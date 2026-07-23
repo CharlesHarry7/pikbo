@@ -63,3 +63,5 @@ git pull && git checkout -B agent/gpt/soft-launch-ops
 ## Cross
 
 - Grok → GPT：卖家包仍在 `docs/growth/SELLER_PACK.md`，本 sprint **不强制**，soft 后做  
+- GPT → Claude：`docs/prd/SELLER_PACK.md` 合入后仅进入实现待办；遵守本 sprint 优先级，soft 后再对齐固定三件套、plan gate、逐条失败/重试。不得发明打包折扣、ZIP 或 cloud delivery。
+- GPT → Claude：T5 开工前先 review `docs/prd/AUTH_CREDITS.md`；schema/transaction 约束有异议先回写 DISPATCH。不得把 Cookie paid plan/credits 直接迁入数据库。

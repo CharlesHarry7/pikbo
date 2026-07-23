@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-23 — [gpt] Seller Pack + T5 durable-credit specifications (P4/P5)
+- Paths: `docs/prd/SELLER_PACK.md` and `docs/prd/AUTH_CREDITS.md`; product/data specifications only.
+- Seller Pack contract: one owned toy photo → Listing Spin, Blind-box Reveal, and Social Flash; cached preview costs 0, while three live children cost 30 credits at the current flat rate with no bundle discount.
+- Failure rule: successful children remain deliverable; returned provider failures restore their own 10 credits; retry targets one failed child and never silently reruns a success.
+- T5 contract: Supabase Auth + account membership + transactional wallet + append-only ledger + idempotent reserve/settle/release + durable Stripe event records.
+- Priority: current 2–3 day soft-launch sprint remains first; Claude reviews these specs after soft launch and must not enable paid Seller Pack before the documented T5/Stripe gates.
+
 ### 2026-07-23 — [gpt] soft-launch product, credits, and Generate contracts (P1–P3)
 - Paths: `docs/prd/SOFT_LAUNCH.md`, `docs/business/CREDITS_AND_PLANS.md`, and `docs/api/GENERATE.md`.
 - Decision: invite-only cached/free Mini validation may proceed; real Stripe remains blocked until durable identity, transactional credits, idempotent billing, media protection, and operational gates pass.
