@@ -32,9 +32,9 @@ export default function CinemaPage() {
   const href = `/create?effect=${encodeURIComponent(effect)}&prompt=${encodeURIComponent(composed)}`;
 
   return (
-    <div className="relative pb-24">
-      {/* Ambient video wash — HF immersion even on tool pages */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-56 overflow-hidden opacity-40">
+    <div className="relative min-h-screen pb-24">
+      {/* HF-style full-bleed cinema chrome */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[min(420px,50vh)] overflow-hidden opacity-50">
         <video
           className="h-full w-full object-cover"
           autoPlay
@@ -42,11 +42,21 @@ export default function CinemaPage() {
           loop
           playsInline
           poster="/demos/scout-still.webp"
+          aria-label="Cinema ambient Lab demo"
         >
           <source src="/demos/scout-packshot-spin.webm" type="video/webm" />
           <source src="/demos/scout-packshot-spin.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[var(--bg)]/80 to-[var(--bg)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-[var(--bg)]/85 to-[var(--bg)]" />
+      </div>
+      <div className="relative z-10 border-b border-white/10 bg-black/40 px-4 py-3 backdrop-blur sm:px-6">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]/80">
+          Cinema · Preview suite door
+        </p>
+        <p className="mt-0.5 text-xs text-white/45">
+          Compose lens / move / grade → opens Generate with Seedance (not a
+          separate offline renderer). Same live Mini honesty as Create.
+        </p>
       </div>
 
       <div className="relative px-4 py-8 sm:px-8">

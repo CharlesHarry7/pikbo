@@ -5,8 +5,10 @@ import {
   freeLiveDownloadBlockReason,
   isSafeDeliverableUrl,
 } from "@/lib/createTrust";
+import { bakeWatermarkedVideo, watermarkWorkerUrl } from "@/lib/t6Bake";
 
 export const runtime = "nodejs";
+export const maxDuration = 120;
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -114,8 +116,35 @@ export async function GET(req: Request, { params }: Props) {
   if (!gate.ok) {
     return NextResponse.json(gate.body, { status: gate.status });
   }
+
+  // Free live + watermark: never hand raw provider URL — bake when worker present.
+  let deliverable = gate.videoUrl;
+  if (
+    gate.watermark &&
+    !gate.demo &&
+    process.env.PIKBO_T6_FILE_BAKE !== "1" &&
+    watermarkWorkerUrl()
+  ) {
+    const baked = await bakeWatermarkedVideo({
+      videoUrl: absoluteDeliverableUrl(req, gate.videoUrl),
+      jobId: id,
+    });
+    if (!baked.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "T6_BAKE_FAILED",
+          error: baked.error,
+          t6: "bake_failed",
+        },
+        { status: 502 }
+      );
+    }
+    deliverable = baked.bakedUrl;
+  }
+
   // Absolute URL so relative /demos/* never fail as open redirects / invalid Location.
-  const target = absoluteDeliverableUrl(req, gate.videoUrl);
+  const target = absoluteDeliverableUrl(req, deliverable);
   return NextResponse.redirect(target, 302);
 }
 

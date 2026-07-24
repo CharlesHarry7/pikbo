@@ -11,6 +11,7 @@ import { VideoTile } from "@/components/VideoTile";
 import { VideoRail } from "@/components/VideoRail";
 import { ProjectCard } from "@/components/ProjectCard";
 import { site } from "@/lib/site";
+import { listPublicCommunityPosts } from "@/lib/communityPosts";
 
 export const metadata: Metadata = {
   title: "Official AI Toy Video Examples",
@@ -41,12 +42,14 @@ const COMMUNITY_FAQ = [
   },
 ] as const;
 
-/** PIKBO Lab: unique official demos only — no shared-loop density wall (G2/G3). */
-export default function CommunityPage() {
+/** Lab always; real UGC only when rows exist (never fake posts). */
+export default async function CommunityPage() {
   const projects = communityProjects();
   const suite = suiteRail();
   const wall = buildVideoFeed();
   const concepts = conceptRecipeCount();
+  const ugc = await listPublicCommunityPosts(24);
+  const realPosts = ugc.posts;
 
   // Phase H: ItemList of official Lab project detail URLs only (no fake UGC).
   const itemListLd = {
@@ -93,9 +96,15 @@ export default function CommunityPage() {
       <div className="sticky top-0 z-20 border-b border-white/[0.07] bg-black/90 px-4 py-3.5 backdrop-blur-xl sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="section-label">Official examples · Lab only</p>
+            <p className="section-label">
+              {realPosts.length > 0
+                ? `Community · ${realPosts.length} real posts + Lab`
+                : "Official examples · Lab only"}
+            </p>
             <h1 className="font-display text-lg font-black tracking-tight sm:text-xl">
-              See what each toy-video recipe is designed to make
+              {realPosts.length > 0
+                ? "Real maker clips + official Lab demos"
+                : "See what each toy-video recipe is designed to make"}
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -130,13 +139,95 @@ export default function CommunityPage() {
           </div>
         </div>
         <p className="mt-1 text-[11px] text-[var(--fg-dim)]">
-          Official product demos only — not customer posts.{" "}
+          {realPosts.length > 0
+            ? "Real posts below are signed-in publishes. Lab cards stay official demos — we never invent fake UGC."
+            : "No real community posts yet — showing PIKBO Lab only. Sign in to publish from Library when UGC SQL is live."}{" "}
           <b className="font-semibold text-[var(--fg-muted)]">
             Remix = use recipe with your toy photo
           </b>
           ; Inside = input, settings, provenance.
         </p>
       </div>
+
+      {realPosts.length > 0 ? (
+        <section className="border-b border-[var(--border)] px-3 py-6 sm:px-5">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-2 px-1">
+            <div>
+              <p className="section-label">Community · real makers</p>
+              <h2 className="mt-1 text-xl font-bold tracking-tight">
+                Published by signed-in users
+              </h2>
+              <p className="mt-1 text-xs text-[var(--fg-muted)]">
+                No fake likes or invented accounts. Remake opens Generate with
+                your own photo.
+              </p>
+            </div>
+            <Link href="/login" className="text-xs font-bold text-[var(--mint)]">
+              Sign in to publish →
+            </Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {realPosts.map((p) => (
+              <article
+                key={p.id}
+                className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-950"
+              >
+                <div className="aspect-[9/14] bg-black">
+                  <video
+                    className="h-full w-full object-cover"
+                    src={p.videoUrl}
+                    poster={p.posterUrl || undefined}
+                    muted
+                    loop
+                    playsInline
+                    controls
+                    preload="metadata"
+                    aria-label={p.title}
+                  />
+                </div>
+                <div className="p-3">
+                  <p className="text-sm font-bold text-white">{p.title}</p>
+                  {p.caption ? (
+                    <p className="mt-1 line-clamp-2 text-xs text-white/50">
+                      {p.caption}
+                    </p>
+                  ) : null}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Link
+                      href={
+                        p.effectSlug
+                          ? `/create?effect=${encodeURIComponent(p.effectSlug)}`
+                          : "/create"
+                      }
+                      className="text-[11px] font-bold text-[var(--mint)]"
+                    >
+                      Remake →
+                    </Link>
+                    <span className="text-[10px] text-white/30">
+                      {p.createdAt.slice(0, 10)}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section className="border-b border-white/[0.06] px-4 py-4 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-4 py-3">
+            <p className="text-xs text-white/50">
+              Real UGC wall is ready — run Supabase migration{" "}
+              <code className="text-[10px] text-white/40">
+                20260725120000_community_ugc.sql
+              </code>{" "}
+              then publish from a signed-in Library clip.
+            </p>
+            <Link href="/login" className="text-xs font-bold text-[var(--mint)]">
+              Sign in →
+            </Link>
+          </div>
+        </section>
+      )}
 
       <section className="border-b border-[var(--border)] px-3 py-6 sm:px-5">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2 px-1">

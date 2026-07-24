@@ -187,16 +187,21 @@ export function canDownloadResult(opts: {
 }): boolean {
   if (opts.demo) return true;
   if (opts.watermark) {
-    // Lazy import avoided — keep createTrust free of heavy deps.
-    // T6 ready only when operator sets PIKBO_T6_FILE_BAKE=1.
+    // Free live: only when force-ready or watermark worker can bake on download.
     if (process.env.PIKBO_T6_FILE_BAKE === "1") return true;
+    if ((process.env.PIKBO_WATERMARK_WORKER_URL || "").startsWith("http")) {
+      return true;
+    }
     return false;
   }
   return true;
 }
 
 export function freeLiveDownloadBlockReason(): string {
-  return "Free Mini live clips cannot download the raw provider file yet — player mark is not a file watermark (T6 blocked). Upgrade for a clean file, or keep the on-player preview.";
+  if ((process.env.PIKBO_WATERMARK_WORKER_URL || "").startsWith("http")) {
+    return "Free Mini download goes through file watermark bake — if this fails, the worker is down. Upgrade for a clean file.";
+  }
+  return "Free Mini live clips cannot download the raw provider file yet — player mark is not a file watermark (T6 blocked). Set PIKBO_WATERMARK_WORKER_URL or upgrade for a clean file.";
 }
 
 /**

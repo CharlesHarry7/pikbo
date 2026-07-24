@@ -42,10 +42,10 @@ Explore → remix 回 Create
 | P7 | Flow 矩阵 | 创建入口货架 | 密网 4 列 + sticky header | **live** |
 | P7b | Seedance 战役条 | 全宽视频 banner | `SeedanceCampaign` 挂首页 | **live** |
 | P8 | Modules 像 lego | 固定工作流壳 | sticky + 4 列密网 + video job 文案 | **live** |
-| P9 | Library/Assets | 底栏 Library | `/library` | soft local |
+| P9 | Library/Assets | 底栏 Library | `/library` | soft local · cloud when Supabase |
 | P10 | 多模型墙 | Kling/Veo live | **诚实 Soon，永不假 live** | skip fake |
-| P11 | 真 UGC 社区 | Community remake | Lab only until auth | blocked |
-| P12 | Cinema 全套 | Cinema Studio | Preview 壳 | partial |
+| P11 | 真 UGC 社区 | Community remake | API + SQL + 双墙；无帖=Lab only | **in progress** |
+| P12 | Cinema 全套 | Cinema Studio | Preview 壳 + HF immersion strip | **partial → denser** |
 
 ## 4. 明确不做（仍是像素对标里的红线）
 
