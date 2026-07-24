@@ -63,6 +63,21 @@ if [[ "$head_code" != "200" ]]; then
 fi
 echo "OK   HEAD /api/health → ${head_code}"
 
+# HEAD /api/me + /api/generations — ops probes (headers only, no full body)
+me_head=$(curl --noproxy '*' -sS -D /tmp/pikbo-me.headers -o /dev/null -w "%{http_code}" -m 10 -I "${BASE}/api/me" || echo "000")
+if [[ "$me_head" != "200" ]]; then
+  echo "FAIL HEAD /api/me → HTTP ${me_head}"
+  exit 1
+fi
+echo "OK   HEAD /api/me → ${me_head} plan=$(grep -i '^X-Pikbo-Plan:' /tmp/pikbo-me.headers | tr -d '\r' | awk '{print $2}') credits=$(grep -i '^X-Pikbo-Credits:' /tmp/pikbo-me.headers | tr -d '\r' | awk '{print $2}')"
+
+gens_head=$(curl --noproxy '*' -sS -D /tmp/pikbo-gens.headers -o /dev/null -w "%{http_code}" -m 10 -I "${BASE}/api/generations" || echo "000")
+if [[ "$gens_head" != "200" ]]; then
+  echo "FAIL HEAD /api/generations → HTTP ${gens_head}"
+  exit 1
+fi
+echo "OK   HEAD /api/generations → ${gens_head} open=$(grep -i '^X-Pikbo-Jobs-Open:' /tmp/pikbo-gens.headers | tr -d '\r' | awk '{print $2}') total=$(grep -i '^X-Pikbo-Jobs:' /tmp/pikbo-gens.headers | tr -d '\r' | awk '{print $2}')"
+
 curl --noproxy '*' -sS -m 10 "${BASE}/api/health" | tee /tmp/pikbo-health.json
 echo
 curl --noproxy '*' -sS -m 10 "${BASE}/api/me" | tee /tmp/pikbo-me.json

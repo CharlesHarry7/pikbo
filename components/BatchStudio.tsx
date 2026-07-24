@@ -780,13 +780,14 @@ export function BatchStudio({
         const result = await downloadVideoFile(t.href, t.filename);
         if (result === "ok") ok += 1;
         else if (result === "fallback") fallback += 1;
+        // "unsafe" / "fail" stay uncounted — never claim multi-download success
         if (i < targets.length - 1) {
           await sleep(350);
         }
       }
       if (ok + fallback === 0) {
         setError(
-          "Could not download available clips — browser blocked or URLs expired. Try each child Download link."
+          "Could not download available clips — blocked, unsafe URL, or expired. Try each child Download link."
         );
       } else if (fallback > 0 && ok === 0) {
         setError(null);

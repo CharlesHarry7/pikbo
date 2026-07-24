@@ -14,7 +14,26 @@ type Health = {
     paid?: boolean;
     durableCredits?: boolean;
   };
-  t6?: { status?: string };
+  product?: {
+    primary?: string;
+    stills?: string;
+  };
+  billing?: {
+    freeTrial?: {
+      scope?: string;
+      stillsOnFree?: string;
+      failedLiveRefunds?: boolean;
+      clipsPerPeriod?: number;
+    };
+  };
+  demos?: {
+    ok?: boolean;
+    present?: number;
+    required?: number;
+    note?: string;
+    samples?: { present?: number; required?: number };
+  };
+  t6?: { status?: string; freeLiveRawDownload?: string };
   forceGenerateFail?: boolean;
   rateLimit?: {
     inflight?: number;
@@ -29,7 +48,9 @@ type Health = {
   jobs?: {
     mode?: string;
     count?: number;
+    open?: number;
     jobTimeoutMs?: number;
+    byStatus?: Record<string, number>;
     note?: string;
   };
   videoWebhook?: {
@@ -71,9 +92,31 @@ export function StatusProbe() {
     );
   }
 
+  const ft = data.billing?.freeTrial;
+  const demos = data.demos;
+  const demosLabel =
+    demos && typeof demos.present === "number" && typeof demos.required === "number"
+      ? `${demos.ok ? "ok" : "MISSING"} · ${demos.present}/${demos.required} clips` +
+        (demos.samples
+          ? ` · samples ${demos.samples.present ?? "?"}/${demos.samples.required ?? "?"}`
+          : "")
+      : "—";
+  const jobsOpen =
+    typeof data.jobs?.open === "number"
+      ? data.jobs.open
+      : data.jobs?.byStatus
+        ? (data.jobs.byStatus.queued ?? 0) + (data.jobs.byStatus.running ?? 0)
+        : null;
+
   const rows: Array<[string, string, boolean?]> = [
     ["Overall", data.ok ? "ok" : "degraded", data.ok],
     ["Mode", String(data.mode ?? "—")],
+    [
+      "Product",
+      data.product?.primary
+        ? `${data.product.primary}${data.product.stills ? ` · stills ${data.product.stills}` : ""}`
+        : "—",
+    ],
     ["Demo path", data.ready?.demo ? "ready" : "no", data.ready?.demo],
     [
       "Soft-live (FAL)",
@@ -88,9 +131,26 @@ export function StatusProbe() {
     ],
     ["Session secret", data.sessionSecret ? "set" : "missing", data.sessionSecret],
     ["FAL key", data.fal ? "set" : "missing", data.fal],
+    [
+      "Lab demos on disk",
+      demosLabel,
+      demos?.ok === true ? true : demos?.ok === false ? false : undefined,
+    ],
+    [
+      "Free trial scope",
+      ft?.scope
+        ? `${ft.scope}${ft.stillsOnFree ? ` · stills ${ft.stillsOnFree}` : ""}${
+            ft.failedLiveRefunds ? " · refunds on fail" : ""
+          }`
+        : "—",
+    ],
     ["T6 watermark bake", data.t6?.status ?? "unknown"],
     [
-      "In-flight jobs",
+      "Free live raw download",
+      data.t6?.freeLiveRawDownload ?? "—",
+    ],
+    [
+      "In-flight locks",
       typeof data.rateLimit?.inflight === "number"
         ? `${data.rateLimit.inflight} (TTL ${Math.round((data.rateLimit.inflightTtlMs ?? 0) / 1000)}s)`
         : "—",
@@ -104,7 +164,7 @@ export function StatusProbe() {
     [
       "Session job ledger",
       typeof data.jobs?.count === "number"
-        ? `${data.jobs.count} · timeout ${Math.round((data.jobs.jobTimeoutMs ?? 0) / 60000)}m`
+        ? `${data.jobs.count}${jobsOpen != null ? ` · open ${jobsOpen}` : ""} · timeout ${Math.round((data.jobs.jobTimeoutMs ?? 0) / 60000)}m`
         : "—",
     ],
     [
@@ -115,6 +175,10 @@ export function StatusProbe() {
       data.videoWebhook?.secretConfigured,
     ],
   ];
+
+  if (data.forceGenerateFail) {
+    rows.push(["Force generate fail", "ON (non-prod ops only)", false]);
+  }
 
   return (
     <dl className="mt-6 space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm">

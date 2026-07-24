@@ -110,7 +110,8 @@
 69. [x] health.demos disk probe · demoClip on-disk fallback · image mergeMeSession + aspect echo
 70. [x] Library import/download URL safety · export downloadGate · me/generations HEAD · creditStatus server echo
 71. [x] FreeTrialCta Apps/Explore/Community · Apps+Explore FAQPage
-72. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+72. [x] StatusProbe demos/freeTrial · Seller Pack unsafe URL drop · CP HEAD me/generations
+73. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -124,8 +125,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Library: import/download refuse unsafe videoUrl; export downloadAllowed/downloadGate.  
-- historyFieldsFromSuccess uses server creditsOutcome; HEAD /api/me + /api/generations.  
+- StatusProbe: Lab demos disk + freeTrial scope + product + jobs open.  
+- Seller Pack export drops unsafe videoUrl; CP HEAD /api/me + /api/generations.  
 - Mode A still needs boss Vercel login · SQL · T6 bake.
 
 ---

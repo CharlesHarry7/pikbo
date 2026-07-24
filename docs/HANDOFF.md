@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] StatusProbe demos + Seller Pack URL safety + CP HEAD
+- StatusProbe surfaces Lab demos disk, freeTrial scope/stills, product, jobs open, T6 raw gate.
+- sellerPackExport: filter/href refuse unsafe schemes; requestId still via /api/downloads.
+- critical-path asserts HEAD /api/me + /api/generations (plan/credits/open headers).
+- Verified: typecheck · lint · engine-smoke.
+
 ### 2026-07-24 — [grok] Community/Tools/Effects FAQ + FreeTrial honesty
 - Phase H: Community + Tools + Effects hubs get FAQ + FAQPage JSON-LD (not thin walls).
 - Tools/Effects: static Try free / Generate free → `FreeTrialCta` (exhausted → plans).

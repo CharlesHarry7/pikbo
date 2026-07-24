@@ -4,6 +4,8 @@
  * Multi-download uses per-clip /api/downloads or videoUrl — no server ZIP yet.
  */
 
+import { isSafeDeliverableUrl } from "@/lib/createTrust";
+
 export type SellerPackExportItem = {
   key: string;
   slug: string;
@@ -36,7 +38,10 @@ export function filterAvailableDeliverables(
       i.status === "succeeded" &&
       typeof i.videoUrl === "string" &&
       i.videoUrl.length > 0 &&
-      i.downloadable
+      i.downloadable &&
+      // Never list javascript:/data: or other unsafe schemes as deliverables.
+      (isSafeDeliverableUrl(i.videoUrl) ||
+        (typeof i.requestId === "string" && i.requestId.trim().length > 0))
   );
 }
 
@@ -51,7 +56,11 @@ export function sellerPackDownloadHref(
   if (typeof item.requestId === "string" && item.requestId.trim()) {
     return `/api/downloads/${encodeURIComponent(item.requestId.trim())}`;
   }
-  if (typeof item.videoUrl === "string" && item.videoUrl.length > 0) {
+  if (
+    typeof item.videoUrl === "string" &&
+    item.videoUrl.length > 0 &&
+    isSafeDeliverableUrl(item.videoUrl)
+  ) {
     return item.videoUrl;
   }
   return null;
