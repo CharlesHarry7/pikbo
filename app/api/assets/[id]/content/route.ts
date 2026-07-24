@@ -65,6 +65,36 @@ export async function PUT(req: Request, { params }: Props) {
   });
 }
 
+/**
+ * Meta-only probe — Create/Seller Pack can confirm the still still exists
+ * without downloading multi-MB dataUrl (multi-instance / TTL recovery).
+ */
+export async function HEAD(_req: Request, { params }: Props) {
+  const { id } = await params;
+  const session = await ensureSession();
+  const asset = getLocalAsset(id, session.id);
+  if (!asset) {
+    return new NextResponse(null, {
+      status: 404,
+      headers: {
+        "Cache-Control": "no-store",
+        "X-Pikbo-Asset": "missing",
+      },
+    });
+  }
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Cache-Control": "no-store",
+      "X-Pikbo-Asset": "ok",
+      "X-Pikbo-Asset-Id": asset.id,
+      "X-Pikbo-Asset-Bytes": String(asset.byteLength),
+      "X-Pikbo-Asset-Type": asset.contentType.slice(0, 64),
+      "X-Pikbo-Asset-Expires": asset.expiresAt,
+    },
+  });
+}
+
 export async function GET(_req: Request, { params }: Props) {
   const { id } = await params;
   const session = await ensureSession();

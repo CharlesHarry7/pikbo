@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] Free raw share/download honesty + assets HEAD
+- Create: copyLink/shareX refuse Free Mini raw + unsafe schemes (T6 cannot bypass via clipboard/X).
+- Create/Landing download href requires requestId or isSafeDeliverableUrl.
+- HEAD /api/assets/[id]/content: meta-only existence (bytes/type/expires, no dataUrl).
+- Verified: typecheck · lint · engine-smoke.
+
 ### 2026-07-24 — [grok] StatusProbe demos + Seller Pack URL safety + CP HEAD
 - StatusProbe surfaces Lab demos disk, freeTrial scope/stills, product, jobs open, T6 raw gate.
 - sellerPackExport: filter/href refuse unsafe schemes; requestId still via /api/downloads.

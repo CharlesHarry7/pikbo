@@ -1493,6 +1493,14 @@ assert.match(
   /Download blocked · Free raw|freeLiveDownloadBlockReason/
 );
 assert.match(landingTool, /\/api\/downloads\//);
+assert.match(landingTool, /isSafeDeliverableUrl/);
+// Create: Free Mini must not copy/share raw provider URL (T6 honesty)
+assert.match(createStudio, /isSafeDeliverableUrl/);
+assert.match(
+  createStudio,
+  /Free Mini raw provider URL is not a deliverable|downloadAllowed/
+);
+assert.match(createStudio, /shareX[\s\S]{0,400}downloadAllowed|!downloadAllowed/);
 
 // Phase G homepage proof quality gate (all dimensions ≥4)
 function passesHomeProofQuality(scores) {
@@ -1690,6 +1698,9 @@ const assetContent = fs.readFileSync(
   "utf8"
 );
 assert.match(assetContent, /putLocalAsset/);
+// HEAD meta probe without dataUrl (TTL / multi-instance recovery)
+assert.match(assetContent, /export async function HEAD/);
+assert.match(assetContent, /X-Pikbo-Asset/);
 assert.match(
   fs.readFileSync(join(root, "lib/localAssets.ts"), "utf8"),
   /putLocalAsset/

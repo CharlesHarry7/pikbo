@@ -111,7 +111,8 @@
 70. [x] Library import/download URL safety · export downloadGate · me/generations HEAD · creditStatus server echo
 71. [x] FreeTrialCta Apps/Explore/Community · Apps+Explore FAQPage
 72. [x] StatusProbe demos/freeTrial · Seller Pack unsafe URL drop · CP HEAD me/generations
-73. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+73. [x] Create/Landing Free raw share+download safety · assets content HEAD
+74. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -125,8 +126,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- StatusProbe: Lab demos disk + freeTrial scope + product + jobs open.  
-- Seller Pack export drops unsafe videoUrl; CP HEAD /api/me + /api/generations.  
+- Create/Landing: Free Mini raw blocked on copy/share/download; unsafe href gated.  
+- HEAD /api/assets/[id]/content meta probe (no dataUrl).  
 - Mode A still needs boss Vercel login · SQL · T6 bake.
 
 ---

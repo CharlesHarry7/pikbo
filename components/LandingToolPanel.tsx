@@ -29,6 +29,7 @@ import {
 import {
   canDownloadResult,
   freeLiveDownloadBlockReason,
+  isSafeDeliverableUrl,
 } from "@/lib/createTrust";
 import { deliveryItemsForJob } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
@@ -628,12 +629,14 @@ export function LandingToolPanel({
                 {demo ? PROVENANCE.cachedDemo : localLibraryNote()}
               </p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
-                {downloadAllowed ? (
+                {downloadAllowed &&
+                (requestId ||
+                  (videoUrl && isSafeDeliverableUrl(videoUrl))) ? (
                   <a
                     href={
                       requestId
                         ? `/api/downloads/${encodeURIComponent(requestId)}`
-                        : videoUrl || "#"
+                        : videoUrl!
                     }
                     download={
                       requestId ? undefined : `pikbo-${effectSlug}.mp4`
@@ -660,10 +663,16 @@ export function LandingToolPanel({
                   <button
                     type="button"
                     disabled
-                    title={freeLiveDownloadBlockReason()}
+                    title={
+                      downloadAllowed
+                        ? "Unsafe deliverable URL — download blocked"
+                        : freeLiveDownloadBlockReason()
+                    }
                     className="btn btn-primary cursor-not-allowed px-3 py-1.5 text-xs opacity-50"
                   >
-                    Download blocked · Free raw
+                    {downloadAllowed
+                      ? "Download blocked · unsafe URL"
+                      : "Download blocked · Free raw"}
                   </button>
                 )}
                 <button

@@ -35,6 +35,7 @@ import {
   canDownloadResult,
   freeLiveDownloadBlockReason,
   internSourceImage,
+  isSafeDeliverableUrl,
   preserveRequestSettlementOnVersionRestore,
   requestCreditStateFromFailure,
   requestCreditStateFromSuccess,
@@ -886,6 +887,15 @@ export function CreateStudio({
 
   async function copyLink() {
     if (!videoUrl) return;
+    // Free Mini raw provider URL is not a deliverable (T6) — do not leak via clipboard.
+    if (!downloadAllowed) {
+      toast(freeLiveDownloadBlockReason());
+      return;
+    }
+    if (!isSafeDeliverableUrl(videoUrl)) {
+      toast("Unsafe deliverable URL — not copied");
+      return;
+    }
     try {
       await navigator.clipboard.writeText(videoUrl);
       setCopied(true);
@@ -937,6 +947,15 @@ export function CreateStudio({
 
   function shareX() {
     if (!videoUrl) return;
+    // Free raw share would bypass T6 download gate — keep honesty.
+    if (!downloadAllowed) {
+      toast(freeLiveDownloadBlockReason());
+      return;
+    }
+    if (!isSafeDeliverableUrl(videoUrl)) {
+      toast("Unsafe deliverable URL — not shared");
+      return;
+    }
     markActivationShared();
     const text = encodeURIComponent(
       `Made with ${site.name} — ${preset.name} 🧸`
@@ -2336,12 +2355,14 @@ export function CreateStudio({
                     : `${PROVENANCE.liveGeneration} — each run creates a separate version. Returned provider failures restore credits; ambiguous network results are marked unconfirmed.`}
                 </p>
                 <div className="mt-4 flex flex-col items-center gap-2">
-                  {downloadAllowed ? (
+                  {downloadAllowed &&
+                  (activeVersion?.requestId ||
+                    (videoUrl && isSafeDeliverableUrl(videoUrl))) ? (
                     <a
                       href={
                         activeVersion?.requestId
                           ? `/api/downloads/${encodeURIComponent(activeVersion.requestId)}`
-                          : videoUrl || "#"
+                          : videoUrl!
                       }
                       download={
                         activeVersion?.requestId
@@ -2368,6 +2389,15 @@ export function CreateStudio({
                     >
                       {t("create.download")}
                     </a>
+                  ) : downloadAllowed ? (
+                    <button
+                      type="button"
+                      disabled
+                      title="Unsafe deliverable URL — download blocked"
+                      className="btn btn-primary w-full max-w-sm cursor-not-allowed px-6 py-3.5 text-sm font-black opacity-50 sm:w-auto sm:min-w-[14rem]"
+                    >
+                      Download · blocked (unsafe URL)
+                    </button>
                   ) : (
                     <button
                       type="button"
