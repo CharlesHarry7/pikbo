@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { track } from "@/lib/analytics";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
+import { DEMO_VIDEOS } from "@/lib/demoVideos";
 
 /**
- * HF homepage product entry strip — big capability cards in a horizontal rail.
- * Only real Pikbo paths; Video is first and hot.
- * Free trial is FreeTrialCta (exhausted → plans), not a static sample link.
+ * HF homepage product entry strip — media-backed capability cards.
+ * Only real Pikbo paths; Video is first and hot. Owned Lab posters only.
  */
 const PRODUCTS: {
   href: string;
@@ -15,49 +15,58 @@ const PRODUCTS: {
   blurb: string;
   tag: string;
   hot?: boolean;
+  /** Index into DEMO_VIDEOS for poster background */
+  demoIndex: number;
 }[] = [
   {
     href: "/create",
     title: "Seedance Video",
-    blurb: "Photo → short video in seconds",
+    blurb: "Photo → short video",
     tag: "Video",
     hot: true,
+    demoIndex: 0,
   },
   {
     href: "/flow",
     title: "Flow",
     blurb: "Creation matrix",
     tag: "Matrix",
+    demoIndex: 1,
   },
   {
     href: "/modules",
     title: "Modules",
     blurb: "Fixed video jobs",
     tag: "Apps",
+    demoIndex: 2,
   },
   {
     href: "/create?mode=seller-pack",
     title: "Seller Pack",
     blurb: "3 videos · one photo",
     tag: "Shop",
+    demoIndex: 3,
   },
   {
     href: "/effects",
     title: "Viral Presets",
     blurb: "Full recipe wall",
     tag: "Presets",
+    demoIndex: 4,
   },
   {
     href: "/cinema",
     title: "Cinema",
     blurb: "Director board · Preview",
     tag: "Preview",
+    demoIndex: 2,
   },
   {
     href: "/image",
     title: "Image",
     blurb: "Stills · then animate",
     tag: "Optional",
+    demoIndex: 3,
   },
 ];
 
@@ -66,9 +75,14 @@ export function HfProductRail() {
     <section className="border-b border-white/10 bg-black px-3 py-5 sm:px-5">
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-3 flex items-end justify-between gap-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
-            Create
-          </p>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+              Create
+            </p>
+            <p className="mt-0.5 text-[11px] text-white/40">
+              Toy-native creative suite · same OS loop as a full AI video stack
+            </p>
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             <FreeTrialCta
               path="/#product-rail"
@@ -85,12 +99,12 @@ export function HfProductRail() {
           </div>
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {/* Free Mini honesty card — not a static always-free live claim */}
-          <div className="group relative w-[9.5rem] shrink-0 overflow-hidden rounded-2xl border border-[#c8ff3d]/45 bg-[#c8ff3d]/[0.1] p-3.5 shadow-[0_0_32px_rgba(200,255,61,0.12)] sm:w-[11rem]">
-            <span className="inline-flex rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-black">
+          {/* Free Mini honesty card */}
+          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[#c8ff3d]/45 bg-[#c8ff3d]/[0.1] p-3.5 shadow-[0_0_32px_rgba(200,255,61,0.12)] sm:h-[11rem] sm:w-[10rem]">
+            <span className="relative z-10 inline-flex rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-black">
               Free
             </span>
-            <p className="mt-2 text-[13px] font-black leading-tight text-white">
+            <p className="relative z-10 mt-2 text-[13px] font-black leading-tight text-white">
               <FreeTrialCta
                 path="/#product-rail-card"
                 labelTry="Try free"
@@ -100,44 +114,68 @@ export function HfProductRail() {
                 className="font-black text-white group-hover:text-[#c8ff3d]"
               />
             </p>
-            <p className="mt-1 text-[10px] leading-snug text-white/45">
+            <p className="relative z-10 mt-1 text-[10px] leading-snug text-white/45">
               Lab sample · Free Mini 5s
             </p>
           </div>
-          {PRODUCTS.map((p) => (
-            <Link
-              key={p.href + p.title}
-              href={p.href}
-              onClick={() =>
-                track({
-                  event: "landing_view",
-                  path: "/",
-                  meta: { cta: "hf_product_rail", label: p.title },
-                })
-              }
-              className={`group relative w-[9.5rem] shrink-0 overflow-hidden rounded-2xl border p-3.5 transition duration-200 hover:-translate-y-0.5 sm:w-[11rem] ${
-                p.hot
-                  ? "border-[#c8ff3d]/45 bg-[#c8ff3d]/[0.1] shadow-[0_0_32px_rgba(200,255,61,0.12)]"
-                  : "border-white/10 bg-white/[0.04] hover:border-white/25"
-              }`}
-            >
-              <span
-                className={`inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${
+          {PRODUCTS.map((p) => {
+            const demo = DEMO_VIDEOS[p.demoIndex % DEMO_VIDEOS.length];
+            return (
+              <Link
+                key={p.href + p.title}
+                href={p.href}
+                onClick={() =>
+                  track({
+                    event: "landing_view",
+                    path: "/",
+                    meta: { cta: "hf_product_rail", label: p.title },
+                  })
+                }
+                className={`group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border transition duration-200 hover:-translate-y-0.5 sm:h-[11rem] sm:w-[10rem] ${
                   p.hot
-                    ? "bg-[#c8ff3d] text-black"
-                    : "border border-white/15 text-white/50"
+                    ? "border-[#c8ff3d]/50 shadow-[0_0_32px_rgba(200,255,61,0.14)]"
+                    : "border-white/10 hover:border-white/30"
                 }`}
               >
-                {p.tag}
-              </span>
-              <p className="mt-2 text-[13px] font-black leading-tight text-white group-hover:text-[#c8ff3d]">
-                {p.title}
-              </p>
-              <p className="mt-1 text-[10px] leading-snug text-white/45">
-                {p.blurb}
-              </p>
-            </Link>
-          ))}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={demo.poster}
+                  alt=""
+                  width={200}
+                  height={280}
+                  className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-t ${
+                    p.hot
+                      ? "from-black via-black/70 to-black/25"
+                      : "from-black via-black/75 to-black/35"
+                  }`}
+                />
+                <div className="relative z-10 flex h-full flex-col justify-between p-3">
+                  <span
+                    className={`inline-flex w-fit rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${
+                      p.hot
+                        ? "bg-[#c8ff3d] text-black"
+                        : "border border-white/20 bg-black/50 text-white/70 backdrop-blur"
+                    }`}
+                  >
+                    {p.tag}
+                  </span>
+                  <div>
+                    <p className="text-[13px] font-black leading-tight text-white group-hover:text-[#c8ff3d]">
+                      {p.title}
+                    </p>
+                    <p className="mt-0.5 text-[10px] leading-snug text-white/55">
+                      {p.blurb}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

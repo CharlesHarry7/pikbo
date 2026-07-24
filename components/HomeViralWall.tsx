@@ -7,11 +7,11 @@ import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { CATEGORIES } from "@/lib/presets";
 
 /**
- * HF Viral Presets wall — uniform dense GRID of autoplay videos.
- * Not a marketing blog section: pure content density.
+ * HF Viral Presets wall — uniform dense GRID of posters + hover video.
+ * Name ticker + category chips mirror HF density; media is Pikbo Lab only.
  */
-/** First paint: show fewer cards; rest on demand (哥飞 LCP / 养站). */
-const INITIAL_WALL = 12;
+/** First paint: denser than before (HF feel) while still poster-first for LCP. */
+const INITIAL_WALL = 18;
 
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
   const [filter, setFilter] = useState("all");
@@ -33,6 +33,12 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
   const visible = expanded ? wall : wall.slice(0, INITIAL_WALL);
   const hasMore = wall.length > INITIAL_WALL && !expanded;
 
+  /** HF-style uppercase name strip above the grid */
+  const nameTicker = useMemo(
+    () => wall.slice(0, 28).map((i) => i.title.toUpperCase()),
+    [wall]
+  );
+
   return (
     <section className="px-2 py-8 sm:px-3">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-2 px-2">
@@ -44,8 +50,8 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
             Viral presets
           </Link>
           <p className="mt-1 max-w-xl text-sm text-white/45">
-            Big-budget motion from one toy photo — tap any card to generate
-            video. Lab samples only · not customer UGC.
+            Big-budget toy motion from one photo — tap any card to open Generate.
+            Lab samples only · not customer UGC.
           </p>
         </div>
         <Link
@@ -56,12 +62,29 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
         </Link>
       </div>
 
+      {/* HF name ticker — dense uppercase labels */}
+      {nameTicker.length > 0 ? (
+        <div className="mb-3 flex gap-x-3 gap-y-1 overflow-x-auto px-2 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {nameTicker.map((name, i) => (
+            <span
+              key={`${name}-${i}`}
+              className="shrink-0 text-[10px] font-black uppercase tracking-[0.12em] text-white/35"
+            >
+              {name}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
       <div className="mb-4 flex gap-2 overflow-x-auto px-2 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {chips.map((c) => (
           <button
             key={c.id}
             type="button"
-            onClick={() => setFilter(c.id)}
+            onClick={() => {
+              setFilter(c.id);
+              setExpanded(false);
+            }}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-wide transition ${
               filter === c.id
                 ? "border-[var(--mint)] bg-[var(--mint)] text-black"
@@ -74,7 +97,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
       </div>
 
       {/* Uniform dense grid — posters first (LCP); video only on hover/tap */}
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+      <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-1.5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
         {visible.map((item, i) => (
           <Link
             key={item.id}
@@ -110,6 +133,10 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-90" />
+            {/* Hover Remake chip — HF remix affordance */}
+            <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-[#c8ff3d] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black opacity-0 shadow-[0_0_16px_rgba(200,255,61,0.35)] transition group-hover:opacity-100">
+              Remake
+            </span>
             <div className="absolute inset-x-0 bottom-0 p-2 sm:p-2.5">
               <p className="line-clamp-2 text-[11px] font-bold uppercase leading-tight tracking-wide text-white sm:text-xs">
                 {item.title}

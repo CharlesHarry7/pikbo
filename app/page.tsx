@@ -19,8 +19,9 @@ import {
 } from "@/lib/jsonLd";
 
 /**
- * 哥飞 2026-07-25：首页 = 承接页，工具在页内，非纯跳转。
+ * 潮玩版 HF OS + 哥飞养站：Generate 页内工具（关键词）+ 下方完整 suite 墙。
  * Primary keyword: AI toy video generator (site.ts).
+ * Product north star: docs/PRODUCT_NORTH_STAR.md
  */
 export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
@@ -70,28 +71,31 @@ export default function Home() {
         ]}
       />
 
-      {/* 哥飞 P0: trial strip + on-page tool (landing = 承接页) */}
+      {/* Soft live strip + Generate on-page (SEO) · below = full toy OS (HF) */}
       <SoftLaunchStrip />
 
       <section
         id="home-tool"
-        className="border-b border-white/10 bg-gradient-to-b from-black via-[#0a0a0c] to-black px-4 py-10 sm:px-6"
+        className="border-b border-white/10 bg-gradient-to-b from-black via-[#0a0a0c] to-black px-4 py-7 sm:px-6 sm:py-9"
       >
         <div className="mx-auto max-w-5xl">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--mint)]">
-            On this page · no extra hop
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--mint)]">
+              Generate · on this page
+            </p>
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/40">
+              Designer-toy OS
+            </span>
+          </div>
           <h1 className="font-display mt-2 max-w-3xl text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">
             {site.homeH1}
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/65 sm:text-base">
-            Use this <strong className="text-white/85">AI toy video generator</strong>{" "}
-            right here: upload one photo of a designer toy you own and{" "}
-            <strong className="text-white/85">turn that photo into short video</strong>{" "}
-            for listings or social. Free Mini trial · often 1–3 minutes live ·
-            Lab demos below are official samples, not customer UGC.
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-[15px]">
+            Upload one photo of a designer toy you own → short video for listings
+            or social. Free Mini · live often 1–3 min · wall below is the full
+            suite (presets · projects · Flow).
           </p>
-          <div className="mt-8">
+          <div className="mt-6">
             <LandingToolPanel
               effectSlug="360-spin-showcase"
               effectName="360° Spin Showcase"
@@ -102,7 +106,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Density / Lab wall — secondary to on-page tool */}
+      {/* 潮玩版 HF: product rail · viral wall · inside projects · suite doors */}
       <HfExploreHome
         demos={labDemos}
         projects={listHomeShowcaseProjects()}
