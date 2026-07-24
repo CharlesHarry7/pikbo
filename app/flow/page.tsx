@@ -111,6 +111,24 @@ export default function FlowPage() {
       tier: "core",
       demoId: "moon-glow",
     },
+    {
+      id: "core-cinema",
+      title: "Cinema board",
+      blurb: "Director board · lens / move / grade → Generate Seedance.",
+      href: "/cinema",
+      badge: "Cinema",
+      tier: "core",
+      demoId: "scout-story",
+    },
+    {
+      id: "core-library",
+      title: "Library · Assets",
+      blurb: "Device clips + session jobs · publish live to Community.",
+      href: "/library",
+      badge: "Assets",
+      tier: "core",
+      demoId: "scout-spin",
+    },
   ];
 
   const preview: FlowCard[] = [
@@ -123,15 +141,6 @@ export default function FlowPage() {
       tier: "preview" as const,
       demoIndex: i,
     })),
-    {
-      id: "prev-cinema",
-      title: "Cinema brief",
-      blurb: "Lens language → opens Generate. Not a full HF Cinema rebuild.",
-      href: "/cinema",
-      badge: "Preview",
-      tier: "preview",
-      demoId: "scout-story",
-    },
     {
       id: "prev-models",
       title: "Models shelf",

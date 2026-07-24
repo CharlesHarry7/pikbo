@@ -71,7 +71,8 @@
 | ✅ | Generate 手感 | WaitStage 阶段轨、手机进度、Fail Retry |
 | ✅ | Library 云感 | 三层存储条 + 密网格；诚实 Local/Session/Account |
 | ✅ | Community 发布 | Library → Publish to Community；无帖只 Lab |
-| 下一拍 | Cinema / 战役条 / Seller Pack | 加深，不假模型 |
+| ✅ | Cinema / 战役条 | Director board + Seedance flagship denser |
+| 下一拍 | Seller Pack / Flow 动线 | 加深，不假模型 |
 | 有流量 | Stripe | 哥飞信号到了再开 |
 | 有 key | 第二模型 | 真 key 才 live |
 
