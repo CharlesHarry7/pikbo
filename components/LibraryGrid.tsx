@@ -34,6 +34,12 @@ type SessionJob = {
   requestId?: string;
   error?: string;
   createdAt?: string;
+  /** Server echo when job recorded from generate. */
+  duration?: number;
+  aspectRatio?: string;
+  resolution?: string;
+  model?: string;
+  watermark?: boolean;
 };
 
 type SessionByStatus = {
@@ -172,6 +178,14 @@ function SessionJobsPanel({
                   {j.creditsOutcome ? ` · ${j.creditsOutcome}` : ""}
                 </span>
               </p>
+              <p className="mt-0.5 truncate text-[10px] text-[var(--fg-dim)]">
+                {j.demo ? "Cached demo" : "Live"}
+                {j.aspectRatio ? ` · ${j.aspectRatio}` : ""}
+                {typeof j.duration === "number" ? ` · ${j.duration}s` : ""}
+                {j.resolution ? ` · ${j.resolution}` : ""}
+                {j.model ? ` · ${j.model.split("/").pop()}` : ""}
+                {j.watermark ? " · on-player mark" : ""}
+              </p>
               {j.error ? (
                 <p className="mt-0.5 truncate text-[10px] text-amber-100/80">
                   {j.error}
@@ -183,7 +197,9 @@ function SessionJobsPanel({
                 href={`/create?effect=${encodeURIComponent(j.effect)}`}
                 className="text-[var(--mint)] hover:underline"
               >
-                Retry recipe
+                {j.status === "failed" || j.status === "canceled"
+                  ? "Retry recipe"
+                  : "Use recipe"}
               </Link>
               {isCancellableSessionJob(j.status) ? (
                 <button
@@ -210,7 +226,12 @@ function SessionJobsPanel({
                   Download
                 </a>
               ) : j.status === "succeeded" && !j.downloadAllowed ? (
-                <span className="text-amber-100/70">Download blocked</span>
+                <span
+                  className="text-amber-100/70"
+                  title="Free Mini live raw is gated until T6 file watermark bake"
+                >
+                  Download blocked · Free raw
+                </span>
               ) : null}
             </div>
           </li>
@@ -544,6 +565,7 @@ export function LibraryGrid() {
     const result = await downloadVideoFile(item.videoUrl, name);
     if (result === "ok") toast("Download started");
     else if (result === "fallback") toast("Opened video — save from browser");
+    else if (result === "unsafe") toast("Unsafe deliverable URL — download blocked");
     else toast("Download failed");
   }
 

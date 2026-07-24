@@ -1,6 +1,10 @@
 /** Client-side generation history (Local Library). No server DB / cloud sync. */
 
-import { canDownloadResult, freeLiveDownloadBlockReason } from "@/lib/createTrust";
+import {
+  canDownloadResult,
+  freeLiveDownloadBlockReason,
+  isSafeDeliverableUrl,
+} from "@/lib/createTrust";
 import { resultProvenanceLabel } from "@/lib/provenance";
 
 export type HistoryItem = {
@@ -60,6 +64,8 @@ function normalizeItem(raw: unknown): HistoryItem | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
   if (typeof o.videoUrl !== "string" || !o.videoUrl) return null;
+  // Import / restore must never rehydrate javascript: or other unsafe schemes.
+  if (!isSafeDeliverableUrl(o.videoUrl)) return null;
   if (typeof o.effect !== "string" || typeof o.effectName !== "string") {
     return null;
   }
@@ -68,7 +74,7 @@ function normalizeItem(raw: unknown): HistoryItem | null {
       typeof o.id === "string" && o.id
         ? o.id
         : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    videoUrl: o.videoUrl,
+    videoUrl: o.videoUrl.trim(),
     projectId: typeof o.projectId === "string" ? o.projectId : undefined,
     projectName:
       typeof o.projectName === "string" ? o.projectName : undefined,
@@ -234,7 +240,8 @@ export function remoteClipMayExpire(item: {
 export async function downloadVideoFile(
   url: string,
   filename: string
-): Promise<"ok" | "fallback" | "fail"> {
+): Promise<"ok" | "fallback" | "fail" | "unsafe"> {
+  if (!isSafeDeliverableUrl(url)) return "unsafe";
   const ctrl = new AbortController();
   const timer = window.setTimeout(() => ctrl.abort(), 45_000);
   try {
@@ -255,6 +262,8 @@ export async function downloadVideoFile(
     return "ok";
   } catch {
     try {
+      // Re-check: never open unsafe schemes even on fetch failure path.
+      if (!isSafeDeliverableUrl(url)) return "unsafe";
       window.open(url, "_blank", "noopener,noreferrer");
       return "fallback";
     } catch {
@@ -267,12 +276,18 @@ export async function downloadVideoFile(
 
 /** Backup library as JSON file for the user / support. */
 export function exportHistoryJson(): void {
-  const list = loadHistory().map((item) => ({
-    ...item,
-    /** Soft-launch PRD ops: identify cached demo vs live without guessing. */
-    provenance: historyProvenance(item),
-    storage: "local-browser",
-  }));
+  const list = loadHistory().map((item) => {
+    const downloadAllowed = historyItemDownloadAllowed(item);
+    return {
+      ...item,
+      /** Soft-launch PRD ops: identify cached demo vs live without guessing. */
+      provenance: historyProvenance(item),
+      /** T6 honesty — Free live raw is not a deliverable. */
+      downloadAllowed,
+      downloadGate: downloadAllowed ? ("allowed" as const) : ("blocked" as const),
+      storage: "local-browser" as const,
+    };
+  });
   const blob = new Blob([JSON.stringify(list, null, 2)], {
     type: "application/json",
   });

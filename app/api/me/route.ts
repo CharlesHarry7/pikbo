@@ -12,6 +12,30 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 export const runtime = "nodejs";
 
 /**
+ * Cheap session probe (ops / badge) — presence headers only, no durable wallet.
+ * Full freeTrial + auth lives on GET.
+ */
+export async function HEAD() {
+  const session = await ensureSession();
+  const mode = generateMode();
+  const clipsLeft = Math.floor(session.credits / CREDITS_PER_VIDEO);
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Cache-Control": "no-store",
+      "X-Pikbo-Plan": session.plan,
+      "X-Pikbo-Credits": String(session.credits),
+      "X-Pikbo-Clips-Left": String(clipsLeft),
+      "X-Pikbo-Mode": mode,
+      "X-Pikbo-Free-Trial-Exhausted":
+        session.plan === "free" && session.credits < CREDITS_PER_VIDEO
+          ? "1"
+          : "0",
+    },
+  });
+}
+
+/**
  * Session + generate mode for Studio honesty.
  * Optional Bearer token enriches response with Supabase auth + durable wallet
  * (shadow ledger). Cookie credits remain the soft-launch generate authority.

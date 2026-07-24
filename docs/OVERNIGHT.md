@@ -108,7 +108,8 @@
 67. [x] free stills never burn Mini trial (`free_trial_video_only` · health/me scope)
 68. [x] Seller Pack multi-download available + Modules freeTrial FAQ honesty
 69. [x] health.demos disk probe · demoClip on-disk fallback · image mergeMeSession + aspect echo
-70. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+70. [x] Library import/download URL safety · export downloadGate · me/generations HEAD · creditStatus server echo
+71. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -122,8 +123,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- health.demos: Lab mp4 + sample stills disk probe (Mode A fail if missing).  
-- demoClipForEffect prefers on-disk; generate demo isSafeDeliverableUrl; image mergeMeSession + aspect.  
+- Library: import/download refuse unsafe videoUrl; export downloadAllowed/downloadGate.  
+- historyFieldsFromSuccess uses server creditsOutcome; HEAD /api/me + /api/generations.  
 - Mode A still needs boss Vercel login · SQL · T6 bake.
 
 ---

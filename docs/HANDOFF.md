@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] Library URL safety + session HEAD probes
+- `history` import/normalize + `downloadVideoFile` refuse unsafe schemes (`isSafeDeliverableUrl`).
+- Export includes `downloadAllowed` / `downloadGate` (T6 Free-live honesty for support).
+- `historyFieldsFromSuccess` prefers server `creditsOutcome` / `costCredits`.
+- `HEAD /api/me` (plan/credits/trial) · `HEAD /api/generations` (open job counts).
+- softlive-checklist prints health.demos + freeTrial scope.
+- Verified: typecheck · lint · engine-smoke.
+
 ### 2026-07-24 — [grok] health demos probe + demo clip disk reliability
 - `lib/demoClips.probeDemoAssets` + health.demos (Lab mp4 + sample stills present/missing).
 - `demoClipForEffect` prefers on-disk assets so missing exact clips do not 404 the player.

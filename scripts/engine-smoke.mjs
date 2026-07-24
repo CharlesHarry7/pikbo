@@ -241,6 +241,11 @@ assert.match(pb, /MAX_EXTRA_CHARS/);
 const hist = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(hist, /remoteClipMayExpire/);
 assert.match(hist, /inputImage:\s*_drop|QuotaExceeded|strip heavy/);
+// Library import/download: refuse unsafe videoUrl schemes (parity with downloads gate).
+assert.match(hist, /isSafeDeliverableUrl/);
+assert.match(hist, /downloadGate|downloadAllowed/);
+assert.match(hist, /"unsafe"|return "unsafe"/);
+assert.match(gen, /creditsOutcome === "0 cached"|creditsOutcome === "10 used"/);
 
 assert.match(ent, /lastInvoiceId/);
 const wh = fs.readFileSync(join(root, "app/api/webhooks/stripe/route.ts"), "utf8");
@@ -1106,6 +1111,13 @@ assert.match(createStudio, /idempotentReplay|no second charge/);
 const meRoute = fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8");
 assert.match(meRoute, /freeTrial/);
 assert.match(meRoute, /seedance-mini|480p|exhausted/);
+// HEAD probes for ops / Library without full JSON body
+assert.match(meRoute, /export async function HEAD/);
+assert.match(meRoute, /X-Pikbo-Credits|X-Pikbo-Free-Trial-Exhausted/);
+assert.match(
+  fs.readFileSync(join(root, "app/api/generations/route.ts"), "utf8"),
+  /export async function HEAD[\s\S]*X-Pikbo-Jobs-Open/
+);
 assert.match(
   fs.readFileSync(join(root, "lib/meClient.ts"), "utf8"),
   /freeTrialExhausted|MeFreeTrial/
@@ -1444,8 +1456,10 @@ assert.doesNotMatch(
 const historySrcLib = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historySrcLib, /historyItemDownloadAllowed/);
 assert.match(historySrcLib, /canDownloadResult/);
+assert.match(historySrcLib, /isSafeDeliverableUrl/);
 assert.match(library, /historyItemDownloadAllowed/);
 assert.match(library, /Download blocked|download blocked/i);
+assert.match(library, /Unsafe deliverable URL|unsafe/);
 assert.match(library, /\/api\/downloads\//);
 assert.match(library, /method:\s*["']HEAD["']|X-Pikbo-Download-Code/);
 assert.match(createStudio, /\/api\/downloads\//);
@@ -2231,6 +2245,34 @@ assert.match(modulesMobileCtaSrc, /freeTrialExhausted/);
 assert.match(
   fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
   /modules\.mobile\.try.*Lab|Try free · Lab/
+);
+
+// Shared FreeTrialCta + Apps/Explore FAQ (Phase H indexable shelves)
+const freeTrialCtaSrc = fs.readFileSync(
+  join(root, "components/FreeTrialCta.tsx"),
+  "utf8"
+);
+assert.match(freeTrialCtaSrc, /freeTrialExhausted/);
+assert.match(freeTrialCtaSrc, /\/pricing/);
+assert.match(freeTrialCtaSrc, /sample=scout/);
+const appsPageSrc = fs.readFileSync(join(root, "app/apps/page.tsx"), "utf8");
+assert.match(appsPageSrc, /APPS_FAQ|Apps FAQ/);
+assert.match(appsPageSrc, /FAQPage/);
+assert.match(appsPageSrc, /FreeTrialCta/);
+assert.doesNotMatch(
+  appsPageSrc,
+  /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Try free/
+);
+const explorePageSrc = fs.readFileSync(
+  join(root, "app/explore/page.tsx"),
+  "utf8"
+);
+assert.match(explorePageSrc, /EXPLORE_FAQ|Explore FAQ/);
+assert.match(explorePageSrc, /FAQPage/);
+assert.match(explorePageSrc, /FreeTrialCta/);
+assert.match(
+  fs.readFileSync(join(root, "app/community/page.tsx"), "utf8"),
+  /FreeTrialCta/
 );
 
 console.log("engine-smoke: PASS");

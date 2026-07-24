@@ -244,7 +244,17 @@ export function historyFieldsFromSuccess(
     sourceProject: meta.sourceProject,
     channel: meta.channel,
     status: "succeeded",
-    creditStatus: data.demo ? "0 cached" : "10 used",
+    // Prefer server settlement echo over client demo guess (idempotent replay safe).
+    creditStatus:
+      data.creditsOutcome === "0 cached" || data.creditsOutcome === "10 used"
+        ? data.creditsOutcome
+        : typeof data.costCredits === "number"
+          ? data.costCredits === 0
+            ? "0 cached"
+            : "10 used"
+          : data.demo
+            ? "0 cached"
+            : "10 used",
   };
 }
 

@@ -73,11 +73,22 @@ print("ready=", h.get("ready"))
 print("rateLimit=", h.get("rateLimit"))
 print("assets=", h.get("assets"))
 print("jobs=", h.get("jobs"))
+print("demos=", h.get("demos"))
 print("videoWebhook=", h.get("videoWebhook"))
+billing=(h.get("billing") or {}).get("freeTrial") or {}
+if billing:
+    print(
+        "billing.freeTrial scope=", billing.get("scope"),
+        "stillsOnFree=", billing.get("stillsOnFree"),
+        "refunds=", billing.get("failedLiveRefunds"),
+    )
 cl=h.get("softLiveChecklist") or {}
 print("checklist fal=", cl.get("FAL_KEY"), "sessionSecret=", cl.get("SESSION_SECRET"))
 print("entitlements writable=", (h.get("entitlements") or {}).get("writable"))
 ready = h.get("ready") or {}
+demos=h.get("demos") or {}
+if demos.get("ok") is False:
+    print("WARN demos.ok=false missing=", demos.get("missing"), demos.get("samples"))
 if ready.get("softLive"):
     print("softLive ready= true")
 elif ready.get("demo"):

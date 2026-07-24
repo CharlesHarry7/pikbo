@@ -12,6 +12,35 @@ import {
 export const runtime = "nodejs";
 
 /**
+ * Cheap open-job probe for Library / ops — counts only (no job bodies).
+ * Sweeps timeouts so HEAD stays honest about mid-flight work.
+ */
+export async function HEAD() {
+  const session = await ensureSession();
+  sweepTimedOutJobs();
+  const listed = listJobsForSession(session.id, 30);
+  let open = 0;
+  let succeeded = 0;
+  let failed = 0;
+  for (const j of listed) {
+    if (j.status === "queued" || j.status === "running") open += 1;
+    else if (j.status === "succeeded") succeeded += 1;
+    else if (j.status === "failed" || j.status === "canceled") failed += 1;
+  }
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Cache-Control": "no-store",
+      "X-Pikbo-Jobs": String(listed.length),
+      "X-Pikbo-Jobs-Open": String(open),
+      "X-Pikbo-Jobs-Succeeded": String(succeeded),
+      "X-Pikbo-Jobs-Failed": String(failed),
+      "X-Pikbo-Job-Timeout-Ms": String(jobTimeoutMs()),
+    },
+  });
+}
+
+/**
  * Phase D — list recent jobs for this session (local memory adapter).
  * Durable async queue still requires Supabase; soft-launch sync path is
  * POST /api/generate, which records jobs into this ledger.
