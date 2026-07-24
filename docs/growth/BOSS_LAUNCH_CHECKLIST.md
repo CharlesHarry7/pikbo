@@ -1,7 +1,7 @@
 # 老板公网 Soft Launch 清单（哥飞 P0）
 
 **目标：** `https://pikbo.ai` 可访问、可试用，不收费。  
-**更新：** 2026-07-24 — DNS / Vercel / env **已完成**（外网验收 softLive=true）。
+**更新：** 2026-07-25 — **Mode A soft live + GSC 全链路完成**（WorkBuddy 回报 + 外网复核）。
 
 ---
 
@@ -9,48 +9,51 @@
 
 | 项 | 状态 |
 |----|------|
-| Vercel 部署 | ✅ |
-| `SESSION_SECRET` + `FAL_KEY` | ✅ health 显示 fal + sessionSecret |
-| DNS A/CNAME | ✅ `pikbo.ai` → 76.76.21.21 · www → vercel-dns |
-| 域名绑定 + SSL | ✅ Let's Encrypt 已签发 |
-| Generate soft live | ✅ 外网可 live-generate |
-| TDH 冻结 | ✅ `lib/site.ts` |
-| SEO 意图页矩阵 | ✅ /for /tools /toys /guides + IndexNow 脚本 |
+| Vercel 部署 | ✅ 项目 `pikbo` · 生产 `https://pikbo.ai` |
+| `SESSION_SECRET` + `FAL_KEY` | ✅ softLive · fal · live-generate |
+| DNS A/CNAME + SSL | ✅ |
+| Generate 冒烟 | ✅ Seedance Mini 真出片（WorkBuddy 2026-07-25） |
+| TDH 冻结 | ✅ `lib/site.ts`（1–4 周勿改） |
+| SEO 意图页 + IndexNow | ✅ Bing/api.indexnow 已推 |
+| **GSC 验证** | ✅ 已进后台（verification meta） |
+| **GSC Sitemap** | ✅ `/sitemap.xml` **成功** · 已发现 **94** 页 · 读取 2026-07-25 |
+| **GSC 请求收录** | ✅ 首页/create/for/photo-to-video/tools 等 6 URL 进优先队列 |
 
-**主域名：** https://pikbo.ai  
-（`*.vercel.app` 本环境可能超时，以自定义域名为准）
+**主域名：** https://pikbo.ai
 
 ---
 
-## 你还差的（Google 只能你点一次）
+## 可选 / 后补（非 blocker）
 
-### Google Search Console（约 5 分钟）
+### 付费目录站（WorkBuddy 探测 2026-07-25）
 
-1. 打开 https://search.google.com/search-console  
-2. 添加资源：`https://pikbo.ai`（网址前缀）  
-3. 验证：推荐 **DNS TXT**（Spaceship）或 HTML 标签（验证码发我可代写进代码）  
-4. 验证通过后 → **站点地图** → 提交：  
-   `https://pikbo.ai/sitemap.xml`
+| 站 | 状态 |
+|----|------|
+| TAAFT | 付费 launch，跳过 |
+| Futurepedia | $247+，跳过 |
+| Toolify | $99，跳过 |
+| AI Tool Hunt | 无免费提交入口 |
 
-工程侧 **Bing/Yandex** 已走 IndexNow（`npm run indexnow`，部署 key 文件后）。
+→ **不付费先不做**。可改走免费渠道：Product Hunt（时机自选）、Indie Hackers、Reddit 合规发帖、中文独立开发社群、免费「submit tool」小站。
 
-### 外链（可本周慢慢铺）
+### 工程后补
 
-见 `docs/growth/GEFEI_SEO_CHECKLIST_STATUS.md` 导航站列表。  
-落地页优先：`/` · `/for/photo-to-video-for-toys` · `/create`
+- T6 文件水印 bake（收费前）
+- Supabase 多机积分
+- Stripe live（刻意后开）
 
 ---
 
 ## 冻结纪律
 
-- **1–4 周不要改**首页 Title / Description / H1（`lib/site.ts`）  
-- Stripe live：先不要开  
+- 1–4 周 **不要改** 首页 Title / Description / H1  
+- Stripe live 先别开  
 
 ---
 
-## 工程自检命令
+## 外网自检
 
 ```bash
-curl -s https://pikbo.ai/api/health | jq '.acceptance,.fal,.sessionSecret,.mode'
-npm run indexnow   # 部署含 key 文件后
+curl -s https://pikbo.ai/api/health | jq '.acceptance,.fal,.mode'
+curl -s https://pikbo.ai/sitemap.xml | grep -c '<loc>'
 ```
