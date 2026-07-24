@@ -43,7 +43,12 @@ export const TOY_TYPES: ToyType[] = [
       "animate action figure",
       "make action figure move video",
     ],
-    recommendedEffects: ["make-figure-walk", "make-figure-dance", "kaiju-rampage"],
+    // Primary must be proof-backed for sitemap index (哥飞: no thin index)
+    recommendedEffects: [
+      "make-figure-walk",
+      "make-figure-dance",
+      "360-spin-showcase",
+    ],
     faq: [
       {
         q: "Does it animate my figure or generate a new one?",
@@ -71,7 +76,11 @@ export const TOY_TYPES: ToyType[] = [
       "plushie animation",
       "stuffed animal video",
     ],
-    recommendedEffects: ["plushie-comes-alive", "claw-machine-win", "toy-wave-hello"],
+    recommendedEffects: [
+      "floating-hero",
+      "make-figure-dance",
+      "360-spin-showcase",
+    ],
     faq: [
       {
         q: "Will it preserve every plush detail?",

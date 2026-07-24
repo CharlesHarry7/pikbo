@@ -10,6 +10,9 @@ import { LandingResults } from "@/components/LandingResults";
 import { site } from "@/lib/site";
 import { robotsForPrimaryEffect } from "@/lib/seoIndex";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
+import { LandingSeoMesh } from "@/components/LandingSeoMesh";
+import { JsonLd } from "@/components/JsonLd";
+import { softwareApplicationJsonLd } from "@/lib/jsonLd";
 
 export function generateStaticParams() {
   return TOY_TYPES.map((t) => ({ slug: t.slug }));
@@ -65,9 +68,15 @@ export default async function ToyTypePage({
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      <JsonLd
+        data={[
+          faqJsonLd,
+          softwareApplicationJsonLd({
+            name: `${t.h1} | ${site.name}`,
+            description: t.seoDescription,
+            url: `${site.url}/toys/${t.slug}`,
+          }),
+        ]}
       />
 
       <section className="glow-bg">
@@ -135,16 +144,27 @@ export default async function ToyTypePage({
         </div>
       </section>
 
-      <section className="container-x py-10">
+      <section className="container-x py-8">
         <h2 className="text-2xl font-bold">More toy types</h2>
         <div className="mt-6 flex flex-wrap gap-3">
-          {TOY_TYPES.filter((x) => x.slug !== t.slug).map((x) => (
-            <Link key={x.slug} href={`/toys/${x.slug}`} className="chip">
-              {x.emoji} {x.label}
-            </Link>
-          ))}
+          <Link href="/toys" className="chip">
+            All toy types →
+          </Link>
+          {TOY_TYPES.filter((x) => x.slug !== t.slug)
+            .slice(0, 12)
+            .map((x) => (
+              <Link key={x.slug} href={`/toys/${x.slug}`} className="chip">
+                {x.emoji} {x.label}
+              </Link>
+            ))}
         </div>
       </section>
+
+      <LandingSeoMesh
+        kind="for"
+        currentSlug={t.slug}
+        effectSlugs={t.recommendedEffects}
+      />
     </>
   );
 }

@@ -540,6 +540,161 @@ export const TOOLS: Tool[] = [
       },
     ],
   },
+  // --- 哥飞 cold-start long-tails (proof-backed primary recipes) ---
+  {
+    slug: "figure-360-product-video",
+    emoji: "🔄",
+    label: "360 figure video",
+    h1: "Figure 360° Product Video From One Photo",
+    seoTitle: "Figure 360 Product Video Generator | Pikbo",
+    seoDescription:
+      "Make a 360° product video of a figure from one photo — no turntable. Free Mini trial for toy listings and storefronts.",
+    intro:
+      "Need a turntable look without the rig? This tool turns one owned figure photo into a short 360-style product spin for listings and shop pages.",
+    body: [
+      "Marketplace buyers want to sense depth. A calm spin answers more questions than three extra stills.",
+      "Start with a front-facing packshot on a plain background. Free Mini is Seedance Mini at 5s · 480p with an on-player mark.",
+      "Review sculpt and paint before you publish. High-value figures need stricter QA than mass blind boxes.",
+      "Related jobs: Etsy listing page, Amazon product video use case, and the spin effect landing — each keeps its own TDH.",
+    ],
+    keywords: [
+      "figure 360 product video",
+      "toy turntable video generator",
+      "360 figure video from photo",
+    ],
+    primaryEffect: "360-spin-showcase",
+    effects: ["360-spin-showcase", "display-case-glam", "floating-hero"],
+    faq: [
+      {
+        q: "Do I need a physical turntable?",
+        a: "No. Upload one clear photo and run the spin recipe. Always QA the result.",
+      },
+      {
+        q: "Is Free Mini unlimited?",
+        a: "No. Soft launch Free Mini has fixed caps. Lab demos are free cached samples and never process your upload.",
+      },
+    ],
+  },
+  {
+    slug: "blind-box-reveal-video-maker",
+    emoji: "📦",
+    label: "Blind box reveal",
+    h1: "Blind Box Reveal Video Maker From One Photo",
+    seoTitle: "Blind Box Reveal Video Maker | Pikbo",
+    seoDescription:
+      "Create a blind box reveal clip from one figure photo for TikTok and drops. Free Mini trial with honest limits.",
+    intro:
+      "Reveal energy sells the dopamine of a pull. Pikbo drafts an unboxing-style clip from one photo of a toy you own — for drops, restocks, and short-form hooks.",
+    body: [
+      "Lead with the first second: lid motion or mystery light works better than a slow fade.",
+      "Use vertical recipes for TikTok/Reels. Keep Free Mini caps in mind (5s · 480p · mark).",
+      "Brand teams: draft teasers before a drop; collectors: flex a pull. Rights still required on upload.",
+      "Pair with the blind-box brand /for page and TikTok Shop use case for channel-specific copy.",
+    ],
+    keywords: [
+      "blind box reveal video",
+      "blind box unboxing video maker",
+      "mystery box video generator",
+    ],
+    primaryEffect: "blind-box-unboxing",
+    effects: ["blind-box-unboxing", "mystery-box-reveal", "paparazzi-flash"],
+    faq: [
+      {
+        q: "Can I use a stock unbox template?",
+        a: "Recipes are toy-native templates. Your photo is the product reference — review likeness before posting.",
+      },
+    ],
+  },
+  {
+    slug: "tiktok-toy-video-from-photo",
+    emoji: "📱",
+    label: "TikTok toy video",
+    h1: "TikTok Toy Video From One Photo",
+    seoTitle: "TikTok Toy Video Generator From Photo | Pikbo",
+    seoDescription:
+      "Make a short TikTok toy video from one photo — vertical hooks for figures and blind boxes. Free Mini trial, no card.",
+    intro:
+      "Short-form toy content needs a strong open. Upload one owned photo, pick a vertical-friendly recipe, and draft a TikTok-ready clip.",
+    body: [
+      "Vertical 9:16 is the default for social hooks. Spin still works if your feed is product-first.",
+      "Soft launch Free Mini is enough to test a hook; do not expect unlimited free exports.",
+      "Caption and sound still matter — Pikbo drafts the motion layer, not the full growth system.",
+      "Channel-specific SEO also lives on /for/tiktok-shop-product-videos.",
+    ],
+    keywords: [
+      "tiktok toy video",
+      "toy video for tiktok from photo",
+      "figure tiktok video maker",
+    ],
+    primaryEffect: "paparazzi-flash",
+    effects: ["paparazzi-flash", "make-figure-dance", "blind-box-unboxing"],
+    faq: [
+      {
+        q: "Will this go viral?",
+        a: "No guarantee. We draft clips; distribution and creative testing are yours.",
+      },
+    ],
+  },
+  {
+    slug: "shopify-product-video-for-toys",
+    emoji: "🛒",
+    label: "Shopify toy video",
+    h1: "Shopify Product Video for Toys From One Photo",
+    seoTitle: "Shopify Toy Product Video Generator | Pikbo",
+    seoDescription:
+      "Add a product video to Shopify toy listings from one photo. Calm spins and hero floats for DTC shops. Free Mini trial.",
+    intro:
+      "DTC toy shops on Shopify convert better with motion on the PDP. Draft a spin or hero clip from the packshot you already use.",
+    body: [
+      "Prefer calm motion for PDPs; save flashy social recipes for ads.",
+      "Export aspect that matches your theme gallery. QA every SKU — AI can smear logos.",
+      "Free Mini validates one hero SKU; batch more when paid credits are available.",
+      "Also see Amazon and Etsy use-case pages if you sell multi-channel.",
+    ],
+    keywords: [
+      "shopify product video toys",
+      "toy shopify video maker",
+      "dtc toy product video",
+    ],
+    primaryEffect: "360-spin-showcase",
+    effects: ["360-spin-showcase", "floating-hero", "display-case-glam"],
+    faq: [
+      {
+        q: "Does Pikbo upload to Shopify?",
+        a: "No. Download the clip and add it in your Shopify admin or theme.",
+      },
+    ],
+  },
+  {
+    slug: "designer-toy-teaser-video",
+    emoji: "✨",
+    label: "Toy teaser",
+    h1: "Designer Toy Teaser Video From One Photo",
+    seoTitle: "Designer Toy Teaser Video Generator | Pikbo",
+    seoDescription:
+      "Draft a designer toy launch teaser from one photo — floating hero and reveal energy for drops. Free Mini trial.",
+    intro:
+      "Launch weeks need teaser loops. Reuse the lookbook still as a short floating hero or mystery reveal without a full motion studio.",
+    body: [
+      "Floating hero sells premium. Mystery reveal sells curiosity. Match the recipe to the announcement beat.",
+      "Keep claims honest: soft launch model is Seedance Mini on Free Mini; Lab demos are labeled cached samples.",
+      "Brand end-cards and logos still belong in your editor after download.",
+      "See also /for/designer-toy-marketing-videos for the full marketing job page.",
+    ],
+    keywords: [
+      "designer toy teaser video",
+      "toy drop teaser generator",
+      "art toy launch video",
+    ],
+    primaryEffect: "floating-hero",
+    effects: ["floating-hero", "mystery-box-reveal", "smoke-burst-entrance"],
+    faq: [
+      {
+        q: "Can I batch a whole drop?",
+        a: "One photo per SKU per run. Seller Pack can fan out formats when you use that mode.",
+      },
+    ],
+  },
 ];
 
 export function getTool(slug: string): Tool | undefined {
