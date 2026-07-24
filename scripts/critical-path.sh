@@ -54,6 +54,7 @@ need "/api/health"
 need "/api/me"
 need "/api/auth/status"
 need "/api/generations"
+need "/api/community/posts"
 
 # HEAD health must stay cheap for uptime probes
 head_code=$(curl --noproxy '*' -sS -o /dev/null -w "%{http_code}" -m 10 -I "${BASE}/api/health" || echo "000")
@@ -78,6 +79,14 @@ if [[ "$gens_head" != "200" ]]; then
 fi
 echo "OK   HEAD /api/generations → ${gens_head} open=$(grep -i '^X-Pikbo-Jobs-Open:' /tmp/pikbo-gens.headers | tr -d '\r' | awk '{print $2}') total=$(grep -i '^X-Pikbo-Jobs:' /tmp/pikbo-gens.headers | tr -d '\r' | awk '{print $2}')"
 
+# HEAD community UGC configured flag
+comm_head=$(curl --noproxy '*' -sS -D /tmp/pikbo-comm.headers -o /dev/null -w "%{http_code}" -m 10 -I "${BASE}/api/community/posts" || echo "000")
+if [[ "$comm_head" != "200" ]]; then
+  echo "FAIL HEAD /api/community/posts → HTTP ${comm_head}"
+  exit 1
+fi
+echo "OK   HEAD /api/community/posts → ${comm_head} ugc=$(grep -i '^X-Pikbo-Community-Ugc:' /tmp/pikbo-comm.headers | tr -d '\r' | awk '{print $2}')"
+
 curl --noproxy '*' -sS -m 10 "${BASE}/api/health" | tee /tmp/pikbo-health.json
 echo
 curl --noproxy '*' -sS -m 10 "${BASE}/api/me" | tee /tmp/pikbo-me.json
@@ -85,6 +94,8 @@ echo
 curl --noproxy '*' -sS -m 10 "${BASE}/api/auth/status" | tee /tmp/pikbo-auth.json
 echo
 curl --noproxy '*' -sS -m 10 "${BASE}/api/generations" | tee /tmp/pikbo-gens.json
+echo
+curl --noproxy '*' -sS -m 10 "${BASE}/api/community/posts" | tee /tmp/pikbo-community.json
 echo
 
 if command -v python3 >/dev/null 2>&1; then
@@ -155,6 +166,26 @@ if demos:
     )
     if demos.get("ok") is False:
         print(f"WARN Lab demos missing on disk: {demos.get('missing')}")
+comm=h.get("community") or {}
+if comm:
+    print(f"community ugcConfigured={comm.get('ugcConfigured')}")
+else:
+    print("WARN health.community missing")
+# Community list honesty — empty is OK (labOnly); never invent posts
+try:
+    cposts=json.load(open("/tmp/pikbo-community.json"))
+    assert cposts.get("ok") is True or cposts.get("ugc") is True or "posts" in cposts
+    posts=cposts.get("posts") or []
+    print(
+        f"community posts count={cposts.get('count', len(posts))} "
+        f"labOnly={cposts.get('labOnly')} configured={cposts.get('configured')}"
+    )
+    if len(posts) == 0 and cposts.get("labOnly") is not True:
+        print("WARN empty community posts should set labOnly=true")
+except FileNotFoundError:
+    print("WARN /api/community/posts body missing")
+except Exception as e:
+    raise SystemExit(f"community posts honesty fail: {e}")
 auth=json.load(open("/tmp/pikbo-auth.json"))
 assert "configured" in auth or "mode" in auth or auth.get("ok") is not None or "providers" in auth or True
 print(f"auth keys={list(auth.keys())[:8]}")

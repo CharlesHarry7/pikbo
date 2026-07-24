@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] community posts rate limits + HEAD probe
+- POST publish: IP 12/min + token 6/min with Retry-After (process-memory).
+- GET list: IP 60/min scrape guard; HEAD `X-Pikbo-Community-Ugc` for ops.
+- critical-path + mode-a-acceptance + softlive print community honesty.
+- Verified: typecheck · lint · engine-smoke.
+
 ### 2026-07-24 — [grok] Settings Phase C/D honesty + cmd-K Lab label
 - Settings: cookie vs durable authority, reserved, session jobs HEAD, live T6 from health.
 - FreeTrialCta; clear onboard uses `pikbo_onboard_v3` (matches banner).

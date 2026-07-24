@@ -105,6 +105,11 @@ if demos:
         sys.exit(f"FAIL health.demos not ok — missing clips={miss} stills={sm}")
 else:
     print("WARN health.demos probe missing — preferred Mode A Lab integrity")
+comm=h.get("community") or {}
+if comm:
+    print(f"community ugcConfigured={comm.get('ugcConfigured')} note={comm.get('note')}")
+else:
+    print("WARN health.community missing — preferred Lab-only UGC honesty probe")
 rl=h.get("rateLimit") or {}
 if isinstance(rl, dict):
     print(f"rateLimit inflight={rl.get('inflight')} ttlMs={rl.get('inflightTtlMs')}")

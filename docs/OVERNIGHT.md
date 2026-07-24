@@ -115,7 +115,8 @@
 74. [x] generateClient refuse unsafe 200 videoUrl · Batch download/player URL safety
 75. [x] T6 live download gate recompute · never raw Free · HEAD X-Pikbo-T6/Bake
 76. [x] Library/Create/Landing video URL safety · imageHistory sanitize · health.community
-77. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+77. [x] community posts rate limits + HEAD · CP/Mode A community honesty
+78. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -129,8 +130,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Library/Create/Landing: video src + open/copy gated on isSafeDeliverableUrl.  
-- imageHistory refuses unsafe schemes; health.community.ugcConfigured + StatusProbe.  
+- community POST/GET rate limits; HEAD X-Pikbo-Community-Ugc ops probe.  
+- critical-path + mode-a assert community list labOnly honesty.  
 - Mode A still needs boss Vercel login · SQL · T6 bake worker.
 
 ---

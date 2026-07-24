@@ -204,6 +204,25 @@ assert.match(healthRoute, /video-create-only/);
 assert.match(healthRoute, /stillsOnFree:\s*"demo-only"/);
 assert.match(healthRoute, /probeDemoAssets|demos:\s*probeDemoAssets/);
 assert.match(healthRoute, /communityUgcConfigured|ugcConfigured/);
+// Community UGC: rate limits + HEAD probe + never-fake empty list
+const communityPostsRoute = fs.readFileSync(
+  join(root, "app/api/community/posts/route.ts"),
+  "utf8"
+);
+assert.match(communityPostsRoute, /export async function HEAD/);
+assert.match(communityPostsRoute, /X-Pikbo-Community-Ugc/);
+assert.match(communityPostsRoute, /takeToken/);
+assert.match(communityPostsRoute, /RATE_LIMITED/);
+assert.match(communityPostsRoute, /labOnly/);
+assert.match(communityPostsRoute, /clientIp/);
+assert.match(
+  fs.readFileSync(join(root, "lib/communityPosts.ts"), "utf8"),
+  /isSafeDeliverableUrl/
+);
+assert.match(
+  fs.readFileSync(join(root, "scripts/critical-path.sh"), "utf8"),
+  /\/api\/community\/posts|X-Pikbo-Community-Ugc/
+);
 assert.match(
   fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8"),
   /stillsOnFree:\s*"demo-only"/

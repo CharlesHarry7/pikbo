@@ -74,6 +74,7 @@ print("rateLimit=", h.get("rateLimit"))
 print("assets=", h.get("assets"))
 print("jobs=", h.get("jobs"))
 print("demos=", h.get("demos"))
+print("community=", h.get("community"))
 print("videoWebhook=", h.get("videoWebhook"))
 billing=(h.get("billing") or {}).get("freeTrial") or {}
 if billing:
