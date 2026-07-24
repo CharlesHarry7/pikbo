@@ -57,6 +57,10 @@ type Health = {
     secretConfigured?: boolean;
     requiresSecretInProduction?: boolean;
   };
+  community?: {
+    ugcConfigured?: boolean;
+    note?: string;
+  };
 };
 
 export function StatusProbe() {
@@ -173,6 +177,13 @@ export function StatusProbe() {
         ? "set"
         : "missing (prod refuses unsigned)",
       data.videoWebhook?.secretConfigured,
+    ],
+    [
+      "Community UGC",
+      data.community?.ugcConfigured
+        ? "Supabase configured (empty still = Lab only)"
+        : "not configured — Lab only",
+      data.community?.ugcConfigured,
     ],
   ];
 

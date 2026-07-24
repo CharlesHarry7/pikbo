@@ -15,6 +15,7 @@ import {
   type HistoryItem,
 } from "@/lib/history";
 import { createRemixHref } from "@/lib/remixIntent";
+import { isSafeDeliverableUrl } from "@/lib/createTrust";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { useToast } from "@/components/Toast";
 import { PROVENANCE, resultProvenanceLabel } from "@/lib/provenance";
@@ -487,6 +488,10 @@ export function LibraryGrid() {
   }
 
   async function copyLink(url: string) {
+    if (!isSafeDeliverableUrl(url)) {
+      toast("Unsafe deliverable URL — not copied");
+      return;
+    }
     try {
       await navigator.clipboard.writeText(url);
       toast("Link copied");
@@ -833,14 +838,20 @@ export function LibraryGrid() {
             {group.items.map((item) => (
               <article key={item.id} className="card group overflow-hidden p-0">
                 <div className="relative aspect-video bg-black/50">
-                  <video
-                    src={item.videoUrl}
-                    className="h-full w-full object-contain"
-                    controls
-                    muted
-                    playsInline
-                    preload="metadata"
-                  />
+                  {isSafeDeliverableUrl(item.videoUrl) ? (
+                    <video
+                      src={item.videoUrl}
+                      className="h-full w-full object-contain"
+                      controls
+                      muted
+                      playsInline
+                      preload="metadata"
+                    />
+                  ) : (
+                    <div className="grid h-full place-items-center p-4 text-center text-[11px] text-amber-100/80">
+                      Unsafe video URL — not rendered
+                    </div>
+                  )}
                   <div className="pointer-events-none absolute left-2 top-2 flex flex-wrap gap-1">
                     <span
                       className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase text-white/90 ${
@@ -895,7 +906,9 @@ export function LibraryGrid() {
                     </p>
                   ) : null}
                   <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                    {historyItemDownloadAllowed(item) ? (
+                    {historyItemDownloadAllowed(item) &&
+                    (item.requestId ||
+                      isSafeDeliverableUrl(item.videoUrl)) ? (
                       <a
                         href={
                           item.requestId
@@ -911,7 +924,11 @@ export function LibraryGrid() {
                     ) : (
                       <span
                         className="text-xs font-medium text-[var(--fg-dim)]"
-                        title={historyDownloadBlockReason()}
+                        title={
+                          historyItemDownloadAllowed(item)
+                            ? "Unsafe deliverable URL"
+                            : historyDownloadBlockReason()
+                        }
                       >
                         Open raw blocked
                       </span>
@@ -940,6 +957,10 @@ export function LibraryGrid() {
                       onClick={() => {
                         if (!historyItemDownloadAllowed(item)) {
                           toast(historyDownloadBlockReason());
+                          return;
+                        }
+                        if (!isSafeDeliverableUrl(item.videoUrl)) {
+                          toast("Unsafe deliverable URL — not copied");
                           return;
                         }
                         void copyLink(item.videoUrl);

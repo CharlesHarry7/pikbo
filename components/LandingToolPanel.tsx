@@ -599,7 +599,11 @@ export function LandingToolPanel({
                 )}
               </div>
               <video
-                src={videoUrl}
+                src={
+                  videoUrl && isSafeDeliverableUrl(videoUrl)
+                    ? videoUrl
+                    : undefined
+                }
                 controls
                 autoPlay
                 loop

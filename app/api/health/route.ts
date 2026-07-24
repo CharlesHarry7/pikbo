@@ -13,6 +13,7 @@ import { paymentsReadiness } from "@/lib/stripe";
 import { inflightJobCount, inflightTtlMs } from "@/lib/rateLimit";
 import { localAssetsProbe } from "@/lib/localAssets";
 import { probeDemoAssets } from "@/lib/demoClips";
+import { communityUgcConfigured } from "@/lib/communityPosts";
 // NextResponse used for GET + HEAD
 
 export const runtime = "nodejs";
@@ -150,6 +151,14 @@ export async function GET() {
      * Demo generate + homepage walls need these files — missing ⇒ player 404.
      */
     demos: probeDemoAssets(),
+    /**
+     * Real community UGC (Supabase). Never invent posts when empty —
+     * UI must show Lab only (labOnly honesty).
+     */
+    community: {
+      ugcConfigured: communityUgcConfigured(),
+      note: "Real posts only when Supabase + migration applied; empty = Lab only",
+    },
     /** Phase D process-memory job ledger (counts only) */
     jobs: generationJobsProbe(),
     /**

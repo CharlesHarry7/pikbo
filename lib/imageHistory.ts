@@ -1,3 +1,5 @@
+import { isSafeDeliverableUrl } from "@/lib/createTrust";
+
 export type ImageHistoryItem = {
   id: string;
   imageUrl: string;
@@ -13,6 +15,13 @@ const KEY = "pikbo_image_library_v1";
 const MAX = 24;
 /** Skip persisting huge data URLs (demo SVG can be large base64). */
 const MAX_STORE_URL_CHARS = 120_000;
+
+/** data:image/* demos + http(s)/path stills — reject javascript: and other schemes. */
+export function isSafeImageHistoryUrl(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  if (url.startsWith("data:image/")) return true;
+  return isSafeDeliverableUrl(url);
+}
 
 function slimItem(item: ImageHistoryItem): ImageHistoryItem {
   if (
@@ -58,7 +67,8 @@ export function loadImageHistory(): ImageHistoryItem[] {
           i &&
           typeof i.prompt === "string" &&
           typeof i.imageUrl === "string" &&
-          i.imageUrl
+          i.imageUrl &&
+          isSafeImageHistoryUrl(i.imageUrl)
       )
       .map((i) => ({
         ...i,
@@ -78,6 +88,10 @@ export function loadImageHistory(): ImageHistoryItem[] {
 export function pushImageHistory(
   item: Omit<ImageHistoryItem, "id" | "createdAt">
 ): ImageHistoryItem[] {
+  if (!isSafeImageHistoryUrl(item.imageUrl)) {
+    // Refuse to persist unsafe schemes — return current store unchanged.
+    return loadImageHistory();
+  }
   const next: ImageHistoryItem = {
     ...item,
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,

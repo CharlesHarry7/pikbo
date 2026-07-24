@@ -2231,7 +2231,11 @@ export function CreateStudio({
                       </p>
                       <video
                         key={videoUrl}
-                        src={videoUrl}
+                        src={
+                          videoUrl && isSafeDeliverableUrl(videoUrl)
+                            ? videoUrl
+                            : undefined
+                        }
                         controls
                         autoPlay
                         loop
@@ -2253,7 +2257,11 @@ export function CreateStudio({
                   <div className="relative">
                     <video
                       key={videoUrl}
-                      src={videoUrl}
+                      src={
+                        videoUrl && isSafeDeliverableUrl(videoUrl)
+                          ? videoUrl
+                          : undefined
+                      }
                       controls
                       autoPlay
                       loop
