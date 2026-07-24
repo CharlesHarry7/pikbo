@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] Library/Create video URL safety + health.community
+- Library: safe video render, open/copy gates; Create/Landing player `src` only when safe.
+- `imageHistory` load/push refuse non-image schemes (`isSafeImageHistoryUrl`).
+- health.community.ugcConfigured + StatusProbe Community UGC row (Lab-only when empty).
+- Verified: typecheck · lint · engine-smoke.
+
 ### 2026-07-24 — [grok] Phase C Profile durable honesty + FreeTrial residual
 - ProfilePanel: cookie vs durable authority, backend (local-file/supabase), reserved,
   process-memory open jobs via HEAD /api/generations.
