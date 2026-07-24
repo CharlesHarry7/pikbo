@@ -163,10 +163,19 @@ assert.match(imgRoute, /Retry-After/);
 const healthRoute = fs.readFileSync(join(root, "app/api/health/route.ts"), "utf8");
 assert.match(healthRoute, /video-create-only/);
 assert.match(healthRoute, /stillsOnFree:\s*"demo-only"/);
+assert.match(healthRoute, /probeDemoAssets|demos:\s*probeDemoAssets/);
 assert.match(
   fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8"),
   /stillsOnFree:\s*"demo-only"/
 );
+
+// Demo catalog: disk probe + prefer on-disk clip (no player 404)
+const demoClipsSrc = fs.readFileSync(join(root, "lib/demoClips.ts"), "utf8");
+assert.match(demoClipsSrc, /export function probeDemoAssets/);
+assert.match(demoClipsSrc, /export function demoAssetOnDisk/);
+assert.match(demoClipsSrc, /demoAssetOnDisk/);
+assert.match(genRoute, /isSafeDeliverableUrl\(videoUrl\)/);
+assert.match(imgRoute, /aspect:\s*aspectEcho|aspect,\s*$/m);
 
 const ent = fs.readFileSync(join(root, "lib/entitlements.ts"), "utf8");
 assert.match(ent, /probeEntitlementsStore/);
@@ -1213,6 +1222,8 @@ const imagePage = fs.readFileSync(join(root, "app/image/page.tsx"), "utf8");
 assert.match(imagePage, /AbortController|Cancel request/);
 assert.match(imagePage, /refund unconfirmed|Request canceled/);
 assert.match(imagePage, /GenerateSuiteChrome|canHandOffStill|stashPendingStill/);
+// FreeTrial honesty after still job (PublicSession merge must rehydrate)
+assert.match(imagePage, /mergeMeSession/);
 assert.match(
   fs.readFileSync(join(root, "components/GenerateSuiteChrome.tsx"), "utf8"),
   /id:\s*["']image["']|href:\s*["']\/image["']/

@@ -127,7 +127,19 @@ else:
 billing=(h.get("billing") or {})
 bft=billing.get("freeTrial") or {}
 if bft:
-    print(f"health.billing.freeTrial clips={bft.get('clipsPerPeriod')} refunds={bft.get('failedLiveRefunds')}")
+    print(
+        f"health.billing.freeTrial clips={bft.get('clipsPerPeriod')} "
+        f"refunds={bft.get('failedLiveRefunds')} scope={bft.get('scope')}"
+    )
+    if bft.get("scope") == "video-create-only":
+        print(f"stillsOnFree={bft.get('stillsOnFree')}")
+demos=h.get("demos") or {}
+if demos:
+    print(
+        f"demos ok={demos.get('ok')} present={demos.get('present')}/{demos.get('required')}"
+    )
+    if demos.get("ok") is False:
+        print(f"WARN Lab demos missing on disk: {demos.get('missing')}")
 auth=json.load(open("/tmp/pikbo-auth.json"))
 assert "configured" in auth or "mode" in auth or auth.get("ok") is not None or "providers" in auth or True
 print(f"auth keys={list(auth.keys())[:8]}")

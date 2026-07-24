@@ -12,6 +12,7 @@ import { generationJobsProbe, jobTimeoutMs } from "@/lib/generationJobs";
 import { paymentsReadiness } from "@/lib/stripe";
 import { inflightJobCount, inflightTtlMs } from "@/lib/rateLimit";
 import { localAssetsProbe } from "@/lib/localAssets";
+import { probeDemoAssets } from "@/lib/demoClips";
 // NextResponse used for GET + HEAD
 
 export const runtime = "nodejs";
@@ -144,6 +145,11 @@ export async function GET() {
     },
     /** Phase D process-memory still registry (never echoes image bytes) */
     assets: localAssetsProbe(),
+    /**
+     * Cached Lab mp4 + one-click sample stills on this host (Mode A ops).
+     * Demo generate + homepage walls need these files — missing ⇒ player 404.
+     */
+    demos: probeDemoAssets(),
     /** Phase D process-memory job ledger (counts only) */
     jobs: generationJobsProbe(),
     /**

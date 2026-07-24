@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] health demos probe + demo clip disk reliability
+- `lib/demoClips.probeDemoAssets` + health.demos (Lab mp4 + sample stills present/missing).
+- `demoClipForEffect` prefers on-disk assets so missing exact clips do not 404 the player.
+- Generate demo path validates `isSafeDeliverableUrl` before success ledger.
+- Image: `mergeMeSession` after still job · history restores settlement · server echoes aspect.
+- mode-a-acceptance fails if demos.ok false; freeTrial.scope/stillsOnFree gates.
+- Verified: typecheck · lint · engine-smoke.
+
 ### 2026-07-24 — [grok] Seller Pack multi-download + Modules freeTrial FAQ
 - Phase F: `sellerPackAvailableDownloads` / download href prefers `/api/downloads`; Batch **Download available** sequential multi-file (no fake ZIP of failures).
 - Modules: freeTrial-honest CTAs (`ModulesSuiteCtas` + mobile); FAQ + FAQPage JSON-LD; Mini 5s copy (not 10s).

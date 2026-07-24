@@ -301,8 +301,24 @@ export async function POST(req: Request) {
     // --- Demo path (no provider): free cached Lab clips — matches pricing honesty ---
     if (!process.env.FAL_KEY) {
       await new Promise((r) => setTimeout(r, 600));
+      // Prefer on-disk clip; refuse unsafe paths even from internal catalog.
+      let videoUrl = demoClipForEffect(preset.slug);
+      if (!isSafeDeliverableUrl(videoUrl)) {
+        videoUrl = "/demos/orbit-dance.mp4";
+      }
+      if (!isSafeDeliverableUrl(videoUrl)) {
+        return err(
+          {
+            error:
+              "Demo catalog has no safe deliverable on this host — check Lab demos deploy",
+            code: "MODEL_EMPTY",
+            session: publicSession(session),
+          },
+          502
+        );
+      }
       const payload: GenerateSuccess = {
-        videoUrl: demoClipForEffect(preset.slug),
+        videoUrl,
         demo: true,
         demoReason: "no_provider_key",
         watermark: plan.watermark,

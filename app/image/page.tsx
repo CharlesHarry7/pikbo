@@ -10,7 +10,7 @@ import {
   removeImageHistoryItem,
   type ImageHistoryItem,
 } from "@/lib/imageHistory";
-import { fetchMe, type MeResponse } from "@/lib/meClient";
+import { fetchMe, mergeMeSession, type MeResponse } from "@/lib/meClient";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 
@@ -141,13 +141,9 @@ export default function ImageStudioPage() {
               : `${data.costCredits} used`
             : null;
       setLastSettlement(outcome);
-      // Authoritative session after still job (credits unchanged on free demo).
+      // Authoritative session after still job — rehydrate freeTrial (badge honesty).
       if (data.session && typeof data.session === "object") {
-        setMe((prev) =>
-          prev
-            ? { ...prev, ...data.session }
-            : (data.session as MeResponse)
-        );
+        setMe((prev) => mergeMeSession(prev, data.session as MeResponse));
       }
       // Store live URLs + labeled demo placeholders so history stays honest.
       if (data.imageUrl) {
@@ -442,6 +438,19 @@ export default function ImageStudioPage() {
                     onClick={() => {
                       setImageUrl(h.imageUrl);
                       setDemo(Boolean(h.demo));
+                      setDemoReason(h.demo ? "history" : null);
+                      setLastSettlement(
+                        h.creditsOutcome === "0 cached" ||
+                          h.creditsOutcome === "10 used"
+                          ? h.creditsOutcome
+                          : h.demo
+                            ? "0 cached"
+                            : typeof h.costCredits === "number"
+                              ? h.costCredits === 0
+                                ? "0 cached"
+                                : `${h.costCredits} used`
+                              : null
+                      );
                     }}
                   />
                   {h.demo && (

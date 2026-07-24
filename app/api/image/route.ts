@@ -82,6 +82,11 @@ export async function POST(req: Request) {
 
   try {
     // Shared free/demo still — never charges credits (video-first free trial honesty).
+    const aspectEcho =
+      typeof body.aspect === "string" && body.aspect.trim()
+        ? body.aspect.trim().slice(0, 16)
+        : "3:4";
+
     const demoStillPayload = (demoReason: "no_provider_key" | "free_trial_video_only") => {
       // placeholder gradient SVG data URL as demo (lime/black brand, not purple)
       const sub =
@@ -95,6 +100,7 @@ export async function POST(req: Request) {
         demo: true as const,
         demoReason,
         model: "demo",
+        aspect: aspectEcho,
         session: publicSession(session),
         // Parity with /api/generate honesty — cached demos never charge.
         costCredits: 0,
@@ -155,7 +161,7 @@ export async function POST(req: Request) {
 
     try {
       fal.config({ credentials: process.env.FAL_KEY });
-      const aspect = body.aspect || "3:4";
+      const aspect = aspectEcho;
       // flux schnell uses image_size enums often
       const sizeMap: Record<string, string> = {
         "1:1": "square_hd",
@@ -210,6 +216,7 @@ export async function POST(req: Request) {
         imageUrl,
         demo: false,
         model: IMAGE_MODEL,
+        aspect,
         session: publicSession(session),
         // Server-echo settlement (Wave B parity with generate).
         costCredits: check.cost,

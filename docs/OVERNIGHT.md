@@ -107,7 +107,8 @@
 66. [x] freeTrial rehydrate after generate merge (stale exhausted/clipsLeft)
 67. [x] free stills never burn Mini trial (`free_trial_video_only` · health/me scope)
 68. [x] Seller Pack multi-download available + Modules freeTrial FAQ honesty
-69. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+69. [x] health.demos disk probe · demoClip on-disk fallback · image mergeMeSession + aspect echo
+70. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -121,8 +122,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Free stills honesty: `/api/image` free plan → labeled demo 0cr (`free_trial_video_only`); paid Flux only.  
-- health.billing.freeTrial.scope=video-create-only · me.stillsOnFree · Still studio CTA honest.  
+- health.demos: Lab mp4 + sample stills disk probe (Mode A fail if missing).  
+- demoClipForEffect prefers on-disk; generate demo isSafeDeliverableUrl; image mergeMeSession + aspect.  
 - Mode A still needs boss Vercel login · SQL · T6 bake.
 
 ---

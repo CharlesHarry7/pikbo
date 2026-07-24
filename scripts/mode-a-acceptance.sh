@@ -79,12 +79,32 @@ bft=billing.get("freeTrial") or {}
 if bft:
     print(
         f"billing.freeTrial clips={bft.get('clipsPerPeriod')} "
-        f"model={bft.get('modelClass')} refunds={bft.get('failedLiveRefunds')}"
+        f"model={bft.get('modelClass')} refunds={bft.get('failedLiveRefunds')} "
+        f"scope={bft.get('scope')} stillsOnFree={bft.get('stillsOnFree')}"
     )
     if bft.get("failedLiveRefunds") is not True:
         sys.exit("FAIL health.billing.freeTrial.failedLiveRefunds must be true")
+    if bft.get("scope") not in (None, "video-create-only"):
+        sys.exit("FAIL health.billing.freeTrial.scope must be video-create-only")
+    if bft.get("scope") == "video-create-only" and bft.get("stillsOnFree") not in (
+        None,
+        "demo-only",
+    ):
+        sys.exit("FAIL stillsOnFree must be demo-only when free trial is video-only")
 else:
     print("WARN health.billing.freeTrial missing — preferred soft-launch contract")
+demos=h.get("demos") or {}
+if demos:
+    print(
+        f"demos ok={demos.get('ok')} present={demos.get('present')}/{demos.get('required')} "
+        f"samples={ (demos.get('samples') or {}).get('present') }/{ (demos.get('samples') or {}).get('required') }"
+    )
+    if demos.get("ok") is not True:
+        miss=demos.get("missing") or []
+        sm=(demos.get("samples") or {}).get("missing") or []
+        sys.exit(f"FAIL health.demos not ok — missing clips={miss} stills={sm}")
+else:
+    print("WARN health.demos probe missing — preferred Mode A Lab integrity")
 rl=h.get("rateLimit") or {}
 if isinstance(rl, dict):
     print(f"rateLimit inflight={rl.get('inflight')} ttlMs={rl.get('inflightTtlMs')}")
