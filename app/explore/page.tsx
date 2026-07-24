@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ExploreProjectGrid } from "@/components/ExploreProjectGrid";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import {
   SHOWCASE_CATEGORIES,
   listShowcaseProjects,
@@ -20,6 +21,22 @@ export const metadata: Metadata = {
     url: `${site.url}/explore`,
   },
 };
+
+/** Phase H: FAQ for indexable Explore (tool + proof + intent). */
+const EXPLORE_FAQ = [
+  {
+    q: "Are Explore projects customer uploads?",
+    a: "No. Every card is an official PIKBO Lab example with an owned input still, a distinct cached output, and a registered recipe. Not community UGC.",
+  },
+  {
+    q: "What does Remix do?",
+    a: "Opens Generate with that recipe so you can run it on a toy photo you own. Lab stills are style references only — not your deliverable.",
+  },
+  {
+    q: "Do cached demos cost credits?",
+    a: "No. Cached Lab playback costs 0 credits. Live Seedance Mini uses Free Mini (about one 5s 480p clip with on-player mark) or paid credits.",
+  },
+] as const;
 
 export default async function ExplorePage({
   searchParams,
@@ -49,11 +66,28 @@ export default async function ExplorePage({
     })),
   };
 
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: EXPLORE_FAQ.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <main className="min-h-screen bg-black pb-24 text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <header className="sticky top-0 z-20 border-b border-white/10 bg-black/90 px-4 py-4 backdrop-blur sm:px-6">
         <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4">
@@ -69,13 +103,8 @@ export default async function ExplorePage({
               registered recipe, and an honest cached/live record.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/create?try=1&sample=scout"
-              className="rounded-full bg-[#c8ff3d] px-5 py-2.5 text-xs font-black text-black shadow-[0_0_28px_rgba(200,255,61,0.22)] transition hover:-translate-y-0.5"
-            >
-              Try free
-            </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <FreeTrialCta path="/explore" variant="primary" />
             <Link
               href="/flow"
               className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-2.5 text-xs font-black text-[#c8ff3d] transition hover:bg-[#c8ff3d]/15"
@@ -149,6 +178,25 @@ export default async function ExplorePage({
           >
             Open Seller Pack →
           </Link>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-10 pt-8 sm:px-6">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
+          <h2 className="text-sm font-bold text-white">Explore FAQ</h2>
+          <p className="mt-1 text-xs text-white/40">
+            Official Lab only · Remix · cached vs live credits
+          </p>
+          <dl className="mt-4 space-y-4">
+            {EXPLORE_FAQ.map((f) => (
+              <div key={f.q}>
+                <dt className="text-sm font-semibold text-white/90">{f.q}</dt>
+                <dd className="mt-1 text-xs leading-relaxed text-white/55">
+                  {f.a}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
     </main>

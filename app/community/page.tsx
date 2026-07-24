@@ -6,6 +6,7 @@ import {
   conceptRecipeCount,
   suiteRail,
 } from "@/lib/videoFeed";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { VideoTile } from "@/components/VideoTile";
 import { VideoRail } from "@/components/VideoRail";
 import { ProjectCard } from "@/components/ProjectCard";
@@ -64,13 +65,8 @@ export default function CommunityPage() {
               See what each toy-video recipe is designed to make
             </h1>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/create?try=1&sample=scout"
-              className="btn btn-primary !px-4 !py-2 text-xs"
-            >
-              Try free
-            </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <FreeTrialCta path="/community" variant="mint" />
             <Link href="/create" className="btn btn-ghost !px-3 !py-2 text-xs">
               Generate
             </Link>

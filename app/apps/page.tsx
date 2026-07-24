@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { WORKFLOWS } from "@/lib/workflows";
 import { APPS } from "@/lib/catalog";
 import { site } from "@/lib/site";
@@ -23,6 +24,26 @@ const CATS = [
   { id: "studio" as const, label: "Pro studio" },
   { id: "edit" as const, label: "Edit tools" },
 ];
+
+/** Phase H: FAQ so /apps is not a thin workflow shelf. */
+const APPS_FAQ = [
+  {
+    q: "What are Pikbo Apps?",
+    a: "Live mini-apps that open Generate with a prefilled toy-video recipe (listing spin, social hook, unbox, Seller Pack). Same Seedance engine as Create — not a multi-model zoo.",
+  },
+  {
+    q: "What does SOON mean?",
+    a: "Roadmap cards you can see but not run. Only LIVE / CONFIGURED cards start a real job. We never label preview tools as live Seedance.",
+  },
+  {
+    q: "Is Try free a live generation?",
+    a: "Lab sample path is a free cached demo (0 credits). Free Mini live is about one Seedance Mini clip (5s · 480p · on-player mark). After trial, Lab demos stay free; live needs a plan.",
+  },
+  {
+    q: "How is Apps different from Modules?",
+    a: "Same product family. /modules is the dense modular wall; /apps is the workflow shelf with LIVE vs SOON honesty. Prefer /modules for job-first browsing.",
+  },
+] as const;
 
 export default function AppsPage() {
   const liveWorkflows = WORKFLOWS.filter((w) => w.live);
@@ -64,11 +85,28 @@ export default function AppsPage() {
     ],
   };
 
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: APPS_FAQ.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div className="relative px-4 py-10 sm:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[radial-gradient(50%_80%_at_0%_0%,rgba(200,255,61,0.07),transparent_70%)]"
@@ -88,10 +126,11 @@ export default function AppsPage() {
           </Link>
           .
         </p>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <Link href="/modules" className="btn btn-primary text-sm">
             Toy Modules
           </Link>
+          <FreeTrialCta path="/apps" variant="ghost" />
           <Link href="/flow" className="btn btn-ghost text-sm">
             Flow
           </Link>
@@ -100,9 +139,6 @@ export default function AppsPage() {
           </Link>
           <Link href="/create?mode=seller-pack" className="btn btn-ghost text-sm">
             Seller Pack
-          </Link>
-          <Link href="/create?try=1&sample=scout" className="btn btn-ghost text-sm">
-            Try free
           </Link>
           <Link href="/effects" className="btn btn-ghost text-sm">
             Recipe wall
@@ -221,6 +257,23 @@ export default function AppsPage() {
             </section>
           );
         })}
+
+        <section className="mt-12 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
+          <h2 className="text-sm font-bold text-white">Apps FAQ</h2>
+          <p className="mt-1 text-xs text-white/40">
+            LIVE vs SOON · Free Mini · Modules · same Generate engine
+          </p>
+          <dl className="mt-4 space-y-4">
+            {APPS_FAQ.map((f) => (
+              <div key={f.q}>
+                <dt className="text-sm font-semibold text-white/90">{f.q}</dt>
+                <dd className="mt-1 text-xs leading-relaxed text-white/55">
+                  {f.a}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
       </div>
     </div>
   );
