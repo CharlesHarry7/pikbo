@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { USE_CASES } from "@/lib/usecases";
 import { TOOLS } from "@/lib/tools";
 import { GUIDES } from "@/lib/guides";
@@ -101,10 +102,12 @@ export function LandingSeoMesh({
         </div>
       )}
 
-      <div className="mt-8 flex flex-wrap gap-2">
-        <Link href="/create?try=1&sample=scout" className="btn btn-primary text-sm">
-          Try free Mini
-        </Link>
+      <div className="mt-8 flex flex-wrap items-center gap-2">
+        <FreeTrialCta
+          path={`/${kind}/${currentSlug}`}
+          variant="mint"
+          labelTry="Try free Mini"
+        />
         <Link href="/create" className="btn btn-ghost text-sm">
           Open Generate
         </Link>

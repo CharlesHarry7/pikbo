@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { site } from "@/lib/site";
 import { Logo } from "@/components/Logo";
 import { CATEGORIES } from "@/lib/presets";
@@ -17,7 +18,7 @@ export function Footer() {
               {site.tagline} Video-first studio for toys you own — Generate,
               Modules, Seller Pack.
             </p>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               <Link href="/create" className="btn btn-primary !px-3 !py-1.5 text-xs">
                 Generate
               </Link>
@@ -27,12 +28,11 @@ export function Footer() {
               <Link href="/modules" className="btn btn-ghost !px-3 !py-1.5 text-xs">
                 Modules
               </Link>
-              <Link
-                href="/create?try=1&sample=scout"
+              <FreeTrialCta
+                path="/footer"
+                variant="ghost"
                 className="btn btn-ghost !px-3 !py-1.5 text-xs"
-              >
-                Try free
-              </Link>
+              />
             </div>
           </div>
           <div>

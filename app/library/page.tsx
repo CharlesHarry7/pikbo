@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { LibraryGrid } from "@/components/LibraryGrid";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
 
@@ -39,16 +40,11 @@ export default function LibraryPage() {
               into Generate · not cloud-synced until durable sign-in.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Link href="/create" className="btn btn-primary text-sm">
               Generate
             </Link>
-            <Link
-              href="/create?try=1&sample=scout"
-              className="btn btn-ghost text-sm"
-            >
-              Try free
-            </Link>
+            <FreeTrialCta path="/library" variant="ghost" />
             <Link href="/flow" className="btn btn-ghost text-sm">
               Flow
             </Link>

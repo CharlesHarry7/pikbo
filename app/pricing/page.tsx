@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PLANS, CREDITS_PER_VIDEO, clipsFromCredits } from "@/lib/pricing";
 import { site } from "@/lib/site";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { PricingUsageEstimator } from "@/components/PricingUsageEstimator";
 import { PricingPlanCards } from "@/components/PricingPlanCards";
 import {
@@ -238,9 +239,11 @@ export default async function PricingPage({
               <Button asChild variant="secondary">
                 <Link href="/create?mode=seller-pack">Seller Pack</Link>
               </Button>
-              <Button asChild variant="secondary">
-                <Link href="/create?try=1&sample=scout">Try free</Link>
-              </Button>
+              <FreeTrialCta
+                path="/pricing#bottom"
+                labelTry="Try free"
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-4 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/[0.07]"
+              />
             </div>
           </CardHeader>
         </Card>

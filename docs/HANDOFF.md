@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] FreeTrialCta sitewide residual surfaces
+- LandingSeoMesh, Footer, effects/[slug], Flow, Library, Create Seller Pack header,
+  projects detail, pricing bottom — static Try free / Generate free → FreeTrialCta.
+- Exhausted Free Mini → plans; Lab sample still free. engine-smoke gates shared CTAs.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-24 — [grok] for/toys/guides FAQ + Mini 5s honesty
 - Phase H: `/for` `/toys` `/guides` hubs → FAQ + FAQPage + FreeTrialCta.
 - Guide detail + PricingHero: no free “10s” CTA; Free Mini 5s labels.

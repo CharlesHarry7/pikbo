@@ -9,6 +9,7 @@ import {
 } from "@/lib/showcaseProjects";
 import { getPreset } from "@/lib/presets";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { ProjectOpenBeacon } from "@/components/ProjectOpenBeacon";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -123,12 +124,10 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               >
                 Seller Pack
               </Link>
-              <Link
-                href="/create?try=1&sample=scout"
+              <FreeTrialCta
+                path={`/projects/${project.slug}`}
                 className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-[#c8ff3d]/40 hover:text-[#c8ff3d]"
-              >
-                Try free
-              </Link>
+              />
             </div>
           </div>
         </header>

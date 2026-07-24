@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { listLiveWorkflows, listPreviewWorkflows } from "@/lib/workflows";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { FlowMediaCard } from "@/components/FlowMediaCard";
 import { site } from "@/lib/site";
@@ -171,13 +172,13 @@ export default function FlowPage() {
               How do you want to create?
             </h1>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/create?try=1&sample=scout"
+          <div className="flex flex-wrap items-center gap-2">
+            <FreeTrialCta
+              path="/flow"
+              variant="primary"
+              labelTry="Try free"
               className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
-            >
-              Generate free
-            </Link>
+            />
             <Link
               href="/create"
               className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"

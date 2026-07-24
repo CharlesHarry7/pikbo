@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { PRESETS, getPreset, COMMON_FAQ } from "@/lib/presets";
 import { USE_CASES } from "@/lib/usecases";
 import { PresetCard } from "@/components/PresetCard";
@@ -150,12 +151,11 @@ export default async function EffectPage({
               >
                 Open Generate
               </Link>
-              <Link
-                href="/create?try=1&sample=scout"
+              <FreeTrialCta
+                path={`/effects/${preset.slug}`}
+                variant="ghost"
                 className="btn btn-ghost !px-3 !py-2 text-xs"
-              >
-                Try free
-              </Link>
+              />
               <Link
                 href="/flow"
                 className="btn btn-ghost !px-3 !py-2 text-xs"

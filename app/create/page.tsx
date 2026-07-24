@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { CreateStudio } from "@/components/CreateStudio";
 import { CreateSeoFooter } from "@/components/CreateSeoFooter";
 import { BatchStudio } from "@/components/BatchStudio";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { getPreset } from "@/lib/presets";
@@ -93,13 +94,13 @@ export default async function CreatePage({
               Lab demos free and labeled. Live charges per successful child;
               failures restore credits when confirmed.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Link
-                href="/create?try=1&sample=scout"
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <FreeTrialCta
+                path="/create?mode=seller-pack"
+                variant="primary"
+                labelTry="Try free video first"
                 className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
-              >
-                Try free video first
-              </Link>
+              />
               <Link
                 href="/create"
                 className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"

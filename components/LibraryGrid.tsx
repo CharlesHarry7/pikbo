@@ -15,6 +15,7 @@ import {
   type HistoryItem,
 } from "@/lib/history";
 import { createRemixHref } from "@/lib/remixIntent";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { useToast } from "@/components/Toast";
 import { PROVENANCE, resultProvenanceLabel } from "@/lib/provenance";
 import { track } from "@/lib/analytics";
@@ -613,13 +614,14 @@ export function LibraryGrid() {
                 </>
               )}
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-2">
-              <Link
-                href="/create?try=1&sample=scout"
-                className="btn btn-primary text-sm"
-              >
-                ▶ Free sample · 10 seconds
-              </Link>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+              <FreeTrialCta
+                path="/library"
+                variant="mint"
+                labelTry="▶ Free sample · Mini 5s"
+                labelDemo="▶ Lab sample · free"
+                labelPlans="Compare plans"
+              />
               <Link href="/modules" className="btn btn-ghost text-sm">
                 Toy Modules
               </Link>

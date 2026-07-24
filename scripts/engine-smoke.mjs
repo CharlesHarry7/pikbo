@@ -37,10 +37,36 @@ function isValidImageDataUrl(image) {
   return /^data:image\/(jpeg|jpg|png|webp|gif);base64,/i.test(image);
 }
 
+function isSafeUrlPure(url) {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t || t.length > 2000) return false;
+  if (t.startsWith("/") && !t.startsWith("//")) return !t.includes("\\");
+  try {
+    const u = new URL(t);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    if (!u.hostname || u.username || u.password) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function interpretGenerateResponse(status, raw) {
   if (status >= 200 && status < 300) {
     if (!raw?.videoUrl) {
       return { ok: false, code: "MODEL_EMPTY", fatal: false, paywall: false };
+    }
+    // Parity with lib/generateClient asSuccess — refuse unsafe schemes
+    if (!isSafeUrlPure(raw.videoUrl)) {
+      return {
+        ok: false,
+        status: 502,
+        code: "UNSAFE_URL",
+        fatal: false,
+        paywall: false,
+        error: "Provider returned an unsafe video URL — not displaying",
+      };
     }
     return { ok: true, data: raw };
   }
@@ -90,6 +116,12 @@ assert.equal(ok.ok, true);
 const empty = interpretGenerateResponse(200, {});
 assert.equal(empty.ok, false);
 
+const unsafeOk = interpretGenerateResponse(200, {
+  videoUrl: "javascript:alert(1)",
+});
+assert.equal(unsafeOk.ok, false);
+assert.equal(unsafeOk.code, "UNSAFE_URL");
+
 const credits = interpretGenerateResponse(402, {
   code: "INSUFFICIENT_CREDITS",
   error: "nope",
@@ -122,6 +154,13 @@ assert.match(gen, /ASSET_NOT_FOUND/);
 assert.match(gen, /fallbackImage/);
 assert.match(gen, /assetId:\s*undefined/);
 assert.match(gen, /recoveredFromAssetMiss/);
+// Client defense: 200 + unsafe videoUrl → UNSAFE_URL (not playable success)
+assert.match(gen, /isSafeDeliverableUrl/);
+assert.match(gen, /UNSAFE_URL/);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /isSafeDeliverableUrl/
+);
 const pe = fs.readFileSync(join(root, "lib/providerError.ts"), "utf8");
 assert.match(pe, /export function isValidImageDataUrl/);
 assert.match(pe, /export function classifyProviderError/);
@@ -2378,6 +2417,51 @@ assert.doesNotMatch(
 assert.match(
   fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
   /Mini 5s|Mini 5 秒/
+);
+// Shared surfaces: freeTrial-honest CTAs (exhausted → plans, not static Try free)
+assert.match(
+  fs.readFileSync(join(root, "components/LandingSeoMesh.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/LandingSeoMesh.tsx"), "utf8"),
+  /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Try free Mini/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/effects/[slug]/page.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "app/effects/[slug]/page.tsx"), "utf8"),
+  /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Try free\s*</
+);
+assert.match(
+  fs.readFileSync(join(root, "app/flow/page.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "app/flow/page.tsx"), "utf8"),
+  /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Generate free/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/create/page.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /10 seconds/
 );
 
 console.log("engine-smoke: PASS");
