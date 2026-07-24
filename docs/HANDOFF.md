@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] Client unsafe videoUrl defense + Batch URL gate
+- `interpretGenerateResponse` / `asSuccess`: 200 with unsafe videoUrl → `UNSAFE_URL` (not playable).
+- BatchStudio: `<video>` + Download/open only when requestId or isSafeDeliverableUrl.
+- engine-smoke pure interpret + source asserts.
+- Verified: typecheck · lint · engine-smoke.
+
 ### 2026-07-24 — [grok] FreeTrialCta sitewide residual surfaces
 - LandingSeoMesh, Footer, effects/[slug], Flow, Library, Create Seller Pack header,
   projects detail, pricing bottom — static Try free / Generate free → FreeTrialCta.

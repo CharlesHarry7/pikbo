@@ -39,7 +39,7 @@ import {
   sellerPackQuoteLabel,
   sellerPackShortfall,
 } from "@/lib/sellerPackQuote";
-import { canDownloadResult } from "@/lib/createTrust";
+import { canDownloadResult, isSafeDeliverableUrl } from "@/lib/createTrust";
 import { sellerPackPostItems } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
@@ -1484,7 +1484,7 @@ export function BatchStudio({
                 </span>
               ) : null}
             </div>
-            {j.videoUrl && (
+            {j.videoUrl && isSafeDeliverableUrl(j.videoUrl) ? (
               <video
                 src={j.videoUrl}
                 controls
@@ -1492,7 +1492,7 @@ export function BatchStudio({
                 playsInline
                 className="mt-2 max-h-40 w-full rounded-lg bg-black/40"
               />
-            )}
+            ) : null}
             {j.status === "succeeded" && (
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <span
@@ -1514,18 +1514,28 @@ export function BatchStudio({
                   Effect page →
                 </Link>
                 {j.demo || !j.watermark ? (
-                  <a
-                    href={
-                      j.requestId
-                        ? `/api/downloads/${encodeURIComponent(j.requestId)}`
-                        : j.videoUrl
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[10px] text-[var(--mint)] hover:underline"
-                  >
-                    Download / open
-                  </a>
+                  j.requestId ||
+                  (j.videoUrl && isSafeDeliverableUrl(j.videoUrl)) ? (
+                    <a
+                      href={
+                        j.requestId
+                          ? `/api/downloads/${encodeURIComponent(j.requestId)}`
+                          : j.videoUrl!
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-[var(--mint)] hover:underline"
+                    >
+                      Download / open
+                    </a>
+                  ) : (
+                    <span
+                      className="text-[10px] text-amber-100/80"
+                      title="Unsafe deliverable URL — download blocked"
+                    >
+                      Download blocked · unsafe URL
+                    </span>
+                  )
                 ) : (
                   <span
                     className="text-[10px] text-amber-100/80"

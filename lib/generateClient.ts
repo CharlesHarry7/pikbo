@@ -8,6 +8,7 @@ import type {
   GenerateRequestBody,
   GenerateSuccess,
 } from "@/lib/contracts";
+import { isSafeDeliverableUrl } from "@/lib/createTrust";
 import type { HistoryItem } from "@/lib/history";
 import type { PublicSession } from "@/lib/session";
 
@@ -51,6 +52,9 @@ function asSuccess(data: unknown): GenerateSuccess | null {
   if (!data || typeof data !== "object") return null;
   const d = data as Partial<GenerateSuccess>;
   if (typeof d.videoUrl !== "string" || !d.videoUrl) return null;
+  // Defense in depth — never treat javascript:/data: etc. as a playable success
+  // even if a buggy proxy or future provider path leaks them past the API gate.
+  if (!isSafeDeliverableUrl(d.videoUrl)) return null;
   return d as GenerateSuccess;
 }
 
@@ -62,11 +66,22 @@ export function interpretGenerateResponse(
   if (status >= 200 && status < 300) {
     const data = asSuccess(raw);
     if (!data) {
+      const d =
+        raw && typeof raw === "object"
+          ? (raw as Partial<GenerateSuccess> & GenerateErrorBody)
+          : null;
+      const hasUrl = typeof d?.videoUrl === "string" && Boolean(d.videoUrl);
+      const unsafe = hasUrl && !isSafeDeliverableUrl(d!.videoUrl as string);
       return {
         ok: false,
-        status,
-        error: "Model returned an empty clip",
-        code: "MODEL_EMPTY",
+        status: unsafe ? 502 : status,
+        error: unsafe
+          ? "Provider returned an unsafe video URL — not displaying. Check balance or Retry."
+          : "Model returned an empty clip",
+        code: unsafe ? "UNSAFE_URL" : "MODEL_EMPTY",
+        session: d?.session,
+        // Server may have already refunded; prefer echo when present.
+        creditsRefunded: d?.creditsRefunded === true ? true : undefined,
         fatal: false,
         paywall: false,
       };

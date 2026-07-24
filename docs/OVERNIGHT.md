@@ -112,7 +112,8 @@
 71. [x] FreeTrialCta Apps/Explore/Community · Apps+Explore FAQPage
 72. [x] StatusProbe demos/freeTrial · Seller Pack unsafe URL drop · CP HEAD me/generations
 73. [x] Create/Landing Free raw share+download safety · assets content HEAD
-74. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+74. [x] generateClient refuse unsafe 200 videoUrl · Batch download/player URL safety
+75. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -126,8 +127,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Create/Landing: Free Mini raw blocked on copy/share/download; unsafe href gated.  
-- HEAD /api/assets/[id]/content meta probe (no dataUrl).  
+- generateClient: 200 + unsafe videoUrl → UNSAFE_URL (no playable success).  
+- BatchStudio: player/download gated on isSafeDeliverableUrl.  
 - Mode A still needs boss Vercel login · SQL · T6 bake.
 
 ---
