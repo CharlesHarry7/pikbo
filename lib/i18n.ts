@@ -287,8 +287,8 @@ const en: Dict = {
   "delivery.complete": "Pack checklist complete · ready to ship this SKU",
   "delivery.reset": "Reset ticks",
 
-  "modules.mobile.hint": "One photo · job block ready · Seedance live",
-  "modules.mobile.try": "Try free · 10s",
+  "modules.mobile.hint": "One photo · job block ready · Free Mini 5s 480p",
+  "modules.mobile.try": "Try free · Lab",
   "modules.mobile.pack": "Pack · 3",
 
   "credits.credits": "credits",
@@ -555,8 +555,8 @@ const zh: Dict = {
   "delivery.complete": "交付清单已完成 · 这款 SKU 可以发了",
   "delivery.reset": "清空勾选",
 
-  "modules.mobile.hint": "一张图 · 任务块就绪 · Seedance 实时",
-  "modules.mobile.try": "免费试 · 10 秒",
+  "modules.mobile.hint": "一张图 · 任务块就绪 · Free Mini 5 秒 480p",
+  "modules.mobile.try": "免费试 · Lab",
   "modules.mobile.pack": "三件套",
 
   "credits.credits": "积分",

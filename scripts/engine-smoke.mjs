@@ -967,13 +967,15 @@ assert.match(videoWh, /requiresSecretInProduction|productionHost|VERCEL_ENV/);
 assert.doesNotMatch(videoWh, /NOT_IMPLEMENTED/);
 assert.match(createStudio, /track\(\{[\s\S]*generate_start/);
 
-// Seller Pack export honesty
+// Seller Pack export honesty + multi-download (no fake ZIP of failures)
 const packExport = fs.readFileSync(
   join(root, "lib/sellerPackExport.ts"),
   "utf8"
 );
 assert.match(packExport, /filterAvailableDeliverables/);
 assert.match(packExport, /sellerPackCsv/);
+assert.match(packExport, /sellerPackAvailableDownloads/);
+assert.match(packExport, /sellerPackDownloadHref/);
 function filterAvailable(items) {
   return items.filter(
     (i) =>
@@ -982,6 +984,19 @@ function filterAvailable(items) {
       i.downloadable
   );
 }
+function packDownloadHref(item) {
+  if (item.status !== "succeeded" || !item.downloadable) return null;
+  if (item.requestId) return `/api/downloads/${encodeURIComponent(item.requestId)}`;
+  return item.videoUrl || null;
+}
+function packAvailableDownloads(items) {
+  return filterAvailable(items)
+    .map((i) => {
+      const href = packDownloadHref(i);
+      return href ? { key: i.key, href } : null;
+    })
+    .filter(Boolean);
+}
 assert.equal(
   filterAvailable([
     { status: "succeeded", videoUrl: "/a.mp4", downloadable: true },
@@ -989,6 +1004,53 @@ assert.equal(
     { status: "succeeded", videoUrl: "/c.mp4", downloadable: false },
   ]).length,
   1
+);
+assert.equal(
+  packDownloadHref({
+    status: "succeeded",
+    downloadable: true,
+    requestId: "req_1",
+    videoUrl: "https://cdn.example/x.mp4",
+  }),
+  "/api/downloads/req_1"
+);
+assert.equal(
+  packDownloadHref({
+    status: "succeeded",
+    downloadable: false,
+    requestId: "req_blocked",
+    videoUrl: "https://cdn.example/x.mp4",
+  }),
+  null,
+  "Free raw blocked must not yield download href"
+);
+assert.equal(
+  packAvailableDownloads([
+    {
+      key: "listing_spin",
+      status: "succeeded",
+      videoUrl: "/a.mp4",
+      downloadable: true,
+      requestId: "r1",
+    },
+    {
+      key: "fail",
+      status: "failed",
+      videoUrl: "/b.mp4",
+      downloadable: true,
+    },
+    {
+      key: "free_raw",
+      status: "succeeded",
+      videoUrl: "https://cdn/x.mp4",
+      downloadable: false,
+    },
+  ]).length,
+  1
+);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /downloadAvailableClips|Download available/
 );
 assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
@@ -2133,6 +2195,31 @@ assert.ok(imageIdx > flowIdx, "stills mode after video suite doors");
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /Optional support|not the product|photo → Seedance/
+);
+
+// Modules freeTrial honesty + FAQ (Phase F/H — not thin "Generate free" shelf)
+const modulesPageSrc = fs.readFileSync(
+  join(root, "app/modules/page.tsx"),
+  "utf8"
+);
+assert.match(modulesPageSrc, /MODULES_FAQ|Modules FAQ/);
+assert.match(modulesPageSrc, /FAQPage/);
+assert.match(modulesPageSrc, /ModulesSuiteCtas/);
+assert.doesNotMatch(modulesPageSrc, /Generate free/);
+const modulesSuiteCtasSrc = fs.readFileSync(
+  join(root, "components/ModulesSuiteCtas.tsx"),
+  "utf8"
+);
+assert.match(modulesSuiteCtasSrc, /freeTrialExhausted/);
+assert.match(modulesSuiteCtasSrc, /Compare plans|Try free/);
+const modulesMobileCtaSrc = fs.readFileSync(
+  join(root, "components/ModulesMobileCta.tsx"),
+  "utf8"
+);
+assert.match(modulesMobileCtaSrc, /freeTrialExhausted/);
+assert.match(
+  fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
+  /modules\.mobile\.try.*Lab|Try free · Lab/
 );
 
 console.log("engine-smoke: PASS");

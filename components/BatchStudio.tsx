@@ -26,10 +26,12 @@ import {
 import { emitSessionRefresh } from "@/lib/sessionEvents";
 import {
   canExportSellerPack,
+  sellerPackAvailableDownloads,
   sellerPackCsv,
   sellerPackManifest,
   type SellerPackExportItem,
 } from "@/lib/sellerPackExport";
+import { downloadVideoFile } from "@/lib/history";
 import {
   batchQuoteLabel,
   sellerPackBalanceCovers,
@@ -713,6 +715,7 @@ export function BatchStudio({
         demo: j.demo,
         watermark: j.watermark,
         creditState: j.creditState,
+        requestId: j.requestId,
         downloadable: Boolean(
           j.videoUrl &&
             canDownloadResult({
@@ -724,6 +727,11 @@ export function BatchStudio({
     });
   }, [jobs]);
   const canExportPack = canExportSellerPack(exportItems);
+  const availableDownloads = useMemo(
+    () => sellerPackAvailableDownloads(exportItems),
+    [exportItems]
+  );
+  const [exportBusy, setExportBusy] = useState(false);
 
   function downloadText(filename: string, body: string, mime: string) {
     const blob = new Blob([body], { type: mime });
@@ -754,6 +762,38 @@ export function BatchStudio({
       JSON.stringify(manifest, null, 2),
       "application/json"
     );
+  }
+
+  /**
+   * Phase F: sequential multi-file save of downloadable children only.
+   * No server ZIP (needs object storage). Free raw / failed siblings omitted.
+   */
+  async function downloadAvailableClips() {
+    const targets = sellerPackAvailableDownloads(exportItems);
+    if (targets.length === 0 || exportBusy) return;
+    setExportBusy(true);
+    try {
+      let ok = 0;
+      let fallback = 0;
+      for (let i = 0; i < targets.length; i++) {
+        const t = targets[i];
+        const result = await downloadVideoFile(t.href, t.filename);
+        if (result === "ok") ok += 1;
+        else if (result === "fallback") fallback += 1;
+        if (i < targets.length - 1) {
+          await sleep(350);
+        }
+      }
+      if (ok + fallback === 0) {
+        setError(
+          "Could not download available clips — browser blocked or URLs expired. Try each child Download link."
+        );
+      } else if (fallback > 0 && ok === 0) {
+        setError(null);
+      }
+    } finally {
+      setExportBusy(false);
+    }
   }
   // Y5: pure quote helpers — Seller Pack always 3×10; batch uses selected length.
   const packQuote = useMemo(
@@ -1336,16 +1376,27 @@ export function BatchStudio({
             <p className="text-[11px] text-[var(--fg-muted)]">
               Export only succeeded downloadable clips
               {canExportPack
-                ? ` · ${
-                    exportItems.filter(
-                      (i) => i.downloadable && i.status === "succeeded"
-                    ).length
-                  } available`
+                ? ` · ${availableDownloads.length} available`
                 : " · none ready yet"}
             </p>
             <button
               type="button"
-              disabled={!canExportPack}
+              disabled={!canExportPack || exportBusy}
+              onClick={() => void downloadAvailableClips()}
+              className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"
+              title="Saves each available clip sequentially. Failed siblings and Free raw live files are omitted."
+            >
+              {exportBusy
+                ? "Saving clips…"
+                : `Download available${
+                    availableDownloads.length
+                      ? ` · ${availableDownloads.length}`
+                      : ""
+                  }`}
+            </button>
+            <button
+              type="button"
+              disabled={!canExportPack || exportBusy}
               onClick={exportAvailableCsv}
               className="rounded-full border border-[var(--mint)]/30 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"
             >
@@ -1353,14 +1404,14 @@ export function BatchStudio({
             </button>
             <button
               type="button"
-              disabled={!canExportPack}
+              disabled={!canExportPack || exportBusy}
               onClick={exportAvailableManifest}
               className="rounded-full border border-[var(--border)] px-3 py-1 text-[10px] font-bold text-[var(--fg-muted)] disabled:opacity-40"
             >
               Manifest JSON
             </button>
             <span className="text-[10px] text-[var(--fg-dim)]">
-              No ZIP until storage · failures omitted
+              Multi-file save · no server ZIP yet · Free raw / failures omitted
             </span>
           </div>
         )}

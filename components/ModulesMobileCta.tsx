@@ -1,30 +1,78 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
 import { useI18n } from "@/components/LanguageProvider";
+import {
+  fetchMe,
+  freeTrialExhausted,
+  isDemoMode,
+  type MeResponse,
+} from "@/lib/meClient";
+import { SESSION_EVENT } from "@/lib/sessionEvents";
 
 /** Sticky mobile CTA on Modules wall — above AppShell tab nav */
 export function ModulesMobileCta() {
   const { t } = useI18n();
+  const [me, setMe] = useState<MeResponse | null>(null);
+
+  useEffect(() => {
+    function load() {
+      void fetchMe().then((d) => {
+        if (d) setMe(d);
+      });
+    }
+    const tmr = window.setTimeout(load, 0);
+    window.addEventListener(SESSION_EVENT, load);
+    return () => {
+      window.clearTimeout(tmr);
+      window.removeEventListener(SESSION_EVENT, load);
+    };
+  }, []);
+
+  const demo = isDemoMode(me);
+  const trialDone = freeTrialExhausted(me);
+  const clipsLeft =
+    typeof me?.freeTrial?.clipsLeft === "number"
+      ? me.freeTrial.clipsLeft
+      : null;
+
+  const primaryHref =
+    trialDone && !demo ? "/pricing" : "/create?try=1&sample=scout";
+  const primaryLabel =
+    trialDone && !demo
+      ? "Plans"
+      : demo
+        ? "Lab sample"
+        : t("modules.mobile.try");
+  const hint =
+    trialDone && !demo
+      ? "Free Mini used · Lab demos still free · finite plans"
+      : clipsLeft !== null && !demo
+        ? `One photo · job ready · ~${clipsLeft} Free Mini left`
+        : t("modules.mobile.hint");
+
   return (
     <div className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-3 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden">
       <p className="mb-1.5 text-center text-[10px] font-medium text-white/45">
-        {t("modules.mobile.hint")}
+        {hint}
       </p>
       <div className="flex gap-2">
         <Link
-          href="/create?try=1&sample=scout"
+          href={primaryHref}
           onClick={() =>
             track({
               event: "landing_view",
               path: "/modules",
-              meta: { cta: "try_free" },
+              meta: {
+                cta: trialDone && !demo ? "try_pricing" : "try_free",
+              },
             })
           }
           className="btn btn-primary min-w-0 flex-[1.4] py-3 text-sm font-black"
         >
-          {t("modules.mobile.try")}
+          {primaryLabel}
         </Link>
         <Link
           href="/create?mode=seller-pack"

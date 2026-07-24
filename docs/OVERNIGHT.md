@@ -106,7 +106,8 @@
 65. [x] Profile/Settings freeTrial honesty · Library download HEAD codes · PRIVATE_ROBOTS settings
 66. [x] freeTrial rehydrate after generate merge (stale exhausted/clipsLeft)
 67. [x] free stills never burn Mini trial (`free_trial_video_only` · health/me scope)
-68. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+68. [x] Seller Pack multi-download available + Modules freeTrial FAQ honesty
+69. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 

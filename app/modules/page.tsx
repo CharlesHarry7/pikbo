@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { ModulesMobileCta } from "@/components/ModulesMobileCta";
+import { ModulesSuiteCtas } from "@/components/ModulesSuiteCtas";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import {
   listLiveWorkflows,
@@ -17,6 +18,26 @@ export const metadata: Metadata = {
     "Modular toy video workflows — listing spin, TikTok hook, blind-box drop, shelf glam, Seller Pack. Pick a block, upload one photo, generate. Designer-toy suite modules.",
   alternates: { canonical: "/modules" },
 };
+
+/** Phase H: FAQ so /modules is not a thin indexable shelf. */
+const MODULES_FAQ = [
+  {
+    q: "What is a Pikbo Module?",
+    a: "A fixed video job — listing spin, social hook, unbox, or Seller Pack — that opens Generate with a registered recipe and aspect ratio. One owned toy photo in, short Seedance clip out.",
+  },
+  {
+    q: "Are Lab posters my final video?",
+    a: "No. Posters and Lab samples are official style demos only. Your upload is never those stills. Cached Lab demos cost 0 credits; live Mini uses your Free trial or paid credits.",
+  },
+  {
+    q: "What does Free Mini cover on Modules?",
+    a: "About one live Seedance Mini clip (5s · 480p · on-player mark). After the trial, Lab cached demos stay free; live jobs need a plan. Free raw download stays gated until server watermark bake.",
+  },
+  {
+    q: "What is Seller Pack?",
+    a: "One photo → three seller formats (Listing Spin 1:1, Blind-box Reveal 9:16, Social Flash 9:16). Partial failure keeps successful children; only downloadable clips export.",
+  },
+] as const;
 
 function posterForEffect(effect?: string): string | null {
   if (!effect) return null;
@@ -149,11 +170,28 @@ export default function ModulesPage() {
     })),
   };
 
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: MODULES_FAQ.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div className="min-h-[calc(100vh-3.5rem)] pb-28 lg:pb-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <Suspense
         fallback={
@@ -175,31 +213,8 @@ export default function ModulesPage() {
               Pick a job · get a video
             </h1>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/create?try=1&sample=scout"
-              className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
-            >
-              Generate free
-            </Link>
-            <Link
-              href="/create"
-              className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"
-            >
-              Video
-            </Link>
-            <Link
-              href="/flow"
-              className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-white/55"
-            >
-              Flow
-            </Link>
-            <Link
-              href="/create?mode=seller-pack"
-              className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-white/55"
-            >
-              Seller Pack
-            </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <ModulesSuiteCtas />
             <Link
               href="/effects"
               className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-white/55"
@@ -296,6 +311,23 @@ export default function ModulesPage() {
                 </li>
               ))}
             </ol>
+          </section>
+
+          <section className="mt-10 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
+            <h2 className="text-sm font-bold text-white">Modules FAQ</h2>
+            <p className="mt-1 text-xs text-white/40">
+              Honest limits · Lab proof · Free Mini · Seller Pack
+            </p>
+            <dl className="mt-4 space-y-4">
+              {MODULES_FAQ.map((f) => (
+                <div key={f.q}>
+                  <dt className="text-sm font-semibold text-white/90">{f.q}</dt>
+                  <dd className="mt-1 text-xs leading-relaxed text-white/55">
+                    {f.a}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </section>
         </div>
       </div>

@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] Seller Pack multi-download + Modules freeTrial FAQ
+- Phase F: `sellerPackAvailableDownloads` / download href prefers `/api/downloads`; Batch **Download available** sequential multi-file (no fake ZIP of failures).
+- Modules: freeTrial-honest CTAs (`ModulesSuiteCtas` + mobile); FAQ + FAQPage JSON-LD; Mini 5s copy (not 10s).
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-24 — [grok] Free stills never burn Mini video trial
 - `/api/image`: Free plan always labeled demo (`free_trial_video_only`, 0 credits) so Flux cannot burn the 10-credit Seedance Mini trial.
 - Paid plans only live-charge stills; health `freeTrial.scope=video-create-only` + me `stillsOnFree`.
