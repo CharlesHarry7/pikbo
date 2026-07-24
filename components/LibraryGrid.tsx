@@ -18,6 +18,8 @@ import { createRemixHref } from "@/lib/remixIntent";
 import { isSafeDeliverableUrl } from "@/lib/createTrust";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { useToast } from "@/components/Toast";
+import { LibraryStorageBanner } from "@/components/LibraryStorageBanner";
+import { CommunityPublishButton } from "@/components/CommunityPublishButton";
 import { PROVENANCE, resultProvenanceLabel } from "@/lib/provenance";
 import { track } from "@/lib/analytics";
 
@@ -589,7 +591,11 @@ export function LibraryGrid() {
   // Device history empty: still surface process-memory session jobs (Phase D recovery).
   if (items.length === 0) {
     return (
-      <div className="mt-8">
+      <div className="mt-6" id="library-assets">
+        <LibraryStorageBanner
+          deviceCount={0}
+          sessionOpen={sessionMeta.open}
+        />
         <SessionJobsPanel
           jobs={sessionJobs}
           meta={sessionMeta}
@@ -620,7 +626,8 @@ export function LibraryGrid() {
               ) : (
                 <>
                   {PROVENANCE.localLibrary} · this device only. One photo → job
-                  (Etsy spin, TikTok hook, reveal) → generate.
+                  (Etsy spin, TikTok hook, reveal) → generate → optional
+                  Community publish when signed in.
                 </>
               )}
             </p>
@@ -655,7 +662,11 @@ export function LibraryGrid() {
   }
 
   return (
-    <div className="mt-8">
+    <div className="mt-6" id="library-assets">
+      <LibraryStorageBanner
+        deviceCount={items.length}
+        sessionOpen={sessionMeta.open}
+      />
       <SessionJobsPanel
         jobs={sessionJobs}
         meta={sessionMeta}
@@ -669,7 +680,7 @@ export function LibraryGrid() {
           <input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            placeholder="Filter by preset…"
+            placeholder="Filter by preset, SKU, project…"
             className="rounded-lg border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-1.5 text-sm outline-none focus:border-[var(--brand)]"
           />
           <select
@@ -834,14 +845,17 @@ export function LibraryGrid() {
               </div>
             </div>
           )}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {group.items.map((item) => (
-              <article key={item.id} className="card group overflow-hidden p-0">
-                <div className="relative aspect-video bg-black/50">
+              <article
+                key={item.id}
+                className="group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/80 shadow-[0_12px_40px_-24px_rgba(0,0,0,0.9)] transition hover:-translate-y-0.5 hover:border-white/20"
+              >
+                <div className="relative aspect-[9/14] bg-black sm:aspect-video">
                   {isSafeDeliverableUrl(item.videoUrl) ? (
                     <video
                       src={item.videoUrl}
-                      className="h-full w-full object-contain"
+                      className="h-full w-full object-cover sm:object-contain"
                       controls
                       muted
                       playsInline
@@ -879,9 +893,11 @@ export function LibraryGrid() {
                   </div>
                 </div>
                 <div className="p-3">
-                  <p className="text-sm font-semibold">{item.effectName}</p>
+                  <p className="text-sm font-semibold text-white">
+                    {item.effectName}
+                  </p>
                   <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]">
-                    {item.status ?? "succeeded"}
+                    {item.status ?? "succeeded"} · this device
                   </p>
                   <p className="mt-0.5 text-[10px] text-[var(--fg-dim)]">
                     {new Date(item.createdAt).toLocaleString()}
@@ -905,7 +921,7 @@ export function LibraryGrid() {
                       watermark bake (T6). Preview on-player only.
                     </p>
                   ) : null}
-                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5">
                     {historyItemDownloadAllowed(item) &&
                     (item.requestId ||
                       isSafeDeliverableUrl(item.videoUrl)) ? (
@@ -951,6 +967,13 @@ export function LibraryGrid() {
                         Download blocked
                       </button>
                     )}
+                    <CommunityPublishButton
+                      videoUrl={item.videoUrl}
+                      posterUrl={item.inputImage}
+                      effectSlug={item.effect}
+                      effectName={item.effectName}
+                      demo={Boolean(item.demo)}
+                    />
                     <button
                       type="button"
                       className="text-xs text-[var(--fg-muted)] hover:text-[var(--mint)]"

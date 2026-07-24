@@ -30,7 +30,11 @@ export const metadata: Metadata = {
 const COMMUNITY_FAQ = [
   {
     q: "Is this real customer community content?",
-    a: "No. Community is PIKBO Lab only — official cached demos with owned inputs and distinct outputs. We do not invent likes, UGC walls, or customer posts.",
+    a: "Only when signed-in makers publish from Library. Until then Community shows PIKBO Lab only — official cached demos. We never invent likes, fake accounts, or customer posts.",
+  },
+  {
+    q: "How do I publish my clip?",
+    a: "Generate a live video → open Library → Publish to Community (sign-in required). Lab cached demos cannot be posted as maker UGC.",
   },
   {
     q: "What is Remix vs Inside?",
@@ -213,18 +217,41 @@ export default async function CommunityPage() {
           </div>
         </section>
       ) : (
-        <section className="border-b border-white/[0.06] px-4 py-4 sm:px-6">
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-4 py-3">
-            <p className="text-xs text-white/50">
-              Real UGC wall is ready — run Supabase migration{" "}
-              <code className="text-[10px] text-white/40">
-                20260725120000_community_ugc.sql
-              </code>{" "}
-              then publish from a signed-in Library clip.
-            </p>
-            <Link href="/login" className="text-xs font-bold text-[var(--mint)]">
-              Sign in →
-            </Link>
+        <section className="border-b border-white/[0.06] px-4 py-5 sm:px-6">
+          <div className="overflow-hidden rounded-2xl border border-dashed border-[var(--mint)]/25 bg-gradient-to-br from-[var(--mint)]/[0.06] to-transparent">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
+              <div className="max-w-xl">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--mint)]">
+                  Community · waiting for real posts
+                </p>
+                <p className="mt-1 text-sm font-semibold text-white">
+                  No invented UGC — Lab demos below stay official
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-white/50">
+                  Pipeline is live: sign in → Generate a live clip → Library →
+                  <span className="text-white/70"> Publish to Community</span>.
+                  Needs Supabase + migration{" "}
+                  <code className="text-[10px] text-white/35">
+                    community_ugc
+                  </code>
+                  . Until then this wall stays Lab-only.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/library" className="btn btn-primary !px-3 !py-2 text-xs">
+                  Open Library
+                </Link>
+                <Link
+                  href="/login?next=/library"
+                  className="btn btn-ghost !px-3 !py-2 text-xs"
+                >
+                  Sign in
+                </Link>
+                <Link href="/create" className="btn btn-ghost !px-3 !py-2 text-xs">
+                  Generate
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       )}

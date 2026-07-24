@@ -67,11 +67,11 @@
 
 | 序 | 模块 | 说明 |
 |----|------|------|
-| 本周 | 墙 + 产品轨密度 | 媒体轨、name ticker、Remake hover、墙 18+ |
-| 持续 | Generate 手感 | 结果台、等待、失败恢复、移动端 |
-| 下一拍 | Library 云感 | 登录列表；无 Supabase 仍标 Local |
-| 再下一拍 | Community 真帖 | SQL 已有；无帖只显示 Lab |
-| 之后 | Cinema / 战役条 / Seller Pack | 加深，不假模型 |
+| ✅ | 墙 + 产品轨密度 | 媒体轨、name ticker、Remake hover、墙 18+ |
+| ✅ | Generate 手感 | WaitStage 阶段轨、手机进度、Fail Retry |
+| ✅ | Library 云感 | 三层存储条 + 密网格；诚实 Local/Session/Account |
+| ✅ | Community 发布 | Library → Publish to Community；无帖只 Lab |
+| 下一拍 | Cinema / 战役条 / Seller Pack | 加深，不假模型 |
 | 有流量 | Stripe | 哥飞信号到了再开 |
 | 有 key | 第二模型 | 真 key 才 live |
 
