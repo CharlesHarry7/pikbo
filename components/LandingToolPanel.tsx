@@ -297,7 +297,12 @@ export function LandingToolPanel({
   }
 
   const busy = status === "generating";
-  const progress = busy ? Math.min(95, 12 + elapsed * 4) : status === "done" ? 100 : 0;
+  // Pace progress for ~3 min live Mini, not ~30s false completion
+  const progress = busy
+    ? Math.min(95, 8 + elapsed * 0.5)
+    : status === "done"
+      ? 100
+      : 0;
 
   // Prefer samples tagged for this effect, else all
   const samples = [
@@ -319,7 +324,7 @@ export function LandingToolPanel({
             >
               {trialDone && isFree && !demoMode
                 ? `Free Mini used · ${effectName}`
-                : `Try free · ${effectName}`}
+                : `Try free Mini · ${effectName}`}
             </p>
             <p className="mt-0.5 text-sm text-[var(--fg-muted)]">
               {trialDone && isFree && !demoMode ? (
@@ -563,7 +568,7 @@ export function LandingToolPanel({
                   Preparing your result…
                 </p>
                 <p className="mt-1 text-xs text-[var(--fg-dim)]">
-                  Live renders usually take 30–90s; cached demos return faster · {elapsed}s
+                  Live Mini often takes 1–3 min — keep this tab open · {elapsed}s
                 </p>
                 <button
                   type="button"

@@ -46,8 +46,8 @@ export function SoftLaunchStrip() {
     : trialDone
       ? "Free Mini trial used · Lab demos still free · compare finite plans"
       : freeLive
-        ? `Free Mini trial · ${freeLive.resolution} ${freeLive.durationSec}s · failed live jobs refund`
-        : "Free Mini trial · Photo → short AI video · no card · failed live jobs refund";
+        ? `Free Mini · ${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · failed jobs refund`
+        : "Free Mini · photo → short video · no card · live often 1–3 min · failed jobs refund";
 
   const primaryHref = trialDone
     ? "/pricing"
@@ -56,7 +56,7 @@ export function SoftLaunchStrip() {
     ? "Compare plans"
     : demo
       ? "Try free Lab video"
-      : "Try free video";
+      : "Try free · Mini 5s";
 
   return (
     <div className="border-b border-[#c8ff3d]/25 bg-gradient-to-r from-[#c8ff3d]/[0.12] via-black to-black px-3 py-2.5 sm:px-5">
