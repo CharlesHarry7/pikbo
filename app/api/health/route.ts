@@ -131,6 +131,9 @@ export async function GET() {
         resolution: "480p",
         onPlayerMark: true,
         failedLiveRefunds: true,
+        /** Free 10 credits = Create video Mini only — not Flux stills. */
+        scope: "video-create-only",
+        stillsOnFree: "demo-only",
       },
     },
     rateLimit: {

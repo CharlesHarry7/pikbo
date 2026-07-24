@@ -105,7 +105,8 @@
 64. [x] Download absolute /demos redirect + HEAD · health.billing.freeTrial · CP me freeTrial
 65. [x] Profile/Settings freeTrial honesty · Library download HEAD codes · PRIVATE_ROBOTS settings
 66. [x] freeTrial rehydrate after generate merge (stale exhausted/clipsLeft)
-67. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+67. [x] free stills never burn Mini trial (`free_trial_video_only` · health/me scope)
+68. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -119,8 +120,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- freeTrial: rehydrate after generate PublicSession merge (exhausted/clipsLeft track credits).  
-- Create/Landing/Batch use mergeMeSession · freeTrialExhausted prefers live credits.  
+- Free stills honesty: `/api/image` free plan → labeled demo 0cr (`free_trial_video_only`); paid Flux only.  
+- health.billing.freeTrial.scope=video-create-only · me.stillsOnFree · Still studio CTA honest.  
 - Mode A still needs boss Vercel login · SQL · T6 bake.
 
 ---

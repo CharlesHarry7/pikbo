@@ -31,6 +31,8 @@ export type MeFreeTrial = {
     onPlayerMark: true;
   } | null;
   exhausted: boolean;
+  /** Free plan stills never debit — live Flux requires paid plan. */
+  stillsOnFree?: "demo-only";
 };
 
 export type MeResponse = PublicSession & {
@@ -67,10 +69,12 @@ export function rehydrateFreeTrial(me: MeResponse): MeResponse {
 
   if (me.plan !== "free") {
     if (!me.freeTrial) return me;
+    const { stillsOnFree: _drop, ...restFt } = me.freeTrial;
+    void _drop;
     return {
       ...me,
       freeTrial: {
-        ...me.freeTrial,
+        ...restFt,
         planId: me.plan,
         isFreePlan: false,
         credits,
@@ -99,6 +103,7 @@ export function rehydrateFreeTrial(me: MeResponse): MeResponse {
         onPlayerMark: true,
       },
       exhausted: credits < need,
+      stillsOnFree: "demo-only",
     },
   };
 }

@@ -147,11 +147,26 @@ assert.match(pe, /CONTENT_POLICY/);
 
 const imgRoute = fs.readFileSync(join(root, "app/api/image/route.ts"), "utf8");
 const imgDemo = imgRoute.indexOf("if (!process.env.FAL_KEY)");
+const imgFreeTrialGate = imgRoute.indexOf('session.plan === "free"');
 const imgDeduct = imgRoute.indexOf("deductCredits(session");
 assert.ok(imgDemo > 0 && imgDeduct > imgDemo, "image demo path free before deduct");
+assert.ok(
+  imgFreeTrialGate > 0 && imgFreeTrialGate < imgDeduct,
+  "free plan stills must not debit Mini trial (before deductCredits)"
+);
+assert.match(imgRoute, /free_trial_video_only/);
 assert.match(imgRoute, /costCredits:\s*0/);
 assert.match(imgRoute, /creditsOutcome:\s*"0 cached"|creditsOutcome:\s*"10 used"/);
 assert.match(imgRoute, /Retry-After/);
+
+// health + me advertise free trial scope (video Create only)
+const healthRoute = fs.readFileSync(join(root, "app/api/health/route.ts"), "utf8");
+assert.match(healthRoute, /video-create-only/);
+assert.match(healthRoute, /stillsOnFree:\s*"demo-only"/);
+assert.match(
+  fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8"),
+  /stillsOnFree:\s*"demo-only"/
+);
 
 const ent = fs.readFileSync(join(root, "lib/entitlements.ts"), "utf8");
 assert.match(ent, /probeEntitlementsStore/);

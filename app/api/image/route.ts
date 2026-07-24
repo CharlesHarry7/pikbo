@@ -81,32 +81,46 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Demo stills are free when no provider is configured (parity with video demos).
-    if (!process.env.FAL_KEY) {
-      await new Promise((r) => setTimeout(r, 800));
+    // Shared free/demo still — never charges credits (video-first free trial honesty).
+    const demoStillPayload = (demoReason: "no_provider_key" | "free_trial_video_only") => {
       // placeholder gradient SVG data URL as demo (lime/black brand, not purple)
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a0a0a"/><stop offset="1" stop-color="#1a2e0a"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><text x="50%" y="48%" fill="#b8ff3c" font-size="28" text-anchor="middle" font-family="sans-serif">Pikbo demo still</text><text x="50%" y="54%" fill="#b8ff3c" font-size="14" text-anchor="middle" opacity=".75">set FAL_KEY for Flux</text></svg>`;
+      const sub =
+        demoReason === "free_trial_video_only"
+          ? "Free trial is Create video · upgrade for Flux"
+          : "set FAL_KEY for Flux";
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a0a0a"/><stop offset="1" stop-color="#1a2e0a"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><text x="50%" y="48%" fill="#b8ff3c" font-size="28" text-anchor="middle" font-family="sans-serif">Pikbo demo still</text><text x="50%" y="54%" fill="#b8ff3c" font-size="14" text-anchor="middle" opacity=".75">${sub}</text></svg>`;
       const imageUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
-      return NextResponse.json({
+      return {
         imageUrl,
-        demo: true,
-        demoReason: "no_provider_key",
+        demo: true as const,
+        demoReason,
         model: "demo",
         session: publicSession(session),
         // Parity with /api/generate honesty — cached demos never charge.
         costCredits: 0,
         creditsOutcome: "0 cached" as const,
-      });
+      };
+    };
+
+    // Demo stills are free when no provider is configured (parity with video demos).
+    if (!process.env.FAL_KEY) {
+      await new Promise((r) => setTimeout(r, 800));
+      return NextResponse.json(demoStillPayload("no_provider_key"));
     }
 
+    // Free plan Mini trial is Create video only — stills must not burn the 10-credit trial.
+    // Paid plans may live-charge Flux; free always labeled demo (0 credits).
+    if (session.plan === "free") {
+      await new Promise((r) => setTimeout(r, 600));
+      return NextResponse.json(demoStillPayload("free_trial_video_only"));
+    }
+
+    // Paid plans only below (Free returned demo above — trial is video Create only).
     const check = checkCredits(session);
     if (!check.ok) {
       return NextResponse.json(
         {
-          error:
-            session.plan === "free"
-              ? "Free trial used up — upgrade on Pricing, or wait for monthly refresh"
-              : "Not enough credits",
+          error: "Not enough credits — top up on Pricing or wait for plan refresh",
           code: "INSUFFICIENT_CREDITS",
           need: check.need,
           have: check.have,

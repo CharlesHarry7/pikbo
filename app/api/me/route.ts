@@ -49,6 +49,14 @@ export async function GET(req: Request) {
             }
           : null,
       exhausted: session.plan === "free" && session.credits < CREDITS_PER_VIDEO,
+      /**
+       * Free Mini trial is video Create only — /api/image returns labeled demo
+       * (0 credits) so stills never burn the 10-credit trial.
+       * Omitted on paid plans (live Flux stills allowed).
+       */
+      ...(session.plan === "free"
+        ? { stillsOnFree: "demo-only" as const }
+        : {}),
     },
     authConfigured: isSupabaseConfigured(),
     durableCreditsActive: durableCreditsActive(),

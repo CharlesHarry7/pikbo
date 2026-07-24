@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] Free stills never burn Mini video trial
+- `/api/image`: Free plan always labeled demo (`free_trial_video_only`, 0 credits) so Flux cannot burn the 10-credit Seedance Mini trial.
+- Paid plans only live-charge stills; health `freeTrial.scope=video-create-only` + me `stillsOnFree`.
+- Still studio CTA/copy: demo 0cr on Free · upgrade/Create for live.
+- Verified: typecheck · engine-smoke · eslint.
+
 ### 2026-07-24 — [grok] freeTrial honesty Batch + Landing tools
 - BatchStudio / Seller Pack: freeTrialExhausted · clipsLeft · trial-used CTA.
 - LandingToolPanel: exhausted → plans + Lab; live clips left from `/api/me`.

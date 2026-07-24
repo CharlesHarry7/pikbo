@@ -10,6 +10,7 @@ import {
   removeImageHistoryItem,
   type ImageHistoryItem,
 } from "@/lib/imageHistory";
+import { fetchMe, type MeResponse } from "@/lib/meClient";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 
@@ -36,17 +37,31 @@ export default function ImageStudioPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [demo, setDemo] = useState(false);
+  const [demoReason, setDemoReason] = useState<string | null>(null);
   const [history, setHistory] = useState<ImageHistoryItem[]>([]);
   /** Server settlement echo — 0 cached vs 10 used (honest soft-launch). */
   const [lastSettlement, setLastSettlement] = useState<string | null>(null);
+  /** Free plan: stills are demo-only so Mini trial stays for Create video. */
+  const [me, setMe] = useState<MeResponse | null>(null);
   /** Phase D/F parity — cancel mid still; refund unconfirmed if live debit started. */
   const abortRef = useRef<AbortController | null>(null);
+
+  // Default optimistic Free until /api/me resolves (soft-launch default plan).
+  const freeStillsDemoOnly =
+    me == null
+      ? true
+      : me.plan === "free" || me.freeTrial?.isFreePlan === true;
 
   useEffect(() => {
     const t = window.setTimeout(() => {
       setHistory(loadImageHistory());
     }, 0);
+    let cancelled = false;
+    void fetchMe().then((m) => {
+      if (!cancelled) setMe(m);
+    });
     return () => {
+      cancelled = true;
       window.clearTimeout(t);
       abortRef.current?.abort();
       abortRef.current = null;
@@ -114,6 +129,9 @@ export default function ImageStudioPage() {
       }
       setImageUrl(data.imageUrl);
       setDemo(Boolean(data.demo));
+      setDemoReason(
+        typeof data.demoReason === "string" ? data.demoReason : null
+      );
       const outcome =
         data.creditsOutcome === "0 cached" || data.creditsOutcome === "10 used"
           ? data.creditsOutcome
@@ -123,6 +141,14 @@ export default function ImageStudioPage() {
               : `${data.costCredits} used`
             : null;
       setLastSettlement(outcome);
+      // Authoritative session after still job (credits unchanged on free demo).
+      if (data.session && typeof data.session === "object") {
+        setMe((prev) =>
+          prev
+            ? { ...prev, ...data.session }
+            : (data.session as MeResponse)
+        );
+      }
       // Store live URLs + labeled demo placeholders so history stays honest.
       if (data.imageUrl) {
         setHistory(
@@ -181,10 +207,14 @@ export default function ImageStudioPage() {
               Still studio
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-[var(--fg-muted)]">
-              Optional packaging mock before video — not the product. Flux via
-              fal ({CREDITS_PER_VIDEO} credits live · demos labeled 0). Hand a
-              safe URL into Generate, Modules, or Seller Pack. Primary path
-              remains photo → Seedance clip.
+              Optional packaging mock before video — not the product. Free plan
+              keeps the Mini trial for{" "}
+              <Link href="/create" className="text-[var(--mint)] underline-offset-2 hover:underline">
+                Create video
+              </Link>{" "}
+              (stills stay labeled demo · 0 credits). Paid plans: Flux via fal (
+              {CREDITS_PER_VIDEO} credits live). Hand a safe URL into Generate,
+              Modules, or Seller Pack.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -263,9 +293,30 @@ export default function ImageStudioPage() {
                 onClick={() => void generate()}
                 className="btn btn-primary mt-4 w-full disabled:opacity-50"
               >
-                Generate still · {CREDITS_PER_VIDEO} credits
+                {freeStillsDemoOnly
+                  ? "Generate demo still · 0 credits"
+                  : `Generate still · ${CREDITS_PER_VIDEO} credits`}
               </button>
             )}
+            {freeStillsDemoOnly ? (
+              <p className="mt-2 text-[11px] leading-relaxed text-[var(--fg-dim)]">
+                Free Mini trial is video-only. Open{" "}
+                <Link
+                  href="/create"
+                  className="text-[var(--mint)] underline-offset-2 hover:underline"
+                >
+                  Create
+                </Link>{" "}
+                for your Seedance clip, or{" "}
+                <Link
+                  href="/pricing"
+                  className="text-[var(--mint)] underline-offset-2 hover:underline"
+                >
+                  upgrade
+                </Link>{" "}
+                for live Flux stills.
+              </p>
+            ) : null}
             {error ? (
               <GenerateFailPanel
                 className="mt-3"
@@ -280,7 +331,11 @@ export default function ImageStudioPage() {
             ) : null}
             {demo && (
               <p className="mt-2 text-xs text-[var(--fg-dim)]">
-                Demo placeholder — add FAL_KEY for Flux stills.
+                {demoReason === "free_trial_video_only"
+                  ? "Labeled demo — Free trial credits stay reserved for Create video Mini."
+                  : demoReason === "no_provider_key"
+                    ? "Demo placeholder — add FAL_KEY for Flux stills (paid plans)."
+                    : "Demo placeholder — labeled 0 credits."}
               </p>
             )}
             {canHandOffStill(imageUrl) && (
