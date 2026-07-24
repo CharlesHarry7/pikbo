@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] Community/Tools/Effects FAQ + FreeTrial honesty
+- Phase H: Community + Tools + Effects hubs get FAQ + FAQPage JSON-LD (not thin walls).
+- Tools/Effects: static Try free / Generate free → `FreeTrialCta` (exhausted → plans).
+- engine-smoke asserts COMMUNITY/TOOLS/EFFECTS FAQ + no thin free CTAs.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-24 — [grok] FreeTrialCta + Apps/Explore FAQ
 - Shared `FreeTrialCta`: freeTrial exhausted → plans; Lab sample still free; clipsLeft chip.
 - Wired Apps / Explore / Community (no static “Try free” when trial spent).

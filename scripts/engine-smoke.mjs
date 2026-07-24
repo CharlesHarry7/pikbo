@@ -990,18 +990,22 @@ assert.match(packExport, /filterAvailableDeliverables/);
 assert.match(packExport, /sellerPackCsv/);
 assert.match(packExport, /sellerPackAvailableDownloads/);
 assert.match(packExport, /sellerPackDownloadHref/);
+assert.match(packExport, /isSafeDeliverableUrl/);
 function filterAvailable(items) {
   return items.filter(
     (i) =>
       i.status === "succeeded" &&
       i.videoUrl &&
-      i.downloadable
+      i.downloadable &&
+      (isSafeDeliverableUrlPure(i.videoUrl) ||
+        (typeof i.requestId === "string" && i.requestId.trim()))
   );
 }
 function packDownloadHref(item) {
   if (item.status !== "succeeded" || !item.downloadable) return null;
   if (item.requestId) return `/api/downloads/${encodeURIComponent(item.requestId)}`;
-  return item.videoUrl || null;
+  if (item.videoUrl && isSafeDeliverableUrlPure(item.videoUrl)) return item.videoUrl;
+  return null;
 }
 function packAvailableDownloads(items) {
   return filterAvailable(items)
@@ -1578,6 +1582,43 @@ assert.equal(isSafeDeliverableUrlPure("https://fal.media/files/x.mp4"), true);
 assert.equal(isSafeDeliverableUrlPure("javascript:alert(1)"), false);
 assert.equal(isSafeDeliverableUrlPure("//evil.com/x"), false);
 assert.equal(isSafeDeliverableUrlPure("data:text/html,hi"), false);
+// Seller Pack: unsafe direct URL dropped; requestId still allowed via downloads gate
+assert.equal(
+  filterAvailable([
+    {
+      status: "succeeded",
+      videoUrl: "javascript:alert(1)",
+      downloadable: true,
+    },
+  ]).length,
+  0
+);
+assert.equal(
+  packDownloadHref({
+    status: "succeeded",
+    downloadable: true,
+    videoUrl: "javascript:alert(1)",
+  }),
+  null
+);
+assert.match(
+  packDownloadHref({
+    status: "succeeded",
+    downloadable: true,
+    requestId: "job_x",
+    videoUrl: "javascript:alert(1)",
+  }) || "",
+  /\/api\/downloads\//
+);
+// Status page ops probe surfaces demos + freeTrial scope
+assert.match(
+  fs.readFileSync(join(root, "components/StatusProbe.tsx"), "utf8"),
+  /Lab demos on disk|demos\?\.ok|freeTrial|billing/
+);
+assert.match(
+  fs.readFileSync(join(root, "scripts/critical-path.sh"), "utf8"),
+  /HEAD \/api\/me|X-Pikbo-Credits|X-Pikbo-Jobs-Open/
+);
 const authUser = fs.readFileSync(join(root, "lib/supabase/user.ts"), "utf8");
 assert.match(authUser, /guestSessionIdHash/);
 assert.match(authUser, /getUser/);
@@ -2270,10 +2311,30 @@ const explorePageSrc = fs.readFileSync(
 assert.match(explorePageSrc, /EXPLORE_FAQ|Explore FAQ/);
 assert.match(explorePageSrc, /FAQPage/);
 assert.match(explorePageSrc, /FreeTrialCta/);
-assert.match(
-  fs.readFileSync(join(root, "app/community/page.tsx"), "utf8"),
-  /FreeTrialCta/
+const communityPageSrc = fs.readFileSync(
+  join(root, "app/community/page.tsx"),
+  "utf8"
 );
+assert.match(communityPageSrc, /FreeTrialCta/);
+assert.match(communityPageSrc, /COMMUNITY_FAQ|Community FAQ/);
+assert.match(communityPageSrc, /FAQPage/);
+// Tools + Effects hubs: freeTrial-honest CTAs + Phase H FAQ (not thin shelves)
+const toolsIndexSrc = fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8");
+assert.match(toolsIndexSrc, /FreeTrialCta/);
+assert.match(toolsIndexSrc, /TOOLS_FAQ|Tools FAQ/);
+assert.match(toolsIndexSrc, /FAQPage/);
+assert.doesNotMatch(
+  toolsIndexSrc,
+  /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Try free/
+);
+const effectsHubSrc = fs.readFileSync(
+  join(root, "app/effects/page.tsx"),
+  "utf8"
+);
+assert.match(effectsHubSrc, /FreeTrialCta/);
+assert.match(effectsHubSrc, /EFFECTS_FAQ|Recipes FAQ/);
+assert.match(effectsHubSrc, /FAQPage/);
+assert.doesNotMatch(effectsHubSrc, /Generate free/);
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

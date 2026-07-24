@@ -25,6 +25,22 @@ export const metadata: Metadata = {
   },
 };
 
+/** Phase H: FAQ so /community is not a thin Lab wall (tool + proof + intent). */
+const COMMUNITY_FAQ = [
+  {
+    q: "Is this real customer community content?",
+    a: "No. Community is PIKBO Lab only — official cached demos with owned inputs and distinct outputs. We do not invent likes, UGC walls, or customer posts.",
+  },
+  {
+    q: "What is Remix vs Inside?",
+    a: "Remix opens Generate with that recipe on a toy photo you own. Inside shows input still, settings, and provenance for the Lab example.",
+  },
+  {
+    q: "Do Lab demos use Free Mini credits?",
+    a: "Cached Lab playback costs 0 credits. Free Mini is for one live Seedance Mini clip (about 5s · 480p · on-player mark). After trial, Lab still free; live needs a plan.",
+  },
+] as const;
+
 /** PIKBO Lab: unique official demos only — no shared-loop density wall (G2/G3). */
 export default function CommunityPage() {
   const projects = communityProjects();
@@ -51,11 +67,28 @@ export default function CommunityPage() {
     })),
   };
 
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: COMMUNITY_FAQ.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div className="pb-24">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <div className="sticky top-0 z-20 border-b border-white/[0.07] bg-black/90 px-4 py-3.5 backdrop-blur-xl sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -158,6 +191,25 @@ export default function CommunityPage() {
           {wall.map((item) => (
             <VideoTile key={item.id} item={item} compact />
           ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-3 pb-10 pt-4 sm:px-5">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
+          <h2 className="text-sm font-bold text-white">Community FAQ</h2>
+          <p className="mt-1 text-xs text-white/40">
+            Lab only · not UGC · Remix · Free Mini
+          </p>
+          <dl className="mt-4 space-y-4">
+            {COMMUNITY_FAQ.map((f) => (
+              <div key={f.q}>
+                <dt className="text-sm font-semibold text-white/90">{f.q}</dt>
+                <dd className="mt-1 text-xs leading-relaxed text-white/55">
+                  {f.a}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
     </div>

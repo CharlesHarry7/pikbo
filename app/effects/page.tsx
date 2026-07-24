@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { PRESETS } from "@/lib/presets";
 import { allCategoryFeeds } from "@/lib/videoFeed";
 import { VideoTile } from "@/components/VideoTile";
@@ -21,6 +22,22 @@ export const metadata: Metadata = {
     url: `${site.url}/effects`,
   },
 };
+
+/** Phase H: FAQ so /effects is not a thin recipe wall. */
+const EFFECTS_FAQ = [
+  {
+    q: "What is a Lab recipe vs a concept recipe?",
+    a: "Lab recipes have a unique cached demo clip and open Generate with that effect. Concept recipes are reachable for SEO/IA but stay labeled concept and may be noindex until proof exists.",
+  },
+  {
+    q: "Does remaking a preset cost credits?",
+    a: "Watching Lab demos costs 0. Live Seedance Mini uses Free Mini (about one 5s 480p clip with on-player mark) or paid credits. Exhausted trial CTAs go to plans — Lab still free.",
+  },
+  {
+    q: "Is every card a guaranteed viral look?",
+    a: "No. Recipes are motion templates for toys you own. Marketplace or social performance is not guaranteed.",
+  },
+] as const;
 
 /** HF viral-presets wall + suite chrome (toy vertical) */
 export default function EffectsHub() {
@@ -47,11 +64,28 @@ export default function EffectsHub() {
     })),
   };
 
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: EFFECTS_FAQ.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div className="pb-24">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <Suspense
         fallback={
@@ -79,13 +113,13 @@ export default function EffectsHub() {
               </Link>
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/create?try=1&sample=scout"
+          <div className="flex flex-wrap items-center gap-2">
+            <FreeTrialCta
+              path="/effects"
+              variant="mint"
+              labelTry="Try free"
               className="btn btn-primary !px-4 !py-2 text-xs font-black"
-            >
-              Generate free
-            </Link>
+            />
             <Link
               href="/flow"
               className="btn btn-ghost !px-3 !py-2 text-xs"
@@ -154,6 +188,25 @@ export default function EffectsHub() {
           </div>
         </section>
       ))}
+
+      <section className="mx-auto max-w-7xl px-3 pb-10 pt-6 sm:px-5">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
+          <h2 className="text-sm font-bold text-white">Recipes FAQ</h2>
+          <p className="mt-1 text-xs text-white/40">
+            Lab vs concept · Free Mini · no viral guarantee
+          </p>
+          <dl className="mt-4 space-y-4">
+            {EFFECTS_FAQ.map((f) => (
+              <div key={f.q}>
+                <dt className="text-sm font-semibold text-white/90">{f.q}</dt>
+                <dd className="mt-1 text-xs leading-relaxed text-white/55">
+                  {f.a}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
     </div>
   );
 }
