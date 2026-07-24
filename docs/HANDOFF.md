@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] for/toys/guides FAQ + Mini 5s honesty
+- Phase H: `/for` `/toys` `/guides` hubs → FAQ + FAQPage + FreeTrialCta.
+- Guide detail + PricingHero: no free “10s” CTA; Free Mini 5s labels.
+- i18n home.tryFree10s / suite.tryFree.blurb + Onboarding/HfProductRail Mini 5s.
+- engine-smoke gates hubs + rejects Try free · 10s.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-24 — [grok] Free raw share/download honesty + assets HEAD
 - Create: copyLink/shareX refuse Free Mini raw + unsafe schemes (T6 cannot bypass via clipboard/X).
 - Create/Landing download href requires requestId or isSafeDeliverableUrl.

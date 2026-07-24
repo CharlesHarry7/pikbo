@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GUIDES, getGuide } from "@/lib/guides";
 import { getPreset } from "@/lib/presets";
 import { PresetCard } from "@/components/PresetCard";
@@ -131,12 +132,13 @@ export default async function GuidePage({
               Try it with a toy you own
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <Link
-                href="/create?try=1&sample=scout"
+              <FreeTrialCta
+                path={`/guides/${g.slug}`}
+                labelTry="Try free · Mini 5s →"
+                labelPlans="Compare plans →"
+                labelDemo="Try Lab sample →"
                 className="btn bg-white px-6 py-2.5 font-semibold text-[var(--bg)] hover:opacity-90"
-              >
-                Try free · 10s →
-              </Link>
+              />
               <Link
                 href="/modules"
                 className="btn border border-white/40 bg-transparent px-5 py-2.5 font-semibold text-white hover:bg-white/10"

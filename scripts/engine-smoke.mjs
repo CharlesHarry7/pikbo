@@ -2346,6 +2346,39 @@ assert.match(effectsHubSrc, /FreeTrialCta/);
 assert.match(effectsHubSrc, /EFFECTS_FAQ|Recipes FAQ/);
 assert.match(effectsHubSrc, /FAQPage/);
 assert.doesNotMatch(effectsHubSrc, /Generate free/);
+// SEO hubs /for /toys /guides — Phase H FAQ + FreeTrial honesty
+const forHubSrc = fs.readFileSync(join(root, "app/for/page.tsx"), "utf8");
+assert.match(forHubSrc, /FreeTrialCta/);
+assert.match(forHubSrc, /FOR_FAQ|Use cases FAQ/);
+assert.match(forHubSrc, /FAQPage/);
+assert.doesNotMatch(
+  forHubSrc,
+  /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Try free Mini/
+);
+const toysHubSrc = fs.readFileSync(join(root, "app/toys/page.tsx"), "utf8");
+assert.match(toysHubSrc, /FreeTrialCta/);
+assert.match(toysHubSrc, /TOYS_FAQ|Toy types FAQ/);
+assert.match(toysHubSrc, /FAQPage/);
+const guidesHubSrc = fs.readFileSync(
+  join(root, "app/guides/page.tsx"),
+  "utf8"
+);
+assert.match(guidesHubSrc, /FreeTrialCta/);
+assert.match(guidesHubSrc, /GUIDES_FAQ|Guides FAQ/);
+assert.match(guidesHubSrc, /FAQPage/);
+// Free Mini is 5s — do not advertise free 10s trial CTAs
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "app/guides/[slug]/page.tsx"), "utf8"),
+  /Try free · 10s/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
+  /Try free · 10s/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
+  /Mini 5s|Mini 5 秒/
+);
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

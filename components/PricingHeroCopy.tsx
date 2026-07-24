@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -82,9 +83,13 @@ export function PricingHeroCopy({
           <Button asChild variant="secondary" size="lg">
             <Link href="#plans">{copy.secondary}</Link>
           </Button>
-          <Button asChild variant="secondary" size="lg">
-            <Link href="/create?try=1&sample=scout">Try free · 10s</Link>
-          </Button>
+          <FreeTrialCta
+            path="/pricing"
+            labelTry="Try free · Mini 5s"
+            labelPlans="Compare plans"
+            labelDemo="Try Lab sample"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-5 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/[0.07]"
+          />
         </div>
         <div className="mt-5 flex flex-wrap justify-center gap-2">
           <Link

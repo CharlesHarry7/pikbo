@@ -13,7 +13,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | ID | Task | Owner | Status | Branch | Notes |
 |---|---|---|---|---|---|
 | GO | Public pikbo.ai Mode B | Grok | **blocked** | agent/grok/final-takeover | Grok owns readiness; boss still must explicitly approve public DNS and charging |
-| GROK-TAKEOVER | Complete every remaining no-cost product, engineering, QA and private-release task | Grok | doing | main | 2026-07-24: Community/Tools/Effects FAQ+FAQPage + FreeTrialCta; prior Apps/Explore. Still blocked on boss Vercel/DNS, T5 SQL multi-node, T6 bake |
+| GROK-TAKEOVER | Complete every remaining no-cost product, engineering, QA and private-release task | Grok | doing | main | 2026-07-24: for/toys/guides FAQ+FreeTrial + Mini 5s honesty; prior Community/Tools/Effects. Still blocked on boss Vercel/DNS, T5 SQL multi-node, T6 bake |
 | SUITE | 潮玩版 HF Generate + Yiha Modules 产品壳 | Grok | **review** | main | `/create` `/modules` suite chrome; softLaunch PRIMARY/MOBILE nav freeze; suite doors sitewide |
 | G1 | Nav whitelist / kill empty doors | Grok | **review** | main + agent/gpt/world-class-prd | Reassigned for final deployed verification; five-label desktop and mobile whitelist frozen |
 | G2 | ≤8 hero presets, unique demos | Grok | **review** | main + agent/gpt/world-class-prd | Reassigned for proof audit; exact eight proof slugs are frozen |

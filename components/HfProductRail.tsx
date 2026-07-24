@@ -24,7 +24,7 @@ const PRODUCTS: {
   {
     href: "/create?try=1&sample=scout",
     title: "Try free",
-    blurb: "Lab sample · ~10s",
+    blurb: "Lab sample · Free Mini 5s",
     tag: "Free",
     hot: true,
   },

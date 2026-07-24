@@ -47,7 +47,7 @@ export function OnboardingBanner() {
             onClick={dismiss}
             className="btn btn-primary px-3.5 py-1.5 text-xs font-black"
           >
-            {t("cta.tryFree")} · 10s
+            {t("cta.tryFree")} · Mini 5s
           </Link>
           <Link
             href="/flow"

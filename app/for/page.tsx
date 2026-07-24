@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { USE_CASES } from "@/lib/usecases";
 import { site } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
@@ -22,6 +23,22 @@ export const metadata: Metadata = {
   },
 };
 
+/** Phase H: FAQ so /for is not a thin use-case index. */
+const FOR_FAQ = [
+  {
+    q: "What is a use-case page?",
+    a: "One search job (Etsy listing, TikTok hook, drop teaser…) with an on-page Generate tool and a registered recipe. Not a brochure or feature dump.",
+  },
+  {
+    q: "Does Try free Mini mean unlimited clips?",
+    a: "No. Free Mini is about one live Seedance Mini clip (5s · 480p · on-player mark). Lab samples cost 0. After trial, Lab stays free; live needs a plan.",
+  },
+  {
+    q: "Are sales guaranteed for sellers?",
+    a: "No. Pikbo makes short product clips from photos of toys you own. Marketplace results depend on your listing, price, and traffic.",
+  },
+] as const;
+
 export default function ForHubPage() {
   // Prefer proof-backed primary recipes first for crawl quality signals.
   const ranked = [...USE_CASES].sort((a, b) => {
@@ -41,9 +58,26 @@ export default function ForHubPage() {
     })),
   });
 
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FOR_FAQ.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div className="relative px-4 py-10 sm:px-8">
       <JsonLd data={itemListLd} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+      />
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-[radial-gradient(45%_80%_at_0%_0%,rgba(200,255,61,0.06),transparent_70%)]"
         aria-hidden
@@ -58,10 +92,12 @@ export default function ForHubPage() {
           Generate tool — not a feature dump. Free Mini has fixed caps; Lab demos
           are cached samples.
         </p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Link href="/create?try=1&sample=scout" className="btn btn-primary text-sm">
-            Try free Mini
-          </Link>
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <FreeTrialCta
+            path="/for"
+            variant="mint"
+            labelTry="Try free Mini"
+          />
           <Link href="/tools" className="btn btn-ghost text-sm">
             Tools hub
           </Link>
@@ -102,6 +138,23 @@ export default function ForHubPage() {
         <p className="mt-8 text-center text-xs text-[var(--fg-dim)]">
           {USE_CASES.length} use-case landings · each deep-links Generate
         </p>
+
+        <section className="mt-12 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
+          <h2 className="text-sm font-bold text-white">Use cases FAQ</h2>
+          <p className="mt-1 text-xs text-white/40">
+            One job per page · Free Mini · no sales guarantee
+          </p>
+          <dl className="mt-4 space-y-4 text-left">
+            {FOR_FAQ.map((f) => (
+              <div key={f.q}>
+                <dt className="text-sm font-semibold text-white/90">{f.q}</dt>
+                <dd className="mt-1 text-xs leading-relaxed text-white/55">
+                  {f.a}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
       </div>
     </div>
   );
