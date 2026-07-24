@@ -7,7 +7,13 @@ import {
   postGenerateWithRetry,
 } from "@/lib/generateClient";
 import { pushHistory } from "@/lib/history";
-import { fetchMe, mergeMeSession, type MeResponse } from "@/lib/meClient";
+import {
+  fetchMe,
+  freeTrialExhausted,
+  isDemoMode,
+  mergeMeSession,
+  type MeResponse,
+} from "@/lib/meClient";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { isValidImageDataUrl } from "@/lib/providerError";
 import { SAMPLE_TOYS, sampleToDataUrl } from "@/lib/samples";
@@ -67,6 +73,20 @@ export function LandingToolPanel({
     demo,
     watermark,
   });
+
+  const trialDone = freeTrialExhausted(session);
+  const isFree =
+    session?.plan === "free" ||
+    session?.watermark === true ||
+    session?.freeTrial?.isFreePlan === true;
+  const demoMode = isDemoMode(session);
+  const freeLive = session?.freeTrial?.freeLive;
+  const clipsLeft =
+    typeof session?.freeTrial?.clipsLeft === "number"
+      ? session.freeTrial.clipsLeft
+      : session && typeof session.credits === "number"
+        ? Math.floor(session.credits / CREDITS_PER_VIDEO)
+        : null;
 
   const refreshSession = useCallback(async () => {
     const data = await fetchMe();
@@ -289,11 +309,31 @@ export function LandingToolPanel({
       <div className="border-b border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-[var(--fg-dim)]">
-              Try free · {effectName}
+            <p
+              className={`text-xs font-bold uppercase tracking-wider ${
+                trialDone && isFree && !demoMode
+                  ? "text-amber-200/90"
+                  : "text-[var(--fg-dim)]"
+              }`}
+            >
+              {trialDone && isFree && !demoMode
+                ? `Free Mini used · ${effectName}`
+                : `Try free · ${effectName}`}
             </p>
             <p className="mt-0.5 text-sm text-[var(--fg-muted)]">
-              Upload one photo → clip on this page (no extra hop).
+              {trialDone && isFree && !demoMode ? (
+                <>
+                  Lab demos still free ·{" "}
+                  <Link
+                    href="/pricing"
+                    className="font-semibold text-[var(--mint)] hover:underline"
+                  >
+                    compare plans
+                  </Link>
+                </>
+              ) : (
+                "Upload one photo → clip on this page (no extra hop)."
+              )}
             </p>
           </div>
           {session && (
@@ -301,9 +341,18 @@ export function LandingToolPanel({
               <p className="font-semibold text-[var(--mint)]">
                 {session.credits} credits
               </p>
-              <p className="text-[var(--fg-dim)]">
-                ≈ {Math.floor(session.credits / CREDITS_PER_VIDEO)}-job allowance ·{" "}
-                {session.planName}
+              <p
+                className={
+                  trialDone && isFree ? "text-amber-200/90" : "text-[var(--fg-dim)]"
+                }
+              >
+                {demoMode
+                  ? `Demo · ${session.planName}`
+                  : trialDone && isFree
+                    ? `trial used · ${session.planName}`
+                    : clipsLeft !== null
+                      ? `~${clipsLeft} live left · ${session.planName}`
+                      : `≈ ${Math.floor(session.credits / CREDITS_PER_VIDEO)}-job · ${session.planName}`}
               </p>
             </div>
           )}
@@ -391,7 +440,7 @@ export function LandingToolPanel({
 
           <div className="flex flex-wrap gap-2 text-[10px] text-[var(--fg-dim)]">
             <span className="rounded-md border border-[var(--border)] px-2 py-1">
-              {duration}s
+              {isFree && freeLive ? `${freeLive.durationSec}s` : `${duration}s`}
             </span>
             <span className="rounded-md border border-[var(--border)] px-2 py-1">
               {aspectRatio}
@@ -400,11 +449,21 @@ export function LandingToolPanel({
               Seedance
             </span>
             <span className="rounded-md border border-[var(--border)] px-2 py-1">
-              {CREDITS_PER_VIDEO} credits
+              {demoMode ? "0 cached" : `${CREDITS_PER_VIDEO} credits`}
             </span>
-            {(session?.plan === "free" || session?.watermark) && (
-              <span className="rounded-md border border-[var(--border)] px-2 py-1">
-                Mini · 480p · on-player mark
+            {isFree && (
+              <span
+                className={`rounded-md border px-2 py-1 ${
+                  trialDone && !demoMode
+                    ? "border-amber-300/30 text-amber-100"
+                    : "border-[var(--border)]"
+                }`}
+              >
+                {trialDone && !demoMode
+                  ? "Free Mini trial used"
+                  : freeLive
+                    ? `Mini · ${freeLive.resolution} · on-player mark`
+                    : "Mini · 480p · on-player mark"}
               </span>
             )}
           </div>
@@ -431,6 +490,22 @@ export function LandingToolPanel({
             >
               Cancel request · {elapsed}s
             </button>
+          ) : trialDone && isFree && !demoMode ? (
+            <div className="space-y-2">
+              <p className="rounded-lg border border-amber-300/25 bg-amber-300/[0.06] px-3 py-2 text-[11px] leading-snug text-amber-100">
+                Free Mini trial exhausted · cached Lab demos still free · failed
+                live jobs still refund when credits return.
+              </p>
+              <Link href="/pricing" className="btn btn-primary w-full text-center">
+                Compare plans
+              </Link>
+              <Link
+                href={`/create?effect=${effectSlug}`}
+                className="btn btn-ghost w-full border border-white/15 text-center text-xs text-white/70"
+              >
+                Open studio · Lab sample
+              </Link>
+            </div>
           ) : (
             <button
               type="button"
@@ -438,7 +513,9 @@ export function LandingToolPanel({
               onClick={() => void generate()}
               className="btn btn-primary w-full disabled:opacity-50"
             >
-              {`Generate ${effectName} · ${CREDITS_PER_VIDEO} credits`}
+              {demoMode
+                ? `Preview ${effectName} · cached free`
+                : `Generate ${effectName} · ${CREDITS_PER_VIDEO} credits`}
             </button>
           )}
 

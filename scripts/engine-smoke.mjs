@@ -1898,6 +1898,15 @@ assert.match(
   fs.readFileSync(join(root, "components/SoftLaunchStrip.tsx"), "utf8"),
   /freeTrialExhausted|Trial used|clipsLeft/
 );
+// Batch / Seller Pack + effect landings share freeTrial honesty (Phase F)
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /freeTrialExhausted|Free Mini trial used|clipsLeft/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
+  /freeTrialExhausted|Free Mini trial exhausted|clipsLeft|compare plans/
+);
 assert.match(
   fs.readFileSync(join(root, "components/HomeProjectsExplore.tsx"), "utf8"),
   /detailHref|Inside|Remake|desktopPlayMode/

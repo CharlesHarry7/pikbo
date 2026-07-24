@@ -16,7 +16,13 @@ import { CATEGORIES, PRESETS, type CategoryId } from "@/lib/presets";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { isValidImageDataUrl } from "@/lib/providerError";
 import { SAMPLE_TOYS, sampleToDataUrl } from "@/lib/samples";
-import { fetchMe, mergeMeSession, type MeResponse } from "@/lib/meClient";
+import {
+  fetchMe,
+  freeTrialExhausted,
+  isDemoMode,
+  mergeMeSession,
+  type MeResponse,
+} from "@/lib/meClient";
 import { emitSessionRefresh } from "@/lib/sessionEvents";
 import {
   canExportSellerPack,
@@ -171,7 +177,16 @@ export function BatchStudio({
   }
 
   const isFree = me?.plan === "free" || me?.watermark === true;
-  const demoMode = me?.mode === "demo-cached";
+  const demoMode = isDemoMode(me) || me?.mode === "demo-cached";
+  /** Soft-launch freeTrial honesty — same contract as Create / SoftLaunchStrip. */
+  const trialDone = freeTrialExhausted(me);
+  const freeLive = me?.freeTrial?.freeLive;
+  const clipsLeft =
+    typeof me?.freeTrial?.clipsLeft === "number"
+      ? me.freeTrial.clipsLeft
+      : typeof me?.credits === "number"
+        ? Math.floor(me.credits / CREDITS_PER_VIDEO)
+        : null;
   /** Server free tier hard-locks 5s / 480p Mini; keep UI honest. */
   const effectiveDuration = isFree ? 5 : duration;
   const effectiveResolution = isFree ? "480p" : "720p";
@@ -765,9 +780,11 @@ export function BatchStudio({
         ? "Confirm ownership to continue"
         : demoMode
           ? `${sellerPackActive ? "Preview Seller Pack" : "Run batch"} · ${selected.length} · cached free`
-          : sellerPackActive
-            ? `Run Seller Pack · ${sellerPackQuoteLabel(packQuote)}`
-            : `Run batch · ${batchQuoteLabel(packQuote)}`;
+          : trialDone && isFree && !liveQuoteCovered
+            ? "Free Mini trial used · open single Generate or plans"
+            : sellerPackActive
+              ? `Run Seller Pack · ${sellerPackQuoteLabel(packQuote)}`
+              : `Run batch · ${batchQuoteLabel(packQuote)}`;
 
   const creditStrip = (
     <div
@@ -795,15 +812,33 @@ export function BatchStudio({
         <p className="mt-0.5 text-[var(--fg-dim)]">
           Session balance:{" "}
           <b className="text-[var(--fg)]">{me?.credits ?? "…"} credits</b>
+          {isFree ? (
+            <span
+              className={
+                trialDone ? " text-amber-200" : " text-[var(--fg-dim)]"
+              }
+            >
+              {trialDone
+                ? " · Free Mini trial used"
+                : freeLive
+                  ? ` · Free Mini · ${freeLive.resolution} ${freeLive.durationSec}s`
+                  : " · Free Mini"}
+              {clipsLeft !== null && !trialDone
+                ? ` · ~${clipsLeft} live left`
+                : ""}
+            </span>
+          ) : null}
           {typeof me?.credits !== "number" ? (
             <span> · loading balance…</span>
           ) : !sellerPackBalanceCovers(packQuote, me.credits) ? (
             <span className="text-amber-200">
               {" "}
               · short {sellerPackShortfall(packQuote, me.credits)}
-              {sellerPackActive
-                ? " — Free Mini covers one 10-cr job, not a full pack"
-                : " — Free Mini is one 10-cr job; deselect recipes or open single Generate"}
+              {trialDone && isFree
+                ? " — trial exhausted; Lab demos still free · single Generate needs a plan top-up"
+                : sellerPackActive
+                  ? " — Free Mini covers one 10-cr job, not a full pack"
+                  : " — Free Mini is one 10-cr job; deselect recipes or open single Generate"}
             </span>
           ) : (
             <span>
@@ -952,7 +987,14 @@ export function BatchStudio({
                 </div>
                 {isFree && (
                   <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
-                    Free · Mini · 480p · 5s (server-enforced)
+                    {trialDone
+                      ? "Free Mini trial used · Lab demos still free"
+                      : freeLive
+                        ? `Free Mini · ${freeLive.resolution} · ${freeLive.durationSec}s (server-enforced)`
+                        : "Free · Mini · 480p · 5s (server-enforced)"}
+                    {clipsLeft !== null && !trialDone
+                      ? ` · ~${clipsLeft} live left`
+                      : ""}
                   </p>
                 )}
               </div>
@@ -1134,12 +1176,31 @@ export function BatchStudio({
         {!liveQuoteCovered && sellerPackActive ? (
           <div className="rounded-xl border border-amber-300/25 bg-amber-300/[0.06] p-3 text-xs text-amber-100">
             <p className="font-bold">
-              Full live pack needs {cost} credits; this session has{" "}
-              {me?.credits ?? 0}.
+              {trialDone && isFree
+                ? "Free Mini trial used · full Seller Pack needs paid credits"
+                : `Full live pack needs ${cost} credits; this session has ${me?.credits ?? 0}.`}
             </p>
             <p className="mt-1 text-[11px] text-white/50">
-              The current Free allowance supports one Mini job. Choose one
-              recipe in single Generate; paid activation remains gated.
+              {trialDone && isFree ? (
+                <>
+                  Cached Lab demos stay free. One live Mini job needs{" "}
+                  {CREDITS_PER_VIDEO} credits after top-up.{" "}
+                  <Link
+                    href="/pricing"
+                    className="font-semibold text-[var(--mint)] hover:underline"
+                  >
+                    Compare plans
+                  </Link>
+                  .
+                </>
+              ) : (
+                <>
+                  Free Mini covers one 10-cr job
+                  {clipsLeft !== null ? ` (~${clipsLeft} left)` : ""} — not a
+                  full pack. Choose one recipe in single Generate; paid
+                  activation remains gated.
+                </>
+              )}
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {SELLER_PACK_ITEMS.map((item) => (
@@ -1151,6 +1212,14 @@ export function BatchStudio({
                   Try {item.label}
                 </Link>
               ))}
+              {trialDone && isFree ? (
+                <Link
+                  href="/pricing"
+                  className="rounded-full border border-[var(--mint)]/35 px-2.5 py-1 text-[10px] font-bold text-[var(--mint)]"
+                >
+                  Plans
+                </Link>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -1174,7 +1243,11 @@ export function BatchStudio({
           {demoMode
             ? " (demo-cached · 0 credits)"
             : isFree
-              ? " (Free Mini 480p 5s)"
+              ? trialDone
+                ? " (Free Mini trial used · Lab demos still free)"
+                : freeLive
+                  ? ` (Free Mini ${freeLive.resolution} ${freeLive.durationSec}s)`
+                  : " (Free Mini 480p 5s)"
               : " (paid Fast 720p path)"}
           . Finished clips land in{" "}
           <Link href="/library" className="text-[var(--brand)] hover:underline">

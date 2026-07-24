@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] freeTrial honesty Batch + Landing tools
+- BatchStudio / Seller Pack: freeTrialExhausted · clipsLeft · trial-used CTA.
+- LandingToolPanel: exhausted → plans + Lab; live clips left from `/api/me`.
+- engine-smoke asserts Batch + Landing freeTrial contract.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-24 — [grok] Profile/Settings freeTrial + Library download HEAD
 - Profile + Settings surface `/api/me` freeTrial (clips left / exhausted / Mini).
 - Settings uses `PRIVATE_ROBOTS`; T6 raw-download honesty row.
