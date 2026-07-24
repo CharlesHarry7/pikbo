@@ -28,19 +28,25 @@ export function SeedanceCampaign() {
 
       <div className="relative grid gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:py-16">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--mint)]">
-            Now in video · already on Pikbo
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--mint)]">
+              Flagship · already on Pikbo
+            </p>
+            <span className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--mint)]">
+              Live Mini
+            </span>
+          </div>
           <h2 className="mt-2 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
             Seedance
-            <span className="block text-[var(--mint)]">VIDEO</span>
+            <span className="block text-[var(--mint)]">TOY VIDEO</span>
           </h2>
           <p className="mt-2 text-sm font-semibold uppercase tracking-[0.18em] text-white/50">
-            AI video for toys · Mini live when configured
+            Designer-toy OS · photo → short clip
           </p>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/45">
-            Photo in → short video out. Single live engine (Seedance). Not a
-            multi-model zoo. Kling / Veo / Sora stay Soon until real keys.
+            One live engine (Seedance) for figures, blind boxes, listings.
+            Not a multi-model zoo — Kling / Veo / Sora stay Soon until real
+            keys land.
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-2.5">
             <FreeTrialCta
