@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] FreeTrialCta + Apps/Explore FAQ
+- Shared `FreeTrialCta`: freeTrial exhausted → plans; Lab sample still free; clipsLeft chip.
+- Wired Apps / Explore / Community (no static “Try free” when trial spent).
+- Phase H: Apps + Explore FAQ + FAQPage JSON-LD (not thin shelves).
+- engine-smoke asserts FreeTrialCta + FAQPage; Library session meta on prior SHA.
+- Verified: typecheck · engine-smoke · `ec40875`.
+
 ### 2026-07-24 — [grok] Library URL safety + session HEAD probes
 - `history` import/normalize + `downloadVideoFile` refuse unsafe schemes (`isSafeDeliverableUrl`).
 - Export includes `downloadAllowed` / `downloadGate` (T6 Free-live honesty for support).

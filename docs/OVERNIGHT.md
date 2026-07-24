@@ -109,7 +109,8 @@
 68. [x] Seller Pack multi-download available + Modules freeTrial FAQ honesty
 69. [x] health.demos disk probe · demoClip on-disk fallback · image mergeMeSession + aspect echo
 70. [x] Library import/download URL safety · export downloadGate · me/generations HEAD · creditStatus server echo
-71. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+71. [x] FreeTrialCta Apps/Explore/Community · Apps+Explore FAQPage
+72. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
