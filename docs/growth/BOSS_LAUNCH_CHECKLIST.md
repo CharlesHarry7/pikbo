@@ -23,7 +23,13 @@
 
 ---
 
-## 可选 / 后补（非 blocker）
+## 权威：听哥飞（2026-07-25 老板确认）
+
+**个人冲动（含「现在就要 Stripe/UGC/T6/全站像 HF」）让位于哥飞 Path A。**  
+当前只做：SEO 内页 · GSC/外链 · Generate/Seller Pack · **TDH 冻结**。  
+Round C 文档休眠：`ROUND_C_STRIPE_UGC_T6_HF.md`。
+
+## 可选 / 后补（非 blocker · 哥飞先别挡）
 
 ### 付费目录站（WorkBuddy 探测 2026-07-25）
 
@@ -34,13 +40,14 @@
 | Toolify | $99，跳过 |
 | AI Tool Hunt | 无免费提交入口 |
 
-→ **不付费先不做**。可改走免费渠道：Product Hunt（时机自选）、Indie Hackers、Reddit 合规发帖、中文独立开发社群、免费「submit tool」小站。
+→ **不付费先不做**。可改走免费渠道：Product Hunt、Indie Hackers、Reddit 合规、中文社群。
 
-### 工程后补
+### 工程后补（有搜索/行为数据后再开）
 
-- T6 文件水印 bake（收费前）
-- Supabase 多机积分
-- Stripe live（刻意后开）
+- Stripe（先 test 再 live）  
+- 真 UGC（SQL 已预埋，默认 Lab only）  
+- T6 文件水印 bake（收费前）  
+- HF 全站像素剩余（P9–P12 小步，不挡 SEO）
 
 ---
 
