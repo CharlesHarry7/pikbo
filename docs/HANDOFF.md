@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] T6 live download gate recompute + HEAD bake honesty
+- `/api/downloads` recomputes `canDownloadResult` at request time (not frozen job flag).
+- Free watermark never redirects raw provider URL without force-bake or successful worker bake.
+- HEAD: `X-Pikbo-T6` + `X-Pikbo-Bake`; toPublicJob recomputes downloadAllowed live.
+- Library toast when T6 bake path is blocked.
+- Verified: typecheck · lint · engine-smoke.
+
 ### 2026-07-24 — [grok] Client unsafe videoUrl defense + Batch URL gate
 - `interpretGenerateResponse` / `asSuccess`: 200 with unsafe videoUrl → `UNSAFE_URL` (not playable).
 - BatchStudio: `<video>` + Download/open only when requestId or isSafeDeliverableUrl.

@@ -113,7 +113,8 @@
 72. [x] StatusProbe demos/freeTrial · Seller Pack unsafe URL drop · CP HEAD me/generations
 73. [x] Create/Landing Free raw share+download safety · assets content HEAD
 74. [x] generateClient refuse unsafe 200 videoUrl · Batch download/player URL safety
-75. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+75. [x] T6 live download gate recompute · never raw Free · HEAD X-Pikbo-T6/Bake
+76. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -127,9 +128,9 @@
 
 ## Grok 本拍状态（3 行）
 
-- generateClient: 200 + unsafe videoUrl → UNSAFE_URL (no playable success).  
-- BatchStudio: player/download gated on isSafeDeliverableUrl.  
-- Mode A still needs boss Vercel login · SQL · T6 bake.
+- downloads: recompute T6 gate live; Free watermark never raw redirect without bake/force.  
+- toPublicJob + HEAD X-Pikbo-T6/Bake honesty; Library toast when bake path blocked.  
+- Mode A still needs boss Vercel login · SQL · T6 bake worker.
 
 ---
 

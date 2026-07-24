@@ -1605,6 +1605,12 @@ assert.match(downloadRouteSrc, /isSafeDeliverableUrl|UNSAFE_URL/);
 assert.match(downloadRouteSrc, /absoluteDeliverableUrl|new URL\(/);
 assert.match(downloadRouteSrc, /export async function HEAD/);
 assert.match(downloadRouteSrc, /X-Pikbo-Download-Code|X-Pikbo-Watermark/);
+// Live T6 recompute at gate time + HEAD bake honesty (not frozen job.downloadAllowed)
+assert.match(downloadRouteSrc, /canDownloadResult/);
+assert.match(downloadRouteSrc, /X-Pikbo-T6|X-Pikbo-Bake/);
+assert.match(downloadRouteSrc, /T6_BAKE_FAILED|bakeWatermarkedVideo/);
+assert.match(downloadRouteSrc, /freeLiveWatermark|never hand raw/);
+assert.match(genJobsStore, /Recompute T6|downloadAllowedForJob/);
 // Health free-trial product contract (session state stays on /api/me)
 assert.match(health, /freeTrial/);
 assert.match(health, /failedLiveRefunds/);
@@ -1712,13 +1718,15 @@ const hfHome = fs.readFileSync(
   join(root, "components/HfExploreHome.tsx"),
   "utf8"
 );
-assert.match(hfHome, /preload=\{eager \? "metadata" : "none"\}/);
+// LCP: posters first; sources only when playing (AutoPlayVideo lazySources)
+assert.match(hfHome, /lazySources|posters first|AutoPlayVideo/);
 assert.match(hfHome, /fetchPriority/);
 const autoPlaySrc = fs.readFileSync(
   join(root, "components/AutoPlayVideo.tsx"),
   "utf8"
 );
 assert.match(autoPlaySrc, /preload=\{eager \? "metadata" : "none"\}/);
+assert.match(autoPlaySrc, /lazySources/);
 const projectPage = fs.readFileSync(
   join(root, "app/projects/[slug]/page.tsx"),
   "utf8"
@@ -1896,7 +1904,17 @@ assert.match(t6, /export function t6Report/);
 assert.match(t6, /status:\s*"blocked"|blocked/);
 assert.match(t6, /playerOverlayIsNotFileWatermark/);
 assert.match(t6, /PIKBO_T6_FILE_BAKE/);
+assert.match(t6, /bake_on_download|worker_configured/);
+assert.match(t6, /t6AllowsFreeDownloadAttempt|workerUrlConfigured/);
 assert.match(health, /t6Report|t6:/);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /PIKBO_WATERMARK_WORKER_URL/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/t6Bake.ts"), "utf8"),
+  /bakeWatermarkedVideo|isSafeDeliverableUrl/
+);
 assert.match(health, /jobTimeoutMs/);
 assert.match(createTrust, /PIKBO_T6_FILE_BAKE|T6 blocked/);
 

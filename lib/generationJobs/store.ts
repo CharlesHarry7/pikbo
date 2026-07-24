@@ -569,9 +569,20 @@ export function toPublicJob(
       owned: false,
     };
   }
-  const { sessionId: _s, ...rest } = job;
+  const { sessionId: _s, downloadAllowed: _frozen, ...rest } = job;
   void _s;
-  return { ...rest, owned: true };
+  void _frozen;
+  // Recompute T6 download gate at read time — env (worker URL / force bake)
+  // can change after the job row was frozen at success.
+  return {
+    ...rest,
+    downloadAllowed: downloadAllowedForJob({
+      demo: job.demo,
+      watermark: job.watermark,
+      status: job.status,
+    }),
+    owned: true,
+  };
 }
 
 /** Find job by provider request id or job id. */

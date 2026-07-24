@@ -507,8 +507,13 @@ export function LibraryGrid() {
       try {
         const head = await fetch(gateUrl, { method: "HEAD" });
         const code = head.headers.get("X-Pikbo-Download-Code") || "";
+        const t6Mode = head.headers.get("X-Pikbo-T6") || "";
         if (head.status === 403 || code === "DOWNLOAD_BLOCKED") {
-          toast(historyDownloadBlockReason());
+          toast(
+            t6Mode === "bake_on_download"
+              ? "Free Mini needs watermark bake — worker may be down. Upgrade for a clean file."
+              : historyDownloadBlockReason()
+          );
           return;
         }
         if (head.status === 404 || code === "NOT_FOUND") {

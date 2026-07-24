@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { ensureSession } from "@/lib/session";
 import { findJobByRequestOrId, sweepTimedOutJobs } from "@/lib/generationJobs";
 import {
+  canDownloadResult,
   freeLiveDownloadBlockReason,
   isSafeDeliverableUrl,
 } from "@/lib/createTrust";
 import { bakeWatermarkedVideo, watermarkWorkerUrl } from "@/lib/t6Bake";
+import { t6Report } from "@/lib/t6Watermark";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -70,7 +72,14 @@ function gateDownload(
       },
     };
   }
-  if (!job.downloadAllowed) {
+  // Live recompute — do not trust job.downloadAllowed frozen at success time.
+  // Worker URL / PIKBO_T6_FILE_BAKE can flip after the row was written.
+  const allowed = canDownloadResult({
+    demo: job.demo,
+    watermark: job.watermark,
+  });
+  if (!allowed) {
+    const t6 = t6Report();
     return {
       ok: false,
       status: 403,
@@ -78,7 +87,7 @@ function gateDownload(
         ok: false,
         code: "DOWNLOAD_BLOCKED",
         error: freeLiveDownloadBlockReason(),
-        t6: "blocked",
+        t6: t6.freeLiveRawDownload,
         watermark: job.watermark,
         demo: job.demo,
       },
@@ -117,14 +126,24 @@ export async function GET(req: Request, { params }: Props) {
     return NextResponse.json(gate.body, { status: gate.status });
   }
 
-  // Free live + watermark: never hand raw provider URL — bake when worker present.
+  // Free live + watermark: never hand raw provider URL unless operator force-ready.
   let deliverable = gate.videoUrl;
-  if (
-    gate.watermark &&
-    !gate.demo &&
-    process.env.PIKBO_T6_FILE_BAKE !== "1" &&
-    watermarkWorkerUrl()
-  ) {
+  const freeLiveWatermark = gate.watermark && !gate.demo;
+  const forceBakeReady = process.env.PIKBO_T6_FILE_BAKE === "1";
+  if (freeLiveWatermark && !forceBakeReady) {
+    const worker = watermarkWorkerUrl();
+    if (!worker) {
+      // Defense: canDownloadResult should already have blocked — never raw free.
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "DOWNLOAD_BLOCKED",
+          error: freeLiveDownloadBlockReason(),
+          t6: "blocked",
+        },
+        { status: 403 }
+      );
+    }
     const baked = await bakeWatermarkedVideo({
       videoUrl: absoluteDeliverableUrl(req, gate.videoUrl),
       jobId: id,
@@ -157,6 +176,7 @@ export async function HEAD(_req: Request, { params }: Props) {
   const { id } = await params;
   const session = await ensureSession();
   const gate = gateDownload(session.id, id);
+  const t6 = t6Report();
   if (!gate.ok) {
     const code =
       typeof gate.body.code === "string" ? gate.body.code : "BLOCKED";
@@ -165,16 +185,24 @@ export async function HEAD(_req: Request, { params }: Props) {
       headers: {
         "X-Pikbo-Download": "blocked",
         "X-Pikbo-Download-Code": code,
+        "X-Pikbo-T6": t6.freeLiveRawDownload,
         "Cache-Control": "no-store",
       },
     });
   }
+  const needsBake =
+    gate.watermark &&
+    !gate.demo &&
+    process.env.PIKBO_T6_FILE_BAKE !== "1" &&
+    Boolean(watermarkWorkerUrl());
   return new NextResponse(null, {
     status: 200,
     headers: {
       "X-Pikbo-Download": "allowed",
       "X-Pikbo-Demo": gate.demo ? "1" : "0",
       "X-Pikbo-Watermark": gate.watermark ? "1" : "0",
+      "X-Pikbo-T6": t6.freeLiveRawDownload,
+      "X-Pikbo-Bake": needsBake ? "1" : "0",
       "Cache-Control": "no-store",
     },
   });
