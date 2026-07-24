@@ -17,10 +17,13 @@ const LINKS = [
   { href: "/create?job=blind-box-drop", label: "Job · Blind-box drop" },
   { href: "/effects", label: "Toy presets / recipes" },
   { href: "/library", label: "Library" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/create?try=1&sample=scout", label: "Try free · Lab sample" },
-  { href: "/profile", label: "Profile" },
-  { href: "/image", label: "Still studio" },
+  { href: "/pricing", label: "Pricing · Free Mini / plans" },
+  {
+    href: "/create?try=1&sample=scout",
+    label: "Lab sample · 0 credits (cached)",
+  },
+  { href: "/profile", label: "Profile · durable honesty" },
+  { href: "/image", label: "Still studio · optional" },
   { href: "/supercomputer", label: "Batch agent" },
   { href: "/guides", label: "Guides" },
   { href: "/for/etsy-listing-videos", label: "For Etsy sellers" },
@@ -29,7 +32,8 @@ const LINKS = [
   { href: "/community", label: "PIKBO Lab" },
   { href: "/apps", label: "Apps catalog" },
   { href: "/models", label: "Models (honest)" },
-  { href: "/settings", label: "Settings" },
+  { href: "/settings", label: "Settings · T6 / jobs" },
+  { href: "/status", label: "System status" },
 ];
 
 export function CommandPalette() {

@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] Settings Phase C/D honesty + cmd-K Lab label
+- Settings: cookie vs durable authority, reserved, session jobs HEAD, live T6 from health.
+- FreeTrialCta; clear onboard uses `pikbo_onboard_v3` (matches banner).
+- CommandPalette: Lab sample labeled 0 credits cached; Settings/status doors.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-24 — [grok] Library/Create video URL safety + health.community
 - Library: safe video render, open/copy gates; Create/Landing player `src` only when safe.
 - `imageHistory` load/push refuse non-image schemes (`isSafeImageHistoryUrl`).

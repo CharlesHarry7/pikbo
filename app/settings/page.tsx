@@ -13,11 +13,29 @@ import {
   type MeResponse,
 } from "@/lib/meClient";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
+import { SESSION_EVENT } from "@/lib/sessionEvents";
+
+type SessionJobsProbe = {
+  open: number;
+  total: number;
+  succeeded: number;
+  failed: number;
+};
+
+type T6Probe = {
+  status: string;
+  freeLiveRawDownload?: string;
+  reason?: string;
+  fileBake?: boolean;
+};
 
 export default function SettingsPage() {
   const [session, setSession] = useState<MeResponse | null>(null);
   const [libCount, setLibCount] = useState(0);
   const [agingCount, setAgingCount] = useState(0);
+  const [jobsProbe, setJobsProbe] = useState<SessionJobsProbe | null>(null);
+  const [t6, setT6] = useState<T6Probe | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
   function refreshLocal() {
@@ -27,11 +45,61 @@ export default function SettingsPage() {
   }
 
   useEffect(() => {
-    void fetchMe().then(setSession);
-    const t = window.setTimeout(() => {
+    function refreshSession() {
+      void fetchMe().then(setSession);
+    }
+
+    async function refreshJobsProbe() {
+      try {
+        const res = await fetch("/api/generations", { method: "HEAD" });
+        if (!res.ok) {
+          setJobsProbe(null);
+          return;
+        }
+        const open = Number(res.headers.get("X-Pikbo-Jobs-Open") || "0");
+        const total = Number(res.headers.get("X-Pikbo-Jobs") || "0");
+        const succeeded = Number(
+          res.headers.get("X-Pikbo-Jobs-Succeeded") || "0"
+        );
+        const failed = Number(res.headers.get("X-Pikbo-Jobs-Failed") || "0");
+        setJobsProbe({
+          open: Number.isFinite(open) ? open : 0,
+          total: Number.isFinite(total) ? total : 0,
+          succeeded: Number.isFinite(succeeded) ? succeeded : 0,
+          failed: Number.isFinite(failed) ? failed : 0,
+        });
+      } catch {
+        setJobsProbe(null);
+      }
+    }
+
+    async function refreshT6() {
+      try {
+        const res = await fetch("/api/health");
+        if (!res.ok) {
+          setT6(null);
+          return;
+        }
+        const body = (await res.json()) as { t6?: T6Probe };
+        setT6(body.t6 ?? null);
+      } catch {
+        setT6(null);
+      }
+    }
+
+    function refresh() {
+      refreshSession();
       refreshLocal();
-    }, 0);
-    return () => window.clearTimeout(t);
+      void refreshJobsProbe();
+      void refreshT6();
+    }
+
+    const t = window.setTimeout(refresh, 0);
+    window.addEventListener(SESSION_EVENT, refresh);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener(SESSION_EVENT, refresh);
+    };
   }, []);
 
   function clearKey(key: string, label: string) {
@@ -59,6 +127,25 @@ export default function SettingsPage() {
   const isFreePlan =
     session?.freeTrial?.isFreePlan === true || session?.plan === "free";
 
+  const durableBackend = session?.durable?.backend ?? null;
+  const durableAuth = session?.durable?.authority ?? null;
+  const durableReserved =
+    session?.durable && typeof session.durable.reservedCredits === "number"
+      ? session.durable.reservedCredits
+      : null;
+
+  const t6DownloadLabel = (() => {
+    if (!t6) return "probe pending · assume blocked until proven";
+    const mode = t6.freeLiveRawDownload || t6.status;
+    if (mode === "allowed" || t6.status === "ready") {
+      return "allowed · operator asserted file bake ready";
+    }
+    if (mode === "bake_on_download" || t6.status === "worker_configured") {
+      return "bake on download · worker configured (not raw)";
+    }
+    return "blocked · T6 file bake not proven (overlay ≠ file watermark)";
+  })();
+
   return (
     <div className="px-4 py-10 sm:px-8">
       <div className="mx-auto max-w-lg">
@@ -66,12 +153,19 @@ export default function SettingsPage() {
         <h1 className="mt-3 text-2xl font-bold">Settings</h1>
         <p className="mt-1 text-sm text-[var(--fg-muted)]">
           Device data & session. Signed-in durable wallets use local file or
-          Supabase Postgres when the T5 migration is applied.
+          Supabase Postgres when the T5 migration is applied. Soft-launch live
+          Generate still debits the guest cookie.
         </p>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <Link href="/create" className="btn btn-primary !px-3 !py-1.5 text-xs">
             Generate
           </Link>
+          <FreeTrialCta
+            path="/settings"
+            variant="ghost"
+            className="btn btn-ghost !px-3 !py-1.5 text-xs"
+            hideClipsChip
+          />
           <Link href="/modules" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Modules
           </Link>
@@ -93,6 +187,21 @@ export default function SettingsPage() {
             </span>
           </div>
           <div className="flex justify-between gap-4">
+            <span className="text-[var(--fg-muted)]">Auth configured</span>
+            <span className="text-right font-semibold">
+              {session?.authConfigured ? "yes · Supabase keys" : "no · guest only"}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-[var(--fg-muted)]">Credits authority</span>
+            <span className="text-right text-xs font-semibold leading-snug">
+              cookie generate
+              {session?.signedIn
+                ? ` · durable ${durableBackend || "pending"} (${durableAuth || "shadow"})`
+                : ""}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
             <span className="text-[var(--fg-muted)]">Durable ledger</span>
             <span className="text-right font-semibold">
               {session?.durable?.backend
@@ -100,6 +209,9 @@ export default function SettingsPage() {
                 : session?.durableCreditsActive
                   ? "shadow ready · no wallet yet"
                   : "off"}
+              {durableReserved !== null && durableReserved > 0
+                ? ` · ${durableReserved} reserved`
+                : ""}
             </span>
           </div>
           <div className="flex justify-between">
@@ -158,12 +270,39 @@ export default function SettingsPage() {
               {session?.cachedDemoFree === false ? "may charge" : "0 credits"}
             </span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between gap-4">
             <span className="text-[var(--fg-muted)]">Free raw download</span>
-            <span className="font-semibold text-amber-100/90">
-              blocked · T6 bake pending
+            <span className="max-w-[58%] text-right text-xs font-semibold leading-snug text-amber-100/90">
+              {t6DownloadLabel}
             </span>
           </div>
+          {t6?.reason ? (
+            <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
+              T6 · {t6.status}
+              {t6.fileBake ? " · fileBake asserted" : ""} — {t6.reason}
+            </p>
+          ) : null}
+          <div className="flex justify-between gap-4">
+            <span className="text-[var(--fg-muted)]">Session jobs</span>
+            <span className="text-right text-xs font-semibold leading-snug">
+              {jobsProbe
+                ? `${jobsProbe.open} open · ${jobsProbe.total} total (process-memory)`
+                : "—"}
+            </span>
+          </div>
+          {jobsProbe && jobsProbe.total > 0 ? (
+            <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
+              {jobsProbe.succeeded} succeeded · {jobsProbe.failed} failed/canceled ·
+              this server instance only —{" "}
+              <Link
+                href="/library"
+                className="text-[var(--mint)] underline-offset-2 hover:underline"
+              >
+                Library recovery
+              </Link>
+              . Not multi-node cloud.
+            </p>
+          ) : null}
           <div className="flex justify-between">
             <span className="text-[var(--fg-muted)]">Library clips</span>
             <span className="font-semibold">{libCount}</span>
@@ -185,10 +324,11 @@ export default function SettingsPage() {
           <p className="text-[11px] leading-relaxed text-[var(--fg-dim)]">
             Soft-live needs <code className="text-[var(--fg-muted)]">SESSION_SECRET</code>{" "}
             + <code className="text-[var(--fg-muted)]">FAL_KEY</code> on the
-            server. Paid needs durable entitlements + Stripe (see LAUNCH.md on
-            the repo). Free Mini trial state comes from{" "}
+            server. Paid needs durable entitlements + Stripe test keys (live off).
+            Free Mini trial state comes from{" "}
             <code className="text-[var(--fg-muted)]">GET /api/me</code>{" "}
-            freeTrial — not a client guess.
+            freeTrial — not a client guess. T6 from{" "}
+            <code className="text-[var(--fg-muted)]">health.t6</code>.
           </p>
         </div>
 
@@ -222,7 +362,16 @@ export default function SettingsPage() {
           <button
             type="button"
             className="btn btn-ghost w-full text-sm"
-            onClick={() => clearKey("pikbo_onboard_v1", "onboarding flag")}
+            onClick={() => {
+              // OnboardingBanner uses pikbo_onboard_v3
+              try {
+                localStorage.removeItem("pikbo_onboard_v3");
+                localStorage.removeItem("pikbo_onboard_v1");
+                setMsg("Reset onboarding banner");
+              } catch {
+                setMsg("Could not clear");
+              }
+            }}
           >
             Reset onboarding banner
           </button>

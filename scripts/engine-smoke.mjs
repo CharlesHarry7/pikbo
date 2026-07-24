@@ -2566,6 +2566,21 @@ assert.match(
   fs.readFileSync(join(root, "components/PricingPlanCards.tsx"), "utf8"),
   /FreeTrialCta/
 );
+// Settings Phase C/D honesty: durable authority, jobs HEAD, live T6, onboard v3
+const settingsPageSrc = fs.readFileSync(
+  join(root, "app/settings/page.tsx"),
+  "utf8"
+);
+assert.match(settingsPageSrc, /Credits authority|cookie generate/);
+assert.match(settingsPageSrc, /X-Pikbo-Jobs-Open|\/api\/generations/);
+assert.match(settingsPageSrc, /health\.t6|freeLiveRawDownload|t6DownloadLabel/);
+assert.match(settingsPageSrc, /FreeTrialCta/);
+assert.match(settingsPageSrc, /pikbo_onboard_v3/);
+assert.match(settingsPageSrc, /process-memory/);
+assert.match(
+  fs.readFileSync(join(root, "components/CommandPalette.tsx"), "utf8"),
+  /Lab sample · 0 credits/
+);
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node
