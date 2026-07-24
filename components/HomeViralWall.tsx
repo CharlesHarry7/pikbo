@@ -10,8 +10,12 @@ import { CATEGORIES } from "@/lib/presets";
  * HF Viral Presets wall — uniform dense GRID of autoplay videos.
  * Not a marketing blog section: pure content density.
  */
+/** First paint: show fewer cards; rest on demand (哥飞 LCP / 养站). */
+const INITIAL_WALL = 12;
+
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
   const [filter, setFilter] = useState("all");
+  const [expanded, setExpanded] = useState(false);
 
   const chips = useMemo(
     () => [
@@ -25,6 +29,9 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
     if (filter === "all") return items;
     return items.filter((i) => i.category === filter);
   }, [filter, items]);
+
+  const visible = expanded ? wall : wall.slice(0, INITIAL_WALL);
+  const hasMore = wall.length > INITIAL_WALL && !expanded;
 
   return (
     <section className="px-2 py-8 sm:px-3">
@@ -66,9 +73,9 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
         ))}
       </div>
 
-      {/* Uniform dense grid — HF viral wall feel */}
+      {/* Uniform dense grid — posters first (LCP); video only on hover/tap */}
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
-        {wall.map((item, i) => (
+        {visible.map((item, i) => (
           <Link
             key={item.id}
             href={item.href}
@@ -80,6 +87,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               mp4={item.demo.mp4}
               focusable={false}
               desktopPlayMode="interaction"
+              lazySources
               label={`${item.title} — official Lab demo. Tap to generate video.`}
               className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out will-change-transform group-hover:scale-[1.06]"
               style={{
@@ -110,6 +118,17 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
           </Link>
         ))}
       </div>
+      {hasMore ? (
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="rounded-full border border-white/15 bg-white/[0.04] px-5 py-2 text-xs font-bold text-white/70 hover:border-[var(--mint)]/40 hover:text-white"
+          >
+            Show more presets ({wall.length - INITIAL_WALL})
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

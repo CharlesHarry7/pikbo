@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 const playing = new Set<HTMLVideoElement>();
 
@@ -28,7 +28,9 @@ function release(v: HTMLVideoElement) {
   v.pause();
 }
 
-/** Viewport autoplay with metadata preload and ≤2 concurrent plays (G2 soft perf). */
+/**
+ * Viewport / interaction video. Wall: lazySources defers network until hover/tap (LCP).
+ */
 export function AutoPlayVideo({
   poster,
   webm,
@@ -37,43 +39,54 @@ export function AutoPlayVideo({
   style,
   eager,
   desktopPlayMode = "viewport",
-  /** When false, video is not a keyboard focus target (e.g. nested inside a Link). */
   focusable = true,
-  /** Accessible label — also used when crawlers inspect the video node */
   label,
+  /** Defer <source> until first interaction — posters only on first paint. */
+  lazySources = false,
 }: {
   poster: string;
   webm?: string;
   mp4: string;
   className?: string;
   style?: CSSProperties;
-  /** Kick play sooner when near the fold (still preload=metadata) */
   eager?: boolean;
-  /** Explore uses deliberate hover/focus on desktop and viewport play on touch. */
   desktopPlayMode?: "viewport" | "interaction";
-  /**
-   * Wave B: Link cards must keep a single focus target. Set false when the
-   * video is decorative inside an anchor; hover play still works via mouse.
-   */
   focusable?: boolean;
   label?: string;
+  lazySources?: boolean;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const [sourcesOn, setSourcesOn] = useState(!lazySources || Boolean(eager));
+  const wantPlay = useRef(false);
 
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
-    if (eager && (isMobile || desktopPlayMode === "viewport")) claim(v);
+    // Interaction-only: no viewport autoplay (desktop + mobile walls).
+    if (desktopPlayMode === "interaction" && !eager) {
+      if (sourcesOn && wantPlay.current) {
+        if (v.preload === "none") v.preload = "metadata";
+        claim(v);
+      }
+      return () => {
+        release(v);
+      };
+    }
+
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    if (eager && sourcesOn && (isMobile || desktopPlayMode === "viewport")) {
+      claim(v);
+    }
 
     const io = new IntersectionObserver(
       ([e]) => {
-        if (!isMobile && desktopPlayMode === "interaction") {
+        if (desktopPlayMode === "interaction") {
           if (!e.isIntersecting) release(v);
           return;
         }
+        if (!sourcesOn) return;
         if (e.isIntersecting && e.intersectionRatio >= 0.35) claim(v);
         else release(v);
       },
@@ -84,26 +97,34 @@ export function AutoPlayVideo({
       io.disconnect();
       release(v);
     };
-  }, [desktopPlayMode, eager, mp4]);
+  }, [desktopPlayMode, eager, mp4, sourcesOn]);
 
   function playFromInteraction() {
-    if (desktopPlayMode === "interaction") {
-      const video = ref.current;
-      if (!video) return;
-      // Dense walls use preload=none — promote metadata on hover so first play is snappier.
-      if (video.preload === "none") {
-        video.preload = "metadata";
-      }
-      claim(video);
+    if (desktopPlayMode !== "interaction") return;
+    wantPlay.current = true;
+    if (!sourcesOn) {
+      setSourcesOn(true);
+      return;
     }
+    const video = ref.current;
+    if (!video) return;
+    if (video.preload === "none") video.preload = "metadata";
+    claim(video);
   }
 
   function pauseFromInteraction() {
     if (desktopPlayMode === "interaction") {
+      wantPlay.current = false;
       const video = ref.current;
       if (video) release(video);
     }
   }
+
+  const aria =
+    label ||
+    (focusable && desktopPlayMode === "interaction"
+      ? "Focus to preview video"
+      : "Official Pikbo Lab demo video");
 
   return (
     <video
@@ -114,24 +135,19 @@ export function AutoPlayVideo({
       muted
       loop
       playsInline
-      // Phase G: non-hero stays poster-only until interaction/viewport claim.
       preload={eager ? "metadata" : "none"}
       tabIndex={
         focusable && desktopPlayMode === "interaction" ? 0 : undefined
       }
-      aria-label={
-        label ||
-        (focusable && desktopPlayMode === "interaction"
-          ? "Focus to preview video"
-          : "Official Pikbo Lab demo video")
-      }
+      aria-label={aria}
       onMouseEnter={playFromInteraction}
       onMouseLeave={pauseFromInteraction}
       onFocus={playFromInteraction}
       onBlur={pauseFromInteraction}
+      onTouchStart={playFromInteraction}
     >
-      {webm ? <source src={webm} type="video/webm" /> : null}
-      <source src={mp4} type="video/mp4" />
+      {sourcesOn && webm ? <source src={webm} type="video/webm" /> : null}
+      {sourcesOn ? <source src={mp4} type="video/mp4" /> : null}
     </video>
   );
 }

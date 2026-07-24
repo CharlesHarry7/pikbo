@@ -15,8 +15,10 @@ export function SeedanceCampaign() {
           poster={hero.poster}
           webm={hero.webm}
           mp4={hero.mp4}
-          eager
+          // 哥飞养站 LCP: campaign uses poster + metadata, not eager full download
           focusable={false}
+          desktopPlayMode="interaction"
+          lazySources
           className="h-full w-full object-cover opacity-55"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/30" />
