@@ -34,6 +34,7 @@ import {
 import { deliveryItemsForJob } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
+import { GenerateWaitStage } from "@/components/GenerateWaitStage";
 import { track } from "@/lib/analytics";
 
 type Status = "idle" | "generating" | "done" | "error";
@@ -559,26 +560,15 @@ export function LandingToolPanel({
 
         <div className="relative min-h-[220px] border-t border-[var(--border)] bg-black/40 lg:border-t-0 lg:border-l">
           {busy && (
-            <div className="grid h-full min-h-[220px] place-items-center p-8 text-center">
-              <div>
-                <div
-                  className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-[var(--brand)]"
-                />
-                <p className="mt-4 text-sm text-[var(--fg-muted)]">
-                  Preparing your result…
-                </p>
-                <p className="mt-1 text-xs text-[var(--fg-dim)]">
-                  Live Mini often takes 1–3 min — keep this tab open · {elapsed}s
-                </p>
-                <button
-                  type="button"
-                  onClick={cancelInFlightGenerate}
-                  className="btn btn-ghost mt-4 border border-amber-400/35 px-3 py-1.5 text-xs text-amber-100"
-                >
-                  Cancel request
-                </button>
-              </div>
-            </div>
+            <GenerateWaitStage
+              elapsed={elapsed}
+              demoMode={demoMode}
+              image={image}
+              effectLabel={effectName}
+              onCancel={cancelInFlightGenerate}
+              compact
+              className="min-h-[220px]"
+            />
           )}
           {!busy && videoUrl ? (
             <div className="relative p-4">

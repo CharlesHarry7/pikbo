@@ -55,6 +55,10 @@ import {
   markActivationShared,
 } from "@/components/ActivationChecklist";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
+import {
+  GenerateWaitMobileStrip,
+  GenerateWaitStage,
+} from "@/components/GenerateWaitStage";
 import { useI18n } from "@/components/LanguageProvider";
 import { getJobIntent, JOB_INTENTS, type JobIntentId } from "@/lib/jobIntents";
 import type { Workflow } from "@/lib/workflows";
@@ -2080,65 +2084,45 @@ export function CreateStudio({
         <section
           id="create-result"
           className={`flex flex-col border-l border-white/[0.06] bg-[#050506] p-4 ${
-            status === "done" || status === "generating" ? "order-first lg:order-none" : ""
+            status === "done" ||
+            status === "generating" ||
+            status === "uploading"
+              ? "order-first lg:order-none"
+              : ""
           }`}
         >
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex items-center justify-between gap-2">
             <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/55">
               <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black lg:hidden">
                 4
               </span>
               {t("create.result")}
             </h2>
-            <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-semibold text-white/50">
-              {usedModel || MODELS.find((m) => m.id === modelId)?.label}
-            </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(status === "generating" || status === "uploading") && (
+                <span className="rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]">
+                  Live · {elapsed}s
+                </span>
+              )}
+              {status === "done" && videoUrl ? (
+                <span className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)] px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-black">
+                  Ready
+                </span>
+              ) : null}
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-semibold text-white/50">
+                {usedModel || MODELS.find((m) => m.id === modelId)?.label}
+              </span>
+            </div>
           </div>
-          <div className="media-stage relative flex min-h-[280px] flex-1 items-center justify-center sm:min-h-[420px]">
-            {status === "generating" && (
-              <div className="p-8 text-center text-[var(--fg-muted)] sm:p-10">
-                <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--mint)]" />
-                <p className="font-medium text-[var(--fg)]">
-                  {demoMode ? "Loading cached demo…" : "Animating your figure…"}
-                </p>
-                <p className="mt-1 text-xs text-[var(--fg-dim)]">
-                  {demoMode
-                    ? "Lab example — not from your upload"
-                    : elapsed < 3
-                      ? "Uploading reference"
-                      : elapsed < 20
-                        ? "Seedance queue"
-                        : elapsed < 60
-                          ? "Rendering motion (often 1–3 min)"
-                          : elapsed < 120
-                            ? "Still rendering — keep this tab open"
-                            : "Almost done — live Mini can take up to ~3 min"}
-                  {" · "}
-                  {elapsed}s
-                </p>
-                <div className="mx-auto mt-4 h-1.5 w-48 overflow-hidden rounded-full bg-[var(--border)]">
-                  <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{
-                      // Live Mini often 90–180s — pace bar for ~3 min, not ~40s.
-                      width: `${Math.min(96, 6 + elapsed * 0.55)}%`,
-                      background: "var(--grad)",
-                    }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={cancelInFlightGenerate}
-                  className="mt-4 rounded-full border border-white/20 px-4 py-1.5 text-[11px] font-bold text-white/80 hover:border-white/40 hover:text-white"
-                  title="Aborts this browser request. Soft-launch may still finish server-side; refund unconfirmed until balance confirms."
-                >
-                  {t("create.cancelRequest")}
-                </button>
-                <p className="mt-1.5 max-w-xs text-[10px] leading-relaxed text-[var(--fg-dim)]">
-                  Stops waiting in this tab. Live debit/refund may still settle
-                  server-side — check balance before retry.
-                </p>
-              </div>
+          <div className="media-stage relative flex min-h-[280px] flex-1 items-center justify-center overflow-hidden sm:min-h-[420px]">
+            {(status === "generating" || status === "uploading") && (
+              <GenerateWaitStage
+                elapsed={elapsed}
+                demoMode={demoMode}
+                image={image}
+                effectLabel={viralName(preset.slug, preset.name)}
+                onCancel={cancelInFlightGenerate}
+              />
             )}
             {(status === "done" || status === "error") && videoUrl && (
               <div className="relative w-full p-3">
@@ -2771,14 +2755,12 @@ export function CreateStudio({
               Try free
             </button>
           </div>
-        ) : status === "generating" ? (
-          <button
-            type="button"
-            onClick={cancelInFlightGenerate}
-            className="btn btn-ghost w-full border border-white/20 py-3 text-sm text-white/85"
-          >
-            Cancel request · {elapsed}s
-          </button>
+        ) : busy ? (
+          <GenerateWaitMobileStrip
+            elapsed={elapsed}
+            demoMode={demoMode}
+            onCancel={cancelInFlightGenerate}
+          />
         ) : (
           <button
             type="button"
