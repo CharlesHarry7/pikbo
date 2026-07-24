@@ -45,13 +45,93 @@ export type MeResponse = PublicSession & {
   durable?: MeDurableWallet | null;
 };
 
-/** True when Free plan has fewer than one live job of credits left. */
+function liveJobCost(me: Pick<MeResponse, "freeTrial" | "liveJobCredits" | "creditsPerVideo">): number {
+  const n =
+    me.freeTrial?.liveJobCredits ??
+    me.liveJobCredits ??
+    me.creditsPerVideo ??
+    10;
+  return Number.isFinite(n) && n > 0 ? n : 10;
+}
+
+/**
+ * Recompute freeTrial from authoritative cookie credits/plan.
+ * Generate / image responses only return PublicSession — without this,
+ * freeTrial.exhausted and clipsLeft lag after a live debit and the badge
+ * can still claim "trial left" when credits are 0.
+ */
+export function rehydrateFreeTrial(me: MeResponse): MeResponse {
+  const need = liveJobCost(me);
+  const credits = typeof me.credits === "number" ? Math.max(0, me.credits) : 0;
+  const clipsLeft = Math.floor(credits / need);
+
+  if (me.plan !== "free") {
+    if (!me.freeTrial) return me;
+    return {
+      ...me,
+      freeTrial: {
+        ...me.freeTrial,
+        planId: me.plan,
+        isFreePlan: false,
+        credits,
+        clipsLeft,
+        liveJobCredits: need,
+        freeLive: null,
+        exhausted: false,
+      },
+    };
+  }
+
+  return {
+    ...me,
+    freeTrial: {
+      planId: me.plan,
+      isFreePlan: true,
+      credits,
+      clipsLeft,
+      liveJobCredits: need,
+      watermark: me.watermark ?? me.freeTrial?.watermark ?? true,
+      cachedDemoFree: me.cachedDemoFree ?? me.freeTrial?.cachedDemoFree ?? true,
+      freeLive: {
+        modelClass: "seedance-mini",
+        durationSec: 5,
+        resolution: "480p",
+        onPlayerMark: true,
+      },
+      exhausted: credits < need,
+    },
+  };
+}
+
+/**
+ * Merge a PublicSession (or partial Me) patch into prior /api/me state and
+ * rehydrate freeTrial so UI honesty tracks the latest debit/refund.
+ */
+export function mergeMeSession(
+  prev: MeResponse | null | undefined,
+  patch: Partial<MeResponse> | PublicSession | null | undefined
+): MeResponse | null {
+  if (!patch) return prev ?? null;
+  const merged = (
+    prev ? { ...prev, ...patch } : { ...(patch as MeResponse) }
+  ) as MeResponse;
+  return rehydrateFreeTrial(merged);
+}
+
+/**
+ * True when Free plan has fewer than one live job of credits left.
+ * Prefer live cookie credits over freeTrial.exhausted — generate success
+ * merges PublicSession only and used to leave exhausted stuck at false.
+ */
 export function freeTrialExhausted(me: MeResponse | null | undefined): boolean {
   if (!me) return false;
-  if (me.freeTrial) return me.freeTrial.exhausted === true;
-  if (me.plan !== "free") return false;
-  const need = me.liveJobCredits ?? 10;
-  return me.credits < need;
+  const isFree = me.plan === "free" || me.freeTrial?.isFreePlan === true;
+  if (!isFree) return false;
+  const need = liveJobCost(me);
+  if (typeof me.credits === "number") {
+    return me.credits < need;
+  }
+  return me.freeTrial?.exhausted === true;
 }
 
 export function isDemoMode(me: MeResponse | null | undefined): boolean {
@@ -92,7 +172,8 @@ export async function fetchMe(): Promise<MeResponse | null> {
     const headers = await authHeaders();
     const res = await fetch("/api/me", { headers });
     if (!res.ok) return null;
-    return (await res.json()) as MeResponse;
+    const data = (await res.json()) as MeResponse;
+    return rehydrateFreeTrial(data);
   } catch {
     return null;
   }

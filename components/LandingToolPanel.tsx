@@ -7,7 +7,7 @@ import {
   postGenerateWithRetry,
 } from "@/lib/generateClient";
 import { pushHistory } from "@/lib/history";
-import { fetchMe, type MeResponse } from "@/lib/meClient";
+import { fetchMe, mergeMeSession, type MeResponse } from "@/lib/meClient";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { isValidImageDataUrl } from "@/lib/providerError";
 import { SAMPLE_TOYS, sampleToDataUrl } from "@/lib/samples";
@@ -226,9 +226,7 @@ export function LandingToolPanel({
     }
     if (result.ok === false) {
       if (result.session) {
-        setSession((prev) =>
-          prev ? { ...prev, ...result.session } : (result.session as MeResponse)
-        );
+        setSession((prev) => mergeMeSession(prev, result.session));
       }
       if (result.paywall) {
         setError("INSUFFICIENT");
@@ -241,9 +239,9 @@ export function LandingToolPanel({
     }
     const data = result.data;
     if (data.session) {
-      setSession((prev) =>
-        prev ? { ...prev, ...data.session } : (data.session as MeResponse)
-      );
+      setSession((prev) => mergeMeSession(prev, data.session));
+      void refreshSession();
+      emitSessionRefresh();
     }
     setVideoUrl(data.videoUrl);
     setDemo(Boolean(data.demo));

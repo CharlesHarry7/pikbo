@@ -12,6 +12,7 @@ import {
   fetchMe,
   freeTrialExhausted,
   isDemoMode,
+  mergeMeSession,
   type MeResponse,
 } from "@/lib/meClient";
 import { isValidImageDataUrl } from "@/lib/providerError";
@@ -416,9 +417,10 @@ export function CreateStudio({
           });
           const data = await res.json();
           if (!cancelled && res.ok && data.session) {
-            setSession(data.session);
+            setSession((prev) => mergeMeSession(prev, data.session));
             setWatermark(data.session.watermark);
             setUpgradedBanner(true);
+            void refreshSession();
           }
         } catch {
           if (!cancelled) await refreshSession();
@@ -659,9 +661,7 @@ export function CreateStudio({
 
     if (!result.ok) {
       if (result.session) {
-        setSession((prev) =>
-          prev ? { ...prev, ...result.session } : (result.session as MeResponse)
-        );
+        setSession((prev) => mergeMeSession(prev, result.session));
       }
       if (result.paywall) setShowPaywall(true);
       setLastRefunded(Boolean(result.creditsRefunded));
@@ -710,9 +710,10 @@ export function CreateStudio({
 
     const data = result.data;
     if (data.session) {
-      setSession((prev) =>
-        prev ? { ...prev, ...data.session } : (data.session as MeResponse)
-      );
+      setSession((prev) => mergeMeSession(prev, data.session));
+      // Keep freeTrial + durable wallet honest after live debit (badge/strip).
+      void refreshSession();
+      emitSessionRefresh();
     }
     // Network-retry recovery: same idempotencyKey, no second debit/fal.
     if (data.idempotentReplay) {

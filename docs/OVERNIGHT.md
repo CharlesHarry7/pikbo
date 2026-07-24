@@ -104,7 +104,8 @@
 63. [x] List GET touches open jobs · /api/me freeTrial honesty · badge trial exhausted
 64. [x] Download absolute /demos redirect + HEAD · health.billing.freeTrial · CP me freeTrial
 65. [x] Profile/Settings freeTrial honesty · Library download HEAD codes · PRIVATE_ROBOTS settings
-66. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+66. [x] freeTrial rehydrate after generate merge (stale exhausted/clipsLeft)
+67. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -118,8 +119,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Profile/Settings freeTrial honesty + Library HEAD gate codes. 
-- health.billing.freeTrial contract · critical-path asserts /api/me freeTrial.  
+- freeTrial: rehydrate after generate PublicSession merge (exhausted/clipsLeft track credits).  
+- Create/Landing/Batch use mergeMeSession · freeTrialExhausted prefers live credits.  
 - Mode A still needs boss Vercel login · SQL · T6 bake.
 
 ---

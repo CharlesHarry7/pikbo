@@ -16,7 +16,7 @@ import { CATEGORIES, PRESETS, type CategoryId } from "@/lib/presets";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { isValidImageDataUrl } from "@/lib/providerError";
 import { SAMPLE_TOYS, sampleToDataUrl } from "@/lib/samples";
-import { fetchMe, type MeResponse } from "@/lib/meClient";
+import { fetchMe, mergeMeSession, type MeResponse } from "@/lib/meClient";
 import { emitSessionRefresh } from "@/lib/sessionEvents";
 import {
   canExportSellerPack,
@@ -275,11 +275,7 @@ export function BatchStudio({
 
     if (!result.ok) {
       if (result.session) {
-        setMe((previous) =>
-          previous
-            ? { ...previous, ...result.session }
-            : (result.session as MeResponse)
-        );
+        setMe((previous) => mergeMeSession(previous, result.session));
         emitSessionRefresh();
       }
       const refunded = result.creditsRefunded === true;
@@ -312,11 +308,8 @@ export function BatchStudio({
 
     const data = result.data;
     if (data.session) {
-      setMe((previous) =>
-        previous
-          ? { ...previous, ...data.session }
-          : (data.session as MeResponse)
-      );
+      setMe((previous) => mergeMeSession(previous, data.session));
+      emitSessionRefresh();
     }
     // Settle 10 on shadow pack when live child succeeds (demo = 0, no settle).
     if (packReservationId && !data.demo) {

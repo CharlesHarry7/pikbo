@@ -231,6 +231,108 @@ assert.match(batch, /effectiveResolution/);
 const meClient = fs.readFileSync(join(root, "lib/meClient.ts"), "utf8");
 assert.match(meClient, /export async function fetchMe/);
 assert.match(meClient, /cachedDemoFree/);
+assert.match(meClient, /export function mergeMeSession/);
+assert.match(meClient, /export function rehydrateFreeTrial/);
+assert.match(meClient, /Prefer live cookie credits|authoritative cookie credits/);
+
+// freeTrial honesty after generate PublicSession merge (stale exhausted must not win)
+function freeTrialExhaustedPure(me) {
+  if (!me) return false;
+  const isFree = me.plan === "free" || me.freeTrial?.isFreePlan === true;
+  if (!isFree) return false;
+  const need =
+    me.freeTrial?.liveJobCredits ?? me.liveJobCredits ?? me.creditsPerVideo ?? 10;
+  if (typeof me.credits === "number") return me.credits < need;
+  return me.freeTrial?.exhausted === true;
+}
+function rehydrateFreeTrialPure(me) {
+  const need =
+    me.freeTrial?.liveJobCredits ?? me.liveJobCredits ?? me.creditsPerVideo ?? 10;
+  const credits = typeof me.credits === "number" ? Math.max(0, me.credits) : 0;
+  const clipsLeft = Math.floor(credits / need);
+  if (me.plan !== "free") {
+    return {
+      ...me,
+      freeTrial: me.freeTrial
+        ? {
+            ...me.freeTrial,
+            isFreePlan: false,
+            credits,
+            clipsLeft,
+            freeLive: null,
+            exhausted: false,
+          }
+        : me.freeTrial,
+    };
+  }
+  return {
+    ...me,
+    freeTrial: {
+      planId: me.plan,
+      isFreePlan: true,
+      credits,
+      clipsLeft,
+      liveJobCredits: need,
+      watermark: true,
+      cachedDemoFree: true,
+      freeLive: {
+        modelClass: "seedance-mini",
+        durationSec: 5,
+        resolution: "480p",
+        onPlayerMark: true,
+      },
+      exhausted: credits < need,
+    },
+  };
+}
+function mergeMeSessionPure(prev, patch) {
+  if (!patch) return prev ?? null;
+  const merged = prev ? { ...prev, ...patch } : { ...patch };
+  return rehydrateFreeTrialPure(merged);
+}
+{
+  // After live debit: credits→0 but freeTrial.exhausted still false (old bug)
+  const stale = {
+    plan: "free",
+    credits: 0,
+    creditsPerVideo: 10,
+    freeTrial: {
+      isFreePlan: true,
+      exhausted: false,
+      clipsLeft: 1,
+      liveJobCredits: 10,
+      credits: 10,
+    },
+  };
+  assert.equal(freeTrialExhaustedPure(stale), true, "credits 0 must exhaust trial");
+  const fixed = rehydrateFreeTrialPure(stale);
+  assert.equal(fixed.freeTrial.exhausted, true);
+  assert.equal(fixed.freeTrial.clipsLeft, 0);
+  // Merge PublicSession patch (generate success) must rehydrate
+  const prev = {
+    plan: "free",
+    credits: 10,
+    creditsPerVideo: 10,
+    watermark: true,
+    freeTrial: {
+      isFreePlan: true,
+      exhausted: false,
+      clipsLeft: 1,
+      liveJobCredits: 10,
+      credits: 10,
+    },
+  };
+  const after = mergeMeSessionPure(prev, {
+    credits: 0,
+    plan: "free",
+    clipsLeft: 0,
+    creditsPerVideo: 10,
+    watermark: true,
+  });
+  assert.equal(after.freeTrial.exhausted, true);
+  assert.equal(after.freeTrial.clipsLeft, 0);
+  assert.equal(freeTrialExhaustedPure(after), true);
+}
 
 const samples = fs.readFileSync(join(root, "lib/samples.ts"), "utf8");
 assert.match(samples, /isValidImageDataUrl/);
