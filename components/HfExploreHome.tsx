@@ -57,12 +57,15 @@ export function HfExploreHome({
   projects,
   feed,
   viralWall,
+  /** 哥飞: tool already on page — skip strip + demote hero H1 */
+  toolFirstLayout = false,
 }: {
   demos: DemoVideo[];
   projects: ShowcaseProject[];
   feed: FeedItem[];
   /** Dense HF-style viral presets grid (owned Lab media only) */
   viralWall?: FeedItem[];
+  toolFirstLayout?: boolean;
 }) {
   const { t } = useI18n();
   const showcase: FeedItem[] = feed.length
@@ -100,21 +103,23 @@ export function HfExploreHome({
   }
 
   return (
-    <div className="min-h-screen bg-black pb-28 text-white sm:pb-16">
-      {/* 哥飞 P0: free trial + Generate CTA above the fold */}
-      <SoftLaunchStrip />
+    <div
+      className={`bg-black text-white sm:pb-16 ${
+        toolFirstLayout ? "pb-8" : "min-h-screen pb-28"
+      }`}
+    >
+      {!toolFirstLayout ? <SoftLaunchStrip /> : null}
 
-      {/* HF product entry rail — capability cards before the wall */}
+      {/* HF product entry rail — secondary when tool already on page */}
       <HfProductRail />
 
-      {/* HF Viral Presets — dense grid is the homepage (not a blog) */}
+      {/* HF Viral Presets wall */}
       <HomeViralWall items={wallItems} />
 
-      {/* HF Seedance battle banner — full-bleed video CTA */}
       <SeedanceCampaign />
 
-      {/* Compact premiere strip (secondary to the wall) */}
-      <section className="relative min-h-[min(420px,55svh)] overflow-hidden border-b border-white/10">
+      {/* Premiere strip — H1 only when tool-first layout did not already emit H1 */}
+      <section className="relative min-h-[min(320px,45svh)] overflow-hidden border-b border-white/10 sm:min-h-[min(420px,55svh)]">
         <div className="absolute inset-0">
           <Clip
             key={item.id}
@@ -125,31 +130,37 @@ export function HfExploreHome({
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
         </div>
 
-        <div className="relative mx-auto flex min-h-[min(860px,calc(100svh-3.5rem))] max-w-6xl flex-col justify-end px-4 pb-8 pt-16 sm:px-6 sm:pb-12">
+        <div className="relative mx-auto flex min-h-[min(420px,50svh)] max-w-6xl flex-col justify-end px-4 pb-8 pt-12 sm:min-h-[min(520px,55svh)] sm:px-6 sm:pb-12 sm:pt-16">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
             {t("home.feelFirst")}
           </p>
           <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#c8ff3d]/30 bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#c8ff3d] shadow-[0_0_24px_rgba(200,255,61,0.15)] backdrop-blur">
             {item.badge ?? "Official example"}
           </span>
-          {/* Stable H1 for SEO (哥飞 TDH freeze) — demo title is visual subhead only */}
-          <h1 className="font-display mt-3 max-w-xl text-3xl font-black uppercase leading-[1.02] tracking-tight sm:text-5xl md:text-6xl">
-            {site.homeH1}
-          </h1>
-          <p className="mt-2 max-w-md text-base font-semibold text-white/80 sm:text-lg">
-            {item.title}
-          </p>
+          {toolFirstLayout ? (
+            <p className="font-display mt-3 max-w-xl text-2xl font-black uppercase leading-[1.02] tracking-tight text-white/90 sm:text-4xl">
+              {item.title}
+            </p>
+          ) : (
+            <h1 className="font-display mt-3 max-w-xl text-3xl font-black uppercase leading-[1.02] tracking-tight sm:text-5xl md:text-6xl">
+              {site.homeH1}
+            </h1>
+          )}
+          {!toolFirstLayout ? (
+            <p className="mt-2 max-w-md text-base font-semibold text-white/80 sm:text-lg">
+              {item.title}
+            </p>
+          ) : null}
           <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65 sm:text-[15px]">
             {t("home.hero.sub")}
           </p>
-          {/* 哥飞: one primary CTA (upload→video); secondary as quieter links */}
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <FreeTrialCta
-              path="/"
-              labelTry={t("home.tryFree10s")}
-              hideClipsChip
-              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_56px_-4px_rgba(200,255,61,0.65)]"
-            />
+            <a
+              href="#home-tool"
+              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
+            >
+              Use tool on this page
+            </a>
             <Link
               href={item.href}
               onClick={() =>
@@ -164,53 +175,20 @@ export function HfExploreHome({
               {t("home.useRecipe")}
             </Link>
             <Link
-              href="/for/photo-to-video-for-toys"
+              href="/tools/ai-toy-video-generator"
               className="text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
             >
-              Photo → video guide
+              Keyword tool page
             </Link>
             <Link
-              href="/flow"
-              onClick={() =>
-                track({
-                  event: "landing_view",
-                  path: "/",
-                  meta: { cta: "flow" },
-                })
-              }
+              href="/for/photo-to-video-for-toys"
               className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
             >
-              {t("home.browseFlow")}
-            </Link>
-            <Link
-              href="/modules"
-              onClick={() =>
-                track({
-                  event: "landing_view",
-                  path: "/",
-                  meta: { cta: "modules" },
-                })
-              }
-              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
-            >
-              {t("home.modules")}
-            </Link>
-            <Link
-              href={item.projectHref || item.detailHref || "/effects"}
-              onClick={() =>
-                track({
-                  event: "project_open",
-                  path: item.projectHref || "/",
-                  recipe: item.recipeSlug,
-                })
-              }
-              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
-            >
-              {t("home.whatsInside")}
+              Photo → video use case
             </Link>
           </div>
           <p className="mt-3 text-[11px] text-white/45">
-            Designer-toy suite · Lab demos free · live Mini uses 10 credits
+            Designer-toy suite · Lab demos free · live Mini often 1–3 min
           </p>
 
           {/* Progress rail */}
@@ -231,10 +209,11 @@ export function HfExploreHome({
                 <img
                   src={s.demo.poster}
                   alt=""
+                  width={80}
+                  height={112}
                   className="h-full w-full object-cover"
                   loading={i === 0 ? "eager" : "lazy"}
                   decoding="async"
-                  // First rail thumb helps LCP when hero poster is the same asset
                   fetchPriority={i === 0 ? "high" : "low"}
                 />
               </button>
@@ -269,6 +248,8 @@ export function HfExploreHome({
                 <img
                   src={item.demo.poster}
                   alt={`Input still for ${item.title}`}
+                  width={720}
+                  height={900}
                   className="absolute inset-0 h-full w-full object-cover"
                 />
                 <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/70 backdrop-blur">

@@ -18,11 +18,10 @@ export const metadata: Metadata = {
   description: site.description,
   keywords: [
     "AI toy video generator",
-    "toy image to video",
-    "figure product video maker",
-    "blind box unboxing video generator",
-    "Etsy toy listing video",
-    "TikTok toy ad generator",
+    "AI toy video generator from one photo",
+    "toy photo to video",
+    "designer toy video maker",
+    "photo into short video toys",
   ],
   openGraph: {
     title: site.titleDefault,

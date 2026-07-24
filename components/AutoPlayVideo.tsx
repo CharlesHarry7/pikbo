@@ -132,9 +132,12 @@ export function AutoPlayVideo({
       className={className}
       style={style}
       poster={poster}
+      width={720}
+      height={1280}
       muted
       loop
       playsInline
+      // 哥飞: 首屏关键视频用 metadata；墙卡片仍 none 直到交互
       preload={eager ? "metadata" : "none"}
       tabIndex={
         focusable && desktopPlayMode === "interaction" ? 0 : undefined
