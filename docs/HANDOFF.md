@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] FreeTrialCta auth + home suite residual
+- SuiteDoorLinks, Login/LoginForm, Cinema, Seedance, Onboarding, Batch empty,
+  HfExploreHome hero, SuiteEntryStrip — static Try free → FreeTrialCta.
+- FreeTrialCta: optional `onNavigate` + `hideClipsChip` for dense rails.
+- engine-smoke gates auth/home residual CTAs.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-24 — [grok] T6 live download gate recompute + HEAD bake honesty
 - `/api/downloads` recomputes `canDownloadResult` at request time (not frozen job flag).
 - Free watermark never redirects raw provider URL without force-bake or successful worker bake.

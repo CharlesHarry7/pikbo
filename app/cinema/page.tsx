@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { PRESETS } from "@/lib/presets";
 
 const LENSES = ["24mm", "35mm", "50mm", "85mm", "100mm macro"];
@@ -72,7 +73,7 @@ export default function CinemaPage() {
               Seedance. Not a full HF Cinema rebuild; toy-native prompt board
               only.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <Link href="/flow" className="btn btn-ghost !px-3 !py-1.5 text-xs">
                 Flow
               </Link>
@@ -85,12 +86,11 @@ export default function CinemaPage() {
               >
                 Seller Pack
               </Link>
-              <Link
-                href="/create?try=1&sample=scout"
+              <FreeTrialCta
+                path="/cinema"
+                variant="ghost"
                 className="btn btn-ghost !px-3 !py-1.5 text-xs"
-              >
-                Try free
-              </Link>
+              />
             </div>
           </div>
           <Link

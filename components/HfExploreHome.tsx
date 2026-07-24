@@ -11,6 +11,7 @@ import {
   type ShowcaseProject,
 } from "@/lib/showcaseProjects";
 import { track } from "@/lib/analytics";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { SuiteEntryStrip } from "@/components/SuiteEntryStrip";
 import { HomeViralPresetRail } from "@/components/HomeViralPresetRail";
 import { HomeViralWall } from "@/components/HomeViralWall";
@@ -143,15 +144,12 @@ export function HfExploreHome({
           </p>
           {/* 哥飞: one primary CTA (upload→video); secondary as quieter links */}
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link
-              href="/create?try=1&sample=scout"
-              onClick={() =>
-                track({ event: "landing_view", path: "/", meta: { cta: "try_free" } })
-              }
+            <FreeTrialCta
+              path="/"
+              labelTry={t("home.tryFree10s")}
+              hideClipsChip
               className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_56px_-4px_rgba(200,255,61,0.65)]"
-            >
-              {t("home.tryFree10s")}
-            </Link>
+            />
             <Link
               href={item.href}
               onClick={() =>
@@ -445,8 +443,17 @@ export function HfExploreHome({
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:border-[#c8ff3d]/40 hover:bg-[#c8ff3d]/5">
+              <FreeTrialCta
+                path="/#jobs"
+                labelTry="Try free video"
+                labelDemo="Lab sample"
+                hideClipsChip
+                className="text-sm font-bold text-white hover:text-[#c8ff3d]"
+              />
+              <p className="text-[11px] text-white/40">Mini 5s · Sample ready</p>
+            </div>
             {[
-              { href: "/create?try=1", label: "Try free video", sub: "Sample ready" },
               { href: "/effects", label: "Video presets", sub: "Viral recipes" },
               { href: "/create?mode=seller-pack", label: "Seller Pack", sub: "3 videos" },
               { href: "/flow", label: "Flow", sub: "Video matrix" },

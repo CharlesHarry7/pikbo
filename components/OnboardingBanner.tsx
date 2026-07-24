@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { useI18n } from "@/components/LanguageProvider";
 
 const KEY = "pikbo_onboard_v3";
@@ -42,13 +43,13 @@ export function OnboardingBanner() {
           <span className="text-white/55"> {t("onboard.sub")}</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/create?try=1&sample=scout"
-            onClick={dismiss}
+          <FreeTrialCta
+            path="/onboarding"
+            labelTry={`${t("cta.tryFree")} · Mini 5s`}
+            onNavigate={dismiss}
+            hideClipsChip
             className="btn btn-primary px-3.5 py-1.5 text-xs font-black"
-          >
-            {t("cta.tryFree")} · Mini 5s
-          </Link>
+          />
           <Link
             href="/flow"
             onClick={dismiss}

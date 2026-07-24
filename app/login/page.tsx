@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { publicAuthStatus } from "@/lib/authConfig";
 import { site } from "@/lib/site";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { LoginForm } from "@/components/LoginForm";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
 
@@ -43,7 +44,7 @@ export default function LoginPage() {
 
         <LoginForm auth={auth} />
 
-        <div className="mt-8 flex flex-wrap gap-3 text-sm">
+        <div className="mt-8 flex flex-wrap items-center gap-3 text-sm">
           <Link href="/create" className="font-semibold text-[var(--mint)] hover:underline">
             Continue as guest → Generate
           </Link>
@@ -53,12 +54,10 @@ export default function LoginPage() {
           <Link href="/modules" className="text-[var(--mint)] hover:underline">
             Modules
           </Link>
-          <Link
-            href="/create?try=1&sample=scout"
+          <FreeTrialCta
+            path="/login"
             className="text-[var(--fg-muted)] hover:text-white"
-          >
-            Try free
-          </Link>
+          />
           <Link
             href="/create?mode=seller-pack"
             className="text-[var(--fg-muted)] hover:text-white"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 
 type AuthPublic = {
@@ -25,7 +26,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
           cookie still works for Generate, Modules, Seller Pack, and this-device
           Library.
         </p>
-        <div className="flex flex-wrap gap-2 pt-1">
+        <div className="flex flex-wrap items-center gap-2 pt-1">
           <a href="/create" className="btn btn-primary !px-3 !py-1.5 text-xs">
             Generate
           </a>
@@ -35,12 +36,11 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
           <a href="/modules" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Modules
           </a>
-          <a
-            href="/create?try=1&sample=scout"
+          <FreeTrialCta
+            path="/login"
+            variant="ghost"
             className="btn btn-ghost !px-3 !py-1.5 text-xs"
-          >
-            Try free
-          </a>
+          />
         </div>
       </div>
     );

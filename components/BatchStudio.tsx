@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import {
   historyFieldsFromSuccess,
   postGenerateWithRetry,
@@ -1347,13 +1348,14 @@ export function BatchStudio({
                 ? "Upload one owned toy photo → Generate pack. Three formats land here with independent success/fail. Failed children refund; siblings stay."
                 : "Pick presets (or open Batch from an effect page), confirm ownership, then run. Finished clips also save on this device Library."}
             </p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <Link
-                href="/create?try=1&sample=scout"
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <FreeTrialCta
+                path="/create?mode=seller-pack"
+                labelTry="Try free · Lab sample"
+                labelDemo="Try free · Lab sample"
+                hideClipsChip
                 className="rounded-full border border-[var(--mint)]/35 px-3 py-1.5 text-[11px] font-bold text-[var(--mint)]"
-              >
-                Try free · Lab sample
-              </Link>
+              />
               {!sellerPackActive ? (
                 <Link
                   href="/create?mode=seller-pack"

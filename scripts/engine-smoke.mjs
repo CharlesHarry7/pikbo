@@ -2481,6 +2481,55 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
   /10 seconds/
 );
+// Auth + home suite residual FreeTrial honesty (Phase C/F)
+assert.match(
+  fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
+  /href=["']\/create\?try=1&sample=scout["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/SuiteEntryStrip.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/SuiteEntryStrip.tsx"), "utf8"),
+  /href:\s*["']\/create\?try=1&sample=scout["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/SeedanceCampaign.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/OnboardingBanner.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/FreeTrialCta.tsx"), "utf8"),
+  /onNavigate/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/cinema/page.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /FreeTrialCta/
+);
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

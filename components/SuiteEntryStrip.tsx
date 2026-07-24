@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { track } from "@/lib/analytics";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { useI18n } from "@/components/LanguageProvider";
 
 /**
@@ -47,12 +48,6 @@ const ENTRY_DEFS = [
     blurbKey: "suite.recipes.blurb",
     emoji: "🧸",
   },
-  {
-    href: "/create?try=1&sample=scout",
-    labelKey: "suite.tryFree",
-    blurbKey: "suite.tryFree.blurb",
-    emoji: "▶",
-  },
 ] as const;
 
 export function SuiteEntryStrip({
@@ -75,6 +70,12 @@ export function SuiteEntryStrip({
             <p className="mt-1 text-[12px] text-white/50">{t(subtitleKey)}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <FreeTrialCta
+              path="/#suite"
+              labelTry={t("suite.tryFree")}
+              hideClipsChip
+              className="text-[11px] font-semibold text-[#c8ff3d] hover:underline"
+            />
             <Link
               href="/flow"
               className="text-[11px] font-semibold text-white/55 hover:text-white hover:underline"
@@ -89,7 +90,7 @@ export function SuiteEntryStrip({
             </Link>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
           {ENTRY_DEFS.map((e) => (
             <Link
               key={e.href + e.labelKey}

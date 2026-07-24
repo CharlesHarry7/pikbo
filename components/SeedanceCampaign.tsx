@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { createRemixHref } from "@/lib/remixIntent";
 
 /** Full-bleed flagship banner — HF Seedance battle pattern (H1). */
@@ -41,13 +42,13 @@ export function SeedanceCampaign() {
             Photo in → short video out. Single live engine (Seedance). Not a
             multi-model zoo. Kling / Veo / Sora stay Soon until real keys.
           </p>
-          <div className="mt-7 flex flex-wrap gap-2.5">
-            <Link
-              href="/create?try=1&sample=scout"
+          <div className="mt-7 flex flex-wrap items-center gap-2.5">
+            <FreeTrialCta
+              path="/seedance-campaign"
+              labelTry="Try free video"
+              labelDemo="Try Lab sample"
               className="rounded-full bg-[var(--mint)] px-6 py-2.5 text-sm font-black text-black shadow-[0_0_28px_rgba(200,255,61,0.25)] transition hover:-translate-y-0.5"
-            >
-              Try free video
-            </Link>
+            />
             <Link
               href="/create"
               className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-5 py-2.5 text-sm font-bold text-[var(--mint)] transition hover:bg-[var(--mint)]/15"

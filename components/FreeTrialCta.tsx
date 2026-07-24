@@ -32,6 +32,8 @@ export function FreeTrialCta({
   labelTry,
   labelPlans,
   labelDemo,
+  onNavigate,
+  hideClipsChip = false,
 }: {
   /** Analytics path (e.g. /apps, /explore). */
   path: string;
@@ -40,6 +42,10 @@ export function FreeTrialCta({
   labelTry?: string;
   labelPlans?: string;
   labelDemo?: string;
+  /** Optional side-effect (e.g. dismiss onboarding). */
+  onNavigate?: () => void;
+  /** Hide ~clipsLeft / trial-used chips (dense rails). */
+  hideClipsChip?: boolean;
 }) {
   const [me, setMe] = useState<MeResponse | null>(null);
 
@@ -75,27 +81,28 @@ export function FreeTrialCta({
 
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
-      {clipsLeft !== null && !demo && !trialDone ? (
+      {!hideClipsChip && clipsLeft !== null && !demo && !trialDone ? (
         <span className="hidden text-[10px] text-white/40 sm:inline">
           ~{clipsLeft} Free Mini left
         </span>
       ) : null}
-      {trialDone && !demo ? (
+      {!hideClipsChip && trialDone && !demo ? (
         <span className="hidden text-[10px] font-semibold text-amber-200/90 sm:inline">
           Free Mini used
         </span>
       ) : null}
       <Link
         href={href}
-        onClick={() =>
+        onClick={() => {
           track({
             event: "landing_view",
             path,
             meta: {
               cta: trialDone && !demo ? "free_trial_pricing" : "free_trial_try",
             },
-          })
-        }
+          });
+          onNavigate?.();
+        }}
         className={className ?? VARIANT_CLASS[variant]}
       >
         {label}
