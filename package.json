@@ -18,7 +18,8 @@
     "g6-launch-pass": "node scripts/g6-launch-pass.mjs",
     "g6-refund-leg": "node scripts/g6-refund-leg.mjs",
     "preflight-launch": "bash scripts/preflight-launch.sh",
-    "mode-a-acceptance": "bash scripts/mode-a-acceptance.sh"
+    "mode-a-acceptance": "bash scripts/mode-a-acceptance.sh",
+    "indexnow": "node scripts/indexnow-submit.mjs"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.1",
