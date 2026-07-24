@@ -5,8 +5,10 @@ import { CreateStudio } from "@/components/CreateStudio";
 import { CreateSeoFooter } from "@/components/CreateSeoFooter";
 import { BatchStudio } from "@/components/BatchStudio";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
+import { JsonLd } from "@/components/JsonLd";
 import { getPreset } from "@/lib/presets";
 import { site } from "@/lib/site";
+import { softwareApplicationJsonLd } from "@/lib/jsonLd";
 
 export async function generateMetadata({
   searchParams,
@@ -34,8 +36,14 @@ export async function generateMetadata({
   return {
     title: "Generate · Toy Studio",
     description:
-      "Pikbo Generate — designer-toy workbench. Upload a photo you own, pick a listing, reveal, or social module, and export a short clip.",
+      "Pikbo Generate — designer-toy workbench. Upload a photo you own, pick a listing, reveal, or social module, and export a short clip. Free Mini trial: 5s · 480p · on-player mark.",
     alternates: { canonical: "/create" },
+    openGraph: {
+      title: `Generate · Toy Studio | ${site.name}`,
+      description:
+        "Upload a toy photo you own and generate a short AI video. Free Mini trial — no card.",
+      url: `${site.url}/create`,
+    },
   };
 }
 
@@ -126,6 +134,14 @@ export default async function CreatePage({
 
   return (
     <>
+      <JsonLd
+        data={softwareApplicationJsonLd({
+          name: `${site.name} Generate — AI Toy Video Studio`,
+          url: `${site.url}/create`,
+          description:
+            "Upload a photo of a designer toy you own and generate a short AI video for listings, TikTok, and drops. Free Mini trial with honest caps.",
+        })}
+      />
       {/* V2 tool core — remix deep link: effect/source/ratio/duration/channel */}
       <Suspense
         fallback={

@@ -39,6 +39,8 @@ export function AutoPlayVideo({
   desktopPlayMode = "viewport",
   /** When false, video is not a keyboard focus target (e.g. nested inside a Link). */
   focusable = true,
+  /** Accessible label — also used when crawlers inspect the video node */
+  label,
 }: {
   poster: string;
   webm?: string;
@@ -54,6 +56,7 @@ export function AutoPlayVideo({
    * video is decorative inside an anchor; hover play still works via mouse.
    */
   focusable?: boolean;
+  label?: string;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
 
@@ -117,9 +120,10 @@ export function AutoPlayVideo({
         focusable && desktopPlayMode === "interaction" ? 0 : undefined
       }
       aria-label={
-        focusable && desktopPlayMode === "interaction"
+        label ||
+        (focusable && desktopPlayMode === "interaction"
           ? "Focus to preview video"
-          : undefined
+          : "Official Pikbo Lab demo video")
       }
       onMouseEnter={playFromInteraction}
       onMouseLeave={pauseFromInteraction}

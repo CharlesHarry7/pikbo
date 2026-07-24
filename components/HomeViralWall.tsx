@@ -80,6 +80,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               mp4={item.demo.mp4}
               focusable={false}
               desktopPlayMode="interaction"
+              label={`${item.title} — official Lab demo. Tap to generate video.`}
               className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out will-change-transform group-hover:scale-[1.06]"
               style={{
                 filter:

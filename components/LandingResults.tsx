@@ -66,20 +66,32 @@ export function LandingResults({
           : ""}. Cached playback never processes a visitor upload.
       </p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {demos.map((d) => (
+        {demos.map((d, i) => (
           <article
             key={d.id}
             className="group overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition hover:border-[var(--mint)]/35"
           >
             <div className="aspect-video bg-black/50">
+              {/* Poster as real img for alt + LCP-friendly first tile */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={d.poster}
+                alt={`${d.title} — official Pikbo Lab demo still of ${d.character} (${d.eyebrow})`}
+                className="sr-only"
+                width={640}
+                height={360}
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
+              />
               <video
                 poster={d.poster}
                 className="h-full w-full object-cover"
                 muted
                 loop
                 playsInline
-                preload="metadata"
+                preload={i === 0 ? "metadata" : "none"}
                 controls
+                aria-label={`${d.title}. Official cached Lab demo — not a visitor upload.`}
               >
                 <source src={d.webm} type="video/webm" />
                 <source src={d.mp4} type="video/mp4" />

@@ -36,6 +36,10 @@ export const metadata: Metadata = {
     title: site.titleDefault,
     description: site.description,
   },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

@@ -204,7 +204,8 @@ export function HfExploreHome({
           <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65 sm:text-[15px]">
             {t("home.hero.sub")}
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          {/* 哥飞: one primary CTA (upload→video); secondary as quieter links */}
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
               href="/create?try=1&sample=scout"
               onClick={() =>
@@ -228,6 +229,12 @@ export function HfExploreHome({
               {t("home.useRecipe")}
             </Link>
             <Link
+              href="/for/photo-to-video-for-toys"
+              className="text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
+            >
+              Photo → video guide
+            </Link>
+            <Link
               href="/flow"
               onClick={() =>
                 track({
@@ -236,7 +243,7 @@ export function HfExploreHome({
                   meta: { cta: "flow" },
                 })
               }
-              className="inline-flex items-center justify-center rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-3 text-sm font-bold text-[#c8ff3d] backdrop-blur transition hover:bg-[#c8ff3d]/15"
+              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
             >
               {t("home.browseFlow")}
             </Link>
@@ -249,7 +256,7 @@ export function HfExploreHome({
                   meta: { cta: "modules" },
                 })
               }
-              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-black/50 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50"
+              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
             >
               {t("home.modules")}
             </Link>
@@ -262,7 +269,7 @@ export function HfExploreHome({
                   recipe: item.recipeSlug,
                 })
               }
-              className="inline-flex items-center justify-center rounded-full border border-white/15 px-4 py-3 text-sm font-semibold text-white/70 hover:text-white"
+              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
             >
               {t("home.whatsInside")}
             </Link>

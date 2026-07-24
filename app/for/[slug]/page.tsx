@@ -15,6 +15,8 @@ import { LandingResults } from "@/components/LandingResults";
 import { site } from "@/lib/site";
 import { robotsForPrimaryEffect } from "@/lib/seoIndex";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
+import { JsonLd } from "@/components/JsonLd";
+import { softwareApplicationJsonLd } from "@/lib/jsonLd";
 
 export function generateStaticParams() {
   const canonical = USE_CASES.map((u) => ({ slug: u.slug }));
@@ -102,13 +104,16 @@ export default async function UseCasePage({
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+      <JsonLd
+        data={[
+          faqJsonLd,
+          howToJsonLd,
+          softwareApplicationJsonLd({
+            name: `${uc.h1} | ${site.name}`,
+            description: uc.seoDescription,
+            url: `${site.url}/for/${uc.slug}`,
+          }),
+        ]}
       />
 
       <section className="glow-bg">

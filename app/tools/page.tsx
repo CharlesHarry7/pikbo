@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { TOOLS } from "@/lib/tools";
 import { site } from "@/lib/site";
+import { JsonLd } from "@/components/JsonLd";
+import { itemListJsonLd } from "@/lib/jsonLd";
 
 export const metadata: Metadata = {
   title: "Toy Video Tools",
@@ -21,29 +23,21 @@ export const metadata: Metadata = {
  * No fake capability list — every card opens a real registered tool page.
  */
 export default function ToolsIndexPage() {
-  // Phase H: ItemList of real tool URLs only (no thin fake catalog).
-  const itemListLd = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
+  // Phase H: ItemList of real tool URLs only — numberOfItems === list length.
+  const itemListLd = itemListJsonLd({
     name: "Pikbo toy video tools",
     description:
       "Search-intent toy video tools that deep-link to a registered Create recipe.",
-    numberOfItems: TOOLS.length,
-    itemListElement: TOOLS.map((t, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
+    items: TOOLS.map((t) => ({
       name: t.label,
       url: `${site.url}/tools/${t.slug}`,
       description: t.h1,
     })),
-  };
+  });
 
   return (
     <div className="relative px-4 py-10 sm:px-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
-      />
+      <JsonLd data={itemListLd} />
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-[radial-gradient(45%_80%_at_0%_0%,rgba(200,255,61,0.06),transparent_70%)]"
         aria-hidden

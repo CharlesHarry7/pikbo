@@ -1,7 +1,8 @@
-# Soft 上线后 10 个优先 SEO 内页（Grok · 哥飞式）
+# Soft 上线后 SEO 内页（Grok · 哥飞式）
 
 **策略：** 一个域名 pikbo.ai，**加内页** 不新开站。  
-**形态：** `/effects/[slug]` 同页工具（已有）— 加厚文案与示例，不是新架构。
+**形态：** `/effects/[slug]` + `/for/*` + `/tools/*` 页页带工具。  
+**全量自检：** `docs/growth/GEFEI_SEO_CHECKLIST_STATUS.md`
 
 | 优先 | slug / 路径 | 意图 |
 |------|-------------|------|
@@ -15,6 +16,12 @@
 | 8 | `mystery-box-reveal` | 揭晓感 |
 | 9 | `make-figure-dance` | 藏家玩法 |
 | 10 | `display-case-glam` | 柜拍质感 |
+| 11 | `/for/photo-to-video-for-toys` | photo→video 主词 |
+| 12 | `/for/action-figure-product-videos` | action figure |
+| 13 | `/for/toy-photography-to-video` | 玩具摄影动画 |
+| 14 | `/for/collectible-ai-video` | collectibles AI video |
+| 15 | `/for/designer-toy-marketing-videos` | 品牌营销片 |
 
-**这 3 天：** Claude 以 Create 为主；SEO 加厚可 Day3 顺手或 soft 后。  
-**不做：** 为单关键词买新域名。  
+**TDH：** 1–4 周冻结（`lib/site.ts`）。  
+**不做：** 为单关键词买新域名；假 UGC Schema。  
+
