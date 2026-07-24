@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { CREDITS_PER_VIDEO, PLANS, clipsFromCredits } from "@/lib/pricing";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { PricingCheckoutButton } from "@/components/PricingCheckoutButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -129,11 +129,16 @@ export function PricingPlanCards() {
               <CardFooter className="mt-auto flex-col items-stretch gap-2">
                 {plan.id === "free" ? (
                   <>
-                    <Button asChild className="w-full" size="lg">
-                      <Link href="/create?try=1&sample=scout">{plan.cta}</Link>
-                    </Button>
+                    <FreeTrialCta
+                      path="/pricing#plans"
+                      labelTry={plan.cta}
+                      labelDemo="Try Lab sample"
+                      labelPlans="Compare plans"
+                      className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-[var(--mint)] px-5 text-sm font-black text-black transition hover:opacity-95"
+                    />
                     <p className="text-center text-[10px] text-[var(--fg-dim)]">
-                      Opens Lab sample · live Mini when provider is on
+                      Lab sample free · Free Mini 5s when trial left · exhausted →
+                      plans
                     </p>
                   </>
                 ) : annual ? (

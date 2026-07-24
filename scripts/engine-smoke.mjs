@@ -203,6 +203,7 @@ const healthRoute = fs.readFileSync(join(root, "app/api/health/route.ts"), "utf8
 assert.match(healthRoute, /video-create-only/);
 assert.match(healthRoute, /stillsOnFree:\s*"demo-only"/);
 assert.match(healthRoute, /probeDemoAssets|demos:\s*probeDemoAssets/);
+assert.match(healthRoute, /communityUgcConfigured|ugcConfigured/);
 assert.match(
   fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8"),
   /stillsOnFree:\s*"demo-only"/
@@ -1443,6 +1444,10 @@ assert.match(
   fs.readFileSync(join(root, "lib/imageHistory.ts"), "utf8"),
   /MAX_STORE_URL_CHARS|slimItem|costCredits/
 );
+assert.match(
+  fs.readFileSync(join(root, "lib/imageHistory.ts"), "utf8"),
+  /isSafeImageHistoryUrl|isSafeDeliverableUrl/
+);
 assert.match(genJobsStore, /findJobByRequestOrId/);
 // getJob must resolve provider requestId (not only job_*)
 assert.match(
@@ -1503,9 +1508,11 @@ assert.match(historySrcLib, /isSafeDeliverableUrl/);
 assert.match(library, /historyItemDownloadAllowed/);
 assert.match(library, /Download blocked|download blocked/i);
 assert.match(library, /Unsafe deliverable URL|unsafe/);
+assert.match(library, /isSafeDeliverableUrl/);
 assert.match(library, /\/api\/downloads\//);
 assert.match(library, /method:\s*["']HEAD["']|X-Pikbo-Download-Code/);
 assert.match(createStudio, /\/api\/downloads\//);
+assert.match(createStudio, /isSafeDeliverableUrl\(videoUrl\)/);
 const retryRoute = fs.readFileSync(
   join(root, "app/api/generations/[id]/retry/route.ts"),
   "utf8"
@@ -1533,6 +1540,7 @@ assert.match(
 );
 assert.match(landingTool, /\/api\/downloads\//);
 assert.match(landingTool, /isSafeDeliverableUrl/);
+assert.match(landingTool, /isSafeDeliverableUrl\(videoUrl\)/);
 // Create: Free Mini must not copy/share raw provider URL (T6 honesty)
 assert.match(createStudio, /isSafeDeliverableUrl/);
 assert.match(
@@ -2528,6 +2536,34 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+// Phase C: Profile durable backend honesty + session jobs HEAD + FreeTrial residual
+const profilePanelSrc = fs.readFileSync(
+  join(root, "components/ProfilePanel.tsx"),
+  "utf8"
+);
+assert.match(profilePanelSrc, /Credits authority|cookie-authoritative|shadow/);
+assert.match(profilePanelSrc, /X-Pikbo-Jobs-Open|\/api\/generations/);
+assert.match(profilePanelSrc, /local-file|supabase/);
+assert.match(profilePanelSrc, /process-memory/);
+const claimRouteSrc = fs.readFileSync(
+  join(root, "app/api/auth/claim/route.ts"),
+  "utf8"
+);
+assert.match(claimRouteSrc, /backend/);
+assert.match(claimRouteSrc, /probeDurableCreditsStore|getPersonalWallet/);
+assert.match(claimRouteSrc, /durableAuthority|shadow/);
+assert.match(
+  fs.readFileSync(join(root, "components/HfProductRail.tsx"), "utf8"),
+  /FreeTrialCta/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/HfProductRail.tsx"), "utf8"),
+  /href:\s*["']\/create\?try=1&sample=scout["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/PricingPlanCards.tsx"), "utf8"),
   /FreeTrialCta/
 );
 

@@ -18,16 +18,27 @@ type DurableClaim = {
   email: string | null;
   availableCredits: number | null;
   migratedNote: string | null;
+  /** From claim / me — honest store label */
+  backend: "supabase" | "local-file" | null;
+  reservedCredits: number | null;
+};
+
+type SessionJobsProbe = {
+  open: number;
+  total: number;
 };
 
 export function ProfilePanel() {
   const [session, setSession] = useState<MeResponse | null>(null);
   const [clips, setClips] = useState(0);
+  const [jobsProbe, setJobsProbe] = useState<SessionJobsProbe | null>(null);
   const [auth, setAuth] = useState<DurableClaim>({
     signedIn: false,
     email: null,
     availableCredits: null,
     migratedNote: null,
+    backend: null,
+    reservedCredits: null,
   });
   const [signingOut, setSigningOut] = useState(false);
 
@@ -39,6 +50,24 @@ export function ProfilePanel() {
       setClips(loadHistory().length);
     }
 
+    async function refreshJobsProbe() {
+      try {
+        const res = await fetch("/api/generations", { method: "HEAD" });
+        if (!res.ok) {
+          setJobsProbe(null);
+          return;
+        }
+        const open = Number(res.headers.get("X-Pikbo-Jobs-Open") || "0");
+        const total = Number(res.headers.get("X-Pikbo-Jobs") || "0");
+        setJobsProbe({
+          open: Number.isFinite(open) ? open : 0,
+          total: Number.isFinite(total) ? total : 0,
+        });
+      } catch {
+        setJobsProbe(null);
+      }
+    }
+
     async function refreshAuth() {
       const supabase = getSupabaseBrowser();
       if (!supabase) {
@@ -47,6 +76,8 @@ export function ProfilePanel() {
           email: null,
           availableCredits: null,
           migratedNote: null,
+          backend: null,
+          reservedCredits: null,
         });
         return;
       }
@@ -59,6 +90,8 @@ export function ProfilePanel() {
           email: null,
           availableCredits: null,
           migratedNote: null,
+          backend: null,
+          reservedCredits: null,
         });
         return;
       }
@@ -74,7 +107,11 @@ export function ProfilePanel() {
         const body = (await res.json()) as {
           ok?: boolean;
           user?: { email?: string | null };
-          wallet?: { availableCredits?: number };
+          wallet?: {
+            availableCredits?: number;
+            reservedCredits?: number;
+            backend?: "supabase" | "local-file";
+          };
           guestMigration?: { note?: string; migratedCredits?: number };
         };
         if (res.ok && body.ok) {
@@ -85,6 +122,11 @@ export function ProfilePanel() {
               typeof body.wallet?.availableCredits === "number"
                 ? body.wallet.availableCredits
                 : null,
+            reservedCredits:
+              typeof body.wallet?.reservedCredits === "number"
+                ? body.wallet.reservedCredits
+                : null,
+            backend: body.wallet?.backend ?? null,
             migratedNote: body.guestMigration?.note ?? null,
           });
         } else {
@@ -92,6 +134,8 @@ export function ProfilePanel() {
             signedIn: true,
             email,
             availableCredits: null,
+            reservedCredits: null,
+            backend: null,
             migratedNote: null,
           });
         }
@@ -100,6 +144,8 @@ export function ProfilePanel() {
           signedIn: true,
           email,
           availableCredits: null,
+          reservedCredits: null,
+          backend: null,
           migratedNote: null,
         });
       }
@@ -108,6 +154,7 @@ export function ProfilePanel() {
     function refresh() {
       refreshGuest();
       void refreshAuth();
+      void refreshJobsProbe();
     }
 
     const t = window.setTimeout(refresh, 0);
@@ -128,6 +175,8 @@ export function ProfilePanel() {
         email: null,
         availableCredits: null,
         migratedNote: null,
+        backend: null,
+        reservedCredits: null,
       });
     } finally {
       setSigningOut(false);
@@ -136,9 +185,20 @@ export function ProfilePanel() {
 
   const perJob = session?.liveJobCredits ?? CREDITS_PER_VIDEO;
   const demo = isDemoMode(session);
+  // Prefer /api/me durable (Bearer) then claim wallet — cookie is generate authority.
+  const durableBackend =
+    session?.durable?.backend ?? auth.backend ?? null;
+  const durableAvailable =
+    session?.durable && typeof session.durable.availableCredits === "number"
+      ? session.durable.availableCredits
+      : auth.availableCredits;
+  const durableReserved =
+    session?.durable && typeof session.durable.reservedCredits === "number"
+      ? session.durable.reservedCredits
+      : auth.reservedCredits;
   const displayCredits =
-    auth.signedIn && auth.availableCredits !== null
-      ? auth.availableCredits
+    auth.signedIn && durableAvailable !== null
+      ? durableAvailable
       : session?.credits;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
@@ -150,6 +210,14 @@ export function ProfilePanel() {
         : null;
   const isFreePlan =
     session?.freeTrial?.isFreePlan === true || session?.plan === "free";
+
+  const durableLine = !auth.signedIn
+    ? "Guest cookie · this device only"
+    : durableBackend === "supabase"
+      ? "Supabase account · durable wallet (Postgres) · live generate still cookie-authoritative until Mode B"
+      : durableBackend === "local-file"
+        ? "Supabase account · durable wallet is single-node file ledger (shadow) — apply T5 SQL for multi-node"
+        : "Supabase account · durable wallet pending claim/probe";
 
   return (
     <div className="card mt-8 space-y-4 p-6">
@@ -169,9 +237,7 @@ export function ProfilePanel() {
                 : "Guest creator"}
           </p>
           <p className="text-xs text-[var(--fg-dim)]">
-            {auth.signedIn
-              ? "Supabase account · durable Free wallet (local ledger until Postgres migration)"
-              : "Guest cookie · this device only"}
+            {durableLine}
             {demo ? " · demo-cached mode" : ""}
           </p>
         </div>
@@ -181,6 +247,45 @@ export function ProfilePanel() {
         <p className="rounded-xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] px-3 py-2 text-[11px] leading-relaxed text-[var(--fg-muted)]">
           {auth.migratedNote}
         </p>
+      ) : null}
+
+      {auth.signedIn ? (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-[var(--fg-muted)]">
+          <span className="font-semibold text-white/80">Credits authority</span>
+          {" · "}
+          Soft-launch live Generate debits the{" "}
+          <span className="font-semibold text-white/75">guest cookie</span>{" "}
+          ({session?.credits ?? "—"} cr). Durable wallet
+          {durableBackend ? ` (${durableBackend}` : ""}
+          {session?.durable?.authority
+            ? ` · ${session.durable.authority}`
+            : durableBackend
+              ? " · shadow"
+              : ""}
+          {durableBackend ? ")" : ""} is for cross-device display
+          {durableReserved !== null && durableReserved > 0
+            ? ` · ${durableReserved} reserved`
+            : ""}
+          . Not multi-node until T5 SQL is applied.
+        </div>
+      ) : null}
+
+      {jobsProbe && (jobsProbe.open > 0 || jobsProbe.total > 0) ? (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-[var(--fg-muted)]">
+          <span className="font-semibold text-white/80">Session jobs</span>
+          {" · "}
+          {jobsProbe.open > 0
+            ? `${jobsProbe.open} open (queued/running) · `
+            : null}
+          {jobsProbe.total} in process-memory ledger this instance —{" "}
+          <Link
+            href="/library"
+            className="font-semibold text-[var(--mint)] underline-offset-2 hover:underline"
+          >
+            Library recovery
+          </Link>
+          . Not multi-node cloud.
+        </div>
       ) : null}
 
       {/* Soft-launch freeTrial honesty — same contract as Create / SoftLaunchStrip */}
@@ -255,7 +360,9 @@ export function ProfilePanel() {
 
       <p className="text-xs text-[var(--fg-muted)]">
         {auth.signedIn
-          ? "Generate still debits the guest cookie this soft-launch cycle. Durable wallet is reserved/settled in shadow when DURABLE_CREDITS=local; Supabase SQL migration remains the production store."
+          ? durableBackend === "supabase"
+            ? "Postgres durable wallet is visible here. Soft-launch Generate still settles the cookie until Mode B flips authority."
+            : "Generate still debits the guest cookie this soft-launch cycle. Durable file ledger is shadow-only (single node) until T5 SQL + multi-node store."
           : demo
             ? "Server is in demo-cached mode — labeled Lab clips cost 0 credits. Configure FAL_KEY for live Seedance Mini."
             : freeLive

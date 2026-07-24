@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import {
   durableMigrateGuest,
   ensurePersonalAccount,
+  getPersonalWallet,
+  probeDurableCreditsStore,
 } from "@/lib/durableCredits";
 import { ensureSession, publicSession } from "@/lib/session";
 import {
@@ -100,6 +102,15 @@ export async function POST(req: Request) {
       ? migrate.data.wallet
       : ensured.data.wallet;
 
+  // Phase C honesty: report store backend (local-file vs supabase), never secrets.
+  const personal = await getPersonalWallet(user.id);
+  const probe = await probeDurableCreditsStore();
+  const backend =
+    personal?.backend ??
+    (probe.backend === "supabase" || probe.backend === "local-file"
+      ? probe.backend
+      : "local-file");
+
   return NextResponse.json({
     ok: true,
     user: {
@@ -115,6 +126,7 @@ export async function POST(req: Request) {
       ? {
           availableCredits: wallet.availableCredits,
           reservedCredits: wallet.reservedCredits,
+          backend,
         }
       : null,
     guestMigration: {
@@ -127,7 +139,8 @@ export async function POST(req: Request) {
     },
     authority: {
       generate: "cookie-guest-until-durable-switch",
-      durableLedger: "local-file-or-supabase-when-migrated",
+      durableLedger: backend,
+      durableAuthority: "shadow",
     },
   });
 }
@@ -148,6 +161,13 @@ export async function GET(req: Request) {
     });
   }
   const ensured = await ensurePersonalAccount(user.id, 10);
+  const personal = await getPersonalWallet(user.id);
+  const probe = await probeDurableCreditsStore();
+  const backend =
+    personal?.backend ??
+    (probe.backend === "supabase" || probe.backend === "local-file"
+      ? probe.backend
+      : "local-file");
   return NextResponse.json({
     ok: true,
     signedIn: true,
@@ -162,7 +182,13 @@ export async function GET(req: Request) {
       ? {
           availableCredits: ensured.data.wallet?.availableCredits ?? 0,
           reservedCredits: ensured.data.wallet?.reservedCredits ?? 0,
+          backend,
         }
       : null,
+    authority: {
+      generate: "cookie-guest-until-durable-switch",
+      durableLedger: backend,
+      durableAuthority: "shadow",
+    },
   });
 }

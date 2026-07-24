@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] Phase C Profile durable honesty + FreeTrial residual
+- ProfilePanel: cookie vs durable authority, backend (local-file/supabase), reserved,
+  process-memory open jobs via HEAD /api/generations.
+- auth/claim returns wallet.backend + shadow authority labels.
+- HfProductRail + Pricing free plan → FreeTrialCta (no static sample free claim).
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-24 — [grok] FreeTrialCta auth + home suite residual
 - SuiteDoorLinks, Login/LoginForm, Cinema, Seedance, Onboarding, Batch empty,
   HfExploreHome hero, SuiteEntryStrip — static Try free → FreeTrialCta.
