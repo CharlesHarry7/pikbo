@@ -36,6 +36,9 @@ export const TOOLS: Tool[] = [
     body: [
       "Unlike generic 'turn yourself into a figure' filters, Pikbo animates the figure in your photo and keeps its recognizable shape and colors. Generated motion can still change small details, so review each clip.",
       "Free runs use Seedance Mini at 5 seconds and 480p with an on-player mark. Cached demos are labeled and never presented as your upload.",
+      "This page targets the head term “AI toy video generator.” Related long-tails live on dedicated /tools and /for URLs so each search job keeps its own title, H1, and FAQ.",
+      "Soft launch honesty: no fake multi-model carousel, no unlimited free 4K, and no guaranteed sales. Failed live jobs refund the 10-credit debit when the server can confirm failure.",
+      "Best path: clean product photo → recipe (spin / float / unbox) → wait for the full live render (often 1–3 minutes) → QA paint and silhouette → post or list.",
     ],
     keywords: [
       "ai toy video generator",
@@ -68,6 +71,8 @@ export const TOOLS: Tool[] = [
     body: [
       "Image-to-video keeps your figure as the visual reference, so the result looks like your toy rather than a generic character.",
       "Best with a clean, well-lit, front-facing photo on a plain background. Generated details can drift — review before posting.",
+      "Use walk or dance recipes when you want character motion; use spin when the still is a packshot for marketplaces. One tool page, one primary job — deep-linked to Create.",
+      "Free Mini caps apply on soft launch. Lab wall clips never spend your photo. Keep the browser tab open until the job finishes or credits may look wrong until refresh.",
     ],
     keywords: [
       "toy image to video",

@@ -24,6 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "",
     "/effects",
     "/tools",
+    "/for",
     "/guides",
     "/create",
     "/modules",

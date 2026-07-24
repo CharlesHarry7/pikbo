@@ -135,6 +135,7 @@
 
 ## 代码本轮改动（实现清单）
 
+### Round A
 - `lib/jsonLd.ts` · `components/JsonLd.tsx`  
 - `app/page.tsx` — metadata canonical + JSON-LD  
 - `app/create/page.tsx` — SoftwareApplication  
@@ -142,6 +143,14 @@
 - `app/for/[slug]/page.tsx` — SoftwareApplication  
 - `LandingResults` / `AutoPlayVideo` / `HomeViralWall` / `HfExploreHome` CTA  
 - `app/tools/page.tsx` — ItemList helper  
+
+### Round B（继续按哥飞堆）
+- `app/for/page.tsx` — 场景枢纽 + ItemList  
+- `components/LandingSeoMesh.tsx` — for/tools/guides 内链网  
+- `lib/guides.ts` — +4 指南（Etsy listing video / Free Mini 诚实 / 摄影设置 / action figure PDP）  
+- `app/sitemap.ts` — 收录 `/for`  
+- Footer — All use cases 入口  
+- tools 主词 body 加厚  
 
 ---
 
@@ -151,3 +160,5 @@
 - 为单关键词买新域名  
 - 假 UGC / 假评分 Schema  
 - ItemList 条目数造假  
+- 因「还不够像 HF」停 SEO 内页  
+

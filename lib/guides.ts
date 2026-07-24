@@ -189,6 +189,199 @@ export const GUIDES: Guide[] = [
       "designer toy content ideas",
     ],
   },
+  {
+    slug: "how-to-make-etsy-listing-video-for-toys",
+    emoji: "🛍️",
+    title: "How to Make an Etsy Listing Video for Toys (From One Photo)",
+    dek: "Marketplace-ready motion without a turntable — checklist for handmade and designer toys.",
+    seoTitle: "How to Make an Etsy Listing Video for Toys | Pikbo",
+    seoDescription:
+      "Step-by-step: turn one product photo into an Etsy listing video for toys and collectibles. Photo tips, recipe choice, and publish checks.",
+    readMins: 4,
+    intro:
+      "Etsy listing videos help buyers understand form and finish. You do not need a new shoot for every SKU — one clear owned product photo can seed a short spin or hero clip you review before upload.",
+    sections: [
+      {
+        h2: "1. Match Etsy’s job, not a cinematic short",
+        paragraphs: [
+          "Listing video intent is commercial: show the object clearly, keep motion calm, and avoid effects that hide paint or scale. Prefer 360° spin, floating hero, or display glam over chaotic dance unless that is your brand.",
+          "Confirm Etsy’s current file rules (length, format, size) before you generate a batch. Soft launch Free Mini is 5s · 480p with an on-player mark — enough to validate a hook.",
+        ],
+      },
+      {
+        h2: "2. Photo checklist for clean AI motion",
+        paragraphs: [
+          "Front-facing, full figure in frame, even light, plain background. Busy shelves and heavy shadows make motion look dirty.",
+          "Shoot once, archive the master JPEG/RAW, then generate variants. Never publish a clip you have not checked for sculpt or color drift.",
+        ],
+      },
+      {
+        h2: "3. Generate on the use-case page, then QA",
+        paragraphs: [
+          "Open the Etsy use-case landing or Generate with a listing recipe. Confirm you own the photo. Run Free Mini or a live job, wait for the full render (often 1–3 minutes), and download only after visual QA.",
+          "If free credits are spent, wait for period refresh or upgrade when billing is live. Failed live jobs should refund the 10-credit debit when the server confirms failure.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Can I list AI video on Etsy?",
+        a: "Etsy allows listing videos when they meet marketplace rules. You are responsible for accurate product representation and rights.",
+      },
+      {
+        q: "Square or vertical?",
+        a: "Many shops use square or short vertical. Pick the aspect that matches your gallery layout and regenerate if needed.",
+      },
+    ],
+    relatedEffects: ["360-spin-showcase", "floating-hero", "display-case-glam"],
+    keywords: [
+      "etsy listing video toys",
+      "how to make etsy product video",
+      "handmade toy listing video",
+    ],
+  },
+  {
+    slug: "free-ai-toy-video-generator-limits",
+    emoji: "🆓",
+    title: "Free AI Toy Video Generator — What Free Mini Actually Includes",
+    dek: "Honest soft-launch limits so searchers are not sold unlimited generation.",
+    seoTitle: "Free AI Toy Video Generator Limits | Pikbo Free Mini",
+    seoDescription:
+      "What Pikbo Free Mini includes: Seedance Mini, 5s, 480p, on-player mark, one live clip path, refunds on failed live jobs. No fake unlimited AI.",
+    readMins: 3,
+    intro:
+      "Searchers looking for a free AI toy video generator should see real caps. Soft launch Free Mini is a constrained live path — not unlimited generation and not a multi-model marketplace.",
+    sections: [
+      {
+        h2: "What Free Mini is",
+        paragraphs: [
+          "One free-plan live path uses Seedance Mini via our provider at about 5 seconds, 480p, with an on-player mark. Cached Lab demos on the homepage never process your upload and do not spend live credits.",
+          "You must confirm you own the photo. Soft launch debits 10 credits for a live job and restores them when the provider path fails and the server can confirm a refund.",
+        ],
+      },
+      {
+        h2: "What Free Mini is not",
+        paragraphs: [
+          "It is not unlimited 4K, not Kling/Runway multi-model switching, and not a guarantee of sales or virality. Stripe checkout stays off until billing is intentionally enabled.",
+          "If the UI says trial used up, the cookie period is exhausted — not a broken engine. Wait for monthly free refresh or use paid credits when available.",
+        ],
+      },
+      {
+        h2: "How to try without wasting a credit",
+        paragraphs: [
+          "Use a small, sharp product photo. Pick a simple spin or hero recipe. Keep the tab open for up to ~3 minutes. Canceling mid-request can leave refund status unconfirmed until balance refresh.",
+          "For recipe exploration without a live debit, watch Lab demos first, then run Free Mini once you know the look you want.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Is there a free AI toy video generator with no card?",
+        a: "Yes on soft launch Free Mini — no card. Caps apply (Mini · 5s · 480p · mark). Lab demos are free cached samples.",
+      },
+      {
+        q: "Why did generation take so long?",
+        a: "Live Mini often takes 1–3 minutes. Leaving the page early can look like failure even if the server finishes.",
+      },
+    ],
+    relatedEffects: ["360-spin-showcase", "floating-hero", "blind-box-unboxing"],
+    keywords: [
+      "free ai toy video generator",
+      "free mini toy video",
+      "ai figure video free trial",
+    ],
+  },
+  {
+    slug: "best-photo-settings-for-ai-figure-video",
+    emoji: "📷",
+    title: "Best Photo Settings for AI Figure Video",
+    dek: "Lighting, framing, and backgrounds that survive Seedance-style motion.",
+    seoTitle: "Best Photo Settings for AI Figure Video | Pikbo",
+    seoDescription:
+      "Practical camera and phone settings for AI figure video: framing, light, background, and what to avoid before you upload to a photo-to-video tool.",
+    readMins: 4,
+    intro:
+      "AI figure video is only as good as the still. These settings reduce mushy edges, color drift, and background noise when you run photo-to-video for designer toys.",
+    sections: [
+      {
+        h2: "Framing and focus",
+        paragraphs: [
+          "Keep the whole figure in frame with a little margin. Crop later if needed; missing feet or antennas force the model to invent geometry.",
+          "Focus on the face or primary paint face. Soft phone portrait mode that blurs the figure itself is usually worse than a simple sharp wide shot.",
+        ],
+      },
+      {
+        h2: "Light and background",
+        paragraphs: [
+          "Even, diffuse light beats dramatic single-source shadows. A white or grey seamless look is ideal for marketplace spins.",
+          "Busy city posters and patterned rugs introduce motion artifacts. If you want a mini-scene, still start from a clean figure plate when possible.",
+        ],
+      },
+      {
+        h2: "Export and upload",
+        paragraphs: [
+          "JPEG or PNG under a few MB is fine. Extremely large phone dumps can hit browser or host body limits — compress slightly without crushing detail.",
+          "Always tick owns-rights. Brand collabs and licensed sculpts need your own legal clearance before public posts.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Phone or camera?",
+        a: "Either. Sharpness and background control matter more than brand of camera.",
+      },
+      {
+        q: "Can I use a shelf photo?",
+        a: "Yes for social flexes; for listings, re-shoot on a plain background when you can.",
+      },
+    ],
+    relatedEffects: ["360-spin-showcase", "miniature-scene", "display-case-glam"],
+    keywords: [
+      "best photo for ai figure video",
+      "toy photo tips ai video",
+      "figure photography for image to video",
+    ],
+  },
+  {
+    slug: "action-figure-video-for-product-pages",
+    emoji: "🦸",
+    title: "Action Figure Video for Product Pages (No Studio Rig)",
+    dek: "When to use spin vs hero float vs social flash on a figure PDP.",
+    seoTitle: "Action Figure Product Page Video From One Photo | Pikbo",
+    seoDescription:
+      "Add action figure motion to product pages from one photo. Choose spin, hero, or glam recipes and QA paint accuracy before publishing.",
+    readMins: 3,
+    intro:
+      "Product pages convert better when buyers can sense depth. For action figures, a short AI spin or hero float from one owned photo is often enough to replace a missing turntable shoot.",
+    sections: [
+      {
+        h2: "Pick the recipe for the PDP job",
+        paragraphs: [
+          "Spin = ‘see the sculpt.’ Hero float = ‘feel premium.’ Display glam = ‘shelf worthy.’ Social flash recipes belong on ads and Reels more than the main gallery.",
+          "Match aspect to the storefront (1:1 gallery vs 9:16 ads). Do not stretch a single export across every placement.",
+        ],
+      },
+      {
+        h2: "QA before publish",
+        paragraphs: [
+          "Check hands, logos, and accessories. AI can invent fingers or smear print. High-value grails need stricter human review than $15 blind boxes.",
+          "Keep the original photo linked in your DAM so support can prove the real product if a buyer disputes the media.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Is AI video allowed on marketplaces?",
+        a: "Policies vary. Represent the product accurately and follow each marketplace’s media rules.",
+      },
+    ],
+    relatedEffects: ["360-spin-showcase", "floating-hero", "display-case-glam"],
+    keywords: [
+      "action figure product video",
+      "figure product page video",
+      "action figure spin video",
+    ],
+  },
 ];
 
 export function getGuide(slug: string): Guide | undefined {

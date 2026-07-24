@@ -6,6 +6,7 @@ import { getPreset } from "@/lib/presets";
 import { PresetCard } from "@/components/PresetCard";
 import { site } from "@/lib/site";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
+import { LandingSeoMesh } from "@/components/LandingSeoMesh";
 
 export function generateStaticParams() {
   return GUIDES.map((g) => ({ slug: g.slug }));
@@ -165,7 +166,12 @@ export default async function GuidePage({
         </div>
       </section>
 
-      {/* More guides */}
+      {/* 哥飞 mesh — tools / for / more guides */}
+      <LandingSeoMesh
+        kind="guides"
+        currentSlug={g.slug}
+        effectSlugs={g.relatedEffects}
+      />
       <section className="container-x pb-12">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-2xl font-bold">More guides</h2>

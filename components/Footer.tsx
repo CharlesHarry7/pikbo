@@ -90,7 +90,12 @@ export function Footer() {
               For
             </h4>
             <ul className="space-y-2 text-sm text-[var(--fg-muted)]">
-              {USE_CASES.map((u) => (
+              <li>
+                <Link href="/for" className="font-semibold text-[var(--mint)]/90 hover:text-[var(--mint)]">
+                  All use cases
+                </Link>
+              </li>
+              {USE_CASES.slice(0, 10).map((u) => (
                 <li key={u.slug}>
                   <Link
                     href={`/for/${u.slug}`}

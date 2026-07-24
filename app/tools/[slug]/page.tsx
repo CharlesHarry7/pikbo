@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { TOOLS, getTool } from "@/lib/tools";
@@ -10,6 +9,9 @@ import { LandingResults } from "@/components/LandingResults";
 import { site } from "@/lib/site";
 import { robotsForPrimaryEffect } from "@/lib/seoIndex";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
+import { LandingSeoMesh } from "@/components/LandingSeoMesh";
+import { JsonLd } from "@/components/JsonLd";
+import { softwareApplicationJsonLd } from "@/lib/jsonLd";
 
 export function generateStaticParams() {
   return TOOLS.map((t) => ({ slug: t.slug }));
@@ -63,9 +65,15 @@ export default async function ToolPage({
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      <JsonLd
+        data={[
+          faqJsonLd,
+          softwareApplicationJsonLd({
+            name: `${t.h1} | ${site.name}`,
+            description: t.seoDescription,
+            url: `${site.url}/tools/${t.slug}`,
+          }),
+        ]}
       />
 
       <section className="glow-bg">
@@ -130,16 +138,11 @@ export default async function ToolPage({
         </div>
       </section>
 
-      <section className="container-x py-10">
-        <h2 className="text-2xl font-bold">More tools</h2>
-        <div className="mt-6 flex flex-wrap gap-3">
-          {TOOLS.filter((x) => x.slug !== t.slug).map((x) => (
-            <Link key={x.slug} href={`/tools/${x.slug}`} className="chip">
-              {x.emoji} {x.label}
-            </Link>
-          ))}
-        </div>
-      </section>
+      <LandingSeoMesh
+        kind="tools"
+        currentSlug={t.slug}
+        effectSlugs={[t.primaryEffect, ...t.effects]}
+      />
     </>
   );
 }

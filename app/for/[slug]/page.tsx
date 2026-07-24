@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import {
@@ -15,6 +14,7 @@ import { LandingResults } from "@/components/LandingResults";
 import { site } from "@/lib/site";
 import { robotsForPrimaryEffect } from "@/lib/seoIndex";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
+import { LandingSeoMesh } from "@/components/LandingSeoMesh";
 import { JsonLd } from "@/components/JsonLd";
 import { softwareApplicationJsonLd } from "@/lib/jsonLd";
 
@@ -193,19 +193,11 @@ export default async function UseCasePage({
         </div>
       </section>
 
-      <section className="container-x py-10">
-        <h2 className="text-2xl font-bold">Also made for</h2>
-        <div className="mt-6 flex flex-wrap gap-3">
-          {USE_CASES.filter((u) => u.slug !== uc.slug).map((u) => (
-            <Link key={u.slug} href={`/for/${u.slug}`} className="chip">
-              {u.emoji} {u.label}
-            </Link>
-          ))}
-          <Link href="/guides" className="chip">
-            Guides →
-          </Link>
-        </div>
-      </section>
+      <LandingSeoMesh
+        kind="for"
+        currentSlug={uc.slug}
+        effectSlugs={uc.recommendedEffects}
+      />
     </>
   );
 }
