@@ -249,13 +249,21 @@ export function BatchStudio({
     recoveredFromAssetMiss?: boolean;
   }> {
     const jobAspect = job.aspectRatio ?? aspectRatio;
+    const dualStill =
+      image && image.startsWith("data:image") && image.length < 3_500_000
+        ? image
+        : undefined;
     const result = await postGenerateWithRetry(
       {
         effect: job.slug,
-        // Prefer assetId when registered; fall back to data URL for samples.
+        // Dual-send when possible: assetId for smaller POSTs + inline still for
+        // multi-instance (Vercel) memory-asset misses.
         ...(sharedAssetId
-          ? { assetId: sharedAssetId }
-          : { image: image ?? undefined }),
+          ? {
+              assetId: sharedAssetId,
+              ...(dualStill ? { image: dualStill } : {}),
+            }
+          : { image: dualStill ?? image ?? undefined }),
         duration: effectiveDuration,
         aspectRatio: jobAspect,
         model: effectiveModel,

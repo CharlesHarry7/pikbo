@@ -189,10 +189,12 @@ export function LandingToolPanel({
     const abortCtrl = new AbortController();
     generateAbortRef.current = abortCtrl;
     const useAsset = Boolean(assetId);
+    // Dual-send image + assetId so multi-instance hosts don't fail asset-memory miss.
+    const dualImageOk = image.length < 3_500_000;
     const result = await postGenerateWithRetry(
       {
         effect: effectSlug,
-        image: useAsset ? undefined : image,
+        image: useAsset ? (dualImageOk ? image : undefined) : image,
         assetId: useAsset && assetId ? assetId : undefined,
         duration,
         aspectRatio,

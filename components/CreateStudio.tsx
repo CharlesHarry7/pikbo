@@ -609,16 +609,24 @@ export function CreateStudio({
     document
       .getElementById("create-result")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    // Prefer assetId when registered (smaller POST); Retry uses frozen still/asset only.
-    // ASSET_NOT_FOUND auto-recovers via fallbackImage (local TTL / process restart).
+    // Prefer assetId when registered (smaller POST); always also send data URL when
+    // available so multi-instance (Vercel) asset-memory misses still generate.
+    // ASSET_NOT_FOUND auto-recovers via fallbackImage when only assetId was sent.
     const fallbackStill =
       (img && isValidImageDataUrl(img) ? img : null) ||
       (image && isValidImageDataUrl(image) ? image : null) ||
       undefined;
+    // Keep dual payload under rough Vercel body comfort (~3.5MB JSON).
+    const dualImageOk =
+      Boolean(fallbackStill) && (fallbackStill?.length ?? 0) < 3_500_000;
     const result = await postGenerateWithRetry(
       {
         effect: fx,
-        image: useAsset ? undefined : img ?? undefined,
+        image: useAsset
+          ? dualImageOk
+            ? fallbackStill
+            : undefined
+          : img ?? undefined,
         assetId: useAsset && postAssetId ? postAssetId : undefined,
         extra: requestExtra,
         duration: requestDuration,
@@ -2079,11 +2087,13 @@ export function CreateStudio({
                     ? "Lab example — not from your upload"
                     : elapsed < 3
                       ? "Uploading reference"
-                      : elapsed < 12
+                      : elapsed < 20
                         ? "Seedance queue"
-                        : elapsed < 35
-                          ? "Rendering motion"
-                          : "Almost done — large clips take longer"}
+                        : elapsed < 60
+                          ? "Rendering motion (often 1–3 min)"
+                          : elapsed < 120
+                            ? "Still rendering — keep this tab open"
+                            : "Almost done — live Mini can take up to ~3 min"}
                   {" · "}
                   {elapsed}s
                 </p>
@@ -2091,7 +2101,8 @@ export function CreateStudio({
                   <div
                     className="h-full rounded-full transition-all duration-300"
                     style={{
-                      width: `${Math.min(95, 8 + elapsed * 2.2)}%`,
+                      // Live Mini often 90–180s — pace bar for ~3 min, not ~40s.
+                      width: `${Math.min(96, 6 + elapsed * 0.55)}%`,
                       background: "var(--grad)",
                     }}
                   />

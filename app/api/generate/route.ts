@@ -220,13 +220,17 @@ export async function POST(req: Request) {
   }
 
   // Phase D: prefer session-local asset over re-posted Base64.
+  // On multi-instance hosts (Vercel), memory assets often miss on another node —
+  // if the client also sent a data URL, fall through instead of hard-failing.
   let image =
     typeof imageField === "string" && imageField.startsWith("data:image")
       ? imageField
       : undefined;
   if (typeof assetId === "string" && assetId.startsWith("asset_")) {
     const asset = getLocalAsset(assetId, session.id);
-    if (!asset) {
+    if (asset) {
+      image = asset.dataUrl;
+    } else if (!image) {
       return err(
         {
           error:
@@ -237,7 +241,6 @@ export async function POST(req: Request) {
         404
       );
     }
-    image = asset.dataUrl;
   }
 
   if (!image || !isValidImageDataUrl(image)) {
