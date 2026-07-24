@@ -1257,6 +1257,7 @@ assert.match(historySrcLib, /canDownloadResult/);
 assert.match(library, /historyItemDownloadAllowed/);
 assert.match(library, /Download blocked|download blocked/i);
 assert.match(library, /\/api\/downloads\//);
+assert.match(library, /method:\s*["']HEAD["']|X-Pikbo-Download-Code/);
 assert.match(createStudio, /\/api\/downloads\//);
 const retryRoute = fs.readFileSync(
   join(root, "app/api/generations/[id]/retry/route.ts"),
@@ -1348,6 +1349,7 @@ assert.match(downloadRouteSrc, /isSafeDeliverableUrl|UNSAFE_URL/);
 // Relative /demos must become absolute Location (Next redirect requirement)
 assert.match(downloadRouteSrc, /absoluteDeliverableUrl|new URL\(/);
 assert.match(downloadRouteSrc, /export async function HEAD/);
+assert.match(downloadRouteSrc, /X-Pikbo-Download-Code|X-Pikbo-Watermark/);
 // Health free-trial product contract (session state stays on /api/me)
 assert.match(health, /freeTrial/);
 assert.match(health, /failedLiveRefunds/);
@@ -1386,6 +1388,16 @@ const profilePanel = fs.readFileSync(
 );
 assert.match(profilePanel, /Sign out|signOut/);
 assert.match(profilePanel, /\/api\/auth\/claim/);
+assert.match(profilePanel, /freeTrialExhausted|Free Mini trial used|clipsLeft/);
+const settingsPage = fs.readFileSync(
+  join(root, "app/settings/page.tsx"),
+  "utf8"
+);
+assert.match(settingsPage, /freeTrialExhausted|Free Mini trial|T6 bake/);
+assert.match(
+  fs.readFileSync(join(root, "app/settings/layout.tsx"), "utf8"),
+  /PRIVATE_ROBOTS/
+);
 assert.match(health, /probeSupabase|auth:\s*\{/);
 
 // Signed-in durable shadow on generate + me enrichment

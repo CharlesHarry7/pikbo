@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
 
 export const metadata: Metadata = {
   title: "Settings",
   description: "Device data and Pikbo session settings.",
-  robots: { index: false, follow: false },
+  robots: PRIVATE_ROBOTS,
 };
 
 export default function SettingsLayout({

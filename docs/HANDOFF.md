@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] Profile/Settings freeTrial + Library download HEAD
+- Profile + Settings surface `/api/me` freeTrial (clips left / exhausted / Mini).
+- Settings uses `PRIVATE_ROBOTS`; T6 raw-download honesty row.
+- Library HEAD-probes `/api/downloads` before open; blocked codes → honest toasts.
+- Download HEAD: `X-Pikbo-Download-Code` + `X-Pikbo-Watermark`.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-24 — [grok] freeTrial honesty Create/SoftLaunch + P6 Inside
 - Create mode banner + preflight: Free Mini clips left / trial exhausted.
 - SoftLaunchStrip reads `/api/me` freeTrial (pricing CTA when exhausted).

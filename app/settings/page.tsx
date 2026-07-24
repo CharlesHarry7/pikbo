@@ -7,7 +7,11 @@ import {
   loadHistory,
   remoteClipMayExpire,
 } from "@/lib/history";
-import { fetchMe, type MeResponse } from "@/lib/meClient";
+import {
+  fetchMe,
+  freeTrialExhausted,
+  type MeResponse,
+} from "@/lib/meClient";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 
 export default function SettingsPage() {
@@ -43,6 +47,17 @@ export default function SettingsPage() {
   const mode = session?.mode ?? "—";
   const demoMode = session?.mode === "demo-cached";
   const liveMode = session?.mode === "live-generate";
+  const perJob = session?.liveJobCredits ?? CREDITS_PER_VIDEO;
+  const trialDone = freeTrialExhausted(session);
+  const freeLive = session?.freeTrial?.freeLive;
+  const clipsLeft =
+    typeof session?.freeTrial?.clipsLeft === "number"
+      ? session.freeTrial.clipsLeft
+      : session
+        ? Math.floor(session.credits / perJob)
+        : null;
+  const isFreePlan =
+    session?.freeTrial?.isFreePlan === true || session?.plan === "free";
 
   return (
     <div className="px-4 py-10 sm:px-8">
@@ -98,14 +113,29 @@ export default function SettingsPage() {
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--fg-muted)]">Live jobs left (est.)</span>
+            <span className="text-[var(--fg-muted)]">Free Mini trial</span>
+            <span
+              className={`text-right font-semibold ${
+                trialDone && isFreePlan ? "text-amber-200" : ""
+              }`}
+            >
+              {!session
+                ? "—"
+                : demoMode
+                  ? "n/a · demo-cached"
+                  : !isFreePlan
+                    ? "paid path · not Free trial"
+                    : trialDone
+                      ? "exhausted · demos still free"
+                      : freeLive
+                        ? `~${clipsLeft} left · ${freeLive.resolution} ${freeLive.durationSec}s`
+                        : `~${clipsLeft} live left`}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[var(--fg-muted)]">Live clips left (est.)</span>
             <span className="font-semibold">
-              {session
-                ? Math.floor(
-                    session.credits /
-                      (session.liveJobCredits ?? CREDITS_PER_VIDEO)
-                  )
-                : "—"}
+              {clipsLeft !== null ? clipsLeft : "—"}
             </span>
           </div>
           <div className="flex justify-between gap-4">
@@ -126,6 +156,12 @@ export default function SettingsPage() {
             <span className="text-[var(--fg-muted)]">Cached demos</span>
             <span className="font-semibold">
               {session?.cachedDemoFree === false ? "may charge" : "0 credits"}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[var(--fg-muted)]">Free raw download</span>
+            <span className="font-semibold text-amber-100/90">
+              blocked · T6 bake pending
             </span>
           </div>
           <div className="flex justify-between">
@@ -150,7 +186,9 @@ export default function SettingsPage() {
             Soft-live needs <code className="text-[var(--fg-muted)]">SESSION_SECRET</code>{" "}
             + <code className="text-[var(--fg-muted)]">FAL_KEY</code> on the
             server. Paid needs durable entitlements + Stripe (see LAUNCH.md on
-            the repo).
+            the repo). Free Mini trial state comes from{" "}
+            <code className="text-[var(--fg-muted)]">GET /api/me</code>{" "}
+            freeTrial — not a client guess.
           </p>
         </div>
 

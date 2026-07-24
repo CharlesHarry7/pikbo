@@ -122,19 +122,30 @@ export async function GET(req: Request, { params }: Props) {
 /**
  * Metadata probe without following the deliverable — Library can HEAD before
  * navigating. Same authorization as GET.
+ * Failures expose code via X-Pikbo-Download-Code for honest client toasts.
  */
 export async function HEAD(_req: Request, { params }: Props) {
   const { id } = await params;
   const session = await ensureSession();
   const gate = gateDownload(session.id, id);
   if (!gate.ok) {
-    return new NextResponse(null, { status: gate.status });
+    const code =
+      typeof gate.body.code === "string" ? gate.body.code : "BLOCKED";
+    return new NextResponse(null, {
+      status: gate.status,
+      headers: {
+        "X-Pikbo-Download": "blocked",
+        "X-Pikbo-Download-Code": code,
+        "Cache-Control": "no-store",
+      },
+    });
   }
   return new NextResponse(null, {
     status: 200,
     headers: {
       "X-Pikbo-Download": "allowed",
       "X-Pikbo-Demo": gate.demo ? "1" : "0",
+      "X-Pikbo-Watermark": gate.watermark ? "1" : "0",
       "Cache-Control": "no-store",
     },
   });

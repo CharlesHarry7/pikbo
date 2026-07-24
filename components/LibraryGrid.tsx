@@ -478,18 +478,60 @@ export function LibraryGrid() {
       toast(historyDownloadBlockReason());
       return;
     }
+    // Prefer controlled download endpoint when we have a server job / request id.
+    // HEAD first so Free-blocked / expired process-memory jobs never open a dead tab.
+    if (item.requestId) {
+      const gateUrl = `/api/downloads/${encodeURIComponent(item.requestId)}`;
+      try {
+        const head = await fetch(gateUrl, { method: "HEAD" });
+        const code = head.headers.get("X-Pikbo-Download-Code") || "";
+        if (head.status === 403 || code === "DOWNLOAD_BLOCKED") {
+          toast(historyDownloadBlockReason());
+          return;
+        }
+        if (head.status === 404 || code === "NOT_FOUND") {
+          toast(
+            "Session job not on this server process — try direct open or remake"
+          );
+          // Fall through to direct only for demos/paid with a known URL.
+        } else if (head.status === 409 || code === "NOT_READY") {
+          toast("Deliverable not ready yet — refresh session jobs");
+          return;
+        } else if (head.status === 422 || code === "UNSAFE_URL") {
+          toast("Unsafe deliverable URL — download blocked");
+          return;
+        } else if (head.ok) {
+          track({
+            event: "export_click",
+            path: "/library",
+            recipe: item.effect,
+            demo: Boolean(item.demo),
+            meta: {
+              via: "downloads_api",
+              sku: item.sku || null,
+              head: "allowed",
+            },
+          });
+          window.open(gateUrl, "_blank", "noopener,noreferrer");
+          toast("Download via server gate…");
+          return;
+        }
+      } catch {
+        /* network — try open / direct below */
+      }
+    }
     track({
       event: "export_click",
       path: "/library",
       recipe: item.effect,
       demo: Boolean(item.demo),
       meta: {
-        via: item.requestId ? "downloads_api" : "direct",
+        via: item.requestId ? "downloads_api_fallback" : "direct",
         sku: item.sku || null,
       },
     });
-    // Prefer controlled download endpoint when we have a server job id.
     if (item.requestId) {
+      // Gate unreachable — last resort open (GET re-applies the same auth).
       window.open(
         `/api/downloads/${encodeURIComponent(item.requestId)}`,
         "_blank",
