@@ -44,9 +44,16 @@ export default function Home() {
   const labDemos = demos.length ? demos : DEMO_VIDEOS.slice(0, 8);
   // Cap VideoObject graph size — first 6 Lab samples on home.
   const videoLd = labDemos.slice(0, 6).map(videoObjectJsonLd);
+  // 哥飞养站 LCP: preload first wall poster (not full video)
+  const lcpPoster =
+    viralWall[0]?.demo?.poster ||
+    labDemos[0]?.poster ||
+    DEMO_VIDEOS[0]?.poster ||
+    "/demos/orbit-still.webp";
 
   return (
     <>
+      <link rel="preload" as="image" href={lcpPoster} fetchPriority="high" />
       <JsonLd
         data={[
           websiteJsonLd(),

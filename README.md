@@ -1,7 +1,19 @@
-# Pikbo — designer toy video maker (pikbo.ai)
+# Pikbo — AI toy video generator
 
-Turn one photo of a figure / blind box / art toy into a shareable video.
-Niche: **designer toys / collectibles**, English/global market, Google-SEO first.
+**Live:** [https://pikbo.ai](https://pikbo.ai) · Free Mini trial · no card  
+
+Turn **one photo** of a designer toy / figure / blind box you own into a short AI video for listings, TikTok, and drops.
+
+```text
+Photo you own → recipe (spin / float / unbox) → short video
+```
+
+Soft launch honesty: Free Mini is Seedance Mini (about 5s · 480p · on-player mark). Lab demos on the site are official cached examples, not customer UGC. Stripe checkout is off until search traffic is stable (哥飞养站).
+
+## Try
+1. Open [pikbo.ai/create](https://pikbo.ai/create)  
+2. Confirm you own the photo  
+3. Generate (live Mini when configured; otherwise labeled demo)
 
 ## Stack
 - **Next.js 16** (App Router) + **Tailwind v4**
@@ -9,13 +21,13 @@ Niche: **designer toys / collectibles**, English/global market, Google-SEO first
   - Free tier → `bytedance/seedance-2.0/mini/image-to-video` at 480p
   - Paid → `bytedance/seedance-2.0/image-to-video`
 - **Signed cookie session** — guest credits + plan (no DB required yet)
-- **Stripe Checkout** (optional) — Creator / Shop subscriptions
-- Programmatic SEO landing pages at `/effects/[slug]`, `/for/[slug]`, `/toys/[slug]`
+- **Stripe Checkout** (optional, soft launch off) — Creator / Shop subscriptions
+- Programmatic SEO: `/effects/*`, `/for/*`, `/tools/*`, `/toys/*`, `/guides/*`
 
 ## Run
 ```bash
 cp .env.example .env.local
-# optional: paste FAL_KEY, SESSION_SECRET, Stripe keys
+# required for live gen: FAL_KEY, SESSION_SECRET
 npm run dev      # http://localhost:3000
 ```
 

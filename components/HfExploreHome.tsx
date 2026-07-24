@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { DemoVideo } from "@/lib/demoVideos";
 import type { FeedItem } from "@/lib/videoFeed";
 import { getPreset } from "@/lib/presets";
@@ -17,70 +17,9 @@ import { HomeViralWall } from "@/components/HomeViralWall";
 import { HfProductRail } from "@/components/HfProductRail";
 import { SeedanceCampaign } from "@/components/SeedanceCampaign";
 import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
+import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { useI18n } from "@/components/LanguageProvider";
 import { site } from "@/lib/site";
-
-/** Soft concurrent autoplay budget — pause extras when many tiles enter view. */
-const playingVideos = new Set<HTMLVideoElement>();
-const MAX_PLAYING_DESKTOP = 2;
-const MAX_PLAYING_MOBILE = 1;
-
-function maxPlayingBudget() {
-  if (typeof window === "undefined") return MAX_PLAYING_DESKTOP;
-  return window.matchMedia("(max-width: 768px)").matches
-    ? MAX_PLAYING_MOBILE
-    : MAX_PLAYING_DESKTOP;
-}
-
-function claimPlay(v: HTMLVideoElement) {
-  if (playingVideos.has(v)) return;
-  const cap = maxPlayingBudget();
-  if (playingVideos.size >= cap) {
-    const oldest = playingVideos.values().next().value;
-    if (oldest && oldest !== v) {
-      oldest.pause();
-      playingVideos.delete(oldest);
-    }
-  }
-  playingVideos.add(v);
-  v.muted = true;
-  v.playsInline = true;
-  void v.play().catch(() => undefined);
-}
-
-function releasePlay(v: HTMLVideoElement) {
-  playingVideos.delete(v);
-  v.pause();
-}
-
-function useAutoPlay(eager = false) {
-  const ref = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    const v = ref.current;
-    if (!v) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const kick = () => claimPlay(v);
-    if (eager) kick();
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) kick();
-        else releasePlay(v);
-      },
-      { rootMargin: "80px 0px", threshold: 0.2 }
-    );
-    io.observe(v);
-    const onGesture = () => kick();
-    window.addEventListener("touchstart", onGesture, { once: true, passive: true });
-    window.addEventListener("click", onGesture, { once: true });
-    return () => {
-      io.disconnect();
-      releasePlay(v);
-      window.removeEventListener("touchstart", onGesture);
-      window.removeEventListener("click", onGesture);
-    };
-  }, [eager]);
-  return ref;
-}
 
 function Clip({
   demo,
@@ -91,21 +30,19 @@ function Clip({
   className?: string;
   eager?: boolean;
 }) {
-  const ref = useAutoPlay(eager);
+  // Reuse wall policy: posters first; sources only when playing (LCP / 养站)
   return (
-    <video
-      ref={ref}
-      className={className}
+    <AutoPlayVideo
       poster={demo.poster}
-      muted
-      loop
-      playsInline
-      // Phase G: hero gets metadata; non-hero poster-only until near viewport play.
-      preload={eager ? "metadata" : "none"}
-    >
-      <source src={demo.webm} type="video/webm" />
-      <source src={demo.mp4} type="video/mp4" />
-    </video>
+      webm={demo.webm}
+      mp4={demo.mp4}
+      className={className}
+      eager={eager}
+      desktopPlayMode={eager ? "viewport" : "interaction"}
+      lazySources={!eager}
+      focusable={false}
+      label={demo.title}
+    />
   );
 }
 
