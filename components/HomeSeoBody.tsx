@@ -71,7 +71,7 @@ export function HomeSeoBody() {
 
         <div>
           <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            How photo into short video works for designer toys
+            How an AI toy video generator turns a photo into short video
           </h2>
           <p className="mt-4">
             The phrase people type is often “photo into short video” or “photo
@@ -173,7 +173,7 @@ export function HomeSeoBody() {
 
         <div>
           <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            Free Mini trial limits (honest soft launch)
+            Free Mini on this AI toy video generator (honest soft launch)
           </h2>
           <p className="mt-4">
             Free plan soft launch is intentionally small: about ten credits,
@@ -221,7 +221,15 @@ export function HomeSeoBody() {
             <Link href="/community" className="text-[var(--mint)] hover:underline">
               community Lab
             </Link>
-            . Guides such as{" "}
+            . For the ranking-focused{" "}
+            <Link
+              href="/tools/ai-toy-video-generator"
+              className="font-semibold text-[var(--mint)] hover:underline"
+            >
+              AI toy video generator
+            </Link>{" "}
+            keyword page (Title, H1, and body aligned to that query), open the
+            tools URL. Guides such as{" "}
             <Link
               href="/guides/how-to-make-a-figure-spin-video"
               className="text-[var(--mint)] hover:underline"
