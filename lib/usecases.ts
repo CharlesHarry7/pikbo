@@ -115,6 +115,9 @@ export const USE_CASES: UseCase[] = [
     body: [
       "A reviewed spin draft can provide another product view, but generated angles are not a substitute for accurate product documentation.",
       "No studio booking — produce listing videos for your whole catalog from existing product photos.",
+      "Amazon media rules change. Always confirm length, format, and whether lifestyle motion is allowed for your category before you replace a main image gallery item.",
+      "Soft launch Free Mini is one constrained live path (Seedance Mini · 5s · 480p · mark). Use it to validate a single hero ASIN, then batch more when paid credits are available.",
+      "Never invent features the physical product does not have. If AI motion blurs a logo or accessory, re-shoot the still or regenerate with a cleaner packshot.",
     ],
     keywords: [
       "amazon product video",
@@ -441,6 +444,123 @@ export const USE_CASES: UseCase[] = [
       },
     ],
   },
+  {
+    slug: "ebay-listing-videos",
+    emoji: "🏷️",
+    label: "eBay sellers",
+    audience: "seller",
+    h1: "eBay Listing Video for Toys From One Photo",
+    seoTitle: "eBay Toy Listing Video Generator | Pikbo",
+    seoDescription:
+      "Make an eBay listing video for toys and collectibles from one photo. Calm spins for auctions and Buy It Now. Free Mini trial.",
+    intro:
+      "eBay buyers want to trust condition and form. Draft a short spin or hero clip from one owned product photo before you list or relaunch a SKU.",
+    body: [
+      "Auction and fixed-price listings both benefit from motion that shows depth without hiding flaws. Prefer honest lighting and full-figure framing.",
+      "Confirm eBay’s current media requirements for your site (US, UK, DE…). Soft launch Free Mini is capped — use it to prove one listing, then scale.",
+      "Resellers: keep the original photo archive so disputes can be answered with the real still, not only the AI draft.",
+      "Cross-link Amazon/Etsy pages if you multi-home inventory — each marketplace job keeps its own URL.",
+    ],
+    keywords: [
+      "ebay listing video toys",
+      "ebay product video maker",
+      "collectible ebay video",
+    ],
+    recommendedEffects: ["360-spin-showcase", "display-case-glam", "floating-hero"],
+    faq: [
+      {
+        q: "Can AI video misrepresent condition?",
+        a: "Yes if you are not careful. QA every clip. Never use motion that hides damage buyers must know about.",
+      },
+    ],
+  },
+  {
+    slug: "mercari-listing-videos",
+    emoji: "📲",
+    label: "Mercari sellers",
+    audience: "seller",
+    h1: "Mercari Video for Figures & Collectibles",
+    seoTitle: "Mercari Toy Listing Video From One Photo | Pikbo",
+    seoDescription:
+      "Create short Mercari listing videos for figures and designer toys from one photo. Mobile-first clips for resale apps.",
+    intro:
+      "Mercari is scroll-first. A short product clip from one photo helps your figure stand out without a full reshoot between thrift finds.",
+    body: [
+      "Shoot or reuse a clean packshot, then generate a calm spin. Avoid over-stylized effects that look unlike the item in hand.",
+      "Free Mini caps apply. Lab demos on Pikbo never process your upload.",
+      "Resale honesty first: if the item has shelf wear, do not pick a glam recipe that hides it.",
+    ],
+    keywords: [
+      "mercari listing video",
+      "mercari figure video",
+      "resale toy video maker",
+    ],
+    recommendedEffects: ["360-spin-showcase", "floating-hero", "display-case-glam"],
+    faq: [
+      {
+        q: "Vertical or square?",
+        a: "Both can work. Match what your Mercari feed previews best and regenerate if needed.",
+      },
+    ],
+  },
+  {
+    slug: "facebook-marketplace-toy-videos",
+    emoji: "💙",
+    label: "Marketplace",
+    audience: "seller",
+    h1: "Facebook Marketplace Toy Videos From One Photo",
+    seoTitle: "Facebook Marketplace Toy Video Generator | Pikbo",
+    seoDescription:
+      "Draft a short Facebook Marketplace video for toys and figures from one photo. Local pickup listings with clearer product motion.",
+    intro:
+      "Local buyers still want to see the object move. Turn one owned photo into a short Marketplace-friendly clip without a home studio.",
+    body: [
+      "Keep motion simple — spin or float. Heavy VFX can hurt trust for second-hand sales.",
+      "Include scale context in your photos when possible; AI will not invent accurate measurements.",
+      "Soft launch Free Mini is enough for a few active listings. Failed live jobs refund credits when confirmed.",
+    ],
+    keywords: [
+      "facebook marketplace toy video",
+      "marketplace figure video",
+      "local sell toy video",
+    ],
+    recommendedEffects: ["360-spin-showcase", "floating-hero", "paparazzi-flash"],
+    faq: [
+      {
+        q: "Does Pikbo post to Marketplace?",
+        a: "No. Download and upload inside Facebook yourself.",
+      },
+    ],
+  },
+  {
+    slug: "reddit-collector-showcase-videos",
+    emoji: "🗨️",
+    label: "Reddit collectors",
+    audience: "collector",
+    h1: "Reddit Showcase Videos for Toy Collectors",
+    seoTitle: "Reddit Toy Showcase Video From One Photo | Pikbo",
+    seoDescription:
+      "Make short showcase clips for Reddit toy communities from one photo — shelf flexes and pull reveals with honest Free Mini limits.",
+    intro:
+      "Subreddits reward clear product shots. A short AI motion draft can lift a still post — as long as you label AI when community rules require it.",
+    body: [
+      "Check each subreddit’s rules on AI media before posting. Honesty beats bans.",
+      "Use display glam or spin for grails; unbox energy for pulls. Keep Free Mini caps in mind.",
+      "Do not spam the same clip across every toy sub. Tailor captions and follow local etiquette.",
+    ],
+    keywords: [
+      "reddit toy showcase video",
+      "collector reddit video",
+      "figure flex video from photo",
+    ],
+    recommendedEffects: ["display-case-glam", "360-spin-showcase", "blind-box-unboxing"],
+    faq: [
+      {
+        q: "Should I disclose AI?",
+        a: "If the community asks for disclosure, disclose. Pikbo is a draft tool, not a pass to break sub rules.",
+      },
+    ],
+  },
 ];
 
 /**
@@ -469,6 +589,12 @@ export const FOR_SLUG_ALIASES: Record<string, string> = {
   "ai-collectible-video": "collectible-ai-video",
   "designer-toy-marketing": "designer-toy-marketing-videos",
   "toy-marketing": "designer-toy-marketing-videos",
+  ebay: "ebay-listing-videos",
+  "ebay-sellers": "ebay-listing-videos",
+  mercari: "mercari-listing-videos",
+  "facebook-marketplace": "facebook-marketplace-toy-videos",
+  marketplace: "facebook-marketplace-toy-videos",
+  "reddit-collectors": "reddit-collector-showcase-videos",
 };
 
 /** Resolve alias → canonical slug (or return input). */
