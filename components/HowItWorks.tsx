@@ -1,55 +1,75 @@
 import Link from "next/link";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 
 const STEPS = [
   {
     n: "1",
     t: "Snap your figure",
-    d: "One clear photo — full toy, even light, clean background.",
+    d: "One clear photo — full toy, even light, clean background. You must own the rights.",
   },
   {
     n: "2",
-    t: "Pick a toy preset",
-    d: "Spin, unbox, dance, shelf pan — or direct it in Cinema.",
+    t: "Pick a toy recipe",
+    d: "Spin, unbox, dance, shelf — Modules and presets open Generate with the job ready.",
   },
   {
     n: "3",
     t: "Generate with Seedance",
-    d: "ByteDance motion that keeps paint and sculpt readable.",
+    d: "Live Mini often 1–3 minutes. Keep the tab open. Failed live jobs refund credits.",
   },
   {
     n: "4",
-    t: "Post or list",
-    d: "TikTok, Etsy, Whatnot, Instagram — download and ship.",
+    t: "Library · post or list",
+    d: "Clips save on this device Library. QA paint before you publish. Seller Pack for 3 formats.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section className="border-b border-[var(--border)] bg-white px-4 py-16 sm:px-8">
+    <section className="border-b border-white/10 bg-black px-4 py-16 text-white sm:px-8">
       <div className="mx-auto max-w-6xl">
-        <p className="section-label text-center">Process</p>
-        <h2 className="mt-2 text-center font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight">
+        <p className="text-center text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]">
+          Process
+        </p>
+        <h2 className="mt-2 text-center font-display text-3xl font-black uppercase tracking-tight">
           How it works
         </h2>
-        <p className="mx-auto mt-3 max-w-md text-center text-sm text-[var(--fg-muted)]">
+        <p className="mx-auto mt-3 max-w-md text-center text-sm text-white/50">
           Four steps from shelf photo to post-ready clip
         </p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((s) => (
-            <div key={s.n} className="card p-6">
-              <span className="font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--brand)]">
+            <div
+              key={s.n}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+            >
+              <span className="font-display text-3xl font-black text-[var(--mint)]">
                 {s.n.padStart(2, "0")}
               </span>
-              <h3 className="mt-4 font-semibold tracking-tight">{s.t}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
-                {s.d}
-              </p>
+              <h3 className="mt-4 font-semibold tracking-tight text-white">
+                {s.t}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-white/50">{s.d}</p>
             </div>
           ))}
         </div>
-        <div className="mt-10 text-center">
-          <Link href="/create" className="btn btn-primary">
-            Try with your figure
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
+          <FreeTrialCta
+            path="/how-it-works"
+            variant="mint"
+            labelTry="Try free · Mini 5s"
+          />
+          <Link href="/create" className="btn btn-ghost text-sm">
+            Open Generate
+          </Link>
+          <Link href="/library" className="btn btn-ghost text-sm">
+            Library
+          </Link>
+          <Link
+            href="/tools/ai-toy-video-generator"
+            className="btn btn-ghost text-sm"
+          >
+            AI toy video generator
           </Link>
         </div>
       </div>
