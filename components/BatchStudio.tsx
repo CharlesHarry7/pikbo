@@ -152,6 +152,9 @@ export function BatchStudio({
   const [jobs, setJobs] = useState<Job[]>([]);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
+    null
+  );
   const [aspectRatio, setAspectRatio] = useState<"9:16" | "1:1" | "16:9">(
     "9:16"
   );
@@ -282,6 +285,7 @@ export function BatchStudio({
     stopQueue: boolean;
     /** Caller should re-register still for remaining pack children. */
     recoveredFromAssetMiss?: boolean;
+    retryAfterSec?: number;
   }> {
     const jobAspect = job.aspectRatio ?? aspectRatio;
     const dualStill =
@@ -346,6 +350,10 @@ export function BatchStudio({
         },
         stopQueue: result.fatal || result.paywall || ambiguous,
         recoveredFromAssetMiss: result.code === "ASSET_NOT_FOUND",
+        retryAfterSec:
+          typeof result.retryAfterSec === "number" && result.retryAfterSec > 0
+            ? result.retryAfterSec
+            : undefined,
       };
     }
 
@@ -427,6 +435,7 @@ export function BatchStudio({
     }
 
     setError(null);
+    setFailRetryAfterSec(null);
     setPackElapsed(0);
     setRunning(true);
     const projectId = `${sellerPackActive ? "seller-pack" : "batch"}-${Date.now()}`;
@@ -507,6 +516,11 @@ export function BatchStudio({
         if (outcome.stopQueue || abortCtrl.signal.aborted) {
           if (!abortCtrl.signal.aborted) {
             setError(outcome.job.error ?? "Seller Pack paused");
+            setFailRetryAfterSec(
+              typeof outcome.retryAfterSec === "number"
+                ? outcome.retryAfterSec
+                : null
+            );
           }
           setJobs((previous) =>
             previous.map((job, index) =>
@@ -1304,9 +1318,13 @@ export function BatchStudio({
         {error ? (
           <GenerateFailPanel
             message={error}
+            retryAfterSec={failRetryAfterSec}
             onRetry={
               image && !running && selected.length > 0
-                ? () => void runBatch()
+                ? () => {
+                    setFailRetryAfterSec(null);
+                    void runBatch();
+                  }
                 : undefined
             }
             retryLabel={
