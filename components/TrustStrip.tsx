@@ -11,7 +11,7 @@ export function TrustStrip() {
         <span className="hidden h-3 w-px bg-white/15 sm:block" />
         <span>Cached demos clearly labeled</span>
         <span className="hidden h-3 w-px bg-white/15 sm:block" />
-        <span>Free: one Mini 5s 480p trial · on-player mark</span>
+        <span>Free Mini · 5s · 480p · on-player mark · failed jobs refund</span>
         <span className="hidden h-3 w-px bg-white/15 sm:block" />
         <span>
           Made for{" "}
@@ -27,6 +27,13 @@ export function TrustStrip() {
             className="font-medium text-white/80 underline-offset-2 hover:text-[var(--mint)] hover:underline"
           >
             TikTok Shop
+          </Link>
+          {" · "}
+          <Link
+            href="/tools/ai-toy-video-generator"
+            className="font-medium text-white/80 underline-offset-2 hover:text-[var(--mint)] hover:underline"
+          >
+            AI toy video generator
           </Link>
         </span>
       </div>

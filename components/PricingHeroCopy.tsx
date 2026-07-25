@@ -75,23 +75,30 @@ export function PricingHeroCopy({
           {copy.description}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-2">
-          <Button asChild size="lg">
+          <FreeTrialCta
+            path="/pricing"
+            variant="mint"
+            labelTry={copy.primary}
+            labelPlans="Compare plans"
+            labelDemo="Try Lab sample"
+            className="!px-6 !py-3 text-sm font-black"
+          />
+          <Button asChild size="lg" variant="secondary">
             <Link href={`/create?source=pricing-${variant}`}>
-              {copy.primary}
+              Full studio
             </Link>
           </Button>
           <Button asChild variant="secondary" size="lg">
             <Link href="#plans">{copy.secondary}</Link>
           </Button>
-          <FreeTrialCta
-            path="/pricing"
-            labelTry="Try free · Mini 5s"
-            labelPlans="Compare plans"
-            labelDemo="Try Lab sample"
-            className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-5 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/[0.07]"
-          />
         </div>
         <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <Link
+            href="/library"
+            className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
+          >
+            Library
+          </Link>
           <Link
             href="/flow"
             className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
@@ -109,12 +116,6 @@ export function PricingHeroCopy({
             className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
           >
             Seller Pack · 3 clips
-          </Link>
-          <Link
-            href="/effects"
-            className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
-          >
-            Recipe wall
           </Link>
         </div>
         <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-[var(--fg-dim)]">
