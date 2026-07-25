@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { MODELS } from "@/lib/catalog";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 
@@ -46,10 +47,16 @@ export default function ModelsPage() {
           <strong className="text-[var(--fg)]">Flux</strong> for stills. We
           don&apos;t fake Kling/Veo/Sora without keys.
         </p>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <Link href="/create" className="btn btn-primary text-sm">
             Generate with Seedance →
           </Link>
+          <FreeTrialCta
+            path="/models"
+            variant="ghost"
+            labelTry="Try free · Lab"
+            hideClipsChip
+          />
           <Link href="/flow" className="btn btn-ghost text-sm">
             Flow
           </Link>

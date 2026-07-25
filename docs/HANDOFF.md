@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-25 — [grok] Status/Settings imageJobs + Models FreeTrial
+- StatusProbe + Settings surface `health.imageJobs` (still Flux idempotency ledger).
+- Models preview: FreeTrialCta · Lab; Create After-generate path smoke-gated.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-25 — [grok] Image idempotency + Phase H apps/[slug] + Library still cap
 - `/api/image`: session-scoped `idempotencyKey` (success/fail replay · running→JOB_IN_FLIGHT) · `lib/imageJobs` · health.imageJobs · client mints once per attempt.
 - `/apps/[slug]`: index only live doors with unique Lab proof + FAQ/FAQPage; thin shells noindex.

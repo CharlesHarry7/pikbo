@@ -30,11 +30,19 @@ type T6Probe = {
   fileBake?: boolean;
 };
 
+type ImageJobsProbe = {
+  total: number;
+  open: number;
+};
+
 export default function SettingsPage() {
   const [session, setSession] = useState<MeResponse | null>(null);
   const [libCount, setLibCount] = useState(0);
   const [agingCount, setAgingCount] = useState(0);
   const [jobsProbe, setJobsProbe] = useState<SessionJobsProbe | null>(null);
+  const [imageJobsProbe, setImageJobsProbe] = useState<ImageJobsProbe | null>(
+    null
+  );
   const [t6, setT6] = useState<T6Probe | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -78,12 +86,26 @@ export default function SettingsPage() {
         const res = await fetch("/api/health");
         if (!res.ok) {
           setT6(null);
+          setImageJobsProbe(null);
           return;
         }
-        const body = (await res.json()) as { t6?: T6Probe };
+        const body = (await res.json()) as {
+          t6?: T6Probe;
+          imageJobs?: { total?: number; open?: number };
+        };
         setT6(body.t6 ?? null);
+        const ij = body.imageJobs;
+        if (ij && typeof ij.total === "number") {
+          setImageJobsProbe({
+            total: ij.total,
+            open: typeof ij.open === "number" ? ij.open : 0,
+          });
+        } else {
+          setImageJobsProbe(null);
+        }
       } catch {
         setT6(null);
+        setImageJobsProbe(null);
       }
     }
 
@@ -290,6 +312,26 @@ export default function SettingsPage() {
                 : "—"}
             </span>
           </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-[var(--fg-muted)]">Still image jobs</span>
+            <span className="text-right text-xs font-semibold leading-snug">
+              {imageJobsProbe
+                ? `${imageJobsProbe.open} open · ${imageJobsProbe.total} total (process-memory · Flux)`
+                : "—"}
+            </span>
+          </div>
+          {imageJobsProbe && imageJobsProbe.total > 0 ? (
+            <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
+              Idempotent still ledger for{" "}
+              <Link
+                href="/image"
+                className="text-[var(--mint)] underline-offset-2 hover:underline"
+              >
+                Still Studio
+              </Link>{" "}
+              — network retries replay without double debit. Not multi-node.
+            </p>
+          ) : null}
           {jobsProbe && jobsProbe.total > 0 ? (
             <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
               {jobsProbe.succeeded} succeeded · {jobsProbe.failed} failed/canceled ·

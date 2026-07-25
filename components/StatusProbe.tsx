@@ -53,6 +53,12 @@ type Health = {
     byStatus?: Record<string, number>;
     note?: string;
   };
+  /** Still studio process-memory ledger (counts only — no image bytes). */
+  imageJobs?: {
+    total?: number;
+    open?: number;
+    byStatus?: Record<string, number>;
+  };
   videoWebhook?: {
     secretConfigured?: boolean;
     requiresSecretInProduction?: boolean;
@@ -169,6 +175,12 @@ export function StatusProbe() {
       "Session job ledger",
       typeof data.jobs?.count === "number"
         ? `${data.jobs.count}${jobsOpen != null ? ` · open ${jobsOpen}` : ""} · timeout ${Math.round((data.jobs.jobTimeoutMs ?? 0) / 60000)}m`
+        : "—",
+    ],
+    [
+      "Still image job ledger",
+      typeof data.imageJobs?.total === "number"
+        ? `${data.imageJobs.total} total · open ${data.imageJobs.open ?? 0} (process-memory · Flux idempotency)`
         : "—",
     ],
     [

@@ -2684,6 +2684,17 @@ assert.match(settingsPageSrc, /health\.t6|freeLiveRawDownload|t6DownloadLabel/);
 assert.match(settingsPageSrc, /FreeTrialCta/);
 assert.match(settingsPageSrc, /pikbo_onboard_v3/);
 assert.match(settingsPageSrc, /process-memory/);
+// Phase C/D: still imageJobs probe from health (Flux idempotency ledger)
+assert.match(settingsPageSrc, /imageJobs|Still image jobs/);
+const statusProbeSrc = fs.readFileSync(
+  join(root, "components/StatusProbe.tsx"),
+  "utf8"
+);
+assert.match(statusProbeSrc, /imageJobs/);
+assert.match(statusProbeSrc, /Still image job ledger|Flux idempotency/);
+const modelsPageSrc = fs.readFileSync(join(root, "app/models/page.tsx"), "utf8");
+assert.match(modelsPageSrc, /FreeTrialCta/);
+assert.match(modelsPageSrc, /robots:\s*\{\s*index:\s*false/);
 assert.match(
   fs.readFileSync(join(root, "components/CommandPalette.tsx"), "utf8"),
   /Lab sample · 0 credits/
@@ -2727,6 +2738,9 @@ assert.match(createStudioSmoke, /GenerateWaitStage/);
 assert.match(createStudioSmoke, /Try free · Lab/);
 // Device Library stills: path samples or tiny previews only (no multi-MB Base64).
 assert.match(createStudioSmoke, /stillForStore\.startsWith\(["']\/["']\)|8_000/);
+// HF post-generate path chips (Library · Seller Pack · Flow · Modules)
+assert.match(createStudioSmoke, /aria-label=["']After generate["']/);
+assert.match(createStudioSmoke, /Publish path/);
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /GenerateWaitStage/
