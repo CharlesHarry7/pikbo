@@ -2775,6 +2775,34 @@ export function CreateStudio({
             demoMode={demoMode}
             onCancel={cancelInFlightGenerate}
           />
+        ) : status === "done" && videoUrl ? (
+          <div className="flex gap-2">
+            <Link
+              href="/library"
+              className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
+            >
+              Library
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (!ownsRights) {
+                  document
+                    .getElementById("create-ownership")
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  return;
+                }
+                void generate();
+                document
+                  .getElementById("create-result")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              disabled={!ownsRights}
+              className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm disabled:opacity-50"
+            >
+              Generate again
+            </button>
+          </div>
         ) : (
           <button
             type="button"

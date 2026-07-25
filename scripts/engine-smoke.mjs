@@ -2830,6 +2830,22 @@ assert.match(
   /GenerateWaitStage/
 );
 assert.match(
+  fs.readFileSync(join(root, "components/GenerateAfterPath.tsx"), "utf8"),
+  /Library|Seller Pack|Publish path/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
+  /GenerateAfterPath/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
+  /GenerateAfterPath/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /GenerateAfterPath/
+);
+assert.match(
   fs.readFileSync(join(root, "components/LibraryStorageBanner.tsx"), "utf8"),
   /process-memory|Session jobs|Device/
 );

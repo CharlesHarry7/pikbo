@@ -358,6 +358,29 @@ export function ProfilePanel() {
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        <Link href="/create" className="btn btn-primary px-3 py-1.5 text-xs">
+          Generate
+        </Link>
+        <Link href="/library" className="btn btn-ghost px-3 py-1.5 text-xs">
+          Library · {clips}
+        </Link>
+        <Link
+          href="/create?mode=seller-pack"
+          className="btn btn-ghost px-3 py-1.5 text-xs"
+        >
+          Seller Pack
+        </Link>
+        <Link href="/flow" className="btn btn-ghost px-3 py-1.5 text-xs">
+          Flow
+        </Link>
+        {!auth.signedIn ? (
+          <Link href="/login" className="btn btn-ghost px-3 py-1.5 text-xs">
+            Sign in
+          </Link>
+        ) : null}
+      </div>
+
       <p className="text-xs text-[var(--fg-muted)]">
         {auth.signedIn
           ? durableBackend === "supabase"
