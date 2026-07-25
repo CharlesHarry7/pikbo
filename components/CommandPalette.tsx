@@ -5,40 +5,44 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PRESETS } from "@/lib/presets";
 
-/** Critical path first — suite doors over vanity surfaces */
+/**
+ * Critical path first (GSC P0).
+ * Preview/Lab doors labeled honestly — not PRIMARY nav peers.
+ */
 const LINKS = [
-  { href: "/", label: "Home" },
+  { href: "/", label: "Home · Explore" },
   { href: "/#home-tool", label: "Home · on-page Generate tool" },
   { href: "/create", label: "Generate · Toy Studio" },
-  { href: "/flow", label: "Flow · creation matrix" },
-  { href: "/modules", label: "Modules · job blocks" },
-  { href: "/create?mode=seller-pack", label: "Seller Pack · 3 clips" },
-  { href: "/create?job=etsy-listing", label: "Job · Etsy listing spin" },
-  { href: "/create?job=tiktok-hook", label: "Job · TikTok hook" },
-  { href: "/create?job=blind-box-drop", label: "Job · Blind-box drop" },
-  { href: "/effects", label: "Toy presets / recipes" },
-  { href: "/library", label: "Library · device assets" },
+  { href: "/effects", label: "Effects · toy presets" },
+  { href: "/pricing", label: "Pricing · Free Mini / plans" },
+  { href: "/explore", label: "Explore Lab projects" },
   {
     href: "/tools/ai-toy-video-generator",
     label: "AI toy video generator · rank page",
   },
-  { href: "/pricing", label: "Pricing · Free Mini / plans" },
+  { href: "/for/photo-to-video-for-toys", label: "For photo → video toys" },
+  { href: "/for/etsy-listing-videos", label: "For Etsy sellers" },
+  { href: "/create?mode=seller-pack", label: "Seller Pack · 3 clips" },
+  { href: "/modules", label: "Modules · job blocks" },
+  { href: "/create?job=etsy-listing", label: "Job · Etsy listing spin" },
+  { href: "/create?job=tiktok-hook", label: "Job · TikTok hook" },
+  { href: "/create?job=blind-box-drop", label: "Job · Blind-box drop" },
+  { href: "/library", label: "Library · device assets (Local)" },
   {
     href: "/create?try=1&sample=scout",
     label: "Lab sample · 0 credits (cached)",
   },
-  { href: "/profile", label: "Profile · durable honesty" },
-  { href: "/image", label: "Still studio · optional" },
-  { href: "/supercomputer", label: "Batch agent" },
-  { href: "/cinema", label: "Cinema · director board" },
-  { href: "/explore", label: "Explore Lab projects" },
-  { href: "/for/photo-to-video-for-toys", label: "For photo → video toys" },
-  { href: "/for/etsy-listing-videos", label: "For Etsy sellers" },
-  { href: "/community", label: "PIKBO Lab (noindex)" },
-  { href: "/apps", label: "Apps catalog" },
-  { href: "/models", label: "Models (honest)" },
-  { href: "/settings", label: "Settings · T6 / jobs" },
-  { href: "/status", label: "System status" },
+  { href: "/flow", label: "Flow · Preview" },
+  { href: "/image", label: "Still studio · Preview" },
+  { href: "/cinema", label: "Cinema · Preview" },
+  { href: "/supercomputer", label: "Batch agent · Preview" },
+  { href: "/models", label: "Models · Preview (honest)" },
+  { href: "/community", label: "PIKBO Lab · noindex" },
+  { href: "/apps", label: "Apps catalog · noindex" },
+  { href: "/profile", label: "Profile · Local" },
+  { href: "/settings", label: "Settings · Local · T6 / jobs" },
+  { href: "/status", label: "System status · Local" },
+  { href: "/login", label: "Sign in" },
 ];
 
 export function CommandPalette() {

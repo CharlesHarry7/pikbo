@@ -10,6 +10,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { getPreset } from "@/lib/presets";
 import { site } from "@/lib/site";
 import { softwareApplicationJsonLd } from "@/lib/jsonLd";
+import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 export async function generateMetadata({
   searchParams,
@@ -17,12 +18,15 @@ export async function generateMetadata({
   searchParams: Promise<{ effect?: string; mode?: string }>;
 }): Promise<Metadata> {
   const sp = await searchParams;
+  // Cold-start: /create is the product tool but not a rank landing (home tool is).
+  // Keep crawlable + follow for deep links; stay out of the 9-URL index budget.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return {
       title: { absolute: `Seller Pack · 3 outputs | ${site.name}` },
       description:
         "One owned toy photo → listing spin, blind-box reveal, and social hook. Three fixed seller formats. Cached demos free; live jobs charge per child.",
       alternates: { canonical: "/create?mode=seller-pack" },
+      robots: CONCEPT_ROBOTS,
     };
   }
   const preset = sp.effect ? getPreset(sp.effect) : undefined;
@@ -31,7 +35,7 @@ export async function generateMetadata({
       title: { absolute: `Generate · ${preset.name} | ${site.name}` },
       description: preset.seoDescription,
       alternates: { canonical: `/effects/${preset.slug}` },
-      robots: { index: false, follow: true },
+      robots: CONCEPT_ROBOTS,
     };
   }
   return {
@@ -39,6 +43,7 @@ export async function generateMetadata({
     description:
       "Pikbo Generate — designer-toy workbench. Upload a photo you own, pick a listing, reveal, or social module, and export a short clip. Free Mini trial: 5s · 480p · on-player mark.",
     alternates: { canonical: "/create" },
+    robots: CONCEPT_ROBOTS,
     openGraph: {
       title: `Generate · Toy Studio | ${site.name}`,
       description:

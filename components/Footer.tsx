@@ -70,15 +70,15 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-white/50">
               {[
                 ["/create", "Generate"],
-                ["/modules", "Modules"],
-                ["/flow", "Flow"],
-                ["/create?mode=seller-pack", "Seller Pack"],
-                ["/library", "Assets"],
-                ["/tools/ai-toy-video-generator", "AI toy video generator"],
-                ["/explore", "Explore Lab"],
+                ["/effects", "Effects"],
                 ["/pricing", "Pricing"],
-                ["/effects", "Presets"],
-                ["/community", "Lab"],
+                ["/explore", "Explore Lab"],
+                ["/tools/ai-toy-video-generator", "AI toy video generator"],
+                ["/create?mode=seller-pack", "Seller Pack"],
+                ["/modules", "Modules"],
+                ["/library", "Assets · Local"],
+                ["/flow", "Flow · Preview"],
+                ["/community", "Lab · noindex"],
                 ["/privacy", "Privacy"],
                 ["/terms", "Terms"],
               ].map(([h, l]) => (
