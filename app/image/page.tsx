@@ -12,6 +12,7 @@ import {
 } from "@/lib/imageHistory";
 import { fetchMe, mergeMeSession, type MeResponse } from "@/lib/meClient";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
+import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 
 /** Handoff stills into Create — http(s) or same-origin path only. */
@@ -237,34 +238,14 @@ export default function ImageStudioPage() {
               Modules, or Seller Pack.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col items-end gap-2">
             <Link
               href="/create"
               className="btn btn-primary !px-3 !py-1.5 text-xs"
             >
               Generate video
             </Link>
-            <Link
-              href="/library"
-              className="btn btn-ghost !px-3 !py-1.5 text-xs"
-            >
-              Library
-            </Link>
-            <Link
-              href="/modules"
-              className="btn btn-ghost !px-3 !py-1.5 text-xs"
-            >
-              Modules
-            </Link>
-            <Link
-              href="/create?mode=seller-pack"
-              className="btn btn-ghost !px-3 !py-1.5 text-xs"
-            >
-              Seller Pack
-            </Link>
-            <Link href="/flow" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-              Flow
-            </Link>
+            <GenerateAfterPath compact demo className="justify-end" />
           </div>
         </div>
 
@@ -405,6 +386,11 @@ export default function ImageStudioPage() {
                 >
                   Or spin on effect page →
                 </Link>
+                <GenerateAfterPath
+                  demo={demo}
+                  className="mt-1"
+                  compact
+                />
               </div>
             )}
           </div>

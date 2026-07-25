@@ -2856,6 +2856,11 @@ assert.match(
 );
 // Mobile Create sticky after success → Library
 assert.match(createStudioSmoke, /status === ["']done["'][\s\S]*?Library/);
+// Still Studio shares AfterPath suite exits (not a dead-end preview)
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /GenerateAfterPath/
+);
 assert.match(
   fs.readFileSync(join(root, "components/LibraryStorageBanner.tsx"), "utf8"),
   /process-memory|Session jobs|Device/

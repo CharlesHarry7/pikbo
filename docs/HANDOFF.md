@@ -4,6 +4,16 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-25 — [grok] GenerateAfterPath smoke fix + Still Studio suite
+- engine-smoke: After generate asserts on shared `GenerateAfterPath` (Create inlined chips removed).
+- Still Studio wires GenerateAfterPath; Profile/mobile done Library locks kept.
+- Verified: typecheck · engine-smoke.
+
+### 2026-07-25 — [grok] Generate closed-loop after-path (prior main)
+- Shared GenerateAfterPath on Create/Landing/Batch; mobile done → Library.
+- FreeTrial/#home-tool convert; suite density (cmd-K, footer, supercomputer).
+- 哥飞 cold-start noindex whitelist + lean sitemap.
+
 ### 2026-07-25 — [grok] Image still TIMEOUT recovery + Status/Settings
 - `sweepTimedOutImageJobs` · HEAD `/api/image` counts · refund unconfirmed on kill.
 - StatusProbe/Settings surface still ledger; Models FreeTrialCta · Lab.
