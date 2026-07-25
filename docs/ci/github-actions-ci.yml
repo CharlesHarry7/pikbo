@@ -1,16 +1,23 @@
+# Canonical CI workflow — copy to .github/workflows/ci.yml when the
+# GitHub token has `workflow` scope (OAuth without that scope cannot push
+# under .github/workflows/).
+#
+# Wave C P0-1: single step for prod server + link-check + critical-path.
+# No || true masking. Demo cached path must pass honestly.
+
 name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "agent/**"]
   pull_request:
     branches: [main]
 
 jobs:
   engine:
-    name: Engine · lint · typecheck · build
+    name: Engine · lint · typecheck · build · critical-path
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
@@ -36,6 +43,9 @@ jobs:
       - name: Engine smoke
         run: npm run engine-smoke
 
+      - name: Durable credits smoke
+        run: npm run durable-credits-smoke
+
       - name: Lint
         run: npm run lint
 
@@ -47,36 +57,39 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 
-      # Server must stay in the SAME step as link/critical checks
-      # (background processes do not survive across GitHub Actions steps).
-      - name: Prod server · link-check · critical-path
+      # P0-1: Start prod server + link-check + critical-path in ONE step.
+      # No || true — server down / link fail / critical path fail → red CI.
+      - name: Prod server + link-check + critical-path
         run: |
           set -euo pipefail
           npm run start -- --port 3456 &
           SERVER_PID=$!
-          cleanup() { kill "$SERVER_PID" 2>/dev/null || true; }
+          cleanup() {
+            kill "$SERVER_PID" 2>/dev/null || true
+            wait "$SERVER_PID" 2>/dev/null || true
+          }
           trap cleanup EXIT
 
           for i in $(seq 1 90); do
             if curl -sf http://127.0.0.1:3456/api/health >/dev/null; then
-              echo "server up on :3456"
+              echo "server up after ${i}s"
               break
             fi
             if ! kill -0 "$SERVER_PID" 2>/dev/null; then
-              echo "server process died before ready"
+              echo "server process exited before ready"
+              exit 1
+            fi
+            if [ "$i" -eq 90 ]; then
+              echo "server failed to start within 90s"
               exit 1
             fi
             sleep 1
-            if [ "$i" -eq 90 ]; then
-              echo "server failed to become healthy"
-              exit 1
-            fi
           done
 
-          export BASE_URL="http://127.0.0.1:3456"
-          npm run link-check
-          # Demo mode: soft-live may fail without FAL_KEY — do not fail the job
-          npm run critical-path || true
+          BASE_URL=http://127.0.0.1:3456 npm run link-check
+          BASE_URL=http://127.0.0.1:3456 npm run critical-path
         env:
           NEXT_TELEMETRY_DISABLED: "1"
           PORT: "3456"
+          # Demo-cached acceptance — no secrets required for critical-path
+          # (script must pass honestly without masking failures)

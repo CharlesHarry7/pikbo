@@ -211,10 +211,21 @@ BASE_URL=http://127.0.0.1:3456 npm run critical-path
 ```
 
 #### CI URL
-- _(fill after rebase push / green Actions run)_
+- Pending green run after boss copies `docs/ci/github-actions-ci.yml` → `.github/workflows/ci.yml` (OAuth lacks `workflow` scope; cannot push workflow file from this agent). Local strict path: **PASS** (link-check + critical-path, no `|| true` on critical-path).
 
 #### Commit SHAs
-- _(fill after rebase completes)_
+- `f494edc` make CI critical path fail honestly (critical-path BASE_URL + package script)
+- `b0cdf86` transactional Supabase credit RPCs
+- `5c7dc43` fail closed and cut over signed-in credits
+- `fb7472c` prove durable concurrency and idempotency
+- `37288d9` ship honest CI as docs/ci template (workflow scope)
+
+#### schemaReady diagnosis (local prod health)
+- `backend=supabase` path ready in code; production currently may still show schemaReady=false until boss applies SQL
+- URL normalize OK; service role present when configured; probe timeout 4s
+- **Boss:** apply both SQL migrations (tables + RPCs) — not Email/callback (done)
+- production fail-closed: **not** falling back to local-file dual ledger
+
 
 ---
 
