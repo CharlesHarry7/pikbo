@@ -19,19 +19,19 @@ import {
 } from "@/lib/jsonLd";
 
 /**
- * 潮玩版 HF OS + 哥飞养站：Generate 页内工具（关键词）+ 下方完整 suite 墙。
- * Primary keyword: AI toy video generator (site.ts).
+ * 潮玩版 HF OS + 哥飞养站：
+ * 首页 = 品牌 suite + 页内工具；主词完整 Title 只在 /tools/ai-toy-video-generator。
  * Product north star: docs/PRODUCT_NORTH_STAR.md
  */
 export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
   description: site.description,
   keywords: [
-    site.keyword,
-    "AI toy video generator from one photo",
+    "Pikbo",
+    "designer toy AI video",
     "toy photo to video",
     "photo into short video toys",
-    "designer toy video maker",
+    "figure video from photo",
   ],
   alternates: { canonical: "/" },
   openGraph: {
@@ -40,6 +40,20 @@ export const metadata: Metadata = {
     url: site.url,
     siteName: site.name,
     type: "website",
+    images: [
+      {
+        url: `${site.url}/opengraph-image.png`,
+        width: 1200,
+        height: 630,
+        alt: site.titleDefault,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: site.titleDefault,
+    description: site.description,
+    images: [`${site.url}/opengraph-image.png`],
   },
 };
 
@@ -63,7 +77,7 @@ export default function Home() {
           websiteJsonLd(),
           organizationJsonLd(),
           softwareApplicationJsonLd({
-            name: `${site.name} — ${site.keyword}`,
+            name: `${site.name} — Designer Toy AI Video Suite`,
             url: site.url,
             description: site.description,
           }),
@@ -93,7 +107,14 @@ export default function Home() {
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-[15px]">
             Upload one photo of a designer toy you own → short video for listings
             or social. Free Mini · live often 1–3 min · wall below is the full
-            suite (presets · projects · Flow).
+            suite. Keyword guide:{" "}
+            <a
+              href={site.rankToolPath}
+              className="font-semibold text-[var(--mint)] hover:underline"
+            >
+              AI toy video generator
+            </a>
+            .
           </p>
           <div className="mt-6">
             <LandingToolPanel

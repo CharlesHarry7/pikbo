@@ -17,10 +17,10 @@ export const metadata: Metadata = {
   },
   description: site.description,
   keywords: [
-    "AI toy video generator",
-    "AI toy video generator from one photo",
+    "Pikbo",
+    "designer toy AI video",
     "toy photo to video",
-    "designer toy video maker",
+    "figure video from photo",
     "photo into short video toys",
   ],
   openGraph: {
@@ -29,11 +29,20 @@ export const metadata: Metadata = {
     url: site.url,
     siteName: site.name,
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: site.titleDefault,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: site.titleDefault,
     description: site.description,
+    images: ["/opengraph-image.png"],
   },
   robots: {
     index: true,

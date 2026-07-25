@@ -2346,8 +2346,15 @@ assert.match(
 
 // Video-first product line (not stills shop) — site + suite order + image honesty
 const siteSrc = fs.readFileSync(join(root, "lib/site.ts"), "utf8");
-assert.match(siteSrc, /AI toy video|photo to short video|titleDefault|homeH1/i);
-assert.match(siteSrc, /VIDEO-first|Free Mini trial|homeH1/i);
+assert.match(siteSrc, /titleDefault|homeH1|Designer Toy AI Video Suite/i);
+assert.match(siteSrc, /Turn your toy photos into short videos|VIDEO-first|Free Mini Trial/i);
+// 哥飞 P0: homepage title must not cannibalize tools rank title
+assert.match(siteSrc, /Pikbo — Designer Toy AI Video Suite/);
+assert.doesNotMatch(
+  siteSrc,
+  /titleDefault:\s*["']AI Toy Video Generator from One Photo/
+);
+assert.match(siteSrc, /rankToolPath|\/tools\/ai-toy-video-generator/);
 const suiteChromeSrc = fs.readFileSync(
   join(root, "components/GenerateSuiteChrome.tsx"),
   "utf8"

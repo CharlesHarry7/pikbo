@@ -1,7 +1,21 @@
-# 哥飞对齐 — 公网后 14 天（2026-07-25 更新）
+# 哥飞对齐 — 公网后 14 天（2026-07-25 更新 · 二轮拍板）
 
-**最新拍板：** 首页过关；主词锁定 **ai toy video generator**；  
-**唯一主目标：** `/tools/ai-toy-video-generator` On Page 对齐 + 外链 DR 破零，让 Google 开始分配排名位置。
+**最新拍板：** 主词锁定 **ai toy video generator**（14 天只打一词）；  
+**P0 已执行：** 首页 Title/H1 与 tools 页 **去撞车**（cannibalization 修复）。  
+**唯一主目标：** `/tools/ai-toy-video-generator` 排名 + 外链破零 + 看 GSC 优待期信号。
+
+### 首页 vs 主词页（写死）
+
+| 页面 | Title | H1 |
+|------|-------|-----|
+| `/` | `Pikbo — Designer Toy AI Video Suite \| Free Mini Trial` | Turn your toy photos into short videos |
+| `/tools/ai-toy-video-generator` | `AI Toy Video Generator from One Photo \| Pikbo` | 保持主词 H1（不改） |
+
+- 首页 SEO 长文 **必须** 内链主词页  
+- tools 正文完整主词密度压到约 3–5%（同义变体）  
+- 14 天 **不做** Community 真 UGC、**不开** Stripe（有 GSC 展示/点击再开）  
+- IndexNow 对 Google 可忽略  
+- 外链：目录→15–20 + V2EX + Reddit value（先不带链）+ PH 只备素材
 
 ---
 

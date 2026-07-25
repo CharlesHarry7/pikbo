@@ -27,22 +27,22 @@ export const TOOLS: Tool[] = [
     slug: "ai-toy-video-generator",
     emoji: "🧸",
     label: "AI toy video",
-    // 哥飞 2026-07-25：排名主战场 — Title/H1/正文打透主词
+    // 哥飞 2026-07-25：排名主战场 — Title/H1 保留主词；正文密度压到约 3–5%
     h1: "AI Toy Video Generator — Photo to Short Video for Designer Toys",
     seoTitle: "AI Toy Video Generator from One Photo | Pikbo",
     seoDescription:
       "AI toy video generator: upload one photo of a designer toy you own and create a short AI video for listings and TikTok. Free Mini trial. No card.",
     intro:
-      "This page is Pikbo’s focused AI toy video generator. Upload one photo of a figure, blind box, or art toy you own, pick a toy-native recipe, and generate a short clip on this page — no turntable, no stop-motion rig, no multi-model theater.",
+      "This is Pikbo’s focused page for turning one owned figure photo into short motion. Upload a blind box, vinyl, or art toy still, pick a toy-native recipe, and generate a clip here — no turntable, no stop-motion rig, no multi-model theater.",
     body: [
-      "An AI toy video generator is not a generic face-filter app. Collectors and sellers need paint, sculpt, and packaging to stay readable while motion sells depth on Etsy, TikTok Shop, and Instagram. Pikbo’s AI toy video generator keeps your still as the visual reference and applies recipes built for toys: 360° spin, floating hero, unbox energy, and more.",
-      "Use this AI toy video generator when you already have a clean product photo. Front-facing, even light, plain background, full figure in frame. Busy shelves and harsh shadows lower quality. Confirm you own the photo — required before live jobs.",
-      "How the AI toy video generator works on soft launch: Free Mini runs Seedance Mini at about 5 seconds and 480p with an on-player mark. Live renders often take one to three minutes — keep the tab open. Failed live jobs refund the 10-credit debit when the server can confirm failure. Cached Lab demos on the site are official samples and never process your upload.",
-      "Why choose a dedicated AI toy video generator page? Search engines and users both need a clear job. This URL owns the head term ai toy video generator. Related jobs live elsewhere so signals stay clean: photo-to-video scenes on /for/photo-to-video-for-toys, Etsy listings on /for/etsy-listing-videos, and the brand home at pikbo.ai with an embedded tool for people who arrive by brand.",
-      "Compared with broad “photo to short video” tools, an AI toy video generator for designer toys prioritizes product identity over cinematic chaos. We do not advertise Kling, Veo, or Sora as live unless keys and routes are real. Soft launch honesty: no fake multi-model carousel, no unlimited free 4K, no guaranteed sales.",
-      "Best path with this AI toy video generator: clean owned photo → recipe (spin for listings, float for drops, unbox for social) → generate → wait → QA paint and logos → post or list. Need three formats from one still? Open Seller Pack from Generate. Need the full recipe browser? Visit Effects or Flow.",
+      "An AI toy video generator is not a generic face-filter app. Collectors and sellers need paint, sculpt, and packaging to stay readable while motion sells depth on Etsy, TikTok Shop, and Instagram. Pikbo keeps your still as the visual reference and applies recipes built for toys: 360° spin, floating hero, unbox energy, and more.",
+      "Use this tool when you already have a clean product photo. Front-facing, even light, plain background, full figure in frame. Busy shelves and harsh shadows lower quality. Confirm you own the photo — required before live jobs.",
+      "How soft launch works: Free Mini runs Seedance Mini at about 5 seconds and 480p with an on-player mark. Live renders often take one to three minutes — keep the tab open. Failed live jobs refund the 10-credit debit when the server can confirm failure. Cached Lab demos on the site are official samples and never process your upload.",
+      "Why a dedicated URL? Search engines and users both need a clear job. This page owns the head term above; related jobs live elsewhere so signals stay clean: photo-to-video scenes on /for/photo-to-video-for-toys, Etsy listings on /for/etsy-listing-videos, and the brand home at pikbo.ai with an embedded generate panel for people who arrive by brand.",
+      "Compared with broad “photo to short video” apps, toy video AI for designer figures prioritizes product identity over cinematic chaos. We do not advertise Kling, Veo, or Sora as live unless keys and routes are real. Soft launch honesty: no fake multi-model carousel, no unlimited free 4K, no guaranteed sales.",
+      "Best path: clean owned photo → recipe (spin for listings, float for drops, unbox for social) → generate → wait → QA paint and logos → post or list. Need three formats from one still? Open Seller Pack from Generate. Need the full recipe browser? Visit Effects or Flow.",
       "Free Mini is intentionally small so you can finish one real loop: upload → generate → preview. That loop builds dwell time and learning for search without promising unlimited free production. When search traffic is stable, paid plans can expand credits — Stripe stays off until then.",
-      "Internal links for crawlers and humans: brand home, photo-to-video for toys use case, Etsy listing videos, guides on photographing toys for AI video, and the full tools index. Each page keeps one primary job; this page’s job is the AI toy video generator.",
+      "Internal links for crawlers and humans: brand home, photo-to-video for toys use case, Etsy listing videos, guides on photographing toys for motion, and the full tools index. Each page keeps one primary job; this page’s job is the head-term tool above.",
     ],
     keywords: [
       "ai toy video generator",
@@ -56,22 +56,22 @@ export const TOOLS: Tool[] = [
     faq: [
       {
         q: "What is an AI toy video generator?",
-        a: "An AI toy video generator turns one still photo of a designer toy into a short motion clip. Pikbo is built for figures, blind boxes, and art toys — not generic stock footage.",
+        a: "It turns one still photo of a designer toy into a short motion clip. Pikbo is built for figures, blind boxes, and art toys — not generic stock footage.",
       },
       {
-        q: "Is this AI toy video generator free to try?",
+        q: "Is this free to try?",
         a: "Yes. Soft launch Free Mini runs Seedance Mini at about 5s · 480p with an on-player mark. No card required. Lab demos are free cached samples.",
       },
       {
-        q: "Can an AI toy video generator replace a real turntable shoot?",
+        q: "Can it replace a real turntable shoot?",
         a: "It drafts product motion from one photo when you lack a rig. Always QA inferred angles against the physical toy before listing high-value pieces.",
       },
       {
-        q: "Does the AI toy video generator use my exact sculpt?",
+        q: "Does it use my exact sculpt?",
         a: "Your photo is the reference. Motion can still change small details — review before publishing.",
       },
       {
-        q: "Where else should I go after this AI toy video generator page?",
+        q: "Where else should I go after this page?",
         a: "Brand home for the suite wall, /for pages for channel jobs (Etsy, TikTok), and /create for full studio controls.",
       },
     ],

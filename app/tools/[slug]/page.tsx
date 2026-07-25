@@ -29,6 +29,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const t = getTool(slug);
   if (!t) return {};
+  const ogImage = `${site.url}/opengraph-image.png`;
   return {
     title: { absolute: t.seoTitle },
     description: t.seoDescription,
@@ -39,6 +40,16 @@ export async function generateMetadata({
       title: t.seoTitle,
       description: t.seoDescription,
       url: `${site.url}/tools/${t.slug}`,
+      siteName: site.name,
+      type: "website",
+      // 哥飞 P2: social preview image (absolute)
+      images: [{ url: ogImage, width: 1200, height: 630, alt: t.h1 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t.seoTitle,
+      description: t.seoDescription,
+      images: [ogImage],
     },
   };
 }
@@ -112,7 +123,7 @@ export default async function ToolPage({
       <section className="container-x py-10">
         <h2 className="text-2xl font-bold">
           {t.slug === PRIMARY_RANK_SLUG
-            ? "How this AI toy video generator works"
+            ? "How this tool works for designer toys"
             : "How this tool works"}
         </h2>
         <div className="mt-5 max-w-2xl space-y-5 text-[var(--fg-muted)]">
