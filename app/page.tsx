@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${site.url}/opengraph-image.png`,
+        url: `${site.url}/opengraph-image`,
         width: 1200,
         height: 630,
         alt: site.titleDefault,
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: site.titleDefault,
     description: site.description,
-    images: [`${site.url}/opengraph-image.png`],
+    images: [`${site.url}/opengraph-image`],
   },
 };
 

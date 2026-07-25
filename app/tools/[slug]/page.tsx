@@ -29,7 +29,8 @@ export async function generateMetadata({
   const { slug } = await params;
   const t = getTool(slug);
   if (!t) return {};
-  const ogImage = `${site.url}/opengraph-image.png`;
+  // app/opengraph-image.png → public route /opengraph-image (Next file convention)
+  const ogImage = `${site.url}/opengraph-image`;
   return {
     title: { absolute: t.seoTitle },
     description: t.seoDescription,
