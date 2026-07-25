@@ -4,9 +4,9 @@ Newest first. One block per meaningful landing.
 
 ---
 
-### 2026-07-26 — [grok] Suite chrome product-first + Preview chips
-- GenerateSuiteChrome: Generate · Seller · Recipes · Modules · Library first.
-- Flow / Cinema / Stills last with Preview badge + muted chrome; i18n blurbs honest.
+### 2026-07-26 — [grok] Suite chrome product-first + FailPanel settlement
+- GenerateSuiteChrome: Generate · Seller · Recipes · Modules · Library first; Preview last.
+- Batch/Landing: requestCreditStateFromFailure on fails; network abort → refundUnconfirmed.
 - Verified: typecheck · engine-smoke.
 
 ### 2026-07-26 — [grok] Cold-start /create noindex + Preview door labels
