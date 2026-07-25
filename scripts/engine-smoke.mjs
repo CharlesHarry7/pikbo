@@ -2818,9 +2818,17 @@ assert.match(createStudioSmoke, /GenerateWaitStage/);
 assert.match(createStudioSmoke, /Try free · Lab/);
 // Device Library stills: path samples or tiny previews only (no multi-MB Base64).
 assert.match(createStudioSmoke, /stillForStore\.startsWith\(["']\/["']\)|8_000/);
-// HF post-generate path chips (Library · Seller Pack · Flow · Modules)
-assert.match(createStudioSmoke, /aria-label=["']After generate["']/);
-assert.match(createStudioSmoke, /Publish path/);
+// HF post-generate path chips live in shared GenerateAfterPath (not inlined)
+const afterPathSrc = fs.readFileSync(
+  join(root, "components/GenerateAfterPath.tsx"),
+  "utf8"
+);
+assert.match(afterPathSrc, /aria-label=["']After generate["']/);
+assert.match(afterPathSrc, /Publish path/);
+assert.match(afterPathSrc, /Library/);
+assert.match(afterPathSrc, /Seller Pack/);
+assert.match(afterPathSrc, /\/modules/);
+assert.match(createStudioSmoke, /GenerateAfterPath/);
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /GenerateWaitStage/
@@ -2830,14 +2838,6 @@ assert.match(
   /GenerateWaitStage/
 );
 assert.match(
-  fs.readFileSync(join(root, "components/GenerateAfterPath.tsx"), "utf8"),
-  /Library|Seller Pack|Publish path/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
-  /GenerateAfterPath/
-);
-assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /GenerateAfterPath/
 );
@@ -2845,6 +2845,17 @@ assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
   /GenerateAfterPath/
 );
+// Profile suite exits for closed loop (Generate / Library / Seller Pack / Flow)
+assert.match(
+  fs.readFileSync(join(root, "components/ProfilePanel.tsx"), "utf8"),
+  /mode=seller-pack|Seller Pack/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/ProfilePanel.tsx"), "utf8"),
+  /href=["']\/library["']/
+);
+// Mobile Create sticky after success → Library
+assert.match(createStudioSmoke, /status === ["']done["'][\s\S]*?Library/);
 assert.match(
   fs.readFileSync(join(root, "components/LibraryStorageBanner.tsx"), "utf8"),
   /process-memory|Session jobs|Device/
