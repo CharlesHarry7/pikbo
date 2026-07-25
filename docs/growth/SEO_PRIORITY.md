@@ -2,7 +2,9 @@
 
 **策略：** 一个域名 pikbo.ai，**加内页** 不新开站。  
 **形态：** `/effects/[slug]` + `/for/*` + `/tools/*` 页页带工具。  
-**全量自检：** `docs/growth/GEFEI_SEO_CHECKLIST_STATUS.md`
+**全量自检：** `docs/growth/GEFEI_SEO_CHECKLIST_STATUS.md`  
+**Intent P0 canonical：** `docs/growth/SEO_INTENT_P0_CANONICAL.md`  
+**冷启动 sitemap：9 个 URL（见 `lib/seoIndex.ts`）— 勿再写 94。**
 
 | 优先 | slug / 路径 | 意图 |
 |------|-------------|------|

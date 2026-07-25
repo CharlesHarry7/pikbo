@@ -64,6 +64,48 @@ const nextConfig: NextConfig = {
         destination: "/for/depop-shop-videos",
         permanent: true,
       },
+      // SEO Intent P0: one job → one canonical (no duplicate thin pages)
+      {
+        source: "/for/action-figure-video-generator",
+        destination: "/for/action-figure-product-videos",
+        permanent: true,
+      },
+      {
+        source: "/for/action-figure-product-video",
+        destination: "/for/action-figure-product-videos",
+        permanent: true,
+      },
+      {
+        source: "/for/blind-box-video-generator",
+        destination: "/for/blind-box-brand-marketing",
+        permanent: true,
+      },
+      {
+        source: "/for/blind-box-drop-videos",
+        destination: "/for/blind-box-brand-marketing",
+        permanent: true,
+      },
+      {
+        source: "/for/blind-box-marketing",
+        destination: "/for/blind-box-brand-marketing",
+        permanent: true,
+      },
+      // Reveal-clip tool job lives under /tools (not a second /for page)
+      {
+        source: "/for/blind-box-reveal",
+        destination: "/tools/blind-box-reveal-video-maker",
+        permanent: true,
+      },
+      {
+        source: "/for/toy-unboxing-video-generator",
+        destination: "/tools/blind-box-reveal-video-maker",
+        permanent: true,
+      },
+      {
+        source: "/for/blind-box-unboxing-video",
+        destination: "/tools/blind-box-reveal-video-maker",
+        permanent: true,
+      },
     ];
   },
   async headers() {

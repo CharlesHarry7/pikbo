@@ -4,6 +4,16 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] SEO Intent P0 (canonical · 9-URL sitemap · main-term first screen)
+
+**Branch:** `agent/grok/seo-intent-p0`
+
+- 主词 `/tools/ai-toy-video-generator`：**未改** Title/H1/canonical；首屏加 collectible（非 selfie）句；三步紧贴工具。
+- `LandingHowItWorks` = Photo → Recipe → Video draft（compact 近工具）；HowTo 仅当工具+三步真实渲染。
+- 冲突审计 + 301：`action-figure-product-videos` · `blind-box-reveal-video-maker` · `blind-box-brand-marketing`。
+- 原创潮玩话术；禁用 Marvel/Star Wars/Gundam/POP MART/Bearbrick/Sonny Angel/KAWS 作意图样例。
+- **sitemap 真实 9 URL**（非 94）— `docs/growth/SEO_INTENT_P0_CANONICAL.md` + GEFEI checklist 已更新。
+
 ### 2026-07-26 — [grok] Cinema AfterPath + mobile suite bar + HowTo steps
 - Cinema Preview: GenerateAfterPath + Library; mobile bar hides image/cinema, Seller Pack on Library.
 - LandingHowItWorks: Photo → Recipe → Video draft + HowTo JSON-LD on tools/for with tools.

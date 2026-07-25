@@ -1,8 +1,10 @@
 # 哥飞式 SEO 自检 — pikbo.ai 现状与动作
 
-**日期：** 2026-07-24（公网 soft live 后）  
+**日期：** 2026-07-26（Intent P0 更新）  
 **域：** https://pikbo.ai  
-**原则：** TDH 1–4 周冻结 · 一词一页 · 页页带工具 · 诚实 demo
+**原则：** TDH 1–4 周冻结 · 一词一页 · 页页带工具 · 诚实 demo · **冷启动 sitemap = 9 URL（不是 94）**
+
+**Canonical 映射：** `docs/growth/SEO_INTENT_P0_CANONICAL.md`
 
 ---
 
@@ -10,13 +12,13 @@
 
 | # | 类 | 状态 | 说明 |
 |---|----|------|------|
-| 1 | TDH 冻结 | ✅ | `lib/site.ts` title/description/homeH1 已冻结；首页 metadata 自引用 |
-| 2 | 内页关键词覆盖 | ✅→加厚 | 原有 for/tools/effects/guides；**新增 5 个 /for 高意图页** |
-| 3 | 结构化数据 | ✅ 补齐 | 首页 WebSite+Organization+SoftwareApplication+VideoObject；Create/for SoftwareApplication |
-| 4 | 技术 SEO | ✅ | robots / sitemap / canonical / SSG generateStaticParams；管理路径 disallow |
+| 1 | TDH 冻结 | ✅ | 首页 `lib/site.ts` + 主词页 tools Title/H1/canonical 冻结；Intent P0 **未改**主词 TDH |
+| 2 | 内页关键词覆盖 | ✅ | 一词一页；冲突别名 301；无独立样片页 noindex |
+| 3 | 结构化数据 | ✅ | FAQPage + SoftwareApplication 保留；HowTo 仅当真实三步 UI |
+| 4 | 技术 SEO | ✅ | **sitemap 真实 9 URL** · robots · canonical · SSG |
 | 5 | 速度 / CWV | ⚠️ 持续 | 墙视频 interaction 播放 + preload 节制；LCP 需 PSI 实测 |
 | 6 | 外链 / 初始信任 | ❌ 老板动作 | 代码无法代提 GSC/导航站 — 见下方清单 |
-| 7 | 内容与停留 | ✅ 软化 | 主 CTA 突出；次要入口改文字链；Lab proof 诚实标注 |
+| 7 | 内容与停留 | ✅ | 主词页首屏 collectible 句 + Photo→Recipe→Video draft 近工具 |
 
 ---
 
@@ -77,10 +79,15 @@
 | 项 | 状态 |
 |----|------|
 | SSR/SSG 意图页 | `generateStaticParams` on for/tools/effects/guides |
-| canonical | 首页 + 各意图页 `alternates.canonical` |
-| sitemap.xml | 自动 · 仅 proof / 静态可索引 URL |
+| canonical | 首页 + 各意图页 `alternates.canonical`；别名 301 |
+| **sitemap.xml** | **固定 9 URL**（`COLD_START_INDEX_PATHS`）— **不是 94** |
+| robots / noindex | 非白名单意图页 `noindex,follow`；无私有样片不进索引 |
 | robots.txt | 挡 `/api` `/library` `/login` 等 |
 | 图片 alt / video label | LandingResults + AutoPlayVideo label |
+
+### Sitemap 九 URL 清单
+
+`/` · `/tools/ai-toy-video-generator` · `/for/photo-to-video-for-toys` · `/for/etsy-listing-videos` · `/guides/how-to-photograph-toys-for-ai-video` · `/explore` · `/pricing` · `/privacy` · `/terms`
 
 ---
 

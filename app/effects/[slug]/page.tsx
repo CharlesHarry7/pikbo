@@ -6,7 +6,10 @@ import { PRESETS, getPreset, COMMON_FAQ } from "@/lib/presets";
 import { USE_CASES } from "@/lib/usecases";
 import { PresetCard } from "@/components/PresetCard";
 import { LandingToolPanel } from "@/components/LandingToolPanel";
-import { LandingHowItWorks } from "@/components/LandingHowItWorks";
+import {
+  LandingHowItWorks,
+  photoRecipeDraftHowToJsonLd,
+} from "@/components/LandingHowItWorks";
 import { LandingResults } from "@/components/LandingResults";
 import { site } from "@/lib/site";
 import { viralName } from "@/lib/viralNames";
@@ -79,29 +82,11 @@ export default async function EffectPage({
     })),
   };
 
-  const howToJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
+  // Matches visible LandingHowItWorks (Photo → Recipe → Video draft)
+  const howToJsonLd = photoRecipeDraftHowToJsonLd({
     name: preset.h1,
     description: preset.seoDescription,
-    step: [
-      {
-        "@type": "HowToStep",
-        name: "Upload a photo of your toy",
-        text: "Use a clear product photo of a designer toy or figure you own.",
-      },
-      {
-        "@type": "HowToStep",
-        name: `Generate ${preset.name}`,
-        text: `With provider access configured, run ${preset.name} for a live render. Without it, the tool returns a labeled cached demo.`,
-      },
-      {
-        "@type": "HowToStep",
-        name: "Download and publish",
-        text: "Export the clip for listings, TikTok, or shelf posts.",
-      },
-    ],
-  };
+  });
 
   const appJsonLd = {
     "@context": "https://schema.org",
@@ -208,7 +193,7 @@ export default async function EffectPage({
         </div>
       </section>
 
-      {/* V2: tool on same page as landing copy */}
+      {/* Tool + three steps on first product surface */}
       <section className="container-x py-8">
         <LandingToolPanel
           effectSlug={preset.slug}
@@ -217,8 +202,7 @@ export default async function EffectPage({
           aspectRatio={preset.aspectRatio}
         />
       </section>
-
-      <LandingHowItWorks productLabel={preset.name.toLowerCase()} />
+      <LandingHowItWorks productLabel="video draft" compact />
 
       {/* Suite modules tied to this recipe (or seller jobs fallback) */}
       {(() => {
