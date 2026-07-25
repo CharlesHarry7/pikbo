@@ -428,7 +428,7 @@ export function mintGenerateIdempotencyKey(): string {
 
 /**
  * POST generate with automatic recovery:
- * - one retry on RATE_LIMITED / PROVIDER_RATE_LIMIT / JOB_IN_FLIGHT
+ * - one retry on RATE_LIMITED / PROVIDER_RATE_LIMIT / JOB_IN_FLIGHT / PROVIDER_NETWORK
  * - one ASSET_NOT_FOUND recovery: drop expired assetId and re-POST inline still
  *   (Phase D local assets TTL ~15m / process restart — Seller Pack mid-queue)
  * - stable idempotencyKey for the whole attempt (network retry = no double debit)
@@ -459,6 +459,7 @@ export async function postGenerateWithRetry(
     attempt < maxRetries &&
     (result.code === "RATE_LIMITED" ||
       result.code === "PROVIDER_RATE_LIMIT" ||
+      result.code === "PROVIDER_NETWORK" ||
       result.code === "JOB_IN_FLIGHT")
   ) {
     attempt += 1;
@@ -466,7 +467,9 @@ export async function postGenerateWithRetry(
     const waitSec =
       result.code === "JOB_IN_FLIGHT"
         ? Math.min(8, Math.max(2, result.retryAfterSec ?? 2))
-        : (result.retryAfterSec ?? 8);
+        : result.code === "PROVIDER_NETWORK"
+          ? Math.min(12, Math.max(3, result.retryAfterSec ?? 8))
+          : (result.retryAfterSec ?? 8);
     try {
       await sleep(Math.min(60, Math.max(1, waitSec)) * 1000, opts?.signal);
     } catch (e) {

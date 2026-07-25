@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-25 — [grok] Generate PROVIDER_NETWORK + ledger JOB_IN_FLIGHT
+- Classify 502/503/ECONNRESET as PROVIDER_NETWORK (retryable); TIMEOUT refund unconfirmed.
+- jobLedgerInFlightRetryAfterSec after kill; client auto-retry on PROVIDER_NETWORK.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-25 — [grok] GenerateAfterPath smoke fix + Still Studio suite
 - engine-smoke: After generate asserts on shared `GenerateAfterPath` (Create inlined chips removed).
 - Still Studio wires GenerateAfterPath; Profile/mobile done Library locks kept.
