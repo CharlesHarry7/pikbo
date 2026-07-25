@@ -120,7 +120,8 @@
 79. [x] Image idempotencyKey + requestId ledger (no double Flux debit) · health.imageJobs
 80. [x] Image TIMEOUT sweep + HEAD open probe · honest JOB_IN_FLIGHT Retry-After after crash
 81. [x] Generate TIMEOUT/PROVIDER_NETWORK honesty · ledger Retry-After after crash · refundUnconfirmed echo
-82. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+82. [x] imageClient postImageWithRetry · Still FailPanel Retry-After · PROVIDER_NETWORK auto-retry
+83. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -134,8 +135,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Generate fail-replay maps TIMEOUT→504 · PROVIDER_NETWORK 503; ledger Retry-After after kill.  
-- Provider classify: ECONNRESET/502/503 → network blip (retry + refund when confirmed).  
+- Still Studio: `lib/imageClient` + FailPanel countdown · auto-retry rate/network/in-flight.  
+- One idempotencyKey per attempt (no double Flux debit); refund unconfirmed honesty.  
 - Mode A still needs boss Vercel login · SQL · T6 bake worker.
 
 ---
