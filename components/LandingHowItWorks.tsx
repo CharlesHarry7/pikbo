@@ -8,17 +8,17 @@ export function LandingHowItWorks({
     {
       n: "1",
       t: "Upload one photo",
-      d: "A clear shot of a designer toy, figure, or blind-box pull you own. Plain background works best.",
+      d: "A clear shot of a designer toy, figure, or blind-box pull you own. Plain background works best. Confirm ownership before live jobs.",
     },
     {
       n: "2",
       t: "Use the tool on this page",
-      d: `With provider access configured, submit the ${productLabel} for a live render. Otherwise you receive a clearly labeled cached demo.`,
+      d: `Submit the ${productLabel} for a live Seedance Mini render when configured. Live often takes 1–3 minutes — keep the tab open. Lab demos stay labeled and free.`,
     },
     {
       n: "3",
-      t: "Download & post",
-      d: "Review generated details before publishing. Free includes one Mini 5s 480p live trial with an on-player mark.",
+      t: "Review · Library · post",
+      d: "QA paint and logos before publishing. Free Mini: ~5s · 480p · on-player mark; failed live jobs refund. Clips save to this-device Library.",
     },
   ];
 
