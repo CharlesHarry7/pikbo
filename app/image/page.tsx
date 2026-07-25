@@ -242,7 +242,13 @@ export default function ImageStudioPage() {
               href="/create"
               className="btn btn-primary !px-3 !py-1.5 text-xs"
             >
-              Generate
+              Generate video
+            </Link>
+            <Link
+              href="/library"
+              className="btn btn-ghost !px-3 !py-1.5 text-xs"
+            >
+              Library
             </Link>
             <Link
               href="/modules"
