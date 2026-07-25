@@ -13,12 +13,15 @@ import { ProjectCard } from "@/components/ProjectCard";
 import { site } from "@/lib/site";
 import { listPublicCommunityPosts } from "@/lib/communityPosts";
 import { isSafeDeliverableUrl } from "@/lib/createTrust";
+import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 export const metadata: Metadata = {
   title: "Official AI Toy Video Examples",
   description:
     "Browse official cached Pikbo examples and toy-video recipes. These are product demonstrations, not customer posts or claimed community activity.",
   alternates: { canonical: "/community" },
+  // 哥飞: Lab-only community — noindex (empty/false UGC hurts trust + crawl budget)
+  robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Official AI Toy Video Examples | ${site.name}`,
     description:

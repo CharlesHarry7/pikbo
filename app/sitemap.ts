@@ -1,118 +1,27 @@
 import type { MetadataRoute } from "next";
-import { PRESETS } from "@/lib/presets";
-import { USE_CASES } from "@/lib/usecases";
-import { TOY_TYPES } from "@/lib/toytypes";
-import { GUIDES } from "@/lib/guides";
-import { TOOLS } from "@/lib/tools";
-import { listOfficialProjectSlugs } from "@/lib/videoFeed";
-import { listLiveWorkflows } from "@/lib/workflows";
 import { site } from "@/lib/site";
-import {
-  proofBackedRecipeSlugs,
-  recipeHasUniqueProof,
-} from "@/lib/seoIndex";
+import { COLD_START_INDEX_PATHS } from "@/lib/seoIndex";
 
 /**
- * Phase H: sitemap lists only index-worthy surfaces.
- * Concept recipes without unique Lab proof stay reachable but noindex —
- * they are omitted here so search does not treat them as thin pages.
+ * 哥飞冷启动爬取预算：sitemap 只列可索引白名单。
+ * 薄页 / Community Lab / Preview suite / 多余意图页可达但 noindex，不进 sitemap。
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const reviewedAt = "2026-07-25";
-  const proofRecipes = new Set(proofBackedRecipeSlugs());
 
-  const staticPages = [
-    "",
-    "/effects",
-    "/tools",
-    "/for",
-    "/toys",
-    "/guides",
-    "/create",
-    "/modules",
-    "/apps",
-    "/pricing",
-    "/privacy",
-    "/terms",
-    "/community",
-    "/explore",
-  ].map((path) => ({
-    url: `${site.url}${path}`,
+  return COLD_START_INDEX_PATHS.map((path) => ({
+    url: path === "/" ? site.url : `${site.url}${path}`,
     lastModified: reviewedAt,
-    changeFrequency: "weekly" as const,
-    priority: path === "" ? 1 : 0.8,
+    changeFrequency: path === "/" || path.includes("ai-toy-video")
+      ? ("daily" as const)
+      : ("weekly" as const),
+    priority:
+      path === "/"
+        ? 1
+        : path.includes("ai-toy-video-generator")
+          ? 0.95
+          : path === "/explore"
+            ? 0.7
+            : 0.65,
   }));
-
-  // Only proof-backed effect landings (unique DEMO_VIDEOS match).
-  const effectPages = PRESETS.filter((p) => proofRecipes.has(p.slug)).map(
-    (p) => ({
-      url: `${site.url}/effects/${p.slug}`,
-      lastModified: reviewedAt,
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    })
-  );
-
-  // Tools whose primary recipe has unique proof.
-  const toolPages = TOOLS.filter((t) =>
-    recipeHasUniqueProof(t.primaryEffect)
-  ).map((t) => ({
-    url: `${site.url}/tools/${t.slug}`,
-    lastModified: reviewedAt,
-    changeFrequency: "weekly" as const,
-    priority: 0.75,
-  }));
-
-  const projectPages = listOfficialProjectSlugs().map((slug) => ({
-    url: `${site.url}/projects/${slug}`,
-    lastModified: reviewedAt,
-    changeFrequency: "weekly" as const,
-    priority: 0.65,
-  }));
-
-  const useCasePages = USE_CASES.filter((u) =>
-    recipeHasUniqueProof(u.recommendedEffects[0] ?? "")
-  ).map((u) => ({
-    url: `${site.url}/for/${u.slug}`,
-    lastModified: reviewedAt,
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
-
-  const toyTypePages = TOY_TYPES.filter((t) =>
-    recipeHasUniqueProof(t.recommendedEffects[0] ?? "")
-  ).map((t) => ({
-    url: `${site.url}/toys/${t.slug}`,
-    lastModified: reviewedAt,
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
-
-  const guidePages = GUIDES.map((g) => ({
-    url: `${site.url}/guides/${g.slug}`,
-    lastModified: reviewedAt,
-    changeFrequency: "monthly" as const,
-    priority: 0.6,
-  }));
-
-  // Live app doors with unique Lab proof + FAQ (thin shells stay noindex / omitted).
-  const appDetailPages = listLiveWorkflows()
-    .filter((w) => w.effect && recipeHasUniqueProof(w.effect))
-    .map((w) => ({
-      url: `${site.url}/apps/${w.id}`,
-      lastModified: reviewedAt,
-      changeFrequency: "weekly" as const,
-      priority: 0.65,
-    }));
-
-  return [
-    ...staticPages,
-    ...effectPages,
-    ...toolPages,
-    ...projectPages,
-    ...useCasePages,
-    ...toyTypePages,
-    ...guidePages,
-    ...appDetailPages,
-  ];
 }

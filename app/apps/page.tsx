@@ -5,6 +5,7 @@ import { WORKFLOWS } from "@/lib/workflows";
 import { APPS } from "@/lib/catalog";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { site } from "@/lib/site";
+import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 function posterForEffect(effect?: string): string | null {
   if (!effect) return null;
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
   description:
     "Pikbo toy-native workflows — listing spin, TikTok hook, blind-box drop, Seller Pack. Same Create engine, job-first mini-apps (Yiha/lego-style shelf, legal IA only).",
   alternates: { canonical: "/apps" },
+  robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Apps & Workflows | ${site.name}`,
     description:

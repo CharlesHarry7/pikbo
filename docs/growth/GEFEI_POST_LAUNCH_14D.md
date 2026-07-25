@@ -11,11 +11,14 @@
 | `/` | `Pikbo — Designer Toy AI Video Suite \| Free Mini Trial` | Turn your toy photos into short videos |
 | `/tools/ai-toy-video-generator` | `AI Toy Video Generator from One Photo \| Pikbo` | 保持主词 H1（不改） |
 
-- 首页 SEO 长文 **必须** 内链主词页  
-- tools 正文完整主词密度压到约 3–5%（同义变体）  
-- 14 天 **不做** Community 真 UGC、**不开** Stripe（有 GSC 展示/点击再开）  
+- 首页 SEO 长文 **必须** 内链主词页；锚文本 **可用完整主词**（权重输送）；首页 description **避开**主词  
+- tools 正文完整主词密度压到约 3–5%（同义变体）；Title/H1 **冻结** 1–4 周  
+- **冷启动 noindex 白名单**（`lib/seoIndex.ts` `COLD_START_INDEX_PATHS`）：  
+  `/` · `/tools/ai-toy-video-generator` · 2 个 /for · 1 个 guide · `/explore` · pricing/privacy/terms  
+  Community Lab / Models / Cinema / Modules / 薄 hub / 多余 tools·effects → **noindex,follow**  
+- 14 天 **不做** Community 真 UGC、**不开** Stripe（主词展示 **或** 非品牌点击；**仅品牌词不算**）  
 - IndexNow 对 Google 可忽略  
-- 外链：目录→15–20 + V2EX + Reddit value（先不带链）+ PH 只备素材
+- 外链：目录→15–20 + V2EX（可写 Free Mini 规格；tools 为主链）+ Reddit value + PH 只备
 
 ---
 

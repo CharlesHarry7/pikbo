@@ -5,14 +5,15 @@ import { TOY_TYPES } from "@/lib/toytypes";
 import { site } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
 import { itemListJsonLd } from "@/lib/jsonLd";
-import { recipeHasUniqueProof } from "@/lib/seoIndex";
+import { CONCEPT_ROBOTS, recipeHasUniqueProof } from "@/lib/seoIndex";
 
-/** 哥飞：玩具品类枢纽 — 按「我有什么」搜索，进带工具的落地页 */
+/** 哥飞：玩具品类枢纽 — 冷启动 noindex */
 export const metadata: Metadata = {
   title: "Toy Types — Video for Figures, Plush, Blind Boxes & More",
   description:
     "One page per collectible type: action figures, art toys, anime figures, blind boxes, plush. Each opens Generate with a matching recipe.",
   alternates: { canonical: "/toys" },
+  robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Toy Types | ${site.name}`,
     description:

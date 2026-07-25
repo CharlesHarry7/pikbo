@@ -12,7 +12,7 @@ import { LandingToolPanel } from "@/components/LandingToolPanel";
 import { LandingHowItWorks } from "@/components/LandingHowItWorks";
 import { LandingResults } from "@/components/LandingResults";
 import { site } from "@/lib/site";
-import { robotsForPrimaryEffect } from "@/lib/seoIndex";
+import { robotsForForSlug } from "@/lib/seoIndex";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
 import { LandingSeoMesh } from "@/components/LandingSeoMesh";
 import { JsonLd } from "@/components/JsonLd";
@@ -38,7 +38,7 @@ export async function generateMetadata({
     description: uc.seoDescription,
     keywords: uc.keywords,
     alternates: { canonical: `/for/${uc.slug}` },
-    robots: robotsForPrimaryEffect(primary),
+    robots: robotsForForSlug(uc.slug),
     openGraph: {
       title: uc.seoTitle,
       description: uc.seoDescription,

@@ -67,7 +67,7 @@ export const TOOLS: Tool[] = [
         a: "It drafts product motion from one photo when you lack a rig. Always QA inferred angles against the physical toy before listing high-value pieces.",
       },
       {
-        q: "Does it use my exact sculpt?",
+        q: "Does the result match my exact sculpt?",
         a: "Your photo is the reference. Motion can still change small details — review before publishing.",
       },
       {

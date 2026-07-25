@@ -3,12 +3,14 @@ import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GUIDES } from "@/lib/guides";
 import { site } from "@/lib/site";
+import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 export const metadata: Metadata = {
   title: "Guides",
   description:
     "How-to guides for making great AI videos of designer toys, figures, and blind boxes — spin videos, photo tips, and content ideas.",
   alternates: { canonical: "/guides" },
+  robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Guides | ${site.name}`,
     description:

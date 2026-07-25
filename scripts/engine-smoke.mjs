@@ -777,9 +777,9 @@ assert.match(toolsPage, /LandingToolPanel/);
 const toolsIndex = fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8");
 assert.match(toolsIndex, /TOOLS\.map/);
 const sitemap = fs.readFileSync(join(root, "app/sitemap.ts"), "utf8");
-assert.match(sitemap, /TOOLS/);
-assert.match(sitemap, /toolPages|\/tools\//);
-assert.match(sitemap, /listOfficialProjectSlugs|projectPages/);
+assert.match(sitemap, /COLD_START_INDEX_PATHS|ai-toy-video-generator/);
+assert.match(sitemap, /tools\/ai-toy-video-generator|COLD_START/);
+assert.doesNotMatch(sitemap, /listOfficialProjectSlugs|projectPages|listLiveWorkflows/);
 const usecases = fs.readFileSync(join(root, "lib/usecases.ts"), "utf8");
 assert.match(usecases, /FOR_SLUG_ALIASES/);
 assert.match(usecases, /etsy-sellers/);
@@ -1601,6 +1601,9 @@ assert.match(critPath, /demo-cached gate|ready\.demo/);
 const seoIndex = fs.readFileSync(join(root, "lib/seoIndex.ts"), "utf8");
 assert.match(seoIndex, /recipeHasUniqueProof/);
 assert.match(seoIndex, /proofBackedRecipeSlugs/);
+assert.match(seoIndex, /COLD_START_INDEX_PATHS/);
+assert.match(seoIndex, /robotsForToolSlug|isColdStartIndexablePath/);
+assert.match(seoIndex, /ai-toy-video-generator/);
 assert.match(seoIndex, /CONCEPT_ROBOTS|PRIVATE_ROBOTS|PREVIEW_ROBOTS/);
 const effectMeta = fs.readFileSync(
   join(root, "app/effects/[slug]/page.tsx"),
@@ -1615,8 +1618,8 @@ const landingResults = fs.readFileSync(
 assert.match(landingResults, /no unique Lab sample/);
 assert.match(landingResults, /recipeHasUniqueProof/);
 const sitemapSrc = fs.readFileSync(join(root, "app/sitemap.ts"), "utf8");
-assert.match(sitemapSrc, /proofBackedRecipeSlugs|recipeHasUniqueProof/);
-assert.doesNotMatch(sitemapSrc, /\/cinema|\/supercomputer|\/models/);
+assert.match(sitemapSrc, /COLD_START_INDEX_PATHS/);
+assert.doesNotMatch(sitemapSrc, /\/cinema|\/supercomputer|\/models|\/community/);
 const robotsSrc = fs.readFileSync(join(root, "app/robots.ts"), "utf8");
 assert.match(robotsSrc, /\/cinema/);
 assert.match(robotsSrc, /\/library/);
@@ -1646,7 +1649,7 @@ assert.match(appsSlugSrc, /APP_DETAIL_FAQ|Workflow FAQ/);
 assert.match(appsSlugSrc, /FAQPage/);
 assert.match(appsSlugSrc, /FreeTrialCta/);
 assert.match(appsSlugSrc, /Lab demo|Lab proof/);
-assert.match(sitemapSrc, /listLiveWorkflows|apps\/\$\{/);
+assert.doesNotMatch(sitemapSrc, /listLiveWorkflows|apps\/\$\{/);
 
 // Library honesty: Free live must not expose raw download/open
 const historySrcLib = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
@@ -2356,7 +2359,11 @@ assert.match(linkCheckSrc, /job=etsy-listing/);
 const footerSrc = fs.readFileSync(join(root, "components/Footer.tsx"), "utf8");
 assert.match(footerSrc, /\/modules/);
 assert.match(footerSrc, /seller-pack|Seller Pack/);
-assert.match(sitemapSrc, /\/modules/);
+assert.doesNotMatch(sitemapSrc, /\/modules/);
+assert.match(
+  fs.readFileSync(join(root, "app/community/page.tsx"), "utf8"),
+  /robots:\s*CONCEPT_ROBOTS|CONCEPT_ROBOTS/
+);
 assert.match(
   fs.readFileSync(join(root, "app/pricing/page.tsx"), "utf8"),
   /\/modules/

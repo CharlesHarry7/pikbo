@@ -9,12 +9,14 @@ import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { listCreateShelfWorkflows } from "@/lib/workflows";
 import { proofBackedRecipeSlugs } from "@/lib/seoIndex";
 import { site } from "@/lib/site";
+import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 export const metadata: Metadata = {
   title: "Toy video presets · Recipes",
   description:
     "Every Pikbo effect as a playable video — spin, unbox, dance, cinematic scenes for designer toys. Remake in Generate.",
   alternates: { canonical: "/effects" },
+  robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Toy video presets · Recipes | ${site.name}`,
     description:

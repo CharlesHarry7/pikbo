@@ -8,7 +8,7 @@ import { LandingToolPanel } from "@/components/LandingToolPanel";
 import { LandingHowItWorks } from "@/components/LandingHowItWorks";
 import { LandingResults } from "@/components/LandingResults";
 import { site } from "@/lib/site";
-import { robotsForPrimaryEffect } from "@/lib/seoIndex";
+import { robotsForToySlug } from "@/lib/seoIndex";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
 import { LandingSeoMesh } from "@/components/LandingSeoMesh";
 import { JsonLd } from "@/components/JsonLd";
@@ -31,7 +31,7 @@ export async function generateMetadata({
     title: { absolute: t.seoTitle },
     description: t.seoDescription,
     alternates: { canonical: `/toys/${t.slug}` },
-    robots: robotsForPrimaryEffect(primary),
+    robots: robotsForToySlug(t.slug),
     openGraph: {
       title: t.seoTitle,
       description: t.seoDescription,

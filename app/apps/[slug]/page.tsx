@@ -60,12 +60,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     workflow?.blurb ??
     app?.blurb ??
     "Toy-native workflow that opens Generate with a prefilled recipe.";
-  const indexable = appDetailIndexable(workflow);
+  // 哥飞冷启动: app doors noindex (suite product, not rank battlefield)
+  void appDetailIndexable(workflow);
   return {
     title: `${title} · Toy workflow`,
     description: `${blurb} One owned toy photo → short Seedance clip. Free Mini limits apply; Lab demos cost 0 credits.`,
     alternates: { canonical: `/apps/${slug}` },
-    robots: indexable ? undefined : CONCEPT_ROBOTS,
+    robots: CONCEPT_ROBOTS,
     openGraph: {
       title: `${title} | ${site.name}`,
       description: blurb,

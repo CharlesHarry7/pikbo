@@ -11,12 +11,15 @@ import {
   type Workflow,
 } from "@/lib/workflows";
 import { site } from "@/lib/site";
+import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 export const metadata: Metadata = {
   title: "Modules · Toy workflow blocks",
   description:
     "Modular toy video workflows — listing spin, TikTok hook, blind-box drop, shelf glam, Seller Pack. Pick a block, upload one photo, generate. Designer-toy suite modules.",
   alternates: { canonical: "/modules" },
+  // 哥飞冷启动: suite 门 noindex，爬取预算留给首页 + 主词页
+  robots: CONCEPT_ROBOTS,
 };
 
 /** Phase H: FAQ so /modules is not a thin indexable shelf. */

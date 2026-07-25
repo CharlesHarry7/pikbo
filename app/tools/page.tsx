@@ -5,12 +5,15 @@ import { TOOLS } from "@/lib/tools";
 import { site } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
 import { itemListJsonLd } from "@/lib/jsonLd";
+import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 export const metadata: Metadata = {
   title: "Toy Video Tools",
   description:
     "Search-intent toy video tools: image-to-video, listing clips, unboxing hooks, and seller demos. Each page deep-links to a real Create recipe with honest Free Mini limits.",
   alternates: { canonical: "/tools" },
+  // Hub is thin vs primary rank slug — noindex during cold start
+  robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Toy Video Tools | ${site.name}`,
     description:

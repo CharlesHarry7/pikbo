@@ -5,16 +5,17 @@ import { USE_CASES } from "@/lib/usecases";
 import { site } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
 import { itemListJsonLd } from "@/lib/jsonLd";
-import { recipeHasUniqueProof } from "@/lib/seoIndex";
+import { CONCEPT_ROBOTS, recipeHasUniqueProof } from "@/lib/seoIndex";
 
 /**
- * 哥飞：场景枢纽页 — 一词一页的索引，每张卡片进带工具的落地页。
+ * 哥飞：场景枢纽页 — 冷启动 noindex（只索引白名单 /for/* 子页）。
  */
 export const metadata: Metadata = {
   title: "Use Cases — Toy Video for Sellers & Collectors",
   description:
     "One page per job: Etsy listings, TikTok Shop, action figures, photo-to-video, collectibles marketing. Each opens Generate with a toy recipe.",
   alternates: { canonical: "/for" },
+  robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Use Cases | ${site.name}`,
     description:

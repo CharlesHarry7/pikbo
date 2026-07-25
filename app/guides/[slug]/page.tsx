@@ -8,6 +8,7 @@ import { PresetCard } from "@/components/PresetCard";
 import { site } from "@/lib/site";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
 import { LandingSeoMesh } from "@/components/LandingSeoMesh";
+import { robotsForGuideSlug } from "@/lib/seoIndex";
 
 export function generateStaticParams() {
   return GUIDES.map((g) => ({ slug: g.slug }));
@@ -25,6 +26,7 @@ export async function generateMetadata({
     title: { absolute: g.seoTitle },
     description: g.seoDescription,
     alternates: { canonical: `/guides/${g.slug}` },
+    robots: robotsForGuideSlug(g.slug),
     openGraph: {
       title: g.seoTitle,
       description: g.seoDescription,
