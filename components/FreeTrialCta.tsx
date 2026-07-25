@@ -70,8 +70,21 @@ export function FreeTrialCta({
       ? me.freeTrial.clipsLeft
       : null;
 
+  // On homepage analytics paths, prefer on-page tool (哥飞: tool not jump-only).
+  const onHome =
+    path === "/" ||
+    path.startsWith("/#") ||
+    path.includes("home") ||
+    path.includes("product-rail") ||
+    path.includes("seedance");
   const href =
-    trialDone && !demo ? "/pricing" : "/create?try=1&sample=scout";
+    trialDone && !demo
+      ? "/pricing"
+      : demo
+        ? "/create?try=1&sample=scout"
+        : onHome
+          ? "/#home-tool"
+          : "/create?try=1&sample=scout";
   const label =
     trialDone && !demo
       ? labelPlans ?? "Compare plans"

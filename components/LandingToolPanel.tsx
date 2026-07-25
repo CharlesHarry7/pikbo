@@ -35,6 +35,7 @@ import { deliveryItemsForJob } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateWaitStage } from "@/components/GenerateWaitStage";
+import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { track } from "@/lib/analytics";
 
 type Status = "idle" | "generating" | "done" | "error";
@@ -681,31 +682,13 @@ export function LandingToolPanel({
                 >
                   Regenerate
                 </button>
-                <Link
-                  href={`/create?effect=${encodeURIComponent(effectSlug)}`}
-                  className="btn btn-ghost px-3 py-1.5 text-xs"
-                >
-                  Full Generate
-                </Link>
-                <Link
-                  href="/modules"
-                  className="btn btn-ghost px-3 py-1.5 text-xs"
-                >
-                  Modules
-                </Link>
-                <Link
-                  href="/create?mode=seller-pack"
-                  className="btn btn-ghost px-3 py-1.5 text-xs"
-                >
-                  Seller Pack
-                </Link>
-                <Link
-                  href="/library"
-                  className="btn btn-ghost px-3 py-1.5 text-xs"
-                >
-                  Library
-                </Link>
               </div>
+              <GenerateAfterPath
+                effectSlug={effectSlug}
+                demo={demo}
+                compact
+                className="mt-2"
+              />
               {/* First-principles delivery steps (honest Free download). */}
               <DeliveryChecklist
                 className="mx-auto mt-3 max-w-sm"
@@ -721,12 +704,18 @@ export function LandingToolPanel({
             </div>
           ) : null}
           {!busy && !videoUrl ? (
-            <div className="grid h-full min-h-[220px] place-items-center p-8 text-center text-sm text-[var(--fg-dim)]">
-              <div>
-                <p className="text-2xl">▶</p>
-                <p className="mt-2">Your clip lands here</p>
-                <p className="mt-1 text-xs">
-                  Tool + landing on one page — ready for search & convert
+            <div className="grid h-full min-h-[220px] place-items-center p-6 text-center text-sm text-[var(--fg-dim)]">
+              <div className="max-w-[16rem]">
+                <p className="text-2xl text-[var(--mint)]">▶</p>
+                <p className="mt-2 font-semibold text-white/70">
+                  Your clip lands here
+                </p>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-white/40">
+                  Upload a toy photo → Generate. Live Mini often 1–3 min — keep
+                  this tab open. Lab samples never use your upload.
+                </p>
+                <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-white/30">
+                  {effectName} · {duration}s · {aspectRatio}
                 </p>
               </div>
             </div>

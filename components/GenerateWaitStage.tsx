@@ -219,6 +219,13 @@ export function GenerateWaitStage({
         ) : null}
       </p>
 
+      {!demoMode && elapsed >= 90 ? (
+        <p className="relative mt-2 max-w-xs rounded-lg border border-amber-400/25 bg-amber-400/[0.07] px-3 py-1.5 text-[10px] leading-snug text-amber-100/90">
+          Still working past 90s is normal for Mini. Don&apos;t close or refresh
+          — cancel only if you must leave.
+        </p>
+      ) : null}
+
       {onCancel ? (
         <>
           <button
