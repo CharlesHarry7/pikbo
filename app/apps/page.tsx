@@ -3,7 +3,13 @@ import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { WORKFLOWS } from "@/lib/workflows";
 import { APPS } from "@/lib/catalog";
+import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { site } from "@/lib/site";
+
+function posterForEffect(effect?: string): string | null {
+  if (!effect) return null;
+  return DEMO_VIDEOS.find((d) => d.preset === effect)?.poster ?? null;
+}
 
 export const metadata: Metadata = {
   title: "Apps & Workflows · Toy video mini-apps",
@@ -152,39 +158,54 @@ export default function AppsPage() {
           <p className="mb-4 text-[11px] text-[var(--fg-dim)]">
             One tap opens Create with recipe + aspect (or batch mode) ready.
           </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {liveWorkflows.map((app) => (
-              <Link
-                key={app.id}
-                href={app.href}
-                className="group flex gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-black/40 p-4 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--mint)]/40 hover:shadow-[0_20px_48px_-24px_rgba(200,255,61,0.12)]"
-              >
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[var(--mint)]/20 bg-[var(--mint)]/[0.1] text-2xl">
-                  {app.emoji}
-                </span>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-semibold text-white transition group-hover:text-[var(--mint)]">
-                      {app.label}
-                    </h3>
-                    <span className="rounded-full bg-[var(--mint)] px-1.5 py-0.5 text-[9px] font-black text-black">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
+            {liveWorkflows.map((app) => {
+              const poster = posterForEffect(app.effect);
+              return (
+                <Link
+                  key={app.id}
+                  href={app.href}
+                  className="group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--mint)]/40 hover:shadow-[0_20px_48px_-24px_rgba(200,255,61,0.12)]"
+                >
+                  <div className="relative aspect-[3/4] bg-black/50">
+                    {poster ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={poster}
+                        alt=""
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.05]"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="grid h-full place-items-center text-3xl">
+                        {app.emoji}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                    <span className="absolute left-2 top-2 rounded-full bg-[var(--mint)] px-1.5 py-0.5 text-[9px] font-black text-black">
                       LIVE
                     </span>
-                    {app.badge && (
-                      <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/55">
-                        {app.badge}
-                      </span>
-                    )}
+                    <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-[var(--mint)] px-2 py-0.5 text-[9px] font-black uppercase text-black opacity-0 transition group-hover:opacity-100">
+                      Launch
+                    </span>
+                    <div className="absolute inset-x-0 bottom-0 p-3">
+                      <p className="text-sm font-bold text-white group-hover:text-[var(--mint)]">
+                        {app.emoji} {app.label}
+                      </p>
+                      <p className="mt-0.5 line-clamp-2 text-[11px] text-white/55">
+                        {app.blurb}
+                      </p>
+                      {app.badge ? (
+                        <p className="mt-1 text-[9px] font-bold uppercase tracking-wide text-white/35">
+                          {app.badge}
+                          {app.aspectRatio ? ` · ${app.aspectRatio}` : ""}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
-                  <p className="mt-1 text-xs leading-relaxed text-white/50">
-                    {app.blurb}
-                  </p>
-                  <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]">
-                    Launch →
-                  </p>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </section>
 

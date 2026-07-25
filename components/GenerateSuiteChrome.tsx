@@ -9,7 +9,7 @@ import { useI18n } from "@/components/LanguageProvider";
  * HF Generate–style suite chrome for the toy vertical.
  * Modes map to real Pikbo surfaces only (no fake Cinema tabs).
  */
-/** Video modes first — Stills is optional support (not the product). */
+/** Video modes first — Library/Assets next; Stills optional support (not the product). */
 const MODE_DEFS = [
   {
     id: "generate" as const,
@@ -40,6 +40,18 @@ const MODE_DEFS = [
     href: "/effects",
     labelKey: "suite.mode.recipes",
     blurbKey: "suite.mode.recipes.blurb",
+  },
+  {
+    id: "library" as const,
+    href: "/library",
+    labelKey: "suite.mode.library",
+    blurbKey: "suite.mode.library.blurb",
+  },
+  {
+    id: "cinema" as const,
+    href: "/cinema",
+    labelKey: "suite.mode.cinema",
+    blurbKey: "suite.mode.cinema.blurb",
   },
   {
     id: "image" as const,
@@ -79,6 +91,12 @@ export function GenerateSuiteChrome({
     }
     if (id === "flow") {
       return path === "/flow";
+    }
+    if (id === "library") {
+      return path === "/library" || path.startsWith("/library/");
+    }
+    if (id === "cinema") {
+      return path === "/cinema" || path.startsWith("/cinema/");
     }
     return false;
   }
