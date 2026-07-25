@@ -10,7 +10,8 @@ import { track } from "@/lib/analytics";
 /**
  * Publish a real Library clip to Community UGC.
  * Never invent posts — only signed-in users + safe http(s) video URLs.
- * Lab demos (demo=true) are blocked; makers publish their own live jobs only.
+ * Lab demos (demo=true) and Free Mini watermark raw (T6) are blocked —
+ * publishing raw free provider URLs would bypass the download gate.
  */
 export function CommunityPublishButton({
   videoUrl,
@@ -18,6 +19,7 @@ export function CommunityPublishButton({
   effectSlug,
   effectName,
   demo,
+  watermark,
   className = "",
 }: {
   videoUrl: string;
@@ -25,6 +27,8 @@ export function CommunityPublishButton({
   effectSlug?: string;
   effectName?: string;
   demo?: boolean;
+  /** Free Mini live raw — not a public deliverable until T6 bake. */
+  watermark?: boolean;
   className?: string;
 }) {
   const toast = useToast();
@@ -42,10 +46,26 @@ export function CommunityPublishButton({
     );
   }
 
+  if (watermark) {
+    return (
+      <span
+        className={`text-xs text-[var(--fg-dim)] ${className}`}
+        title="Free Mini live raw is not a public deliverable until T6 file watermark bake"
+      >
+        Free raw · no publish
+      </span>
+    );
+  }
+
   async function publish() {
     const abs = toPublicVideoUrl(videoUrl);
     if (!abs) {
       toast("Need a public http(s) video URL to publish");
+      return;
+    }
+    // Relative /demos paths become absolute — still require safe scheme.
+    if (!isSafeDeliverableUrl(abs)) {
+      toast("Unsafe video URL — not published");
       return;
     }
     const sb = getSupabaseBrowser();
@@ -82,12 +102,21 @@ export function CommunityPublishButton({
         id?: string;
         error?: string;
         code?: string;
+        retryAfterSec?: number;
       };
       if (!res.ok || !body.ok) {
         if (body.code === "UNAUTHORIZED" || res.status === 401) {
           toast("Session expired — sign in again");
         } else if (body.code === "NOT_CONFIGURED" || res.status === 503) {
           toast("Community UGC not configured on this deploy");
+        } else if (body.code === "RATE_LIMITED" || res.status === 429) {
+          const wait =
+            typeof body.retryAfterSec === "number"
+              ? ` · retry in ${body.retryAfterSec}s`
+              : "";
+          toast(`Too many publishes${wait}`);
+        } else if (body.code === "UNSAFE_URL") {
+          toast("Server refused unsafe video URL");
         } else {
           toast(body.error || body.code || "Publish failed");
         }

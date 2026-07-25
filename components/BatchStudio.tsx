@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import {
+  GenerateWaitMobileStrip,
+  GenerateWaitStage,
+} from "@/components/GenerateWaitStage";
+import {
   historyFieldsFromSuccess,
   postGenerateWithRetry,
   releaseSellerPackChildClient,
@@ -155,6 +159,8 @@ export function BatchStudio({
   const [me, setMe] = useState<MeResponse | null>(null);
   const [ownsRights, setOwnsRights] = useState(false);
   const [runProjectId, setRunProjectId] = useState<string | null>(null);
+  /** Wall-clock while pack/batch runs — feeds GenerateWaitStage (1–3 min Mini). */
+  const [packElapsed, setPackElapsed] = useState(0);
   /** Abort in-flight pack child + rate-limit waits (parity with Create Cancel). */
   const packAbortRef = useRef<AbortController | null>(null);
 
@@ -168,6 +174,16 @@ export function BatchStudio({
       packAbortRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (!running) return;
+    // Elapsed clock only while pack is running; reset is done when starting a pack.
+    const t0 = Date.now();
+    const id = window.setInterval(() => {
+      setPackElapsed(Math.floor((Date.now() - t0) / 1000));
+    }, 500);
+    return () => window.clearInterval(id);
+  }, [running]);
 
   function cancelInFlightPack() {
     const ctrl = packAbortRef.current;
@@ -410,6 +426,7 @@ export function BatchStudio({
     }
 
     setError(null);
+    setPackElapsed(0);
     setRunning(true);
     const projectId = `${sellerPackActive ? "seller-pack" : "batch"}-${Date.now()}`;
     setRunProjectId(projectId);
@@ -573,6 +590,7 @@ export function BatchStudio({
       runProjectId ??
       `${sellerPackActive ? "seller-pack" : "batch"}-retry-${target.slug}`;
     setRunProjectId(projectId);
+    setPackElapsed(0);
     setRunning(true);
     setError(null);
     packAbortRef.current?.abort();
@@ -627,6 +645,7 @@ export function BatchStudio({
       runProjectId ??
       `${sellerPackActive ? "seller-pack" : "batch"}-retry-failed-${Date.now().toString(36)}`;
     setRunProjectId(projectId);
+    setPackElapsed(0);
     setRunning(true);
     setError(null);
     packAbortRef.current?.abort();
@@ -1197,14 +1216,30 @@ export function BatchStudio({
         </label>
 
         {running ? (
-          <button
-            type="button"
-            onClick={cancelInFlightPack}
-            className="btn btn-ghost hidden w-full border border-white/20 lg:flex"
-            title="Aborts this browser request. Live debit on the running child may still settle server-side."
-          >
-            Cancel pack · keep finished children
-          </button>
+          <>
+            <GenerateWaitStage
+              elapsed={packElapsed}
+              demoMode={demoMode}
+              image={image}
+              effectLabel={
+                jobs.find((j) => j.status === "running")?.name ||
+                (sellerPackActive
+                  ? `Seller Pack · ${doneCount}/${jobs.length || 3}`
+                  : `Batch · ${doneCount}/${jobs.length || selected.length}`)
+              }
+              onCancel={cancelInFlightPack}
+              compact
+              className="mb-1"
+            />
+            <button
+              type="button"
+              onClick={cancelInFlightPack}
+              className="btn btn-ghost hidden w-full border border-white/20 lg:flex"
+              title="Aborts this browser request. Live debit on the running child may still settle server-side."
+            >
+              Cancel pack · keep finished children
+            </button>
+          </>
         ) : (
           <button
             type="button"
@@ -1575,32 +1610,34 @@ export function BatchStudio({
             <span>I own this photo for every pack child.</span>
           </label>
         ) : null}
-        <button
-          type="button"
-          disabled={!running && Boolean(image) && !canRun}
-          onClick={() => {
-            if (running) {
-              cancelInFlightPack();
-              return;
-            }
-            if (!image) {
-              window.scrollTo({ top: 0, behavior: "smooth" });
-              return;
-            }
-            if (!ownsRights) {
-              document
-                .getElementById("batch-ownership")
-                ?.scrollIntoView({ behavior: "smooth", block: "center" });
-              return;
-            }
-            if (canRun) void runBatch();
-          }}
-          className={`w-full py-3 text-sm disabled:opacity-50 ${
-            running ? "btn btn-ghost border border-white/20" : "btn btn-primary"
-          }`}
-        >
-          {running ? "Cancel pack · keep finished" : primaryBatchLabel}
-        </button>
+        {running ? (
+          <GenerateWaitMobileStrip
+            elapsed={packElapsed}
+            demoMode={demoMode}
+            onCancel={cancelInFlightPack}
+          />
+        ) : (
+          <button
+            type="button"
+            disabled={Boolean(image) && !canRun}
+            onClick={() => {
+              if (!image) {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                return;
+              }
+              if (!ownsRights) {
+                document
+                  .getElementById("batch-ownership")
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+              }
+              if (canRun) void runBatch();
+            }}
+            className="btn btn-primary w-full py-3 text-sm disabled:opacity-50"
+          >
+            {primaryBatchLabel}
+          </button>
+        )}
       </div>
     </div>
   );

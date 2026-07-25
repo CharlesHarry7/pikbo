@@ -12,6 +12,7 @@ import { VideoRail } from "@/components/VideoRail";
 import { ProjectCard } from "@/components/ProjectCard";
 import { site } from "@/lib/site";
 import { listPublicCommunityPosts } from "@/lib/communityPosts";
+import { isSafeDeliverableUrl } from "@/lib/createTrust";
 
 export const metadata: Metadata = {
   title: "Official AI Toy Video Examples",
@@ -34,7 +35,7 @@ const COMMUNITY_FAQ = [
   },
   {
     q: "How do I publish my clip?",
-    a: "Generate a live video → open Library → Publish to Community (sign-in required). Lab cached demos cannot be posted as maker UGC.",
+    a: "Generate a live paid/clean deliverable → open Library → Publish to Community (sign-in required). Lab demos and Free Mini raw provider files cannot be posted as public UGC (T6).",
   },
   {
     q: "What is Remix vs Inside?",
@@ -171,7 +172,9 @@ export default async function CommunityPage() {
             </Link>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {realPosts.map((p) => (
+            {realPosts
+              .filter((p) => isSafeDeliverableUrl(p.videoUrl))
+              .map((p) => (
               <article
                 key={p.id}
                 className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-950"
@@ -180,7 +183,11 @@ export default async function CommunityPage() {
                   <video
                     className="h-full w-full object-cover"
                     src={p.videoUrl}
-                    poster={p.posterUrl || undefined}
+                    poster={
+                      p.posterUrl && isSafeDeliverableUrl(p.posterUrl)
+                        ? p.posterUrl
+                        : undefined
+                    }
                     muted
                     loop
                     playsInline

@@ -72,7 +72,7 @@
 | ✅ | Library 云感 | 三层存储条 + 密网格；诚实 Local/Session/Account |
 | ✅ | Community 发布 | Library → Publish to Community；无帖只 Lab |
 | ✅ | Cinema / 战役条 | Director board + Seedance flagship denser |
-| 下一拍 | Seller Pack / Flow 动线 | 加深，不假模型 |
+| ✅ | Seller Pack / Flow 动线 | Pack WaitStage + Flow 路径 chips + T6 publish 红线 |
 | 有流量 | Stripe | 哥飞信号到了再开 |
 | 有 key | 第二模型 | 真 key 才 live |
 

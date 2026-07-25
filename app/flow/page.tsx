@@ -61,7 +61,8 @@ export default function FlowPage() {
       id: "core-i2v",
       title: "Photo → Clip",
       blurb: "Main Generate workbench — one owned toy photo to short video.",
-      href: "/create?try=1&sample=scout",
+      // Workbench door (not forced Lab sample). Free trial CTA is in the header.
+      href: "/create",
       badge: "Core",
       tier: "core",
       demoId: "scout-spin",
@@ -261,9 +262,45 @@ export default function FlowPage() {
         <p className="text-sm text-white/45">
           Media matrix · every card is a real {site.name} path · Lab footage only
         </p>
+        {/* HF Flow motion — core loop without fake multi-model doors */}
+        <nav
+          aria-label="Core product path"
+          className="mx-auto mt-5 flex max-w-3xl flex-wrap items-center justify-center gap-2 text-[11px] font-semibold text-white/55"
+        >
+          <Link href="/create" className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]">
+            Generate
+          </Link>
+          <span aria-hidden className="text-white/25">
+            →
+          </span>
+          <Link href="/modules" className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white">
+            Modules
+          </Link>
+          <span aria-hidden className="text-white/25">
+            →
+          </span>
+          <Link
+            href="/create?mode=seller-pack"
+            className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
+          >
+            Seller Pack
+          </Link>
+          <span aria-hidden className="text-white/25">
+            →
+          </span>
+          <Link href="/library" className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white">
+            Library
+          </Link>
+          <span aria-hidden className="text-white/25">
+            →
+          </span>
+          <Link href="/community" className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white">
+            Community
+          </Link>
+        </nav>
         <Link
           href="/create"
-          className="mt-4 inline-flex rounded-full bg-[#c8ff3d] px-8 py-3.5 text-sm font-black text-black shadow-[0_0_32px_rgba(200,255,61,0.25)]"
+          className="mt-6 inline-flex rounded-full bg-[#c8ff3d] px-8 py-3.5 text-sm font-black text-black shadow-[0_0_32px_rgba(200,255,61,0.25)]"
         >
           Start Generate video
         </Link>

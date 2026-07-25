@@ -973,6 +973,7 @@ export function LibraryGrid() {
                       effectSlug={item.effect}
                       effectName={item.effectName}
                       demo={Boolean(item.demo)}
+                      watermark={Boolean(item.watermark)}
                     />
                     <button
                       type="button"

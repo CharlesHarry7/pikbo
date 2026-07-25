@@ -58,7 +58,7 @@ export default function CinemaPage() {
   const [lens, setLens] = useState<(typeof LENSES)[number]>(LENSES[1]);
   const [move, setMove] = useState<(typeof MOVES)[number]>(MOVES[1]);
   const [look, setLook] = useState<(typeof LOOKS)[number]>(LOOKS[0]);
-  const [shot, setShot] = useState(SHOT_TEMPLATES[0].brief);
+  const [shot, setShot] = useState<string>(SHOT_TEMPLATES[0].brief);
   const [effect, setEffect] = useState(PRESETS[0]?.slug ?? "360-spin-showcase");
   const [boardShot, setBoardShot] = useState(0);
 

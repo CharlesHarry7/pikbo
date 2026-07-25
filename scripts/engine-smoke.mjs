@@ -1133,9 +1133,14 @@ assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
   /exportAvailableCsv|Export CSV/
 );
+// Library honesty: HF Assets IA + device-local labels (banner, not raw page string)
 assert.match(
   fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /Saved on this device/
+  /LibraryStorageBanner|LibraryGrid|device-local|this browser|local storage/i
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryStorageBanner.tsx"), "utf8"),
+  /device-local|this browser|export JSON|no fake multi-device/i
 );
 assert.match(
   fs.readFileSync(
@@ -2413,6 +2418,17 @@ const communityPageSrc = fs.readFileSync(
 assert.match(communityPageSrc, /FreeTrialCta/);
 assert.match(communityPageSrc, /COMMUNITY_FAQ|Community FAQ/);
 assert.match(communityPageSrc, /FAQPage/);
+assert.match(communityPageSrc, /isSafeDeliverableUrl/);
+// Free Mini raw must not publish as public UGC (T6 honesty)
+const communityPublishSrc = fs.readFileSync(
+  join(root, "components/CommunityPublishButton.tsx"),
+  "utf8"
+);
+assert.match(communityPublishSrc, /watermark/);
+assert.match(communityPublishSrc, /Free raw · no publish|T6/);
+assert.match(communityPublishSrc, /RATE_LIMITED/);
+assert.match(communityPublishSrc, /isSafeDeliverableUrl/);
+assert.match(library, /watermark=\{Boolean\(item\.watermark\)\}|watermark=\{/);
 // Tools + Effects hubs: freeTrial-honest CTAs + Phase H FAQ (not thin shelves)
 const toolsIndexSrc = fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8");
 assert.match(toolsIndexSrc, /FreeTrialCta/);
@@ -2600,6 +2616,66 @@ assert.match(
   fs.readFileSync(join(root, "components/CommandPalette.tsx"), "utf8"),
   /Lab sample · 0 credits/
 );
+// HF modules (2026-07-25 density) — wait stage, Library storage, Community publish, Flow
+const waitStageSrc = fs.readFileSync(
+  join(root, "components/GenerateWaitStage.tsx"),
+  "utf8"
+);
+assert.match(waitStageSrc, /waitPhaseForElapsed/);
+assert.match(waitStageSrc, /waitProgressPct/);
+assert.match(waitStageSrc, /1–3 min|1-3 min|~180|180s|0\.52/);
+assert.match(waitStageSrc, /not a fake|not a hard ETA|Cached example/i);
+// Pure wait phase math (mirrors GenerateWaitStage)
+function waitPhaseForElapsedPure(elapsed, demoMode) {
+  if (demoMode) return "demo";
+  if (elapsed < 4) return "upload";
+  if (elapsed < 22) return "queue";
+  if (elapsed < 70) return "render";
+  if (elapsed < 140) return "deep";
+  return "long";
+}
+function waitProgressPctPure(elapsed, demoMode) {
+  if (demoMode) return Math.min(92, 20 + elapsed * 8);
+  return Math.min(96, 5 + elapsed * 0.52);
+}
+assert.equal(waitPhaseForElapsedPure(0, true), "demo");
+assert.equal(waitPhaseForElapsedPure(2, false), "upload");
+assert.equal(waitPhaseForElapsedPure(10, false), "queue");
+assert.equal(waitPhaseForElapsedPure(40, false), "render");
+assert.equal(waitPhaseForElapsedPure(100, false), "deep");
+assert.equal(waitPhaseForElapsedPure(200, false), "long");
+assert.ok(waitProgressPctPure(60, false) < 50, "60s bar not fake-complete");
+assert.ok(waitProgressPctPure(180, false) >= 90, "3min near end of bar");
+assert.match(
+  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
+  /GenerateWaitStage/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
+  /GenerateWaitStage/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /GenerateWaitStage/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryStorageBanner.tsx"), "utf8"),
+  /process-memory|Session jobs|Device/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/CommunityPublishButton.tsx"), "utf8"),
+  /Lab only|demo/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/CommunityPublishButton.tsx"), "utf8"),
+  /fake UGC|invent posts/i
+);
+const flowPageSrc = fs.readFileSync(join(root, "app/flow/page.tsx"), "utf8");
+assert.match(flowPageSrc, /core-cinema|Cinema board/);
+assert.match(flowPageSrc, /core-library|Library · Assets/);
+assert.match(flowPageSrc, /Core product path|Seller Pack/);
+// Photo→Clip workbench is /create (header FreeTrialCta owns sample path)
+assert.match(flowPageSrc, /id:\s*["']core-i2v["'][\s\S]*?href:\s*["']\/create["']/);
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

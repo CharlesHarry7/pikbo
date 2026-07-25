@@ -4,6 +4,19 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-24 — [grok] Flow path + Seller Pack WaitStage + HF smoke
+- Flow: Photo→Clip → `/create` workbench; core path chips Generate→…→Community.
+- Batch/Seller Pack: `GenerateWaitStage` while pack runs (1–3 min Mini pace).
+- Cinema shot state typed as string (template chips compile).
+- engine-smoke: wait phase math, WaitStage wire, LibraryStorage, CommunityPublish, Flow doors.
+- Verified: typecheck · engine-smoke.
+
+### 2026-07-24 — [grok] Free Mini raw blocked from Community publish
+- `CommunityPublishButton`: watermark Free live → no publish (T6 raw bypass closed).
+- Handles RATE_LIMITED / UNSAFE_URL; Community wall filters unsafe video/poster.
+- engine-smoke: LibraryStorageBanner honesty (not stale "Saved on this device").
+- Verified: typecheck · lint · engine-smoke.
+
 ### 2026-07-24 — [grok] community posts rate limits + HEAD probe
 - POST publish: IP 12/min + token 6/min with Retry-After (process-memory).
 - GET list: IP 60/min scrape guard; HEAD `X-Pikbo-Community-Ugc` for ops.

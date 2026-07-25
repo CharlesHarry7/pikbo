@@ -116,7 +116,8 @@
 75. [x] T6 live download gate recompute · never raw Free · HEAD X-Pikbo-T6/Bake
 76. [x] Library/Create/Landing video URL safety · imageHistory sanitize · health.community
 77. [x] community posts rate limits + HEAD · CP/Mode A community honesty
-78. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+78. [x] Free Mini raw blocked from Community publish · safe UGC render · library smoke
+79. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -130,8 +131,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- community POST/GET rate limits; HEAD X-Pikbo-Community-Ugc ops probe.  
-- critical-path + mode-a assert community list labOnly honesty.  
+- Community publish blocks Free Mini watermark raw (T6 cannot bypass via UGC).  
+- Community wall filters unsafe videoUrl; publish handles 429/UNSAFE.  
 - Mode A still needs boss Vercel login · SQL · T6 bake worker.
 
 ---
