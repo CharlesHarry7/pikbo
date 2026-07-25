@@ -21,11 +21,11 @@ Newest first. One block per meaningful landing.
 - **Still 9 URLs** (`COLD_START_INDEX_PATHS` unchanged).
 
 #### Tests
-- _(re-verify after PR #25 follow-up)_ lint · typecheck · build · engine-smoke
+- lint 0 errors · typecheck PASS · build PASS · engine-smoke PASS
 
 #### Commit
 - `a72d597` base GSC fix
-- _(follow-up SHA after push)_
+- `43ea757`
 
 #### Boss
 **Deploy then open Search Console → click “验证修复” for the VideoObject uploadDate issue.**
