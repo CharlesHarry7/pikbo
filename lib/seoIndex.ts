@@ -34,10 +34,14 @@ export const PRIVATE_ROBOTS: NonNullable<Metadata["robots"]> = {
   follow: false,
 };
 
-/** Preview suite doors (not soft-launch primary product). */
+/**
+ * Preview / Lab suite doors (not cold-start rank pages).
+ * noindex so they stay out of the index — but follow + crawlable
+ * (must NOT also be disallowed in robots.txt, or Google cannot read noindex).
+ */
 export const PREVIEW_ROBOTS: NonNullable<Metadata["robots"]> = {
   index: false,
-  follow: false,
+  follow: true,
 };
 
 /**

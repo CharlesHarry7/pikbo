@@ -106,14 +106,15 @@ export function GenerateSuiteChrome({
       <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1
+            {/* Image page owns a single H1 in page body — chrome title is not H1 */}
+            <div
               className={cn(
                 "font-display font-black tracking-tight text-white",
                 compact ? "text-base" : "text-lg sm:text-xl"
               )}
             >
               {isImage ? t("suite.stills") : t("cta.generate")}
-            </h1>
+            </div>
             <span className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/12 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[var(--mint)] shadow-[0_0_20px_rgba(200,255,61,0.12)]">
               {t("suite.toyStudio")}
             </span>

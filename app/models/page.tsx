@@ -9,7 +9,8 @@ export const metadata: Metadata = {
   description:
     "AI model integrations in PIKBO — configured paths are separated from roadmap models and cached previews are labeled.",
   alternates: { canonical: "/models" },
-  robots: { index: false, follow: false },
+  // Preview: noindex + crawlable (no robots.txt dual-block)
+  robots: { index: false, follow: true },
 };
 
 /** Lab posters for wired video engines only — never invent Kling/Veo media. */

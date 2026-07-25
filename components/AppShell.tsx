@@ -15,15 +15,14 @@ import { cn } from "@/lib/utils";
 import { MOBILE_NAV, PRIMARY_NAV } from "@/lib/softLaunch";
 
 /**
- * Soft-launch suite nav — hrefs frozen in lib/softLaunch PRIMARY_NAV.
- * More destinations carry Local/Preview tags — not empty-door peers.
+ * GSC P0: PRIMARY = Explore · Create · Effects · Pricing only.
+ * Preview/Lab doors in More with tags — crawlable + noindex, not robots.txt block.
  */
 const PRIMARY_KEYS = [
   "nav.explore",
-  "nav.video",
-  "nav.image",
-  "nav.cinema",
-  "nav.lab",
+  "nav.create",
+  "nav.presets",
+  "cta.pricing",
 ] as const;
 
 const PRIMARY = PRIMARY_NAV.map((item, i) => ({
@@ -31,33 +30,31 @@ const PRIMARY = PRIMARY_NAV.map((item, i) => ({
   key: PRIMARY_KEYS[i],
 }));
 
-/** Soft-nav: More entries. SEO hubs first (哥飞内链) — then suite / preview doors. */
+/** More: SEO hubs + Preview/Lab suite doors (not primary nav peers). */
 const MORE = [
   { href: "/for", key: "nav.for", tag: null },
   { href: "/tools", key: "nav.tools", tag: null },
   { href: "/toys", key: "nav.toys", tag: null },
   { href: "/guides", key: "nav.guides", tag: null },
-  { href: "/effects", key: "nav.presets", tag: null },
-  { href: "/flow", key: "nav.flow", tag: null },
-  { href: "/apps", key: "nav.apps", tag: null },
-  { href: "/library", key: "nav.library", tag: "Local" },
+  { href: "/community", key: "nav.lab", tag: "Lab" },
   { href: "/image", key: "nav.image", tag: "Preview" },
-  { href: "/supercomputer", key: "nav.batch", tag: "Preview" },
   { href: "/cinema", key: "nav.cinema", tag: "Preview" },
   { href: "/models", key: "nav.models", tag: "Preview" },
-  { href: "/explore", key: "nav.feed", tag: "Preview" },
-  { href: "/community", key: "nav.lab", tag: null },
-  { href: "/login", key: "nav.signin", tag: "Preview" },
+  { href: "/flow", key: "nav.flow", tag: "Preview" },
+  { href: "/supercomputer", key: "nav.batch", tag: "Preview" },
+  { href: "/apps", key: "nav.apps", tag: null },
+  { href: "/modules", key: "nav.modules", tag: null },
+  { href: "/library", key: "nav.library", tag: "Local" },
+  { href: "/login", key: "nav.signin", tag: null },
   { href: "/profile", key: "nav.profile", tag: "Local" },
 ] as const;
 
 /**
- * Mobile bottom bar — hrefs frozen in MOBILE_NAV (Generate center primary).
- * Lab remains desktop PRIMARY + More (not a bottom-tab peer of Modules).
+ * Mobile bottom bar — core loop (Generate center). Preview doors stay in More.
  */
 const MOBILE_KEYS = [
   "nav.home",
-  "nav.lab",
+  "nav.presets",
   "cta.generate",
   "nav.library",
   "nav.profile",

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description:
     "Higgsfield Flow–style creation hub for designer toys: pick a job, open Generate or Modules with media-first cards. Lab demos only.",
   alternates: { canonical: "/flow" },
-  // Phase H: suite matrix is useful but not primary SEO — robots already disallows /flow
+  // Preview: noindex but crawlable (not robots.txt blocked) so Google can read noindex
   robots: PREVIEW_ROBOTS,
 };
 

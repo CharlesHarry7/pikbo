@@ -4,6 +4,32 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] GSC P0: VideoObject DateTime + crawl/noindex contract
+
+**Branch:** `agent/grok/seo-gsc-p0`
+
+#### Scope
+- `lib/jsonLd.ts`: VideoObject `uploadDate` → `2026-07-20T00:00:00Z`; optional `duration` from recipe seconds (`PT5S`); smoke forbids date-only.
+- Nav: PRIMARY = Explore · Create · Effects · Pricing; Image/Cinema/Community/Models/Flow/Batch → More (Preview/Lab).
+- `robots.ts`: only private/auth disallowed; Preview pages crawlable + `noindex` (PREVIEW_ROBOTS follow:true); self-canonical on image/cinema.
+- `/image` single H1: GenerateSuiteChrome title is `div` not `h1`.
+- Analytics: env-gated GA4 (`NEXT_PUBLIC_GA_MEASUREMENT_ID`) + existing beacon; no-op when unset; no photos/prompts/emails/URLs.
+- **Did not change:** homepage TDH, `/tools/ai-toy-video-generator` TDH, Stripe, credits/session, generate provider.
+
+#### Sitemap
+- **Still 9 URLs** (`COLD_START_INDEX_PATHS` unchanged).
+
+#### Tests
+- _(fill after verify)_ lint · typecheck · build · link-check · critical-path
+
+#### Commit
+- _(fill SHA)_
+
+#### Boss
+**Deploy then open Search Console → click “验证修复” for the VideoObject uploadDate issue.**
+
+---
+
 ### 2026-07-26 — [grok] SEO Intent P0 (canonical · 9-URL sitemap · main-term first screen)
 
 **Branch:** `agent/grok/seo-intent-p0`

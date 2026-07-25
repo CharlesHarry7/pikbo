@@ -54,19 +54,22 @@ export function GenerateFailPanel({
     typeof retryAfterSec === "number" && retryAfterSec > 0
       ? Math.ceil(retryAfterSec)
       : 0;
+  const waitKey = `${message ?? ""}:${initialWait}`;
   const [waitLeft, setWaitLeft] = useState(initialWait);
-
-  useEffect(() => {
+  const [countdownKey, setCountdownKey] = useState(waitKey);
+  if (countdownKey !== waitKey) {
+    setCountdownKey(waitKey);
     setWaitLeft(initialWait);
-  }, [initialWait, message]);
+  }
 
+  const counting = waitLeft > 0;
   useEffect(() => {
-    if (waitLeft <= 0) return;
+    if (!counting) return;
     const id = window.setInterval(() => {
       setWaitLeft((w) => (w > 0 ? w - 1 : 0));
     }, 1000);
     return () => window.clearInterval(id);
-  }, [waitLeft > 0]);
+  }, [counting]);
 
   if (!message && !restored && !unconfirmed) return null;
 

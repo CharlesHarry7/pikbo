@@ -1,10 +1,25 @@
 /**
  * Shared Schema.org JSON-LD builders (哥飞 SEO — structured data for tool sites).
  * Keep ItemList.numberOfItems === itemListElement.length always.
+ *
+ * VideoObject dates must be ISO 8601 DateTime (GSC rejects date-only uploadDate).
  */
 
 import { site } from "@/lib/site";
 import type { DemoVideo } from "@/lib/demoVideos";
+import { getPreset } from "@/lib/presets";
+
+/** Lab demo registry date — full DateTime for GSC VideoObject. */
+export const LAB_VIDEO_UPLOAD_DATETIME = "2026-07-20T00:00:00Z" as const;
+
+/** ISO 8601 duration from whole seconds (e.g. 5 → PT5S). */
+export function iso8601DurationFromSeconds(sec: number): string | null {
+  if (!Number.isFinite(sec) || sec <= 0 || !Number.isInteger(sec)) return null;
+  if (sec < 60) return `PT${sec}S`;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return s > 0 ? `PT${m}M${s}S` : `PT${m}M`;
+}
 
 export function organizationJsonLd() {
   return {
@@ -76,6 +91,13 @@ export function softwareApplicationJsonLd(opts?: {
 }
 
 export function videoObjectJsonLd(demo: DemoVideo) {
+  // Duration only from registered recipe metadata — never invent play counts / ratings.
+  const presetDuration = getPreset(demo.preset)?.duration;
+  const duration =
+    typeof presetDuration === "number"
+      ? iso8601DurationFromSeconds(presetDuration)
+      : null;
+
   return {
     "@context": "https://schema.org",
     "@type": "VideoObject",
@@ -83,7 +105,9 @@ export function videoObjectJsonLd(demo: DemoVideo) {
     description: `${demo.result} Official Pikbo Lab sample (cached demo — not a visitor upload).`,
     thumbnailUrl: `${site.url}${demo.poster}`,
     contentUrl: `${site.url}${demo.mp4}`,
-    uploadDate: "2026-07-20",
+    // GSC: must be DateTime with time + timezone (not YYYY-MM-DD alone)
+    uploadDate: LAB_VIDEO_UPLOAD_DATETIME,
+    ...(duration ? { duration } : {}),
     isFamilyFriendly: true,
     publisher: {
       "@type": "Organization",

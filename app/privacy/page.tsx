@@ -43,6 +43,19 @@ export default function PrivacyPage() {
         </section>
 
         <section>
+          <h2 className="text-lg font-semibold text-[var(--fg)]">
+            Product analytics (optional)
+          </h2>
+          <p className="mt-2">
+            If configured, we may load Google Analytics 4 or a first-party beacon
+            to count coarse product events (page view, upload ready, generate
+            start/result, export click). We do not send your uploaded photos,
+            generation prompts, emails, or raw media URLs through analytics.
+            Analytics is env-gated and disabled when measurement IDs are unset.
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-lg font-semibold text-[var(--fg)]">Payments</h2>
           <p className="mt-2">
             Paid plans are processed by Stripe. Their privacy policy applies to payment data.
