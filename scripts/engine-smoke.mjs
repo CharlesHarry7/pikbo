@@ -2205,18 +2205,32 @@ const failPanel = fs.readFileSync(
 // Fail CTAs are i18n keys (en/zh via t); restored/unconfirmed copy lives in lib/i18n
 assert.match(failPanel, /fail\.anotherRecipe|fail\.labSample/);
 assert.match(failPanel, /fail\.restored|fail\.unconfirmed/);
+// Retry-After countdown locks Retry until wait elapses
+assert.match(failPanel, /retryAfterSec|waitLeft|Retry in/);
+assert.match(failPanel, /href=["']\/library["']/);
 const i18nSrc = fs.readFileSync(join(root, "lib/i18n.ts"), "utf8");
 assert.match(i18nSrc, /fail\.labSample/);
 assert.match(i18nSrc, /Free Lab sample|免费实验室样片/);
 assert.match(i18nSrc, /10 credits restored|已退还 10 积分/);
 assert.match(createStudio, /GenerateFailPanel/);
+assert.match(createStudio, /failRetryAfterSec|retryAfterSec=/);
 assert.match(batchStudio, /GenerateFailPanel/);
+assert.match(batchStudio, /failRetryAfterSec|retryAfterSec=/);
 assert.match(batchStudio, /registerLocalAsset|sharedAssetId/);
 assert.match(batchStudio, /retryAllFailed|Retry failed only/);
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /GenerateFailPanel/
 );
+assert.match(
+  fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
+  /failRetryAfterSec|retryAfterSec=/
+);
+// Still Studio FailPanel Retry-After + refund unconfirmed (parity with Create)
+const imagePageSrc = fs.readFileSync(join(root, "app/image/page.tsx"), "utf8");
+assert.match(imagePageSrc, /GenerateFailPanel/);
+assert.match(imagePageSrc, /failRetryAfterSec|retryAfterSec=/);
+assert.match(imagePageSrc, /refund unconfirmed|failCreditState/);
 assert.match(
   fs.readFileSync(join(root, "app/auth/callback/layout.tsx"), "utf8"),
   /PRIVATE_ROBOTS|index:\s*false/

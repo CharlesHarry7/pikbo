@@ -37,6 +37,14 @@ export default function ImageStudioPage() {
   const [busy, setBusy] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Server Retry-After — FailPanel countdown locks Retry (parity with Create). */
+  const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
+    null
+  );
+  /** Settlement honesty for FailPanel (restored vs unconfirmed). */
+  const [failCreditState, setFailCreditState] = useState<
+    null | "10 restored" | "refund unconfirmed"
+  >(null);
   const [demo, setDemo] = useState(false);
   const [demoReason, setDemoReason] = useState<string | null>(null);
   const [history, setHistory] = useState<ImageHistoryItem[]>([]);
@@ -92,6 +100,8 @@ export default function ImageStudioPage() {
         : `img_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     setBusy(true);
     setError(null);
+    setFailRetryAfterSec(null);
+    setFailCreditState(null);
     try {
       const res = await fetch("/api/image", {
         method: "POST",
@@ -105,10 +115,23 @@ export default function ImageStudioPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        const wait =
-          typeof data.retryAfterSec === "number"
-            ? ` · retry in ${data.retryAfterSec}s`
-            : "";
+        const retryAfter =
+          typeof data.retryAfterSec === "number" && data.retryAfterSec > 0
+            ? data.retryAfterSec
+            : null;
+        setFailRetryAfterSec(retryAfter);
+        if (data.creditsRefunded === true) {
+          setFailCreditState("10 restored");
+        } else if (
+          data.refundUnconfirmed === true ||
+          data.code === "TIMEOUT" ||
+          data.code === "UNSAFE_URL"
+        ) {
+          setFailCreditState("refund unconfirmed");
+        } else {
+          setFailCreditState(null);
+        }
+        const wait = retryAfter != null ? ` · retry in ${retryAfter}s` : "";
         const refunded =
           data.creditsRefunded === true
             ? " · 10 credits restored"
@@ -121,14 +144,16 @@ export default function ImageStudioPage() {
             : data.refundUnconfirmed === true
               ? " · check balance (refund unconfirmed)"
               : "";
+        const waitCodes =
+          data.code === "RATE_LIMITED" ||
+          data.code === "PROVIDER_RATE_LIMIT" ||
+          data.code === "PROVIDER_TIMEOUT" ||
+          data.code === "PROVIDER_NETWORK" ||
+          data.code === "JOB_IN_FLIGHT" ||
+          data.code === "TIMEOUT";
         throw new Error(
           (data.error || "Image generation failed") +
-            (data.code === "RATE_LIMITED" ||
-            data.code === "PROVIDER_RATE_LIMIT" ||
-            data.code === "PROVIDER_TIMEOUT" ||
-            data.code === "JOB_IN_FLIGHT"
-              ? wait
-              : "") +
+            (waitCodes ? wait : "") +
             refunded +
             timeoutHint
         );
@@ -195,13 +220,15 @@ export default function ImageStudioPage() {
         (typeof DOMException !== "undefined" &&
           e instanceof DOMException &&
           e.name === "AbortError");
-      setError(
-        aborted
-          ? "Request canceled — if credits were debited, check balance or retry (refund unconfirmed until server confirms)"
-          : e instanceof Error
-            ? e.message
-            : "Failed"
-      );
+      if (aborted) {
+        setFailRetryAfterSec(null);
+        setFailCreditState("refund unconfirmed");
+        setError(
+          "Request canceled — if credits were debited, check balance or retry (refund unconfirmed until server confirms)"
+        );
+      } else {
+        setError(e instanceof Error ? e.message : "Failed");
+      }
     } finally {
       if (abortRef.current === abortCtrl) abortRef.current = null;
       setBusy(false);
@@ -328,6 +355,8 @@ export default function ImageStudioPage() {
               <GenerateFailPanel
                 className="mt-3"
                 message={error}
+                creditState={failCreditState}
+                retryAfterSec={failRetryAfterSec}
                 compact
                 onRetry={!busy ? () => void generate() : undefined}
                 retryLabel="Retry still"
