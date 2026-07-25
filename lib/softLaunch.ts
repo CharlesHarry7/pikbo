@@ -2,30 +2,29 @@
  * Soft-launch freezes from docs/prd/SOFT_NAV_AND_PRESETS.md (+ suite Modules).
  * Code imports this so G1/G2 cannot drift from the product contract.
  *
- * 2026-07-24: PRIMARY/MOBILE aligned to HF pixel IA (Explore/Video/Image/Cinema/Community
- * + bottom Home·Community·Generate·Library·Profile). Video is the product.
+ * 2026-07-26 GSC P0: PRIMARY = real indexable core only.
+ * Preview/Lab doors live under More (crawlable + noindex, not robots.txt block).
  */
 
 /**
- * Desktop primary — HF-style product OS nav (video first).
+ * Desktop primary — core product path only (Explore · Create · Effects · Pricing).
  */
 export const PRIMARY_NAV = [
   { href: "/", label: "Explore" },
-  { href: "/create", label: "Video" },
-  { href: "/image", label: "Image" },
-  { href: "/cinema", label: "Cinema" },
-  { href: "/community", label: "Community" },
+  { href: "/create", label: "Create" },
+  { href: "/effects", label: "Effects" },
+  { href: "/pricing", label: "Pricing" },
 ] as const;
 
 export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
 
 /**
- * Mobile bottom bar — pixel parity with HF:
- * Home · Community · Generate(center) · Library · Profile
+ * Mobile bottom bar — core loop without Preview doors.
+ * Home · Effects · Generate(center) · Library · Profile
  */
 export const MOBILE_NAV = [
   { href: "/", label: "Home" },
-  { href: "/community", label: "Community" },
+  { href: "/effects", label: "Effects" },
   { href: "/create", label: "Generate", primary: true as const },
   { href: "/library", label: "Library" },
   { href: "/profile", label: "Profile" },

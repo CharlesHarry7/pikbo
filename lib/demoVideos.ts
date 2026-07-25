@@ -10,11 +10,21 @@ export type DemoVideo = {
   mp4: string;
   webm: string;
   accent: string;
+  /**
+   * First public publish time (ISO 8601 DateTime with timezone).
+   * Source: git first-commit author date of the asset / registry batch.
+   * Used as VideoObject.uploadDate — never invent a single fake global date.
+   */
+  publishedAt: string;
 };
 
 /**
  * Original Pikbo prototype footage. These are cached product demos, so homepage
  * playback never invokes fal.ai and demo mode remains useful without FAL_KEY.
+ *
+ * publishedAt notes:
+ * - First six: homepage demo theatre commit 2026-07-22T19:57:06+08:00
+ * - Mini lab six: Seedance Mini lab batch commit 2026-07-23T03:11:03+08:00
  */
 export const DEMO_VIDEOS: DemoVideo[] = [
   {
@@ -29,6 +39,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/orbit-hyper-cgi.mp4",
     webm: "/demos/orbit-hyper-cgi.webm",
     accent: "#b8a3ff",
+    publishedAt: "2026-07-22T11:57:06Z",
   },
   {
     id: "moon-reveal",
@@ -42,6 +53,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/moon-box-reveal.mp4",
     webm: "/demos/moon-box-reveal.webm",
     accent: "#83f3d2",
+    publishedAt: "2026-07-22T11:57:06Z",
   },
   {
     id: "scout-story",
@@ -55,6 +67,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/scout-story-mode.mp4",
     webm: "/demos/scout-story-mode.webm",
     accent: "#ffd36a",
+    publishedAt: "2026-07-22T11:57:06Z",
   },
   {
     id: "beatbot-hook",
@@ -68,6 +81,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/beatbot-viral-hook.mp4",
     webm: "/demos/beatbot-viral-hook.webm",
     accent: "#ff6ea8",
+    publishedAt: "2026-07-22T11:57:06Z",
   },
   {
     id: "scout-spin",
@@ -81,6 +95,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/scout-packshot-spin.mp4",
     webm: "/demos/scout-packshot-spin.webm",
     accent: "#ff9f6e",
+    publishedAt: "2026-07-22T11:57:06Z",
   },
   {
     id: "beatbot-unboxed",
@@ -94,6 +109,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/beatbot-unboxed.mp4",
     webm: "/demos/beatbot-unboxed.webm",
     accent: "#74e4ff",
+    publishedAt: "2026-07-22T11:57:06Z",
   },
   // --- Seedance Mini lab batch 2026-07-23 (real fal renders, cached) ---
   {
@@ -108,6 +124,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/orbit-dance.mp4",
     webm: "/demos/orbit-dance.mp4",
     accent: "#c8ff3d",
+    publishedAt: "2026-07-22T19:11:03Z",
   },
   {
     id: "moon-glow",
@@ -121,6 +138,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/moon-glow.mp4",
     webm: "/demos/moon-glow.mp4",
     accent: "#b8a3ff",
+    publishedAt: "2026-07-22T19:11:03Z",
   },
   {
     id: "scout-walk",
@@ -134,6 +152,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/scout-walk.mp4",
     webm: "/demos/scout-walk.mp4",
     accent: "#ffd36a",
+    publishedAt: "2026-07-22T19:11:03Z",
   },
   {
     id: "beatbot-neon",
@@ -147,6 +166,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/beatbot-neon.mp4",
     webm: "/demos/beatbot-neon.mp4",
     accent: "#74e4ff",
+    publishedAt: "2026-07-22T19:11:03Z",
   },
   {
     id: "orbit-aura",
@@ -160,6 +180,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/orbit-aura.mp4",
     webm: "/demos/orbit-aura.mp4",
     accent: "#ff6ea8",
+    publishedAt: "2026-07-22T19:11:03Z",
   },
   {
     id: "moon-smoke",
@@ -173,5 +194,6 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/moon-smoke.mp4",
     webm: "/demos/moon-smoke.mp4",
     accent: "#83f3d2",
+    publishedAt: "2026-07-22T19:11:03Z",
   },
 ];

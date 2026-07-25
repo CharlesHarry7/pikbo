@@ -15,7 +15,8 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | GO | Public pikbo.ai Mode B | Grok | **blocked** | agent/grok/final-takeover | Grok owns readiness; boss still must explicitly approve public DNS and charging |
 | GROK-TAKEOVER | Complete every remaining no-cost product, engineering, QA and private-release task | Grok | doing | main | 2026-07-24: Flow path + Seller Pack WaitStage + HF smoke locks. Still blocked on boss Vercel/DNS, T5 SQL multi-node, T6 bake |
 | SUITE | 潮玩版 HF Generate + Yiha Modules 产品壳 | Grok | **review** | main | `/create` `/modules` suite chrome; softLaunch PRIMARY/MOBILE nav freeze; suite doors sitewide |
-| G1 | Nav whitelist / kill empty doors | Grok | **review** | main + agent/gpt/world-class-prd | Reassigned for final deployed verification; five-label desktop and mobile whitelist frozen |
+| G1 | Nav whitelist / kill empty doors | Grok | **review** | agent/grok/seo-gsc-p0 | GSC P0: PRIMARY = Explore·Create·Effects·Pricing; Preview/Lab in More |
+| SEO-GSC | GSC VideoObject + crawl/noindex contract | Grok | **review** | agent/grok/seo-gsc-p0 @ a72d597 | PR #25; uploadDate DateTime; Preview crawlable+noindex; sitemap 9; **boss: GSC 验证修复 after deploy** |
 | G2 | ≤8 hero presets, unique demos | Grok | **review** | main + agent/gpt/world-class-prd | Reassigned for proof audit; exact eight proof slugs are frozen |
 | G3 | Official demos copy (no fake UGC) | Codex | **done** | main @ `32c634c` | Official example / cached / concept language merged |
 | G4 | Zero 404 on linked URLs | Claude | **done** | main @ `5d25fb3` | Redirect aliases and link-check passed |

@@ -22,7 +22,9 @@ export async function generateMetadata({
     title: "Batch agent · Preview",
     description:
       "Run multiple toy video presets from one photo — Pikbo batch generate for shops.",
-    robots: { index: false, follow: false },
+    alternates: { canonical: "/supercomputer" },
+    // Preview: noindex + crawlable (no robots.txt dual-block)
+    robots: { index: false, follow: true },
   };
 }
 

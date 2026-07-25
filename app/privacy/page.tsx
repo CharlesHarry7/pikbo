@@ -4,6 +4,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: `How ${site.name} handles photos, generations, and billing data.`,
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
@@ -39,6 +40,19 @@ export default function PrivacyPage() {
           <p className="mt-2">
             We use an HTTP-only cookie to remember your plan and credit balance on this device.
             Clearing cookies resets your free guest session.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-[var(--fg)]">
+            Product analytics (optional)
+          </h2>
+          <p className="mt-2">
+            If configured, we may load Google Analytics 4 or a first-party beacon
+            to count coarse product events (page view, upload ready, generate
+            start/result, export click). We do not send your uploaded photos,
+            generation prompts, emails, or raw media URLs through analytics.
+            Analytics is env-gated and disabled when measurement IDs are unset.
           </p>
         </section>
 

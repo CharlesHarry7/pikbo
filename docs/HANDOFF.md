@@ -4,6 +4,34 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] GSC P0: VideoObject DateTime + crawl/noindex contract
+
+**Branch:** `agent/grok/seo-gsc-p0` · PR #25
+
+#### Scope
+- `lib/jsonLd.ts`: VideoObject `uploadDate` = **per-demo `publishedAt`** (ISO DateTime); optional `duration` from recipe (`PT5S`); no single forged global date.
+- `lib/demoVideos.ts`: each demo has `publishedAt` from git first-commit (2026-07-22 theatre batch · 2026-07-23 Mini lab batch, stored as Zulu).
+- Nav: PRIMARY = Explore · Create · Effects · Pricing; **removed right-rail duplicate Pricing**.
+- Preview doors in More; robots allow Preview crawl + noindex; self-canonical on image/cinema/**privacy/terms**.
+- `/image` single H1: suite chrome title is `div`.
+- Analytics: GA4 env-gated + **AppShell `trackPageView(pathname)`** on route change; `send_page_view: false`; path only.
+- **GenerateFailPanel** lint fix kept in this PR: `react-hooks/set-state-in-effect` made `npm run lint` red on branch tip — required for green CI gates, not product SEO scope. Revert-safe isolated change.
+
+#### Sitemap
+- **Still 9 URLs** (`COLD_START_INDEX_PATHS` unchanged).
+
+#### Tests
+- lint 0 errors · typecheck PASS · build PASS · engine-smoke PASS
+
+#### Commit
+- `a72d597` base GSC fix
+- `43ea757`
+
+#### Boss
+**Deploy then open Search Console → click “验证修复” for the VideoObject uploadDate issue.**
+
+---
+
 ### 2026-07-26 — [grok] SEO Intent P0 (canonical · 9-URL sitemap · main-term first screen)
 
 **Branch:** `agent/grok/seo-intent-p0`

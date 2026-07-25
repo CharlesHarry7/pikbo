@@ -6,6 +6,7 @@ import type { DemoVideo } from "@/lib/demoVideos";
 import type { FeedItem } from "@/lib/videoFeed";
 import { getPreset } from "@/lib/presets";
 import {
+  showcaseProjectAsDemo,
   showcaseProjectHref,
   showcaseRecipeHref,
   type ShowcaseProject,
@@ -355,23 +356,7 @@ export function HfExploreHome({
                 >
                   <div className="relative aspect-[3/4] sm:aspect-[9/14]">
                     <Clip
-                      demo={{
-                        id: project.slug,
-                        title: project.title,
-                        character: project.character,
-                        eyebrow: project.eyebrow,
-                        result: project.result,
-                        preset: project.recipeSlug,
-                        ratio:
-                          project.aspectRatio === "1:1" ||
-                          project.aspectRatio === "16:9"
-                            ? project.aspectRatio
-                            : "9:16",
-                        poster: project.poster,
-                        mp4: project.outputVideo,
-                        webm: project.outputWebm ?? project.outputVideo,
-                        accent: project.accent,
-                      }}
+                      demo={showcaseProjectAsDemo(project)}
                       eager={i < 2}
                       className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
                     />

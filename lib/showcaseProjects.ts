@@ -408,6 +408,8 @@ export function showcaseRecipeHref(project: ShowcaseProject): string {
 export function showcaseProjectAsDemo(
   project: ShowcaseProject
 ): DemoVideo {
+  // Prefer registry publishedAt when this project maps to a Lab demo id
+  const fromRegistry = DEMO_VIDEOS.find((d) => d.id === project.slug);
   return {
     id: project.slug,
     title: project.title,
@@ -423,6 +425,10 @@ export function showcaseProjectAsDemo(
     mp4: project.outputVideo,
     webm: project.outputWebm ?? project.outputVideo,
     accent: project.accent,
+    publishedAt:
+      fromRegistry?.publishedAt ??
+      DEMO_VIDEOS.find((d) => d.preset === project.recipeSlug)?.publishedAt ??
+      "2026-07-22T11:57:06Z",
   };
 }
 

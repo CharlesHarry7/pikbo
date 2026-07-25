@@ -1642,16 +1642,94 @@ assert.match(landingResults, /recipeHasUniqueProof/);
 const sitemapSrc = fs.readFileSync(join(root, "app/sitemap.ts"), "utf8");
 assert.match(sitemapSrc, /COLD_START_INDEX_PATHS/);
 assert.doesNotMatch(sitemapSrc, /\/cinema|\/supercomputer|\/models|\/community/);
+// Cold-start sitemap is exactly 9 paths (not a 90+ dump)
+const seoIndexSrc = fs.readFileSync(join(root, "lib/seoIndex.ts"), "utf8");
+assert.match(seoIndexSrc, /COLD_START_INDEX_PATHS/);
+{
+  const m = seoIndexSrc.match(
+    /COLD_START_INDEX_PATHS\s*=\s*\[([\s\S]*?)\]\s*as const/
+  );
+  assert.ok(m, "COLD_START_INDEX_PATHS present");
+  const n = (m[1].match(/"[^"]+"/g) || []).length;
+  assert.equal(n, 9, `sitemap allowlist must stay 9 URLs, got ${n}`);
+}
+// GSC P0: Preview pages must NOT be dual-blocked by robots.txt (need crawl for noindex)
 const robotsSrc = fs.readFileSync(join(root, "app/robots.ts"), "utf8");
-assert.match(robotsSrc, /\/cinema/);
 assert.match(robotsSrc, /\/library/);
-assert.match(robotsSrc, /\/image/);
+assert.match(robotsSrc, /\/api\//);
+assert.match(robotsSrc, /\/profile/);
+assert.doesNotMatch(robotsSrc, /["']\/cinema["']/);
+assert.doesNotMatch(robotsSrc, /["']\/image["']/);
+assert.doesNotMatch(robotsSrc, /["']\/models["']/);
+assert.doesNotMatch(robotsSrc, /["']\/flow["']/);
+assert.doesNotMatch(robotsSrc, /["']\/supercomputer["']/);
+// Preview meta: noindex + follow (crawlable)
+assert.match(seoIndexSrc, /export const PREVIEW_ROBOTS/);
+assert.match(
+  seoIndexSrc,
+  /PREVIEW_ROBOTS[\s\S]*?index:\s*false[\s\S]*?follow:\s*true/
+);
 const libMeta = fs.readFileSync(join(root, "app/library/page.tsx"), "utf8");
 assert.match(libMeta, /PRIVATE_ROBOTS|index:\s*false/);
 assert.match(
   fs.readFileSync(join(root, "lib/seoIndex.ts"), "utf8"),
   /export const PRIVATE_ROBOTS/
 );
+// VideoObject uploadDate from per-demo publishedAt (ISO DateTime, not date-only)
+const jsonLdSrc = fs.readFileSync(join(root, "lib/jsonLd.ts"), "utf8");
+assert.match(jsonLdSrc, /uploadDate:\s*demo\.publishedAt/);
+assert.match(jsonLdSrc, /isIso8601DateTime/);
+assert.doesNotMatch(
+  jsonLdSrc,
+  /uploadDate:\s*["']\d{4}-\d{2}-\d{2}["']/
+);
+assert.doesNotMatch(jsonLdSrc, /LAB_VIDEO_UPLOAD_DATETIME/);
+assert.match(jsonLdSrc, /iso8601DurationFromSeconds|duration/);
+const demoVideosSrc = fs.readFileSync(join(root, "lib/demoVideos.ts"), "utf8");
+assert.match(demoVideosSrc, /publishedAt:\s*string/);
+// Every demo entry must declare publishedAt DateTime with T and Z/offset
+{
+  const pubs = demoVideosSrc.match(/publishedAt:\s*"([^"]+)"/g) || [];
+  assert.ok(pubs.length >= 6, "each DemoVideo needs publishedAt");
+  for (const p of pubs) {
+    assert.match(p, /publishedAt:\s*"\d{4}-\d{2}-\d{2}T/);
+    assert.match(p, /Z"|[+-]\d{2}:\d{2}"/);
+  }
+  // Must not all share one forged string if more than one batch exists
+  const unique = new Set(pubs.map((x) => x.replace(/^publishedAt:\s*/, "")));
+  assert.ok(unique.size >= 1);
+}
+// AppShell: no duplicate Pricing in right rail; GA4 page_view on pathname
+{
+  const shell = fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8");
+  assert.match(shell, /trackPageView/);
+  assert.doesNotMatch(
+    shell,
+    /CreditsBadge[\s\S]{0,200}href=["']\/pricing["']/
+  );
+}
+// Image chrome must not introduce a second H1 on /image
+const suiteChromeSrc = fs.readFileSync(
+  join(root, "components/GenerateSuiteChrome.tsx"),
+  "utf8"
+);
+assert.doesNotMatch(suiteChromeSrc, /<h1[\s>]/);
+// Privacy / terms self-canonical
+assert.match(
+  fs.readFileSync(join(root, "app/privacy/page.tsx"), "utf8"),
+  /canonical:\s*["']\/privacy["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/terms/page.tsx"), "utf8"),
+  /canonical:\s*["']\/terms["']/
+);
+// Analytics page_view helper
+{
+  const a = fs.readFileSync(join(root, "lib/analytics.ts"), "utf8");
+  assert.match(a, /trackPageView/);
+  assert.match(a, /page_view/);
+  assert.match(a, /send_page_view:\s*false/);
+}
 const appsMeta = fs.readFileSync(join(root, "app/apps/page.tsx"), "utf8");
 // Apps is the live workflow shelf (not a thin preview door).
 assert.match(appsMeta, /WORKFLOWS|workflows/);
@@ -2380,17 +2458,34 @@ assert.match(historySrcLib, /sku\?:/);
 assert.match(library, /i\.sku|sku/);
 
 
-// Suite honesty: PRIMARY_NAV freeze (HF: Explore/Video/Image/Cinema/Community)
+// Suite honesty: PRIMARY_NAV = Explore · Create · Effects · Pricing (GSC P0)
 const softLaunchSrc = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
 assert.match(softLaunchSrc, /PRIMARY_NAV/);
 assert.match(softLaunchSrc, /href:\s*["']\/create["']/);
-assert.match(softLaunchSrc, /href:\s*["']\/community["']/);
-assert.match(softLaunchSrc, /href:\s*["']\/image["']/);
-assert.match(softLaunchSrc, /href:\s*["']\/cinema["']/);
-assert.match(
-  fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
-  /PRIMARY_NAV/
+assert.match(softLaunchSrc, /href:\s*["']\/effects["']/);
+assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
+// Preview doors must not sit in PRIMARY_NAV
+{
+  const primaryBlock = softLaunchSrc.match(
+    /PRIMARY_NAV\s*=\s*\[[\s\S]*?\]\s*as const/
+  )?.[0] || "";
+  assert.ok(primaryBlock.includes('href: "/"'));
+  assert.doesNotMatch(primaryBlock, /href:\s*["']\/image["']/);
+  assert.doesNotMatch(primaryBlock, /href:\s*["']\/cinema["']/);
+  assert.doesNotMatch(primaryBlock, /href:\s*["']\/community["']/);
+}
+const appShellSrc = fs.readFileSync(
+  join(root, "components/AppShell.tsx"),
+  "utf8"
 );
+assert.match(appShellSrc, /PRIMARY_NAV/);
+// More menu holds Preview/Lab tags for suite doors
+assert.match(appShellSrc, /tag:\s*["']Preview["']/);
+assert.match(appShellSrc, /tag:\s*["']Lab["']/);
+// GA4 adapter is env-gated no-op when unset (reuse analyticsSrc declared above)
+assert.match(analyticsSrc, /NEXT_PUBLIC_GA_MEASUREMENT_ID/);
+assert.match(analyticsSrc, /landing_view|generate_start|export_click/);
+assert.match(analyticsSrc, /SENSITIVE_META|sanitizeMeta/i);
 // Modules remains a real product surface (not necessarily primary-nav peer)
 assert.match(
   fs.readFileSync(join(root, "app/modules/page.tsx"), "utf8"),
@@ -2525,15 +2620,15 @@ function resolveGenerateStillPure(input) {
 
 // Mobile bottom nav: HF parity Home · Community · Generate · Library · Profile
 assert.match(softLaunchSrc, /MOBILE_NAV/);
-assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/community["']/);
 assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/create["']/);
-assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/library["']/);
-const appShellSrc = fs.readFileSync(
-  join(root, "components/AppShell.tsx"),
-  "utf8"
+assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/effects["']/);
+assert.doesNotMatch(
+  softLaunchSrc,
+  /MOBILE_NAV[\s\S]*href:\s*["']\/community["']/
 );
+assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/library["']/);
 assert.match(appShellSrc, /MOBILE_NAV/);
-assert.match(appShellSrc, /nav\.lab|nav\.modules|nav\.video/);
+assert.match(appShellSrc, /nav\.lab|nav\.modules|nav\.create|nav\.presets/);
 assert.match(
   fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8"),
   /\/modules/
@@ -2558,11 +2653,7 @@ assert.doesNotMatch(
   /titleDefault:\s*["']AI Toy Video Generator from One Photo/
 );
 assert.match(siteSrc, /rankToolPath|\/tools\/ai-toy-video-generator/);
-const suiteChromeSrc = fs.readFileSync(
-  join(root, "components/GenerateSuiteChrome.tsx"),
-  "utf8"
-);
-// Video modes before image/stills in MODE_DEFS
+// Video modes before image/stills in MODE_DEFS (suiteChromeSrc declared above)
 const genIdx = suiteChromeSrc.indexOf('id: "generate"');
 const flowIdx = suiteChromeSrc.indexOf('id: "flow"');
 const imageIdx = suiteChromeSrc.indexOf('id: "image"');
