@@ -44,7 +44,7 @@ export function OnboardingBanner() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <FreeTrialCta
-            path="/onboarding"
+            path="/"
             labelTry={`${t("cta.tryFree")} · Mini 5s`}
             onNavigate={dismiss}
             hideClipsChip

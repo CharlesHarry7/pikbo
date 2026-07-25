@@ -234,7 +234,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <LanguageSwitcher compact />
             <CreditsBadge compact />
             <Link
-              href="/create"
+              href={home ? "/#home-tool" : "/create"}
               className="rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[11px] font-black text-black"
             >
               {t("cta.generate")}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BatchStudio } from "@/components/BatchStudio";
+import { FreeTrialCta } from "@/components/FreeTrialCta";
 
 export async function generateMetadata({
   searchParams,
@@ -65,8 +66,12 @@ export default async function SupercomputerPage({
             >
               Seller Pack · 3
             </Link>
+            <FreeTrialCta path="/supercomputer" variant="ghost" />
             <Link href="/create" className="btn btn-ghost text-sm">
               Generate
+            </Link>
+            <Link href="/library" className="btn btn-ghost text-sm">
+              Library
             </Link>
             <Link href="/flow" className="btn btn-ghost text-sm">
               Flow
@@ -76,6 +81,41 @@ export default async function SupercomputerPage({
             </Link>
           </div>
         </div>
+        <nav
+          aria-label="Suite path"
+          className="mt-4 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-white/50"
+        >
+          <Link
+            href="/create"
+            className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
+          >
+            Generate
+          </Link>
+          <span aria-hidden className="text-white/25">
+            →
+          </span>
+          <Link
+            href="/create?mode=seller-pack"
+            className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
+          >
+            Seller Pack
+          </Link>
+          <span aria-hidden className="text-white/25">
+            →
+          </span>
+          <span className="rounded-full border border-white/20 bg-white/[0.06] px-3 py-1.5 text-white">
+            Batch
+          </span>
+          <span aria-hidden className="text-white/25">
+            →
+          </span>
+          <Link
+            href="/library"
+            className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
+          >
+            Library
+          </Link>
+        </nav>
         <p className="mt-3 text-xs text-[var(--fg-dim)]">
           Honest Preview · not multi-model Supercomputer. Credits debit per
           child job · failed children refund when confirmed.

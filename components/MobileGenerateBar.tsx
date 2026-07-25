@@ -24,7 +24,9 @@ export function MobileGenerateBar() {
     path.startsWith("/community") ||
     path === "/effects" ||
     path === "/apps" ||
-    path === "/library";
+    path === "/library" ||
+    path === "/models" ||
+    path === "/flow";
   if (!showBar) return null;
 
   return (
@@ -36,16 +38,16 @@ export function MobileGenerateBar() {
         Generate
       </Link>
       <Link
-        href="/modules"
+        href="/library"
         className="pointer-events-auto rounded-full border border-[var(--mint)]/40 bg-black/70 px-4 py-2.5 text-xs font-semibold text-[var(--mint)] backdrop-blur"
       >
-        Modules
+        Library
       </Link>
       <Link
-        href="/effects"
+        href="/modules"
         className="pointer-events-auto rounded-full border border-white/15 bg-black/70 px-4 py-2.5 text-xs font-semibold text-white backdrop-blur"
       >
-        Recipes
+        Modules
       </Link>
     </div>
   );

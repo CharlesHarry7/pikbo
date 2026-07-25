@@ -33,6 +33,12 @@ export default function StatusPage() {
         <Link href="/create" className="text-[var(--mint)] hover:underline">
           Generate →
         </Link>
+        <Link href="/#home-tool" className="text-[var(--mint)] hover:underline">
+          Home tool
+        </Link>
+        <Link href="/library" className="text-[var(--mint)] hover:underline">
+          Library
+        </Link>
         <Link href="/modules" className="text-[var(--mint)] hover:underline">
           Modules
         </Link>

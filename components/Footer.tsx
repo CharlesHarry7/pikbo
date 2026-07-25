@@ -19,8 +19,14 @@ export function Footer() {
               Modules, Seller Pack.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <Link href="/create" className="btn btn-primary !px-3 !py-1.5 text-xs">
+              <Link
+                href="/#home-tool"
+                className="btn btn-primary !px-3 !py-1.5 text-xs"
+              >
                 Generate
+              </Link>
+              <Link href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
+                Library
               </Link>
               <Link href="/flow" className="btn btn-ghost !px-3 !py-1.5 text-xs">
                 Flow
@@ -29,7 +35,7 @@ export function Footer() {
                 Modules
               </Link>
               <FreeTrialCta
-                path="/footer"
+                path="/"
                 variant="ghost"
                 className="btn btn-ghost !px-3 !py-1.5 text-xs"
               />
@@ -68,12 +74,11 @@ export function Footer() {
                 ["/flow", "Flow"],
                 ["/create?mode=seller-pack", "Seller Pack"],
                 ["/library", "Assets"],
+                ["/tools/ai-toy-video-generator", "AI toy video generator"],
+                ["/explore", "Explore Lab"],
                 ["/pricing", "Pricing"],
                 ["/effects", "Presets"],
                 ["/community", "Lab"],
-                ["/apps", "Apps"],
-                ["/tools", "Tools"],
-                ["/guides", "Guides"],
                 ["/privacy", "Privacy"],
                 ["/terms", "Terms"],
               ].map(([h, l]) => (

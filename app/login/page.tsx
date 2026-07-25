@@ -48,6 +48,12 @@ export default function LoginPage() {
           <Link href="/create" className="font-semibold text-[var(--mint)] hover:underline">
             Continue as guest → Generate
           </Link>
+          <Link href="/#home-tool" className="text-[var(--mint)] hover:underline">
+            Home tool
+          </Link>
+          <Link href="/library" className="text-[var(--mint)] hover:underline">
+            Library
+          </Link>
           <Link href="/flow" className="text-[var(--mint)] hover:underline">
             Flow
           </Link>

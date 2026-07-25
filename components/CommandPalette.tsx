@@ -8,6 +8,7 @@ import { PRESETS } from "@/lib/presets";
 /** Critical path first — suite doors over vanity surfaces */
 const LINKS = [
   { href: "/", label: "Home" },
+  { href: "/#home-tool", label: "Home · on-page Generate tool" },
   { href: "/create", label: "Generate · Toy Studio" },
   { href: "/flow", label: "Flow · creation matrix" },
   { href: "/modules", label: "Modules · job blocks" },
@@ -16,7 +17,11 @@ const LINKS = [
   { href: "/create?job=tiktok-hook", label: "Job · TikTok hook" },
   { href: "/create?job=blind-box-drop", label: "Job · Blind-box drop" },
   { href: "/effects", label: "Toy presets / recipes" },
-  { href: "/library", label: "Library" },
+  { href: "/library", label: "Library · device assets" },
+  {
+    href: "/tools/ai-toy-video-generator",
+    label: "AI toy video generator · rank page",
+  },
   { href: "/pricing", label: "Pricing · Free Mini / plans" },
   {
     href: "/create?try=1&sample=scout",
@@ -25,11 +30,11 @@ const LINKS = [
   { href: "/profile", label: "Profile · durable honesty" },
   { href: "/image", label: "Still studio · optional" },
   { href: "/supercomputer", label: "Batch agent" },
-  { href: "/guides", label: "Guides" },
+  { href: "/cinema", label: "Cinema · director board" },
+  { href: "/explore", label: "Explore Lab projects" },
+  { href: "/for/photo-to-video-for-toys", label: "For photo → video toys" },
   { href: "/for/etsy-listing-videos", label: "For Etsy sellers" },
-  { href: "/for/tiktok-shop-product-videos", label: "For TikTok Shop" },
-  { href: "/explore", label: "Explore" },
-  { href: "/community", label: "PIKBO Lab" },
+  { href: "/community", label: "PIKBO Lab (noindex)" },
   { href: "/apps", label: "Apps catalog" },
   { href: "/models", label: "Models (honest)" },
   { href: "/settings", label: "Settings · T6 / jobs" },
