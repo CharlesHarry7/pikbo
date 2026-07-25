@@ -628,7 +628,15 @@ assert.match(batchStudio, /Download blocked · Free raw/);
 // B1: last-request settlement must not be overwritten by version creditState
 function requestCreditStateFromFailure(result) {
   if (result.creditsRefunded === true) return "10 restored";
-  if (result.status === 0) return "refund unconfirmed";
+  if (
+    result.refundUnconfirmed === true ||
+    result.status === 0 ||
+    result.code === "NETWORK_ERROR" ||
+    result.code === "REQUEST_CANCELED" ||
+    result.code === "TIMEOUT"
+  ) {
+    return "refund unconfirmed";
+  }
   return null;
 }
 function preserveRequestSettlementOnVersionRestore(lastRequest, _versionCredit) {
@@ -669,6 +677,25 @@ function canDownloadResult(opts) {
   assert.equal(
     preserveRequestSettlementOnVersionRestore(refunded, "0 cached"),
     "10 restored"
+  );
+}
+// 2b) ledger TIMEOUT → unconfirmed (never claim restored)
+{
+  assert.equal(
+    requestCreditStateFromFailure({
+      creditsRefunded: false,
+      status: 504,
+      code: "TIMEOUT",
+    }),
+    "refund unconfirmed"
+  );
+  assert.equal(
+    requestCreditStateFromFailure({
+      refundUnconfirmed: true,
+      status: 504,
+      code: "TIMEOUT",
+    }),
+    "refund unconfirmed"
   );
 }
 // 3) Retry uses frozen GenerationSpec; Make variant uses composer (source markers)
@@ -1555,33 +1582,51 @@ assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
   /NETWORK_ERROR|REQUEST_CANCELED/
 );
+function requestCreditStateFromFailurePure(result) {
+  if (result.creditsRefunded === true) return "10 restored";
+  if (
+    result.refundUnconfirmed === true ||
+    result.status === 0 ||
+    result.code === "NETWORK_ERROR" ||
+    result.code === "REQUEST_CANCELED" ||
+    result.code === "TIMEOUT"
+  ) {
+    return "refund unconfirmed";
+  }
+  return null;
+}
 assert.equal(
-  (function requestCreditStateFromFailurePure(result) {
-    if (result.creditsRefunded === true) return "10 restored";
-    if (
-      result.status === 0 ||
-      result.code === "NETWORK_ERROR" ||
-      result.code === "REQUEST_CANCELED"
-    ) {
-      return "refund unconfirmed";
-    }
-    return null;
-  })({ status: 0, code: "NETWORK_ERROR" }),
+  requestCreditStateFromFailurePure({ status: 0, code: "NETWORK_ERROR" }),
   "refund unconfirmed"
 );
 assert.equal(
-  (function requestCreditStateFromFailurePure(result) {
-    if (result.creditsRefunded === true) return "10 restored";
-    if (
-      result.status === 0 ||
-      result.code === "NETWORK_ERROR" ||
-      result.code === "REQUEST_CANCELED"
-    ) {
-      return "refund unconfirmed";
-    }
-    return null;
-  })({ status: 500, code: "REQUEST_CANCELED" }),
+  requestCreditStateFromFailurePure({ status: 500, code: "REQUEST_CANCELED" }),
   "refund unconfirmed"
+);
+assert.equal(
+  requestCreditStateFromFailurePure({ status: 504, code: "TIMEOUT" }),
+  "refund unconfirmed"
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /refundUnconfirmed|TIMEOUT/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /refundUnconfirmed/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
+  /refundUnconfirmed:\s*result\.refundUnconfirmed/
+);
+// Residual refund copy must not overclaim unconditional refund
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/HowItWorks.tsx"), "utf8"),
+  /Failed live jobs refund credits\./
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
+  /Failed gens refund credits"/
 );
 // Demo + sample stills must exist on disk (preflight parity)
 {
@@ -2464,6 +2509,22 @@ assert.match(softLaunchSrc, /PRIMARY_NAV/);
 assert.match(softLaunchSrc, /href:\s*["']\/create["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/effects["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
+// Cold-start: /create is a tool, not a rank landing — noindex,follow
+const createPageMeta = fs.readFileSync(
+  join(root, "app/create/page.tsx"),
+  "utf8"
+);
+assert.match(createPageMeta, /CONCEPT_ROBOTS/);
+assert.match(createPageMeta, /robots:\s*CONCEPT_ROBOTS/);
+// Cmd-K + Footer: Preview doors labeled (not PRIMARY peers)
+assert.match(
+  fs.readFileSync(join(root, "components/CommandPalette.tsx"), "utf8"),
+  /Cinema · Preview|Still studio · Preview/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
+  /Flow · Preview|Assets · Local/
+);
 // Preview doors must not sit in PRIMARY_NAV
 {
   const primaryBlock = softLaunchSrc.match(

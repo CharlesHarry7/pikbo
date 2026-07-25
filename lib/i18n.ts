@@ -124,10 +124,10 @@ const en: Dict = {
   "home.promo.chip": "1 video trial · free",
   "home.promo.title": "Turn your toy photo into video",
   "home.promo.sub":
-    "Photo in → short AI video out. Free Mini trial. No card. Cached demos labeled. Failed live jobs refund credits.",
+    "Photo in → short AI video out. Free Mini trial. No card. Cached demos labeled. Failed live jobs restore credits when confirmed.",
   "home.pitch.title": "Toy AI video",
   "home.pitch.b1": "Free: one Mini 5s 480p trial",
-  "home.pitch.b2": "Failed gens refund credits",
+  "home.pitch.b2": "Failed gens restore credits when confirmed",
   "home.pitch.b3": "Paid = commercial use",
   "home.pitch.b4": "Priced for model cost, not fake volume",
   "home.feat.mini.title": "Seedance Mini",

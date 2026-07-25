@@ -186,7 +186,7 @@ export const TOOLS: Tool[] = [
       "Pikbo animates the toy in your photo. Pick a come-alive recipe — a dance, a wave, a little bit of life — and generate a short clip that gives your figure personality.",
     body: [
       "The state is always clear before you generate: a labeled cached demo, or a live run against your uploaded photo.",
-      "Come-alive motion is generated, so expect small variations in the figure between runs. Not happy? Regenerate — failed live jobs refund credits.",
+      "Come-alive motion is generated, so expect small variations in the figure between runs. Not happy? Regenerate — failed live jobs restore credits when confirmed.",
     ],
     keywords: [
       "animate toy from photo",

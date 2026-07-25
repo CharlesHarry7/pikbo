@@ -45,7 +45,7 @@ export function PaywallCard({
       </div>
       <p className="mt-2 text-[10px] text-[var(--fg-dim)]">
         Each eligible live job currently costs {CREDITS_PER_VIDEO} credits.
-        Failed live jobs refund automatically; cached examples use no credits.
+        Failed live jobs restore credits when confirmed; cached examples use no credits.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Link href="/pricing" className="btn btn-primary px-4 py-2 text-xs">

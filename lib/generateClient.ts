@@ -21,6 +21,11 @@ export type GenerateFail = {
   retryAfterSec?: number;
   /** Soft-launch: live debit restored after provider/validation failure. */
   creditsRefunded?: boolean;
+  /**
+   * Ledger kill / TIMEOUT / network cut — do not claim credits restored.
+   * Create/Batch should settle as "refund unconfirmed".
+   */
+  refundUnconfirmed?: boolean;
   /** Stop further batch jobs (credits / provider balance empty). */
   fatal: boolean;
   /** Open paywall UI (user allowance, not provider). */
@@ -157,6 +162,7 @@ export function interpretGenerateResponse(
     session: body.session,
     retryAfterSec,
     creditsRefunded,
+    refundUnconfirmed: refundUnconfirmed || undefined,
     fatal,
     paywall,
   };

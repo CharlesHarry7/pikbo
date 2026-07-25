@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Cold-start /create noindex + Preview door labels
+- `/create` + Seller Pack: `CONCEPT_ROBOTS` (tool, not rank landing; 9-URL budget).
+- CommandPalette + Footer: Preview/Local tags on Flow/Cinema/Image/Batch/Assets.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-26 — [grok] GSC P0: VideoObject DateTime + crawl/noindex contract
 
 **Branch:** `agent/grok/seo-gsc-p0` · PR #25
@@ -45,6 +50,11 @@ Newest first. One block per meaningful landing.
 ### 2026-07-26 — [grok] Cinema AfterPath + mobile suite bar + HowTo steps
 - Cinema Preview: GenerateAfterPath + Library; mobile bar hides image/cinema, Seller Pack on Library.
 - LandingHowItWorks: Photo → Recipe → Video draft + HowTo JSON-LD on tools/for with tools.
+- Verified: typecheck · engine-smoke.
+
+### 2026-07-26 — [grok] Create TIMEOUT settlement + residual refund honesty
+- requestCreditStateFromFailure: TIMEOUT / refundUnconfirmed → chip; generateClient echoes flag.
+- CreateStudio wires result.refundUnconfirmed; residual copy “when confirmed”.
 - Verified: typecheck · engine-smoke.
 
 ### 2026-07-26 — [grok] PROVIDER_TIMEOUT auto-retry + Library TIMEOUT honesty

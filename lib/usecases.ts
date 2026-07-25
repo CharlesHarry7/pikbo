@@ -285,7 +285,7 @@ export const USE_CASES: UseCase[] = [
       "Photo-to-video for toys is the whole product: one clear still of a figure you own becomes a short clip for listings, TikTok, or drops. Pikbo is built for designer toys — not generic stock footage.",
     body: [
       "Most “AI video” tools assume people or landscapes. Collectibles need a different job: keep the paint, silhouette, and product identity readable while adding motion a phone pan cannot fake in ten seconds.",
-      "Start with a sharp product photo — even light, full figure in frame, simple background. Soft launch Free Mini runs Seedance Mini at 5s · 480p with an on-player mark. Failed live jobs refund the 10-credit debit.",
+      "Start with a sharp product photo — even light, full figure in frame, simple background. Soft launch Free Mini runs Seedance Mini at 5s · 480p with an on-player mark. Failed live jobs restore the 10-credit debit when confirmed.",
       "Pick a recipe that matches the channel: 360° spin for marketplaces, unboxing energy for short-form, floating hero for launch teasers. Each landing page deep-links into Generate with the recipe pre-selected.",
       "This page is the search intent “photo to video for toys.” If you need Etsy, TikTok Shop, or Amazon specifically, use the /for/* channel pages — one commercial job per URL, same upload → generate loop.",
       "Honest limits: free trial is one Mini live clip per free period, not unlimited generation. Lab wall clips are cached demos and never process your upload. No card required to try Free Mini.",
@@ -372,7 +372,7 @@ export const USE_CASES: UseCase[] = [
       "Toy photographers and collectors often have a hard drive of excellent stills that die as single Instagram posts. Motion extends the life of a shot without restaging the set.",
       "Best inputs: sharp focus on the figure, controlled light, and a background you would be happy to see moving slightly. Busy city backdrops can distract; mini dioramas often shine with a gentle camera push.",
       "Use miniature-scene or floating-hero style recipes when the photo is already cinematic. Use spin when the photo is a clean product packshot and you want marketplace energy instead of story energy.",
-      "Soft launch honesty: Free Mini is one live clip with fixed caps. Cached Lab examples on the site are not generated from your upload. Failed live jobs refund credits.",
+      "Soft launch honesty: Free Mini is one live clip with fixed caps. Cached Lab examples on the site are not generated from your upload. Failed live jobs restore credits when confirmed.",
       "Workflow tip: shoot once for photo, generate variants for different platforms, keep the original RAW/JPEG archive as your source of truth.",
     ],
     keywords: [

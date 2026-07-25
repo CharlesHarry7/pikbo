@@ -129,20 +129,25 @@ export function resolveSpecImage(
 
 /**
  * Map a failed generate result to the request settlement chip.
- * Network / abort → unconfirmed; confirmed refund → restored; else null
- * (validation / 402 before debit should not claim refund).
+ * Confirmed refund → restored; kill/network/ledger timeout → unconfirmed;
+ * validation / 402 before debit → null (do not claim refund).
  */
 export function requestCreditStateFromFailure(result: {
   creditsRefunded?: boolean;
+  /** Server ledger timeout / kill mid-flight — never claim restored. */
+  refundUnconfirmed?: boolean;
   status: number;
-  /** Client/server error codes (NETWORK_ERROR · REQUEST_CANCELED · …) */
+  /** Client/server error codes (NETWORK_ERROR · REQUEST_CANCELED · TIMEOUT · …) */
   code?: string;
 }): Exclude<RequestCreditState, "0 cached" | "10 used"> {
   if (result.creditsRefunded === true) return "10 restored";
   if (
+    result.refundUnconfirmed === true ||
     result.status === 0 ||
     result.code === "NETWORK_ERROR" ||
-    result.code === "REQUEST_CANCELED"
+    result.code === "REQUEST_CANCELED" ||
+    // Process-memory ledger TIMEOUT (kill mid-flight) — never claim restored.
+    result.code === "TIMEOUT"
   ) {
     return "refund unconfirmed";
   }

@@ -15,7 +15,7 @@ export const site = {
   tagline: "Designer toy AI video suite",
   /** Meta description — brand suite + trial; primary keyword lives on /tools */
   description:
-    "Pikbo is a designer-toy AI video suite: turn photos of figures you own into short clips for listings and social. Free Mini trial. No card. Failed live jobs refund credits.",
+    "Pikbo is a designer-toy AI video suite: turn photos of figures you own into short clips for listings and social. Free Mini trial. No card. Failed live jobs restore credits when confirmed.",
   /**
    * Document title (homepage default) — brand first.
    * 哥飞 P0: must NOT match tools rank-page title.

@@ -634,7 +634,7 @@ export function LandingToolPanel({
               ) : (
                 <p className="mt-2 text-center text-[10px] text-[var(--fg-dim)]">
                   {PROVENANCE.liveGeneration} — AI motion varies. Failed jobs
-                  refund credits. Free live uses Mini · 480p ·{" "}
+                  restore credits when confirmed. Free live uses Mini · 480p ·{" "}
                   {PROVENANCE.onPlayerMark.toLowerCase()}.
                 </p>
               )}

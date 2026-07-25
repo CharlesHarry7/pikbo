@@ -122,7 +122,8 @@
 81. [x] Generate TIMEOUT/PROVIDER_NETWORK honesty · ledger Retry-After after crash · refundUnconfirmed echo
 82. [x] imageClient postImageWithRetry · Still FailPanel Retry-After · PROVIDER_NETWORK auto-retry
 83. [x] PROVIDER_TIMEOUT auto-retry (gen+image) · Library TIMEOUT refund-unconfirmed honesty
-84. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+84. [x] Create settlement TIMEOUT→refund unconfirmed · generateClient flag · residual refund copy
+85. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -136,8 +137,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- postGenerate/ImageWithRetry: one PROVIDER_TIMEOUT retry (ledger TIMEOUT never auto-retried).  
-- Library session jobs surface errorCode + refund unconfirmed on TIMEOUT.  
+- Create: TIMEOUT/refundUnconfirmed → settlement chip (never claim restored).  
+- generateClient echoes refundUnconfirmed; residual “refund credits” copy → when confirmed.  
 - Mode A still needs boss Vercel login · SQL · T6 bake worker.
 
 ---

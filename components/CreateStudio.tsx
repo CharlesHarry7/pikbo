@@ -690,6 +690,7 @@ export function CreateStudio({
       );
       const failSettlement = requestCreditStateFromFailure({
         creditsRefunded: result.creditsRefunded,
+        refundUnconfirmed: result.refundUnconfirmed,
         status: result.status,
         code: result.code,
       });
