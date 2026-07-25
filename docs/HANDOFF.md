@@ -4,6 +4,49 @@ Newest first. One block per meaningful landing.
 
 ---
 
+
+### 2026-07-26 — [grok] Wave C: durable auth · transactional credits · CI honesty
+
+**Branch:** `agent/grok/durable-auth-ci-cutover` (rebased onto current `main`) · PR https://github.com/CharlesHarry7/pikbo/pull/23
+
+#### Implemented
+1. **P0-1 CI false-green:** Honest template `docs/ci/github-actions-ci.yml` — single step start+link-check+critical-path, **no `|| true`**. OAuth lacks `workflow` scope so live `.github/workflows/ci.yml` unchanged. Boss must copy template. `durable-credits-smoke` wired.
+2. **P0-2 schemaReady:** URL normalize (strip `/rest/v1`). Local health: backend=supabase, schemaReady=false, code=SCHEMA_MISSING — **not** local-file dual ledger. ready.durableCredits=false until SQL.
+3. **P0-3 transactional RPCs:** `20260726120000_t5_credit_rpcs.sql` FOR UPDATE + idempotent. JS RPC-only.
+4. **P0-4 fail closed:** production never silent local-file dual ledger.
+5. **P0-5 signed-in SoT:** Generate uses Supabase when durableIsAuthoritative(); guests keep Cookie Free Trial; migrate max 10 once.
+6. **P0-6 tests:** durable-credits-smoke PASS (6×10@50, idempotency, Seller Pack 30→20+10).
+
+#### Migration required (boss — Email/localhost callback already done)
+1. `20260723120000_t5_auth_credits.sql`
+2. `20260726120000_t5_credit_rpcs.sql`
+
+#### Verify (rebased)
+check:conflicts · durable-credits-smoke · engine-smoke · lint · typecheck · build · link-check · critical-path — **all PASS** (strict, no `|| true`).
+
+Local health (NODE_ENV=production): backend=supabase · schemaReady=false · transactionReady=false · code=SCHEMA_MISSING · ready.durableCredits=false · **not** local-file dual ledger · softLive guest Cookie still works.
+
+#### Gates
+- **T5 → review** only after boss applies both SQL migrations → transactionReady=true.
+- **T23 → done** only after boss copies `docs/ci/github-actions-ci.yml` → `.github/workflows/ci.yml` (workflow scope) + green Actions URL.
+- **T6** stays **blocked**.
+
+#### PR
+- https://github.com/CharlesHarry7/pikbo/pull/23
+
+#### CI URL
+- Pending boss workflow-scope copy of `docs/ci/github-actions-ci.yml`. Local strict path **PASS**.
+
+#### Commit SHAs (rebased)
+- `5a636e2` [grok] HANDOFF: Wave C PR #23 link
+- `196c732` [grok] ship honest CI as docs/ci template (workflow scope)
+- `62b356e` [grok] prove durable concurrency and idempotency
+- `9288adc` [grok] fail closed and cut over signed-in credits
+- `7420899` [grok] add transactional Supabase credit RPCs
+- `88e4098` [grok] make CI critical path fail honestly
+
+---
+
 ### 2026-07-26 — [grok] T8 Seller Pack recovery + Free live player parity
 - BatchStudio sessionStorage holds only active-pack child pointers (no photo/
   video/balance). `GET /api/generations` is authoritative after refresh; missing
@@ -172,62 +215,6 @@ Newest first. One block per meaningful landing.
 - Library session jobs: errorCode + refund unconfirmed; empty-state copy no longer overclaims refunds.
 - Verified: typecheck · engine-smoke.
 
-### 2026-07-26 — [grok] Wave C: durable auth · transactional credits · CI honesty
-
-**Branch:** `agent/grok/durable-auth-ci-cutover` (rebased onto current `main`; **do not** reuse `agent/grok/final-takeover`)
-
-#### Implemented
-1. **P0-1 CI false-green:** Honest CI template at `docs/ci/github-actions-ci.yml` (single step start + link-check + critical-path, **no `|| true`** on critical-path). OAuth lacks `workflow` scope so live `.github/workflows/ci.yml` cannot be updated by agent — boss must copy template. `critical-path.sh` accepts `BASE_URL`. `durable-credits-smoke` in package.json.
-2. **P0-2 schemaReady:** `lib/supabase/env.ts` normalizes project URL (strip `/rest/v1|/auth/v1|/storage/v1`) — root cause of `Invalid path specified in request URL`. Probe returns codes only (`SCHEMA_MISSING|RPC_MISSING|URL_INVALID|…`), host desensitized; 4s probe timeout.
-3. **P0-3 transactional RPCs:** `supabase/migrations/20260726120000_t5_credit_rpcs.sql` — `pikbo_probe_ready`, `pikbo_ensure_personal_account`, `pikbo_grant_free_allowance`, `pikbo_reserve_credits`, `pikbo_settle_credits`, `pikbo_release_credits`, `pikbo_migrate_guest_credits` (FOR UPDATE, idempotent). JS adapter **RPC only** (`supabaseStore.ts`).
-4. **P0-4 fail closed:** production / `PIKBO_DURABLE_BACKEND=supabase` / `REQUIRE_DURABLE_CREDITS=1` never silent local-file dual ledger. `ready.durableCredits` only when backend=supabase + transactionReady.
-5. **P0-5 signed-in SoT:** Generate uses Supabase wallet when `durableIsAuthoritative()`; guests keep Cookie Free Trial; migrate max 10 once. Profile/me/claim/settings authority strings match.
-6. **P0-6 tests:** `npm run durable-credits-smoke` (concurrency 6×10@50, idempotency, settle/release replay, Seller Pack 30→20+10, SQL contracts, CI no mask, fail-closed).
-
-#### Migration required (boss)
-Apply in Supabase SQL Editor, in order:
-1. `20260723120000_t5_auth_credits.sql`
-2. `20260726120000_t5_credit_rpcs.sql`
-
-Email + localhost callback already configured — **not** blockers.
-
-#### Gates
-- **T5 → review** only when health: backend=supabase, transactionReady=true, signed-in Generate uses DB wallet, concurrency smoke green.
-- **T23 → done** only with green GitHub Actions URL after boss copies `docs/ci/github-actions-ci.yml` → `.github/workflows/ci.yml` (workflow scope).
-- **T6** stays **blocked** (fail-closed skeleton on main; no fake file watermark).
-
-#### Verify (local)
-```
-npm run check:conflicts
-npm run engine-smoke
-npm run durable-credits-smoke
-npm run lint
-npm run typecheck
-npm run build
-# then strict (no || true):
-npm run start -- --port 3456 &
-BASE_URL=http://127.0.0.1:3456 npm run link-check
-BASE_URL=http://127.0.0.1:3456 npm run critical-path
-```
-
-#### CI URL
-- Pending green run after boss copies `docs/ci/github-actions-ci.yml` → `.github/workflows/ci.yml` (OAuth lacks `workflow` scope; cannot push workflow file from this agent). Local strict path: **PASS** (link-check + critical-path, no `|| true` on critical-path).
-
-#### Commit SHAs
-- `f494edc` make CI critical path fail honestly (critical-path BASE_URL + package script)
-- `b0cdf86` transactional Supabase credit RPCs
-- `5c7dc43` fail closed and cut over signed-in credits
-- `fb7472c` prove durable concurrency and idempotency
-- `37288d9` ship honest CI as docs/ci template (workflow scope)
-
-#### schemaReady diagnosis (local prod health)
-- `backend=supabase` path ready in code; production currently may still show schemaReady=false until boss applies SQL
-- URL normalize OK; service role present when configured; probe timeout 4s
-- **Boss:** apply both SQL migrations (tables + RPCs) — not Email/callback (done)
-- production fail-closed: **not** falling back to local-file dual ledger
-
-
----
 
 ### 2026-07-25 — [grok] Still Studio imageClient + FailPanel Retry-After
 - `lib/imageClient`: postImageWithRetry · PROVIDER_NETWORK auto-retry · refund unconfirmed.
