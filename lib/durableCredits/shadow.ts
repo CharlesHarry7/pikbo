@@ -1,13 +1,12 @@
 /**
- * Optional shadow ledger for soft-launch generate.
- * Cookie remains authoritative until REQUIRE_DURABLE_CREDITS=1.
- * Enable with DURABLE_CREDITS=local|1, or auto when Supabase is configured.
- *
- * Prefer signed-in Supabase user id; fall back to guest cookie session id.
+ * Durable shadow / authority path for generate.
+ * - Guest: Cookie remains authoritative; optional shadow when durable active.
+ * - Signed-in + durableIsAuthoritative(): Supabase reserve is required (fail closed).
  */
 
 import {
   durableCreditsActive,
+  durableIsAuthoritative,
   durableRelease,
   durableReserve,
   durableSettle,
@@ -22,19 +21,35 @@ export type ShadowReservation = {
   /** durable owner used for this reserve */
   ownerUserId: string;
   kind: "auth" | "guest";
+  /** When true, cookie debit should be skipped (wallet is authority). */
+  authoritative: boolean;
 };
 
 async function reserveForOwner(
   ownerUserId: string,
-  kind: "auth" | "guest"
-): Promise<ShadowReservation | null> {
-  if (!durableCreditsActive()) return null;
+  kind: "auth" | "guest",
+  opts?: { authoritative?: boolean; idempotencyKey?: string }
+): Promise<
+  | { ok: true; shadow: ShadowReservation }
+  | { ok: false; code: string; error: string }
+> {
+  if (!durableCreditsActive() && !opts?.authoritative) {
+    return { ok: false, code: "DURABLE_OFF", error: "durable inactive" };
+  }
   try {
     const ensured = await ensurePersonalAccount(ownerUserId, 10);
-    if (!ensured.ok) return null;
+    if (!ensured.ok) {
+      return {
+        ok: false,
+        code: ensured.code || "ENSURE_FAILED",
+        error: ensured.error || "ensure account failed",
+      };
+    }
     const accountId = ensured.data.account.id;
     const credits = jobCostCredits();
-    const key = `shadow-reserve:${kind}:${ownerUserId}:${Date.now()}`;
+    const key =
+      opts?.idempotencyKey ||
+      `shadow-reserve:${kind}:${ownerUserId}:${Date.now()}`;
     const reserved = await durableReserve({
       accountId,
       createdBy: ownerUserId,
@@ -43,50 +58,89 @@ async function reserveForOwner(
       idempotencyKey: key,
     });
     if (!reserved.ok) {
-      // Shadow must never block live cookie path — log and continue.
-      console.warn(
-        "[durable-shadow] reserve failed",
-        reserved.code,
-        reserved.error
-      );
-      return null;
+      if (!opts?.authoritative) {
+        console.warn(
+          "[durable-shadow] reserve failed",
+          reserved.code
+        );
+      }
+      return {
+        ok: false,
+        code: reserved.code || "RESERVE_FAILED",
+        error: reserved.error || "reserve failed",
+      };
     }
     return {
-      accountId,
-      reservationId: reserved.data.reservation.id,
-      credits,
-      ownerUserId,
-      kind,
+      ok: true,
+      shadow: {
+        accountId,
+        reservationId: reserved.data.reservation.id,
+        credits,
+        ownerUserId,
+        kind,
+        authoritative: Boolean(opts?.authoritative),
+      },
     };
   } catch (e) {
-    console.warn("[durable-shadow] reserve error", e);
-    return null;
+    const msg = e instanceof Error ? e.message.slice(0, 120) : "reserve error";
+    if (!opts?.authoritative) {
+      console.warn("[durable-shadow] reserve error", msg);
+    }
+    return { ok: false, code: "RESERVE_THROW", error: msg };
   }
 }
 
 /** Signed-in Supabase user — preferred durable owner. */
 export async function shadowReserveForAuthUser(
-  userId: string
+  userId: string,
+  opts?: { authoritative?: boolean; idempotencyKey?: string }
 ): Promise<ShadowReservation | null> {
   if (!userId) return null;
-  return reserveForOwner(userId, "auth");
+  const r = await reserveForOwner(userId, "auth", opts);
+  return r.ok ? r.shadow : null;
+}
+
+export async function shadowReserveForAuthUserStrict(
+  userId: string,
+  idempotencyKey: string
+): Promise<
+  | { ok: true; shadow: ShadowReservation }
+  | { ok: false; code: string; error: string }
+> {
+  return reserveForOwner(userId, "auth", {
+    authoritative: true,
+    idempotencyKey: `auth-gen:${userId}:${idempotencyKey}`,
+  });
 }
 
 export async function shadowReserveForGuest(
   guestSessionId: string
 ): Promise<ShadowReservation | null> {
-  return reserveForOwner(guestSessionId, "guest");
+  const r = await reserveForOwner(guestSessionId, "guest");
+  return r.ok ? r.shadow : null;
 }
 
 /**
  * Prefer auth user wallet; otherwise guest cookie mapping.
- * Cookie debit still happens on generate regardless of shadow outcome.
+ * Cookie debit still happens on generate unless shadow.authoritative.
  */
 export async function shadowReserveForGenerate(input: {
   authUserId?: string | null;
   guestSessionId: string;
+  idempotencyKey?: string;
 }): Promise<ShadowReservation | null> {
   if (input.authUserId) {
+    const authoritative = await durableIsAuthoritative();
+    if (authoritative) {
+      const strict = await shadowReserveForAuthUserStrict(
+        input.authUserId,
+        input.idempotencyKey || `t:${Date.now()}`
+      );
+      if (strict.ok) return strict.shadow;
+      // Fail closed for signed-in authoritative path — caller must check null
+      // and treat as hard error when durableIsAuthoritative was true.
+      return null;
+    }
     const auth = await shadowReserveForAuthUser(input.authUserId);
     if (auth) return auth;
   }
@@ -105,8 +159,8 @@ export async function shadowSettle(
       idempotencyKey: `shadow-settle:${shadow.reservationId}:${jobId || "ok"}`,
       jobId,
     });
-  } catch (e) {
-    console.warn("[durable-shadow] settle error", e);
+  } catch {
+    console.warn("[durable-shadow] settle error");
   }
 }
 
@@ -120,11 +174,13 @@ export async function shadowRelease(
     await durableRelease({
       reservationId: shadow.reservationId,
       credits: shadow.credits,
-      idempotencyKey: `shadow-release:${shadow.reservationId}:${reason}`,
+      idempotencyKey: `shadow-release:${shadow.reservationId}:${reason}:${jobId || "x"}`,
       reason,
       jobId,
     });
-  } catch (e) {
-    console.warn("[durable-shadow] release error", e);
+  } catch {
+    console.warn("[durable-shadow] release error");
   }
 }
+
+export { durableIsAuthoritative };

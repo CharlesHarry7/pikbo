@@ -1,6 +1,6 @@
 /**
- * File-backed durable credits for local / single-node dev.
- * Not a production multi-region store — Supabase is the production path.
+ * File-backed durable credits for local / single-node **dev only**.
+ * Production must use Supabase RPCs (fail closed — never silent dual ledger).
  */
 
 import { promises as fs } from "fs";
@@ -53,75 +53,112 @@ export async function probeDurableCreditsStore(): Promise<{
   required: boolean;
   configured: boolean;
   schemaReady?: boolean;
+  transactionReady?: boolean;
+  authority?: "cookie" | "supabase" | "none";
   warning?: string;
+  code?: string;
 }> {
-  const required = process.env.REQUIRE_DURABLE_CREDITS === "1";
-  // Lazy import avoids circular deps with supabase clients at module load.
+  const required =
+    process.env.REQUIRE_DURABLE_CREDITS === "1" ||
+    process.env.PIKBO_DURABLE_BACKEND === "supabase" ||
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production";
+
   const { probeSupabaseCreditsSchema, supabaseCreditsConfigured } =
     await import("@/lib/durableCredits/supabaseStore");
 
   if (supabaseCreditsConfigured()) {
     const schema = await probeSupabaseCreditsSchema();
-    if (schema.schemaReady) {
+    if (schema.transactionReady) {
       return {
         writable: true,
-        path: "supabase:credit_wallets",
+        path: "supabase:rpc",
         backend: "supabase",
         required,
         configured: true,
         schemaReady: true,
+        transactionReady: true,
+        authority: "supabase",
       };
     }
-    // Keys present but migration missing — still report local-file as fallback.
+    if (schema.schemaReady && !schema.transactionReady) {
+      // Tables exist, RPCs missing — fail closed in production
+      if (required) {
+        return {
+          writable: false,
+          path: "supabase:tables-only",
+          backend: "supabase",
+          required: true,
+          configured: true,
+          schemaReady: true,
+          transactionReady: false,
+          authority: "none",
+          code: schema.code || "RPC_MISSING",
+          warning: schema.warning,
+        };
+      }
+    }
+    if (required) {
+      return {
+        writable: false,
+        path: "supabase:not-ready",
+        backend: "supabase",
+        required: true,
+        configured: true,
+        schemaReady: schema.schemaReady,
+        transactionReady: false,
+        authority: "none",
+        code: schema.code,
+        warning: schema.warning,
+      };
+    }
+    // Dev: optional local-file fallback only when not required
+  }
+
+  // Explicit local or dev without Supabase
+  if (
+    process.env.PIKBO_DURABLE_BACKEND === "local" ||
+    process.env.DURABLE_CREDITS === "local" ||
+    (!required && !supabaseCreditsConfigured())
+  ) {
     const file = storePath();
     let localWritable = false;
     try {
       await fs.mkdir(path.dirname(file), { recursive: true });
       const probe = `${file}.probe`;
-      await fs.writeFile(probe, String(Date.now()), "utf8");
-      await fs.unlink(probe).catch(() => undefined);
+      await fs.writeFile(probe, "ok", "utf8");
+      await fs.unlink(probe);
       localWritable = true;
     } catch {
       localWritable = false;
     }
     return {
       writable: localWritable,
-      path: localWritable ? file : "supabase",
+      path: file,
       backend: localWritable ? "local-file" : "none",
-      required,
-      configured: true,
+      required: false,
+      configured: localWritable,
       schemaReady: false,
-      warning:
-        schema.warning ||
-        "Supabase keys present; T5 SQL migration not applied — using local file fallback",
+      transactionReady: false,
+      authority: "cookie",
+      warning: localWritable
+        ? "Dev local-file demo only — not multi-node"
+        : "Local durable path not writable",
     };
   }
 
-  const file = storePath();
-  try {
-    await fs.mkdir(path.dirname(file), { recursive: true });
-    const probe = `${file}.probe`;
-    await fs.writeFile(probe, String(Date.now()), "utf8");
-    await fs.unlink(probe).catch(() => undefined);
-    return {
-      writable: true,
-      path: file,
-      backend: "local-file",
-      required,
-      configured: true,
-      schemaReady: false,
-    };
-  } catch {
-    return {
-      writable: false,
-      path: file,
-      backend: required ? "none" : "local-file",
-      required,
-      configured: false,
-      schemaReady: false,
-      warning: required
-        ? "REQUIRE_DURABLE_CREDITS=1 but store unwritable and Supabase unset"
-        : "Local durable store unwritable",
-    };
-  }
+  return {
+    writable: false,
+    path: "none",
+    backend: "none",
+    required,
+    configured: false,
+    schemaReady: false,
+    transactionReady: false,
+    authority: "none",
+    code: "NO_BACKEND",
+    warning: required
+      ? "Production requires Supabase T5 schema + credit RPCs"
+      : "No durable backend configured",
+  };
 }

@@ -211,13 +211,18 @@ export function ProfilePanel() {
   const isFreePlan =
     session?.freeTrial?.isFreePlan === true || session?.plan === "free";
 
+  const generateAuth =
+    session?.durable?.generateAuthority ??
+    (session?.durable?.authority === "authoritative" ? "supabase" : "cookie");
   const durableLine = !auth.signedIn
     ? "Guest cookie · this device only"
-    : durableBackend === "supabase"
-      ? "Supabase account · durable wallet (Postgres) · live generate still cookie-authoritative until Mode B"
-      : durableBackend === "local-file"
-        ? "Supabase account · durable wallet is single-node file ledger (shadow) — apply T5 SQL for multi-node"
-        : "Supabase account · durable wallet pending claim/probe";
+    : durableBackend === "supabase" && generateAuth === "supabase"
+      ? "Supabase account · cloud wallet is Generate authority (cross-device)"
+      : durableBackend === "supabase"
+        ? "Supabase account · wallet visible · Generate still cookie until RPC ready"
+        : durableBackend === "local-file"
+          ? "Supabase account · local-file shadow only — not multi-node"
+          : "Supabase account · durable wallet pending claim/probe";
 
   return (
     <div className="card mt-8 space-y-4 p-6">
@@ -253,20 +258,41 @@ export function ProfilePanel() {
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-[var(--fg-muted)]">
           <span className="font-semibold text-white/80">Credits authority</span>
           {" · "}
-          Soft-launch live Generate debits the{" "}
-          <span className="font-semibold text-white/75">guest cookie</span>{" "}
-          ({session?.credits ?? "—"} cr). Durable wallet
-          {durableBackend ? ` (${durableBackend}` : ""}
-          {session?.durable?.authority
-            ? ` · ${session.durable.authority}`
-            : durableBackend
-              ? " · shadow"
-              : ""}
-          {durableBackend ? ")" : ""} is for cross-device display
-          {durableReserved !== null && durableReserved > 0
-            ? ` · ${durableReserved} reserved`
-            : ""}
-          . Not multi-node until T5 SQL is applied.
+          {generateAuth === "supabase" ? (
+            <>
+              Live Generate debits your{" "}
+              <span className="font-semibold text-white/75">
+                Supabase wallet
+              </span>
+              {durableBackend ? ` (${durableBackend}` : ""}
+              {session?.durable?.authority
+                ? ` · ${session.durable.authority}`
+                : ""}
+              {durableBackend ? ")" : ""}
+              {durableReserved !== null && durableReserved > 0
+                ? ` · ${durableReserved} reserved`
+                : ""}
+              . Same balance across browsers after login.
+            </>
+          ) : (
+            <>
+              Live Generate still debits the{" "}
+              <span className="font-semibold text-white/75">guest cookie</span>{" "}
+              ({session?.credits ?? "—"} cr). Durable wallet
+              {durableBackend ? ` (${durableBackend}` : ""}
+              {session?.durable?.authority
+                ? ` · ${session.durable.authority}`
+                : durableBackend
+                  ? " · shadow"
+                  : ""}
+              {durableBackend ? ")" : ""} is display/shadow until credit RPCs
+              are applied
+              {durableReserved !== null && durableReserved > 0
+                ? ` · ${durableReserved} reserved`
+                : ""}
+              .
+            </>
+          )}
         </div>
       ) : null}
 
@@ -383,9 +409,11 @@ export function ProfilePanel() {
 
       <p className="text-xs text-[var(--fg-muted)]">
         {auth.signedIn
-          ? durableBackend === "supabase"
-            ? "Postgres durable wallet is visible here. Soft-launch Generate still settles the cookie until Mode B flips authority."
-            : "Generate still debits the guest cookie this soft-launch cycle. Durable file ledger is shadow-only (single node) until T5 SQL + multi-node store."
+          ? generateAuth === "supabase"
+            ? "Cloud wallet is Generate authority for this signed-in account. Guest Free Trial remains cookie-only until login."
+            : durableBackend === "supabase"
+              ? "Postgres wallet is visible. Generate still settles the cookie until T5 credit RPCs make transactionReady=true."
+              : "Generate still debits the guest cookie. Local-file ledger is shadow-only (single node) — not multi-node cloud credits."
           : demo
             ? "Server is in demo-cached mode — labeled Lab clips cost 0 credits. Configure FAL_KEY for live Seedance Mini."
             : freeLive

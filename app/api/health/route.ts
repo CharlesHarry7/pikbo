@@ -55,15 +55,24 @@ export async function GET() {
   const authPublic = publicAuthStatus();
   const mode = generateMode();
   const payments = paymentsReadiness();
+  /**
+   * Durable gate blocks *paid* / claimed-cloud-credits only.
+   * Guest soft-live (Cookie Free Mini) still works without Supabase RPCs.
+   */
   const durableGate =
-    process.env.REQUIRE_DURABLE_CREDITS === "1" && !durableCredits.writable;
+    (process.env.REQUIRE_DURABLE_CREDITS === "1" ||
+      process.env.PIKBO_DURABLE_BACKEND === "supabase") &&
+    !(
+      durableCredits.backend === "supabase" &&
+      durableCredits.transactionReady === true
+    );
 
   /** Demo / soft-live / paid ladders — honest gates for ops */
   const ready = {
     /** Cached Lab + Studio demo path (no provider key; free, no credit burn) */
     demo: true,
     /** Live Mini/full Seedance when FAL_KEY + session secret present */
-    softLive: fal && (sessionSecret || !production) && !durableGate,
+    softLive: fal && (sessionSecret || !production),
     /**
      * Real charges — needs durable entitlements (PRELAUNCH R1).
      * File store unwritable ⇒ paid stays false even if Stripe env is set.
@@ -75,10 +84,17 @@ export async function GET() {
       stripe &&
       stripeWebhook &&
       entitlements.writable &&
-      durableCredits.writable &&
+      durableCredits.backend === "supabase" &&
+      durableCredits.transactionReady === true &&
       payments.readyForTestCheckout,
-    /** T5 local adapter or Supabase — not live Stripe */
-    durableCredits: durableCredits.writable && durableCredits.configured,
+    /**
+     * True only when Supabase schema + transactional RPCs are ready.
+     * Never true for silent local-file dual ledger.
+     */
+    durableCredits:
+      durableCredits.backend === "supabase" &&
+      durableCredits.transactionReady === true &&
+      durableCredits.writable,
   };
 
   return NextResponse.json({

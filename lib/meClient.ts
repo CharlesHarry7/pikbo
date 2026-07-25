@@ -12,7 +12,10 @@ export type MeDurableWallet = {
   reservedCredits: number;
   planId: string;
   backend?: "supabase" | "local-file";
+  /** Wallet visibility vs Generate debit source */
   authority?: "shadow" | "authoritative";
+  /** Who Generate actually debits for this signed-in user */
+  generateAuthority?: "cookie" | "supabase";
 };
 
 /** Soft-launch free trial honesty from GET /api/me */

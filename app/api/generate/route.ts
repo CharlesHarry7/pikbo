@@ -36,6 +36,7 @@ import type {
   GenerateRequestBody,
   GenerateSuccess,
 } from "@/lib/contracts";
+import { jobCostCredits } from "@/lib/contracts";
 import {
   shadowRelease,
   shadowReserveForGenerate,
@@ -380,32 +381,74 @@ export async function POST(req: Request) {
     }
 
     // --- Live path: charge credits only when a real provider call will run ---
-    const check = checkCredits(session);
-    if (!check.ok) {
-      return err(
-        {
-          error:
-            session.plan === "free"
-              ? "Free trial used up — upgrade on Pricing, or wait for monthly refresh"
-              : "Not enough credits",
-          code: "INSUFFICIENT_CREDITS",
-          need: check.need,
-          have: check.have,
-          session: publicSession(session),
-        },
-        402
-      );
-    }
-
-    session = deductCredits(session, check.cost);
-    await saveSession(session);
-    // Optional durable shadow ledger — prefer signed-in Supabase user.
-    // Cookie remains authoritative until REQUIRE_DURABLE_CREDITS=1.
     const authUser = await getAuthUserFromRequest(req);
-    let shadow: ShadowReservation | null = await shadowReserveForGenerate({
-      authUserId: authUser?.id,
-      guestSessionId: session.id,
-    });
+    const { durableIsAuthoritative } = await import("@/lib/durableCredits");
+    const authWalletAuthority =
+      Boolean(authUser?.id) && (await durableIsAuthoritative());
+
+    // Signed-in + Supabase RPC ready → wallet is authority (fail closed).
+    // Guest / non-authoritative → Cookie Free Mini check + optional shadow.
+    let shadow: ShadowReservation | null = null;
+    let check = checkCredits(session);
+
+    if (authWalletAuthority && authUser?.id) {
+      shadow = await shadowReserveForGenerate({
+        authUserId: authUser.id,
+        guestSessionId: session.id,
+        idempotencyKey: idempotencyKey || undefined,
+      });
+      if (!shadow) {
+        const { getPersonalWallet } = await import("@/lib/durableCredits");
+        const w = await getPersonalWallet(authUser.id);
+        const cost = jobCostCredits();
+        return err(
+          {
+            error: w
+              ? "Not enough durable credits on your account"
+              : "Durable credits unavailable — apply T5 RPCs or retry later",
+            code: w ? "INSUFFICIENT_CREDITS" : "DURABLE_UNAVAILABLE",
+            need: cost,
+            have: w?.availableCredits ?? 0,
+            session: publicSession(session),
+          },
+          w ? 402 : 503
+        );
+      }
+      // Best-effort cookie mirror for guest UI only (not authority)
+      if (check.ok) {
+        session = deductCredits(session, check.cost);
+        await saveSession(session);
+      }
+      check = {
+        ok: true,
+        cost: shadow.credits,
+        remainingAfter: Math.max(0, session.credits),
+      };
+    } else {
+      if (!check.ok) {
+        return err(
+          {
+            error:
+              session.plan === "free"
+                ? "Free trial used up — upgrade on Pricing, or wait for monthly refresh"
+                : "Not enough credits",
+            code: "INSUFFICIENT_CREDITS",
+            need: check.need,
+            have: check.have,
+            session: publicSession(session),
+          },
+          402
+        );
+      }
+
+      session = deductCredits(session, check.cost);
+      await saveSession(session);
+      shadow = await shadowReserveForGenerate({
+        authUserId: authUser?.id,
+        guestSessionId: session.id,
+        idempotencyKey: idempotencyKey || undefined,
+      });
+    }
 
     const model = modelForTier({
       freeTier,

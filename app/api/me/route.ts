@@ -4,6 +4,7 @@ import { generateMode } from "@/lib/requestMeta";
 import { ensureSession, publicSession } from "@/lib/session";
 import {
   durableCreditsActive,
+  durableIsAuthoritative,
   getPersonalWallet,
 } from "@/lib/durableCredits";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
@@ -37,8 +38,8 @@ export async function HEAD() {
 
 /**
  * Session + generate mode for Studio honesty.
- * Optional Bearer token enriches response with Supabase auth + durable wallet
- * (shadow ledger). Cookie credits remain the soft-launch generate authority.
+ * Bearer token enriches with Supabase auth + durable wallet.
+ * Guest Generate = cookie; signed-in Generate = Supabase when transactionReady.
  */
 export async function GET(req: Request) {
   const session = await ensureSession();
@@ -100,15 +101,18 @@ export async function GET(req: Request) {
     });
   }
 
-  let durable: {
-    accountId: string;
-    availableCredits: number;
-    reservedCredits: number;
-    planId: string;
-    backend?: "supabase" | "local-file";
-  } | null = null;
+  let durable: Awaited<ReturnType<typeof getPersonalWallet>> = null;
+  let walletAuthority: "cookie" | "supabase" | "shadow" = "cookie";
   try {
     durable = await getPersonalWallet(user.id);
+    const authz = await durableIsAuthoritative();
+    walletAuthority = authz
+      ? "supabase"
+      : durable?.backend === "supabase"
+        ? "shadow"
+        : durable?.backend === "local-file"
+          ? "shadow"
+          : "cookie";
   } catch {
     durable = null;
   }
@@ -127,8 +131,13 @@ export async function GET(req: Request) {
           reservedCredits: durable.reservedCredits,
           planId: durable.planId,
           backend: durable.backend ?? "local-file",
-          /** Display hint — cookie still debit authority for soft-launch live jobs */
-          authority: "shadow" as const,
+          /**
+           * authoritative = signed-in Generate debits Supabase wallet.
+           * shadow = wallet visible but cookie still debits Generate.
+           */
+          authority:
+            walletAuthority === "supabase" ? ("authoritative" as const) : ("shadow" as const),
+          generateAuthority: walletAuthority === "supabase" ? "supabase" : "cookie",
         }
       : null,
   });

@@ -54,6 +54,7 @@ export function GenerateFailPanel({
     typeof retryAfterSec === "number" && retryAfterSec > 0
       ? Math.ceil(retryAfterSec)
       : 0;
+  // Reset countdown when message / retry budget changes (render-time adjust, no effect setState).
   const waitKey = `${message ?? ""}:${initialWait}`;
   const [waitLeft, setWaitLeft] = useState(initialWait);
   const [countdownKey, setCountdownKey] = useState(waitKey);

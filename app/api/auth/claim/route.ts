@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  durableIsAuthoritative,
   durableMigrateGuest,
   ensurePersonalAccount,
   getPersonalWallet,
@@ -20,8 +21,9 @@ export const runtime = "nodejs";
  * After magic-link sign-in: ensure durable Free account and one-time migrate
  * remaining guest Cookie credits (capped at 10, never paid plan).
  *
- * Cookie session remains the soft-launch generate authority until generate
- * switches to durable wallets; this claim is idempotent and audited.
+ * Guest cookie Free Trial remains until login. After claim, signed-in
+ * Generate uses Supabase wallet when transactionReady (else cookie + shadow).
+ * Migration is idempotent (max 10 guest credits, once per guest hash).
  *
  * Authorization: Bearer <supabase access_token>
  */
@@ -102,7 +104,7 @@ export async function POST(req: Request) {
       ? migrate.data.wallet
       : ensured.data.wallet;
 
-  // Phase C honesty: report store backend (local-file vs supabase), never secrets.
+  // Honesty: report backend + whether Generate uses Supabase (never secrets).
   const personal = await getPersonalWallet(user.id);
   const probe = await probeDurableCreditsStore();
   const backend =
@@ -110,6 +112,11 @@ export async function POST(req: Request) {
     (probe.backend === "supabase" || probe.backend === "local-file"
       ? probe.backend
       : "local-file");
+  const authz = await durableIsAuthoritative();
+  const durableAuthority = authz ? "authoritative" : "shadow";
+  const generateAuthority = authz
+    ? "supabase-wallet"
+    : "cookie-guest-until-rpc-ready";
 
   return NextResponse.json({
     ok: true,
@@ -134,13 +141,15 @@ export async function POST(req: Request) {
       guestSession: publicSession(guest),
       note:
         migrated > 0
-          ? `Moved ${migrated} guest credits into your Free account (one-time).`
+          ? `Moved ${migrated} guest credits into your Free account (one-time, max 10).`
           : "No guest credits migrated (already claimed, empty, or durable balance present).",
     },
     authority: {
-      generate: "cookie-guest-until-durable-switch",
+      generate: generateAuthority,
       durableLedger: backend,
-      durableAuthority: "shadow",
+      durableAuthority,
+      transactionReady: probe.transactionReady === true,
+      schemaReady: probe.schemaReady === true,
     },
   });
 }
@@ -168,6 +177,7 @@ export async function GET(req: Request) {
     (probe.backend === "supabase" || probe.backend === "local-file"
       ? probe.backend
       : "local-file");
+  const authz = await durableIsAuthoritative();
   return NextResponse.json({
     ok: true,
     signedIn: true,
@@ -186,9 +196,11 @@ export async function GET(req: Request) {
         }
       : null,
     authority: {
-      generate: "cookie-guest-until-durable-switch",
+      generate: authz ? "supabase-wallet" : "cookie-guest-until-rpc-ready",
       durableLedger: backend,
-      durableAuthority: "shadow",
+      durableAuthority: authz ? "authoritative" : "shadow",
+      transactionReady: probe.transactionReady === true,
+      schemaReady: probe.schemaReady === true,
     },
   });
 }

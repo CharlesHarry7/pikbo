@@ -76,6 +76,8 @@ export type GenerateErrorBody = {
   error: string;
   code?:
     | "INSUFFICIENT_CREDITS"
+    /** Signed-in wallet authority required but Supabase RPCs unavailable */
+    | "DURABLE_UNAVAILABLE"
     | "INVALID_REQUEST"
     | "IMAGE_TOO_LARGE"
     | "ASSET_NOT_FOUND"

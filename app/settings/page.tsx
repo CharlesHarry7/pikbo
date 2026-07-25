@@ -195,9 +195,9 @@ export default function SettingsPage() {
         <span className="chip">Settings</span>
         <h1 className="mt-3 text-2xl font-bold">Settings</h1>
         <p className="mt-1 text-sm text-[var(--fg-muted)]">
-          Device data & session. Signed-in durable wallets use local file or
-          Supabase Postgres when the T5 migration is applied. Soft-launch live
-          Generate still debits the guest cookie.
+          Device data & session. Guests use cookie Free Trial. Signed-in
+          Generate uses Supabase wallet when credit RPCs are ready
+          (transactionReady); otherwise cookie + shadow ledger.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <Link href="/create" className="btn btn-primary !px-3 !py-1.5 text-xs">
@@ -238,10 +238,11 @@ export default function SettingsPage() {
           <div className="flex justify-between gap-4">
             <span className="text-[var(--fg-muted)]">Credits authority</span>
             <span className="text-right text-xs font-semibold leading-snug">
-              cookie generate
-              {session?.signedIn
-                ? ` · durable ${durableBackend || "pending"} (${durableAuth || "shadow"})`
-                : ""}
+              {!session?.signedIn
+                ? "cookie generate (guest Free Trial)"
+                : durableAuth === "authoritative"
+                  ? `supabase generate · durable ${durableBackend || "supabase"} (authoritative)`
+                  : `cookie generate · durable ${durableBackend || "pending"} (${durableAuth || "shadow"})`}
             </span>
           </div>
           <div className="flex justify-between gap-4">

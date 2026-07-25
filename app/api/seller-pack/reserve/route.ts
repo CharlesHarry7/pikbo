@@ -76,10 +76,15 @@ export async function POST(req: Request) {
     );
   }
 
+  const { durableIsAuthoritative } = await import("@/lib/durableCredits");
+  const authz =
+    Boolean(auth?.id) && (await durableIsAuthoritative());
   return NextResponse.json({
     ok: true,
-    mode: "shadow",
-    authority: "cookie-generate-still-authoritative",
+    mode: authz ? "authoritative-wallet" : "shadow",
+    authority: authz
+      ? "supabase-wallet-for-signed-in"
+      : "cookie-generate-still-authoritative",
     pack: result.data,
     quoteCredits: result.data.quotedCredits,
     childCredits: result.data.childCredits,
