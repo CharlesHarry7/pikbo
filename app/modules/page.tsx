@@ -60,7 +60,7 @@ function ModuleCard({
       className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-[#0c0c10] to-black shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--mint)]/45 hover:shadow-[0_24px_56px_-24px_rgba(200,255,61,0.15)]"
     >
       {poster ? (
-        <div className="relative aspect-[16/10] overflow-hidden bg-black/50">
+        <div className="relative aspect-[3/4] overflow-hidden bg-black/50 sm:aspect-[4/5]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={poster}
@@ -68,11 +68,14 @@ function ModuleCard({
             className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-[1.05]"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
           <span className="absolute left-3 top-3 text-2xl drop-shadow-lg">
             {w.emoji}
           </span>
-          <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1">
+          <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-[var(--mint)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black opacity-0 shadow-[0_0_16px_rgba(200,255,61,0.35)] transition group-hover:opacity-100">
+            Launch
+          </span>
+          <div className="absolute bottom-14 left-3 right-3 flex flex-wrap gap-1">
             <span
               className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
                 isLive
@@ -117,22 +120,29 @@ function ModuleCard({
           </div>
         </div>
       )}
-      <div className="p-5 pt-4">
-        <h3 className="text-lg font-bold tracking-tight transition group-hover:text-[var(--mint)]">
+      <div className={poster ? "p-3 pt-3" : "p-5 pt-4"}>
+        <h3
+          className={`font-bold tracking-tight transition group-hover:text-[var(--mint)] ${
+            poster ? "text-sm sm:text-base" : "text-lg"
+          }`}
+        >
           {w.label}
         </h3>
-        <p className="mt-1.5 text-xs leading-relaxed text-white/50">
+        <p
+          className={`mt-1 leading-relaxed text-white/50 ${
+            poster ? "line-clamp-2 text-[11px]" : "text-xs"
+          }`}
+        >
           {w.blurb}
         </p>
         {w.effect && (
-          <p className="mt-3 text-[10px] text-white/30">
-            Recipe · {w.effect}
-            {w.aspectRatio ? ` · ${w.aspectRatio}` : ""}
-            {poster ? " · Lab still ≠ your upload" : ""}
+          <p className="mt-2 text-[10px] text-white/30">
+            {w.aspectRatio ? `${w.aspectRatio} · ` : ""}
+            Lab still ≠ upload
           </p>
         )}
-        <p className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-[var(--mint)]">
-          {isLive ? "Launch module" : "Open preview"}
+        <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[var(--mint)]">
+          {isLive ? "Launch" : "Preview"}
           <span className="transition group-hover:translate-x-0.5" aria-hidden>
             →
           </span>
@@ -227,11 +237,46 @@ export default function ModulesPage() {
 
       <div className="relative px-3 py-6 sm:px-5">
         <div className="relative mx-auto max-w-[1400px]">
-          <p className="mb-4 max-w-2xl text-sm leading-relaxed text-white/50">
+          <p className="mb-3 max-w-2xl text-sm leading-relaxed text-white/50">
             Yiha-style mini-app shelf: each block is a fixed{" "}
             <b className="text-white/75">video</b> job — photo in, recipe +
             aspect ready, Seedance out. Lab posters are style only.
           </p>
+          <nav
+            aria-label="Suite path"
+            className="mb-5 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-white/50"
+          >
+            <Link
+              href="/create"
+              className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+            >
+              Generate
+            </Link>
+            <span aria-hidden className="text-white/25">
+              →
+            </span>
+            <span className="rounded-full border border-white/20 bg-white/[0.06] px-3 py-1.5 text-white">
+              Modules
+            </span>
+            <span aria-hidden className="text-white/25">
+              →
+            </span>
+            <Link
+              href="/create?mode=seller-pack"
+              className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
+            >
+              Seller Pack
+            </Link>
+            <span aria-hidden className="text-white/25">
+              →
+            </span>
+            <Link
+              href="/library"
+              className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
+            >
+              Library
+            </Link>
+          </nav>
 
           <section>
             <div className="mb-3 flex items-end justify-between gap-3">
@@ -242,7 +287,7 @@ export default function ModulesPage() {
                 One photo · Seedance video · not a stills shop
               </p>
             </div>
-            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {live.map((w) => (
                 <ModuleCard
                   key={w.id}
