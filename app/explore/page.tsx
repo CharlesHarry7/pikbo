@@ -106,8 +106,14 @@ export default async function ExplorePage({
           <div className="flex flex-wrap items-center gap-2">
             <FreeTrialCta path="/explore" variant="primary" />
             <Link
-              href="/flow"
+              href="/create"
               className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-2.5 text-xs font-black text-[#c8ff3d] transition hover:bg-[#c8ff3d]/15"
+            >
+              Generate
+            </Link>
+            <Link
+              href="/flow"
+              className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/80 transition hover:border-white/30"
             >
               Flow
             </Link>
@@ -118,10 +124,10 @@ export default async function ExplorePage({
               Modules
             </Link>
             <Link
-              href="/create"
-              className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/80 transition hover:border-white/30"
+              href="/library"
+              className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/70 transition hover:border-white/30"
             >
-              Generate
+              Library
             </Link>
             <Link
               href="/effects"
@@ -131,13 +137,26 @@ export default async function ExplorePage({
             </Link>
           </div>
         </div>
-        <div className="mx-auto mt-3 flex max-w-7xl flex-wrap gap-x-4 gap-y-1 text-[10px] text-white/35">
-          <span>{projects.length} distinct output files</span>
-          <span>Cached playback · 0 credits</span>
-          <span>Live runs · current 10-credit contract</span>
-          <span>Mobile · one playing clip maximum</span>
-          <span title="Provisional Lab self-check · not external human QA">
-            Lab ≥4 · provisional proof gate
+        <div className="mx-auto mt-3 flex max-w-7xl flex-wrap items-center gap-2 text-[11px] font-semibold text-white/45">
+          <span className="text-[10px] font-normal text-white/30">
+            Path ·
+          </span>
+          <Link href="/create" className="text-[#c8ff3d] hover:underline">
+            Generate
+          </Link>
+          <span aria-hidden className="text-white/20">
+            →
+          </span>
+          <span className="text-white/70">Explore Lab</span>
+          <span aria-hidden className="text-white/20">
+            →
+          </span>
+          <Link href="/library" className="hover:text-white hover:underline">
+            Library
+          </Link>
+          <span className="mx-1 text-white/15">|</span>
+          <span className="text-[10px] font-normal text-white/30">
+            {projects.length} distinct outputs · cached 0 credits · not UGC
           </span>
         </div>
       </header>

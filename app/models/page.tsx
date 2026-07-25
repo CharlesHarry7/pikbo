@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MODELS } from "@/lib/catalog";
+import { DEMO_VIDEOS } from "@/lib/demoVideos";
 
 export const metadata: Metadata = {
   title: "Models · Preview",
@@ -9,6 +10,18 @@ export const metadata: Metadata = {
   alternates: { canonical: "/models" },
   robots: { index: false, follow: false },
 };
+
+/** Lab posters for wired video engines only — never invent Kling/Veo media. */
+function posterForModel(id: string): string | null {
+  const map: Record<string, number> = {
+    "seedance-2": 0,
+    "seedance-mini": 1,
+    "seedance-fast": 2,
+  };
+  const i = map[id];
+  if (i === undefined) return null;
+  return DEMO_VIDEOS[i % DEMO_VIDEOS.length]?.poster ?? null;
+}
 
 export default function ModelsPage() {
   const live = MODELS.filter((m) => m.live);
@@ -46,43 +59,90 @@ export default function ModelsPage() {
           <Link href="/image" className="btn btn-ghost text-sm">
             Flux stills · Preview
           </Link>
-          <Link href="/pricing" className="btn btn-ghost text-sm">
-            Pricing
+          <Link href="/library" className="btn btn-ghost text-sm">
+            Library
           </Link>
         </div>
+
+        <nav
+          aria-label="Suite path"
+          className="mt-5 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-white/50"
+        >
+          <Link
+            href="/create"
+            className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+          >
+            Generate
+          </Link>
+          <span aria-hidden className="text-white/25">
+            →
+          </span>
+          <span className="rounded-full border border-white/20 bg-white/[0.06] px-3 py-1.5 text-white">
+            Models
+          </span>
+          <span aria-hidden className="text-white/25">
+            →
+          </span>
+          <Link
+            href="/library"
+            className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
+          >
+            Library
+          </Link>
+        </nav>
 
         <h2 className="mt-10 mb-4 text-xs font-bold uppercase tracking-wider text-[var(--mint)]">
           Configured · {live.length}
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {live.map((m) => (
-            <Link
-              key={m.id}
-              href={m.href}
-              className="card group overflow-hidden p-0 transition-transform hover:-translate-y-1"
-            >
-              <div className="relative h-28" style={{ background: m.gradient }}>
-                <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-[var(--mint)]">
-                  WIRED
-                </span>
-                {m.tag && (
-                  <span className="absolute right-2 top-2 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-semibold text-white/80">
-                    {m.tag}
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
+          {live.map((m) => {
+            const poster = posterForModel(m.id);
+            return (
+              <Link
+                key={m.id}
+                href={m.href}
+                className="group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 transition hover:-translate-y-1 hover:border-[var(--mint)]/40"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  {poster ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={poster}
+                      alt=""
+                      className="absolute inset-0 h-full w-full object-cover opacity-80 transition duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div
+                      className="absolute inset-0"
+                      style={{ background: m.gradient }}
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                  <span className="absolute left-2 top-2 rounded-full bg-[var(--mint)] px-2 py-0.5 text-[10px] font-black text-black">
+                    WIRED
                   </span>
-                )}
-              </div>
-              <div className="p-4">
-                <h2 className="font-semibold group-hover:text-[var(--mint)]">
-                  {m.name}
-                </h2>
-                <p className="text-[11px] text-[var(--fg-dim)]">{m.vendor}</p>
-                <p className="mt-2 text-xs text-[var(--fg-muted)]">{m.blurb}</p>
-                <p className="mt-3 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]">
-                  Open workspace →
-                </p>
-              </div>
-            </Link>
-          ))}
+                  {m.tag ? (
+                    <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white/80">
+                      {m.tag}
+                    </span>
+                  ) : null}
+                  <div className="absolute inset-x-0 bottom-0 p-3">
+                    <h2 className="text-sm font-bold text-white group-hover:text-[var(--mint)]">
+                      {m.name}
+                    </h2>
+                    <p className="text-[10px] text-white/45">{m.vendor}</p>
+                  </div>
+                </div>
+                <div className="p-3">
+                  <p className="line-clamp-2 text-xs text-white/50">{m.blurb}</p>
+                  <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]">
+                    Open workspace →
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
         </div>
 
         <h2
@@ -91,22 +151,27 @@ export default function ModelsPage() {
         >
           Roadmap · not sold as live
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
           {soon.map((m) => (
             <div
               key={m.id}
-              className="card overflow-hidden p-0 opacity-65"
+              className="overflow-hidden rounded-2xl border border-white/8 bg-white/[0.02] opacity-60"
               aria-disabled
             >
-              <div className="relative h-28" style={{ background: m.gradient }}>
+              <div
+                className="relative aspect-[4/3]"
+                style={{ background: m.gradient }}
+              >
                 <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-white/75">
                   {m.tag ?? "Soon"}
                 </span>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                  <h2 className="text-sm font-bold text-white/90">{m.name}</h2>
+                  <p className="text-[10px] text-white/40">{m.vendor}</p>
+                </div>
               </div>
-              <div className="p-4">
-                <h2 className="font-semibold">{m.name}</h2>
-                <p className="text-[11px] text-[var(--fg-dim)]">{m.vendor}</p>
-                <p className="mt-2 text-xs text-[var(--fg-muted)]">{m.blurb}</p>
+              <div className="p-3">
+                <p className="line-clamp-2 text-xs text-white/40">{m.blurb}</p>
               </div>
             </div>
           ))}

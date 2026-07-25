@@ -2276,6 +2276,48 @@ export function CreateStudio({
                   </p>
                 </div>
 
+                {/* HF post-generate loop: Library · pack · remake (honest doors only) */}
+                {status === "done" && videoUrl ? (
+                  <nav
+                    aria-label="After generate"
+                    className="mx-auto mt-3 flex max-w-md flex-wrap items-center justify-center gap-1.5"
+                  >
+                    <Link
+                      href="/library"
+                      className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-1.5 text-[11px] font-bold text-[var(--mint)] hover:bg-[var(--mint)]/20"
+                    >
+                      Library
+                    </Link>
+                    <Link
+                      href="/create?mode=seller-pack"
+                      className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[11px] font-bold text-white/75 hover:border-white/30"
+                    >
+                      Seller Pack
+                    </Link>
+                    <Link
+                      href="/flow"
+                      className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[11px] font-bold text-white/75 hover:border-white/30"
+                    >
+                      Flow
+                    </Link>
+                    <Link
+                      href="/modules"
+                      className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[11px] font-bold text-white/75 hover:border-white/30"
+                    >
+                      Modules
+                    </Link>
+                    {!demo ? (
+                      <Link
+                        href="/library"
+                        className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[11px] font-bold text-white/55 hover:border-white/30"
+                        title="Publish live clips from Library when signed in"
+                      >
+                        Publish path
+                      </Link>
+                    ) : null}
+                  </nav>
+                ) : null}
+
                 {/* Delivery pack — interactive ticks (session-local, first principles P4) */}
                 <DeliveryChecklist
                   className="mx-auto mt-3 max-w-md"
