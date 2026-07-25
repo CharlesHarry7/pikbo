@@ -20,10 +20,13 @@ Newest first. One block per meaningful landing.
 - **Still 9 URLs** (`COLD_START_INDEX_PATHS` unchanged).
 
 #### Tests
-- _(fill after verify)_ lint · typecheck · build · link-check · critical-path
+- lint 0 errors · typecheck PASS · build PASS · link-check PASS · critical-path PASS
+- sitemap <url> count = **9**
+- homepage VideoObject uploadDate = `2026-07-20T00:00:00Z`
+- robots.txt: Preview paths crawlable (not dual-blocked)
 
 #### Commit
-- _(fill SHA)_
+- `a72d597`
 
 #### Boss
 **Deploy then open Search Console → click “验证修复” for the VideoObject uploadDate issue.**
