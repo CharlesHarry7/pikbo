@@ -35,7 +35,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T2 | Real fal sample clips / homepage demos | GPT | done | agent/gpt/homepage-demos | 6 original encoded demos; cached/no FAL cost; verified fal renders can replace assets later |
 | T3 | Keyword + preset expansion (long-tail SEO) | Claude | done | agent/claude/seo-keywords | +use-cases + toy-types |
 | T4 | Stripe webhook (renew/cancel plan) | Grok | done | agent/grok/ship-billing-launch | webhook + confirm + entitlements |
-| T5 | Supabase auth + durable credits | Grok | doing | agent/grok/final-takeover | SQL migration + pure engine + local adapter + smoke tests landed; Supabase Auth UI/wire blocked on keys (see BLOCKERS_REQUEST) |
+| T5 | Supabase auth + durable credits | Grok | doing | agent/grok/durable-auth-ci-cutover | Wave C: transactional RPCs + fail-closed + signed-in Generate cutover in code. **review only after** backend=supabase, transactionReady=true, signed-in Generate uses DB, concurrency smoke green. Boss must apply both SQL migrations. |
 | T-PHASE-D | Local async job ledger + controlled download API | Grok | review | main | process-memory generations + /api/downloads gate; durable queue still Supabase |
 | T6 | Server-side free watermark (ffmpeg) | Grok | **blocked** | agent/grok/t6-watermark-worker-v1 | Fail-closed skeleton on main; Free raw blocked until owned derivative + ffmpeg proof |
 | T7 | Private Vercel RC + later domain pikbo.ai | Grok | blocked | agent/grok/final-takeover | Prepare private preview; Vercel login and public DNS require boss authorization |
@@ -65,7 +65,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T8 | Batch generate for Shop plan | Grok | review | agent/grok/t8-campaign-recovery | Current-device/session Seller Pack recovery reconciles existing generation jobs; no cloud/durable claim. T5 worker remains blocked |
 | T9 | Effect preset expansion (studio + SEO landing) | Claude | done | agent/claude/seo-presets | +3 effects |
 | T11 | Guides: informational long-tail content | Claude | done | agent/claude/guides | 3 how-to/tips/ideas articles at /guides; Article+FAQ JSON-LD; cross-linked to effects |
-| T23 | CI build + conflict-marker gate | Grok | review | main | Workflow template `docs/ci/github-actions-ci.yml` (engine-smoke · lint · typecheck · build). OAuth token lacks `workflow` scope so cannot push under `.github/workflows/` yet — boss: copy + push with workflow scope |
+| T23 | CI build + conflict-marker gate | Grok | review | agent/grok/durable-auth-ci-cutover | Wave C: real `.github/workflows/ci.yml` — single step start+link-check+critical-path, no `\|\| true`, durable-credits-smoke. **done only with green Actions URL** in HANDOFF |
 | T24 | Generate honesty: demo vs live + regen/refund copy | Grok | review | main | Wave B: lastRequestCreditState, Retry/Variant, Free download gate, server costCredits/effect echo |
 | T25 | Homepage truth labels + overclaim sweep | GPT | done | agent/gpt/claude-copy-audit | PR #6; cached/shared previews and provider-gated paths labeled |
 | T26 | Unit economics doc + free-tier recommendation | GPT | done | agent/gpt/convert-truth | Superseded by C1–C5: implemented Free Mini 5s trial; current 1 / 5 / 15 allowances |
@@ -73,7 +73,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T28 | Pricing conversion copy A/B | GPT | done | agent/gpt/pricing-mobile | Outcome default; `?copy=cost` cost-control variant; C1–C5 aligns active 1 / 5 / 15 contract |
 | T29 | Homepage first-screen 390px acceptance + polish | GPT | done | agent/gpt/pricing-mobile | No x-overflow; primary CTA visible; duplicate home floating CTA removed; accessible demo controls |
 | T30 | Pricing UI matches active credit contract | GPT | done | agent/gpt/pricing-truth-main | Free 1 / Creator ~5 / Shop ~15; billing gate and future model-aware weights remain explicit |
-| T5 | Supabase auth + durable credits | Grok | doing | agent/grok/final-takeover | Schema+engine landed; Supabase keys in BLOCKERS_REQUEST; **blocks serious Stripe** |
+| T5 | Supabase auth + durable credits | Grok | doing | agent/grok/durable-auth-ci-cutover | Wave C: transactional RPCs + fail-closed + signed-in Generate cutover in code. **review only after** backend=supabase, transactionReady=true, signed-in Generate uses DB, concurrency smoke green. Boss must apply both SQL migrations. |
 | T6 | Server-side free watermark (ffmpeg) | Grok | **blocked** | agent/grok/t6-watermark-worker-v1 | Fail-closed skeleton on main; Free raw blocked until owned derivative + ffmpeg proof |
 
 ---

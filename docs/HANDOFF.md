@@ -172,6 +172,52 @@ Newest first. One block per meaningful landing.
 - Library session jobs: errorCode + refund unconfirmed; empty-state copy no longer overclaims refunds.
 - Verified: typecheck · engine-smoke.
 
+### 2026-07-26 — [grok] Wave C: durable auth · transactional credits · CI honesty
+
+**Branch:** `agent/grok/durable-auth-ci-cutover` (rebased onto current `main`; **do not** reuse `agent/grok/final-takeover`)
+
+#### Implemented
+1. **P0-1 CI false-green:** Honest CI template at `docs/ci/github-actions-ci.yml` (single step start + link-check + critical-path, **no `|| true`** on critical-path). OAuth lacks `workflow` scope so live `.github/workflows/ci.yml` cannot be updated by agent — boss must copy template. `critical-path.sh` accepts `BASE_URL`. `durable-credits-smoke` in package.json.
+2. **P0-2 schemaReady:** `lib/supabase/env.ts` normalizes project URL (strip `/rest/v1|/auth/v1|/storage/v1`) — root cause of `Invalid path specified in request URL`. Probe returns codes only (`SCHEMA_MISSING|RPC_MISSING|URL_INVALID|…`), host desensitized; 4s probe timeout.
+3. **P0-3 transactional RPCs:** `supabase/migrations/20260726120000_t5_credit_rpcs.sql` — `pikbo_probe_ready`, `pikbo_ensure_personal_account`, `pikbo_grant_free_allowance`, `pikbo_reserve_credits`, `pikbo_settle_credits`, `pikbo_release_credits`, `pikbo_migrate_guest_credits` (FOR UPDATE, idempotent). JS adapter **RPC only** (`supabaseStore.ts`).
+4. **P0-4 fail closed:** production / `PIKBO_DURABLE_BACKEND=supabase` / `REQUIRE_DURABLE_CREDITS=1` never silent local-file dual ledger. `ready.durableCredits` only when backend=supabase + transactionReady.
+5. **P0-5 signed-in SoT:** Generate uses Supabase wallet when `durableIsAuthoritative()`; guests keep Cookie Free Trial; migrate max 10 once. Profile/me/claim/settings authority strings match.
+6. **P0-6 tests:** `npm run durable-credits-smoke` (concurrency 6×10@50, idempotency, settle/release replay, Seller Pack 30→20+10, SQL contracts, CI no mask, fail-closed).
+
+#### Migration required (boss)
+Apply in Supabase SQL Editor, in order:
+1. `20260723120000_t5_auth_credits.sql`
+2. `20260726120000_t5_credit_rpcs.sql`
+
+Email + localhost callback already configured — **not** blockers.
+
+#### Gates
+- **T5 → review** only when health: backend=supabase, transactionReady=true, signed-in Generate uses DB wallet, concurrency smoke green.
+- **T23 → done** only with green GitHub Actions URL after boss copies `docs/ci/github-actions-ci.yml` → `.github/workflows/ci.yml` (workflow scope).
+- **T6** stays **blocked** (fail-closed skeleton on main; no fake file watermark).
+
+#### Verify (local)
+```
+npm run check:conflicts
+npm run engine-smoke
+npm run durable-credits-smoke
+npm run lint
+npm run typecheck
+npm run build
+# then strict (no || true):
+npm run start -- --port 3456 &
+BASE_URL=http://127.0.0.1:3456 npm run link-check
+BASE_URL=http://127.0.0.1:3456 npm run critical-path
+```
+
+#### CI URL
+- _(fill after rebase push / green Actions run)_
+
+#### Commit SHAs
+- _(fill after rebase completes)_
+
+---
+
 ### 2026-07-25 — [grok] Still Studio imageClient + FailPanel Retry-After
 - `lib/imageClient`: postImageWithRetry · PROVIDER_NETWORK auto-retry · refund unconfirmed.
 - Image page uses client + FailPanel countdown; smoke locks FailPanel + imageClient.
