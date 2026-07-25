@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Suite chrome product-first + Preview chips
+- GenerateSuiteChrome: Generate · Seller · Recipes · Modules · Library first.
+- Flow / Cinema / Stills last with Preview badge + muted chrome; i18n blurbs honest.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-26 — [grok] Cold-start /create noindex + Preview door labels
 - `/create` + Seller Pack: `CONCEPT_ROBOTS` (tool, not rank landing; 9-URL budget).
 - CommandPalette + Footer: Preview/Local tags on Flow/Cinema/Image/Batch/Assets.
@@ -50,6 +55,11 @@ Newest first. One block per meaningful landing.
 ### 2026-07-26 — [grok] Cinema AfterPath + mobile suite bar + HowTo steps
 - Cinema Preview: GenerateAfterPath + Library; mobile bar hides image/cinema, Seller Pack on Library.
 - LandingHowItWorks: Photo → Recipe → Video draft + HowTo JSON-LD on tools/for with tools.
+- Verified: typecheck · engine-smoke.
+
+### 2026-07-26 — [grok] Batch/Landing TIMEOUT settlement parity
+- BatchStudio + LandingToolPanel: requestCreditStateFromFailure for child/landing fails.
+- generateClient: network/abort always refundUnconfirmed; FailPanel creditState on Landing.
 - Verified: typecheck · engine-smoke.
 
 ### 2026-07-26 — [grok] Create TIMEOUT settlement + residual refund honesty

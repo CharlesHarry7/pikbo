@@ -622,6 +622,7 @@ assert.match(batchStudio, /status:\s*refunded\s*\?\s*"refunded"/);
 assert.match(batchStudio, /retryJob/);
 assert.match(batchStudio, /not_started/);
 assert.match(batchStudio, /refund unconfirmed/);
+assert.match(batchStudio, /requestCreditStateFromFailure/);
 assert.match(batchStudio, /Download blocked · Free raw/);
 
 // ── Wave B trust ──────────────────────────────────────────────────────────
@@ -2361,6 +2362,14 @@ assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /failRetryAfterSec|retryAfterSec=/
 );
+assert.match(
+  fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
+  /failCreditState|requestCreditStateFromFailure/
+);
+// Network/abort client fails always carry refundUnconfirmed
+assert.match(gen, /refundUnconfirmed:\s*true/);
+assert.match(gen, /NETWORK_ERROR/);
+assert.match(gen, /REQUEST_CANCELED/);
 // Still Studio FailPanel Retry-After + refund unconfirmed (parity with Create)
 const imagePageSrc = fs.readFileSync(join(root, "app/image/page.tsx"), "utf8");
 assert.match(imagePageSrc, /GenerateFailPanel/);
@@ -2714,12 +2723,16 @@ assert.doesNotMatch(
   /titleDefault:\s*["']AI Toy Video Generator from One Photo/
 );
 assert.match(siteSrc, /rankToolPath|\/tools\/ai-toy-video-generator/);
-// Video modes before image/stills in MODE_DEFS (suiteChromeSrc declared above)
+// Product path before Preview doors in MODE_DEFS (suiteChromeSrc declared above)
 const genIdx = suiteChromeSrc.indexOf('id: "generate"');
+const sellerIdx = suiteChromeSrc.indexOf('id: "seller"');
 const flowIdx = suiteChromeSrc.indexOf('id: "flow"');
 const imageIdx = suiteChromeSrc.indexOf('id: "image"');
-assert.ok(genIdx > 0 && flowIdx > genIdx, "flow after generate");
-assert.ok(imageIdx > flowIdx, "stills mode after video suite doors");
+assert.ok(genIdx > 0 && sellerIdx > genIdx, "seller pack after generate");
+assert.ok(flowIdx > sellerIdx, "flow preview after product modes");
+assert.ok(imageIdx > flowIdx, "stills preview last among suite doors");
+assert.match(suiteChromeSrc, /preview:\s*true/);
+assert.match(suiteChromeSrc, /suite\.preview/);
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /Optional support|not the product|photo → Seedance/

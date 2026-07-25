@@ -123,7 +123,8 @@
 82. [x] imageClient postImageWithRetry · Still FailPanel Retry-After · PROVIDER_NETWORK auto-retry
 83. [x] PROVIDER_TIMEOUT auto-retry (gen+image) · Library TIMEOUT refund-unconfirmed honesty
 84. [x] Create settlement TIMEOUT→refund unconfirmed · generateClient flag · residual refund copy
-85. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+85. [x] Batch/Landing TIMEOUT settlement parity · network abort refundUnconfirmed
+86. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -137,8 +138,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Create: TIMEOUT/refundUnconfirmed → settlement chip (never claim restored).  
-- generateClient echoes refundUnconfirmed; residual “refund credits” copy → when confirmed.  
+- Batch + Landing use requestCreditStateFromFailure (TIMEOUT/network → unconfirmed).  
+- generateClient network/abort always sets refundUnconfirmed.  
 - Mode A still needs boss Vercel login · SQL · T6 bake worker.
 
 ---

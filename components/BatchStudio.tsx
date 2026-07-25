@@ -45,7 +45,11 @@ import {
   sellerPackQuoteLabel,
   sellerPackShortfall,
 } from "@/lib/sellerPackQuote";
-import { canDownloadResult, isSafeDeliverableUrl } from "@/lib/createTrust";
+import {
+  canDownloadResult,
+  isSafeDeliverableUrl,
+  requestCreditStateFromFailure,
+} from "@/lib/createTrust";
 import { sellerPackPostItems } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
@@ -326,7 +330,14 @@ export function BatchStudio({
         emitSessionRefresh();
       }
       const refunded = result.creditsRefunded === true;
-      const ambiguous = result.status === 0;
+      // TIMEOUT / network / abort → unconfirmed; confirmed refund → restored.
+      const settlement = requestCreditStateFromFailure({
+        creditsRefunded: result.creditsRefunded,
+        refundUnconfirmed: result.refundUnconfirmed,
+        status: result.status,
+        code: result.code,
+      });
+      const unconfirmed = settlement === "refund unconfirmed";
       // Phase C: release 10 from Seller Pack shadow reservation on failed child.
       // Failures only occur on the live debit path (demo never debits).
       if (packReservationId) {
@@ -344,11 +355,14 @@ export function BatchStudio({
           errorCode: result.code,
           creditState: refunded
             ? "10 restored"
-            : ambiguous
+            : unconfirmed
               ? "refund unconfirmed"
-              : "not charged",
+              : settlement === null
+                ? "not charged"
+                : settlement,
         },
-        stopQueue: result.fatal || result.paywall || ambiguous,
+        // Unconfirmed network/TIMEOUT still stops the pack — operator should check balance.
+        stopQueue: result.fatal || result.paywall || unconfirmed,
         recoveredFromAssetMiss: result.code === "ASSET_NOT_FOUND",
         retryAfterSec:
           typeof result.retryAfterSec === "number" && result.retryAfterSec > 0

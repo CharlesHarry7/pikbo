@@ -220,6 +220,8 @@ export async function postGenerate(
         : e instanceof Error
           ? e.message || "Network error — check connection and balance"
           : "Network error — check connection and balance",
+      // Client never saw a typed body — do not claim restore.
+      refundUnconfirmed: true,
       fatal: false,
       paywall: false,
     };
@@ -496,6 +498,7 @@ export async function postGenerateWithRetry(
           code: "REQUEST_CANCELED",
           error:
             "Request canceled — if credits were debited, check balance or retry (refund unconfirmed until server confirms)",
+          refundUnconfirmed: true,
           fatal: false,
           paywall: false,
         };

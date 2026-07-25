@@ -30,6 +30,7 @@ import {
   canDownloadResult,
   freeLiveDownloadBlockReason,
   isSafeDeliverableUrl,
+  requestCreditStateFromFailure,
 } from "@/lib/createTrust";
 import { deliveryItemsForJob } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
@@ -64,6 +65,10 @@ export function LandingToolPanel({
   const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
     null
   );
+  /** FailPanel settlement honesty (TIMEOUT / network → unconfirmed). */
+  const [failCreditState, setFailCreditState] = useState<
+    null | "10 restored" | "refund unconfirmed"
+  >(null);
   const [demo, setDemo] = useState(false);
   const [watermark, setWatermark] = useState(true);
   const [session, setSession] = useState<MeResponse | null>(null);
@@ -154,6 +159,7 @@ export function LandingToolPanel({
     setImage(dataUrl);
     setAssetId(null);
     setError(null);
+    setFailCreditState(null);
     setVideoUrl(null);
     setStatus("idle");
     try {
@@ -207,6 +213,8 @@ export function LandingToolPanel({
     const freeTier = session?.plan === "free" || session?.watermark;
     const resolution = freeTier ? "480p" : "720p";
     setError(null);
+    setFailRetryAfterSec(null);
+    setFailCreditState(null);
     setVideoUrl(null);
     setRequestId(null);
     setElapsed(0);
@@ -259,6 +267,17 @@ export function LandingToolPanel({
       setFailRetryAfterSec(
         typeof result.retryAfterSec === "number" && result.retryAfterSec > 0
           ? result.retryAfterSec
+          : null
+      );
+      const settlement = requestCreditStateFromFailure({
+        creditsRefunded: result.creditsRefunded,
+        refundUnconfirmed: result.refundUnconfirmed,
+        status: result.status,
+        code: result.code,
+      });
+      setFailCreditState(
+        settlement === "10 restored" || settlement === "refund unconfirmed"
+          ? settlement
           : null
       );
       if (result.paywall) {
@@ -510,7 +529,7 @@ export function LandingToolPanel({
             <div className="space-y-2">
               <p className="rounded-lg border border-amber-300/25 bg-amber-300/[0.06] px-3 py-2 text-[11px] leading-snug text-amber-100">
                 Free Mini trial exhausted · cached Lab demos still free · failed
-                live jobs still refund when credits return.
+                live jobs restore credits when confirmed.
               </p>
               <Link href="/pricing" className="btn btn-primary w-full text-center">
                 Compare plans
@@ -542,6 +561,8 @@ export function LandingToolPanel({
             <GenerateFailPanel
               message={error}
               compact
+              creditState={failCreditState}
+              creditsRestored={failCreditState === "10 restored"}
               showModules={false}
               showRecipes={false}
               showLabSample
@@ -550,6 +571,7 @@ export function LandingToolPanel({
                 image && !busy
                   ? () => {
                       setFailRetryAfterSec(null);
+                      setFailCreditState(null);
                       void generate();
                     }
                   : undefined
