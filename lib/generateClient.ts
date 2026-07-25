@@ -428,10 +428,12 @@ export function mintGenerateIdempotencyKey(): string {
 
 /**
  * POST generate with automatic recovery:
- * - one retry on RATE_LIMITED / PROVIDER_RATE_LIMIT / JOB_IN_FLIGHT / PROVIDER_NETWORK
+ * - one retry on RATE_LIMITED / PROVIDER_RATE_LIMIT / JOB_IN_FLIGHT /
+ *   PROVIDER_NETWORK / PROVIDER_TIMEOUT (transient provider blips)
  * - one ASSET_NOT_FOUND recovery: drop expired assetId and re-POST inline still
  *   (Phase D local assets TTL ~15m / process restart — Seller Pack mid-queue)
  * - stable idempotencyKey for the whole attempt (network retry = no double debit)
+ * - never auto-retry TIMEOUT (ledger kill) — client must mint a new key
  */
 export async function postGenerateWithRetry(
   body: GenerateRequestBody,
@@ -460,6 +462,7 @@ export async function postGenerateWithRetry(
     (result.code === "RATE_LIMITED" ||
       result.code === "PROVIDER_RATE_LIMIT" ||
       result.code === "PROVIDER_NETWORK" ||
+      result.code === "PROVIDER_TIMEOUT" ||
       result.code === "JOB_IN_FLIGHT")
   ) {
     attempt += 1;
@@ -469,7 +472,9 @@ export async function postGenerateWithRetry(
         ? Math.min(8, Math.max(2, result.retryAfterSec ?? 2))
         : result.code === "PROVIDER_NETWORK"
           ? Math.min(12, Math.max(3, result.retryAfterSec ?? 8))
-          : (result.retryAfterSec ?? 8);
+          : result.code === "PROVIDER_TIMEOUT"
+            ? Math.min(15, Math.max(5, result.retryAfterSec ?? 5))
+            : (result.retryAfterSec ?? 8);
     try {
       await sleep(Math.min(60, Math.max(1, waitSec)) * 1000, opts?.signal);
     } catch (e) {

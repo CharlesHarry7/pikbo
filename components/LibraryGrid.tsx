@@ -35,6 +35,9 @@ type SessionJob = {
   downloadAllowed?: boolean;
   videoUrl?: string;
   creditsOutcome?: string;
+  /** Server ledger code — TIMEOUT / CANCELED / provider codes. */
+  errorCode?: string;
+  creditsRefunded?: boolean;
   requestId?: string;
   error?: string;
   createdAt?: string;
@@ -118,6 +121,7 @@ function SessionJobsPanel({
             Local ledger from Generate (not multi-node cloud). Device Library
             below is this browser only — empty until a clip is saved here.
             Cancel marks the ledger only; in-flight fal may still finish.
+            TIMEOUT rows show refund unconfirmed (check balance) — not a confirmed restore.
             {timeoutMin ? (
               <span className="text-[var(--fg-dim)]">
                 {" "}
@@ -179,6 +183,7 @@ function SessionJobsPanel({
                 {j.effect}{" "}
                 <span className={`font-normal ${statusTone(j.status)}`}>
                   · {j.status}
+                  {j.errorCode ? ` · ${j.errorCode}` : ""}
                   {j.creditsOutcome ? ` · ${j.creditsOutcome}` : ""}
                 </span>
               </p>
@@ -189,10 +194,18 @@ function SessionJobsPanel({
                 {j.resolution ? ` · ${j.resolution}` : ""}
                 {j.model ? ` · ${j.model.split("/").pop()}` : ""}
                 {j.watermark ? " · on-player mark" : ""}
+                {j.creditsRefunded === true
+                  ? " · 10 restored"
+                  : j.creditsOutcome === "refund unconfirmed" ||
+                      j.errorCode === "TIMEOUT"
+                    ? " · refund unconfirmed"
+                    : ""}
               </p>
               {j.error ? (
                 <p className="mt-0.5 truncate text-[10px] text-amber-100/80">
-                  {j.error}
+                  {j.errorCode === "TIMEOUT"
+                    ? "Timed out — Retry on Create (mint new attempt). Check balance if credits were debited."
+                    : j.error}
                 </p>
               ) : null}
             </div>
@@ -205,6 +218,17 @@ function SessionJobsPanel({
                   ? "Retry recipe"
                   : "Use recipe"}
               </Link>
+              {(j.status === "failed" || j.status === "canceled") &&
+              (j.errorCode === "TIMEOUT" ||
+                j.creditsOutcome === "refund unconfirmed") ? (
+                <Link
+                  href="/create?try=1&sample=scout"
+                  className="text-white/55 hover:text-white hover:underline"
+                  title="Lab sample · 0 credits if live is blocked"
+                >
+                  Lab sample
+                </Link>
+              ) : null}
               {isCancellableSessionJob(j.status) ? (
                 <button
                   type="button"
@@ -653,7 +677,8 @@ export function LibraryGrid() {
               </Link>
             </div>
             <p className="mt-4 max-w-xs text-[10px] text-[var(--fg-dim)]">
-              Clips land here after success · failed live jobs refund credits
+              Clips land here after success · failed live jobs usually restore
+              credits · TIMEOUT stays refund unconfirmed
             </p>
           </div>
         </div>

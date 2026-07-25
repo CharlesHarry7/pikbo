@@ -159,6 +159,13 @@ const require = createRequire(import.meta.url);
 const fs = require("node:fs");
 const gen = fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8");
 assert.match(gen, /export async function postGenerateWithRetry/);
+// Transient provider timeout is auto-retried once; ledger TIMEOUT is not.
+assert.match(gen, /PROVIDER_TIMEOUT/);
+assert.match(
+  gen,
+  /PROVIDER_NETWORK[\s\S]{0,120}PROVIDER_TIMEOUT|PROVIDER_TIMEOUT[\s\S]{0,120}JOB_IN_FLIGHT/
+);
+assert.match(gen, /never auto-retry TIMEOUT|mint a new key/);
 assert.match(gen, /historyFieldsFromSuccess/);
 assert.match(gen, /ASSET_NOT_FOUND/);
 assert.match(gen, /fallbackImage/);
@@ -2242,8 +2249,18 @@ const imageClientSrc = fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8")
 assert.match(imageClientSrc, /export async function postImageWithRetry/);
 assert.match(imageClientSrc, /mintImageIdempotencyKey/);
 assert.match(imageClientSrc, /PROVIDER_NETWORK/);
+assert.match(imageClientSrc, /PROVIDER_TIMEOUT/);
 assert.match(imageClientSrc, /refundUnconfirmed/);
 assert.match(imageClientSrc, /interpretImageResponse/);
+// Library session jobs: TIMEOUT ≠ confirmed refund
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /refund unconfirmed|errorCode === "TIMEOUT"/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /failed live jobs refund credits$/
+);
 assert.match(
   fs.readFileSync(join(root, "app/auth/callback/layout.tsx"), "utf8"),
   /PRIVATE_ROBOTS|index:\s*false/
@@ -2916,6 +2933,27 @@ assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /GenerateAfterPath/
 );
+// Cinema Preview closed-loop suite chips (not a dead-end director board)
+assert.match(
+  fs.readFileSync(join(root, "app/cinema/page.tsx"), "utf8"),
+  /GenerateAfterPath/
+);
+// Library session jobs: TIMEOUT / refund unconfirmed honesty + Retry recipe
+const libraryGridSrc = fs.readFileSync(
+  join(root, "components/LibraryGrid.tsx"),
+  "utf8"
+);
+assert.match(libraryGridSrc, /errorCode/);
+assert.match(libraryGridSrc, /refund unconfirmed|TIMEOUT/);
+assert.match(libraryGridSrc, /Retry recipe/);
+assert.match(libraryGridSrc, /Lab sample|try=1&sample=scout/);
+// Mobile suite bar: hide image/cinema; Library shows Seller Pack
+const mobileBarSrc = fs.readFileSync(
+  join(root, "components/MobileGenerateBar.tsx"),
+  "utf8"
+);
+assert.match(mobileBarSrc, /\/image|\/cinema/);
+assert.match(mobileBarSrc, /seller-pack|Seller Pack/);
 assert.match(
   fs.readFileSync(join(root, "components/LibraryStorageBanner.tsx"), "utf8"),
   /process-memory|Session jobs|Device/

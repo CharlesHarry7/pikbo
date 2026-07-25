@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] PROVIDER_TIMEOUT auto-retry + Library TIMEOUT honesty
+- generateClient + imageClient: one auto-retry on PROVIDER_TIMEOUT (not ledger TIMEOUT).
+- Library session jobs: errorCode + refund unconfirmed; empty-state copy no longer overclaims refunds.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-25 — [grok] Still Studio imageClient + FailPanel Retry-After
 - `lib/imageClient`: postImageWithRetry · PROVIDER_NETWORK auto-retry · refund unconfirmed.
 - Image page uses client + FailPanel countdown; smoke locks FailPanel + imageClient.

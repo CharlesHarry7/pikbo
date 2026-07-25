@@ -264,9 +264,10 @@ export async function postImage(
 }
 
 /**
- * POST still with one automatic recovery on rate / in-flight / network blips.
+ * POST still with one automatic recovery on rate / in-flight / network / timeout.
  * Stable idempotencyKey for the whole attempt (no double Flux debit).
  * User Retry must call again without reusing a failed key (mint fresh).
+ * Never auto-retries ledger TIMEOUT — mint a new key after kill recovery.
  */
 export async function postImageWithRetry(
   body: { prompt: string; aspect?: string; idempotencyKey?: string },
@@ -287,6 +288,7 @@ export async function postImageWithRetry(
     (result.code === "RATE_LIMITED" ||
       result.code === "PROVIDER_RATE_LIMIT" ||
       result.code === "PROVIDER_NETWORK" ||
+      result.code === "PROVIDER_TIMEOUT" ||
       result.code === "JOB_IN_FLIGHT")
   ) {
     attempt += 1;
@@ -295,7 +297,9 @@ export async function postImageWithRetry(
         ? Math.min(8, Math.max(2, result.retryAfterSec ?? 2))
         : result.code === "PROVIDER_NETWORK"
           ? Math.min(12, Math.max(3, result.retryAfterSec ?? 8))
-          : (result.retryAfterSec ?? 8);
+          : result.code === "PROVIDER_TIMEOUT"
+            ? Math.min(15, Math.max(5, result.retryAfterSec ?? 5))
+            : (result.retryAfterSec ?? 8);
     try {
       await sleep(Math.min(60, Math.max(1, waitSec)) * 1000, opts?.signal);
     } catch (e) {

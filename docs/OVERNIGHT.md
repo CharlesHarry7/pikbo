@@ -121,7 +121,8 @@
 80. [x] Image TIMEOUT sweep + HEAD open probe · honest JOB_IN_FLIGHT Retry-After after crash
 81. [x] Generate TIMEOUT/PROVIDER_NETWORK honesty · ledger Retry-After after crash · refundUnconfirmed echo
 82. [x] imageClient postImageWithRetry · Still FailPanel Retry-After · PROVIDER_NETWORK auto-retry
-83. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+83. [x] PROVIDER_TIMEOUT auto-retry (gen+image) · Library TIMEOUT refund-unconfirmed honesty
+84. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -135,8 +136,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Still Studio: `lib/imageClient` + FailPanel countdown · auto-retry rate/network/in-flight.  
-- One idempotencyKey per attempt (no double Flux debit); refund unconfirmed honesty.  
+- postGenerate/ImageWithRetry: one PROVIDER_TIMEOUT retry (ledger TIMEOUT never auto-retried).  
+- Library session jobs surface errorCode + refund unconfirmed on TIMEOUT.  
 - Mode A still needs boss Vercel login · SQL · T6 bake worker.
 
 ---
