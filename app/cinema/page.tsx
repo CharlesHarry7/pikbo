@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
+import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { PRESETS } from "@/lib/presets";
 import { viralName } from "@/lib/viralNames";
@@ -121,21 +122,28 @@ export default function CinemaPage() {
               separate offline renderer
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/create" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-              Generate
-            </Link>
-            <Link href="/flow" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-              Flow
-            </Link>
-            <Link href="/modules" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-              Modules
-            </Link>
-            <FreeTrialCta
-              path="/cinema"
-              variant="ghost"
-              className="btn btn-ghost !px-3 !py-1.5 text-xs"
-            />
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
+              <Link
+                href="/create"
+                className="btn btn-ghost !px-3 !py-1.5 text-xs"
+              >
+                Generate
+              </Link>
+              <Link
+                href="/library"
+                className="btn btn-ghost !px-3 !py-1.5 text-xs"
+              >
+                Library
+              </Link>
+              <FreeTrialCta
+                path="/cinema"
+                variant="ghost"
+                className="btn btn-ghost !px-3 !py-1.5 text-xs"
+                hideClipsChip
+              />
+            </div>
+            <GenerateAfterPath compact demo className="justify-end" />
           </div>
         </div>
       </div>

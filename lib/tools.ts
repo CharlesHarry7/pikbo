@@ -597,29 +597,39 @@ export const TOOLS: Tool[] = [
     slug: "blind-box-reveal-video-maker",
     emoji: "📦",
     label: "Blind box reveal",
+    /**
+     * Canonical tool job: single-photo reveal / unboxing clip maker.
+     * Brand campaign SEO lives on /for/blind-box-brand-marketing (no duplicate page).
+     * Original designer-toy / indie blind-box stills only — no franchise names.
+     */
     h1: "Blind Box Reveal Video Maker From One Photo",
     seoTitle: "Blind Box Reveal Video Maker | Pikbo",
     seoDescription:
       "Create a blind box reveal clip from one figure photo for TikTok and drops. Free Mini trial with honest limits.",
     intro:
-      "Reveal energy sells the dopamine of a pull. Pikbo drafts an unboxing-style clip from one photo of a toy you own — for drops, restocks, and short-form hooks.",
+      "Reveal energy sells the dopamine of a pull. Upload one photo of an original or rights-owned blind-box figure (not a selfie) and draft an unboxing-style short for TikTok, Reels, or restock posts.",
     body: [
-      "Lead with the first second: lid motion or mystery light works better than a slow fade.",
-      "Use vertical recipes for TikTok/Reels. Keep Free Mini caps in mind (5s · 480p · mark).",
-      "Brand teams: draft teasers before a drop; collectors: flex a pull. Rights still required on upload.",
-      "Pair with the blind-box brand /for page and TikTok Shop use case for channel-specific copy.",
+      "This tool page owns the “make a reveal clip from one photo” job. Brand-wide drop campaigns and series teasers belong on /for/blind-box-brand-marketing — same engine, different intent, one canonical each.",
+      "Lead with the first second: lid motion or mystery light works better than a slow fade. Use vertical recipes for TikTok/Reels. Keep Free Mini caps in mind (5s · 480p · mark).",
+      "Collectors flex a pull; small shops draft restock hooks. Always confirm you own the photo and the product rights before live generate.",
+      "Channel SEO (TikTok Shop, Etsy) stays on /for/* platform pages. Link out for distribution; do not re-title this tool as a brand marketing page.",
     ],
     keywords: [
-      "blind box reveal video",
-      "blind box unboxing video maker",
-      "mystery box video generator",
+      "blind box reveal video maker",
+      "blind box unboxing video from photo",
+      "indie blind box reveal clip",
+      "figure pull video from one photo",
     ],
     primaryEffect: "blind-box-unboxing",
     effects: ["blind-box-unboxing", "mystery-box-reveal", "paparazzi-flash"],
     faq: [
       {
+        q: "Is this the same as blind box brand marketing?",
+        a: "No. This page is the reveal-clip tool. Brand drop campaigns use /for/blind-box-brand-marketing. Both deep-link Create; each keeps one primary keyword job.",
+      },
+      {
         q: "Can I use a stock unbox template?",
-        a: "Recipes are toy-native templates. Your photo is the product reference — review likeness before posting.",
+        a: "Recipes are toy-native templates. Your photo is the product reference — review likeness before posting. Only upload collectibles you own.",
       },
     ],
   },

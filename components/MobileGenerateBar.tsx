@@ -14,7 +14,9 @@ export function MobileGenerateBar() {
     path.startsWith("/effects/") ||
     path.startsWith("/for/") ||
     path.startsWith("/toys/") ||
-    path.startsWith("/modules")
+    path.startsWith("/modules") ||
+    path.startsWith("/image") ||
+    path.startsWith("/cinema")
   ) {
     return null;
   }
@@ -26,8 +28,14 @@ export function MobileGenerateBar() {
     path === "/apps" ||
     path === "/library" ||
     path === "/models" ||
-    path === "/flow";
+    path === "/flow" ||
+    path === "/pricing" ||
+    path === "/login" ||
+    path === "/profile" ||
+    path === "/status";
   if (!showBar) return null;
+
+  const onLibrary = path === "/library" || path.startsWith("/library/");
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[4.75rem] z-30 flex justify-center gap-2 px-4 lg:hidden">
@@ -37,12 +45,21 @@ export function MobileGenerateBar() {
       >
         Generate
       </Link>
-      <Link
-        href="/library"
-        className="pointer-events-auto rounded-full border border-[var(--mint)]/40 bg-black/70 px-4 py-2.5 text-xs font-semibold text-[var(--mint)] backdrop-blur"
-      >
-        Library
-      </Link>
+      {onLibrary ? (
+        <Link
+          href="/create?mode=seller-pack"
+          className="pointer-events-auto rounded-full border border-[var(--mint)]/40 bg-black/70 px-4 py-2.5 text-xs font-semibold text-[var(--mint)] backdrop-blur"
+        >
+          Seller Pack
+        </Link>
+      ) : (
+        <Link
+          href="/library"
+          className="pointer-events-auto rounded-full border border-[var(--mint)]/40 bg-black/70 px-4 py-2.5 text-xs font-semibold text-[var(--mint)] backdrop-blur"
+        >
+          Library
+        </Link>
+      )}
       <Link
         href="/modules"
         className="pointer-events-auto rounded-full border border-white/15 bg-black/70 px-4 py-2.5 text-xs font-semibold text-white backdrop-blur"

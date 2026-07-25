@@ -170,30 +170,42 @@ export const USE_CASES: UseCase[] = [
     emoji: "🎁",
     label: "Blind box brands",
     audience: "seller",
+    /**
+     * Canonical job: brand / shop drop marketing (campaign teaser).
+     * Distinct from /tools/blind-box-reveal-video-maker (single pull reveal tool).
+     * No licensed IP names (Marvel, Star Wars, Gundam, mass blind-box franchises).
+     */
     h1: "Create Blind Box Drop Videos From One Product Photo",
     seoTitle: "Blind Box Drop Video Generator for Toy Brands | Pikbo",
     seoDescription:
-      "Launch drops with hype. Turn one figure photo into unboxing reveals and mystery-box teasers for your blind box brand — no production shoot.",
+      "Launch indie blind-box drops with teaser clips from one product photo you own. Brand marketing drafts for restocks and series launches — not a selfie app.",
     intro:
-      "Every blind box drop needs a teaser. Pikbo turns a single figure photo into unboxing reveals and mystery-box moments that build hype before a launch — no production shoot required.",
+      "Indie blind-box and designer-toy brands need launch energy without a production crew. Upload one owned product still of your original figure line and draft a drop teaser or campaign hook for social and storefronts.",
     body: [
-      "Tease a series before samples ship, and post a reveal the moment it drops.",
-      "Keep a consistent, hype-driven look across an entire release with matching effects.",
+      "This page is for brand marketing: series teaser, restock hype, and drop-day posts. For a one-off pull/reveal clip maker, use /tools/blind-box-reveal-video-maker instead — one job per URL.",
+      "Shoot or use a clean packshot of your own sculpt. We never train your prompt on third-party franchises; only upload art and packaging you own or are licensed to market.",
+      "Tease a series before samples ship, then post a matching motion language on drop day. Soft launch Free Mini is enough to validate a campaign draft (5s · 480p · mark).",
+      "Keep a consistent look across a release with matching recipes (mystery energy for teaser, spin for product grid). Always QA logos and box text before paid ads.",
     ],
     keywords: [
-      "blind box marketing video",
-      "blind box brand video",
-      "toy drop teaser video",
+      "blind box brand marketing video",
+      "blind box drop teaser video",
+      "designer toy launch video",
+      "indie blind box campaign clip",
     ],
     recommendedEffects: ["blind-box-unboxing", "mystery-box-reveal", "360-spin-showcase"],
     faq: [
+      {
+        q: "How is this different from the blind box reveal tool page?",
+        a: "This /for page is for brand drop and campaign marketing. The /tools/blind-box-reveal-video-maker page is the focused tool job for a single reveal clip from one photo.",
+      },
       {
         q: "How can a blind box brand make a drop teaser from one image?",
         a: "Upload an image your brand owns, select an unboxing or mystery-reveal recipe, and generate a short teaser draft. Packaging text and unrevealed surfaces are model-generated and require review.",
       },
       {
         q: "Can I tease before the product ships?",
-        a: "Yes — a single render or product mockup photo is enough to build a reveal teaser.",
+        a: "Yes — a single render or product mockup photo of your own line is enough to draft a teaser. Do not upload IP you do not control.",
       },
     ],
   },
@@ -305,24 +317,29 @@ export const USE_CASES: UseCase[] = [
     emoji: "🦸",
     label: "Action figures",
     audience: "seller",
+    /**
+     * Canonical job: articulated figure product / listing motion.
+     * Not a brand-franchise page — only original or rights-owned figures.
+     * Aliases (video-generator, action-figures short) 301 here — no duplicate pages.
+     */
     h1: "Action Figure Product Videos From One Photo",
     seoTitle: "Action Figure Product Video Generator | Pikbo",
     seoDescription:
       "Make short action figure product videos from one photo — spins, hero floats, and shelf glam for listings and social. Free Mini trial, no card.",
     intro:
-      "Action figure sellers and collectors need motion that shows scale, paint apps, and pose without a full studio. Pikbo turns one owned figure photo into a short product video draft.",
+      "Sellers of articulated designer figures need motion that shows scale, paint apps, and pose without a full studio. Upload one photo of a figure you own (not a selfie) and draft a listing-ready product clip.",
     body: [
+      "This URL owns the product-listing job for articulated figures. Dance/play motion for collectors lives on effect recipes; marketplace channel pages (Etsy, Amazon) own channel SEO — link out, do not duplicate.",
       "Buyers hesitate when they only see a single front-facing JPEG. A short spin or hero float answers “how does it look in the round?” faster than three more stills.",
       "Use a neutral background when you can. Strong silhouettes survive AI motion better than cluttered shelves. Soft launch Free Mini is enough to validate a listing hook before you batch a whole roster.",
       "Recommended path: 360° spin for storefronts, floating hero for “new in stock” posts, display-case glam when the figure is a premium release. Always verify likeness and accessories before you publish.",
-      "If you sell on multiple channels, generate once per aspect ratio (1:1 listing vs 9:16 social) rather than stretching a single export. Pikbo recipes ship with aspect defaults you can override on paid tiers.",
-      "Rights matter: only upload figures and photos you own or are licensed to market. Soft launch enforces an owns-rights checkbox server-side.",
+      "Rights matter: only upload figures and photos you own or are licensed to market. Do not upload third-party franchise packaging you do not control. Soft launch enforces an owns-rights checkbox server-side.",
     ],
     keywords: [
       "action figure product video",
-      "action figure video maker",
-      "figure listing video",
-      "AI action figure video",
+      "action figure listing video",
+      "articulated figure product clip",
+      "figure product video from photo",
     ],
     recommendedEffects: ["360-spin-showcase", "floating-hero", "display-case-glam"],
     faq: [
@@ -333,6 +350,10 @@ export const USE_CASES: UseCase[] = [
       {
         q: "Will paint details stay accurate?",
         a: "Start from a sharp photo. AI motion can soften micro detail — always inspect the output before listing high-value pieces.",
+      },
+      {
+        q: "Is this for mass-franchise packaging?",
+        a: "No. Pikbo is for photos of collectibles you own or are licensed to market. Upload original or rights-cleared figures only.",
       },
     ],
   },
@@ -584,6 +605,12 @@ export const FOR_SLUG_ALIASES: Record<string, string> = {
   "toy-photo-to-video": "photo-to-video-for-toys",
   "action-figure-video": "action-figure-product-videos",
   "action-figures": "action-figure-product-videos",
+  // SEO Intent map aliases — no second page for same job
+  "action-figure-video-generator": "action-figure-product-videos",
+  "action-figure-product-video": "action-figure-product-videos",
+  "blind-box-video-generator": "blind-box-brand-marketing",
+  "blind-box-drop-videos": "blind-box-brand-marketing",
+  "blind-box-marketing": "blind-box-brand-marketing",
   "toy-photography": "toy-photography-to-video",
   collectibles: "collectible-ai-video",
   "ai-collectible-video": "collectible-ai-video",

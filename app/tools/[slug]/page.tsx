@@ -5,7 +5,10 @@ import { TOOLS, getTool } from "@/lib/tools";
 import { COMMON_FAQ, getPreset } from "@/lib/presets";
 import { PresetCard } from "@/components/PresetCard";
 import { LandingToolPanel } from "@/components/LandingToolPanel";
-import { LandingHowItWorks } from "@/components/LandingHowItWorks";
+import {
+  LandingHowItWorks,
+  photoRecipeDraftHowToJsonLd,
+} from "@/components/LandingHowItWorks";
 import { LandingResults } from "@/components/LandingResults";
 import { site } from "@/lib/site";
 import { robotsForToolSlug } from "@/lib/seoIndex";
@@ -80,18 +83,29 @@ export default async function ToolPage({
     })),
   };
 
+  const isPrimaryRank = t.slug === PRIMARY_RANK_SLUG;
+  // HowTo only when the three-step block is actually rendered with the tool
+  const showHowTo = Boolean(primary);
+  const jsonLdBlocks: object[] = [
+    faqJsonLd,
+    softwareApplicationJsonLd({
+      name: `${t.h1} | ${site.name}`,
+      description: t.seoDescription,
+      url: `${site.url}/tools/${t.slug}`,
+    }),
+  ];
+  if (showHowTo) {
+    jsonLdBlocks.push(
+      photoRecipeDraftHowToJsonLd({
+        name: t.h1,
+        description: t.seoDescription,
+      })
+    );
+  }
+
   return (
     <>
-      <JsonLd
-        data={[
-          faqJsonLd,
-          softwareApplicationJsonLd({
-            name: `${t.h1} | ${site.name}`,
-            description: t.seoDescription,
-            url: `${site.url}/tools/${t.slug}`,
-          }),
-        ]}
-      />
+      <JsonLd data={jsonLdBlocks} />
 
       <section className="glow-bg">
         <div className="container-x relative z-10 pt-14 pb-8">
@@ -104,22 +118,30 @@ export default async function ToolPage({
           <p className="mt-4 max-w-2xl text-lg text-[var(--fg-muted)]">
             {t.intro}
           </p>
+          {isPrimaryRank ? (
+            <p className="mt-3 max-w-2xl text-base font-medium leading-relaxed text-white/85">
+              Upload a photo of a collectible you own—not a selfie—and turn it
+              into a short video draft for listings and social.
+            </p>
+          ) : null}
           <SuiteDoorLinks effectSlug={primary?.slug} className="mt-5" />
         </div>
       </section>
 
-      {primary && (
-        <section className="container-x py-8">
-          <LandingToolPanel
-            effectSlug={primary.slug}
-            effectName={primary.name}
-            duration={primary.duration}
-            aspectRatio={primary.aspectRatio}
-          />
-        </section>
-      )}
-
-      <LandingHowItWorks productLabel="toy clip" />
+      {primary ? (
+        <>
+          <section className="container-x py-8">
+            <LandingToolPanel
+              effectSlug={primary.slug}
+              effectName={primary.name}
+              duration={primary.duration}
+              aspectRatio={primary.aspectRatio}
+            />
+          </section>
+          {/* Three steps sit next to the first-screen tool (not buried below body) */}
+          <LandingHowItWorks productLabel="video draft" compact />
+        </>
+      ) : null}
 
       <section className="container-x py-10">
         <h2 className="text-2xl font-bold">

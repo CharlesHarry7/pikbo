@@ -9,7 +9,10 @@ import {
 import { COMMON_FAQ, getPreset } from "@/lib/presets";
 import { PresetCard } from "@/components/PresetCard";
 import { LandingToolPanel } from "@/components/LandingToolPanel";
-import { LandingHowItWorks } from "@/components/LandingHowItWorks";
+import {
+  LandingHowItWorks,
+  photoRecipeDraftHowToJsonLd,
+} from "@/components/LandingHowItWorks";
 import { LandingResults } from "@/components/LandingResults";
 import { site } from "@/lib/site";
 import { robotsForForSlug } from "@/lib/seoIndex";
@@ -78,43 +81,28 @@ export default async function UseCasePage({
     })),
   };
 
-  const howToJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
-    name: uc.h1,
-    description: uc.seoDescription,
-    step: [
-      {
-        "@type": "HowToStep",
-        name: "Upload a product photo",
-        text: "Use one clear photo of the toy or collectible you sell or own.",
-      },
-      {
-        "@type": "HowToStep",
-        name: "Generate on this page",
-        text: "Run the tool below without leaving this landing page.",
-      },
-      {
-        "@type": "HowToStep",
-        name: "Post to your channel",
-        text: `Download and use the clip for ${uc.label}.`,
-      },
-    ],
-  };
+  // HowTo only when Photo → Recipe → Video draft is visible with on-page tool
+  const showHowTo = Boolean(primary);
+  const jsonLdBlocks: object[] = [
+    faqJsonLd,
+    softwareApplicationJsonLd({
+      name: `${uc.h1} | ${site.name}`,
+      description: uc.seoDescription,
+      url: `${site.url}/for/${uc.slug}`,
+    }),
+  ];
+  if (showHowTo) {
+    jsonLdBlocks.push(
+      photoRecipeDraftHowToJsonLd({
+        name: uc.h1,
+        description: uc.seoDescription,
+      })
+    );
+  }
 
   return (
     <>
-      <JsonLd
-        data={[
-          faqJsonLd,
-          howToJsonLd,
-          softwareApplicationJsonLd({
-            name: `${uc.h1} | ${site.name}`,
-            description: uc.seoDescription,
-            url: `${site.url}/for/${uc.slug}`,
-          }),
-        ]}
-      />
+      <JsonLd data={jsonLdBlocks} />
 
       <section className="glow-bg">
         <div className="container-x relative z-10 pt-14 pb-8">
@@ -135,19 +123,20 @@ export default async function UseCasePage({
         </div>
       </section>
 
-      {/* V2: tool on page — default recommended effect */}
-      {primary && (
-        <section className="container-x py-8">
-          <LandingToolPanel
-            effectSlug={primary.slug}
-            effectName={primary.name}
-            duration={primary.duration}
-            aspectRatio={primary.aspectRatio}
-          />
-        </section>
-      )}
-
-      <LandingHowItWorks productLabel="listing-ready clip" />
+      {/* Tool + three steps on first product surface */}
+      {primary ? (
+        <>
+          <section className="container-x py-8">
+            <LandingToolPanel
+              effectSlug={primary.slug}
+              effectName={primary.name}
+              duration={primary.duration}
+              aspectRatio={primary.aspectRatio}
+            />
+          </section>
+          <LandingHowItWorks productLabel="listing-ready draft" compact />
+        </>
+      ) : null}
 
       <section className="container-x py-10">
         <h2 className="text-2xl font-bold">Why this works for {uc.label}</h2>

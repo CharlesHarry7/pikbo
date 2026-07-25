@@ -1,44 +1,69 @@
-/** 哥飞 V2 — 落地文案块：SSR 步骤，给用户 + 爬虫 */
+/**
+ * 哥飞 V2 — 落地三步：Photo → Recipe → Video draft
+ * 必须与页面真实 UI 一致；仅在页内有工具时挂 HowTo JSON-LD。
+ */
 export function LandingHowItWorks({
-  productLabel = "clip",
+  productLabel = "video draft",
+  compact = false,
 }: {
   productLabel?: string;
+  /** Place under on-page tool (first screen), not a distant footer block */
+  compact?: boolean;
 }) {
   const steps = [
     {
       n: "1",
-      t: "Upload one photo",
-      d: "A clear shot of a designer toy, figure, or blind-box pull you own. Plain background works best. Confirm ownership before live jobs.",
+      t: "Photo",
+      d: "Upload a photo of a collectible you own—not a selfie. Clear figure, plain background, full product in frame.",
     },
     {
       n: "2",
-      t: "Use the tool on this page",
-      d: `Submit the ${productLabel} for a live Seedance Mini render when configured. Live often takes 1–3 minutes — keep the tab open. Lab demos stay labeled and free.`,
+      t: "Recipe",
+      d: "Pick a toy-native recipe (spin, float, unbox energy). Soft launch uses Seedance Mini with honest Free Mini caps.",
     },
     {
       n: "3",
-      t: "Review · Library · post",
-      d: "QA paint and logos before publishing. Free Mini: ~5s · 480p · on-player mark; failed live jobs refund. Clips save to this-device Library.",
+      t: "Video draft",
+      d: `Review the ${productLabel} before posting. Free Mini: ~5s · 480p · on-player mark. Failed live jobs refund when confirmed.`,
     },
   ];
 
   return (
-    <section className="container-x py-12">
+    <section
+      className={
+        compact
+          ? "container-x py-6"
+          : "container-x py-12"
+      }
+      aria-label="How it works: Photo, Recipe, Video draft"
+    >
       <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]">
         How it works
       </p>
-      <h2 className="mt-1 font-display text-2xl font-black tracking-tight sm:text-3xl">
-        Photo in · clip out
+      <h2
+        className={
+          compact
+            ? "mt-1 font-display text-xl font-black tracking-tight sm:text-2xl"
+            : "mt-1 font-display text-2xl font-black tracking-tight sm:text-3xl"
+        }
+      >
+        Photo → Recipe → Video draft
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
-        Upload a toy photo you own, choose the recipe, and review whether Studio
-        returned a live render or a labeled cached demo.
+        Upload a collectible photo you own, choose a recipe, and review a short
+        video draft for listings or social—not a portrait selfie pipeline.
       </p>
-      <ol className="mt-8 grid gap-3 sm:grid-cols-3">
+      <ol
+        className={
+          compact
+            ? "mt-5 grid gap-2.5 sm:grid-cols-3"
+            : "mt-8 grid gap-3 sm:grid-cols-3"
+        }
+      >
         {steps.map((s) => (
           <li
             key={s.n}
-            className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-black/40 p-5 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)]"
+            className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-black/40 p-4 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] sm:p-5"
           >
             <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--mint)] text-sm font-black text-black shadow-[0_0_16px_rgba(200,255,61,0.3)]">
               {s.n}
@@ -52,4 +77,34 @@ export function LandingHowItWorks({
       </ol>
     </section>
   );
+}
+
+/** Shared HowTo JSON-LD steps — only emit when LandingHowItWorks is on the page. */
+export function photoRecipeDraftHowToJsonLd(input: {
+  name: string;
+  description: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: input.name,
+    description: input.description,
+    step: [
+      {
+        "@type": "HowToStep",
+        name: "Photo",
+        text: "Upload a photo of a collectible you own—not a selfie.",
+      },
+      {
+        "@type": "HowToStep",
+        name: "Recipe",
+        text: "Choose a toy-native recipe such as spin, float, or unbox energy.",
+      },
+      {
+        "@type": "HowToStep",
+        name: "Video draft",
+        text: "Review the short video draft for listings or social before posting.",
+      },
+    ],
+  };
 }

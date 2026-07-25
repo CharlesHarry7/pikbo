@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Cinema AfterPath + mobile suite bar + HowTo steps
+- Cinema Preview: GenerateAfterPath + Library; mobile bar hides image/cinema, Seller Pack on Library.
+- LandingHowItWorks: Photo → Recipe → Video draft + HowTo JSON-LD on tools/for with tools.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-26 — [grok] PROVIDER_TIMEOUT auto-retry + Library TIMEOUT honesty
 - generateClient + imageClient: one auto-retry on PROVIDER_TIMEOUT (not ledger TIMEOUT).
 - Library session jobs: errorCode + refund unconfirmed; empty-state copy no longer overclaims refunds.
