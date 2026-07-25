@@ -23,6 +23,7 @@ export {
   applyProviderWebhookEvent,
   sweepTimedOutJobs,
   jobTimeoutMs,
+  jobLedgerInFlightRetryAfterSec,
   generationJobsProbe,
   __resetGenerationJobsForTests,
 } from "@/lib/generationJobs/store";

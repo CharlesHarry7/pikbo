@@ -85,11 +85,18 @@ export type GenerateErrorBody = {
     | "PROVIDER_BALANCE"
     | "PROVIDER_RATE_LIMIT"
     | "PROVIDER_TIMEOUT"
+    /** Upstream network blip (502/503/ECONNRESET) — Retry; usually refunded. */
+    | "PROVIDER_NETWORK"
     | "CONTENT_POLICY"
     | "RATE_LIMITED"
     | "JOB_IN_FLIGHT"
     | "RIGHTS_REQUIRED"
     | "UNSAFE_URL"
+    /**
+     * Process-memory ledger timeout (sweep) — mint a new idempotency key.
+     * Distinct from PROVIDER_TIMEOUT (live fal deadline).
+     */
+    | "TIMEOUT"
     /** Client-side only — fetch never reached a typed server body. */
     | "NETWORK_ERROR"
     | "REQUEST_CANCELED";
@@ -104,6 +111,11 @@ export type GenerateErrorBody = {
    * Absent/false when no debit occurred (validation, rate limit, demo path).
    */
   creditsRefunded?: boolean;
+  /**
+   * Ledger timeout / kill mid-flight — do not claim credits restored.
+   * Client should re-check /api/me balance.
+   */
+  refundUnconfirmed?: boolean;
 };
 
 /** Future metering hook — flat cost today, structured for model×duration later. */

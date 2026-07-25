@@ -7,6 +7,7 @@ export type ProviderFailKind =
   | "balance"
   | "rate"
   | "timeout"
+  | "network"
   | "content"
   | "other";
 
@@ -27,6 +28,14 @@ export function classifyProviderError(raw: string): ProviderFailKind {
     )
   ) {
     return "timeout";
+  }
+  // Upstream blips distinct from model timeout — client should Retry soon.
+  if (
+    /ECONNRESET|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH|socket hang up|fetch failed|network error|Bad Gateway|Service Unavailable|\b502\b|\b503\b|connection reset|temporarily unavailable/i.test(
+      raw
+    )
+  ) {
+    return "network";
   }
   if (
     /content.?policy|nsfw|safety|moderation|blocked.?content|violat/i.test(raw)
@@ -49,6 +58,9 @@ export function providerErrorMessage(
   if (kind === "timeout") {
     return "Provider timed out — try again; credits restored when the debit was confirmed.";
   }
+  if (kind === "network") {
+    return "Provider network blip — Retry in a few seconds; credits restored when the debit was confirmed.";
+  }
   if (kind === "content") {
     return "Provider rejected the still or prompt under content policy — try a clearer product photo (credits restored).";
   }
@@ -64,6 +76,7 @@ export function providerFailHttp(kind: ProviderFailKind): {
     | "PROVIDER_BALANCE"
     | "PROVIDER_RATE_LIMIT"
     | "PROVIDER_TIMEOUT"
+    | "PROVIDER_NETWORK"
     | "CONTENT_POLICY"
     | "GENERATION_FAILED";
   status: number;
@@ -77,6 +90,9 @@ export function providerFailHttp(kind: ProviderFailKind): {
   }
   if (kind === "timeout") {
     return { code: "PROVIDER_TIMEOUT", status: 504, retryAfterSec: 5 };
+  }
+  if (kind === "network") {
+    return { code: "PROVIDER_NETWORK", status: 503, retryAfterSec: 8 };
   }
   if (kind === "content") {
     return { code: "CONTENT_POLICY", status: 422 };

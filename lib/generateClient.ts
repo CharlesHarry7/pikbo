@@ -123,9 +123,13 @@ export function interpretGenerateResponse(
                       ? `Provider busy — try again in ${retryAfterSec ?? "a few"}s`
                       : code === "PROVIDER_TIMEOUT"
                         ? `Provider timed out — Retry in ${retryAfterSec ?? "a few"}s (same still kept)`
-                        : code === "CONTENT_POLICY"
-                          ? "Provider rejected this still or prompt — use a clear product photo on a simple background"
-                          : "Generation failed — Retry keeps your still, or try another recipe");
+                        : code === "PROVIDER_NETWORK"
+                          ? `Provider network blip — Retry in ${retryAfterSec ?? "a few"}s (same still kept)`
+                          : code === "TIMEOUT"
+                            ? "Prior job timed out on the server — mint a new attempt (Retry). Check balance if refund is unconfirmed."
+                            : code === "CONTENT_POLICY"
+                              ? "Provider rejected this still or prompt — use a clear product photo on a simple background"
+                              : "Generation failed — Retry keeps your still, or try another recipe");
 
   // PRD §5: recoverable failures must say whether the 10 credits were restored.
   if (
@@ -133,6 +137,16 @@ export function interpretGenerateResponse(
     !/refund|restored|credit/i.test(error)
   ) {
     error = `${error} · 10 credits restored`;
+  }
+  // Ledger/kill timeout — never claim restored when server flags unconfirmed.
+  const refundUnconfirmed =
+    body.refundUnconfirmed === true || code === "TIMEOUT";
+  if (
+    refundUnconfirmed &&
+    !creditsRefunded &&
+    !/refund unconfirmed|check balance/i.test(error)
+  ) {
+    error = `${error} · check balance (refund unconfirmed)`;
   }
 
   return {

@@ -45,6 +45,7 @@ import {
   completeSyncGenerateJob,
   failSyncGenerateJob,
   findJobByIdempotencyKey,
+  jobLedgerInFlightRetryAfterSec,
   recordSucceededGenerate,
   type GenerationJob,
 } from "@/lib/generationJobs";
@@ -176,7 +177,10 @@ export async function POST(req: Request) {
         return NextResponse.json(successFromJob(prior, session, true));
       }
       if (prior.status === "running" || prior.status === "queued") {
-        const retryAfterSec = jobInFlightRetryAfterSec(session.id);
+        // Prefer ledger age over inflight lock — lock frees after kill while row open.
+        const lockRetry = jobInFlightRetryAfterSec(session.id);
+        const ledgerRetry = jobLedgerInFlightRetryAfterSec(prior);
+        const retryAfterSec = Math.max(lockRetry, ledgerRetry);
         return err(
           {
             error: `A generate with this idempotency key is still running — try again in ${retryAfterSec}s`,
@@ -194,15 +198,17 @@ export async function POST(req: Request) {
         const status =
           code === "CONTENT_POLICY"
             ? 422
-            : code === "PROVIDER_TIMEOUT"
+            : code === "PROVIDER_TIMEOUT" || code === "TIMEOUT"
               ? 504
-              : code === "PROVIDER_BALANCE"
-                ? 402
-                : code === "PROVIDER_RATE_LIMIT"
-                  ? 429
-                  : code === "UNSAFE_URL" || code === "MODEL_EMPTY"
-                    ? 502
-                    : 500;
+              : code === "PROVIDER_NETWORK"
+                ? 503
+                : code === "PROVIDER_BALANCE"
+                  ? 402
+                  : code === "PROVIDER_RATE_LIMIT"
+                    ? 429
+                    : code === "UNSAFE_URL" || code === "MODEL_EMPTY"
+                      ? 502
+                      : 500;
         return err(
           {
             error:
@@ -212,6 +218,9 @@ export async function POST(req: Request) {
             model: prior.model,
             session: publicSession(session),
             creditsRefunded: prior.creditsRefunded,
+            ...(prior.creditsOutcome === "refund unconfirmed"
+              ? { refundUnconfirmed: true }
+              : {}),
           },
           status
         );

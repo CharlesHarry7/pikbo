@@ -119,7 +119,8 @@
 78. [x] Free Mini raw blocked from Community publish · safe UGC render · library smoke
 79. [x] Image idempotencyKey + requestId ledger (no double Flux debit) · health.imageJobs
 80. [x] Image TIMEOUT sweep + HEAD open probe · honest JOB_IN_FLIGHT Retry-After after crash
-81. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+81. [x] Generate TIMEOUT/PROVIDER_NETWORK honesty · ledger Retry-After after crash · refundUnconfirmed echo
+82. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -133,8 +134,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Image ledger sweeps TIMEOUT (default 90s) so crash mid-Flux cannot leave infinite JOB_IN_FLIGHT.  
-- HEAD /api/image open counts · Retry-After max(lock, job age) · refund unconfirmed on timeout.  
+- Generate fail-replay maps TIMEOUT→504 · PROVIDER_NETWORK 503; ledger Retry-After after kill.  
+- Provider classify: ECONNRESET/502/503 → network blip (retry + refund when confirmed).  
 - Mode A still needs boss Vercel login · SQL · T6 bake worker.
 
 ---

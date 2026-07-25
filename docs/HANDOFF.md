@@ -14,6 +14,11 @@ Newest first. One block per meaningful landing.
 - FreeTrial/#home-tool convert; suite density (cmd-K, footer, supercomputer).
 - 哥飞 cold-start noindex whitelist + lean sitemap.
 
+### 2026-07-25 — [grok] Generate TIMEOUT + PROVIDER_NETWORK honesty
+- Ledger TIMEOUT fail-replay → 504 + refundUnconfirmed; JOB_IN_FLIGHT Retry-After max(lock, ledger age).
+- classifyProviderError: network (ECONNRESET/502/503) → PROVIDER_NETWORK 503 · client Retry copy.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-25 — [grok] Image still TIMEOUT recovery + Status/Settings
 - `sweepTimedOutImageJobs` · HEAD `/api/image` counts · refund unconfirmed on kill.
 - StatusProbe/Settings surface still ledger; Models FreeTrialCta · Lab.

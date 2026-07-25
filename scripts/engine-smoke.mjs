@@ -26,6 +26,13 @@ function classifyProviderError(raw) {
   if (/timeout|timed?\s*out|deadline exceeded|ETIMEDOUT|Gateway Time-out|504/i.test(raw)) {
     return "timeout";
   }
+  if (
+    /ECONNRESET|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH|socket hang up|fetch failed|network error|Bad Gateway|Service Unavailable|\b502\b|\b503\b|connection reset|temporarily unavailable/i.test(
+      raw
+    )
+  ) {
+    return "network";
+  }
   if (/content.?policy|nsfw|safety|moderation|blocked.?content|violat/i.test(raw)) {
     return "content";
   }
@@ -96,6 +103,9 @@ assert.equal(classifyProviderError("rate limit exceeded"), "rate");
 assert.equal(classifyProviderError("boom"), "other");
 assert.equal(classifyProviderError("Gateway Time-out 504"), "timeout");
 assert.equal(classifyProviderError("content policy violation"), "content");
+assert.equal(classifyProviderError("fetch failed ECONNRESET"), "network");
+assert.equal(classifyProviderError("502 Bad Gateway"), "network");
+assert.equal(classifyProviderError("Service Unavailable 503"), "network");
 
 // --- image mime ---
 assert.equal(
@@ -2032,14 +2042,32 @@ function providerFailHttpPure(kind) {
     return { code: "PROVIDER_RATE_LIMIT", status: 429, retryAfterSec: 8 };
   if (kind === "timeout")
     return { code: "PROVIDER_TIMEOUT", status: 504, retryAfterSec: 5 };
+  if (kind === "network")
+    return { code: "PROVIDER_NETWORK", status: 503, retryAfterSec: 8 };
   if (kind === "content") return { code: "CONTENT_POLICY", status: 422 };
   return { code: "GENERATION_FAILED", status: 500 };
 }
 assert.equal(providerFailHttpPure("timeout").code, "PROVIDER_TIMEOUT");
 assert.equal(providerFailHttpPure("timeout").status, 504);
+assert.equal(providerFailHttpPure("network").code, "PROVIDER_NETWORK");
+assert.equal(providerFailHttpPure("network").status, 503);
 assert.equal(providerFailHttpPure("content").code, "CONTENT_POLICY");
 assert.equal(providerFailHttpPure("content").status, 422);
 assert.equal(providerFailHttpPure("rate").retryAfterSec, 8);
+
+// Provider network + TIMEOUT contract/client honesty
+assert.match(pe, /PROVIDER_NETWORK|network/);
+assert.match(
+  fs.readFileSync(join(root, "lib/contracts.ts"), "utf8"),
+  /PROVIDER_NETWORK/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/contracts.ts"), "utf8"),
+  /"TIMEOUT"/
+);
+assert.match(gen, /PROVIDER_NETWORK|TIMEOUT/);
+assert.match(genRoute, /TIMEOUT|jobLedgerInFlightRetryAfterSec/);
+assert.match(genJobsStore, /jobLedgerInFlightRetryAfterSec/);
 
 // Phase D job timeout recovery
 assert.match(genJobsStore, /sweepTimedOutJobs/);

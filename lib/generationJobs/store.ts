@@ -204,6 +204,19 @@ export function touchJob(id: string): GenerationJob | null {
 }
 
 /**
+ * Seconds until an open ledger job would TIMEOUT (JOB_IN_FLIGHT Retry-After).
+ * Prefer this over the inflight lock alone — lock frees after process kill
+ * while the process-memory row can stay open until sweep.
+ */
+export function jobLedgerInFlightRetryAfterSec(job: GenerationJob): number {
+  if (job.status !== "queued" && job.status !== "running") return 1;
+  const stamp = job.updatedAt || job.createdAt;
+  const remainingMs = jobTimeoutMs() - ageMs(stamp);
+  if (remainingMs <= 0) return 1;
+  return Math.max(1, Math.ceil(remainingMs / 1000));
+}
+
+/**
  * Cancel a queued/running local job. Terminal states are left unchanged.
  * Soft-launch sync generate cannot interrupt fal mid-flight; this marks the
  * ledger honestly for clients that abandon a poll.
