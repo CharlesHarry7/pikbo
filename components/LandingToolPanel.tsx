@@ -61,6 +61,9 @@ export function LandingToolPanel({
   const [status, setStatus] = useState<Status>("idle");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
+    null
+  );
   const [demo, setDemo] = useState(false);
   const [watermark, setWatermark] = useState(true);
   const [session, setSession] = useState<MeResponse | null>(null);
@@ -253,6 +256,11 @@ export function LandingToolPanel({
       if (result.session) {
         setSession((prev) => mergeMeSession(prev, result.session));
       }
+      setFailRetryAfterSec(
+        typeof result.retryAfterSec === "number" && result.retryAfterSec > 0
+          ? result.retryAfterSec
+          : null
+      );
       if (result.paywall) {
         setError("INSUFFICIENT");
       } else {
@@ -537,7 +545,15 @@ export function LandingToolPanel({
               showModules={false}
               showRecipes={false}
               showLabSample
-              onRetry={image && !busy ? () => void generate() : undefined}
+              retryAfterSec={failRetryAfterSec}
+              onRetry={
+                image && !busy
+                  ? () => {
+                      setFailRetryAfterSec(null);
+                      void generate();
+                    }
+                  : undefined
+              }
               retryLabel="Retry"
             />
           ) : null}

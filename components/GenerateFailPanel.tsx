@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useI18n } from "@/components/LanguageProvider";
 
 export type FailCreditHint =
@@ -12,8 +13,9 @@ export type FailCreditHint =
   | string;
 
 /**
- * Shared generate failure surface — one tone for Create / Batch / Landing / Image.
- * Always ends with a next action (Retry · recipe · Lab · Modules). No dead-end red text.
+ * Shared generate failure surface — Create / Batch / Landing / Image.
+ * Always ends with a next action. Optional Retry-After countdown for
+ * RATE_LIMITED / JOB_IN_FLIGHT / PROVIDER_NETWORK honesty.
  */
 export function GenerateFailPanel({
   message,
@@ -21,6 +23,7 @@ export function GenerateFailPanel({
   creditsRestored = false,
   onRetry,
   retryLabel,
+  retryAfterSec = null,
   showLabSample = true,
   showRecipes = true,
   showModules = true,
@@ -32,6 +35,8 @@ export function GenerateFailPanel({
   creditsRestored?: boolean;
   onRetry?: () => void;
   retryLabel?: string;
+  /** Seconds until Retry should unlock (server Retry-After). */
+  retryAfterSec?: number | null;
   showLabSample?: boolean;
   showRecipes?: boolean;
   showModules?: boolean;
@@ -45,10 +50,29 @@ export function GenerateFailPanel({
     (typeof creditState === "string" && /restored|refunded/i.test(creditState));
   const unconfirmed = creditState === "refund unconfirmed";
 
+  const initialWait =
+    typeof retryAfterSec === "number" && retryAfterSec > 0
+      ? Math.ceil(retryAfterSec)
+      : 0;
+  const [waitLeft, setWaitLeft] = useState(initialWait);
+
+  useEffect(() => {
+    setWaitLeft(initialWait);
+  }, [initialWait, message]);
+
+  useEffect(() => {
+    if (waitLeft <= 0) return;
+    const id = window.setInterval(() => {
+      setWaitLeft((w) => (w > 0 ? w - 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [waitLeft > 0]);
+
   if (!message && !restored && !unconfirmed) return null;
 
   const tone = restored || unconfirmed ? "amber" : "brand";
   const retryText = retryLabel || t("fail.retry");
+  const retryLocked = Boolean(onRetry) && waitLeft > 0;
 
   return (
     <div
@@ -87,6 +111,12 @@ export function GenerateFailPanel({
         </p>
       ) : null}
 
+      {retryLocked ? (
+        <p className="mt-1 font-mono text-[11px] font-bold tabular-nums text-white/55">
+          Retry in {waitLeft}s
+        </p>
+      ) : null}
+
       <p
         className={`leading-relaxed text-amber-100/70 ${
           compact ? "mt-1 text-[10px]" : "mt-1.5 text-[11px]"
@@ -104,9 +134,10 @@ export function GenerateFailPanel({
           <button
             type="button"
             onClick={onRetry}
-            className="rounded-full bg-[var(--mint)] px-3.5 py-1.5 text-[11px] font-black text-black shadow-[0_0_16px_rgba(200,255,61,0.3)] transition hover:brightness-110"
+            disabled={retryLocked}
+            className="rounded-full bg-[var(--mint)] px-3.5 py-1.5 text-[11px] font-black text-black shadow-[0_0_16px_rgba(200,255,61,0.3)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {retryText}
+            {retryLocked ? `Wait ${waitLeft}s` : retryText}
           </button>
         ) : null}
         {showLabSample ? (
@@ -133,6 +164,12 @@ export function GenerateFailPanel({
             {t("fail.modules")}
           </Link>
         ) : null}
+        <Link
+          href="/library"
+          className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-white/75 transition hover:border-white/30 hover:text-white"
+        >
+          Library
+        </Link>
       </div>
     </div>
   );

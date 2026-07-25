@@ -219,6 +219,10 @@ export function CreateStudio({
   const [status, setStatus] = useState<Status>("idle");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Server Retry-After for rate limit / inflight / provider network. */
+  const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
+    null
+  );
   const [demo, setDemo] = useState(false);
   const [watermark, setWatermark] = useState(true);
   const [session, setSession] = useState<MeResponse | null>(null);
@@ -679,6 +683,11 @@ export function CreateStudio({
       }
       if (result.paywall) setShowPaywall(true);
       setLastRefunded(Boolean(result.creditsRefunded));
+      setFailRetryAfterSec(
+        typeof result.retryAfterSec === "number" && result.retryAfterSec > 0
+          ? result.retryAfterSec
+          : null
+      );
       const failSettlement = requestCreditStateFromFailure({
         creditsRefunded: result.creditsRefunded,
         status: result.status,
@@ -2063,9 +2072,11 @@ export function CreateStudio({
               message={error}
               creditState={lastRequestCreditState}
               creditsRestored={lastRefunded}
+              retryAfterSec={failRetryAfterSec}
               onRetry={
                 image && !busy
                   ? () => {
+                      setFailRetryAfterSec(null);
                       if (activeVersion) retryActiveVersion();
                       else void generate();
                     }
