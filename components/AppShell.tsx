@@ -13,6 +13,7 @@ import { LanguageProvider, useI18n } from "@/components/LanguageProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 import { MOBILE_NAV, PRIMARY_NAV } from "@/lib/softLaunch";
+import { trackPageView } from "@/lib/analytics";
 
 /**
  * GSC P0: PRIMARY = Explore · Create · Effects · Pricing only.
@@ -165,6 +166,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     path.startsWith("/explore") ||
     path.startsWith("/community");
 
+  // Route-level GA4 page_view — pathname only; send_page_view stays false on config
+  useEffect(() => {
+    trackPageView(path);
+  }, [path]);
+
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
       {/* Desktop top nav — soft-launch critical path + More */}
@@ -195,17 +201,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <div className="flex shrink-0 items-center gap-3">
           <LanguageSwitcher />
           <CreditsBadge />
-          <Link
-            href="/pricing"
-            className={cn(
-              "text-[13px] font-semibold transition-colors",
-              active(path, "/pricing")
-                ? "text-[#c8ff3d]"
-                : "text-white/70 hover:text-white"
-            )}
-          >
-            {t("cta.pricing")}
-          </Link>
+          {/* Pricing lives only in PRIMARY_NAV — no right-rail duplicate */}
           <Link
             href={home ? "/#home-tool" : "/create"}
             className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[13px] font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.25)] transition-transform hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(200,255,61,0.4)]"

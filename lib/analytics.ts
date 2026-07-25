@@ -151,6 +151,50 @@ export function track(payload: AnalyticsPayload): void {
   }
 }
 
+/**
+ * Route-level GA4 page_view (AppShell).
+ * - pathname only (strip query / hash)
+ * - send_page_view stays false on config to avoid double counts
+ * - no photos, prompts, emails, tokens, or full URLs
+ */
+export function trackPageView(pathname: string): void {
+  try {
+    if (typeof window === "undefined") return;
+    const path = (pathname || "/")
+      .split("?")[0]
+      .split("#")[0]
+      .slice(0, 120);
+    if (!path.startsWith("/")) return;
+
+    const id = gaMeasurementId();
+    if (id) {
+      const gtag = ensureGtag(id);
+      if (gtag) {
+        gtag("event", "page_view", {
+          page_path: path,
+          page_title: undefined,
+          page_location: undefined,
+        });
+      }
+    }
+
+    // Optional beacon — path only
+    const url = endpoint();
+    if (url) {
+      const body = JSON.stringify({
+        event: "page_view",
+        path,
+        ts: Date.now(),
+      });
+      if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+        navigator.sendBeacon(url, new Blob([body], { type: "application/json" }));
+      }
+    }
+  } catch {
+    // never throw
+  }
+}
+
 export function analyticsConfigured(): boolean {
   return Boolean(endpoint() || gaMeasurementId());
 }

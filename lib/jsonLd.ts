@@ -9,8 +9,13 @@ import { site } from "@/lib/site";
 import type { DemoVideo } from "@/lib/demoVideos";
 import { getPreset } from "@/lib/presets";
 
-/** Lab demo registry date — full DateTime for GSC VideoObject. */
-export const LAB_VIDEO_UPLOAD_DATETIME = "2026-07-20T00:00:00Z" as const;
+/** ISO 8601 DateTime with timezone (GSC VideoObject.uploadDate). */
+const ISO_DATETIME_RE =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/;
+
+export function isIso8601DateTime(value: string): boolean {
+  return ISO_DATETIME_RE.test(value);
+}
 
 /** ISO 8601 duration from whole seconds (e.g. 5 → PT5S). */
 export function iso8601DurationFromSeconds(sec: number): string | null {
@@ -98,6 +103,13 @@ export function videoObjectJsonLd(demo: DemoVideo) {
       ? iso8601DurationFromSeconds(presetDuration)
       : null;
 
+  // Per-demo first publish time — never a single forged global date.
+  if (!isIso8601DateTime(demo.publishedAt)) {
+    throw new Error(
+      `DemoVideo ${demo.id}: publishedAt must be ISO 8601 DateTime with timezone`
+    );
+  }
+
   return {
     "@context": "https://schema.org",
     "@type": "VideoObject",
@@ -105,8 +117,7 @@ export function videoObjectJsonLd(demo: DemoVideo) {
     description: `${demo.result} Official Pikbo Lab sample (cached demo — not a visitor upload).`,
     thumbnailUrl: `${site.url}${demo.poster}`,
     contentUrl: `${site.url}${demo.mp4}`,
-    // GSC: must be DateTime with time + timezone (not YYYY-MM-DD alone)
-    uploadDate: LAB_VIDEO_UPLOAD_DATETIME,
+    uploadDate: demo.publishedAt,
     ...(duration ? { duration } : {}),
     isFamilyFriendly: true,
     publisher: {

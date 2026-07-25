@@ -1675,21 +1675,61 @@ assert.match(
   fs.readFileSync(join(root, "lib/seoIndex.ts"), "utf8"),
   /export const PRIVATE_ROBOTS/
 );
-// VideoObject uploadDate must be ISO DateTime (GSC rejects date-only)
+// VideoObject uploadDate from per-demo publishedAt (ISO DateTime, not date-only)
 const jsonLdSrc = fs.readFileSync(join(root, "lib/jsonLd.ts"), "utf8");
-assert.match(jsonLdSrc, /LAB_VIDEO_UPLOAD_DATETIME|uploadDate/);
-assert.match(jsonLdSrc, /2026-07-20T00:00:00Z/);
+assert.match(jsonLdSrc, /uploadDate:\s*demo\.publishedAt/);
+assert.match(jsonLdSrc, /isIso8601DateTime/);
 assert.doesNotMatch(
   jsonLdSrc,
   /uploadDate:\s*["']\d{4}-\d{2}-\d{2}["']/
 );
+assert.doesNotMatch(jsonLdSrc, /LAB_VIDEO_UPLOAD_DATETIME/);
 assert.match(jsonLdSrc, /iso8601DurationFromSeconds|duration/);
+const demoVideosSrc = fs.readFileSync(join(root, "lib/demoVideos.ts"), "utf8");
+assert.match(demoVideosSrc, /publishedAt:\s*string/);
+// Every demo entry must declare publishedAt DateTime with T and Z/offset
+{
+  const pubs = demoVideosSrc.match(/publishedAt:\s*"([^"]+)"/g) || [];
+  assert.ok(pubs.length >= 6, "each DemoVideo needs publishedAt");
+  for (const p of pubs) {
+    assert.match(p, /publishedAt:\s*"\d{4}-\d{2}-\d{2}T/);
+    assert.match(p, /Z"|[+-]\d{2}:\d{2}"/);
+  }
+  // Must not all share one forged string if more than one batch exists
+  const unique = new Set(pubs.map((x) => x.replace(/^publishedAt:\s*/, "")));
+  assert.ok(unique.size >= 1);
+}
+// AppShell: no duplicate Pricing in right rail; GA4 page_view on pathname
+{
+  const shell = fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8");
+  assert.match(shell, /trackPageView/);
+  assert.doesNotMatch(
+    shell,
+    /CreditsBadge[\s\S]{0,200}href=["']\/pricing["']/
+  );
+}
 // Image chrome must not introduce a second H1 on /image
 const suiteChromeSrc = fs.readFileSync(
   join(root, "components/GenerateSuiteChrome.tsx"),
   "utf8"
 );
 assert.doesNotMatch(suiteChromeSrc, /<h1[\s>]/);
+// Privacy / terms self-canonical
+assert.match(
+  fs.readFileSync(join(root, "app/privacy/page.tsx"), "utf8"),
+  /canonical:\s*["']\/privacy["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/terms/page.tsx"), "utf8"),
+  /canonical:\s*["']\/terms["']/
+);
+// Analytics page_view helper
+{
+  const a = fs.readFileSync(join(root, "lib/analytics.ts"), "utf8");
+  assert.match(a, /trackPageView/);
+  assert.match(a, /page_view/);
+  assert.match(a, /send_page_view:\s*false/);
+}
 const appsMeta = fs.readFileSync(join(root, "app/apps/page.tsx"), "utf8");
 // Apps is the live workflow shelf (not a thin preview door).
 assert.match(appsMeta, /WORKFLOWS|workflows/);

@@ -6,27 +6,26 @@ Newest first. One block per meaningful landing.
 
 ### 2026-07-26 — [grok] GSC P0: VideoObject DateTime + crawl/noindex contract
 
-**Branch:** `agent/grok/seo-gsc-p0`
+**Branch:** `agent/grok/seo-gsc-p0` · PR #25
 
 #### Scope
-- `lib/jsonLd.ts`: VideoObject `uploadDate` → `2026-07-20T00:00:00Z`; optional `duration` from recipe seconds (`PT5S`); smoke forbids date-only.
-- Nav: PRIMARY = Explore · Create · Effects · Pricing; Image/Cinema/Community/Models/Flow/Batch → More (Preview/Lab).
-- `robots.ts`: only private/auth disallowed; Preview pages crawlable + `noindex` (PREVIEW_ROBOTS follow:true); self-canonical on image/cinema.
-- `/image` single H1: GenerateSuiteChrome title is `div` not `h1`.
-- Analytics: env-gated GA4 (`NEXT_PUBLIC_GA_MEASUREMENT_ID`) + existing beacon; no-op when unset; no photos/prompts/emails/URLs.
-- **Did not change:** homepage TDH, `/tools/ai-toy-video-generator` TDH, Stripe, credits/session, generate provider.
+- `lib/jsonLd.ts`: VideoObject `uploadDate` = **per-demo `publishedAt`** (ISO DateTime); optional `duration` from recipe (`PT5S`); no single forged global date.
+- `lib/demoVideos.ts`: each demo has `publishedAt` from git first-commit (2026-07-22 theatre batch · 2026-07-23 Mini lab batch, stored as Zulu).
+- Nav: PRIMARY = Explore · Create · Effects · Pricing; **removed right-rail duplicate Pricing**.
+- Preview doors in More; robots allow Preview crawl + noindex; self-canonical on image/cinema/**privacy/terms**.
+- `/image` single H1: suite chrome title is `div`.
+- Analytics: GA4 env-gated + **AppShell `trackPageView(pathname)`** on route change; `send_page_view: false`; path only.
+- **GenerateFailPanel** lint fix kept in this PR: `react-hooks/set-state-in-effect` made `npm run lint` red on branch tip — required for green CI gates, not product SEO scope. Revert-safe isolated change.
 
 #### Sitemap
 - **Still 9 URLs** (`COLD_START_INDEX_PATHS` unchanged).
 
 #### Tests
-- lint 0 errors · typecheck PASS · build PASS · link-check PASS · critical-path PASS
-- sitemap <url> count = **9**
-- homepage VideoObject uploadDate = `2026-07-20T00:00:00Z`
-- robots.txt: Preview paths crawlable (not dual-blocked)
+- _(re-verify after PR #25 follow-up)_ lint · typecheck · build · engine-smoke
 
 #### Commit
-- `a72d597`
+- `a72d597` base GSC fix
+- _(follow-up SHA after push)_
 
 #### Boss
 **Deploy then open Search Console → click “验证修复” for the VideoObject uploadDate issue.**
