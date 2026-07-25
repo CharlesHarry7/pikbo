@@ -1361,13 +1361,18 @@ const imageRoute = fs.readFileSync(
 assert.match(imageRoute, /isSafeDeliverableUrl/);
 assert.match(imageRoute, /UNSAFE_URL/);
 assert.match(imageRoute, /providerFailHttp/);
+// Still safety + provider codes live in shared imageClient (page just wires UI)
 assert.match(
-  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
   /UNSAFE_URL|creditsRefunded/
 );
 assert.match(
-  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
   /PROVIDER_TIMEOUT/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /postImageWithRetry|imageClient/
 );
 // Image idempotency — paid Flux network retry must not double-debit
 const imageJobsSrc = fs.readFileSync(join(root, "lib/imageJobs.ts"), "utf8");
@@ -2231,6 +2236,14 @@ const imagePageSrc = fs.readFileSync(join(root, "app/image/page.tsx"), "utf8");
 assert.match(imagePageSrc, /GenerateFailPanel/);
 assert.match(imagePageSrc, /failRetryAfterSec|retryAfterSec=/);
 assert.match(imagePageSrc, /refund unconfirmed|failCreditState/);
+assert.match(imagePageSrc, /postImageWithRetry|imageClient/);
+// Shared still client (generateClient parity)
+const imageClientSrc = fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8");
+assert.match(imageClientSrc, /export async function postImageWithRetry/);
+assert.match(imageClientSrc, /mintImageIdempotencyKey/);
+assert.match(imageClientSrc, /PROVIDER_NETWORK/);
+assert.match(imageClientSrc, /refundUnconfirmed/);
+assert.match(imageClientSrc, /interpretImageResponse/);
 assert.match(
   fs.readFileSync(join(root, "app/auth/callback/layout.tsx"), "utf8"),
   /PRIVATE_ROBOTS|index:\s*false/

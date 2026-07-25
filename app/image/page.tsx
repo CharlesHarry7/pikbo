@@ -11,6 +11,10 @@ import {
   type ImageHistoryItem,
 } from "@/lib/imageHistory";
 import { fetchMe, mergeMeSession, type MeResponse } from "@/lib/meClient";
+import {
+  mintImageIdempotencyKey,
+  postImageWithRetry,
+} from "@/lib/imageClient";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
@@ -93,82 +97,42 @@ export default function ImageStudioPage() {
     abortRef.current?.abort();
     const abortCtrl = new AbortController();
     abortRef.current = abortCtrl;
-    // One logical attempt — Retry mints a new key; network retry reuses this one.
-    const idempotencyKey =
-      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : `img_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    // One logical attempt — Retry mints a new key; auto-retry reuses this one.
+    const idempotencyKey = mintImageIdempotencyKey();
     setBusy(true);
     setError(null);
     setFailRetryAfterSec(null);
     setFailCreditState(null);
     try {
-      const res = await fetch("/api/image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: trimmed,
-          aspect,
-          idempotencyKey,
-        }),
-        signal: abortCtrl.signal,
-      });
-      const data = await res.json();
-      if (!res.ok) {
+      const result = await postImageWithRetry(
+        { prompt: trimmed, aspect, idempotencyKey },
+        { signal: abortCtrl.signal }
+      );
+      if (!result.ok) {
         const retryAfter =
-          typeof data.retryAfterSec === "number" && data.retryAfterSec > 0
-            ? data.retryAfterSec
+          typeof result.retryAfterSec === "number" && result.retryAfterSec > 0
+            ? result.retryAfterSec
             : null;
         setFailRetryAfterSec(retryAfter);
-        if (data.creditsRefunded === true) {
+        if (result.creditsRefunded === true) {
           setFailCreditState("10 restored");
         } else if (
-          data.refundUnconfirmed === true ||
-          data.code === "TIMEOUT" ||
-          data.code === "UNSAFE_URL"
+          result.refundUnconfirmed === true ||
+          result.code === "TIMEOUT" ||
+          result.code === "UNSAFE_URL" ||
+          result.code === "REQUEST_CANCELED"
         ) {
           setFailCreditState("refund unconfirmed");
         } else {
           setFailCreditState(null);
         }
-        const wait = retryAfter != null ? ` · retry in ${retryAfter}s` : "";
-        const refunded =
-          data.creditsRefunded === true
-            ? " · 10 credits restored"
-            : data.code === "UNSAFE_URL"
-              ? " · check balance (refund unconfirmed)"
-              : "";
-        const timeoutHint =
-          data.code === "TIMEOUT"
-            ? " · mint a new attempt (prior key timed out)"
-            : data.refundUnconfirmed === true
-              ? " · check balance (refund unconfirmed)"
-              : "";
-        const waitCodes =
-          data.code === "RATE_LIMITED" ||
-          data.code === "PROVIDER_RATE_LIMIT" ||
-          data.code === "PROVIDER_TIMEOUT" ||
-          data.code === "PROVIDER_NETWORK" ||
-          data.code === "JOB_IN_FLIGHT" ||
-          data.code === "TIMEOUT";
-        throw new Error(
-          (data.error || "Image generation failed") +
-            (waitCodes ? wait : "") +
-            refunded +
-            timeoutHint
-        );
+        if (result.session) {
+          setMe((prev) => mergeMeSession(prev, result.session as MeResponse));
+        }
+        setError(result.error || "Image generation failed");
+        return;
       }
-      // Live stills must be http(s) or same-origin path; never trust odd schemes.
-      if (
-        typeof data.imageUrl === "string" &&
-        !data.demo &&
-        !/^https?:\/\//i.test(data.imageUrl) &&
-        !data.imageUrl.startsWith("/")
-      ) {
-        throw new Error(
-          "Server returned an unsafe image URL — not displaying · check balance"
-        );
-      }
+      const data = result.data;
       setImageUrl(data.imageUrl);
       setDemo(Boolean(data.demo));
       setDemoReason(
@@ -215,20 +179,9 @@ export default function ImageStudioPage() {
         );
       }
     } catch (e) {
-      const aborted =
-        (e instanceof Error && e.name === "AbortError") ||
-        (typeof DOMException !== "undefined" &&
-          e instanceof DOMException &&
-          e.name === "AbortError");
-      if (aborted) {
-        setFailRetryAfterSec(null);
-        setFailCreditState("refund unconfirmed");
-        setError(
-          "Request canceled — if credits were debited, check balance or retry (refund unconfirmed until server confirms)"
-        );
-      } else {
-        setError(e instanceof Error ? e.message : "Failed");
-      }
+      setFailRetryAfterSec(null);
+      setFailCreditState("refund unconfirmed");
+      setError(e instanceof Error ? e.message : "Failed");
     } finally {
       if (abortRef.current === abortCtrl) abortRef.current = null;
       setBusy(false);
@@ -356,9 +309,17 @@ export default function ImageStudioPage() {
                 className="mt-3"
                 message={error}
                 creditState={failCreditState}
+                creditsRestored={failCreditState === "10 restored"}
                 retryAfterSec={failRetryAfterSec}
                 compact
-                onRetry={!busy ? () => void generate() : undefined}
+                onRetry={
+                  !busy
+                    ? () => {
+                        setFailRetryAfterSec(null);
+                        void generate();
+                      }
+                    : undefined
+                }
                 retryLabel="Retry still"
                 showRecipes={false}
                 showModules={false}

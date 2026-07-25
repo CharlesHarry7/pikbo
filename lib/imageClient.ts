@@ -1,0 +1,322 @@
+/**
+ * Shared client for POST /api/image.
+ * Parity with generateClient: typed fail codes, Retry-After waits, idempotency.
+ */
+
+import type { PublicSession } from "@/lib/session";
+import { isSafeDeliverableUrl } from "@/lib/createTrust";
+import { sleep } from "@/lib/generateClient";
+
+export type ImageErrorCode =
+  | "INVALID_REQUEST"
+  | "INSUFFICIENT_CREDITS"
+  | "RATE_LIMITED"
+  | "JOB_IN_FLIGHT"
+  | "MODEL_EMPTY"
+  | "GENERATION_FAILED"
+  | "PROVIDER_BALANCE"
+  | "PROVIDER_RATE_LIMIT"
+  | "PROVIDER_TIMEOUT"
+  | "PROVIDER_NETWORK"
+  | "CONTENT_POLICY"
+  | "UNSAFE_URL"
+  | "TIMEOUT"
+  | "NETWORK_ERROR"
+  | "REQUEST_CANCELED";
+
+export type ImageSuccess = {
+  imageUrl: string;
+  demo: boolean;
+  demoReason?: string;
+  model?: string;
+  aspect?: string;
+  session?: PublicSession;
+  costCredits?: number;
+  creditsOutcome?: "0 cached" | "10 used";
+  requestId?: string;
+  jobId?: string;
+  idempotentReplay?: boolean;
+};
+
+export type ImageFail = {
+  ok: false;
+  status: number;
+  error: string;
+  code?: ImageErrorCode;
+  session?: PublicSession;
+  retryAfterSec?: number;
+  creditsRefunded?: boolean;
+  refundUnconfirmed?: boolean;
+};
+
+export type ImageOk = {
+  ok: true;
+  status: number;
+  data: ImageSuccess;
+};
+
+export type ImageResult = ImageOk | ImageFail;
+
+export function mintImageIdempotencyKey(): string {
+  try {
+    if (
+      typeof crypto !== "undefined" &&
+      typeof crypto.randomUUID === "function"
+    ) {
+      return crypto.randomUUID();
+    }
+  } catch {
+    /* fall through */
+  }
+  return `img_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
+}
+
+function asErrorBody(data: unknown): {
+  error?: string;
+  code?: string;
+  session?: PublicSession;
+  retryAfterSec?: number;
+  creditsRefunded?: boolean;
+  refundUnconfirmed?: boolean;
+} {
+  if (data && typeof data === "object") {
+    return data as {
+      error?: string;
+      code?: string;
+      session?: PublicSession;
+      retryAfterSec?: number;
+      creditsRefunded?: boolean;
+      refundUnconfirmed?: boolean;
+    };
+  }
+  return { error: "Image generation failed" };
+}
+
+/** Parse a fetch Response + JSON into a typed still result. */
+export function interpretImageResponse(
+  status: number,
+  raw: unknown
+): ImageResult {
+  if (status >= 200 && status < 300) {
+    if (!raw || typeof raw !== "object") {
+      return {
+        ok: false,
+        status,
+        error: "Model returned an empty still",
+        code: "MODEL_EMPTY",
+      };
+    }
+    const d = raw as Partial<ImageSuccess> & {
+      creditsRefunded?: boolean;
+    };
+    if (typeof d.imageUrl !== "string" || !d.imageUrl) {
+      return {
+        ok: false,
+        status,
+        error: "Model returned an empty still",
+        code: "MODEL_EMPTY",
+        session: d.session,
+        creditsRefunded: d.creditsRefunded === true ? true : undefined,
+      };
+    }
+    // Live stills must be http(s) or same-origin path; demos may be data:image.
+    const demo = Boolean(d.demo);
+    if (!demo) {
+      if (
+        !/^https?:\/\//i.test(d.imageUrl) &&
+        !d.imageUrl.startsWith("/")
+      ) {
+        return {
+          ok: false,
+          status: 502,
+          error:
+            "Server returned an unsafe image URL — not displaying · check balance",
+          code: "UNSAFE_URL",
+          session: d.session,
+          creditsRefunded: d.creditsRefunded === true ? true : undefined,
+          refundUnconfirmed: d.creditsRefunded !== true,
+        };
+      }
+      if (
+        /^https?:\/\//i.test(d.imageUrl) &&
+        !isSafeDeliverableUrl(d.imageUrl)
+      ) {
+        return {
+          ok: false,
+          status: 502,
+          error:
+            "Server returned an unsafe image URL — not displaying · check balance",
+          code: "UNSAFE_URL",
+          session: d.session,
+          creditsRefunded: d.creditsRefunded === true ? true : undefined,
+          refundUnconfirmed: d.creditsRefunded !== true,
+        };
+      }
+    } else if (
+      !d.imageUrl.startsWith("data:image/") &&
+      !isSafeDeliverableUrl(d.imageUrl) &&
+      !d.imageUrl.startsWith("/")
+    ) {
+      return {
+        ok: false,
+        status: 502,
+        error: "Demo still URL is unsafe — not displaying",
+        code: "UNSAFE_URL",
+        session: d.session,
+      };
+    }
+    return { ok: true, status, data: d as ImageSuccess };
+  }
+
+  const body = asErrorBody(raw);
+  const code = (body.code as ImageErrorCode | undefined) || undefined;
+  const retryAfterSec =
+    typeof body.retryAfterSec === "number" && body.retryAfterSec > 0
+      ? body.retryAfterSec
+      : undefined;
+  const creditsRefunded = body.creditsRefunded === true;
+  const refundUnconfirmed =
+    body.refundUnconfirmed === true || code === "TIMEOUT";
+
+  let error =
+    body.error ||
+    (code === "RATE_LIMITED"
+      ? `Too many image jobs — wait ${retryAfterSec ?? "a few"}s, then Retry`
+      : code === "JOB_IN_FLIGHT"
+        ? `An image job is already running — wait ${retryAfterSec ?? "a few"}s`
+        : code === "PROVIDER_BALANCE"
+          ? "Upstream provider balance empty — credits restored when the debit was confirmed."
+          : code === "PROVIDER_RATE_LIMIT"
+            ? `Provider busy — try again in ${retryAfterSec ?? "a few"}s`
+            : code === "PROVIDER_TIMEOUT"
+              ? `Provider timed out — Retry in ${retryAfterSec ?? "a few"}s`
+              : code === "PROVIDER_NETWORK"
+                ? `Provider network blip — Retry in ${retryAfterSec ?? "a few"}s`
+                : code === "TIMEOUT"
+                  ? "Prior still job timed out — mint a new attempt (Retry). Check balance if refund is unconfirmed."
+                  : code === "CONTENT_POLICY"
+                    ? "Provider rejected this prompt — try a clearer product description"
+                    : code === "UNSAFE_URL"
+                      ? "Provider returned an unsafe image URL — check balance"
+                      : code === "INSUFFICIENT_CREDITS"
+                        ? "Not enough credits — top up on Pricing or wait for plan refresh"
+                        : "Image generation failed — Retry keeps your prompt");
+
+  if (creditsRefunded && !/refund|restored|credit/i.test(error)) {
+    error = `${error} · 10 credits restored`;
+  }
+  if (
+    refundUnconfirmed &&
+    !creditsRefunded &&
+    !/refund unconfirmed|check balance/i.test(error)
+  ) {
+    error = `${error} · check balance (refund unconfirmed)`;
+  }
+
+  return {
+    ok: false,
+    status,
+    error,
+    code,
+    session: body.session,
+    retryAfterSec,
+    creditsRefunded,
+    refundUnconfirmed: refundUnconfirmed || undefined,
+  };
+}
+
+export async function postImage(
+  body: { prompt: string; aspect?: string; idempotencyKey?: string },
+  init?: { signal?: AbortSignal }
+): Promise<ImageResult> {
+  try {
+    const res = await fetch("/api/image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: init?.signal,
+    });
+    let raw: unknown = null;
+    try {
+      raw = await res.json();
+    } catch {
+      raw = { error: "Invalid server response" };
+    }
+    return interpretImageResponse(res.status, raw);
+  } catch (e) {
+    const aborted =
+      (e instanceof Error && e.name === "AbortError") ||
+      (typeof DOMException !== "undefined" &&
+        e instanceof DOMException &&
+        e.name === "AbortError");
+    return {
+      ok: false,
+      status: 0,
+      code: aborted ? "REQUEST_CANCELED" : "NETWORK_ERROR",
+      error: aborted
+        ? "Request canceled — if credits were debited, check balance or retry (refund unconfirmed until server confirms)"
+        : e instanceof Error
+          ? e.message
+          : "Network error",
+      refundUnconfirmed: aborted ? true : undefined,
+    };
+  }
+}
+
+/**
+ * POST still with one automatic recovery on rate / in-flight / network blips.
+ * Stable idempotencyKey for the whole attempt (no double Flux debit).
+ * User Retry must call again without reusing a failed key (mint fresh).
+ */
+export async function postImageWithRetry(
+  body: { prompt: string; aspect?: string; idempotencyKey?: string },
+  opts?: { maxRetries?: number; signal?: AbortSignal }
+): Promise<ImageResult> {
+  const maxRetries = opts?.maxRetries ?? 1;
+  const idempotencyKey =
+    typeof body.idempotencyKey === "string" &&
+    body.idempotencyKey.trim().length >= 8
+      ? body.idempotencyKey.trim().slice(0, 128)
+      : mintImageIdempotencyKey();
+  const keyed = { ...body, idempotencyKey };
+  let attempt = 0;
+  let result = await postImage(keyed, { signal: opts?.signal });
+  while (
+    !result.ok &&
+    attempt < maxRetries &&
+    (result.code === "RATE_LIMITED" ||
+      result.code === "PROVIDER_RATE_LIMIT" ||
+      result.code === "PROVIDER_NETWORK" ||
+      result.code === "JOB_IN_FLIGHT")
+  ) {
+    attempt += 1;
+    const waitSec =
+      result.code === "JOB_IN_FLIGHT"
+        ? Math.min(8, Math.max(2, result.retryAfterSec ?? 2))
+        : result.code === "PROVIDER_NETWORK"
+          ? Math.min(12, Math.max(3, result.retryAfterSec ?? 8))
+          : (result.retryAfterSec ?? 8);
+    try {
+      await sleep(Math.min(60, Math.max(1, waitSec)) * 1000, opts?.signal);
+    } catch (e) {
+      const aborted =
+        (e instanceof Error && e.name === "AbortError") ||
+        (typeof DOMException !== "undefined" &&
+          e instanceof DOMException &&
+          e.name === "AbortError");
+      if (aborted) {
+        return {
+          ok: false,
+          status: 0,
+          code: "REQUEST_CANCELED",
+          error:
+            "Request canceled — if credits were debited, check balance or retry (refund unconfirmed until server confirms)",
+          refundUnconfirmed: true,
+        };
+      }
+      throw e;
+    }
+    result = await postImage(keyed, { signal: opts?.signal });
+  }
+  return result;
+}

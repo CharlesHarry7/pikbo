@@ -4,10 +4,9 @@ Newest first. One block per meaningful landing.
 
 ---
 
-### 2026-07-25 — [grok] Still Studio FailPanel Retry-After + refund honesty
-- Image page: `failRetryAfterSec` / `failCreditState` into GenerateFailPanel countdown.
-- Smoke locks FailPanel countdown + Create/Landing/Batch/Image retryAfter wiring.
-- Prior: FailPanel Library exit; Batch pack FailPanel Retry-After.
+### 2026-07-25 — [grok] Still Studio imageClient + FailPanel Retry-After
+- `lib/imageClient`: postImageWithRetry · PROVIDER_NETWORK auto-retry · refund unconfirmed.
+- Image page uses client + FailPanel countdown; smoke locks FailPanel + imageClient.
 - Verified: typecheck · engine-smoke.
 
 ### 2026-07-25 — [grok] Generate PROVIDER_NETWORK + ledger JOB_IN_FLIGHT
