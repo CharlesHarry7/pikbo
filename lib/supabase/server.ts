@@ -54,6 +54,7 @@ export async function probeSupabase(): Promise<{
   if (!configured) {
     return { configured: false, reachable: false, hasServiceRole };
   }
+  const PROBE_MS = 3_000;
   try {
     const client = getSupabaseAnonServer();
     if (!client) {
@@ -64,8 +65,14 @@ export async function probeSupabase(): Promise<{
         error: "client_init_failed",
       };
     }
-    // Lightweight reachability: auth settings endpoint via getSession on empty
-    const { error } = await client.auth.getSession();
+    // Lightweight reachability with hard timeout (health must not hang)
+    const sessionResult = await Promise.race([
+      client.auth.getSession(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("supabase_probe_timeout")), PROBE_MS)
+      ),
+    ]);
+    const { error } = sessionResult;
     // getSession with no cookie is fine; network/config errors surface here
     if (error && /fetch|network|ENOTFOUND|ECONNREFUSED/i.test(error.message)) {
       return {
