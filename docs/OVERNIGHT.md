@@ -118,7 +118,8 @@
 77. [x] community posts rate limits + HEAD · CP/Mode A community honesty
 78. [x] Free Mini raw blocked from Community publish · safe UGC render · library smoke
 79. [x] Image idempotencyKey + requestId ledger (no double Flux debit) · health.imageJobs
-80. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+80. [x] Image TIMEOUT sweep + HEAD open probe · honest JOB_IN_FLIGHT Retry-After after crash
+81. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -132,8 +133,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Image `/api/image` session-scoped idempotencyKey: success/fail replay · running→JOB_IN_FLIGHT.  
-- Still studio mints key once per attempt; health.imageJobs probe; smoke invent-posts false positive fixed.  
+- Image ledger sweeps TIMEOUT (default 90s) so crash mid-Flux cannot leave infinite JOB_IN_FLIGHT.  
+- HEAD /api/image open counts · Retry-After max(lock, job age) · refund unconfirmed on timeout.  
 - Mode A still needs boss Vercel login · SQL · T6 bake worker.
 
 ---

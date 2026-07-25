@@ -114,6 +114,12 @@ export default function ImageStudioPage() {
             : data.code === "UNSAFE_URL"
               ? " · check balance (refund unconfirmed)"
               : "";
+        const timeoutHint =
+          data.code === "TIMEOUT"
+            ? " · mint a new attempt (prior key timed out)"
+            : data.refundUnconfirmed === true
+              ? " · check balance (refund unconfirmed)"
+              : "";
         throw new Error(
           (data.error || "Image generation failed") +
             (data.code === "RATE_LIMITED" ||
@@ -122,7 +128,8 @@ export default function ImageStudioPage() {
             data.code === "JOB_IN_FLIGHT"
               ? wait
               : "") +
-            refunded
+            refunded +
+            timeoutHint
         );
       }
       // Live stills must be http(s) or same-origin path; never trust odd schemes.

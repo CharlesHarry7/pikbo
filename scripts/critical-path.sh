@@ -79,6 +79,14 @@ if [[ "$gens_head" != "200" ]]; then
 fi
 echo "OK   HEAD /api/generations → ${gens_head} open=$(grep -i '^X-Pikbo-Jobs-Open:' /tmp/pikbo-gens.headers | tr -d '\r' | awk '{print $2}') total=$(grep -i '^X-Pikbo-Jobs:' /tmp/pikbo-gens.headers | tr -d '\r' | awk '{print $2}')"
 
+# HEAD /api/image — still ledger open count (TIMEOUT sweep honesty)
+img_head=$(curl --noproxy '*' -sS -D /tmp/pikbo-img.headers -o /dev/null -w "%{http_code}" -m 10 -I "${BASE}/api/image" || echo "000")
+if [[ "$img_head" != "200" ]]; then
+  echo "FAIL HEAD /api/image → HTTP ${img_head}"
+  exit 1
+fi
+echo "OK   HEAD /api/image → ${img_head} open=$(grep -i '^X-Pikbo-Image-Jobs-Open:' /tmp/pikbo-img.headers | tr -d '\r' | awk '{print $2}') total=$(grep -i '^X-Pikbo-Image-Jobs:' /tmp/pikbo-img.headers | tr -d '\r' | awk '{print $2}')"
+
 # HEAD community UGC configured flag
 comm_head=$(curl --noproxy '*' -sS -D /tmp/pikbo-comm.headers -o /dev/null -w "%{http_code}" -m 10 -I "${BASE}/api/community/posts" || echo "000")
 if [[ "$comm_head" != "200" ]]; then
