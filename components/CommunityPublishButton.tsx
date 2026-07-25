@@ -9,7 +9,7 @@ import { track } from "@/lib/analytics";
 
 /**
  * Publish a real Library clip to Community UGC.
- * Never invent posts — only signed-in users + safe http(s) video URLs.
+ * Real posts only — signed-in users + safe http(s) video URLs.
  * Lab demos (demo=true) and Free Mini watermark raw (T6) are blocked —
  * publishing raw free provider URLs would bypass the download gate.
  */

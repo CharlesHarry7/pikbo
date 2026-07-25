@@ -4,11 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
-### 2026-07-25 — [grok] Phase H apps/[slug] + Library still cap
+### 2026-07-25 — [grok] Image idempotency + Phase H apps/[slug] + Library still cap
+- `/api/image`: session-scoped `idempotencyKey` (success/fail replay · running→JOB_IN_FLIGHT) · `lib/imageJobs` · health.imageJobs · client mints once per attempt.
 - `/apps/[slug]`: index only live doors with unique Lab proof + FAQ/FAQPage; thin shells noindex.
 - Sitemap lists proof-backed app doors; Create sticky CTA = Try free · Lab.
 - Device Library: slimInputImage drops multi-MB Base64 (path samples / ≤8k only).
-- Verified: typecheck · engine-smoke.
+- Verified: typecheck · eslint · engine-smoke.
 
 ### 2026-07-24 — [grok] Flow path + Seller Pack WaitStage + HF smoke
 - Flow: Photo→Clip → `/create` workbench; core path chips Generate→…→Community.

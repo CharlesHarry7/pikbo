@@ -8,6 +8,8 @@ export type ImageHistoryItem = {
   /** Server-echoed when present (0 cached · flat live). */
   costCredits?: number;
   creditsOutcome?: "0 cached" | "10 used";
+  /** Server/provider id when present (idempotent replay / support). */
+  requestId?: string;
   createdAt: string;
 };
 
@@ -78,6 +80,10 @@ export function loadImageHistory(): ImageHistoryItem[] {
         creditsOutcome:
           i.creditsOutcome === "0 cached" || i.creditsOutcome === "10 used"
             ? i.creditsOutcome
+            : undefined,
+        requestId:
+          typeof i.requestId === "string" && i.requestId
+            ? i.requestId
             : undefined,
       }));
   } catch {

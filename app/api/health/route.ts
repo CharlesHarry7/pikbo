@@ -14,6 +14,7 @@ import { inflightJobCount, inflightTtlMs } from "@/lib/rateLimit";
 import { localAssetsProbe } from "@/lib/localAssets";
 import { probeDemoAssets } from "@/lib/demoClips";
 import { communityUgcConfigured } from "@/lib/communityPosts";
+import { imageJobsProbe } from "@/lib/imageJobs";
 // NextResponse used for GET + HEAD
 
 export const runtime = "nodejs";
@@ -117,7 +118,9 @@ export async function GET() {
       stills: "optional-support" as const,
       generatePath: "/api/generate",
       imagePath: "/api/image",
+      /** Generate + image both accept client-minted session-scoped keys. */
       idempotency: "client-key-session-scoped",
+      imageIdempotency: "client-key-session-scoped",
     },
     /** Honesty contract: cached demos free; live jobs charge flat credits */
     billing: {
@@ -161,6 +164,8 @@ export async function GET() {
     },
     /** Phase D process-memory job ledger (counts only) */
     jobs: generationJobsProbe(),
+    /** Still studio process-memory ledger (counts only — no image bytes) */
+    imageJobs: imageJobsProbe(),
     /**
      * Provider webhook auth readiness (presence only — never echo secret).
      * Production refuses unsigned POSTs when secret missing.

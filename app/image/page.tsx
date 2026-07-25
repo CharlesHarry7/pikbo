@@ -84,13 +84,22 @@ export default function ImageStudioPage() {
     abortRef.current?.abort();
     const abortCtrl = new AbortController();
     abortRef.current = abortCtrl;
+    // One logical attempt — Retry mints a new key; network retry reuses this one.
+    const idempotencyKey =
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `img_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     setBusy(true);
     setError(null);
     try {
       const res = await fetch("/api/image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: trimmed, aspect }),
+        body: JSON.stringify({
+          prompt: trimmed,
+          aspect,
+          idempotencyKey,
+        }),
         signal: abortCtrl.signal,
       });
       const data = await res.json();
@@ -140,13 +149,19 @@ export default function ImageStudioPage() {
               ? "0 cached"
               : `${data.costCredits} used`
             : null;
-      setLastSettlement(outcome);
+      // Idempotent replay honesty — same still, no second debit.
+      setLastSettlement(
+        data.idempotentReplay === true && outcome
+          ? `${outcome} · replay`
+          : outcome
+      );
       // Authoritative session after still job — rehydrate freeTrial (badge honesty).
       if (data.session && typeof data.session === "object") {
         setMe((prev) => mergeMeSession(prev, data.session as MeResponse));
       }
       // Store live URLs + labeled demo placeholders so history stays honest.
-      if (data.imageUrl) {
+      // Skip re-push on idempotent replay (same requestId / still).
+      if (data.imageUrl && data.idempotentReplay !== true) {
         setHistory(
           pushImageHistory({
             imageUrl: data.imageUrl,
@@ -161,6 +176,8 @@ export default function ImageStudioPage() {
               data.creditsOutcome === "10 used"
                 ? data.creditsOutcome
                 : undefined,
+            requestId:
+              typeof data.requestId === "string" ? data.requestId : undefined,
           })
         );
       }
