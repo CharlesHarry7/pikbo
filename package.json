@@ -12,6 +12,7 @@
     "link-check": "bash scripts/link-check.sh",
     "g6-api-smoke": "node scripts/g6-api-smoke.mjs",
     "engine-smoke": "node scripts/engine-smoke.mjs",
+    "durable-credits-smoke": "node scripts/durable-credits-smoke.mjs",
     "softlive-checklist": "bash scripts/softlive-checklist.sh",
     "typecheck": "tsc --noEmit",
     "check:conflicts": "git grep -nE \"^(<<<<<<<|>>>>>>>|=======)\" -- app lib components && exit 1 || exit 0",
