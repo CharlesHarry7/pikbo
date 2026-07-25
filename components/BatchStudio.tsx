@@ -7,6 +7,7 @@ import {
   GenerateWaitMobileStrip,
   GenerateWaitStage,
 } from "@/components/GenerateWaitStage";
+import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import {
   historyFieldsFromSuccess,
   postGenerateWithRetry,
@@ -1481,6 +1482,12 @@ export function BatchStudio({
             className="border-[var(--mint)]/25 bg-[var(--mint)]/[0.06]"
           />
         )}
+        {doneCount > 0 && !running ? (
+          <GenerateAfterPath
+            demo={demoMode}
+            className="mt-3 justify-start"
+          />
+        ) : null}
         {jobs.map((j) => (
           <div
             key={j.slug}
