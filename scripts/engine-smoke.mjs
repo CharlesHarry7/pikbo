@@ -300,6 +300,9 @@ assert.match(pb, /MAX_EXTRA_CHARS/);
 const hist = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(hist, /remoteClipMayExpire/);
 assert.match(hist, /inputImage:\s*_drop|QuotaExceeded|strip heavy/);
+// Phase A4/G: never push multi-MB Base64 stills into device Library.
+assert.match(hist, /slimInputImage|MAX_INPUT_IMAGE_CHARS/);
+assert.match(hist, /8_000|8000/);
 // Library import/download: refuse unsafe videoUrl schemes (parity with downloads gate).
 assert.match(hist, /isSafeDeliverableUrl/);
 assert.match(hist, /downloadGate|downloadAllowed/);
@@ -1356,6 +1359,56 @@ assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /PROVIDER_TIMEOUT/
 );
+// Image idempotency — paid Flux network retry must not double-debit
+const imageJobsSrc = fs.readFileSync(join(root, "lib/imageJobs.ts"), "utf8");
+assert.match(imageJobsSrc, /export function findImageJobByIdempotencyKey/);
+assert.match(imageJobsSrc, /export function beginImageJob/);
+assert.match(imageJobsSrc, /export function completeImageJob/);
+assert.match(imageJobsSrc, /export function failImageJob/);
+assert.match(imageJobsSrc, /export function imageJobsProbe/);
+assert.match(imageJobsSrc, /export function normalizeImageIdempotencyKey/);
+assert.match(imageRoute, /findImageJobByIdempotencyKey/);
+assert.match(imageRoute, /idempotentReplay/);
+assert.match(imageRoute, /normalizeImageIdempotencyKey/);
+assert.match(imageRoute, /requestId/);
+// Idempotency before rate limit + debit (replay free of second charge)
+// Use post-handler call sites — import lines also mention these names.
+{
+  const postAt = imageRoute.indexOf("export async function POST");
+  const idempAt = imageRoute.indexOf(
+    "findImageJobByIdempotencyKey(session.id",
+    postAt
+  );
+  const budgetAt = imageRoute.indexOf("takeGenerateBudget(", postAt);
+  const deductAt = imageRoute.indexOf("deductCredits(session", postAt);
+  assert.ok(postAt > 0 && idempAt > postAt, "image idempotency lookup in POST");
+  assert.ok(idempAt < budgetAt, "image idempotency before rate budget");
+  assert.ok(idempAt < deductAt, "image idempotency before deductCredits");
+}
+// Pure image idempotency key gate (parity with generate min length 8)
+function normalizeImageIdempotencyKeyPure(raw) {
+  if (typeof raw !== "string") return undefined;
+  const t = raw.trim().slice(0, 128);
+  if (t.length < 8) return undefined;
+  return t;
+}
+assert.equal(normalizeImageIdempotencyKeyPure("short"), undefined);
+assert.equal(normalizeImageIdempotencyKeyPure("  ab12cd34  "), "ab12cd34");
+assert.equal(normalizeImageIdempotencyKeyPure(null), undefined);
+// Client mints once per attempt; history can store requestId
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /idempotencyKey/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /randomUUID|idempotencyKey/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageHistory.ts"), "utf8"),
+  /requestId\?:/
+);
+assert.match(healthRoute, /imageJobs|imageIdempotency/);
 assert.match(createStudio, /useCallback[\s\S]*adoptImage|adoptImage = useCallback/);
 // Flow + home viral: shared AutoPlay (no multi-autoPlay)
 assert.match(
@@ -1523,6 +1576,18 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "app/robots.ts"), "utf8"),
   /["']\/apps["']/
 );
+// Phase H: /apps/[slug] only indexes live doors with unique Lab proof + FAQ.
+const appsSlugSrc = fs.readFileSync(
+  join(root, "app/apps/[slug]/page.tsx"),
+  "utf8"
+);
+assert.match(appsSlugSrc, /appDetailIndexable|recipeHasUniqueProof/);
+assert.match(appsSlugSrc, /CONCEPT_ROBOTS|PREVIEW_ROBOTS/);
+assert.match(appsSlugSrc, /APP_DETAIL_FAQ|Workflow FAQ/);
+assert.match(appsSlugSrc, /FAQPage/);
+assert.match(appsSlugSrc, /FreeTrialCta/);
+assert.match(appsSlugSrc, /Lab demo|Lab proof/);
+assert.match(sitemapSrc, /listLiveWorkflows|apps\/\$\{/);
 
 // Library honesty: Free live must not expose raw download/open
 const historySrcLib = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
@@ -2653,10 +2718,15 @@ assert.equal(waitPhaseForElapsedPure(100, false), "deep");
 assert.equal(waitPhaseForElapsedPure(200, false), "long");
 assert.ok(waitProgressPctPure(60, false) < 50, "60s bar not fake-complete");
 assert.ok(waitProgressPctPure(180, false) >= 90, "3min near end of bar");
-assert.match(
-  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
-  /GenerateWaitStage/
+const createStudioSmoke = fs.readFileSync(
+  join(root, "components/CreateStudio.tsx"),
+  "utf8"
 );
+assert.match(createStudioSmoke, /GenerateWaitStage/);
+// Mobile sticky Lab sample is not a Free Mini live claim.
+assert.match(createStudioSmoke, /Try free · Lab/);
+// Device Library stills: path samples or tiny previews only (no multi-MB Base64).
+assert.match(createStudioSmoke, /stillForStore\.startsWith\(["']\/["']\)|8_000/);
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /GenerateWaitStage/

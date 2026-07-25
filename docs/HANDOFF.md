@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-25 — [grok] Phase H apps/[slug] + Library still cap
+- `/apps/[slug]`: index only live doors with unique Lab proof + FAQ/FAQPage; thin shells noindex.
+- Sitemap lists proof-backed app doors; Create sticky CTA = Try free · Lab.
+- Device Library: slimInputImage drops multi-MB Base64 (path samples / ≤8k only).
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-24 — [grok] Flow path + Seller Pack WaitStage + HF smoke
 - Flow: Photo→Clip → `/create` workbench; core path chips Generate→…→Community.
 - Batch/Seller Pack: `GenerateWaitStage` while pack runs (1–3 min Mini pace).

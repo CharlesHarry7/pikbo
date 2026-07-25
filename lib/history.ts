@@ -59,6 +59,21 @@ export function historyProvenance(item: Pick<HistoryItem, "demo">): string {
 
 const KEY = "pikbo_library_v1";
 const MAX = 48;
+/** Cap device Library still previews — never store multi-MB Base64 uploads. */
+const MAX_INPUT_IMAGE_CHARS = 8_000;
+
+function slimInputImage(inputImage: string | undefined): string | undefined {
+  if (!inputImage) return undefined;
+  // Path samples (/demos/…) are fine; large data: URLs bloat localStorage.
+  if (inputImage.startsWith("/")) return inputImage;
+  if (
+    inputImage.startsWith("data:image/") &&
+    inputImage.length <= MAX_INPUT_IMAGE_CHARS
+  ) {
+    return inputImage;
+  }
+  return undefined;
+}
 
 function normalizeItem(raw: unknown): HistoryItem | null {
   if (!raw || typeof raw !== "object") return null;
@@ -79,11 +94,9 @@ function normalizeItem(raw: unknown): HistoryItem | null {
     projectName:
       typeof o.projectName === "string" ? o.projectName : undefined,
     sku: typeof o.sku === "string" && o.sku.trim() ? o.sku.trim().slice(0, 48) : undefined,
-    inputImage:
-      typeof o.inputImage === "string" &&
-      (o.inputImage.startsWith("data:image/") || o.inputImage.startsWith("/"))
-        ? o.inputImage
-        : undefined,
+    inputImage: slimInputImage(
+      typeof o.inputImage === "string" ? o.inputImage : undefined
+    ),
     effect: o.effect,
     effectName: o.effectName,
     model: typeof o.model === "string" ? o.model : undefined,
@@ -161,6 +174,7 @@ export function pushHistory(
 ): HistoryItem[] {
   const next: HistoryItem = {
     ...item,
+    inputImage: slimInputImage(item.inputImage),
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     createdAt: new Date().toISOString(),
   };

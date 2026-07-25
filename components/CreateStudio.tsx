@@ -846,8 +846,12 @@ export function CreateStudio({
           : remix.intent?.sourceProjectSlug
             ? `Remix · ${remix.intent.sourceProjectSlug}`
             : identityProjectName(toyIdentity) || "Owned toy project",
+        // Phase A4/G: do not ship multi-MB Base64 into device Library.
+        // Keep path samples (/demos/…) or tiny stills only; session sourceStore
+        // holds the full still for Retry/Variant in this tab.
         inputImage:
-          stillForStore && stillForStore.length <= 300_000
+          stillForStore &&
+          (stillForStore.startsWith("/") || stillForStore.length <= 8_000)
             ? stillForStore
             : undefined,
         sku: toyIdentity.sku || undefined,
@@ -2751,8 +2755,9 @@ export function CreateStudio({
               disabled={sampleLoading || busy}
               onClick={() => void loadSampleToy("scout", true)}
               className="btn btn-ghost shrink-0 px-3 py-3 text-xs"
+              title="Official Lab sample · 0 credits cached demo"
             >
-              Try free
+              Try free · Lab
             </button>
           </div>
         ) : busy ? (

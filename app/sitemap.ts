@@ -5,6 +5,7 @@ import { TOY_TYPES } from "@/lib/toytypes";
 import { GUIDES } from "@/lib/guides";
 import { TOOLS } from "@/lib/tools";
 import { listOfficialProjectSlugs } from "@/lib/videoFeed";
+import { listLiveWorkflows } from "@/lib/workflows";
 import { site } from "@/lib/site";
 import {
   proofBackedRecipeSlugs,
@@ -17,7 +18,7 @@ import {
  * they are omitted here so search does not treat them as thin pages.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const reviewedAt = "2026-07-24";
+  const reviewedAt = "2026-07-25";
   const proofRecipes = new Set(proofBackedRecipeSlugs());
 
   const staticPages = [
@@ -94,6 +95,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
+  // Live app doors with unique Lab proof + FAQ (thin shells stay noindex / omitted).
+  const appDetailPages = listLiveWorkflows()
+    .filter((w) => w.effect && recipeHasUniqueProof(w.effect))
+    .map((w) => ({
+      url: `${site.url}/apps/${w.id}`,
+      lastModified: reviewedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.65,
+    }));
+
   return [
     ...staticPages,
     ...effectPages,
@@ -102,5 +113,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...useCasePages,
     ...toyTypePages,
     ...guidePages,
+    ...appDetailPages,
   ];
 }
