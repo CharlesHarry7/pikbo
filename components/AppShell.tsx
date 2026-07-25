@@ -210,7 +210,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             {t("cta.pricing")}
           </Link>
           <Link
-            href="/create"
+            href={home ? "/#home-tool" : "/create"}
             className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[13px] font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.25)] transition-transform hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(200,255,61,0.4)]"
           >
             {t("cta.generate")}
