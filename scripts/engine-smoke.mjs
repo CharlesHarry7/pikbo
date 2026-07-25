@@ -1367,10 +1367,69 @@ assert.match(imageJobsSrc, /export function completeImageJob/);
 assert.match(imageJobsSrc, /export function failImageJob/);
 assert.match(imageJobsSrc, /export function imageJobsProbe/);
 assert.match(imageJobsSrc, /export function normalizeImageIdempotencyKey/);
+assert.match(imageJobsSrc, /export function sweepTimedOutImageJobs/);
+assert.match(imageJobsSrc, /export function imageJobTimeoutMs/);
+assert.match(imageJobsSrc, /export function imageJobInFlightRetryAfterSec/);
+assert.match(imageJobsSrc, /TIMEOUT|refund unconfirmed/);
 assert.match(imageRoute, /findImageJobByIdempotencyKey/);
 assert.match(imageRoute, /idempotentReplay/);
 assert.match(imageRoute, /normalizeImageIdempotencyKey/);
 assert.match(imageRoute, /requestId/);
+assert.match(imageRoute, /export async function HEAD/);
+assert.match(imageRoute, /X-Pikbo-Image-Jobs-Open/);
+assert.match(imageRoute, /imageJobInFlightRetryAfterSec/);
+// Pure image timeout sweep (crash mid-Flux must not leave infinite JOB_IN_FLIGHT)
+function sweepTimedOutImageJobsPure(jobs, now, timeoutMs) {
+  const timedOut = [];
+  for (const job of jobs) {
+    if (job.status !== "running") continue;
+    const age = now - Date.parse(job.updatedAt || job.createdAt);
+    if (!Number.isFinite(age) || age < timeoutMs) continue;
+    job.status = "failed";
+    job.errorCode = "TIMEOUT";
+    job.creditsOutcome = "refund unconfirmed";
+    timedOut.push(job);
+  }
+  return timedOut;
+}
+{
+  const base = new Date("2026-07-25T00:00:00.000Z").getTime();
+  const jobs = [
+    {
+      status: "running",
+      createdAt: new Date(base).toISOString(),
+      updatedAt: new Date(base).toISOString(),
+    },
+    {
+      status: "running",
+      createdAt: new Date(base).toISOString(),
+      updatedAt: new Date(base + 10_000).toISOString(),
+    },
+    {
+      status: "succeeded",
+      createdAt: new Date(base).toISOString(),
+      updatedAt: new Date(base).toISOString(),
+    },
+  ];
+  const hit = sweepTimedOutImageJobsPure(jobs, base + 90_000, 90_000);
+  assert.equal(hit.length, 1, "only fully aged running job times out");
+  assert.equal(jobs[0].errorCode, "TIMEOUT");
+  assert.equal(jobs[0].creditsOutcome, "refund unconfirmed");
+  assert.equal(jobs[1].status, "running", "recently updated still open");
+  assert.equal(jobs[2].status, "succeeded");
+  // Retry-After prefers remaining job age (lock may already be free after kill)
+  function imageJobRetryAfterPure(job, now, timeoutMs) {
+    if (job.status !== "running") return 1;
+    const age = now - Date.parse(job.updatedAt || job.createdAt);
+    const remainingMs = timeoutMs - age;
+    if (remainingMs <= 0) return 1;
+    return Math.max(1, Math.ceil(remainingMs / 1000));
+  }
+  assert.equal(
+    imageJobRetryAfterPure(jobs[1], base + 10_000 + 30_000, 90_000),
+    60
+  );
+}
 // Idempotency before rate limit + debit (replay free of second charge)
 // Use post-handler call sites — import lines also mention these names.
 {
@@ -2684,8 +2743,9 @@ assert.match(settingsPageSrc, /health\.t6|freeLiveRawDownload|t6DownloadLabel/);
 assert.match(settingsPageSrc, /FreeTrialCta/);
 assert.match(settingsPageSrc, /pikbo_onboard_v3/);
 assert.match(settingsPageSrc, /process-memory/);
-// Phase C/D: still imageJobs probe from health (Flux idempotency ledger)
+// Phase C/D: still imageJobs probe from health + HEAD /api/image
 assert.match(settingsPageSrc, /imageJobs|Still image jobs/);
+assert.match(settingsPageSrc, /X-Pikbo-Image-Jobs|method:\s*["']HEAD["']/);
 const statusProbeSrc = fs.readFileSync(
   join(root, "components/StatusProbe.tsx"),
   "utf8"
@@ -2695,6 +2755,19 @@ assert.match(statusProbeSrc, /Still image job ledger|Flux idempotency/);
 const modelsPageSrc = fs.readFileSync(join(root, "app/models/page.tsx"), "utf8");
 assert.match(modelsPageSrc, /FreeTrialCta/);
 assert.match(modelsPageSrc, /robots:\s*\{\s*index:\s*false/);
+// Image still timeout recovery (no infinite JOB_IN_FLIGHT after kill)
+const imageJobsLib = fs.readFileSync(join(root, "lib/imageJobs.ts"), "utf8");
+assert.match(imageJobsLib, /sweepTimedOutImageJobs/);
+assert.match(imageJobsLib, /refund unconfirmed/);
+assert.match(imageJobsLib, /imageJobInFlightRetryAfterSec/);
+assert.match(imageJobsLib, /listImageJobCountsForSession/);
+const imageRouteHead = fs.readFileSync(
+  join(root, "app/api/image/route.ts"),
+  "utf8"
+);
+assert.match(imageRouteHead, /export async function HEAD/);
+assert.match(imageRouteHead, /X-Pikbo-Image-Jobs-Open/);
+assert.match(imageRouteHead, /imageJobInFlightRetryAfterSec/);
 assert.match(
   fs.readFileSync(join(root, "components/CommandPalette.tsx"), "utf8"),
   /Lab sample · 0 credits/

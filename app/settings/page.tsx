@@ -33,6 +33,9 @@ type T6Probe = {
 type ImageJobsProbe = {
   total: number;
   open: number;
+  succeeded?: number;
+  failed?: number;
+  timeoutMs?: number;
 };
 
 export default function SettingsPage() {
@@ -81,31 +84,48 @@ export default function SettingsPage() {
       }
     }
 
+    async function refreshImageJobsProbe() {
+      try {
+        // Session-scoped HEAD — sweeps TIMEOUT so open never sticks after kill.
+        const res = await fetch("/api/image", { method: "HEAD" });
+        if (!res.ok) {
+          setImageJobsProbe(null);
+          return;
+        }
+        const total = Number(res.headers.get("X-Pikbo-Image-Jobs") || "0");
+        const open = Number(res.headers.get("X-Pikbo-Image-Jobs-Open") || "0");
+        const succeeded = Number(
+          res.headers.get("X-Pikbo-Image-Jobs-Succeeded") || "0"
+        );
+        const failed = Number(
+          res.headers.get("X-Pikbo-Image-Jobs-Failed") || "0"
+        );
+        const timeoutMs = Number(
+          res.headers.get("X-Pikbo-Image-Job-Timeout-Ms") || "0"
+        );
+        setImageJobsProbe({
+          total: Number.isFinite(total) ? total : 0,
+          open: Number.isFinite(open) ? open : 0,
+          succeeded: Number.isFinite(succeeded) ? succeeded : 0,
+          failed: Number.isFinite(failed) ? failed : 0,
+          timeoutMs: Number.isFinite(timeoutMs) ? timeoutMs : undefined,
+        });
+      } catch {
+        setImageJobsProbe(null);
+      }
+    }
+
     async function refreshT6() {
       try {
         const res = await fetch("/api/health");
         if (!res.ok) {
           setT6(null);
-          setImageJobsProbe(null);
           return;
         }
-        const body = (await res.json()) as {
-          t6?: T6Probe;
-          imageJobs?: { total?: number; open?: number };
-        };
+        const body = (await res.json()) as { t6?: T6Probe };
         setT6(body.t6 ?? null);
-        const ij = body.imageJobs;
-        if (ij && typeof ij.total === "number") {
-          setImageJobsProbe({
-            total: ij.total,
-            open: typeof ij.open === "number" ? ij.open : 0,
-          });
-        } else {
-          setImageJobsProbe(null);
-        }
       } catch {
         setT6(null);
-        setImageJobsProbe(null);
       }
     }
 
@@ -113,6 +133,7 @@ export default function SettingsPage() {
       refreshSession();
       refreshLocal();
       void refreshJobsProbe();
+      void refreshImageJobsProbe();
       void refreshT6();
     }
 
@@ -320,16 +341,21 @@ export default function SettingsPage() {
                 : "—"}
             </span>
           </div>
-          {imageJobsProbe && imageJobsProbe.total > 0 ? (
+          {imageJobsProbe ? (
             <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
-              Idempotent still ledger for{" "}
+              {imageJobsProbe.succeeded ?? 0} succeeded ·{" "}
+              {imageJobsProbe.failed ?? 0} failed · HEAD /api/image sweeps TIMEOUT
+              {imageJobsProbe.timeoutMs
+                ? ` (~${Math.round(imageJobsProbe.timeoutMs / 1000)}s)`
+                : ""}
+              .{" "}
               <Link
                 href="/image"
                 className="text-[var(--mint)] underline-offset-2 hover:underline"
               >
                 Still Studio
               </Link>{" "}
-              — network retries replay without double debit. Not multi-node.
+              retries mint a new key after fail; refund unconfirmed on crash.
             </p>
           ) : null}
           {jobsProbe && jobsProbe.total > 0 ? (

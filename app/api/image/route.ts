@@ -21,12 +21,35 @@ import {
   completeImageJob,
   failImageJob,
   findImageJobByIdempotencyKey,
+  imageJobInFlightRetryAfterSec,
+  imageJobTimeoutMs,
+  listImageJobCountsForSession,
   normalizeImageIdempotencyKey,
   type ImageJob,
 } from "@/lib/imageJobs";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+/**
+ * Cheap still-job probe (Library/ops) — counts only, no image bodies.
+ * Sweeps TIMEOUT so open never sticks after process kill mid-Flux.
+ */
+export async function HEAD() {
+  const session = await ensureSession();
+  const counts = listImageJobCountsForSession(session.id);
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Cache-Control": "no-store",
+      "X-Pikbo-Image-Jobs": String(counts.total),
+      "X-Pikbo-Image-Jobs-Open": String(counts.open),
+      "X-Pikbo-Image-Jobs-Succeeded": String(counts.succeeded),
+      "X-Pikbo-Image-Jobs-Failed": String(counts.failed),
+      "X-Pikbo-Image-Job-Timeout-Ms": String(imageJobTimeoutMs()),
+    },
+  });
+}
 
 type ImageSuccessBody = {
   imageUrl: string;
@@ -122,7 +145,10 @@ export async function POST(req: Request) {
         }
       }
       if (prior.status === "running") {
-        const retryAfterSec = jobInFlightRetryAfterSec(`img:${session.id}`);
+        // Prefer ledger age over inflight lock — lock frees after kill while row open.
+        const lockRetry = jobInFlightRetryAfterSec(`img:${session.id}`);
+        const jobRetry = imageJobInFlightRetryAfterSec(prior);
+        const retryAfterSec = Math.max(lockRetry, jobRetry);
         return NextResponse.json(
           {
             error: `An image job with this idempotency key is still running — try again in ${retryAfterSec}s`,
@@ -141,7 +167,7 @@ export async function POST(req: Request) {
         const status =
           code === "CONTENT_POLICY"
             ? 422
-            : code === "PROVIDER_TIMEOUT"
+            : code === "PROVIDER_TIMEOUT" || code === "TIMEOUT"
               ? 504
               : code === "PROVIDER_BALANCE"
                 ? 402
@@ -159,6 +185,10 @@ export async function POST(req: Request) {
             model: prior.model,
             session: publicSession(session),
             creditsRefunded: prior.creditsRefunded,
+            // Timeout/crash: do not claim credits restored.
+            ...(prior.creditsOutcome === "refund unconfirmed"
+              ? { refundUnconfirmed: true }
+              : {}),
           },
           { status }
         );

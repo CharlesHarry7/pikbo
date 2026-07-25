@@ -17,7 +17,11 @@ export type ImageJob = {
   demoReason?: "no_provider_key" | "free_trial_video_only";
   model?: string;
   costCredits?: number;
-  creditsOutcome?: "0 cached" | "10 used" | "10 restored";
+  creditsOutcome?:
+    | "0 cached"
+    | "10 used"
+    | "10 restored"
+    | "refund unconfirmed";
   creditsRefunded?: boolean;
   error?: string;
   errorCode?: string;
@@ -34,6 +38,11 @@ const byIdempotency = new Map<string, string>();
 
 const MAX_JOBS = 200;
 const TTL_MS = 30 * 60 * 1000;
+/**
+ * Soft-launch still jobs: route maxDuration is 60s — default timeout slightly above.
+ * Override with PIKBO_IMAGE_JOB_TIMEOUT_MS (min 30s).
+ */
+const DEFAULT_IMAGE_JOB_TIMEOUT_MS = 90_000;
 
 function nowIso() {
   return new Date().toISOString();
@@ -41,6 +50,12 @@ function nowIso() {
 
 function newId() {
   return `img_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+export function imageJobTimeoutMs(): number {
+  const raw = Number(process.env.PIKBO_IMAGE_JOB_TIMEOUT_MS || 0);
+  if (Number.isFinite(raw) && raw >= 30_000) return Math.floor(raw);
+  return DEFAULT_IMAGE_JOB_TIMEOUT_MS;
 }
 
 function trimStore() {
@@ -65,6 +80,40 @@ function trimStore() {
   }
 }
 
+/**
+ * Crash / hard-kill recovery: open still jobs past timeout become failed TIMEOUT.
+ * Same key then replays as fail (mint a new key to retry) — never infinite JOB_IN_FLIGHT.
+ */
+export function sweepTimedOutImageJobs(opts?: {
+  nowMs?: number;
+  timeoutMs?: number;
+}): ImageJob[] {
+  const now = opts?.nowMs ?? Date.now();
+  const limit = opts?.timeoutMs ?? imageJobTimeoutMs();
+  const timedOut: ImageJob[] = [];
+  for (const job of jobs.values()) {
+    if (job.status !== "running") continue;
+    const stamp = job.updatedAt || job.createdAt;
+    const age = now - Date.parse(stamp);
+    if (!Number.isFinite(age) || age < limit) continue;
+    const next: ImageJob = {
+      ...job,
+      status: "failed",
+      error:
+        "Still job timed out (process may have been killed mid-Flux) — mint a new idempotency key to retry",
+      errorCode: "TIMEOUT",
+      // Soft-launch cookie debit may or may not have restored — never claim refund.
+      creditsOutcome: "refund unconfirmed",
+      creditsRefunded: undefined,
+      imageUrl: undefined,
+      updatedAt: nowIso(),
+    };
+    jobs.set(job.id, next);
+    timedOut.push(next);
+  }
+  return timedOut;
+}
+
 export function normalizeImageIdempotencyKey(
   raw: unknown
 ): string | undefined {
@@ -79,6 +128,7 @@ export function findImageJobByIdempotencyKey(
   idempotencyKey: string
 ): ImageJob | undefined {
   trimStore();
+  sweepTimedOutImageJobs();
   const key = idempotencyKey.trim();
   if (!key) return undefined;
   const id = byIdempotency.get(`${sessionId}:${key}`);
@@ -88,6 +138,20 @@ export function findImageJobByIdempotencyKey(
   return job;
 }
 
+/**
+ * Seconds until a running still job would TIMEOUT (for JOB_IN_FLIGHT Retry-After).
+ * Prefer job age over inflight lock — lock can free after kill while ledger is open.
+ */
+export function imageJobInFlightRetryAfterSec(job: ImageJob): number {
+  if (job.status !== "running") return 1;
+  const stamp = job.updatedAt || job.createdAt;
+  const age = Date.now() - Date.parse(stamp);
+  if (!Number.isFinite(age)) return 1;
+  const remainingMs = imageJobTimeoutMs() - age;
+  if (remainingMs <= 0) return 1;
+  return Math.max(1, Math.ceil(remainingMs / 1000));
+}
+
 export function beginImageJob(input: {
   sessionId: string;
   prompt: string;
@@ -95,6 +159,7 @@ export function beginImageJob(input: {
   idempotencyKey?: string;
 }): ImageJob {
   trimStore();
+  sweepTimedOutImageJobs();
   const t = nowIso();
   const job: ImageJob = {
     id: newId(),
@@ -190,6 +255,8 @@ export function failImageJob(input: {
   errorCode?: string;
   model?: string;
   creditsRefunded?: boolean;
+  /** When true and not refunded — crash/timeout honesty. */
+  refundUnconfirmed?: boolean;
   idempotencyKey?: string;
 }): ImageJob {
   trimStore();
@@ -202,7 +269,9 @@ export function failImageJob(input: {
 
   const creditsOutcome: ImageJob["creditsOutcome"] = input.creditsRefunded
     ? "10 restored"
-    : undefined;
+    : input.refundUnconfirmed
+      ? "refund unconfirmed"
+      : undefined;
 
   if (existing && existing.sessionId === input.sessionId) {
     const next: ImageJob = {
@@ -242,20 +311,62 @@ export function failImageJob(input: {
   return job;
 }
 
-/** Ops probe — counts only, never echoes URLs. */
+/** Ops probe — counts only, never echoes URLs. Sweeps timeouts first. */
 export function imageJobsProbe(): {
   total: number;
   byStatus: Record<string, number>;
   open: number;
+  jobTimeoutMs: number;
+  timedOutThisProbe: number;
+  note: string;
 } {
   trimStore();
+  const timedOut = sweepTimedOutImageJobs();
   const byStatus: Record<string, number> = {};
   let open = 0;
   for (const j of jobs.values()) {
     byStatus[j.status] = (byStatus[j.status] || 0) + 1;
     if (j.status === "running") open += 1;
   }
-  return { total: jobs.size, byStatus, open };
+  return {
+    total: jobs.size,
+    byStatus,
+    open,
+    jobTimeoutMs: imageJobTimeoutMs(),
+    timedOutThisProbe: timedOut.length,
+    note:
+      timedOut.length > 0
+        ? `Process-memory still ledger; swept ${timedOut.length} timed-out job(s) this probe`
+        : open > 0
+          ? "Process-memory still ledger; open Flux jobs on this instance"
+          : "Process-memory still ledger; idle",
+  };
+}
+
+/**
+ * Session-scoped open still count (HEAD /api/image).
+ * Sweeps timeouts so ops never see infinite open after crash.
+ */
+export function listImageJobCountsForSession(sessionId: string): {
+  total: number;
+  open: number;
+  succeeded: number;
+  failed: number;
+} {
+  trimStore();
+  sweepTimedOutImageJobs();
+  let total = 0;
+  let open = 0;
+  let succeeded = 0;
+  let failed = 0;
+  for (const j of jobs.values()) {
+    if (j.sessionId !== sessionId) continue;
+    total += 1;
+    if (j.status === "running") open += 1;
+    else if (j.status === "succeeded") succeeded += 1;
+    else if (j.status === "failed") failed += 1;
+  }
+  return { total, open, succeeded, failed };
 }
 
 export function __resetImageJobsForTests(): void {

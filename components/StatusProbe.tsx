@@ -58,6 +58,9 @@ type Health = {
     total?: number;
     open?: number;
     byStatus?: Record<string, number>;
+    jobTimeoutMs?: number;
+    timedOutThisProbe?: number;
+    note?: string;
   };
   videoWebhook?: {
     secretConfigured?: boolean;
@@ -180,7 +183,14 @@ export function StatusProbe() {
     [
       "Still image job ledger",
       typeof data.imageJobs?.total === "number"
-        ? `${data.imageJobs.total} total · open ${data.imageJobs.open ?? 0} (process-memory · Flux idempotency)`
+        ? `${data.imageJobs.total} total · open ${data.imageJobs.open ?? 0}` +
+          (data.imageJobs.jobTimeoutMs
+            ? ` · timeout ${Math.round(data.imageJobs.jobTimeoutMs / 1000)}s`
+            : "") +
+          (data.imageJobs.timedOutThisProbe
+            ? ` · swept ${data.imageJobs.timedOutThisProbe}`
+            : "") +
+          " (process-memory · Flux idempotency)"
         : "—",
     ],
     [
