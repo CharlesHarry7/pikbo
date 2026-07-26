@@ -13,8 +13,25 @@ create table if not exists public.pikbo_schema_versions (
 alter table public.pikbo_schema_versions enable row level security;
 revoke all on table public.pikbo_schema_versions from anon, authenticated;
 
+-- Do not silently merge pre-existing personal accounts: that would obscure an
+-- accounting/audit incident. Operators must reconcile duplicates explicitly.
+do $$
+begin
+  if exists (
+    select 1
+      from public.accounts
+     where kind = 'personal'
+     group by owner_user_id
+    having count(*) > 1
+  ) then
+    raise exception using errcode = 'P0001',
+      message = 'PIKBO_CREDITS:DUPLICATE_PERSONAL_ACCOUNT';
+  end if;
+end;
+$$;
+
 -- A personal account is unique per durable user. This also makes concurrent
--- account bootstraps idempotent.
+-- account bootstraps idempotent after the audited preflight above.
 create unique index if not exists accounts_one_personal_per_owner_idx
   on public.accounts (owner_user_id)
   where kind = 'personal';
@@ -149,6 +166,13 @@ begin
       message = 'PIKBO_CREDITS:INVALID_IDEMPOTENCY_KEY';
   end if;
 
+  -- The unique index is the final guard, but serializing the read/create path
+  -- makes concurrent retries return the original reservation rather than one
+  -- caller surfacing a unique-violation race.
+  perform pg_advisory_xact_lock(
+    hashtextextended('pikbo_reserve:' || p_idempotency_key, 0)
+  );
+
   if not exists (
     select 1
       from public.account_memberships m
@@ -278,6 +302,7 @@ declare
   v_released integer;
   v_status public.reservation_status;
   v_existing public.credit_ledger%rowtype;
+  v_job public.generation_jobs%rowtype;
 begin
   if p_kind not in ('settle', 'release') then
     raise exception using errcode = 'P0001',
@@ -309,6 +334,39 @@ begin
       message = 'PIKBO_CREDITS:UNAUTHORIZED';
   end if;
 
+  -- Terminal money movement is server-job owned. Validate this even on an
+  -- idempotent replay, so a missing/arbitrary job id is never accepted.
+  if p_job_id is null
+     or p_job_id !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' then
+    raise exception using errcode = 'P0001',
+      message = 'PIKBO_CREDITS:JOB_REQUIRED';
+  end if;
+
+  select *
+    into v_job
+    from public.generation_jobs
+   where id = p_job_id::uuid
+   for update;
+  if not found then
+    raise exception using errcode = 'P0001',
+      message = 'PIKBO_CREDITS:JOB_NOT_FOUND';
+  end if;
+  if v_job.account_id <> v_reservation.account_id
+     or v_job.reservation_id <> p_reservation_id
+     or v_job.created_by <> p_actor_user_id then
+    raise exception using errcode = 'P0001',
+      message = 'PIKBO_CREDITS:JOB_OWNERSHIP_MISMATCH';
+  end if;
+  if v_job.effect_slug <> p_item_key then
+    raise exception using errcode = 'P0001',
+      message = 'PIKBO_CREDITS:JOB_ITEM_MISMATCH';
+  end if;
+  if (p_kind = 'settle' and v_job.status <> 'succeeded')
+     or (p_kind = 'release' and v_job.status not in ('failed', 'canceled')) then
+    raise exception using errcode = 'P0001',
+      message = 'PIKBO_CREDITS:JOB_STATUS_MISMATCH';
+  end if;
+
   select * into v_existing
     from public.credit_ledger
    where idempotency_key = p_idempotency_key;
@@ -337,24 +395,6 @@ begin
   if v_item.status <> 'pending' then
     raise exception using errcode = 'P0001',
       message = 'PIKBO_CREDITS:ITEM_ALREADY_FINAL';
-  end if;
-
-  -- If a durable job UUID is supplied and exists, its account/reservation must
-  -- match. Provider request IDs remain diagnostic text and are not trusted.
-  if p_job_id is not null
-     and p_job_id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
-     and exists (
-       select 1 from public.generation_jobs j where j.id = p_job_id::uuid
-     )
-     and not exists (
-       select 1
-         from public.generation_jobs j
-        where j.id = p_job_id::uuid
-          and j.account_id = v_reservation.account_id
-          and j.reservation_id = p_reservation_id
-     ) then
-    raise exception using errcode = 'P0001',
-      message = 'PIKBO_CREDITS:JOB_OWNERSHIP_MISMATCH';
   end if;
 
   select *
@@ -429,6 +469,96 @@ begin
     'reservation', to_jsonb(v_reservation),
     'wallet', to_jsonb(v_wallet),
     'idempotent', false
+  );
+end;
+$$;
+
+-- Service-owned health/job sweep. It atomically returns every still-pending
+-- item on an expired reservation; terminal browser routes never call this.
+create or replace function public.pikbo_expire_reservations()
+returns jsonb
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  v_reservation public.credit_reservations%rowtype;
+  v_wallet public.credit_wallets%rowtype;
+  v_released integer;
+  v_expired integer := 0;
+  v_released_credits integer := 0;
+begin
+  for v_reservation in
+    select *
+      from public.credit_reservations
+     where expires_at <= now()
+       and status in ('reserved', 'partially_settled')
+     for update skip locked
+  loop
+    -- Reservation is locked above; lock its items before aggregating them.
+    perform 1
+      from public.credit_reservation_items
+     where reservation_id = v_reservation.id
+       and status = 'pending'
+     for update;
+    select coalesce(sum(credits), 0)
+      into v_released
+      from public.credit_reservation_items
+     where reservation_id = v_reservation.id
+       and status = 'pending';
+    if v_released = 0 then
+      continue;
+    end if;
+
+    select * into strict v_wallet
+      from public.credit_wallets
+     where account_id = v_reservation.account_id
+     for update;
+    if v_wallet.reserved_credits < v_released then
+      raise exception using errcode = 'P0001',
+        message = 'PIKBO_CREDITS:RESERVED_UNDERFLOW';
+    end if;
+
+    update public.credit_wallets
+       set available_credits = available_credits + v_released,
+           reserved_credits = reserved_credits - v_released,
+           version = version + 1,
+           updated_at = now()
+     where account_id = v_reservation.account_id
+     returning * into strict v_wallet;
+
+    update public.credit_reservation_items
+       set status = 'released',
+           terminal_idempotency_key =
+             'expire:' || v_reservation.id::text || ':' || item_key,
+           updated_at = now()
+     where reservation_id = v_reservation.id
+       and status = 'pending';
+
+    update public.credit_reservations
+       set released_credits = released_credits + v_released,
+           status = 'expired',
+           updated_at = now()
+     where id = v_reservation.id;
+
+    insert into public.credit_ledger (
+      account_id, kind, delta_available, delta_reserved,
+      available_after, reserved_after, reservation_id,
+      source_type, source_id, idempotency_key, metadata
+    ) values (
+      v_reservation.account_id, 'expire', v_released, -v_released,
+      v_wallet.available_credits, v_wallet.reserved_credits,
+      v_reservation.id, 'reservation_expiry', v_reservation.id::text,
+      'expire:' || v_reservation.id::text,
+      jsonb_build_object('releasedCredits', v_released, 'serverOwned', true)
+    );
+    v_expired := v_expired + 1;
+    v_released_credits := v_released_credits + v_released;
+  end loop;
+
+  return jsonb_build_object(
+    'expired', v_expired,
+    'releasedCredits', v_released_credits
   );
 end;
 $$;
@@ -621,6 +751,9 @@ begin
   ) is null then
     v_missing := array_append(v_missing, 'rpc:pikbo_ensure_personal_account');
   end if;
+  if to_regprocedure('public.pikbo_expire_reservations()') is null then
+    v_missing := array_append(v_missing, 'rpc:pikbo_expire_reservations');
+  end if;
   if to_regprocedure(
     'public.pikbo_reserve_credits(uuid,uuid,public.reservation_purpose,text)'
   ) is null then
@@ -668,6 +801,8 @@ revoke all on function public.pikbo_release_reservation_item(
 revoke all on function public.pikbo_migrate_guest_credits(
   text, uuid, uuid, integer, text
 ) from public, anon, authenticated;
+revoke all on function public.pikbo_expire_reservations()
+  from public, anon, authenticated;
 revoke all on function public.pikbo_credits_schema_probe()
   from public, anon, authenticated;
 
@@ -685,6 +820,8 @@ grant execute on function public.pikbo_release_reservation_item(
 grant execute on function public.pikbo_migrate_guest_credits(
   text, uuid, uuid, integer, text
 ) to service_role;
+grant execute on function public.pikbo_expire_reservations()
+  to service_role;
 grant execute on function public.pikbo_credits_schema_probe()
   to service_role;
 

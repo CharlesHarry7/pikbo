@@ -394,6 +394,26 @@ export async function supabaseRelease(input: {
   return { ok: true, data: mapped };
 }
 
+/** Atomically return pending items for expired reservations (service role only). */
+export async function supabaseExpireReservations(): Promise<
+  | { ok: true; data: { expired: number; releasedCredits: number } }
+  | { ok: false; code: string; error: string }
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return rpcFailure({ message: "Supabase admin unavailable" });
+  const { data, error } = await admin.rpc("pikbo_expire_reservations");
+  if (error) return rpcFailure(error);
+  const raw = data as { expired?: unknown; releasedCredits?: unknown } | null;
+  if (!raw) return rpcFailure({ message: "Malformed expiry RPC response" });
+  return {
+    ok: true,
+    data: {
+      expired: Math.max(0, Math.floor(Number(raw.expired) || 0)),
+      releasedCredits: Math.max(0, Math.floor(Number(raw.releasedCredits) || 0)),
+    },
+  };
+}
+
 export async function supabaseMigrateGuest(input: {
   guestSessionIdHash: string;
   userId: string;

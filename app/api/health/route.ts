@@ -100,6 +100,9 @@ export async function GET() {
     payments,
     /** Local durable reservation TTL sweep since last probe */
     reservationSweep,
+    /** Local files are only a single-node development verification backend. */
+    durableCreditsBackendNote:
+      "local-file is single-node verification only; production multi-node accounting requires Supabase RPCs",
     service: "pikbo",
     foundation: "L0-L3",
     time: new Date().toISOString(),

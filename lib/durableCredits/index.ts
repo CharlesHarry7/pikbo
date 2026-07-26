@@ -39,11 +39,16 @@ import {
   reserveCredits,
   settleReservationItem,
 } from "./engine";
-import { loadDurableState, saveDurableState } from "./localStore";
+import {
+  loadDurableState,
+  saveDurableState,
+  withLocalStoreMutex,
+} from "./localStore";
 import type { DurableState, ReservationPurpose } from "./types";
 import {
   probeSupabaseCreditsSchema,
   supabaseEnsurePersonalAccount,
+  supabaseExpireReservations,
   supabaseGetPersonalWallet,
   supabaseMigrateGuest,
   supabaseRelease,
@@ -101,17 +106,19 @@ async function withState<T>(
   | { ok: true; data: T }
   | { ok: false; code: string; error: string }
 > {
-  const state = await loadDurableState();
-  const result = fn(state);
-  if (result.ok) {
-    await saveDurableState(result.state);
-    return { ok: true, data: result.data as T };
-  }
-  return {
-    ok: false,
-    code: result.code || "ERROR",
-    error: result.error || "Durable credits error",
-  };
+  return withLocalStoreMutex(async () => {
+    const state = await loadDurableState();
+    const result = fn(state);
+    if (result.ok) {
+      await saveDurableState(result.state);
+      return { ok: true, data: result.data as T };
+    }
+    return {
+      ok: false,
+      code: result.code || "ERROR",
+      error: result.error || "Durable credits error",
+    };
+  });
 }
 
 /** Ensure a personal Free account + wallet exist for a durable user id. */
@@ -364,9 +371,17 @@ export async function getPersonalWallet(userId: string): Promise<{
 export async function durableExpireStaleReservations(): Promise<{
   expired: number;
   releasedCredits: number;
-  backend: "local-file" | "skipped-remote";
+  backend: "local-file" | "supabase" | "skipped-remote";
 }> {
   const backend = await durableBackend();
+  if (backend.kind === "supabase") {
+    const remote = await supabaseExpireReservations();
+    if (!remote.ok) {
+      console.warn("[durable-credits] remote expiry sweep failed", remote.code, remote.error);
+      return { expired: 0, releasedCredits: 0, backend: "supabase" };
+    }
+    return { ...remote.data, backend: "supabase" };
+  }
   if (backend.kind !== "local") {
     return { expired: 0, releasedCredits: 0, backend: "skipped-remote" };
   }

@@ -7,6 +7,7 @@ import {
 } from "@/lib/durableCredits";
 import {
   reserveSellerPackShadow,
+  sellerPackServerOwnedJobsReady,
   SELLER_PACK_CHILD_COUNT,
   SELLER_PACK_QUOTE_CREDITS,
 } from "@/lib/durableCredits/sellerPack";
@@ -29,6 +30,20 @@ export async function POST(req: Request) {
   const session = await ensureSession();
   const auth = await getAuthUserFromRequest(req);
 
+  if (!sellerPackServerOwnedJobsReady()) {
+    return NextResponse.json({
+      ok: false,
+      code: "SERVER_OWNED_JOBS_REQUIRED",
+      disabled: true,
+      authority: "server-owned-jobs",
+      message:
+        "Durable Seller Pack reserve is disabled until server-owned jobs are ready; cookie generation continues normally.",
+      quoteCredits: SELLER_PACK_QUOTE_CREDITS,
+      childCount: SELLER_PACK_CHILD_COUNT,
+      childCredits: 10,
+      session: publicSession(session),
+    });
+  }
   if (!durableCreditsActive()) {
     return NextResponse.json({
       ok: false,

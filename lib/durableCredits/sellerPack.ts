@@ -23,6 +23,14 @@ export const SELLER_PACK_ITEM_KEYS = [
 ] as const;
 export type SellerPackItemKey = (typeof SELLER_PACK_ITEM_KEYS)[number];
 
+/**
+ * Seller Pack reservations are unsafe until the server creates durable
+ * generation_jobs itself. Browser children only have untrusted request ids.
+ */
+export function sellerPackServerOwnedJobsReady(): boolean {
+  return process.env.PIKBO_SERVER_OWNED_JOBS === "1";
+}
+
 function sellerPackItemKey(raw: string | undefined): SellerPackItemKey | null {
   return SELLER_PACK_ITEM_KEYS.includes(raw as SellerPackItemKey)
     ? (raw as SellerPackItemKey)
@@ -46,6 +54,13 @@ export async function reserveSellerPackShadow(input: {
   | { ok: true; data: SellerPackShadow }
   | { ok: false; code: string; error: string }
 > {
+  if (!sellerPackServerOwnedJobsReady()) {
+    return {
+      ok: false,
+      code: "SERVER_OWNED_JOBS_REQUIRED",
+      error: "Seller Pack durable reserve is disabled until server-owned jobs are ready",
+    };
+  }
   if (!durableCreditsActive()) {
     return {
       ok: false,
@@ -109,6 +124,13 @@ export async function settleSellerPackChild(input: {
   jobId?: string;
   childKey: string;
 }): Promise<{ ok: boolean; code?: string; error?: string }> {
+  if (!sellerPackServerOwnedJobsReady()) {
+    return {
+      ok: false,
+      code: "SERVER_OWNED_JOBS_REQUIRED",
+      error: "Seller Pack settlement is owned by server jobs",
+    };
+  }
   if (!durableCreditsActive()) return { ok: true };
   const itemKey = sellerPackItemKey(input.childKey);
   if (!itemKey) {
@@ -149,6 +171,13 @@ export async function releaseSellerPackChild(input: {
   jobId?: string;
   childKey: string;
 }): Promise<{ ok: boolean; code?: string; error?: string }> {
+  if (!sellerPackServerOwnedJobsReady()) {
+    return {
+      ok: false,
+      code: "SERVER_OWNED_JOBS_REQUIRED",
+      error: "Seller Pack release is owned by server jobs",
+    };
+  }
   if (!durableCreditsActive()) return { ok: true };
   const itemKey = sellerPackItemKey(input.childKey);
   if (!itemKey) {

@@ -106,18 +106,28 @@ export async function shadowReserveForGenerate(input: {
 export async function shadowSettle(
   shadow: ShadowReservation | null,
   jobId?: string
-): Promise<void> {
-  if (!shadow) return;
+): Promise<{ ok: boolean; code?: string; error?: string }> {
+  if (!shadow) return { ok: true };
   try {
-    await durableSettle({
+    const result = await durableSettle({
       reservationId: shadow.reservationId,
       actorUserId: shadow.ownerUserId,
       itemKey: "generation",
       idempotencyKey: `shadow-settle:${shadow.reservationId}:${jobId || "ok"}`,
       jobId,
     });
+    if (!result.ok) {
+      console.warn("[durable-shadow] settle rejected", result.code, result.error);
+      return result;
+    }
+    return { ok: true };
   } catch (e) {
     console.warn("[durable-shadow] settle error", e);
+    return {
+      ok: false,
+      code: "ERROR",
+      error: e instanceof Error ? e.message : "settle failed",
+    };
   }
 }
 
@@ -125,10 +135,10 @@ export async function shadowRelease(
   shadow: ShadowReservation | null,
   reason: string,
   jobId?: string
-): Promise<void> {
-  if (!shadow) return;
+): Promise<{ ok: boolean; code?: string; error?: string }> {
+  if (!shadow) return { ok: true };
   try {
-    await durableRelease({
+    const result = await durableRelease({
       reservationId: shadow.reservationId,
       actorUserId: shadow.ownerUserId,
       itemKey: "generation",
@@ -136,7 +146,17 @@ export async function shadowRelease(
       reason,
       jobId,
     });
+    if (!result.ok) {
+      console.warn("[durable-shadow] release rejected", result.code, result.error);
+      return result;
+    }
+    return { ok: true };
   } catch (e) {
     console.warn("[durable-shadow] release error", e);
+    return {
+      ok: false,
+      code: "ERROR",
+      error: e instanceof Error ? e.message : "release failed",
+    };
   }
 }

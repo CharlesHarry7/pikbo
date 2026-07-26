@@ -4,6 +4,7 @@
  */
 
 import { promises as fs } from "fs";
+import { randomUUID } from "crypto";
 import path from "path";
 import type { DurableState } from "@/lib/durableCredits/types";
 import { emptyState } from "@/lib/durableCredits/engine";
@@ -43,7 +44,30 @@ export async function loadDurableState(): Promise<DurableState> {
 export async function saveDurableState(state: DurableState): Promise<void> {
   const file = storePath();
   await fs.mkdir(path.dirname(file), { recursive: true });
-  await fs.writeFile(file, JSON.stringify(state, null, 2), "utf8");
+  // Rename is atomic on the local filesystem: a reader sees either the prior
+  // complete ledger or the next complete ledger, never a truncated JSON file.
+  const temp = `${file}.${process.pid}.${randomUUID()}.tmp`;
+  await fs.writeFile(temp, JSON.stringify(state, null, 2), "utf8");
+  await fs.rename(temp, file);
+}
+
+// Process-local serialization only. The local-file adapter is deliberately a
+// single-node/dev verification backend; it is not a production multi-node
+// accounting store (Supabase RPCs are the production path).
+let mutationTail: Promise<void> = Promise.resolve();
+
+export async function withLocalStoreMutex<T>(work: () => Promise<T>): Promise<T> {
+  let release: (() => void) | undefined;
+  const previous = mutationTail;
+  mutationTail = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await previous;
+  try {
+    return await work();
+  } finally {
+    release?.();
+  }
 }
 
 export async function probeDurableCreditsStore(): Promise<{

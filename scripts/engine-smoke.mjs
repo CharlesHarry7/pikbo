@@ -2191,11 +2191,11 @@ assert.match(spReserve, /reserveSellerPackShadow/);
 assert.match(spReserve, /SELLER_PACK_QUOTE_CREDITS|quoteCredits/);
 assert.match(
   fs.readFileSync(join(root, "app/api/seller-pack/settle/route.ts"), "utf8"),
-  /settleSellerPackChild/
+  /SERVER_OWNED_JOBS_REQUIRED/
 );
 assert.match(
   fs.readFileSync(join(root, "app/api/seller-pack/release/route.ts"), "utf8"),
-  /releaseSellerPackChild/
+  /SERVER_OWNED_JOBS_REQUIRED/
 );
 assert.match(batchStudio, /reserveSellerPackShadowClient/);
 assert.match(batchStudio, /settleSellerPackChildClient/);
@@ -2361,6 +2361,7 @@ assert.match(sbStore, /supabaseEnsurePersonalAccount/);
 assert.match(sbStore, /supabaseReserve/);
 assert.match(sbStore, /supabaseSettle/);
 assert.match(sbStore, /supabaseRelease/);
+assert.match(sbStore, /supabaseExpireReservations/);
 assert.match(sbStore, /supabaseMigrateGuest/);
 assert.match(durableIdx, /supabaseEnsurePersonalAccount|prefersSupabaseBackend/);
 assert.match(durableIdx, /probeSupabaseCreditsSchema/);
@@ -2385,12 +2386,19 @@ assert.match(t5RpcMigration, /pikbo_credits_schema_probe/);
 assert.match(t5RpcMigration, /pikbo_reserve_credits/);
 assert.match(t5RpcMigration, /pikbo_settle_reservation_item/);
 assert.match(t5RpcMigration, /pikbo_release_reservation_item/);
+assert.match(t5RpcMigration, /pikbo_expire_reservations/);
 assert.match(t5RpcMigration, /pikbo_migrate_guest_credits/);
 assert.match(t5RpcMigration, /security definer/gi);
 assert.match(t5RpcMigration, /for update/gi);
 assert.match(t5RpcMigration, /when p_purpose = 'generation' then 10/);
 assert.match(t5RpcMigration, /when p_purpose = 'seller_pack' then 30/);
 assert.match(t5RpcMigration, /check \(credits = 10\)/);
+assert.match(t5RpcMigration, /pg_advisory_xact_lock/);
+assert.match(t5RpcMigration, /PIKBO_CREDITS:DUPLICATE_PERSONAL_ACCOUNT/);
+assert.match(t5RpcMigration, /PIKBO_CREDITS:JOB_REQUIRED/);
+assert.match(t5RpcMigration, /v_job\.effect_slug <> p_item_key/);
+assert.match(t5RpcMigration, /v_job\.status <> 'succeeded'/);
+assert.match(t5RpcMigration, /v_job\.status not in \('failed', 'canceled'\)/);
 assert.match(t5RpcMigration, /grant execute[\s\S]+to service_role/);
 assert.match(
   t5RpcMigration,
@@ -2440,6 +2448,8 @@ assert.match(
   /backend\.kind === "supabase"\) return supabaseReserve\(input\)/
 );
 assert.match(localStore, /PIKBO_DURABLE_BACKEND === "supabase"/);
+assert.match(localStore, /withLocalStoreMutex/);
+assert.match(localStore, /fs\.rename/);
 assert.match(
   localStore,
   /Explicit\/required Supabase[\s\S]{0,300}backend:\s*"none"/
@@ -2453,11 +2463,10 @@ const sellerReleaseRoute = fs.readFileSync(
   "utf8"
 );
 for (const route of [sellerSettleRoute, sellerReleaseRoute]) {
-  assert.match(route, /getAuthUserFromRequest/);
-  assert.match(route, /code:\s*"UNAUTHORIZED"/);
-  assert.match(route, /\?\s*403/);
-  assert.match(route, /actorUserId:\s*auth\.id/);
-  assert.doesNotMatch(route, /childCredits/);
+  assert.match(route, /SERVER_OWNED_JOBS_REQUIRED/);
+  assert.match(route, /disabled:\s*true/);
+  assert.match(route, /server-owned-jobs/);
+  assert.doesNotMatch(route, /settleSellerPackChild|releaseSellerPackChild/);
 }
 const sellerPackCredits = fs.readFileSync(
   join(root, "lib/durableCredits/sellerPack.ts"),
@@ -2466,6 +2475,8 @@ const sellerPackCredits = fs.readFileSync(
 assert.match(sellerPackCredits, /SELLER_PACK_ITEM_KEYS/);
 assert.match(sellerPackCredits, /SELLER_PACK_QUOTE_CREDITS/);
 assert.match(sellerPackCredits, /actorUserId/);
+assert.match(sellerPackCredits, /sellerPackServerOwnedJobsReady/);
+assert.match(spReserve, /SERVER_OWNED_JOBS_REQUIRED/);
 assert.doesNotMatch(sellerPackCredits, /input\.childCredits/);
 assert.match(genRoute, /DURABLE_BACKEND_UNAVAILABLE/);
 assert.match(
@@ -2505,6 +2516,14 @@ const engineSrc = fs.readFileSync(
 assert.match(engineSrc, /export function expireStaleReservations/);
 assert.match(durableIdx, /durableExpireStaleReservations|expireStaleReservations/);
 assert.match(health, /reservationSweep|durableExpireStaleReservations/);
+assert.match(health, /single-node verification only/);
+assert.match(durableIdx, /backend\.kind === "supabase"[\s\S]{0,300}supabaseExpireReservations/);
+const shadowSrc = fs.readFileSync(
+  join(root, "lib/durableCredits/shadow.ts"),
+  "utf8"
+);
+assert.match(shadowSrc, /if \(!result\.ok\)/);
+assert.match(shadowSrc, /settle rejected|release rejected/);
 const softliveChk = fs.readFileSync(
   join(root, "scripts/softlive-checklist.sh"),
   "utf8"
