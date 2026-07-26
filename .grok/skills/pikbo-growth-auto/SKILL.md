@@ -5,15 +5,23 @@ description: Fully automated Pikbo growth execution (AI directories, PH assets, 
 
 # Pikbo Growth Auto (100% unattended)
 
+## Coordination with engineering (Grok) — boss is NOT a messenger
+
+1. **Source of truth = GitHub `main`** (remotes may be `guochao950518-wq/pikbo` or `CharlesHarry7/pikbo`).
+2. **Always** `git pull origin main` before work; read `docs/growth/AGENT_BUS.md`, `docs/growth/AGENT_STATE.md`, `docs/HANDOFF.md`.
+3. After every run: update `AGENT_STATE.md`, commit growth artifacts, **push** so Grok sees it without the boss.
+4. Never ask the boss to “tell Grok” or “forward logs”.
+
 ## Hard rules
 
 1. **Domain is only `https://pikbo.ai`** — never submit `pikbo.com`.
 2. **No human questions mid-run.** Missing secrets → mark step `blocked_secret`, continue other steps.
-3. **No Stripe, no code changes, no new SEO pages** unless explicitly in a separate eng task.
+3. **No Stripe, no product code changes, no new SEO pages** — only `scripts/growth-auto/**` + `docs/growth/**` (+ AGENT_STATE).
 4. **No fake UGC / multi-model claims** in any form text.
 5. Prefer **browser automation** (Playwright Chromium or system Chrome CDP). Headless OK; headed if CAPTCHA rate is high and `GROWTH_HEADED=1`.
-6. Every action writes a row to `docs/growth/runs/YYYY-MM-DD.jsonl` + screenshot under `docs/growth/screenshots/`.
+6. Every action writes a row to `docs/growth/runs/*.jsonl` + screenshot under `docs/growth/screenshots/`.
 7. Cap runtime: stop after `GROWTH_MAX_MINUTES` (default 90) and write final report.
+8. **Push results to GitHub** before exit (main or `agent/workbuddy/growth-*`).
 
 ## Product copy (paste into forms)
 
@@ -123,6 +131,8 @@ Write `docs/growth/runs/{date}-report.md`:
 
 ## Related
 
+- Agent bus: `docs/growth/AGENT_BUS.md`
+- Shared state: `docs/growth/AGENT_STATE.md`
 - Prompt for agent boot: `docs/growth/WORKBUDDY_AUTO_PROMPT.md`
 - Config: `scripts/growth-auto/directories.json`
 - Runner: `scripts/growth-auto/run_growth.py`
