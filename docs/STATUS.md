@@ -44,7 +44,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | FP0 | First-principles nav + Mini truth + doctrine | Grok | done | main | AppShell primary/more; docs/FIRST_PRINCIPLES.md |
 | FP1 | critical-path smoke script | Grok | done | main | `npm run critical-path` |
 | G-ops | demo map + rate limit + dev topup + preflight demos | Grok | done | agent/grok/foundation-ops | no UI aesthetic conflict |
-| UI-q | UI quality r1–r3 aesthetic | Grok | todo | agent/grok/final-takeover | Inspect Claude branch and selectively port only compatible finished polish |
+| UI-q | UI quality r1–r3 aesthetic | Grok | review | main | Create first-run 390px: Upload→recipe→generate; hide model strip/activation/workflow on phone; advanced collapsed; smoke locked |
 | C1–C5 | truth-sync: pricing numbers, estimator, economics, microcopy | Codex | done | agent/gpt/truth-sync | Free Mini 480p + 1 / 5 / 15 contract aligned; `eslint app components lib --max-warnings=0` passed |
 | T31 | Overnight Explore/Lab/trust/FAQ honesty pass | Codex | done | agent/gpt/overnight-copy | Cached vs live labels, Mini 5s 480p path, no exact-output or conversion guarantees |
 | T32 | Wave2 Community/Explore/Effects/empty-state honesty pass | Codex | done | agent/gpt/wave2-copy | Cached/concept/live labels aligned; Mini + 1 / 5 / 15 FAQ; lint + typecheck pass |

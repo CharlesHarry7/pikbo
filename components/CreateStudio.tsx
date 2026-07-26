@@ -1152,8 +1152,8 @@ export function CreateStudio({
       <div className="hidden lg:block">
         <GenerateSuiteChrome compact />
       </div>
-      {/* HF-style model/mode strip — video models primary; honesty on Soon */}
-      <div className="border-b border-white/10 bg-[#050506] px-3 py-1.5 sm:px-4">
+      {/* HF-style model/mode strip — hide on 390px so first-run stays upload→recipe→generate */}
+      <div className="hidden border-b border-white/10 bg-[#050506] px-3 py-1.5 sm:block sm:px-4">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-1.5 text-[11px]">
           <span className="mr-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">
             Video
@@ -1188,18 +1188,17 @@ export function CreateStudio({
           </Link>
         </div>
       </div>
-      <ActivationChecklist
-        hasImage={Boolean(image)}
-        hasGenerated={status === "done" || versions.length > 0}
-      />
-      {/* Job modules shelf — compact; replaces JobIntentBar on small screens */}
-      <WorkflowShelf
-        compact
-        activeId={jobIntentId}
-        onPick={applyWorkflow}
-      />
-      {/* Outcome chips: desktop only (overlap Modules on phone) */}
+      {/* Activation + job shelf: desktop only — free 390px for first-run core */}
       <div className="hidden lg:block">
+        <ActivationChecklist
+          hasImage={Boolean(image)}
+          hasGenerated={status === "done" || versions.length > 0}
+        />
+        <WorkflowShelf
+          compact
+          activeId={jobIntentId}
+          onPick={applyWorkflow}
+        />
         <JobIntentBar activeId={jobIntentId} onPick={applyJobIntent} />
       </div>
       {/* ── Mode banner: demo vs live (W5) · tighter on phone ── */}
@@ -1335,15 +1334,17 @@ export function CreateStudio({
         </div>
       )}
 
-      {/* ── Mobile path steps (390px craft) ── */}
+      {/* ── Mobile first-run: upload → recipe → generate (Phase F 390px) ── */}
       <div className="border-b border-[var(--border)] px-4 py-2 lg:hidden">
-        <ol className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide">
+        <ol
+          className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide"
+          aria-label="Create steps"
+        >
           {(
             [
-              { n: 1 as const, label: "Photo" },
-              { n: 2 as const, label: "Recipe" },
+              { n: 1 as const, label: "Upload" },
+              { n: 2 as const, label: "Choose recipe" },
               { n: 3 as const, label: "Generate" },
-              { n: 4 as const, label: "Result" },
             ] as const
           ).map((s, i) => (
             <li key={s.n} className="flex flex-1 items-center gap-1">
@@ -1363,7 +1364,7 @@ export function CreateStudio({
               >
                 {s.label}
               </span>
-              {i < 3 && (
+              {i < 2 && (
                 <span className="mx-0.5 flex-1 border-t border-white/10" aria-hidden />
               )}
             </li>
@@ -1498,14 +1499,18 @@ export function CreateStudio({
             </div>
           )}
 
-          {/* Step 1 — Photo */}
-          <div id="create-photo-step">
+          {/* Step 1 — Upload owned toy photo */}
+          <div id="create-photo-step" data-first-run-step="upload">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <label className="text-xs font-bold uppercase tracking-wide text-[var(--fg-muted)]">
+              <label
+                htmlFor="create-photo-input"
+                className="text-xs font-bold uppercase tracking-wide text-[var(--fg-muted)]"
+              >
                 <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black lg:hidden">
                   1
                 </span>
-                {t("create.yourPhoto")}
+                <span className="lg:hidden">Upload owned toy photo</span>
+                <span className="hidden lg:inline">{t("create.yourPhoto")}</span>
               </label>
               {image && (
                 <button
@@ -1555,6 +1560,7 @@ export function CreateStudio({
                 </span>
               )}
               <input
+                id="create-photo-input"
                 type="file"
                 accept="image/*"
                 className="hidden"
@@ -1619,6 +1625,9 @@ export function CreateStudio({
                   cost 0 credits; live Mini uses 10 when the provider is on.
                   One tap loads the recipe and starts generate.
                 </p>
+                <p className="mt-1 text-[10px] font-semibold text-[var(--mint)]">
+                  Try free · Lab samples are official examples, not your upload.
+                </p>
                 <button
                   type="button"
                   disabled={sampleLoading || busy}
@@ -1662,12 +1671,12 @@ export function CreateStudio({
           </div>
 
           {/* Step 2 — Recipe (mobile chips; desktop uses rail) */}
-          <div className="lg:hidden">
+          <div className="lg:hidden" data-first-run-step="recipe">
             <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--fg-muted)]">
               <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black">
                 2
               </span>
-              Recipe
+              Choose recipe
             </p>
             <input
               value={presetFilter}
@@ -1770,11 +1779,13 @@ export function CreateStudio({
             </div>
           </div>
 
-          {/* Advanced — models, duration, seed, prompt (collapsed) */}
+          {/* Advanced — models, duration, seed, prompt (collapsed by default) */}
           <div className="rounded-xl border border-white/10 bg-black/25">
             <button
               type="button"
               onClick={() => setShowAdvanced((v) => !v)}
+              aria-expanded={showAdvanced}
+              aria-controls="create-advanced-options"
               className="flex w-full items-center justify-between px-3 py-2.5 text-left text-xs font-semibold text-white/65 transition hover:text-white"
             >
               {t("create.advanced")}
@@ -1785,7 +1796,10 @@ export function CreateStudio({
               </span>
             </button>
             {showAdvanced && (
-              <div className="space-y-3 border-t border-[var(--border)] p-3">
+              <div
+                id="create-advanced-options"
+                className="space-y-3 border-t border-[var(--border)] p-3"
+              >
                 <div>
                   <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
                     Duration
@@ -2720,7 +2734,8 @@ export function CreateStudio({
         {image ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
             {preset.emoji} {viralName(preset.slug, preset.name)} · {aspectRatio}
-            {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""}
+            {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
+            {CREDITS_PER_VIDEO} credits
           </p>
         ) : null}
         {image && !ownsRights ? (
@@ -2768,8 +2783,9 @@ export function CreateStudio({
                   ?.scrollIntoView({ behavior: "smooth", block: "center" })
               }
               className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
+              data-first-run-action="upload"
             >
-              Add toy photo
+              Upload owned toy photo
             </button>
             <button
               type="button"
@@ -2832,6 +2848,7 @@ export function CreateStudio({
             }}
             disabled={busy || !ownsRights || (mode === "i2v" && !image)}
             className="btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
+            data-first-run-action="generate"
           >
             {primaryLabel}
           </button>
