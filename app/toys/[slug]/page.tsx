@@ -26,7 +26,6 @@ export async function generateMetadata({
   const { slug } = await params;
   const t = getToyType(slug);
   if (!t) return {};
-  const primary = t.recommendedEffects[0];
   return {
     title: { absolute: t.seoTitle },
     description: t.seoDescription,

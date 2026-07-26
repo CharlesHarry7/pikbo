@@ -35,7 +35,6 @@ export async function generateMetadata({
   const { slug } = await params;
   const uc = getUseCase(slug);
   if (!uc) return {};
-  const primary = uc.recommendedEffects[0];
   return {
     title: { absolute: uc.seoTitle },
     description: uc.seoDescription,

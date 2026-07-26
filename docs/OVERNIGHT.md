@@ -147,9 +147,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- Generate cancel-on-abort: DELETE /api/generations · idempotencyKey · ledger refund unconfirmed.
-- Image cancel already shipped; both clients best-effort cancel on AbortError.
+- Cancel ops honesty: webhook refund unconfirmed · pack child idempotency · CP canceled headers.
+- mode-a requires jobs.byStatus.canceled; lint unused primary fixed on for/toys.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 

@@ -468,9 +468,12 @@ export function BatchStudio({
         : undefined;
     // CD: same still + character bible across all pack children (prompt extra only).
     const packExtra = composeExtraWithIdentity(toyIdentity, "");
+    // Unique key per child attempt so abort cancelGenerateLedger hits the right row.
+    const childIdempotencyKey = `pack:${projectId}:${job.slug}:${Date.now().toString(36)}`;
     const result = await postGenerateWithRetry(
       {
         effect: job.slug,
+        idempotencyKey: childIdempotencyKey,
         // Dual-send when possible: assetId for smaller POSTs + inline still for
         // multi-instance (Vercel) memory-asset misses.
         ...(sharedAssetId

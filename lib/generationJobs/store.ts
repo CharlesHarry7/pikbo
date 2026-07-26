@@ -761,6 +761,8 @@ export function applyProviderWebhookEvent(input: {
           status: "canceled",
           error: input.error || "Canceled by provider",
           errorCode: "CANCELED",
+          creditsOutcome: "refund unconfirmed",
+          creditsRefunded: undefined,
         })!;
       }
     } else {
@@ -849,6 +851,13 @@ export function applyProviderWebhookEvent(input: {
     error: input.error || `Provider ${input.status}`,
     errorCode: input.errorCode || input.status.toUpperCase(),
     videoUrl: undefined,
+    // Provider cancel/fail via webhook never invents a confirmed refund.
+    creditsOutcome:
+      input.status === "canceled"
+        ? "refund unconfirmed"
+        : job.creditsOutcome,
+    creditsRefunded:
+      input.status === "canceled" ? undefined : job.creditsRefunded,
   });
   if (!next) {
     return { ok: false, code: "UPDATE_FAILED", message: "Could not update job" };

@@ -2514,6 +2514,29 @@ assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /setFailCreditState\(["']refund unconfirmed["']\)/
 );
+// Webhook cancel stamps refund unconfirmed (never invent restore)
+assert.match(
+  genJobsStore,
+  /Canceled by provider[\s\S]{0,120}refund unconfirmed|status === "canceled"[\s\S]{0,200}refund unconfirmed/
+);
+// Seller Pack child idempotency for abort cancel targeting
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /idempotencyKey:\s*childIdempotencyKey|pack:\$\{projectId\}/
+);
+// Ops scripts surface canceled HEAD counters
+assert.match(
+  fs.readFileSync(join(root, "scripts/critical-path.sh"), "utf8"),
+  /X-Pikbo-Jobs-Canceled|Jobs-Canceled/
+);
+assert.match(
+  fs.readFileSync(join(root, "scripts/critical-path.sh"), "utf8"),
+  /X-Pikbo-Image-Jobs-Canceled|Image-Jobs-Canceled/
+);
+assert.match(
+  fs.readFileSync(join(root, "scripts/mode-a-acceptance.sh"), "utf8"),
+  /byStatus\.canceled|canceled key/
+);
 
 assert.match(genJobIdRoute, /export async function DELETE/);
 const assetContent = fs.readFileSync(
@@ -3644,6 +3667,11 @@ const statusProbeSrc = fs.readFileSync(
 );
 assert.match(statusProbeSrc, /imageJobs/);
 assert.match(statusProbeSrc, /Still image job ledger|Flux idempotency/);
+// Phase C/D: byStatus histogram includes canceled (not only open count)
+assert.match(statusProbeSrc, /jobsStatusHint|jobsBs\.canceled|canceled/);
+assert.match(statusProbeSrc, /imageStatusHint|imgBs\.canceled/);
+assert.match(statusProbeSrc, /process-memory\)/);
+assert.match(statusProbeSrc, /Session job ledger/);
 const modelsPageSrc = fs.readFileSync(join(root, "app/models/page.tsx"), "utf8");
 assert.match(modelsPageSrc, /FreeTrialCta/);
 // Preview noindex via shared PREVIEW_ROBOTS (or inline) — crawlable, not dual-blocked
