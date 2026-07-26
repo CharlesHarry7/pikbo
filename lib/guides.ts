@@ -382,6 +382,135 @@ export const GUIDES: Guide[] = [
       "action figure spin video",
     ],
   },
+  {
+    slug: "designer-toy-ai-video-vs-generic-tools",
+    emoji: "🎯",
+    title: "Designer Toy AI Video vs Generic Photo-to-Video Tools",
+    dek: "Why a toy-vertical generator beats a multi-model zoo for listings and drops.",
+    seoTitle: "Designer Toy AI Video vs Generic Tools | Pikbo",
+    seoDescription:
+      "Compare designer toy AI video with generic photo-to-video apps. Owned photos, listing recipes, honest Free Mini limits — not fake multi-model theater.",
+    readMins: 6,
+    intro:
+      "Generic AI video tools optimize for faces, cinematic B-roll, and model shopping. Designer-toy sellers need paint, sculpt, and packaging to stay readable while motion sells depth on Etsy, TikTok Shop, and drop posts. This guide explains the difference and when Pikbo’s toy-native path is the right job.",
+    sections: [
+      {
+        h2: "What searchers actually need",
+        paragraphs: [
+          "Queries like “AI toy video generator,” “blind box AI video generator,” and “one photo toy video AI” are commercial or near-commercial. The user already has a product still. They do not need a 45-camera film school — they need a short clip that survives marketplace QA.",
+          "Generic tools often push multi-model free tiers (Kling, Veo, Sora labels). Soft launch honesty matters: if a model is not wired live, it should read Soon — never as a fake live carousel.",
+        ],
+      },
+      {
+        h2: "Vertical recipes beat prompt chaos",
+        paragraphs: [
+          "Pikbo ships toy-native recipes: 360° spin for galleries, box reveal for pulls, floating hero for drop teasers, display glam for shelf posts. Each recipe maps to a job intent instead of a blank prompt box.",
+          "Seller Pack bundles listing + reveal + social from one owned photo when you need three commercial formats. Partial failure keeps successful children — do not re-run the whole pack blindly.",
+        ],
+      },
+      {
+        h2: "Rights and identity",
+        paragraphs: [
+          "Only upload figures and photos you own or are licensed to market. Soft launch enforces an owns-rights confirmation before live jobs. Mass-franchise packaging you do not control is out of scope.",
+          "Toy Identity (SKU + preserve notes) is a local bible, not cloud Soul ID. Carry SKU into Next SKU and Remake so commercial context does not drop between clips.",
+        ],
+      },
+      {
+        h2: "Honest Free Mini vs unlimited claims",
+        paragraphs: [
+          "Free Mini is intentionally small: Seedance Mini, about 5s · 480p · on-player mark, limited live path. Lab demos are official cached samples and never process your upload.",
+          "Failed live jobs restore credits when the server can confirm failure. TIMEOUT/cancel can remain unconfirmed — that is honest ledger policy, not a silent debit.",
+        ],
+      },
+      {
+        h2: "Recommended path this week",
+        paragraphs: [
+          "1) Clean packshot → 2) Open /tools/ai-toy-video-generator or Seller Pack → 3) Generate once → 4) QC edges, paint splits, logos → 5) Post or list. For 360-only, use the figure 360 tool page. For pull energy, use blind box AI video generator.",
+          "External links and GSC matter more than another thin tool URL. Keep the cold-start index lean; deepen guides and real demos instead of cloning near-duplicate pages.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Is designer toy AI video the same as animating any product?",
+        a: "No. Toy vertical prioritizes sculpt/paint identity and listing recipes over generic cinematic chaos.",
+      },
+      {
+        q: "Do you run every model live?",
+        a: "No. Soft launch is Seedance Mini for Free Mini. Other names stay Soon until real keys and routes exist.",
+      },
+      {
+        q: "Where do I start if I only have one photo?",
+        a: "Use the one photo toy video AI tool page or the main AI toy video generator with a clean front-facing still.",
+      },
+    ],
+    relatedEffects: ["360-spin-showcase", "blind-box-unboxing", "floating-hero"],
+    keywords: [
+      "designer toy AI video",
+      "designer toy ai video vs generic",
+      "ai toy video generator vs runway",
+      "toy vertical photo to video",
+    ],
+  },
+  {
+    slug: "seller-pack-workflow-listing-reveal-hook",
+    emoji: "📦",
+    title: "Seller Pack Workflow: Listing + Reveal + Hook From One Photo",
+    dek: "A practical commercial loop for Etsy, TikTok, and drop day — without three separate shoots.",
+    seoTitle: "Seller Pack Workflow: Listing Reveal Hook | Pikbo",
+    seoDescription:
+      "Run Pikbo Seller Pack: one owned toy photo → listing spin, box reveal, social hook. QC checklist, credit honesty, and next-SKU tips for sellers.",
+    readMins: 5,
+    intro:
+      "Seller Pack is the Creative Director default for commercial toy media: three formats from one still. This workflow guide is for sellers who need listing motion, unbox energy, and a vertical hook without booking a studio.",
+    sections: [
+      {
+        h2: "When to use Seller Pack vs single recipe",
+        paragraphs: [
+          "Use Seller Pack when one SKU needs storefront + social the same day. Use a single recipe (spin only, reveal only) when you are testing Free Mini or iterating one channel.",
+          "Open /create?mode=seller-pack. Optional ?try=1 loads an official Lab still for layout learning — it must not auto-fire three live debits.",
+        ],
+      },
+      {
+        h2: "Step-by-step",
+        paragraphs: [
+          "1) Upload a sharp owned photo (plain background if listing-critical). 2) Confirm rights. 3) Optional: set SKU / preserve notes in Toy Identity. 4) Review Launch Plan quote (three children). 5) Generate and wait with the tab open. 6) Download only children that pass HEAD/download gates.",
+          "If one child fails, keep successes. Retry only the failed job when credits and policy allow — do not assume silent multi-refunds.",
+        ],
+      },
+      {
+        h2: "Fidelity QC before you publish",
+        paragraphs: [
+          "Check edges (no melt), paint splits, logo/sculpt match, background crop, and proportions. Tick the delivery QC list on the result stage — human review, not automated vision scoring.",
+          "High-value grails need stricter QA than low-cost blind boxes. Marketplace policies still require accurate representation.",
+        ],
+      },
+      {
+        h2: "Next SKU without losing context",
+        paragraphs: [
+          "After generate, use Next SKU / Remake links that carry job and SKU when set. Library Remake also preserves SKU for device-local bibles.",
+          "Batch another photo for the same commercial goal instead of re-explaining the workflow each time.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "How many credits is Seller Pack?",
+        a: "Live children charge per successful path; Lab demos are free cached samples. See the on-page Launch Plan quote before you run.",
+      },
+      {
+        q: "Can I publish all three to every channel?",
+        a: "Match aspect and energy: 1:1 for many galleries, 9:16 for TikTok/Reels hooks. One export does not fit every placement.",
+      },
+    ],
+    relatedEffects: ["360-spin-showcase", "blind-box-unboxing", "paparazzi-flash"],
+    keywords: [
+      "seller pack toy video",
+      "listing reveal hook workflow",
+      "one photo three toy videos",
+      "etsy tiktok toy video pack",
+    ],
+  },
 ];
 
 export function getGuide(slug: string): Guide | undefined {

@@ -2008,6 +2008,18 @@ assert.match(toolsSrc, /one photo toy video AI|One Photo Toy Video AI/i);
 assert.match(toolsSrc, /blind box AI video generator|Blind Box AI Video Generator/i);
 assert.match(toolsSrc, /AI figure 360 video|AI Figure 360 Video/i);
 assert.match(toolsSrc, /Toy Product Video AI|toy product video AI/i);
+const guidesSrc24 = fs.readFileSync(join(root, "lib/guides.ts"), "utf8");
+assert.match(guidesSrc24, /designer-toy-ai-video-vs-generic-tools/);
+assert.match(guidesSrc24, /seller-pack-workflow-listing-reveal-hook/);
+assert.match(
+  fs.readFileSync(join(root, "app/about/page.tsx"), "utf8"),
+  /Designer-toy AI video|CONCEPT_ROBOTS/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HomeSeoBody.tsx"), "utf8"),
+  /data-home-seo-mesh=["']long-tail["']/
+);
+
 // GSC P0: Preview pages must NOT be dual-blocked by robots.txt (need crawl for noindex)
 const robotsSrc = fs.readFileSync(join(root, "app/robots.ts"), "utf8");
 assert.match(robotsSrc, /\/library/);

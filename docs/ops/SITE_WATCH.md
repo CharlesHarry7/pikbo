@@ -5,6 +5,30 @@ Grok 主写（见 `docs/prompts/GROK_SELF_OPS.md`）。Claude/Codex 可补产品
 
 ---
 
+## 2026-07-27 · 24h 冲刺启动（Grok）
+
+```yaml
+writer: grok-eng
+mandate: "都做 · 24h 不停"
+production:
+  softLive: true
+  sitemap: 13
+  deploy: "WB DEPLOY PASS already"
+growth:
+  last_wb: "20260726T181140Z submitted=1(prior) captcha/login heavy"
+  queue_open: ["WQ-04 growth loop", "WQ-05 GSC recheck"]
+  need_email: "PIKBO_GROWTH_EMAIL for login walls"
+product_content_shipped:
+  - "2 deep guides (vs generic + Seller Pack workflow)"
+  - "/about trust (noindex)"
+  - "HomeSeoBody long-tail mesh chips"
+next:
+  grok: "Generate/home density residual; more guide polish if time"
+  workbuddy: "clear WQ-04/05; growth --all loops; no sitemap expand"
+```
+
+---
+
 ## 2026-07-27 · 长尾蓝海 7 词布局（Grok）
 
 ```yaml

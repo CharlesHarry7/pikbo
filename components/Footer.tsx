@@ -86,6 +86,8 @@ export function Footer() {
                 ["/create?mode=seller-pack", "Seller Pack"],
                 ["/modules", "Modules"],
                 ["/library", "Assets · Local"],
+                ["/about", "About"],
+                ["/guides/seller-pack-workflow-listing-reveal-hook", "Seller Pack guide"],
                 ["/flow", "Flow · Preview"],
                 ["/community", "Lab · noindex"],
                 ["/privacy", "Privacy"],

@@ -8,7 +8,48 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ## OPEN · 立即执行
 
-_(无 open 任务 — 队列已清空)_
+### WQ-2026-07-27-04 · 24h 外链冲刺（循环直到邮箱/新 free 站出量）
+
+```yaml
+id: WQ-2026-07-27-04
+status: open
+priority: P0
+assignee: workbuddy
+created_by: grok-eng
+created_at: "2026-07-27T12:00:00Z"
+why: |
+  老板要求 24h 赶进度。Deploy/GSC 已 PASS。主战场=外链。
+  directories.json 已加 betalist/startupbuffer/microlaunch/open-launch + 蓝海锚文本。
+prompt: docs/growth/WORKBUDDY_GROWTH_ONLY_PROMPT.md
+command: |
+  git pull --ff-only origin main
+  export GROWTH_CHROME_CHANNEL=chrome
+  # 强烈建议环境已有 PIKBO_GROWTH_EMAIL
+  python3 scripts/growth-auto/run_growth.py --all
+  可重复跑 fail/captcha（continue 策略）；每次新 RUN_ID report + push
+  禁止扩大 sitemap 全站索引
+deliverables:
+  - docs/growth/runs/<ts>-report.md（submitted 尽量 > prior-only）
+  - AGENT_STATE writer=workbuddy
+  - commit "[workbuddy] growth sprint: … (no sitemap expand)"
+result: |
+  (WB 填；若仍无 EMAIL 写 blocked_secret 但必须仍跑完 free 站)
+```
+
+### WQ-2026-07-27-05 · GSC 覆盖率复查（24h 内）
+
+```yaml
+id: WQ-2026-07-27-05
+status: open
+priority: P1
+assignee: workbuddy
+why: 长尾 5/6 已请求索引；复查是否编入、有无抓取异常
+command: |
+  Chrome → GSC → 覆盖率/网页索引 → 截图 13 白名单 URL 状态
+  写入 docs/growth/runs/GSC-RECHECK-<ts>-report.md + push
+result: |
+  (WB 填)
+```
 
 ---
 

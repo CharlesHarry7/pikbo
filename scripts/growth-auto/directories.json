@@ -15,9 +15,12 @@
   "anchor_texts": [
     "Pikbo",
     "Pikbo.ai",
-    "Pikbo - AI toy video generator",
-    "AI toy video generator by Pikbo",
-    "toy video from one photo"
+    "AI toy video generator",
+    "designer toy AI video",
+    "blind box AI video generator",
+    "one photo toy video AI",
+    "AI figure 360 video",
+    "toy product video AI"
   ],
   "directories": [
     {
@@ -114,6 +117,38 @@
       "submit_url": "https://www.saaspo.com/submit",
       "free": true,
       "note": "New free candidate 2026-07-27"
+    },
+    {
+      "slug": "betalist",
+      "name": "BetaList",
+      "url": "https://betalist.com",
+      "submit_url": "https://betalist.com/submit",
+      "free": true,
+      "note": "24h sprint candidate — may need login/email"
+    },
+    {
+      "slug": "startupbuffer",
+      "name": "Startup Buffer",
+      "url": "https://startupbuffer.com",
+      "submit_url": "https://startupbuffer.com/submit",
+      "free": true,
+      "note": "24h sprint free candidate"
+    },
+    {
+      "slug": "microlaunch",
+      "name": "Microlaunch",
+      "url": "https://microlaunch.net",
+      "submit_url": "https://microlaunch.net/submit",
+      "free": true,
+      "note": "24h sprint free candidate"
+    },
+    {
+      "slug": "open-launch",
+      "name": "Open Launch",
+      "url": "https://open-launch.com",
+      "submit_url": "https://open-launch.com/submit",
+      "free": true,
+      "note": "24h sprint free candidate"
     },
     {
       "slug": "aitoolsdirectory-done",

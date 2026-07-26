@@ -76,6 +76,33 @@ export function HomeSeoBody() {
             preview. Lab wall demos stay labeled official examples—not fake
             customer UGC.
           </p>
+          <nav
+            aria-label="Long-tail toy video jobs"
+            className="mt-5 flex flex-wrap gap-2"
+            data-home-seo-mesh="long-tail"
+          >
+            {(
+              [
+                ["/tools/figure-360-product-video", "AI figure 360 video"],
+                ["/tools/blind-box-reveal-video-maker", "Blind box AI video"],
+                ["/tools/one-photo-product-video", "One photo toy video AI"],
+                ["/tools/ai-product-video-generator-for-toys", "Toy product video AI"],
+                ["/for/action-figure-product-videos", "Action figure AI video"],
+                [
+                  "/guides/designer-toy-ai-video-vs-generic-tools",
+                  "Why toy-vertical",
+                ],
+              ] as const
+            ).map(([href, label]) => (
+              <Link
+                key={href}
+                href={href}
+                className="rounded-full border border-white/12 bg-white/[0.03] px-2.5 py-1 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
         <div>

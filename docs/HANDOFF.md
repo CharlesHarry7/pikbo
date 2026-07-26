@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] 24h sprint: guides + About + home long-tail mesh + growth queue
+- Guides: designer-toy-ai-video-vs-generic-tools; seller-pack-workflow-listing-reveal-hook
+- `/about` trust page (CONCEPT_ROBOTS noindex); Footer links
+- HomeSeoBody long-tail chips → rank URLs + guide (internal equity)
+- directories.json: 4 free candidates + blue-ocean anchors; WORK_QUEUE 04/05 open
+- `docs/growth/SPRINT_24H.md` dual-track mandate. No sitemap expand.
+
 ### 2026-07-27 — [grok] Deploy SEO checklist (prod lag vs main 7de8049)
 - Prod still sitemap 9 + long-tail noindex; code on main is 13 + indexable TDH.
 - Boss action: Vercel redeploy main; then GSC + WorkBuddy. Checklist:
