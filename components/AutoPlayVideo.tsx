@@ -5,8 +5,9 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 const playing = new Set<HTMLVideoElement>();
 
 function playbackBudget() {
-  if (typeof window === "undefined") return 2;
-  return window.matchMedia("(max-width: 768px)").matches ? 1 : 2;
+  // One moving proof at a time keeps mobile data, desktop attention, and
+  // reduced-motion expectations predictable across every wall.
+  return 1;
 }
 
 function claim(v: HTMLVideoElement) {

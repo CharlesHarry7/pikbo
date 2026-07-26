@@ -14,6 +14,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 |---|---|---|---|---|---|
 | GO | Public pikbo.ai Mode B | Grok | **blocked** | agent/grok/final-takeover | Grok owns readiness; boss still must explicitly approve public DNS and charging |
 | GROK-TAKEOVER | Complete every remaining no-cost product, engineering, QA and private-release task | Grok | doing | main | 2026-07-24: Flow path + Seller Pack WaitStage + HF smoke locks. Still blocked on boss Vercel/DNS, T5 SQL multi-node, T6 bake |
+| H-RETENTION | Proof-first toy seller homepage | Grok | **review** | agent/grok/home-proof-first | One Seedance Lab premiere + compact upload in viewport; source/output proof; 8 distinct cached projects; one-video playback budget |
 | SUITE | 潮玩版 HF Generate + Yiha Modules 产品壳 | Grok | **review** | main | `/create` `/modules` suite chrome; softLaunch PRIMARY/MOBILE nav freeze; suite doors sitewide |
 | G1 | Nav whitelist / kill empty doors | Grok | **review** | agent/grok/seo-gsc-p0 | GSC P0: PRIMARY = Explore·Create·Effects·Pricing; Preview/Lab in More |
 | SEO-GSC | GSC VideoObject + crawl/noindex contract | Grok | **review** | agent/grok/seo-gsc-p0 @ a72d597 | PR #25; uploadDate DateTime; Preview crawlable+noindex; sitemap 9; **boss: GSC 验证修复 after deploy** |

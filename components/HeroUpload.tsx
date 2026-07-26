@@ -48,16 +48,24 @@ export function HeroUpload() {
 
   return (
     <div>
-      <div className="mb-2 flex flex-wrap gap-1.5">
+      <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/45">
+          Choose a recipe
+        </p>
+        <p className="hidden text-[10px] text-white/35 sm:block">
+          Photo you own · max 8MB
+        </p>
+      </div>
+      <div className="mb-3 flex flex-wrap gap-1.5">
         {PRESETS_QUICK.map((p) => (
           <button
             key={p.slug}
             type="button"
             onClick={() => setEffect(p.slug)}
-            className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+            className={`rounded-full border px-3 py-1.5 text-[11px] font-bold transition-colors ${
               effect === p.slug
-                ? "border-[var(--mint)] text-[var(--mint)]"
-                : "border-[var(--border)] text-[var(--fg-dim)] hover:text-[var(--fg)]"
+                ? "border-[#c8ff3d] bg-[#c8ff3d]/10 text-[#c8ff3d]"
+                : "border-white/10 text-white/55 hover:border-white/25 hover:text-white"
             }`}
           >
             {p.label}
@@ -75,18 +83,26 @@ export function HeroUpload() {
           setHover(false);
           goWithFile(e.dataTransfer.files?.[0]);
         }}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-5 transition-colors ${
+        className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 transition-all ${
           hover
-            ? "border-[var(--mint)] bg-[var(--mint)]/10"
-            : "border-[var(--border)] bg-[var(--card)] hover:border-white/20"
+            ? "border-[#c8ff3d] bg-[#c8ff3d]/15"
+            : "border-[#c8ff3d]/50 bg-[#c8ff3d] hover:-translate-y-0.5 hover:brightness-105"
         }`}
       >
-        <p className="text-sm font-semibold">
-          {busy ? "Opening Generate…" : "Drop a toy photo → start"}
-        </p>
-        <p className="mt-1 text-[11px] text-[var(--fg-dim)]">
-          Jumps into Generate with look preselected
-        </p>
+        <span>
+          <span className="block text-sm font-black text-black">
+            {busy ? "Opening Generate…" : "Upload photo & Generate"}
+          </span>
+          <span className="mt-0.5 block text-[10px] font-semibold text-black/60">
+            Recipe and image continue into Create
+          </span>
+        </span>
+        <span
+          aria-hidden="true"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-black text-lg font-black text-[#c8ff3d]"
+        >
+          ↗
+        </span>
         <input
           type="file"
           accept="image/*"
@@ -96,7 +112,7 @@ export function HeroUpload() {
         />
       </label>
       {err && (
-        <p className="mt-2 text-center text-xs text-[var(--brand)]">{err}</p>
+        <p className="mt-2 text-xs font-semibold text-rose-300">{err}</p>
       )}
     </div>
   );

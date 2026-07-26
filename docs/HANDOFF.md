@@ -16,6 +16,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Proof-first homepage for toy sellers
+- First viewport now contains one distinct Seedance Mini Lab clip, the only H1, recipe choices, and a compact upload-to-Create action; Free Mini names the PIKBO watermark explicitly.
+- HeroUpload keeps the selected image in `pikbo_pending_still`; CreateStudio already restores and registers that image after navigation.
+- Screen 2 shows the registered input beside its cached output; screen 3 is capped at eight unique official cached projects with Inside and Use recipe.
+- Product shelves, Preview surfaces, and long SEO copy begin after those three screens; cached playback never claims to process a visitor upload.
+- AutoPlayVideo now enforces one moving video at a time on desktop and mobile. Lint (0 errors), typecheck, engine-smoke, build, and 390/768/1440 review passed.
+
+---
+
 ### 2026-07-26 — [grok] T5 durable credit transaction hardening
 - Branch `agent/grok/t5-hardening`: versioned v2 Supabase migration adds SECURITY DEFINER, service-role-only atomic account/reserve/settle/release/guest-migrate RPCs.
 - Wallet/reservation/item rows are locked in one transaction; prices are server-fixed at 10 per generation child and 30 per Seller Pack.

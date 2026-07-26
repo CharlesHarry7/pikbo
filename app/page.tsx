@@ -6,8 +6,6 @@ import {
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { listHomeShowcaseProjects } from "@/lib/showcaseProjects";
 import { HfExploreHome } from "@/components/HfExploreHome";
-import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
-import { LandingToolPanel } from "@/components/LandingToolPanel";
 import { HomeSeoBody } from "@/components/HomeSeoBody";
 import { JsonLd } from "@/components/JsonLd";
 import { site } from "@/lib/site";
@@ -62,9 +60,11 @@ export default function Home() {
   const viralWall = buildViralPresetsWallFeed();
   const demos = showcase.map((item) => item.demo);
   const labDemos = demos.length ? demos : DEMO_VIDEOS.slice(0, 8);
+  const projects = listHomeShowcaseProjects();
   const videoLd = labDemos.slice(0, 6).map(videoObjectJsonLd);
   const lcpPoster =
-    viralWall[0]?.demo?.poster ||
+    projects.find((project) => project.model.includes("Seedance"))?.poster ||
+    projects[0]?.poster ||
     labDemos[0]?.poster ||
     DEMO_VIDEOS[0]?.poster ||
     "/demos/orbit-still.webp";
@@ -85,55 +85,9 @@ export default function Home() {
         ]}
       />
 
-      {/* Soft live strip + Generate on-page (SEO) · below = full toy OS (HF) */}
-      <SoftLaunchStrip />
-
-      <section
-        id="home-tool"
-        className="border-b border-white/10 bg-gradient-to-b from-black via-[#0a0a0c] to-black px-4 py-7 sm:px-6 sm:py-9"
-      >
-        <div className="mx-auto max-w-5xl">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--mint)]">
-              Generate · on this page
-            </p>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/40">
-              Designer-toy OS
-            </span>
-          </div>
-          <h1 className="font-display mt-2 max-w-3xl text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">
-            {site.homeH1}
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-[15px]">
-            Upload one photo of a designer toy you own → short video for listings
-            or social. Free Mini · live often 1–3 min · wall below is the full
-            suite. Keyword guide:{" "}
-            <a
-              href={site.rankToolPath}
-              className="font-semibold text-[var(--mint)] hover:underline"
-            >
-              AI toy video generator
-            </a>
-            .
-          </p>
-          <div className="mt-6">
-            <LandingToolPanel
-              effectSlug="360-spin-showcase"
-              effectName="360° Spin Showcase"
-              duration={5}
-              aspectRatio="1:1"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* 潮玩版 HF: product rail · viral wall · inside projects · suite doors */}
       <HfExploreHome
-        demos={labDemos}
-        projects={listHomeShowcaseProjects()}
-        feed={showcase}
+        projects={projects}
         viralWall={viralWall}
-        toolFirstLayout
       />
 
       <HomeSeoBody />

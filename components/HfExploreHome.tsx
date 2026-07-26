@@ -1,10 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import type { DemoVideo } from "@/lib/demoVideos";
 import type { FeedItem } from "@/lib/videoFeed";
-import { getPreset } from "@/lib/presets";
 import {
   showcaseProjectAsDemo,
   showcaseProjectHref,
@@ -12,27 +9,27 @@ import {
   type ShowcaseProject,
 } from "@/lib/showcaseProjects";
 import { track } from "@/lib/analytics";
+import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
-import { SuiteEntryStrip } from "@/components/SuiteEntryStrip";
+import { HeroUpload } from "@/components/HeroUpload";
+import { HfProductRail } from "@/components/HfProductRail";
 import { HomeViralPresetRail } from "@/components/HomeViralPresetRail";
 import { HomeViralWall } from "@/components/HomeViralWall";
-import { HfProductRail } from "@/components/HfProductRail";
 import { SeedanceCampaign } from "@/components/SeedanceCampaign";
-import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
-import { AutoPlayVideo } from "@/components/AutoPlayVideo";
-import { useI18n } from "@/components/LanguageProvider";
-import { site } from "@/lib/site";
+import { SuiteEntryStrip } from "@/components/SuiteEntryStrip";
 
-function Clip({
-  demo,
+function ProofVideo({
+  project,
   className,
-  eager,
+  eager = false,
+  interactionOnly = true,
 }: {
-  demo: DemoVideo;
+  project: ShowcaseProject;
   className?: string;
   eager?: boolean;
+  interactionOnly?: boolean;
 }) {
-  // Reuse wall policy: posters first; sources only when playing (LCP / 养站)
+  const demo = showcaseProjectAsDemo(project);
   return (
     <AutoPlayVideo
       poster={demo.poster}
@@ -40,440 +37,353 @@ function Clip({
       mp4={demo.mp4}
       className={className}
       eager={eager}
-      desktopPlayMode={eager ? "viewport" : "interaction"}
+      desktopPlayMode={interactionOnly ? "interaction" : "viewport"}
       lazySources={!eager}
       focusable={false}
-      label={demo.title}
+      label={`${project.title} official cached example`}
     />
   );
 }
 
+function ProofBadge() {
+  return (
+    <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#c8ff3d]/30 bg-black/70 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#c8ff3d] backdrop-blur">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#c8ff3d]" />
+      Official example · cached
+    </span>
+  );
+}
+
 /**
- * HF Explore home — pixel-parity structure:
- * product rail → dense viral video wall → inside projects → suite doors.
- * Video is the product; stills are not the homepage hero job.
+ * Home retention order:
+ * 1. One proof-backed toy premiere + compact upload composer.
+ * 2. The exact source still beside the cached output.
+ * 3. At most eight traceable projects with Inside / Use recipe.
+ *
+ * Product shelves and preview surfaces deliberately start after those screens.
  */
 export function HfExploreHome({
-  demos,
   projects,
-  feed,
-  viralWall,
-  /** 哥飞: tool already on page — skip strip + demote hero H1 */
-  toolFirstLayout = false,
+  viralWall = [],
 }: {
-  demos: DemoVideo[];
   projects: ShowcaseProject[];
-  feed: FeedItem[];
-  /** Dense HF-style viral presets grid (owned Lab media only) */
   viralWall?: FeedItem[];
-  toolFirstLayout?: boolean;
 }) {
-  const { t } = useI18n();
-  const showcase: FeedItem[] = feed.length
-    ? feed
-    : demos.slice(0, 8).map((d) => ({
-        id: d.id,
-        title: d.title,
-        subtitle: d.character,
-        href: `/create?effect=${d.preset}`,
-        projectHref: `/projects/${d.id}`,
-        detailHref: `/effects/${d.preset}`,
-        badge: "Official example · cached",
-        ratio: d.ratio as FeedItem["ratio"],
-        demo: d,
-        kind: "demo" as const,
-        recipeSlug: d.preset,
-      }));
+  const premiere =
+    projects.find((project) => project.model.includes("Seedance")) ??
+    projects[0];
 
-  const wallItems =
-    viralWall && viralWall.length > 0 ? viralWall : showcase;
-
-  const [active, setActive] = useState(0);
-  const item = showcase[active] ?? showcase[0];
-  const preset = item?.recipeSlug ? getPreset(item.recipeSlug) : undefined;
-
-  if (!item) {
+  if (!premiere) {
     return (
-      <div className="min-h-screen bg-black px-4 py-20 text-center text-white">
-        <p className="text-white/50">No official examples yet.</p>
-        <Link href="/create" className="mt-4 inline-block text-[#c8ff3d]">
-          Go to Generate →
-        </Link>
-      </div>
+      <main className="grid min-h-[70svh] place-items-center bg-black px-4 text-center text-white">
+        <div>
+          <p className="text-sm text-white/55">No approved Lab proof yet.</p>
+          <Link
+            href="/create"
+            className="mt-4 inline-flex rounded-full bg-[#c8ff3d] px-6 py-3 text-sm font-black text-black"
+          >
+            Open Generate
+          </Link>
+        </div>
+      </main>
     );
   }
 
+  const proofProjects = projects.slice(0, 8);
+
   return (
-    <div
-      className={`bg-black text-white sm:pb-16 ${
-        toolFirstLayout ? "pb-8" : "min-h-screen pb-28"
-      }`}
-    >
-      {!toolFirstLayout ? <SoftLaunchStrip /> : null}
-
-      {/* HF product entry rail — secondary when tool already on page */}
-      <HfProductRail />
-
-      {/* HF Viral Presets wall */}
-      <HomeViralWall items={wallItems} />
-
-      <SeedanceCampaign />
-
-      {/* Premiere strip — H1 only when tool-first layout did not already emit H1 */}
-      <section className="relative min-h-[min(320px,45svh)] overflow-hidden border-b border-white/10 sm:min-h-[min(420px,55svh)]">
-        <div className="absolute inset-0">
-          <Clip
-            key={item.id}
-            demo={item.demo}
-            eager
-            className="h-full w-full object-cover"
+    <main className="overflow-x-clip bg-black text-white">
+      {/* Screen 1 — proof and action share the first viewport. */}
+      <section
+        id="home-tool"
+        className="relative isolate h-[calc(100svh-3rem)] overflow-hidden border-b border-white/10 md:grid md:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:h-[calc(100svh-3.5rem)]"
+      >
+        <div className="absolute inset-0 overflow-hidden md:relative md:col-start-2 md:row-start-1 md:h-full">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={premiere.poster}
+            alt=""
+            width={960}
+            height={1280}
+            className="absolute inset-0 h-full w-full object-cover"
+            fetchPriority="high"
+            aria-hidden="true"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
+          <ProofVideo
+            project={premiere}
+            eager
+            interactionOnly={false}
+            className="relative h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-black/25 md:bg-gradient-to-r md:from-black md:via-black/25 md:to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-black/85 to-transparent px-6 pb-6 pt-20 md:block">
+            <div className="ml-auto max-w-sm text-right">
+              <ProofBadge />
+              <p className="mt-2 text-sm font-bold text-white">
+                {premiere.title}
+              </p>
+              <p className="text-[11px] text-white/50">
+                {premiere.model} · {premiere.aspectRatio} ·{" "}
+                {premiere.durationSeconds}s
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="relative mx-auto flex min-h-[min(420px,50svh)] max-w-6xl flex-col justify-end px-4 pb-8 pt-12 sm:min-h-[min(520px,55svh)] sm:px-6 sm:pb-12 sm:pt-16">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
-            {t("home.feelFirst")}
-          </p>
-          <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#c8ff3d]/30 bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#c8ff3d] shadow-[0_0_24px_rgba(200,255,61,0.15)] backdrop-blur">
-            {item.badge ?? "Official example"}
-          </span>
-          {toolFirstLayout ? (
-            <p className="font-display mt-3 max-w-xl text-2xl font-black uppercase leading-[1.02] tracking-tight text-white/90 sm:text-4xl">
-              {item.title}
+        <div className="relative z-10 flex h-full min-w-0 flex-col justify-center overflow-hidden bg-gradient-to-b from-black/70 via-black/35 to-black px-4 pb-20 pt-8 md:col-start-1 md:row-start-1 md:bg-black md:px-8 md:py-8 lg:px-12">
+          <div className="min-w-0">
+            <ProofBadge />
+            <p className="mt-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/55">
+              The AI video studio built for toys
             </p>
-          ) : (
-            <h1 className="font-display mt-3 max-w-xl text-3xl font-black uppercase leading-[1.02] tracking-tight sm:text-5xl md:text-6xl">
-              {site.homeH1}
+            <h1 className="font-display mt-2 max-w-full text-[clamp(1.9rem,7.8vw,4.75rem)] font-black leading-[0.96] tracking-[-0.04em] text-white md:text-[clamp(2.7rem,4.4vw,4.6rem)]">
+              <span className="block">Turn one toy photo</span>
+              <span className="block">into a clip ready to</span>
+              <span className="block">list or post.</span>
             </h1>
-          )}
-          {!toolFirstLayout ? (
-            <p className="mt-2 max-w-md text-base font-semibold text-white/80 sm:text-lg">
-              {item.title}
+            <p className="mt-4 max-w-[34ch] text-sm leading-relaxed text-white/70 sm:text-base">
+              Pick a toy-native recipe, upload a photo you own, and review the
+              generated details before publishing.
             </p>
-          ) : null}
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65 sm:text-[15px]">
-            {t("home.hero.sub")}
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <a
-              href="#home-tool"
-              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
-            >
-              Use tool on this page
-            </a>
-            <Link
-              href={item.href}
-              onClick={() =>
-                track({
-                  event: "recipe_use",
-                  path: "/",
-                  recipe: item.recipeSlug,
-                })
-              }
-              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-black/50 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50 hover:bg-black/60"
-            >
-              {t("home.useRecipe")}
-            </Link>
-            <Link
-              href="/tools/ai-toy-video-generator"
-              className="text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
-            >
-              Keyword tool page
-            </Link>
-            <Link
-              href="/for/photo-to-video-for-toys"
-              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
-            >
-              Photo → video use case
-            </Link>
           </div>
-          <p className="mt-3 text-[11px] text-white/45">
-            Designer-toy suite · Lab demos free · live Mini often 1–3 min
-          </p>
 
-          {/* Progress rail */}
-          <div className="mt-8 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-            {showcase.map((s, i) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setActive(i)}
-                className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ring-2 transition sm:h-16 sm:w-12 ${
-                  i === active
-                    ? "ring-[#c8ff3d]"
-                    : "ring-white/10 opacity-70 hover:opacity-100"
-                }`}
-                aria-label={`Show ${s.title}`}
+          <div className="mt-5 min-w-0 max-w-lg overflow-hidden rounded-3xl border border-white/15 bg-black/75 p-3 shadow-[0_28px_80px_-28px_rgba(0,0,0,0.95)] backdrop-blur-xl sm:p-4">
+            <HeroUpload />
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-[10px] text-white/45">
+              <span>Free Mini: 1 live 5s clip · 480p · PIKBO watermark</span>
+              <a
+                href="#proof"
+                className="shrink-0 font-bold text-white/75 hover:text-[#c8ff3d]"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={s.demo.poster}
-                  alt=""
-                  width={80}
-                  height={112}
-                  className="h-full w-full object-cover"
-                  loading={i === 0 ? "eager" : "lazy"}
-                  decoding="async"
-                  fetchPriority={i === 0 ? "high" : "low"}
-                />
-              </button>
-            ))}
+                See the proof ↓
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Suite doors — Generate + Modules + Seller Pack */}
-      <SuiteEntryStrip />
-
-      {/* HF Viral Presets pattern — toy-native Lab rail */}
-      <HomeViralPresetRail />
-
-      {/* ── Screen 2: Before → after ── */}
-      <section className="border-b border-white/10 bg-gradient-to-b from-black via-[#08080c] to-black px-3 py-12 sm:px-5">
-        <div className="mx-auto max-w-5xl">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8ff3d]/90">
-            {t("home.proof")}
-          </p>
-          <h2 className="font-display mt-1 text-xl font-bold uppercase tracking-tight sm:text-3xl">
-            {t("home.beforeAfter")}
-          </h2>
-          <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/50">
-            Same official Lab example: one still in, one cached clip out — not a
-            customer post.
-          </p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <div className="overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-white/10 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.9)]">
-              <div className="relative aspect-[4/5]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={item.demo.poster}
-                  alt={`Input still for ${item.title}`}
-                  width={720}
-                  height={900}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-                <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/70 backdrop-blur">
-                  Before
-                </span>
-              </div>
-              <p className="p-3.5 text-xs font-bold uppercase tracking-wide text-white/55">
-                Input · still photo
-              </p>
-            </div>
-            <div className="overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-[#c8ff3d]/25 shadow-[0_24px_60px_-24px_rgba(200,255,61,0.2)]">
-              <div className="relative aspect-[4/5]">
-                <Clip
-                  demo={item.demo}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-                <span className="absolute left-3 top-3 rounded-full bg-[#c8ff3d] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black shadow-[0_0_16px_rgba(200,255,61,0.4)]">
-                  After
-                </span>
-              </div>
-              <p className="p-3.5 text-xs font-bold uppercase tracking-wide text-[#c8ff3d]">
-                Output · official cached example
-              </p>
-            </div>
-          </div>
-          <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[12px] text-white/55">
-            <div>
-              <dt className="inline text-white/35">Recipe · </dt>
-              <dd className="inline font-semibold text-white/85">
-                {item.title}
-              </dd>
-            </div>
-            {preset && (
-              <>
-                <div>
-                  <dt className="inline text-white/35">Duration · </dt>
-                  <dd className="inline">{preset.duration}s</dd>
-                </div>
-                <div>
-                  <dt className="inline text-white/35">Aspect · </dt>
-                  <dd className="inline">{preset.aspectRatio}</dd>
-                </div>
-              </>
-            )}
-            <div>
-              <dt className="inline text-white/35">Mode · </dt>
-              <dd className="inline">Cached Lab · not live</dd>
-            </div>
-          </dl>
-          <div className="mt-7 flex flex-wrap gap-2">
-            <Link
-              href={item.href}
-              className="inline-flex rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_40px_-8px_rgba(200,255,61,0.5)] transition hover:-translate-y-0.5"
-            >
-              {t("home.replaceMine")}
-            </Link>
-            <Link
-              href={item.projectHref || item.detailHref || "/explore"}
-              className="inline-flex rounded-full border border-white/20 bg-black/40 px-5 py-3.5 text-sm font-bold text-white/85 backdrop-blur transition hover:border-[#c8ff3d]/45"
-            >
-              {t("home.insideProject")}
-            </Link>
-            <Link
-              href="/create?mode=seller-pack"
-              className="inline-flex rounded-full border border-white/15 px-5 py-3.5 text-sm font-bold text-white/70 transition hover:border-white/30 hover:text-white"
-            >
-              {t("cta.sellerPack")}
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Screen 3: traceable projects ── */}
-      <section className="px-3 py-10 sm:px-5">
+      {/* Screen 2 — one source image, one distinct output. */}
+      <section
+        id="proof"
+        className="border-b border-white/10 bg-gradient-to-b from-[#09090c] to-black px-4 py-14 sm:px-6 sm:py-20"
+      >
         <div className="mx-auto max-w-6xl">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <h2 className="font-display text-xl font-bold uppercase tracking-tight sm:text-2xl">
-                Explore inside every project
+          <div className="max-w-2xl">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+              One owned photo → one video draft
+            </p>
+            <h2 className="font-display mt-2 text-3xl font-black tracking-tight sm:text-5xl">
+              See exactly what changed.
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-white/55 sm:text-base">
+              This is a PIKBO Lab example, not a customer post. Cached playback
+              costs 0 credits and does not process your upload.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-3 md:grid-cols-2 md:gap-5">
+            <article className="overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c0f]">
+              <div className="relative aspect-[4/5] overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={premiere.inputImage}
+                  alt={`Source photo for ${premiere.title}`}
+                  width={960}
+                  height={1200}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/70 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-white/75 backdrop-blur">
+                  Input · source photo
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3 p-4">
+                <p className="text-sm font-bold">{premiere.character}</p>
+                <p className="text-[11px] text-white/40">Owned Lab asset</p>
+              </div>
+            </article>
+
+            <article className="overflow-hidden rounded-2xl border border-[#c8ff3d]/25 bg-[#0c0c0f] shadow-[0_24px_80px_-40px_rgba(200,255,61,0.35)]">
+              <div className="group relative aspect-[4/5] overflow-hidden">
+                <ProofVideo
+                  project={premiere}
+                  className="h-full w-full object-cover"
+                />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-3 pb-3 pt-14">
+                  <ProofBadge />
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 p-4">
+                <div>
+                  <p className="text-sm font-bold">{premiere.title}</p>
+                  <p className="mt-0.5 text-[11px] text-white/45">
+                    Hover, focus, or tap to play · not auto-playing beside hero
+                  </p>
+                </div>
+                <Link
+                  href={showcaseRecipeHref(premiere)}
+                  onClick={() =>
+                    track({
+                      event: "recipe_use",
+                      path: "/",
+                      recipe: premiere.recipeSlug,
+                    })
+                  }
+                  className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
+                >
+                  Use this recipe
+                </Link>
+              </div>
+            </article>
+          </div>
+
+          <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/10 bg-white/10 sm:grid-cols-4">
+            {[
+              ["Recipe", premiere.recipeSlug],
+              ["Model", premiere.model],
+              ["Format", `${premiere.aspectRatio} · ${premiere.durationSeconds}s`],
+              ["Mode", "Cached Lab · 0 credits"],
+            ].map(([label, value]) => (
+              <div key={label} className="bg-[#09090c] p-3">
+                <dt className="text-[9px] font-bold uppercase tracking-wider text-white/35">
+                  {label}
+                </dt>
+                <dd className="mt-1 text-[11px] font-semibold text-white/75">
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* Screen 3 — no shared loops, no fake UGC, no autoplay storm. */}
+      <section className="border-b border-white/10 px-4 py-14 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="max-w-2xl">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+                Eight recipes · eight distinct files
+              </p>
+              <h2 className="font-display mt-2 text-3xl font-black tracking-tight sm:text-5xl">
+                Open the proof, then use the recipe.
               </h2>
-              <p className="mt-1 text-sm text-white/45">
-                Open the input, output, recipe, model record, and review state
-                before using it with your own toy.
+              <p className="mt-3 text-sm leading-relaxed text-white/55">
+                Every card opens its source, output, settings, and provisional
+                Lab review. These are official cached examples—not customer UGC.
               </p>
             </div>
             <Link
               href="/explore"
-              className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
+              className="text-sm font-bold text-[#c8ff3d] hover:underline"
             >
-              All projects →
+              Explore all projects →
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:gap-3">
-            {projects.slice(0, 8).map((project, i) => (
-              <div
+
+          <div className="mt-8 grid grid-cols-2 gap-2.5 md:grid-cols-4 md:gap-4">
+            {proofProjects.map((project) => (
+              <article
                 key={project.slug}
-                className="group relative overflow-hidden rounded-xl bg-neutral-900 ring-1 ring-white/10 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.85)] transition duration-300 hover:-translate-y-1 hover:ring-[#c8ff3d]/45 hover:shadow-[0_20px_40px_-20px_rgba(200,255,61,0.12)]"
+                className="group overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c0f] transition hover:-translate-y-1 hover:border-[#c8ff3d]/35"
               >
-                <button
-                  type="button"
-                  className="block w-full text-left"
-                  onClick={() => setActive(i)}
+                <Link
+                  href={showcaseProjectHref(project)}
+                  className="relative block aspect-[3/4] overflow-hidden"
+                  aria-label={`Open ${project.title} project`}
                 >
-                  <div className="relative aspect-[3/4] sm:aspect-[9/14]">
-                    <Clip
-                      demo={showcaseProjectAsDemo(project)}
-                      eager={i < 2}
-                      className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                    <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#c8ff3d] ring-1 ring-white/10">
-                      Official example · cached
-                    </span>
-                    <p className="absolute inset-x-0 bottom-12 p-2 text-[11px] font-bold uppercase leading-tight tracking-wide sm:text-xs">
+                  <ProofVideo
+                    project={project}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/5 to-transparent" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3">
+                    <ProofBadge />
+                    <h3 className="mt-2 text-xs font-black leading-tight text-white sm:text-sm">
                       {project.title}
+                    </h3>
+                    <p className="mt-1 text-[9px] uppercase tracking-wider text-white/45">
+                      {project.aspectRatio} · {project.durationSeconds}s ·{" "}
+                      {project.resolution}
                     </p>
                   </div>
-                </button>
-                <div className="absolute inset-x-0 bottom-0 flex gap-1 p-2">
-                  <Link
-                    href={showcaseRecipeHref(project)}
-                    className="flex-1 rounded-full bg-[#c8ff3d] py-1.5 text-center text-[10px] font-black text-black shadow-[0_0_16px_rgba(200,255,61,0.25)] transition hover:brightness-110"
-                  >
-                    {t("home.remake")}
-                  </Link>
+                </Link>
+                <div className="grid grid-cols-2 gap-1.5 p-2">
                   <Link
                     href={showcaseProjectHref(project)}
-                    className="rounded-full border border-white/20 bg-black/55 px-2.5 py-1.5 text-[10px] font-bold text-white backdrop-blur-sm transition hover:border-[#c8ff3d]/40"
+                    className="rounded-full border border-white/15 px-2 py-2 text-center text-[10px] font-bold text-white/75 hover:border-white/30 hover:text-white"
                   >
-                    {t("home.insideProject")}
+                    Inside
+                  </Link>
+                  <Link
+                    href={showcaseRecipeHref(project)}
+                    onClick={() =>
+                      track({
+                        event: "recipe_use",
+                        path: "/",
+                        recipe: project.recipeSlug,
+                      })
+                    }
+                    className="rounded-full bg-[#c8ff3d] px-2 py-2 text-center text-[10px] font-black text-black"
+                  >
+                    Use recipe
                   </Link>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* HF Flow–class creation matrix strip */}
-      <section className="border-b border-white/10 px-3 py-8 sm:px-5">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#c8ff3d]">
-                Creation flow
-              </p>
-              <h2 className="font-display text-xl font-bold uppercase tracking-tight sm:text-2xl">
-                Every way to make a clip
-              </h2>
-            </div>
-            <Link
-              href="/flow"
-              className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
-            >
-              Open full Flow →
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:border-[#c8ff3d]/40 hover:bg-[#c8ff3d]/5">
-              <FreeTrialCta
-                path="/#jobs"
-                labelTry="Try free video"
-                labelDemo="Lab sample"
-                hideClipsChip
-                className="text-sm font-bold text-white hover:text-[#c8ff3d]"
-              />
-              <p className="text-[11px] text-white/40">Mini 5s · Sample ready</p>
-            </div>
-            {[
-              { href: "/effects", label: "Video presets", sub: "Viral recipes" },
-              { href: "/create?mode=seller-pack", label: "Seller Pack", sub: "3 videos" },
-              { href: "/flow", label: "Flow", sub: "Video matrix" },
-              { href: "/community", label: "Lab", sub: "Video examples" },
-              { href: "/models", label: "Engines", sub: "Seedance live" },
-            ].map((c) => (
-              <Link
-                key={c.href}
-                href={c.href}
-                className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:border-[#c8ff3d]/40 hover:bg-[#c8ff3d]/5"
-              >
-                <p className="text-sm font-bold text-white">{c.label}</p>
-                <p className="text-[11px] text-white/40">{c.sub}</p>
-              </Link>
-            ))}
-          </div>
+      {/* Product breadth starts only after proof and activation. */}
+      <section className="border-b border-white/10 py-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
+            More ways to work
+          </p>
+          <h2 className="font-display mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+            Build a listing clip or a three-video Seller Pack.
+          </h2>
         </div>
+        <SuiteEntryStrip />
+        <HfProductRail />
       </section>
 
-      {/* Lower: Seller Pack + CTA */}
-      <section className="px-3 pb-6 sm:px-5">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent p-5 sm:flex-row sm:items-center sm:p-6">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
-              Seller Pack · 3 videos
-            </p>
-            <h3 className="mt-1 font-display text-lg font-bold uppercase tracking-tight sm:text-xl">
-              One photo → three short videos
-            </h3>
-            <p className="mt-1 max-w-md text-[12px] text-white/50">
-              Listing spin + reveal + social hook — all video outputs. Lab
-              examples free to watch; live jobs bill per clip.
+      {viralWall.length > 0 ? (
+        <section className="border-b border-white/10 py-8">
+          <div className="mx-auto mb-4 max-w-7xl px-4 sm:px-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
+              Additional Lab references
             </p>
           </div>
+          <HomeViralWall items={viralWall} />
+        </section>
+      ) : null}
+
+      <SeedanceCampaign />
+      <HomeViralPresetRail />
+
+      <section className="px-4 py-14 text-center sm:px-6">
+        <p className="text-sm text-white/50">
+          Upload a toy you own. Pick the job. Review the result before posting.
+        </p>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <FreeTrialCta
+            path="/create"
+            labelTry="Generate a toy clip"
+            labelDemo="Open cached Lab"
+            hideClipsChip
+            className="inline-flex rounded-full bg-[#c8ff3d] px-7 py-3 text-sm font-black text-black"
+          />
           <Link
             href="/create?mode=seller-pack"
-            className="inline-flex shrink-0 items-center rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-sm font-bold text-[#c8ff3d] transition hover:bg-[#c8ff3d]/10"
+            className="inline-flex rounded-full border border-white/15 px-6 py-3 text-sm font-bold text-white/75 hover:border-white/30 hover:text-white"
           >
-            Open Seller Pack →
+            Open Seller Pack
           </Link>
         </div>
       </section>
-
-      <section className="px-3 pb-10 text-center sm:px-5">
-        <p className="mb-3 text-[12px] text-white/40">
-          Watch what a toy recipe does. Replace the toy. Generate your version.
-        </p>
-        <Link
-          href={item.href}
-          className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-8 py-3 text-sm font-black text-black"
-        >
-          Remix the premiere recipe
-        </Link>
-      </section>
-    </div>
+    </main>
   );
 }
