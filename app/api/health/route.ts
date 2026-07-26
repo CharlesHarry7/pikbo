@@ -55,8 +55,7 @@ export async function GET() {
   const authPublic = publicAuthStatus();
   const mode = generateMode();
   const payments = paymentsReadiness();
-  const durableGate =
-    process.env.REQUIRE_DURABLE_CREDITS === "1" && !durableCredits.writable;
+  const durableGate = durableCredits.required && !durableCredits.writable;
 
   /** Demo / soft-live / paid ladders — honest gates for ops */
   const ready = {
@@ -206,7 +205,10 @@ export async function GET() {
       production,
       entitlementsWritable: entitlements.writable,
       durableCreditsWritable: durableCredits.writable,
-      requireDurableCredits: process.env.REQUIRE_DURABLE_CREDITS === "1",
+      requireDurableCredits: durableCredits.required,
+      durableSchemaVersion: durableCredits.schemaVersion ?? null,
+      durableRequiredVersion: durableCredits.requiredVersion ?? null,
+      durableSchemaMissing: durableCredits.missing ?? [],
       supabaseConfigured: supabase.configured,
       supabaseServiceRole: supabase.hasServiceRole,
     },

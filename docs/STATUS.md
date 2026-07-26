@@ -73,7 +73,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T28 | Pricing conversion copy A/B | GPT | done | agent/gpt/pricing-mobile | Outcome default; `?copy=cost` cost-control variant; C1–C5 aligns active 1 / 5 / 15 contract |
 | T29 | Homepage first-screen 390px acceptance + polish | GPT | done | agent/gpt/pricing-mobile | No x-overflow; primary CTA visible; duplicate home floating CTA removed; accessible demo controls |
 | T30 | Pricing UI matches active credit contract | GPT | done | agent/gpt/pricing-truth-main | Free 1 / Creator ~5 / Shop ~15; billing gate and future model-aware weights remain explicit |
-| T5 | Supabase auth + durable credits | Grok | doing | agent/grok/final-takeover | Schema+engine landed; Supabase keys in BLOCKERS_REQUEST; **blocks serious Stripe** |
+| T5 | Supabase auth + durable credits | Grok | review | agent/grok/t5-hardening | P0 RPC hardening: atomic reserve/settle/release/migrate, v2 full probe, fail-closed Supabase, authenticated Seller Pack; migration still requires operator apply |
 | T6 | Server-side free watermark (ffmpeg) | Grok | todo | agent/grok/final-takeover | After Wave B/CI; file-level proof required |
 
 ---

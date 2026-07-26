@@ -14,6 +14,17 @@ Newest first. One block per meaningful landing.
 - Models page uses shared `PREVIEW_ROBOTS` (not inline robots object).
 - Verified: typecheck · engine-smoke.
 
+---
+
+### 2026-07-26 — [grok] T5 durable credit transaction hardening
+- Branch `agent/grok/t5-hardening`: versioned v2 Supabase migration adds SECURITY DEFINER, service-role-only atomic account/reserve/settle/release/guest-migrate RPCs.
+- Wallet/reservation/item rows are locked in one transaction; prices are server-fixed at 10 per generation child and 30 per Seller Pack.
+- Schema readiness now verifies version, critical tables and every RPC; explicit Supabase/required mode fails closed without local-file fallback.
+- Seller Pack reserve/settle/release requires a verified user; terminal child state is keyed to the three fixed recipes and client credit amounts are ignored.
+- Verified locally: targeted ESLint, TypeScript, engine-smoke, production build. SQL was not applied externally; operator migration remains the blocker.
+
+---
+
 ### 2026-07-26 — [grok] Suite chrome product-first + FailPanel settlement
 - GenerateSuiteChrome: Generate · Seller · Recipes · Modules · Library first; Preview last.
 - Batch/Landing: requestCreditStateFromFailure on fails; network abort → refundUnconfirmed.

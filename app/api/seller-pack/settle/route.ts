@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { settleSellerPackChild } from "@/lib/durableCredits/sellerPack";
 import { durableCreditsActive } from "@/lib/durableCredits";
+import { getAuthUserFromRequest } from "@/lib/supabase/user";
 
 export const runtime = "nodejs";
 
@@ -10,7 +11,6 @@ export async function POST(req: Request) {
     reservationId?: string;
     jobId?: string;
     childKey?: string;
-    childCredits?: number;
   } = {};
   try {
     body = (await req.json()) as typeof body;
@@ -23,19 +23,42 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
+  const auth = await getAuthUserFromRequest(req);
+  if (!auth) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "UNAUTHORIZED",
+        error: "Signed-in account required to settle Seller Pack credits",
+      },
+      { status: 401 }
+    );
+  }
+  if (!body.childKey || typeof body.childKey !== "string") {
+    return NextResponse.json(
+      { ok: false, code: "INVALID_REQUEST", error: "childKey required" },
+      { status: 400 }
+    );
+  }
   if (!durableCreditsActive()) {
     return NextResponse.json({ ok: true, skipped: true, code: "DURABLE_OFF" });
   }
   const result = await settleSellerPackChild({
     reservationId: body.reservationId,
+    actorUserId: auth.id,
     jobId: body.jobId,
     childKey: body.childKey,
-    childCredits: body.childCredits,
   });
   if (!result.ok) {
+    const status =
+      result.code === "UNAUTHORIZED"
+        ? 403
+        : result.code === "DURABLE_BACKEND_UNAVAILABLE"
+          ? 503
+          : 400;
     return NextResponse.json(
       { ok: false, code: result.code, error: result.error },
-      { status: 400 }
+      { status }
     );
   }
   return NextResponse.json({ ok: true });

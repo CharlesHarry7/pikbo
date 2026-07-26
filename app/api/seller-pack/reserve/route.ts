@@ -19,7 +19,7 @@ export const runtime = "nodejs";
  * When durable is off, returns ok:false with DURABLE_OFF (batch continues on cookie).
  */
 export async function POST(req: Request) {
-  let body: { childCount?: number; idempotencyKey?: string } = {};
+  let body: { idempotencyKey?: string } = {};
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -28,8 +28,6 @@ export async function POST(req: Request) {
 
   const session = await ensureSession();
   const auth = await getAuthUserFromRequest(req);
-  const ownerUserId = auth?.id || session.id;
-  const kind = auth?.id ? "auth" : "guest";
 
   if (!durableCreditsActive()) {
     return NextResponse.json({
@@ -43,18 +41,22 @@ export async function POST(req: Request) {
       session: publicSession(session),
     });
   }
-
-  const childCount =
-    typeof body.childCount === "number" &&
-    body.childCount >= 1 &&
-    body.childCount <= 8
-      ? Math.floor(body.childCount)
-      : SELLER_PACK_CHILD_COUNT;
+  if (!auth) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "UNAUTHORIZED",
+        error:
+          "Sign in to reserve a durable Seller Pack; guest children continue on the Cookie trial path",
+        session: publicSession(session),
+      },
+      { status: 401 }
+    );
+  }
 
   const result = await reserveSellerPackShadow({
-    ownerUserId,
-    kind,
-    childCount,
+    ownerUserId: auth.id,
+    kind: "auth",
     idempotencyKey:
       typeof body.idempotencyKey === "string"
         ? body.idempotencyKey.slice(0, 160)
@@ -62,15 +64,22 @@ export async function POST(req: Request) {
   });
 
   if (!result.ok) {
-    const status = result.code === "INSUFFICIENT_CREDITS" ? 402 : 400;
+    const status =
+      result.code === "INSUFFICIENT_CREDITS"
+        ? 402
+        : result.code === "UNAUTHORIZED"
+          ? 403
+          : result.code === "DURABLE_BACKEND_UNAVAILABLE"
+            ? 503
+            : 400;
     return NextResponse.json(
       {
         ok: false,
         code: result.code,
         error: result.error,
-        quoteCredits: childCount * 10,
+        quoteCredits: SELLER_PACK_QUOTE_CREDITS,
         session: publicSession(session),
-        durable: auth?.id ? await getPersonalWallet(auth.id) : null,
+        durable: await getPersonalWallet(auth.id),
       },
       { status }
     );
@@ -84,6 +93,6 @@ export async function POST(req: Request) {
     quoteCredits: result.data.quotedCredits,
     childCredits: result.data.childCredits,
     session: publicSession(session),
-    durable: auth?.id ? await getPersonalWallet(auth.id) : null,
+    durable: await getPersonalWallet(auth.id),
   });
 }

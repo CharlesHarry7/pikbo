@@ -1,6 +1,7 @@
 /**
  * Supabase Postgres durable credits adapter (T5).
- * Uses service role only. Falls back when schema is not applied yet.
+ * Uses service role only. All money mutations call SECURITY DEFINER RPCs so
+ * wallet, reservation and ledger changes commit in one Postgres transaction.
  * Cookie generate remains soft-launch authority until REQUIRE_DURABLE_CREDITS=1.
  */
 
@@ -17,18 +18,30 @@ import type {
 export type SupabaseCreditsProbe = {
   configured: boolean;
   schemaReady: boolean;
+  schemaVersion?: number;
+  requiredVersion?: number;
+  missing?: string[];
   warning?: string;
 };
 
-let schemaReadyCache: { at: number; ready: boolean; warning?: string } | null =
-  null;
+let schemaReadyCache: {
+  at: number;
+  ready: boolean;
+  schemaVersion?: number;
+  requiredVersion?: number;
+  missing?: string[];
+  warning?: string;
+} | null = null;
 const SCHEMA_TTL_MS = 30_000;
 
 export function supabaseCreditsConfigured(): boolean {
   return Boolean(supabaseUrl() && supabaseServiceRoleKey());
 }
 
-/** Probe credit_wallets table presence (cached briefly). */
+/**
+ * Probe the versioned T5 contract (cached briefly). A single table existing is
+ * insufficient: production requires every critical table and transactional RPC.
+ */
 export async function probeSupabaseCreditsSchema(): Promise<SupabaseCreditsProbe> {
   if (!supabaseCreditsConfigured()) {
     return {
@@ -42,6 +55,9 @@ export async function probeSupabaseCreditsSchema(): Promise<SupabaseCreditsProbe
     return {
       configured: true,
       schemaReady: schemaReadyCache.ready,
+      schemaVersion: schemaReadyCache.schemaVersion,
+      requiredVersion: schemaReadyCache.requiredVersion,
+      missing: schemaReadyCache.missing,
       warning: schemaReadyCache.warning,
     };
   }
@@ -54,19 +70,16 @@ export async function probeSupabaseCreditsSchema(): Promise<SupabaseCreditsProbe
     };
   }
   try {
-    const { error } = await admin
-      .from("credit_wallets")
-      .select("account_id")
-      .limit(1);
+    const { data, error } = await admin.rpc("pikbo_credits_schema_probe");
     if (error) {
       const msg = error.message || String(error);
       const missing =
-        /does not exist|relation|schema cache|Could not find/i.test(msg);
+        /does not exist|function|schema cache|Could not find/i.test(msg);
       schemaReadyCache = {
         at: now,
         ready: false,
         warning: missing
-          ? "T5 migration not applied — run supabase/migrations/20260723120000_t5_auth_credits.sql"
+          ? "T5 RPC migration not applied — apply both durable credit migrations in order"
           : msg.slice(0, 160),
       };
       return {
@@ -75,8 +88,42 @@ export async function probeSupabaseCreditsSchema(): Promise<SupabaseCreditsProbe
         warning: schemaReadyCache.warning,
       };
     }
-    schemaReadyCache = { at: now, ready: true };
-    return { configured: true, schemaReady: true };
+    const raw = (data ?? {}) as {
+      ready?: unknown;
+      schemaVersion?: unknown;
+      requiredVersion?: unknown;
+      missing?: unknown;
+    };
+    const schemaVersion = Number(raw.schemaVersion) || 0;
+    const requiredVersion = Number(raw.requiredVersion) || 2;
+    const missingItems = Array.isArray(raw.missing)
+      ? raw.missing.filter((v): v is string => typeof v === "string")
+      : [];
+    const ready =
+      raw.ready === true &&
+      schemaVersion >= requiredVersion &&
+      missingItems.length === 0;
+    const warning = ready
+      ? undefined
+      : `T5 schema incomplete (v${schemaVersion}/${requiredVersion})${
+          missingItems.length ? `: ${missingItems.slice(0, 8).join(", ")}` : ""
+        }`;
+    schemaReadyCache = {
+      at: now,
+      ready,
+      schemaVersion,
+      requiredVersion,
+      missing: missingItems,
+      warning,
+    };
+    return {
+      configured: true,
+      schemaReady: ready,
+      schemaVersion,
+      requiredVersion,
+      missing: missingItems,
+      warning,
+    };
   } catch (e) {
     const msg = e instanceof Error ? e.message.slice(0, 160) : "probe failed";
     schemaReadyCache = { at: now, ready: false, warning: msg };
@@ -197,138 +244,61 @@ export async function supabaseGetPersonalWallet(userId: string): Promise<{
   };
 }
 
-/**
- * Ensure profile + personal account + wallet. Bootstraps Free grant once via
- * ledger idempotency key free:{accountId}:bootstrap.
- */
+type RpcErrorLike = { message?: string; details?: string; hint?: string };
+
+function rpcFailure(error: RpcErrorLike | null | undefined): {
+  ok: false;
+  code: string;
+  error: string;
+} {
+  const message = error?.message || "Supabase credit RPC failed";
+  const match = /PIKBO_CREDITS:([A-Z0-9_]+)/.exec(message);
+  return {
+    ok: false,
+    code: match?.[1] || "SUPABASE_RPC_FAILED",
+    error: message.slice(0, 200),
+  };
+}
+
+function mutationData(raw: unknown): {
+  reservation: CreditReservation;
+  wallet: CreditWallet;
+} | null {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as { reservation?: unknown; wallet?: unknown };
+  if (!obj.reservation || !obj.wallet) return null;
+  return {
+    reservation: mapReservation(obj.reservation as ReservationRow),
+    wallet: mapWallet(obj.wallet as WalletRow),
+  };
+}
+
+/** Atomic profile/account/wallet bootstrap with a server-fixed 10-credit grant. */
 export async function supabaseEnsurePersonalAccount(
   userId: string,
-  initialAvailable = 10
+  _initialAvailable = 10
 ): Promise<
   | { ok: true; data: { account: DurableAccount; wallet: CreditWallet } }
   | { ok: false; code: string; error: string }
 > {
   const admin = getSupabaseAdmin();
-  if (!admin) {
-    return { ok: false, code: "NO_ADMIN", error: "Supabase admin unavailable" };
+  void _initialAvailable; // RPC owns the Free bootstrap amount (always 10).
+  if (!admin) return rpcFailure({ message: "Supabase admin unavailable" });
+  const { data, error } = await admin.rpc("pikbo_ensure_personal_account", {
+    p_user_id: userId,
+  });
+  if (error) return rpcFailure(error);
+  const raw = data as { account?: unknown; wallet?: unknown } | null;
+  if (!raw?.account || !raw.wallet) {
+    return rpcFailure({ message: "Malformed ensure-account RPC response" });
   }
-
-  // Profile (ignore conflict)
-  await admin.from("profiles").upsert(
-    { id: userId, updated_at: new Date().toISOString() },
-    { onConflict: "id" }
-  );
-
-  const { data: existingAccounts } = await admin
-    .from("accounts")
-    .select("*")
-    .eq("owner_user_id", userId)
-    .eq("kind", "personal")
-    .limit(1);
-
-  let account: DurableAccount;
-  if (existingAccounts?.length) {
-    account = mapAccount(existingAccounts[0] as AccountRow);
-  } else {
-    const { data: created, error } = await admin
-      .from("accounts")
-      .insert({
-        kind: "personal",
-        owner_user_id: userId,
-        plan_id: "free",
-        status: "active",
-      })
-      .select("*")
-      .single();
-    if (error || !created) {
-      return {
-        ok: false,
-        code: "ACCOUNT_CREATE_FAILED",
-        error: error?.message?.slice(0, 160) || "account create failed",
-      };
-    }
-    account = mapAccount(created as AccountRow);
-    await admin.from("account_memberships").upsert(
-      {
-        account_id: account.id,
-        user_id: userId,
-        role: "owner",
-      },
-      { onConflict: "account_id,user_id" }
-    );
-  }
-
-  const { data: walletRows } = await admin
-    .from("credit_wallets")
-    .select("*")
-    .eq("account_id", account.id)
-    .limit(1);
-
-  let wallet: CreditWallet;
-  if (walletRows?.length) {
-    wallet = mapWallet(walletRows[0] as WalletRow);
-  } else {
-    const { data: w, error: wErr } = await admin
-      .from("credit_wallets")
-      .insert({
-        account_id: account.id,
-        available_credits: 0,
-        reserved_credits: 0,
-        lifetime_used_credits: 0,
-        version: 0,
-      })
-      .select("*")
-      .single();
-    if (wErr || !w) {
-      return {
-        ok: false,
-        code: "WALLET_CREATE_FAILED",
-        error: wErr?.message?.slice(0, 160) || "wallet create failed",
-      };
-    }
-    wallet = mapWallet(w as WalletRow);
-  }
-
-  // One-time free bootstrap grant
-  if (initialAvailable > 0 && wallet.availableCredits === 0) {
-    const idem = `free:${account.id}:bootstrap`;
-    const { data: existingLedger } = await admin
-      .from("credit_ledger")
-      .select("id")
-      .eq("idempotency_key", idem)
-      .limit(1);
-    if (!existingLedger?.length) {
-      const nextAvailable = wallet.availableCredits + initialAvailable;
-      const { data: updated, error: uErr } = await admin
-        .from("credit_wallets")
-        .update({
-          available_credits: nextAvailable,
-          version: wallet.version + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("account_id", account.id)
-        .eq("version", wallet.version)
-        .select("*")
-        .maybeSingle();
-      if (!uErr && updated) {
-        wallet = mapWallet(updated as WalletRow);
-        await admin.from("credit_ledger").insert({
-          account_id: account.id,
-          kind: "grant",
-          delta_available: initialAvailable,
-          delta_reserved: 0,
-          available_after: wallet.availableCredits,
-          reserved_after: wallet.reservedCredits,
-          source_type: "free_period",
-          source_id: idem,
-          idempotency_key: idem,
-          metadata: {},
-        });
-      }
-    }
-  }
-
-  return { ok: true, data: { account, wallet } };
+  return {
+    ok: true,
+    data: {
+      account: mapAccount(raw.account as AccountRow),
+      wallet: mapWallet(raw.wallet as WalletRow),
+    },
+  };
 }
 
 export async function supabaseReserve(input: {
@@ -342,143 +312,62 @@ export async function supabaseReserve(input: {
   | { ok: false; code: string; error: string }
 > {
   const admin = getSupabaseAdmin();
-  if (!admin) {
-    return { ok: false, code: "NO_ADMIN", error: "Supabase admin unavailable" };
-  }
-  if (input.quotedCredits <= 0) {
-    return { ok: false, code: "INVALID_AMOUNT", error: "quotedCredits must be > 0" };
-  }
-
-  // Idempotent reserve
-  const { data: existingRes } = await admin
-    .from("credit_reservations")
-    .select("*")
-    .eq("idempotency_key", input.idempotencyKey)
-    .limit(1);
-  if (existingRes?.length) {
-    const reservation = mapReservation(existingRes[0] as ReservationRow);
-    const { data: w } = await admin
-      .from("credit_wallets")
-      .select("*")
-      .eq("account_id", input.accountId)
-      .limit(1);
-    if (!w?.length) {
-      return { ok: false, code: "WALLET_NOT_FOUND", error: "Wallet missing" };
-    }
-    return {
-      ok: true,
-      data: {
-        reservation,
-        wallet: mapWallet(w[0] as WalletRow),
-      },
-    };
-  }
-
-  const { data: walletRows } = await admin
-    .from("credit_wallets")
-    .select("*")
-    .eq("account_id", input.accountId)
-    .limit(1);
-  if (!walletRows?.length) {
-    return { ok: false, code: "WALLET_NOT_FOUND", error: "Wallet not found" };
-  }
-  const wallet = mapWallet(walletRows[0] as WalletRow);
-  if (wallet.availableCredits < input.quotedCredits) {
+  if (!admin) return rpcFailure({ message: "Supabase admin unavailable" });
+  const expected = input.purpose === "seller_pack" ? 30 : 10;
+  if (input.quotedCredits !== expected) {
     return {
       ok: false,
-      code: "INSUFFICIENT_CREDITS",
-      error: `Need ${input.quotedCredits}, have ${wallet.availableCredits}`,
+      code: "SERVER_QUOTE_MISMATCH",
+      error: `${input.purpose} is server-priced at ${expected} credits`,
     };
   }
-
-  const nextAvailable = wallet.availableCredits - input.quotedCredits;
-  const nextReserved = wallet.reservedCredits + input.quotedCredits;
-  const { data: updated, error: uErr } = await admin
-    .from("credit_wallets")
-    .update({
-      available_credits: nextAvailable,
-      reserved_credits: nextReserved,
-      version: wallet.version + 1,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("account_id", input.accountId)
-    .eq("version", wallet.version)
-    .select("*")
-    .maybeSingle();
-  if (uErr || !updated) {
-    return {
-      ok: false,
-      code: "CONCURRENT_UPDATE",
-      error: uErr?.message?.slice(0, 160) || "Wallet version conflict — retry",
-    };
-  }
-  const nextWallet = mapWallet(updated as WalletRow);
-  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-  const { data: resRow, error: rErr } = await admin
-    .from("credit_reservations")
-    .insert({
-      account_id: input.accountId,
-      purpose: input.purpose,
-      quoted_credits: input.quotedCredits,
-      settled_credits: 0,
-      released_credits: 0,
-      status: "reserved",
-      idempotency_key: input.idempotencyKey,
-      expires_at: expiresAt,
-      created_by: input.createdBy,
-    })
-    .select("*")
-    .single();
-  if (rErr || !resRow) {
-    // best-effort rollback wallet
-    await admin
-      .from("credit_wallets")
-      .update({
-        available_credits: wallet.availableCredits,
-        reserved_credits: wallet.reservedCredits,
-        version: nextWallet.version + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("account_id", input.accountId)
-      .eq("version", nextWallet.version);
-    return {
-      ok: false,
-      code: "RESERVE_FAILED",
-      error: rErr?.message?.slice(0, 160) || "reservation insert failed",
-    };
-  }
-  const reservation = mapReservation(resRow as ReservationRow);
-  await admin.from("credit_ledger").insert({
-    account_id: input.accountId,
-    kind: "reserve",
-    delta_available: -input.quotedCredits,
-    delta_reserved: input.quotedCredits,
-    available_after: nextWallet.availableCredits,
-    reserved_after: nextWallet.reservedCredits,
-    reservation_id: reservation.id,
-    source_type: "reservation",
-    source_id: reservation.id,
-    idempotency_key: `ledger:reserve:${input.idempotencyKey}`,
-    metadata: { purpose: input.purpose },
+  const { data, error } = await admin.rpc("pikbo_reserve_credits", {
+    p_account_id: input.accountId,
+    p_created_by: input.createdBy,
+    p_purpose: input.purpose,
+    p_idempotency_key: input.idempotencyKey,
   });
-  return { ok: true, data: { reservation, wallet: nextWallet } };
+  if (error) return rpcFailure(error);
+  const mapped = mutationData(data);
+  if (!mapped) return rpcFailure({ message: "Malformed reserve RPC response" });
+  if (mapped.reservation.quotedCredits !== expected) {
+    return rpcFailure({ message: "Server quote invariant failed" });
+  }
+  return { ok: true, data: mapped };
 }
 
 export async function supabaseSettle(input: {
   reservationId: string;
-  credits: number;
+  actorUserId: string;
+  itemKey: string;
   idempotencyKey: string;
   jobId?: string;
 }): Promise<
   | { ok: true; data: { reservation: CreditReservation; wallet: CreditWallet } }
   | { ok: false; code: string; error: string }
 > {
-  return settleOrRelease("settle", input);
+  const admin = getSupabaseAdmin();
+  if (!admin) return rpcFailure({ message: "Supabase admin unavailable" });
+  const { data, error } = await admin.rpc(
+    "pikbo_settle_reservation_item",
+    {
+      p_reservation_id: input.reservationId,
+      p_actor_user_id: input.actorUserId,
+      p_item_key: input.itemKey,
+      p_job_id: input.jobId ?? null,
+      p_idempotency_key: input.idempotencyKey,
+    }
+  );
+  if (error) return rpcFailure(error);
+  const mapped = mutationData(data);
+  if (!mapped) return rpcFailure({ message: "Malformed settle RPC response" });
+  return { ok: true, data: mapped };
 }
 
 export async function supabaseRelease(input: {
   reservationId: string;
-  credits: number;
+  actorUserId: string;
+  itemKey: string;
   idempotencyKey: string;
   reason?: string;
   jobId?: string;
@@ -486,193 +375,23 @@ export async function supabaseRelease(input: {
   | { ok: true; data: { reservation: CreditReservation; wallet: CreditWallet } }
   | { ok: false; code: string; error: string }
 > {
-  return settleOrRelease("release", input);
-}
-
-async function settleOrRelease(
-  kind: "settle" | "release",
-  input: {
-    reservationId: string;
-    credits: number;
-    idempotencyKey: string;
-    reason?: string;
-    jobId?: string;
-  }
-): Promise<
-  | { ok: true; data: { reservation: CreditReservation; wallet: CreditWallet } }
-  | { ok: false; code: string; error: string }
-> {
   const admin = getSupabaseAdmin();
-  if (!admin) {
-    return { ok: false, code: "NO_ADMIN", error: "Supabase admin unavailable" };
-  }
-  if (input.credits <= 0) {
-    return { ok: false, code: "INVALID_AMOUNT", error: "credits must be > 0" };
-  }
-
-  const { data: led } = await admin
-    .from("credit_ledger")
-    .select("id")
-    .eq("idempotency_key", input.idempotencyKey)
-    .limit(1);
-  if (led?.length) {
-    const { data: resRows } = await admin
-      .from("credit_reservations")
-      .select("*")
-      .eq("id", input.reservationId)
-      .limit(1);
-    const { data: wRows } = await admin
-      .from("credit_wallets")
-      .select("*")
-      .eq(
-        "account_id",
-        resRows?.[0] ? (resRows[0] as ReservationRow).account_id : ""
-      )
-      .limit(1);
-    if (resRows?.length && wRows?.length) {
-      return {
-        ok: true,
-        data: {
-          reservation: mapReservation(resRows[0] as ReservationRow),
-          wallet: mapWallet(wRows[0] as WalletRow),
-        },
-      };
+  if (!admin) return rpcFailure({ message: "Supabase admin unavailable" });
+  const { data, error } = await admin.rpc(
+    "pikbo_release_reservation_item",
+    {
+      p_reservation_id: input.reservationId,
+      p_actor_user_id: input.actorUserId,
+      p_item_key: input.itemKey,
+      p_job_id: input.jobId ?? null,
+      p_reason: input.reason ?? null,
+      p_idempotency_key: input.idempotencyKey,
     }
-  }
-
-  const { data: resRows, error: rErr } = await admin
-    .from("credit_reservations")
-    .select("*")
-    .eq("id", input.reservationId)
-    .limit(1);
-  if (rErr || !resRows?.length) {
-    return {
-      ok: false,
-      code: "RESERVATION_NOT_FOUND",
-      error: "Reservation not found",
-    };
-  }
-  const reservation = mapReservation(resRows[0] as ReservationRow);
-  const remaining =
-    reservation.quotedCredits -
-    reservation.settledCredits -
-    reservation.releasedCredits;
-  if (input.credits > remaining) {
-    return {
-      ok: false,
-      code: "OVER_BUDGET",
-      error: `Only ${remaining} credits left on reservation`,
-    };
-  }
-
-  const { data: walletRows } = await admin
-    .from("credit_wallets")
-    .select("*")
-    .eq("account_id", reservation.accountId)
-    .limit(1);
-  if (!walletRows?.length) {
-    return { ok: false, code: "WALLET_NOT_FOUND", error: "Wallet not found" };
-  }
-  const wallet = mapWallet(walletRows[0] as WalletRow);
-
-  const deltaAvailable = kind === "release" ? input.credits : 0;
-  const deltaReserved = -input.credits;
-  const lifetimeDelta = kind === "settle" ? input.credits : 0;
-  const nextAvailable = wallet.availableCredits + deltaAvailable;
-  const nextReserved = wallet.reservedCredits + deltaReserved;
-  if (nextReserved < 0) {
-    return {
-      ok: false,
-      code: "RESERVED_UNDERFLOW",
-      error: "Reserved credits would go negative",
-    };
-  }
-
-  const { data: updatedWallet, error: uErr } = await admin
-    .from("credit_wallets")
-    .update({
-      available_credits: nextAvailable,
-      reserved_credits: nextReserved,
-      lifetime_used_credits: wallet.lifetimeUsedCredits + lifetimeDelta,
-      version: wallet.version + 1,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("account_id", reservation.accountId)
-    .eq("version", wallet.version)
-    .select("*")
-    .maybeSingle();
-  if (uErr || !updatedWallet) {
-    return {
-      ok: false,
-      code: "CONCURRENT_UPDATE",
-      error: uErr?.message?.slice(0, 160) || "Wallet version conflict",
-    };
-  }
-  const nextWallet = mapWallet(updatedWallet as WalletRow);
-
-  const settled =
-    reservation.settledCredits + (kind === "settle" ? input.credits : 0);
-  const released =
-    reservation.releasedCredits + (kind === "release" ? input.credits : 0);
-  const closed = settled + released >= reservation.quotedCredits;
-  let status: CreditReservation["status"] = reservation.status;
-  if (closed) {
-    status =
-      released > 0 && settled === 0
-        ? "released"
-        : released > 0
-          ? "partially_settled"
-          : "settled";
-    if (settled > 0 && released === 0) status = "settled";
-    if (settled === 0 && released > 0) status = "released";
-    if (settled > 0 && released > 0) status = "partially_settled";
-  } else if (settled > 0 || released > 0) {
-    status = "partially_settled";
-  }
-
-  const { data: nextRes, error: resUpErr } = await admin
-    .from("credit_reservations")
-    .update({
-      settled_credits: settled,
-      released_credits: released,
-      status,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", reservation.id)
-    .select("*")
-    .single();
-  if (resUpErr || !nextRes) {
-    return {
-      ok: false,
-      code: "RESERVATION_UPDATE_FAILED",
-      error: resUpErr?.message?.slice(0, 160) || "reservation update failed",
-    };
-  }
-
-  await admin.from("credit_ledger").insert({
-    account_id: reservation.accountId,
-    kind,
-    delta_available: deltaAvailable,
-    delta_reserved: deltaReserved,
-    available_after: nextWallet.availableCredits,
-    reserved_after: nextWallet.reservedCredits,
-    reservation_id: reservation.id,
-    source_type: kind,
-    source_id: input.jobId || reservation.id,
-    idempotency_key: input.idempotencyKey,
-    metadata: {
-      reason: input.reason,
-      jobId: input.jobId,
-    },
-  });
-
-  return {
-    ok: true,
-    data: {
-      reservation: mapReservation(nextRes as ReservationRow),
-      wallet: nextWallet,
-    },
-  };
+  );
+  if (error) return rpcFailure(error);
+  const mapped = mutationData(data);
+  if (!mapped) return rpcFailure({ message: "Malformed release RPC response" });
+  return { ok: true, data: mapped };
 }
 
 export async function supabaseMigrateGuest(input: {
@@ -686,114 +405,24 @@ export async function supabaseMigrateGuest(input: {
   | { ok: false; code: string; error: string }
 > {
   const admin = getSupabaseAdmin();
-  if (!admin) {
-    return { ok: false, code: "NO_ADMIN", error: "Supabase admin unavailable" };
-  }
-
-  const { data: consumed } = await admin
-    .from("consumed_guest_sessions")
-    .select("*")
-    .eq("guest_session_id_hash", input.guestSessionIdHash)
-    .limit(1);
-  if (consumed?.length) {
-    const { data: w } = await admin
-      .from("credit_wallets")
-      .select("*")
-      .eq("account_id", input.accountId)
-      .limit(1);
-    if (!w?.length) {
-      return { ok: false, code: "WALLET_NOT_FOUND", error: "Wallet not found" };
-    }
-    return {
-      ok: true,
-      data: { migrated: 0, wallet: mapWallet(w[0] as WalletRow) },
-    };
-  }
-
-  const { data: walletRows } = await admin
-    .from("credit_wallets")
-    .select("*")
-    .eq("account_id", input.accountId)
-    .limit(1);
-  if (!walletRows?.length) {
-    return { ok: false, code: "WALLET_NOT_FOUND", error: "Wallet not found" };
-  }
-  let wallet = mapWallet(walletRows[0] as WalletRow);
-
-  // If durable already has balance, mark guest consumed with 0 migrate.
-  if (wallet.availableCredits > 0 || wallet.reservedCredits > 0) {
-    await admin.from("consumed_guest_sessions").upsert({
-      guest_session_id_hash: input.guestSessionIdHash,
-      user_id: input.userId,
-      account_id: input.accountId,
-      migrated_credits: 0,
-    });
-    return { ok: true, data: { migrated: 0, wallet } };
-  }
-
-  const migrated = Math.min(10, Math.max(0, Math.floor(input.cookieCredits)));
-  if (migrated === 0) {
-    await admin.from("consumed_guest_sessions").upsert({
-      guest_session_id_hash: input.guestSessionIdHash,
-      user_id: input.userId,
-      account_id: input.accountId,
-      migrated_credits: 0,
-    });
-    return { ok: true, data: { migrated: 0, wallet } };
-  }
-
-  const { data: existingLed } = await admin
-    .from("credit_ledger")
-    .select("id")
-    .eq("idempotency_key", input.idempotencyKey)
-    .limit(1);
-  if (existingLed?.length) {
-    await admin.from("consumed_guest_sessions").upsert({
-      guest_session_id_hash: input.guestSessionIdHash,
-      user_id: input.userId,
-      account_id: input.accountId,
-      migrated_credits: 0,
-    });
-    return { ok: true, data: { migrated: 0, wallet } };
-  }
-
-  const nextAvailable = wallet.availableCredits + migrated;
-  const { data: updated, error } = await admin
-    .from("credit_wallets")
-    .update({
-      available_credits: nextAvailable,
-      version: wallet.version + 1,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("account_id", input.accountId)
-    .eq("version", wallet.version)
-    .select("*")
-    .maybeSingle();
-  if (error || !updated) {
-    return {
-      ok: false,
-      code: "CONCURRENT_UPDATE",
-      error: error?.message?.slice(0, 160) || "migrate wallet conflict",
-    };
-  }
-  wallet = mapWallet(updated as WalletRow);
-  await admin.from("credit_ledger").insert({
-    account_id: input.accountId,
-    kind: "migration",
-    delta_available: migrated,
-    delta_reserved: 0,
-    available_after: wallet.availableCredits,
-    reserved_after: wallet.reservedCredits,
-    source_type: "migration",
-    source_id: input.guestSessionIdHash,
-    idempotency_key: input.idempotencyKey,
-    metadata: {},
+  if (!admin) return rpcFailure({ message: "Supabase admin unavailable" });
+  const { data, error } = await admin.rpc("pikbo_migrate_guest_credits", {
+    p_guest_session_id_hash: input.guestSessionIdHash,
+    p_user_id: input.userId,
+    p_account_id: input.accountId,
+    p_cookie_credits: Math.min(10, Math.max(0, Math.floor(input.cookieCredits))),
+    p_idempotency_key: input.idempotencyKey,
   });
-  await admin.from("consumed_guest_sessions").upsert({
-    guest_session_id_hash: input.guestSessionIdHash,
-    user_id: input.userId,
-    account_id: input.accountId,
-    migrated_credits: migrated,
-  });
-  return { ok: true, data: { migrated, wallet } };
+  if (error) return rpcFailure(error);
+  const raw = data as { migrated?: unknown; wallet?: unknown } | null;
+  if (!raw?.wallet) {
+    return rpcFailure({ message: "Malformed guest-migrate RPC response" });
+  }
+  return {
+    ok: true,
+    data: {
+      migrated: Math.min(10, Math.max(0, Number(raw.migrated) || 0)),
+      wallet: mapWallet(raw.wallet as WalletRow),
+    },
+  };
 }

@@ -99,7 +99,8 @@ export type GenerateErrorBody = {
     | "TIMEOUT"
     /** Client-side only — fetch never reached a typed server body. */
     | "NETWORK_ERROR"
-    | "REQUEST_CANCELED";
+    | "REQUEST_CANCELED"
+    | "DURABLE_BACKEND_UNAVAILABLE";
   need?: number;
   have?: number;
   model?: string;

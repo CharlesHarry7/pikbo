@@ -388,10 +388,29 @@ export async function POST(req: Request) {
     // Optional durable shadow ledger — prefer signed-in Supabase user.
     // Cookie remains authoritative until REQUIRE_DURABLE_CREDITS=1.
     const authUser = await getAuthUserFromRequest(req);
-    let shadow: ShadowReservation | null = await shadowReserveForGenerate({
-      authUserId: authUser?.id,
-      guestSessionId: session.id,
-    });
+    let shadow: ShadowReservation | null = null;
+    try {
+      shadow = await shadowReserveForGenerate({
+        authUserId: authUser?.id,
+        guestSessionId: session.id,
+      });
+    } catch {
+      // Explicit Supabase/required mode is an accounting boundary: undo the
+      // Cookie debit and do not call the provider when the durable reserve
+      // cannot be proven.
+      session = refundCredits(session, check.cost);
+      await saveSession(session);
+      return err(
+        {
+          error:
+            "Durable credit service unavailable — no generation was submitted and credits were restored",
+          code: "DURABLE_BACKEND_UNAVAILABLE",
+          session: publicSession(session),
+          creditsRefunded: true,
+        },
+        503
+      );
+    }
 
     const model = modelForTier({
       freeTier,

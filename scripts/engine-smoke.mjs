@@ -2323,6 +2323,79 @@ const localStore = fs.readFileSync(
 assert.match(localStore, /schemaReady/);
 assert.match(localStore, /probeSupabaseCreditsSchema/);
 
+// T5 P0 hardening: versioned full probe + atomic SECURITY DEFINER RPCs.
+const t5RpcMigration = fs.readFileSync(
+  join(
+    root,
+    "supabase/migrations/20260726120000_t5_credit_rpcs.sql"
+  ),
+  "utf8"
+);
+assert.match(t5RpcMigration, /pikbo_schema_versions/);
+assert.match(t5RpcMigration, /credit_reservation_items/);
+assert.match(t5RpcMigration, /pikbo_credits_schema_probe/);
+assert.match(t5RpcMigration, /pikbo_reserve_credits/);
+assert.match(t5RpcMigration, /pikbo_settle_reservation_item/);
+assert.match(t5RpcMigration, /pikbo_release_reservation_item/);
+assert.match(t5RpcMigration, /pikbo_migrate_guest_credits/);
+assert.match(t5RpcMigration, /security definer/gi);
+assert.match(t5RpcMigration, /for update/gi);
+assert.match(t5RpcMigration, /when p_purpose = 'generation' then 10/);
+assert.match(t5RpcMigration, /when p_purpose = 'seller_pack' then 30/);
+assert.match(t5RpcMigration, /check \(credits = 10\)/);
+assert.match(t5RpcMigration, /grant execute[\s\S]+to service_role/);
+assert.match(
+  t5RpcMigration,
+  /revoke all[\s\S]+from public, anon, authenticated/
+);
+assert.match(sbStore, /admin\.rpc\("pikbo_credits_schema_probe"\)/);
+assert.match(sbStore, /schemaVersion/);
+assert.match(sbStore, /pikbo_reserve_credits/);
+assert.doesNotMatch(
+  sbStore,
+  /\.from\("credit_wallets"\)[\s\S]{0,250}\.update\(/,
+  "Supabase money mutations must stay inside RPCs"
+);
+assert.match(durableIdx, /durableSupabaseRequired/);
+assert.match(durableIdx, /DURABLE_BACKEND_UNAVAILABLE/);
+assert.match(
+  durableIdx,
+  /backend\.kind === "supabase"\) return supabaseReserve\(input\)/
+);
+assert.match(localStore, /PIKBO_DURABLE_BACKEND === "supabase"/);
+assert.match(
+  localStore,
+  /Explicit\/required Supabase[\s\S]{0,300}backend:\s*"none"/
+);
+const sellerSettleRoute = fs.readFileSync(
+  join(root, "app/api/seller-pack/settle/route.ts"),
+  "utf8"
+);
+const sellerReleaseRoute = fs.readFileSync(
+  join(root, "app/api/seller-pack/release/route.ts"),
+  "utf8"
+);
+for (const route of [sellerSettleRoute, sellerReleaseRoute]) {
+  assert.match(route, /getAuthUserFromRequest/);
+  assert.match(route, /code:\s*"UNAUTHORIZED"/);
+  assert.match(route, /\?\s*403/);
+  assert.match(route, /actorUserId:\s*auth\.id/);
+  assert.doesNotMatch(route, /childCredits/);
+}
+const sellerPackCredits = fs.readFileSync(
+  join(root, "lib/durableCredits/sellerPack.ts"),
+  "utf8"
+);
+assert.match(sellerPackCredits, /SELLER_PACK_ITEM_KEYS/);
+assert.match(sellerPackCredits, /SELLER_PACK_QUOTE_CREDITS/);
+assert.match(sellerPackCredits, /actorUserId/);
+assert.doesNotMatch(sellerPackCredits, /input\.childCredits/);
+assert.match(genRoute, /DURABLE_BACKEND_UNAVAILABLE/);
+assert.match(
+  genRoute,
+  /no generation was submitted and credits were restored/
+);
+
 // Phase I payments readiness + checkout live-key / flag gates
 const stripeSrc = fs.readFileSync(join(root, "lib/stripe.ts"), "utf8");
 assert.match(stripeSrc, /export function paymentsReadiness/);

@@ -109,7 +109,7 @@ export async function POST(req: Request) {
     personal?.backend ??
     (probe.backend === "supabase" || probe.backend === "local-file"
       ? probe.backend
-      : "local-file");
+      : "unavailable");
 
   return NextResponse.json({
     ok: true,
@@ -167,7 +167,7 @@ export async function GET(req: Request) {
     personal?.backend ??
     (probe.backend === "supabase" || probe.backend === "local-file"
       ? probe.backend
-      : "local-file");
+      : "unavailable");
   return NextResponse.json({
     ok: true,
     signedIn: true,

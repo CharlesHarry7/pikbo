@@ -8,6 +8,7 @@
 
 import {
   durableCreditsActive,
+  durableSupabaseRequired,
   durableRelease,
   durableReserve,
   durableSettle,
@@ -31,7 +32,12 @@ async function reserveForOwner(
   if (!durableCreditsActive()) return null;
   try {
     const ensured = await ensurePersonalAccount(ownerUserId, 10);
-    if (!ensured.ok) return null;
+    if (!ensured.ok) {
+      if (durableSupabaseRequired()) {
+        throw new Error(`DURABLE_REQUIRED:${ensured.code}`);
+      }
+      return null;
+    }
     const accountId = ensured.data.account.id;
     const credits = jobCostCredits();
     const key = `shadow-reserve:${kind}:${ownerUserId}:${Date.now()}`;
@@ -43,6 +49,9 @@ async function reserveForOwner(
       idempotencyKey: key,
     });
     if (!reserved.ok) {
+      if (durableSupabaseRequired()) {
+        throw new Error(`DURABLE_REQUIRED:${reserved.code}`);
+      }
       // Shadow must never block live cookie path — log and continue.
       console.warn(
         "[durable-shadow] reserve failed",
@@ -59,6 +68,7 @@ async function reserveForOwner(
       kind,
     };
   } catch (e) {
+    if (durableSupabaseRequired()) throw e;
     console.warn("[durable-shadow] reserve error", e);
     return null;
   }
@@ -101,7 +111,8 @@ export async function shadowSettle(
   try {
     await durableSettle({
       reservationId: shadow.reservationId,
-      credits: shadow.credits,
+      actorUserId: shadow.ownerUserId,
+      itemKey: "generation",
       idempotencyKey: `shadow-settle:${shadow.reservationId}:${jobId || "ok"}`,
       jobId,
     });
@@ -119,7 +130,8 @@ export async function shadowRelease(
   try {
     await durableRelease({
       reservationId: shadow.reservationId,
-      credits: shadow.credits,
+      actorUserId: shadow.ownerUserId,
+      itemKey: "generation",
       idempotencyKey: `shadow-release:${shadow.reservationId}:${reason}`,
       reason,
       jobId,

@@ -51,16 +51,42 @@ import {
   supabaseSettle,
 } from "./supabaseStore";
 
-async function prefersSupabaseBackend(): Promise<boolean> {
-  if (process.env.PIKBO_DURABLE_BACKEND === "local") return false;
-  if (process.env.PIKBO_DURABLE_BACKEND === "supabase") {
-    const p = await probeSupabaseCreditsSchema();
-    return p.schemaReady;
+export function durableSupabaseRequired(): boolean {
+  return (
+    process.env.PIKBO_DURABLE_BACKEND === "supabase" ||
+    process.env.REQUIRE_DURABLE_CREDITS === "1"
+  );
+}
+
+type BackendDecision =
+  | { kind: "supabase" }
+  | { kind: "local" }
+  | { kind: "unavailable"; error: string };
+
+async function durableBackend(): Promise<BackendDecision> {
+  const required = durableSupabaseRequired();
+  if (process.env.PIKBO_DURABLE_BACKEND === "local" && !required) {
+    return { kind: "local" };
   }
-  // Auto when T5 tables exist; DURABLE_CREDITS=local still allows shadow via file
-  // when schema is not ready.
-  const p = await probeSupabaseCreditsSchema();
-  return p.schemaReady;
+  const probe = await probeSupabaseCreditsSchema();
+  if (probe.schemaReady) return { kind: "supabase" };
+  if (required) {
+    return {
+      kind: "unavailable",
+      error:
+        probe.warning ||
+        "Supabase durable credits are required but schema/RPC probe failed",
+    };
+  }
+  return { kind: "local" };
+}
+
+function unavailable(error: string) {
+  return {
+    ok: false as const,
+    code: "DURABLE_BACKEND_UNAVAILABLE",
+    error,
+  };
 }
 
 async function withState<T>(
@@ -93,13 +119,11 @@ export async function ensurePersonalAccount(
   userId: string,
   initialAvailable = 10
 ) {
-  if (await prefersSupabaseBackend()) {
-    const remote = await supabaseEnsurePersonalAccount(
-      userId,
-      initialAvailable
-    );
-    // Guest cookie ids are not auth.users rows — FK fails; fall back to local.
-    if (remote.ok) return remote;
+  const backend = await durableBackend();
+  if (backend.kind === "unavailable") return unavailable(backend.error);
+  if (backend.kind === "supabase") {
+    // Remote errors are authoritative. Never leak into a local-file wallet.
+    return supabaseEnsurePersonalAccount(userId, initialAvailable);
   }
   return withState((state) => {
     const existing = Object.values(state.accounts).find(
@@ -168,11 +192,9 @@ export async function durableReserve(input: {
   quotedCredits: number;
   idempotencyKey: string;
 }) {
-  if (await prefersSupabaseBackend()) {
-    const remote = await supabaseReserve(input);
-    if (remote.ok) return remote;
-    // Local-file account ids won't exist in Postgres — fall back.
-  }
+  const backend = await durableBackend();
+  if (backend.kind === "unavailable") return unavailable(backend.error);
+  if (backend.kind === "supabase") return supabaseReserve(input);
   return withState((state) => {
     const r = reserveCredits(state, input);
     if (!r.ok) {
@@ -184,16 +206,37 @@ export async function durableReserve(input: {
 
 export async function durableSettle(input: {
   reservationId: string;
-  credits: number;
+  actorUserId: string;
+  itemKey: string;
   idempotencyKey: string;
   jobId?: string;
 }) {
-  if (await prefersSupabaseBackend()) {
-    const remote = await supabaseSettle(input);
-    if (remote.ok) return remote;
-  }
+  const backend = await durableBackend();
+  if (backend.kind === "unavailable") return unavailable(backend.error);
+  if (backend.kind === "supabase") return supabaseSettle(input);
   return withState((state) => {
-    const r = settleReservationItem(state, input);
+    const reservation = state.reservations[input.reservationId];
+    const account = reservation
+      ? state.accounts[reservation.accountId]
+      : undefined;
+    if (
+      reservation &&
+      reservation.createdBy !== input.actorUserId &&
+      account?.ownerUserId !== input.actorUserId
+    ) {
+      return {
+        ok: false,
+        state,
+        code: "UNAUTHORIZED",
+        error: "Reservation does not belong to this account user",
+      };
+    }
+    const r = settleReservationItem(state, {
+      reservationId: input.reservationId,
+      credits: 10,
+      idempotencyKey: input.idempotencyKey,
+      jobId: input.jobId,
+    });
     if (!r.ok) {
       return { ok: false, state: r.state, code: r.code, error: r.error };
     }
@@ -203,17 +246,39 @@ export async function durableSettle(input: {
 
 export async function durableRelease(input: {
   reservationId: string;
-  credits: number;
+  actorUserId: string;
+  itemKey: string;
   idempotencyKey: string;
   reason?: string;
   jobId?: string;
 }) {
-  if (await prefersSupabaseBackend()) {
-    const remote = await supabaseRelease(input);
-    if (remote.ok) return remote;
-  }
+  const backend = await durableBackend();
+  if (backend.kind === "unavailable") return unavailable(backend.error);
+  if (backend.kind === "supabase") return supabaseRelease(input);
   return withState((state) => {
-    const r = releaseReservationItem(state, input);
+    const reservation = state.reservations[input.reservationId];
+    const account = reservation
+      ? state.accounts[reservation.accountId]
+      : undefined;
+    if (
+      reservation &&
+      reservation.createdBy !== input.actorUserId &&
+      account?.ownerUserId !== input.actorUserId
+    ) {
+      return {
+        ok: false,
+        state,
+        code: "UNAUTHORIZED",
+        error: "Reservation does not belong to this account user",
+      };
+    }
+    const r = releaseReservationItem(state, {
+      reservationId: input.reservationId,
+      credits: 10,
+      idempotencyKey: input.idempotencyKey,
+      reason: input.reason,
+      jobId: input.jobId,
+    });
     if (!r.ok) {
       return { ok: false, state: r.state, code: r.code, error: r.error };
     }
@@ -228,10 +293,9 @@ export async function durableMigrateGuest(input: {
   cookieCredits: number;
   idempotencyKey: string;
 }) {
-  if (await prefersSupabaseBackend()) {
-    const remote = await supabaseMigrateGuest(input);
-    if (remote.ok) return remote;
-  }
+  const backend = await durableBackend();
+  if (backend.kind === "unavailable") return unavailable(backend.error);
+  if (backend.kind === "supabase") return supabaseMigrateGuest(input);
   return withState((state) => {
     const r = migrateGuestCredits(state, input);
     if (!r.ok) {
@@ -250,7 +314,8 @@ export function durableCreditsActive(): boolean {
   if (
     process.env.DURABLE_CREDITS === "local" ||
     process.env.DURABLE_CREDITS === "1" ||
-    process.env.REQUIRE_DURABLE_CREDITS === "1"
+    process.env.REQUIRE_DURABLE_CREDITS === "1" ||
+    process.env.PIKBO_DURABLE_BACKEND === "supabase"
   ) {
     return true;
   }
@@ -270,7 +335,9 @@ export async function getPersonalWallet(userId: string): Promise<{
   planId: string;
   backend?: "supabase" | "local-file";
 } | null> {
-  if (await prefersSupabaseBackend()) {
+  const backend = await durableBackend();
+  if (backend.kind === "unavailable") return null;
+  if (backend.kind === "supabase") {
     const w = await supabaseGetPersonalWallet(userId);
     return w ? { ...w, backend: "supabase" } : null;
   }
@@ -299,7 +366,8 @@ export async function durableExpireStaleReservations(): Promise<{
   releasedCredits: number;
   backend: "local-file" | "skipped-remote";
 }> {
-  if (await prefersSupabaseBackend()) {
+  const backend = await durableBackend();
+  if (backend.kind !== "local") {
     return { expired: 0, releasedCredits: 0, backend: "skipped-remote" };
   }
   const result = await withState((state) => {

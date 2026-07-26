@@ -53,9 +53,14 @@ export async function probeDurableCreditsStore(): Promise<{
   required: boolean;
   configured: boolean;
   schemaReady?: boolean;
+  schemaVersion?: number;
+  requiredVersion?: number;
+  missing?: string[];
   warning?: string;
 }> {
-  const required = process.env.REQUIRE_DURABLE_CREDITS === "1";
+  const required =
+    process.env.REQUIRE_DURABLE_CREDITS === "1" ||
+    process.env.PIKBO_DURABLE_BACKEND === "supabase";
   // Lazy import avoids circular deps with supabase clients at module load.
   const { probeSupabaseCreditsSchema, supabaseCreditsConfigured } =
     await import("@/lib/durableCredits/supabaseStore");
@@ -70,9 +75,30 @@ export async function probeDurableCreditsStore(): Promise<{
         required,
         configured: true,
         schemaReady: true,
+        schemaVersion: schema.schemaVersion,
+        requiredVersion: schema.requiredVersion,
+        missing: schema.missing,
       };
     }
-    // Keys present but migration missing — still report local-file as fallback.
+    // Explicit/required Supabase is an accounting boundary: never report a
+    // local file as a valid fallback.
+    if (required) {
+      return {
+        writable: false,
+        path: "supabase",
+        backend: "none",
+        required,
+        configured: true,
+        schemaReady: false,
+        schemaVersion: schema.schemaVersion,
+        requiredVersion: schema.requiredVersion,
+        missing: schema.missing,
+        warning:
+          schema.warning ||
+          "Supabase durable credits required but versioned schema/RPC probe failed",
+      };
+    }
+    // Optional development mode may retain the single-node local adapter.
     const file = storePath();
     let localWritable = false;
     try {
@@ -91,6 +117,9 @@ export async function probeDurableCreditsStore(): Promise<{
       required,
       configured: true,
       schemaReady: false,
+      schemaVersion: schema.schemaVersion,
+      requiredVersion: schema.requiredVersion,
+      missing: schema.missing,
       warning:
         schema.warning ||
         "Supabase keys present; T5 SQL migration not applied — using local file fallback",
@@ -98,6 +127,18 @@ export async function probeDurableCreditsStore(): Promise<{
   }
 
   const file = storePath();
+  if (required) {
+    return {
+      writable: false,
+      path: "supabase",
+      backend: "none",
+      required,
+      configured: false,
+      schemaReady: false,
+      warning:
+        "Supabase durable credits required but URL/service role is not configured",
+    };
+  }
   try {
     await fs.mkdir(path.dirname(file), { recursive: true });
     const probe = `${file}.probe`;

@@ -16,6 +16,18 @@ import {
 export const SELLER_PACK_CHILD_COUNT = 3;
 export const SELLER_PACK_QUOTE_CREDITS =
   SELLER_PACK_CHILD_COUNT * CREDITS_PER_VIDEO; // 30
+export const SELLER_PACK_ITEM_KEYS = [
+  "360-spin-showcase",
+  "blind-box-unboxing",
+  "paparazzi-flash",
+] as const;
+export type SellerPackItemKey = (typeof SELLER_PACK_ITEM_KEYS)[number];
+
+function sellerPackItemKey(raw: string | undefined): SellerPackItemKey | null {
+  return SELLER_PACK_ITEM_KEYS.includes(raw as SellerPackItemKey)
+    ? (raw as SellerPackItemKey)
+    : null;
+}
 
 export type SellerPackShadow = {
   accountId: string;
@@ -29,8 +41,6 @@ export type SellerPackShadow = {
 export async function reserveSellerPackShadow(input: {
   ownerUserId: string;
   kind?: "auth" | "guest";
-  /** Override for tests; default 3× CREDITS_PER_VIDEO */
-  childCount?: number;
   idempotencyKey?: string;
 }): Promise<
   | { ok: true; data: SellerPackShadow }
@@ -44,9 +54,8 @@ export async function reserveSellerPackShadow(input: {
     };
   }
   const kind = input.kind ?? "guest";
-  const childCount = input.childCount ?? SELLER_PACK_CHILD_COUNT;
   const childCredits = CREDITS_PER_VIDEO;
-  const quoted = childCount * childCredits;
+  const quoted = SELLER_PACK_QUOTE_CREDITS;
   try {
     const ensured = await ensurePersonalAccount(input.ownerUserId, 10);
     if (!ensured.ok) {
@@ -96,17 +105,25 @@ export async function reserveSellerPackShadow(input: {
 
 export async function settleSellerPackChild(input: {
   reservationId: string;
-  childCredits?: number;
+  actorUserId: string;
   jobId?: string;
-  childKey?: string;
+  childKey: string;
 }): Promise<{ ok: boolean; code?: string; error?: string }> {
   if (!durableCreditsActive()) return { ok: true };
-  const credits = input.childCredits ?? CREDITS_PER_VIDEO;
-  const key = `seller-pack-settle:${input.reservationId}:${input.childKey || input.jobId || Date.now()}`;
+  const itemKey = sellerPackItemKey(input.childKey);
+  if (!itemKey) {
+    return {
+      ok: false,
+      code: "INVALID_ITEM",
+      error: "Unknown Seller Pack child",
+    };
+  }
+  const key = `seller-pack-settle:${input.reservationId}:${itemKey}`;
   try {
     const r = await durableSettle({
       reservationId: input.reservationId,
-      credits,
+      actorUserId: input.actorUserId,
+      itemKey,
       idempotencyKey: key,
       jobId: input.jobId,
     });
@@ -127,19 +144,27 @@ export async function settleSellerPackChild(input: {
 
 export async function releaseSellerPackChild(input: {
   reservationId: string;
-  childCredits?: number;
+  actorUserId: string;
   reason?: string;
   jobId?: string;
-  childKey?: string;
+  childKey: string;
 }): Promise<{ ok: boolean; code?: string; error?: string }> {
   if (!durableCreditsActive()) return { ok: true };
-  const credits = input.childCredits ?? CREDITS_PER_VIDEO;
+  const itemKey = sellerPackItemKey(input.childKey);
+  if (!itemKey) {
+    return {
+      ok: false,
+      code: "INVALID_ITEM",
+      error: "Unknown Seller Pack child",
+    };
+  }
   const reason = input.reason || "child_failed";
-  const key = `seller-pack-release:${input.reservationId}:${input.childKey || reason}:${input.jobId || Date.now()}`;
+  const key = `seller-pack-release:${input.reservationId}:${itemKey}`;
   try {
     const r = await durableRelease({
       reservationId: input.reservationId,
-      credits,
+      actorUserId: input.actorUserId,
+      itemKey,
       idempotencyKey: key,
       reason,
       jobId: input.jobId,
