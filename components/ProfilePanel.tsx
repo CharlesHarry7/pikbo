@@ -26,12 +26,25 @@ type DurableClaim = {
 type SessionJobsProbe = {
   open: number;
   total: number;
+  failed?: number;
+  canceled?: number;
+};
+
+/** Process-memory Flux still ledger (HEAD /api/image) — Settings parity. */
+type ImageJobsProbe = {
+  open: number;
+  total: number;
+  failed?: number;
+  canceled?: number;
 };
 
 export function ProfilePanel() {
   const [session, setSession] = useState<MeResponse | null>(null);
   const [clips, setClips] = useState(0);
   const [jobsProbe, setJobsProbe] = useState<SessionJobsProbe | null>(null);
+  const [imageJobsProbe, setImageJobsProbe] = useState<ImageJobsProbe | null>(
+    null
+  );
   const [auth, setAuth] = useState<DurableClaim>({
     signedIn: false,
     email: null,
@@ -59,12 +72,45 @@ export function ProfilePanel() {
         }
         const open = Number(res.headers.get("X-Pikbo-Jobs-Open") || "0");
         const total = Number(res.headers.get("X-Pikbo-Jobs") || "0");
+        const failed = Number(res.headers.get("X-Pikbo-Jobs-Failed") || "0");
+        const canceled = Number(
+          res.headers.get("X-Pikbo-Jobs-Canceled") || "0"
+        );
         setJobsProbe({
           open: Number.isFinite(open) ? open : 0,
           total: Number.isFinite(total) ? total : 0,
+          failed: Number.isFinite(failed) ? failed : 0,
+          canceled: Number.isFinite(canceled) ? canceled : 0,
         });
       } catch {
         setJobsProbe(null);
+      }
+    }
+
+    async function refreshImageJobsProbe() {
+      try {
+        // Session-scoped HEAD — sweeps TIMEOUT so open never sticks after kill.
+        const res = await fetch("/api/image", { method: "HEAD" });
+        if (!res.ok) {
+          setImageJobsProbe(null);
+          return;
+        }
+        const total = Number(res.headers.get("X-Pikbo-Image-Jobs") || "0");
+        const open = Number(res.headers.get("X-Pikbo-Image-Jobs-Open") || "0");
+        const failed = Number(
+          res.headers.get("X-Pikbo-Image-Jobs-Failed") || "0"
+        );
+        const canceled = Number(
+          res.headers.get("X-Pikbo-Image-Jobs-Canceled") || "0"
+        );
+        setImageJobsProbe({
+          open: Number.isFinite(open) ? open : 0,
+          total: Number.isFinite(total) ? total : 0,
+          failed: Number.isFinite(failed) ? failed : 0,
+          canceled: Number.isFinite(canceled) ? canceled : 0,
+        });
+      } catch {
+        setImageJobsProbe(null);
       }
     }
 
@@ -155,6 +201,7 @@ export function ProfilePanel() {
       refreshGuest();
       void refreshAuth();
       void refreshJobsProbe();
+      void refreshImageJobsProbe();
     }
 
     const t = window.setTimeout(refresh, 0);
@@ -271,13 +318,20 @@ export function ProfilePanel() {
       ) : null}
 
       {jobsProbe && (jobsProbe.open > 0 || jobsProbe.total > 0) ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-[var(--fg-muted)]">
-          <span className="font-semibold text-white/80">Session jobs</span>
+        <div
+          className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-[var(--fg-muted)]"
+          data-profile-jobs="video"
+        >
+          <span className="font-semibold text-white/80">Session video jobs</span>
           {" · "}
           {jobsProbe.open > 0
             ? `${jobsProbe.open} open (queued/running) · `
             : null}
-          {jobsProbe.total} in process-memory ledger this instance —{" "}
+          {jobsProbe.total} in process-memory ledger this instance
+          {(jobsProbe.failed ?? 0) > 0 || (jobsProbe.canceled ?? 0) > 0
+            ? ` · ${jobsProbe.failed ?? 0} failed · ${jobsProbe.canceled ?? 0} canceled`
+            : ""}{" "}
+          —{" "}
           <Link
             href="/library"
             className="font-semibold text-[var(--mint)] underline-offset-2 hover:underline"
@@ -285,6 +339,33 @@ export function ProfilePanel() {
             Library recovery
           </Link>
           . Not multi-node cloud.
+        </div>
+      ) : null}
+
+      {imageJobsProbe &&
+      (imageJobsProbe.open > 0 || imageJobsProbe.total > 0) ? (
+        <div
+          className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-[var(--fg-muted)]"
+          data-profile-jobs="image"
+        >
+          <span className="font-semibold text-white/80">Still image jobs</span>
+          {" · "}
+          {imageJobsProbe.open > 0
+            ? `${imageJobsProbe.open} open · `
+            : null}
+          {imageJobsProbe.total} Flux process-memory this instance
+          {(imageJobsProbe.failed ?? 0) > 0 ||
+          (imageJobsProbe.canceled ?? 0) > 0
+            ? ` · ${imageJobsProbe.failed ?? 0} failed · ${imageJobsProbe.canceled ?? 0} canceled`
+            : ""}{" "}
+          —{" "}
+          <Link
+            href="/image"
+            className="font-semibold text-[var(--mint)] underline-offset-2 hover:underline"
+          >
+            Image studio
+          </Link>
+          . Separate from video ledger · not multi-node.
         </div>
       ) : null}
 

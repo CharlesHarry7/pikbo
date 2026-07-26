@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Profile still-image jobs probe (Phase C)
+- ProfilePanel HEAD `/api/image` alongside video `/api/generations` (Settings
+  parity): open/total/failed/canceled process-memory Flux stills.
+- Video probe also surfaces failed·canceled counts; image door → `/image`.
+- Smoke: data-profile-jobs=image|video + X-Pikbo-Image-Jobs headers.
+
 ### 2026-07-27 — [grok] Download HEAD fail-code honesty
 - `classifyDownloadHead`: terminal fail codes (PROVIDER_NETWORK · CONTENT_POLICY ·
   MODEL_EMPTY · UNSAFE_URL · cancel) evaluated **before** generic 409/NOT_READY

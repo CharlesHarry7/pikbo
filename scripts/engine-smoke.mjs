@@ -4096,6 +4096,11 @@ const profilePanelSrc = fs.readFileSync(
 );
 assert.match(profilePanelSrc, /Credits authority|cookie-authoritative|shadow/);
 assert.match(profilePanelSrc, /X-Pikbo-Jobs-Open|\/api\/generations/);
+// Profile: still image jobs HEAD probe (Settings parity — process-memory Flux)
+assert.match(profilePanelSrc, /X-Pikbo-Image-Jobs|\/api\/image/);
+assert.match(profilePanelSrc, /data-profile-jobs=["']image["']/);
+assert.match(profilePanelSrc, /data-profile-jobs=["']video["']/);
+assert.match(profilePanelSrc, /X-Pikbo-Image-Jobs-Canceled|Image-Jobs-Canceled/);
 assert.match(profilePanelSrc, /local-file|supabase/);
 assert.match(profilePanelSrc, /process-memory/);
 const claimRouteSrc = fs.readFileSync(
