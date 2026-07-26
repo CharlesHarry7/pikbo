@@ -130,7 +130,8 @@
 89. [x] T6 hard gate: derivative must bind jobId+providerRequestId; canServe requires serving+storage
 90. [x] Create empty remix honesty + first-fold (identity in Advanced · Lab collapsed)
 91. [x] Free live generate never echoes provider raw URL · controlled /api/downloads only
-92. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+92. [x] Seller Pack session recovery + Batch/Library Free live playable gate + login product-first guest
+93. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -144,8 +145,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Free live generate success/idempotent replay → `/api/downloads/{jobId}` only (no fal raw).  
-- Create/Landing show T6-held honesty when Free live not playable; demos+paid unchanged.  
+- Seller Pack: sessionStorage pointer + `/api/generations` authority after refresh; fail jobId echo.  
+- Batch/Library Free live not mounted as video until T6; login guest path product-first.  
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 ---

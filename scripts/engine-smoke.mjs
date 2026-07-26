@@ -2066,6 +2066,46 @@ assert.match(createTrust, /export function isSafeDeliverableUrl/);
 assert.match(createTrust, /export function customerFacingGenerateVideoUrl/);
 assert.match(createTrust, /export function isPlayableResultVideoUrl/);
 assert.match(genRoute, /customerFacingGenerateVideoUrl/);
+// Seller Pack + Library must not mount Free live as <video> (parity with Create)
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /isPlayableResultVideoUrl/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /Free live held for T6 bake/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /isPlayableResultVideoUrl/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /Free live held for T6 bake/
+);
+// Phase C auth guest path product-first (Seller Pack before Flow)
+const loginFormSrc = fs.readFileSync(
+  join(root, "components/LoginForm.tsx"),
+  "utf8"
+);
+const loginPageSrc = fs.readFileSync(join(root, "app/login/page.tsx"), "utf8");
+assert.match(loginFormSrc, /data-auth-guest-path="product-first"/);
+assert.match(loginPageSrc, /data-auth-guest-path="product-first"/);
+assert.match(loginFormSrc, /mode=seller-pack/);
+assert.match(loginPageSrc, /mode=seller-pack/);
+assert.ok(
+  loginFormSrc.indexOf("mode=seller-pack") < loginFormSrc.indexOf("/modules"),
+  "LoginForm guest: Seller Pack before Modules"
+);
+assert.ok(
+  !loginFormSrc.includes('href="/flow"') ||
+    loginFormSrc.indexOf("mode=seller-pack") < loginFormSrc.indexOf('href="/flow"'),
+  "LoginForm guest: Seller Pack before Flow when Flow present"
+);
+assert.ok(
+  loginPageSrc.indexOf("mode=seller-pack") < loginPageSrc.indexOf("/modules"),
+  "Login page guest: Seller Pack before Modules"
+);
 assert.match(
   genRoute,
   /Free live provider output stays server-only|Never expose the raw Free provider/
@@ -3493,6 +3533,82 @@ assert.match(flowPageSrc, /core-library|Library · Assets/);
 assert.match(flowPageSrc, /Core product path|Seller Pack/);
 // Photo→Clip workbench is /create (header FreeTrialCta owns sample path)
 assert.match(flowPageSrc, /id:\s*["']core-i2v["'][\s\S]*?href:\s*["']\/create["']/);
+
+// T8 Seller Pack recovery: a browser hint carries only identifiers/config;
+// current `/api/generations` rows own result + settlement truth after refresh.
+const sellerPackRecoverySrc = fs.readFileSync(
+  join(root, "lib/sellerPackRecovery.ts"),
+  "utf8"
+);
+assert.match(sellerPackRecoverySrc, /SELLER_PACK_RECOVERY_KEY/);
+assert.match(sellerPackRecoverySrc, /reconcileSellerPackRecovery/);
+assert.match(sellerPackRecoverySrc, /Job is no longer available in this device\/server session/);
+assert.match(sellerPackRecoverySrc, /360-spin-showcase/);
+assert.match(sellerPackRecoverySrc, /refund unconfirmed/);
+assert.match(batchStudio, /data-seller-pack-recovery="device-local"/);
+assert.match(batchStudio, /retryEligible/);
+const recoveryCjs = require("typescript").transpileModule(sellerPackRecoverySrc, {
+  compilerOptions: {
+    module: require("typescript").ModuleKind.CommonJS,
+    target: require("typescript").ScriptTarget.ES2022,
+  },
+}).outputText;
+const recoveryModule = { exports: {} };
+new Function("require", "exports", "module", recoveryCjs)(
+  (id) => {
+    throw new Error(`unexpected Seller Pack recovery import: ${id}`);
+  },
+  recoveryModule.exports,
+  recoveryModule
+);
+const recovery = recoveryModule.exports;
+const activePack = recovery.parseSellerPackRecovery({
+  version: 1,
+  projectId: "seller-pack-fixture",
+  savedAt: "2026-07-26T00:00:00.000Z",
+  children: [
+    { slug: "360-spin-showcase", name: "Listing Spin", aspectRatio: "1:1", requestId: "spin", statusHint: "running", retryCount: 0 },
+    { slug: "blind-box-unboxing", name: "Blind-box Reveal", aspectRatio: "9:16", requestId: "reveal", statusHint: "failed", retryCount: 0 },
+    { slug: "paparazzi-flash", name: "Social Flash", aspectRatio: "9:16", requestId: "social", statusHint: "failed", retryCount: 0 },
+  ],
+});
+assert.ok(activePack, "only the exact fixed three Seller Pack children may hydrate");
+assert.equal(
+  recovery.parseSellerPackRecovery({ ...activePack, children: [{ ...activePack.children[0], slug: "injected" }] }),
+  null,
+  "sessionStorage cannot inject a different child mapping"
+);
+assert.equal(
+  recovery.parseSellerPackRecovery({ ...activePack, children: [activePack.children[0], activePack.children[0], activePack.children[2]] }),
+  null,
+  "sessionStorage rejects duplicate child slugs"
+);
+assert.equal(
+  recovery.parseSellerPackRecovery({ ...activePack, children: [{ ...activePack.children[0], aspectRatio: "9:16" }, activePack.children[1], activePack.children[2]] }),
+  null,
+  "sessionStorage rejects an incorrect fixed-child aspect ratio"
+);
+const refreshedPack = recovery.reconcileSellerPackRecovery(activePack, [
+  { id: "spin", effect: "360-spin-showcase", status: "succeeded", videoUrl: "/demos/spin.mp4", creditsOutcome: "10 used" },
+  { id: "reveal", effect: "blind-box-unboxing", status: "failed", creditsOutcome: "10 restored" },
+  { id: "social", effect: "paparazzi-flash", status: "failed", creditsOutcome: "refund unconfirmed" },
+]);
+assert.deepEqual(
+  refreshedPack.children.map((child) => [child.slug, child.status, child.creditState]),
+  [
+    ["360-spin-showcase", "succeeded", "10 used"],
+    ["blind-box-unboxing", "refunded", "10 restored"],
+    ["paparazzi-flash", "failed", "refund unconfirmed"],
+  ],
+  "refresh restores server-known partial success/failure/refund state"
+);
+const retryOnlyConfirmed = refreshedPack.children
+  .filter((child) => child.status === "refunded" || (child.status === "failed" && child.creditState !== "refund unconfirmed"))
+  .map((child) => child.slug);
+assert.deepEqual(retryOnlyConfirmed, ["blind-box-unboxing"], "retry excludes succeeded siblings and refund-unconfirmed children");
+const gonePack = recovery.reconcileSellerPackRecovery(activePack, []);
+assert.equal(gonePack.unavailable, 3);
+assert.ok(gonePack.children.every((child) => child.status === "recovery_unavailable" && !child.creditState), "missing current-session jobs never revive stale success or refund hints");
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

@@ -44,32 +44,32 @@ export default function LoginPage() {
 
         <LoginForm auth={auth} />
 
-        <div className="mt-8 flex flex-wrap items-center gap-3 text-sm">
+        <div
+          className="mt-8 flex flex-wrap items-center gap-3 text-sm"
+          data-auth-guest-path="product-first"
+        >
           <Link href="/create" className="font-semibold text-[var(--mint)] hover:underline">
             Continue as guest → Generate
           </Link>
-          <Link href="/#home-tool" className="text-[var(--mint)] hover:underline">
-            Home tool
+          <Link
+            href="/create?mode=seller-pack"
+            className="text-[var(--mint)] hover:underline"
+          >
+            Seller Pack
           </Link>
           <Link href="/library" className="text-[var(--mint)] hover:underline">
             Library
           </Link>
-          <Link href="/flow" className="text-[var(--mint)] hover:underline">
-            Flow
-          </Link>
-          <Link href="/modules" className="text-[var(--mint)] hover:underline">
+          <Link href="/modules" className="text-[var(--fg-muted)] hover:text-white">
             Modules
+          </Link>
+          <Link href="/#home-tool" className="text-[var(--fg-muted)] hover:text-white">
+            Home tool
           </Link>
           <FreeTrialCta
             path="/login"
             className="text-[var(--fg-muted)] hover:text-white"
           />
-          <Link
-            href="/create?mode=seller-pack"
-            className="text-[var(--fg-muted)] hover:text-white"
-          >
-            Seller Pack
-          </Link>
           <Link href="/profile" className="text-[var(--fg-muted)] hover:text-white">
             Profile
           </Link>

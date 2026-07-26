@@ -15,7 +15,11 @@ import {
   type HistoryItem,
 } from "@/lib/history";
 import { createRemixHref } from "@/lib/remixIntent";
-import { isSafeDeliverableUrl } from "@/lib/createTrust";
+import {
+  freeLiveDownloadBlockReason,
+  isPlayableResultVideoUrl,
+  isSafeDeliverableUrl,
+} from "@/lib/createTrust";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { useToast } from "@/components/Toast";
 import { LibraryStorageBanner } from "@/components/LibraryStorageBanner";
@@ -945,7 +949,11 @@ export function LibraryGrid() {
                 className="group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/80 shadow-[0_12px_40px_-24px_rgba(0,0,0,0.9)] transition hover:-translate-y-0.5 hover:border-white/20"
               >
                 <div className="relative aspect-[9/14] bg-black sm:aspect-video">
-                  {isSafeDeliverableUrl(item.videoUrl) ? (
+                  {isPlayableResultVideoUrl({
+                    videoUrl: item.videoUrl,
+                    demo: Boolean(item.demo),
+                    watermark: Boolean(item.watermark),
+                  }) ? (
                     <video
                       src={item.videoUrl}
                       className="h-full w-full object-cover sm:object-contain"
@@ -954,6 +962,15 @@ export function LibraryGrid() {
                       playsInline
                       preload="metadata"
                     />
+                  ) : item.watermark && !item.demo ? (
+                    <div className="grid h-full place-items-center p-4 text-center text-[11px] leading-snug text-amber-100/80">
+                      <p className="font-bold text-amber-100">
+                        Free live held for T6 bake
+                      </p>
+                      <p className="mt-1 max-w-[14rem] text-white/50">
+                        {freeLiveDownloadBlockReason()}
+                      </p>
+                    </div>
                   ) : (
                     <div className="grid h-full place-items-center p-4 text-center text-[11px] text-amber-100/80">
                       Unsafe video URL — not rendered

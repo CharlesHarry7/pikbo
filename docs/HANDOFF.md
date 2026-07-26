@@ -4,6 +4,21 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] T8 Seller Pack current-session recovery
+- BatchStudio keeps only an active-pack pointer in `sessionStorage`: the three
+  fixed child keys, request IDs, config, and status hints. It never stores the
+  photo/video payload, balances, settlement truth, or a second Library/history.
+- On refresh, `GET /api/generations` is authoritative. It reopens only jobs
+  still present in the current device/server session (queued, running,
+  succeeded, failed, restored, or refund-unconfirmed); a missing job is shown
+  as unavailable rather than reviving a stale local result/refund claim.
+- Retry is limited to confirmed terminal failed/restored children or explicitly
+  unsubmitted children; successful siblings remain untouched, and unconfirmed
+  refunds never auto-retry. Current UI explicitly says this is not cloud or
+  cross-device recovery.
+- Failures echo local ledger `jobId` via `noteFailed` for recovery pointers.
+- Verified: engine-smoke recovery fixture PASS · tsc PASS.
+
 ### 2026-07-26 — [grok] Free live generate never echoes provider raw URL
 - `customerFacingGenerateVideoUrl`: Free live success + idempotent replay return
   `/api/downloads/{jobId}` only; demos and paid raw keep their media URL.

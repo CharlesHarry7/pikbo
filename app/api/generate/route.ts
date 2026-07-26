@@ -120,6 +120,9 @@ function noteFailed(
   body: GenerateErrorBody,
   jobId?: string
 ) {
+  // Returning the already-created local ledger id lets a current-device UI
+  // reconcile this terminal failure after refresh. It is not a durable id.
+  if (jobId) body.jobId = jobId;
   try {
     failSyncGenerateJob({
       jobId,

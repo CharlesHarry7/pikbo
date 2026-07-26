@@ -26,12 +26,21 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
           cookie still works for Generate, Modules, Seller Pack, and this-device
           Library.
         </p>
-        <div className="flex flex-wrap items-center gap-2 pt-1">
+        <div
+          className="flex flex-wrap items-center gap-2 pt-1"
+          data-auth-guest-path="product-first"
+        >
           <a href="/create" className="btn btn-primary !px-3 !py-1.5 text-xs">
             Generate
           </a>
-          <a href="/flow" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-            Flow
+          <a
+            href="/create?mode=seller-pack"
+            className="btn btn-ghost !px-3 !py-1.5 text-xs"
+          >
+            Seller Pack
+          </a>
+          <a href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
+            Library
           </a>
           <a href="/modules" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Modules
@@ -42,6 +51,10 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
             className="btn btn-ghost !px-3 !py-1.5 text-xs"
           />
         </div>
+        <p className="text-[10px] leading-relaxed text-white/40">
+          Guest cookie is still generate authority · durable wallet needs
+          Supabase keys (shadow until Mode B).
+        </p>
       </div>
     );
   }
