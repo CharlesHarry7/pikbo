@@ -20,6 +20,7 @@ Newest first. One block per meaningful landing.
 - First viewport now contains one distinct Seedance Mini Lab clip, the only H1, recipe choices, and a compact upload-to-Create action; Free Mini names the PIKBO watermark explicitly.
 - HeroUpload keeps the selected image in `pikbo_pending_still`; CreateStudio already restores and registers that image after navigation.
 - Screen 2 shows the registered input beside its cached output; screen 3 is capped at eight unique official cached projects with Inside and Use recipe.
+- The first-screen split now starts at `lg`, so 768px keeps the full-bleed proof layout; project badges distinguish official Seedance model samples from prototype motion studies, and the homepage no longer nests a second `main`.
 - Product shelves, Preview surfaces, and long SEO copy begin after those three screens; cached playback never claims to process a visitor upload.
 - AutoPlayVideo now enforces one moving video at a time on desktop and mobile. Lint (0 errors), typecheck, engine-smoke, build, and 390/768/1440 review passed.
 

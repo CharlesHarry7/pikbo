@@ -45,11 +45,15 @@ function ProofVideo({
   );
 }
 
-function ProofBadge() {
+function ProofBadge({ project }: { project: ShowcaseProject }) {
+  const label = project.model.includes("Seedance")
+    ? "Official model example · cached"
+    : "Prototype motion study · cached";
+
   return (
     <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#c8ff3d]/30 bg-black/70 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#c8ff3d] backdrop-blur">
       <span className="h-1.5 w-1.5 rounded-full bg-[#c8ff3d]" />
-      Official example · cached
+      {label}
     </span>
   );
 }
@@ -75,7 +79,7 @@ export function HfExploreHome({
 
   if (!premiere) {
     return (
-      <main className="grid min-h-[70svh] place-items-center bg-black px-4 text-center text-white">
+      <div className="grid min-h-[70svh] place-items-center bg-black px-4 text-center text-white">
         <div>
           <p className="text-sm text-white/55">No approved Lab proof yet.</p>
           <Link
@@ -85,20 +89,20 @@ export function HfExploreHome({
             Open Generate
           </Link>
         </div>
-      </main>
+      </div>
     );
   }
 
   const proofProjects = projects.slice(0, 8);
 
   return (
-    <main className="overflow-x-clip bg-black text-white">
+    <div className="overflow-x-clip bg-black text-white">
       {/* Screen 1 — proof and action share the first viewport. */}
       <section
         id="home-tool"
-        className="relative isolate h-[calc(100svh-3rem)] overflow-hidden border-b border-white/10 md:grid md:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:h-[calc(100svh-3.5rem)]"
+        className="relative isolate h-[calc(100svh-3rem)] overflow-hidden border-b border-white/10 lg:grid lg:h-[calc(100svh-3.5rem)] lg:grid-cols-2"
       >
-        <div className="absolute inset-0 overflow-hidden md:relative md:col-start-2 md:row-start-1 md:h-full">
+        <div className="absolute inset-0 overflow-hidden lg:relative lg:col-start-2 lg:row-start-1 lg:h-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={premiere.poster}
@@ -115,10 +119,10 @@ export function HfExploreHome({
             interactionOnly={false}
             className="relative h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-black/25 md:bg-gradient-to-r md:from-black md:via-black/25 md:to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-black/85 to-transparent px-6 pb-6 pt-20 md:block">
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-black/25 lg:bg-gradient-to-r lg:from-black lg:via-black/25 lg:to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-black/85 to-transparent px-6 pb-6 pt-20 lg:block">
             <div className="ml-auto max-w-sm text-right">
-              <ProofBadge />
+              <ProofBadge project={premiere} />
               <p className="mt-2 text-sm font-bold text-white">
                 {premiere.title}
               </p>
@@ -130,13 +134,13 @@ export function HfExploreHome({
           </div>
         </div>
 
-        <div className="relative z-10 flex h-full min-w-0 flex-col justify-center overflow-hidden bg-gradient-to-b from-black/70 via-black/35 to-black px-4 pb-20 pt-8 md:col-start-1 md:row-start-1 md:bg-black md:px-8 md:py-8 lg:px-12">
+        <div className="relative z-10 flex h-full min-w-0 flex-col justify-center overflow-hidden bg-gradient-to-b from-black/70 via-black/35 to-black px-4 pb-20 pt-8 lg:col-start-1 lg:row-start-1 lg:bg-black lg:px-12 lg:py-8">
           <div className="min-w-0">
-            <ProofBadge />
+            <ProofBadge project={premiere} />
             <p className="mt-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/55">
               The AI video studio built for toys
             </p>
-            <h1 className="font-display mt-2 max-w-full text-[clamp(1.9rem,7.8vw,4.75rem)] font-black leading-[0.96] tracking-[-0.04em] text-white md:text-[clamp(2.7rem,4.4vw,4.6rem)]">
+            <h1 className="font-display mt-2 max-w-full text-[clamp(1.9rem,7.8vw,4.75rem)] font-black leading-[0.96] tracking-[-0.04em] text-white lg:text-[clamp(2.7rem,4vw,4.2rem)]">
               <span className="block">Turn one toy photo</span>
               <span className="block">into a clip ready to</span>
               <span className="block">list or post.</span>
@@ -211,7 +215,7 @@ export function HfExploreHome({
                   className="h-full w-full object-cover"
                 />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-3 pb-3 pt-14">
-                  <ProofBadge />
+                  <ProofBadge project={premiere} />
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 p-4">
@@ -267,11 +271,12 @@ export function HfExploreHome({
                 Eight recipes · eight distinct files
               </p>
               <h2 className="font-display mt-2 text-3xl font-black tracking-tight sm:text-5xl">
-                Open the proof, then use the recipe.
+                Open the project, then use the recipe.
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-white/55">
                 Every card opens its source, output, settings, and provisional
-                Lab review. These are official cached examples—not customer UGC.
+                Lab review. Prototype studies and model samples are clearly
+                identified Inside; none are customer UGC.
               </p>
             </div>
             <Link
@@ -299,7 +304,7 @@ export function HfExploreHome({
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/5 to-transparent" />
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3">
-                    <ProofBadge />
+                    <ProofBadge project={project} />
                     <h3 className="mt-2 text-xs font-black leading-tight text-white sm:text-sm">
                       {project.title}
                     </h3>
@@ -384,6 +389,6 @@ export function HfExploreHome({
           </Link>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
