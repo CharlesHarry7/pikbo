@@ -6,6 +6,7 @@ import {
   conceptRecipeCount,
   suiteRail,
 } from "@/lib/videoFeed";
+import { createRemixHref } from "@/lib/remixIntent";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { VideoTile } from "@/components/VideoTile";
 import { VideoRail } from "@/components/VideoRail";
@@ -227,7 +228,7 @@ export default async function CommunityPage() {
                     <Link
                       href={
                         p.effectSlug
-                          ? `/create?effect=${encodeURIComponent(p.effectSlug)}`
+                          ? createRemixHref(p.effectSlug)
                           : "/create"
                       }
                       className="text-[11px] font-bold text-[var(--mint)]"

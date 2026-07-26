@@ -10,6 +10,7 @@ import {
   LandingHowItWorks,
   photoRecipeDraftHowToJsonLd,
 } from "@/components/LandingHowItWorks";
+import { createRemixHref } from "@/lib/remixIntent";
 import { LandingResults } from "@/components/LandingResults";
 import { site } from "@/lib/site";
 import { viralName } from "@/lib/viralNames";
@@ -131,7 +132,7 @@ export default async function EffectPage({
             </Link>
             <div className="flex flex-wrap gap-2">
               <Link
-                href={`/create?effect=${encodeURIComponent(preset.slug)}`}
+                href={createRemixHref(preset.slug)}
                 className="btn btn-primary !px-4 !py-2 text-xs font-black"
               >
                 Open Generate

@@ -1,5 +1,6 @@
 "use client";
 
+import { createRemixHref } from "@/lib/remixIntent";
 import Link from "next/link";
 import { useState } from "react";
 import type { DemoVideo } from "@/lib/demoVideos";
@@ -76,7 +77,7 @@ export function HfExploreHome({
         id: d.id,
         title: d.title,
         subtitle: d.character,
-        href: `/create?effect=${d.preset}`,
+        href: createRemixHref(d.preset, d.id),
         projectHref: `/projects/${d.id}`,
         detailHref: `/effects/${d.preset}`,
         badge: "Official example · cached",

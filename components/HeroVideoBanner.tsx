@@ -1,5 +1,6 @@
 "use client";
 
+import { createRemixHref } from "@/lib/remixIntent";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
@@ -73,7 +74,7 @@ export function HeroVideoBanner() {
               Try with my photo
             </Link>
             <Link
-              href={`/create?effect=${encodeURIComponent(demo.preset)}`}
+              href={createRemixHref(demo.preset, demo.id)}
               className="btn btn-ghost border-white/20 px-6 py-3 text-sm"
             >
               Try this recipe

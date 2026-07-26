@@ -1,5 +1,6 @@
 "use client";
 
+import { createRemixHref } from "@/lib/remixIntent";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AssetBriefPanel } from "@/components/AssetBriefPanel";
@@ -1476,7 +1477,11 @@ export function BatchStudio({
               onPickRecipe={(slug) => {
                 // Seller Pack trio is fixed — deep-link single Generate for other recipes.
                 if (typeof window !== "undefined") {
-                  window.location.href = `/create?effect=${encodeURIComponent(slug)}`;
+                  window.location.href = createRemixHref(
+                    slug,
+                    undefined,
+                    toyIdentity.sku || null
+                  );
                 }
               }}
               collapsed={briefCollapsed}
@@ -1777,8 +1782,13 @@ export function BatchStudio({
               {SELLER_PACK_ITEMS.map((item) => (
                 <Link
                   key={item.key}
-                  href={`/create?effect=${item.slug}`}
+                  href={createRemixHref(
+                    item.slug,
+                    undefined,
+                    toyIdentity.sku || null
+                  )}
                   className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70"
+                  data-pack-try-recipe={item.slug}
                 >
                   Try {item.label}
                 </Link>

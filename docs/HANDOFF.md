@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Residual createRemixHref deep-link sweep
+- BatchStudio brief recipe pick + free-trial single-recipe chips → remix href.
+- HfExploreHome fallback feed, HeroVideoBanner, Community UGC remake,
+  /effects/[slug] Open Generate → createRemixHref (ratio/channel/duration).
+- Smoke: no create?effect=${ in BatchStudio; remake surfaces locked.
+
 ### 2026-07-27 — [grok] Landing tool paths: remix + Seller Pack first
 - LandingToolPanel Full studio / Lab sample → createRemixHref(+sku).
 - Product-first footer: Full studio · Seller Pack · Batch Preview (supercomputer demoted).

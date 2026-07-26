@@ -4506,5 +4506,36 @@ assert.match(
   /code === ["']PROVIDER_NETWORK["'][\s\S]{0,40}PROVIDER_TIMEOUT|PROVIDER_NETWORK[\s\S]{0,60}TIMEOUT/
 );
 
+
+// Residual deep links: Batch / Home / Hero / Community / Effects use createRemixHref
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /createRemixHref\(/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /onPickRecipe[\s\S]{0,200}createRemixHref/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /create\?effect=\$\{/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
+  /createRemixHref\(d\.preset/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HeroVideoBanner.tsx"), "utf8"),
+  /createRemixHref\(demo\.preset/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/community/page.tsx"), "utf8"),
+  /createRemixHref\(p\.effectSlug\)/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/effects/[slug]/page.tsx"), "utf8"),
+  /createRemixHref\(preset\.slug\)/
+);
+
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node
