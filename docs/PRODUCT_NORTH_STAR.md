@@ -136,7 +136,8 @@ Explore 证明墙
 | **B2** | Director Plan 生成前确认消耗 · 画幅软应用首选配方 · 材质 chips | ✅ main |
 | **B3** | Seller Pack Launch Plan：三件套总价 / 规格 / 阻塞预检 | ✅ main |
 | **C-lite** | Brief 中文 bullet · 角度 tags · 第二张细节图（仅预览+提示词，非 Soul ID） | ✅ main |
-| **C-qc** | Seller Pack 挂 Asset Brief · 结果台保真 QC 清单（人工勾选） | 本分支 |
+| **C-qc** | Seller Pack 挂 Asset Brief · 结果台保真 QC 清单（人工勾选） | ✅ main |
+| **C-loop** | 生成后 AfterPath 携带 job + SKU（Next SKU 商业上下文不断） | ✅ main |
 | C | 真 Toy Soul ID / 多图模型输入 / 3D 可打印 | 未开 · 标 Soon |
 
 **Phase B 诚实边界：** Asset Brief 是 **规则简报**（像素画幅 + 产品规则），**不是**云端识图 / 漆面识别。角色圣经是本地可选字段，写入 generate extra，不是 LoRA。  
@@ -144,4 +145,4 @@ Explore 证明墙
 
 **红线不变：** 不假 UGC、不假多模型 live、不扩冷启动 SEO 页预算、不提前 Stripe 装成熟、不 force-push main。
 
-文档版本：2026-07-26 · v5（CD Phase B2 Director Plan）
+文档版本：2026-07-26 · v6（CD AfterPath job+SKU carry · C-qc on main）

@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] CD AfterPath job+SKU carry (commercial loop)
+- `GenerateAfterPath`: carries `job` + `sku` + `effect` into Next SKU / Full
+  Generate / Seller Pack links; shows active job label when set.
+- CreateStudio + BatchStudio wire jobIntentId/sku; `/create?sku=` hydrates bible.
+- Smoke locks data-after-job + jobIntentId wiring. C-qc marked ✅ on north star.
+
 ### 2026-07-26 — [grok] Agent bus v2: GitHub = real-time brain (no boss relay)
 - `docs/growth/AGENT_BUS.md`: git log = live activity feed; pull→work→push protocol;
   scannable commit messages; unpushed work does not exist for the other side.

@@ -162,6 +162,7 @@ export function CreateStudio({
   initialChannel,
   initialSample,
   initialJob,
+  initialSku,
 }: {
   initialEffect?: string;
   initialModel?: string;
@@ -176,6 +177,8 @@ export function CreateStudio({
   initialSample?: string;
   /** Job-to-be-done: etsy-listing | tiktok-hook | blind-box-drop | shelf-display */
   initialJob?: string;
+  /** Character bible SKU from ?sku= (Next SKU carry) */
+  initialSku?: string;
 }) {
   const { t, locale } = useI18n();
   const remix = useMemo(
@@ -219,7 +222,7 @@ export function CreateStudio({
   const [extra, setExtra] = useState(initialPrompt ?? "");
   /** Optional SKU lock — first principles, not Character/Soul cloud */
   const [toyIdentity, setToyIdentity] = useState<ToyIdentity>({
-    sku: "",
+    sku: (initialSku || "").trim().slice(0, 64),
     preserve: "",
   });
   const [duration, setDuration] = useState<5 | 10>(() => {
@@ -2589,6 +2592,8 @@ export function CreateStudio({
                   <GenerateAfterPath
                     effectSlug={activeVersion?.effect || effect}
                     demo={demo}
+                    jobIntentId={jobIntentId}
+                    sku={toyIdentity.sku || null}
                     className="mx-auto mt-3 max-w-md"
                   />
                 ) : null}

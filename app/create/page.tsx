@@ -70,6 +70,8 @@ export default async function CreatePage({
     try?: string;
     /** Job-to-be-done chip: etsy-listing | tiktok-hook | blind-box-drop | shelf-display */
     job?: string;
+    /** Character bible SKU carried from post-generate Next SKU */
+    sku?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -169,6 +171,7 @@ export default async function CreatePage({
           initialChannel={sp.channel}
           initialSample={firstRunSample}
           initialJob={sp.job}
+          initialSku={sp.sku}
         />
       </Suspense>
       {/* SSR landing copy + internal links for crawlers */}

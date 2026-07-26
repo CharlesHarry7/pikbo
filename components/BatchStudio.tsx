@@ -1876,6 +1876,8 @@ export function BatchStudio({
         {doneCount > 0 && !running ? (
           <GenerateAfterPath
             demo={demoMode}
+            jobIntentId="seller-pack"
+            sku={toyIdentity.sku || null}
             className="mt-3 justify-start"
           />
         ) : null}

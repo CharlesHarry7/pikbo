@@ -1,30 +1,69 @@
 "use client";
 
 import Link from "next/link";
+import type { JobIntentId } from "@/lib/jobIntents";
+import { getJobIntent } from "@/lib/jobIntents";
 
 /**
- * Post-generate closed loop — product path first (CD Phase A):
+ * Post-generate closed loop — product path first (CD Phase A + job carry):
  * Library · Seller Pack · Next SKU · Modules · Remix · Publish,
  * then Flow · Preview last (not a live job peer).
  * Shared by CreateStudio + LandingToolPanel + BatchStudio.
+ *
+ * Job/SKU query carry keeps commercial context on the next hop
+ * (Creative Director: same seller path, new photo or same goal).
  */
+function withQuery(
+  base: string,
+  params: Record<string, string | undefined | null>
+): string {
+  const u = new URL(base, "https://pikbo.ai");
+  for (const [k, v] of Object.entries(params)) {
+    if (v && String(v).trim()) u.searchParams.set(k, String(v).trim());
+  }
+  return `${u.pathname}${u.search}`;
+}
+
 export function GenerateAfterPath({
   effectSlug,
   demo = false,
   compact = false,
   className = "",
+  jobIntentId,
+  sku,
 }: {
   effectSlug?: string;
   demo?: boolean;
   compact?: boolean;
   className?: string;
+  /** Active commercial goal — carried into Next SKU / Full Generate links */
+  jobIntentId?: JobIntentId | null;
+  /** Optional SKU label from character bible — carry for next hop */
+  sku?: string | null;
 }) {
-  const studioHref = effectSlug
-    ? `/create?effect=${encodeURIComponent(effectSlug)}`
-    : "/create";
-  const nextSkuHref = effectSlug
-    ? `/create?effect=${encodeURIComponent(effectSlug)}&try=1`
-    : "/create?try=1";
+  const intent = jobIntentId ? getJobIntent(jobIntentId) : undefined;
+  const effect = effectSlug || intent?.effect;
+  const carry = {
+    effect: effect || undefined,
+    job: jobIntentId || undefined,
+    sku: sku || undefined,
+  };
+
+  const studioHref = withQuery("/create", {
+    effect: carry.effect,
+    job: carry.job,
+    sku: carry.sku,
+  });
+  const nextSkuHref = withQuery("/create", {
+    effect: carry.effect,
+    job: carry.job,
+    sku: carry.sku,
+    try: "1",
+  });
+  const sellerPackHref = withQuery("/create", {
+    mode: "seller-pack",
+    sku: carry.sku,
+  });
 
   const chip =
     "rounded-full border border-white/15 bg-white/[0.04] font-bold text-white/75 transition hover:border-white/30 hover:text-white " +
@@ -36,29 +75,53 @@ export function GenerateAfterPath({
     "rounded-full border border-white/10 bg-white/[0.02] font-bold text-white/45 transition hover:border-white/20 hover:text-white/70 " +
     (compact ? "px-2.5 py-1 text-[10px]" : "px-3 py-1.5 text-[11px]");
 
+  const jobHint = intent
+    ? `${intent.label} · ${intent.channel}`
+    : "commercial path";
+
   return (
     <nav
       aria-label="After generate"
       data-after-path="product-first"
+      data-after-job={jobIntentId || "none"}
+      data-after-sku={sku ? "yes" : "no"}
       className={`flex flex-wrap items-center justify-center gap-1.5 ${className}`}
     >
+      {intent ? (
+        <span
+          className={
+            compact
+              ? "w-full text-center text-[9px] font-bold uppercase tracking-wider text-white/35"
+              : "w-full text-center text-[10px] font-bold uppercase tracking-wider text-white/40"
+          }
+          data-after-job-label={intent.id}
+        >
+          Next · {jobHint}
+        </span>
+      ) : null}
       <Link href="/library" className={chipMint} title="Save and review clips">
         Library
       </Link>
       <Link
-        href="/create?mode=seller-pack"
+        href={sellerPackHref}
         className={chipMint}
         title="Listing spin + box reveal + social hook"
+        data-after-seller-pack="1"
       >
         Seller Pack
       </Link>
-      <Link href={nextSkuHref} className={chip} title="New photo · same commercial path">
+      <Link
+        href={nextSkuHref}
+        className={chip}
+        title="New photo · same commercial path"
+        data-after-next-sku="1"
+      >
         Next SKU
       </Link>
       <Link href="/modules" className={chip}>
         Modules
       </Link>
-      <Link href={studioHref} className={chip}>
+      <Link href={studioHref} className={chip} data-after-full-generate="1">
         Full Generate
       </Link>
       {!demo ? (

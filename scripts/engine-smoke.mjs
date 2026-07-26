@@ -4034,15 +4034,21 @@ const afterPathSrc = fs.readFileSync(
 );
 assert.match(afterPathSrc, /aria-label=["']After generate["']/);
 assert.match(afterPathSrc, /data-after-path=["']product-first["']/);
+assert.match(afterPathSrc, /data-after-job/);
+assert.match(afterPathSrc, /jobIntentId/);
 assert.match(afterPathSrc, /Publish path/);
 assert.match(afterPathSrc, /Library/);
 assert.match(afterPathSrc, /Seller Pack/);
 assert.match(afterPathSrc, /Next SKU/);
 assert.match(afterPathSrc, /\/modules/);
 assert.match(afterPathSrc, /Flow · Preview/);
+// CD loop: job + SKU carry into next hops (not bare /create only)
+assert.match(afterPathSrc, /seller-pack/);
+assert.match(afterPathSrc, /try:\s*["']1["']/);
+assert.match(afterPathSrc, /job:\s*carry\.job|jobIntentId/);
 // Product path before Flow · Preview on after-generate chips
 assert.ok(
-  afterPathSrc.indexOf("mode=seller-pack") < afterPathSrc.indexOf('href="/flow"'),
+  afterPathSrc.indexOf("seller-pack") < afterPathSrc.indexOf('href="/flow"'),
   "AfterPath: Seller Pack before Flow"
 );
 assert.ok(
@@ -4054,6 +4060,8 @@ assert.ok(
   "AfterPath: Next SKU before Flow Preview"
 );
 assert.match(createStudioSmoke, /GenerateAfterPath/);
+assert.match(createStudioSmoke, /jobIntentId=\{jobIntentId\}/);
+assert.match(createStudioSmoke, /sku=\{toyIdentity\.sku/);
 // Footer / Profile / Explore / Community product-first suite exits
 assert.match(
   fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
