@@ -181,8 +181,7 @@ export function requestSettlementAfterSelectVersion(
 }
 
 /**
- * Free live results expose a provider raw URL until server watermark bake exists.
- * Download must not treat that URL as a deliverable.
+ * Free live provider raw URLs must never be customer-facing deliverables.
  * Cached demos may still offer open/download (not the user's live output).
  * A Free live file may download only after its own verified, locally owned
  * baked derivative is attached by the server worker. No env flag can bypass it.
@@ -201,6 +200,41 @@ export function canDownloadResult(opts: {
 
 export function freeLiveDownloadBlockReason(): string {
   return "Free Mini live clips cannot expose or download the raw provider file. A verified server-owned baked derivative is required (T6 blocked).";
+}
+
+/**
+ * Customer-facing video URL for generate success / idempotent replay.
+ * Free live never echoes the provider raw URL — only a controlled downloads
+ * path that re-checks T6 ownership. Demos and paid raw keep their URL.
+ */
+export function customerFacingGenerateVideoUrl(opts: {
+  demo: boolean;
+  watermark: boolean;
+  jobId: string;
+  /** Server-held provider or demo URL (never trust client). */
+  videoUrl: string;
+}): string {
+  if (opts.demo || !opts.watermark) return opts.videoUrl;
+  const id = (opts.jobId || "").trim();
+  if (!id) return `/api/downloads/unavailable`;
+  return `/api/downloads/${encodeURIComponent(id)}`;
+}
+
+/**
+ * Whether a result URL is safe to mount in a <video> element.
+ * Free live controlled download paths return 403 JSON until T6 bake unlocks —
+ * do not treat them as playable media.
+ */
+export function isPlayableResultVideoUrl(opts: {
+  videoUrl: string | null | undefined;
+  demo: boolean;
+  watermark: boolean;
+}): boolean {
+  if (!opts.videoUrl || !isSafeDeliverableUrl(opts.videoUrl)) return false;
+  if (opts.demo || !opts.watermark) return true;
+  if (opts.videoUrl.startsWith("/api/downloads/")) return false;
+  // Defense: never mount free live absolute provider URLs as durable media.
+  return false;
 }
 
 /**

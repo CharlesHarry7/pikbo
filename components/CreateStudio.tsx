@@ -33,6 +33,7 @@ import { parseRemixSearchParams } from "@/lib/remixIntent";
 import {
   buildGenerationSpec,
   canDownloadResult,
+  isPlayableResultVideoUrl,
   freeLiveDownloadBlockReason,
   internSourceImage,
   isSafeDeliverableUrl,
@@ -960,6 +961,11 @@ export function CreateStudio({
         resolveSpecImage(activeVersion.spec, sourceStore)
       : null) || image;
   const downloadAllowed = canDownloadResult({
+    demo: Boolean(activeVersion?.demo ?? demo),
+    watermark: Boolean(activeVersion?.watermark ?? watermark),
+  });
+  const playableVideo = isPlayableResultVideoUrl({
+    videoUrl,
     demo: Boolean(activeVersion?.demo ?? demo),
     watermark: Boolean(activeVersion?.watermark ?? watermark),
   });
@@ -2251,54 +2257,70 @@ export function CreateStudio({
                       <p className="mb-1 text-center text-[10px] font-bold uppercase text-[var(--fg-dim)]">
                         After · server output
                       </p>
-                      <video
-                        key={videoUrl}
-                        src={
-                          videoUrl && isSafeDeliverableUrl(videoUrl)
-                            ? videoUrl
-                            : undefined
-                        }
-                        controls
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="mx-auto max-h-[45vh] rounded-lg"
-                      />
-                      {watermark && (
+                      {playableVideo ? (
+                        <video
+                          key={videoUrl}
+                          src={videoUrl || undefined}
+                          controls
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="mx-auto max-h-[45vh] rounded-lg"
+                        />
+                      ) : (
+                        <div className="mx-auto flex max-h-[45vh] min-h-[160px] max-w-md flex-col items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/[0.06] px-4 py-6 text-center">
+                          <p className="text-sm font-bold text-amber-100">
+                            Free live held for T6 bake
+                          </p>
+                          <p className="mt-1 text-[11px] leading-relaxed text-white/55">
+                            {freeLiveDownloadBlockReason()} Player will unlock
+                            when a server-owned derivative is ready.
+                          </p>
+                        </div>
+                      )}
+                      {watermark && playableVideo ? (
                         <div
                           className="pointer-events-none absolute bottom-3 right-3 rounded-md px-2 py-1 text-[10px] font-bold text-white/90"
                           style={{ background: "var(--grad)" }}
                         >
                           {site.name}
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 ) : (
                   <div className="relative">
-                    <video
-                      key={videoUrl}
-                      src={
-                        videoUrl && isSafeDeliverableUrl(videoUrl)
-                          ? videoUrl
-                          : undefined
-                      }
-                      controls
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="mx-auto max-h-[65vh] rounded-lg"
-                    />
-                    {watermark && (
+                    {playableVideo ? (
+                      <video
+                        key={videoUrl}
+                        src={videoUrl || undefined}
+                        controls
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="mx-auto max-h-[65vh] rounded-lg"
+                      />
+                    ) : (
+                      <div className="mx-auto flex max-h-[65vh] min-h-[200px] max-w-md flex-col items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/[0.06] px-4 py-8 text-center">
+                        <p className="text-sm font-bold text-amber-100">
+                          Free live held for T6 bake
+                        </p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-white/55">
+                          {freeLiveDownloadBlockReason()} Credits already
+                          settled; file bake is still blocked.
+                        </p>
+                      </div>
+                    )}
+                    {watermark && playableVideo ? (
                       <div
                         className="pointer-events-none absolute bottom-6 right-6 rounded-md px-2 py-1 text-xs font-bold text-white/90"
                         style={{ background: "var(--grad)" }}
                       >
                         {site.name}
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 )}
                 <div className="mx-auto mt-4 max-w-md rounded-2xl border border-[var(--mint)]/35 bg-gradient-to-b from-[var(--mint)]/[0.12] to-black/40 px-4 py-3.5 text-center shadow-[0_0_40px_rgba(200,255,61,0.1)]">

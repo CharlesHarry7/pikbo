@@ -26,7 +26,10 @@ import {
   providerErrorMessage,
   providerFailHttp,
 } from "@/lib/providerError";
-import { isSafeDeliverableUrl } from "@/lib/createTrust";
+import {
+  customerFacingGenerateVideoUrl,
+  isSafeDeliverableUrl,
+} from "@/lib/createTrust";
 import { buildGeneratePrompt } from "@/lib/promptBuild";
 import type {
   GenerateErrorBody,
@@ -82,8 +85,16 @@ function successFromJob(
       : demo
         ? ("0 cached" as const)
         : ("10 used" as const);
+  // Free live provider output stays server-only until a verified baked
+  // derivative exists. Controlled /api/downloads re-checks T6 ownership.
+  const customerVideoUrl = customerFacingGenerateVideoUrl({
+    demo,
+    watermark: job.watermark,
+    jobId: job.id,
+    videoUrl: job.videoUrl || "",
+  });
   return {
-    videoUrl: job.videoUrl!,
+    videoUrl: customerVideoUrl,
     demo,
     watermark: job.watermark,
     model: job.model || (demo ? "demo-cached" : "unknown"),
@@ -550,7 +561,14 @@ export async function POST(req: Request) {
         /* best-effort */
       }
       const payload: GenerateSuccess = {
-        videoUrl,
+        // Never expose the raw Free provider URL. Paid/raw keeps provider URL;
+        // Free delivery waits for a verified T6 derivative via /api/downloads.
+        videoUrl: customerFacingGenerateVideoUrl({
+          demo: false,
+          watermark: plan.watermark,
+          jobId: ledgerJobId || result.requestId || "unavailable",
+          videoUrl,
+        }),
         demo: false,
         watermark: plan.watermark,
         model,

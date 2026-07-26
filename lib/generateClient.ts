@@ -248,8 +248,26 @@ export function historyFieldsFromSuccess(
     sku?: string;
   }
 ): Omit<HistoryItem, "id" | "createdAt"> {
+  // Prefer server redaction; if a legacy free live provider URL slipped through,
+  // pin history to the controlled download path (T6 gate re-checks ownership).
+  const jobKey =
+    typeof data.jobId === "string"
+      ? data.jobId
+      : typeof data.requestId === "string"
+        ? data.requestId
+        : "";
+  let videoUrl = data.videoUrl;
+  if (
+    Boolean(data.watermark) &&
+    !Boolean(data.demo) &&
+    jobKey &&
+    !videoUrl.startsWith("/api/downloads/") &&
+    !videoUrl.startsWith("/demos/")
+  ) {
+    videoUrl = `/api/downloads/${encodeURIComponent(jobKey)}`;
+  }
   return {
-    videoUrl: data.videoUrl,
+    videoUrl,
     projectId: meta.projectId,
     projectName: meta.projectName,
     inputImage: meta.inputImage,

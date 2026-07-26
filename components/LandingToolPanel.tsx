@@ -29,6 +29,7 @@ import {
 import {
   canDownloadResult,
   freeLiveDownloadBlockReason,
+  isPlayableResultVideoUrl,
   isSafeDeliverableUrl,
   requestCreditStateFromFailure,
 } from "@/lib/createTrust";
@@ -81,6 +82,11 @@ export function LandingToolPanel({
   const generateAbortRef = useRef<AbortController | null>(null);
   const toast = useToast();
   const downloadAllowed = canDownloadResult({
+    demo,
+    watermark,
+  });
+  const playableVideo = isPlayableResultVideoUrl({
+    videoUrl,
     demo,
     watermark,
   });
@@ -627,37 +633,49 @@ export function LandingToolPanel({
                   </span>
                 )}
               </div>
-              <video
-                src={
-                  videoUrl && isSafeDeliverableUrl(videoUrl)
-                    ? videoUrl
-                    : undefined
-                }
-                controls
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="mx-auto max-h-[320px] w-full rounded-lg"
-              />
-              {watermark && (
+              {playableVideo ? (
+                <video
+                  src={videoUrl || undefined}
+                  controls
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="mx-auto max-h-[320px] w-full rounded-lg"
+                />
+              ) : (
+                <div className="mx-auto flex min-h-[180px] max-w-md flex-col items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/[0.06] px-4 py-6 text-center">
+                  <p className="text-sm font-bold text-amber-100">
+                    Free live held for T6 bake
+                  </p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-white/55">
+                    {freeLiveDownloadBlockReason()}
+                  </p>
+                </div>
+              )}
+              {watermark && playableVideo ? (
                 <div
                   className="pointer-events-none absolute bottom-8 right-8 rounded-md px-2 py-1 text-[10px] font-bold text-white/90"
                   style={{ background: "var(--grad)" }}
                 >
                   {site.name}
                 </div>
-              )}
+              ) : null}
               {demo ? (
                 <p className="mt-2 text-center text-[10px] text-[var(--fg-dim)]">
                   {PROVENANCE.cachedDemo} — does not animate your upload or call a
                   live model. Configure FAL_KEY for a live Seedance render.
                 </p>
-              ) : (
+              ) : playableVideo ? (
                 <p className="mt-2 text-center text-[10px] text-[var(--fg-dim)]">
                   {PROVENANCE.liveGeneration} — AI motion varies. Failed jobs
                   restore credits when confirmed. Free live uses Mini · 480p ·{" "}
                   {PROVENANCE.onPlayerMark.toLowerCase()}.
+                </p>
+              ) : (
+                <p className="mt-2 text-center text-[10px] text-[var(--fg-dim)]">
+                  {PROVENANCE.liveGeneration} settled · Free raw is not exposed.
+                  Download unlocks only after server-owned T6 bake.
                 </p>
               )}
               <p className="mt-1 text-center text-[10px] text-[var(--fg-dim)]">
