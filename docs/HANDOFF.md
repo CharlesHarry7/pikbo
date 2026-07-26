@@ -10,6 +10,12 @@ Newest first. One block per meaningful landing.
 - Video probe also surfaces failed·canceled counts; image door → `/image`.
 - Smoke: data-profile-jobs=image|video + X-Pikbo-Image-Jobs headers.
 
+### 2026-07-27 — [grok] Profile still-image jobs probe
+- ProfilePanel HEADs `/api/image` for process-memory Flux counts (open/total/
+  failed/canceled) — Settings parity with video `/api/generations` probe.
+- Video strip: failed/canceled counts; `data-profile-jobs=video|image`.
+- Smoke already locks Image-Jobs headers + dual strips.
+
 ### 2026-07-27 — [grok] Download HEAD fail-code honesty
 - `classifyDownloadHead`: terminal fail codes (PROVIDER_NETWORK · CONTENT_POLICY ·
   MODEL_EMPTY · UNSAFE_URL · cancel) evaluated **before** generic 409/NOT_READY

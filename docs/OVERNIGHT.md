@@ -150,7 +150,8 @@
 109. [x] Image FailPanel uses requestCreditStateFromFailure (Create/Landing parity)
 110. [x] fail ledger failedLedgerCreditsOutcome + Library unconfirmed code sweep
 111. [x] Download HEAD fail codes before 409 “not ready” + webhook fail ledger
-112. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+112. [x] Profile still-image jobs HEAD probe (Flux ledger honesty)
+113. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -164,8 +165,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Download HEAD: PROVIDER_NETWORK/CONTENT_POLICY/MODEL_EMPTY no longer toast “not ready”.
-- Webhook fail path + downloads HEAD credits outcome honesty.
+- Download HEAD: fail codes before 409 “not ready”; Profile image jobs HEAD probe.
+- Webhook fail ledger + downloads credits outcome honesty.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 
