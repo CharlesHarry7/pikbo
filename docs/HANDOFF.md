@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] fix(smoke): drop accidental T6 worker asserts
+- engine-smoke again matches main download gate (`canDownloadResult` + bake path).
+- Keeps HfProductRail product-first Explore locks; no T6 worker enablement.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-26 — [grok] T6 server-owned baked-watermark skeleton (source-only)
 - Free live raw never unlocked by env force / external worker URL alone.
 - `lib/t6Worker.ts` hard-disabled; downloads require verified owned derivative.
