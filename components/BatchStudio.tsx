@@ -1013,7 +1013,8 @@ export function BatchStudio({
    */
   /**
    * Per-child download: HEAD /api/downloads first (Create/Library parity) so
-   * canceled / timeout / in-flight never open a dead tab.
+   * canceled / timeout / in-flight never open a dead tab. Allowed GET uses
+   * downloadVideoFile (blob) — never window.open the gate (JSON error tabs).
    */
   async function downloadChild(j: Job) {
     const downloadAllowed = canDownloadResult({
@@ -1024,6 +1025,9 @@ export function BatchStudio({
       setError(freeLiveDownloadBlockReason());
       return;
     }
+    const filename = `pikbo-pack-${(j.slug || j.name || "clip")
+      .toString()
+      .slice(0, 32)}.mp4`;
     if (j.requestId) {
       const gateUrl = `/api/downloads/${encodeURIComponent(j.requestId)}`;
       try {
@@ -1039,7 +1043,15 @@ export function BatchStudio({
         }
         if (gate.kind === "allow") {
           setError(null);
-          window.open(gateUrl, "_blank", "noopener,noreferrer");
+          const result = await downloadVideoFile(gateUrl, filename);
+          if (result === "ok" || result === "fallback") return;
+          if (result === "blocked" || result === "unsafe") {
+            setError(
+              `${j.name || j.slug}: download blocked — T6 / cancel / timeout / unsafe`
+            );
+            return;
+          }
+          setError(`${j.name || j.slug}: download failed`);
           return;
         }
         if (gate.kind === "not_found") {
@@ -1051,7 +1063,13 @@ export function BatchStudio({
     }
     if (j.videoUrl && isSafeDeliverableUrl(j.videoUrl)) {
       setError(null);
-      window.open(j.videoUrl, "_blank", "noopener,noreferrer");
+      const result = await downloadVideoFile(j.videoUrl, filename);
+      if (result === "ok" || result === "fallback") return;
+      if (result === "unsafe") {
+        setError(`${j.name || j.slug}: unsafe deliverable URL`);
+        return;
+      }
+      setError(`${j.name || j.slug}: download failed`);
       return;
     }
     setError(`No safe download URL for ${j.name || j.slug}`);

@@ -6,7 +6,7 @@ import {
   historyFieldsFromSuccess,
   postGenerateWithRetry,
 } from "@/lib/generateClient";
-import { pushHistory } from "@/lib/history";
+import { downloadVideoFile, pushHistory } from "@/lib/history";
 import {
   fetchMe,
   freeTrialExhausted,
@@ -140,12 +140,16 @@ export function LandingToolPanel({
     );
   }
 
-  /** HEAD gate before open — canceled/timeout/in-flight never open a dead tab. */
+  /**
+   * HEAD gate then blob download — canceled/timeout/in-flight never open a
+   * dead tab, and /api/downloads never window.open as JSON.
+   */
   async function downloadLandingResult() {
     if (!downloadAllowed) {
       toast(freeLiveDownloadBlockReason());
       return;
     }
+    const filename = `pikbo-${effectSlug.slice(0, 32)}.mp4`;
     if (requestId) {
       const gateUrl = `/api/downloads/${encodeURIComponent(requestId)}`;
       try {
@@ -166,13 +170,17 @@ export function LandingToolPanel({
             recipe: effectSlug,
             demo: Boolean(demo),
             meta: {
-              via: "downloads_api",
+              via: "downloads_api_blob",
               source: "landing",
               head: "allowed",
             },
           });
-          window.open(gateUrl, "_blank", "noopener,noreferrer");
-          toast("Download via server gate…");
+          const result = await downloadVideoFile(gateUrl, filename);
+          if (result === "ok") toast("Download started");
+          else if (result === "fallback") toast("Opened video — save from browser");
+          else if (result === "blocked" || result === "unsafe") {
+            toast("Download blocked — T6 / cancel / timeout / unsafe");
+          } else toast("Download failed");
           return;
         }
         if (decision.kind === "not_found" && decision.message) {
@@ -193,7 +201,12 @@ export function LandingToolPanel({
           source: "landing",
         },
       });
-      window.open(videoUrl, "_blank", "noopener,noreferrer");
+      const result = await downloadVideoFile(videoUrl, filename);
+      if (result === "ok") toast("Download started");
+      else if (result === "fallback") toast("Opened video — save from browser");
+      else if (result === "unsafe") toast("Unsafe deliverable URL — download blocked");
+      else if (result === "blocked") toast("Download blocked — no file");
+      else toast("Download failed");
       return;
     }
     toast("No safe download URL for this result");

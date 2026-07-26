@@ -285,8 +285,25 @@ export async function downloadVideoFile(
     // Relative /demos/... works same-origin; absolute fal needs CORS.
     const res = await fetch(url, { mode: "cors", signal: ctrl.signal });
     if (!res.ok) throw new Error(String(res.status));
+    // Gate / error bodies are application/json — never save JSON as "video".
+    const ct = (res.headers.get("Content-Type") || "").toLowerCase();
+    if (
+      ct.includes("application/json") ||
+      ct.includes("text/html") ||
+      ct.includes("text/plain")
+    ) {
+      return "blocked";
+    }
     const blob = await res.blob();
     if (!blob || blob.size < 32) throw new Error("empty");
+    // Second line of defense if Content-Type was missing/mis-set.
+    if (
+      (url.startsWith("/api/downloads/") || url.includes("/api/downloads/")) &&
+      blob.type &&
+      (blob.type.includes("json") || blob.type.startsWith("text/"))
+    ) {
+      return "blocked";
+    }
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;

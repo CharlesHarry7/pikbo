@@ -2582,7 +2582,37 @@ assert.ok(
     historyLibSrc.includes('return "blocked"'),
   "downloadVideoFile must block /api/downloads open-on-fail"
 );
+// Reject JSON/text Content-Type so gate error bodies never save as .mp4
+assert.match(
+  historyLibSrc,
+  /application\/json|Content-Type/
+);
 assert.match(library, /downloadSessionJob|onDownload/);
+// Create / Library / Landing / Seller Pack: allow path uses blob helper — never
+// window.open(gateUrl) which dumps 403/409 JSON into a new tab.
+assert.match(createStudio, /downloadVideoFile/);
+assert.match(library, /downloadVideoFile/);
+assert.match(landingTool, /downloadVideoFile/);
+assert.match(batchStudio, /downloadVideoFile/);
+assert.match(createStudio, /downloads_api_blob|downloadVideoFile\(gateUrl/);
+assert.match(library, /downloads_api_blob|downloadVideoFile\(gateUrl/);
+assert.match(landingTool, /downloads_api_blob|downloadVideoFile\(gateUrl/);
+assert.doesNotMatch(
+  createStudio,
+  /window\.open\(\s*gateUrl/
+);
+assert.doesNotMatch(
+  library,
+  /window\.open\(\s*gateUrl/
+);
+assert.doesNotMatch(
+  landingTool,
+  /window\.open\(\s*gateUrl/
+);
+assert.doesNotMatch(
+  batchStudio,
+  /window\.open\(\s*gateUrl/
+);
 assert.match(
   fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8"),
   /ledgerCancelRefund/
@@ -3407,6 +3437,7 @@ assert.match(batchStudio, /recoveredFromAssetMiss/);
 assert.match(batchStudio, /cancelInFlightPack|AbortController/);
 assert.match(batchStudio, /downloadChild|classifyDownloadHead/);
 assert.match(batchStudio, /data-seller-download=["']gated["']/);
+assert.match(batchStudio, /downloadVideoFile\(gateUrl|downloadVideoFile\(j\.videoUrl/);
 
 assert.match(batchStudio, /Cancel pack/);
 // Pack cancel immediately marks running children refund unconfirmed (Create parity)

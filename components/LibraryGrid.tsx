@@ -410,7 +410,13 @@ export function LibraryGrid() {
     const id = (job.requestId || job.id || "").trim();
     if (!id) {
       if (job.videoUrl && isSafeDeliverableUrl(job.videoUrl)) {
-        window.open(job.videoUrl, "_blank", "noopener,noreferrer");
+        const name = `pikbo-session-${(job.effect || "clip").slice(0, 24)}.mp4`;
+        const result = await downloadVideoFile(job.videoUrl, name);
+        if (result === "ok") toast("Download started");
+        else if (result === "fallback") toast("Opened video — save from browser");
+        else if (result === "unsafe") toast("Unsafe deliverable URL — download blocked");
+        else if (result === "blocked") toast("Download blocked — no file");
+        else toast("Download failed");
         return;
       }
       toast("No download id for this session job");
@@ -434,10 +440,20 @@ export function LibraryGrid() {
           path: "/library",
           recipe: job.effect,
           demo: Boolean(job.demo),
-          meta: { via: "downloads_api", surface: "session_jobs", head: "allowed" },
+          meta: {
+            via: "downloads_api_blob",
+            surface: "session_jobs",
+            head: "allowed",
+          },
         });
-        window.open(gateUrl, "_blank", "noopener,noreferrer");
-        toast("Download via server gate…");
+        // Blob path — never window.open /api/downloads (JSON error tabs).
+        const name = `pikbo-session-${(job.effect || "clip").slice(0, 24)}.mp4`;
+        const result = await downloadVideoFile(gateUrl, name);
+        if (result === "ok") toast("Download started");
+        else if (result === "fallback") toast("Opened video — save from browser");
+        else if (result === "blocked" || result === "unsafe") {
+          toast("Download blocked — T6 / cancel / timeout / unsafe");
+        } else toast("Download failed");
         return;
       }
       if (decision.action === "fallthrough" && decision.toast) {
@@ -446,13 +462,16 @@ export function LibraryGrid() {
     } catch {
       /* network */
     }
-    // Last resort: open gate GET (re-applies auth) or safe videoUrl
+    // Last resort: demo direct URL only — never open gate GET as a tab.
     if (job.videoUrl && isSafeDeliverableUrl(job.videoUrl) && job.demo) {
-      window.open(job.videoUrl, "_blank", "noopener,noreferrer");
+      const name = `pikbo-session-${(job.effect || "clip").slice(0, 24)}.mp4`;
+      const result = await downloadVideoFile(job.videoUrl, name);
+      if (result === "ok") toast("Download started");
+      else if (result === "fallback") toast("Opened video — save from browser");
+      else toast("Download failed");
       return;
     }
-    window.open(gateUrl, "_blank", "noopener,noreferrer");
-    toast("Download via server gate…");
+    toast("Download gate unreachable — remake or try again");
   }
 
   async function cancelSessionJob(id: string) {
@@ -609,8 +628,11 @@ export function LibraryGrid() {
       toast(historyDownloadBlockReason());
       return;
     }
+    const name = `pikbo-${item.effect}-${item.id.slice(0, 8)}.mp4`;
     // Prefer controlled download endpoint when we have a server job / request id.
     // HEAD first so Free-blocked / expired process-memory jobs never open a dead tab.
+    // Allowed GET always goes through downloadVideoFile (blob) — never window.open
+    // /api/downloads (403/409 JSON tabs).
     if (item.requestId) {
       const gateUrl = `/api/downloads/${encodeURIComponent(item.requestId)}`;
       try {
@@ -634,17 +656,21 @@ export function LibraryGrid() {
             recipe: item.effect,
             demo: Boolean(item.demo),
             meta: {
-              via: "downloads_api",
+              via: "downloads_api_blob",
               sku: item.sku || null,
               head: "allowed",
             },
           });
-          window.open(gateUrl, "_blank", "noopener,noreferrer");
-          toast("Download via server gate…");
+          const result = await downloadVideoFile(gateUrl, name);
+          if (result === "ok") toast("Download started");
+          else if (result === "fallback") toast("Opened video — save from browser");
+          else if (result === "blocked" || result === "unsafe") {
+            toast("Download blocked — T6 / cancel / timeout / unsafe");
+          } else toast("Download failed");
           return;
         }
       } catch {
-        /* network — try open / direct below */
+        /* network — try direct below when safe */
       }
     }
     track({
@@ -653,25 +679,24 @@ export function LibraryGrid() {
       recipe: item.effect,
       demo: Boolean(item.demo),
       meta: {
-        via: item.requestId ? "downloads_api_fallback" : "direct",
+        via: item.requestId ? "direct_after_gate" : "direct",
         sku: item.sku || null,
       },
     });
-    if (item.requestId) {
-      // Gate unreachable — last resort open (GET re-applies the same auth).
-      window.open(
-        `/api/downloads/${encodeURIComponent(item.requestId)}`,
-        "_blank",
-        "noopener,noreferrer"
+    // Never window.open /api/downloads — blob or honest fail only.
+    if (!item.videoUrl) {
+      toast(
+        item.requestId
+          ? "Download gate unreachable — remake or try again"
+          : "No video URL for this history item"
       );
-      toast("Download via server gate…");
       return;
     }
-    const name = `pikbo-${item.effect}-${item.id.slice(0, 8)}.mp4`;
     const result = await downloadVideoFile(item.videoUrl, name);
     if (result === "ok") toast("Download started");
     else if (result === "fallback") toast("Opened video — save from browser");
     else if (result === "unsafe") toast("Unsafe deliverable URL — download blocked");
+    else if (result === "blocked") toast("Download blocked — no file");
     else toast("Download failed");
   }
 

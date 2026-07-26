@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] All surfaces blob-download /api/downloads (no JSON tabs)
+- Create · Landing · Library session/history · Seller Pack child: allow path
+  uses `downloadVideoFile` (blob) — never `window.open(gateUrl)`.
+- `downloadVideoFile` rejects application/json · text/* Content-Type.
+- Smoke locks downloads_api_blob + no window.open(gateUrl).
+
 ### 2026-07-26 — [grok] downloadVideoFile never opens /api/downloads JSON tabs
 - On blob-fetch failure for controlled `/api/downloads/*`, return `blocked`
   instead of `window.open` (403/409 is JSON, not MP4). Protects Pack multi-save.
