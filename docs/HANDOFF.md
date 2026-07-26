@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] CD Phase C-lite: ZH brief + fidelity refs
+- `buildAssetBrief` locale en|zh dynamic bullets + recipe labels.
+- C-lite: `FIDELITY_ANGLE_CHIPS` + optional secondary still (client preview);
+  `composeExtraWithIdentity` writes angle/secondary honesty into extra —
+  **not** multi-image provider input / Soul ID.
+- AssetBriefPanel `data-fidelity-refs=c-lite`; smoke locks.
+
 ### 2026-07-26 — [grok] CD Phase B3: Seller Pack Director Plan
 - `buildSellerPackDirectorPlan`: Launch Pack 3 children, 30-cr quote, Free Mini
   shortfall honesty, Sales fidelity row.

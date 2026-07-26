@@ -172,7 +172,7 @@ export function CreateStudio({
   /** Job-to-be-done: etsy-listing | tiktok-hook | blind-box-drop | shelf-display */
   initialJob?: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const remix = useMemo(
     () =>
       parseRemixSearchParams({
@@ -206,6 +206,9 @@ export function CreateStudio({
   /** True when still is official Lab sample (not customer SKU) */
   const [labStill, setLabStill] = useState(false);
   const [briefCollapsed, setBriefCollapsed] = useState(false);
+  /** Phase C-lite: claimed angles + secondary still (client preview only). */
+  const [fidelityAngles, setFidelityAngles] = useState<string[]>([]);
+  const [secondaryStill, setSecondaryStill] = useState<string | null>(null);
   /** Soft-applied primary recipe once per still (Phase B2). */
   const briefAutoAppliedRef = useRef(false);
   const [extra, setExtra] = useState(initialPrompt ?? "");
@@ -474,6 +477,8 @@ export function CreateStudio({
       setImageProbe(null);
       setLabStill(Boolean(opts?.labSample));
       setBriefCollapsed(false);
+      setFidelityAngles([]);
+      setSecondaryStill(null);
       briefAutoAppliedRef.current = false;
       setError(null);
       track({
@@ -593,7 +598,10 @@ export function CreateStudio({
     // Retry freezes prior extra; new runs merge optional Toy Identity into extra.
     const requestExtra = retry
       ? retry.extra
-      : composeExtraWithIdentity(toyIdentity, extra);
+      : composeExtraWithIdentity(toyIdentity, extra, {
+          angles: fidelityAngles,
+          hasSecondaryStill: Boolean(secondaryStill),
+        });
     const requestAspect = (retry?.aspectRatio ??
       opts?.aspectOverride ??
       aspectRatio) as "9:16" | "16:9" | "1:1";
@@ -1153,8 +1161,21 @@ export function CreateStudio({
         jobId: jobIntentId,
         identity: toyIdentity,
         labSample: labStill,
+        locale: locale === "zh" ? "zh" : "en",
+        fidelityAngles,
+        hasSecondaryStill: Boolean(secondaryStill),
       }),
-    [image, imageProbe, effect, jobIntentId, toyIdentity, labStill]
+    [
+      image,
+      imageProbe,
+      effect,
+      jobIntentId,
+      toyIdentity,
+      labStill,
+      locale,
+      fidelityAngles,
+      secondaryStill,
+    ]
   );
 
   // Phase B2: soft-apply shape-primary recipe once (skip deep-link / job / Lab sample).
@@ -1651,6 +1672,8 @@ export function CreateStudio({
                     setAssetId(null);
                     setImageProbe(null);
                     setLabStill(false);
+                    setFidelityAngles([]);
+                    setSecondaryStill(null);
                   }}
                 >
                   {t("create.replace")}
@@ -1715,6 +1738,16 @@ export function CreateStudio({
                     meta: { source: "asset_brief" },
                   });
                 }}
+                fidelityAngles={fidelityAngles}
+                onToggleAngle={(angle) => {
+                  setFidelityAngles((prev) =>
+                    prev.includes(angle)
+                      ? prev.filter((a) => a !== angle)
+                      : [...prev, angle].slice(0, 6)
+                  );
+                }}
+                secondaryStill={secondaryStill}
+                onSecondaryStill={setSecondaryStill}
                 collapsed={briefCollapsed}
                 onToggle={() => setBriefCollapsed((v) => !v)}
               />

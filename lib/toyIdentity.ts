@@ -3,10 +3,11 @@
  *
  * Physics: one photo of a real toy the user owns.
  * Product truth: same toy across clips beats multi-model theater.
- * Five-step: 2 optional fields only; no LoRA, no cloud character train, no 3D.
+ * Five-step: optional SKU + preserve + Phase C-lite angle notes.
+ * No LoRA, no cloud character train, no multi-image model input, no 3D.
  *
  * Server already appends TOY_IDENTITY_LOCK via buildGeneratePrompt.
- * This layer only adds optional SKU name + "preserve" notes into `extra`.
+ * This layer only adds optional SKU / preserve / fidelity notes into `extra`.
  */
 
 import { MAX_EXTRA_CHARS, sanitizeExtra } from "@/lib/promptBuild";
@@ -17,6 +18,25 @@ export type ToyIdentity = {
   /** What must not change (paint, logo, sculpt) */
   preserve: string;
 };
+
+/** Phase C-lite fidelity notes — prompt text only, not multi-image Soul ID. */
+export type FidelityRefNotes = {
+  /** User-claimed angles covered by stills (front/side/…) */
+  angles: string[];
+  /**
+   * Secondary still is client preview only — generate still uses primary image.
+   * Honesty: not sent as a second provider image.
+   */
+  hasSecondaryStill: boolean;
+};
+
+export const FIDELITY_ANGLE_CHIPS = [
+  "front",
+  "side",
+  "back",
+  "detail",
+  "packaging",
+] as const;
 
 const STORAGE_KEY = "pikbo_toy_identity_v1";
 const MAX_SKU = 48;
@@ -41,10 +61,11 @@ export function sanitizeToyIdentity(raw: Partial<ToyIdentity> | null | undefined
   };
 }
 
-/** Compose optional identity into the user extra string sent to generate. */
+/** Compose optional identity (+ C-lite fidelity notes) into generate `extra`. */
 export function composeExtraWithIdentity(
   identity: ToyIdentity,
-  userExtra: unknown
+  userExtra: unknown,
+  refs?: FidelityRefNotes | null
 ): string {
   const base = sanitizeExtra(userExtra);
   const id = sanitizeToyIdentity(identity);
@@ -54,6 +75,20 @@ export function composeExtraWithIdentity(
   }
   if (id.preserve) {
     parts.push(`Preserve exactly: ${id.preserve}.`);
+  }
+  const angles = (refs?.angles ?? [])
+    .map((a) => a.trim().toLowerCase())
+    .filter(Boolean)
+    .slice(0, 6);
+  if (angles.length > 0) {
+    parts.push(
+      `Reference angles noted by seller: ${angles.join(", ")}. Keep silhouette, paint, and logos consistent.`
+    );
+  }
+  if (refs?.hasSecondaryStill) {
+    parts.push(
+      "Seller attached a secondary detail still in studio (client preview only — not multi-image model input). Match paint lines, logos, and sculpt from the primary photo."
+    );
   }
   if (parts.length === 0) return base;
   const identityBlock = parts.join(" ");

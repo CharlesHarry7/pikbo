@@ -2899,12 +2899,17 @@ const assetBriefSrc = fs.readFileSync(join(root, "lib/assetBrief.ts"), "utf8");
 assert.match(assetBriefSrc, /buildAssetBrief|probeImageSize|primaryRecipeForShape/);
 assert.match(assetBriefSrc, /not cloud vision|not computer vision|Rule-based/i);
 assert.match(assetBriefSrc, /seller-pack|Seller Pack|BIBLE_MATERIAL_CHIPS/);
+assert.match(assetBriefSrc, /locale.*zh|BriefLocale|hasSecondaryStill|fidelityAngles/);
 assert.match(
   fs.readFileSync(join(root, "components/AssetBriefPanel.tsx"), "utf8"),
-  /data-asset-brief=["']cd-phase-b["']|data-character-bible=["']draft["']/
+  /data-asset-brief=["']cd-phase-b["']|data-character-bible=["']draft["']|data-fidelity-refs=["']c-lite["']/
 );
 assert.match(createStudio, /AssetBriefPanel|buildAssetBrief|probeImageSize/);
 assert.match(createStudio, /data-asset-brief|labStill|imageProbe|briefCollapsed/);
+assert.match(createStudio, /fidelityAngles|secondaryStill|hasSecondaryStill/);
+const toyIdRefsSrc = fs.readFileSync(join(root, "lib/toyIdentity.ts"), "utf8");
+assert.match(toyIdRefsSrc, /FIDELITY_ANGLE_CHIPS|FidelityRefNotes|hasSecondaryStill/);
+assert.match(toyIdRefsSrc, /not multi-image model input|secondary detail still/i);
 // CD Phase B2 — Director Plan + soft auto recipe
 const directorPlanSrc = fs.readFileSync(
   join(root, "lib/directorPlan.ts"),

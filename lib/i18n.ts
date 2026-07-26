@@ -294,6 +294,15 @@ const en: Dict = {
   "brief.sku.ph": "e.g. Scout pink #3",
   "brief.preserve.ph": "paint lines, logo, sculpt",
   "brief.materials": "Material chips · optional",
+  "brief.angles": "Angles covered · optional",
+  "brief.angles.hint":
+    "Tag which views you have. Prompt-only lock — not multi-image Soul ID.",
+  "brief.secondary": "Secondary detail still · optional",
+  "brief.secondary.hint":
+    "Client preview only · generate still uses primary photo · not a second model input.",
+  "brief.secondary.add": "Add detail still",
+  "brief.secondary.replace": "Replace detail still",
+  "brief.secondary.clear": "Clear",
 
   "plan.title": "Director Plan · confirm cost",
   "plan.sub": "Review goal, recipe, and credits before you spend",
@@ -587,6 +596,15 @@ const zh: Dict = {
   "brief.sku.ph": "例：Scout 粉色 #3",
   "brief.preserve.ph": "漆线、logo、造型",
   "brief.materials": "材质标签 · 可选",
+  "brief.angles": "已覆盖角度 · 可选",
+  "brief.angles.hint":
+    "标记你有的视图。仅写入提示词 —— 不是多图 Soul ID 训练。",
+  "brief.secondary": "第二张细节图 · 可选",
+  "brief.secondary.hint":
+    "仅工作室预览 · 生成仍用主图 · 不会作为第二张模型输入。",
+  "brief.secondary.add": "添加细节图",
+  "brief.secondary.replace": "更换细节图",
+  "brief.secondary.clear": "清除",
 
   "plan.title": "导演计划 · 确认消耗",
   "plan.sub": "生成前核对目标、配方与积分",

@@ -5,18 +5,25 @@ import {
   BIBLE_MATERIAL_CHIPS,
   type AssetBrief,
 } from "@/lib/assetBrief";
-import type { ToyIdentity } from "@/lib/toyIdentity";
+import {
+  FIDELITY_ANGLE_CHIPS,
+  type ToyIdentity,
+} from "@/lib/toyIdentity";
 import { useI18n } from "@/components/LanguageProvider";
 
 /**
- * CD Phase B — post-upload Asset Brief + lightweight character bible draft.
- * Pure UI over `buildAssetBrief` + toyIdentity fields.
+ * CD Phase B/C-lite — Asset Brief + bible + optional angle/secondary still.
+ * Secondary still is client preview only (not multi-image model input).
  */
 export function AssetBriefPanel({
   brief,
   identity,
   onIdentityPatch,
   onPickRecipe,
+  fidelityAngles = [],
+  onToggleAngle,
+  secondaryStill = null,
+  onSecondaryStill,
   collapsed = false,
   onToggle,
   className = "",
@@ -25,11 +32,26 @@ export function AssetBriefPanel({
   identity: ToyIdentity;
   onIdentityPatch: (patch: Partial<ToyIdentity>) => void;
   onPickRecipe: (slug: string) => void;
+  fidelityAngles?: string[];
+  onToggleAngle?: (angle: string) => void;
+  secondaryStill?: string | null;
+  onSecondaryStill?: (dataUrl: string | null) => void;
   collapsed?: boolean;
   onToggle?: () => void;
   className?: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const angleLabel = (a: string) => {
+    if (locale !== "zh") return a;
+    const map: Record<string, string> = {
+      front: "正面",
+      side: "侧面",
+      back: "背面",
+      detail: "细节",
+      packaging: "包装",
+    };
+    return map[a] ?? a;
+  };
 
   if (!brief.ready) return null;
 
@@ -204,6 +226,93 @@ export function AssetBriefPanel({
                   </button>
                 );
               })}
+            </div>
+
+            {/* Phase C-lite: angle tags + optional secondary still (not Soul ID) */}
+            <div
+              data-fidelity-refs="c-lite"
+              className="mt-3 border-t border-white/[0.06] pt-2"
+            >
+              <p className="text-[9px] font-bold uppercase tracking-wide text-white/35">
+                {t("brief.angles")}
+              </p>
+              <p className="mt-0.5 text-[10px] leading-snug text-white/40">
+                {t("brief.angles.hint")}
+              </p>
+              {onToggleAngle ? (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {FIDELITY_ANGLE_CHIPS.map((angle) => {
+                    const active = fidelityAngles.includes(angle);
+                    return (
+                      <button
+                        key={angle}
+                        type="button"
+                        onClick={() => onToggleAngle(angle)}
+                        className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold transition ${
+                          active
+                            ? "border-[var(--mint)]/50 bg-[var(--mint)]/15 text-[var(--mint)]"
+                            : "border-white/12 bg-black/30 text-white/55 hover:border-white/25"
+                        }`}
+                      >
+                        {angleLabel(angle)}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+              {onSecondaryStill ? (
+                <div className="mt-2">
+                  <p className="text-[9px] font-bold uppercase tracking-wide text-white/35">
+                    {t("brief.secondary")}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-white/40">
+                    {t("brief.secondary.hint")}
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    {secondaryStill ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={secondaryStill}
+                        alt="secondary fidelity still"
+                        className="h-14 w-14 rounded-lg border border-white/15 object-cover"
+                      />
+                    ) : null}
+                    <label className="cursor-pointer rounded-lg border border-white/15 bg-black/40 px-2.5 py-1.5 text-[10px] font-semibold text-white/70 hover:border-[var(--mint)]/40 hover:text-[var(--mint)]">
+                      {secondaryStill
+                        ? t("brief.secondary.replace")
+                        : t("brief.secondary.add")}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          e.target.value = "";
+                          if (!file) return;
+                          if (file.size > 8_000_000) return;
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            const r = reader.result;
+                            if (typeof r === "string" && r.startsWith("data:image")) {
+                              onSecondaryStill(r);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    </label>
+                    {secondaryStill ? (
+                      <button
+                        type="button"
+                        onClick={() => onSecondaryStill(null)}
+                        className="text-[10px] font-semibold text-white/45 hover:text-white/75"
+                      >
+                        {t("brief.secondary.clear")}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

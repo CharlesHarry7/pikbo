@@ -13,6 +13,8 @@ export type ImageProbe = {
   height: number;
 };
 
+export type BriefLocale = "en" | "zh";
+
 export type AssetBriefInput = {
   hasImage: boolean;
   probe: ImageProbe | null;
@@ -21,6 +23,11 @@ export type AssetBriefInput = {
   identity: ToyIdentity;
   /** Official Lab sample — brief is illustrative only */
   labSample?: boolean;
+  /** Dynamic bullet language (EN default; ZH for 简体中文) */
+  locale?: BriefLocale;
+  /** Phase C-lite: claimed angles / secondary still */
+  fidelityAngles?: string[];
+  hasSecondaryStill?: boolean;
 };
 
 export type BriefBullet = {
@@ -56,27 +63,29 @@ export type AssetBrief = {
 
 /** Shape → default commercial recipe (Creative Director soft apply). */
 export function primaryRecipeForShape(
-  shape: AssetBrief["shape"]
+  shape: AssetBrief["shape"],
+  locale: BriefLocale = "en"
 ): BriefRecipeHint {
+  const zh = locale === "zh";
   if (shape === "portrait") {
     return {
       slug: "blind-box-unboxing",
-      label: "Box Reveal",
-      reason: "Portrait · drop / social",
+      label: zh ? "开箱揭晓" : "Box Reveal",
+      reason: zh ? "竖图 · 发售 / 社媒" : "Portrait · drop / social",
     };
   }
   if (shape === "landscape") {
     return {
       slug: "display-case-glam",
-      label: "Display Glow",
-      reason: "Landscape · shelf / PDP",
+      label: zh ? "陈列光感" : "Display Glow",
+      reason: zh ? "横图 · 晒柜 / 详情页" : "Landscape · shelf / PDP",
     };
   }
   // square + unknown → listing spin is the commercial default
   return {
     slug: "360-spin-showcase",
-    label: "360° Spin",
-    reason: "Listing packshot default",
+    label: zh ? "360° 旋转" : "360° Spin",
+    reason: zh ? "上架主图默认" : "Listing packshot default",
   };
 }
 
@@ -161,9 +170,11 @@ export function probeImageSize(src: string): Promise<ImageProbe | null> {
 
 /**
  * Build a Creative Director brief from geometry + product context.
- * Pure / deterministic — safe for smoke tests.
+ * Pure / deterministic — safe for smoke tests. Locale: en | zh.
  */
 export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
+  const locale: BriefLocale = input.locale === "zh" ? "zh" : "en";
+  const zh = locale === "zh";
   const shape = classifyShape(input.probe);
   const label = aspectLabel(input.probe, shape);
   const sellerPackHref = "/create?mode=seller-pack";
@@ -171,9 +182,10 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
   if (!input.hasImage) {
     return {
       ready: false,
-      title: "Asset Brief",
-      disclaimer:
-        "Rule-based Creative Director brief · not cloud vision · upload a photo first.",
+      title: zh ? "资产简报" : "Asset Brief",
+      disclaimer: zh
+        ? "基于画幅与产品规则的创意总监简报 · 非云端识图 · 请先上传照片。"
+        : "Rule-based Creative Director brief · not cloud vision · upload a photo first.",
       bullets: [],
       recipes: [],
       primaryRecipe: null,
@@ -188,13 +200,17 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
   if (input.labSample) {
     bullets.push({
       id: "lab",
-      text: "Official Lab still — good for feeling a recipe; live Mini uses this sample, not a customer SKU.",
+      text: zh
+        ? "官方实验室样片 —— 适合试配方；实时 Mini 用的是样片，不是客户 SKU。"
+        : "Official Lab still — good for feeling a recipe; live Mini uses this sample, not a customer SKU.",
       tone: "tip",
     });
   } else {
     bullets.push({
       id: "rights",
-      text: "Sales mode: only animate toys you own or have rights to. Confirm ownership before generate.",
+      text: zh
+        ? "卖货模式：只动画化你拥有或有权使用的玩具。生成前请确认权属。"
+        : "Sales mode: only animate toys you own or have rights to. Confirm ownership before generate.",
       tone: "warn",
     });
   }
@@ -203,44 +219,89 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
     id: "shape",
     text:
       shape === "square"
-        ? `Photo is ${label} — strong fit for Listing · 360° Spin (1:1 marketplace gallery).`
+        ? zh
+          ? `照片为 ${label} —— 适合上架 · 360° 旋转（1:1 电商轮播）。`
+          : `Photo is ${label} — strong fit for Listing · 360° Spin (1:1 marketplace gallery).`
         : shape === "portrait"
-          ? `Photo is ${label} — strong fit for Box Reveal or Social Hook (9:16 feeds).`
+          ? zh
+            ? `照片为 ${label} —— 适合开箱揭晓或社媒钩子（9:16 信息流）。`
+            : `Photo is ${label} — strong fit for Box Reveal or Social Hook (9:16 feeds).`
           : shape === "landscape"
-            ? `Photo is ${label} — strong fit for Display Glow / shelf pans (16:9 PDP).`
-            : "Could not read pixel size — a front-facing, well-lit shot still works for any recipe.",
+            ? zh
+              ? `照片为 ${label} —— 适合陈列光感 / 货架扫镜（16:9 详情页）。`
+              : `Photo is ${label} — strong fit for Display Glow / shelf pans (16:9 PDP).`
+            : zh
+              ? "未能读取像素尺寸 —— 正面、光线干净的照片仍适合任意配方。"
+              : "Could not read pixel size — a front-facing, well-lit shot still works for any recipe.",
     tone: "ok",
   });
 
   bullets.push({
     id: "fidelity",
-    text: "Fidelity checklist: sharp edges, clean paint splits, logo readable, plain or soft studio background. Soft/blurry photos lose sculpt detail in motion.",
+    text: zh
+      ? "保真清单：边缘锐利、漆面分隔干净、logo 可读、背景简洁。模糊照片会在运动中丢造型细节。"
+      : "Fidelity checklist: sharp edges, clean paint splits, logo readable, plain or soft studio background. Soft/blurry photos lose sculpt detail in motion.",
     tone: "tip",
   });
 
   if (input.identity.sku || input.identity.preserve) {
     bullets.push({
       id: "bible",
-      text: `Character bible draft active${
-        input.identity.sku ? ` · ${input.identity.sku}` : ""
-      }${
-        input.identity.preserve
-          ? ` · preserve: ${input.identity.preserve}`
-          : ""
-      }. Remakes will append this lock to the motion prompt.`,
+      text: zh
+        ? `角色圣经草案已启用${
+            input.identity.sku ? ` · ${input.identity.sku}` : ""
+          }${
+            input.identity.preserve
+              ? ` · 必保：${input.identity.preserve}`
+              : ""
+          }。重做时会写入运动提示词。`
+        : `Character bible draft active${
+            input.identity.sku ? ` · ${input.identity.sku}` : ""
+          }${
+            input.identity.preserve
+              ? ` · preserve: ${input.identity.preserve}`
+              : ""
+          }. Remakes will append this lock to the motion prompt.`,
       tone: "ok",
     });
   } else {
     bullets.push({
       id: "bible-empty",
-      text: "Optional character bible: name the SKU and list paint/logo lines to preserve — helps multi-clip consistency without cloud Soul ID.",
+      text: zh
+        ? "可选角色圣经：填写 SKU 与必保漆线/logo —— 多片一致，不是云端 Soul ID。"
+        : "Optional character bible: name the SKU and list paint/logo lines to preserve — helps multi-clip consistency without cloud Soul ID.",
       tone: "tip",
+    });
+  }
+
+  const angles = (input.fidelityAngles ?? []).filter(Boolean);
+  if (angles.length > 0 || input.hasSecondaryStill) {
+    bullets.push({
+      id: "refs",
+      text: zh
+        ? `保真参考（C-lite）：${
+            angles.length ? `角度 ${angles.join("、")}` : "未标角度"
+          }${
+            input.hasSecondaryStill
+              ? " · 已附第二张细节图（仅工作室预览，不送多图模型）"
+              : ""
+          }。不是真 Soul ID 训练。`
+        : `Fidelity refs (C-lite): ${
+            angles.length ? `angles ${angles.join(", ")}` : "no angles tagged"
+          }${
+            input.hasSecondaryStill
+              ? " · secondary detail still attached (client preview only, not multi-image model input)"
+              : ""
+          }. Not a true Soul ID train.`,
+      tone: "ok",
     });
   }
 
   bullets.push({
     id: "pack",
-    text: "Commercial default: Seller Pack (Launch Pack) = listing spin + box reveal + social hook from this still.",
+    text: zh
+      ? "商用默认：卖家三件套（上新包）= 上架旋转 + 开箱揭晓 + 社媒钩子，同一静图。"
+      : "Commercial default: Seller Pack (Launch Pack) = listing spin + box reveal + social hook from this still.",
     tone: "ok",
   });
 
@@ -248,32 +309,32 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
   if (shape === "square" || shape === "unknown") {
     recipes.push({
       slug: "360-spin-showcase",
-      label: "360° Spin",
-      reason: "Listing packshot",
+      label: zh ? "360° 旋转" : "360° Spin",
+      reason: zh ? "上架主图" : "Listing packshot",
     });
     recipes.push({
       slug: "floating-hero",
-      label: "Zero-G Float",
-      reason: "Hero / ad open",
+      label: zh ? "零重力漂浮" : "Zero-G Float",
+      reason: zh ? "主视觉 / 广告开场" : "Hero / ad open",
     });
   }
   if (shape === "portrait" || shape === "unknown") {
     recipes.push({
       slug: "blind-box-unboxing",
-      label: "Box Reveal",
-      reason: "Drop / restock",
+      label: zh ? "开箱揭晓" : "Box Reveal",
+      reason: zh ? "发售 / 补货" : "Drop / restock",
     });
     recipes.push({
       slug: "paparazzi-flash",
-      label: "Social Hook",
-      reason: "First-second feed",
+      label: zh ? "社媒钩子" : "Social Hook",
+      reason: zh ? "信息流前一秒" : "First-second feed",
     });
   }
   if (shape === "landscape" || shape === "unknown") {
     recipes.push({
       slug: "display-case-glam",
-      label: "Display Glow",
-      reason: "Shelf / PDP",
+      label: zh ? "陈列光感" : "Display Glow",
+      reason: zh ? "晒柜 / 详情页" : "Shelf / PDP",
     });
   }
   // Always ensure current effect is not the only option; cap 3 unique
@@ -284,7 +345,7 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
     return true;
   }).slice(0, 3);
 
-  const primaryRecipe = primaryRecipeForShape(shape);
+  const primaryRecipe = primaryRecipeForShape(shape, locale);
   // Ensure primary is always present in the chip list
   if (!seen.has(primaryRecipe.slug)) {
     unique.unshift(primaryRecipe);
@@ -301,10 +362,11 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
 
   return {
     ready: true,
-    title: "Creative Director · Asset Brief",
-    disclaimer:
-      "Rule-based brief from photo shape + product rules · not computer vision · review fidelity yourself.",
-    bullets: bullets.slice(0, 5),
+    title: zh ? "创意总监 · 资产简报" : "Creative Director · Asset Brief",
+    disclaimer: zh
+      ? "基于画幅 + 产品规则 · 非计算机视觉 · 请自行核对保真。"
+      : "Rule-based brief from photo shape + product rules · not computer vision · review fidelity yourself.",
+    bullets: bullets.slice(0, 6),
     recipes: unique.slice(0, 3),
     primaryRecipe,
     sellerPackHref,
