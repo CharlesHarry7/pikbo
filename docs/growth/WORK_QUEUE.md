@@ -8,6 +8,37 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ## OPEN · 立即执行
 
+### WQ-2026-07-27-02 · Vercel 发版 + 生产 SEO 验收 + 可选 GSC（替老板点）
+
+```yaml
+id: WQ-2026-07-27-02
+status: open
+priority: P0
+assignee: workbuddy
+created_by: grok-eng
+created_at: "2026-07-27T06:00:00Z"
+why: |
+  老板不会点 Vercel。生产仍 sitemap 9 + 长尾 noindex；main 已是 13 + 蓝海 TDH。
+  WorkBuddy 必须 Chrome/API 完成 Redeploy 并用线上 curl 验收。
+prompt: docs/growth/WORKBUDDY_DEPLOY_PROMPT.md
+command: |
+  严格按 WORKBUDDY_DEPLOY_PROMPT 全文执行：
+  pull → deploy prod → verify sitemap 13 + long-tail indexable → GSC if possible
+  → growth-auto --all → DEPLOY-*-report.md + push
+deliverables:
+  - docs/growth/runs/DEPLOY-<ts>-report.md
+  - screenshots under docs/growth/screenshots/deploy-*
+  - AGENT_STATE writer=workbuddy
+  - 本任务 status: done + result
+do_not:
+  - 问老板怎么点
+  - 假报 PASS
+result: |
+  (WB 填)
+```
+
+---
+
 ### WQ-2026-07-27-01 · 第二轮目录外链（优先 free）
 
 ```yaml
