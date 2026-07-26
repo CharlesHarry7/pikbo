@@ -4,6 +4,19 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] T6 hard gate: bind Free derivative to job identity
+- Free live download no longer trusts free-floating derivative metadata. Gate
+  requires `canServeVerifiedT6Derivative({ jobId, providerRequestId, derivative })`:
+  exact idempotencyKey/objectKey/deliveryPath, distinct checksums, baked-mark
+  probe, **and** `t6DeliveryReadiness` (env + IMPLEMENTED + serving + storage;
+  serving/storage stay hard-false).
+- `downloadAllowedForJob` / `publicVideoUrlForJob` / `/api/downloads` pass
+  `jobId` + `providerRequestId`. `updateJob` recomputes when `bakedDerivative`
+  or `requestId` attaches.
+- Worker rejects foreign terminal rows with `DERIVATIVE_IDENTITY_MISMATCH`.
+  Fixture imports production `lib/t6Worker.ts` via `--experimental-strip-types`.
+- Verified: engine-smoke PASS · tsc PASS · t6 fixture PASS.
+
 ### 2026-07-26 — [grok] Create first-run conversion (Phase F 390px)
 - Mobile Create path is three steps: Upload → Choose recipe → Generate.
 - Model/mode strip, ActivationChecklist, WorkflowShelf, and JobIntentBar are
