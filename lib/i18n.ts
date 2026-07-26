@@ -279,6 +279,21 @@ const en: Dict = {
   "job.seller": "Seller Pack · Launch",
   "job.seller.blurb": "Default path: listing + reveal + hook",
 
+  "brief.title": "Creative Director · Asset Brief",
+  "brief.disclaimer":
+    "Rule-based from photo shape + product rules · not computer vision",
+  "brief.expand": "Expand",
+  "brief.collapse": "Collapse",
+  "brief.collapsedHint": "brief ready · expand to edit bible",
+  "brief.tryRecipes": "Suggested recipes",
+  "brief.sellerPack": "Seller Pack · Launch",
+  "brief.sellerPack.sub": "3 commercial clips",
+  "brief.bible": "Character bible · draft",
+  "brief.bible.hint":
+    "Optional SKU + preserve notes. Locked into remakes — not cloud Soul ID.",
+  "brief.sku.ph": "e.g. Scout pink #3",
+  "brief.preserve.ph": "paint lines, logo, sculpt",
+
   "activation.title": "First clip",
   "activation.hide": "Hide",
   "activation.pickJob": "Pick a job",
@@ -553,6 +568,20 @@ const zh: Dict = {
   "job.shelf.blurb": "干净晒柜 / 展柜 · 藏家与详情页",
   "job.seller": "卖家三件套 · 上新包",
   "job.seller.blurb": "默认路径：上架 + 揭晓 + 钩子",
+
+  "brief.title": "创意总监 · 资产简报",
+  "brief.disclaimer": "基于照片画幅 + 产品规则 · 非云端识图",
+  "brief.expand": "展开",
+  "brief.collapse": "收起",
+  "brief.collapsedHint": "简报已就绪 · 展开可编辑角色圣经",
+  "brief.tryRecipes": "推荐配方",
+  "brief.sellerPack": "卖家三件套 · 上新包",
+  "brief.sellerPack.sub": "3 条商用成片",
+  "brief.bible": "角色圣经 · 草案",
+  "brief.bible.hint":
+    "可选 SKU + 必保细节。会写入重做提示词 —— 不是云端 Soul ID。",
+  "brief.sku.ph": "例：Scout 粉色 #3",
+  "brief.preserve.ph": "漆线、logo、造型",
 
   "activation.title": "第一条成片",
   "activation.hide": "隐藏",

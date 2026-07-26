@@ -48,8 +48,14 @@ import {
 } from "@/lib/createTrust";
 import { track } from "@/lib/analytics";
 import { JobIntentBar } from "@/components/JobIntentBar";
+import { AssetBriefPanel } from "@/components/AssetBriefPanel";
 import { WorkflowShelf } from "@/components/WorkflowShelf";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
+import {
+  buildAssetBrief,
+  probeImageSize,
+  type ImageProbe,
+} from "@/lib/assetBrief";
 import {
   ActivationChecklist,
   markActivationJob,
@@ -193,6 +199,11 @@ export function CreateStudio({
   const [image, setImage] = useState<string | null>(null);
   /** Phase D local asset id — generate prefers assetId over re-posting Base64. */
   const [assetId, setAssetId] = useState<string | null>(null);
+  /** CD Phase B — natural size for rule-based Asset Brief */
+  const [imageProbe, setImageProbe] = useState<ImageProbe | null>(null);
+  /** True when still is official Lab sample (not customer SKU) */
+  const [labStill, setLabStill] = useState(false);
+  const [briefCollapsed, setBriefCollapsed] = useState(false);
   const [extra, setExtra] = useState(initialPrompt ?? "");
   /** Optional SKU lock — first principles, not Character/Soul cloud */
   const [toyIdentity, setToyIdentity] = useState<ToyIdentity>({
@@ -328,7 +339,7 @@ export function CreateStudio({
     setError(null);
     try {
       const data = await sampleToDataUrl(s.path);
-      await adoptImage(data);
+      await adoptImage(data, { labSample: true });
       selectEffect(s.effect);
       // Official Pikbo Lab stills — product-owned samples, not a visitor upload.
       setOwnsRights(true);
@@ -453,15 +464,22 @@ export function CreateStudio({
   }, [refreshSession]);
 
   const adoptImage = useCallback(
-    async (dataUrl: string) => {
+    async (dataUrl: string, opts?: { labSample?: boolean }) => {
       setImage(dataUrl);
       setAssetId(null);
+      setImageProbe(null);
+      setLabStill(Boolean(opts?.labSample));
+      setBriefCollapsed(false);
       setError(null);
       track({
         event: "upload_ready",
         path: "/create",
         recipe: effect,
-        meta: { bytes: dataUrl.length },
+        meta: { bytes: dataUrl.length, lab: Boolean(opts?.labSample) },
+      });
+      // Geometry for Asset Brief (rule-based, not vision).
+      void probeImageSize(dataUrl).then((meta) => {
+        if (meta) setImageProbe(meta);
       });
       // Register into process-memory asset store so generate can skip large JSON.
       try {
@@ -1121,6 +1139,19 @@ export function CreateStudio({
     });
   }
 
+  const assetBrief = useMemo(
+    () =>
+      buildAssetBrief({
+        hasImage: Boolean(image),
+        probe: imageProbe,
+        effect,
+        jobId: jobIntentId,
+        identity: toyIdentity,
+        labSample: labStill,
+      }),
+    [image, imageProbe, effect, jobIntentId, toyIdentity, labStill]
+  );
+
   /** Yiha/lego mini-app pick: prefill Create without full remount when possible */
   function applyWorkflow(w: Workflow) {
     if (w.href.includes("mode=seller-pack")) {
@@ -1539,6 +1570,8 @@ export function CreateStudio({
                   onClick={() => {
                     setImage(null);
                     setAssetId(null);
+                    setImageProbe(null);
+                    setLabStill(false);
                   }}
                 >
                   {t("create.replace")}
@@ -1587,6 +1620,26 @@ export function CreateStudio({
                 onChange={onFile}
               />
             </label>
+            {/* CD Phase B: Asset Brief + character bible draft after photo lands */}
+            {image && assetBrief.ready ? (
+              <AssetBriefPanel
+                className="mt-3"
+                brief={assetBrief}
+                identity={toyIdentity}
+                onIdentityPatch={updateToyIdentity}
+                onPickRecipe={(slug) => {
+                  selectEffect(slug);
+                  track({
+                    event: "recipe_use",
+                    path: "/create",
+                    recipe: slug,
+                    meta: { source: "asset_brief" },
+                  });
+                }}
+                collapsed={briefCollapsed}
+                onToggle={() => setBriefCollapsed((v) => !v)}
+              />
+            ) : null}
             {/* Lab samples live after recipe (Phase F first-run order). */}
           </div>
 

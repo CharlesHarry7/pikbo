@@ -4,6 +4,16 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] CD Phase B: Asset Brief + character bible draft
+- `lib/assetBrief.ts`: pure `buildAssetBrief` + `probeImageSize` (geometry only;
+  disclaimer: not computer vision).
+- `AssetBriefPanel`: post-upload brief bullets, suggested recipes, Seller Pack
+  CTA, editable SKU/preserve bible (`data-asset-brief=cd-phase-b`).
+- CreateStudio: probe on adoptImage; Lab samples flagged; brief after photo;
+  identity still locks via `composeExtraWithIdentity`.
+- North star §6 Phase B marked; i18n brief chrome EN/ZH; engine-smoke locks.
+- No vision API · no SEO pages · no Stripe · no Wave C.
+
 ### 2026-07-26 — [grok] residual Flow · Preview on suite shelves
 - Effects / tools / guides / apps / models / onboarding / PricingHero /
   SeedanceCampaign / WorkflowShelf: product CTAs first; Flow labeled Preview.
