@@ -146,8 +146,11 @@ export function requestCreditStateFromFailure(result: {
     result.status === 0 ||
     result.code === "NETWORK_ERROR" ||
     result.code === "REQUEST_CANCELED" ||
+    // Ledger cancel (soft-launch) — debit may be ambiguous until balance confirms.
+    result.code === "CANCELED" ||
     // Process-memory ledger TIMEOUT (kill mid-flight) — never claim restored.
-    result.code === "TIMEOUT"
+    result.code === "TIMEOUT" ||
+    result.code === "PROVIDER_TIMEOUT"
   ) {
     return "refund unconfirmed";
   }
@@ -224,6 +227,127 @@ export function downloadBlockedCtaLabel(opts: {
     return "Download blocked · unsafe URL";
   }
   return "Download held · T6 bake";
+}
+
+
+/**
+ * Classify HEAD /api/downloads/{id} for honest client toasts.
+ * Pure — shared by Create / Landing / Library / history (Phase D gate honesty).
+ */
+export type DownloadHeadGate =
+  | { kind: "allow" }
+  | { kind: "block"; message: string }
+  | { kind: "not_found"; message: string }
+  | { kind: "unknown" };
+
+export function classifyDownloadHead(opts: {
+  status: number;
+  code?: string | null;
+  t6Mode?: string | null;
+}): DownloadHeadGate {
+  const code = (opts.code || "").trim();
+  const status = opts.status;
+  if (status === 403 || code === "DOWNLOAD_BLOCKED") {
+    return {
+      kind: "block",
+      message:
+        opts.t6Mode === "bake_on_download"
+          ? "Free Mini needs watermark bake — worker may be down. Upgrade for a clean file."
+          : freeLiveDownloadBlockReason(),
+    };
+  }
+  if (status === 404 || code === "NOT_FOUND") {
+    return {
+      kind: "not_found",
+      message:
+        "Session job not on this server process — try remake or open Library recovery",
+    };
+  }
+  if (code === "CANCELED") {
+    return {
+      kind: "block",
+      message:
+        "Job canceled — no file. Check balance if live debit is unconfirmed.",
+    };
+  }
+  if (code === "JOB_IN_FLIGHT") {
+    return {
+      kind: "block",
+      message: "Still generating — download unlocks after success",
+    };
+  }
+  if (code === "TIMEOUT" || code === "PROVIDER_TIMEOUT" || status === 504) {
+    return {
+      kind: "block",
+      message:
+        "Job timed out — no file. Check balance (refund may be unconfirmed).",
+    };
+  }
+  if (code === "GENERATION_FAILED") {
+    return {
+      kind: "block",
+      message:
+        "Job failed — no deliverable. Check balance if refund is unconfirmed.",
+    };
+  }
+  if (status === 409 || code === "NOT_READY") {
+    return {
+      kind: "block",
+      message: "Deliverable not ready yet — refresh or remake",
+    };
+  }
+  if (status === 422 || code === "UNSAFE_URL") {
+    return {
+      kind: "block",
+      message: "Unsafe deliverable URL — download blocked",
+    };
+  }
+  if (status >= 200 && status < 300) {
+    return { kind: "allow" };
+  }
+  return { kind: "unknown" };
+}
+
+/**
+ * Action-oriented view of classifyDownloadHead for Library / Create / Landing.
+ * allow | block | fallthrough (404 / process-memory miss).
+ */
+export type DownloadHeadDecision =
+  | { action: "allow" }
+  | { action: "block"; code: string; toast: string }
+  | { action: "fallthrough"; code: string; toast?: string };
+
+export function interpretDownloadHead(input: {
+  status: number;
+  code?: string | null;
+  t6Mode?: string | null;
+}): DownloadHeadDecision {
+  const code = (input.code || "").trim();
+  const gate = classifyDownloadHead({
+    status: input.status,
+    code,
+    t6Mode: input.t6Mode,
+  });
+  if (gate.kind === "allow") return { action: "allow" };
+  if (gate.kind === "not_found") {
+    return {
+      action: "fallthrough",
+      code: code || "NOT_FOUND",
+      toast: gate.message,
+    };
+  }
+  if (gate.kind === "block") {
+    return {
+      action: "block",
+      code: code || "BLOCKED",
+      toast: gate.message,
+    };
+  }
+  return {
+    action: "block",
+    code: code || `HTTP_${input.status}`,
+    toast: "Download gate refused — try again or remake",
+  };
 }
 
 /**

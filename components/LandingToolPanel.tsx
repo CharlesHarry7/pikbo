@@ -31,6 +31,7 @@ import {
   downloadBlockedCtaLabel,
   downloadPolicyLabel,
   freeLiveDownloadBlockReason,
+  classifyDownloadHead,
   isPlayableResultVideoUrl,
   isSafeDeliverableUrl,
   requestCreditStateFromFailure,
@@ -137,6 +138,65 @@ export function LandingToolPanel({
     toast(
       "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"
     );
+  }
+
+  /** HEAD gate before open — canceled/timeout/in-flight never open a dead tab. */
+  async function downloadLandingResult() {
+    if (!downloadAllowed) {
+      toast(freeLiveDownloadBlockReason());
+      return;
+    }
+    if (requestId) {
+      const gateUrl = `/api/downloads/${encodeURIComponent(requestId)}`;
+      try {
+        const head = await fetch(gateUrl, { method: "HEAD" });
+        const decision = classifyDownloadHead({
+          status: head.status,
+          code: head.headers.get("X-Pikbo-Download-Code") || "",
+          t6Mode: head.headers.get("X-Pikbo-T6"),
+        });
+        if (decision.kind === "block") {
+          toast(decision.message);
+          return;
+        }
+        if (decision.kind === "allow") {
+          track({
+            event: "export_click",
+            path: `/effects/${effectSlug}`,
+            recipe: effectSlug,
+            demo: Boolean(demo),
+            meta: {
+              via: "downloads_api",
+              source: "landing",
+              head: "allowed",
+            },
+          });
+          window.open(gateUrl, "_blank", "noopener,noreferrer");
+          toast("Download via server gate…");
+          return;
+        }
+        if (decision.kind === "not_found" && decision.message) {
+          toast(decision.message);
+        }
+      } catch {
+        /* fall through */
+      }
+    }
+    if (videoUrl && isSafeDeliverableUrl(videoUrl)) {
+      track({
+        event: "export_click",
+        path: `/effects/${effectSlug}`,
+        recipe: effectSlug,
+        demo: Boolean(demo),
+        meta: {
+          via: requestId ? "direct_after_gate" : "direct",
+          source: "landing",
+        },
+      });
+      window.open(videoUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    toast("No safe download URL for this result");
   }
 
   useEffect(() => {
@@ -776,33 +836,14 @@ export function LandingToolPanel({
                 {downloadAllowed &&
                 (requestId ||
                   (videoUrl && isSafeDeliverableUrl(videoUrl))) ? (
-                  <a
-                    href={
-                      requestId
-                        ? `/api/downloads/${encodeURIComponent(requestId)}`
-                        : videoUrl!
-                    }
-                    download={
-                      requestId ? undefined : `pikbo-${effectSlug}.mp4`
-                    }
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    type="button"
+                    data-landing-download="gated"
                     className="btn btn-primary px-3 py-1.5 text-xs"
-                    onClick={() =>
-                      track({
-                        event: "export_click",
-                        path: `/effects/${effectSlug}`,
-                        recipe: effectSlug,
-                        demo: Boolean(demo),
-                        meta: {
-                          via: requestId ? "downloads_api" : "direct",
-                          source: "landing",
-                        },
-                      })
-                    }
+                    onClick={() => void downloadLandingResult()}
                   >
                     Download
-                  </a>
+                  </button>
                 ) : (
                   <button
                     type="button"

@@ -4,6 +4,7 @@ import {
   canDownloadResult,
   freeLiveDownloadBlockReason,
   isSafeDeliverableUrl,
+  classifyDownloadHead,
 } from "@/lib/createTrust";
 import { resultProvenanceLabel } from "@/lib/provenance";
 
@@ -254,8 +255,30 @@ export function remoteClipMayExpire(item: {
 export async function downloadVideoFile(
   url: string,
   filename: string
-): Promise<"ok" | "fallback" | "fail" | "unsafe"> {
+): Promise<"ok" | "fallback" | "fail" | "unsafe" | "blocked"> {
   if (!isSafeDeliverableUrl(url)) return "unsafe";
+  // Controlled gate: HEAD first so cancel/timeout never blob-fetch 409 JSON.
+  if (
+    url.startsWith("/api/downloads/") ||
+    url.includes("/api/downloads/")
+  ) {
+    try {
+      const head = await fetch(url, { method: "HEAD" });
+      const gate = classifyDownloadHead({
+        status: head.status,
+        code: head.headers.get("X-Pikbo-Download-Code") || "",
+        t6Mode: head.headers.get("X-Pikbo-T6"),
+      });
+      if (gate.kind === "block" || gate.kind === "not_found") {
+        return "blocked";
+      }
+      if (gate.kind !== "allow" && !head.ok) {
+        return "blocked";
+      }
+    } catch {
+      /* network — continue to GET attempt */
+    }
+  }
   const ctrl = new AbortController();
   const timer = window.setTimeout(() => ctrl.abort(), 45_000);
   try {

@@ -147,9 +147,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- Download gate honesty: CANCELED / JOB_IN_FLIGHT / TIMEOUT codes + Library toasts.
-- imageJobs byStatus zero-fill · health.product cancel/download paths.
+- Shared classifyDownloadHead: Create/Library/history HEAD gate (cancel/timeout/T6).
+- Batch multi-save counts blocked; softlive product cancel paths; CANCELED settlement.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 

@@ -35,6 +35,7 @@ import {
   canDownloadResult,
   downloadBlockedCtaLabel,
   downloadPolicyLabel,
+  classifyDownloadHead,
   isPlayableResultVideoUrl,
   freeLiveDownloadBlockReason,
   internSourceImage,
@@ -1006,6 +1007,67 @@ export function CreateStudio({
     demo: Boolean(activeVersion?.demo ?? demo),
     watermark: Boolean(activeVersion?.watermark ?? watermark),
   });
+
+  /**
+   * Phase D: HEAD /api/downloads first when we have a job/request id so
+   * canceled/timeout/in-flight never open a dead tab (Library parity).
+   */
+  async function downloadActiveResult() {
+    if (!downloadAllowed) {
+      toast(freeLiveDownloadBlockReason());
+      return;
+    }
+    const requestId = activeVersion?.requestId;
+    if (requestId) {
+      const gateUrl = `/api/downloads/${encodeURIComponent(requestId)}`;
+      try {
+        const head = await fetch(gateUrl, { method: "HEAD" });
+        const decision = classifyDownloadHead({
+          status: head.status,
+          code: head.headers.get("X-Pikbo-Download-Code") || "",
+          t6Mode: head.headers.get("X-Pikbo-T6"),
+        });
+        if (decision.kind === "block") {
+          toast(decision.message);
+          return;
+        }
+        if (decision.kind === "allow") {
+          markActivationShared();
+          track({
+            event: "export_click",
+            path: "/create",
+            recipe: activeVersion?.effect || effect,
+            demo: Boolean(demo),
+            meta: { via: "downloads_api", head: "allowed" },
+          });
+          window.open(gateUrl, "_blank", "noopener,noreferrer");
+          toast("Download via server gate…");
+          return;
+        }
+        if (decision.kind === "not_found" && decision.message) {
+          toast(decision.message);
+          // Fall through only when a safe demo/paid URL exists.
+        }
+      } catch {
+        /* network — try direct below when safe */
+      }
+    }
+    if (videoUrl && isSafeDeliverableUrl(videoUrl)) {
+      markActivationShared();
+      track({
+        event: "export_click",
+        path: "/create",
+        recipe: activeVersion?.effect || effect,
+        demo: Boolean(demo),
+        meta: {
+          via: requestId ? "direct_after_gate" : "direct",
+        },
+      });
+      window.open(videoUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    toast("No safe download URL for this result");
+  }
 
   function shareX() {
     if (!videoUrl) return;
@@ -2578,37 +2640,14 @@ export function CreateStudio({
                   {downloadAllowed &&
                   (activeVersion?.requestId ||
                     (videoUrl && isSafeDeliverableUrl(videoUrl))) ? (
-                    <a
-                      href={
-                        activeVersion?.requestId
-                          ? `/api/downloads/${encodeURIComponent(activeVersion.requestId)}`
-                          : videoUrl!
-                      }
-                      download={
-                        activeVersion?.requestId
-                          ? undefined
-                          : `pikbo-${activeVersion?.effect || effect}.mp4`
-                      }
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      data-create-download="gated"
                       className="btn btn-primary w-full max-w-sm px-6 py-3.5 text-sm font-black tracking-tight sm:w-auto sm:min-w-[14rem]"
-                      onClick={() => {
-                        markActivationShared();
-                        track({
-                          event: "export_click",
-                          path: "/create",
-                          recipe: activeVersion?.effect || effect,
-                          demo: Boolean(demo),
-                          meta: {
-                            via: activeVersion?.requestId
-                              ? "downloads_api"
-                              : "direct",
-                          },
-                        });
-                      }}
+                      onClick={() => void downloadActiveResult()}
                     >
                       {t("create.download")}
-                    </a>
+                    </button>
                   ) : downloadAllowed ? (
                     <button
                       type="button"

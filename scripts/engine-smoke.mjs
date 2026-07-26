@@ -2286,8 +2286,15 @@ assert.match(downloadRouteSrc, /bakedDerivative|owned derivative|Verified owned/
 assert.match(downloadRouteSrc, /code:\s*["']CANCELED["']/);
 assert.match(downloadRouteSrc, /code:\s*["']JOB_IN_FLIGHT["']/);
 assert.match(downloadRouteSrc, /X-Pikbo-Job-Status/);
-assert.match(library, /code === ["']CANCELED["']|Job canceled/);
-assert.match(library, /JOB_IN_FLIGHT|Still generating/);
+assert.match(library, /interpretDownloadHead|classifyDownloadHead/);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /Job canceled/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /JOB_IN_FLIGHT|Still generating/
+);
 // imageJobs probe always includes canceled key (inline — imageJobsLib loads later)
 assert.match(
   fs.readFileSync(join(root, "lib/imageJobs.ts"), "utf8"),
@@ -2450,6 +2457,45 @@ assert.match(
   /PRIVATE_ROBOTS/
 );
 assert.match(health, /probeSupabase|auth:\s*\{/);
+// Shared download HEAD classifier (Create/Library/history)
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /export function classifyDownloadHead/
+);
+assert.match(
+  createTrust,
+  /export function interpretDownloadHead/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /code === ["']CANCELED["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
+  /interpretDownloadHead|classifyDownloadHead|downloadActiveResult/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /interpretDownloadHead|classifyDownloadHead/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/history.ts"), "utf8"),
+  /classifyDownloadHead|["']blocked["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /code === ["']CANCELED["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /code === ["']CANCELED["'] \|\|/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /PROVIDER_TIMEOUT/
+);
+
+
 
 // Signed-in durable shadow on generate + me enrichment
 const durableIdx = fs.readFileSync(

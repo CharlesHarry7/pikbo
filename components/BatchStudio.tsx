@@ -1017,19 +1017,23 @@ export function BatchStudio({
     try {
       let ok = 0;
       let fallback = 0;
+      let blocked = 0;
       for (let i = 0; i < targets.length; i++) {
         const t = targets[i];
         const result = await downloadVideoFile(t.href, t.filename);
         if (result === "ok") ok += 1;
         else if (result === "fallback") fallback += 1;
-        // "unsafe" / "fail" stay uncounted — never claim multi-download success
+        else if (result === "blocked" || result === "unsafe") blocked += 1;
+        // "fail" stays uncounted — never claim multi-download success
         if (i < targets.length - 1) {
           await sleep(350);
         }
       }
       if (ok + fallback === 0) {
         setError(
-          "Could not download available clips — blocked, unsafe URL, or expired. Try each child Download link."
+          blocked > 0
+            ? "Could not download — gate blocked (T6/canceled/timeout/unsafe). Try each child Download link."
+            : "Could not download available clips — blocked, unsafe URL, or expired. Try each child Download link."
         );
       } else if (fallback > 0 && ok === 0) {
         setError(null);

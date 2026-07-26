@@ -73,6 +73,18 @@ print("ready=", h.get("ready"))
 print("rateLimit=", h.get("rateLimit"))
 print("assets=", h.get("assets"))
 print("jobs=", h.get("jobs"))
+print("imageJobs=", h.get("imageJobs"))
+product=h.get("product") or {}
+if product:
+    print(
+        "product primary=", product.get("primary"),
+        "cancelGenerate=", product.get("cancelGenerate"),
+        "cancelImage=", product.get("cancelImage"),
+        "downloadGate=", product.get("downloadGate"),
+    )
+bs=(h.get("jobs") or {}).get("byStatus") or {}
+if "canceled" in bs:
+    print("jobs.byStatus.canceled=", bs.get("canceled"))
 print("demos=", h.get("demos"))
 print("community=", h.get("community"))
 print("videoWebhook=", h.get("videoWebhook"))

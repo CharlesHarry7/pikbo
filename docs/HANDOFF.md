@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Shared download HEAD classifier + pack multi-save gate
+- `classifyDownloadHead` pure helper (CANCELED · JOB_IN_FLIGHT · TIMEOUT · T6).
+- Create `downloadActiveResult` HEAD-first; Library uses shared classifier.
+- `downloadVideoFile` HEADs `/api/downloads/*` → `blocked` (no blob 409 JSON).
+- Batch multi-download counts blocked; softlive prints product cancel/download paths.
+- `requestCreditStateFromFailure` treats CANCELED / PROVIDER_TIMEOUT as unconfirmed.
+- Verified: typecheck · engine-smoke · lint 0 errors.
+
 ### 2026-07-26 — [grok] Download gate status honesty (CANCELED/TIMEOUT/IN_FLIGHT)
 - `/api/downloads`: non-success jobs return typed codes (CANCELED · JOB_IN_FLIGHT ·
   TIMEOUT · GENERATION_FAILED) instead of blanket NOT_READY; HEAD `X-Pikbo-Job-Status`.

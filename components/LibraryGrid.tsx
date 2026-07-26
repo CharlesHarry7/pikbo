@@ -17,6 +17,7 @@ import {
 import { createRemixHref } from "@/lib/remixIntent";
 import {
   freeLiveDownloadBlockReason,
+  interpretDownloadHead,
   isPlayableResultVideoUrl,
   isSafeDeliverableUrl,
 } from "@/lib/createTrust";
@@ -560,45 +561,19 @@ export function LibraryGrid() {
       const gateUrl = `/api/downloads/${encodeURIComponent(item.requestId)}`;
       try {
         const head = await fetch(gateUrl, { method: "HEAD" });
-        const code = head.headers.get("X-Pikbo-Download-Code") || "";
-        const t6Mode = head.headers.get("X-Pikbo-T6") || "";
-        if (head.status === 403 || code === "DOWNLOAD_BLOCKED") {
-          toast(
-            t6Mode === "bake_on_download"
-              ? "Free Mini needs watermark bake — worker may be down. Upgrade for a clean file."
-              : historyDownloadBlockReason()
-          );
+        const decision = interpretDownloadHead({
+          status: head.status,
+          code: head.headers.get("X-Pikbo-Download-Code"),
+          t6Mode: head.headers.get("X-Pikbo-T6"),
+        });
+        if (decision.action === "block") {
+          toast(decision.toast);
           return;
         }
-        if (head.status === 404 || code === "NOT_FOUND") {
-          toast(
-            "Session job not on this server process — try direct open or remake"
-          );
+        if (decision.action === "fallthrough") {
+          if (decision.toast) toast(decision.toast);
           // Fall through to direct only for demos/paid with a known URL.
-        } else if (code === "CANCELED") {
-          toast(
-            "Job canceled — no file. Check balance if live debit is unconfirmed."
-          );
-          return;
-        } else if (code === "JOB_IN_FLIGHT") {
-          toast("Still generating — download unlocks after success");
-          return;
-        } else if (
-          code === "TIMEOUT" ||
-          code === "PROVIDER_TIMEOUT" ||
-          head.status === 504
-        ) {
-          toast(
-            "Job timed out — no file. Check balance (refund may be unconfirmed)."
-          );
-          return;
-        } else if (head.status === 409 || code === "NOT_READY") {
-          toast("Deliverable not ready yet — refresh session jobs");
-          return;
-        } else if (head.status === 422 || code === "UNSAFE_URL") {
-          toast("Unsafe deliverable URL — download blocked");
-          return;
-        } else if (head.ok) {
+        } else if (decision.action === "allow") {
           track({
             event: "export_click",
             path: "/library",
