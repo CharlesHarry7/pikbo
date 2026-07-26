@@ -4752,5 +4752,75 @@ assert.match(
   /from ["']@\/lib\/createTrust["']/
 );
 
+// Fail ledger settlement: generate failSync + image failImage use shared map
+const createTrustLedger = fs.readFileSync(
+  join(root, "lib/createTrust.ts"),
+  "utf8"
+);
+assert.match(createTrustLedger, /export function failedLedgerCreditsOutcome/);
+assert.match(createTrustLedger, /export function isAmbiguousDebitFailureCode/);
+assert.match(
+  fs.readFileSync(join(root, "lib/generationJobs/store.ts"), "utf8"),
+  /failedLedgerCreditsOutcome/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageJobs.ts"), "utf8"),
+  /failedLedgerCreditsOutcome/
+);
+// Pure map (mirrors createTrust.failedLedgerCreditsOutcome)
+function failedLedgerCreditsOutcomePure(opts) {
+  if (opts.creditsRefunded === true) return "10 restored";
+  const code = opts.errorCode;
+  const ambiguous =
+    opts.refundUnconfirmed === true ||
+    code === "NETWORK_ERROR" ||
+    code === "PROVIDER_NETWORK" ||
+    code === "REQUEST_CANCELED" ||
+    code === "CANCELED" ||
+    code === "TIMEOUT" ||
+    code === "PROVIDER_TIMEOUT" ||
+    code === "UNSAFE_URL" ||
+    code === "CONTENT_POLICY" ||
+    code === "MODEL_EMPTY";
+  if (ambiguous) return "refund unconfirmed";
+  return undefined;
+}
+assert.equal(
+  failedLedgerCreditsOutcomePure({
+    creditsRefunded: true,
+    errorCode: "CONTENT_POLICY",
+  }),
+  "10 restored"
+);
+assert.equal(
+  failedLedgerCreditsOutcomePure({ errorCode: "PROVIDER_NETWORK" }),
+  "refund unconfirmed"
+);
+assert.equal(
+  failedLedgerCreditsOutcomePure({ errorCode: "MODEL_EMPTY" }),
+  "refund unconfirmed"
+);
+assert.equal(
+  failedLedgerCreditsOutcomePure({ errorCode: "GENERATION_FAILED" }),
+  undefined
+);
+// Library session jobs: broader unconfirmed codes + Lab sample door
+const librarySessionHonesty = fs.readFileSync(
+  join(root, "components/LibraryGrid.tsx"),
+  "utf8"
+);
+assert.match(librarySessionHonesty, /PROVIDER_NETWORK/);
+assert.match(librarySessionHonesty, /MODEL_EMPTY/);
+assert.match(librarySessionHonesty, /data-session-lab=["']sample["']/);
+// Clients: MODEL_EMPTY on typed error body (not only empty 200)
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /code === ["']MODEL_EMPTY["'] && !creditsRefunded/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /code === ["']MODEL_EMPTY["'] && !creditsRefunded/
+);
+
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

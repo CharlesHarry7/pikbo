@@ -4,6 +4,8 @@
  * Not multi-node durable — Vercel multi-instance needs Redis/Supabase later.
  */
 
+import { failedLedgerCreditsOutcome } from "@/lib/createTrust";
+
 export type ImageJobStatus = "running" | "succeeded" | "failed" | "canceled";
 
 export type ImageJob = {
@@ -363,11 +365,12 @@ export function failImageJob(input: {
       ? findImageJobByIdempotencyKey(input.sessionId, input.idempotencyKey)
       : undefined);
 
-  const creditsOutcome: ImageJob["creditsOutcome"] = input.creditsRefunded
-    ? "10 restored"
-    : input.refundUnconfirmed
-      ? "refund unconfirmed"
-      : undefined;
+  // Shared with generate failSync — restored vs refund unconfirmed by code.
+  const creditsOutcome = failedLedgerCreditsOutcome({
+    creditsRefunded: input.creditsRefunded,
+    refundUnconfirmed: input.refundUnconfirmed,
+    errorCode: input.errorCode,
+  });
 
   if (existing && existing.sessionId === input.sessionId) {
     // Respect ledger cancel — do not overwrite canceled with failed.

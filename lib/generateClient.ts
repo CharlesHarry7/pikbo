@@ -165,7 +165,9 @@ export function interpretGenerateResponse(
     code === "PROVIDER_TIMEOUT" ||
     // Provider returned unusable URL after a live attempt may have debited.
     (code === "UNSAFE_URL" && !creditsRefunded) ||
-    (code === "CONTENT_POLICY" && !creditsRefunded);
+    (code === "CONTENT_POLICY" && !creditsRefunded) ||
+    // Empty clip after live attempt — same ambiguity as UNSAFE_URL (createTrust).
+    (code === "MODEL_EMPTY" && !creditsRefunded);
   if (
     refundUnconfirmed &&
     !creditsRefunded &&

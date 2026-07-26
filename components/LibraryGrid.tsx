@@ -229,22 +229,34 @@ function SessionJobsPanel({
                 {j.resolution ? ` · ${j.resolution}` : ""}
                 {j.model ? ` · ${j.model.split("/").pop()}` : ""}
                 {j.watermark ? " · on-player mark" : ""}
-                {j.creditsRefunded === true
+                {j.creditsRefunded === true ||
+                j.creditsOutcome === "10 restored"
                   ? " · 10 restored"
                   : j.creditsOutcome === "refund unconfirmed" ||
+                      j.status === "canceled" ||
                       j.errorCode === "TIMEOUT" ||
+                      j.errorCode === "PROVIDER_TIMEOUT" ||
+                      j.errorCode === "PROVIDER_NETWORK" ||
                       j.errorCode === "CANCELED" ||
-                      j.status === "canceled"
+                      j.errorCode === "REQUEST_CANCELED" ||
+                      j.errorCode === "UNSAFE_URL" ||
+                      j.errorCode === "CONTENT_POLICY" ||
+                      j.errorCode === "MODEL_EMPTY"
                     ? " · refund unconfirmed"
                     : ""}
               </p>
               {j.error || j.status === "canceled" ? (
                 <p className="mt-0.5 truncate text-[10px] text-amber-100/80">
-                  {j.errorCode === "TIMEOUT"
+                  {j.errorCode === "TIMEOUT" ||
+                  j.errorCode === "PROVIDER_TIMEOUT"
                     ? "Timed out — Retry on Create (mint new attempt). Check balance if credits were debited."
-                    : j.status === "canceled" || j.errorCode === "CANCELED"
+                    : j.status === "canceled" ||
+                        j.errorCode === "CANCELED" ||
+                        j.errorCode === "REQUEST_CANCELED"
                       ? "Canceled — Retry mints a new attempt. Check balance if live debit is unconfirmed."
-                      : j.error}
+                      : j.errorCode === "PROVIDER_NETWORK"
+                        ? "Provider network blip — Retry on Create. Check balance if debit is unconfirmed."
+                        : j.error}
                 </p>
               ) : null}
             </div>
@@ -277,12 +289,21 @@ function SessionJobsPanel({
                 </button>
               ) : null}
               {(j.status === "failed" || j.status === "canceled") &&
-              (j.errorCode === "TIMEOUT" ||
-                j.creditsOutcome === "refund unconfirmed") ? (
+              (j.creditsOutcome === "refund unconfirmed" ||
+                j.errorCode === "TIMEOUT" ||
+                j.errorCode === "PROVIDER_TIMEOUT" ||
+                j.errorCode === "PROVIDER_NETWORK" ||
+                j.errorCode === "CONTENT_POLICY" ||
+                j.errorCode === "UNSAFE_URL" ||
+                j.errorCode === "MODEL_EMPTY" ||
+                j.errorCode === "CANCELED" ||
+                j.errorCode === "REQUEST_CANCELED" ||
+                j.status === "canceled") ? (
                 <Link
                   href="/create?try=1&sample=scout"
                   className="text-white/55 hover:text-white hover:underline"
                   title="Lab sample · 0 credits if live is blocked"
+                  data-session-lab="sample"
                 >
                   Lab sample
                 </Link>

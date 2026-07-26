@@ -128,6 +128,46 @@ export function resolveSpecImage(
 }
 
 /**
+ * Error codes that imply debit ambiguity after a live attempt.
+ * Shared by client FailPanel + process-memory job ledgers (generate/image).
+ * Confirmed restore always wins via creditsRefunded.
+ */
+export function isAmbiguousDebitFailureCode(code?: string | null): boolean {
+  if (!code) return false;
+  return (
+    code === "NETWORK_ERROR" ||
+    code === "PROVIDER_NETWORK" ||
+    code === "REQUEST_CANCELED" ||
+    code === "CANCELED" ||
+    code === "TIMEOUT" ||
+    code === "PROVIDER_TIMEOUT" ||
+    code === "UNSAFE_URL" ||
+    code === "CONTENT_POLICY" ||
+    code === "MODEL_EMPTY"
+  );
+}
+
+/**
+ * Process-memory fail ledger settlement (generate + image parity).
+ * Confirmed restore → "10 restored"; ambiguous debit → "refund unconfirmed";
+ * validation/pre-debit fails leave outcome undefined (do not invent refund).
+ */
+export function failedLedgerCreditsOutcome(opts: {
+  creditsRefunded?: boolean;
+  refundUnconfirmed?: boolean;
+  errorCode?: string | null;
+}): "10 restored" | "refund unconfirmed" | undefined {
+  if (opts.creditsRefunded === true) return "10 restored";
+  if (
+    opts.refundUnconfirmed === true ||
+    isAmbiguousDebitFailureCode(opts.errorCode)
+  ) {
+    return "refund unconfirmed";
+  }
+  return undefined;
+}
+
+/**
  * Map a failed generate result to the request settlement chip.
  * Confirmed refund → restored; kill/network/ledger timeout → unconfirmed;
  * validation / 402 before debit → null (do not claim refund).
@@ -144,21 +184,7 @@ export function requestCreditStateFromFailure(result: {
   if (
     result.refundUnconfirmed === true ||
     result.status === 0 ||
-    result.code === "NETWORK_ERROR" ||
-    // Upstream 502/503 blip — debit may have started; never invent restore.
-    result.code === "PROVIDER_NETWORK" ||
-    result.code === "REQUEST_CANCELED" ||
-    // Ledger cancel (soft-launch) — debit may be ambiguous until balance confirms.
-    result.code === "CANCELED" ||
-    // Process-memory ledger TIMEOUT (kill mid-flight) — never claim restored.
-    result.code === "TIMEOUT" ||
-    result.code === "PROVIDER_TIMEOUT" ||
-    // Unusable media / content reject after a live attempt — restored only via
-    // creditsRefunded early-return above.
-    result.code === "UNSAFE_URL" ||
-    result.code === "CONTENT_POLICY" ||
-    // Empty provider body after a live attempt — same ambiguity as UNSAFE_URL.
-    result.code === "MODEL_EMPTY"
+    isAmbiguousDebitFailureCode(result.code)
   ) {
     return "refund unconfirmed";
   }

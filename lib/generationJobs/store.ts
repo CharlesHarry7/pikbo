@@ -4,7 +4,11 @@
  * Supabase job table remains the production target (AUTH_CREDITS / Phase D PRD).
  */
 
-import { canDownloadResult, isSafeDeliverableUrl } from "@/lib/createTrust";
+import {
+  canDownloadResult,
+  failedLedgerCreditsOutcome,
+  isSafeDeliverableUrl,
+} from "@/lib/createTrust";
 import { canServeVerifiedT6Derivative } from "@/lib/t6Worker";
 import type {
   BakedWatermarkDerivative,
@@ -519,7 +523,14 @@ export function failSyncGenerateJob(input: {
   errorCode?: string;
   model?: string;
   creditsRefunded?: boolean;
+  /** When true and not restored — kill/timeout/cancel honesty (image fail parity). */
+  refundUnconfirmed?: boolean;
 }): GenerationJob {
+  const creditsOutcome = failedLedgerCreditsOutcome({
+    creditsRefunded: input.creditsRefunded,
+    refundUnconfirmed: input.refundUnconfirmed,
+    errorCode: input.errorCode,
+  });
   if (input.jobId) {
     const cur = jobs.get(input.jobId);
     if (cur && cur.sessionId === input.sessionId) {
@@ -536,7 +547,8 @@ export function failSyncGenerateJob(input: {
         errorCode: input.errorCode,
         model: input.model ?? cur.model,
         creditsRefunded: input.creditsRefunded,
-        creditsOutcome: input.creditsRefunded ? "10 restored" : undefined,
+        // Restored when confirmed; ambiguous debit codes → refund unconfirmed.
+        creditsOutcome,
         downloadAllowed: false,
         videoUrl: undefined,
       });
@@ -550,6 +562,7 @@ export function failSyncGenerateJob(input: {
     errorCode: input.errorCode,
     model: input.model,
     creditsRefunded: input.creditsRefunded,
+    refundUnconfirmed: input.refundUnconfirmed,
   });
 }
 
@@ -620,6 +633,7 @@ export function recordFailedGenerate(input: {
   errorCode?: string;
   model?: string;
   creditsRefunded?: boolean;
+  refundUnconfirmed?: boolean;
   preferredId?: string;
   idempotencyKey?: string;
 }): GenerationJob {
@@ -628,9 +642,11 @@ export function recordFailedGenerate(input: {
     input.preferredId && !jobs.has(input.preferredId)
       ? input.preferredId
       : newId();
-  const creditsOutcome: GenerationJob["creditsOutcome"] = input.creditsRefunded
-    ? "10 restored"
-    : undefined;
+  const creditsOutcome = failedLedgerCreditsOutcome({
+    creditsRefunded: input.creditsRefunded,
+    refundUnconfirmed: input.refundUnconfirmed,
+    errorCode: input.errorCode,
+  });
   const job: GenerationJob = {
     id,
     sessionId: input.sessionId,

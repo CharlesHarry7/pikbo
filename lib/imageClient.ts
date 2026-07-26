@@ -189,7 +189,9 @@ export function interpretImageResponse(
     code === "PROVIDER_NETWORK" ||
     code === "PROVIDER_TIMEOUT" ||
     (code === "UNSAFE_URL" && !creditsRefunded) ||
-    (code === "CONTENT_POLICY" && !creditsRefunded);
+    (code === "CONTENT_POLICY" && !creditsRefunded) ||
+    // Empty still after live attempt — generateClient + createTrust parity.
+    (code === "MODEL_EMPTY" && !creditsRefunded);
 
   let error =
     body.error ||

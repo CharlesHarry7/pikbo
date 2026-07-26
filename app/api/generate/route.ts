@@ -132,6 +132,9 @@ function noteFailed(
       errorCode: body.code,
       model: body.model,
       creditsRefunded: body.creditsRefunded,
+      // Ambiguous debit codes (TIMEOUT · PROVIDER_* · CONTENT_POLICY · …)
+      // stamp refund unconfirmed on the ledger when restore is not confirmed.
+      refundUnconfirmed: body.refundUnconfirmed === true,
     });
   } catch {
     /* job ledger is best-effort */

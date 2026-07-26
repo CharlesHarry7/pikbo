@@ -148,7 +148,8 @@
 107. [x] Pack retryEligible allows TIMEOUT unconfirmed + CONTENT_POLICY settle
 108. [x] Remix remake carries job ratio/duration + MODEL_EMPTY honesty
 109. [x] Image FailPanel uses requestCreditStateFromFailure (Create/Landing parity)
-110. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+110. [x] fail ledger failedLedgerCreditsOutcome + Library unconfirmed code sweep
+111. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -162,8 +163,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Image FailPanel: shared createTrust settlement (CONTENT_POLICY/NETWORK/MODEL_EMPTY).
-- Prior: remixOptsFromRecord + MODEL_EMPTY/empty-200 refundUnconfirmed.
+- failSync/image fail: shared failedLedgerCreditsOutcome stamps refund unconfirmed.
+- Library session: PROVIDER_*/CONTENT_POLICY/MODEL_EMPTY show unconfirmed + Lab door.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 
