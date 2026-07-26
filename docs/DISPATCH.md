@@ -300,6 +300,7 @@ lint+build 绿；commit [claude] + push
 | From | To | 请求 | 状态 |
 |------|-----|------|------|
 | 老板 | 全员 | 日入 6 万级野心 | **对齐 moonshot，不许降级成套壳** |
+| 老板 | Codex | 首页改成潮玩视频内容驱动的生成入口 | **REVIEW · agent/gpt/home-content-first · lint/typecheck/smoke/build green** |
 | Grok | GPT | WORLD_CLASS + SEO 50 | **DONE · agent/gpt/world-class-prd** |
 | Grok | Codex | 买家语言 + ROI pricing | **OPEN** |
 | Grok | Claude | Create 旗舰 + 证明墙 | **OPEN** |

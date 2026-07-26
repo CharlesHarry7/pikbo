@@ -41,12 +41,22 @@ export function HomeSeoBody() {
   };
 
   return (
-    <section className="border-t border-white/10 bg-black px-4 py-14 text-white sm:px-6">
+    <details className="group border-t border-white/10 bg-black text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <div className="mx-auto max-w-3xl space-y-10 text-[15px] leading-relaxed text-white/70">
+      <summary className="mx-auto flex max-w-3xl cursor-pointer list-none items-center justify-between gap-4 px-4 py-6 text-sm font-bold text-white/55 transition hover:text-white sm:px-6 [&::-webkit-details-marker]:hidden">
+        <span>产品说明与常见问题</span>
+        <span
+          aria-hidden
+          className="text-lg text-white/35 transition group-open:rotate-45"
+        >
+          +
+        </span>
+      </summary>
+      <section className="border-t border-white/[0.06] px-4 py-12 sm:px-6">
+        <div className="mx-auto max-w-3xl space-y-10 text-[15px] leading-relaxed text-white/70">
         <div>
           <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
             Why generate toy video from one photo on this page
@@ -278,7 +288,8 @@ export function HomeSeoBody() {
           . Supporting phrases here: photo into short video / animate designer
           toys.
         </p>
-      </div>
-    </section>
+        </div>
+      </section>
+    </details>
   );
 }

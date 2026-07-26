@@ -3030,17 +3030,22 @@ const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero|HomeViralWall|home-create/);
 assert.match(
   fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /home\.cinema\.ctaPrimary|data-home-hero|setInterval|items|prefetch/
+  /home\.cinema\.sub|home\.cinema\.ctaPrimary|data-home-hero|setInterval|items|prefetch/
 );
 assert.match(
   fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
-  /home\.cinema\.ctaPrimary|home\.wall\.remake|home\.browseCta/
+  /home\.cinema\.ctaPrimary|home\.wall\.viewer\.primary|home\.wall\.remake|home\.browseCta/
 );
 assert.match(
   fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /TOY_WALL_FILTERS|生成同款|360°展示|data-home-wall|sticky|wallDense|viewport-dense|Premiere|data-wall-featured/
+  /TOY_WALL_FILTERS|home\.wall\.remake|data-home-wall|sticky|wallDense|viewport-dense|Premiere|data-wall-featured|role="dialog"|toy_wall_watch/
 );
 assert.match(homePageSrc, /HomeCinemaHero items=|SoftLaunchStrip|HomeBrowseCta/);
+assert.match(homePageSrc, /data-home-value="three-points"|保留潮玩细节/);
+assert.match(
+  homePageSrc,
+  /data-home-final-cta="upload-or-watch"|上传照片生成/
+);
 assert.match(
   fs.readFileSync(join(root, "components/AutoPlayVideo.tsx"), "utf8"),
   /wallDense|playbackBudget/
@@ -3052,6 +3057,10 @@ assert.match(
 assert.match(
   fs.readFileSync(join(root, "components/AutoPlayVideo.tsx"), "utf8"),
   /visibilitychange|visibilityState/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HomeSeoBody.tsx"), "utf8"),
+  /<details|产品说明与常见问题/
 );
 
 // Five-step toy identity + delivery honesty + landing assetId + workflows

@@ -58,6 +58,9 @@ export function HomeCinemaHero({
           <br />
           {t("home.cinema.h1b")}
         </h1>
+        <p className="mt-4 max-w-md text-sm text-white/65 sm:text-base">
+          {t("home.cinema.sub")}
+        </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <a
             href="#home-create"
@@ -115,6 +118,7 @@ export function HomeCinemaHero({
         ))}
         <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black via-black/40 to-black/20" />
         <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-black/55 via-transparent to-black/20" />
+        <div className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(circle_at_12%_72%,rgba(255,67,165,0.2),transparent_30%),radial-gradient(circle_at_82%_24%,rgba(130,83,255,0.18),transparent_30%),radial-gradient(circle_at_78%_78%,rgba(255,142,55,0.14),transparent_24%)] mix-blend-screen" />
       </div>
 
       <div className="relative z-[3] mx-auto flex min-h-[min(92svh,920px)] max-w-6xl flex-col justify-end px-4 pb-10 pt-24 sm:px-6 sm:pb-14 md:pb-16">
@@ -126,10 +130,14 @@ export function HomeCinemaHero({
           <br />
           {t("home.cinema.h1b")}
         </h1>
-        <p className="mt-3 max-w-md text-sm font-medium text-white/70 sm:text-base">
-          {item.title}
-          <span className="text-white/40"> · {t("home.cinema.lab")}</span>
+        <p className="mt-4 max-w-lg text-sm font-medium leading-relaxed text-white/70 sm:text-base">
+          {t("home.cinema.sub")}
         </p>
+        <div className="mt-3 flex w-fit items-center gap-2 rounded-full border border-white/12 bg-black/35 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white/60 backdrop-blur-md">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#ff5da8] shadow-[0_0_12px_rgba(255,93,168,0.8)]" />
+          {item.title}
+          <span className="text-white/30">· {t("home.cinema.lab")}</span>
+        </div>
 
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <a

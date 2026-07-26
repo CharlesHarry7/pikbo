@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FeedItem } from "@/lib/videoFeed";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
@@ -65,10 +65,46 @@ function matchesToyFilter(item: FeedItem, filter: ToyWallFilterId): boolean {
   }
 }
 
+function wallLabelKey(item: FeedItem): string {
+  const slug = (item.recipeSlug || "").toLowerCase();
+  if (slug.includes("360") || slug.includes("spin")) {
+    return "home.wall.label.spin";
+  }
+  if (
+    slug.includes("unbox") ||
+    slug.includes("reveal") ||
+    slug.includes("blind")
+  ) {
+    return "home.wall.label.unbox";
+  }
+  if (slug.includes("float") || slug.includes("zero")) {
+    return "home.wall.label.float";
+  }
+  if (slug.includes("display") || slug.includes("glam")) {
+    return "home.wall.label.display";
+  }
+  return "home.wall.label.motion";
+}
+
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
   const { t } = useI18n();
   const [filter, setFilter] = useState<ToyWallFilterId>("all");
   const [expanded, setExpanded] = useState(false);
+  const [selected, setSelected] = useState<FeedItem | null>(null);
+
+  useEffect(() => {
+    if (!selected) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setSelected(null);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selected]);
 
   const counts = useMemo(() => {
     const m: Record<string, number> = { all: items.length };
@@ -197,19 +233,22 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                 key={`feat-${item.id}`}
                 className="group relative aspect-[9/14] overflow-hidden rounded-lg bg-zinc-950 ring-1 ring-[#c8ff3d]/20 sm:aspect-[3/4] sm:rounded-xl"
               >
-                <Link
-                  href={item.href}
-                  prefetch
+                <button
+                  type="button"
                   className="absolute inset-0"
-                  onClick={() =>
+                  onClick={() => {
+                    setSelected(item);
                     track({
-                      event: "recipe_use",
+                      event: "project_open",
                       path: "/",
                       recipe: item.recipeSlug,
-                      meta: { source: "toy_wall_featured" },
-                    })
-                  }
-                  aria-label={`${item.title} · ${t("home.wall.remake")}`}
+                      meta: {
+                        source: "toy_wall_featured_watch",
+                        itemId: item.id,
+                      },
+                    });
+                  }}
+                  aria-label={`${t("home.wall.watch")} ${item.title}`}
                 >
                   <AutoPlayVideo
                     poster={item.demo.poster}
@@ -224,18 +263,30 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                     className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                  <span className="absolute left-2 top-2 rounded-full border border-[#c8ff3d]/40 bg-black/60 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#c8ff3d] backdrop-blur">
-                    Premiere
-                  </span>
-                  <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
-                    <p className="line-clamp-2 text-xs font-black uppercase tracking-wide text-white sm:text-sm">
-                      {item.title}
-                    </p>
-                    <span className="mt-1.5 inline-flex rounded-full bg-[#c8ff3d] px-2.5 py-1 text-[10px] font-black text-black">
-                      {t("home.wall.remake")}
-                    </span>
-                  </div>
-                </Link>
+                </button>
+                <span className="pointer-events-none absolute left-2 top-2 rounded-full border border-[#c8ff3d]/40 bg-black/60 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#c8ff3d] backdrop-blur">
+                  Premiere
+                </span>
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
+                  <p className="line-clamp-2 text-xs font-black uppercase tracking-wide text-white sm:text-sm">
+                    {item.title}
+                  </p>
+                  <Link
+                    href={item.href}
+                    prefetch
+                    onClick={() =>
+                      track({
+                        event: "recipe_use",
+                        path: "/",
+                        recipe: item.recipeSlug,
+                        meta: { source: "toy_wall_featured_remake" },
+                      })
+                    }
+                    className="pointer-events-auto mt-1.5 inline-flex rounded-full bg-[#c8ff3d] px-2.5 py-1 text-[10px] font-black text-black"
+                  >
+                    {t("home.wall.remake")}
+                  </Link>
+                </div>
               </article>
             ))}
           </div>
@@ -247,19 +298,19 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               key={item.id}
               className="group relative aspect-[3/4] overflow-hidden rounded-md bg-zinc-950 ring-1 ring-white/[0.06] transition duration-300 hover:-translate-y-1 hover:z-[1] hover:ring-[#c8ff3d]/45 hover:shadow-[0_0_0_1px_rgba(200,255,61,0.25),0_16px_48px_rgba(0,0,0,0.6)] sm:rounded-lg sm:aspect-[9/14]"
             >
-              <Link
-                href={item.href}
-                prefetch
+              <button
+                type="button"
                 className="absolute inset-0 z-0"
-                onClick={() =>
+                onClick={() => {
+                  setSelected(item);
                   track({
-                    event: "recipe_use",
+                    event: "project_open",
                     path: "/",
                     recipe: item.recipeSlug,
-                    meta: { source: "toy_wall_card" },
-                  })
-                }
-                aria-label={`${item.title} · ${t("home.wall.remake")}`}
+                    meta: { source: "toy_wall_watch", itemId: item.id },
+                  });
+                }}
+                aria-label={`${t("home.wall.watch")} ${item.title}`}
               >
                 <AutoPlayVideo
                   poster={item.demo.poster}
@@ -291,9 +342,12 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent opacity-90" />
                 <div className="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100 bg-[radial-gradient(circle_at_50%_80%,rgba(200,255,61,0.12),transparent_55%)]" />
-              </Link>
+              </button>
 
               <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 p-2 sm:p-2.5">
+                <span className="mb-1 inline-flex rounded-full border border-white/15 bg-black/35 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.12em] text-white/60 backdrop-blur-sm">
+                  {t(wallLabelKey(item))}
+                </span>
                 <p className="line-clamp-2 text-[10px] font-black uppercase leading-tight tracking-wide text-white drop-shadow sm:text-[11px]">
                   {item.title}
                 </p>
@@ -337,6 +391,99 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
           <div className="pb-6" />
         )}
       </div>
+
+      {selected ? (
+        <div className="fixed inset-0 z-[80] grid place-items-center p-3 sm:p-6">
+          <button
+            type="button"
+            aria-label={t("home.wall.viewer.close")}
+            onClick={() => setSelected(null)}
+            className="absolute inset-0 bg-black/85 backdrop-blur-xl"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${selected.title} · ${t("home.wall.viewer.close")}`}
+            className="relative z-10 flex max-h-[94svh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0a090d] shadow-[0_32px_120px_rgba(0,0,0,0.9)] md:grid md:grid-cols-[minmax(0,1fr)_280px]"
+          >
+            <div className="relative grid min-h-0 place-items-center overflow-hidden bg-black">
+              <video
+                key={selected.id}
+                poster={selected.demo.poster}
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
+                className="max-h-[72svh] w-full object-contain"
+                aria-label={`${selected.title} · ${t("home.cinema.lab")}`}
+              >
+                {selected.demo.webm ? (
+                  <source src={selected.demo.webm} type="video/webm" />
+                ) : null}
+                <source src={selected.demo.mp4} type="video/mp4" />
+              </video>
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 to-transparent" />
+              <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white/70 backdrop-blur-md">
+                {t("home.cinema.lab")} · {t(wallLabelKey(selected))}
+              </span>
+            </div>
+
+            <div className="flex flex-col justify-between gap-6 border-t border-white/10 bg-[radial-gradient(circle_at_85%_10%,rgba(157,82,255,0.18),transparent_35%),radial-gradient(circle_at_10%_90%,rgba(255,78,158,0.16),transparent_38%),#0a090d] p-5 md:border-l md:border-t-0">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  className="float-right grid h-9 w-9 place-items-center rounded-full border border-white/12 bg-white/[0.05] text-lg text-white/65 transition hover:bg-white/10 hover:text-white"
+                  aria-label={t("home.wall.viewer.close")}
+                >
+                  ×
+                </button>
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+                  {t("home.wall.viewer.eyebrow")}
+                </p>
+                <h3 className="font-display mt-3 pr-10 text-2xl font-black uppercase leading-tight text-white">
+                  {selected.title}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-white/50">
+                  {t("home.wall.viewer.body")}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Link
+                  href={selected.href}
+                  prefetch
+                  onClick={() =>
+                    track({
+                      event: "recipe_use",
+                      path: "/",
+                      recipe: selected.recipeSlug,
+                      meta: { source: "toy_wall_lightbox" },
+                    })
+                  }
+                  className="flex w-full items-center justify-center rounded-full bg-[#c8ff3d] px-5 py-3 text-center text-sm font-black text-black shadow-[0_0_32px_rgba(200,255,61,0.28)] transition hover:brightness-110"
+                >
+                  {t("home.wall.viewer.primary")}
+                </Link>
+                {selected.projectHref || selected.detailHref ? (
+                  <Link
+                    href={
+                      selected.projectHref ||
+                      selected.detailHref ||
+                      "/effects"
+                    }
+                    prefetch
+                    className="flex w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-bold text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+                  >
+                    {t("home.wall.viewer.details")}
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -4,6 +4,19 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [gpt] Home content-first conversion loop
+- Hero stays video-dominant and multilingual; pink/purple/orange light is
+  scoped to home while the core product lime remains intact.
+- Wall retains Premiere, create prefetch, tab-pause, mobile-nav clearance and
+  the 4-desktop / 2-mobile autoplay budget from main.
+- Cards now open an accessible in-page viewer; viewer and cards both expose
+  Generate same style, with real upload/generate after the wall.
+- Visible explanation is reduced to three value cards + final dual CTA; long SEO
+  copy remains server-rendered inside a collapsed details section.
+- Contract: `docs/prd/HOME_CONTENT_FIRST.md`.
+- Verified: targeted ESLint · TypeScript · engine-smoke · production build
+  (189 pages).
+
 ### 2026-07-26 — [grok] Settings canceled counts + cancel settlement UX
 - Settings HEAD probes `X-Pikbo-Jobs-Canceled` / Image-Jobs-Canceled; detail
   lines separate failed vs canceled (process-memory honesty).
