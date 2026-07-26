@@ -4,6 +4,16 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Free live generate never echoes provider raw URL
+- `customerFacingGenerateVideoUrl`: Free live success + idempotent replay return
+  `/api/downloads/{jobId}` only; demos and paid raw keep their media URL.
+  Server ledger still holds the provider URL for a future T6 worker.
+- `isPlayableResultVideoUrl`: Create + Landing do not mount Free download
+  endpoints as `<video>` (403 JSON until bake). Honest “held for T6 bake” panel.
+- `historyFieldsFromSuccess` rewrites any residual free live absolute URL onto
+  the controlled download path when a job id is present.
+- Verified: engine-smoke PASS · tsc PASS.
+
 ### 2026-07-26 — [grok] Library first-run + device-local honesty (Phase F)
 - Sticky mobile CTA: Generate · Seller Pack; clip count + “Saved on this device”.
 - Empty state product-first (Generate/Seller before Lab); filled chip labels

@@ -129,7 +129,8 @@
 88. [x] T6 fail-closed skeleton: no env unlock Free raw · server-owned worker IMPLEMENTED=false
 89. [x] T6 hard gate: derivative must bind jobId+providerRequestId; canServe requires serving+storage
 90. [x] Create empty remix honesty + first-fold (identity in Advanced · Lab collapsed)
-91. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+91. [x] Free live generate never echoes provider raw URL · controlled /api/downloads only
+92. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -143,8 +144,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Fresh /create no longer fabricates PRESETS[0] remix banner (hasRemixSearchParams).  
-- First-fold: Upload → recipe → generate; Toy Identity in Advanced; Lab samples collapsed.  
+- Free live generate success/idempotent replay → `/api/downloads/{jobId}` only (no fal raw).  
+- Create/Landing show T6-held honesty when Free live not playable; demos+paid unchanged.  
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 ---
