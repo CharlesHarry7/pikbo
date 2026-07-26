@@ -1,17 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { JobIntentId } from "@/lib/jobIntents";
 import { getJobIntent } from "@/lib/jobIntents";
+import { loadToyIdentity } from "@/lib/toyIdentity";
 
 /**
  * Post-generate closed loop — product path first (CD Phase A + job carry):
  * Library · Seller Pack · Next SKU · Modules · Remix · Publish,
  * then Flow · Preview last (not a live job peer).
- * Shared by CreateStudio + LandingToolPanel + BatchStudio.
+ * Shared by CreateStudio + LandingToolPanel + BatchStudio + Preview shelves.
  *
  * Job/SKU query carry keeps commercial context on the next hop
  * (Creative Director: same seller path, new photo or same goal).
+ * When `sku` prop is omitted, device-local bible SKU is auto-hydrated so
+ * Cinema / Supercomputer / Image shelves still carry Next SKU honesty.
  */
 function withQuery(
   base: string,
@@ -38,15 +42,38 @@ export function GenerateAfterPath({
   className?: string;
   /** Active commercial goal — carried into Next SKU / Full Generate links */
   jobIntentId?: JobIntentId | null;
-  /** Optional SKU label from character bible — carry for next hop */
+  /**
+   * Character bible SKU for next hop. When null/undefined, auto-loads
+   * device-local bible (prop empty string still means "no SKU").
+   */
   sku?: string | null;
 }) {
+  const [deviceSku, setDeviceSku] = useState("");
+  useEffect(() => {
+    // Explicit prop (including "") wins — only auto-load when omitted.
+    if (sku !== undefined && sku !== null) return;
+    const t = window.setTimeout(() => {
+      try {
+        const id = loadToyIdentity();
+        if (id.sku) setDeviceSku(id.sku);
+      } catch {
+        /* private mode */
+      }
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [sku]);
+
+  const resolvedSku =
+    sku !== undefined && sku !== null
+      ? String(sku).trim() || undefined
+      : deviceSku.trim() || undefined;
+
   const intent = jobIntentId ? getJobIntent(jobIntentId) : undefined;
   const effect = effectSlug || intent?.effect;
   const carry = {
     effect: effect || undefined,
     job: jobIntentId || undefined,
-    sku: sku || undefined,
+    sku: resolvedSku,
   };
 
   /**
@@ -92,7 +119,7 @@ export function GenerateAfterPath({
       aria-label="After generate"
       data-after-path="product-first"
       data-after-job={jobIntentId || "none"}
-      data-after-sku={sku ? "yes" : "no"}
+      data-after-sku={resolvedSku ? "yes" : "no"}
       className={`flex flex-wrap items-center justify-center gap-1.5 ${className}`}
     >
       {intent ? (

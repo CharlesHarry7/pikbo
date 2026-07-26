@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] AfterPath auto-SKU + Cinema + Pack try sample
+- GenerateAfterPath: when `sku` prop omitted, load device-local bible SKU so
+  Cinema / Supercomputer / any shelf still carries Next SKU · Seller Pack.
+- Explicit sku prop (Create/Landing/Batch) still wins; empty string = no SKU.
+- Cinema: primary Generate href + AfterPath pass effect + bible SKU.
+- Seller Pack: `?try=1` / `?sample=` hydrates Lab still only (no auto 3× debit);
+  supercomputer?pack=seller redirects keep sku/try/sample query.
+- Smoke: AfterPath loadToyIdentity · BatchStudio initialSku multiline safe.
+
 ### 2026-07-27 — [grok] WorkBuddy WORK_QUEUE dispatch on GitHub
 - `docs/growth/WORK_QUEUE.md`: open task WQ-2026-07-27-01 (second growth run).
 - Grok cannot remote-start WorkBuddy; queue is the dispatch bus.

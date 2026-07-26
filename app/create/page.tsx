@@ -76,6 +76,10 @@ export default async function CreatePage({
 }) {
   const sp = await searchParams;
 
+  const firstRunSample =
+    sp.sample ||
+    (sp.try === "1" || sp.try === "true" ? "scout" : undefined);
+
   // Wave A: Seller Pack is a Create mode, not a separate suite door.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return (
@@ -130,18 +134,18 @@ export default async function CreatePage({
               </Link>
             </div>
             <div className="mt-6">
-              {/* AfterPath ?sku= must hydrate Seller Pack bible + Library history */}
-              <BatchStudio pack="seller" initialSku={sp.sku} />
+              {/* AfterPath ?sku= / ?try=1 hydrate bible + Lab still (no auto 3× run) */}
+              <BatchStudio
+                pack="seller"
+                initialSku={sp.sku}
+                initialSample={firstRunSample}
+              />
             </div>
           </div>
         </div>
       </div>
     );
   }
-
-  const firstRunSample =
-    sp.sample ||
-    (sp.try === "1" || sp.try === "true" ? "scout" : undefined);
 
   return (
     <>

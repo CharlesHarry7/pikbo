@@ -742,7 +742,9 @@ const batchPage = fs.readFileSync(
   join(root, "app/supercomputer/page.tsx"),
   "utf8"
 );
-assert.match(batchPage, /redirect\("\/create\?mode=seller-pack"\)|mode=seller-pack/);
+// Legacy /supercomputer?pack=seller preserves sku/try/sample into Create
+assert.match(batchPage, /mode=seller-pack|URLSearchParams/);
+assert.match(batchPage, /sku|try|sample/);
 // Preview Batch: PREVIEW_ROBOTS + closed-loop AfterPath (not a dead-end shelf)
 assert.match(batchPage, /PREVIEW_ROBOTS/);
 assert.match(batchPage, /GenerateAfterPath/);
@@ -3393,7 +3395,11 @@ assert.match(
 assert.match(batchSkuSrc, /initialSku/);
 assert.match(batchSkuSrc, /hydrateToyIdentityFromQuery\(initialSku\)/);
 assert.match(batchSkuSrc, /sku:\s*toyIdentity\.sku/);
-assert.match(createPage, /BatchStudio pack=["']seller["'][\s\S]{0,80}initialSku/);
+// Multiline JSX props (initialSku + optional initialSample) — wide window.
+assert.match(
+  createPage,
+  /BatchStudio[\s\S]{0,200}pack=["']seller["'][\s\S]{0,200}initialSku/
+);
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /freeTrialExhausted|Free Mini trial exhausted|clipsLeft|compare plans/
@@ -4073,6 +4079,13 @@ const afterPathSrc = fs.readFileSync(
 );
 assert.match(afterPathSrc, /aria-label=["']After generate["']/);
 assert.match(afterPathSrc, /data-after-path=["']product-first["']/);
+// AfterPath auto-hydrates device bible SKU when prop omitted (Cinema/Batch shelves)
+assert.match(afterPathSrc, /loadToyIdentity/);
+assert.match(afterPathSrc, /resolvedSku|deviceSku/);
+assert.match(
+  fs.readFileSync(join(root, "app/cinema/page.tsx"), "utf8"),
+  /loadToyIdentity|sku=\{toySku|effectSlug=\{effect\}/
+);
 assert.match(afterPathSrc, /data-after-job/);
 assert.match(afterPathSrc, /jobIntentId/);
 assert.match(afterPathSrc, /Publish path/);

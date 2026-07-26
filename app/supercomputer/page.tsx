@@ -9,7 +9,13 @@ import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ pack?: string; effects?: string }>;
+  searchParams: Promise<{
+    pack?: string;
+    effects?: string;
+    sku?: string;
+    try?: string;
+    sample?: string;
+  }>;
 }): Promise<Metadata> {
   const sp = await searchParams;
   if (sp.pack === "seller") {
@@ -35,12 +41,22 @@ export async function generateMetadata({
 export default async function SupercomputerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ effects?: string; pack?: string }>;
+  searchParams: Promise<{
+    effects?: string;
+    pack?: string;
+    sku?: string;
+    try?: string;
+    sample?: string;
+  }>;
 }) {
   const sp = await searchParams;
-  // Wave A: Seller Pack canonical is /create?mode=seller-pack
+  // Wave A: Seller Pack canonical is /create?mode=seller-pack — keep sku/try/sample.
   if (sp.pack === "seller") {
-    redirect("/create?mode=seller-pack");
+    const q = new URLSearchParams({ mode: "seller-pack" });
+    if (sp.sku?.trim()) q.set("sku", sp.sku.trim().slice(0, 64));
+    if (sp.try?.trim()) q.set("try", sp.try.trim());
+    if (sp.sample?.trim()) q.set("sample", sp.sample.trim());
+    redirect(`/create?${q.toString()}`);
   }
   const initialEffects = sp.effects
     ? sp.effects.split(",").map((s) => s.trim()).filter(Boolean)

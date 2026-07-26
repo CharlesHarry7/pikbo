@@ -187,12 +187,18 @@ export function BatchStudio({
   initialEffects,
   pack,
   initialSku,
+  initialSample,
 }: {
   initialEffects?: string[];
   /** Named pack from SELLER_PACK PRD — freezes the three seller outputs. */
   pack?: "seller" | string;
   /** Character bible SKU from ?sku= (AfterPath / Next SKU carry). */
   initialSku?: string;
+  /**
+   * First-run Lab still from ?sample= or ?try=1 (AfterPath Next SKU).
+   * Loads photo only — does not auto-run the 3-child pack (cost honesty).
+   */
+  initialSample?: string;
 }) {
   const isSellerPack = pack === "seller";
 
@@ -263,6 +269,49 @@ export function BatchStudio({
       packAbortRef.current = null;
     };
   }, [initialSku]);
+
+  /**
+   * AfterPath Next SKU → /create?mode=seller-pack&try=1&sku=…
+   * Hydrate official Lab still so the pack is not an empty upload dead-end.
+   * Never auto-run three live children (would debit 30 without an explicit tap).
+   */
+  useEffect(() => {
+    if (!initialSample) return;
+    const id = SAMPLE_TOYS.some((s) => s.id === initialSample)
+      ? initialSample
+      : "scout";
+    let canceled = false;
+    const t = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const s =
+            SAMPLE_TOYS.find((x) => x.id === id) ?? SAMPLE_TOYS[0];
+          const dataUrl = await sampleToDataUrl(s.path);
+          if (canceled) return;
+          setImage(dataUrl);
+          setLabStill(true);
+          setImageProbe(null);
+          setBriefCollapsed(false);
+          // Official Pikbo Lab stills — product-owned samples, not a visitor upload.
+          setOwnsRights(true);
+          setError(null);
+          void probeImageSize(dataUrl).then((meta) => {
+            if (!canceled && meta) setImageProbe(meta);
+          });
+        } catch {
+          if (!canceled) {
+            setError(
+              "Could not load Lab sample — upload your toy photo or pick a sample below"
+            );
+          }
+        }
+      })();
+    }, 0);
+    return () => {
+      canceled = true;
+      window.clearTimeout(t);
+    };
+  }, [initialSample]);
 
   /**
    * Re-open only this browser's active pack against the current local ledger.

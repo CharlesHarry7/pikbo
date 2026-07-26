@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { PRESETS } from "@/lib/presets";
 import { viralName } from "@/lib/viralNames";
+import { loadToyIdentity } from "@/lib/toyIdentity";
 
 const LENSES = ["24mm", "35mm", "50mm", "85mm", "100mm macro"] as const;
 const MOVES = [
@@ -62,6 +63,20 @@ export default function CinemaPage() {
   const [shot, setShot] = useState<string>(SHOT_TEMPLATES[0].brief);
   const [effect, setEffect] = useState(PRESETS[0]?.slug ?? "360-spin-showcase");
   const [boardShot, setBoardShot] = useState(0);
+  /** Device-local bible — primary CTA + AfterPath commercial carry. */
+  const [toySku, setToySku] = useState("");
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      try {
+        const id = loadToyIdentity();
+        if (id.sku) setToySku(id.sku);
+      } catch {
+        /* private mode */
+      }
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, []);
 
   const composed = useMemo(
     () =>
@@ -75,7 +90,14 @@ export default function CinemaPage() {
     [shot, lens, move, look]
   );
 
-  const href = `/create?effect=${encodeURIComponent(effect)}&prompt=${encodeURIComponent(composed)}`;
+  const href = useMemo(() => {
+    const q = new URLSearchParams({
+      effect,
+      prompt: composed,
+    });
+    if (toySku) q.set("sku", toySku);
+    return `/create?${q.toString()}`;
+  }, [effect, composed, toySku]);
   const board = DEMO_VIDEOS.slice(0, 3);
   const activeBoard = board[boardShot] ?? board[0];
   const cinemaPresets = PRESETS.filter((p) =>
@@ -142,7 +164,13 @@ export default function CinemaPage() {
                 hideClipsChip
               />
             </div>
-            <GenerateAfterPath compact demo className="justify-end" />
+            <GenerateAfterPath
+              compact
+              demo
+              className="justify-end"
+              effectSlug={effect}
+              sku={toySku || null}
+            />
           </div>
         </div>
       </div>
