@@ -63,6 +63,9 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: "1"
           PORT: "3456"
+          # CI-only values. Production must supply separate strong secrets.
+          SESSION_SECRET: "pikbo-ci-session-secret-not-for-production-20260726"
+          CREDITS_SECRET: "pikbo-ci-credits-secret-not-for-production-20260726"
 
       - name: Link check (prod)
         run: BASE_URL=http://127.0.0.1:3456 npm run link-check
@@ -70,7 +73,7 @@ jobs:
           BASE_URL: "http://127.0.0.1:3456"
 
       - name: Critical path (demo)
-        run: BASE_URL=http://127.0.0.1:3456 npm run critical-path || true
+        run: BASE_URL=http://127.0.0.1:3456 npm run critical-path
         env:
           BASE_URL: "http://127.0.0.1:3456"
 
