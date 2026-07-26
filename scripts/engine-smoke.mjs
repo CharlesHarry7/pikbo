@@ -2443,6 +2443,8 @@ assert.doesNotMatch(
 );
 assert.match(durableIdx, /durableSupabaseRequired/);
 assert.match(durableIdx, /durableServerOwnedJobsReady/);
+assert.match(durableIdx, /SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED = false/);
+assert.match(durableIdx, /envRequested[\s\S]{0,200}implemented[\s\S]{0,200}effective/);
 assert.match(durableIdx, /SERVER_OWNED_JOBS_REQUIRED/);
 assert.match(durableIdx, /DURABLE_BACKEND_UNAVAILABLE/);
 assert.match(
@@ -2450,7 +2452,7 @@ assert.match(
   /backend\.kind === "supabase"\) return supabaseReserve\(input\)/
 );
 assert.match(localStore, /PIKBO_DURABLE_BACKEND === "supabase"/);
-assert.match(localStore, /PIKBO_SERVER_OWNED_JOBS=1/);
+assert.match(localStore, /server-owned job persistence is not implemented/);
 assert.match(localStore, /withLocalStoreMutex/);
 assert.match(localStore, /fs\.rename/);
 assert.match(
@@ -2485,7 +2487,20 @@ assert.match(genRoute, /DURABLE_BACKEND_UNAVAILABLE/);
 assert.match(genRoute, /SERVER_OWNED_JOBS_REQUIRED/);
 assert.match(
   genRoute,
+  /NODE_ENV === "production"[\s\S]{0,220}!durableServerOwnedJobsReady/
+);
+assert.match(
+  genRoute,
+  /Live generation is disabled until server-owned jobs and atomic credits are implemented/
+);
+assert.match(
+  genRoute,
   /no generation was submitted and credits were restored/
+);
+assert.match(t5RpcMigration, /p_item_key <> 'generation'/);
+assert.match(
+  t5RpcMigration,
+  /j\.status in \('queued', 'running', 'succeeded'\)/
 );
 
 // Phase I payments readiness + checkout live-key / flag gates
@@ -2521,9 +2536,22 @@ assert.match(engineSrc, /export function expireStaleReservations/);
 assert.match(durableIdx, /durableExpireStaleReservations|expireStaleReservations/);
 assert.match(health, /reservationSweep|durableExpireStaleReservations/);
 assert.match(health, /single-node verification only/);
-assert.match(health, /durableServerOwnedJobsReady/);
+assert.match(health, /durableServerOwnedJobsStatus/);
+assert.match(health, /durableServerOwnedJobs,/);
+assert.match(
+  health,
+  /softLive:[\s\S]{0,260}durableServerOwnedJobs\.effective/
+);
+assert.match(
+  health,
+  /paid:[\s\S]{0,300}durableServerOwnedJobs\.effective/
+);
 assert.match(durableIdx, /backend\.kind === "supabase"[\s\S]{0,300}supabaseExpireReservations/);
 assert.match(durableIdx, /EXPIRY_SWEEP_TTL_MS/);
+const sessionSrc = fs.readFileSync(join(root, "lib/session.ts"), "utf8");
+assert.match(sessionSrc, /class SessionSecretRequiredError/);
+assert.match(sessionSrc, /SESSION_SECRET_REQUIRED/);
+assert.match(sessionSrc, /NODE_ENV === "production"[\s\S]{0,300}throw new SessionSecretRequiredError/);
 const shadowSrc = fs.readFileSync(
   join(root, "lib/durableCredits/shadow.ts"),
   "utf8"

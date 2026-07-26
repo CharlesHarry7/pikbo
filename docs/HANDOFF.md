@@ -16,6 +16,27 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] T5 hard blocked pending durable job worker
+- T5 Supabase generation and Seller Pack mutations are **hard disabled**, even
+  when `PIKBO_SERVER_OWNED_JOBS=1` is requested. The current code has no
+  server-owned durable `generation_jobs` worker to create jobs and atomically
+  settle or release them.
+- Do **not** apply the T5 migrations as a launch-enablement step and do not
+  mark T5 ready. A future implementation must create durable jobs server-side,
+  drive provider completion, and terminally settle/release in the same owned
+  workflow before this block can be removed.
+- Production session-backed accounting now refuses requests when
+  `SESSION_SECRET`/`CREDITS_SECRET` is absent; the development demo fallback is
+  intentionally unavailable in production.
+- Production provider generation is also hard blocked while Cookie credits are
+  the only authority; local development may still test FAL, and cached Lab
+  demos remain available without provider cost.
+- The source migration now keeps queued, running, and succeeded durable jobs
+  out of expiry refunds and allows a normal generation job to own the generic
+  `generation` reservation item. It remains unapplied and launch-blocked.
+
+---
+
 ### 2026-07-26 — [grok] Effects exact-demo / concept truth gate
 - Effects no longer assigns a fallback video to recipes without their own registered media; concept cards are static and say `No demo yet`.
 - `effectProof` rejects duplicate recipe registrations and reused MP4 outputs, and only exact registered media can emit VideoObject JSON-LD.
@@ -40,7 +61,7 @@ Newest first. One block per meaningful landing.
 - Wallet/reservation/item rows are locked in one transaction; prices are server-fixed at 10 per generation child and 30 per Seller Pack.
 - Schema readiness now verifies version, critical tables and every RPC; explicit Supabase/required mode fails closed without local-file fallback.
 - Seller Pack reserve/settle/release requires a verified user; terminal child state is keyed to the three fixed recipes and client credit amounts are ignored.
-- Verified locally: targeted ESLint, TypeScript, engine-smoke, production build. SQL was not applied externally; operator migration remains the blocker.
+- Verified locally: targeted ESLint, TypeScript, engine-smoke, production build. SQL was not applied externally; migration application remains blocked pending the durable job worker.
 
 ---
 
@@ -545,9 +566,9 @@ Newest first. One block per meaningful landing.
 
 ### 2026-07-24 — [grok] Supabase Postgres durable adapter + schema probe
 - `lib/durableCredits/supabaseStore.ts`: ensure/get wallet, reserve/settle/release, guest migrate via service role + optimistic version.
-- Auto-use Postgres when T5 tables exist; else local file. Guest FK failures fall back to local.
+- Historical note superseded: the current code must not auto-enable Postgres generation mutations merely because T5 tables exist; durable jobs are still blocked.
 - Health probe reports `schemaReady`; Settings shows durable backend; `/api/me` durable.backend.
-- Cookie generate still authoritative. Apply migration to go multi-node. Verified: typecheck · engine-smoke · lint.
+- Cookie generate remains authoritative. Do not apply migration to enable multi-node generation until the durable job worker is implemented. Verified: typecheck · engine-smoke · lint.
 
 ### 2026-07-24 — [grok] Job timeout recovery + T6 honest status
 - `sweepTimedOutJobs`: queued/running past `jobTimeoutMs` (default 10m, `PIKBO_JOB_TIMEOUT_MS`) → failed `TIMEOUT` / refund unconfirmed note.
@@ -593,7 +614,7 @@ Newest first. One block per meaningful landing.
 - `POST/GET /api/auth/claim`: Bearer JWT → ensure Free account + one-time guest credit migrate (cap 10).
 - Auth callback + Profile claim on load; Profile shows email, durable balance, Sign out.
 - Health exposes `auth.supabase` probe (configured/reachable/serviceRole). Generate still cookie-authoritative.
-- Verified: typecheck · engine-smoke · lint. Apply SQL migration in Supabase for production wallet tables.
+- Verified: typecheck · engine-smoke · lint. Do not apply SQL migration as a production-enable action while T5 remains blocked.
 
 ### 2026-07-23 — [grok] Supabase keys detected · magic-link wiring
 - Boss filled local `.env.local` (URL + publishable + service_role; values not logged).
@@ -664,7 +685,7 @@ Newest first. One block per meaningful landing.
 ### 2026-07-23 — [grok] Phase C start — T5 durable credits foundation
 - SQL: `supabase/migrations/20260723120000_t5_auth_credits.sql` (wallets, ledger, reservations, jobs, guest migration, RLS read policies).
 - Pure engine: `lib/durableCredits/engine.ts` reserve / settle / release / guest migrate + idempotency.
-- Local file adapter: `data/durable-credits.json` (dev); production still Cookie until Supabase env + REQUIRE gate.
+- Local file adapter: `data/durable-credits.json` (dev); production durable launch remains blocked until the server-owned job worker exists.
 - Health probes `durableCredits`; Create session stills interned via `sourceKey` (no 8× Base64).
 - engine-smoke: concurrent 5/6 reserves, Seller Pack 30 partial settle/release, idempotent reserve.
 - Boss blockers consolidated: `docs/BLOCKERS_REQUEST.md` (workflow scope, Supabase keys, FAL budget).

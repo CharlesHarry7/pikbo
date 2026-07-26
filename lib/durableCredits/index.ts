@@ -63,9 +63,30 @@ export function durableSupabaseRequired(): boolean {
   );
 }
 
+/**
+ * Deliberate launch capability, not an environment toggle. Do not change this
+ * until a server worker creates durable generation_jobs and atomically drives
+ * provider completion plus terminal settlement/release.
+ */
+export const SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED = false;
+
+export function durableServerOwnedJobsStatus(): {
+  envRequested: boolean;
+  implemented: boolean;
+  effective: boolean;
+} {
+  const envRequested = process.env.PIKBO_SERVER_OWNED_JOBS === "1";
+  const implemented = SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED;
+  return {
+    envRequested,
+    implemented,
+    effective: envRequested && implemented,
+  };
+}
+
 /** Supabase terminal accounting is unsafe until jobs are persisted server-side. */
 export function durableServerOwnedJobsReady(): boolean {
-  return process.env.PIKBO_SERVER_OWNED_JOBS === "1";
+  return durableServerOwnedJobsStatus().effective;
 }
 
 type BackendDecision =
@@ -81,7 +102,7 @@ async function durableBackend(): Promise<BackendDecision> {
         kind: "unavailable",
         code: "SERVER_OWNED_JOBS_REQUIRED",
         error:
-          "Supabase durable generation is disabled until server-owned jobs are ready",
+          "Supabase durable generation is hard-disabled until server-owned jobs are implemented",
       };
     }
     // Optional Supabase config must not create a remote reservation that this

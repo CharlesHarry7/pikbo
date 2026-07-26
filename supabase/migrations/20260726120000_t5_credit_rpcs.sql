@@ -362,7 +362,10 @@ begin
     raise exception using errcode = 'P0001',
       message = 'PIKBO_CREDITS:JOB_OWNERSHIP_MISMATCH';
   end if;
-  if v_job.effect_slug <> p_item_key then
+  -- A single generation reservation uses the generic item key. Seller Pack
+  -- items are recipe-specific and must match the durable job effect exactly.
+  if p_item_key <> 'generation'
+     and v_job.effect_slug <> p_item_key then
     raise exception using errcode = 'P0001',
       message = 'PIKBO_CREDITS:JOB_ITEM_MISMATCH';
   end if;
@@ -502,15 +505,29 @@ begin
   loop
     -- Reservation is locked above; lock its items before aggregating them.
     perform 1
-      from public.credit_reservation_items
-     where reservation_id = v_reservation.id
-       and status = 'pending'
+      from public.credit_reservation_items i
+     where i.reservation_id = v_reservation.id
+       and i.status = 'pending'
+       and not exists (
+         select 1
+           from public.generation_jobs j
+          where j.reservation_id = v_reservation.id
+            and (i.item_key = 'generation' or j.effect_slug = i.item_key)
+            and j.status in ('queued', 'running', 'succeeded')
+       )
      for update;
     select coalesce(sum(credits), 0)
       into v_released
-      from public.credit_reservation_items
-     where reservation_id = v_reservation.id
-       and status = 'pending';
+      from public.credit_reservation_items i
+     where i.reservation_id = v_reservation.id
+       and i.status = 'pending'
+       and not exists (
+         select 1
+           from public.generation_jobs j
+          where j.reservation_id = v_reservation.id
+            and (i.item_key = 'generation' or j.effect_slug = i.item_key)
+            and j.status in ('queued', 'running', 'succeeded')
+       );
     if v_released = 0 then
       continue;
     end if;
@@ -532,13 +549,20 @@ begin
      where account_id = v_reservation.account_id
      returning * into strict v_wallet;
 
-    update public.credit_reservation_items
+    update public.credit_reservation_items i
        set status = 'released',
            terminal_idempotency_key =
-             'expire:' || v_reservation.id::text || ':' || item_key,
+             'expire:' || v_reservation.id::text || ':' || i.item_key,
            updated_at = now()
-     where reservation_id = v_reservation.id
-       and status = 'pending';
+     where i.reservation_id = v_reservation.id
+       and i.status = 'pending'
+       and not exists (
+         select 1
+           from public.generation_jobs j
+          where j.reservation_id = v_reservation.id
+            and (i.item_key = 'generation' or j.effect_slug = i.item_key)
+            and j.status in ('queued', 'running', 'succeeded')
+       );
 
     update public.credit_reservations
        set released_credits = released_credits + v_released,

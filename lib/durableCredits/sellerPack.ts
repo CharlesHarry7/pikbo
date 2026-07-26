@@ -7,6 +7,7 @@
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import {
   durableCreditsActive,
+  durableServerOwnedJobsReady,
   durableRelease,
   durableReserve,
   durableSettle,
@@ -28,7 +29,7 @@ export type SellerPackItemKey = (typeof SELLER_PACK_ITEM_KEYS)[number];
  * generation_jobs itself. Browser children only have untrusted request ids.
  */
 export function sellerPackServerOwnedJobsReady(): boolean {
-  return process.env.PIKBO_SERVER_OWNED_JOBS === "1";
+  return durableServerOwnedJobsReady();
 }
 
 function sellerPackItemKey(raw: string | undefined): SellerPackItemKey | null {

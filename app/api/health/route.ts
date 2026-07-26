@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { probeEntitlementsStore } from "@/lib/entitlements";
 import {
-  durableServerOwnedJobsReady,
+  durableServerOwnedJobsStatus,
   durableExpireStaleReservations,
   probeDurableCreditsStore,
 } from "@/lib/durableCredits";
@@ -57,13 +57,18 @@ export async function GET() {
   const mode = generateMode();
   const payments = paymentsReadiness();
   const durableGate = durableCredits.required && !durableCredits.writable;
+  const durableServerOwnedJobs = durableServerOwnedJobsStatus();
 
   /** Demo / soft-live / paid ladders — honest gates for ops */
   const ready = {
     /** Cached Lab + Studio demo path (no provider key; free, no credit burn) */
     demo: true,
     /** Live Mini/full Seedance when FAL_KEY + session secret present */
-    softLive: fal && (sessionSecret || !production) && !durableGate,
+    softLive:
+      fal &&
+      (sessionSecret || !production) &&
+      !durableGate &&
+      (!production || durableServerOwnedJobs.effective),
     /**
      * Real charges — needs durable entitlements (PRELAUNCH R1).
      * File store unwritable ⇒ paid stays false even if Stripe env is set.
@@ -76,9 +81,13 @@ export async function GET() {
       stripeWebhook &&
       entitlements.writable &&
       durableCredits.writable &&
+      durableServerOwnedJobs.effective &&
       payments.readyForTestCheckout,
-    /** T5 local adapter or Supabase — not live Stripe */
-    durableCredits: durableCredits.writable && durableCredits.configured,
+    /** Local-file is sufficient only for development verification. */
+    durableCredits:
+      durableCredits.writable &&
+      durableCredits.configured &&
+      (!production || durableServerOwnedJobs.effective),
   };
 
   return NextResponse.json({
@@ -104,7 +113,7 @@ export async function GET() {
     /** Local files are only a single-node development verification backend. */
     durableCreditsBackendNote:
       "local-file is single-node verification only; production multi-node accounting requires Supabase RPCs",
-    durableServerOwnedJobsReady: durableServerOwnedJobsReady(),
+    durableServerOwnedJobs,
     service: "pikbo",
     foundation: "L0-L3",
     time: new Date().toISOString(),

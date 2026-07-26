@@ -39,6 +39,7 @@ import {
   shadowSettle,
   type ShadowReservation,
 } from "@/lib/durableCredits/shadow";
+import { durableServerOwnedJobsReady } from "@/lib/durableCredits";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 import {
   beginSyncGenerateJob,
@@ -363,6 +364,24 @@ export async function POST(req: Request) {
         /* best-effort job ledger */
       }
       return NextResponse.json(payload);
+    }
+
+    // A signed Cookie balance is replayable across production instances. Until
+    // the durable server-owned job worker exists, production must not submit a
+    // paid provider request using Cookie credits as its only authority.
+    if (
+      process.env.NODE_ENV === "production" &&
+      !durableServerOwnedJobsReady()
+    ) {
+      return err(
+        {
+          error:
+            "Live generation is disabled until server-owned jobs and atomic credits are implemented. Cached Lab demos remain available.",
+          code: "SERVER_OWNED_JOBS_REQUIRED",
+          session: publicSession(session),
+        },
+        503
+      );
     }
 
     // --- Live path: charge credits only when a real provider call will run ---

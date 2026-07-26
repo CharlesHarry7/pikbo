@@ -6,6 +6,17 @@ import { CREDITS_PER_VIDEO, getPlan, type PlanId } from "@/lib/pricing";
 export const SESSION_COOKIE = "pikbo_s";
 const MAX_AGE = 60 * 60 * 24 * 180; // 180 days
 
+export class SessionSecretRequiredError extends Error {
+  constructor() {
+    super("SESSION_SECRET_REQUIRED");
+    this.name = "SessionSecretRequiredError";
+  }
+}
+
+export function sessionSecretConfigured(): boolean {
+  return Boolean((process.env.SESSION_SECRET || process.env.CREDITS_SECRET || "").trim());
+}
+
 export type UserSession = {
   id: string;
   plan: PlanId;
@@ -22,13 +33,15 @@ export type PublicSession = UserSession & {
 };
 
 function secret(): string {
-  const s = process.env.SESSION_SECRET || process.env.CREDITS_SECRET;
+  const s = (process.env.SESSION_SECRET || process.env.CREDITS_SECRET || "").trim();
   if (!s) {
     if (process.env.NODE_ENV === "production") {
       console.error(
-        "[pikbo] SESSION_SECRET is missing — using insecure default. Set it before real traffic."
+        "[pikbo] SESSION_SECRET is missing — refusing session-backed requests."
       );
+      throw new SessionSecretRequiredError();
     }
+    // Development/demo only. Production must never sign with a public default.
     return "pikbo-dev-secret-change-me";
   }
   return s;
