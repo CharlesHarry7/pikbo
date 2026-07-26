@@ -14,7 +14,7 @@ description: Fully automated Pikbo growth execution (AI directories, PH assets, 
    git fetch origin && git pull --ff-only origin main
    git log origin/main --oneline -30
    ```
-   Then read `docs/growth/AGENT_BUS.md`, `docs/growth/AGENT_STATE.md`, `docs/HANDOFF.md` (first 40 lines), latest `docs/growth/runs/*-report.md`.
+   Then read `docs/growth/WORK_QUEUE.md` (execute every `status: open` task first), `docs/growth/AGENT_BUS.md`, `docs/growth/AGENT_STATE.md`, `docs/HANDOFF.md` (first 40 lines), latest `docs/growth/runs/*-report.md`.
 4. After every run: update `AGENT_STATE.md` (`writer: workbuddy`), commit growth artifacts with a scannable message (`[workbuddy] growth run <ts>: N submitted / M captcha`), **push** so Grok sees it without the boss.
 5. Never ask the boss to “tell Grok”, “forward logs”, or “confirm eng status” — pull the repo instead.
 

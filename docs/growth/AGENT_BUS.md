@@ -17,8 +17,12 @@
 | **Grok 自驱提示** | `docs/prompts/GROK_SELF_OPS.md` | 谷歌观察 + 产品迭代 + X 雷达 |
 | **站点观察日志** | `docs/ops/SITE_WATCH.md` | softLive / SERP / HF 缺口 / X |
 | **增长状态看板** | `docs/growth/AGENT_STATE.md` | 覆盖写：谁、何时、tip、下一步 |
+| **WorkBuddy 派工队列** | `docs/growth/WORK_QUEUE.md` | Grok/老板写 open 任务；WB 必须清空 |
 | **增长报告** | `docs/growth/runs/*-report.md` | 每次目录/外链跑完的结果表 |
 | **本协议** | `docs/growth/AGENT_BUS.md` | 协作铁律（本文件） |
+
+**注意：** Grok **不能**远程启动 WorkBuddy 进程。派工 = 写 `WORK_QUEUE.md` + push；  
+WorkBuddy 必须自己 pull 执行。老板可把会话提示词再丢一次以唤醒 WB。
 
 **未 push 的本地改动 = 对方不可见 = 等于没发生。**
 

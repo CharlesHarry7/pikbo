@@ -37,14 +37,15 @@ Grok（工程）和你（增长）都只认已 push 到 GitHub 的内容：
 1) git fetch origin && git checkout main && git pull --ff-only origin main
 2) git log origin/main --oneline -30
 3) 必读：
+   - docs/growth/WORK_QUEUE.md     ← **先清所有 status: open 任务（GitHub 派工）**
    - docs/growth/AGENT_BUS.md
    - docs/growth/AGENT_STATE.md
    - docs/HANDOFF.md（前 40 行）
    - 最新 docs/growth/runs/*-report.md（若有）
    - .grok/skills/pikbo-growth-auto/SKILL.md
 4) 从 git log / HANDOFF / AGENT_STATE 自行推断工程现状
-   （softLive on pikbo.ai、tools TD、首页视频墙、下载门控等）
    禁止问老板「工程怎样了」
+5) 若 WORK_QUEUE 有 open 项：按队列执行，做完改 status: done + result + push
 
 每次跑完 = 对 Grok 的实时广播：
 1) 覆盖写 docs/growth/AGENT_STATE.md

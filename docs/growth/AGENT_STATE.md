@@ -13,12 +13,11 @@ status: |
   Modules Official·Lab≥4·Remake CTA. softLive true. No Stripe.
 last_workbuddy_report: "docs/growth/runs/20260726T161415Z-report.md"
 next_for_workbuddy: |
-  1) git pull origin main  (pick up cleaned directories.json)
-  2) set PIKBO_GROWTH_EMAIL if available (login walls)
+  MANDATORY: read docs/growth/WORK_QUEUE.md — clear all status: open (WQ-2026-07-27-01).
+  1) git pull origin main
+  2) optional PIKBO_GROWTH_EMAIL for login walls
   3) GROWTH_CHROME_CHANNEL=chrome python3 scripts/growth-auto/run_growth.py --all
-  4) priority: free=true not done — awesomeaitools, dang-ai, aivalley, insidr,
-     aiwizard, aitoolhunt, saasaitools, startupfa-me, launched-io, saaspo
-  5) commit [workbuddy] + push (or push_via_api.py if git 443 blocked)
+  4) mark WORK_QUEUE task done + AGENT_STATE writer=workbuddy + push
 next_for_grok: |
   continue HF density / Generate; re-read next WB report into SITE_WATCH
 next_for_claude: "UI/IA density"

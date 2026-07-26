@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] WorkBuddy WORK_QUEUE dispatch on GitHub
+- `docs/growth/WORK_QUEUE.md`: open task WQ-2026-07-27-01 (second growth run).
+- Grok cannot remote-start WorkBuddy; queue is the dispatch bus.
+- WORKBUDDY_AUTO_PROMPT + AGENT_BUS + skill: pull then clear open queue.
+
 ### 2026-07-27 — [grok] WorkBuddy intake → SITE_WATCH + dirs clean + Modules proof
 - Pulled WB `d308b46`/`bb7a6da`: run report 18 dirs (submitted=1 prior only).
 - SITE_WATCH: full growth intake + secrets/PH blocked notes.
