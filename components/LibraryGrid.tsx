@@ -1083,18 +1083,15 @@ export function LibraryGrid() {
                     {historyItemDownloadAllowed(item) &&
                     (item.requestId ||
                       isSafeDeliverableUrl(item.videoUrl)) ? (
-                      <a
-                        href={
-                          item.requestId
-                            ? `/api/downloads/${encodeURIComponent(item.requestId)}`
-                            : item.videoUrl
-                        }
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => void downloadClip(item)}
                         className="text-xs font-medium text-[var(--mint)] hover:underline"
+                        title="HEAD gate then open — cancel / timeout / T6 honest"
+                        data-history-open="gated"
                       >
                         Open result
-                      </a>
+                      </button>
                     ) : (
                       <span
                         className="text-xs font-medium text-[var(--fg-dim)]"

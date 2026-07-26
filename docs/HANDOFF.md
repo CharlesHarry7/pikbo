@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Library history Open result HEAD-gated
+- History card "Open result" is a button → `downloadClip` (HEAD first), not a
+  raw `<a href=/api/downloads>` that can dump 403 JSON in a new tab.
+- `data-history-open=gated`; session Download already gated.
+
 ### 2026-07-26 — [grok] Proof Lab ≥4 chips on cinema + community cards
 - HomeCinemaHero, HomeProjectsExplore, ProjectCard show provisional Lab ≥4
   when recipe passes home-proof quality (not external QA).

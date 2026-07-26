@@ -2566,6 +2566,13 @@ assert.match(
 );
 // Library session jobs: HEAD-gated download (not raw <a> to 403 JSON)
 assert.match(library, /data-session-download=["']gated["']/);
+// History "Open result" must not be a raw /api/downloads <a> (403 JSON tabs)
+assert.match(library, /data-history-open=["']gated["']/);
+assert.match(library, /downloadClip\(item\)|void downloadClip/);
+assert.doesNotMatch(
+  library,
+  /Open result[\s\S]{0,120}href=\{\s*item\.requestId/
+);
 assert.match(library, /downloadSessionJob|onDownload/);
 assert.match(
   fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8"),
