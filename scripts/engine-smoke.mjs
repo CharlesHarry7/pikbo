@@ -1917,24 +1917,12 @@ assert.match(downloadRouteSrc, /isSafeDeliverableUrl|UNSAFE_URL/);
 assert.match(downloadRouteSrc, /absoluteDeliverableUrl|new URL\(/);
 assert.match(downloadRouteSrc, /export async function HEAD/);
 assert.match(downloadRouteSrc, /X-Pikbo-Download-Code|X-Pikbo-Watermark/);
-// Fail-closed T6: owned derivative gate only (no download-time bake / env unlock)
-assert.match(downloadRouteSrc, /downloadAllowedForJob/);
+// Live T6 recompute at gate time + HEAD bake honesty (not frozen job.downloadAllowed)
+assert.match(downloadRouteSrc, /canDownloadResult/);
 assert.match(downloadRouteSrc, /X-Pikbo-T6|X-Pikbo-Bake/);
-assert.doesNotMatch(downloadRouteSrc, /bakeWatermarkedVideo/);
-assert.match(downloadRouteSrc, /bakedDerivative|owned derivative|Verified owned/);
-assert.match(genJobsStore, /downloadAllowedForJob|bakedDerivative/);
-assert.match(
-  fs.readFileSync(join(root, "lib/t6Worker.ts"), "utf8"),
-  /SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED\s*=\s*false/
-);
-assert.match(
-  fs.readFileSync(join(root, "lib/t6Watermark.ts"), "utf8"),
-  /t6WorkerReadiness|serverOwnedWorkerReady/
-);
-assert.match(
-  fs.readFileSync(join(root, "lib/t6Bake.ts"), "utf8"),
-  /SERVER_WORKER_DISABLED/
-);
+assert.match(downloadRouteSrc, /T6_BAKE_FAILED|bakeWatermarkedVideo/);
+assert.match(downloadRouteSrc, /freeLiveWatermark|never hand raw/);
+assert.match(genJobsStore, /Recompute T6|downloadAllowedForJob/);
 // Health free-trial product contract (session state stays on /api/me)
 assert.match(health, /freeTrial/);
 assert.match(health, /failedLiveRefunds/);
@@ -2826,6 +2814,7 @@ assert.match(
   fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
   /suite\.preview["']:\s*["']Preview["']|suite\.tag\.preview/
 );
+
 // Hf product rail + explore job grid: product-first, Preview tags
 const hfRailSrc = fs.readFileSync(
   join(root, "components/HfProductRail.tsx"),
@@ -2845,6 +2834,7 @@ assert.match(
   fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
   /Flow · Preview|Seller Pack/
 );
+
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /Optional support|not the product|photo → Seedance/
