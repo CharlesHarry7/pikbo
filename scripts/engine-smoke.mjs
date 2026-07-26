@@ -2012,6 +2012,15 @@ const guidesSrc24 = fs.readFileSync(join(root, "lib/guides.ts"), "utf8");
 assert.match(guidesSrc24, /designer-toy-ai-video-vs-generic-tools/);
 assert.match(guidesSrc24, /seller-pack-workflow-listing-reveal-hook/);
 assert.match(
+  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
+  /data-cinema-cta=["']seller-pack["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
+  /createRemixHref/
+);
+
+assert.match(
   fs.readFileSync(join(root, "app/about/page.tsx"), "utf8"),
   /Designer-toy AI video|CONCEPT_ROBOTS/
 );

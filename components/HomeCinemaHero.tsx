@@ -7,6 +7,7 @@ import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
 import { useI18n } from "@/components/LanguageProvider";
 import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
+import { createRemixHref } from "@/lib/remixIntent";
 
 /**
  * Homepage first fold — video cinema (HF-style).
@@ -66,6 +67,13 @@ export function HomeCinemaHero({
           >
             {t("home.cinema.ctaPrimary")}
           </a>
+          <Link
+            href="/create?mode=seller-pack"
+            className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-6 py-3.5 text-sm font-bold text-[#c8ff3d]"
+            data-cinema-cta="seller-pack"
+          >
+            Seller Pack
+          </Link>
           <a
             href="#toy-wall"
             className="rounded-full border border-white/25 px-6 py-3.5 text-sm font-bold text-white"
@@ -155,6 +163,14 @@ export function HomeCinemaHero({
           >
             {t("home.cinema.ctaPrimary")}
           </a>
+          <Link
+            href="/create?mode=seller-pack"
+            prefetch
+            className="inline-flex items-center justify-center rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-3.5 text-sm font-bold text-[#c8ff3d] backdrop-blur-md transition hover:border-[#c8ff3d] hover:bg-[#c8ff3d]/15"
+            data-cinema-cta="seller-pack"
+          >
+            Seller Pack
+          </Link>
           <a
             href="#toy-wall"
             className="inline-flex items-center justify-center rounded-full border border-white/25 bg-black/45 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-white/50"
@@ -162,7 +178,11 @@ export function HomeCinemaHero({
             {t("home.cinema.ctaSecondary")}
           </a>
           <Link
-            href={item.href}
+            href={
+              item.recipeSlug
+                ? createRemixHref(item.recipeSlug)
+                : item.href
+            }
             prefetch
             onClick={() =>
               track({
@@ -173,6 +193,7 @@ export function HomeCinemaHero({
               })
             }
             className="text-xs font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline sm:text-sm"
+            data-cinema-cta="remake"
           >
             {t("home.cinema.remake")}
           </Link>

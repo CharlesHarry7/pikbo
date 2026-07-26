@@ -4,6 +4,10 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Cinema hero Seller Pack CTA + remake remix href
+- HomeCinemaHero: Seller Pack door + createRemixHref remake (recipe carry).
+- Smoke: data-cinema-cta=seller-pack.
+
 ### 2026-07-27 — [grok] 24h sprint: guides + About + home long-tail mesh + growth queue
 - Guides: designer-toy-ai-video-vs-generic-tools; seller-pack-workflow-listing-reveal-hook
 - `/about` trust page (CONCEPT_ROBOTS noindex); Footer links
