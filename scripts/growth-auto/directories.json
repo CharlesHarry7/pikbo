@@ -1,5 +1,5 @@
 {
-  "_comment": "Free AI directory submit list for Pikbo (https://pikbo.ai). free=false skips paid. Updated 2026-07-27 from WorkBuddy manual browser-use run. status_hint=done = already submitted.",
+  "_comment": "Free AI directory submit list for Pikbo (https://pikbo.ai). free=false skips paid. Updated 2026-07-27 cycle 2: added 10 new free dirs, restored 2 broken dirs. status_hint=done = already submitted.",
   "product": {
     "name": "Pikbo",
     "url": "https://pikbo.ai",
@@ -17,7 +17,12 @@
     "Pikbo.ai",
     "Pikbo - AI toy video generator",
     "AI toy video generator by Pikbo",
-    "toy video from one photo"
+    "toy video from one photo",
+    "Pikbo AI video suite for designer toys",
+    "designer toy AI video maker - Pikbo",
+    "blind box video generator | Pikbo",
+    "Pikbo - turn one photo into an AI toy video",
+    "AI figure 360 video by Pikbo"
   ],
   "directories": [
     {
@@ -98,17 +103,17 @@
       "url": "https://ai-tools.io",
       "submit_url": "https://ai-tools.io/submit",
       "free": true,
-      "status_hint": "broken",
-      "note": "WB 20260727: ERR_CONNECTION_CLOSED - site down"
+      "status_hint": "pending",
+      "note": "WB 20260727c2: Site back online (HTTP 200). JS-rendered page, needs browser. Previously broken."
     },
     {
       "slug": "startupfa-me",
       "name": "Startupfa.me",
       "url": "https://startupfa.me",
-      "submit_url": "https://startupfa.me/submit",
+      "submit_url": "https://startupfa.me/s/submitator",
       "free": true,
-      "status_hint": "broken",
-      "note": "WB 20260727: 404 - page not found"
+      "status_hint": "pending",
+      "note": "WB 20260727c2: /submit 404. Actual submit link is /s/submitator → submitator.com (paid submission service). Likely paid_skip."
     },
     {
       "slug": "launched-io",
@@ -117,7 +122,7 @@
       "submit_url": "https://launched.io/submit",
       "free": true,
       "status_hint": "broken",
-      "note": "WB 20260727: SSL error - site inaccessible"
+      "note": "WB 20260727: SSL error - site still inaccessible (c2 recheck confirms still down)"
     },
     {
       "slug": "saaspo",
@@ -298,6 +303,96 @@
       "submit_url": "https://www.futurepedia.io/submit",
       "free": false,
       "status_hint": "paid_skip"
+    },
+    {
+      "slug": "freeappsai",
+      "name": "Free AI Apps",
+      "url": "https://freeappsai.com",
+      "submit_url": "https://freeappsai.com/add/",
+      "free": true,
+      "status_hint": "paid_skip",
+      "note": "WB 20260727c2: New dir. Site says 'temporarily paused adding apps'. Standard option requires reciprocal link; not a real free submission."
+    },
+    {
+      "slug": "findcool",
+      "name": "Find Cool Tools",
+      "url": "https://findcool.tools",
+      "submit_url": "https://findcool.tools/submit-tool",
+      "free": false,
+      "status_hint": "paid_skip",
+      "note": "WB 20260727c2: /submit-tool shows paid plan $1.99/mo and 'Not accepting new tools'. No free submission."
+    },
+    {
+      "slug": "goodaitools",
+      "name": "Good AI Tools",
+      "url": "https://goodaitools.com",
+      "submit_url": "https://goodaitools.com/submit",
+      "free": true,
+      "status_hint": "pending",
+      "note": "WB 20260727c2: New dir. Has form, low login mentions, no captcha."
+    },
+    {
+      "slug": "free-ai-tools-directory",
+      "name": "Free AI Tools Directory",
+      "url": "https://free-ai-tools-directory.com",
+      "submit_url": "https://free-ai-tools-directory.com/submit-request/",
+      "free": true,
+      "status_hint": "pending",
+      "note": "WB 20260727c2: New dir. Has 11 form elements, has captcha. Free."
+    },
+    {
+      "slug": "devpages",
+      "name": "DevPages",
+      "url": "https://www.devpages.io",
+      "submit_url": "https://www.devpages.io/submit-a-tool",
+      "free": true,
+      "status_hint": "fail",
+      "note": "WB 20260727c2: New dir. Form fills OK but Email is required and PIKBO_GROWTH_EMAIL is unset. Popup ads also interfere. Retry after email secret is set."
+    },
+    {
+      "slug": "aitoolszone",
+      "name": "AI Tools Zone",
+      "url": "https://aitoolszone.com",
+      "submit_url": "https://aitoolszone.com/submit",
+      "free": true,
+      "status_hint": "login_required",
+      "note": "WB 20260727c2: New dir. JS-rendered; on load shows 'Sign In Required' popup. Requires account to submit."
+    },
+    {
+      "slug": "faind-ai",
+      "name": "Faind AI",
+      "url": "https://faind.ai",
+      "submit_url": "https://faind.ai/submit-a-tool/",
+      "free": true,
+      "status_hint": "pending",
+      "note": "WB 20260727c2: New dir. JS-rendered, needs browser. No login/paid indicators."
+    },
+    {
+      "slug": "dokeyai",
+      "name": "DokeyAI",
+      "url": "https://dokeyai.com",
+      "submit_url": "https://dokeyai.com/submit",
+      "free": true,
+      "status_hint": "login_required",
+      "note": "WB 20260727c2: New dir. Clicking Submit opens 'Please continue by logging in' popup. Requires login."
+    },
+    {
+      "slug": "fazier",
+      "name": "Fazier",
+      "url": "https://fazier.com",
+      "submit_url": "https://fazier.com/submit",
+      "free": true,
+      "status_hint": "login_required",
+      "note": "WB 20260727c2: New dir. Free tier exists but clicking Submit opens login popup. Requires account."
+    },
+    {
+      "slug": "first100users",
+      "name": "First 100 Users",
+      "url": "https://www.first100users.com",
+      "submit_url": "https://www.first100users.com/submit/",
+      "free": true,
+      "status_hint": "pending",
+      "note": "WB 20260727c2: New dir. Softr page slow to load. May need longer wait."
     }
   ]
 }

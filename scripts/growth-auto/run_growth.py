@@ -229,11 +229,34 @@ def phase_directories(log, product, directories, email, headed, max_minutes):
     t0 = time.time()
     results = []
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=not headed, args=["--no-sandbox","--disable-blink-features=AutomationControlled"])
-        ctx = browser.new_context(
-            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
-            viewport={"width":1366,"height":900},
-        )
+        # Try CDP debug instance first (has Google login cookies, anti-automation bypass)
+        cdp_browser = None
+        try:
+            import urllib.request
+            req = urllib.request.urlopen("http://localhost:9222/json/version", timeout=3)
+            if req.status == 200:
+                cdp_browser = p.chromium.connect_over_cdp("http://localhost:9222")
+                print("  [cdp] Connected to Chrome debug instance on :9222")
+        except Exception as e:
+            print(f"  [cdp] No debug instance on :9222 ({e}), launching new browser")
+
+        if cdp_browser:
+            browser = cdp_browser
+            contexts = browser.contexts
+            if contexts:
+                ctx = contexts[0]
+                print("  [cdp] Using existing context with login cookies")
+            else:
+                ctx = browser.new_context(
+                    user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+                    viewport={"width":1366,"height":900},
+                )
+        else:
+            browser = p.chromium.launch(headless=not headed, args=["--no-sandbox","--disable-blink-features=AutomationControlled"])
+            ctx = browser.new_context(
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+                viewport={"width":1366,"height":900},
+            )
         for d in directories:
             if time.time() - t0 > max_minutes*60:
                 print("  max_minutes reached, stopping directory phase")
@@ -298,10 +321,15 @@ def phase_directories(log, product, directories, email, headed, max_minutes):
                     submit_url=d.get("submit_url"), status=status, reason=reason,
                     filled=filled)
             results.append({**d, "status":status, "reason":reason, "filled":filled})
-        try: ctx.close()
-        except Exception: pass
-        try: browser.close()
-        except Exception: pass
+        # Don't close CDP browser or shared context — just disconnect
+        if not cdp_browser:
+            try: ctx.close()
+            except Exception: pass
+            try: browser.close()
+            except Exception: pass
+        else:
+            try: browser.close()  # disconnects from CDP without killing Chrome
+            except Exception: pass
     return results
 
 def phase_ph_assets(log, product):
