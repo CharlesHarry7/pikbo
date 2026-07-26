@@ -80,6 +80,8 @@ function gateDownload(
     demo: job.demo,
     watermark: job.watermark,
     status: job.status,
+    jobId: job.id,
+    providerRequestId: job.requestId,
     bakedDerivative: job.bakedDerivative,
   });
   if (!allowed) {

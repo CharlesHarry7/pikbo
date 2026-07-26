@@ -5,7 +5,7 @@
  */
 
 import { canDownloadResult, isSafeDeliverableUrl } from "@/lib/createTrust";
-import { t6OwnedDeliveryPath } from "@/lib/t6Worker";
+import { canServeVerifiedT6Derivative } from "@/lib/t6Worker";
 import type {
   BakedWatermarkDerivative,
   GenerationJob,
@@ -66,18 +66,20 @@ export function downloadAllowedForJob(opts: {
   demo: boolean;
   watermark: boolean;
   status: GenerationJobStatus;
+  jobId?: string;
+  providerRequestId?: string;
   bakedDerivative?: BakedWatermarkDerivative;
 }): boolean {
   if (opts.status !== "succeeded") return false;
+  // Free live only unlocks when the derivative is bound to this exact job
+  // identity AND the owned delivery stack is actually ready.
   const bakedDerivativeVerified =
-    opts.bakedDerivative?.status === "succeeded" &&
-    opts.bakedDerivative.contentType === "video/mp4" &&
-    Boolean(opts.bakedDerivative.deliveryPath) &&
-    opts.bakedDerivative.deliveryPath ===
-      t6OwnedDeliveryPath(opts.bakedDerivative.objectKey) &&
-    Boolean(opts.bakedDerivative.sourceChecksum) &&
-    Boolean(opts.bakedDerivative.outputChecksum) &&
-    opts.bakedDerivative.probe?.bakedMarkSignal === true;
+    Boolean(opts.jobId) &&
+    canServeVerifiedT6Derivative({
+      jobId: opts.jobId!,
+      providerRequestId: opts.providerRequestId,
+      derivative: opts.bakedDerivative,
+    });
   return canDownloadResult({
     demo: opts.demo,
     watermark: opts.watermark,
@@ -90,11 +92,12 @@ export function publicVideoUrlForJob(job: GenerationJob): string | undefined {
   if (job.demo || !job.watermark) return job.videoUrl;
   const derivative = job.bakedDerivative;
   if (
-    derivative?.status === "succeeded" &&
-    derivative.contentType === "video/mp4" &&
-    derivative.probe?.bakedMarkSignal === true &&
-    derivative.deliveryPath &&
-    derivative.deliveryPath === t6OwnedDeliveryPath(derivative.objectKey) &&
+    canServeVerifiedT6Derivative({
+      jobId: job.id,
+      providerRequestId: job.requestId,
+      derivative,
+    }) &&
+    derivative?.deliveryPath &&
     isSafeDeliverableUrl(derivative.deliveryPath)
   ) {
     return derivative.deliveryPath;
@@ -334,16 +337,20 @@ export function updateJob(
     createdAt: cur.createdAt,
     updatedAt: nowIso(),
   };
-  // Recompute download gate whenever status/demo/watermark change.
+  // Recompute download gate when status/demo/watermark OR owned derivative changes.
   if (
     patch.status !== undefined ||
     patch.demo !== undefined ||
-    patch.watermark !== undefined
+    patch.watermark !== undefined ||
+    patch.bakedDerivative !== undefined ||
+    patch.requestId !== undefined
   ) {
     next.downloadAllowed = downloadAllowedForJob({
       demo: next.demo,
       watermark: next.watermark,
       status: next.status,
+      jobId: next.id,
+      providerRequestId: next.requestId,
       bakedDerivative: next.bakedDerivative,
     });
   }
@@ -530,6 +537,8 @@ export function recordSucceededGenerate(input: {
       demo: input.demo,
       watermark: input.watermark,
       status: "succeeded",
+      jobId: id,
+      providerRequestId: input.requestId,
     }),
     videoUrl: input.videoUrl,
     model: input.model,
@@ -627,6 +636,8 @@ export function toPublicJob(
       demo: job.demo,
       watermark: job.watermark,
       status: job.status,
+      jobId: job.id,
+      providerRequestId: job.requestId,
       bakedDerivative: job.bakedDerivative,
     }),
     owned: true,

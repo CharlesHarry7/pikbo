@@ -4,6 +4,7 @@
  * Run: node scripts/engine-smoke.mjs
  */
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
@@ -2318,6 +2319,7 @@ assert.equal(ageMs(new Date(Date.now()).toISOString(), Date.now()), 0);
 
 // T6 honest blocked status (player overlay ≠ file bake)
 const t6 = fs.readFileSync(join(root, "lib/t6Watermark.ts"), "utf8");
+const t6Worker = fs.readFileSync(join(root, "lib/t6Worker.ts"), "utf8");
 assert.match(t6, /export function t6Report/);
 assert.match(t6, /status:\s*"blocked"|blocked/);
 assert.match(t6, /playerOverlayIsNotFileWatermark/);
@@ -2325,9 +2327,53 @@ assert.doesNotMatch(t6, /PIKBO_T6_FILE_BAKE\s*===\s*["']1["']/);
 assert.match(t6, /t6WorkerReadiness|serverOwnedWorkerReady|blocked/);
 assert.match(t6, /bake_on_download|worker_configured/);
 assert.match(t6, /t6AllowsFreeDownloadAttempt|workerUrlConfigured/);
+assert.match(t6Worker, /SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED = false/);
+assert.match(t6Worker, /createServerOwnedT6Input|ServerOwnedT6Input/);
+assert.match(t6Worker, /isPublicProviderOutputUrl/);
+assert.match(t6Worker, /https:|localhost|isNonPublicIpv4|isPrivateIpv4/);
+assert.match(t6Worker, /hasOnlyPublicResolvedAddresses|SOURCE_PRIVATE_NETWORK/);
+assert.match(t6Worker, /T6_MAX_SOURCE_BYTES|T6_SOURCE_TIMEOUT_MS/);
+assert.match(t6Worker, /video\/mp4|SOURCE_CONTENT_TYPE/);
+assert.match(t6Worker, /drawtext|PIKBO baked watermark/);
+assert.match(t6Worker, /t6-baked\//);
+assert.match(t6Worker, /t6OwnedDeliveryPath|\/api\/t6-derivatives/);
+assert.match(t6Worker, /transitionT6Derivative|DERIVATIVE_UNVERIFIED/);
+// Hard gate: derivative must bind jobId+providerRequestId; metadata alone cannot unlock
+assert.match(t6Worker, /isVerifiedT6DerivativeForJob|DERIVATIVE_IDENTITY_MISMATCH/);
+assert.match(t6Worker, /t6DeliveryReadiness|canServeVerifiedT6Derivative/);
+assert.match(genJobsStore, /canServeVerifiedT6Derivative/);
+assert.match(genJobsStore, /jobId:.*\n[\s\S]*?providerRequestId:/);
+assert.match(downloadRouteSrc, /jobId:\s*job\.id/);
+assert.match(downloadRouteSrc, /providerRequestId:\s*job\.requestId/);
+assert.match(t6Worker, /SERVER_WORKER_DISABLED/);
+assert.match(
+  t6Worker,
+  /derivativeServingImplemented = false|storageAdapterImplemented = false/
+);
+assert.match(t6, /derivativeServingImplemented|storageAdapterImplemented/);
+assert.equal(
+  fs.existsSync(join(root, "app/api/t6-derivatives")),
+  false,
+  "T6 must stay blocked until an owned derivative serving route is implemented"
+);
+assert.doesNotMatch(t6Worker, /fetch\(input\.providerOutputUrl/);
+const t6Fixture = join(root, "scripts/t6-watermark-worker-fixture.mjs");
+assert.match(
+  fs.readFileSync(t6Fixture, "utf8"),
+  /runT6PipelineWithInjectedRunner|DERIVATIVE_IDENTITY_MISMATCH/
+);
+execFileSync(process.execPath, ["--experimental-strip-types", t6Fixture], {
+  stdio: "pipe",
+});
 assert.match(health, /t6Report|t6:/);
-assert.match(fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"), /bakedDerivativeVerified|server-owned baked derivative/);
-assert.match(fs.readFileSync(join(root, "lib/t6Bake.ts"), "utf8"), /bakeWatermarkedVideo|SERVER_WORKER_DISABLED/);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /bakedDerivativeVerified|server-owned baked derivative/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/t6Bake.ts"), "utf8"),
+  /bakeWatermarkedVideo|SERVER_WORKER_DISABLED/
+);
 assert.match(health, /jobTimeoutMs/);
 assert.match(createTrust, /bakedDerivativeVerified|T6 blocked|server-owned/);
 
