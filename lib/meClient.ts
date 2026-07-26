@@ -24,6 +24,12 @@ export type MeFreeTrial = {
   liveJobCredits: number;
   watermark: boolean;
   cachedDemoFree: boolean;
+  /** Confirmed fails restore debit (boolean for ops gates). */
+  failedLiveRefunds?: boolean;
+  /** Ops honesty — not every fail is a confirmed restore. */
+  failedLiveRefundPolicy?: "when_confirmed";
+  /** Process kill / ledger TIMEOUT → check balance. */
+  ledgerTimeoutRefund?: "unconfirmed";
   freeLive: {
     modelClass: "seedance-mini";
     durationSec: 5;

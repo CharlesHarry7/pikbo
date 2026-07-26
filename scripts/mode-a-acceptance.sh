@@ -84,6 +84,12 @@ if bft:
     )
     if bft.get("failedLiveRefunds") is not True:
         sys.exit("FAIL health.billing.freeTrial.failedLiveRefunds must be true")
+    if bft.get("failedLiveRefundPolicy") not in (None, "when_confirmed"):
+        sys.exit("FAIL freeTrial.failedLiveRefundPolicy must be when_confirmed when set")
+    if bft.get("ledgerTimeoutRefund") not in (None, "unconfirmed"):
+        sys.exit("FAIL freeTrial.ledgerTimeoutRefund must be unconfirmed when set")
+    if bft.get("failedLiveRefundPolicy") == "when_confirmed":
+        print("refund policy=when_confirmed · TIMEOUT unconfirmed")
     if bft.get("scope") not in (None, "video-create-only"):
         sys.exit("FAIL health.billing.freeTrial.scope must be video-create-only")
     if bft.get("scope") == "video-create-only" and bft.get("stillsOnFree") not in (

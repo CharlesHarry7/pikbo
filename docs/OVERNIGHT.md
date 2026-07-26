@@ -124,7 +124,8 @@
 83. [x] PROVIDER_TIMEOUT auto-retry (gen+image) · Library TIMEOUT refund-unconfirmed honesty
 84. [x] Create settlement TIMEOUT→refund unconfirmed · generateClient flag · residual refund copy
 85. [x] Batch/Landing TIMEOUT settlement parity · network abort refundUnconfirmed
-86. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+86. [x] health/me refund policy when_confirmed · TIMEOUT unconfirmed · imageClient network
+87. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -138,8 +139,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Batch + Landing use requestCreditStateFromFailure (TIMEOUT/network → unconfirmed).  
-- generateClient network/abort always sets refundUnconfirmed.  
+- health/me: failedLiveRefundPolicy=when_confirmed · ledgerTimeoutRefund=unconfirmed.  
+- imageClient NETWORK_ERROR always refundUnconfirmed; StatusProbe honest labels.  
 - Mode A still needs boss Vercel login · SQL · T6 bake worker.
 
 ---

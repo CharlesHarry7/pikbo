@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BatchStudio } from "@/components/BatchStudio";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
+import { GenerateAfterPath } from "@/components/GenerateAfterPath";
+import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
 
 export async function generateMetadata({
   searchParams,
@@ -11,11 +13,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const sp = await searchParams;
   if (sp.pack === "seller") {
-    // Legacy entry — still resolve metadata before redirect.
+    // Legacy entry — still resolve metadata before redirect to Create Seller Pack.
     return {
       title: "Seller Pack · 3 outputs",
       description:
         "One owned toy photo → listing spin, blind-box reveal, and social hook. Marketplace seller workflow on Pikbo.",
+      // Not a rank landing — canonical lives on /create?mode=seller-pack (also noindex).
+      robots: PREVIEW_ROBOTS,
     };
   }
   return {
@@ -24,7 +28,7 @@ export async function generateMetadata({
       "Run multiple toy video presets from one photo — Pikbo batch generate for shops.",
     alternates: { canonical: "/supercomputer" },
     // Preview: noindex + crawlable (no robots.txt dual-block)
-    robots: { index: false, follow: true },
+    robots: PREVIEW_ROBOTS,
   };
 }
 
@@ -61,26 +65,24 @@ export default async function SupercomputerPage({
               this page is custom multi-preset batch Preview.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/create?mode=seller-pack"
-              className="btn btn-primary text-sm"
-            >
-              Seller Pack · 3
-            </Link>
-            <FreeTrialCta path="/supercomputer" variant="ghost" />
-            <Link href="/create" className="btn btn-ghost text-sm">
-              Generate
-            </Link>
-            <Link href="/library" className="btn btn-ghost text-sm">
-              Library
-            </Link>
-            <Link href="/flow" className="btn btn-ghost text-sm">
-              Flow
-            </Link>
-            <Link href="/modules" className="btn btn-ghost text-sm">
-              Modules
-            </Link>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
+              <Link
+                href="/create?mode=seller-pack"
+                className="btn btn-primary text-sm"
+              >
+                Seller Pack · 3
+              </Link>
+              <FreeTrialCta
+                path="/supercomputer"
+                variant="ghost"
+                hideClipsChip
+              />
+              <Link href="/create" className="btn btn-ghost text-sm">
+                Generate
+              </Link>
+            </div>
+            <GenerateAfterPath compact demo className="justify-end" />
           </div>
         </div>
         <nav

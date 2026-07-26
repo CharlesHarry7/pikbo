@@ -256,9 +256,11 @@ export async function postImage(
       error: aborted
         ? "Request canceled — if credits were debited, check balance or retry (refund unconfirmed until server confirms)"
         : e instanceof Error
-          ? e.message
-          : "Network error",
-      refundUnconfirmed: aborted ? true : undefined,
+          ? e.message ||
+            "Network error — check connection and balance (refund unconfirmed until server confirms)"
+          : "Network error — check connection and balance (refund unconfirmed until server confirms)",
+      // Client never saw a typed body — do not claim restore (parity with generateClient).
+      refundUnconfirmed: true,
     };
   }
 }

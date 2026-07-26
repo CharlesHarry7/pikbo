@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { MODELS } from "@/lib/catalog";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
+import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
 
 export const metadata: Metadata = {
   title: "Models · Preview",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     "AI model integrations in PIKBO — configured paths are separated from roadmap models and cached previews are labeled.",
   alternates: { canonical: "/models" },
   // Preview: noindex + crawlable (no robots.txt dual-block)
-  robots: { index: false, follow: true },
+  robots: PREVIEW_ROBOTS,
 };
 
 /** Lab posters for wired video engines only — never invent Kling/Veo media. */

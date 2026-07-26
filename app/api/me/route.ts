@@ -63,6 +63,10 @@ export async function GET(req: Request) {
       liveJobCredits: CREDITS_PER_VIDEO,
       watermark: plan.watermark,
       cachedDemoFree: true,
+      /** Confirmed provider/validation fails restore debit; TIMEOUT stays unconfirmed. */
+      failedLiveRefunds: true as const,
+      failedLiveRefundPolicy: "when_confirmed" as const,
+      ledgerTimeoutRefund: "unconfirmed" as const,
       freeLive:
         session.plan === "free"
           ? {

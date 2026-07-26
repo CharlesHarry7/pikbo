@@ -23,6 +23,8 @@ type Health = {
       scope?: string;
       stillsOnFree?: string;
       failedLiveRefunds?: boolean;
+      failedLiveRefundPolicy?: string;
+      ledgerTimeoutRefund?: string;
       clipsPerPeriod?: number;
     };
   };
@@ -153,7 +155,15 @@ export function StatusProbe() {
       "Free trial scope",
       ft?.scope
         ? `${ft.scope}${ft.stillsOnFree ? ` · stills ${ft.stillsOnFree}` : ""}${
-            ft.failedLiveRefunds ? " · refunds on fail" : ""
+            ft.failedLiveRefunds
+              ? ft.failedLiveRefundPolicy === "when_confirmed"
+                ? " · refunds when confirmed"
+                : " · refunds on fail"
+              : ""
+          }${
+            ft.ledgerTimeoutRefund === "unconfirmed"
+              ? " · TIMEOUT unconfirmed"
+              : ""
           }`
         : "—",
     ],

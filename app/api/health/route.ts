@@ -135,7 +135,15 @@ export async function GET() {
         durationSec: 5,
         resolution: "480p",
         onPlayerMark: true,
+        /**
+         * Recoverable provider/validation fails restore the debit when the
+         * server confirms. Keep boolean true for Mode A ops gates.
+         */
         failedLiveRefunds: true,
+        /** Ops honesty — not every fail is a confirmed restore. */
+        failedLiveRefundPolicy: "when_confirmed" as const,
+        /** Process kill / ledger TIMEOUT → refund unconfirmed (check balance). */
+        ledgerTimeoutRefund: "unconfirmed" as const,
         /** Free 10 credits = Create video Mini only — not Flux stills. */
         scope: "video-create-only",
         stillsOnFree: "demo-only",

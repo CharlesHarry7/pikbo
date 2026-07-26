@@ -566,6 +566,13 @@ const batchPage = fs.readFileSync(
   "utf8"
 );
 assert.match(batchPage, /redirect\("\/create\?mode=seller-pack"\)|mode=seller-pack/);
+// Preview Batch: PREVIEW_ROBOTS + closed-loop AfterPath (not a dead-end shelf)
+assert.match(batchPage, /PREVIEW_ROBOTS/);
+assert.match(batchPage, /GenerateAfterPath/);
+assert.match(
+  fs.readFileSync(join(root, "app/models/page.tsx"), "utf8"),
+  /PREVIEW_ROBOTS/
+);
 const showcase = fs.readFileSync(
   join(root, "lib/showcaseProjects.ts"),
   "utf8"
@@ -1919,6 +1926,25 @@ assert.match(genJobsStore, /Recompute T6|downloadAllowedForJob/);
 // Health free-trial product contract (session state stays on /api/me)
 assert.match(health, /freeTrial/);
 assert.match(health, /failedLiveRefunds/);
+assert.match(health, /failedLiveRefundPolicy:\s*"when_confirmed"|when_confirmed/);
+assert.match(health, /ledgerTimeoutRefund:\s*"unconfirmed"|unconfirmed/);
+assert.match(
+  fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8"),
+  /failedLiveRefundPolicy:\s*"when_confirmed"/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8"),
+  /ledgerTimeoutRefund:\s*"unconfirmed"/
+);
+// imageClient network path always refundUnconfirmed (generate parity)
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /refundUnconfirmed:\s*true/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/StatusProbe.tsx"), "utf8"),
+  /refunds when confirmed|TIMEOUT unconfirmed/
+);
 assert.match(health, /seedance-mini|clipsPerPeriod/);
 // Pure safe-url checks
 function isSafeDeliverableUrlPure(url) {
@@ -2998,7 +3024,11 @@ assert.match(statusProbeSrc, /imageJobs/);
 assert.match(statusProbeSrc, /Still image job ledger|Flux idempotency/);
 const modelsPageSrc = fs.readFileSync(join(root, "app/models/page.tsx"), "utf8");
 assert.match(modelsPageSrc, /FreeTrialCta/);
-assert.match(modelsPageSrc, /robots:\s*\{\s*index:\s*false/);
+// Preview noindex via shared PREVIEW_ROBOTS (or inline) — crawlable, not dual-blocked
+assert.match(
+  modelsPageSrc,
+  /PREVIEW_ROBOTS|robots:\s*\{\s*index:\s*false/
+);
 // Image still timeout recovery (no infinite JOB_IN_FLIGHT after kill)
 const imageJobsLib = fs.readFileSync(join(root, "lib/imageJobs.ts"), "utf8");
 assert.match(imageJobsLib, /sweepTimedOutImageJobs/);

@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Batch Preview PREVIEW_ROBOTS + AfterPath
+- `/supercomputer` + legacy pack=seller meta: `PREVIEW_ROBOTS`; GenerateAfterPath suite exits.
+- Models page uses shared `PREVIEW_ROBOTS` (not inline robots object).
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-26 — [grok] Suite chrome product-first + FailPanel settlement
 - GenerateSuiteChrome: Generate · Seller · Recipes · Modules · Library first; Preview last.
 - Batch/Landing: requestCreditStateFromFailure on fails; network abort → refundUnconfirmed.
@@ -56,6 +61,11 @@ Newest first. One block per meaningful landing.
 - Cinema Preview: GenerateAfterPath + Library; mobile bar hides image/cinema, Seller Pack on Library.
 - LandingHowItWorks: Photo → Recipe → Video draft + HowTo JSON-LD on tools/for with tools.
 - Verified: typecheck · engine-smoke.
+
+### 2026-07-26 — [grok] health/me refund policy honesty
+- billing.freeTrial: failedLiveRefundPolicy=when_confirmed · ledgerTimeoutRefund=unconfirmed.
+- /api/me freeTrial same fields; imageClient network always refundUnconfirmed; StatusProbe labels.
+- Mode A still requires failedLiveRefunds=true (ops gate). Verified: typecheck · engine-smoke.
 
 ### 2026-07-26 — [grok] Batch/Landing TIMEOUT settlement parity
 - BatchStudio + LandingToolPanel: requestCreditStateFromFailure for child/landing fails.
