@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] CD Phase B3: Seller Pack Director Plan
+- `buildSellerPackDirectorPlan`: Launch Pack 3 children, 30-cr quote, Free Mini
+  shortfall honesty, Sales fidelity row.
+- BatchStudio Seller Pack: `DirectorPlanPanel` when photo ready
+  (`data-seller-pack-plan=director`); credit strip before photo.
+- engine-smoke locks; no Stripe / Soul ID / multi-view.
+
 ### 2026-07-26 — [grok] CD Phase B2: Director Plan + soft recipe + materials
 - `lib/directorPlan.ts` + `DirectorPlanPanel`: pre-generate confirm (goal/recipe/
   format/Sales mode/bible/cost/blockers) — `data-director-plan=cd-phase-b2`.

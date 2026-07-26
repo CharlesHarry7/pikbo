@@ -25,7 +25,7 @@ export function DirectorPlanPanel({
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--mint)]">
-            {t("plan.title")}
+            {plan.title || t("plan.title")}
           </p>
           <p className="mt-0.5 text-[10px] text-white/40">{t("plan.sub")}</p>
         </div>

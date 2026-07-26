@@ -133,7 +133,8 @@ Explore 证明墙
 |----|------|------|
 | **A** | 叙事 + 动线：目标先于模型、Seller Pack 默认推荐、版权提示、结果台下一 SKU | ✅ main |
 | **B** | 上传后 Asset Brief（画幅规则 + 推荐配方）+ 角色圣经草案（SKU/preserve） | ✅ main |
-| **B2** | Director Plan 生成前确认消耗 · 画幅软应用首选配方 · 材质 chips | 本分支 |
+| **B2** | Director Plan 生成前确认消耗 · 画幅软应用首选配方 · 材质 chips | ✅ main |
+| **B3** | Seller Pack Launch Plan：三件套总价 / 规格 / 阻塞预检 | 本分支 |
 | C | 真 Toy Soul ID / 多静帧 / 3D 可打印 | 未开 · 标 Soon |
 
 **Phase B 诚实边界：** Asset Brief 是 **规则简报**（像素画幅 + 产品规则），**不是**云端识图 / 漆面识别。角色圣经是本地可选字段，写入 generate extra，不是 LoRA。  

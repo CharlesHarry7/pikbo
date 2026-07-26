@@ -1,9 +1,16 @@
 /**
- * Creative Director Phase B2 — Director Plan preflight (cost + fidelity).
+ * Creative Director Phase B2/B3 — Director Plan preflight (cost + fidelity).
  * Pure summary for "confirm before generate" — no provider calls.
+ * Single Generate + Seller Pack / batch share the same DirectorPlan shape.
  */
 
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
+import {
+  sellerPackQuote,
+  sellerPackQuoteLabel,
+  sellerPackShortfall,
+  type SellerPackQuote,
+} from "@/lib/sellerPackQuote";
 import type { ToyIdentity } from "@/lib/toyIdentity";
 import { viralName } from "@/lib/viralNames";
 
@@ -176,3 +183,164 @@ export function buildDirectorPlan(input: DirectorPlanInput): DirectorPlan {
     creditsPerClip: credits,
   };
 }
+
+/** Fixed Seller Pack commercial children (must match BatchStudio SELLER_PACK_ITEMS). */
+export const SELLER_PACK_PLAN_CHILDREN = [
+  {
+    key: "listing_spin",
+    label: "Listing Spin",
+    channel: "Marketplace gallery",
+    aspectRatio: "1:1" as const,
+  },
+  {
+    key: "box_reveal",
+    label: "Box Reveal",
+    channel: "Drop / restock",
+    aspectRatio: "9:16" as const,
+  },
+  {
+    key: "social_hook",
+    label: "Social Hook",
+    channel: "TikTok / Reels",
+    aspectRatio: "9:16" as const,
+  },
+] as const;
+
+export type SellerPackDirectorPlanInput = {
+  hasImage: boolean;
+  demoMode: boolean;
+  isFree: boolean;
+  trialDone: boolean;
+  creditsLeft: number | null;
+  clipsLeft: number | null;
+  ownsRights: boolean;
+  durationSec: number;
+  resolution: string;
+  /** Lab sample still — not customer SKU */
+  labSample?: boolean;
+};
+
+/**
+ * Director Plan for Seller Pack (Launch Pack) — 3 children, total quote.
+ */
+export function buildSellerPackDirectorPlan(
+  input: SellerPackDirectorPlanInput
+): DirectorPlan {
+  const quote: SellerPackQuote = sellerPackQuote({
+    demo: input.demoMode,
+    childCount: SELLER_PACK_PLAN_CHILDREN.length,
+  });
+  const rows: DirectorPlanRow[] = [];
+  const blockers: string[] = [];
+
+  if (!input.hasImage) {
+    blockers.push("Add a toy photo first");
+  }
+  if (!input.ownsRights && !input.demoMode) {
+    blockers.push("Confirm photo ownership before live pack");
+  }
+  if (!input.demoMode && input.trialDone && input.isFree) {
+    blockers.push(
+      "Free Mini covers one 10-cr job — full Launch Pack needs more credits"
+    );
+  }
+  if (
+    !input.demoMode &&
+    input.creditsLeft !== null &&
+    input.creditsLeft < quote.totalCredits
+  ) {
+    const short = sellerPackShortfall(quote, input.creditsLeft);
+    blockers.push(
+      `Need ${quote.totalCredits} credits (short ${short} · have ${input.creditsLeft})`
+    );
+  }
+
+  rows.push({
+    id: "goal",
+    label: "Goal",
+    value: "Seller Pack · Launch (listing + reveal + hook)",
+    tone: "ok",
+  });
+
+  rows.push({
+    id: "children",
+    label: "Clips",
+    value: SELLER_PACK_PLAN_CHILDREN.map(
+      (c) => `${c.label} ${c.aspectRatio}`
+    ).join(" · "),
+    tone: "ok",
+  });
+
+  rows.push({
+    id: "format",
+    label: "Format",
+    value: input.demoMode
+      ? "3 Lab demos · 0 credits · not your photo motion"
+      : input.isFree
+        ? `Mini · ${input.durationSec}s · ${input.resolution} · on-player mark per child`
+        : `${input.durationSec}s · ${input.resolution} · sequential Seedance`,
+    tone: input.demoMode ? "muted" : "ok",
+  });
+
+  rows.push({
+    id: "fidelity",
+    label: "Mode",
+    value: "Sales · same still · fidelity first across three formats",
+    tone: "ok",
+  });
+
+  rows.push({
+    id: "quote",
+    label: "Quote",
+    value: sellerPackQuoteLabel(quote),
+    tone: input.demoMode ? "muted" : "ok",
+  });
+
+  if (input.labSample) {
+    rows.push({
+      id: "source",
+      label: "Source",
+      value: "Official Lab still · not a customer SKU",
+      tone: "warn",
+    });
+  }
+
+  let costLabel: string;
+  if (input.demoMode) {
+    costLabel = "0 credits · 3 cached Lab demos";
+  } else if (blockers.some((b) => b.includes("Need") || b.includes("Free Mini"))) {
+    costLabel = blockers[0];
+  } else {
+    const left =
+      input.clipsLeft !== null
+        ? ` · ~${input.clipsLeft} single live left`
+        : input.creditsLeft !== null
+          ? ` · ${input.creditsLeft} cr left`
+          : "";
+    costLabel = `${quote.totalCredits} credits pack total (3×${quote.creditsPerChild})${left} · failed child refunds ${quote.creditsPerChild}`;
+  }
+
+  const modeLabel = input.demoMode
+    ? "Lab pack preview"
+    : input.isFree
+      ? "Live Mini · pack quote"
+      : "Live Seller Pack";
+
+  const ready = input.hasImage;
+  const canGenerate =
+    ready &&
+    blockers.length === 0 &&
+    (input.demoMode || input.ownsRights);
+
+  return {
+    ready,
+    title: "Director Plan · Launch Pack",
+    modeLabel,
+    costLabel,
+    rows,
+    blockers,
+    canGenerate,
+    creditsPerClip: quote.creditsPerChild,
+  };
+}
+

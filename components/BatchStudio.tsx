@@ -54,8 +54,10 @@ import {
 } from "@/lib/createTrust";
 import { sellerPackPostItems } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
+import { DirectorPlanPanel } from "@/components/DirectorPlanPanel";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { SellerPackSteps } from "@/components/SellerPackSteps";
+import { buildSellerPackDirectorPlan } from "@/lib/directorPlan";
 import {
   parseSellerPackRecovery,
   reconcileSellerPackRecovery,
@@ -976,6 +978,35 @@ export function BatchStudio({
     [demoMode, sellerPackActive, selected.length]
   );
   const liveQuoteCovered = sellerPackBalanceCovers(packQuote, me?.credits);
+
+  /** CD Phase B3 — Seller Pack Director Plan (total cost before run). */
+  const sellerDirectorPlan = useMemo(() => {
+    if (!sellerPackActive) return null;
+    return buildSellerPackDirectorPlan({
+      hasImage: Boolean(image),
+      demoMode,
+      isFree: Boolean(isFree),
+      trialDone,
+      creditsLeft: typeof me?.credits === "number" ? me.credits : null,
+      clipsLeft,
+      ownsRights,
+      durationSec: freeLive?.durationSec ?? effectiveDuration,
+      resolution: freeLive?.resolution ?? effectiveResolution,
+    });
+  }, [
+    sellerPackActive,
+    image,
+    demoMode,
+    isFree,
+    trialDone,
+    me?.credits,
+    freeLive?.durationSec,
+    freeLive?.resolution,
+    clipsLeft,
+    ownsRights,
+    effectiveDuration,
+    effectiveResolution,
+  ]);
   const canRun =
     !running &&
     Boolean(image) &&
@@ -1070,15 +1101,21 @@ export function BatchStudio({
           <div className="space-y-3">
             <div className="rounded-2xl border border-[var(--mint)]/35 bg-gradient-to-br from-[var(--mint)]/[0.1] to-black/40 px-3.5 py-3 text-xs text-[var(--fg-muted)] shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
               <p className="font-bold text-[var(--mint)]">
-                Seller Pack · product three-step
+                Creative Director · Seller Pack Launch
               </p>
               <p className="mt-1 leading-relaxed text-white/55">
-                Upload product photo → generate three formats → export & post.
-                Listing Spin (1:1) · Blind-box Reveal (9:16) · Social Flash
-                (9:16).
+                Upload product photo → confirm pack cost → three commercial
+                formats → export & post. Listing Spin (1:1) · Box Reveal (9:16)
+                · Social Hook (9:16).
               </p>
-              {/* Y5 credit transparency — balance · per child · total · refund */}
-              <div className="mt-2">{creditStrip}</div>
+              {/* Y5 + CD B3: full Director Plan when still ready; strip before photo */}
+              {sellerDirectorPlan?.ready ? (
+                <div className="mt-2" data-seller-pack-plan="director">
+                  <DirectorPlanPanel plan={sellerDirectorPlan} />
+                </div>
+              ) : (
+                <div className="mt-2">{creditStrip}</div>
+              )}
               <ul className="mt-2 space-y-0.5 text-[10px] text-[var(--fg-dim)]">
                 {SELLER_PACK_ITEMS.map((item) => (
                   <li key={item.key}>

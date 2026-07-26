@@ -2917,6 +2917,14 @@ assert.match(
 );
 assert.match(createStudio, /DirectorPlanPanel|buildDirectorPlan|briefAutoAppliedRef/);
 assert.match(createStudio, /asset_brief_auto/);
+// CD Phase B3 — Seller Pack Launch Plan (3× quote before run)
+assert.match(directorPlanSrc, /buildSellerPackDirectorPlan|Launch Pack|SELLER_PACK_PLAN_CHILDREN/);
+const batchStudioSrc = fs.readFileSync(
+  join(root, "components/BatchStudio.tsx"),
+  "utf8"
+);
+assert.match(batchStudioSrc, /buildSellerPackDirectorPlan|DirectorPlanPanel/);
+assert.match(batchStudioSrc, /data-seller-pack-plan=["']director["']/);
 
 // Five-step toy identity + delivery honesty + landing assetId + workflows
 const toyIdSrc = fs.readFileSync(join(root, "lib/toyIdentity.ts"), "utf8");
