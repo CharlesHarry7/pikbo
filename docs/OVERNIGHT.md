@@ -138,7 +138,8 @@
 97. [x] Seller Pack AfterPath intent.href + Create ?job=seller-pack redirect
 98. [x] SKU hydrate Create/Batch + Landing history (prior)
 99. [x] Seller Pack ?try=1 Lab still + AfterPath auto-SKU + supercomputer query carry
-100. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+100. [x] BatchStudio adopts Image pikbo_pending_still (Seller Pack handoff)
+101. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -152,9 +153,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- Seller Pack Next SKU ?try=1 hydrates Lab still (no auto 3× debit); sku still carries.
-- AfterPath auto-loads device bible SKU when prop omitted (Cinema shelves).
+- BatchStudio adopts Image studio `pikbo_pending_still` (Seller Pack was empty).
+- Image handoff CTAs carry sku + data-image-handoff; pending beats try=1 sample.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 
