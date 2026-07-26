@@ -4410,5 +4410,20 @@ assert.match(
   /data-image-cancel=["']settlement["']/
 );
 
+
+// Home feature carousel: Seller Pack canonical + remake remix hrefs (not /supercomputer)
+const featureCarousel = fs.readFileSync(
+  join(root, "components/HomeFeatureCarousel.tsx"),
+  "utf8"
+);
+assert.match(featureCarousel, /createRemixHref/);
+assert.match(featureCarousel, /mode=seller-pack|data-home-promo-path=["']seller-pack["']/);
+assert.doesNotMatch(featureCarousel, /href:\s*["']\/supercomputer["']/);
+assert.match(featureCarousel, /data-proof-quality=["']provisional-lab["']|provisionalLabQualityLabel/);
+assert.match(
+  fs.readFileSync(join(root, "components/HeroUpload.tsx"), "utf8"),
+  /createRemixHref/
+);
+
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { createRemixHref } from "@/lib/remixIntent";
 
 const PRESETS_QUICK = [
   { slug: "360-spin-showcase", label: "360°" },
@@ -37,7 +38,8 @@ export function HeroUpload() {
         setBusy(false);
         return;
       }
-      router.push(`/create?effect=${encodeURIComponent(effect)}`);
+      // Remix contract: effect + ratio/duration/channel — still via session.
+      router.push(createRemixHref(effect));
     };
     reader.onerror = () => {
       setErr("Could not read file.");

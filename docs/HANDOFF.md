@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Home feature carousel remake + Seller Pack path
+- HomeFeatureCarousel: recipe cards use createRemixHref; Seller Pack door →
+  /create?mode=seller-pack (not /supercomputer); Official · Lab ≥4 chips.
+- HeroUpload: push createRemixHref(effect) with pending still (ratio/channel).
+- Smoke: data-home-promo-path · no /supercomputer href · HeroUpload remix.
+
 ### 2026-07-27 — [grok] Cinema hero Seller Pack CTA + remake remix href
 - HomeCinemaHero: Seller Pack door + createRemixHref remake (recipe carry).
 - Smoke: data-cinema-cta=seller-pack.
