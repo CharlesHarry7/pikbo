@@ -2493,13 +2493,14 @@ export function CreateStudio({
                   className="mx-auto mt-3 max-w-md"
                   title={
                     toyIdentity.sku
-                      ? `Delivery · next steps · ${toyIdentity.sku}`
-                      : "Delivery · next steps"
+                      ? `Delivery · QC · ${toyIdentity.sku}`
+                      : "Delivery · fidelity QC"
                   }
                   surface={`create:${jobIntentId ?? "default"}`}
                   items={deliveryItemsForJob(jobIntentId, {
                     demo,
                     downloadAllowed,
+                    includeQc: true,
                   })}
                 />
 

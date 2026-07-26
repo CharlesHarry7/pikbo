@@ -2,7 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AssetBriefPanel } from "@/components/AssetBriefPanel";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
+import {
+  buildAssetBrief,
+  probeImageSize,
+  type ImageProbe,
+} from "@/lib/assetBrief";
+import {
+  loadToyIdentity,
+  saveToyIdentity,
+  type ToyIdentity,
+} from "@/lib/toyIdentity";
+import { useI18n } from "@/components/LanguageProvider";
 import {
   GenerateWaitMobileStrip,
   GenerateWaitStage,
@@ -200,6 +212,13 @@ export function BatchStudio({
   );
 
   const [image, setImage] = useState<string | null>(null);
+  const [imageProbe, setImageProbe] = useState<ImageProbe | null>(null);
+  const [labStill, setLabStill] = useState(false);
+  const [briefCollapsed, setBriefCollapsed] = useState(false);
+  const [toyIdentity, setToyIdentity] = useState<ToyIdentity>({
+    sku: "",
+    preserve: "",
+  });
   const [selected, setSelected] = useState<string[]>(defaults);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [running, setRunning] = useState(false);
@@ -225,9 +244,12 @@ export function BatchStudio({
   /** Abort in-flight pack child + rate-limit waits (parity with Create Cancel). */
   const packAbortRef = useRef<AbortController | null>(null);
 
+  const { locale } = useI18n();
+
   useEffect(() => {
     const t = window.setTimeout(() => {
       void fetchMe().then(setMe);
+      setToyIdentity(loadToyIdentity());
     }, 0);
     return () => {
       window.clearTimeout(t);
@@ -369,11 +391,32 @@ export function BatchStudio({
     }
     const reader = new FileReader();
     reader.onload = () => {
-      setImage(reader.result as string);
+      const dataUrl = reader.result as string;
+      setImage(dataUrl);
+      setImageProbe(null);
+      setLabStill(false);
+      setBriefCollapsed(false);
       setError(null);
+      void probeImageSize(dataUrl).then((meta) => {
+        if (meta) setImageProbe(meta);
+      });
     };
     reader.readAsDataURL(file);
   }
+
+  const packAssetBrief = useMemo(
+    () =>
+      buildAssetBrief({
+        hasImage: Boolean(image),
+        probe: imageProbe,
+        effect: "360-spin-showcase",
+        jobId: "seller-pack",
+        identity: toyIdentity,
+        labSample: labStill,
+        locale: locale === "zh" ? "zh" : "en",
+      }),
+    [image, imageProbe, toyIdentity, labStill, locale]
+  );
 
   function toggle(slug: string) {
     if (isSellerPack) return;
@@ -1211,6 +1254,27 @@ export function BatchStudio({
               onChange={(e) => loadFile(e.target.files?.[0])}
             />
           </label>
+          {image && packAssetBrief.ready ? (
+            <AssetBriefPanel
+              className="mt-3"
+              brief={packAssetBrief}
+              identity={toyIdentity}
+              onIdentityPatch={(patch) => {
+                setToyIdentity((prev) => {
+                  const next = { ...prev, ...patch };
+                  return saveToyIdentity(next);
+                });
+              }}
+              onPickRecipe={(slug) => {
+                // Seller Pack trio is fixed — deep-link single Generate for other recipes.
+                if (typeof window !== "undefined") {
+                  window.location.href = `/create?effect=${encodeURIComponent(slug)}`;
+                }
+              }}
+              collapsed={briefCollapsed}
+              onToggle={() => setBriefCollapsed((v) => !v)}
+            />
+          ) : null}
           {!image && (
             <div className="mt-2 flex flex-wrap gap-2">
               {SAMPLE_TOYS.map((s) => (
@@ -1220,8 +1284,15 @@ export function BatchStudio({
                   className="rounded-lg border border-[var(--border)] px-2 py-1 text-[10px] hover:border-[var(--brand)]"
                   onClick={async () => {
                     try {
-                      setImage(await sampleToDataUrl(s.path));
+                      const dataUrl = await sampleToDataUrl(s.path);
+                      setImage(dataUrl);
+                      setLabStill(true);
+                      setImageProbe(null);
+                      setBriefCollapsed(false);
                       setError(null);
+                      void probeImageSize(dataUrl).then((meta) => {
+                        if (meta) setImageProbe(meta);
+                      });
                     } catch {
                       setError("Sample load failed");
                     }
@@ -1675,7 +1746,7 @@ export function BatchStudio({
         {/* Post pack checklist — interactive ticks after first success */}
         {sellerPackActive && doneCount > 0 && (
           <DeliveryChecklist
-            title={`Post pack · ${
+            title={`Post pack · fidelity QC · ${
               jobs.filter(
                 (j) =>
                   j.status === "succeeded" &&
@@ -1696,6 +1767,8 @@ export function BatchStudio({
                     watermark: Boolean(j.watermark),
                   })
               ).length,
+              demo: demoMode,
+              includeQc: true,
             })}
             className="border-[var(--mint)]/25 bg-[var(--mint)]/[0.06]"
           />

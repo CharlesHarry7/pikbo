@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] CD: Seller Pack Asset Brief + fidelity QC
+- BatchStudio: post-upload `AssetBriefPanel` + toy identity (shape probe, lab
+  sample flag); recipe chips deep-link single Generate (pack trio stays fixed).
+- `fidelityQcItems` on Create delivery + Seller Pack post checklist (edges /
+  paint / logo / bg / proportions — human ticks, not vision).
+- engine-smoke locks; no Soul ID / multi-image provider.
+
 ### 2026-07-26 — [grok] CD Phase C-lite: ZH brief + fidelity refs
 - `buildAssetBrief` locale en|zh dynamic bullets + recipe labels.
 - C-lite: `FIDELITY_ANGLE_CHIPS` + optional secondary still (client preview);

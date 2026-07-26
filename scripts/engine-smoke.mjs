@@ -2930,6 +2930,15 @@ const batchStudioSrc = fs.readFileSync(
 );
 assert.match(batchStudioSrc, /buildSellerPackDirectorPlan|DirectorPlanPanel/);
 assert.match(batchStudioSrc, /data-seller-pack-plan=["']director["']/);
+assert.match(batchStudioSrc, /AssetBriefPanel|buildAssetBrief|packAssetBrief/);
+// CD fidelity QC checklist on Create + Seller Pack results
+const deliveryPackSrc = fs.readFileSync(
+  join(root, "lib/deliveryPack.ts"),
+  "utf8"
+);
+assert.match(deliveryPackSrc, /fidelityQcItems|qc-edge|qc-paint|qc-logo/);
+assert.match(deliveryPackSrc, /Sales fidelity|includeQc/);
+assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 
 // Five-step toy identity + delivery honesty + landing assetId + workflows
 const toyIdSrc = fs.readFileSync(join(root, "lib/toyIdentity.ts"), "utf8");

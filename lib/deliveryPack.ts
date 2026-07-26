@@ -16,16 +16,56 @@ export type DeliveryItem = {
 };
 
 /**
+ * Creative Director fidelity QC — human review ticks after generate.
+ * Not automated vision scoring; seller confirms before listing/post.
+ */
+export function fidelityQcItems(opts?: {
+  demo?: boolean;
+  pack?: boolean;
+}): DeliveryItem[] {
+  const demo = Boolean(opts?.demo);
+  const pack = Boolean(opts?.pack);
+  const scope = pack ? "each pack child" : "this clip";
+  return [
+    {
+      id: "qc-edge",
+      label: demo
+        ? `QC edges (Lab demo) · still review ${scope} before treating as product proof`
+        : `QC · edges sharp on ${scope} (no melt / smear)`,
+    },
+    {
+      id: "qc-paint",
+      label: `QC · paint splits clean vs real toy (Sales fidelity)`,
+    },
+    {
+      id: "qc-logo",
+      label: `QC · logo / sculpt details match the SKU you own`,
+    },
+    {
+      id: "qc-bg",
+      label: `QC · background clean enough for listing / social crop`,
+    },
+    {
+      id: "qc-ratio",
+      label: pack
+        ? "QC · proportions read as designer toy (not stretched morph)"
+        : "QC · proportions / face stay on-figure (no random morph)",
+    },
+  ];
+}
+
+/**
  * Static next steps after a successful clip.
  * Job-aware copy only — no fake "posted" tracking.
  * Download label stays honest for Free live raw (T6).
  */
 export function deliveryItemsForJob(
   jobId: JobIntentId | null | undefined,
-  opts?: { demo?: boolean; downloadAllowed?: boolean }
+  opts?: { demo?: boolean; downloadAllowed?: boolean; includeQc?: boolean }
 ): DeliveryItem[] {
   const demo = Boolean(opts?.demo);
   const downloadAllowed = opts?.downloadAllowed !== false;
+  const includeQc = opts?.includeQc !== false;
   const items: DeliveryItem[] = [
     {
       id: "download",
@@ -36,6 +76,10 @@ export function deliveryItemsForJob(
           : "Download blocked · Free live raw (T6 file watermark pending)",
     },
   ];
+
+  if (includeQc) {
+    items.push(...fidelityQcItems({ demo, pack: false }));
+  }
 
   switch (jobId) {
     case "etsy-listing":
@@ -115,9 +159,12 @@ export function deliveryItemsForJob(
 export function sellerPackPostItems(opts?: {
   downloadableCount?: number;
   readyCount?: number;
+  demo?: boolean;
+  includeQc?: boolean;
 }): DeliveryItem[] {
   const downloadable = Math.max(0, opts?.downloadableCount ?? 0);
   const ready = Math.max(0, opts?.readyCount ?? 0);
+  const includeQc = opts?.includeQc !== false;
   const items: DeliveryItem[] = [
     {
       id: "export",
@@ -128,17 +175,24 @@ export function sellerPackPostItems(opts?: {
             ? `Clips ready · download blocked on Free raw until T6 (${ready} playable)`
             : "Wait for at least one succeeded child before export",
     },
+  ];
+
+  if (includeQc) {
+    items.push(...fidelityQcItems({ demo: opts?.demo, pack: true }));
+  }
+
+  items.push(
     {
       id: "listing-spin",
       label: "Listing Spin → shop gallery (1:1) · verify sculpt",
     },
     {
       id: "blind-box",
-      label: "Blind-box Reveal → drop / restock story (9:16)",
+      label: "Box Reveal → drop / restock story (9:16)",
     },
     {
       id: "social-flash",
-      label: "Social Flash → TikTok / Reels first second (9:16)",
+      label: "Social Hook → TikTok / Reels first second (9:16)",
     },
     {
       id: "library",
@@ -149,8 +203,8 @@ export function sellerPackPostItems(opts?: {
       id: "variant",
       label: "Single Generate for one more variant",
       href: "/create",
-    },
-  ];
+    }
+  );
   return items;
 }
 
