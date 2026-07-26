@@ -14,6 +14,12 @@ Newest first. One block per meaningful landing.
   the controlled download path when a job id is present.
 - Verified: engine-smoke PASS · tsc PASS.
 
+### 2026-07-26 — [grok] Free live never exposes raw provider video URL
+- `customerFacingGenerateVideoUrl` redacts Free live generate success to
+  `/api/downloads/{jobId}` (T6 re-check). History pins legacy Free raw paths.
+- Create + LandingToolPanel only mount playable results; held Free live shows
+  honest T6-bake placeholder instead of a dead player URL.
+
 ### 2026-07-26 — [grok] Library first-run + device-local honesty (Phase F)
 - Sticky mobile CTA: Generate · Seller Pack; clip count + “Saved on this device”.
 - Empty state product-first (Generate/Seller before Lab); filled chip labels
