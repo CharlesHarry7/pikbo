@@ -3400,6 +3400,15 @@ assert.match(
   createPage,
   /BatchStudio[\s\S]{0,200}pack=["']seller["'][\s\S]{0,200}initialSku/
 );
+// AfterPath Next SKU ?try=1 → Lab still hydrate on Seller Pack (no auto 3× debit)
+assert.match(createPage, /initialSample=\{firstRunSample\}/);
+assert.match(batchSkuSrc, /initialSample/);
+assert.match(batchSkuSrc, /sampleToDataUrl/);
+assert.match(batchSkuSrc, /setLabStill\(true\)/);
+assert.match(
+  batchSkuSrc,
+  /Never auto-run three live children|does not auto-run/
+);
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /freeTrialExhausted|Free Mini trial exhausted|clipsLeft|compare plans/
