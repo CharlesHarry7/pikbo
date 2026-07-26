@@ -4,6 +4,16 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [gpt] CI production-session gate alignment
+- GitHub Actions now starts the production test server with explicit CI-only
+  session and credit secrets, matching the fail-closed production contract.
+- `/api/me` can therefore be exercised by link and critical-path checks without
+  weakening the runtime guard for real deployments.
+- The critical-path step is a real gate; failures are no longer hidden by
+  `|| true`.
+
+---
+
 ### 2026-07-26 — [grok] T5 durable job worker v1 skeleton (source-only)
 - Added migration `20260726130000_t5_durable_job_worker_v1.sql`: a
   service-role-only atomic create+reserve RPC and terminal worker RPC. The

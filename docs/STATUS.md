@@ -67,7 +67,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T8 | Batch generate for Shop plan | Grok | todo | agent/grok/final-takeover | Complete after durable auth/credits; reuse Seller Pack child state model |
 | T9 | Effect preset expansion (studio + SEO landing) | Claude | done | agent/claude/seo-presets | +3 effects |
 | T11 | Guides: informational long-tail content | Claude | done | agent/claude/guides | 3 how-to/tips/ideas articles at /guides; Article+FAQ JSON-LD; cross-linked to effects |
-| T23 | CI build + conflict-marker gate | Grok | review | main | Workflow template `docs/ci/github-actions-ci.yml` (engine-smoke · lint · typecheck · build). OAuth token lacks `workflow` scope so cannot push under `.github/workflows/` yet — boss: copy + push with workflow scope |
+| T23 | CI build + conflict-marker gate | Grok | review | agent/gpt/product-core-integration | Active workflow runs engine-smoke · lint · typecheck · build · link-check · critical-path; PR #26 adds CI-only session secrets and removes the hidden critical-path bypass |
 | T24 | Generate honesty: demo vs live + regen/refund copy | Grok | review | main | Wave B: lastRequestCreditState, Retry/Variant, Free download gate, server costCredits/effect echo |
 | T25 | Homepage truth labels + overclaim sweep | GPT | done | agent/gpt/claude-copy-audit | PR #6; cached/shared previews and provider-gated paths labeled |
 | T26 | Unit economics doc + free-tier recommendation | GPT | done | agent/gpt/convert-truth | Superseded by C1–C5: implemented Free Mini 5s trial; current 1 / 5 / 15 allowances |
