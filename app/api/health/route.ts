@@ -16,6 +16,7 @@ import { localAssetsProbe } from "@/lib/localAssets";
 import { probeDemoAssets } from "@/lib/demoClips";
 import { communityUgcConfigured } from "@/lib/communityPosts";
 import { imageJobsProbe } from "@/lib/imageJobs";
+import { sessionSecretConfigured } from "@/lib/session";
 // NextResponse used for GET + HEAD
 
 export const runtime = "nodejs";
@@ -33,9 +34,7 @@ export async function GET() {
   const fal = Boolean(process.env.FAL_KEY);
   const stripe = Boolean(process.env.STRIPE_SECRET_KEY);
   const stripeWebhook = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
-  const sessionSecret = Boolean(
-    process.env.SESSION_SECRET || process.env.CREDITS_SECRET
-  );
+  const sessionSecret = sessionSecretConfigured();
   const production = process.env.NODE_ENV === "production";
   const degraded = production && !sessionSecret;
 
