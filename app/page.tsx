@@ -4,11 +4,11 @@ import {
   buildViralPresetsWallFeed,
 } from "@/lib/videoFeed";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
-import { listHomeShowcaseProjects } from "@/lib/showcaseProjects";
-import { HfExploreHome } from "@/components/HfExploreHome";
-import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
+import { HomeCinemaHero } from "@/components/HomeCinemaHero";
+import { HomeViralWall } from "@/components/HomeViralWall";
 import { LandingToolPanel } from "@/components/LandingToolPanel";
 import { HomeSeoBody } from "@/components/HomeSeoBody";
+import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
 import { JsonLd } from "@/components/JsonLd";
 import { site } from "@/lib/site";
 import {
@@ -19,9 +19,9 @@ import {
 } from "@/lib/jsonLd";
 
 /**
- * 潮玩版 HF OS + 哥飞养站：
- * 首页 = 品牌 suite + 页内工具；主词完整 Title 只在 /tools/ai-toy-video-generator。
- * Product north star: docs/PRODUCT_NORTH_STAR.md
+ * 首页 = 潮玩视频内容驱动（学 HF）：
+ * 1 Cinema hero → 2 视频墙 → 3 生成入口 → 4 SEO 底文
+ * 主词 Title 仍不与 /tools 抢；页内工具保留但放在墙后。
  */
 export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
@@ -63,7 +63,9 @@ export default function Home() {
   const demos = showcase.map((item) => item.demo);
   const labDemos = demos.length ? demos : DEMO_VIDEOS.slice(0, 8);
   const videoLd = labDemos.slice(0, 6).map(videoObjectJsonLd);
+  const heroItem = showcase[0] ?? viralWall[0] ?? null;
   const lcpPoster =
+    heroItem?.demo?.poster ||
     viralWall[0]?.demo?.poster ||
     labDemos[0]?.poster ||
     DEMO_VIDEOS[0]?.poster ||
@@ -77,7 +79,7 @@ export default function Home() {
           websiteJsonLd(),
           organizationJsonLd(),
           softwareApplicationJsonLd({
-            name: `${site.name} — Designer Toy AI Video Suite`,
+            name: `${site.name} — Designer Toy AI Video`,
             url: site.url,
             description: site.description,
           }),
@@ -85,38 +87,42 @@ export default function Home() {
         ]}
       />
 
-      {/* Soft live strip + Generate on-page (SEO) · below = full toy OS (HF) */}
+      {/* 1 · Cinema hero — video first, minimal copy */}
+      <HomeCinemaHero item={heroItem} />
+
+      {/* Soft-live honesty strip — thin, not competing with cinema */}
       <SoftLaunchStrip />
 
+      {/* 2 · Dense toy video wall — browse & remake */}
+      <HomeViralWall items={viralWall.length ? viralWall : showcase} />
+
+      {/* 3 · Generate after wall — “your turn” */}
       <section
-        id="home-tool"
-        className="border-b border-white/10 bg-gradient-to-b from-black via-[#0a0a0c] to-black px-4 py-7 sm:px-6 sm:py-9"
+        id="home-create"
+        data-home-create="after-wall"
+        className="scroll-mt-16 border-b border-white/10 bg-gradient-to-b from-black via-[#08080a] to-black px-4 py-12 sm:px-6 sm:py-16"
       >
         <div className="mx-auto max-w-5xl">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--mint)]">
-              Generate · on this page
-            </p>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/40">
-              Designer-toy OS
-            </span>
-          </div>
-          <h1 className="font-display mt-2 max-w-3xl text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">
-            {site.homeH1}
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-[15px]">
-            Upload one photo of a designer toy you own → short video for listings
-            or social. Free Mini · live often 1–3 min · wall below is the full
-            suite. Keyword guide:{" "}
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+            Your turn
+          </p>
+          <h2 className="font-display mt-2 text-3xl font-black uppercase tracking-tight text-white sm:text-5xl">
+            轮到你的潮玩了
+          </h2>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/55 sm:text-[15px]">
+            上传一张你拥有的潮玩照片，生成短视频。
+            <span className="font-semibold text-white/80"> 免费可试 Mini</span>
+            {" · "}
+            约 5 秒 · 480p · 播放器水印。
+            {" "}
             <a
               href={site.rankToolPath}
-              className="font-semibold text-[var(--mint)] hover:underline"
+              className="font-semibold text-[#c8ff3d]/90 hover:underline"
             >
-              AI toy video generator
+              完整工具页
             </a>
-            .
           </p>
-          <div className="mt-6">
+          <div className="mt-8">
             <LandingToolPanel
               effectSlug="360-spin-showcase"
               effectName="360° Spin Showcase"
@@ -127,15 +133,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 潮玩版 HF: product rail · viral wall · inside projects · suite doors */}
-      <HfExploreHome
-        demos={labDemos}
-        projects={listHomeShowcaseProjects()}
-        feed={showcase}
-        viralWall={viralWall}
-        toolFirstLayout
-      />
-
+      {/* 4 · SEO body — below the product experience */}
       <HomeSeoBody />
     </>
   );

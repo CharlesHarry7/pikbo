@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Home cinema + toy video wall (HF-style)
+- Home: `HomeCinemaHero` (video first) → `HomeViralWall` (360/开箱/漂浮/收藏/Listing) → `#home-create` generate.
+- Wall cards: 生成同款. SoftLaunch strip thin. SEO body stays below.
+- No suite tourism above the wall.
+
 ### 2026-07-26 — [grok] Landing result meta + T6 download policy labels
 - `downloadPolicyLabel` / `downloadBlockedCtaLabel` (Held for T6 bake · Free raw
   blocked; Demo open · Lab). Create + Landing share helpers.
