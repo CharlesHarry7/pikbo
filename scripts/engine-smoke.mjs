@@ -1045,6 +1045,15 @@ const toolsSrc = fs.readFileSync(join(root, "lib/tools.ts"), "utf8");
 assert.match(toolsSrc, /export const TOOLS/);
 assert.match(toolsSrc, /ai-toy-video-generator/);
 assert.match(toolsSrc, /toy-social-content-pack/);
+// Primary rank TD CTR (H1 unchanged; T+D reworked for SERP)
+assert.match(
+  toolsSrc,
+  /Turn One Toy Photo into a Video|No turntable, no rig, no skills/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/tools/[slug]/page.tsx"), "utf8"),
+  /data-tools-friction=["']no-signup["']|No sign-up\. No card/
+);
 const toolsPage = fs.readFileSync(
   join(root, "app/tools/[slug]/page.tsx"),
   "utf8"

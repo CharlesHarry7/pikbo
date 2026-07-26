@@ -27,11 +27,11 @@ export const TOOLS: Tool[] = [
     slug: "ai-toy-video-generator",
     emoji: "🧸",
     label: "AI toy video",
-    // 哥飞 2026-07-25：排名主战场 — Title/H1 保留主词；正文密度压到约 3–5%
+    // 哥飞/养站对齐 2026-07-26：只动 T+D 提 CTR，H1 不动；主词仍在 Title 前部
     h1: "AI Toy Video Generator — Photo to Short Video for Designer Toys",
-    seoTitle: "AI Toy Video Generator from One Photo | Pikbo",
+    seoTitle: "AI Toy Video Generator: Turn One Toy Photo into a Video | Pikbo",
     seoDescription:
-      "AI toy video generator: upload one photo of a designer toy you own and create a short AI video for listings and TikTok. Free Mini trial. No card.",
+      "Turn one photo of your designer toy into a short AI video in minutes. No turntable, no rig, no skills. Try it free — no card needed.",
     intro:
       "This is Pikbo’s focused page for turning one owned figure photo into short motion. Upload a blind box, vinyl, or art toy still, pick a toy-native recipe, and generate a clip here — no turntable, no stop-motion rig, no multi-model theater.",
     body: [

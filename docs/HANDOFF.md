@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] tools rank TD CTR + friction line (no H1 change)
+- Primary `/tools/ai-toy-video-generator`: seoTitle/Description SERP CTR rewrite;
+  H1 unchanged; friction line above H1 (no sign-up / no card / free).
+- Growth still owns outer links · GSC · PH. No new SEO URLs · Stripe off.
+
 ### 2026-07-26 — [grok] All surfaces blob-download /api/downloads (no JSON tabs)
 - Create · Landing · Library session/history · Seller Pack child: allow path
   uses `downloadVideoFile` (blob) — never `window.open(gateUrl)`.
