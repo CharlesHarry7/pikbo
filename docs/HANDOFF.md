@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Effects + VideoTile proof chips (Official · Lab ≥4)
+- PresetPreviewCard (/effects wall): exact Lab → Official · cached + provisional
+  Lab ≥4; concept recipes stay Concept only.
+- VideoTile (community rails): Official badge + provisional Lab ≥4 when recipe
+  passes home-proof quality.
+- Smoke locks data-proof-quality on both surfaces.
+
 ### 2026-07-26 — [grok] tools rank TD CTR + friction line (no H1 change)
 - Primary `/tools/ai-toy-video-generator`: seoTitle/Description SERP CTR rewrite;
   H1 unchanged; friction line above H1 (no sign-up / no card / free).

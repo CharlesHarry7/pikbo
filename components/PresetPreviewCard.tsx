@@ -6,6 +6,7 @@ import type { Preset } from "@/lib/presets";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { createRemixHref } from "@/lib/remixIntent";
+import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /** Exact Lab examples and shared concept backdrops are labeled separately. */
 export function PresetPreviewCard({ preset }: { preset: Preset }) {
@@ -17,6 +18,7 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
     );
     return { demo: DEMO_VIDEOS[idx % DEMO_VIDEOS.length], exact: false };
   }, [preset.slug]);
+  const labQuality = exact ? provisionalLabQualityLabel(preset.slug) : null;
 
   return (
     <Link
@@ -33,6 +35,25 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
           className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out will-change-transform group-hover:scale-[1.06]"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-95 transition duration-300 group-hover:opacity-100" />
+        <div className="absolute left-2 top-2 flex max-w-[70%] flex-wrap gap-0.5">
+          {exact ? (
+            <span
+              className="rounded-full border border-white/10 bg-black/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur-sm"
+              title="Official Lab cached demo · not live customer output"
+            >
+              Official · cached
+            </span>
+          ) : null}
+          {labQuality ? (
+            <span
+              className="rounded-full border border-amber-200/25 bg-black/55 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur-sm"
+              title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
+              data-proof-quality="provisional-lab"
+            >
+              Lab ≥4
+            </span>
+          ) : null}
+        </div>
         <span
           className={`absolute right-2 top-2 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider transition duration-300 ${
             exact
@@ -41,9 +62,6 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
           }`}
         >
           {exact ? "Lab proof" : "Concept"}
-        </span>
-        <span className="pointer-events-none absolute left-2 top-2 rounded-full border border-white/15 bg-black/55 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/70 opacity-0 transition duration-300 group-hover:opacity-100">
-          Hover play
         </span>
         <div className="absolute inset-x-0 bottom-0 p-3">
           <p className="text-[13px] font-bold leading-snug text-white">

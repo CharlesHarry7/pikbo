@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import type { FeedItem } from "@/lib/videoFeed";
+import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 function aspectClass(ratio: FeedItem["ratio"], compact?: boolean) {
   if (compact) {
@@ -20,6 +21,7 @@ function aspectClass(ratio: FeedItem["ratio"], compact?: boolean) {
 /**
  * Autoplay-on-visible video card — shared AutoPlayVideo budget
  * (mobile ≤1 concurrent · non-hero preload none · Link owns focus).
+ * Official Lab items get honesty chips (cached + provisional Lab ≥4).
  */
 export function VideoTile({
   item,
@@ -28,6 +30,17 @@ export function VideoTile({
   item: FeedItem;
   compact?: boolean;
 }) {
+  const recipe =
+    item.recipeSlug ||
+    (item.kind === "demo" || item.kind === "preset"
+      ? item.demo?.preset
+      : undefined);
+  const isOfficial =
+    Boolean(item.badge && /official|cached/i.test(item.badge)) ||
+    item.kind === "demo";
+  const labQuality =
+    isOfficial || recipe ? provisionalLabQualityLabel(recipe) : null;
+
   return (
     <Link
       href={item.href}
@@ -45,11 +58,29 @@ export function VideoTile({
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-95" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c8ff3d]/45 to-transparent opacity-0 transition group-hover:opacity-100" />
-        {item.badge && (
-          <span className="absolute left-2 top-2 rounded-full border border-white/10 bg-black/55 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/80 backdrop-blur">
-            {item.badge}
-          </span>
-        )}
+        <div className="absolute left-2 top-2 flex max-w-[80%] flex-wrap gap-0.5">
+          {item.badge ? (
+            <span className="rounded-full border border-white/10 bg-black/55 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/80 backdrop-blur">
+              {item.badge}
+            </span>
+          ) : isOfficial ? (
+            <span
+              className="rounded-full border border-white/10 bg-black/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur"
+              title="Official Lab cached demo · not live customer output"
+            >
+              Official · cached
+            </span>
+          ) : null}
+          {labQuality ? (
+            <span
+              className="rounded-full border border-amber-200/25 bg-black/55 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur"
+              title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
+              data-proof-quality="provisional-lab"
+            >
+              Lab ≥4
+            </span>
+          ) : null}
+        </div>
         <span className="absolute right-2 top-2 rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[8px] font-black text-black opacity-0 shadow transition group-hover:opacity-100">
           Remake
         </span>

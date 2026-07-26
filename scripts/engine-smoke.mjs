@@ -980,6 +980,23 @@ assert.match(
   fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
   /data-proof-quality=["']provisional-lab["']/
 );
+// Effects wall + community VideoTile residual proof honesty
+assert.match(
+  fs.readFileSync(join(root, "components/PresetPreviewCard.tsx"), "utf8"),
+  /data-proof-quality=["']provisional-lab["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/PresetPreviewCard.tsx"), "utf8"),
+  /Official · cached/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/VideoTile.tsx"), "utf8"),
+  /data-proof-quality=["']provisional-lab["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/VideoTile.tsx"), "utf8"),
+  /provisionalLabQualityLabel/
+);
 
 assert.match(softLaunch, /floating-hero/);
 assert.match(softLaunch, /mystery-box-reveal/);
@@ -1643,6 +1660,7 @@ const videoTile = fs.readFileSync(
 );
 assert.match(videoTile, /AutoPlayVideo/);
 assert.match(videoTile, /focusable=\{false\}/);
+assert.match(videoTile, /data-proof-quality=["']provisional-lab["']/);
 assert.match(
   fs.readFileSync(join(root, "app/effects/page.tsx"), "utf8"),
   /proofBackedRecipeSlugs|ItemList/
@@ -3326,6 +3344,10 @@ assert.match(
 assert.match(
   fs.readFileSync(join(root, "components/PresetPreviewCard.tsx"), "utf8"),
   /desktopPlayMode=["']interaction["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/PresetPreviewCard.tsx"), "utf8"),
+  /Official · cached|data-proof-quality=["']provisional-lab["']/
 );
 assert.match(
   fs.readFileSync(join(root, "lib/workflows.ts"), "utf8"),
