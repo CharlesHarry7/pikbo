@@ -105,6 +105,8 @@ export type GenerateErrorBody = {
   need?: number;
   have?: number;
   model?: string;
+  /** Existing local generation-ledger id when a submitted request fails. */
+  jobId?: string;
   session?: PublicSession;
   /** seconds to wait on rate limits */
   retryAfterSec?: number;

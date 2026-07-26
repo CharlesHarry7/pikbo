@@ -64,7 +64,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T20 | Favorites, before/after, onboarding, trust strip | Grok | done | main | |
 | T21 | Gap close: image API, resolution, settings, cmd-K, library, annual UI | Grok | done | main | docs/GAP_AUDIT.md |
 | T22 | Pre-launch audit: lint green, pricing honesty, size guard, T2V honesty | Grok | done | main | docs/PRELAUNCH_AUDIT.md |
-| T8 | Batch generate for Shop plan | Grok | todo | agent/grok/final-takeover | Complete after durable auth/credits; reuse Seller Pack child state model |
+| T8 | Batch generate for Shop plan | Grok | review | agent/grok/t8-campaign-recovery | Current-device/session Seller Pack recovery reconciles existing generation jobs; no cloud/durable claim. T5 worker remains blocked |
 | T9 | Effect preset expansion (studio + SEO landing) | Claude | done | agent/claude/seo-presets | +3 effects |
 | T11 | Guides: informational long-tail content | Claude | done | agent/claude/guides | 3 how-to/tips/ideas articles at /guides; Article+FAQ JSON-LD; cross-linked to effects |
 | T23 | CI build + conflict-marker gate | Grok | review | agent/gpt/product-core-integration | Active workflow runs engine-smoke · lint · typecheck · build · link-check · critical-path; PR #26 adds CI-only session secrets and removes the hidden critical-path bypass |

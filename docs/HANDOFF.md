@@ -4,6 +4,21 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] T8 Seller Pack current-session recovery (review)
+- BatchStudio keeps only an active-pack pointer in `sessionStorage`: the three
+  fixed child keys, request IDs, config, and status hints. It never stores the
+  photo/video payload, balances, settlement truth, or a second Library/history.
+- On refresh, `GET /api/generations` is authoritative. It reopens only jobs
+  still present in the current device/server session (queued, running,
+  succeeded, failed, restored, or refund-unconfirmed); a missing job is shown
+  as unavailable rather than reviving a stale local result/refund claim.
+- Retry is limited to confirmed terminal failed/restored children or explicitly
+  unsubmitted children; successful siblings remain untouched, and unconfirmed
+  refunds never auto-retry. Current UI explicitly says this is not cloud or
+  cross-device recovery.
+- T5 remains blocked: the generation ledger is process-memory, not a durable
+  server-owned worker. No FAL/Stripe/DNS/pricing/credit-ledger change was made.
+
 ### 2026-07-26 — [grok] Create first-run order + plain /create remix honesty
 - Create: recipe chips before Lab samples; Toy Identity only under Advanced.
 - `hasRemixSearchParams` — empty /create is not an implicit PRESETS[0] remix.

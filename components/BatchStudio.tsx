@@ -54,17 +54,20 @@ import { sellerPackPostItems } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { SellerPackSteps } from "@/components/SellerPackSteps";
+import {
+  parseSellerPackRecovery,
+  reconcileSellerPackRecovery,
+  SELLER_PACK_RECOVERY_KEY,
+  type SellerPackChildStatus,
+  type SellerPackPublicJob,
+  type SellerPackRecoveryRun,
+} from "@/lib/sellerPackRecovery";
 
 type Job = {
   slug: string;
   name: string;
   status:
-    | "queued"
-    | "running"
-    | "succeeded"
-    | "failed"
-    | "refunded"
-    | "not_started";
+    | SellerPackChildStatus;
   error?: string;
   errorCode?: string;
   videoUrl?: string;
@@ -117,6 +120,47 @@ function selectedMatchesSellerPack(slugs: string[]): boolean {
   return SELLER_PACK_SLUGS.every((s) => set.has(s));
 }
 
+/** Active-run pointer only: no image/video, balance, credits, or Library history. */
+function saveSellerPackRecovery(projectId: string, jobs: Job[]) {
+  if (typeof window === "undefined") return;
+  const fixed = SELLER_PACK_SLUGS.map((slug) => jobs.find((job) => job.slug === slug));
+  if (fixed.some((job) => !job)) return;
+  const run: SellerPackRecoveryRun = {
+    version: 1,
+    projectId,
+    savedAt: new Date().toISOString(),
+    children: fixed.map((job) => ({
+      slug: job!.slug,
+      name: job!.name,
+      aspectRatio: job!.aspectRatio ?? "9:16",
+      requestId: job!.requestId,
+      statusHint: job!.status,
+      retryCount: job!.retryCount,
+    })),
+  };
+  try {
+    sessionStorage.setItem(SELLER_PACK_RECOVERY_KEY, JSON.stringify(run));
+  } catch {
+    // Private mode / quota can decline this optional current-session pointer.
+  }
+}
+
+function toRecoveredJob(child: ReturnType<typeof reconcileSellerPackRecovery>["children"][number]): Job {
+  const { statusHint: _hint, ...job } = child;
+  void _hint;
+  return job;
+}
+
+function retryEligible(job: Job): boolean {
+  if (job.status === "not_started") return true;
+  if (job.status === "refunded") return Boolean(job.requestId);
+  return (
+    job.status === "failed" &&
+    job.creditState !== "refund unconfirmed" &&
+    Boolean(job.requestId)
+  );
+}
+
 /**
  * Shop-style batch: one toy photo → several presets in sequence.
  * Supports ?effects=slug1,slug2 and ?pack=seller (Seller Pack MVP).
@@ -167,6 +211,11 @@ export function BatchStudio({
   const [me, setMe] = useState<MeResponse | null>(null);
   const [ownsRights, setOwnsRights] = useState(false);
   const [runProjectId, setRunProjectId] = useState<string | null>(null);
+  const [sellerPackRecoveryHydrated, setSellerPackRecoveryHydrated] =
+    useState(!isSellerPack);
+  const [sellerPackRecoveryNote, setSellerPackRecoveryNote] = useState<
+    string | null
+  >(null);
   /** Wall-clock while pack/batch runs — feeds GenerateWaitStage (1–3 min Mini). */
   const [packElapsed, setPackElapsed] = useState(0);
   /** Abort in-flight pack child + rate-limit waits (parity with Create Cancel). */
@@ -182,6 +231,79 @@ export function BatchStudio({
       packAbortRef.current = null;
     };
   }, []);
+
+  /**
+   * Re-open only this browser's active pack against the current local ledger.
+   * The browser hint merely identifies children; `/api/generations` decides
+   * whether they still exist and what happened to their credits/results.
+   */
+  useEffect(() => {
+    if (!isSellerPack) return;
+    let canceled = false;
+    const start = window.setTimeout(() => {
+      let saved: SellerPackRecoveryRun | null = null;
+      try {
+        const raw = sessionStorage.getItem(SELLER_PACK_RECOVERY_KEY);
+        saved = raw ? parseSellerPackRecovery(JSON.parse(raw)) : null;
+      } catch {
+        saved = null;
+      }
+      if (!saved) {
+        setSellerPackRecoveryHydrated(true);
+        return;
+      }
+      setRunProjectId(saved.projectId);
+      setSelected([...SELLER_PACK_SLUGS]);
+      setSellerPackRecoveryNote("Checking this device/server session for the active Seller Pack…");
+      void fetch("/api/generations", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Generation job list unavailable");
+        return (await response.json()) as { jobs?: unknown };
+      })
+      .then((body) => {
+        if (canceled) return;
+        const listed = Array.isArray(body.jobs)
+          ? (body.jobs as SellerPackPublicJob[])
+          : [];
+        const recovered = reconcileSellerPackRecovery(saved!, listed);
+        setJobs(recovered.children.map(toRecoveredJob));
+        setSellerPackRecoveryNote(
+          recovered.unavailable > 0
+            ? `${recovered.unavailable} child${recovered.unavailable === 1 ? "" : "ren"} cannot recover on this device/server session. Old local hints were not treated as results or refunds.`
+            : "Active pack restored from this device/server session."
+        );
+      })
+      .catch(() => {
+        if (canceled) return;
+        const unavailable = reconcileSellerPackRecovery(saved!, []).children.map(
+          toRecoveredJob
+        );
+        setJobs(unavailable);
+        setSellerPackRecoveryNote(
+          "Cannot recover on this device/server session while generation jobs are unavailable. No local success or refund claim was restored."
+        );
+      })
+        .finally(() => {
+          if (!canceled) setSellerPackRecoveryHydrated(true);
+        });
+      });
+    return () => {
+      canceled = true;
+      window.clearTimeout(start);
+    };
+  }, [isSellerPack]);
+
+  useEffect(() => {
+    if (
+      !isSellerPack ||
+      !sellerPackRecoveryHydrated ||
+      !runProjectId ||
+      jobs.length === 0
+    ) {
+      return;
+    }
+    saveSellerPackRecovery(runProjectId, jobs);
+  }, [isSellerPack, jobs, runProjectId, sellerPackRecoveryHydrated]);
 
   useEffect(() => {
     if (!running) return;
@@ -360,6 +482,7 @@ export function BatchStudio({
               : settlement === null
                 ? "not charged"
                 : settlement,
+          requestId: result.jobId,
         },
         // Unconfirmed network/TIMEOUT still stops the pack — operator should check balance.
         stopQueue: result.fatal || result.paywall || unconfirmed,
@@ -609,10 +732,7 @@ export function BatchStudio({
   async function retryJob(slug: string) {
     if (running || !image || !ownsRights) return;
     const target = jobs.find((job) => job.slug === slug);
-    if (
-      !target ||
-      (target.status !== "failed" && target.status !== "refunded")
-    ) {
+    if (!target || !retryEligible(target)) {
       return;
     }
     const projectId =
@@ -666,9 +786,7 @@ export function BatchStudio({
   /** Phase F: partial failure — re-run only failed/refunded children; successes stay. */
   async function retryAllFailed() {
     if (running || !image || !ownsRights) return;
-    const failed = jobs.filter(
-      (job) => job.status === "failed" || job.status === "refunded"
-    );
+    const failed = jobs.filter(retryEligible);
     if (failed.length === 0) return;
     const projectId =
       runProjectId ??
@@ -743,13 +861,14 @@ export function BatchStudio({
           ? 2
           : 1;
   const failedRetryCount = jobs.filter(
-    (job) => job.status === "failed" || job.status === "refunded"
+    retryEligible
   ).length;
   const needsAttentionCount = jobs.filter(
     (job) =>
       job.status === "failed" ||
       job.status === "refunded" ||
-      job.status === "not_started"
+      job.status === "not_started" ||
+      job.status === "recovery_unavailable"
   ).length;
 
   const exportItems: SellerPackExportItem[] = useMemo(() => {
@@ -970,6 +1089,19 @@ export function BatchStudio({
               </ul>
             </div>
             <SellerPackSteps step={sellerStep} />
+            <p
+              data-seller-pack-recovery="device-local"
+              className="rounded-lg border border-amber-300/20 bg-amber-300/[0.04] px-3 py-2 text-[10px] leading-relaxed text-amber-100/85"
+            >
+              Current device/server session only — this reopens the active
+              pack from the local generation-job ledger. It is not cloud
+              storage, cross-device history, or a durable credits claim.
+            </p>
+            {sellerPackRecoveryNote ? (
+              <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
+                {sellerPackRecoveryNote}
+              </p>
+            ) : null}
           </div>
         )}
         {!sellerPackActive ? (
@@ -1407,14 +1539,14 @@ export function BatchStudio({
                 disabled={running || !image || !ownsRights}
                 onClick={() => void retryAllFailed()}
                 className="rounded-full border border-[var(--mint)]/35 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"
-                title="Re-quote only failed children · successful outputs stay playable"
+                title="Re-quote only confirmed failed or unsubmitted children · successful outputs stay playable; unconfirmed refunds never auto-retry"
               >
-                Retry failed only
+                Retry eligible only
               </button>
             ) : null}
             {jobs.length > 0 ? (
               <span className="text-[10px] text-[var(--fg-dim)]">
-                Saved on this device
+                Current device/session only
               </span>
             ) : null}
           </div>
@@ -1637,7 +1769,7 @@ export function BatchStudio({
                 )}
               </div>
             )}
-            {(j.status === "failed" || j.status === "refunded") && (
+            {retryEligible(j) && (
               <button
                 type="button"
                 disabled={running || !image || !ownsRights}
@@ -1647,6 +1779,11 @@ export function BatchStudio({
                 Retry this item · new 10-credit quote
               </button>
             )}
+            {j.creditState === "refund unconfirmed" ? (
+              <p className="mt-2 text-[10px] text-amber-200">
+                Refund unconfirmed — check balance first; this child is not auto-retried.
+              </p>
+            ) : null}
           </div>
         ))}
       </div>
