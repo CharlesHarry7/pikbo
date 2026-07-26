@@ -1,5 +1,5 @@
 {
-  "_comment": "Free AI directory submit list for Pikbo (https://pikbo.ai). free=false skips paid. Updated 2026-07-27 from WorkBuddy run 20260726T161415Z empirical paid_skip. status_hint=done = already submitted.",
+  "_comment": "Free AI directory submit list for Pikbo (https://pikbo.ai). free=false skips paid. Updated 2026-07-27 from WorkBuddy manual browser-use run. status_hint=done = already submitted.",
   "product": {
     "name": "Pikbo",
     "url": "https://pikbo.ai",
@@ -15,22 +15,37 @@
   "anchor_texts": [
     "Pikbo",
     "Pikbo.ai",
-    "AI toy video generator",
-    "designer toy AI video",
-    "blind box AI video generator",
-    "one photo toy video AI",
-    "AI figure 360 video",
-    "toy product video AI"
+    "Pikbo - AI toy video generator",
+    "AI toy video generator by Pikbo",
+    "toy video from one photo"
   ],
   "directories": [
+    {
+      "slug": "insidr",
+      "name": "Insidr AI",
+      "url": "https://www.insidr.ai",
+      "submit_url": "https://www.insidr.ai/submit",
+      "free": true,
+      "status_hint": "done",
+      "note": "WB 20260727: SUBMITTED via browser-use. Form filled (message, link, tag, email), Send button clicked after scrollIntoView. Page showed 'Your submission was successful.'"
+    },
+    {
+      "slug": "freeaio",
+      "name": "FreeAIO",
+      "url": "https://freeaio.com",
+      "submit_url": "https://freeaio.com/submit-ai-tool/",
+      "free": true,
+      "status_hint": "done",
+      "note": "WB 20260727: SUBMITTED via Playwright. WPForms (wpforms-202). Fields: Name, Email, Website URL, Description (400-500 words), Pricing, Category, Affiliate. Terms checkbox checked. Honeypot fields (field_9, field_10) must NOT be filled. AJAX response: {success:true, 'Thanks for contacting us!'}"
+    },
     {
       "slug": "awesomeaitools",
       "name": "Awesome AI Tools",
       "url": "https://awesomeaitools.com",
       "submit_url": "https://awesomeaitools.com/submit",
       "free": true,
-      "status_hint": "login_required",
-      "note": "WB 161415: login wall; needs PIKBO_GROWTH_EMAIL"
+      "status_hint": "broken",
+      "note": "WB 20260727: 404 - site no longer accessible"
     },
     {
       "slug": "dang-ai",
@@ -47,16 +62,8 @@
       "url": "https://aivalley.ai",
       "submit_url": "https://aivalley.ai/submit/",
       "free": true,
-      "status_hint": "login_required"
-    },
-    {
-      "slug": "insidr",
-      "name": "Insidr AI",
-      "url": "https://www.insidr.ai",
-      "submit_url": "https://www.insidr.ai/submit",
-      "free": true,
-      "status_hint": "captcha",
-      "note": "WB: captcha after fill"
+      "status_hint": "fail",
+      "note": "WB 20260727: WordPress Contact Form 7. Form fills OK but submit fails - form.submit() redirects to search page, button click redirects to /submit-prompts/ without success message. AJAX submission not triggered properly."
     },
     {
       "slug": "aiwizard",
@@ -64,8 +71,8 @@
       "url": "https://www.aiwizard.io",
       "submit_url": "https://www.aiwizard.io/submit",
       "free": true,
-      "status_hint": "fail",
-      "note": "WB: no_submit_button — retry form heuristics"
+      "status_hint": "broken",
+      "note": "WB 20260727: 404 - site no longer accessible"
     },
     {
       "slug": "aitoolhunt",
@@ -73,8 +80,8 @@
       "url": "https://www.aitoolhunt.com",
       "submit_url": "https://www.aitoolhunt.com/submit",
       "free": true,
-      "status_hint": "fail",
-      "note": "WB: no_submit_button"
+      "status_hint": "broken",
+      "note": "WB 20260727: 404 - site no longer accessible"
     },
     {
       "slug": "saasaitools",
@@ -82,8 +89,8 @@
       "url": "https://www.saasaitools.com",
       "submit_url": "https://www.saasaitools.com/submit",
       "free": true,
-      "status_hint": "fail",
-      "note": "WB: no_submit_button"
+      "status_hint": "broken",
+      "note": "WB 20260727: SSL error - site inaccessible"
     },
     {
       "slug": "ai-tools-io",
@@ -91,8 +98,8 @@
       "url": "https://ai-tools.io",
       "submit_url": "https://ai-tools.io/submit",
       "free": true,
-      "status_hint": "fail",
-      "note": "WB: ERR_CONNECTION_CLOSED"
+      "status_hint": "broken",
+      "note": "WB 20260727: ERR_CONNECTION_CLOSED - site down"
     },
     {
       "slug": "startupfa-me",
@@ -100,7 +107,8 @@
       "url": "https://startupfa.me",
       "submit_url": "https://startupfa.me/submit",
       "free": true,
-      "note": "New free candidate 2026-07-27"
+      "status_hint": "broken",
+      "note": "WB 20260727: 404 - page not found"
     },
     {
       "slug": "launched-io",
@@ -108,7 +116,8 @@
       "url": "https://launched.io",
       "submit_url": "https://launched.io/submit",
       "free": true,
-      "note": "New free candidate 2026-07-27"
+      "status_hint": "broken",
+      "note": "WB 20260727: SSL error - site inaccessible"
     },
     {
       "slug": "saaspo",
@@ -116,39 +125,62 @@
       "url": "https://www.saaspo.com",
       "submit_url": "https://www.saaspo.com/submit",
       "free": true,
-      "note": "New free candidate 2026-07-27"
+      "status_hint": "skip",
+      "note": "WB 20260727: Design showcase site, not an AI tools directory. Form has Name, Email, Twitter, Website-URL fields only."
     },
     {
-      "slug": "betalist",
-      "name": "BetaList",
-      "url": "https://betalist.com",
-      "submit_url": "https://betalist.com/submit",
+      "slug": "bestaibrands",
+      "name": "Best AI Brands",
+      "url": "https://bestaibrands.com",
+      "submit_url": "https://bestaibrands.com/submit",
       "free": true,
-      "note": "24h sprint candidate — may need login/email"
+      "status_hint": "fail",
+      "note": "WB 20260727: Form fields lack IDs/names (React-based). Fields: Product Name, Website URL, Tagline, Email, Category, Description, Logo URL, Terms. JS value set fills fields but submit doesn't trigger React state update. Playwright native fill couldn't locate form elements."
     },
     {
-      "slug": "startupbuffer",
-      "name": "Startup Buffer",
-      "url": "https://startupbuffer.com",
-      "submit_url": "https://startupbuffer.com/submit",
+      "slug": "productcool",
+      "name": "ProductCool",
+      "url": "https://www.productcool.com",
+      "submit_url": "https://www.productcool.com/submit",
       "free": true,
-      "note": "24h sprint free candidate"
+      "status_hint": "login_required",
+      "note": "WB 20260727: Requires Google OAuth login. Google account chooser shows guochao950518@gmail.com but OAuth redirect blocked by Google RAPT (anti-automation). Email-based 'Send Sign In Link' alternative available."
     },
     {
-      "slug": "microlaunch",
-      "name": "Microlaunch",
-      "url": "https://microlaunch.net",
-      "submit_url": "https://microlaunch.net/submit",
-      "free": true,
-      "note": "24h sprint free candidate"
+      "slug": "tap4ai",
+      "name": "Tap4 AI",
+      "url": "https://tap4.ai",
+      "submit_url": "https://tap4.ai/submit/",
+      "free": false,
+      "status_hint": "paid_skip",
+      "note": "WB 20260727: Has form (website, url, title, description) but defaults to paid option ($10/4000 credits) and has reCAPTCHA"
     },
     {
-      "slug": "open-launch",
-      "name": "Open Launch",
-      "url": "https://open-launch.com",
-      "submit_url": "https://open-launch.com/submit",
+      "slug": "yaatd",
+      "name": "YAATD",
+      "url": "https://yaatd.com",
+      "submit_url": "https://yaatd.com/submit/",
       "free": true,
-      "note": "24h sprint free candidate"
+      "status_hint": "skip",
+      "note": "WB 20260727: Submit page shows email subscribe form, not tool submission form. May need account creation first."
+    },
+    {
+      "slug": "indietools",
+      "name": "IndieTools",
+      "url": "https://www.indietools.app",
+      "submit_url": "https://www.indietools.app/dashboard/products/new",
+      "free": true,
+      "status_hint": "login_required",
+      "note": "WB 20260727: Requires Google login. 'Continue with Google' button present."
+    },
+    {
+      "slug": "builtbyme",
+      "name": "BuiltByMe",
+      "url": "https://builtbyme.io",
+      "submit_url": "https://builtbyme.io/submit",
+      "free": true,
+      "status_hint": "login_required",
+      "note": "WB 20260727: Requires login. 'Continue with Google' button present."
     },
     {
       "slug": "aitoolsdirectory-done",
