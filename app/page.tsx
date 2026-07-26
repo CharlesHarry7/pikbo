@@ -111,22 +111,20 @@ export default function Home() {
       >
         <div className="mx-auto max-w-5xl">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
-            Your turn
+            Your turn · 轮到你了
           </p>
           <h2 className="font-display mt-2 text-3xl font-black uppercase tracking-tight text-white sm:text-5xl">
             轮到你的潮玩了
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/55 sm:text-[15px]">
-            上传一张你拥有的潮玩照片，生成短视频。
-            <span className="font-semibold text-white/80"> 免费可试 Mini</span>
-            {" · "}
-            约 5 秒 · 480p · 播放器水印。
+            Upload a photo you own — free Mini trial · ~5s · 480p · on-player
+            mark. 上传自有潮玩照片即可试。
             {" "}
             <a
               href={site.rankToolPath}
               className="font-semibold text-[#c8ff3d]/90 hover:underline"
             >
-              完整工具页
+              tool guide
             </a>
           </p>
           <div className="mt-8">

@@ -4,6 +4,10 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Home cinema/wall i18n + create prefetch
+- EN/ZH keys for cinema, wall filters, remake, browse CTA.
+- Prefetch `/create` from hero mount + browse CTA; wall Links `prefetch`.
+
 ### 2026-07-26 — [grok] Home browse CTA above mobile nav + tab pause
 - `HomeBrowseCta` bottom offset `4.75rem` on mobile (clears suite bar); z-35.
 - `AutoPlayVideo`: pause all claimed clips on `visibilitychange` hidden.

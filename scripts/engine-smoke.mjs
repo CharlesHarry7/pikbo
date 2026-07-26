@@ -2989,7 +2989,11 @@ const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero|HomeViralWall|home-create/);
 assert.match(
   fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /用我的潮玩生成|先看看示例|data-home-hero|setInterval|items/
+  /home\.cinema\.ctaPrimary|data-home-hero|setInterval|items|prefetch/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
+  /home\.cinema\.ctaPrimary|home\.wall\.remake|home\.browseCta/
 );
 assert.match(
   fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
@@ -3002,7 +3006,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/HomeBrowseCta.tsx"), "utf8"),
-  /data-home-browse-cta|用你的潮玩生成|#home-create|4\.75rem/
+  /data-home-browse-cta|home\.browseCta|#home-create|4\.75rem|prefetch/
 );
 assert.match(
   fs.readFileSync(join(root, "components/AutoPlayVideo.tsx"), "utf8"),

@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import type { FeedItem } from "@/lib/videoFeed";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
+import { useI18n } from "@/components/LanguageProvider";
 
 /**
  * Dense toy video wall — browse first, then remake.
@@ -15,12 +16,12 @@ const INITIAL_WALL = 24;
 
 /** Homepage wall filters — 潮玩内容向 */
 export const TOY_WALL_FILTERS = [
-  { id: "all", label: "全部" },
-  { id: "spin", label: "360°展示" },
-  { id: "unbox", label: "开箱" },
-  { id: "float", label: "漂浮" },
-  { id: "collect", label: "收藏展示" },
-  { id: "listing", label: "Listing" },
+  { id: "all", labelKey: "home.wall.filter.all" },
+  { id: "spin", labelKey: "home.wall.filter.spin" },
+  { id: "unbox", labelKey: "home.wall.filter.unbox" },
+  { id: "float", labelKey: "home.wall.filter.float" },
+  { id: "collect", labelKey: "home.wall.filter.collect" },
+  { id: "listing", labelKey: "home.wall.filter.listing" },
 ] as const;
 
 export type ToyWallFilterId = (typeof TOY_WALL_FILTERS)[number]["id"];
@@ -65,6 +66,7 @@ function matchesToyFilter(item: FeedItem, filter: ToyWallFilterId): boolean {
 }
 
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
+  const { t } = useI18n();
   const [filter, setFilter] = useState<ToyWallFilterId>("all");
   const [expanded, setExpanded] = useState(false);
 
@@ -112,24 +114,25 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3 px-2">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
-              潮玩视频墙 · {items.length} clips
+              {t("home.wall.eyebrow")} · {items.length}
             </p>
             <h2 className="font-display mt-1 text-3xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-5xl">
-              先看潮玩
-              <span className="text-[#c8ff3d]">怎么动</span>
+              {t("home.wall.h2a")}
+              <span className="text-[#c8ff3d]">{t("home.wall.h2b")}</span>
             </h2>
             <p className="mt-1.5 max-w-xl text-sm text-white/45">
-              划过即播（静音）· 官方 Lab · 点「生成同款」换成你的玩具
+              {t("home.wall.sub")}
             </p>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/30">
-              muted autoplay · leave tab pauses
+              {t("home.wall.mutedNote")}
             </p>
           </div>
           <Link
             href="/effects"
+            prefetch
             className="rounded-full border border-[#c8ff3d]/35 px-3 py-1.5 text-xs font-bold text-[#c8ff3d] transition hover:bg-[#c8ff3d]/10"
           >
-            全部配方 →
+            {t("home.wall.allRecipes")}
           </Link>
         </div>
 
@@ -168,7 +171,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                     : "border-white/12 bg-white/[0.05] text-white/70 hover:border-[#c8ff3d]/40 hover:text-white"
                 }`}
               >
-                {c.label}
+                {t(c.labelKey)}
                 <span
                   className={`ml-1.5 tabular-nums ${
                     filter === c.id ? "text-black/55" : "text-white/35"
@@ -196,6 +199,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               >
                 <Link
                   href={item.href}
+                  prefetch
                   className="absolute inset-0"
                   onClick={() =>
                     track({
@@ -205,7 +209,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                       meta: { source: "toy_wall_featured" },
                     })
                   }
-                  aria-label={`${item.title} · 生成同款`}
+                  aria-label={`${item.title} · ${t("home.wall.remake")}`}
                 >
                   <AutoPlayVideo
                     poster={item.demo.poster}
@@ -228,7 +232,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                       {item.title}
                     </p>
                     <span className="mt-1.5 inline-flex rounded-full bg-[#c8ff3d] px-2.5 py-1 text-[10px] font-black text-black">
-                      生成同款
+                      {t("home.wall.remake")}
                     </span>
                   </div>
                 </Link>
@@ -245,6 +249,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
             >
               <Link
                 href={item.href}
+                prefetch
                 className="absolute inset-0 z-0"
                 onClick={() =>
                   track({
@@ -254,7 +259,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                     meta: { source: "toy_wall_card" },
                   })
                 }
-                aria-label={`${item.title} · 生成同款`}
+                aria-label={`${item.title} · ${t("home.wall.remake")}`}
               >
                 <AutoPlayVideo
                   poster={item.demo.poster}
@@ -294,6 +299,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                 </p>
                 <Link
                   href={item.href}
+                  prefetch
                   onClick={() =>
                     track({
                       event: "recipe_use",
@@ -304,7 +310,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                   }
                   className="pointer-events-auto mt-1.5 inline-flex rounded-full bg-[#c8ff3d] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-black shadow-[0_0_18px_rgba(200,255,61,0.45)] transition sm:text-[10px]"
                 >
-                  生成同款
+                  {t("home.wall.remake")}
                 </Link>
               </div>
             </article>
@@ -313,7 +319,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
 
         {wall.length === 0 ? (
           <p className="px-2 py-12 text-center text-sm text-white/40">
-            这一类暂时没有示例 · 试试「全部」
+            {t("home.wall.empty")}
           </p>
         ) : null}
 
@@ -324,7 +330,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               onClick={() => setExpanded(true)}
               className="rounded-full border border-white/15 bg-white/[0.04] px-6 py-2.5 text-xs font-bold text-white/75 hover:border-[#c8ff3d]/40 hover:text-white"
             >
-              看更多潮玩视频（+{wall.length - INITIAL_WALL}）
+              {t("home.wall.more")}（+{gridPool.length - INITIAL_WALL}）
             </button>
           </div>
         ) : (
