@@ -4,6 +4,20 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [gpt] T33 Toy Identity V0 vertical slice
+- Create can save, select, edit, and remove up to 12 device-local SKU profiles;
+  legacy single-profile storage migrates automatically.
+- Sales mode favors product fidelity; Story mode allows more expressive motion
+  while preserving recognition. Identity instructions precede optional motion
+  text so prompt truncation keeps the product contract.
+- History stores stable `toyIdentityId` + mode; Library groups the same toy
+  across recipes by identity id, even if the visible SKU is later renamed.
+- V0 truth stays explicit: one primary photo, local browser storage, no LoRA,
+  cloud sync, multi-reference generation, identity scoring, or fidelity claim.
+- Contract: `docs/prd/TOY_IDENTITY_V0.md`.
+- Verified: targeted ESLint PASS · TypeScript PASS · engine-smoke PASS ·
+  Next.js production build PASS (189 static pages).
+
 ### 2026-07-26 — [grok] Image cancel ledger + abort best-effort DELETE
 - `ImageJobStatus` + `cancelImageJob` / `findImageJobByRequestOrId` (process-memory).
 - `DELETE /api/image` (jobId | requestId | idempotencyKey); HEAD

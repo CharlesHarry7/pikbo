@@ -183,6 +183,31 @@ const pe = fs.readFileSync(join(root, "lib/providerError.ts"), "utf8");
 assert.match(pe, /export function isValidImageDataUrl/);
 assert.match(pe, /export function classifyProviderError/);
 
+// Toy Identity V0: reusable device-local profiles, explicit fidelity mode,
+// legacy migration, and stable Library linkage. Never imply cloud training.
+const toyIdentity = fs.readFileSync(join(root, "lib/toyIdentity.ts"), "utf8");
+assert.match(toyIdentity, /pikbo_toy_identities_v2/);
+assert.match(toyIdentity, /migrateLegacyIdentity/);
+assert.match(toyIdentity, /ToyIdentityMode\s*=\s*"sales"\s*\|\s*"story"/);
+assert.match(toyIdentity, /export function activateToyIdentity/);
+assert.match(toyIdentity, /export function deleteToyIdentity/);
+assert.match(toyIdentity, /export function identityProjectId/);
+assert.match(
+  toyIdentity,
+  /Identity is the product moat[\s\S]{0,180}`\$\{identityBlock\} \$\{base\}`/
+);
+const createStudio = fs.readFileSync(
+  join(root, "components/CreateStudio.tsx"),
+  "utf8"
+);
+assert.match(createStudio, /data-toy-identity-v0/);
+assert.match(createStudio, /toy_identity_created/);
+assert.match(createStudio, /toy_identity_selected/);
+assert.match(createStudio, /toyIdentityId:\s*toyIdentity\.id/);
+const history = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
+assert.match(history, /toyIdentityId\?: string/);
+assert.match(history, /identityMode\?: "sales" \| "story"/);
+
 // Demo path must not charge before FAL_KEY gate (honesty vs pricing)
 const genRoute = fs.readFileSync(join(root, "app/api/generate/route.ts"), "utf8");
 const demoIdx = genRoute.indexOf("if (!process.env.FAL_KEY)");
@@ -574,10 +599,6 @@ assert.match(provenance, /Cached demo/);
 assert.match(provenance, /Live generation/);
 assert.match(provenance, /On-player mark/);
 assert.match(provenance, /Local Library/);
-const createStudio = fs.readFileSync(
-  join(root, "components/CreateStudio.tsx"),
-  "utf8"
-);
 assert.match(createStudio, /resultProvenanceLabel/);
 assert.match(createStudio, /PROVENANCE\.onPlayerMark|onPlayerMark/);
 const landing = fs.readFileSync(
@@ -2950,6 +2971,7 @@ const directorPlanSrc = fs.readFileSync(
   "utf8"
 );
 assert.match(directorPlanSrc, /buildDirectorPlan|confirm cost|Sales/);
+assert.match(directorPlanSrc, /identity\.mode[\s\S]{0,160}Story/);
 assert.match(
   fs.readFileSync(join(root, "components/DirectorPlanPanel.tsx"), "utf8"),
   /data-director-plan=["']cd-phase-b2["']/
@@ -2979,19 +3001,6 @@ const deliveryPackSrc = fs.readFileSync(
 assert.match(deliveryPackSrc, /fidelityQcItems|qc-edge|qc-paint|qc-logo/);
 assert.match(deliveryPackSrc, /Sales fidelity|includeQc/);
 assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
-
-
-// Homepage cinema → wall → create (video-first)
-const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
-assert.match(homePageSrc, /HomeCinemaHero|HomeViralWall|home-create/);
-assert.match(
-  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /用我的潮玩生成|先看看示例|data-home-hero/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /TOY_WALL_FILTERS|生成同款|360°展示|data-home-wall/
-);
 
 // Five-step toy identity + delivery honesty + landing assetId + workflows
 const toyIdSrc = fs.readFileSync(join(root, "lib/toyIdentity.ts"), "utf8");

@@ -300,6 +300,7 @@ lint+build 绿；commit [claude] + push
 | From | To | 请求 | 状态 |
 |------|-----|------|------|
 | 老板 | 全员 | 日入 6 万级野心 | **对齐 moonshot，不许降级成套壳** |
+| 老板 | Codex | Toy Identity V0 纵向实现：可复用 SKU 身份、模式与作品关联 | **REVIEW · agent/gpt/toy-identity-v0 · lint/typecheck/smoke/build green** |
 | Grok | GPT | WORLD_CLASS + SEO 50 | **DONE · agent/gpt/world-class-prd** |
 | Grok | Codex | 买家语言 + ROI pricing | **OPEN** |
 | Grok | Claude | Create 旗舰 + 证明墙 | **OPEN** |

@@ -10,6 +10,8 @@ export type AnalyticsEvent =
   | "landing_view"
   | "project_open"
   | "recipe_use"
+  | "toy_identity_created"
+  | "toy_identity_selected"
   | "upload_ready"
   | "generate_start"
   | "generate_result"

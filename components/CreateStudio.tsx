@@ -75,10 +75,17 @@ import { useI18n } from "@/components/LanguageProvider";
 import { getJobIntent, JOB_INTENTS, type JobIntentId } from "@/lib/jobIntents";
 import type { Workflow } from "@/lib/workflows";
 import {
+  activateToyIdentity,
   composeExtraWithIdentity,
+  deleteToyIdentity,
+  EMPTY_TOY_IDENTITY,
+  hasToyIdentity,
+  identityProjectId,
   identityProjectName,
   loadToyIdentity,
+  loadToyIdentities,
   saveToyIdentity,
+  startNewToyIdentity,
   type ToyIdentity,
 } from "@/lib/toyIdentity";
 import { deliveryItemsForJob } from "@/lib/deliveryPack";
@@ -216,9 +223,10 @@ export function CreateStudio({
   const [extra, setExtra] = useState(initialPrompt ?? "");
   /** Optional SKU lock — first principles, not Character/Soul cloud */
   const [toyIdentity, setToyIdentity] = useState<ToyIdentity>({
-    sku: "",
-    preserve: "",
+    ...EMPTY_TOY_IDENTITY,
   });
+  /** Reusable SKU profiles stored only on this device in V0. */
+  const [toyIdentities, setToyIdentities] = useState<ToyIdentity[]>([]);
   const [duration, setDuration] = useState<5 | 10>(() => {
     if (remix.intent?.durationSeconds === 10 || remix.intent?.durationSeconds === 5) {
       return remix.intent.durationSeconds;
@@ -510,6 +518,7 @@ export function CreateStudio({
     const t = window.setTimeout(() => {
       setFavorites(loadFavorites());
       setToyIdentity(loadToyIdentity());
+      setToyIdentities(loadToyIdentities());
       try {
         const pending = sessionStorage.getItem("pikbo_pending_still");
         if (pending?.startsWith("data:image")) {
@@ -880,12 +889,14 @@ export function CreateStudio({
           ? `lab-sample-${opts.labSampleId}`
           : remix.intent?.sourceProjectSlug,
         channel: remix.intent?.channel,
-        projectId: localProjectId(
-          stillForStore || fx,
-          opts?.labSampleId
-            ? `lab-sample-${opts.labSampleId}`
-            : remix.intent?.sourceProjectSlug
-        ),
+        projectId:
+          identityProjectId(toyIdentity) ||
+          localProjectId(
+            stillForStore || fx,
+            opts?.labSampleId
+              ? `lab-sample-${opts.labSampleId}`
+              : remix.intent?.sourceProjectSlug
+          ),
         projectName: opts?.labSampleId
           ? `PIKBO Lab sample · ${opts.labSampleId}`
           : remix.intent?.sourceProjectSlug
@@ -900,6 +911,10 @@ export function CreateStudio({
             ? stillForStore
             : undefined,
         sku: toyIdentity.sku || undefined,
+        toyIdentityId: toyIdentity.id || undefined,
+        identityMode: hasToyIdentity(toyIdentity)
+          ? toyIdentity.mode
+          : undefined,
       })
     );
     emitSessionRefresh();
@@ -1148,10 +1163,60 @@ export function CreateStudio({
   }
 
   function updateToyIdentity(patch: Partial<ToyIdentity>) {
-    setToyIdentity((prev) => {
-      const next = { ...prev, ...patch };
-      return saveToyIdentity(next);
-    });
+    const draft = { ...toyIdentity, ...patch };
+    if (!hasToyIdentity(draft) && !toyIdentity.id) {
+      setToyIdentity({
+        ...EMPTY_TOY_IDENTITY,
+        mode: draft.mode === "story" ? "story" : "sales",
+      });
+      return;
+    }
+    const wasUnsaved = !toyIdentity.id;
+    const next = saveToyIdentity(draft);
+    setToyIdentity(next);
+    setToyIdentities(loadToyIdentities());
+    if (wasUnsaved && next.id) {
+      track({
+        event: "toy_identity_created",
+        path: "/create",
+        meta: { mode: next.mode },
+      });
+    }
+  }
+
+  function selectToyIdentity(id: string) {
+    const next = id ? activateToyIdentity(id) : startNewToyIdentity();
+    setToyIdentity(next);
+    setToyIdentities(loadToyIdentities());
+    if (next.id) {
+      track({
+        event: "toy_identity_selected",
+        path: "/create",
+        meta: { mode: next.mode },
+      });
+    }
+  }
+
+  function removeActiveToyIdentity() {
+    if (!toyIdentity.id) return;
+    if (
+      !window.confirm(
+        `Remove “${toyIdentity.sku || "this toy"}” from this device? Saved clips stay in Library.`
+      )
+    ) {
+      return;
+    }
+    const next = deleteToyIdentity(toyIdentity.id);
+    setToyIdentity(next);
+    setToyIdentities(loadToyIdentities());
+    toast("Toy Identity removed · existing clips kept");
+  }
+
+  function newToyIdentity() {
+    const next = startNewToyIdentity();
+    setToyIdentity(next);
+    setToyIdentities(loadToyIdentities());
+    toast("New Toy Identity · add a name or preservation detail");
   }
 
   const assetBrief = useMemo(
@@ -2129,8 +2194,11 @@ export function CreateStudio({
                   </div>
                 </div>
 
-                {/* Toy Identity — advanced only (not first-run upload step) */}
-                <div className="rounded-xl border border-[var(--mint)]/15 bg-gradient-to-br from-[var(--mint)]/[0.06] to-black/30 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
+                {/* Toy Identity V0 — reusable on this device; no cloud/multi-ref claim. */}
+                <div
+                  data-toy-identity-v0
+                  className="rounded-xl border border-[var(--mint)]/15 bg-gradient-to-br from-[var(--mint)]/[0.06] to-black/30 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]"
+                >
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]/90">
@@ -2140,12 +2208,89 @@ export function CreateStudio({
                         {t("create.toyIdentity.hint")}
                       </p>
                     </div>
-                    {(toyIdentity.sku || toyIdentity.preserve) && (
+                    {hasToyIdentity(toyIdentity) && (
                       <span className="shrink-0 rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/10 px-1.5 py-0.5 text-[9px] font-bold text-[var(--mint)]">
-                        {t("create.active")}
+                        {toyIdentity.mode === "sales"
+                          ? t("create.identitySales")
+                          : t("create.identityStory")}
                       </span>
                     )}
                   </div>
+
+                  <div className="mt-2 flex flex-wrap items-end gap-2">
+                    <label className="min-w-[12rem] flex-1">
+                      <span className="text-[10px] font-semibold text-[var(--fg-dim)]">
+                        {t("create.identityLibrary")}
+                      </span>
+                      <select
+                        value={toyIdentity.id}
+                        onChange={(e) => selectToyIdentity(e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 text-xs outline-none transition focus:border-[var(--mint)] focus:ring-1 focus:ring-[var(--mint)]/30"
+                      >
+                        <option value="">{t("create.identityNew")}</option>
+                        {toyIdentities.map((identity) => (
+                          <option key={identity.id} value={identity.id}>
+                            {identity.sku ||
+                              identity.preserve.slice(0, 28) ||
+                              t("create.identityUntitled")}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={newToyIdentity}
+                      className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[10px] font-semibold text-white/65 transition hover:border-[var(--mint)]/50 hover:text-white"
+                    >
+                      {t("create.identityNewButton")}
+                    </button>
+                    {toyIdentity.id ? (
+                      <button
+                        type="button"
+                        onClick={removeActiveToyIdentity}
+                        className="rounded-lg border border-red-300/15 bg-red-300/[0.04] px-2.5 py-1.5 text-[10px] font-semibold text-red-100/60 transition hover:border-red-300/40 hover:text-red-100"
+                      >
+                        {t("create.identityRemove")}
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <div
+                    className="mt-2 grid grid-cols-2 gap-1 rounded-xl border border-white/8 bg-black/25 p-1"
+                    role="group"
+                    aria-label={t("create.identityMode")}
+                  >
+                    {(["sales", "story"] as const).map((identityMode) => {
+                      const active = toyIdentity.mode === identityMode;
+                      return (
+                        <button
+                          key={identityMode}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() =>
+                            updateToyIdentity({ mode: identityMode })
+                          }
+                          className={`rounded-lg px-2 py-1.5 text-left transition ${
+                            active
+                              ? "bg-[var(--mint)]/15 text-white ring-1 ring-[var(--mint)]/35"
+                              : "text-white/45 hover:bg-white/[0.05] hover:text-white/75"
+                          }`}
+                        >
+                          <span className="block text-[10px] font-bold">
+                            {identityMode === "sales"
+                              ? t("create.identitySales")
+                              : t("create.identityStory")}
+                          </span>
+                          <span className="mt-0.5 block text-[9px] leading-snug opacity-65">
+                            {identityMode === "sales"
+                              ? t("create.identitySalesHint")
+                              : t("create.identityStoryHint")}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
                   <div className="mt-2 grid gap-2 sm:grid-cols-2">
                     <label className="block">
                       <span className="text-[10px] font-semibold text-[var(--fg-dim)]">
@@ -2176,6 +2321,9 @@ export function CreateStudio({
                       />
                     </label>
                   </div>
+                  <p className="mt-2 text-[9px] leading-snug text-white/35">
+                    {t("create.identityDeviceNote")}
+                  </p>
                 </div>
               </div>
             )}

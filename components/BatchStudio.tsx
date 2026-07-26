@@ -11,6 +11,7 @@ import {
 } from "@/lib/assetBrief";
 import {
   composeExtraWithIdentity,
+  EMPTY_TOY_IDENTITY,
   loadToyIdentity,
   saveToyIdentity,
   type ToyIdentity,
@@ -217,8 +218,7 @@ export function BatchStudio({
   const [labStill, setLabStill] = useState(false);
   const [briefCollapsed, setBriefCollapsed] = useState(false);
   const [toyIdentity, setToyIdentity] = useState<ToyIdentity>({
-    sku: "",
-    preserve: "",
+    ...EMPTY_TOY_IDENTITY,
   });
   const [selected, setSelected] = useState<string[]>(defaults);
   const [jobs, setJobs] = useState<Job[]>([]);

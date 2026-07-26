@@ -250,6 +250,10 @@ export function historyFieldsFromSuccess(
     inputImage?: string;
     /** Optional Toy Identity SKU for Library grouping/filter. */
     sku?: string;
+    /** Stable device-local identity project id. */
+    toyIdentityId?: string;
+    /** Fidelity intent for this generation. */
+    identityMode?: "sales" | "story";
   }
 ): Omit<HistoryItem, "id" | "createdAt"> {
   // Prefer server redaction; if a legacy free live provider URL slipped through,
@@ -276,6 +280,8 @@ export function historyFieldsFromSuccess(
     projectName: meta.projectName,
     inputImage: meta.inputImage,
     sku: meta.sku,
+    toyIdentityId: meta.toyIdentityId,
+    identityMode: meta.identityMode,
     effect: meta.effect,
     effectName: meta.effectName,
     model: data.model,

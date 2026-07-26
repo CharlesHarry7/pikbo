@@ -30,6 +30,10 @@ export type HistoryItem = {
   channel?: string;
   /** Optional Toy Identity SKU label from Create (device-local only). */
   sku?: string;
+  /** Stable device-local Toy Identity linkage across recipes. */
+  toyIdentityId?: string;
+  /** Fidelity intent used for this output. */
+  identityMode?: "sales" | "story";
   status?: "succeeded";
   creditStatus?: "0 cached" | "10 used";
   createdAt: string;
@@ -94,6 +98,17 @@ function normalizeItem(raw: unknown): HistoryItem | null {
     projectName:
       typeof o.projectName === "string" ? o.projectName : undefined,
     sku: typeof o.sku === "string" && o.sku.trim() ? o.sku.trim().slice(0, 48) : undefined,
+    toyIdentityId:
+      typeof o.toyIdentityId === "string" &&
+      /^toy-[a-zA-Z0-9_-]+$/.test(o.toyIdentityId)
+        ? o.toyIdentityId.slice(0, 80)
+        : undefined,
+    identityMode:
+      o.identityMode === "story"
+        ? "story"
+        : o.identityMode === "sales"
+          ? "sales"
+          : undefined,
     inputImage: slimInputImage(
       typeof o.inputImage === "string" ? o.inputImage : undefined
     ),

@@ -447,7 +447,8 @@ export function LibraryGrid() {
           (i.projectName || "").toLowerCase().includes(q) ||
           (i.projectId || "").toLowerCase().includes(q) ||
           (i.sourceProject || "").toLowerCase().includes(q) ||
-          (i.sku || "").toLowerCase().includes(q)
+          (i.sku || "").toLowerCase().includes(q) ||
+          (i.toyIdentityId || "").toLowerCase().includes(q)
       );
     }
     if (sort === "name") {
@@ -470,7 +471,13 @@ export function LibraryGrid() {
       let key: string;
       if (groupMode === "sku") {
         const sku = item.sku?.trim();
-        key = sku ? `sku:${sku}` : "__no_sku__";
+        const identityId = item.toyIdentityId?.trim();
+        // Stable Toy Identity wins over a mutable/display-only SKU label.
+        key = identityId
+          ? `identity:${identityId}`
+          : sku
+            ? `sku:${sku}`
+            : "__no_sku__";
       } else {
         key =
           item.projectId?.trim() ||
@@ -485,12 +492,13 @@ export function LibraryGrid() {
       .map(([key, groupItems]) => {
         const input = groupItems.find((item) => item.inputImage)?.inputImage;
         if (groupMode === "sku") {
+          const sku = groupItems.find((item) => item.sku)?.sku;
           return {
             key,
             label:
               key === "__no_sku__"
                 ? "No SKU · set Name/SKU on Create"
-                : `SKU · ${key.replace(/^sku:/, "")}`,
+                : `SKU · ${sku || key.replace(/^(sku:|identity:)/, "")}`,
             input,
             items: groupItems,
           };
@@ -908,7 +916,13 @@ export function LibraryGrid() {
                     {group.items.length} version
                     {group.items.length === 1 ? "" : "s"} · Saved on this
                     device
-                    {groupMode === "sku" ? " · Assets-style SKU group" : ""}
+                    {groupMode === "sku"
+                      ? ` · ${
+                          group.items[0]?.identityMode === "story"
+                            ? "Story"
+                            : "Sales"
+                        } identity`
+                      : ""}
                   </p>
                 </div>
               </div>

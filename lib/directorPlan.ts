@@ -110,7 +110,10 @@ export function buildDirectorPlan(input: DirectorPlanInput): DirectorPlan {
   rows.push({
     id: "fidelity",
     label: "Mode",
-    value: "Sales · fidelity first (paint / logo / sculpt)",
+    value:
+      input.identity.mode === "story"
+        ? "Story · expressive motion, toy stays recognizable"
+        : "Sales · fidelity first (paint / logo / sculpt)",
     tone: "ok",
   });
 
@@ -361,4 +364,3 @@ export function buildSellerPackDirectorPlan(
     creditsPerClip: quote.creditsPerChild,
   };
 }
-
