@@ -2896,15 +2896,27 @@ assert.match(
 
 // CD Phase B — rule-based Asset Brief + character bible draft (not cloud vision)
 const assetBriefSrc = fs.readFileSync(join(root, "lib/assetBrief.ts"), "utf8");
-assert.match(assetBriefSrc, /buildAssetBrief|probeImageSize/);
+assert.match(assetBriefSrc, /buildAssetBrief|probeImageSize|primaryRecipeForShape/);
 assert.match(assetBriefSrc, /not cloud vision|not computer vision|Rule-based/i);
-assert.match(assetBriefSrc, /seller-pack|Seller Pack/);
+assert.match(assetBriefSrc, /seller-pack|Seller Pack|BIBLE_MATERIAL_CHIPS/);
 assert.match(
   fs.readFileSync(join(root, "components/AssetBriefPanel.tsx"), "utf8"),
   /data-asset-brief=["']cd-phase-b["']|data-character-bible=["']draft["']/
 );
 assert.match(createStudio, /AssetBriefPanel|buildAssetBrief|probeImageSize/);
 assert.match(createStudio, /data-asset-brief|labStill|imageProbe|briefCollapsed/);
+// CD Phase B2 — Director Plan + soft auto recipe
+const directorPlanSrc = fs.readFileSync(
+  join(root, "lib/directorPlan.ts"),
+  "utf8"
+);
+assert.match(directorPlanSrc, /buildDirectorPlan|confirm cost|Sales/);
+assert.match(
+  fs.readFileSync(join(root, "components/DirectorPlanPanel.tsx"), "utf8"),
+  /data-director-plan=["']cd-phase-b2["']/
+);
+assert.match(createStudio, /DirectorPlanPanel|buildDirectorPlan|briefAutoAppliedRef/);
+assert.match(createStudio, /asset_brief_auto/);
 
 // Five-step toy identity + delivery honesty + landing assetId + workflows
 const toyIdSrc = fs.readFileSync(join(root, "lib/toyIdentity.ts"), "utf8");

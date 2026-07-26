@@ -43,11 +43,52 @@ export type AssetBrief = {
   bullets: BriefBullet[];
   /** Suggested recipes (max 3) for one-tap apply */
   recipes: BriefRecipeHint[];
+  /**
+   * Best single recipe for this shape (stable — not reordered by current effect).
+   * Used for soft auto-apply on first upload (Phase B2).
+   */
+  primaryRecipe: BriefRecipeHint | null;
   /** Suggested commercial goal deep link */
   sellerPackHref: string;
   shape: "square" | "portrait" | "landscape" | "unknown";
   aspectLabel: string;
 };
+
+/** Shape → default commercial recipe (Creative Director soft apply). */
+export function primaryRecipeForShape(
+  shape: AssetBrief["shape"]
+): BriefRecipeHint {
+  if (shape === "portrait") {
+    return {
+      slug: "blind-box-unboxing",
+      label: "Box Reveal",
+      reason: "Portrait · drop / social",
+    };
+  }
+  if (shape === "landscape") {
+    return {
+      slug: "display-case-glam",
+      label: "Display Glow",
+      reason: "Landscape · shelf / PDP",
+    };
+  }
+  // square + unknown → listing spin is the commercial default
+  return {
+    slug: "360-spin-showcase",
+    label: "360° Spin",
+    reason: "Listing packshot default",
+  };
+}
+
+/** Optional material chips that append into Toy Identity preserve. */
+export const BIBLE_MATERIAL_CHIPS = [
+  "PVC",
+  "Sofubi",
+  "Resin",
+  "Flocking",
+  "Metallic paint",
+  "Translucent parts",
+] as const;
 
 function classifyShape(
   probe: ImageProbe | null
@@ -135,6 +176,7 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
         "Rule-based Creative Director brief · not cloud vision · upload a photo first.",
       bullets: [],
       recipes: [],
+      primaryRecipe: null,
       sellerPackHref,
       shape,
       aspectLabel: label,
@@ -242,8 +284,16 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
     return true;
   }).slice(0, 3);
 
-  // Prefer not-current recipe first if possible for discovery
+  const primaryRecipe = primaryRecipeForShape(shape);
+  // Ensure primary is always present in the chip list
+  if (!seen.has(primaryRecipe.slug)) {
+    unique.unshift(primaryRecipe);
+    seen.add(primaryRecipe.slug);
+  }
+  // Prefer not-current recipe first if possible for discovery (primary stays if match)
   unique.sort((a, b) => {
+    if (a.slug === primaryRecipe.slug) return -1;
+    if (b.slug === primaryRecipe.slug) return 1;
     if (a.slug === input.effect) return 1;
     if (b.slug === input.effect) return -1;
     return 0;
@@ -255,7 +305,8 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
     disclaimer:
       "Rule-based brief from photo shape + product rules · not computer vision · review fidelity yourself.",
     bullets: bullets.slice(0, 5),
-    recipes: unique,
+    recipes: unique.slice(0, 3),
+    primaryRecipe,
     sellerPackHref,
     shape,
     aspectLabel: label,

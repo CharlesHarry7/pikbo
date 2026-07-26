@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] CD Phase B2: Director Plan + soft recipe + materials
+- `lib/directorPlan.ts` + `DirectorPlanPanel`: pre-generate confirm (goal/recipe/
+  format/Sales mode/bible/cost/blockers) — `data-director-plan=cd-phase-b2`.
+- Asset Brief: `primaryRecipeForShape` + one-shot soft auto-apply (skip deep-link/
+  job/Lab); material chips append into preserve (PVC/Sofubi/…).
+- Create preflight replaced by Director Plan; i18n plan.* EN/ZH; smoke locks.
+- Still not Phase C (no Soul ID / multi-view / 3D).
+
 ### 2026-07-26 — [grok] CD Phase B: Asset Brief + character bible draft
 - `lib/assetBrief.ts`: pure `buildAssetBrief` + `probeImageSize` (geometry only;
   disclaimer: not computer vision).

@@ -293,6 +293,10 @@ const en: Dict = {
     "Optional SKU + preserve notes. Locked into remakes — not cloud Soul ID.",
   "brief.sku.ph": "e.g. Scout pink #3",
   "brief.preserve.ph": "paint lines, logo, sculpt",
+  "brief.materials": "Material chips · optional",
+
+  "plan.title": "Director Plan · confirm cost",
+  "plan.sub": "Review goal, recipe, and credits before you spend",
 
   "activation.title": "First clip",
   "activation.hide": "Hide",
@@ -582,6 +586,10 @@ const zh: Dict = {
     "可选 SKU + 必保细节。会写入重做提示词 —— 不是云端 Soul ID。",
   "brief.sku.ph": "例：Scout 粉色 #3",
   "brief.preserve.ph": "漆线、logo、造型",
+  "brief.materials": "材质标签 · 可选",
+
+  "plan.title": "导演计划 · 确认消耗",
+  "plan.sub": "生成前核对目标、配方与积分",
 
   "activation.title": "第一条成片",
   "activation.hide": "隐藏",

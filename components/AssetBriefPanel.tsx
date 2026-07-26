@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import type { AssetBrief } from "@/lib/assetBrief";
+import {
+  BIBLE_MATERIAL_CHIPS,
+  type AssetBrief,
+} from "@/lib/assetBrief";
 import type { ToyIdentity } from "@/lib/toyIdentity";
 import { useI18n } from "@/components/LanguageProvider";
 
@@ -159,6 +162,48 @@ export function AssetBriefPanel({
                   className="mt-1 w-full rounded-lg border border-white/10 bg-black/50 px-2.5 py-1.5 text-xs outline-none focus:border-[var(--mint)] focus:ring-1 focus:ring-[var(--mint)]/30"
                 />
               </label>
+            </div>
+            <p className="mt-2 text-[9px] font-bold uppercase tracking-wide text-white/35">
+              {t("brief.materials")}
+            </p>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {BIBLE_MATERIAL_CHIPS.map((chip) => {
+                const active = identity.preserve
+                  .toLowerCase()
+                  .includes(chip.toLowerCase());
+                return (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => {
+                      const cur = identity.preserve.trim();
+                      if (active) {
+                        // Remove chip token (case-insensitive, optional comma)
+                        const next = cur
+                          .split(/[,;/]+/)
+                          .map((s) => s.trim())
+                          .filter(
+                            (s) => s.toLowerCase() !== chip.toLowerCase()
+                          )
+                          .join(", ");
+                        onIdentityPatch({ preserve: next });
+                      } else {
+                        const next = cur ? `${cur}, ${chip}` : chip;
+                        onIdentityPatch({
+                          preserve: next.slice(0, 120),
+                        });
+                      }
+                    }}
+                    className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold transition ${
+                      active
+                        ? "border-[var(--mint)]/50 bg-[var(--mint)]/15 text-[var(--mint)]"
+                        : "border-white/12 bg-black/30 text-white/55 hover:border-white/25 hover:text-white/80"
+                    }`}
+                  >
+                    {chip}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

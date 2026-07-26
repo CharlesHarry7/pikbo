@@ -49,6 +49,7 @@ import {
 import { track } from "@/lib/analytics";
 import { JobIntentBar } from "@/components/JobIntentBar";
 import { AssetBriefPanel } from "@/components/AssetBriefPanel";
+import { DirectorPlanPanel } from "@/components/DirectorPlanPanel";
 import { WorkflowShelf } from "@/components/WorkflowShelf";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import {
@@ -56,6 +57,7 @@ import {
   probeImageSize,
   type ImageProbe,
 } from "@/lib/assetBrief";
+import { buildDirectorPlan } from "@/lib/directorPlan";
 import {
   ActivationChecklist,
   markActivationJob,
@@ -204,6 +206,8 @@ export function CreateStudio({
   /** True when still is official Lab sample (not customer SKU) */
   const [labStill, setLabStill] = useState(false);
   const [briefCollapsed, setBriefCollapsed] = useState(false);
+  /** Soft-applied primary recipe once per still (Phase B2). */
+  const briefAutoAppliedRef = useRef(false);
   const [extra, setExtra] = useState(initialPrompt ?? "");
   /** Optional SKU lock — first principles, not Character/Soul cloud */
   const [toyIdentity, setToyIdentity] = useState<ToyIdentity>({
@@ -470,6 +474,7 @@ export function CreateStudio({
       setImageProbe(null);
       setLabStill(Boolean(opts?.labSample));
       setBriefCollapsed(false);
+      briefAutoAppliedRef.current = false;
       setError(null);
       track({
         event: "upload_ready",
@@ -1151,6 +1156,80 @@ export function CreateStudio({
       }),
     [image, imageProbe, effect, jobIntentId, toyIdentity, labStill]
   );
+
+  // Phase B2: soft-apply shape-primary recipe once (skip deep-link / job / Lab sample).
+  useEffect(() => {
+    if (!image || !imageProbe || !assetBrief.primaryRecipe) return;
+    if (briefAutoAppliedRef.current) return;
+    if (labStill) return;
+    if (initialEffect || initialJob) return;
+    if (jobIntentId) return;
+    const primary = assetBrief.primaryRecipe;
+    if (effect === primary.slug) {
+      briefAutoAppliedRef.current = true;
+      return;
+    }
+    briefAutoAppliedRef.current = true;
+    selectEffect(primary.slug);
+    track({
+      event: "recipe_use",
+      path: "/create",
+      recipe: primary.slug,
+      meta: { source: "asset_brief_auto", shape: assetBrief.shape },
+    });
+    toast(
+      `Director · ${primary.label} for ${assetBrief.shape} photo · change anytime`
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot soft apply on probe
+  }, [
+    image,
+    imageProbe,
+    assetBrief.primaryRecipe?.slug,
+    labStill,
+    initialEffect,
+    initialJob,
+    jobIntentId,
+  ]);
+
+  const directorPlan = useMemo(() => {
+    const job = jobIntentId ? getJobIntent(jobIntentId) : undefined;
+    return buildDirectorPlan({
+      hasImage: Boolean(image),
+      effect,
+      effectName: preset.name,
+      aspectRatio,
+      durationSec: effectiveDuration,
+      resolution: isFree
+        ? freeLive?.resolution || "480p"
+        : resolution,
+      demoMode,
+      isFree: Boolean(isFree),
+      trialDone,
+      creditsLeft,
+      clipsLeft,
+      identity: toyIdentity,
+      ownsRights,
+      labSample: labStill,
+      jobLabel: job?.label ?? null,
+    });
+  }, [
+    image,
+    effect,
+    preset.name,
+    aspectRatio,
+    effectiveDuration,
+    isFree,
+    freeLive?.resolution,
+    resolution,
+    demoMode,
+    trialDone,
+    creditsLeft,
+    clipsLeft,
+    toyIdentity,
+    ownsRights,
+    labStill,
+    jobIntentId,
+  ]);
 
   /** Yiha/lego mini-app pick: prefill Create without full remount when possible */
   function applyWorkflow(w: Workflow) {
@@ -2062,65 +2141,34 @@ export function CreateStudio({
             )}
           </div>
 
-          {/* Preflight + rights + primary (desktop; mobile sticky below) */}
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] p-3 text-xs">
-            <p className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-[var(--fg-dim)]">
-              <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black lg:hidden">
+          {/* CD Phase B2 Director Plan — confirm cost/fidelity before generate */}
+          <div data-first-run-step="plan">
+            <p className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-[var(--fg-dim)] lg:hidden">
+              <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black">
                 3
               </span>
-              Before you generate
+              Director Plan
             </p>
-            {demoMode ? (
-              <p className="text-[var(--fg-muted)]">
-                <b className="text-[var(--fg)]">{PROVENANCE.cachedDemo}</b> — does not use
-                your upload · costs 0 credits
-              </p>
-            ) : trialDone && isFree ? (
-              <div className="space-y-1 text-[var(--fg-muted)]">
-                <p>
-                  <b className="text-amber-200">Free Mini trial exhausted</b> —
-                  not enough credits for another live job ({CREDITS_PER_VIDEO}{" "}
-                  needed
-                  {creditsLeft !== null ? ` · ${creditsLeft} left` : ""}).
-                </p>
-                <p className="text-[var(--fg-dim)]">
-                  Cached Lab samples stay free ·{" "}
-                  <Link
-                    href="/pricing"
-                    className="font-semibold text-[var(--mint)] hover:underline"
-                  >
-                    finite plans
-                  </Link>{" "}
-                  when live billing opens · failed live jobs still refund.
-                </p>
-              </div>
+            {image ? (
+              <DirectorPlanPanel plan={directorPlan} />
             ) : (
-              <div className="space-y-1 text-[var(--fg-muted)]">
-                <p>
-                  <b className="text-[var(--fg)]">
-                    {isFree ? "Live Mini trial" : PROVENANCE.liveGeneration}
-                  </b>{" "}
-                  — uses your photo ·{" "}
-                  {isFree
-                    ? freeLive
-                      ? `Seedance Mini · ${freeLive.durationSec}s · ${freeLive.resolution}`
-                      : "Seedance Mini · 5s · 480p"
-                    : `${effectiveDuration}s · ${resolution}`}{" "}
-                  · {aspectRatio}
-                  {isFree ? " · on-player mark" : ""}
-                </p>
-                <p className="text-[var(--fg-dim)]">
-                  Costs {CREDITS_PER_VIDEO} credits
-                  {clipsLeft !== null
-                    ? ` · ~${clipsLeft} live left`
-                    : creditsLeft !== null
-                      ? ` · ${creditsLeft} left`
-                      : ""}{" "}
-                  · fal.ai / Seedance ·{" "}
-                  <b className="text-[var(--fg)]">failed jobs refund</b>
-                </p>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] p-3 text-xs text-[var(--fg-muted)]">
+                {t("create.beforeGen")} — upload a photo to see cost and
+                recipe plan.
               </div>
             )}
+            {trialDone && isFree && !demoMode ? (
+              <p className="mt-2 text-[11px] text-[var(--fg-dim)]">
+                Cached Lab samples stay free ·{" "}
+                <Link
+                  href="/pricing"
+                  className="font-semibold text-[var(--mint)] hover:underline"
+                >
+                  finite plans
+                </Link>{" "}
+                when live billing opens.
+              </p>
+            ) : null}
           </div>
 
           <label
