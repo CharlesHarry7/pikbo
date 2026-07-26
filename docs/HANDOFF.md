@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] forkRetryJob terminal-only eligibility
+- Server forkRetry rejects succeeded / queued / running parents with
+  NOT_RETRYABLE (422) or JOB_IN_FLIGHT (409); only failed|canceled fork.
+- Retry route maps codes honestly; createUi already createRemixHref.
+- Smoke: NOT_RETRYABLE|JOB_IN_FLIGHT + retry route status locks.
+
 ### 2026-07-27 — [grok] Retry createUi remix + FailPanel Seller Pack
 - POST /api/generations/[id]/retry `next.createUi` → createRemixHref(effect)
   (ratio/duration/channel), not bare create?effect=.

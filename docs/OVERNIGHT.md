@@ -142,7 +142,9 @@
 101. [x] Community UGC fail-closed + PROVIDER_NETWORK settlement + session remake remix
 102. [x] Landing remake createRemixHref + PROVIDER_NETWORK client refundUnconfirmed
 103. [x] Residual createRemixHref: Batch/HfExplore/Hero/Community/Effects
-104. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+104. [x] Retry createUi remix + UNSAFE_URL refundUnconfirmed + FailPanel Seller Pack
+105. [x] forkRetryJob terminal-only (no success/in-flight fork)
+106. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -156,9 +158,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- Residual bare /create?effect= → createRemixHref (Batch, HfExplore, Hero, Community, Effects).
-- Pack try-recipe links carry sku; smoke locks no create?effect= template.
+- forkRetryJob: only failed|canceled parents (409 in-flight · 422 success).
+- Retry createUi remix + UNSAFE_URL refundUnconfirmed already on main.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 

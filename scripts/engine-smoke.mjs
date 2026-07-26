@@ -1840,6 +1840,9 @@ assert.doesNotMatch(
 assert.match(genJobsStore, /export function generationJobsProbe/);
 assert.match(genJobsStore, /byStatus|timedOutThisProbe/);
 assert.match(genJobsStore, /forkRetryJob[\s\S]*findJobByRequestOrId/);
+assert.match(genJobsStore, /NOT_RETRYABLE|JOB_IN_FLIGHT/);
+assert.match(genJobsStore, /status === ["']succeeded["']/);
+
 // Success payload must echo process ledger jobId (cancel/poll)
 assert.match(
   fs.readFileSync(join(root, "lib/contracts.ts"), "utf8"),
@@ -2186,6 +2189,8 @@ assert.match(retryRoute, /forkRetryJob/);
 assert.doesNotMatch(retryRoute, /NOT_IMPLEMENTED/);
 // createUi must use remix contract (ratio/duration/channel), not bare effect=
 assert.match(retryRoute, /createRemixHref/);
+assert.match(retryRoute, /NOT_RETRYABLE|JOB_IN_FLIGHT|422|409/);
+
 assert.doesNotMatch(retryRoute, /create\?effect=\$\{/);
 
 // Phase F — Create/Seller mobile craft (390px ownership + sticky CTA)

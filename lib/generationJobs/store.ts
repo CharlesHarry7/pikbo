@@ -165,7 +165,11 @@ export function forkRetryJob(input: {
   parentId: string;
 }):
   | { ok: true; job: GenerationJob; parent: GenerationJob }
-  | { ok: false; code: "NOT_FOUND" | "NOT_OWNED"; message: string } {
+  | {
+      ok: false;
+      code: "NOT_FOUND" | "NOT_OWNED" | "JOB_IN_FLIGHT" | "NOT_RETRYABLE";
+      message: string;
+    } {
   // Accept job id or provider requestId (Library / downloads may store either).
   const parent = findJobByRequestOrId(input.parentId);
   if (!parent) {
@@ -180,6 +184,31 @@ export function forkRetryJob(input: {
       ok: false,
       code: "NOT_OWNED",
       message: "Job belongs to another session",
+    };
+  }
+  // Seller Pack / Library retry only failed terminals — never fork success or mid-flight.
+  if (parent.status === "queued" || parent.status === "running") {
+    return {
+      ok: false,
+      code: "JOB_IN_FLIGHT",
+      message:
+        "Parent job still open — wait for success/failure or cancel ledger first",
+    };
+  }
+  if (parent.status === "succeeded") {
+    return {
+      ok: false,
+      code: "NOT_RETRYABLE",
+      message:
+        "Parent already succeeded — open Create for a new attempt or variant",
+    };
+  }
+  // failed | canceled only (soft-launch terminal failures).
+  if (parent.status !== "failed" && parent.status !== "canceled") {
+    return {
+      ok: false,
+      code: "NOT_RETRYABLE",
+      message: `Parent status “${parent.status}” is not retryable on this ledger`,
     };
   }
   const job = createJob({

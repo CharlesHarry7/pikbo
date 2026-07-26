@@ -19,7 +19,14 @@ export async function POST(_req: Request, { params }: Props) {
   const session = await ensureSession();
   const result = forkRetryJob({ sessionId: session.id, parentId: id });
   if (!result.ok) {
-    const status = result.code === "NOT_FOUND" ? 404 : 403;
+    const status =
+      result.code === "NOT_FOUND"
+        ? 404
+        : result.code === "NOT_OWNED"
+          ? 403
+          : result.code === "JOB_IN_FLIGHT"
+            ? 409
+            : 422;
     return NextResponse.json(
       {
         ok: false,
