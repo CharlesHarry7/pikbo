@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Library session Ledger retry (fork + createUi)
+- SessionJobsPanel: failed|canceled → "Ledger retry" POSTs
+  /api/generations/[id]/retry then navigates to next.createUi (remix).
+- Honest toasts: JOB_IN_FLIGHT · NOT_RETRYABLE · network.
+- Smoke: data-session-retry=ledger-fork + NOT_RETRYABLE locks.
+
 ### 2026-07-27 — [grok] forkRetryJob terminal-only eligibility
 - Server forkRetry rejects succeeded / queued / running parents with
   NOT_RETRYABLE (422) or JOB_IN_FLIGHT (409); only failed|canceled fork.

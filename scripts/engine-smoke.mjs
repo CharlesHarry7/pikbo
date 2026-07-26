@@ -824,7 +824,8 @@ function requestCreditStateFromFailure(result) {
     result.code === "CANCELED" ||
     result.code === "TIMEOUT" ||
     result.code === "PROVIDER_TIMEOUT" ||
-    (result.code === "UNSAFE_URL" && result.creditsRefunded !== true)
+    (result.code === "UNSAFE_URL" && result.creditsRefunded !== true) ||
+    (result.code === "CONTENT_POLICY" && result.creditsRefunded !== true)
   ) {
     return "refund unconfirmed";
   }
@@ -1898,7 +1899,8 @@ function requestCreditStateFromFailurePure(result) {
     result.code === "CANCELED" ||
     result.code === "TIMEOUT" ||
     result.code === "PROVIDER_TIMEOUT" ||
-    (result.code === "UNSAFE_URL" && result.creditsRefunded !== true)
+    (result.code === "UNSAFE_URL" && result.creditsRefunded !== true) ||
+    (result.code === "CONTENT_POLICY" && result.creditsRefunded !== true)
   ) {
     return "refund unconfirmed";
   }
@@ -4595,6 +4597,44 @@ assert.match(
 assert.match(
   fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
   /UNSAFE_URL[\s\S]{0,120}!creditsRefunded|code === ["']UNSAFE_URL["'] && !creditsRefunded/
+);
+
+
+// Library session: ledger fork retry posts /retry then createUi remix
+const libraryGridRetry = fs.readFileSync(
+  join(root, "components/LibraryGrid.tsx"),
+  "utf8"
+);
+assert.match(libraryGridRetry, /data-session-retry=["']ledger-fork["']/);
+assert.match(libraryGridRetry, /forkSessionRetry/);
+assert.match(libraryGridRetry, /\/retry/);
+assert.match(libraryGridRetry, /NOT_RETRYABLE|JOB_IN_FLIGHT/);
+assert.match(libraryGridRetry, /createUi/);
+
+
+// Seller Pack UI: TIMEOUT / cancel unconfirmed remain retryEligible (mint new attempt)
+assert.match(batchStudio, /function retryEligible/);
+assert.match(
+  batchStudio,
+  /status === ["']failed["'][\s\S]{0,80}canceled|failed[\s\S]{0,40}canceled/
+);
+assert.doesNotMatch(
+  batchStudio,
+  /function retryEligible[\s\S]{0,350}creditState !== ["']refund unconfirmed["']/
+);
+// Library session ledger fork uses server retry API (terminal-only)
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /data-session-retry=["']ledger-fork["']|\/api\/generations\/.*\/retry/
+);
+// CONTENT_POLICY without restore → refundUnconfirmed (parity UNSAFE_URL)
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /CONTENT_POLICY/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /CONTENT_POLICY[\s\S]{0,80}!creditsRefunded|code === ["']CONTENT_POLICY["'] && !creditsRefunded/
 );
 
 console.log("engine-smoke: PASS");

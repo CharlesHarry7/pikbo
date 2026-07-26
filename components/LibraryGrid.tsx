@@ -96,14 +96,20 @@ function SessionJobsPanel({
   jobs,
   meta,
   cancellingId,
+  forkingId,
   onCancel,
+  onForkRetry,
   onRefresh,
   onDownload,
 }: {
   jobs: SessionJob[];
   meta: SessionJobsMeta;
   cancellingId: string | null;
+  /** Job id currently POSTing /api/generations/[id]/retry */
+  forkingId: string | null;
   onCancel: (id: string) => void;
+  /** Fork terminal failure into a new queued ledger row + Create remix UI */
+  onForkRetry: (id: string) => void;
   onRefresh: () => void;
   /** HEAD gate then open — never raw <a> that dumps 403 JSON into a tab. */
   onDownload: (job: SessionJob) => void;
@@ -252,6 +258,18 @@ function SessionJobsPanel({
                   ? "Retry recipe"
                   : "Use recipe"}
               </Link>
+              {j.status === "failed" || j.status === "canceled" ? (
+                <button
+                  type="button"
+                  disabled={forkingId === j.id || cancellingId === j.id}
+                  onClick={() => onForkRetry(j.id)}
+                  className="text-[var(--mint)]/90 hover:text-[var(--mint)] disabled:opacity-50"
+                  data-session-retry="ledger-fork"
+                  title="Fork process-memory retry job then open Create (does not re-run fal by itself)"
+                >
+                  {forkingId === j.id ? "Forking…" : "Ledger retry"}
+                </button>
+              ) : null}
               {(j.status === "failed" || j.status === "canceled") &&
               (j.errorCode === "TIMEOUT" ||
                 j.creditsOutcome === "refund unconfirmed") ? (
@@ -317,6 +335,7 @@ export function LibraryGrid() {
     mode: null,
   });
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [forkingId, setForkingId] = useState<string | null>(null);
   const toast = useToast();
 
   function applyGenerationsBody(body: {
@@ -502,6 +521,59 @@ export function LibraryGrid() {
       toast("Network error canceling job");
     } finally {
       setCancellingId(null);
+    }
+  }
+
+  /**
+   * Phase D: POST /api/generations/[id]/retry forks a queued child (failed|canceled
+   * only). Navigate to createUi remix path — does not re-run the provider.
+   */
+  async function forkSessionRetry(id: string) {
+    setForkingId(id);
+    try {
+      const res = await fetch(
+        `/api/generations/${encodeURIComponent(id)}/retry`,
+        { method: "POST" }
+      );
+      const body = (await res.json()) as {
+        ok?: boolean;
+        message?: string;
+        code?: string;
+        next?: { createUi?: string };
+      };
+      if (!res.ok || !body.ok) {
+        const code = body.code || "";
+        if (code === "JOB_IN_FLIGHT") {
+          toast(
+            body.message ||
+              "Job still open — wait or cancel ledger first"
+          );
+        } else if (code === "NOT_RETRYABLE") {
+          toast(
+            body.message ||
+              "Not retryable on this ledger — open Create for a new attempt"
+          );
+        } else {
+          toast(body.message || body.code || "Could not fork retry job");
+        }
+        return;
+      }
+      toast(
+        body.message ||
+          "Ledger retry forked · open Create with your photo to re-run"
+      );
+      await refreshSessionJobs();
+      const createUi =
+        typeof body.next?.createUi === "string" && body.next.createUi.startsWith("/")
+          ? body.next.createUi
+          : createRemixHref(
+              sessionJobs.find((j) => j.id === id)?.effect || "360-spin-showcase"
+            );
+      window.location.href = createUi;
+    } catch {
+      toast("Network error forking retry job");
+    } finally {
+      setForkingId(null);
     }
   }
 
@@ -760,7 +832,9 @@ export function LibraryGrid() {
           jobs={sessionJobs}
           meta={sessionMeta}
           cancellingId={cancellingId}
+          forkingId={forkingId}
           onCancel={(id) => void cancelSessionJob(id)}
+          onForkRetry={(id) => void forkSessionRetry(id)}
           onRefresh={() => void refreshSessionJobs()}
           onDownload={(job) => void downloadSessionJob(job)}
         />
@@ -852,9 +926,11 @@ export function LibraryGrid() {
         jobs={sessionJobs}
         meta={sessionMeta}
         cancellingId={cancellingId}
+        forkingId={forkingId}
         onCancel={(id) => void cancelSessionJob(id)}
+        onForkRetry={(id) => void forkSessionRetry(id)}
         onRefresh={() => void refreshSessionJobs()}
-          onDownload={(job) => void downloadSessionJob(job)}
+        onDownload={(job) => void downloadSessionJob(job)}
       />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
