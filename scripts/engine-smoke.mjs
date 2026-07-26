@@ -3525,6 +3525,18 @@ const imageStudioSrc = fs.readFileSync(
 assert.match(imageStudioSrc, /stashPendingStill|pikbo_pending_still/);
 assert.match(imageStudioSrc, /data-image-handoff=["']seller-pack["']/);
 assert.match(imageStudioSrc, /mode=seller-pack/);
+// Animate → Create carries remix contract (ratio/duration/channel), not bare /create
+assert.match(imageStudioSrc, /createRemixHref/);
+assert.match(imageStudioSrc, /data-image-handoff=["']create["']/);
+assert.match(imageStudioSrc, /360-spin-showcase|IMAGE_HANDOFF_EFFECT/);
+assert.doesNotMatch(
+  imageStudioSrc,
+  /data-image-handoff=["']create["'][\s\S]{0,120}href=\{\s*toySku/
+);
+assert.doesNotMatch(
+  imageStudioSrc,
+  /data-image-handoff=["']create["'][\s\S]{0,80}`\/create\?/
+);
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /freeTrialExhausted|Free Mini trial exhausted|clipsLeft|compare plans/
@@ -4219,6 +4231,10 @@ const afterPathSrc = fs.readFileSync(
 );
 assert.match(afterPathSrc, /aria-label=["']After generate["']/);
 assert.match(afterPathSrc, /data-after-path=["']product-first["']/);
+// Full Generate / Next SKU carry remix contract (ratio/duration/channel)
+assert.match(afterPathSrc, /createRemixHref/);
+assert.match(afterPathSrc, /remixOptsFromRecord/);
+assert.match(afterPathSrc, /aspectRatio|duration/);
 // AfterPath auto-hydrates device bible SKU when prop omitted (Cinema/Batch shelves)
 assert.match(afterPathSrc, /loadToyIdentity/);
 assert.match(afterPathSrc, /resolvedSku|deviceSku/);

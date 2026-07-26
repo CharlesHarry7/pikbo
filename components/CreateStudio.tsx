@@ -2616,6 +2616,14 @@ export function CreateStudio({
                     demo={demo}
                     jobIntentId={jobIntentId}
                     sku={toyIdentity.sku || null}
+                    aspectRatio={
+                      activeVersion?.aspectRatio ||
+                      activeVersion?.spec?.aspectRatio
+                    }
+                    duration={
+                      activeVersion?.duration ??
+                      activeVersion?.spec?.duration
+                    }
                     className="mx-auto mt-3 max-w-md"
                   />
                 ) : null}

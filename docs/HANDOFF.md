@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] After-path + Image handoff remix contract
+- GenerateAfterPath Full Generate / Next SKU use createRemixHref +
+  remixOptsFromRecord (ratio/duration/channel); optional aspect/duration props.
+- CreateStudio + LandingToolPanel pass last-run params into after-path.
+- `/image` Animate → Create (header/footer/free-trial) → createRemixHref
+  (360-spin default + sku); Seller Pack handoff unchanged.
+- Smoke: after-path createRemixHref; image handoff not bare /create?sku=.
+
 ### 2026-07-27 — [grok] Image FailPanel shared settlement
 - `/image` FailPanel no longer hand-rolls a partial code list (TIMEOUT ·
   UNSAFE_URL · REQUEST_CANCELED only) — uses `requestCreditStateFromFailure`

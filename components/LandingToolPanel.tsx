@@ -920,6 +920,8 @@ export function LandingToolPanel({
                 compact
                 className="mt-2"
                 sku={toySku || null}
+                aspectRatio={aspectRatio}
+                duration={duration}
               />
               {/* First-principles delivery steps (honest Free download). */}
               <DeliveryChecklist

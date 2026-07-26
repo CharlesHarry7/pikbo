@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 import type { JobIntentId } from "@/lib/jobIntents";
 import { getJobIntent } from "@/lib/jobIntents";
 import { loadToyIdentity } from "@/lib/toyIdentity";
+import {
+  createRemixHref,
+  remixOptsFromRecord,
+} from "@/lib/remixIntent";
 
 /**
  * Post-generate closed loop — product path first (CD Phase A + job carry):
@@ -16,6 +20,9 @@ import { loadToyIdentity } from "@/lib/toyIdentity";
  * (Creative Director: same seller path, new photo or same goal).
  * When `sku` prop is omitted, device-local bible SKU is auto-hydrated so
  * Cinema / Supercomputer / Image shelves still carry Next SKU honesty.
+ *
+ * Full Generate / Next SKU use createRemixHref so ratio/duration/channel
+ * from the last run (or recipe defaults) reopen Create correctly.
  */
 function withQuery(
   base: string,
@@ -35,6 +42,8 @@ export function GenerateAfterPath({
   className = "",
   jobIntentId,
   sku,
+  aspectRatio,
+  duration,
 }: {
   effectSlug?: string;
   demo?: boolean;
@@ -47,6 +56,10 @@ export function GenerateAfterPath({
    * device-local bible (prop empty string still means "no SKU").
    */
   sku?: string | null;
+  /** Last successful run ratio — Full Generate remake honesty. */
+  aspectRatio?: string;
+  /** Last successful run duration seconds (5 | 10). */
+  duration?: number;
 }) {
   const [deviceSku, setDeviceSku] = useState("");
   useEffect(() => {
@@ -75,26 +88,40 @@ export function GenerateAfterPath({
     job: jobIntentId || undefined,
     sku: resolvedSku,
   };
+  const remixOpts = remixOptsFromRecord({
+    aspectRatio: aspectRatio || intent?.aspectRatio,
+    duration,
+    channel: intent?.channel,
+  });
 
   /**
    * Jobs with `href` (Seller Pack) must land on mode=seller-pack — not
    * /create?job=seller-pack which CreateStudio used to ignore (href early-return).
+   * Otherwise remix contract carries ratio/duration/channel (+ optional job).
    */
   const studioHref = intent?.href
     ? withQuery(intent.href, { sku: carry.sku })
-    : withQuery("/create", {
-        effect: carry.effect,
-        job: carry.job,
-        sku: carry.sku,
-      });
+    : carry.effect
+      ? withQuery(
+          createRemixHref(carry.effect, undefined, carry.sku, remixOpts),
+          { job: carry.job }
+        )
+      : withQuery("/create", {
+          job: carry.job,
+          sku: carry.sku,
+        });
   const nextSkuHref = intent?.href
     ? withQuery(intent.href, { sku: carry.sku, try: "1" })
-    : withQuery("/create", {
-        effect: carry.effect,
-        job: carry.job,
-        sku: carry.sku,
-        try: "1",
-      });
+    : carry.effect
+      ? withQuery(
+          createRemixHref(carry.effect, undefined, carry.sku, remixOpts),
+          { job: carry.job, try: "1" }
+        )
+      : withQuery("/create", {
+          job: carry.job,
+          sku: carry.sku,
+          try: "1",
+        });
   const sellerPackHref = withQuery("/create", {
     mode: "seller-pack",
     sku: carry.sku,

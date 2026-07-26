@@ -20,6 +20,10 @@ import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { loadToyIdentity } from "@/lib/toyIdentity";
+import { createRemixHref } from "@/lib/remixIntent";
+
+/** Default video recipe when handing a still into Generate (listing spin). */
+const IMAGE_HANDOFF_EFFECT = "360-spin-showcase";
 
 /** Handoff stills into Create — http(s) or same-origin path only. */
 function canHandOffStill(url: string | null | undefined): url is string {
@@ -236,8 +240,13 @@ export default function ImageStudioPage() {
           </div>
           <div className="flex flex-col items-end gap-2">
             <Link
-              href="/create"
+              href={createRemixHref(
+                IMAGE_HANDOFF_EFFECT,
+                undefined,
+                toySku.trim() || null
+              )}
               className="btn btn-primary !px-3 !py-1.5 text-xs"
+              data-image-handoff="create-header"
             >
               Generate video
             </Link>
@@ -246,6 +255,7 @@ export default function ImageStudioPage() {
               demo
               className="justify-end"
               sku={toySku || null}
+              effectSlug={IMAGE_HANDOFF_EFFECT}
             />
           </div>
         </div>
@@ -311,8 +321,9 @@ export default function ImageStudioPage() {
               <p className="mt-2 text-[11px] leading-relaxed text-[var(--fg-dim)]">
                 Free Mini trial is video-only. Open{" "}
                 <Link
-                  href="/create"
+                  href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
                   className="text-[var(--mint)] underline-offset-2 hover:underline"
+                  data-image-handoff="create-free-trial"
                 >
                   Create
                 </Link>{" "}
@@ -371,11 +382,11 @@ export default function ImageStudioPage() {
                   Delivery · next job
                 </p>
                 <Link
-                  href={
-                    toySku.trim()
-                      ? `/create?sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
-                      : "/create"
-                  }
+                  href={createRemixHref(
+                    IMAGE_HANDOFF_EFFECT,
+                    undefined,
+                    toySku.trim() || null
+                  )}
                   className="btn btn-primary w-full text-sm"
                   data-image-handoff="create"
                   onClick={() => stashPendingStill(imageUrl)}
@@ -413,6 +424,7 @@ export default function ImageStudioPage() {
                   className="mt-1"
                   compact
                   sku={toySku || null}
+                  effectSlug={IMAGE_HANDOFF_EFFECT}
                 />
               </div>
             )}
@@ -513,8 +525,9 @@ export default function ImageStudioPage() {
         <p className="mt-6 text-sm text-[var(--fg-muted)]">
           Have a real figure photo?{" "}
           <Link
-            href="/create"
+            href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
             className="font-semibold text-[var(--mint)] hover:underline"
+            data-image-handoff="create-footer"
           >
             Animate it with Seedance
           </Link>
