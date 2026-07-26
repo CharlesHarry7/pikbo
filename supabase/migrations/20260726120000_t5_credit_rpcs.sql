@@ -308,6 +308,7 @@ declare
   v_status public.reservation_status;
   v_existing public.credit_ledger%rowtype;
   v_job public.generation_jobs%rowtype;
+  v_worker_terminal_job_id text;
 begin
   if p_kind not in ('settle', 'release') then
     raise exception using errcode = 'P0001',
@@ -325,19 +326,6 @@ begin
     from public.credit_reservations
    where id = p_reservation_id
    for update;
-
-  if not exists (
-    select 1
-      from public.account_memberships m
-      join public.accounts a on a.id = m.account_id
-     where m.account_id = v_reservation.account_id
-       and m.user_id = p_actor_user_id
-       and m.role in ('owner', 'editor')
-       and a.status = 'active'
-  ) then
-    raise exception using errcode = 'P0001',
-      message = 'PIKBO_CREDITS:UNAUTHORIZED';
-  end if;
 
   -- Terminal money movement is server-job owned. Validate this even on an
   -- idempotent replay, so a missing/arbitrary job id is never accepted.
@@ -361,6 +349,26 @@ begin
      or v_job.created_by <> p_actor_user_id then
     raise exception using errcode = 'P0001',
       message = 'PIKBO_CREDITS:JOB_OWNERSHIP_MISMATCH';
+  end if;
+  -- A service-role terminal worker binds this transaction-local setting to
+  -- the exact locked job immediately before calling us. That narrowly permits
+  -- a provider result to settle/release after the account is deactivated or
+  -- its member removed. All ordinary callers retain the active-member check.
+  v_worker_terminal_job_id := current_setting(
+    'app.pikbo_worker_terminal_job_id', true
+  );
+  if v_worker_terminal_job_id is distinct from v_job.id::text
+     and not exists (
+       select 1
+         from public.account_memberships m
+         join public.accounts a on a.id = m.account_id
+        where m.account_id = v_reservation.account_id
+          and m.user_id = p_actor_user_id
+          and m.role in ('owner', 'editor')
+          and a.status = 'active'
+     ) then
+    raise exception using errcode = 'P0001',
+      message = 'PIKBO_CREDITS:UNAUTHORIZED';
   end if;
   -- A single generation reservation uses the generic item key. Seller Pack
   -- items are recipe-specific and must match the durable job effect exactly.

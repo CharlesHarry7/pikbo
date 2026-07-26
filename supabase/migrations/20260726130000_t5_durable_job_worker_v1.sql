@@ -158,6 +158,13 @@ begin
    where id = v_job.id
    returning * into strict v_job;
 
+  -- The generic finalizer normally requires an active account membership.
+  -- This value is local to this transaction and must match its locked job, so
+  -- only this service-role worker path can finish provider work after account
+  -- deactivation or membership removal.
+  perform set_config(
+    'app.pikbo_worker_terminal_job_id', v_job.id::text, true
+  );
   v_kind := case when p_terminal_status = 'succeeded' then 'settle' else 'release' end;
   v_result := public.pikbo_finish_reservation_item(
     v_kind,

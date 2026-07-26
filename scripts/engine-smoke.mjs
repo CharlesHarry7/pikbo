@@ -2517,6 +2517,10 @@ assert.match(t5WorkerMigration, /create unique index[\s\S]+server_idempotency_ke
 assert.match(t5WorkerMigration, /pg_advisory_xact_lock/);
 assert.match(t5WorkerMigration, /pikbo_reserve_credits/);
 assert.match(t5WorkerMigration, /pikbo_finish_reservation_item/);
+assert.match(t5WorkerMigration, /set_config\([\s\S]+app\.pikbo_worker_terminal_job_id/);
+assert.match(t5RpcMigration, /current_setting\([\s\S]+app\.pikbo_worker_terminal_job_id/);
+assert.match(t5RpcMigration, /v_worker_terminal_job_id is distinct from v_job\.id::text/);
+assert.match(t5WorkerMigration, /'worker:' \|\| v_kind \|\| ':' \|\| v_job\.id::text/);
 assert.match(t5WorkerMigration, /\('succeeded', 'failed', 'canceled'\)/);
 assert.match(t5WorkerMigration, /PIKBO_CREDITS:JOB_TERMINAL_CONFLICT/);
 assert.match(t5WorkerMigration, /'idempotent', true/);
@@ -2549,6 +2553,19 @@ function finishWorkerJobModel(job, terminalStatus) {
   }
   return { ...job, status: terminalStatus, ledgerKind: terminalStatus === "succeeded" ? "settle" : "release" };
 }
+function finishReservationModel(
+  job,
+  terminalStatus,
+  { workerJobId, accountActive = true, membershipPresent = true }
+) {
+  if (workerJobId !== job.id && (!accountActive || !membershipPresent)) {
+    throw new Error("UNAUTHORIZED");
+  }
+  return {
+    ...finishWorkerJobModel(job, terminalStatus),
+    idempotent: job.status === terminalStatus,
+  };
+}
 const workerModel = { available: 20, reserved: 0, jobs: new Map() };
 const firstWorkerJob = createWorkerJobModel(workerModel, "request-0001", "anime");
 const replayedWorkerJob = createWorkerJobModel(workerModel, "request-0001", "anime");
@@ -2572,6 +2589,40 @@ assert.equal(finishWorkerJobModel(firstWorkerJob, "failed").ledgerKind, "release
 assert.throws(
   () => finishWorkerJobModel(firstWorkerJob, "running"),
   /INVALID_JOB_TERMINAL_STATUS/
+);
+assert.equal(
+  finishReservationModel(firstWorkerJob, "succeeded", {
+    workerJobId: firstWorkerJob.id,
+    accountActive: false,
+  }).ledgerKind,
+  "settle",
+  "a service worker must settle after account deactivation"
+);
+const replayedWorkerTerminal = finishReservationModel(succeededWorkerJob, "succeeded", {
+  workerJobId: firstWorkerJob.id,
+  accountActive: false,
+});
+assert.equal(replayedWorkerTerminal.idempotent, true, "same terminal worker replay is idempotent");
+assert.equal(
+  finishReservationModel(firstWorkerJob, "failed", {
+    workerJobId: firstWorkerJob.id,
+    membershipPresent: false,
+  }).ledgerKind,
+  "release",
+  "a service worker must release after membership removal"
+);
+assert.throws(
+  () => finishReservationModel(firstWorkerJob, "succeeded", { accountActive: false }),
+  /UNAUTHORIZED/,
+  "the non-worker finalizer retains its active-member requirement"
+);
+assert.throws(
+  () => finishReservationModel(succeededWorkerJob, "failed", {
+    workerJobId: firstWorkerJob.id,
+    membershipPresent: false,
+  }),
+  /JOB_TERMINAL_CONFLICT/,
+  "a worker must fail closed when a replay changes terminal state"
 );
 
 // Phase I payments readiness + checkout live-key / flag gates

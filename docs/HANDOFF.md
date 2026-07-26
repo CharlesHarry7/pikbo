@@ -12,6 +12,10 @@ Newest first. One block per meaningful landing.
 - Replayed server idempotency keys return the original job/reservation without
   reserving twice; competing terminal outcomes fail closed. Reservation expiry
   continues to skip queued/running/succeeded `generation_jobs`.
+- A terminal service worker binds its transaction to the locked job before the
+  finalizer, allowing an already-submitted provider result to settle/release
+  after account deactivation or membership removal; ordinary callers retain
+  the active-member authorization requirement.
 - This is deliberately **not launch ready**: no provider route, cookie flow,
   migration application, or feature gate was enabled. Keep
   `SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED=false` until real worker
