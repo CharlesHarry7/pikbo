@@ -2713,7 +2713,8 @@ function ageMs(iso, now) {
   return Math.max(0, now - t);
 }
 assert.ok(ageMs(new Date(0).toISOString(), 60_000) >= 60_000);
-assert.equal(ageMs(new Date(Date.now()).toISOString(), Date.now()), 0);
+const timeoutNow = Date.now();
+assert.equal(ageMs(new Date(timeoutNow).toISOString(), timeoutNow), 0);
 
 // T6 honest blocked status (player overlay ≠ file bake)
 const t6 = fs.readFileSync(join(root, "lib/t6Watermark.ts"), "utf8");
