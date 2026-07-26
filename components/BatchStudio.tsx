@@ -865,7 +865,7 @@ export function BatchStudio({
   const primaryBatchLabel = running
     ? `${sellerPackActive ? "Seller Pack" : "Batch"} running… ${doneCount}/${jobs.length}`
     : !image
-      ? "Add a toy photo first"
+      ? "Upload owned toy photo"
       : !ownsRights
         ? "Confirm ownership to continue"
         : demoMode
@@ -991,65 +991,80 @@ export function BatchStudio({
             <div className="mt-2">{creditStrip}</div>
           </div>
         ) : null}
-        <label
-          id="seller-pack-photo"
-          className={`flex aspect-video cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
-            image
-              ? "border-white/12 ring-1 ring-white/5"
-              : "border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)]"
-          }`}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault();
-            loadFile(e.dataTransfer.files?.[0]);
-          }}
-        >
-          {image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={image}
-              alt="toy"
-              className="h-full w-full object-contain"
-            />
-          ) : (
-            <span className="px-4 text-center text-sm text-[var(--fg-dim)]">
-              <span className="mb-2 block text-2xl" aria-hidden>
-                🧸
-              </span>
-              Drop one toy photo for the whole{" "}
-              {sellerPackActive ? "pack" : "batch"}
-              <br />
-              <span className="text-xs">or tap · JPEG / PNG / WebP · under ~8 MB</span>
+        <div data-seller-pack-step="upload">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--fg-muted)] sm:hidden">
+            <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black">
+              1
             </span>
+            Upload owned toy photo
+          </p>
+          <label
+            id="seller-pack-photo"
+            htmlFor="seller-pack-photo-input"
+            className={`flex aspect-video cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
+              image
+                ? "border-white/12 ring-1 ring-white/5"
+                : "border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)]"
+            }`}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              loadFile(e.dataTransfer.files?.[0]);
+            }}
+          >
+            {image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={image}
+                alt="toy"
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <span className="px-4 text-center text-sm text-[var(--fg-dim)]">
+                <span className="mb-2 block text-2xl" aria-hidden>
+                  🧸
+                </span>
+                Drop one toy photo for the whole{" "}
+                {sellerPackActive ? "pack" : "batch"}
+                <br />
+                <span className="text-xs">
+                  or tap · JPEG / PNG / WebP · under ~8 MB
+                </span>
+              </span>
+            )}
+            <input
+              id="seller-pack-photo-input"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => loadFile(e.target.files?.[0])}
+            />
+          </label>
+          {!image && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {SAMPLE_TOYS.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className="rounded-lg border border-[var(--border)] px-2 py-1 text-[10px] hover:border-[var(--brand)]"
+                  onClick={async () => {
+                    try {
+                      setImage(await sampleToDataUrl(s.path));
+                      setError(null);
+                    } catch {
+                      setError("Sample load failed");
+                    }
+                  }}
+                >
+                  Sample: {s.label}
+                </button>
+              ))}
+              <p className="w-full text-[10px] font-semibold text-[var(--mint)]">
+                Lab samples are official examples · not a customer upload.
+              </p>
+            </div>
           )}
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => loadFile(e.target.files?.[0])}
-          />
-        </label>
-        {!image && (
-          <div className="flex flex-wrap gap-2">
-            {SAMPLE_TOYS.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                className="rounded-lg border border-[var(--border)] px-2 py-1 text-[10px] hover:border-[var(--brand)]"
-                onClick={async () => {
-                  try {
-                    setImage(await sampleToDataUrl(s.path));
-                    setError(null);
-                  } catch {
-                    setError("Sample load failed");
-                  }
-                }}
-              >
-                Sample: {s.label}
-              </button>
-            ))}
-          </div>
-        )}
+        </div>
 
         <div className={`grid gap-2 ${isSellerPack ? "" : "grid-cols-2"}`}>
           {!isSellerPack ? (
@@ -1637,7 +1652,19 @@ export function BatchStudio({
       </div>
 
       {/* Phase F: sticky mobile Seller Pack / Batch CTA above tab nav */}
-      <div className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/90 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
+      <div
+        className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+        data-seller-pack-sticky="mobile"
+      >
+        {image ? (
+          <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
+            {sellerPackActive
+              ? `Seller Pack · 3 outputs · ${sellerPackQuoteLabel(packQuote)}`
+              : `Batch · ${selected.length} recipes · ${batchQuoteLabel(packQuote)}`}
+            {doneCount > 0 ? ` · ${doneCount} ready` : ""}
+            {failedRetryCount > 0 ? ` · ${failedRetryCount} failed kept` : ""}
+          </p>
+        ) : null}
         {image && !ownsRights ? (
           <label className="mb-2 flex cursor-pointer items-start gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2 text-[10px] leading-snug text-[var(--fg-muted)]">
             <input
@@ -1655,15 +1682,75 @@ export function BatchStudio({
             demoMode={demoMode}
             onCancel={cancelInFlightPack}
           />
+        ) : !image ? (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById("seller-pack-photo")
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" })
+              }
+              className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
+              data-seller-pack-action="upload"
+            >
+              Upload owned toy photo
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  setImage(await sampleToDataUrl(SAMPLE_TOYS[0].path));
+                  setError(null);
+                } catch {
+                  setError("Sample load failed");
+                }
+              }}
+              className="btn btn-ghost shrink-0 px-3 py-3 text-xs"
+              title="Official Lab sample · not a customer upload"
+            >
+              Try free · Lab
+            </button>
+          </div>
+        ) : doneCount > 0 ? (
+          <div className="flex gap-2">
+            <Link
+              href="/library"
+              className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
+              data-seller-pack-action="library"
+            >
+              Library
+            </Link>
+            {failedRetryCount > 0 ? (
+              <button
+                type="button"
+                disabled={running || !image || !ownsRights}
+                onClick={() => void retryAllFailed()}
+                className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm disabled:opacity-50"
+                data-seller-pack-action="retry-failed"
+                title="Re-run only failed children · successes stay"
+              >
+                Retry failed only
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={!canRun}
+                onClick={() => {
+                  if (canRun) void runBatch();
+                }}
+                className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm disabled:opacity-50"
+                data-seller-pack-action="run-again"
+              >
+                Run pack again
+              </button>
+            )}
+          </div>
         ) : (
           <button
             type="button"
-            disabled={Boolean(image) && !canRun}
+            disabled={!canRun}
             onClick={() => {
-              if (!image) {
-                window.scrollTo({ top: 0, behavior: "smooth" });
-                return;
-              }
               if (!ownsRights) {
                 document
                   .getElementById("batch-ownership")
@@ -1672,7 +1759,8 @@ export function BatchStudio({
               }
               if (canRun) void runBatch();
             }}
-            className="btn btn-primary w-full py-3 text-sm disabled:opacity-50"
+            className="btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
+            data-seller-pack-action="generate"
           >
             {primaryBatchLabel}
           </button>

@@ -382,6 +382,29 @@ assert.match(
   /hidden border-b border-white\/10 bg-\[#050506\] px-3 py-1\.5 sm:block/
 );
 
+// Seller Pack first-run (Phase F 390px): compact steps + sticky actions.
+const sellerPackStepsSrc = fs.readFileSync(
+  join(root, "components/SellerPackSteps.tsx"),
+  "utf8"
+);
+assert.match(sellerPackStepsSrc, /data-seller-pack-steps="compact"/);
+assert.match(sellerPackStepsSrc, /data-seller-pack-steps="full"/);
+assert.match(sellerPackStepsSrc, /sm:hidden/);
+assert.match(sellerPackStepsSrc, /hidden gap-2 sm:grid/);
+const batchFirstRun = fs.readFileSync(
+  join(root, "components/BatchStudio.tsx"),
+  "utf8"
+);
+assert.match(batchFirstRun, /data-seller-pack-step="upload"/);
+assert.match(batchFirstRun, /Upload owned toy photo/);
+assert.match(batchFirstRun, /data-seller-pack-action="upload"/);
+assert.match(batchFirstRun, /data-seller-pack-action="generate"/);
+assert.match(batchFirstRun, /data-seller-pack-action="library"/);
+assert.match(batchFirstRun, /data-seller-pack-action="retry-failed"/);
+assert.match(batchFirstRun, /data-seller-pack-sticky="mobile"/);
+assert.match(batchFirstRun, /Retry failed only/);
+assert.match(batchFirstRun, /Lab samples are official examples/);
+
 const meClient = fs.readFileSync(join(root, "lib/meClient.ts"), "utf8");
 assert.match(meClient, /export async function fetchMe/);
 assert.match(meClient, /cachedDemoFree/);
@@ -576,7 +599,7 @@ assert.match(remix, /export function hasRemixSearchParams/);
 assert.match(remix, /sourceProjectSlug/);
 assert.match(createStudio, /sourceProject|remix\.intent/);
 // Execute the production pure remix parser with a tiny fixture catalog.
-// This catches a fresh /create accidentally inheriting PRESETS[0]'s demo card.
+// Catches a fresh /create accidentally inheriting PRESETS[0]'s demo card.
 const remixFixturePresets = [
   {
     slug: "fixture-spin",
