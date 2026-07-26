@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Create first-run order + plain /create remix honesty
+- Create: recipe chips before Lab samples; Toy Identity only under Advanced.
+- `hasRemixSearchParams` — empty /create is not an implicit PRESETS[0] remix.
+- Seller Pack first-run (prior): compact steps + sticky upload/generate/library/retry.
+
 ### 2026-07-26 — [grok] Seller Pack first-run conversion (Phase F 390px)
 - SellerPackSteps: compact horizontal strip on phone; full cards from sm+.
 - BatchStudio sticky: Upload owned photo · Lab sample · Generate with quote ·
