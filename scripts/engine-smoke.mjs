@@ -2931,6 +2931,12 @@ const batchStudioSrc = fs.readFileSync(
 assert.match(batchStudioSrc, /buildSellerPackDirectorPlan|DirectorPlanPanel/);
 assert.match(batchStudioSrc, /data-seller-pack-plan=["']director["']/);
 assert.match(batchStudioSrc, /AssetBriefPanel|buildAssetBrief|packAssetBrief/);
+assert.match(
+  batchStudioSrc,
+  /composeExtraWithIdentity|packExtra|ownsRights(?!\s*:\s*true)/
+);
+// Pack children must receive bible extra (not only ownsRights: true hardcode)
+assert.match(batchStudioSrc, /extra:\s*packExtra|packExtra \? \{ extra/);
 // CD fidelity QC checklist on Create + Seller Pack results
 const deliveryPackSrc = fs.readFileSync(
   join(root, "lib/deliveryPack.ts"),

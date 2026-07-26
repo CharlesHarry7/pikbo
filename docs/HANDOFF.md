@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] CD: wire pack bible into generate extra
+- BatchStudio `executeJob`: `composeExtraWithIdentity(toyIdentity)` on every
+  pack child; real `ownsRights` (not hard-true); Director Plan shows bible +
+  labSample.
+- LandingToolPanel delivery checklist includes fidelity QC (parity with Create).
+- smoke: packExtra / composeExtraWithIdentity.
+
 ### 2026-07-26 — [grok] CD: Seller Pack Asset Brief + fidelity QC
 - BatchStudio: post-upload `AssetBriefPanel` + toy identity (shape probe, lab
   sample flag); recipe chips deep-link single Generate (pack trio stays fixed).

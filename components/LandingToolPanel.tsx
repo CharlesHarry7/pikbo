@@ -28,10 +28,13 @@ import {
 } from "@/lib/provenance";
 import {
   canDownloadResult,
+  downloadBlockedCtaLabel,
+  downloadPolicyLabel,
   freeLiveDownloadBlockReason,
   isPlayableResultVideoUrl,
   isSafeDeliverableUrl,
   requestCreditStateFromFailure,
+  requestCreditStateFromSuccess,
 } from "@/lib/createTrust";
 import { deliveryItemsForJob } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
@@ -78,6 +81,11 @@ export function LandingToolPanel({
   const [ownsRights, setOwnsRights] = useState(false);
   const [usedModel, setUsedModel] = useState<string | null>(null);
   const [resultResolution, setResultResolution] = useState<string | null>(null);
+  const [costCredits, setCostCredits] = useState<number | null>(null);
+  const [resultSettlement, setResultSettlement] = useState<
+    "0 cached" | "10 used" | null
+  >(null);
+  const [serverEcho, setServerEcho] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
   const generateAbortRef = useRef<AbortController | null>(null);
   const toast = useToast();
@@ -223,6 +231,9 @@ export function LandingToolPanel({
     setFailCreditState(null);
     setVideoUrl(null);
     setRequestId(null);
+    setCostCredits(null);
+    setResultSettlement(null);
+    setServerEcho(false);
     setElapsed(0);
     setStatus("generating");
     generateAbortRef.current?.abort();
@@ -312,6 +323,15 @@ export function LandingToolPanel({
       typeof data.requestId === "string" && data.requestId
         ? data.requestId
         : null
+    );
+    setCostCredits(
+      typeof data.costCredits === "number" ? data.costCredits : null
+    );
+    setResultSettlement(requestCreditStateFromSuccess(Boolean(data.demo)));
+    setServerEcho(
+      typeof data.costCredits === "number" ||
+        typeof data.requestId === "string" ||
+        typeof data.model === "string"
     );
     setStatus("done");
     pushHistory(
@@ -748,9 +768,13 @@ export function LandingToolPanel({
               {/* First-principles delivery steps (honest Free download). */}
               <DeliveryChecklist
                 className="mx-auto mt-3 max-w-sm"
-                title="Delivery · next steps"
+                title="Delivery · fidelity QC"
                 surface="landing:default"
-                items={deliveryItemsForJob(null, { demo, downloadAllowed })}
+                items={deliveryItemsForJob(null, {
+                  demo,
+                  downloadAllowed,
+                  includeQc: true,
+                })}
               />
               {!downloadAllowed ? (
                 <p className="mt-2 text-center text-[10px] leading-snug text-amber-100/80">

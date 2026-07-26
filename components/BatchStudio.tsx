@@ -10,6 +10,7 @@ import {
   type ImageProbe,
 } from "@/lib/assetBrief";
 import {
+  composeExtraWithIdentity,
   loadToyIdentity,
   saveToyIdentity,
   type ToyIdentity,
@@ -465,6 +466,8 @@ export function BatchStudio({
       image && image.startsWith("data:image") && image.length < 3_500_000
         ? image
         : undefined;
+    // CD: same still + character bible across all pack children (prompt extra only).
+    const packExtra = composeExtraWithIdentity(toyIdentity, "");
     const result = await postGenerateWithRetry(
       {
         effect: job.slug,
@@ -480,7 +483,8 @@ export function BatchStudio({
         aspectRatio: jobAspect,
         model: effectiveModel,
         resolution: effectiveResolution,
-        ownsRights: true,
+        ownsRights,
+        ...(packExtra ? { extra: packExtra } : {}),
       },
       {
         maxRetries: 1,
@@ -1035,6 +1039,8 @@ export function BatchStudio({
       ownsRights,
       durationSec: freeLive?.durationSec ?? effectiveDuration,
       resolution: freeLive?.resolution ?? effectiveResolution,
+      labSample: labStill,
+      identity: toyIdentity,
     });
   }, [
     sellerPackActive,
@@ -1049,6 +1055,8 @@ export function BatchStudio({
     ownsRights,
     effectiveDuration,
     effectiveResolution,
+    labStill,
+    toyIdentity,
   ]);
   const canRun =
     !running &&

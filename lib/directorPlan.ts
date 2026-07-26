@@ -218,6 +218,8 @@ export type SellerPackDirectorPlanInput = {
   resolution: string;
   /** Lab sample still — not customer SKU */
   labSample?: boolean;
+  /** Optional character bible from Asset Brief */
+  identity?: ToyIdentity | null;
 };
 
 /**
@@ -295,6 +297,22 @@ export function buildSellerPackDirectorPlan(
     value: sellerPackQuoteLabel(quote),
     tone: input.demoMode ? "muted" : "ok",
   });
+
+  if (input.identity?.sku || input.identity?.preserve) {
+    rows.push({
+      id: "bible",
+      label: "Bible",
+      value: [
+        input.identity.sku || null,
+        input.identity.preserve
+          ? `preserve: ${input.identity.preserve}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      tone: "ok",
+    });
+  }
 
   if (input.labSample) {
     rows.push({
