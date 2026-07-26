@@ -6,6 +6,7 @@ import type { FeedItem } from "@/lib/videoFeed";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
 import { useI18n } from "@/components/LanguageProvider";
+import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /**
  * Homepage first fold — video cinema (HF-style).
@@ -130,6 +131,22 @@ export function HomeCinemaHero({
           {item.title}
           <span className="text-white/40"> · {t("home.cinema.lab")}</span>
         </p>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {item.badge ? (
+            <span className="rounded-full border border-white/15 bg-black/40 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/75">
+              {item.badge}
+            </span>
+          ) : null}
+          {provisionalLabQualityLabel(item.recipeSlug) ? (
+            <span
+              className="rounded-full border border-amber-200/30 bg-black/45 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-100/90"
+              title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
+              data-proof-quality="provisional-lab"
+            >
+              Lab ≥4 · provisional
+            </span>
+          ) : null}
+        </div>
 
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <a

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { CommunityProject } from "@/lib/videoFeed";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /**
  * HF “Explore the inside of every project” — tall portrait cards.
@@ -74,9 +75,21 @@ export function HomeProjectsExplore({
               />
             </Link>
             <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black via-black/25 to-transparent" />
-            <span className="pointer-events-none absolute left-2.5 top-2.5 z-[2] rounded-full border border-white/15 bg-black/45 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/90 backdrop-blur">
-              {p.visibility}
-            </span>
+            <div className="pointer-events-none absolute left-2.5 top-2.5 z-[2] flex max-w-[90%] flex-wrap gap-1">
+              <span className="rounded-full border border-white/15 bg-black/45 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/90 backdrop-blur">
+                {p.visibility}
+              </span>
+              {p.visibility === "Official example" &&
+              provisionalLabQualityLabel(p.demo.preset) ? (
+                <span
+                  className="rounded-full border border-amber-200/25 bg-black/50 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur"
+                  title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
+                  data-proof-quality="provisional-lab"
+                >
+                  Lab ≥4
+                </span>
+              ) : null}
+            </div>
             <div className="absolute inset-x-0 bottom-0 z-[2] p-3">
               <div className="mb-2 flex items-center gap-2">
                 <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--mint)] text-[9px] font-black text-black">

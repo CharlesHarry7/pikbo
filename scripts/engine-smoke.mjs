@@ -962,6 +962,20 @@ assert.match(
   fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
   /data-proof-quality=["']provisional-lab["']/
 );
+
+// Phase G: cinema / projects explore / community ProjectCard provisional chips
+assert.match(
+  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
+  /data-proof-quality=["']provisional-lab["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HomeProjectsExplore.tsx"), "utf8"),
+  /data-proof-quality=["']provisional-lab["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/ProjectCard.tsx"), "utf8"),
+  /data-proof-quality=["']provisional-lab["']/
+);
 assert.match(
   fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
   /data-proof-quality=["']provisional-lab["']/
