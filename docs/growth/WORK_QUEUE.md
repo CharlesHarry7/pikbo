@@ -8,6 +8,28 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ## OPEN · 立即执行
 
+### WQ-2026-07-27-03 · 外链 + GSC（禁止扩 sitemap）
+
+```yaml
+id: WQ-2026-07-27-03
+status: open
+priority: P0
+assignee: workbuddy
+created_by: grok-eng
+prompt: docs/growth/WORKBUDDY_GROWTH_ONLY_PROMPT.md
+why: |
+  SEO 复核后主战场=外链/GSC。生产 sitemap 13 已正确，禁止全站塞索引。
+command: |
+  严格按 WORKBUDDY_GROWTH_ONLY_PROMPT 执行
+deliverables:
+  - runs report + AGENT_STATE writer=workbuddy
+  - commit message must say no sitemap expand
+result: |
+  (WB 填)
+```
+
+---
+
 ### WQ-2026-07-27-02 · Vercel 发版 + 生产 SEO 验收 + 可选 GSC（替老板点）
 
 ```yaml
