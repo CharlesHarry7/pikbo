@@ -3241,6 +3241,15 @@ assert.match(batchStudio, /fallbackImage/);
 assert.match(batchStudio, /recoveredFromAssetMiss/);
 assert.match(batchStudio, /cancelInFlightPack|AbortController/);
 assert.match(batchStudio, /Cancel pack/);
+// Pack cancel immediately marks running children refund unconfirmed (Create parity)
+assert.match(
+  batchStudio,
+  /function cancelInFlightPack[\s\S]{0,900}refund unconfirmed/
+);
+assert.match(
+  batchStudio,
+  /function cancelInFlightPack[\s\S]{0,900}setJobs/
+);
 assert.match(landingTool, /postGenerateWithRetry|fallbackImage/);
 assert.match(landingTool, /recoveredFromAssetMiss|registerLocalAsset/);
 function resolveSpecImagePure(spec, store) {

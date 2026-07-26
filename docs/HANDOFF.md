@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Seller Pack cancel immediate settlement
+- `cancelInFlightPack` marks running children failed + refund unconfirmed and
+  queued → not_started immediately (Create cancel parity); finished siblings kept.
+- Smoke locks cancelInFlightPack + setJobs settlement.
+
 ### 2026-07-26 — [grok] Cancel ops honesty + pack child idempotency
 - Webhook cancel stamps `creditsOutcome: refund unconfirmed` (never invent restore).
 - Seller Pack: per-child `idempotencyKey` so abort cancel hits the right ledger row.

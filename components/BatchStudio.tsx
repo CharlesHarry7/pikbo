@@ -347,6 +347,26 @@ export function BatchStudio({
     if (!ctrl) return;
     ctrl.abort();
     packAbortRef.current = null;
+    // Immediate Wave B settlement UI (parity with Create cancel) before the
+    // generate loop unwinds — finished siblings stay; running → unconfirmed.
+    setJobs((previous) =>
+      previous.map((job) =>
+        job.status === "queued" || job.status === "running"
+          ? {
+              ...job,
+              status: job.status === "running" ? "failed" : "not_started",
+              error:
+                job.status === "running"
+                  ? "Canceled · refund unconfirmed if live debit started"
+                  : undefined,
+              creditState:
+                job.status === "running"
+                  ? "refund unconfirmed"
+                  : job.creditState,
+            }
+          : job
+      )
+    );
     setError(
       "Pack canceled — finished children kept. Live debit on the interrupted child may still settle server-side (refund unconfirmed until confirmed)."
     );
