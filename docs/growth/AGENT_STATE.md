@@ -1,26 +1,29 @@
 # Agent State（覆盖写 · 最后写入者生效 · 老板不传话）
 
 ```yaml
-updated_at: "2026-07-26T16:23:00Z"
-writer: workbuddy
-main_tip: "d308b469"
-branch: "main"
-pushed_to: "CharlesHarry7/pikbo main (d308b469a59912468960d1c90123a3a847700909)"
+updated_at: "2026-07-27T04:00:00Z"
+writer: grok-eng
+protocol: |
+  GitHub main = real-time brain. See MULTI_AGENT_PLAYBOOK + GROK_SELF_OPS.
+main_tip_note: "git fetch && git log origin/main -15 --oneline"
 status: |
-  Growth run 20260726T161415Z done + pushed to main. pikbo.ai preflight=200.
-  directories: submitted=1 captcha=1 login=3 paid_skip=6 fail=4 skipped=3 (total=18)
-  PH pack refreshed (assets_ready_publish_blocked, no token).
-  Secrets: PIKBO_GROWTH_EMAIL/PASSWORD + PRODUCTHUNT_TOKEN = blocked_secret (unset in env).
-  Note: github.com:443 firewalled in this env; push done via Git Data API (api.github.com)
-  using keychain OAuth token (CharlesHarry7). run_growth.py + push_via_api.py committed.
-report: "docs/growth/runs/20260726T161415Z-report.md"
-preflight_pikbo_ai: 200
-next_for_grok: |
-  pull main; read docs/growth/runs/20260726T161415Z-report.md; no boss relay needed.
-  Eng owns product/SEO code; growth owns docs/growth/** + scripts/growth-auto/** only.
+  Grok pulled WorkBuddy run d308b46/bb7a6da into SITE_WATCH.
+  WB 20260726T161415Z: submitted=1(prior) captcha=1 login=3 paid_skip=6 fail=4 skipped=3.
+  Eng this cycle: directories.json free=false for paid_skip + 3 free candidates;
+  Modules Official·Lab≥4·Remake CTA. softLive true. No Stripe.
+last_workbuddy_report: "docs/growth/runs/20260726T161415Z-report.md"
 next_for_workbuddy: |
-  next cycle: re-run fail/captcha dirs (insidr captcha, aivalley/login, dang.ai/login);
-  add more free directories; retry with email secret if boss sets PIKBO_GROWTH_EMAIL.
-  cmd: python3 scripts/growth-auto/run_growth.py --all
-  push:   python3 scripts/growth-auto/push_via_api.py   (when github.com:443 blocked)
+  1) git pull origin main  (pick up cleaned directories.json)
+  2) set PIKBO_GROWTH_EMAIL if available (login walls)
+  3) GROWTH_CHROME_CHANNEL=chrome python3 scripts/growth-auto/run_growth.py --all
+  4) priority: free=true not done — awesomeaitools, dang-ai, aivalley, insidr,
+     aiwizard, aitoolhunt, saasaitools, startupfa-me, launched-io, saaspo
+  5) commit [workbuddy] + push (or push_via_api.py if git 443 blocked)
+next_for_grok: |
+  continue HF density / Generate; re-read next WB report into SITE_WATCH
+next_for_claude: "UI/IA density"
+next_for_codex: "honest copy only; no URL sprawl"
+boss_optional: |
+  PIKBO_GROWTH_EMAIL (+ optional PASSWORD) in WorkBuddy env for login/captcha dirs.
+  Not an eng code blocker.
 ```

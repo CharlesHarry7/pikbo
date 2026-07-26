@@ -12,6 +12,7 @@ import {
 } from "@/lib/workflows";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 export const metadata: Metadata = {
   title: "Modules · Toy workflow blocks",
@@ -57,10 +58,14 @@ function ModuleCard({
   capability: "live" | "preview";
 }) {
   const isLive = capability === "live";
+  const exactLab = Boolean(poster && w.effect);
+  const labQuality =
+    exactLab && w.effect ? provisionalLabQualityLabel(w.effect) : null;
   return (
     <Link
       href={w.href}
       className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-[#0c0c10] to-black shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--mint)]/45 hover:shadow-[0_24px_56px_-24px_rgba(200,255,61,0.15)]"
+      data-module-card={isLive ? "live" : "preview"}
     >
       {poster ? (
         <div className="relative aspect-[3/4] overflow-hidden bg-black/50 sm:aspect-[4/5]">
@@ -76,7 +81,7 @@ function ModuleCard({
             {w.emoji}
           </span>
           <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-[var(--mint)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black opacity-0 shadow-[0_0_16px_rgba(200,255,61,0.35)] transition group-hover:opacity-100">
-            Launch
+            Remake
           </span>
           <div className="absolute bottom-14 left-3 right-3 flex flex-wrap gap-1">
             <span
@@ -88,9 +93,21 @@ function ModuleCard({
             >
               {isLive ? "JOB" : "PREVIEW"}
             </span>
-            {poster && isLive ? (
-              <span className="rounded-full bg-black/65 px-1.5 py-0.5 text-[9px] font-bold text-white/80 backdrop-blur">
-                Lab proof
+            {exactLab && isLive ? (
+              <span
+                className="rounded-full border border-white/10 bg-black/65 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur"
+                title="Official Lab cached poster · not live customer output"
+              >
+                Official · cached
+              </span>
+            ) : null}
+            {labQuality ? (
+              <span
+                className="rounded-full border border-amber-200/25 bg-black/55 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur"
+                title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
+                data-proof-quality="provisional-lab"
+              >
+                Lab ≥4
               </span>
             ) : null}
             {w.badge && (
@@ -145,7 +162,7 @@ function ModuleCard({
           </p>
         )}
         <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[var(--mint)]">
-          {isLive ? "Launch" : "Preview"}
+          {isLive ? "Remake · your toy photo" : "Preview path"}
           <span className="transition group-hover:translate-x-0.5" aria-hidden>
             →
           </span>

@@ -3486,6 +3486,7 @@ assert.match(
   fs.readFileSync(join(root, "app/modules/page.tsx"), "utf8"),
   /Modules|modules/
 );
+
 const workflowsSrc = fs.readFileSync(join(root, "lib/workflows.ts"), "utf8");
 assert.match(workflowsSrc, /listPreviewWorkflows/);
 assert.match(workflowsSrc, /listLiveWorkflows/);
@@ -3725,6 +3726,10 @@ assert.match(modulesPageSrc, /MODULES_FAQ|Modules FAQ/);
 assert.match(modulesPageSrc, /FAQPage/);
 assert.match(modulesPageSrc, /ModulesSuiteCtas/);
 assert.doesNotMatch(modulesPageSrc, /Generate free/);
+assert.match(modulesPageSrc, /data-module-card/);
+assert.match(modulesPageSrc, /Official · cached/);
+assert.match(modulesPageSrc, /Remake · your toy photo/);
+assert.match(modulesPageSrc, /provisionalLabQualityLabel/);
 const modulesSuiteCtasSrc = fs.readFileSync(
   join(root, "components/ModulesSuiteCtas.tsx"),
   "utf8"

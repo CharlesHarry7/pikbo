@@ -1,5 +1,5 @@
 {
-  "_comment": "Free AI directory submit list for Pikbo (https://pikbo.ai). Paid-only sites -> skipped. Prior queue from docs/growth/FREE_DIRECTORY_SUBMIT.md + extra free dirs. Already-submitted (2026-07-25) kept with status_hint=done.",
+  "_comment": "Free AI directory submit list for Pikbo (https://pikbo.ai). free=false skips paid. Updated 2026-07-27 from WorkBuddy run 20260726T161415Z empirical paid_skip. status_hint=done = already submitted.",
   "product": {
     "name": "Pikbo",
     "url": "https://pikbo.ai",
@@ -20,23 +20,181 @@
     "toy video from one photo"
   ],
   "directories": [
-    { "slug": "aitools-fyi", "name": "AI Tools FYI", "url": "https://www.aitools.fyi", "submit_url": "https://www.aitools.fyi/submit", "free": true },
-    { "slug": "topai-tools", "name": "TopAI Tools", "url": "https://topai.tools", "submit_url": "https://topai.tools/submit", "free": true },
-    { "slug": "futuretools-io", "name": "FutureTools", "url": "https://www.futuretools.io", "submit_url": "https://www.futuretools.io/submit", "free": true },
-    { "slug": "aitoolnet", "name": "AI Tool Net", "url": "https://www.aitoolnet.com", "submit_url": "https://www.aitoolnet.com/submit", "free": true },
-    { "slug": "awesomeaitools", "name": "Awesome AI Tools", "url": "https://awesomeaitools.com", "submit_url": "https://awesomeaitools.com/submit", "free": true },
-    { "slug": "dang-ai", "name": "Dang.ai", "url": "https://dang.ai", "submit_url": "https://dang.ai/submit", "free": true },
-    { "slug": "aivalley", "name": "AI Valley", "url": "https://aivalley.ai", "submit_url": "https://aivalley.ai/submit/", "free": true },
-    { "slug": "aiwizard", "name": "AI Wizard", "url": "https://www.aiwizard.io", "submit_url": "https://www.aiwizard.io/submit", "free": true },
-    { "slug": "aitoolhunt", "name": "AI Tool Hunt", "url": "https://www.aitoolhunt.com", "submit_url": "https://www.aitoolhunt.com/submit", "free": true },
-    { "slug": "bestofai", "name": "Best of AI", "url": "https://bestofai.com", "submit_url": "https://bestofai.com/submit", "free": true },
-    { "slug": "insidr", "name": "Insidr AI", "url": "https://www.insidr.ai", "submit_url": "https://www.insidr.ai/submit", "free": true },
-    { "slug": "aitools-inc", "name": "AI Tools Inc", "url": "https://aitools.inc", "submit_url": "https://aitools.inc/submit", "free": true },
-    { "slug": "saasaitools", "name": "SaaS AI Tools", "url": "https://www.saasaitools.com", "submit_url": "https://www.saasaitools.com/submit", "free": true },
-    { "slug": "ai-tools-io", "name": "AI Tools.io", "url": "https://ai-tools.io", "submit_url": "https://ai-tools.io/submit", "free": true },
-    { "slug": "aitoolsdirectory-done", "name": "AI Tools Directory (done 07-25)", "url": "https://aitoolsdirectory.com", "submit_url": "https://aitoolsdirectory.com/submit", "free": true, "status_hint": "done" },
-    { "slug": "theresanaiforthat", "name": "TheresAnAIForThat", "url": "https://theresanaiforthat.com", "submit_url": "https://theresanaiforthat.com/submit", "free": false, "status_hint": "paid_skip" },
-    { "slug": "toolify", "name": "Toolify", "url": "https://www.toolify.ai", "submit_url": "https://www.toolify.ai/submit", "free": false, "status_hint": "paid_skip" },
-    { "slug": "futurepedia", "name": "Futurepedia", "url": "https://www.futurepedia.io", "submit_url": "https://www.futurepedia.io/submit", "free": false, "status_hint": "paid_skip" }
+    {
+      "slug": "awesomeaitools",
+      "name": "Awesome AI Tools",
+      "url": "https://awesomeaitools.com",
+      "submit_url": "https://awesomeaitools.com/submit",
+      "free": true,
+      "status_hint": "login_required",
+      "note": "WB 161415: login wall; needs PIKBO_GROWTH_EMAIL"
+    },
+    {
+      "slug": "dang-ai",
+      "name": "Dang.ai",
+      "url": "https://dang.ai",
+      "submit_url": "https://dang.ai/submit",
+      "free": true,
+      "status_hint": "login_required",
+      "note": "WB: redirect login/pricing"
+    },
+    {
+      "slug": "aivalley",
+      "name": "AI Valley",
+      "url": "https://aivalley.ai",
+      "submit_url": "https://aivalley.ai/submit/",
+      "free": true,
+      "status_hint": "login_required"
+    },
+    {
+      "slug": "insidr",
+      "name": "Insidr AI",
+      "url": "https://www.insidr.ai",
+      "submit_url": "https://www.insidr.ai/submit",
+      "free": true,
+      "status_hint": "captcha",
+      "note": "WB: captcha after fill"
+    },
+    {
+      "slug": "aiwizard",
+      "name": "AI Wizard",
+      "url": "https://www.aiwizard.io",
+      "submit_url": "https://www.aiwizard.io/submit",
+      "free": true,
+      "status_hint": "fail",
+      "note": "WB: no_submit_button — retry form heuristics"
+    },
+    {
+      "slug": "aitoolhunt",
+      "name": "AI Tool Hunt",
+      "url": "https://www.aitoolhunt.com",
+      "submit_url": "https://www.aitoolhunt.com/submit",
+      "free": true,
+      "status_hint": "fail",
+      "note": "WB: no_submit_button"
+    },
+    {
+      "slug": "saasaitools",
+      "name": "SaaS AI Tools",
+      "url": "https://www.saasaitools.com",
+      "submit_url": "https://www.saasaitools.com/submit",
+      "free": true,
+      "status_hint": "fail",
+      "note": "WB: no_submit_button"
+    },
+    {
+      "slug": "ai-tools-io",
+      "name": "AI Tools.io",
+      "url": "https://ai-tools.io",
+      "submit_url": "https://ai-tools.io/submit",
+      "free": true,
+      "status_hint": "fail",
+      "note": "WB: ERR_CONNECTION_CLOSED"
+    },
+    {
+      "slug": "startupfa-me",
+      "name": "Startupfa.me",
+      "url": "https://startupfa.me",
+      "submit_url": "https://startupfa.me/submit",
+      "free": true,
+      "note": "New free candidate 2026-07-27"
+    },
+    {
+      "slug": "launched-io",
+      "name": "Launched.io",
+      "url": "https://launched.io",
+      "submit_url": "https://launched.io/submit",
+      "free": true,
+      "note": "New free candidate 2026-07-27"
+    },
+    {
+      "slug": "saaspo",
+      "name": "SaaSPo",
+      "url": "https://www.saaspo.com",
+      "submit_url": "https://www.saaspo.com/submit",
+      "free": true,
+      "note": "New free candidate 2026-07-27"
+    },
+    {
+      "slug": "aitoolsdirectory-done",
+      "name": "AI Tools Directory (done 07-25)",
+      "url": "https://aitoolsdirectory.com",
+      "submit_url": "https://aitoolsdirectory.com/submit",
+      "free": true,
+      "status_hint": "done"
+    },
+    {
+      "slug": "aitools-fyi",
+      "name": "AI Tools FYI",
+      "url": "https://www.aitools.fyi",
+      "submit_url": "https://www.aitools.fyi/submit",
+      "free": false,
+      "status_hint": "paid_skip",
+      "note": "WB 161415: paid_skip"
+    },
+    {
+      "slug": "topai-tools",
+      "name": "TopAI Tools",
+      "url": "https://topai.tools",
+      "submit_url": "https://topai.tools/submit",
+      "free": false,
+      "status_hint": "paid_skip"
+    },
+    {
+      "slug": "futuretools-io",
+      "name": "FutureTools",
+      "url": "https://www.futuretools.io",
+      "submit_url": "https://www.futuretools.io/submit",
+      "free": false,
+      "status_hint": "paid_skip"
+    },
+    {
+      "slug": "aitoolnet",
+      "name": "AI Tool Net",
+      "url": "https://www.aitoolnet.com",
+      "submit_url": "https://www.aitoolnet.com/submit",
+      "free": false,
+      "status_hint": "paid_skip"
+    },
+    {
+      "slug": "bestofai",
+      "name": "Best of AI",
+      "url": "https://bestofai.com",
+      "submit_url": "https://bestofai.com/submit",
+      "free": false,
+      "status_hint": "paid_skip"
+    },
+    {
+      "slug": "aitools-inc",
+      "name": "AI Tools Inc",
+      "url": "https://aitools.inc",
+      "submit_url": "https://aitools.inc/submit",
+      "free": false,
+      "status_hint": "paid_skip"
+    },
+    {
+      "slug": "theresanaiforthat",
+      "name": "TheresAnAIForThat",
+      "url": "https://theresanaiforthat.com",
+      "submit_url": "https://theresanaiforthat.com/submit",
+      "free": false,
+      "status_hint": "paid_skip"
+    },
+    {
+      "slug": "toolify",
+      "name": "Toolify",
+      "url": "https://www.toolify.ai",
+      "submit_url": "https://www.toolify.ai/submit",
+      "free": false,
+      "status_hint": "paid_skip"
+    },
+    {
+      "slug": "futurepedia",
+      "name": "Futurepedia",
+      "url": "https://www.futurepedia.io",
+      "submit_url": "https://www.futurepedia.io/submit",
+      "free": false,
+      "status_hint": "paid_skip"
+    }
   ]
 }

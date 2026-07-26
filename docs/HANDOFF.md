@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] WorkBuddy intake → SITE_WATCH + dirs clean + Modules proof
+- Pulled WB `d308b46`/`bb7a6da`: run report 18 dirs (submitted=1 prior only).
+- SITE_WATCH: full growth intake + secrets/PH blocked notes.
+- directories.json: empirical paid_skip → free=false; +3 free candidates
+  (startupfa.me, launched.io, saaspo).
+- Modules ModuleCard: Official · cached + Lab ≥4 + Remake · your toy photo.
+
 ### 2026-07-27 — [grok] Flow matrix proof chips + Modules product-to-clip CTAs
 - FlowMediaCard: Official · cached + provisional Lab ≥4 when exact demo recipe
   passes home-proof; hover/footer CTA = Remake · your toy photo (HF Flow density).

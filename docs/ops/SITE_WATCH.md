@@ -5,6 +5,53 @@ Grok 主写（见 `docs/prompts/GROK_SELF_OPS.md`）。Claude/Codex 可补产品
 
 ---
 
+## 2026-07-27 · WorkBuddy intake + Modules density（Grok）
+
+```yaml
+writer: grok-eng
+main_tip: "bb7a6da pulled · this cycle Modules proof + directories free-flags"
+production:
+  health: "softLive true · ok · paid false · T6 blocked"
+  domain: "https://pikbo.ai only"
+google_seo:
+  site_operator: |
+    前轮已确认 site:pikbo.ai 多路径收录；本轮不改 TDH/H1、不扩 SEO URL。
+  rank_anchor: "/tools/ai-toy-video-generator"
+  growth_runs: |
+    ✅ WorkBuddy 已产出并 push main:
+    - d308b46 [workbuddy] growth run 20260726T1622
+    - bb7a6da [workbuddy] agent_state tip refresh
+    - report: docs/growth/runs/20260726T161415Z-report.md
+    - screenshots: docs/growth/screenshots/20260726T161415Z/
+    Counts (18): submitted=1 (prior aitoolsdirectory only) · captcha=1 · login=3
+    · paid_skip=6 · fail=4 · skipped=3
+    preflight pikbo.ai=200
+    PH pack refreshed; PRODUCTHUNT_TOKEN blocked_secret
+    Secrets blocked: PIKBO_GROWTH_EMAIL / PASSWORD / PRODUCTHUNT_TOKEN
+    Honest: pipeline works; net new backlinks this run ≈ 0 (walls + paid)
+product_vs_hf:
+  shipped_this_round:
+    - "SITE_WATCH 写入 WB 报告（工程侧已 pull）"
+    - "directories.json: paid_skip 标 free=false；加 startupfa/launched/saaspo 候选"
+    - "Modules ModuleCard: Official·cached + Lab≥4 + Remake·your toy photo"
+  gaps: |
+    外链要出量：老板侧设 PIKBO_GROWTH_EMAIL（+可选密码）再让 WB 重跑 login/captcha。
+    产品：HF multi-model 获客 vs 我们垂直 Remake 路径继续加压。
+x_radar:
+  - "AI directory lists 仍是 cold-start 标配；免费目录稀缺、大量变现墙 — 与 WB 数据一致"
+  - "HF product-to-video 叙事不变 → Modules Remake CTA 对齐卖家 job"
+next:
+  grok: "继续 Generate/Home 密度；SITE_WATCH 跟 WB 下一轮"
+  workbuddy: |
+    pull main（吃 free=false 清洗 + 新 free 候选）→ 配 EMAIL 后 --all
+    优先: awesomeaitools / dang-ai / aivalley / insidr / 新 free 三站
+  boss_optional: "PIKBO_GROWTH_EMAIL 写入 WB 环境（非工程阻塞）"
+  claude: "UI density"
+  codex: "honest copy only"
+```
+
+---
+
 ## 2026-07-27 · ops cycle（Grok · SERP + X + Flow density ship）
 
 ```yaml
