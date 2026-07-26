@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Download gate status honesty (CANCELED/TIMEOUT/IN_FLIGHT)
+- `/api/downloads`: non-success jobs return typed codes (CANCELED · JOB_IN_FLIGHT ·
+  TIMEOUT · GENERATION_FAILED) instead of blanket NOT_READY; HEAD `X-Pikbo-Job-Status`.
+- Library HEAD toasts match codes (cancel/timeout/in-flight).
+- `imageJobsProbe` zero-fills byStatus incl. canceled; health.product cancel+download paths.
+- Cinema: drop unused media-has-caption eslint-disable.
+- Verified: typecheck · engine-smoke · lint 0 errors.
+
 ### 2026-07-26 — [grok] Seller Pack cancel immediate settlement
 - `cancelInFlightPack` marks running children failed + refund unconfirmed and
   queued → not_started immediately (Create cancel parity); finished siblings kept.

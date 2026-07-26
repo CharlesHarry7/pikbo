@@ -63,6 +63,53 @@ function gateDownload(
     };
   }
   if (job.status !== "succeeded" || !job.videoUrl) {
+    // Honest status codes for Library HEAD toasts (not a blanket NOT_READY).
+    if (job.status === "canceled") {
+      return {
+        ok: false,
+        status: 409,
+        body: {
+          ok: false,
+          code: "CANCELED",
+          error:
+            "Job was canceled — no deliverable. Check balance if a live debit is unconfirmed.",
+          status: job.status,
+          creditsOutcome: job.creditsOutcome,
+        },
+      };
+    }
+    if (job.status === "queued" || job.status === "running") {
+      return {
+        ok: false,
+        status: 409,
+        body: {
+          ok: false,
+          code: "JOB_IN_FLIGHT",
+          error: "Job still running — download unlocks after success",
+          status: job.status,
+        },
+      };
+    }
+    if (job.status === "failed") {
+      const code =
+        job.errorCode === "TIMEOUT" || job.errorCode === "PROVIDER_TIMEOUT"
+          ? "TIMEOUT"
+          : job.errorCode || "GENERATION_FAILED";
+      return {
+        ok: false,
+        status: code === "TIMEOUT" || code === "PROVIDER_TIMEOUT" ? 504 : 409,
+        body: {
+          ok: false,
+          code,
+          error:
+            job.error ||
+            "Job failed — no deliverable. Check balance if refund is unconfirmed.",
+          status: job.status,
+          creditsOutcome: job.creditsOutcome,
+          creditsRefunded: job.creditsRefunded,
+        },
+      };
+    }
     return {
       ok: false,
       status: 409,
@@ -154,11 +201,14 @@ export async function HEAD(_req: Request, { params }: Props) {
   if (!gate.ok) {
     const code =
       typeof gate.body.code === "string" ? gate.body.code : "BLOCKED";
+    const jobStatus =
+      typeof gate.body.status === "string" ? gate.body.status : "";
     return new NextResponse(null, {
       status: gate.status,
       headers: {
         "X-Pikbo-Download": "blocked",
         "X-Pikbo-Download-Code": code,
+        ...(jobStatus ? { "X-Pikbo-Job-Status": jobStatus } : {}),
         "X-Pikbo-T6": t6.freeLiveRawDownload,
         "Cache-Control": "no-store",
       },

@@ -575,6 +575,23 @@ export function LibraryGrid() {
             "Session job not on this server process — try direct open or remake"
           );
           // Fall through to direct only for demos/paid with a known URL.
+        } else if (code === "CANCELED") {
+          toast(
+            "Job canceled — no file. Check balance if live debit is unconfirmed."
+          );
+          return;
+        } else if (code === "JOB_IN_FLIGHT") {
+          toast("Still generating — download unlocks after success");
+          return;
+        } else if (
+          code === "TIMEOUT" ||
+          code === "PROVIDER_TIMEOUT" ||
+          head.status === 504
+        ) {
+          toast(
+            "Job timed out — no file. Check balance (refund may be unconfirmed)."
+          );
+          return;
         } else if (head.status === 409 || code === "NOT_READY") {
           toast("Deliverable not ready yet — refresh session jobs");
           return;

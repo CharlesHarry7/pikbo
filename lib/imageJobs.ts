@@ -425,7 +425,13 @@ export function imageJobsProbe(): {
 } {
   trimStore();
   const timedOut = sweepTimedOutImageJobs();
-  const byStatus: Record<string, number> = {};
+  // Always expose full histogram (incl. canceled=0) for Mode A / StatusProbe honesty.
+  const byStatus: Record<string, number> = {
+    running: 0,
+    succeeded: 0,
+    failed: 0,
+    canceled: 0,
+  };
   let open = 0;
   for (const j of jobs.values()) {
     byStatus[j.status] = (byStatus[j.status] || 0) + 1;

@@ -138,6 +138,10 @@ export async function GET() {
       /** Generate + image both accept client-minted session-scoped keys. */
       idempotency: "client-key-session-scoped",
       imageIdempotency: "client-key-session-scoped",
+      /** Ledger cancel (soft-launch; does not kill provider mid-flight). */
+      cancelGenerate: "DELETE /api/generations",
+      cancelImage: "DELETE /api/image",
+      downloadGate: "/api/downloads/{jobId|requestId}",
     },
     /** Honesty contract: cached demos free; live jobs charge flat credits */
     billing: {

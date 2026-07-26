@@ -2281,6 +2281,27 @@ assert.match(downloadRouteSrc, /downloadAllowedForJob/);
 assert.match(downloadRouteSrc, /X-Pikbo-T6|X-Pikbo-Bake/);
 assert.doesNotMatch(downloadRouteSrc, /bakeWatermarkedVideo/);
 assert.match(downloadRouteSrc, /bakedDerivative|owned derivative|Verified owned/);
+
+// Download gate status honesty (canceled / in-flight / timeout codes)
+assert.match(downloadRouteSrc, /code:\s*["']CANCELED["']/);
+assert.match(downloadRouteSrc, /code:\s*["']JOB_IN_FLIGHT["']/);
+assert.match(downloadRouteSrc, /X-Pikbo-Job-Status/);
+assert.match(library, /code === ["']CANCELED["']|Job canceled/);
+assert.match(library, /JOB_IN_FLIGHT|Still generating/);
+// imageJobs probe always includes canceled key (inline — imageJobsLib loads later)
+assert.match(
+  fs.readFileSync(join(root, "lib/imageJobs.ts"), "utf8"),
+  /canceled:\s*0/
+);
+// health product cancel + download paths
+assert.match(
+  fs.readFileSync(join(root, "app/api/health/route.ts"), "utf8"),
+  /cancelGenerate|DELETE \/api\/generations/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/health/route.ts"), "utf8"),
+  /downloadGate/
+);
 assert.match(genJobsStore, /downloadAllowedForJob|bakedDerivative/);
 assert.match(fs.readFileSync(join(root, "lib/t6Worker.ts"), "utf8"), /SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED\s*=\s*false/);
 assert.match(fs.readFileSync(join(root, "lib/t6Watermark.ts"), "utf8"), /t6WorkerReadiness|serverOwnedWorkerReady/);

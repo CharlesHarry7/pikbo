@@ -89,7 +89,6 @@ export default function CinemaPage() {
   return (
     <div className="relative min-h-screen pb-28">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[min(420px,50vh)] overflow-hidden opacity-45">
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video
           className="h-full w-full object-cover"
           autoPlay

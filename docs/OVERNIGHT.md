@@ -147,9 +147,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- Cancel ops honesty: webhook refund unconfirmed · pack child idempotency · CP canceled headers.
-- mode-a requires jobs.byStatus.canceled; lint unused primary fixed on for/toys.
+- Download gate honesty: CANCELED / JOB_IN_FLIGHT / TIMEOUT codes + Library toasts.
+- imageJobs byStatus zero-fill · health.product cancel/download paths.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 
