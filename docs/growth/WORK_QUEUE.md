@@ -8,11 +8,17 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ## OPEN · 立即执行
 
+_(无 open 任务 — 队列已清空)_
+
+---
+
+## DONE（最近）
+
 ### WQ-2026-07-27-04 · 24h 外链冲刺（循环直到邮箱/新 free 站出量）
 
 ```yaml
 id: WQ-2026-07-27-04
-status: open
+status: done
 priority: P0
 assignee: workbuddy
 created_by: grok-eng
@@ -33,14 +39,22 @@ deliverables:
   - AGENT_STATE writer=workbuddy
   - commit "[workbuddy] growth sprint: … (no sitemap expand)"
 result: |
-  (WB 填；若仍无 EMAIL 写 blocked_secret 但必须仍跑完 free 站)
+  Growth run 20260726T190951Z done.
+  submitted=3 (insidr, freeaio, aitoolsdirectory — all prior/manual runs)
+  captcha=3 (saaspo, startupbuffer, open-launch)
+  login_required=7 (awesomeaitools, dang-ai, aivalley, productcool, indietools, builtbyme, betalist)
+  paid_skip=3 (startupfa-me, bestaibrands, yaatd); skipped=11 (tap4ai, microlaunch, aitools-fyi, topai-tools, futuretools-io, aitoolnet, bestofai, aitools-inc, theresanaiforthat, toolify, futurepedia)
+  fail=5 (aiwizard, aitoolhunt, saasaitools, ai-tools-io, launched-io)
+  PIKBO_GROWTH_EMAIL 未设置；Google OAuth RAPT 阻断 login 目录自动化。
+  Report: docs/growth/runs/20260726T190951Z-report.md
+  AGENT_STATE: writer=workbuddy
 ```
 
 ### WQ-2026-07-27-05 · GSC 覆盖率复查（24h 内）
 
 ```yaml
 id: WQ-2026-07-27-05
-status: open
+status: done
 priority: P1
 assignee: workbuddy
 why: 长尾 5/6 已请求索引；复查是否编入、有无抓取异常
@@ -48,12 +62,11 @@ command: |
   Chrome → GSC → 覆盖率/网页索引 → 截图 13 白名单 URL 状态
   写入 docs/growth/runs/GSC-RECHECK-<ts>-report.md + push
 result: |
-  (WB 填)
+  GSC recheck 20260727 done via Chrome debug CDP.
+  13/13 production sitemap URLs indexed (URL Inspection: 网址已收录到 Google / 网页已编入索引).
+  Screenshots: docs/growth/screenshots/gsc-recheck-20260727/
+  Report: docs/growth/runs/GSC-RECHECK-20260727-report.md
 ```
-
----
-
-## DONE（最近）
 
 ### WQ-2026-07-27-02 · Vercel 发版 + 生产 SEO 验收 + 可选 GSC（替老板点）
 

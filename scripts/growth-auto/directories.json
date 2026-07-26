@@ -60,10 +60,10 @@
       "slug": "aivalley",
       "name": "AI Valley",
       "url": "https://aivalley.ai",
-      "submit_url": "https://aivalley.ai/submit/",
+      "submit_url": "https://aivalley.ai/submit-tool/",
       "free": true,
       "status_hint": "fail",
-      "note": "WB 20260727: WordPress Contact Form 7. Form fills OK but submit fails - form.submit() redirects to search page, button click redirects to /submit-prompts/ without success message. AJAX submission not triggered properly."
+      "note": "WB 20260727: CORRECTED submit URL from /submit/ (prompts page) to /submit-tool/ (AI tool submission). Form fields: Name, Email, Tool Name, Tool URL, Tool Description, Tool Short Description. CF7 form fills OK but actual Submit button click does not produce success response/output."
     },
     {
       "slug": "aiwizard",
@@ -181,6 +181,42 @@
       "free": true,
       "status_hint": "login_required",
       "note": "WB 20260727: Requires login. 'Continue with Google' button present."
+    },
+    {
+      "slug": "betalist",
+      "name": "BetaList",
+      "url": "https://betalist.com",
+      "submit_url": "https://betalist.com/submit",
+      "free": true,
+      "status_hint": "pending",
+      "note": "WB 20260727: Free startup directory. Submit page returns 200. May require login."
+    },
+    {
+      "slug": "startupbuffer",
+      "name": "StartupBuffer",
+      "url": "https://startupbuffer.com",
+      "submit_url": "https://startupbuffer.com/submit",
+      "free": true,
+      "status_hint": "pending",
+      "note": "WB 20260727: Free startup directory. Curl got 403 (likely Cloudflare), needs browser access."
+    },
+    {
+      "slug": "microlaunch",
+      "name": "MicroLaunch",
+      "url": "https://microlaunch.net",
+      "submit_url": "https://microlaunch.net/submit",
+      "free": false,
+      "status_hint": "paid_skip",
+      "note": "WB 20260727: PAID directory. Submit page is a landing page with paid tiers ($49 Pro Launch, $129 PH bundle). No free submission. Auto-detect false positive - corrected."
+    },
+    {
+      "slug": "open-launch",
+      "name": "OpenLaunch",
+      "url": "https://open-launch.com",
+      "submit_url": "https://open-launch.com/projects/submit",
+      "free": true,
+      "status_hint": "pending",
+      "note": "WB 20260727: Free product directory (Next.js). Submit URL is /projects/submit. May require login."
     },
     {
       "slug": "aitoolsdirectory-done",
