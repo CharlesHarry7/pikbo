@@ -37,7 +37,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T2 | Real fal sample clips / homepage demos | GPT | done | agent/gpt/homepage-demos | 6 original encoded demos; cached/no FAL cost; verified fal renders can replace assets later |
 | T3 | Keyword + preset expansion (long-tail SEO) | Claude | done | agent/claude/seo-keywords | +use-cases + toy-types |
 | T4 | Stripe webhook (renew/cancel plan) | Grok | done | agent/grok/ship-billing-launch | webhook + confirm + entitlements |
-| T5 | Supabase auth + durable credits | Grok | **blocked** | agent/gpt/product-core-integration | Hard-disabled: durable `generation_jobs` worker is not implemented; do not apply migration or enable Supabase mutations as a launch step |
+| T5 | Supabase auth + durable credits | Grok | **blocked** | agent/grok/durable-job-worker-v1 | Source-only worker RPC skeleton landed; provider integration, migration application, and launch switch remain blocked |
 | T-PHASE-D | Local async job ledger + controlled download API | Grok | review | main | process-memory generations + /api/downloads gate; durable queue still Supabase |
 | T6 | Server-side free watermark (ffmpeg) | Grok | todo | agent/grok/final-takeover | Raw Free download must remain disabled until file derivative is verified |
 | T7 | Private Vercel RC + later domain pikbo.ai | Grok | blocked | agent/grok/final-takeover | Prepare private preview; Vercel login and public DNS require boss authorization |

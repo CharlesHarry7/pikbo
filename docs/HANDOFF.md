@@ -4,10 +4,27 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] T5 durable job worker v1 skeleton (source-only)
+- Added migration `20260726130000_t5_durable_job_worker_v1.sql`: a
+  service-role-only atomic create+reserve RPC and terminal worker RPC. The
+  terminal RPC locks the durable job, then settles successful work or releases
+  failed/canceled work in the same transaction.
+- Replayed server idempotency keys return the original job/reservation without
+  reserving twice; competing terminal outcomes fail closed. Reservation expiry
+  continues to skip queued/running/succeeded `generation_jobs`.
+- This is deliberately **not launch ready**: no provider route, cookie flow,
+  migration application, or feature gate was enabled. Keep
+  `SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED=false` until real worker
+  integration has passed its database-backed tests.
+
+---
+
 ### 2026-07-26 — [grok] Home suite product-first + Flow Preview tag
 - SuiteEntryStrip: Generate · Seller · Modules · Recipes · Flow (Preview last).
 - SuiteDoorLinks: Seller/Modules/Library before Flow · Preview; i18n suite.preview = Preview.
 - Verified: typecheck · engine-smoke.
+
+---
 
 ### 2026-07-26 — [grok] Batch Preview PREVIEW_ROBOTS + AfterPath
 - `/supercomputer` + legacy pack=seller meta: `PREVIEW_ROBOTS`; GenerateAfterPath suite exits.

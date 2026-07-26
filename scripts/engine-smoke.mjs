@@ -2380,6 +2380,13 @@ const t5RpcMigration = fs.readFileSync(
   ),
   "utf8"
 );
+const t5WorkerMigration = fs.readFileSync(
+  join(
+    root,
+    "supabase/migrations/20260726130000_t5_durable_job_worker_v1.sql"
+  ),
+  "utf8"
+);
 assert.match(t5RpcMigration, /pikbo_schema_versions/);
 assert.match(t5RpcMigration, /credit_reservation_items/);
 assert.match(t5RpcMigration, /pikbo_credits_schema_probe/);
@@ -2388,6 +2395,7 @@ assert.match(t5RpcMigration, /pikbo_settle_reservation_item/);
 assert.match(t5RpcMigration, /pikbo_release_reservation_item/);
 assert.match(t5RpcMigration, /pikbo_expire_reservations/);
 assert.match(t5RpcMigration, /pikbo_migrate_guest_credits/);
+assert.match(t5RpcMigration, /'requiredVersion', 3/);
 assert.match(t5RpcMigration, /security definer/gi);
 assert.match(t5RpcMigration, /for update/gi);
 assert.match(t5RpcMigration, /when p_purpose = 'generation' then 10/);
@@ -2501,6 +2509,69 @@ assert.match(t5RpcMigration, /p_item_key <> 'generation'/);
 assert.match(
   t5RpcMigration,
   /j\.status in \('queued', 'running', 'succeeded'\)/
+);
+assert.match(t5WorkerMigration, /pikbo_create_generation_job_reservation/);
+assert.match(t5WorkerMigration, /pikbo_worker_finish_generation_job/);
+assert.match(t5WorkerMigration, /server_idempotency_key text/);
+assert.match(t5WorkerMigration, /create unique index[\s\S]+server_idempotency_key/);
+assert.match(t5WorkerMigration, /pg_advisory_xact_lock/);
+assert.match(t5WorkerMigration, /pikbo_reserve_credits/);
+assert.match(t5WorkerMigration, /pikbo_finish_reservation_item/);
+assert.match(t5WorkerMigration, /\('succeeded', 'failed', 'canceled'\)/);
+assert.match(t5WorkerMigration, /PIKBO_CREDITS:JOB_TERMINAL_CONFLICT/);
+assert.match(t5WorkerMigration, /'idempotent', true/);
+assert.match(t5WorkerMigration, /'idempotent', false/);
+assert.match(t5WorkerMigration, /revoke all[\s\S]+from public, anon, authenticated/);
+assert.match(t5WorkerMigration, /grant execute[\s\S]+to service_role/);
+assert.match(t5WorkerMigration, /^\s*begin;\s*$/im);
+assert.match(t5WorkerMigration, /^\s*commit;\s*$/im);
+
+// T5 worker contract examples: duplicate enqueue is a replay, competing
+// terminal outcomes conflict, and only terminal operations settle/release.
+function createWorkerJobModel(state, key, effectSlug) {
+  const existing = state.jobs.get(key);
+  if (existing) {
+    if (existing.effectSlug !== effectSlug) throw new Error("IDEMPOTENCY_CONFLICT");
+    return { ...existing, idempotent: true };
+  }
+  const job = { id: `job-${state.jobs.size + 1}`, effectSlug, status: "queued", idempotent: false };
+  state.jobs.set(key, job);
+  state.available -= 10;
+  state.reserved += 10;
+  return job;
+}
+function finishWorkerJobModel(job, terminalStatus) {
+  if (!new Set(["succeeded", "failed", "canceled"]).has(terminalStatus)) {
+    throw new Error("INVALID_JOB_TERMINAL_STATUS");
+  }
+  if (["succeeded", "failed", "canceled"].includes(job.status) && job.status !== terminalStatus) {
+    throw new Error("JOB_TERMINAL_CONFLICT");
+  }
+  return { ...job, status: terminalStatus, ledgerKind: terminalStatus === "succeeded" ? "settle" : "release" };
+}
+const workerModel = { available: 20, reserved: 0, jobs: new Map() };
+const firstWorkerJob = createWorkerJobModel(workerModel, "request-0001", "anime");
+const replayedWorkerJob = createWorkerJobModel(workerModel, "request-0001", "anime");
+assert.equal(workerModel.jobs.size, 1, "concurrent/retried enqueue must produce one job");
+assert.equal(workerModel.available, 10);
+assert.equal(workerModel.reserved, 10);
+assert.equal(replayedWorkerJob.id, firstWorkerJob.id);
+assert.equal(replayedWorkerJob.idempotent, true);
+assert.throws(
+  () => createWorkerJobModel(workerModel, "request-0001", "clay"),
+  /IDEMPOTENCY_CONFLICT/
+);
+const succeededWorkerJob = finishWorkerJobModel(firstWorkerJob, "succeeded");
+assert.equal(succeededWorkerJob.ledgerKind, "settle");
+assert.equal(finishWorkerJobModel(succeededWorkerJob, "succeeded").ledgerKind, "settle");
+assert.throws(
+  () => finishWorkerJobModel(succeededWorkerJob, "failed"),
+  /JOB_TERMINAL_CONFLICT/
+);
+assert.equal(finishWorkerJobModel(firstWorkerJob, "failed").ledgerKind, "release");
+assert.throws(
+  () => finishWorkerJobModel(firstWorkerJob, "running"),
+  /INVALID_JOB_TERMINAL_STATUS/
 );
 
 // Phase I payments readiness + checkout live-key / flag gates

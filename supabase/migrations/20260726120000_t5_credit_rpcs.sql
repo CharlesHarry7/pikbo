@@ -784,6 +784,20 @@ begin
     v_missing := array_append(v_missing, 'rpc:pikbo_expire_reservations');
   end if;
   if to_regprocedure(
+    'public.pikbo_create_generation_job_reservation(uuid,uuid,text,text)'
+  ) is null then
+    v_missing := array_append(
+      v_missing, 'rpc:pikbo_create_generation_job_reservation'
+    );
+  end if;
+  if to_regprocedure(
+    'public.pikbo_worker_finish_generation_job(uuid,public.generation_status,text,text)'
+  ) is null then
+    v_missing := array_append(
+      v_missing, 'rpc:pikbo_worker_finish_generation_job'
+    );
+  end if;
+  if to_regprocedure(
     'public.pikbo_reserve_credits(uuid,uuid,public.reservation_purpose,text)'
   ) is null then
     v_missing := array_append(v_missing, 'rpc:pikbo_reserve_credits');
@@ -806,8 +820,8 @@ begin
 
   return jsonb_build_object(
     'schemaVersion', v_version,
-    'requiredVersion', 2,
-    'ready', v_version >= 2 and cardinality(v_missing) = 0,
+    'requiredVersion', 3,
+    'ready', v_version >= 3 and cardinality(v_missing) = 0,
     'missing', to_jsonb(v_missing)
   );
 end;
