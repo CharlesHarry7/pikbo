@@ -42,7 +42,7 @@ export function AutoPlayVideo({
   desktopPlayMode = "viewport",
   focusable = true,
   label,
-  /** Defer <source> until first interaction — posters only on first paint. */
+  /** Defer <source> until near viewport or first interaction. */
   lazySources = false,
 }: {
   poster: string;
@@ -59,6 +59,25 @@ export function AutoPlayVideo({
   const ref = useRef<HTMLVideoElement>(null);
   const [sourcesOn, setSourcesOn] = useState(!lazySources || Boolean(eager));
   const wantPlay = useRef(false);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || !lazySources || sourcesOn) return;
+
+    // Keep every off-screen wall card poster-only. Arm its sources shortly
+    // before it reaches the viewport so scrolling stays responsive without
+    // turning the homepage into dozens of initial media requests.
+    const sourceIo = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setSourcesOn(true);
+        sourceIo.disconnect();
+      },
+      { threshold: 0, rootMargin: "240px 0px" }
+    );
+    sourceIo.observe(v);
+    return () => sourceIo.disconnect();
+  }, [lazySources, sourcesOn]);
 
   useEffect(() => {
     const v = ref.current;

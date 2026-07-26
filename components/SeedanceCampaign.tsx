@@ -101,6 +101,7 @@ export function SeedanceCampaign() {
                 mp4={d.mp4}
                 focusable={false}
                 desktopPlayMode="interaction"
+                lazySources
                 className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />

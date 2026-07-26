@@ -65,6 +65,7 @@ export function HomeViralPresetRail() {
                   mp4={d.mp4}
                   focusable={false}
                   desktopPlayMode="interaction"
+                  lazySources
                   className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out will-change-transform group-hover:scale-[1.07]"
                 />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />

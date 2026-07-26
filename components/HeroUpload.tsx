@@ -83,7 +83,7 @@ export function HeroUpload() {
           setHover(false);
           goWithFile(e.dataTransfer.files?.[0]);
         }}
-        className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 transition-all ${
+        className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 transition-all focus-within:ring-2 focus-within:ring-[#c8ff3d] focus-within:ring-offset-2 focus-within:ring-offset-black ${
           hover
             ? "border-[#c8ff3d] bg-[#c8ff3d]/15"
             : "border-[#c8ff3d]/50 bg-[#c8ff3d] hover:-translate-y-0.5 hover:brightness-105"
@@ -93,7 +93,10 @@ export function HeroUpload() {
           <span className="block text-sm font-black text-black">
             {busy ? "Opening Generate…" : "Upload photo & Generate"}
           </span>
-          <span className="mt-0.5 block text-[10px] font-semibold text-black/60">
+          <span
+            id="hero-upload-help"
+            className="mt-0.5 block text-[10px] font-semibold text-black/60"
+          >
             Recipe and image continue into Create
           </span>
         </span>
@@ -106,13 +109,23 @@ export function HeroUpload() {
         <input
           type="file"
           accept="image/*"
-          className="hidden"
+          className="sr-only"
           disabled={busy}
+          aria-label="Upload a photo of a toy you own to generate a video"
+          aria-describedby={
+            err ? "hero-upload-help hero-upload-error" : "hero-upload-help"
+          }
           onChange={(e) => goWithFile(e.target.files?.[0])}
         />
       </label>
       {err && (
-        <p className="mt-2 text-xs font-semibold text-rose-300">{err}</p>
+        <p
+          id="hero-upload-error"
+          role="alert"
+          className="mt-2 text-xs font-semibold text-rose-300"
+        >
+          {err}
+        </p>
       )}
     </div>
   );
