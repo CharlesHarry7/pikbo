@@ -4,19 +4,22 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 const playing = new Set<HTMLVideoElement>();
 
-function playbackBudget() {
+/** Desktop wall can hold a few muted clips; mobile stays tight for battery. */
+function playbackBudget(wallDense?: boolean) {
   if (typeof window === "undefined") return 2;
-  return window.matchMedia("(max-width: 768px)").matches ? 1 : 2;
+  const mobile = window.matchMedia("(max-width: 768px)").matches;
+  if (wallDense) return mobile ? 2 : 4;
+  return mobile ? 1 : 2;
 }
 
-function claim(v: HTMLVideoElement) {
+function claim(v: HTMLVideoElement, wallDense?: boolean) {
   if (playing.has(v)) return;
-  if (playing.size >= playbackBudget()) {
+  const budget = playbackBudget(wallDense);
+  while (playing.size >= budget) {
     const oldest = playing.values().next().value;
-    if (oldest && oldest !== v) {
-      oldest.pause();
-      playing.delete(oldest);
-    }
+    if (!oldest || oldest === v) break;
+    oldest.pause();
+    playing.delete(oldest);
   }
   playing.add(v);
   v.muted = true;
@@ -29,7 +32,10 @@ function release(v: HTMLVideoElement) {
 }
 
 /**
- * Viewport / interaction video. Wall: lazySources defers network until hover/tap (LCP).
+ * Viewport / interaction video.
+ * - interaction + lazySources: posters until hover/tap (default wall)
+ * - viewport + lazySources: load+play when card enters view (dense wall browse)
+ * - eager: hero / LCP
  */
 export function AutoPlayVideo({
   poster,
@@ -41,8 +47,13 @@ export function AutoPlayVideo({
   desktopPlayMode = "viewport",
   focusable = true,
   label,
-  /** Defer <source> until first interaction — posters only on first paint. */
+  /** Defer <source> until interaction or viewport entry. */
   lazySources = false,
+  /**
+   * Home wall dense mode: higher concurrent muted plays when cards scroll in.
+   * Only meaningful with desktopPlayMode="viewport".
+   */
+  wallDense = false,
 }: {
   poster: string;
   webm?: string;
@@ -54,6 +65,7 @@ export function AutoPlayVideo({
   focusable?: boolean;
   label?: string;
   lazySources?: boolean;
+  wallDense?: boolean;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [sourcesOn, setSourcesOn] = useState(!lazySources || Boolean(eager));
@@ -64,11 +76,11 @@ export function AutoPlayVideo({
     if (!v) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    // Interaction-only: no viewport autoplay (desktop + mobile walls).
+    // Interaction-only: no viewport autoplay (hover/tap walls).
     if (desktopPlayMode === "interaction" && !eager) {
       if (sourcesOn && wantPlay.current) {
         if (v.preload === "none") v.preload = "metadata";
-        claim(v);
+        claim(v, wallDense);
       }
       return () => {
         release(v);
@@ -77,7 +89,7 @@ export function AutoPlayVideo({
 
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
     if (eager && sourcesOn && (isMobile || desktopPlayMode === "viewport")) {
-      claim(v);
+      claim(v, wallDense);
     }
 
     const io = new IntersectionObserver(
@@ -86,18 +98,48 @@ export function AutoPlayVideo({
           if (!e.isIntersecting) release(v);
           return;
         }
-        if (!sourcesOn) return;
-        if (e.isIntersecting && e.intersectionRatio >= 0.35) claim(v);
-        else release(v);
+        // Viewport mode: mount sources when near/in view, then play.
+        if (e.isIntersecting && e.intersectionRatio >= 0.28) {
+          if (!sourcesOn) {
+            setSourcesOn(true);
+            return;
+          }
+          if (v.preload === "none") v.preload = "metadata";
+          claim(v, wallDense);
+        } else if (!e.isIntersecting) {
+          release(v);
+        }
       },
-      { threshold: [0, 0.12, 0.35, 0.65], rootMargin: "80px 0px" }
+      {
+        threshold: [0, 0.12, 0.28, 0.45, 0.65],
+        rootMargin: wallDense ? "120px 0px" : "80px 0px",
+      }
     );
     io.observe(v);
     return () => {
       io.disconnect();
       release(v);
     };
-  }, [desktopPlayMode, eager, mp4, sourcesOn]);
+  }, [desktopPlayMode, eager, mp4, sourcesOn, wallDense]);
+
+  // After lazy sources flip on from viewport, try play immediately.
+  useEffect(() => {
+    if (!sourcesOn || desktopPlayMode !== "viewport") return;
+    const v = ref.current;
+    if (!v) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // If already in view, claim after sources attach.
+    const rect = v.getBoundingClientRect();
+    const vh = window.innerHeight || 1;
+    const visible =
+      rect.bottom > 0 && rect.top < vh && rect.height > 0
+        ? Math.min(rect.bottom, vh) - Math.max(rect.top, 0) >= rect.height * 0.28
+        : false;
+    if (visible || eager) {
+      if (v.preload === "none") v.preload = "metadata";
+      claim(v, wallDense);
+    }
+  }, [sourcesOn, desktopPlayMode, eager, wallDense, mp4]);
 
   function playFromInteraction() {
     if (desktopPlayMode !== "interaction") return;
@@ -109,7 +151,7 @@ export function AutoPlayVideo({
     const video = ref.current;
     if (!video) return;
     if (video.preload === "none") video.preload = "metadata";
-    claim(video);
+    claim(video, wallDense);
   }
 
   function pauseFromInteraction() {
@@ -137,8 +179,7 @@ export function AutoPlayVideo({
       muted
       loop
       playsInline
-      // 哥飞: 首屏关键视频用 metadata；墙卡片仍 none 直到交互
-      preload={eager ? "metadata" : "none"}
+      preload={eager || (wallDense && sourcesOn) ? "metadata" : "none"}
       tabIndex={
         focusable && desktopPlayMode === "interaction" ? 0 : undefined
       }

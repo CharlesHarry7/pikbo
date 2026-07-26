@@ -2457,7 +2457,10 @@ const autoPlaySrc = fs.readFileSync(
   join(root, "components/AutoPlayVideo.tsx"),
   "utf8"
 );
-assert.match(autoPlaySrc, /preload=\{eager \? "metadata" : "none"\}/);
+assert.match(
+  autoPlaySrc,
+  /preload=\{eager[^}]*"metadata" : "none"\}|preload=\{eager \? "metadata" : "none"\}/
+);
 assert.match(autoPlaySrc, /lazySources/);
 const projectPage = fs.readFileSync(
   join(root, "app/projects/[slug]/page.tsx"),
@@ -2990,9 +2993,13 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /TOY_WALL_FILTERS|生成同款|360°展示|data-home-wall|sticky/
+  /TOY_WALL_FILTERS|生成同款|360°展示|data-home-wall|sticky|wallDense|viewport-dense/
 );
 assert.match(homePageSrc, /HomeCinemaHero items=|SoftLaunchStrip/);
+assert.match(
+  fs.readFileSync(join(root, "components/AutoPlayVideo.tsx"), "utf8"),
+  /wallDense|playbackBudget/
+);
 
 // Five-step toy identity + delivery honesty + landing assetId + workflows
 const toyIdSrc = fs.readFileSync(join(root, "lib/toyIdentity.ts"), "utf8");

@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Home wall viewport multi-play + denser toy chrome
+- `AutoPlayVideo`: `wallDense` + viewport lazy load/play (budget 4 desktop / 2
+  mobile); sources attach on intersection.
+- Home wall: `desktopPlayMode=viewport` + wallDense; punchier mint/sticky chips;
+  tighter grid; always-on 生成同款.
+
 ### 2026-07-26 — [grok] Home cinema dwell: multi-clip + sticky wall
 - Hero rotates ≤6 Lab clips (7s) + dots + scroll cue; SoftLaunch under wall.
 - Wall: sticky chips with counts, INITIAL 24, denser grid, 生成同款 always on.

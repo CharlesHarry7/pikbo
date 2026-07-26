@@ -94,24 +94,26 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
     <section
       id="toy-wall"
       data-home-wall="toy-video"
-      className="scroll-mt-14 border-b border-white/10 bg-black"
+      data-wall-autoplay="viewport-dense"
+      className="scroll-mt-14 border-b border-white/10 bg-[radial-gradient(ellipse_at_top,_rgba(200,255,61,0.06),_transparent_55%),#000]"
     >
       <div className="px-2 pt-10 sm:px-3 sm:pt-12">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3 px-2">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]/85">
-              Toy video wall · {items.length}
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+              潮玩视频墙 · {items.length} clips
             </p>
-            <h2 className="font-display mt-1 text-2xl font-black uppercase tracking-tight text-white sm:text-4xl">
-              先看潮玩怎么动
+            <h2 className="font-display mt-1 text-3xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-5xl">
+              先看潮玩
+              <span className="text-[#c8ff3d]">怎么动</span>
             </h2>
-            <p className="mt-1 max-w-xl text-sm text-white/40">
-              官方 Lab · 点卡片生成同款 · 不是 UGC
+            <p className="mt-1.5 max-w-xl text-sm text-white/45">
+              划过即播 · 官方 Lab · 点「生成同款」换成你的玩具
             </p>
           </div>
           <Link
             href="/effects"
-            className="text-xs font-bold text-[#c8ff3d] hover:underline"
+            className="rounded-full border border-[#c8ff3d]/35 px-3 py-1.5 text-xs font-bold text-[#c8ff3d] transition hover:bg-[#c8ff3d]/10"
           >
             全部配方 →
           </Link>
@@ -132,7 +134,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
       </div>
 
       {/* Sticky category chips — stay while scrolling the wall */}
-      <div className="sticky top-14 z-20 border-y border-white/[0.06] bg-black/85 px-2 py-2.5 backdrop-blur-md sm:px-3">
+      <div className="sticky top-14 z-20 border-y border-[#c8ff3d]/15 bg-black/90 px-2 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.65)] backdrop-blur-md sm:px-3">
         <div className="flex gap-2 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TOY_WALL_FILTERS.map((c) => {
             const n = counts[c.id] ?? 0;
@@ -146,10 +148,10 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                   setFilter(c.id);
                   setExpanded(false);
                 }}
-                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[11px] font-bold tracking-wide transition disabled:cursor-not-allowed disabled:opacity-30 ${
+                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[11px] font-black uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-30 ${
                   filter === c.id
-                    ? "border-[#c8ff3d] bg-[#c8ff3d] text-black"
-                    : "border-white/10 bg-white/[0.04] text-white/65 hover:border-white/25 hover:text-white"
+                    ? "border-[#c8ff3d] bg-[#c8ff3d] text-black shadow-[0_0_20px_rgba(200,255,61,0.35)]"
+                    : "border-white/12 bg-white/[0.05] text-white/70 hover:border-[#c8ff3d]/40 hover:text-white"
                 }`}
               >
                 {c.label}
@@ -166,12 +168,12 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
         </div>
       </div>
 
-      <div className="px-1.5 py-3 sm:px-2 sm:py-4">
-        <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-1.5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+      <div className="px-1 py-3 sm:px-1.5 sm:py-4">
+        <div className="grid grid-cols-2 gap-0.5 sm:grid-cols-3 sm:gap-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
           {visible.map((item, i) => (
             <article
               key={item.id}
-              className="group relative aspect-[3/4] overflow-hidden rounded-lg bg-zinc-900 transition duration-300 hover:-translate-y-0.5 hover:z-[1] hover:shadow-[0_14px_44px_rgba(0,0,0,0.55)] sm:rounded-xl sm:aspect-[9/14]"
+              className="group relative aspect-[3/4] overflow-hidden rounded-md bg-zinc-950 ring-1 ring-white/[0.06] transition duration-300 hover:-translate-y-1 hover:z-[1] hover:ring-[#c8ff3d]/45 hover:shadow-[0_0_0_1px_rgba(200,255,61,0.25),0_16px_48px_rgba(0,0,0,0.6)] sm:rounded-lg sm:aspect-[9/14]"
             >
               <Link
                 href={item.href}
@@ -191,17 +193,21 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                   webm={item.demo.webm}
                   mp4={item.demo.mp4}
                   focusable={false}
-                  desktopPlayMode="interaction"
+                  /* Viewport dense: muted multi-play while browsing */
+                  desktopPlayMode="viewport"
                   lazySources
+                  wallDense
                   label={`${item.title} — Lab demo`}
-                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.06]"
+                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.07]"
                   style={{
                     filter:
                       i % 5 === 1
-                        ? "saturate(1.12)"
+                        ? "saturate(1.2) contrast(1.05)"
                         : i % 5 === 2
-                          ? "contrast(1.06)"
-                          : undefined,
+                          ? "contrast(1.1) brightness(1.04)"
+                          : i % 5 === 3
+                            ? "saturate(1.08)"
+                            : undefined,
                     objectPosition:
                       i % 3 === 0
                         ? "center top"
@@ -210,11 +216,12 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                           : "center center",
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/15 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent opacity-90" />
+                <div className="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100 bg-[radial-gradient(circle_at_50%_80%,rgba(200,255,61,0.12),transparent_55%)]" />
               </Link>
 
               <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 p-2 sm:p-2.5">
-                <p className="line-clamp-2 text-[10px] font-bold uppercase leading-tight tracking-wide text-white sm:text-[11px]">
+                <p className="line-clamp-2 text-[10px] font-black uppercase leading-tight tracking-wide text-white drop-shadow sm:text-[11px]">
                   {item.title}
                 </p>
                 <Link
@@ -227,7 +234,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                       meta: { source: "toy_wall_remake" },
                     })
                   }
-                  className="pointer-events-auto mt-1.5 inline-flex rounded-full bg-[#c8ff3d] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black opacity-100 shadow-[0_0_14px_rgba(200,255,61,0.3)] transition sm:text-[10px] sm:opacity-90 sm:group-hover:opacity-100"
+                  className="pointer-events-auto mt-1.5 inline-flex rounded-full bg-[#c8ff3d] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-black shadow-[0_0_18px_rgba(200,255,61,0.45)] transition sm:text-[10px]"
                 >
                   生成同款
                 </Link>
