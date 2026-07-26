@@ -1,3 +1,7 @@
+# WorkBuddy 全自动增长
+
+**超长完整版（推荐整段丢给 WorkBuddy）：** `docs/growth/WORKBUDDY_MEGA_PROMPT.md`
+
 # WorkBuddy 全自动增长（100% 无人 · Chrome · GitHub 同步 · 老板不传话）
 
 **只把下方 fenced 代码块整段丢给 WorkBuddy。**  
