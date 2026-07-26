@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Landing result meta + T6 download policy labels
+- `downloadPolicyLabel` / `downloadBlockedCtaLabel` (Held for T6 bake · Free raw
+  blocked; Demo open · Lab). Create + Landing share helpers.
+- LandingToolPanel: Create-parity result metadata (recipe/model/settlement/
+  policy/cost/task id) + server-echo note.
+- Settings product-first Seller Pack CTA. Smoke pure labels + markers.
+
 ### 2026-07-26 — [grok] CD: wire pack bible into generate extra
 - BatchStudio `executeJob`: `composeExtraWithIdentity(toyIdentity)` on every
   pack child; real `ownsRights` (not hard-true); Director Plan shows bible +

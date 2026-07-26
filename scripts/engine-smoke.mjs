@@ -869,8 +869,12 @@ assert.match(createStudio, /makeVariant/);
 assert.equal(canDownloadResult({ demo: false, watermark: true }), false);
 assert.equal(canDownloadResult({ demo: true, watermark: true }), true);
 assert.equal(canDownloadResult({ demo: false, watermark: false }), true);
-assert.match(createStudio, /canDownloadResult|Download · blocked \(Free raw\)/);
+assert.match(
+  createStudio,
+  /canDownloadResult|downloadBlockedCtaLabel|Download held · T6 bake/
+);
 assert.match(createStudio, /freeLiveDownloadBlockReason|Free Mini live/);
+assert.match(createStudio, /downloadPolicyLabel/);
 // 5) Seller Pack single-item retry keeps siblings (retryJob maps by slug only)
 assert.match(batchStudio, /previous\.map\(\(job\) => \(job\.slug === slug/);
 // B3: server echo fields on generate success
@@ -902,7 +906,27 @@ const createTrust = fs.readFileSync(
 );
 assert.match(createTrust, /export function requestCreditStateFromFailure/);
 assert.match(createTrust, /export function canDownloadResult/);
+assert.match(createTrust, /export function downloadPolicyLabel/);
+assert.match(createTrust, /export function downloadBlockedCtaLabel/);
 assert.match(createTrust, /export function buildGenerationSpec/);
+// Pure policy labels stay honest for Free live (T6)
+function downloadPolicyLabel(opts) {
+  if (opts.demo) return "Demo open · Lab";
+  if (opts.downloadAllowed) return "Allowed";
+  return "Held for T6 bake · Free raw blocked";
+}
+assert.equal(
+  downloadPolicyLabel({ demo: false, downloadAllowed: false }),
+  "Held for T6 bake · Free raw blocked"
+);
+assert.equal(
+  downloadPolicyLabel({ demo: true, downloadAllowed: true }),
+  "Demo open · Lab"
+);
+assert.equal(
+  downloadPolicyLabel({ demo: false, downloadAllowed: true }),
+  "Allowed"
+);
 assert.match(createStudio, /lastRequestCreditState/);
 assert.match(createStudio, /preserveRequestSettlementOnVersionRestore/);
 
@@ -2012,8 +2036,13 @@ const landingTool = fs.readFileSync(
 assert.match(landingTool, /canDownloadResult/);
 assert.match(
   landingTool,
-  /Download blocked · Free raw|freeLiveDownloadBlockReason/
+  /downloadBlockedCtaLabel|Download held · T6 bake|freeLiveDownloadBlockReason/
 );
+assert.match(landingTool, /downloadPolicyLabel/);
+assert.match(landingTool, /data-landing-result-meta=["']server-echo["']/);
+assert.match(landingTool, /data-download-policy=/);
+assert.match(landingTool, /requestCreditStateFromSuccess/);
+assert.match(landingTool, /costCredits/);
 assert.match(landingTool, /\/api\/downloads\//);
 assert.match(landingTool, /isSafeDeliverableUrl/);
 assert.match(landingTool, /isSafeDeliverableUrl\(videoUrl\)/);
@@ -2024,6 +2053,11 @@ assert.match(
   /Free Mini raw provider URL is not a deliverable|downloadAllowed/
 );
 assert.match(createStudio, /shareX[\s\S]{0,400}downloadAllowed|!downloadAllowed/);
+assert.match(createStudio, /data-download-policy=/);
+assert.match(
+  fs.readFileSync(join(root, "app/settings/page.tsx"), "utf8"),
+  /data-settings-path=["']product-first["']/
+);
 
 // Phase H + product-first: /projects/[slug] noindex cold-start; suite CTAs Seller first
 const projectPageSrc = fs.readFileSync(
@@ -3540,6 +3574,12 @@ assert.match(imageJobsLib, /sweepTimedOutImageJobs/);
 assert.match(imageJobsLib, /refund unconfirmed/);
 assert.match(imageJobsLib, /imageJobInFlightRetryAfterSec/);
 assert.match(imageJobsLib, /listImageJobCountsForSession/);
+// Still cancel ledger (parity with generationJobs.cancelJob)
+assert.match(imageJobsLib, /cancelImageJob/);
+assert.match(imageJobsLib, /"canceled"/);
+assert.match(imageJobsLib, /findImageJobByRequestOrId/);
+assert.match(imageJobsLib, /status === "canceled"|Respect ledger cancel/);
+
 const imageRouteHead = fs.readFileSync(
   join(root, "app/api/image/route.ts"),
   "utf8"
@@ -3547,6 +3587,19 @@ const imageRouteHead = fs.readFileSync(
 assert.match(imageRouteHead, /export async function HEAD/);
 assert.match(imageRouteHead, /X-Pikbo-Image-Jobs-Open/);
 assert.match(imageRouteHead, /imageJobInFlightRetryAfterSec/);
+assert.match(imageRouteHead, /X-Pikbo-Image-Jobs-Canceled/);
+assert.match(imageRouteHead, /export async function DELETE/);
+assert.match(imageRouteHead, /cancelImageJob/);
+assert.match(imageRouteHead, /prior\.status === "canceled"/);
+// imageClientSrc loaded earlier (postImageWithRetry block)
+assert.match(imageClientSrc, /cancelImageLedger/);
+assert.match(imageClientSrc, /method:\s*["']DELETE["']/);
+assert.match(imageClientSrc, /keepalive:\s*true/);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /downloadPolicyLabel|downloadBlockedCtaLabel/
+);
+
 assert.match(
   fs.readFileSync(join(root, "components/CommandPalette.tsx"), "utf8"),
   /Lab sample · 0 credits/

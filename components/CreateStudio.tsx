@@ -33,6 +33,8 @@ import { parseRemixSearchParams } from "@/lib/remixIntent";
 import {
   buildGenerationSpec,
   canDownloadResult,
+  downloadBlockedCtaLabel,
+  downloadPolicyLabel,
   isPlayableResultVideoUrl,
   freeLiveDownloadBlockReason,
   internSourceImage,
@@ -2605,7 +2607,10 @@ export function CreateStudio({
                       title="Unsafe deliverable URL — download blocked"
                       className="btn btn-primary w-full max-w-sm cursor-not-allowed px-6 py-3.5 text-sm font-black opacity-50 sm:w-auto sm:min-w-[14rem]"
                     >
-                      Download · blocked (unsafe URL)
+                      {downloadBlockedCtaLabel({
+                        downloadAllowed: true,
+                        unsafeUrl: true,
+                      })}
                     </button>
                   ) : (
                     <button
@@ -2614,7 +2619,7 @@ export function CreateStudio({
                       title={freeLiveDownloadBlockReason()}
                       className="btn btn-primary w-full max-w-sm cursor-not-allowed px-6 py-3.5 text-sm font-black opacity-50 sm:w-auto sm:min-w-[14rem]"
                     >
-                      Download · blocked (Free raw)
+                      {downloadBlockedCtaLabel({ downloadAllowed: false })}
                     </button>
                   )}
                   <div className="flex flex-wrap items-center justify-center gap-2">
@@ -2730,12 +2735,17 @@ export function CreateStudio({
                   </div>
                   <div>
                     <dt className="text-[var(--fg-dim)]">Download policy</dt>
-                    <dd className="font-semibold text-[var(--fg)]">
-                      {downloadAllowed
-                        ? demo
-                          ? "Demo open"
-                          : "Allowed"
-                        : "Blocked · Free raw"}
+                    <dd
+                      className="font-semibold text-[var(--fg)]"
+                      data-download-policy={
+                        downloadAllowed
+                          ? demo
+                            ? "demo-open"
+                            : "allowed"
+                          : "t6-held"
+                      }
+                    >
+                      {downloadPolicyLabel({ demo, downloadAllowed })}
                     </dd>
                   </div>
                   {typeof activeVersion?.costCredits === "number" ? (
