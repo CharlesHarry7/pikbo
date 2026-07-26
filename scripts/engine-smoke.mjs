@@ -2573,6 +2573,15 @@ assert.doesNotMatch(
   library,
   /Open result[\s\S]{0,120}href=\{\s*item\.requestId/
 );
+// downloadVideoFile: never window.open controlled /api/downloads on fetch fail
+const historyLibSrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
+assert.match(historyLibSrc, /downloadVideoFile|classifyDownloadHead/);
+assert.match(historyLibSrc, /return ["']blocked["']/);
+assert.ok(
+  historyLibSrc.includes("/api/downloads/") &&
+    historyLibSrc.includes('return "blocked"'),
+  "downloadVideoFile must block /api/downloads open-on-fail"
+);
 assert.match(library, /downloadSessionJob|onDownload/);
 assert.match(
   fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8"),

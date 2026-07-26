@@ -4,6 +4,10 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] downloadVideoFile never opens /api/downloads JSON tabs
+- On blob-fetch failure for controlled `/api/downloads/*`, return `blocked`
+  instead of `window.open` (403/409 is JSON, not MP4). Protects Pack multi-save.
+
 ### 2026-07-26 — [grok] Profile refund honesty + viral rail Lab ≥4
 - ProfilePanel: Live fail refunds · TIMEOUT/cancel unconfirmed (Settings parity).
 - HomeViralPresetRail: Official · cached + provisional Lab ≥4 chips.

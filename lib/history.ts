@@ -301,6 +301,14 @@ export async function downloadVideoFile(
     try {
       // Re-check: never open unsafe schemes even on fetch failure path.
       if (!isSafeDeliverableUrl(url)) return "unsafe";
+      // Controlled /api/downloads GET is JSON on failure (403/409) — never open a
+      // new tab as "fallback" or users see error JSON instead of a video file.
+      if (
+        url.startsWith("/api/downloads/") ||
+        url.includes("/api/downloads/")
+      ) {
+        return "blocked";
+      }
       window.open(url, "_blank", "noopener,noreferrer");
       return "fallback";
     } catch {
