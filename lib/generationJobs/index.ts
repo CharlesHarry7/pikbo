@@ -1,4 +1,5 @@
 export type {
+  BakedWatermarkDerivative,
   GenerationJob,
   GenerationJobStatus,
   PublicGenerationJob,
@@ -17,6 +18,7 @@ export {
   recordFailedGenerate,
   toPublicJob,
   downloadAllowedForJob,
+  publicVideoUrlForJob,
   forkRetryJob,
   cancelJob,
   findJobByRequestOrId,

@@ -39,7 +39,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T4 | Stripe webhook (renew/cancel plan) | Grok | done | agent/grok/ship-billing-launch | webhook + confirm + entitlements |
 | T5 | Supabase auth + durable credits | Grok | **blocked** | agent/grok/durable-job-worker-v1 | Source-only worker RPC skeleton landed; provider integration, migration application, and launch switch remain blocked |
 | T-PHASE-D | Local async job ledger + controlled download API | Grok | review | main | process-memory generations + /api/downloads gate; durable queue still Supabase |
-| T6 | Server-side free watermark (ffmpeg) | Grok | todo | agent/grok/final-takeover | Raw Free download must remain disabled until file derivative is verified |
+| T6 | Server-side free watermark (ffmpeg) | Grok | **blocked** | agent/grok/t6-watermark-worker-v1 | Source-only server-owned derivative worker skeleton; Free raw URLs remain hidden/blocked until persistent worker + ffmpeg/ffprobe proof |
 | T7 | Private Vercel RC + later domain pikbo.ai | Grok | blocked | agent/grok/final-takeover | Prepare private preview; Vercel login and public DNS require boss authorization |
 | FP0 | First-principles nav + Mini truth + doctrine | Grok | done | main | AppShell primary/more; docs/FIRST_PRINCIPLES.md |
 | FP1 | critical-path smoke script | Grok | done | main | `npm run critical-path` |
@@ -75,7 +75,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T28 | Pricing conversion copy A/B | GPT | done | agent/gpt/pricing-mobile | Outcome default; `?copy=cost` cost-control variant; C1–C5 aligns active 1 / 5 / 15 contract |
 | T29 | Homepage first-screen 390px acceptance + polish | GPT | done | agent/gpt/pricing-mobile | No x-overflow; primary CTA visible; duplicate home floating CTA removed; accessible demo controls |
 | T30 | Pricing UI matches active credit contract | GPT | done | agent/gpt/pricing-truth-main | Free 1 / Creator ~5 / Shop ~15; billing gate and future model-aware weights remain explicit |
-| T6 | Server-side free watermark (ffmpeg) | Grok | todo | agent/grok/final-takeover | After Wave B/CI; file-level proof required |
+| T6 | Server-side free watermark (ffmpeg) | Grok | **blocked** | agent/grok/t6-watermark-worker-v1 | Source-only worker skeleton; file-level proof requires persistent worker plus ffmpeg/ffprobe |
 
 ---
 

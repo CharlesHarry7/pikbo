@@ -77,6 +77,11 @@ function successFromJob(
   replay: boolean
 ): GenerateSuccess {
   const demo = Boolean(job.demo);
+  // Free live provider output stays server-only until a verified baked
+  // derivative exists. The controlled endpoint will honestly block instead of
+  // leaking/redirecting the provider URL while T6 remains hard-disabled.
+  const customerVideoUrl =
+    job.watermark && !demo ? `/api/downloads/${encodeURIComponent(job.id)}` : job.videoUrl!;
   const outcome =
     job.creditsOutcome === "0 cached" || job.creditsOutcome === "10 used"
       ? job.creditsOutcome
@@ -84,7 +89,7 @@ function successFromJob(
         ? ("0 cached" as const)
         : ("10 used" as const);
   return {
-    videoUrl: job.videoUrl!,
+    videoUrl: customerVideoUrl,
     demo,
     watermark: job.watermark,
     model: job.model || (demo ? "demo-cached" : "unknown"),
@@ -593,7 +598,11 @@ export async function POST(req: Request) {
         /* best-effort */
       }
       const payload: GenerateSuccess = {
-        videoUrl,
+        // Never expose the raw Free provider URL. Paid/raw behavior is kept
+        // unchanged; Free delivery waits for a verified T6 derivative.
+        videoUrl: plan.watermark
+          ? `/api/downloads/${encodeURIComponent(ledgerJobId || result.requestId || "unavailable")}`
+          : videoUrl,
         demo: false,
         watermark: plan.watermark,
         model,

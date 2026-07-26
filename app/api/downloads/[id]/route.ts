@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { ensureSession } from "@/lib/session";
-import { findJobByRequestOrId, sweepTimedOutJobs } from "@/lib/generationJobs";
 import {
-  canDownloadResult,
+  downloadAllowedForJob,
+  findJobByRequestOrId,
+  sweepTimedOutJobs,
+} from "@/lib/generationJobs";
+import {
   freeLiveDownloadBlockReason,
   isSafeDeliverableUrl,
 } from "@/lib/createTrust";
-import { bakeWatermarkedVideo, watermarkWorkerUrl } from "@/lib/t6Bake";
 import { t6Report } from "@/lib/t6Watermark";
 
 export const runtime = "nodejs";
@@ -72,11 +74,13 @@ function gateDownload(
       },
     };
   }
-  // Live recompute — do not trust job.downloadAllowed frozen at success time.
-  // Worker URL / PIKBO_T6_FILE_BAKE can flip after the row was written.
-  const allowed = canDownloadResult({
+  // Live recompute — only an attached, verified owned derivative can unlock
+  // a Free live delivery. Worker URLs and operator flags never unlock raw.
+  const allowed = downloadAllowedForJob({
     demo: job.demo,
     watermark: job.watermark,
+    status: job.status,
+    bakedDerivative: job.bakedDerivative,
   });
   if (!allowed) {
     const t6 = t6Report();
@@ -93,20 +97,24 @@ function gateDownload(
       },
     };
   }
-  if (!isSafeDeliverableUrl(job.videoUrl)) {
+  const deliverable =
+    job.watermark && !job.demo
+      ? job.bakedDerivative?.deliveryPath
+      : job.videoUrl;
+  if (!deliverable || !isSafeDeliverableUrl(deliverable)) {
     return {
       ok: false,
       status: 422,
       body: {
         ok: false,
         code: "UNSAFE_URL",
-        error: "Deliverable URL is not a safe redirect target",
+        error: "Verified owned derivative is not a safe deliverable",
       },
     };
   }
   return {
     ok: true,
-    videoUrl: job.videoUrl,
+    videoUrl: deliverable,
     demo: job.demo,
     watermark: job.watermark,
   };
@@ -114,8 +122,8 @@ function gateDownload(
 
 /**
  * Phase E gate — controlled download authorization.
- * Free live raw provider URLs are never returned (T6 still blocked for bake).
- * Cached demos and paid (no watermark) may redirect to the known output URL.
+ * Free live raw provider URLs are never returned. Cached demos and paid
+ * (no-watermark) outputs may redirect to their known output URL.
  * Accepts job id or provider requestId (Create/Library may store either).
  */
 export async function GET(req: Request, { params }: Props) {
@@ -126,44 +134,8 @@ export async function GET(req: Request, { params }: Props) {
     return NextResponse.json(gate.body, { status: gate.status });
   }
 
-  // Free live + watermark: never hand raw provider URL unless operator force-ready.
-  let deliverable = gate.videoUrl;
-  const freeLiveWatermark = gate.watermark && !gate.demo;
-  const forceBakeReady = process.env.PIKBO_T6_FILE_BAKE === "1";
-  if (freeLiveWatermark && !forceBakeReady) {
-    const worker = watermarkWorkerUrl();
-    if (!worker) {
-      // Defense: canDownloadResult should already have blocked — never raw free.
-      return NextResponse.json(
-        {
-          ok: false,
-          code: "DOWNLOAD_BLOCKED",
-          error: freeLiveDownloadBlockReason(),
-          t6: "blocked",
-        },
-        { status: 403 }
-      );
-    }
-    const baked = await bakeWatermarkedVideo({
-      videoUrl: absoluteDeliverableUrl(req, gate.videoUrl),
-      jobId: id,
-    });
-    if (!baked.ok) {
-      return NextResponse.json(
-        {
-          ok: false,
-          code: "T6_BAKE_FAILED",
-          error: baked.error,
-          t6: "bake_failed",
-        },
-        { status: 502 }
-      );
-    }
-    deliverable = baked.bakedUrl;
-  }
-
   // Absolute URL so relative /demos/* never fail as open redirects / invalid Location.
-  const target = absoluteDeliverableUrl(req, deliverable);
+  const target = absoluteDeliverableUrl(req, gate.videoUrl);
   return NextResponse.redirect(target, 302);
 }
 
@@ -190,11 +162,6 @@ export async function HEAD(_req: Request, { params }: Props) {
       },
     });
   }
-  const needsBake =
-    gate.watermark &&
-    !gate.demo &&
-    process.env.PIKBO_T6_FILE_BAKE !== "1" &&
-    Boolean(watermarkWorkerUrl());
   return new NextResponse(null, {
     status: 200,
     headers: {
@@ -202,7 +169,7 @@ export async function HEAD(_req: Request, { params }: Props) {
       "X-Pikbo-Demo": gate.demo ? "1" : "0",
       "X-Pikbo-Watermark": gate.watermark ? "1" : "0",
       "X-Pikbo-T6": t6.freeLiveRawDownload,
-      "X-Pikbo-Bake": needsBake ? "1" : "0",
+      "X-Pikbo-Bake": "0",
       "Cache-Control": "no-store",
     },
   });

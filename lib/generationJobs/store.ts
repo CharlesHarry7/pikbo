@@ -5,7 +5,9 @@
  */
 
 import { canDownloadResult, isSafeDeliverableUrl } from "@/lib/createTrust";
+import { t6OwnedDeliveryPath } from "@/lib/t6Worker";
 import type {
+  BakedWatermarkDerivative,
   GenerationJob,
   GenerationJobStatus,
   PublicGenerationJob,
@@ -64,9 +66,40 @@ export function downloadAllowedForJob(opts: {
   demo: boolean;
   watermark: boolean;
   status: GenerationJobStatus;
+  bakedDerivative?: BakedWatermarkDerivative;
 }): boolean {
   if (opts.status !== "succeeded") return false;
-  return canDownloadResult({ demo: opts.demo, watermark: opts.watermark });
+  const bakedDerivativeVerified =
+    opts.bakedDerivative?.status === "succeeded" &&
+    opts.bakedDerivative.contentType === "video/mp4" &&
+    Boolean(opts.bakedDerivative.deliveryPath) &&
+    opts.bakedDerivative.deliveryPath ===
+      t6OwnedDeliveryPath(opts.bakedDerivative.objectKey) &&
+    Boolean(opts.bakedDerivative.sourceChecksum) &&
+    Boolean(opts.bakedDerivative.outputChecksum) &&
+    opts.bakedDerivative.probe?.bakedMarkSignal === true;
+  return canDownloadResult({
+    demo: opts.demo,
+    watermark: opts.watermark,
+    bakedDerivativeVerified,
+  });
+}
+
+/** Never disclose a raw Free provider URL in public job representations. */
+export function publicVideoUrlForJob(job: GenerationJob): string | undefined {
+  if (job.demo || !job.watermark) return job.videoUrl;
+  const derivative = job.bakedDerivative;
+  if (
+    derivative?.status === "succeeded" &&
+    derivative.contentType === "video/mp4" &&
+    derivative.probe?.bakedMarkSignal === true &&
+    derivative.deliveryPath &&
+    derivative.deliveryPath === t6OwnedDeliveryPath(derivative.objectKey) &&
+    isSafeDeliverableUrl(derivative.deliveryPath)
+  ) {
+    return derivative.deliveryPath;
+  }
+  return undefined;
 }
 
 /** Lookup by client idempotency key (session-scoped). */
@@ -311,6 +344,7 @@ export function updateJob(
       demo: next.demo,
       watermark: next.watermark,
       status: next.status,
+      bakedDerivative: next.bakedDerivative,
     });
   }
   jobs.set(id, next);
@@ -585,14 +619,15 @@ export function toPublicJob(
   const { sessionId: _s, downloadAllowed: _frozen, ...rest } = job;
   void _s;
   void _frozen;
-  // Recompute T6 download gate at read time — env (worker URL / force bake)
-  // can change after the job row was frozen at success.
+  // Recompute from verified derivative metadata, never an operator env flag.
   return {
     ...rest,
+    videoUrl: publicVideoUrlForJob(job),
     downloadAllowed: downloadAllowedForJob({
       demo: job.demo,
       watermark: job.watermark,
       status: job.status,
+      bakedDerivative: job.bakedDerivative,
     }),
     owned: true,
   };

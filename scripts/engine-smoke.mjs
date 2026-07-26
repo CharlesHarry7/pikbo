@@ -8,6 +8,7 @@ import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -1966,10 +1967,11 @@ assert.match(downloadRouteSrc, /absoluteDeliverableUrl|new URL\(/);
 assert.match(downloadRouteSrc, /export async function HEAD/);
 assert.match(downloadRouteSrc, /X-Pikbo-Download-Code|X-Pikbo-Watermark/);
 // Live T6 recompute at gate time + HEAD bake honesty (not frozen job.downloadAllowed)
-assert.match(downloadRouteSrc, /canDownloadResult/);
+assert.match(downloadRouteSrc, /downloadAllowedForJob/);
 assert.match(downloadRouteSrc, /X-Pikbo-T6|X-Pikbo-Bake/);
-assert.match(downloadRouteSrc, /T6_BAKE_FAILED|bakeWatermarkedVideo/);
-assert.match(downloadRouteSrc, /freeLiveWatermark|never hand raw/);
+assert.match(downloadRouteSrc, /bakedDerivative\?\.deliveryPath|verified owned derivative/);
+assert.doesNotMatch(downloadRouteSrc, /bakeWatermarkedVideo\(/);
+assert.match(downloadRouteSrc, /Free live raw provider URLs are never returned/);
 assert.match(genJobsStore, /Recompute T6|downloadAllowedForJob/);
 // Health free-trial product contract (session state stays on /api/me)
 assert.match(health, /freeTrial/);
@@ -2333,21 +2335,41 @@ assert.equal(ageMs(new Date(Date.now()).toISOString(), Date.now()), 0);
 
 // T6 honest blocked status (player overlay ≠ file bake)
 const t6 = fs.readFileSync(join(root, "lib/t6Watermark.ts"), "utf8");
+const t6Worker = fs.readFileSync(join(root, "lib/t6Worker.ts"), "utf8");
 assert.match(t6, /export function t6Report/);
 assert.match(t6, /status:\s*"blocked"|blocked/);
 assert.match(t6, /playerOverlayIsNotFileWatermark/);
-assert.match(t6, /PIKBO_T6_FILE_BAKE/);
+assert.match(t6, /server-owned derivative|t6WorkerReadiness/);
 assert.match(t6, /bake_on_download|worker_configured/);
 assert.match(t6, /t6AllowsFreeDownloadAttempt|workerUrlConfigured/);
+assert.match(t6Worker, /SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED = false/);
+assert.match(t6Worker, /createServerOwnedT6Input|ServerOwnedT6Input/);
+assert.match(t6Worker, /isPublicProviderOutputUrl/);
+assert.match(t6Worker, /https:|localhost|isPrivateIpv4/);
+assert.match(t6Worker, /hasOnlyPublicResolvedAddresses|SOURCE_PRIVATE_NETWORK/);
+assert.match(t6Worker, /T6_MAX_SOURCE_BYTES|T6_SOURCE_TIMEOUT_MS/);
+assert.match(t6Worker, /video\/mp4|SOURCE_CONTENT_TYPE/);
+assert.match(t6Worker, /drawtext|PIKBO baked watermark/);
+assert.match(t6Worker, /t6-baked\//);
+assert.match(t6Worker, /t6OwnedDeliveryPath|\/api\/t6-derivatives/);
+assert.match(t6Worker, /transitionT6Derivative|DERIVATIVE_UNVERIFIED/);
+assert.match(t6Worker, /SERVER_WORKER_DISABLED/);
+assert.doesNotMatch(t6Worker, /fetch\(input\.providerOutputUrl/);
+const t6Fixture = join(root, "scripts/t6-watermark-worker-fixture.mjs");
+assert.match(fs.readFileSync(t6Fixture, "utf8"), /PIKBO_BAKED_MARK|bakedMarkSignal/);
+execFileSync(process.execPath, [t6Fixture], { stdio: "pipe" });
 assert.match(health, /t6Report|t6:/);
 assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
-  /PIKBO_WATERMARK_WORKER_URL/
+  /verified server-owned baked derivative|bakedDerivativeVerified/
 );
 assert.match(
   fs.readFileSync(join(root, "lib/t6Bake.ts"), "utf8"),
-  /bakeWatermarkedVideo|isSafeDeliverableUrl/
+  /bakeWatermarkedVideo|SERVER_WORKER_DISABLED/
 );
+assert.match(downloadRoute, /bakedDerivative\?\.deliveryPath|verified owned derivative/);
+assert.doesNotMatch(downloadRoute, /bakeWatermarkedVideo\(/);
+assert.match(genRoute, /Free live provider output stays server-only|\/api\/downloads/);
 assert.match(health, /jobTimeoutMs/);
 assert.match(createTrust, /PIKBO_T6_FILE_BAKE|T6 blocked/);
 

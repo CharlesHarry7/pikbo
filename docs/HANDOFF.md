@@ -14,6 +14,24 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] T6 server-owned baked-watermark skeleton (source-only)
+- Free live provider URLs are no longer exposed in public job responses or
+  download redirects. Until a verified locally owned derivative is attached,
+  Free live returns only a controlled download endpoint, which remains blocked.
+  Paid/raw behavior was not changed.
+- `lib/t6Worker.ts` defines server-job-only input, deterministic derivative
+  idempotency/object keys, private/file URL rejection, source type/size/timeout
+  checks, ffmpeg visible-mark command contract, checksum+ffprobe verification,
+  and queued/running/succeeded/failed transition reducer. The app entrypoint is
+  hard-disabled (`SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED=false`).
+- This host has no `ffmpeg` or `ffprobe`. Operator requirement before enabling:
+  install pinned ffmpeg+ffprobe in the persistent worker runtime; add durable
+  job/storage locking; run the real MP4 derivative fixture proving distinct
+  bytes and a baked mark signal. The injected fixture is local-only and does
+  not claim that production tooling exists.
+
+---
+
 ### 2026-07-26 — [grok] T5 durable job worker v1 skeleton (source-only)
 - Added migration `20260726130000_t5_durable_job_worker_v1.sql`: a
   service-role-only atomic create+reserve RPC and terminal worker RPC. The

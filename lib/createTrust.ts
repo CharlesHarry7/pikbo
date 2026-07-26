@@ -184,29 +184,23 @@ export function requestSettlementAfterSelectVersion(
  * Free live results expose a provider raw URL until server watermark bake exists.
  * Download must not treat that URL as a deliverable.
  * Cached demos may still offer open/download (not the user's live output).
- * When PIKBO_T6_FILE_BAKE=1 (operator-proven bake), free live may download.
+ * A Free live file may download only after its own verified, locally owned
+ * baked derivative is attached by the server worker. No env flag can bypass it.
  */
 export function canDownloadResult(opts: {
   demo: boolean;
   watermark: boolean;
+  bakedDerivativeVerified?: boolean;
 }): boolean {
   if (opts.demo) return true;
   if (opts.watermark) {
-    // Free live: only when force-ready or watermark worker can bake on download.
-    if (process.env.PIKBO_T6_FILE_BAKE === "1") return true;
-    if ((process.env.PIKBO_WATERMARK_WORKER_URL || "").startsWith("http")) {
-      return true;
-    }
-    return false;
+    return opts.bakedDerivativeVerified === true;
   }
   return true;
 }
 
 export function freeLiveDownloadBlockReason(): string {
-  if ((process.env.PIKBO_WATERMARK_WORKER_URL || "").startsWith("http")) {
-    return "Free Mini download goes through file watermark bake — if this fails, the worker is down. Upgrade for a clean file.";
-  }
-  return "Free Mini live clips cannot download the raw provider file yet — player mark is not a file watermark (T6 blocked). Set PIKBO_WATERMARK_WORKER_URL or upgrade for a clean file.";
+  return "Free Mini live clips cannot expose or download the raw provider file. A verified server-owned baked derivative is required (T6 blocked).";
 }
 
 /**
