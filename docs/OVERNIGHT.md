@@ -147,9 +147,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- Library session jobs: HEAD-gated download (no raw 403 JSON tabs).
-- me/health ledgerCancelRefund=unconfirmed; mode-a cancel policy gate.
+- meClient rehydrates ledgerCancelRefund (cancel never invents restore after merge).
+- StatusProbe + Settings surface cancel unconfirmed beside TIMEOUT policy.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 

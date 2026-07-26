@@ -25,6 +25,7 @@ type Health = {
       failedLiveRefunds?: boolean;
       failedLiveRefundPolicy?: string;
       ledgerTimeoutRefund?: string;
+      ledgerCancelRefund?: string;
       clipsPerPeriod?: number;
     };
   };
@@ -193,6 +194,10 @@ export function StatusProbe() {
           }${
             ft.ledgerTimeoutRefund === "unconfirmed"
               ? " · TIMEOUT unconfirmed"
+              : ""
+          }${
+            ft.ledgerCancelRefund === "unconfirmed"
+              ? " · cancel unconfirmed"
               : ""
           }`
         : "—",

@@ -30,6 +30,8 @@ export type MeFreeTrial = {
   failedLiveRefundPolicy?: "when_confirmed";
   /** Process kill / ledger TIMEOUT → check balance. */
   ledgerTimeoutRefund?: "unconfirmed";
+  /** Soft-launch cancel / abort ledger → never invent restore. */
+  ledgerCancelRefund?: "unconfirmed";
   freeLive: {
     modelClass: "seedance-mini";
     durationSec: 5;
@@ -78,6 +80,7 @@ export function rehydrateFreeTrial(me: MeResponse): MeResponse {
     failedLiveRefunds: me.freeTrial?.failedLiveRefunds,
     failedLiveRefundPolicy: me.freeTrial?.failedLiveRefundPolicy,
     ledgerTimeoutRefund: me.freeTrial?.ledgerTimeoutRefund,
+    ledgerCancelRefund: me.freeTrial?.ledgerCancelRefund,
   };
 
   if (me.plan !== "free") {
@@ -124,6 +127,7 @@ export function rehydrateFreeTrial(me: MeResponse): MeResponse {
       failedLiveRefundPolicy:
         refundPolicy.failedLiveRefundPolicy ?? "when_confirmed",
       ledgerTimeoutRefund: refundPolicy.ledgerTimeoutRefund ?? "unconfirmed",
+      ledgerCancelRefund: refundPolicy.ledgerCancelRefund ?? "unconfirmed",
     },
   };
 }

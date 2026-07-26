@@ -429,6 +429,24 @@ assert.match(meClient, /cachedDemoFree/);
 assert.match(meClient, /export function mergeMeSession/);
 assert.match(meClient, /export function rehydrateFreeTrial/);
 assert.match(meClient, /Prefer live cookie credits|authoritative cookie credits/);
+// meClient preserves cancel refund policy across PublicSession merges
+assert.match(
+  fs.readFileSync(join(root, "lib/meClient.ts"), "utf8"),
+  /ledgerCancelRefund/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/meClient.ts"), "utf8"),
+  /ledgerCancelRefund: refundPolicy\.ledgerCancelRefund \?\? ["']unconfirmed["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/StatusProbe.tsx"), "utf8"),
+  /cancel unconfirmed|ledgerCancelRefund/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/settings/page.tsx"), "utf8"),
+  /ledgerCancelRefund|cancel unconfirmed/
+);
+
 
 // freeTrial honesty after generate PublicSession merge (stale exhausted must not win)
 function freeTrialExhaustedPure(me) {

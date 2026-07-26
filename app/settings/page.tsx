@@ -343,6 +343,9 @@ export default function SettingsPage() {
               {session?.freeTrial?.ledgerTimeoutRefund === "unconfirmed"
                 ? " · TIMEOUT unconfirmed"
                 : ""}
+              {session?.freeTrial?.ledgerCancelRefund === "unconfirmed"
+                ? " · cancel unconfirmed"
+                : ""}
             </span>
           </div>
           <div className="flex justify-between gap-4">

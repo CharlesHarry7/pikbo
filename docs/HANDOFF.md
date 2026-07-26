@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] meClient cancel-refund rehydrate + Status/Settings
+- `MeFreeTrial.ledgerCancelRefund` preserved in `rehydrateFreeTrial` (default
+  unconfirmed) so generate merges do not drop cancel honesty.
+- StatusProbe + Settings show "cancel unconfirmed" next to TIMEOUT policy.
+- Verified: typecheck · engine-smoke · lint 0 errors.
+
 ### 2026-07-26 — [grok] Library session-job download HEAD gate + cancel refund policy
 - Session jobs panel: Download is HEAD-gated (`data-session-download=gated`) —
   no raw `<a href=/api/downloads>` dumping 403 JSON tabs.
