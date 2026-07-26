@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
+import { createRemixHref } from "@/lib/remixIntent";
 
 /**
  * Compact suite doors for SEO landings (/for, /tools, /toys, guides).
  * Always real deep links — never fake multi-model.
+ * Recipe doors use createRemixHref (ratio/duration/channel carry).
  */
 export function SuiteDoorLinks({
   effectSlug,
@@ -14,7 +16,7 @@ export function SuiteDoorLinks({
   className?: string;
 }) {
   const generateHref = effectSlug
-    ? `/create?effect=${encodeURIComponent(effectSlug)}`
+    ? createRemixHref(effectSlug)
     : "/create";
 
   return (
@@ -22,6 +24,7 @@ export function SuiteDoorLinks({
       <Link
         href={generateHref}
         className="btn btn-primary !px-4 !py-2 text-xs font-black"
+        data-suite-door="generate"
       >
         Open Generate
       </Link>
@@ -33,6 +36,7 @@ export function SuiteDoorLinks({
       <Link
         href="/create?mode=seller-pack"
         className="btn btn-ghost !px-3 !py-2 text-xs"
+        data-suite-door="seller-pack"
       >
         Seller Pack
       </Link>

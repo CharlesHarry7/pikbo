@@ -146,9 +146,12 @@ export function interpretGenerateResponse(
   ) {
     error = `${error} · 10 credits restored`;
   }
-  // Ledger/kill timeout — never claim restored when server flags unconfirmed.
+  // Ledger kill + provider network blip — never invent restore when unconfirmed.
   const refundUnconfirmed =
-    body.refundUnconfirmed === true || code === "TIMEOUT";
+    body.refundUnconfirmed === true ||
+    code === "TIMEOUT" ||
+    code === "PROVIDER_NETWORK" ||
+    code === "PROVIDER_TIMEOUT";
   if (
     refundUnconfirmed &&
     !creditsRefunded &&

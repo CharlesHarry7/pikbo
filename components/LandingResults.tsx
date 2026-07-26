@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
+import { createRemixHref } from "@/lib/remixIntent";
 import { recipeHasUniqueProof } from "@/lib/seoIndex";
 import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
@@ -35,8 +36,9 @@ export function LandingResults({
               Official examples →
             </Link>
             <Link
-              href={`/create?effect=${encodeURIComponent(effectSlug)}`}
+              href={createRemixHref(effectSlug)}
               className="text-[var(--fg-muted)] hover:text-white"
+              data-landing-remake="concept"
             >
               Open in Generate
             </Link>
@@ -126,8 +128,9 @@ export function LandingResults({
                 {d.result}
               </p>
               <Link
-                href={`/create?effect=${encodeURIComponent(d.preset)}`}
+                href={createRemixHref(d.preset, d.id)}
                 className="mt-2.5 inline-flex text-[11px] font-bold text-[var(--mint)] opacity-90 hover:underline group-hover:opacity-100"
+                data-landing-remake="proof"
               >
                 Remake · your toy photo →
               </Link>

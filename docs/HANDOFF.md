@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Landing tool paths: remix + Seller Pack first
+- LandingToolPanel Full studio / Lab sample → createRemixHref(+sku).
+- Product-first footer: Full studio · Seller Pack · Batch Preview (supercomputer demoted).
+- LandingResults + SuiteDoorLinks: createRemixHref remake doors.
+- generateClient/imageClient: PROVIDER_NETWORK → refundUnconfirmed echo.
+- Smoke: data-landing-paths + data-landing-studio=seller-pack.
+
 ### 2026-07-27 — [grok] Community UGC fail-closed + PROVIDER_NETWORK settlement
 - CommunityPublishButton: refuse session /api/downloads + Lab /demos before network;
   match server isPublicCommunityVideoUrl (no origin-absolute demos).

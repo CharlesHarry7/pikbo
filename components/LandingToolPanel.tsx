@@ -44,6 +44,7 @@ import { GenerateWaitStage } from "@/components/GenerateWaitStage";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { track } from "@/lib/analytics";
 import { loadToyIdentity } from "@/lib/toyIdentity";
+import { createRemixHref } from "@/lib/remixIntent";
 
 type Status = "idle" | "generating" | "done" | "error";
 
@@ -648,8 +649,9 @@ export function LandingToolPanel({
                 Compare plans
               </Link>
               <Link
-                href={`/create?effect=${effectSlug}`}
+                href={createRemixHref(effectSlug, undefined, toySku || null)}
                 className="btn btn-ghost w-full border border-white/15 text-center text-xs text-white/70"
+                data-landing-studio="lab-sample"
               >
                 Open studio · Lab sample
               </Link>
@@ -693,19 +695,37 @@ export function LandingToolPanel({
             />
           ) : null}
 
-          <p className="text-center text-[10px] text-[var(--fg-dim)]">
+          <p
+            className="text-center text-[10px] text-[var(--fg-dim)]"
+            data-landing-paths="product-first"
+          >
             <Link
-              href={`/create?effect=${effectSlug}`}
+              href={createRemixHref(effectSlug, undefined, toySku || null)}
               className="text-[var(--mint)] hover:underline"
+              data-landing-studio="full"
             >
               Full studio
             </Link>
             {" · "}
             <Link
-              href={`/supercomputer?effects=${effectSlug},360-spin-showcase,floating-hero,blind-box-unboxing`}
+              href={
+                toySku.trim()
+                  ? `/create?mode=seller-pack&sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
+                  : "/create?mode=seller-pack"
+              }
               className="text-[var(--mint)] hover:underline"
+              data-landing-studio="seller-pack"
+              title="Listing spin + box reveal + social hook"
             >
-              Batch more
+              Seller Pack
+            </Link>
+            {" · "}
+            <Link
+              href={`/supercomputer?effects=${encodeURIComponent(effectSlug)},360-spin-showcase,floating-hero,blind-box-unboxing`}
+              className="text-white/45 hover:text-white/70 hover:underline"
+              title="Custom multi-preset batch · Preview"
+            >
+              Batch · Preview
             </Link>
           </p>
         </div>

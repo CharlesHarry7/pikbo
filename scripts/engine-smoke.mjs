@@ -4258,7 +4258,38 @@ assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /GenerateAfterPath/
 );
-// Landing + Image AfterPath carry device-local bible SKU (Create/Batch parity)
+// Landing + Image AfterPath carry device-local bible SKU
+
+// Landing tool panel: Full studio remix href + Seller Pack door (product-first)
+const landingPathsSrc = fs.readFileSync(
+  join(root, "components/LandingToolPanel.tsx"),
+  "utf8"
+);
+assert.match(landingPathsSrc, /createRemixHref/);
+assert.match(landingPathsSrc, /data-landing-paths=["']product-first["']/);
+assert.match(landingPathsSrc, /data-landing-studio=["']seller-pack["']/);
+assert.match(landingPathsSrc, /mode=seller-pack/);
+
+// SEO suite doors + LandingResults remake remix href
+assert.match(
+  fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
+  /createRemixHref/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LandingResults.tsx"), "utf8"),
+  /createRemixHref|data-landing-remake/
+);
+// Client interpret: PROVIDER_NETWORK never invents restore
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /PROVIDER_NETWORK/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /PROVIDER_NETWORK/
+);
+
+// Landing + Image AfterPath SKU carry (Create/Batch parity)
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /loadToyIdentity|sku=\{toySku/
@@ -4453,6 +4484,26 @@ assert.match(communityPublish, /\/demos\//);
 assert.match(
   fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
   /data-session-remake=["']remix["']|createRemixHref\(j\.effect\)/
+);
+
+
+// Landing remake + suite doors use createRemixHref (ratio/duration/channel)
+assert.match(
+  fs.readFileSync(join(root, "components/LandingResults.tsx"), "utf8"),
+  /createRemixHref|data-landing-remake/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
+  /createRemixHref|data-suite-door=["']generate["']/
+);
+// image + generate clients: PROVIDER_NETWORK/TIMEOUT set refundUnconfirmed flag
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /PROVIDER_NETWORK[\s\S]{0,80}PROVIDER_TIMEOUT|code === ["']PROVIDER_NETWORK["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /code === ["']PROVIDER_NETWORK["'][\s\S]{0,40}PROVIDER_TIMEOUT|PROVIDER_NETWORK[\s\S]{0,60}TIMEOUT/
 );
 
 console.log("engine-smoke: PASS");
