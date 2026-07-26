@@ -2382,6 +2382,7 @@ function rehydrateFreeTrialPolicyPure(me) {
     failedLiveRefunds: me.freeTrial?.failedLiveRefunds,
     failedLiveRefundPolicy: me.freeTrial?.failedLiveRefundPolicy,
     ledgerTimeoutRefund: me.freeTrial?.ledgerTimeoutRefund,
+    ledgerCancelRefund: me.freeTrial?.ledgerCancelRefund,
   };
   if (me.plan !== "free") return refundPolicy;
   return {
@@ -2389,6 +2390,7 @@ function rehydrateFreeTrialPolicyPure(me) {
     failedLiveRefundPolicy:
       refundPolicy.failedLiveRefundPolicy ?? "when_confirmed",
     ledgerTimeoutRefund: refundPolicy.ledgerTimeoutRefund ?? "unconfirmed",
+    ledgerCancelRefund: refundPolicy.ledgerCancelRefund ?? "unconfirmed",
   };
 }
 {
@@ -2398,10 +2400,31 @@ function rehydrateFreeTrialPolicyPure(me) {
       failedLiveRefunds: true,
       failedLiveRefundPolicy: "when_confirmed",
       ledgerTimeoutRefund: "unconfirmed",
+      ledgerCancelRefund: "unconfirmed",
     },
   });
   assert.equal(kept.failedLiveRefundPolicy, "when_confirmed");
   assert.equal(kept.ledgerTimeoutRefund, "unconfirmed");
+  assert.equal(kept.ledgerCancelRefund, "unconfirmed");
+}
+
+// Image still cancel settlement parity (Create refund unconfirmed)
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /setFailCreditState\(["']refund unconfirmed["']\)/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /Canceled · ledger cancel|refund unconfirmed until balance/
+);
+// Library session canceled honesty
+assert.match(library, /Canceled — Retry mints|status === ["']canceled["']/);
+{
+  const defaults = rehydrateFreeTrialPolicyPure({
+    plan: "free",
+    freeTrial: {},
+  });
+  assert.equal(defaults.ledgerCancelRefund, "unconfirmed");
 }
 assert.match(
   fs.readFileSync(join(root, "app/settings/page.tsx"), "utf8"),

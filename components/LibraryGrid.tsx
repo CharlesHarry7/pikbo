@@ -224,15 +224,19 @@ function SessionJobsPanel({
                 {j.creditsRefunded === true
                   ? " · 10 restored"
                   : j.creditsOutcome === "refund unconfirmed" ||
-                      j.errorCode === "TIMEOUT"
+                      j.errorCode === "TIMEOUT" ||
+                      j.errorCode === "CANCELED" ||
+                      j.status === "canceled"
                     ? " · refund unconfirmed"
                     : ""}
               </p>
-              {j.error ? (
+              {j.error || j.status === "canceled" ? (
                 <p className="mt-0.5 truncate text-[10px] text-amber-100/80">
                   {j.errorCode === "TIMEOUT"
                     ? "Timed out — Retry on Create (mint new attempt). Check balance if credits were debited."
-                    : j.error}
+                    : j.status === "canceled" || j.errorCode === "CANCELED"
+                      ? "Canceled — Retry mints a new attempt. Check balance if live debit is unconfirmed."
+                      : j.error}
                 </p>
               ) : null}
             </div>

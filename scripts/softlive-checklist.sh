@@ -94,6 +94,8 @@ if billing:
         "billing.freeTrial scope=", billing.get("scope"),
         "stillsOnFree=", billing.get("stillsOnFree"),
         "refunds=", billing.get("failedLiveRefunds"),
+        "timeoutRefund=", billing.get("ledgerTimeoutRefund"),
+        "cancelRefund=", billing.get("ledgerCancelRefund"),
     )
 cl=h.get("softLiveChecklist") or {}
 print("checklist fal=", cl.get("FAL_KEY"), "sessionSecret=", cl.get("SESSION_SECRET"))

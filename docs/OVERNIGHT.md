@@ -147,9 +147,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- meClient rehydrates ledgerCancelRefund (cancel never invents restore after merge).
-- StatusProbe + Settings surface cancel unconfirmed beside TIMEOUT policy.
+- Image cancel settlement: refund unconfirmed immediate + CANCELED fail path.
+- Library canceled jobs honest; smoke/CP/softlive lock ledgerCancelRefund.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 

@@ -4,6 +4,18 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Proof Lab ≥4 chips on cinema + community cards
+- HomeCinemaHero, HomeProjectsExplore, ProjectCard show provisional Lab ≥4
+  when recipe passes home-proof quality (not external QA).
+- Extends wall/HfExplore chips; smoke locks data-proof-quality markers.
+
+### 2026-07-26 — [grok] Image cancel settlement + canceled job honesty
+- `/image` cancel: immediate `refund unconfirmed` + honest error (Create parity);
+  fail path treats `CANCELED` like `REQUEST_CANCELED`.
+- Library session jobs: canceled rows show refund unconfirmed + retry copy.
+- Smoke pure rehydrate locks `ledgerCancelRefund`; critical-path/softlive print it.
+- Verified: typecheck · engine-smoke · lint 0 errors.
+
 ### 2026-07-26 — [grok] Home proof Lab ≥4 provisional chips
 - `provisionalLabQualityLabel` / recipe lookup for wall + home project grid.
 - Premiere + dense wall + HfExploreHome show **Lab ≥4** (not external QA).

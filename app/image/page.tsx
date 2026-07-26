@@ -86,6 +86,11 @@ export default function ImageStudioPage() {
     if (!ctrl) return;
     ctrl.abort();
     abortRef.current = null;
+    // Create/Landing parity: settle immediately as unconfirmed until server echoes.
+    setFailCreditState("refund unconfirmed");
+    setError(
+      "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"
+    );
   }
 
   async function generate() {

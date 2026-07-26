@@ -183,8 +183,11 @@ else:
     if ft.get("failedLiveRefundPolicy"):
         print(
             f"me.refundPolicy={ft.get('failedLiveRefundPolicy')} "
-            f"timeout={ft.get('ledgerTimeoutRefund')}"
+            f"timeout={ft.get('ledgerTimeoutRefund')} "
+            f"cancel={ft.get('ledgerCancelRefund')}"
         )
+        if ft.get("ledgerCancelRefund") not in (None, "unconfirmed"):
+            raise SystemExit("FAIL me freeTrial.ledgerCancelRefund must be unconfirmed when set")
 billing=(h.get("billing") or {})
 bft=billing.get("freeTrial") or {}
 if bft:
@@ -193,8 +196,11 @@ if bft:
         f"refunds={bft.get('failedLiveRefunds')} "
         f"policy={bft.get('failedLiveRefundPolicy')} "
         f"timeout={bft.get('ledgerTimeoutRefund')} "
+        f"cancel={bft.get('ledgerCancelRefund')} "
         f"scope={bft.get('scope')}"
     )
+    if bft.get("ledgerCancelRefund") not in (None, "unconfirmed"):
+        raise SystemExit("FAIL health freeTrial.ledgerCancelRefund must be unconfirmed when set")
     if bft.get("scope") == "video-create-only":
         print(f"stillsOnFree={bft.get('stillsOnFree')}")
 demos=h.get("demos") or {}
