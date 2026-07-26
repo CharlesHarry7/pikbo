@@ -63,13 +63,31 @@ export function durableSupabaseRequired(): boolean {
   );
 }
 
+/** Supabase terminal accounting is unsafe until jobs are persisted server-side. */
+export function durableServerOwnedJobsReady(): boolean {
+  return process.env.PIKBO_SERVER_OWNED_JOBS === "1";
+}
+
 type BackendDecision =
   | { kind: "supabase" }
   | { kind: "local" }
-  | { kind: "unavailable"; error: string };
+  | { kind: "unavailable"; code: string; error: string };
 
 async function durableBackend(): Promise<BackendDecision> {
   const required = durableSupabaseRequired();
+  if (!durableServerOwnedJobsReady()) {
+    if (required) {
+      return {
+        kind: "unavailable",
+        code: "SERVER_OWNED_JOBS_REQUIRED",
+        error:
+          "Supabase durable generation is disabled until server-owned jobs are ready",
+      };
+    }
+    // Optional Supabase config must not create a remote reservation that this
+    // process cannot terminally settle/release with a persisted job.
+    return { kind: "local" };
+  }
   if (process.env.PIKBO_DURABLE_BACKEND === "local" && !required) {
     return { kind: "local" };
   }
@@ -78,6 +96,7 @@ async function durableBackend(): Promise<BackendDecision> {
   if (required) {
     return {
       kind: "unavailable",
+      code: "DURABLE_BACKEND_UNAVAILABLE",
       error:
         probe.warning ||
         "Supabase durable credits are required but schema/RPC probe failed",
@@ -86,10 +105,10 @@ async function durableBackend(): Promise<BackendDecision> {
   return { kind: "local" };
 }
 
-function unavailable(error: string) {
+function unavailable(error: string, code = "DURABLE_BACKEND_UNAVAILABLE") {
   return {
     ok: false as const,
-    code: "DURABLE_BACKEND_UNAVAILABLE",
+    code,
     error,
   };
 }
@@ -127,7 +146,7 @@ export async function ensurePersonalAccount(
   initialAvailable = 10
 ) {
   const backend = await durableBackend();
-  if (backend.kind === "unavailable") return unavailable(backend.error);
+  if (backend.kind === "unavailable") return unavailable(backend.error, backend.code);
   if (backend.kind === "supabase") {
     // Remote errors are authoritative. Never leak into a local-file wallet.
     return supabaseEnsurePersonalAccount(userId, initialAvailable);
@@ -200,7 +219,7 @@ export async function durableReserve(input: {
   idempotencyKey: string;
 }) {
   const backend = await durableBackend();
-  if (backend.kind === "unavailable") return unavailable(backend.error);
+  if (backend.kind === "unavailable") return unavailable(backend.error, backend.code);
   if (backend.kind === "supabase") return supabaseReserve(input);
   return withState((state) => {
     const r = reserveCredits(state, input);
@@ -219,7 +238,7 @@ export async function durableSettle(input: {
   jobId?: string;
 }) {
   const backend = await durableBackend();
-  if (backend.kind === "unavailable") return unavailable(backend.error);
+  if (backend.kind === "unavailable") return unavailable(backend.error, backend.code);
   if (backend.kind === "supabase") return supabaseSettle(input);
   return withState((state) => {
     const reservation = state.reservations[input.reservationId];
@@ -260,7 +279,7 @@ export async function durableRelease(input: {
   jobId?: string;
 }) {
   const backend = await durableBackend();
-  if (backend.kind === "unavailable") return unavailable(backend.error);
+  if (backend.kind === "unavailable") return unavailable(backend.error, backend.code);
   if (backend.kind === "supabase") return supabaseRelease(input);
   return withState((state) => {
     const reservation = state.reservations[input.reservationId];
@@ -301,7 +320,7 @@ export async function durableMigrateGuest(input: {
   idempotencyKey: string;
 }) {
   const backend = await durableBackend();
-  if (backend.kind === "unavailable") return unavailable(backend.error);
+  if (backend.kind === "unavailable") return unavailable(backend.error, backend.code);
   if (backend.kind === "supabase") return supabaseMigrateGuest(input);
   return withState((state) => {
     const r = migrateGuestCredits(state, input);
@@ -365,14 +384,22 @@ export async function getPersonalWallet(userId: string): Promise<{
 }
 
 /**
- * Sweep expired local-file reservations (Postgres TTL job later).
+ * Sweep expired local-file reservations or the service-owned Supabase RPC.
  * Idempotent release keys `expire:{reservationId}`.
  */
+let lastExpirySweepAt = 0;
+const EXPIRY_SWEEP_TTL_MS = 60_000;
+
 export async function durableExpireStaleReservations(): Promise<{
   expired: number;
   releasedCredits: number;
-  backend: "local-file" | "supabase" | "skipped-remote";
+  backend: "local-file" | "supabase" | "skipped-remote" | "throttled";
 }> {
+  // /api/health is public: do not turn every probe into an accounting write.
+  if (Date.now() - lastExpirySweepAt < EXPIRY_SWEEP_TTL_MS) {
+    return { expired: 0, releasedCredits: 0, backend: "throttled" };
+  }
+  lastExpirySweepAt = Date.now();
   const backend = await durableBackend();
   if (backend.kind === "supabase") {
     const remote = await supabaseExpireReservations();

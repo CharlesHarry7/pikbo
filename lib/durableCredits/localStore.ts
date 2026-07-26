@@ -88,10 +88,24 @@ export async function probeDurableCreditsStore(): Promise<{
   // Lazy import avoids circular deps with supabase clients at module load.
   const { probeSupabaseCreditsSchema, supabaseCreditsConfigured } =
     await import("@/lib/durableCredits/supabaseStore");
+  const serverOwnedJobsReady = process.env.PIKBO_SERVER_OWNED_JOBS === "1";
+
+  if (required && !serverOwnedJobsReady) {
+    return {
+      writable: false,
+      path: "supabase",
+      backend: "none",
+      required,
+      configured: supabaseCreditsConfigured(),
+      schemaReady: false,
+      warning:
+        "Supabase durable generation requires PIKBO_SERVER_OWNED_JOBS=1; server-owned job persistence is not ready",
+    };
+  }
 
   if (supabaseCreditsConfigured()) {
     const schema = await probeSupabaseCreditsSchema();
-    if (schema.schemaReady) {
+    if (schema.schemaReady && serverOwnedJobsReady) {
       return {
         writable: true,
         path: "supabase:credit_wallets",
@@ -140,13 +154,15 @@ export async function probeDurableCreditsStore(): Promise<{
       backend: localWritable ? "local-file" : "none",
       required,
       configured: true,
-      schemaReady: false,
+      schemaReady: schema.schemaReady,
       schemaVersion: schema.schemaVersion,
       requiredVersion: schema.requiredVersion,
       missing: schema.missing,
       warning:
-        schema.warning ||
-        "Supabase keys present; T5 SQL migration not applied — using local file fallback",
+        !serverOwnedJobsReady
+          ? "Supabase schema is ready but mutations stay on local-file until PIKBO_SERVER_OWNED_JOBS=1"
+          : schema.warning ||
+            "Supabase keys present; T5 SQL migration not applied — using local file fallback",
     };
   }
 

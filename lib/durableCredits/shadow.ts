@@ -1,7 +1,8 @@
 /**
  * Optional shadow ledger for soft-launch generate.
  * Cookie remains authoritative until REQUIRE_DURABLE_CREDITS=1.
- * Enable with DURABLE_CREDITS=local|1, or auto when Supabase is configured.
+ * Supabase mutations require PIKBO_SERVER_OWNED_JOBS=1; otherwise optional
+ * configuration uses the local single-node adapter and required mode blocks.
  *
  * Prefer signed-in Supabase user id; fall back to guest cookie session id.
  */

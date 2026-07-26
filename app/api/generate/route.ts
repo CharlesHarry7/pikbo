@@ -394,17 +394,22 @@ export async function POST(req: Request) {
         authUserId: authUser?.id,
         guestSessionId: session.id,
       });
-    } catch {
+    } catch (e) {
       // Explicit Supabase/required mode is an accounting boundary: undo the
       // Cookie debit and do not call the provider when the durable reserve
       // cannot be proven.
       session = refundCredits(session, check.cost);
       await saveSession(session);
+      const serverJobsRequired =
+        e instanceof Error && e.message.includes("SERVER_OWNED_JOBS_REQUIRED");
       return err(
         {
-          error:
-            "Durable credit service unavailable — no generation was submitted and credits were restored",
-          code: "DURABLE_BACKEND_UNAVAILABLE",
+          error: serverJobsRequired
+            ? "Durable generation requires server-owned jobs — no generation was submitted and credits were restored"
+            : "Durable credit service unavailable — no generation was submitted and credits were restored",
+          code: serverJobsRequired
+            ? "SERVER_OWNED_JOBS_REQUIRED"
+            : "DURABLE_BACKEND_UNAVAILABLE",
           session: publicSession(session),
           creditsRefunded: true,
         },

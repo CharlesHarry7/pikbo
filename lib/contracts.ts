@@ -100,7 +100,8 @@ export type GenerateErrorBody = {
     /** Client-side only — fetch never reached a typed server body. */
     | "NETWORK_ERROR"
     | "REQUEST_CANCELED"
-    | "DURABLE_BACKEND_UNAVAILABLE";
+    | "DURABLE_BACKEND_UNAVAILABLE"
+    | "SERVER_OWNED_JOBS_REQUIRED";
   need?: number;
   have?: number;
   model?: string;

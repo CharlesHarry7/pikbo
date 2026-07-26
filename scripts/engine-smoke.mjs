@@ -2442,12 +2442,15 @@ assert.doesNotMatch(
   "Supabase money mutations must stay inside RPCs"
 );
 assert.match(durableIdx, /durableSupabaseRequired/);
+assert.match(durableIdx, /durableServerOwnedJobsReady/);
+assert.match(durableIdx, /SERVER_OWNED_JOBS_REQUIRED/);
 assert.match(durableIdx, /DURABLE_BACKEND_UNAVAILABLE/);
 assert.match(
   durableIdx,
   /backend\.kind === "supabase"\) return supabaseReserve\(input\)/
 );
 assert.match(localStore, /PIKBO_DURABLE_BACKEND === "supabase"/);
+assert.match(localStore, /PIKBO_SERVER_OWNED_JOBS=1/);
 assert.match(localStore, /withLocalStoreMutex/);
 assert.match(localStore, /fs\.rename/);
 assert.match(
@@ -2479,6 +2482,7 @@ assert.match(sellerPackCredits, /sellerPackServerOwnedJobsReady/);
 assert.match(spReserve, /SERVER_OWNED_JOBS_REQUIRED/);
 assert.doesNotMatch(sellerPackCredits, /input\.childCredits/);
 assert.match(genRoute, /DURABLE_BACKEND_UNAVAILABLE/);
+assert.match(genRoute, /SERVER_OWNED_JOBS_REQUIRED/);
 assert.match(
   genRoute,
   /no generation was submitted and credits were restored/
@@ -2517,7 +2521,9 @@ assert.match(engineSrc, /export function expireStaleReservations/);
 assert.match(durableIdx, /durableExpireStaleReservations|expireStaleReservations/);
 assert.match(health, /reservationSweep|durableExpireStaleReservations/);
 assert.match(health, /single-node verification only/);
+assert.match(health, /durableServerOwnedJobsReady/);
 assert.match(durableIdx, /backend\.kind === "supabase"[\s\S]{0,300}supabaseExpireReservations/);
+assert.match(durableIdx, /EXPIRY_SWEEP_TTL_MS/);
 const shadowSrc = fs.readFileSync(
   join(root, "lib/durableCredits/shadow.ts"),
   "utf8"

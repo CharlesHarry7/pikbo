@@ -50,6 +50,11 @@ create table if not exists public.credit_reservation_items (
   primary key (reservation_id, item_key)
 );
 
+-- Expiry worker/health sweep only considers these still-open reservations.
+create index if not exists credit_reservations_expiry_pending_idx
+  on public.credit_reservations (expires_at)
+  where status in ('reserved', 'partially_settled');
+
 alter table public.credit_reservation_items enable row level security;
 
 drop policy if exists reservation_items_member

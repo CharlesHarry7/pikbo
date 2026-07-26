@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { probeEntitlementsStore } from "@/lib/entitlements";
 import {
+  durableServerOwnedJobsReady,
   durableExpireStaleReservations,
   probeDurableCreditsStore,
 } from "@/lib/durableCredits";
@@ -103,6 +104,7 @@ export async function GET() {
     /** Local files are only a single-node development verification backend. */
     durableCreditsBackendNote:
       "local-file is single-node verification only; production multi-node accounting requires Supabase RPCs",
+    durableServerOwnedJobsReady: durableServerOwnedJobsReady(),
     service: "pikbo",
     foundation: "L0-L3",
     time: new Date().toISOString(),
