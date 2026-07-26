@@ -126,7 +126,9 @@
 85. [x] Batch/Landing TIMEOUT settlement parity · network abort refundUnconfirmed
 86. [x] health/me refund policy when_confirmed · TIMEOUT unconfirmed · imageClient network
 87. [x] rehydrateFreeTrial keeps refund policy · Settings Live fail refunds · guides honesty
-88. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+88. [x] T6 fail-closed skeleton: no env unlock Free raw · server-owned worker IMPLEMENTED=false
+89. [x] T6 hard gate: derivative must bind jobId+providerRequestId; canServe requires serving+storage
+90. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -140,9 +142,9 @@
 
 ## Grok 本拍状态（3 行）
 
-- rehydrateFreeTrial preserves when_confirmed / TIMEOUT unconfirmed after generate merge.  
-- Settings shows Live fail refunds; Free Mini guide SEO copy honest.  
-- Mode A still needs boss Vercel login · SQL · T6 bake worker.
+- T6 hard gate: downloadAllowed binds jobId+providerRequestId via canServeVerifiedT6Derivative.
+- Metadata alone cannot unlock Free; serving+storage adapters still hard-false; fixture PASS.
+- Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 ---
 

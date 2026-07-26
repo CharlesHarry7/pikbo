@@ -28,6 +28,13 @@ Newest first. One block per meaningful landing.
   (189 routes). The shared browser at 127.0.0.1:3457 served a stale checkout
   during this pass, so it was not counted as evidence for the new layout.
 
+### 2026-07-26 — [grok] HfProductRail + Explore jobs product-first
+- HfProductRail keeps Generate, Seller, Modules, and Presets ahead of
+  Flow/Cinema/Image Preview doors.
+- HfExploreHome uses the product-first rail after proof and activation rather
+  than presenting Preview media surfaces as live-job peers.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-26 — [grok] T6 hard gate: bind Free derivative to job identity
 - Free live download no longer trusts free-floating derivative metadata. Gate
   requires `canServeVerifiedT6Derivative({ jobId, providerRequestId, derivative })`:
