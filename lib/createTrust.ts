@@ -203,6 +203,30 @@ export function freeLiveDownloadBlockReason(): string {
 }
 
 /**
+ * Phase F result metadata — honest download policy label (Create + Landing).
+ * Never say "allowed" for Free live raw; never claim bake ready without canDownload.
+ */
+export function downloadPolicyLabel(opts: {
+  demo: boolean;
+  downloadAllowed: boolean;
+}): string {
+  if (opts.demo) return "Demo open · Lab";
+  if (opts.downloadAllowed) return "Allowed";
+  return "Held for T6 bake · Free raw blocked";
+}
+
+/** Primary download CTA label when the action is blocked. */
+export function downloadBlockedCtaLabel(opts: {
+  downloadAllowed: boolean;
+  unsafeUrl?: boolean;
+}): string {
+  if (opts.downloadAllowed && opts.unsafeUrl) {
+    return "Download blocked · unsafe URL";
+  }
+  return "Download held · T6 bake";
+}
+
+/**
  * Customer-facing video URL for generate success / idempotent replay.
  * Free live never echoes the provider raw URL — only a controlled downloads
  * path that re-checks T6 ownership. Demos and paid raw keep their URL.
