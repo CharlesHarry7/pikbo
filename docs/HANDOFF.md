@@ -16,11 +16,13 @@ Newest first. One block per meaningful landing.
   CTAs: Seller Pack before Modules; Flow out of cold-start path).
 - Verified: engine-smoke PASS · tsc PASS.
 
-### 2026-07-26 — [grok] Project page product-first + Phase H noindex
-- `/projects/[slug]`: cold-start `CONCEPT_ROBOTS` (crawlable, not in 9-URL index).
-- Breadcrumb Home → Explore → title (Flow removed). CTAs: Use recipe · Seller
-  Pack · Modules · Library (product before Flow preview).
-- engine-smoke locks data-project-* + Seller-before-Modules + noindex import.
+### 2026-07-26 — [grok] Project product-first + C/D honesty gates
+- `/projects/[slug]`: cold-start `CONCEPT_ROBOTS`; breadcrumb Home→Explore→title;
+  CTAs Seller Pack · Modules · Library (Flow demoted).
+- Community publish requires public http(s) only (`isPublicCommunityVideoUrl`);
+  Free `/api/downloads` and relative Lab paths fail closed.
+- Health paid/durable multi-node gated on hard-false
+  `SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED` (env alone cannot unlock).
 
 ### 2026-07-26 — [grok] T8 Seller Pack recovery + Free live player parity
 - BatchStudio sessionStorage holds only active-pack child pointers (no photo/
