@@ -30,17 +30,20 @@ export function SuiteDoorLinks({
         variant="ghost"
         className="btn btn-ghost !px-3 !py-2 text-xs"
       />
-      <Link href="/flow" className="btn btn-ghost !px-3 !py-2 text-xs">
-        Flow
-      </Link>
-      <Link href="/modules" className="btn btn-ghost !px-3 !py-2 text-xs">
-        Modules
-      </Link>
       <Link
         href="/create?mode=seller-pack"
         className="btn btn-ghost !px-3 !py-2 text-xs"
       >
         Seller Pack
+      </Link>
+      <Link href="/modules" className="btn btn-ghost !px-3 !py-2 text-xs">
+        Modules
+      </Link>
+      <Link href="/library" className="btn btn-ghost !px-3 !py-2 text-xs">
+        Library
+      </Link>
+      <Link href="/flow" className="btn btn-ghost !px-3 !py-2 text-xs">
+        Flow · Preview
       </Link>
     </div>
   );

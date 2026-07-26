@@ -9,6 +9,7 @@ import { useI18n } from "@/components/LanguageProvider";
  * Toy suite entry rail — HF Generate + Yiha modules pattern, verticalized.
  * Used on Home after premiere so users hit real product doors, not model zoo.
  */
+/** Product doors first; Flow is Preview (not a live Seedance job peer). */
 const ENTRY_DEFS = [
   {
     href: "/create",
@@ -19,12 +20,12 @@ const ENTRY_DEFS = [
     tagKey: "suite.tag.flagship" as const,
   },
   {
-    href: "/flow",
-    labelKey: "suite.flow",
-    blurbKey: "suite.flow.blurb",
-    emoji: "◎",
+    href: "/create?mode=seller-pack",
+    labelKey: "suite.seller",
+    blurbKey: "suite.seller.blurb",
+    emoji: "🛍️",
     hot: true,
-    tagKey: "suite.tag.explore" as const,
+    tagKey: "suite.tag.sell" as const,
   },
   {
     href: "/modules",
@@ -35,18 +36,20 @@ const ENTRY_DEFS = [
     tagKey: "suite.tag.jobs" as const,
   },
   {
-    href: "/create?mode=seller-pack",
-    labelKey: "suite.seller",
-    blurbKey: "suite.seller.blurb",
-    emoji: "🛍️",
-    hot: true,
-    tagKey: "suite.tag.sell" as const,
-  },
-  {
     href: "/effects",
     labelKey: "suite.recipes",
     blurbKey: "suite.recipes.blurb",
     emoji: "🧸",
+    hot: true,
+    tagKey: "suite.tag.flagship" as const,
+  },
+  {
+    href: "/flow",
+    labelKey: "suite.flow",
+    blurbKey: "suite.flow.blurb",
+    emoji: "◎",
+    hot: false,
+    tagKey: "suite.tag.preview" as const,
   },
 ] as const;
 

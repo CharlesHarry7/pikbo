@@ -2795,6 +2795,25 @@ assert.ok(flowIdx > sellerIdx, "flow preview after product modes");
 assert.ok(imageIdx > flowIdx, "stills preview last among suite doors");
 assert.match(suiteChromeSrc, /preview:\s*true/);
 assert.match(suiteChromeSrc, /suite\.preview/);
+// Home suite rail + landing doors: product first, Flow tagged Preview
+const suiteEntrySrc = fs.readFileSync(
+  join(root, "components/SuiteEntryStrip.tsx"),
+  "utf8"
+);
+assert.match(suiteEntrySrc, /suite\.tag\.preview|tagKey:\s*["']suite\.tag\.preview/);
+assert.ok(
+  suiteEntrySrc.indexOf('href: "/create"') <
+    suiteEntrySrc.indexOf('href: "/flow"'),
+  "Generate before Flow on home suite rail"
+);
+assert.match(
+  fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
+  /Flow · Preview|Seller Pack/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
+  /suite\.preview["']:\s*["']Preview["']|suite\.tag\.preview/
+);
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /Optional support|not the product|photo → Seedance/
