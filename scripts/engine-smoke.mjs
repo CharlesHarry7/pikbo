@@ -4067,6 +4067,16 @@ assert.match(afterPathSrc, /Flow · Preview/);
 assert.match(afterPathSrc, /seller-pack/);
 assert.match(afterPathSrc, /try:\s*["']1["']/);
 assert.match(afterPathSrc, /job:\s*carry\.job|jobIntentId/);
+// Seller Pack intent has href — Next SKU / Full Generate must use intent.href
+// (mode=seller-pack), not /create?job=seller-pack which Create used to drop.
+assert.match(afterPathSrc, /intent\?\.href/);
+assert.match(afterPathSrc, /withQuery\(intent\.href/);
+// Create deep link: jobs with href redirect to mode=seller-pack (+ sku)
+assert.match(
+  createStudioSmoke,
+  /job\.href|location\.replace|mode=seller-pack/
+);
+assert.match(createStudioSmoke, /initialSku|getJobIntent\(initialJob\)/);
 // Product path before Flow · Preview on after-generate chips
 assert.ok(
   afterPathSrc.indexOf("seller-pack") < afterPathSrc.indexOf('href="/flow"'),

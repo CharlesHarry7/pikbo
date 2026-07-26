@@ -49,17 +49,25 @@ export function GenerateAfterPath({
     sku: sku || undefined,
   };
 
-  const studioHref = withQuery("/create", {
-    effect: carry.effect,
-    job: carry.job,
-    sku: carry.sku,
-  });
-  const nextSkuHref = withQuery("/create", {
-    effect: carry.effect,
-    job: carry.job,
-    sku: carry.sku,
-    try: "1",
-  });
+  /**
+   * Jobs with `href` (Seller Pack) must land on mode=seller-pack — not
+   * /create?job=seller-pack which CreateStudio used to ignore (href early-return).
+   */
+  const studioHref = intent?.href
+    ? withQuery(intent.href, { sku: carry.sku })
+    : withQuery("/create", {
+        effect: carry.effect,
+        job: carry.job,
+        sku: carry.sku,
+      });
+  const nextSkuHref = intent?.href
+    ? withQuery(intent.href, { sku: carry.sku, try: "1" })
+    : withQuery("/create", {
+        effect: carry.effect,
+        job: carry.job,
+        sku: carry.sku,
+        try: "1",
+      });
   const sellerPackHref = withQuery("/create", {
     mode: "seller-pack",
     sku: carry.sku,

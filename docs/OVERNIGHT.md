@@ -135,7 +135,9 @@
 94. [x] CD Phase A: Creative Director narrative + product-first suite exits · JobIntentBar goals all viewports
 95. [x] All surfaces blob-download gate (no window.open JSON tabs) · Content-Type guard
 96. [x] Share/copy session-gate honesty + HEAD-allow download open fallback
-97. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+97. [x] Seller Pack AfterPath intent.href + Create ?job=seller-pack redirect
+98. [x] SKU hydrate Create/Batch + Landing history (prior)
+99. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -149,9 +151,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- Share/copy refuse session /api/downloads as public links; demos origin-absolute.
-- downloadVideoFile: HEAD allow + CORS may open gate; HEAD block/JSON still blocked.
+- Seller Pack AfterPath: Next SKU/Full Generate use intent.href (mode=seller-pack+sku).
+- Create ?job=seller-pack redirects to pack with sku/try; no silent drop.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 

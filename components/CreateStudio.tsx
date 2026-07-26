@@ -398,17 +398,38 @@ export function CreateStudio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSample]);
 
-  // Deep link: ?job=etsy-listing → select recipe + aspect (outcome routing)
+  // Deep link: ?job=etsy-listing → select recipe + aspect (outcome routing).
+  // Jobs with href (Seller Pack) redirect to mode=seller-pack + sku carry —
+  // never silently drop commercial context on /create?job=seller-pack.
   useEffect(() => {
     if (!initialJob) return;
     const job = getJobIntent(initialJob);
-    if (!job || job.href) return;
+    if (!job) return;
     const t = window.setTimeout(() => {
+      if (job.href) {
+        try {
+          const u = new URL(job.href, window.location.origin);
+          const sku = (initialSku || "").trim().slice(0, 64);
+          if (sku) u.searchParams.set("sku", sku);
+          const tryParam = new URLSearchParams(window.location.search).get(
+            "try"
+          );
+          if (tryParam) u.searchParams.set("try", tryParam);
+          const dest = `${u.pathname}${u.search}`;
+          const here = `${window.location.pathname}${window.location.search}`;
+          if (dest !== here) {
+            window.location.replace(dest);
+          }
+        } catch {
+          /* ignore bad href */
+        }
+        return;
+      }
       applyJobIntent(job.id);
     }, 0);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialJob]);
+  }, [initialJob, initialSku]);
 
   useEffect(() => {
     if (status !== "generating") return;

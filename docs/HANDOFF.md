@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Seller Pack job.href AfterPath + Create redirect
+- GenerateAfterPath: jobs with `href` (Seller Pack) use mode=seller-pack for
+  Next SKU / Full Generate (+ sku · try), not /create?job=seller-pack.
+- CreateStudio: ?job=seller-pack redirects to pack with sku/try carry.
+- Smoke locks intent?.href + location.replace.
+
 ### 2026-07-26 — [grok] Landing/Image AfterPath SKU + PresetCard proof chips
 - LandingToolPanel + Image studio: load device-local bible SKU → GenerateAfterPath
   (Next SKU / Create / Seller Pack hops; Create/Batch parity).
