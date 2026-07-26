@@ -50,13 +50,15 @@ export const TOOLS: Tool[] = [
       "toy video maker from photo",
       "make a toy video with ai",
       "designer toy AI video",
+      "one photo toy video AI",
+      "toy product video AI",
     ],
     primaryEffect: "360-spin-showcase",
     effects: ["360-spin-showcase", "floating-hero", "blind-box-unboxing"],
     faq: [
       {
         q: "What is an AI toy video generator?",
-        a: "It turns one still photo of a designer toy into a short motion clip. Pikbo is built for figures, blind boxes, and art toys — not generic stock footage.",
+        a: "It turns one still photo of a designer toy into a short motion clip. Pikbo is built for figures, blind boxes, and art toys — not generic stock footage. Related jobs: designer toy AI video, one photo toy video AI, and figure 360 clips on their own tool URLs.",
       },
       {
         q: "Is this free to try?",
@@ -114,17 +116,19 @@ export const TOOLS: Tool[] = [
     slug: "ai-product-video-generator-for-toys",
     emoji: "🛍️",
     label: "Product video",
-    h1: "AI Product Video Generator for Toys",
-    seoTitle: "AI Product Video Generator for Toys From One Photo | Pikbo",
+    h1: "Toy Product Video AI — Listing Clips From One Photo",
+    seoTitle: "Toy Product Video AI: Listing Clips From One Photo | Pikbo",
     seoDescription:
-      "Make listing-ready product videos for toys from one photo. Clean spins and hero shots for Etsy, TikTok Shop, and marketplaces — no studio.",
+      "Toy product video AI for Etsy, TikTok Shop, and storefronts. One owned photo → clean spin or hero clip. Free Mini trial — no card, no studio.",
     intro:
-      "Toy listings sell on motion. Pikbo turns one product photo into a clean spin or hero clip that shows your figure off for a storefront, without a camera studio.",
+      "Toy product video AI is for sellers who already have a packshot. Pikbo turns one product photo into a clean spin or hero clip that shows your figure off for a storefront — without a camera studio.",
     body: [
-      "A short spin lets buyers inspect a collectible, but it does not guarantee a sale, and inferred angles should be checked against the real product.",
+      "Searchers looking for toy product video AI usually need listing motion, not cinematic chaos. A short spin lets buyers inspect a collectible; it does not guarantee a sale. Check inferred angles against the real product.",
       "Paid clips are cleared for commercial use — keep the video honest to the product you're actually selling.",
+      "Head term AI toy video generator lives on /tools/ai-toy-video-generator. This page owns the e-commerce product-video job only.",
     ],
     keywords: [
+      "toy product video AI",
       "ai product video generator toys",
       "toy listing video maker",
       "product video from photo toy",
@@ -132,6 +136,10 @@ export const TOOLS: Tool[] = [
     primaryEffect: "360-spin-showcase",
     effects: ["360-spin-showcase", "floating-hero", "display-case-glam"],
     faq: [
+      {
+        q: "What is toy product video AI?",
+        a: "It drafts a short product clip from one toy photo for listings and shops. Pikbo is toy-native — paint and sculpt stay the reference.",
+      },
       {
         q: "Can I use these for listings?",
         a: "Paid clips are cleared for commercial use. Because angles are generated, review sculpt, paint, and logos before publishing.",
@@ -338,17 +346,19 @@ export const TOOLS: Tool[] = [
     slug: "one-photo-product-video",
     emoji: "📸",
     label: "One photo",
-    h1: "Make a Product Video From One Toy Photo",
-    seoTitle: "One-Photo Product Video Maker for Toys | Pikbo",
+    h1: "One Photo Toy Video AI — Single Still to Short Clip",
+    seoTitle: "One Photo Toy Video AI: Single Still to Short Clip | Pikbo",
     seoDescription:
-      "Only have one photo? Turn a single toy product photo into a short video — a floating hero or clean spin for listings and social.",
+      "One photo toy video AI for designers and sellers. Turn a single owned toy still into a short hero or spin — Free Mini, no card, no photo shoot.",
     intro:
-      "You don't need a photo shoot. Pikbo turns a single product photo of your toy into a short video — a floating hero or a clean spin — from that one image.",
+      "One photo toy video AI means you skip the multi-angle shoot. Pikbo turns a single product photo of your toy into a short video — floating hero or clean spin — from that one image.",
     body: [
-      "The one-photo workflow is the fastest path from a shelf shot to a postable clip.",
+      "The one-photo workflow is the fastest path from a shelf shot to a postable clip. No turntable required.",
       "Because the motion and any unseen angles are generated, review the result against the real product before using it in a listing.",
+      "For the head term AI toy video generator, use /tools/ai-toy-video-generator. This URL owns the single-still constraint job.",
     ],
     keywords: [
+      "one photo toy video AI",
       "one photo product video",
       "single photo toy video",
       "product video from one image toy",
@@ -359,6 +369,10 @@ export const TOOLS: Tool[] = [
       {
         q: "Really just one photo?",
         a: "Yes — one clean, front-facing photo is enough. Better lighting and a plain background give a smoother clip.",
+      },
+      {
+        q: "Is one photo toy video AI the same as a full studio?",
+        a: "No. It drafts motion from one still. QA paint and logos before high-value listings.",
       },
       {
         q: "Will it show accurate angles?",
@@ -563,19 +577,21 @@ export const TOOLS: Tool[] = [
     slug: "figure-360-product-video",
     emoji: "🔄",
     label: "360 figure video",
-    h1: "Figure 360° Product Video From One Photo",
-    seoTitle: "Figure 360 Product Video Generator | Pikbo",
+    h1: "AI Figure 360 Video From One Photo",
+    seoTitle: "AI Figure 360 Video: Spin From One Photo | Pikbo",
     seoDescription:
-      "Make a 360° product video of a figure from one photo — no turntable. Free Mini trial for toy listings and storefronts.",
+      "AI figure 360 video from one photo — no turntable. Short product spins for toy listings and storefronts. Free Mini trial, no card.",
     intro:
-      "Need a turntable look without the rig? This tool turns one owned figure photo into a short 360-style product spin for listings and shop pages.",
+      "AI figure 360 video is the turntable look without the rig. This tool turns one owned figure photo into a short 360-style product spin for listings and shop pages.",
     body: [
-      "Marketplace buyers want to sense depth. A calm spin answers more questions than three extra stills.",
+      "Marketplace buyers want to sense depth. A calm AI figure 360 video answers more questions than three extra stills.",
       "Start with a front-facing packshot on a plain background. Free Mini is Seedance Mini at 5s · 480p with an on-player mark.",
       "Review sculpt and paint before you publish. High-value figures need stricter QA than mass blind boxes.",
-      "Related jobs: Etsy listing page, Amazon product video use case, and the spin effect landing — each keeps its own TDH.",
+      "Related jobs: toy product video AI, Etsy listing use case, and the head-term AI toy video generator — each keeps its own URL.",
     ],
     keywords: [
+      "AI figure 360 video",
+      "ai figure 360 video",
       "figure 360 product video",
       "toy turntable video generator",
       "360 figure video from photo",
@@ -583,6 +599,10 @@ export const TOOLS: Tool[] = [
     primaryEffect: "360-spin-showcase",
     effects: ["360-spin-showcase", "display-case-glam", "floating-hero"],
     faq: [
+      {
+        q: "What is AI figure 360 video?",
+        a: "A short product spin drafted from one figure photo so buyers can sense the sculpt without a physical turntable.",
+      },
       {
         q: "Do I need a physical turntable?",
         a: "No. Upload one clear photo and run the spin recipe. Always QA the result.",
@@ -602,27 +622,32 @@ export const TOOLS: Tool[] = [
      * Brand campaign SEO lives on /for/blind-box-brand-marketing (no duplicate page).
      * Original designer-toy / indie blind-box stills only — no franchise names.
      */
-    h1: "Blind Box Reveal Video Maker From One Photo",
-    seoTitle: "Blind Box Reveal Video Maker | Pikbo",
+    h1: "Blind Box AI Video Generator — Reveal From One Photo",
+    seoTitle: "Blind Box AI Video Generator: Reveal From One Photo | Pikbo",
     seoDescription:
-      "Create a blind box reveal clip from one figure photo for TikTok and drops. Free Mini trial with honest limits.",
+      "Blind box AI video generator for sellers and collectors. One owned photo → reveal/unbox short for TikTok and drops. Free Mini trial, honest limits.",
     intro:
-      "Reveal energy sells the dopamine of a pull. Upload one photo of an original or rights-owned blind-box figure (not a selfie) and draft an unboxing-style short for TikTok, Reels, or restock posts.",
+      "A blind box AI video generator is for pull energy, not generic face filters. Upload one photo of an original or rights-owned blind-box figure (not a selfie) and draft an unboxing-style short for TikTok, Reels, or restock posts.",
     body: [
-      "This tool page owns the “make a reveal clip from one photo” job. Brand-wide drop campaigns and series teasers belong on /for/blind-box-brand-marketing — same engine, different intent, one canonical each.",
+      "This tool page owns the blind box AI video generator job: make a reveal clip from one photo. Brand-wide drop campaigns and series teasers belong on /for/blind-box-brand-marketing — same engine, different intent, one canonical each.",
       "Lead with the first second: lid motion or mystery light works better than a slow fade. Use vertical recipes for TikTok/Reels. Keep Free Mini caps in mind (5s · 480p · mark).",
       "Collectors flex a pull; small shops draft restock hooks. Always confirm you own the photo and the product rights before live generate.",
       "Channel SEO (TikTok Shop, Etsy) stays on /for/* platform pages. Link out for distribution; do not re-title this tool as a brand marketing page.",
     ],
     keywords: [
+      "blind box AI video generator",
+      "blind box ai video generator",
       "blind box reveal video maker",
       "blind box unboxing video from photo",
       "indie blind box reveal clip",
-      "figure pull video from one photo",
     ],
     primaryEffect: "blind-box-unboxing",
     effects: ["blind-box-unboxing", "mystery-box-reveal", "paparazzi-flash"],
     faq: [
+      {
+        q: "What is a blind box AI video generator?",
+        a: "It drafts a short reveal or unbox-style clip from one photo of a rights-owned blind-box figure — for social and restock hooks.",
+      },
       {
         q: "Is this the same as blind box brand marketing?",
         a: "No. This page is the reveal-clip tool. Brand drop campaigns use /for/blind-box-brand-marketing. Both deep-link Create; each keeps one primary keyword job.",
@@ -697,19 +722,21 @@ export const TOOLS: Tool[] = [
     slug: "designer-toy-teaser-video",
     emoji: "✨",
     label: "Toy teaser",
-    h1: "Designer Toy Teaser Video From One Photo",
-    seoTitle: "Designer Toy Teaser Video Generator | Pikbo",
+    h1: "Designer Toy AI Video — Teaser From One Photo",
+    seoTitle: "Designer Toy AI Video: Teaser From One Photo | Pikbo",
     seoDescription:
-      "Draft a designer toy launch teaser from one photo — floating hero and reveal energy for drops. Free Mini trial.",
+      "Designer toy AI video for drops and lookbooks. One owned still → floating hero or reveal teaser. Free Mini trial — vertical toy-native, not generic stock.",
     intro:
-      "Launch weeks need teaser loops. Reuse the lookbook still as a short floating hero or mystery reveal without a full motion studio.",
+      "Designer toy AI video is for indie vinyl, art toys, and lookbook stills — not mass face filters. Reuse one owned photo as a short floating hero or mystery reveal without a full motion studio.",
     body: [
       "Floating hero sells premium. Mystery reveal sells curiosity. Match the recipe to the announcement beat.",
+      "The head term AI toy video generator is on /tools/ai-toy-video-generator. This page owns designer-toy teaser / drop energy.",
       "Keep claims honest: soft launch model is Seedance Mini on Free Mini; Lab demos are labeled cached samples.",
-      "Brand end-cards and logos still belong in your editor after download.",
-      "See also /for/designer-toy-marketing-videos for the full marketing job page.",
+      "Brand end-cards and logos still belong in your editor after download. See also /for pages for channel marketing jobs.",
     ],
     keywords: [
+      "designer toy AI video",
+      "designer toy ai video",
       "designer toy teaser video",
       "toy drop teaser generator",
       "art toy launch video",

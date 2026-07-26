@@ -45,19 +45,36 @@ export const PREVIEW_ROBOTS: NonNullable<Metadata["robots"]> = {
 };
 
 /**
- * 哥飞: 冷启动只保首页 + 主词页 + 3–5 高质量页（+ 法务）。
- * 路径无尾斜杠；根为 "/"。
+ * 哥飞: 冷启动只保首页 + 主词页 + 少量高质量页（+ 法务）。
+ * 2026-07-27: 长尾无人蓝海词扩 3 个 proof 工具页 + 1 个 action-figure /for
+ * （一词一页 · 不重复主词 TDH）。路径无尾斜杠；根为 "/"。
  */
 export const COLD_START_INDEX_PATHS = [
   "/",
   "/tools/ai-toy-video-generator",
+  "/tools/figure-360-product-video",
+  "/tools/blind-box-reveal-video-maker",
+  "/tools/one-photo-product-video",
+  "/tools/ai-product-video-generator-for-toys",
   "/for/photo-to-video-for-toys",
   "/for/etsy-listing-videos",
+  "/for/action-figure-product-videos",
   "/guides/how-to-photograph-toys-for-ai-video",
-  "/explore",
   "/pricing",
   "/privacy",
   "/terms",
+] as const;
+
+/**
+ * Tools allowed to index in cold start (must also appear in COLD_START_INDEX_PATHS).
+ * Primary rank + long-tail blue-ocean cluster 2026-07-27.
+ */
+export const COLD_START_INDEXABLE_TOOL_SLUGS = [
+  "ai-toy-video-generator",
+  "figure-360-product-video",
+  "blind-box-reveal-video-maker",
+  "one-photo-product-video",
+  "ai-product-video-generator-for-toys",
 ] as const;
 
 const COLD_START_SET = new Set<string>(COLD_START_INDEX_PATHS);
@@ -90,9 +107,13 @@ export function robotsForRecipe(slug: string): Metadata["robots"] | undefined {
   return CONCEPT_ROBOTS;
 }
 
-/** Tools: only primary rank slug indexes during cold start. */
+/** Tools: cold-start allowlist only (primary + long-tail cluster). */
 export function robotsForToolSlug(slug: string): Metadata["robots"] | undefined {
-  if (slug === "ai-toy-video-generator") return undefined;
+  if (
+    (COLD_START_INDEXABLE_TOOL_SLUGS as readonly string[]).includes(slug)
+  ) {
+    return undefined;
+  }
   return CONCEPT_ROBOTS;
 }
 

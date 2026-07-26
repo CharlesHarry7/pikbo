@@ -1985,7 +1985,7 @@ assert.match(landingResults, /recipeHasUniqueProof/);
 const sitemapSrc = fs.readFileSync(join(root, "app/sitemap.ts"), "utf8");
 assert.match(sitemapSrc, /COLD_START_INDEX_PATHS/);
 assert.doesNotMatch(sitemapSrc, /\/cinema|\/supercomputer|\/models|\/community/);
-// Cold-start sitemap is exactly 9 paths (not a 90+ dump)
+// Cold-start sitemap allowlist size (not a 90+ dump). 2026-07-27 long-tail cluster → 13.
 const seoIndexSrc = fs.readFileSync(join(root, "lib/seoIndex.ts"), "utf8");
 assert.match(seoIndexSrc, /COLD_START_INDEX_PATHS/);
 {
@@ -1994,8 +1994,20 @@ assert.match(seoIndexSrc, /COLD_START_INDEX_PATHS/);
   );
   assert.ok(m, "COLD_START_INDEX_PATHS present");
   const n = (m[1].match(/"[^"]+"/g) || []).length;
-  assert.equal(n, 9, `sitemap allowlist must stay 9 URLs, got ${n}`);
+  assert.equal(
+    n,
+    13,
+    `sitemap allowlist must stay 13 URLs (long-tail cluster), got ${n}`
+  );
 }
+assert.match(seoIndexSrc, /COLD_START_INDEXABLE_TOOL_SLUGS/);
+assert.match(seoIndexSrc, /figure-360-product-video/);
+assert.match(seoIndexSrc, /blind-box-reveal-video-maker/);
+assert.match(seoIndexSrc, /one-photo-product-video/);
+assert.match(toolsSrc, /one photo toy video AI|One Photo Toy Video AI/i);
+assert.match(toolsSrc, /blind box AI video generator|Blind Box AI Video Generator/i);
+assert.match(toolsSrc, /AI figure 360 video|AI Figure 360 Video/i);
+assert.match(toolsSrc, /Toy Product Video AI|toy product video AI/i);
 // GSC P0: Preview pages must NOT be dual-blocked by robots.txt (need crawl for noindex)
 const robotsSrc = fs.readFileSync(join(root, "app/robots.ts"), "utf8");
 assert.match(robotsSrc, /\/library/);

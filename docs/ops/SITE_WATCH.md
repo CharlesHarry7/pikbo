@@ -5,6 +5,31 @@ Grok 主写（见 `docs/prompts/GROK_SELF_OPS.md`）。Claude/Codex 可补产品
 
 ---
 
+## 2026-07-27 · 长尾蓝海 7 词布局（Grok）
+
+```yaml
+writer: grok-eng
+decision: |
+  老板：这些词无人做，我们做。竞争低→先占一词一页 + 冷启动 sitemap 扩到 13。
+  主词 H1 冻结；不堆 franchise IP；不扩垃圾 URL。
+map: docs/growth/LONG_TAIL_KEYWORD_MAP.md
+index_new:
+  - /tools/figure-360-product-video  # AI figure 360 video
+  - /tools/blind-box-reveal-video-maker  # blind box AI video generator
+  - /tools/one-photo-product-video  # one photo toy video AI
+  - /tools/ai-product-video-generator-for-toys  # toy product video AI
+  - /for/action-figure-product-videos  # AI action figure video generator
+mesh:
+  - designer toy AI video → designer-toy-teaser + main keywords
+  - AI toy video generator → primary rank (unchanged H1)
+dropped_from_sitemap: /explore
+next:
+  workbuddy: "外链锚文本可轮换 7 词；rank URL 仍以主词页为主"
+  gsc: "老板侧：新 URL 提交 sitemap / 检查覆盖率（非工程阻塞）"
+```
+
+---
+
 ## 2026-07-27 · WorkBuddy intake + Modules density（Grok）
 
 ```yaml

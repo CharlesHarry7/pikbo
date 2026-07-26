@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Long-tail blue-ocean keyword cluster (7 terms)
+- Map: `docs/growth/LONG_TAIL_KEYWORD_MAP.md` — one job per URL.
+- On-page TD/H1/keywords: 360, blind-box AI, one-photo, product video AI,
+  designer toy AI teaser, action figure AI generator; **main H1 frozen**.
+- Cold-start sitemap **13** (was 9): +4 tools + action-figure /for; drop /explore.
+- `COLD_START_INDEXABLE_TOOL_SLUGS` + smoke count locks.
+
 ### 2026-07-27 — [grok] AfterPath auto-SKU + Cinema + Pack try sample
 - GenerateAfterPath: when `sku` prop omitted, load device-local bible SKU so
   Cinema / Supercomputer / any shelf still carries Next SKU · Seller Pack.

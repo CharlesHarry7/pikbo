@@ -322,27 +322,32 @@ export const USE_CASES: UseCase[] = [
      * Not a brand-franchise page — only original or rights-owned figures.
      * Aliases (video-generator, action-figures short) 301 here — no duplicate pages.
      */
-    h1: "Action Figure Product Videos From One Photo",
-    seoTitle: "Action Figure Product Video Generator | Pikbo",
+    h1: "AI Action Figure Video Generator — Product Clips From One Photo",
+    seoTitle: "AI Action Figure Video Generator From One Photo | Pikbo",
     seoDescription:
-      "Make short action figure product videos from one photo — spins, hero floats, and shelf glam for listings and social. Free Mini trial, no card.",
+      "AI action figure video generator for sellers. One owned photo → spin, hero float, or shelf glam for listings and social. Free Mini trial, no card.",
     intro:
-      "Sellers of articulated designer figures need motion that shows scale, paint apps, and pose without a full studio. Upload one photo of a figure you own (not a selfie) and draft a listing-ready product clip.",
+      "An AI action figure video generator helps sellers of articulated designer figures show scale, paint apps, and pose without a full studio. Upload one photo of a figure you own (not a selfie) and draft a listing-ready product clip.",
     body: [
-      "This URL owns the product-listing job for articulated figures. Dance/play motion for collectors lives on effect recipes; marketplace channel pages (Etsy, Amazon) own channel SEO — link out, do not duplicate.",
+      "This URL owns the AI action figure video generator job for product/listing motion. Dance/play motion for collectors lives on effect recipes; marketplace channel pages (Etsy, Amazon) own channel SEO — link out, do not duplicate.",
       "Buyers hesitate when they only see a single front-facing JPEG. A short spin or hero float answers “how does it look in the round?” faster than three more stills.",
       "Use a neutral background when you can. Strong silhouettes survive AI motion better than cluttered shelves. Soft launch Free Mini is enough to validate a listing hook before you batch a whole roster.",
       "Recommended path: 360° spin for storefronts, floating hero for “new in stock” posts, display-case glam when the figure is a premium release. Always verify likeness and accessories before you publish.",
       "Rights matter: only upload figures and photos you own or are licensed to market. Do not upload third-party franchise packaging you do not control. Soft launch enforces an owns-rights checkbox server-side.",
     ],
     keywords: [
+      "AI action figure video generator",
+      "ai action figure video generator",
       "action figure product video",
       "action figure listing video",
       "articulated figure product clip",
-      "figure product video from photo",
     ],
     recommendedEffects: ["360-spin-showcase", "floating-hero", "display-case-glam"],
     faq: [
+      {
+        q: "What is an AI action figure video generator?",
+        a: "A tool that drafts short product motion from one photo of an articulated figure you own — for listings and social, not franchise IP cloning.",
+      },
       {
         q: "Can I make an action figure listing video without a turntable?",
         a: "Yes. Upload one clear photo, run a spin or hero recipe, and review the draft. A physical turntable is optional, not required.",

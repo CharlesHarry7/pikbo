@@ -13,19 +13,25 @@
 | **Sitemap URL 数** | **9**（不是 94） |
 | 来源 | `lib/seoIndex.ts` → `COLD_START_INDEX_PATHS` → `app/sitemap.ts` |
 
-### 当前 9 个可索引 URL
+### 当前 13 个可索引 URL（2026-07-27 长尾蓝海扩容）
 
 1. `/`
 2. `/tools/ai-toy-video-generator` ← **主词页**
-3. `/for/photo-to-video-for-toys`
-4. `/for/etsy-listing-videos`
-5. `/guides/how-to-photograph-toys-for-ai-video`
-6. `/explore`
-7. `/pricing`
-8. `/privacy`
-9. `/terms`
+3. `/tools/figure-360-product-video` ← AI figure 360 video
+4. `/tools/blind-box-reveal-video-maker` ← blind box AI video generator
+5. `/tools/one-photo-product-video` ← one photo toy video AI
+6. `/tools/ai-product-video-generator-for-toys` ← toy product video AI
+7. `/for/photo-to-video-for-toys`
+8. `/for/etsy-listing-videos`
+9. `/for/action-figure-product-videos` ← AI action figure video generator
+10. `/guides/how-to-photograph-toys-for-ai-video`
+11. `/pricing`
+12. `/privacy`
+13. `/terms`
 
-其余 `/for/*` `/tools/*` `/effects/*` `/toys/*` 等可达但 **noindex**（无独立输入/输出样片或非白名单），**不进 sitemap**。
+地图全文：`docs/growth/LONG_TAIL_KEYWORD_MAP.md`。  
+其余 `/for/*` `/tools/*` 等可达但 **noindex**（非白名单），**不进 sitemap**。  
+**已下 sitemap：** `/explore`（Lab 墙，非长尾战场）。
 
 ---
 
