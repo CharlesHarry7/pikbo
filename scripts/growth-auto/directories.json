@@ -1,0 +1,86 @@
+{
+  "product": {
+    "name": "Pikbo",
+    "url": "https://pikbo.ai",
+    "rankUrl": "https://pikbo.ai/tools/ai-toy-video-generator",
+    "createUrl": "https://pikbo.ai/create",
+    "tagline": "Turn one designer-toy photo into a short AI video",
+    "description": "Pikbo is an AI video suite for designer toys, blind boxes, and figures. Upload one owned product photo, pick a recipe (360° spin, unbox, float), and generate a short clip for listings and social. Free Mini trial — no card. Soft launch honesty: Seedance Mini live path, no fake multi-model zoo.",
+    "categories": ["AI Video", "Image to Video", "Generative AI", "E-commerce", "Marketing"],
+    "pricing": "Free trial",
+    "twitter": "@pikbo_ai"
+  },
+  "anchors": [
+    "Pikbo",
+    "Pikbo.ai",
+    "Pikbo — AI toy video generator",
+    "AI toy video generator by Pikbo",
+    "toy video from one photo"
+  ],
+  "directories": [
+    {
+      "id": "theresanaiforthat",
+      "name": "There's An AI For That",
+      "submitUrl": "https://theresanaiforthat.com/submit/",
+      "homeUrl": "https://theresanaiforthat.com/",
+      "preferredLink": "rankUrl",
+      "enabled": true
+    },
+    {
+      "id": "futuretools",
+      "name": "FutureTools",
+      "submitUrl": "https://www.futuretools.io/submit-a-tool",
+      "homeUrl": "https://www.futuretools.io/",
+      "preferredLink": "url",
+      "enabled": true
+    },
+    {
+      "id": "futurepedia",
+      "name": "Futurepedia",
+      "submitUrl": "https://www.futurepedia.io/submit-tool",
+      "homeUrl": "https://www.futurepedia.io/",
+      "preferredLink": "url",
+      "enabled": true
+    },
+    {
+      "id": "topaitools",
+      "name": "TopAI.tools",
+      "submitUrl": "https://topai.tools/submit",
+      "homeUrl": "https://topai.tools/",
+      "preferredLink": "rankUrl",
+      "enabled": true
+    },
+    {
+      "id": "saashub",
+      "name": "SaaSHub",
+      "submitUrl": "https://www.saashub.com/submit",
+      "homeUrl": "https://www.saashub.com/",
+      "preferredLink": "url",
+      "enabled": true
+    },
+    {
+      "id": "aitoolsguru",
+      "name": "AI Tools Guru",
+      "submitUrl": "https://aitoolsguru.com/submit-tool/",
+      "homeUrl": "https://aitoolsguru.com/",
+      "preferredLink": "url",
+      "enabled": true
+    },
+    {
+      "id": "toolify",
+      "name": "Toolify",
+      "submitUrl": "https://www.toolify.ai/submit",
+      "homeUrl": "https://www.toolify.ai/",
+      "preferredLink": "rankUrl",
+      "enabled": true
+    },
+    {
+      "id": "aitools_fyi",
+      "name": "AITools.fyi",
+      "submitUrl": "https://aitools.fyi/submit",
+      "homeUrl": "https://aitools.fyi/",
+      "preferredLink": "url",
+      "enabled": true
+    }
+  ]
+}
