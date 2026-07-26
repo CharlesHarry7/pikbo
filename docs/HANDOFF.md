@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Create first-run conversion (Phase F 390px)
+- Mobile Create path is three steps: Upload → Choose recipe → Generate.
+- Model/mode strip, ActivationChecklist, WorkflowShelf, and JobIntentBar are
+  desktop-only so the phone first screen stays product-first.
+- Sticky CTA labels ownership upload; recipe line shows credit cost; Lab sample
+  remains a secondary free path; advanced controls stay collapsed by default.
+- engine-smoke locks data-first-run markers + showAdvanced initial false.
+
 ### 2026-07-26 — [grok] fix(smoke): drop accidental T6 worker asserts
 - engine-smoke again matches main download gate (`canDownloadResult` + bake path).
 - Keeps HfProductRail product-first Explore locks; no T6 worker enablement.

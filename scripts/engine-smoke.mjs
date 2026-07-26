@@ -336,6 +336,33 @@ assert.match(batch, /effectiveModel/);
 assert.match(batch, /seedance-mini/);
 assert.match(batch, /effectiveResolution/);
 
+// Create first-run conversion (Phase F 390px): three actions in source;
+// advanced controls stay collapsed on initial render.
+const createFirstRunStudio = fs.readFileSync(
+  join(root, "components/CreateStudio.tsx"),
+  "utf8"
+);
+assert.match(createFirstRunStudio, /data-first-run-step="upload"/);
+assert.match(createFirstRunStudio, /Upload owned toy photo/);
+assert.match(createFirstRunStudio, /data-first-run-step="recipe"/);
+assert.match(createFirstRunStudio, /Choose recipe/);
+assert.match(createFirstRunStudio, /data-first-run-action="generate"/);
+assert.match(createFirstRunStudio, /CREDITS_PER_VIDEO\} credits/);
+assert.match(
+  createFirstRunStudio,
+  /const \[showAdvanced, setShowAdvanced\] = useState\(false\)/
+);
+assert.match(createFirstRunStudio, /aria-expanded=\{showAdvanced\}/);
+// Mobile first-run: activation/workflow chrome desktop-only (lg+)
+assert.match(
+  createFirstRunStudio,
+  /Activation \+ job shelf: desktop only/
+);
+assert.match(
+  createFirstRunStudio,
+  /hidden border-b border-white\/10 bg-\[#050506\] px-3 py-1\.5 sm:block/
+);
+
 const meClient = fs.readFileSync(join(root, "lib/meClient.ts"), "utf8");
 assert.match(meClient, /export async function fetchMe/);
 assert.match(meClient, /cachedDemoFree/);
