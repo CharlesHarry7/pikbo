@@ -4126,3 +4126,13 @@ assert.ok(gonePack.children.every((child) => child.status === "recovery_unavaila
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node
+
+// Phase G: viral preset rail provisional Lab ≥4 chips
+assert.match(
+  fs.readFileSync(join(root, "components/HomeViralPresetRail.tsx"), "utf8"),
+  /data-proof-quality=["']provisional-lab["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HomeViralPresetRail.tsx"), "utf8"),
+  /Official · cached|provisionalLabQualityLabel/
+);

@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Viral preset rail Official + Lab ≥4 chips
+- HomeViralPresetRail: Official · cached + provisional Lab ≥4 on recipes that
+  pass home-proof quality (not external QA).
+- Smoke locks data-proof-quality on rail.
+
 ### 2026-07-26 — [grok] Library history Open result HEAD-gated
 - History card "Open result" is a button → `downloadClip` (HEAD first), not a
   raw `<a href=/api/downloads>` that can dump 403 JSON in a new tab.
