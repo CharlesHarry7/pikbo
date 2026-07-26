@@ -823,7 +823,8 @@ function requestCreditStateFromFailure(result) {
     result.code === "REQUEST_CANCELED" ||
     result.code === "CANCELED" ||
     result.code === "TIMEOUT" ||
-    result.code === "PROVIDER_TIMEOUT"
+    result.code === "PROVIDER_TIMEOUT" ||
+    (result.code === "UNSAFE_URL" && result.creditsRefunded !== true)
   ) {
     return "refund unconfirmed";
   }
@@ -1893,7 +1894,8 @@ function requestCreditStateFromFailurePure(result) {
     result.code === "REQUEST_CANCELED" ||
     result.code === "CANCELED" ||
     result.code === "TIMEOUT" ||
-    result.code === "PROVIDER_TIMEOUT"
+    result.code === "PROVIDER_TIMEOUT" ||
+    (result.code === "UNSAFE_URL" && result.creditsRefunded !== true)
   ) {
     return "refund unconfirmed";
   }
@@ -1918,9 +1920,28 @@ assert.equal(
   }),
   "refund unconfirmed"
 );
+assert.equal(
+  requestCreditStateFromFailurePure({
+    status: 422,
+    code: "UNSAFE_URL",
+  }),
+  "refund unconfirmed"
+);
+assert.equal(
+  requestCreditStateFromFailurePure({
+    status: 422,
+    code: "UNSAFE_URL",
+    creditsRefunded: true,
+  }),
+  "10 restored"
+);
 assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
   /PROVIDER_NETWORK/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /UNSAFE_URL/
 );
 assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
@@ -2163,6 +2184,9 @@ const retryRoute = fs.readFileSync(
 );
 assert.match(retryRoute, /forkRetryJob/);
 assert.doesNotMatch(retryRoute, /NOT_IMPLEMENTED/);
+// createUi must use remix contract (ratio/duration/channel), not bare effect=
+assert.match(retryRoute, /createRemixHref/);
+assert.doesNotMatch(retryRoute, /create\?effect=\$\{/);
 
 // Phase F — Create/Seller mobile craft (390px ownership + sticky CTA)
 assert.match(createStudio, /create-ownership/);
@@ -4556,6 +4580,17 @@ assert.match(
   /UNSAFE_URL/
 );
 
+
+
+// UNSAFE_URL without confirmed restore → refundUnconfirmed (client honesty)
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /UNSAFE_URL[\s\S]{0,120}!creditsRefunded|code === ["']UNSAFE_URL["'] && !creditsRefunded/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /UNSAFE_URL[\s\S]{0,120}!creditsRefunded|code === ["']UNSAFE_URL["'] && !creditsRefunded/
+);
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node
