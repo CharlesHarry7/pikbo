@@ -9,6 +9,7 @@ import { DEMO_VIDEOS } from "@/lib/demoVideos";
  * HF homepage product entry strip — media-backed capability cards.
  * Only real Pikbo paths; Video is first and hot. Owned Lab posters only.
  */
+/** Product doors first; Flow/Cinema/Image are Preview (not live job peers). */
 const PRODUCTS: {
   href: string;
   title: string;
@@ -27,32 +28,35 @@ const PRODUCTS: {
     demoIndex: 0,
   },
   {
-    href: "/flow",
-    title: "Flow",
-    blurb: "Creation matrix",
-    tag: "Matrix",
-    demoIndex: 1,
+    href: "/create?mode=seller-pack",
+    title: "Seller Pack",
+    blurb: "3 videos · one photo",
+    tag: "Shop",
+    hot: true,
+    demoIndex: 3,
   },
   {
     href: "/modules",
     title: "Modules",
     blurb: "Fixed video jobs",
-    tag: "Apps",
+    tag: "Jobs",
+    hot: true,
     demoIndex: 2,
-  },
-  {
-    href: "/create?mode=seller-pack",
-    title: "Seller Pack",
-    blurb: "3 videos · one photo",
-    tag: "Shop",
-    demoIndex: 3,
   },
   {
     href: "/effects",
     title: "Viral Presets",
     blurb: "Full recipe wall",
     tag: "Presets",
+    hot: true,
     demoIndex: 4,
+  },
+  {
+    href: "/flow",
+    title: "Flow",
+    blurb: "Preview media wall",
+    tag: "Preview",
+    demoIndex: 1,
   },
   {
     href: "/cinema",
@@ -65,7 +69,7 @@ const PRODUCTS: {
     href: "/image",
     title: "Image",
     blurb: "Stills · then animate",
-    tag: "Optional",
+    tag: "Preview",
     demoIndex: 3,
   },
 ];

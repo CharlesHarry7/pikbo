@@ -402,10 +402,10 @@ export function HfExploreHome({
               </h2>
             </div>
             <Link
-              href="/flow"
+              href="/create"
               className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
             >
-              Open full Flow →
+              Open Generate →
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -420,11 +420,12 @@ export function HfExploreHome({
               <p className="text-[11px] text-white/40">Mini 5s · Sample ready</p>
             </div>
             {[
-              { href: "/effects", label: "Video presets", sub: "Viral recipes" },
               { href: "/create?mode=seller-pack", label: "Seller Pack", sub: "3 videos" },
-              { href: "/flow", label: "Flow", sub: "Video matrix" },
-              { href: "/community", label: "Lab", sub: "Video examples" },
-              { href: "/models", label: "Engines", sub: "Seedance live" },
+              { href: "/modules", label: "Modules", sub: "Video jobs" },
+              { href: "/effects", label: "Video presets", sub: "Viral recipes" },
+              { href: "/library", label: "Library", sub: "This device" },
+              { href: "/flow", label: "Flow · Preview", sub: "Media wall" },
+              { href: "/models", label: "Engines · Preview", sub: "Seedance live" },
             ].map((c) => (
               <Link
                 key={c.href}

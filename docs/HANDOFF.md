@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] HfProductRail + Explore jobs product-first
+- HfProductRail: Generate · Seller · Modules · Presets before Flow/Cinema/Image Preview.
+- HfExploreHome job grid: Seller/Modules/Library before Flow · Preview; Generate CTA.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-26 — [grok] Home suite product-first + Flow Preview tag
 - SuiteEntryStrip: Generate · Seller · Modules · Recipes · Flow (Preview last).
 - SuiteDoorLinks: Seller/Modules/Library before Flow · Preview; i18n suite.preview = Preview.
