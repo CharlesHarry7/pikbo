@@ -2353,11 +2353,19 @@ assert.match(t6Worker, /drawtext|PIKBO baked watermark/);
 assert.match(t6Worker, /t6-baked\//);
 assert.match(t6Worker, /t6OwnedDeliveryPath|\/api\/t6-derivatives/);
 assert.match(t6Worker, /transitionT6Derivative|DERIVATIVE_UNVERIFIED/);
+assert.match(t6Worker, /isVerifiedT6DerivativeForJob|DERIVATIVE_IDENTITY_MISMATCH/);
 assert.match(t6Worker, /SERVER_WORKER_DISABLED/);
+assert.match(t6Worker, /derivativeServingImplemented = false|storageAdapterImplemented = false/);
+assert.match(t6, /derivativeServingImplemented|storageAdapterImplemented/);
+assert.equal(
+  fs.existsSync(join(root, "app/api/t6-derivatives")),
+  false,
+  "T6 must stay blocked until an owned derivative serving route is implemented"
+);
 assert.doesNotMatch(t6Worker, /fetch\(input\.providerOutputUrl/);
 const t6Fixture = join(root, "scripts/t6-watermark-worker-fixture.mjs");
-assert.match(fs.readFileSync(t6Fixture, "utf8"), /PIKBO_BAKED_MARK|bakedMarkSignal/);
-execFileSync(process.execPath, [t6Fixture], { stdio: "pipe" });
+assert.match(fs.readFileSync(t6Fixture, "utf8"), /runT6PipelineWithInjectedRunner|DERIVATIVE_IDENTITY_MISMATCH/);
+execFileSync(process.execPath, ["--experimental-strip-types", t6Fixture], { stdio: "pipe" });
 assert.match(health, /t6Report|t6:/);
 assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),

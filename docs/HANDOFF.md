@@ -24,6 +24,13 @@ Newest first. One block per meaningful landing.
   checks, ffmpeg visible-mark command contract, checksum+ffprobe verification,
   and queued/running/succeeded/failed transition reducer. The app entrypoint is
   hard-disabled (`SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED=false`).
+- Review hardening binds every terminal replay and delivery gate to the exact
+  `jobId + providerRequestId` derivative identity; foreign terminal records,
+  wrong paths, equal source/output checksums, and non-public source addresses
+  fail closed. The fixture imports and runs the production worker core.
+- The expected `/api/t6-derivatives/...` serving route and owned storage adapter
+  are explicitly marked unimplemented in readiness; metadata alone cannot
+  unlock Free delivery.
 - This host has no `ffmpeg` or `ffprobe`. Operator requirement before enabling:
   install pinned ffmpeg+ffprobe in the persistent worker runtime; add durable
   job/storage locking; run the real MP4 derivative fixture proving distinct

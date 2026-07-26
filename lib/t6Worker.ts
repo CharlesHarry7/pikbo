@@ -41,6 +41,8 @@ export type T6DerivativeMetadata = Readonly<{
 export type T6WorkerReadiness = Readonly<{
   envRequested: boolean;
   implemented: boolean;
+  derivativeServingImplemented: boolean;
+  storageAdapterImplemented: boolean;
   effective: boolean;
   reason: string;
 }>;
@@ -49,12 +51,22 @@ export type T6WorkerReadiness = Readonly<{
 export function t6WorkerReadiness(): T6WorkerReadiness {
   const envRequested = process.env.PIKBO_T6_BAKED_WATERMARK_WORKER === "1";
   const implemented = SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED;
+  // No /api/t6-derivatives route or owned-object storage adapter exists yet.
+  // A metadata row must never be mistaken for a serveable file.
+  const derivativeServingImplemented = false;
+  const storageAdapterImplemented = false;
   return {
     envRequested,
     implemented,
-    effective: envRequested && implemented,
+    derivativeServingImplemented,
+    storageAdapterImplemented,
+    effective:
+      envRequested &&
+      implemented &&
+      derivativeServingImplemented &&
+      storageAdapterImplemented,
     reason:
-      "T6 baked derivatives are hard-disabled until the persisted server worker and database-backed ffmpeg proof are complete",
+      "T6 baked derivatives are hard-disabled until the persisted server worker, owned serving/storage adapter, and database-backed ffmpeg proof are complete",
   };
 }
 
@@ -68,8 +80,12 @@ export function t6DerivativeIdempotencyKey(input: {
 }
 
 export function t6DerivativeObjectKey(input: ServerOwnedT6Input): string {
+  return t6DerivativeObjectKeyFromIdempotency(input.idempotencyKey);
+}
+
+export function t6DerivativeObjectKeyFromIdempotency(idempotencyKey: string): string {
   return `t6-baked/${createHash("sha256")
-    .update(input.idempotencyKey)
+    .update(idempotencyKey)
     .digest("hex")}.mp4`;
 }
 
@@ -79,7 +95,45 @@ export function t6OwnedDeliveryPath(objectKey: string): string | null {
   return match ? `/api/t6-derivatives/${match[1]}.mp4` : null;
 }
 
-function isPrivateIpv4(hostname: string): boolean {
+/** Exact job binding required before any Free derivative may be served. */
+export function isVerifiedT6DerivativeForJob(input: {
+  jobId: string;
+  providerRequestId?: string;
+  derivative?: Pick<
+    T6DerivativeMetadata,
+    | "status"
+    | "idempotencyKey"
+    | "objectKey"
+    | "deliveryPath"
+    | "contentType"
+    | "sourceChecksum"
+    | "outputChecksum"
+    | "probe"
+  >;
+}): boolean {
+  if (!input.providerRequestId || !input.derivative) return false;
+  const expectedIdempotencyKey = t6DerivativeIdempotencyKey({
+    jobId: input.jobId,
+    providerRequestId: input.providerRequestId,
+  });
+  const expectedObjectKey = t6DerivativeObjectKeyFromIdempotency(
+    expectedIdempotencyKey
+  );
+  const derivative = input.derivative;
+  return (
+    derivative.status === "succeeded" &&
+    derivative.idempotencyKey === expectedIdempotencyKey &&
+    derivative.objectKey === expectedObjectKey &&
+    derivative.deliveryPath === t6OwnedDeliveryPath(expectedObjectKey) &&
+    derivative.contentType === "video/mp4" &&
+    Boolean(derivative.sourceChecksum) &&
+    Boolean(derivative.outputChecksum) &&
+    derivative.sourceChecksum !== derivative.outputChecksum &&
+    derivative.probe?.bakedMarkSignal === true
+  );
+}
+
+function isNonPublicIpv4(hostname: string): boolean {
   const parts = hostname.split(".").map(Number);
   if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
     return false;
@@ -91,26 +145,43 @@ function isPrivateIpv4(hostname: string): boolean {
     a === 127 ||
     (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 0) ||
+    (a === 192 && b === 2) ||
     (a === 192 && b === 168) ||
-    (a === 100 && b >= 64 && b <= 127)
+    (a === 100 && b >= 64 && b <= 127) ||
+    (a === 198 && (b === 18 || b === 19)) ||
+    (a === 198 && b === 51) ||
+    (a === 203 && b === 0) ||
+    a >= 224
   );
+}
+
+function isNonPublicIpv6(value: string): boolean {
+  const normalized = value.replace(/^\[|\]$/g, "").toLowerCase();
+  const mappedIpv4 = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+  if (mappedIpv4) return isNonPublicIpv4(mappedIpv4[1]);
+  return (
+    normalized === "::" ||
+    normalized === "::1" ||
+    normalized.startsWith("fe80:") ||
+    normalized.startsWith("fc") ||
+    normalized.startsWith("fd") ||
+    normalized.startsWith("ff") ||
+    normalized.startsWith("2001:db8:")
+  );
+}
+
+function isNonPublicAddress(address: string): boolean {
+  const normalized = address.replace(/^\[|\]$/g, "").toLowerCase();
+  return normalized.includes(":")
+    ? isNonPublicIpv6(normalized)
+    : isNonPublicIpv4(normalized);
 }
 
 /** DNS rebinding guard: every address resolved by the server adapter must be public. */
 export function hasOnlyPublicResolvedAddresses(addresses: readonly string[]): boolean {
   if (!addresses.length) return false;
-  return addresses.every((address) => {
-    const normalized = address.replace(/^\[|\]$/g, "").toLowerCase();
-    if (isPrivateIpv4(normalized)) return false;
-    const mappedIpv4 = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    if (mappedIpv4 && isPrivateIpv4(mappedIpv4[1])) return false;
-    return !(
-      normalized === "::1" ||
-      normalized.startsWith("fe80:") ||
-      normalized.startsWith("fc") ||
-      normalized.startsWith("fd")
-    );
-  });
+  return addresses.every((address) => !isNonPublicAddress(address));
 }
 
 /**
@@ -122,18 +193,13 @@ export function isPublicProviderOutputUrl(value: string): boolean {
     const url = new URL(value);
     const host = url.hostname.toLowerCase();
     if (url.protocol !== "https:" || !host || url.username || url.password) return false;
-    if (host === "localhost" || host.endsWith(".localhost") || isPrivateIpv4(host)) {
+    if (host === "localhost" || host.endsWith(".localhost") || isNonPublicAddress(host)) {
       return false;
     }
     // file:, data:, unix sockets and IPv6 loopback / link-local / ULA all fail.
     if (host.includes(":")) {
       const normalized = host.replace(/^\[|\]$/g, "");
-      if (
-        normalized === "::1" ||
-        normalized.startsWith("fe80:") ||
-        normalized.startsWith("fc") ||
-        normalized.startsWith("fd")
-      ) {
+      if (isNonPublicIpv6(normalized)) {
         return false;
       }
     }
@@ -290,6 +356,13 @@ export async function runT6PipelineWithInjectedRunner(input: {
     idempotencyKey: input.job.idempotencyKey,
     objectKey: t6DerivativeObjectKey(input.job),
   };
+  if (
+    input.current &&
+    (input.current.idempotencyKey !== base.idempotencyKey ||
+      input.current.objectKey !== base.objectKey)
+  ) {
+    return { ...base, status: "failed", errorCode: "DERIVATIVE_IDENTITY_MISMATCH" };
+  }
   if (input.current?.status === "succeeded" || input.current?.status === "failed") {
     return input.current;
   }
@@ -340,10 +413,20 @@ export async function processServerOwnedT6Derivative(input: {
   job: ServerOwnedT6Input;
   runner: T6InjectedRunner;
 }): Promise<T6DerivativeMetadata> {
+  const base = {
+    idempotencyKey: input.job.idempotencyKey,
+    objectKey: t6DerivativeObjectKey(input.job),
+  };
+  if (
+    input.current &&
+    (input.current.idempotencyKey !== base.idempotencyKey ||
+      input.current.objectKey !== base.objectKey)
+  ) {
+    return { ...base, status: "failed", errorCode: "DERIVATIVE_IDENTITY_MISMATCH" };
+  }
   if (!t6WorkerReadiness().effective) {
     return {
-      idempotencyKey: input.job.idempotencyKey,
-      objectKey: t6DerivativeObjectKey(input.job),
+      ...base,
       status: "failed",
       errorCode: "SERVER_WORKER_DISABLED",
     };
@@ -362,6 +445,13 @@ export function transitionT6Derivative(
   base: Pick<T6DerivativeMetadata, "idempotencyKey" | "objectKey">,
   verified?: Pick<T6DerivativeMetadata, "contentType" | "sourceChecksum" | "outputChecksum" | "probe" | "deliveryPath">
 ): T6DerivativeMetadata {
+  if (
+    current &&
+    (current.idempotencyKey !== base.idempotencyKey ||
+      current.objectKey !== base.objectKey)
+  ) {
+    return { ...base, status: "failed", errorCode: "DERIVATIVE_IDENTITY_MISMATCH" };
+  }
   if (current?.status === "succeeded") return current;
   if (current?.status === "failed") return current;
   if (next === "succeeded") {

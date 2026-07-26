@@ -24,6 +24,8 @@ export type T6Report = {
     ffprobeHint: boolean;
     workerUrlConfigured: boolean;
     serverOwnedWorkerReady: boolean;
+    derivativeServingImplemented: boolean;
+    storageAdapterImplemented: boolean;
   };
 };
 
@@ -43,6 +45,8 @@ export function t6ToolingProbe(): T6Report["tooling"] {
       (process.env.PIKBO_WATERMARK_WORKER_URL || "").startsWith("http")
     ),
     serverOwnedWorkerReady: false,
+    derivativeServingImplemented: false,
+    storageAdapterImplemented: false,
   };
 }
 
@@ -62,7 +66,12 @@ export function t6Report(): T6Report {
     freeLiveRawDownload: "blocked",
     reason:
       "No verified server-owned baked derivative exists. Free Mini live raw provider URLs must not be exposed or downloaded; player overlay is not a file watermark.",
-    tooling: { ...tooling, serverOwnedWorkerReady: worker.effective },
+    tooling: {
+      ...tooling,
+      serverOwnedWorkerReady: worker.effective,
+      derivativeServingImplemented: worker.derivativeServingImplemented,
+      storageAdapterImplemented: worker.storageAdapterImplemented,
+    },
   };
 }
 
