@@ -4537,5 +4537,25 @@ assert.match(
   /createRemixHref\(preset\.slug\)/
 );
 
+
+// Retry API createUi uses remix contract; FailPanel product-first Seller Pack
+assert.match(
+  fs.readFileSync(join(root, "app/api/generations/[id]/retry/route.ts"), "utf8"),
+  /createRemixHref|createUi/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "app/api/generations/[id]/retry/route.ts"), "utf8"),
+  /createUi:\s*`\/create\?effect=/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/GenerateFailPanel.tsx"), "utf8"),
+  /data-fail-path=["']seller-pack["']|mode=seller-pack/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /UNSAFE_URL/
+);
+
+
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

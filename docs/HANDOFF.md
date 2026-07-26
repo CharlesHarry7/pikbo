@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Retry createUi remix + FailPanel Seller Pack
+- POST /api/generations/[id]/retry `next.createUi` → createRemixHref(effect)
+  (ratio/duration/channel), not bare create?effect=.
+- GenerateFailPanel: product-first Seller Pack chip (listing+reveal+hook).
+- generate/image clients: UNSAFE_URL without confirmed refund → refundUnconfirmed.
+- Smoke: retry route no bare createUi; data-fail-path=seller-pack.
+
 ### 2026-07-27 — [grok] Residual createRemixHref deep-link sweep
 - BatchStudio brief recipe pick + free-trial single-recipe chips → remix href.
 - HfExploreHome fallback feed, HeroVideoBanner, Community UGC remake,

@@ -168,6 +168,14 @@ export function GenerateFailPanel({
           </Link>
         ) : null}
         <Link
+          href="/create?mode=seller-pack"
+          className="rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/10 px-3 py-1 text-[11px] font-semibold text-[var(--mint)] transition hover:bg-[var(--mint)]/20"
+          data-fail-path="seller-pack"
+          title="Listing spin + box reveal + social hook"
+        >
+          Seller Pack
+        </Link>
+        <Link
           href="/library"
           className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-white/75 transition hover:border-white/30 hover:text-white"
         >

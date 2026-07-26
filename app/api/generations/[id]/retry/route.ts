@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ensureSession } from "@/lib/session";
 import { forkRetryJob, toPublicJob } from "@/lib/generationJobs";
+import { createRemixHref } from "@/lib/remixIntent";
 
 export const runtime = "nodejs";
 
@@ -31,6 +32,8 @@ export async function POST(_req: Request, { params }: Props) {
     );
   }
   const { job, parent } = result;
+  // Remix contract: ratio / duration / channel from recipe (not bare effect=).
+  const createUi = createRemixHref(parent.effect);
   return NextResponse.json(
     {
       ok: true,
@@ -43,7 +46,7 @@ export async function POST(_req: Request, { params }: Props) {
       next: {
         generate: "/api/generate",
         status: `/api/generations/${job.id}`,
-        createUi: `/create?effect=${encodeURIComponent(parent.effect)}`,
+        createUi,
       },
       note: "Seller Pack: only this child is re-quoted; successful siblings stay available.",
     },

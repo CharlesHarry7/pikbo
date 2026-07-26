@@ -175,12 +175,13 @@ export function interpretImageResponse(
       ? body.retryAfterSec
       : undefined;
   const creditsRefunded = body.creditsRefunded === true;
-  // TIMEOUT ledger kill + PROVIDER_NETWORK blip — never invent restore (generate parity).
+  // TIMEOUT / provider blip / unsafe deliverable after debit — never invent restore.
   const refundUnconfirmed =
     body.refundUnconfirmed === true ||
     code === "TIMEOUT" ||
     code === "PROVIDER_NETWORK" ||
-    code === "PROVIDER_TIMEOUT";
+    code === "PROVIDER_TIMEOUT" ||
+    (code === "UNSAFE_URL" && !creditsRefunded);
 
   let error =
     body.error ||

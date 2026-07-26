@@ -146,12 +146,14 @@ export function interpretGenerateResponse(
   ) {
     error = `${error} · 10 credits restored`;
   }
-  // Ledger kill + provider network blip — never invent restore when unconfirmed.
+  // Ledger kill / provider blip / unsafe deliverable after debit — never invent restore.
   const refundUnconfirmed =
     body.refundUnconfirmed === true ||
     code === "TIMEOUT" ||
     code === "PROVIDER_NETWORK" ||
-    code === "PROVIDER_TIMEOUT";
+    code === "PROVIDER_TIMEOUT" ||
+    // Provider returned unusable URL after a live attempt may have debited.
+    (code === "UNSAFE_URL" && !creditsRefunded);
   if (
     refundUnconfirmed &&
     !creditsRefunded &&
