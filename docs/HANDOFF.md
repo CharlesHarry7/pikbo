@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Seller Pack per-child HEAD download gate
+- BatchStudio `downloadChild`: HEAD /api/downloads first (CANCELED/TIMEOUT/IN_FLIGHT
+  honest errors); no dead-tab open for failed ledger rows.
+- `data-seller-download=gated`; multi-save already blocked-aware.
+- Smoke locks downloadChild + classifyDownloadHead.
+
 ### 2026-07-26 — [grok] Shared download HEAD gate (Create/Landing/Library)
 - `classifyDownloadHead` + `interpretDownloadHead` (CANCELED · JOB_IN_FLIGHT ·
   TIMEOUT · T6 bake).

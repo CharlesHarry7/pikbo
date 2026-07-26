@@ -3307,6 +3307,9 @@ assert.match(createStudio, /recoveredFromAssetMiss|registerLocalAsset/);
 assert.match(batchStudio, /fallbackImage/);
 assert.match(batchStudio, /recoveredFromAssetMiss/);
 assert.match(batchStudio, /cancelInFlightPack|AbortController/);
+assert.match(batchStudio, /downloadChild|classifyDownloadHead/);
+assert.match(batchStudio, /data-seller-download=["']gated["']/);
+
 assert.match(batchStudio, /Cancel pack/);
 // Pack cancel immediately marks running children refund unconfirmed (Create parity)
 assert.match(

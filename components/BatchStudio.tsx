@@ -60,6 +60,7 @@ import {
 } from "@/lib/sellerPackQuote";
 import {
   canDownloadResult,
+  classifyDownloadHead,
   freeLiveDownloadBlockReason,
   isPlayableResultVideoUrl,
   isSafeDeliverableUrl,
@@ -1010,6 +1011,52 @@ export function BatchStudio({
    * Phase F: sequential multi-file save of downloadable children only.
    * No server ZIP (needs object storage). Free raw / failed siblings omitted.
    */
+  /**
+   * Per-child download: HEAD /api/downloads first (Create/Library parity) so
+   * canceled / timeout / in-flight never open a dead tab.
+   */
+  async function downloadChild(j: Job) {
+    const downloadAllowed = canDownloadResult({
+      demo: Boolean(j.demo),
+      watermark: Boolean(j.watermark),
+    });
+    if (!downloadAllowed) {
+      setError(freeLiveDownloadBlockReason());
+      return;
+    }
+    if (j.requestId) {
+      const gateUrl = `/api/downloads/${encodeURIComponent(j.requestId)}`;
+      try {
+        const head = await fetch(gateUrl, { method: "HEAD" });
+        const gate = classifyDownloadHead({
+          status: head.status,
+          code: head.headers.get("X-Pikbo-Download-Code"),
+          t6Mode: head.headers.get("X-Pikbo-T6"),
+        });
+        if (gate.kind === "block") {
+          setError(`${j.name || j.slug}: ${gate.message}`);
+          return;
+        }
+        if (gate.kind === "allow") {
+          setError(null);
+          window.open(gateUrl, "_blank", "noopener,noreferrer");
+          return;
+        }
+        if (gate.kind === "not_found") {
+          setError(`${j.name || j.slug}: ${gate.message}`);
+        }
+      } catch {
+        /* fall through to safe direct URL */
+      }
+    }
+    if (j.videoUrl && isSafeDeliverableUrl(j.videoUrl)) {
+      setError(null);
+      window.open(j.videoUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    setError(`No safe download URL for ${j.name || j.slug}`);
+  }
+
   async function downloadAvailableClips() {
     const targets = sellerPackAvailableDownloads(exportItems);
     if (targets.length === 0 || exportBusy) return;
@@ -1896,18 +1943,14 @@ export function BatchStudio({
                 {j.demo || !j.watermark ? (
                   j.requestId ||
                   (j.videoUrl && isSafeDeliverableUrl(j.videoUrl)) ? (
-                    <a
-                      href={
-                        j.requestId
-                          ? `/api/downloads/${encodeURIComponent(j.requestId)}`
-                          : j.videoUrl!
-                      }
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      data-seller-download="gated"
+                      onClick={() => void downloadChild(j)}
                       className="text-[10px] text-[var(--mint)] hover:underline"
                     >
                       Download / open
-                    </a>
+                    </button>
                   ) : (
                     <span
                       className="text-[10px] text-amber-100/80"
