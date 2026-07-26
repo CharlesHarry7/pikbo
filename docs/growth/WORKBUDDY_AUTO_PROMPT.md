@@ -17,26 +17,27 @@ REPO 可能是以下之一（git remote -v 自检）:
 - https://github.com/guochao950518-wq/pikbo.git
 - https://github.com/CharlesHarry7/pikbo.git  （若 redirect）
 
-启动后立刻：
+启动后立刻（GitHub = 实时大脑，老板不传话）：
 1) git fetch origin && git checkout main && git pull --ff-only origin main
-2) git log -20 --oneline   # 看 Grok 刚推了什么
+2) git log origin/main --oneline -30   # 这就是 Grok 实时做了什么；commit message 即广播
 3) 必读：
-   - docs/growth/AGENT_BUS.md
-   - docs/growth/AGENT_STATE.md
+   - docs/growth/AGENT_BUS.md（协作铁律）
+   - docs/growth/AGENT_STATE.md（对方看板）
    - docs/HANDOFF.md（前 40 行）
    - docs/growth/runs/*-report.md（若有，读最新一份）
    - .grok/skills/pikbo-growth-auto/SKILL.md
-4) 从 git log / HANDOFF 自行推断工程现状（softLive、tools TD、首页墙、下载门控等），禁止假设老板会补充
+4) 从 git log / HANDOFF / AGENT_STATE 自行推断工程现状（softLive、tools TD、首页墙、下载门控等）
+   禁止问老板「工程怎样了」——未 push = 对方没做
 
-写回协议（每次跑完）：
+写回协议（每次跑完 = 你对 Grok 的实时广播）：
 1) 更新 docs/growth/AGENT_STATE.md（writer: workbuddy，写清刚做完什么、SHA、下一步）
-2) commit：
-   git add docs/growth/ runs screenshots producthunt_pack AGENT_STATE
-   git commit -m "[workbuddy] growth run <timestamp>: <N> directories attempted"
-3) git push origin HEAD:main
+2) commit message 必须可扫：
+   git add docs/growth/
+   git commit -m "[workbuddy] growth run <timestamp>: <N> submitted / <M> captcha / <K> fail"
+3) git pull --rebase origin main && git push origin HEAD:main
    - 若无 main 写权限：push 到 agent/workbuddy/growth-<date> 并在 AGENT_STATE 写 branch 名
-   - push 前再 pull --rebase origin main，解决冲突（只碰 docs/growth/**）
-4) 禁止说「请老板告诉 Grok」——Grok 会自己 pull 读你的 commit
+   - 只碰 docs/growth/**（+ 必要时 scripts/growth-auto/**）
+4) 禁止说「请老板告诉 Grok」——Grok 自己 pull log 就知道你干了啥
 
 ════════════════════════════════════
 ## 1. 铁律
@@ -102,6 +103,7 @@ python3 scripts/growth-auto/run_growth.py --all
 
 ## 工程侧 Grok 自用备忘
 
-- 开工：`git pull` + 读 `docs/growth/AGENT_STATE.md` 与最新 `runs/*-report.md`
-- 收工：HANDOFF + push；更新 AGENT_STATE writer=grok
-- 不要求老板转发 WorkBuddy 进度
+- 开工 / 循环：`git fetch && pull` + `git log origin/main -30`（= WorkBuddy 实时广播）
+- 读：`AGENT_STATE.md` + 最新 `runs/*-report.md` + HANDOFF
+- 收工：HANDOFF + push；更新 AGENT_STATE writer=grok-eng
+- 永不要求老板转发 WorkBuddy 进度；只认已 push 的 commit

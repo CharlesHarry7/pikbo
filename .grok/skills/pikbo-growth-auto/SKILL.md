@@ -8,9 +8,15 @@ description: Fully automated Pikbo growth execution (AI directories, PH assets, 
 ## Coordination with engineering (Grok) — boss is NOT a messenger
 
 1. **Source of truth = GitHub `main`** (remotes may be `guochao950518-wq/pikbo` or `CharlesHarry7/pikbo`).
-2. **Always** `git pull origin main` before work; read `docs/growth/AGENT_BUS.md`, `docs/growth/AGENT_STATE.md`, `docs/HANDOFF.md`.
-3. After every run: update `AGENT_STATE.md`, commit growth artifacts, **push** so Grok sees it without the boss.
-4. Never ask the boss to “tell Grok” or “forward logs”.
+2. **Real-time activity feed** = `git log origin/main --oneline -30` (Grok’s commits = what eng just shipped). Unpushed work does not exist for the other side.
+3. **Always** before work:
+   ```bash
+   git fetch origin && git pull --ff-only origin main
+   git log origin/main --oneline -30
+   ```
+   Then read `docs/growth/AGENT_BUS.md`, `docs/growth/AGENT_STATE.md`, `docs/HANDOFF.md` (first 40 lines), latest `docs/growth/runs/*-report.md`.
+4. After every run: update `AGENT_STATE.md` (`writer: workbuddy`), commit growth artifacts with a scannable message (`[workbuddy] growth run <ts>: N submitted / M captcha`), **push** so Grok sees it without the boss.
+5. Never ask the boss to “tell Grok”, “forward logs”, or “confirm eng status” — pull the repo instead.
 
 ## Hard rules
 

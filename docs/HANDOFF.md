@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Agent bus v2: GitHub = real-time brain (no boss relay)
+- `docs/growth/AGENT_BUS.md`: git log = live activity feed; pull→work→push protocol;
+  scannable commit messages; unpushed work does not exist for the other side.
+- `AGENT_STATE.md` + `WORKBUDDY_AUTO_PROMPT.md` + skill `pikbo-growth-auto` aligned.
+- Boss does not forward eng↔growth status. WorkBuddy/Grok self-sync on `main`.
+
 ### 2026-07-26 — [grok] Share/copy never leak session /api/downloads
 - `isSessionGatedDownloadUrl` + `publicShareableVideoUrl` in createTrust.
 - Create copy/share-X + Library copy: block gate URLs; absolute only when public.
