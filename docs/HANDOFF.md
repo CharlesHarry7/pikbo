@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] StatusProbe byStatus canceled honesty
+- Session + still ledgers show ok/fail/canceled from health `byStatus`.
+- Video row tagged process-memory; image keeps Flux idempotency note.
+- Smoke locks canceled histogram markers.
+
 ### 2026-07-26 — [grok] Settings canceled counts + cancel settlement UX
 - Settings HEAD probes `X-Pikbo-Jobs-Canceled` / Image-Jobs-Canceled; detail
   lines separate failed vs canceled (process-memory honesty).

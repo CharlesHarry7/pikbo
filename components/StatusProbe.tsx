@@ -122,6 +122,36 @@ export function StatusProbe() {
       : data.jobs?.byStatus
         ? (data.jobs.byStatus.queued ?? 0) + (data.jobs.byStatus.running ?? 0)
         : null;
+  const jobsBs = data.jobs?.byStatus;
+  const jobsStatusHint =
+    jobsBs && typeof jobsBs === "object"
+      ? [
+          typeof jobsBs.succeeded === "number"
+            ? `${jobsBs.succeeded} ok`
+            : null,
+          typeof jobsBs.failed === "number" ? `${jobsBs.failed} fail` : null,
+          typeof jobsBs.canceled === "number"
+            ? `${jobsBs.canceled} canceled`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : "";
+  const imgBs = data.imageJobs?.byStatus;
+  const imageStatusHint =
+    imgBs && typeof imgBs === "object"
+      ? [
+          typeof imgBs.succeeded === "number"
+            ? `${imgBs.succeeded} ok`
+            : null,
+          typeof imgBs.failed === "number" ? `${imgBs.failed} fail` : null,
+          typeof imgBs.canceled === "number"
+            ? `${imgBs.canceled} canceled`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : "";
 
   const rows: Array<[string, string, boolean?]> = [
     ["Overall", data.ok ? "ok" : "degraded", data.ok],
@@ -187,13 +217,17 @@ export function StatusProbe() {
     [
       "Session job ledger",
       typeof data.jobs?.count === "number"
-        ? `${data.jobs.count}${jobsOpen != null ? ` · open ${jobsOpen}` : ""} · timeout ${Math.round((data.jobs.jobTimeoutMs ?? 0) / 60000)}m`
+        ? `${data.jobs.count}${jobsOpen != null ? ` · open ${jobsOpen}` : ""}` +
+          (jobsStatusHint ? ` · ${jobsStatusHint}` : "") +
+          ` · timeout ${Math.round((data.jobs.jobTimeoutMs ?? 0) / 60000)}m` +
+          " (process-memory)"
         : "—",
     ],
     [
       "Still image job ledger",
       typeof data.imageJobs?.total === "number"
         ? `${data.imageJobs.total} total · open ${data.imageJobs.open ?? 0}` +
+          (imageStatusHint ? ` · ${imageStatusHint}` : "") +
           (data.imageJobs.jobTimeoutMs
             ? ` · timeout ${Math.round(data.imageJobs.jobTimeoutMs / 1000)}s`
             : "") +

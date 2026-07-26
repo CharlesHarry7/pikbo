@@ -3635,6 +3635,11 @@ const statusProbeSrc = fs.readFileSync(
 );
 assert.match(statusProbeSrc, /imageJobs/);
 assert.match(statusProbeSrc, /Still image job ledger|Flux idempotency/);
+// Phase C/D: byStatus histogram includes canceled (not only open count)
+assert.match(statusProbeSrc, /jobsStatusHint|jobsBs\.canceled|canceled/);
+assert.match(statusProbeSrc, /imageStatusHint|imgBs\.canceled/);
+assert.match(statusProbeSrc, /process-memory\)/);
+assert.match(statusProbeSrc, /Session job ledger/);
 const modelsPageSrc = fs.readFileSync(join(root, "app/models/page.tsx"), "utf8");
 assert.match(modelsPageSrc, /FreeTrialCta/);
 // Preview noindex via shared PREVIEW_ROBOTS (or inline) — crawlable, not dual-blocked
