@@ -81,18 +81,95 @@ export function buildCreateRemixHref(intent: RemixIntent): string {
 }
 
 /**
+ * Optional overrides from a real generation/history record.
+ * Recipe defaults apply when fields are missing or invalid.
+ * Used so Retry / Remake reopen Create with the same ratio/duration/channel
+ * the user already ran (not only the preset default).
+ */
+export type RemixHrefOpts = {
+  ratio?: string;
+  duration?: number | string;
+  channel?: string;
+};
+
+/** Pick validated remix overrides from a job or device-history row. */
+export function remixOptsFromRecord(r: {
+  aspectRatio?: string;
+  duration?: number | string;
+  channel?: string;
+}): RemixHrefOpts {
+  return {
+    ratio: r.aspectRatio,
+    duration: r.duration,
+    channel: r.channel,
+  };
+}
+
+/**
  * Library / Explore remake deep link.
  * Optional sku keeps Toy Identity label on Create (device-local bible, not Soul ID).
+ * Optional opts carry actual job ratio/duration/channel when known.
  */
 export function createRemixHref(
   recipeSlug: string,
   sourceId?: string,
-  sku?: string | null
+  sku?: string | null,
+  opts?: RemixHrefOpts
 ): string {
   const intent = remixIntentFromRecipe(recipeSlug, sourceId);
-  const base = intent
-    ? buildCreateRemixHref(intent)
-    : `/create?effect=${encodeURIComponent(recipeSlug)}`;
+  let base: string;
+  if (intent) {
+    let aspectRatio = intent.aspectRatio;
+    if (
+      opts?.ratio === "9:16" ||
+      opts?.ratio === "16:9" ||
+      opts?.ratio === "1:1"
+    ) {
+      aspectRatio = opts.ratio;
+    }
+    let durationSeconds = intent.durationSeconds;
+    const d =
+      typeof opts?.duration === "string"
+        ? Number(opts.duration)
+        : opts?.duration;
+    if (d === 5 || d === 10) {
+      durationSeconds = d;
+    }
+    let channel = intent.channel;
+    if (opts?.channel && (CHANNELS as string[]).includes(opts.channel)) {
+      channel = opts.channel as RemixChannel;
+    } else if (aspectRatio !== intent.aspectRatio) {
+      // Aspect changed without explicit channel — re-pick marketplace vs social.
+      channel = channelForPreset(intent.recipeSlug, aspectRatio);
+    }
+    base = buildCreateRemixHref({
+      ...intent,
+      aspectRatio,
+      durationSeconds,
+      channel,
+    });
+  } else {
+    // Unknown recipe — still append validated ratio/duration so Create can honor them.
+    const q = new URLSearchParams({
+      effect: recipeSlug,
+    });
+    if (
+      opts?.ratio === "9:16" ||
+      opts?.ratio === "16:9" ||
+      opts?.ratio === "1:1"
+    ) {
+      q.set("ratio", opts.ratio);
+    }
+    const d =
+      typeof opts?.duration === "string"
+        ? Number(opts.duration)
+        : opts?.duration;
+    if (d === 5 || d === 10) q.set("duration", String(d));
+    if (opts?.channel && (CHANNELS as string[]).includes(opts.channel)) {
+      q.set("channel", opts.channel);
+    }
+    base = `/create?${q.toString()}`;
+  }
   const cleanSku = (sku || "").trim().slice(0, 64);
   if (!cleanSku) return base;
   const joiner = base.includes("?") ? "&" : "?";

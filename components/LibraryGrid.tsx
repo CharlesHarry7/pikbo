@@ -14,7 +14,7 @@ import {
   removeHistoryItem,
   type HistoryItem,
 } from "@/lib/history";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
 import {
   freeLiveDownloadBlockReason,
   interpretDownloadHead,
@@ -250,9 +250,15 @@ function SessionJobsPanel({
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
               <Link
-                href={createRemixHref(j.effect)}
+                href={createRemixHref(
+                  j.effect,
+                  undefined,
+                  null,
+                  remixOptsFromRecord(j)
+                )}
                 className="text-[var(--mint)] hover:underline"
                 data-session-remake="remix"
+                data-session-remake-params="job"
               >
                 {j.status === "failed" || j.status === "canceled"
                   ? "Retry recipe"
@@ -563,11 +569,15 @@ export function LibraryGrid() {
           "Ledger retry forked · open Create with your photo to re-run"
       );
       await refreshSessionJobs();
+      const parentJob = sessionJobs.find((j) => j.id === id);
       const createUi =
         typeof body.next?.createUi === "string" && body.next.createUi.startsWith("/")
           ? body.next.createUi
           : createRemixHref(
-              sessionJobs.find((j) => j.id === id)?.effect || "360-spin-showcase"
+              parentJob?.effect || "360-spin-showcase",
+              undefined,
+              null,
+              parentJob ? remixOptsFromRecord(parentJob) : undefined
             );
       window.location.href = createUi;
     } catch {
@@ -1079,10 +1089,12 @@ export function LibraryGrid() {
                     href={createRemixHref(
                       group.items[0].effect,
                       group.items[0].sourceProject,
-                      group.items[0].sku
+                      group.items[0].sku,
+                      remixOptsFromRecord(group.items[0])
                     )}
                     className="rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/10 px-2.5 py-1 text-[10px] font-bold text-[var(--mint)] hover:border-[var(--mint)]"
                     data-library-remake="sku-carry"
+                    data-library-remake-params="job"
                   >
                     Remake · same recipe
                   </Link>
@@ -1273,17 +1285,15 @@ export function LibraryGrid() {
                       Tool page
                     </Link>
                     <Link
-                      href={
-                        item.sourceProject
-                          ? createRemixHref(
-                              item.effect,
-                              item.sourceProject,
-                              item.sku
-                            )
-                          : createRemixHref(item.effect, undefined, item.sku)
-                      }
+                      href={createRemixHref(
+                        item.effect,
+                        item.sourceProject,
+                        item.sku,
+                        remixOptsFromRecord(item)
+                      )}
                       className="text-xs text-[var(--fg-muted)] hover:text-[var(--mint)]"
                       data-library-remake="sku-carry"
+                      data-library-remake-params="job"
                     >
                       Regenerate
                     </Link>

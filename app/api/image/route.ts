@@ -234,20 +234,23 @@ export async function POST(req: Request) {
       }
       if (prior.status === "failed" || prior.status === "canceled") {
         const code = prior.errorCode || "GENERATION_FAILED";
+        // HTTP status map parity with /api/generate fail replay.
         const status =
           code === "CONTENT_POLICY"
             ? 422
             : code === "PROVIDER_TIMEOUT" || code === "TIMEOUT"
               ? 504
-              : code === "PROVIDER_BALANCE"
-                ? 402
-                : code === "PROVIDER_RATE_LIMIT"
-                  ? 429
-                  : code === "CANCELED" || code === "REQUEST_CANCELED"
-                    ? 409
-                    : code === "UNSAFE_URL" || code === "MODEL_EMPTY"
-                      ? 502
-                      : 500;
+              : code === "PROVIDER_NETWORK"
+                ? 503
+                : code === "PROVIDER_BALANCE"
+                  ? 402
+                  : code === "PROVIDER_RATE_LIMIT"
+                    ? 429
+                    : code === "CANCELED" || code === "REQUEST_CANCELED"
+                      ? 409
+                      : code === "UNSAFE_URL" || code === "MODEL_EMPTY"
+                        ? 502
+                        : 500;
         return NextResponse.json(
           {
             error:

@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Remix job params + MODEL_EMPTY refund honesty
+- createRemixHref(opts) + remixOptsFromRecord: Retry/Remake reopen Create with
+  actual generation params (not preset defaults only).
+- Library session remake · device history remake · POST /retry createUi · Pack
+  Try chips (Listing 1:1 · Reveal/Flash 9:16).
+- MODEL_EMPTY / empty 200 → refundUnconfirmed (generate+image clients + createTrust);
+  fail-replay cancel → 409 REQUEST_CANCELED; image replay + PROVIDER_NETWORK 503.
+- Smoke: remixOptsFromRecord · job remake params · MODEL_EMPTY settlement.
+
 ### 2026-07-27 — [grok] Pack retryEligible allows TIMEOUT unconfirmed
 - BatchStudio retryEligible no longer blocks creditState refund unconfirmed
   (TIMEOUT/cancel settlement) or requires requestId — Retry mints new generate.

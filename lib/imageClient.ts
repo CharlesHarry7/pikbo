@@ -110,13 +110,20 @@ export function interpretImageResponse(
       creditsRefunded?: boolean;
     };
     if (typeof d.imageUrl !== "string" || !d.imageUrl) {
+      const creditsRefunded =
+        d.creditsRefunded === true ? true : undefined;
+      // Empty 200 still may have debited — never invent restore (generateClient parity).
       return {
         ok: false,
         status,
-        error: "Model returned an empty still",
+        error:
+          creditsRefunded === true
+            ? "Model returned an empty still · 10 credits restored"
+            : "Model returned an empty still · check balance (refund unconfirmed)",
         code: "MODEL_EMPTY",
         session: d.session,
-        creditsRefunded: d.creditsRefunded === true ? true : undefined,
+        creditsRefunded,
+        refundUnconfirmed: creditsRefunded !== true ? true : undefined,
       };
     }
     // Live stills must be http(s) or same-origin path; demos may be data:image.

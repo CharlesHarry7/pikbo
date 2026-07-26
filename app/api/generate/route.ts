@@ -207,27 +207,35 @@ export async function POST(req: Request) {
         );
       }
       if (prior.status === "failed" || prior.status === "canceled") {
-        const code =
-          (prior.errorCode as GenerateErrorBody["code"]) || "GENERATION_FAILED";
+        // Ledger may store CANCELED/TIMEOUT strings not on GenerateErrorBody union.
+        const rawCode = prior.errorCode || "GENERATION_FAILED";
+        const code = (
+          rawCode === "CANCELED" ? "REQUEST_CANCELED" : rawCode
+        ) as GenerateErrorBody["code"];
+        // HTTP status map parity with /api/image fail replay.
         const status =
-          code === "CONTENT_POLICY"
+          rawCode === "CONTENT_POLICY"
             ? 422
-            : code === "PROVIDER_TIMEOUT" || code === "TIMEOUT"
+            : rawCode === "PROVIDER_TIMEOUT" || rawCode === "TIMEOUT"
               ? 504
-              : code === "PROVIDER_NETWORK"
+              : rawCode === "PROVIDER_NETWORK"
                 ? 503
-                : code === "PROVIDER_BALANCE"
+                : rawCode === "PROVIDER_BALANCE"
                   ? 402
-                  : code === "PROVIDER_RATE_LIMIT"
+                  : rawCode === "PROVIDER_RATE_LIMIT"
                     ? 429
-                    : code === "UNSAFE_URL" || code === "MODEL_EMPTY"
-                      ? 502
-                      : 500;
+                    : rawCode === "CANCELED" || rawCode === "REQUEST_CANCELED"
+                      ? 409
+                      : rawCode === "UNSAFE_URL" || rawCode === "MODEL_EMPTY"
+                        ? 502
+                        : 500;
         return err(
           {
             error:
               prior.error ||
-              "Prior generate attempt failed — mint a new idempotency key to retry",
+              (prior.status === "canceled"
+                ? "Prior generate attempt was canceled — mint a new idempotency key to retry"
+                : "Prior generate attempt failed — mint a new idempotency key to retry"),
             code,
             model: prior.model,
             session: publicSession(session),

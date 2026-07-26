@@ -1789,10 +1789,12 @@ export function BatchStudio({
                   href={createRemixHref(
                     item.slug,
                     undefined,
-                    toyIdentity.sku || null
+                    toyIdentity.sku || null,
+                    { ratio: item.aspectRatio }
                   )}
                   className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70"
                   data-pack-try-recipe={item.slug}
+                  data-pack-try-ratio={item.aspectRatio}
                 >
                   Try {item.label}
                 </Link>

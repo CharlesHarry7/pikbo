@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ensureSession } from "@/lib/session";
 import { forkRetryJob, toPublicJob } from "@/lib/generationJobs";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
 
 export const runtime = "nodejs";
 
@@ -39,8 +39,13 @@ export async function POST(_req: Request, { params }: Props) {
     );
   }
   const { job, parent } = result;
-  // Remix contract: ratio / duration / channel from recipe (not bare effect=).
-  const createUi = createRemixHref(parent.effect);
+  // Remix contract: carry parent job ratio/duration when recorded (not bare effect=).
+  const createUi = createRemixHref(
+    parent.effect,
+    undefined,
+    null,
+    remixOptsFromRecord(parent)
+  );
   return NextResponse.json(
     {
       ok: true,

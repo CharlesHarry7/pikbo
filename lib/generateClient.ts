@@ -79,16 +79,27 @@ export function interpretGenerateResponse(
           : null;
       const hasUrl = typeof d?.videoUrl === "string" && Boolean(d.videoUrl);
       const unsafe = hasUrl && !isSafeDeliverableUrl(d!.videoUrl as string);
+      const creditsRefunded =
+        d?.creditsRefunded === true ? true : undefined;
+      // Live 200 without a safe clip may still have debited — never invent restore
+      // (imageClient unsafe/empty still parity).
+      const refundUnconfirmed = creditsRefunded !== true;
+      const baseError = unsafe
+        ? "Provider returned an unsafe video URL — not displaying"
+        : "Model returned an empty clip";
+      const error =
+        creditsRefunded === true
+          ? `${baseError} · 10 credits restored`
+          : `${baseError} · check balance (refund unconfirmed)`;
       return {
         ok: false,
         status: unsafe ? 502 : status,
-        error: unsafe
-          ? "Provider returned an unsafe video URL — not displaying. Check balance or Retry."
-          : "Model returned an empty clip",
+        error,
         code: unsafe ? "UNSAFE_URL" : "MODEL_EMPTY",
         session: d?.session,
         // Server may have already refunded; prefer echo when present.
-        creditsRefunded: d?.creditsRefunded === true ? true : undefined,
+        creditsRefunded,
+        refundUnconfirmed: refundUnconfirmed || undefined,
         jobId: typeof d?.jobId === "string" ? d.jobId : undefined,
         fatal: false,
         paywall: false,

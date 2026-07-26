@@ -700,6 +700,25 @@ const invalidRemixFixture = remixFixture.parseRemixSearchParams({
 });
 assert.equal(invalidRemixFixture.intent?.recipeSlug, "fixture-spin");
 assert.match(invalidRemixFixture.notices.join(" "), /Unknown recipe/);
+// createRemixHref opts: job ratio/duration override recipe defaults (1:1 / 5s)
+assert.equal(typeof remixFixture.createRemixHref, "function");
+assert.equal(typeof remixFixture.remixOptsFromRecord, "function");
+const defaultRemixHref = remixFixture.createRemixHref("fixture-spin");
+assert.match(defaultRemixHref, /ratio=1%3A1|ratio=1:1/);
+assert.match(defaultRemixHref, /duration=5/);
+const jobRemixHref = remixFixture.createRemixHref(
+  "fixture-spin",
+  undefined,
+  null,
+  remixFixture.remixOptsFromRecord({
+    aspectRatio: "9:16",
+    duration: 10,
+    channel: "tiktok",
+  })
+);
+assert.match(jobRemixHref, /ratio=9%3A16|ratio=9:16/);
+assert.match(jobRemixHref, /duration=10/);
+assert.match(jobRemixHref, /channel=tiktok/);
 const projectsPage = fs.readFileSync(
   join(root, "app/projects/[slug]/page.tsx"),
   "utf8"
@@ -720,6 +739,10 @@ assert.match(libraryGrid, /data-library-remake=["']sku-carry["']/);
 const remixIntentSrc = fs.readFileSync(join(root, "lib/remixIntent.ts"), "utf8");
 assert.match(remixIntentSrc, /sku\?:\s*string/);
 assert.match(remixIntentSrc, /sku=\$\{encodeURIComponent/);
+// Job/history remake carries actual ratio/duration/channel (not recipe default only)
+assert.match(remixIntentSrc, /export type RemixHrefOpts|RemixHrefOpts\s*=/);
+assert.match(remixIntentSrc, /remixOptsFromRecord/);
+assert.match(remixIntentSrc, /opts\?\.ratio|opts\?\.duration|opts\?\.channel/);
 
 
 // One-tap Lab sample honesty (not "free" when live)
@@ -825,7 +848,8 @@ function requestCreditStateFromFailure(result) {
     result.code === "TIMEOUT" ||
     result.code === "PROVIDER_TIMEOUT" ||
     (result.code === "UNSAFE_URL" && result.creditsRefunded !== true) ||
-    (result.code === "CONTENT_POLICY" && result.creditsRefunded !== true)
+    (result.code === "CONTENT_POLICY" && result.creditsRefunded !== true) ||
+    (result.code === "MODEL_EMPTY" && result.creditsRefunded !== true)
   ) {
     return "refund unconfirmed";
   }
@@ -1900,7 +1924,8 @@ function requestCreditStateFromFailurePure(result) {
     result.code === "TIMEOUT" ||
     result.code === "PROVIDER_TIMEOUT" ||
     (result.code === "UNSAFE_URL" && result.creditsRefunded !== true) ||
-    (result.code === "CONTENT_POLICY" && result.creditsRefunded !== true)
+    (result.code === "CONTENT_POLICY" && result.creditsRefunded !== true) ||
+    (result.code === "MODEL_EMPTY" && result.creditsRefunded !== true)
   ) {
     return "refund unconfirmed";
   }
@@ -4511,10 +4536,18 @@ const communityPublish = fs.readFileSync(
 assert.match(communityPublish, /isPublicCommunityVideoUrl/);
 assert.match(communityPublish, /isSessionGatedDownloadUrl/);
 assert.match(communityPublish, /\/demos\//);
-// Library session Retry uses remix contract (ratio/duration/channel)
+// Library session Retry uses remix contract (ratio/duration/channel from job)
 assert.match(
   fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /data-session-remake=["']remix["']|createRemixHref\(j\.effect\)/
+  /data-session-remake=["']remix["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /remixOptsFromRecord|data-session-remake-params=["']job["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /data-library-remake-params=["']job["']/
 );
 
 
@@ -4569,14 +4602,23 @@ assert.match(
 );
 
 
-// Retry API createUi uses remix contract; FailPanel product-first Seller Pack
+// Retry API createUi uses remix contract + parent job ratio/duration
 assert.match(
   fs.readFileSync(join(root, "app/api/generations/[id]/retry/route.ts"), "utf8"),
   /createRemixHref|createUi/
 );
+assert.match(
+  fs.readFileSync(join(root, "app/api/generations/[id]/retry/route.ts"), "utf8"),
+  /remixOptsFromRecord\(parent\)/
+);
 assert.doesNotMatch(
   fs.readFileSync(join(root, "app/api/generations/[id]/retry/route.ts"), "utf8"),
   /createUi:\s*`\/create\?effect=/
+);
+// Seller Pack Try chips lock fixed child aspect (Listing 1:1 · Reveal/Flash 9:16)
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /data-pack-try-ratio|ratio:\s*item\.aspectRatio/
 );
 assert.match(
   fs.readFileSync(join(root, "components/GenerateFailPanel.tsx"), "utf8"),
@@ -4638,6 +4680,50 @@ assert.match(
 assert.match(
   fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
   /code === ["']CONTENT_POLICY["'] && !creditsRefunded/
+);
+
+// Fail-replay HTTP status map: generate ↔ image parity
+// image: PROVIDER_NETWORK → 503; generate: CANCELED → 409
+assert.match(
+  fs.readFileSync(join(root, "app/api/image/route.ts"), "utf8"),
+  /PROVIDER_NETWORK[\s\S]{0,40}\? 503|code === ["']PROVIDER_NETWORK["']\s*\n?\s*\? 503/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/generate/route.ts"), "utf8"),
+  /CANCELED["'] \|\| (?:raw)?[Cc]ode === ["']REQUEST_CANCELED["'][\s\S]{0,40}\? 409/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/generate/route.ts"), "utf8"),
+  /rawCode === ["']CANCELED["'] \? ["']REQUEST_CANCELED["']/
+);
+// MODEL_EMPTY without restore → refund unconfirmed (empty body after debit)
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /MODEL_EMPTY/
+);
+assert.equal(
+  requestCreditStateFromFailurePure({
+    status: 502,
+    code: "MODEL_EMPTY",
+  }),
+  "refund unconfirmed"
+);
+assert.equal(
+  requestCreditStateFromFailurePure({
+    status: 502,
+    code: "MODEL_EMPTY",
+    creditsRefunded: true,
+  }),
+  "10 restored"
+);
+// Client 200 empty/unsafe: refundUnconfirmed when restore not echoed
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /MODEL_EMPTY[\s\S]{0,200}refundUnconfirmed|refundUnconfirmed[\s\S]{0,120}MODEL_EMPTY/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /MODEL_EMPTY[\s\S]{0,200}refundUnconfirmed|refundUnconfirmed[\s\S]{0,120}MODEL_EMPTY/
 );
 
 console.log("engine-smoke: PASS");

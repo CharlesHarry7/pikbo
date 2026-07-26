@@ -156,7 +156,9 @@ export function requestCreditStateFromFailure(result: {
     // Unusable media / content reject after a live attempt — restored only via
     // creditsRefunded early-return above.
     result.code === "UNSAFE_URL" ||
-    result.code === "CONTENT_POLICY"
+    result.code === "CONTENT_POLICY" ||
+    // Empty provider body after a live attempt — same ambiguity as UNSAFE_URL.
+    result.code === "MODEL_EMPTY"
   ) {
     return "refund unconfirmed";
   }
