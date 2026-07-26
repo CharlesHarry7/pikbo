@@ -4,7 +4,7 @@
  * Not multi-node durable — Vercel multi-instance needs Redis/Supabase later.
  */
 
-export type ImageJobStatus = "running" | "succeeded" | "failed";
+export type ImageJobStatus = "running" | "succeeded" | "failed" | "canceled";
 
 export type ImageJob = {
   id: string;
@@ -178,6 +178,101 @@ export function beginImageJob(input: {
   return job;
 }
 
+
+/**
+ * Resolve still job by local id or provider requestId (session-scoped).
+ * Used by cancel DELETE and Library-style recovery.
+ */
+export function findImageJobByRequestOrId(
+  sessionId: string,
+  idOrRequestId: string
+): ImageJob | undefined {
+  trimStore();
+  sweepTimedOutImageJobs();
+  const key = idOrRequestId.trim();
+  if (!sessionId || !key) return undefined;
+  const byId = jobs.get(key);
+  if (byId && byId.sessionId === sessionId) return byId;
+  for (const j of jobs.values()) {
+    if (j.sessionId !== sessionId) continue;
+    if (j.requestId === key || j.id === key) return j;
+  }
+  return undefined;
+}
+
+/**
+ * Mark a running still job canceled (ledger only — does not kill Flux mid-flight).
+ * Provider complete still wins after cancel (parity with generate completeSync).
+ */
+export function cancelImageJob(input: {
+  sessionId: string;
+  id?: string;
+  idempotencyKey?: string;
+}):
+  | { ok: true; job: ImageJob }
+  | {
+      ok: false;
+      code: "NOT_FOUND" | "NOT_OWNED" | "NOT_CANCELABLE" | "INVALID";
+      message: string;
+      job?: ImageJob;
+    } {
+  trimStore();
+  sweepTimedOutImageJobs();
+  let job: ImageJob | undefined;
+  if (input.id) {
+    job = findImageJobByRequestOrId(input.sessionId, input.id);
+  } else if (input.idempotencyKey) {
+    job = findImageJobByIdempotencyKey(
+      input.sessionId,
+      input.idempotencyKey
+    );
+  } else {
+    return {
+      ok: false,
+      code: "INVALID",
+      message: "Provide jobId or idempotencyKey to cancel a still job",
+    };
+  }
+  if (!job) {
+    return {
+      ok: false,
+      code: "NOT_FOUND",
+      message: "Still job not in this process ledger",
+    };
+  }
+  if (job.sessionId !== input.sessionId) {
+    return {
+      ok: false,
+      code: "NOT_OWNED",
+      message: "Still job belongs to another session",
+      job,
+    };
+  }
+  if (job.status === "canceled") {
+    return { ok: true, job };
+  }
+  if (job.status === "succeeded" || job.status === "failed") {
+    return {
+      ok: false,
+      code: "NOT_CANCELABLE",
+      message: `Still job already ${job.status}`,
+      job,
+    };
+  }
+  const next: ImageJob = {
+    ...job,
+    status: "canceled",
+    error: "Canceled by client",
+    errorCode: "CANCELED",
+    creditsOutcome: "refund unconfirmed",
+    creditsRefunded: undefined,
+    imageUrl: undefined,
+    updatedAt: nowIso(),
+  };
+  jobs.set(job.id, next);
+  return { ok: true, job: next };
+}
+
 export function completeImageJob(input: {
   jobId?: string;
   sessionId: string;
@@ -201,6 +296,7 @@ export function completeImageJob(input: {
       : undefined);
 
   if (existing && existing.sessionId === input.sessionId) {
+    // Provider finished wins: cancel is ledger abandon only (not Flux kill).
     const next: ImageJob = {
       ...existing,
       status: "succeeded",
@@ -274,6 +370,13 @@ export function failImageJob(input: {
       : undefined;
 
   if (existing && existing.sessionId === input.sessionId) {
+    // Respect ledger cancel — do not overwrite canceled with failed.
+    if (existing.status === "canceled") {
+      return existing;
+    }
+    if (existing.status === "succeeded") {
+      return existing;
+    }
     const next: ImageJob = {
       ...existing,
       status: "failed",
@@ -352,6 +455,7 @@ export function listImageJobCountsForSession(sessionId: string): {
   open: number;
   succeeded: number;
   failed: number;
+  canceled: number;
 } {
   trimStore();
   sweepTimedOutImageJobs();
@@ -359,14 +463,16 @@ export function listImageJobCountsForSession(sessionId: string): {
   let open = 0;
   let succeeded = 0;
   let failed = 0;
+  let canceled = 0;
   for (const j of jobs.values()) {
     if (j.sessionId !== sessionId) continue;
     total += 1;
     if (j.status === "running") open += 1;
     else if (j.status === "succeeded") succeeded += 1;
     else if (j.status === "failed") failed += 1;
+    else if (j.status === "canceled") canceled += 1;
   }
-  return { total, open, succeeded, failed };
+  return { total, open, succeeded, failed, canceled };
 }
 
 export function __resetImageJobsForTests(): void {

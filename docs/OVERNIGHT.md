@@ -147,9 +147,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- CD Phase A shipped: commercial goals first · Launch Pack path · Flow demoted to Preview.  
-- engine-smoke PASS · product-first markers on Footer/Profile/Explore/Community/Pricing/AfterPath.  
+- Image cancel ledger: DELETE /api/image · abort best-effort · complete>cancel.
+- engine-smoke + tsc PASS · Create soft-apply lint deferred (setTimeout).
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 ---
 

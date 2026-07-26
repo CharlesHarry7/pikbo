@@ -18,6 +18,7 @@ import { ensureSession, publicSession, saveSession } from "@/lib/session";
 import { isSafeDeliverableUrl } from "@/lib/createTrust";
 import {
   beginImageJob,
+  cancelImageJob,
   completeImageJob,
   failImageJob,
   findImageJobByIdempotencyKey,
@@ -46,8 +47,77 @@ export async function HEAD() {
       "X-Pikbo-Image-Jobs-Open": String(counts.open),
       "X-Pikbo-Image-Jobs-Succeeded": String(counts.succeeded),
       "X-Pikbo-Image-Jobs-Failed": String(counts.failed),
+      "X-Pikbo-Image-Jobs-Canceled": String(counts.canceled),
       "X-Pikbo-Image-Job-Timeout-Ms": String(imageJobTimeoutMs()),
     },
+  });
+}
+
+/**
+ * Phase D still cancel (ledger only) — parity with DELETE /api/generations/[id].
+ * Does not interrupt in-flight Flux; complete may still stamp success.
+ * Accepts jobId / requestId / idempotencyKey via query or JSON body.
+ */
+export async function DELETE(req: Request) {
+  const session = await ensureSession();
+  const url = new URL(req.url);
+  let body: {
+    jobId?: string;
+    requestId?: string;
+    idempotencyKey?: string;
+  } = {};
+  try {
+    const text = await req.text();
+    if (text.trim()) {
+      body = JSON.parse(text) as typeof body;
+    }
+  } catch {
+    /* query-only cancel is fine */
+  }
+  const jobId =
+    (typeof body.jobId === "string" && body.jobId.trim()) ||
+    (typeof body.requestId === "string" && body.requestId.trim()) ||
+    url.searchParams.get("jobId")?.trim() ||
+    url.searchParams.get("requestId")?.trim() ||
+    url.searchParams.get("id")?.trim() ||
+    undefined;
+  const idempotencyKey = normalizeImageIdempotencyKey(
+    body.idempotencyKey ?? url.searchParams.get("idempotencyKey")
+  );
+
+  const result = cancelImageJob({
+    sessionId: session.id,
+    id: jobId || undefined,
+    idempotencyKey,
+  });
+  if (!result.ok) {
+    const status =
+      result.code === "NOT_FOUND"
+        ? 404
+        : result.code === "NOT_OWNED"
+          ? 403
+          : result.code === "INVALID"
+            ? 400
+            : 409;
+    return NextResponse.json(
+      {
+        ok: false,
+        code: result.code,
+        message: result.message,
+        jobId: result.job?.id,
+      },
+      { status }
+    );
+  }
+  return NextResponse.json({
+    ok: true,
+    mode: "local-memory",
+    durable: false,
+    jobId: result.job.id,
+    status: result.job.status,
+    errorCode: result.job.errorCode,
+    creditsOutcome: result.job.creditsOutcome,
+    note: "Still ledger marked canceled. Soft-launch Flux may still complete server-side.",
   });
 }
 
@@ -162,7 +232,7 @@ export async function POST(req: Request) {
           }
         );
       }
-      if (prior.status === "failed") {
+      if (prior.status === "failed" || prior.status === "canceled") {
         const code = prior.errorCode || "GENERATION_FAILED";
         const status =
           code === "CONTENT_POLICY"
@@ -173,19 +243,23 @@ export async function POST(req: Request) {
                 ? 402
                 : code === "PROVIDER_RATE_LIMIT"
                   ? 429
-                  : code === "UNSAFE_URL" || code === "MODEL_EMPTY"
-                    ? 502
-                    : 500;
+                  : code === "CANCELED" || code === "REQUEST_CANCELED"
+                    ? 409
+                    : code === "UNSAFE_URL" || code === "MODEL_EMPTY"
+                      ? 502
+                      : 500;
         return NextResponse.json(
           {
             error:
               prior.error ||
-              "Prior image attempt failed — mint a new idempotency key to retry",
+              (prior.status === "canceled"
+                ? "Prior image attempt was canceled — mint a new idempotency key to retry"
+                : "Prior image attempt failed — mint a new idempotency key to retry"),
             code,
             model: prior.model,
             session: publicSession(session),
             creditsRefunded: prior.creditsRefunded,
-            // Timeout/crash: do not claim credits restored.
+            // Timeout/crash/cancel: do not claim credits restored.
             ...(prior.creditsOutcome === "refund unconfirmed"
               ? { refundUnconfirmed: true }
               : {}),

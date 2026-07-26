@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Image cancel ledger + abort best-effort DELETE
+- `ImageJobStatus` + `cancelImageJob` / `findImageJobByRequestOrId` (process-memory).
+- `DELETE /api/image` (jobId | requestId | idempotencyKey); HEAD
+  `X-Pikbo-Image-Jobs-Canceled`; canceled idempotency replay (409 + refund unconfirmed).
+- complete wins over cancel; fail respects cancel (generate parity).
+- `imageClient.cancelImageLedger` on AbortError (keepalive DELETE).
+- Create soft recipe auto-apply deferred via setTimeout (lint set-state-in-effect).
+- Verified: typecheck · engine-smoke · lint 0 errors.
+
 ### 2026-07-26 — [grok] Home cinema + toy video wall (HF-style)
 - Home: `HomeCinemaHero` (video first) → `HomeViralWall` (360/开箱/漂浮/收藏/Listing) → `#home-create` generate.
 - Wall cards: 生成同款. SoftLaunch strip thin. SEO body stays below.

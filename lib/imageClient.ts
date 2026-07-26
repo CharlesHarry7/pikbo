@@ -225,6 +225,30 @@ export function interpretImageResponse(
   };
 }
 
+/**
+ * Best-effort still ledger cancel (DELETE /api/image).
+ * Soft-launch Flux may still complete server-side; complete wins over cancel.
+ */
+export async function cancelImageLedger(opts: {
+  jobId?: string;
+  idempotencyKey?: string;
+}): Promise<void> {
+  try {
+    const payload: Record<string, string> = {};
+    if (opts.jobId) payload.jobId = opts.jobId;
+    if (opts.idempotencyKey) payload.idempotencyKey = opts.idempotencyKey;
+    if (!payload.jobId && !payload.idempotencyKey) return;
+    await fetch("/api/image", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    });
+  } catch {
+    /* ignore — client already treats as cancel/refund unconfirmed */
+  }
+}
+
 export async function postImage(
   body: { prompt: string; aspect?: string; idempotencyKey?: string },
   init?: { signal?: AbortSignal }
@@ -249,6 +273,9 @@ export async function postImage(
       (typeof DOMException !== "undefined" &&
         e instanceof DOMException &&
         e.name === "AbortError");
+    if (aborted && body.idempotencyKey) {
+      void cancelImageLedger({ idempotencyKey: body.idempotencyKey });
+    }
     return {
       ok: false,
       status: 0,
@@ -311,6 +338,7 @@ export async function postImageWithRetry(
           e instanceof DOMException &&
           e.name === "AbortError");
       if (aborted) {
+        void cancelImageLedger({ idempotencyKey });
         return {
           ok: false,
           status: 0,

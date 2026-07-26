@@ -1181,6 +1181,7 @@ export function CreateStudio({
   );
 
   // Phase B2: soft-apply shape-primary recipe once (skip deep-link / job / Lab sample).
+  // Defer setState out of the effect body (react-hooks/set-state-in-effect).
   useEffect(() => {
     if (!image || !imageProbe || !assetBrief.primaryRecipe) return;
     if (briefAutoAppliedRef.current) return;
@@ -1193,16 +1194,20 @@ export function CreateStudio({
       return;
     }
     briefAutoAppliedRef.current = true;
-    selectEffect(primary.slug);
-    track({
-      event: "recipe_use",
-      path: "/create",
-      recipe: primary.slug,
-      meta: { source: "asset_brief_auto", shape: assetBrief.shape },
-    });
-    toast(
-      `Director · ${primary.label} for ${assetBrief.shape} photo · change anytime`
-    );
+    const shape = assetBrief.shape;
+    const slug = primary.slug;
+    const label = primary.label;
+    const timer = window.setTimeout(() => {
+      selectEffect(slug);
+      track({
+        event: "recipe_use",
+        path: "/create",
+        recipe: slug,
+        meta: { source: "asset_brief_auto", shape },
+      });
+      toast(`Director · ${label} for ${shape} photo · change anytime`);
+    }, 0);
+    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot soft apply on probe
   }, [
     image,
