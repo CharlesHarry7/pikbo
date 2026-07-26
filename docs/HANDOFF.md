@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Fail ledger refund-unconfirmed parity
+- `failedLedgerCreditsOutcome` + `isAmbiguousDebitFailureCode` in createTrust.
+- generate failSync/recordFailed + image failImageJob stamp refund unconfirmed
+  for TIMEOUT/PROVIDER_*/CONTENT_POLICY/UNSAFE_URL/MODEL_EMPTY/cancel when
+  restore is not confirmed (was often undefined on the ledger).
+- Library session jobs: broader unconfirmed codes + Lab sample door.
+- Clients: MODEL_EMPTY on typed error body → refundUnconfirmed.
+- Smoke: pure ledger map + Library PROVIDER_NETWORK/MODEL_EMPTY locks.
+
 ### 2026-07-27 — [grok] After-path + Image handoff remix contract
 - GenerateAfterPath Full Generate / Next SKU use createRemixHref +
   remixOptsFromRecord (ratio/duration/channel); optional aspect/duration props.
