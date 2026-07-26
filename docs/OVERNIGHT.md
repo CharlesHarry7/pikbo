@@ -128,7 +128,8 @@
 87. [x] rehydrateFreeTrial keeps refund policy · Settings Live fail refunds · guides honesty
 88. [x] T6 fail-closed skeleton: no env unlock Free raw · server-owned worker IMPLEMENTED=false
 89. [x] T6 hard gate: derivative must bind jobId+providerRequestId; canServe requires serving+storage
-90. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+90. [x] Create empty remix honesty + first-fold (identity in Advanced · Lab collapsed)
+91. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -142,8 +143,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- T6 hard gate: downloadAllowed binds jobId+providerRequestId via canServeVerifiedT6Derivative.  
-- Metadata alone cannot unlock Free; serving+storage adapters still hard-false; fixture PASS.  
+- Fresh /create no longer fabricates PRESETS[0] remix banner (hasRemixSearchParams).  
+- First-fold: Upload → recipe → generate; Toy Identity in Advanced; Lab samples collapsed.  
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 ---
