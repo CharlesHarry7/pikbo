@@ -3421,6 +3421,16 @@ assert.match(
   batchSkuSrc,
   /Never auto-run three live children|does not auto-run/
 );
+// Image studio → Seller Pack stashes pikbo_pending_still; Batch must adopt (Create parity)
+assert.match(batchSkuSrc, /pikbo_pending_still/);
+assert.match(batchSkuSrc, /data:image/);
+const imageStudioSrc = fs.readFileSync(
+  join(root, "app/image/page.tsx"),
+  "utf8"
+);
+assert.match(imageStudioSrc, /stashPendingStill|pikbo_pending_still/);
+assert.match(imageStudioSrc, /data-image-handoff=["']seller-pack["']/);
+assert.match(imageStudioSrc, /mode=seller-pack/);
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /freeTrialExhausted|Free Mini trial exhausted|clipsLeft|compare plans/
@@ -3795,6 +3805,21 @@ const explorePageSrc = fs.readFileSync(
 );
 assert.match(explorePageSrc, /EXPLORE_FAQ|Explore FAQ/);
 assert.match(explorePageSrc, /FAQPage/);
+// Explore dropped from 13-URL sitemap — must stay noindex (not dual-index Lab wall)
+assert.match(explorePageSrc, /CONCEPT_ROBOTS|robots:\s*CONCEPT/);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "lib/seoIndex.ts"), "utf8"),
+  /COLD_START_INDEX_PATHS[\s\S]{0,400}"\/explore"/
+);
+// Tool landing proof chips (SSR crawlers see Official · Lab ≥4)
+assert.match(
+  fs.readFileSync(join(root, "components/LandingResults.tsx"), "utf8"),
+  /data-proof-quality=["']provisional-lab["']|provisionalLabQualityLabel/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LandingResults.tsx"), "utf8"),
+  /Official · cached/
+);
 assert.match(explorePageSrc, /FreeTrialCta/);
 const communityPageSrc = fs.readFileSync(
   join(root, "app/community/page.tsx"),

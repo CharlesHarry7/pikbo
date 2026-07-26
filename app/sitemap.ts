@@ -20,8 +20,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
         ? 1
         : path.includes("ai-toy-video-generator")
           ? 0.95
-          : path === "/explore"
-            ? 0.7
-            : 0.65,
+          : path.startsWith("/tools/")
+            ? 0.85
+            : path.startsWith("/for/")
+              ? 0.75
+              : 0.65,
   }));
 }

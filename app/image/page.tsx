@@ -369,15 +369,25 @@ export default function ImageStudioPage() {
                   Delivery · next job
                 </p>
                 <Link
-                  href="/create"
+                  href={
+                    toySku.trim()
+                      ? `/create?sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
+                      : "/create"
+                  }
                   className="btn btn-primary w-full text-sm"
+                  data-image-handoff="create"
                   onClick={() => stashPendingStill(imageUrl)}
                 >
                   Animate in Generate →
                 </Link>
                 <Link
-                  href="/create?mode=seller-pack"
+                  href={
+                    toySku.trim()
+                      ? `/create?mode=seller-pack&sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
+                      : "/create?mode=seller-pack"
+                  }
                   className="btn btn-ghost w-full text-sm"
+                  data-image-handoff="seller-pack"
                   onClick={() => stashPendingStill(imageUrl)}
                 >
                   Seller Pack · 3 clips →

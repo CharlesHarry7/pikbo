@@ -271,18 +271,71 @@ export function BatchStudio({
   }, [initialSku]);
 
   /**
-   * AfterPath Next SKU → /create?mode=seller-pack&try=1&sku=…
-   * Hydrate official Lab still so the pack is not an empty upload dead-end.
+   * Still handoff order (Create parity):
+   * 1) `pikbo_pending_still` from Image studio / HeroUpload (customer still)
+   * 2) else ?sample= / ?try=1 Lab still (AfterPath Next SKU)
    * Never auto-run three live children (would debit 30 without an explicit tap).
+   * Customer pending still does not auto-check ownsRights (user must confirm).
    */
   useEffect(() => {
-    if (!initialSample) return;
-    const id = SAMPLE_TOYS.some((s) => s.id === initialSample)
-      ? initialSample
-      : "scout";
     let canceled = false;
     const t = window.setTimeout(() => {
       void (async () => {
+        // 1) Image → Seller Pack · 3 clips stashes session still; Batch must adopt.
+        try {
+          const pending = sessionStorage.getItem("pikbo_pending_still");
+          if (pending) {
+            sessionStorage.removeItem("pikbo_pending_still");
+            if (pending.startsWith("data:image")) {
+              if (canceled) return;
+              setImage(pending);
+              setLabStill(false);
+              setImageProbe(null);
+              setBriefCollapsed(false);
+              setError(null);
+              // Do not setOwnsRights — customer still needs ownership confirm.
+              void probeImageSize(pending).then((meta) => {
+                if (!canceled && meta) setImageProbe(meta);
+              });
+              return;
+            }
+            if (
+              pending.startsWith("https://") ||
+              pending.startsWith("http://") ||
+              (pending.startsWith("/") && !pending.startsWith("//"))
+            ) {
+              try {
+                const dataUrl = await sampleToDataUrl(pending);
+                if (canceled) return;
+                setImage(dataUrl);
+                setLabStill(false);
+                setImageProbe(null);
+                setBriefCollapsed(false);
+                setError(null);
+                void probeImageSize(dataUrl).then((meta) => {
+                  if (!canceled && meta) setImageProbe(meta);
+                });
+                return;
+              } catch {
+                if (!canceled) {
+                  setError(
+                    "Could not load handed-off still — upload your toy photo"
+                  );
+                }
+                // Fall through to Lab sample if try=1 was also present.
+              }
+            }
+            // Drop unsafe schemes (javascript:, data: non-image, //…).
+          }
+        } catch {
+          /* private mode */
+        }
+
+        // 2) AfterPath Next SKU → /create?mode=seller-pack&try=1&sku=…
+        if (!initialSample) return;
+        const id = SAMPLE_TOYS.some((s) => s.id === initialSample)
+          ? initialSample
+          : "scout";
         try {
           const s =
             SAMPLE_TOYS.find((x) => x.id === id) ?? SAMPLE_TOYS[0];

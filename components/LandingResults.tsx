@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { recipeHasUniqueProof } from "@/lib/seoIndex";
+import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /** 哥飞 V2 — 结果展示块：only unique matching demos (SSR，爬虫可见文字) */
 export function LandingResults({
@@ -66,12 +67,14 @@ export function LandingResults({
           : ""}. Cached playback never processes a visitor upload.
       </p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {demos.map((d, i) => (
+        {demos.map((d, i) => {
+          const labQuality = provisionalLabQualityLabel(d.preset);
+          return (
           <article
             key={d.id}
             className="group overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition hover:border-[var(--mint)]/35"
           >
-            <div className="aspect-video bg-black/50">
+            <div className="relative aspect-video bg-black/50">
               {/* Poster as real img for alt + LCP-friendly first tile */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -96,6 +99,23 @@ export function LandingResults({
                 <source src={d.webm} type="video/webm" />
                 <source src={d.mp4} type="video/mp4" />
               </video>
+              <div className="pointer-events-none absolute left-2 top-2 flex max-w-[90%] flex-wrap gap-0.5">
+                <span
+                  className="rounded-full border border-white/10 bg-black/60 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/80 backdrop-blur-sm"
+                  title="Official Lab cached demo · not live customer output"
+                >
+                  Official · cached
+                </span>
+                {labQuality ? (
+                  <span
+                    className="rounded-full border border-amber-200/25 bg-black/60 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur-sm"
+                    title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
+                    data-proof-quality="provisional-lab"
+                  >
+                    Lab ≥4
+                  </span>
+                ) : null}
+              </div>
             </div>
             <div className="p-3.5">
               <p className="text-sm font-semibold text-white">{d.title}</p>
@@ -109,11 +129,12 @@ export function LandingResults({
                 href={`/create?effect=${encodeURIComponent(d.preset)}`}
                 className="mt-2.5 inline-flex text-[11px] font-bold text-[var(--mint)] opacity-90 hover:underline group-hover:opacity-100"
               >
-                Remake in Generate →
+                Remake · your toy photo →
               </Link>
             </div>
           </article>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

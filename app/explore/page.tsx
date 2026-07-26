@@ -8,12 +8,17 @@ import {
   type ShowcaseCategory,
 } from "@/lib/showcaseProjects";
 import { site } from "@/lib/site";
+import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 export const metadata: Metadata = {
   title: "Explore Official AI Toy Video Projects",
   description:
     "Open PIKBO Lab toy-video projects, inspect the owned input and cached output, then reuse the exact recipe with a toy photo you own.",
   alternates: { canonical: "/explore" },
+  // Cold-start 2026-07-27: dropped from 13-URL sitemap (long-tail tools win crawl
+  // budget). Stay crawlable + follow for deep links; noindex so Lab wall does
+  // not compete with rank landings.
+  robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Explore official toy video projects | ${site.name}`,
     description:
@@ -22,7 +27,7 @@ export const metadata: Metadata = {
   },
 };
 
-/** Phase H: FAQ for indexable Explore (tool + proof + intent). */
+/** Phase H: FAQ so Explore is not a thin Lab wall (reachable · noindex). */
 const EXPLORE_FAQ = [
   {
     q: "Are Explore projects customer uploads?",

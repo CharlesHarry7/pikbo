@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Explore noindex + LandingResults Lab ≥4 + Pack still
+- `/explore`: CONCEPT_ROBOTS (noindex,follow) — matches cold-start sitemap drop
+  (13 long-tail URLs; Lab wall not rank battlefield).
+- LandingResults (tool SEO pages): Official · cached + provisional Lab ≥4;
+  CTA Remake · your toy photo.
+- BatchStudio adopts `pikbo_pending_still` from Image → Seller Pack (Create parity).
+- Sitemap: drop dead `/explore` priority branch; tools 0.85 · for 0.75.
+- Smoke: explore noindex · LandingResults proof · pending still.
+
 ### 2026-07-27 — [grok] Long-tail blue-ocean keyword cluster (7 terms)
 - Map: `docs/growth/LONG_TAIL_KEYWORD_MAP.md` — one job per URL.
 - On-page TD/H1/keywords: 360, blind-box AI, one-photo, product video AI,
