@@ -354,6 +354,24 @@ assert.match(
   /const \[showAdvanced, setShowAdvanced\] = useState\(false\)/
 );
 assert.match(createFirstRunStudio, /aria-expanded=\{showAdvanced\}/);
+const firstRunRecipeAt = createFirstRunStudio.indexOf(
+  'data-first-run-step="recipe"'
+);
+const firstRunLabAt = createFirstRunStudio.indexOf("Try free · Lab");
+const firstRunAdvancedAt = createFirstRunStudio.indexOf(
+  'id="create-advanced-options"'
+);
+const firstRunIdentityAt = createFirstRunStudio.indexOf(
+  't("create.toyIdentity")'
+);
+assert.ok(
+  firstRunRecipeAt >= 0 && firstRunRecipeAt < firstRunLabAt,
+  "mobile recipe must precede collapsed Lab samples"
+);
+assert.ok(
+  firstRunAdvancedAt >= 0 && firstRunAdvancedAt < firstRunIdentityAt,
+  "Toy Identity must be inside Advanced, not in the upload step"
+);
 // Mobile first-run: activation/workflow chrome desktop-only (lg+)
 assert.match(
   createFirstRunStudio,
@@ -363,6 +381,29 @@ assert.match(
   createFirstRunStudio,
   /hidden border-b border-white\/10 bg-\[#050506\] px-3 py-1\.5 sm:block/
 );
+
+// Seller Pack first-run (Phase F 390px): compact steps + sticky actions.
+const sellerPackStepsSrc = fs.readFileSync(
+  join(root, "components/SellerPackSteps.tsx"),
+  "utf8"
+);
+assert.match(sellerPackStepsSrc, /data-seller-pack-steps="compact"/);
+assert.match(sellerPackStepsSrc, /data-seller-pack-steps="full"/);
+assert.match(sellerPackStepsSrc, /sm:hidden/);
+assert.match(sellerPackStepsSrc, /hidden gap-2 sm:grid/);
+const batchFirstRun = fs.readFileSync(
+  join(root, "components/BatchStudio.tsx"),
+  "utf8"
+);
+assert.match(batchFirstRun, /data-seller-pack-step="upload"/);
+assert.match(batchFirstRun, /Upload owned toy photo/);
+assert.match(batchFirstRun, /data-seller-pack-action="upload"/);
+assert.match(batchFirstRun, /data-seller-pack-action="generate"/);
+assert.match(batchFirstRun, /data-seller-pack-action="library"/);
+assert.match(batchFirstRun, /data-seller-pack-action="retry-failed"/);
+assert.match(batchFirstRun, /data-seller-pack-sticky="mobile"/);
+assert.match(batchFirstRun, /Retry failed only/);
+assert.match(batchFirstRun, /Lab samples are official examples/);
 
 const meClient = fs.readFileSync(join(root, "lib/meClient.ts"), "utf8");
 assert.match(meClient, /export async function fetchMe/);
@@ -554,8 +595,75 @@ assert.match(historySrc, /sourceProject/);
 const remix = fs.readFileSync(join(root, "lib/remixIntent.ts"), "utf8");
 assert.match(remix, /export function buildCreateRemixHref/);
 assert.match(remix, /export function parseRemixSearchParams/);
+assert.match(remix, /export function hasRemixSearchParams/);
 assert.match(remix, /sourceProjectSlug/);
 assert.match(createStudio, /sourceProject|remix\.intent/);
+// Execute the production pure remix parser with a tiny fixture catalog.
+// Catches a fresh /create accidentally inheriting PRESETS[0]'s demo card.
+const remixFixturePresets = [
+  {
+    slug: "fixture-spin",
+    aspectRatio: "1:1",
+    duration: 5,
+    promptTemplate: "fixture prompt",
+  },
+];
+const remixFixtureDemos = [
+  {
+    id: "fixture-source",
+    preset: "fixture-spin",
+    character: "Fixture toy",
+    title: "Fixture spin",
+    poster: "/fixture-poster.jpg",
+  },
+];
+const remixCjs = require("typescript").transpileModule(remix, {
+  compilerOptions: {
+    module: require("typescript").ModuleKind.CommonJS,
+    target: require("typescript").ScriptTarget.ES2022,
+  },
+}).outputText;
+const remixFixtureModule = { exports: {} };
+new Function("require", "exports", "module", remixCjs)(
+  (id) => {
+    if (id === "@/lib/presets") {
+      return {
+        PRESETS: remixFixturePresets,
+        getPreset: (slug) => remixFixturePresets.find((p) => p.slug === slug),
+      };
+    }
+    if (id === "@/lib/demoVideos") return { DEMO_VIDEOS: remixFixtureDemos };
+    if (id === "@/lib/viralNames") return { viralName: (_slug, name) => name };
+    throw new Error(`unexpected remix fixture import: ${id}`);
+  },
+  remixFixtureModule.exports,
+  remixFixtureModule
+);
+const remixFixture = remixFixtureModule.exports;
+assert.deepEqual(remixFixture.parseRemixSearchParams({}), {
+  intent: null,
+  notices: [],
+  sourceLabel: null,
+  sourcePoster: null,
+});
+const validRemixFixture = remixFixture.parseRemixSearchParams({
+  effect: "fixture-spin",
+  source: "fixture-source",
+  ratio: "9:16",
+  duration: "10",
+  channel: "tiktok",
+});
+assert.equal(validRemixFixture.intent?.recipeSlug, "fixture-spin");
+assert.equal(validRemixFixture.intent?.sourceProjectSlug, "fixture-source");
+assert.equal(validRemixFixture.intent?.aspectRatio, "9:16");
+assert.equal(validRemixFixture.intent?.durationSeconds, 10);
+assert.equal(validRemixFixture.intent?.channel, "tiktok");
+assert.equal(validRemixFixture.sourcePoster, "/fixture-poster.jpg");
+const invalidRemixFixture = remixFixture.parseRemixSearchParams({
+  effect: "not-a-recipe",
+});
+assert.equal(invalidRemixFixture.intent?.recipeSlug, "fixture-spin");
+assert.match(invalidRemixFixture.notices.join(" "), /Unknown recipe/);
 const projectsPage = fs.readFileSync(
   join(root, "app/projects/[slug]/page.tsx"),
   "utf8"

@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Seller Pack first-run conversion (Phase F 390px)
+- SellerPackSteps: compact horizontal strip on phone; full cards from sm+.
+- BatchStudio sticky: Upload owned photo · Lab sample · Generate with quote ·
+  after success Library + Retry failed only (siblings kept) or Run pack again.
+- Photo step labeled/data-marked; Lab samples honesty line; credit line on sticky.
+- engine-smoke locks data-seller-pack-* markers.
+
 ### 2026-07-26 — [grok] T6 hard gate: bind Free derivative to job identity
 - Free live download no longer trusts free-floating derivative metadata. Gate
   requires `canServeVerifiedT6Derivative({ jobId, providerRequestId, derivative })`:
