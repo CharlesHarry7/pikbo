@@ -6,20 +6,19 @@
  */
 
 import type { Metadata } from "next";
-import { DEMO_VIDEOS } from "@/lib/demoVideos";
-import { PRESETS } from "@/lib/presets";
+import {
+  getEffectProof,
+  listProvenEffectSlugs,
+} from "@/lib/effectProof";
 
 /** Recipes that have at least one distinct DEMO_VIDEOS entry (unique preset match). */
 export function recipeHasUniqueProof(slug: string): boolean {
-  return DEMO_VIDEOS.some((d) => d.preset === slug);
+  return Boolean(getEffectProof(slug));
 }
 
 /** All preset slugs that currently have unique Lab proof. */
 export function proofBackedRecipeSlugs(): string[] {
-  const set = new Set(
-    DEMO_VIDEOS.map((d) => d.preset).filter((s): s is string => Boolean(s))
-  );
-  return PRESETS.map((p) => p.slug).filter((slug) => set.has(slug));
+  return listProvenEffectSlugs();
 }
 
 /** Public SEO landings may still be followed so deep links work. */

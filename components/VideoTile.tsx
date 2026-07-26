@@ -31,6 +31,10 @@ export function VideoTile({
   return (
     <Link
       href={item.href}
+      data-proof-status={
+        "proofStatus" in item ? item.proofStatus : undefined
+      }
+      data-recipe-slug={item.recipeSlug}
       className="video-tile group block overflow-hidden rounded-xl border border-white/[0.08] bg-black shadow-[0_12px_32px_-14px_rgba(0,0,0,0.85)] transition duration-300 hover:-translate-y-0.5 hover:border-[var(--mint)]/45 hover:shadow-[0_20px_48px_-16px_rgba(200,255,61,0.12)]"
       aria-label={`Open ${item.title}`}
     >

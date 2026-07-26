@@ -7,6 +7,7 @@
 
 import { site } from "@/lib/site";
 import type { DemoVideo } from "@/lib/demoVideos";
+import { isRegisteredEffectProof } from "@/lib/effectProof";
 import { getPreset } from "@/lib/presets";
 
 /** ISO 8601 DateTime with timezone (GSC VideoObject.uploadDate). */
@@ -96,6 +97,12 @@ export function softwareApplicationJsonLd(opts?: {
 }
 
 export function videoObjectJsonLd(demo: DemoVideo) {
+  if (!isRegisteredEffectProof(demo)) {
+    throw new Error(
+      `DemoVideo ${demo.id}: VideoObject requires exact registered recipe proof`
+    );
+  }
+
   // Duration only from registered recipe metadata — never invent play counts / ratings.
   const presetDuration = getPreset(demo.preset)?.duration;
   const duration =

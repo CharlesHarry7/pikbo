@@ -4,6 +4,10 @@ import { APPS } from "@/lib/catalog";
 import { MODELS } from "@/lib/catalog";
 import { viralName } from "@/lib/viralNames";
 import {
+  getEffectProof,
+  listProvenEffectDemos,
+} from "@/lib/effectProof";
+import {
   HOME_PROOF_BADGE,
   HOME_PROOF_LIMIT,
 } from "@/lib/softLaunch";
@@ -35,6 +39,20 @@ export type FeedItem = {
   recipeSlug?: string;
 };
 
+export type ProvenEffectFeedItem = FeedItem & {
+  proofStatus: "proven";
+};
+
+export type ConceptEffectFeedItem = Omit<FeedItem, "demo"> & {
+  proofStatus: "concept";
+  conceptEmoji: string;
+  conceptGradient: string;
+};
+
+export type EffectFeedItem =
+  | ProvenEffectFeedItem
+  | ConceptEffectFeedItem;
+
 export type CommunityProject = {
   id: string;
   title: string;
@@ -62,7 +80,7 @@ export const HOME_SHOWCASE_LIMIT = HOME_PROOF_LIMIT;
  * showcase project card. Uses only owned footage (no shared-loop fakes).
  */
 export function buildViralPresetsWallFeed(): FeedItem[] {
-  const fromDemos: FeedItem[] = DEMO_VIDEOS.map((demo) => {
+  const fromDemos: FeedItem[] = listProvenEffectDemos().map((demo) => {
     const preset = PRESETS.find((p) => p.slug === demo.preset);
     return {
       id: `viral-demo-${demo.id}`,
@@ -165,8 +183,7 @@ export function buildVideoFeed(): FeedItem[] {
 
 /** Count of recipes without unique Lab footage (for honest empty/CTA copy). */
 export function conceptRecipeCount(): number {
-  const withFootage = new Set(DEMO_VIDEOS.map((d) => d.preset));
-  return PRESETS.filter((p) => !withFootage.has(p.slug)).length;
+  return PRESETS.filter((preset) => !getEffectProof(preset.slug)).length;
 }
 
 export function featuredStrip(): FeedItem[] {
@@ -259,28 +276,48 @@ export function suiteRail(): FeedItem[] {
   return [...models, ...apps];
 }
 
-export function feedByCategory(cat: CategoryId): FeedItem[] {
-  return PRESETS.filter((p) => p.category === cat).map((p, i) => {
-    const mapped = DEMO_VIDEOS.find((d) => d.preset === p.slug);
-    const demo = mapped ?? demoForIndex(i + cat.length);
+export function feedByCategory(cat: CategoryId): EffectFeedItem[] {
+  return PRESETS.filter((p) => p.category === cat).map((p) => {
+    const proof = getEffectProof(p.slug);
+    const ratio =
+      p.aspectRatio === "1:1"
+        ? "1:1"
+        : p.aspectRatio === "16:9"
+          ? "16:9"
+          : "9:16";
+
+    if (!proof) {
+      return {
+        id: `cat-${cat}-${p.slug}`,
+        title: viralName(p.slug, p.name),
+        subtitle: `Concept recipe · No demo yet · ${p.tagline}`,
+        href: `/effects/${p.slug}`,
+        detailHref: `/effects/${p.slug}`,
+        badge: "Concept recipe · No demo yet",
+        ratio,
+        kind: "preset" as const,
+        category: p.category,
+        recipeSlug: p.slug,
+        proofStatus: "concept" as const,
+        conceptEmoji: p.emoji,
+        conceptGradient: p.gradient,
+      } satisfies ConceptEffectFeedItem;
+    }
+
     return {
       id: `cat-${cat}-${p.slug}`,
       title: viralName(p.slug, p.name),
-      subtitle: mapped
-        ? p.tagline
-        : `Concept recipe · shared Lab loop · ${p.tagline}`,
+      subtitle: p.tagline,
       href: createHref(p.slug),
       detailHref: `/effects/${p.slug}`,
-      badge: mapped ? "Official example" : "Concept",
-      ratio:
-        p.aspectRatio === "1:1"
-          ? "1:1"
-          : p.aspectRatio === "16:9"
-            ? "16:9"
-            : "9:16",
-      demo,
+      badge: "Official example · cached",
+      ratio,
+      demo: proof.demo,
       kind: "preset" as const,
-    };
+      category: p.category,
+      recipeSlug: p.slug,
+      proofStatus: "proven" as const,
+    } satisfies ProvenEffectFeedItem;
   });
 }
 

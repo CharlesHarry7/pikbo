@@ -16,6 +16,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Effects exact-demo / concept truth gate
+- Effects no longer assigns a fallback video to recipes without their own registered media; concept cards are static and say `No demo yet`.
+- `effectProof` rejects duplicate recipe registrations and reused MP4 outputs, and only exact registered media can emit VideoObject JSON-LD.
+- Effects UI says `Demo available` rather than implying every prototype file is a model-verified generation; fal and prototype provenance remains separate.
+- Homepage viral references now draw from the exact registry, while unknown concepts deep-link to their detail page instead of Generate.
+- Verified: lint (0 errors), TypeScript, engine-smoke, production webpack build (189 pages).
+
+---
+
 ### 2026-07-26 — [grok] Proof-first homepage for toy sellers
 - First viewport now contains one distinct Seedance Mini Lab clip, the only H1, recipe choices, and a compact upload-to-Create action; Free Mini names the PIKBO watermark explicitly.
 - HeroUpload keeps the selected image in `pikbo_pending_still`; CreateStudio already restores and registers that image after navigation.

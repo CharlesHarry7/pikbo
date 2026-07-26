@@ -5,6 +5,7 @@ import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { PRESETS } from "@/lib/presets";
 import { allCategoryFeeds } from "@/lib/videoFeed";
 import { VideoTile } from "@/components/VideoTile";
+import { ConceptRecipeTile } from "@/components/ConceptRecipeTile";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { listCreateShelfWorkflows } from "@/lib/workflows";
 import { proofBackedRecipeSlugs } from "@/lib/seoIndex";
@@ -14,13 +15,13 @@ import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 export const metadata: Metadata = {
   title: "Toy video presets · Recipes",
   description:
-    "Every Pikbo effect as a playable video — spin, unbox, dance, cinematic scenes for designer toys. Remake in Generate.",
+    "Browse Pikbo toy-video recipes with exact cached demos and clearly labeled concept recipes with no demo yet.",
   alternates: { canonical: "/effects" },
   robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Toy video presets · Recipes | ${site.name}`,
     description:
-      "Playable Lab recipes for designer toys — spin, unbox, dance, shelf. Remix in Generate.",
+      "Recipes with exact cached demos, plus clearly separated concept recipes awaiting their own demo.",
     url: `${site.url}/effects`,
   },
 };
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
 const EFFECTS_FAQ = [
   {
     q: "What is a Lab recipe vs a concept recipe?",
-    a: "Lab recipes have a unique cached demo clip and open Generate with that effect. Concept recipes are reachable for SEO/IA but stay labeled concept and may be noindex until proof exists.",
+    a: "Lab recipes have a unique cached demo clip registered to that exact recipe. Concept recipes show a static card with No demo yet, never a borrowed video, and may stay noindex until proof exists.",
   },
   {
     q: "Does remaking a preset cost credits?",
@@ -50,12 +51,13 @@ export default function EffectsHub() {
   // Phase H: ItemList only proof-backed recipes (concept walls stay reachable/noindex).
   const proofSlugs = new Set(proofBackedRecipeSlugs());
   const proofPresets = PRESETS.filter((p) => proofSlugs.has(p.slug));
+  const conceptCount = PRESETS.length - proofPresets.length;
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Pikbo Lab toy video recipes with proof",
+    name: "Pikbo Lab toy video recipes with exact demos",
     description:
-      "Effect landings that have a unique Lab cached demo. Concept recipes without proof are omitted.",
+      "Effect landings that have a unique Lab cached demo. Concept recipes without their own demo are omitted.",
     numberOfItems: proofPresets.length,
     itemListElement: proofPresets.map((p, i) => ({
       "@type": "ListItem",
@@ -103,13 +105,13 @@ export default function EffectsHub() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
-              Viral presets · {PRESETS.length} · {proofPresets.length} with Lab video
+              Recipes · {proofPresets.length} demos · {conceptCount} concepts
             </p>
             <h1 className="font-display text-xl font-black uppercase tracking-tight sm:text-2xl">
-              Big-budget motion · remake as video
+              Exact demo or clearly marked concept
             </h1>
             <p className="mt-0.5 text-[11px] text-white/45">
-              Pixel-parity with suite viral walls — tap any card to Generate video ·{" "}
+              Demo cards play the exact registered Lab file. Concepts stay static until their own demo lands ·{" "}
               <Link href="/create" className="font-semibold text-[#c8ff3d] hover:underline">
                 Open Generate →
               </Link>
@@ -180,13 +182,18 @@ export default function EffectsHub() {
               <p className="mt-0.5 text-xs text-white/40">{category.blurb}</p>
             </div>
             <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30">
-              {items.length} looks
+              {items.filter((item) => item.proofStatus === "proven").length} demos ·{" "}
+              {items.filter((item) => item.proofStatus === "concept").length} concepts
             </span>
           </div>
           <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
-            {items.map((item) => (
-              <VideoTile key={item.id} item={item} compact />
-            ))}
+            {items.map((item) =>
+              item.proofStatus === "proven" ? (
+                <VideoTile key={item.id} item={item} compact />
+              ) : (
+                <ConceptRecipeTile key={item.id} item={item} compact />
+              )
+            )}
           </div>
         </section>
       ))}

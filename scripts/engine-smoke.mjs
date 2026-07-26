@@ -760,12 +760,37 @@ assert.match(softLaunch, /floating-hero/);
 assert.match(softLaunch, /mystery-box-reveal/);
 assert.match(softLaunch, /display-case-glam/);
 const videoFeed = fs.readFileSync(join(root, "lib/videoFeed.ts"), "utf8");
+const effectProofSrc = fs.readFileSync(join(root, "lib/effectProof.ts"), "utf8");
+const conceptRecipeTileSrc = fs.readFileSync(
+  join(root, "components/ConceptRecipeTile.tsx"),
+  "utf8"
+);
 assert.match(showcase, /HOME_PROOF_SLUGS/);
 assert.match(showcase, /listHomeShowcaseProjects/);
 assert.match(videoFeed, /HOME_PROOF_SLUGS|HOME_SHOWCASE_LIMIT/);
 assert.match(videoFeed, /listHomeShowcaseProjects/);
 assert.match(videoFeed, /conceptRecipeCount/);
 assert.match(videoFeed, /official unique demos only|Official unique demos only/i);
+// Effects proof truth: exact registered media only. Concept recipes never
+// borrow demoForIndex and their component cannot emit a video node.
+assert.match(effectProofSrc, /EFFECT_PROOF_REGISTRY/);
+assert.match(effectProofSrc, /Effect proof output reused/);
+assert.match(effectProofSrc, /isRegisteredEffectProof/);
+{
+  const categoryFeed = videoFeed.slice(
+    videoFeed.indexOf("export function feedByCategory"),
+    videoFeed.indexOf("export function allCategoryFeeds")
+  );
+  assert.match(categoryFeed, /getEffectProof/);
+  assert.match(categoryFeed, /proofStatus:\s*"proven"/);
+  assert.match(categoryFeed, /proofStatus:\s*"concept"/);
+  assert.match(categoryFeed, /No demo yet/);
+  assert.doesNotMatch(categoryFeed, /demoForIndex/);
+  assert.doesNotMatch(categoryFeed, /shared Lab loop/i);
+}
+assert.match(conceptRecipeTileSrc, /data-proof-status="concept"/);
+assert.match(conceptRecipeTileSrc, /No demo yet/);
+assert.doesNotMatch(conceptRecipeTileSrc, /AutoPlayVideo|<video\b/);
 // Claude viral presets (SEO mesh) must remain registered
 const presetsSrc = fs.readFileSync(join(root, "lib/presets.ts"), "utf8");
 for (const slug of [
@@ -1740,6 +1765,29 @@ assert.doesNotMatch(jsonLdSrc, /LAB_VIDEO_UPLOAD_DATETIME/);
 assert.match(jsonLdSrc, /iso8601DurationFromSeconds|duration/);
 const demoVideosSrc = fs.readFileSync(join(root, "lib/demoVideos.ts"), "utf8");
 assert.match(demoVideosSrc, /publishedAt:\s*string/);
+// Every proven recipe owns one independent primary output file.
+{
+  const proofRows = [
+    ...demoVideosSrc.matchAll(
+      /id:\s*"([^"]+)"[\s\S]*?preset:\s*"([^"]+)"[\s\S]*?mp4:\s*"([^"]+)"/g
+    ),
+  ].map((match) => ({
+    id: match[1],
+    preset: match[2],
+    mp4: match[3],
+  }));
+  assert.ok(proofRows.length >= 8, "expected registered effect proof rows");
+  assert.equal(
+    new Set(proofRows.map((row) => row.preset)).size,
+    proofRows.length,
+    "each proven recipe must have one exact proof registration"
+  );
+  assert.equal(
+    new Set(proofRows.map((row) => row.mp4)).size,
+    proofRows.length,
+    "proven recipes must not reuse output media"
+  );
+}
 // Every demo entry must declare publishedAt DateTime with T and Z/offset
 {
   const pubs = demoVideosSrc.match(/publishedAt:\s*"([^"]+)"/g) || [];
@@ -3003,6 +3051,9 @@ const effectsHubSrc = fs.readFileSync(
 assert.match(effectsHubSrc, /FreeTrialCta/);
 assert.match(effectsHubSrc, /EFFECTS_FAQ|Recipes FAQ/);
 assert.match(effectsHubSrc, /FAQPage/);
+assert.match(effectsHubSrc, /item\.proofStatus === "proven"/);
+assert.match(effectsHubSrc, /ConceptRecipeTile/);
+assert.match(effectsHubSrc, /exact demo or clearly marked concept/i);
 assert.doesNotMatch(effectsHubSrc, /Generate free/);
 // SEO hubs /for /toys /guides — Phase H FAQ + FreeTrial honesty
 const forHubSrc = fs.readFileSync(join(root, "app/for/page.tsx"), "utf8");
