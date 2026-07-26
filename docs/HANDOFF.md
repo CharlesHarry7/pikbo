@@ -35,10 +35,12 @@ Local health (NODE_ENV=production): backend=supabase · schemaReady=false · tra
 - https://github.com/CharlesHarry7/pikbo/pull/23
 
 #### CI URL
-- Pending boss workflow-scope copy of `docs/ci/github-actions-ci.yml`. Local strict path **PASS**.
+- Engine/lint/typecheck/build green (live CI still masks critical-path with `|| true`): https://github.com/CharlesHarry7/pikbo/actions/runs/30190344863
+- Full T23 (honest critical-path) pending boss copy of `docs/ci/github-actions-ci.yml` → `.github/workflows/ci.yml`.
+- Local strict path **PASS**.
 
 #### Commit SHAs (rebased)
-- `5a636e2` [grok] HANDOFF: Wave C PR #23 link
+- `c2597a8` [grok] HANDOFF: Wave C PR #23 link
 - `196c732` [grok] ship honest CI as docs/ci template (workflow scope)
 - `62b356e` [grok] prove durable concurrency and idempotency
 - `9288adc` [grok] fail closed and cut over signed-in credits
