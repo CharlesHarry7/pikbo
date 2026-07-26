@@ -2,10 +2,12 @@
  * T6 — protected Free deliverables (file watermark bake).
  *
  * Honest status only. Player CSS overlay is NOT a file watermark.
- * Free live raw provider URLs stay undownloadable unless:
- *   - PIKBO_WATERMARK_WORKER_URL bake succeeds on download, or
- *   - PIKBO_T6_FILE_BAKE=1 after operator proves pipeline (force).
+ * Free live raw provider URLs stay undownloadable until a verified local,
+ * server-owned derivative worker is proven end-to-end. Environment variables
+ * are requests for operators, never evidence that a file was baked.
  */
+
+import { t6WorkerReadiness } from "@/lib/t6Worker";
 
 export type T6Status = "blocked" | "ready" | "worker_configured";
 
@@ -19,7 +21,9 @@ export type T6Report = {
   /** Env / tooling presence only — not a green light alone. */
   tooling: {
     ffmpegHint: boolean;
+    ffprobeHint: boolean;
     workerUrlConfigured: boolean;
+    serverOwnedWorkerReady: boolean;
   };
 };
 
@@ -32,50 +36,33 @@ export function t6ToolingProbe(): T6Report["tooling"] {
     ffmpegHint: process.env.PIKBO_FFMPEG_PATH
       ? process.env.PIKBO_FFMPEG_PATH.length > 0
       : false,
+    ffprobeHint: process.env.PIKBO_FFPROBE_PATH
+      ? process.env.PIKBO_FFPROBE_PATH.length > 0
+      : false,
     workerUrlConfigured: Boolean(
       (process.env.PIKBO_WATERMARK_WORKER_URL || "").startsWith("http")
     ),
+    serverOwnedWorkerReady: false,
   };
 }
 
 /**
  * Authoritative T6 readiness.
- * - force flag = full ready (operator proved)
- * - worker URL = bake_on_download (raw still blocked; download path bakes)
+ * The unfinished v1 skeleton cannot be enabled by an env flag. The operator
+ * must install ffmpeg+ffprobe, persistent job/storage wiring, and pass an
+ * actual derivative fixture before this report can ever become ready.
  */
 export function t6Report(): T6Report {
   const tooling = t6ToolingProbe();
-  const forcedReady = process.env.PIKBO_T6_FILE_BAKE === "1";
-  if (forcedReady) {
-    return {
-      status: "ready",
-      fileBake: true,
-      playerOverlayIsNotFileWatermark: true,
-      freeLiveRawDownload: "allowed",
-      reason:
-        "PIKBO_T6_FILE_BAKE=1 — operator asserts baked Free derivative pipeline is live",
-      tooling,
-    };
-  }
-  if (tooling.workerUrlConfigured) {
-    return {
-      status: "worker_configured",
-      fileBake: false,
-      playerOverlayIsNotFileWatermark: true,
-      freeLiveRawDownload: "bake_on_download",
-      reason:
-        "Watermark worker configured — Free downloads bake via PIKBO_WATERMARK_WORKER_URL; raw provider URLs stay blocked",
-      tooling,
-    };
-  }
+  const worker = t6WorkerReadiness();
   return {
     status: "blocked",
     fileBake: false,
     playerOverlayIsNotFileWatermark: true,
     freeLiveRawDownload: "blocked",
     reason:
-      "No server-side baked watermark pipeline yet. Free Mini live raw provider URLs must not download; on-player mark is not a file watermark. Set PIKBO_WATERMARK_WORKER_URL.",
-    tooling,
+      "No verified server-owned baked derivative exists. Free Mini live raw provider URLs must not be exposed or downloaded; player overlay is not a file watermark.",
+    tooling: { ...tooling, serverOwnedWorkerReady: worker.effective },
   };
 }
 
@@ -83,8 +70,7 @@ export function t6BlocksFreeLiveDownload(): boolean {
   return t6Report().freeLiveRawDownload === "blocked";
 }
 
-/** Free live may attempt download when worker can bake or force-ready. */
+/** Hard false until the server-owned derivative pipeline has actual proof. */
 export function t6AllowsFreeDownloadAttempt(): boolean {
-  const mode = t6Report().freeLiveRawDownload;
-  return mode === "allowed" || mode === "bake_on_download";
+  return false;
 }

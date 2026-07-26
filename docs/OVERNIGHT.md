@@ -126,7 +126,8 @@
 85. [x] Batch/Landing TIMEOUT settlement parity · network abort refundUnconfirmed
 86. [x] health/me refund policy when_confirmed · TIMEOUT unconfirmed · imageClient network
 87. [x] rehydrateFreeTrial keeps refund policy · Settings Live fail refunds · guides honesty
-88. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+88. [x] T6 fail-closed skeleton: no env unlock Free raw · server-owned worker IMPLEMENTED=false
+89. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -140,9 +141,9 @@
 
 ## Grok 本拍状态（3 行）
 
-- rehydrateFreeTrial preserves when_confirmed / TIMEOUT unconfirmed after generate merge.  
-- Settings shows Live fail refunds; Free Mini guide SEO copy honest.  
-- Mode A still needs boss Vercel login · SQL · T6 bake worker.
+- T6: Free live raw never unlocked by PIKBO_T6_FILE_BAKE / external worker URL alone.  
+- lib/t6Worker source-only skeleton hard-disabled; downloads need owned derivative.  
+- Mode A still needs boss Vercel login · SQL · real T6 bake proof.
 
 ---
 

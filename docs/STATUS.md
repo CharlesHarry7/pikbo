@@ -37,7 +37,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T4 | Stripe webhook (renew/cancel plan) | Grok | done | agent/grok/ship-billing-launch | webhook + confirm + entitlements |
 | T5 | Supabase auth + durable credits | Grok | doing | agent/grok/final-takeover | SQL migration + pure engine + local adapter + smoke tests landed; Supabase Auth UI/wire blocked on keys (see BLOCKERS_REQUEST) |
 | T-PHASE-D | Local async job ledger + controlled download API | Grok | review | main | process-memory generations + /api/downloads gate; durable queue still Supabase |
-| T6 | Server-side free watermark (ffmpeg) | Grok | todo | agent/grok/final-takeover | Raw Free download must remain disabled until file derivative is verified |
+| T6 | Server-side free watermark (ffmpeg) | Grok | **blocked** | agent/grok/t6-watermark-worker-v1 | Fail-closed skeleton on main; Free raw blocked until owned derivative + ffmpeg proof |
 | T7 | Private Vercel RC + later domain pikbo.ai | Grok | blocked | agent/grok/final-takeover | Prepare private preview; Vercel login and public DNS require boss authorization |
 | FP0 | First-principles nav + Mini truth + doctrine | Grok | done | main | AppShell primary/more; docs/FIRST_PRINCIPLES.md |
 | FP1 | critical-path smoke script | Grok | done | main | `npm run critical-path` |
@@ -74,7 +74,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T29 | Homepage first-screen 390px acceptance + polish | GPT | done | agent/gpt/pricing-mobile | No x-overflow; primary CTA visible; duplicate home floating CTA removed; accessible demo controls |
 | T30 | Pricing UI matches active credit contract | GPT | done | agent/gpt/pricing-truth-main | Free 1 / Creator ~5 / Shop ~15; billing gate and future model-aware weights remain explicit |
 | T5 | Supabase auth + durable credits | Grok | doing | agent/grok/final-takeover | Schema+engine landed; Supabase keys in BLOCKERS_REQUEST; **blocks serious Stripe** |
-| T6 | Server-side free watermark (ffmpeg) | Grok | todo | agent/grok/final-takeover | After Wave B/CI; file-level proof required |
+| T6 | Server-side free watermark (ffmpeg) | Grok | **blocked** | agent/grok/t6-watermark-worker-v1 | Fail-closed skeleton on main; Free raw blocked until owned derivative + ffmpeg proof |
 
 ---
 

@@ -1917,12 +1917,18 @@ assert.match(downloadRouteSrc, /isSafeDeliverableUrl|UNSAFE_URL/);
 assert.match(downloadRouteSrc, /absoluteDeliverableUrl|new URL\(/);
 assert.match(downloadRouteSrc, /export async function HEAD/);
 assert.match(downloadRouteSrc, /X-Pikbo-Download-Code|X-Pikbo-Watermark/);
-// Live T6 recompute at gate time + HEAD bake honesty (not frozen job.downloadAllowed)
-assert.match(downloadRouteSrc, /canDownloadResult/);
+// Fail-closed T6: owned derivative gate only
+assert.match(downloadRouteSrc, /downloadAllowedForJob/);
 assert.match(downloadRouteSrc, /X-Pikbo-T6|X-Pikbo-Bake/);
-assert.match(downloadRouteSrc, /T6_BAKE_FAILED|bakeWatermarkedVideo/);
-assert.match(downloadRouteSrc, /freeLiveWatermark|never hand raw/);
-assert.match(genJobsStore, /Recompute T6|downloadAllowedForJob/);
+assert.doesNotMatch(downloadRouteSrc, /bakeWatermarkedVideo/);
+assert.match(downloadRouteSrc, /bakedDerivative|owned derivative|Verified owned/);
+assert.match(genJobsStore, /downloadAllowedForJob|bakedDerivative/);
+assert.match(fs.readFileSync(join(root, "lib/t6Worker.ts"), "utf8"), /SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED\s*=\s*false/);
+assert.match(fs.readFileSync(join(root, "lib/t6Watermark.ts"), "utf8"), /t6WorkerReadiness|serverOwnedWorkerReady/);
+assert.match(fs.readFileSync(join(root, "lib/t6Bake.ts"), "utf8"), /SERVER_WORKER_DISABLED/);
+// Live T6 recompute at gate time + HEAD bake honesty (not frozen job.downloadAllowed)
+assert.match(downloadRouteSrc, /X-Pikbo-T6|X-Pikbo-Bake/);
+assert.match(genJobsStore, /downloadAllowedForJob|bakedDerivative/);
 // Health free-trial product contract (session state stays on /api/me)
 assert.match(health, /freeTrial/);
 assert.match(health, /failedLiveRefunds/);
@@ -2288,20 +2294,15 @@ const t6 = fs.readFileSync(join(root, "lib/t6Watermark.ts"), "utf8");
 assert.match(t6, /export function t6Report/);
 assert.match(t6, /status:\s*"blocked"|blocked/);
 assert.match(t6, /playerOverlayIsNotFileWatermark/);
-assert.match(t6, /PIKBO_T6_FILE_BAKE/);
+assert.doesNotMatch(t6, /PIKBO_T6_FILE_BAKE\s*===\s*["']1["']/);
+assert.match(t6, /t6WorkerReadiness|serverOwnedWorkerReady|blocked/);
 assert.match(t6, /bake_on_download|worker_configured/);
 assert.match(t6, /t6AllowsFreeDownloadAttempt|workerUrlConfigured/);
 assert.match(health, /t6Report|t6:/);
-assert.match(
-  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
-  /PIKBO_WATERMARK_WORKER_URL/
-);
-assert.match(
-  fs.readFileSync(join(root, "lib/t6Bake.ts"), "utf8"),
-  /bakeWatermarkedVideo|isSafeDeliverableUrl/
-);
+assert.match(fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"), /bakedDerivativeVerified|server-owned baked derivative/);
+assert.match(fs.readFileSync(join(root, "lib/t6Bake.ts"), "utf8"), /bakeWatermarkedVideo|SERVER_WORKER_DISABLED/);
 assert.match(health, /jobTimeoutMs/);
-assert.match(createTrust, /PIKBO_T6_FILE_BAKE|T6 blocked/);
+assert.match(createTrust, /bakedDerivativeVerified|T6 blocked|server-owned/);
 
 // Phase C Supabase Postgres durable adapter
 const sbStore = fs.readFileSync(

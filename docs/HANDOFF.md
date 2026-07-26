@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] T6 server-owned baked-watermark skeleton (source-only)
+- Free live raw never unlocked by env force / external worker URL alone.
+- `lib/t6Worker.ts` hard-disabled; downloads require verified owned derivative.
+- Verified: typecheck · engine-smoke · t6 fixture.
+
 ### 2026-07-26 — [grok] HfProductRail + Explore jobs product-first
 - HfProductRail: Generate · Seller · Modules · Presets before Flow/Cinema/Image Preview.
 - HfExploreHome job grid: Seller/Modules/Library before Flow · Preview; Generate CTA.

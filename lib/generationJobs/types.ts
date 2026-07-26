@@ -10,6 +10,20 @@ export type GenerationJobStatus =
   | "failed"
   | "canceled";
 
+/** A server-owned file, never a provider URL. Only succeeded+verified is serveable. */
+export type BakedWatermarkDerivative = {
+  status: "queued" | "running" | "succeeded" | "failed";
+  idempotencyKey: string;
+  objectKey: string;
+  /** Local/owned delivery path. This must never equal the provider raw URL. */
+  deliveryPath?: string;
+  contentType?: "video/mp4";
+  sourceChecksum?: string;
+  outputChecksum?: string;
+  probe?: { formatName: string; bakedMarkSignal: boolean };
+  errorCode?: string;
+};
+
 export type GenerationJob = {
   id: string;
   sessionId: string;
@@ -19,6 +33,8 @@ export type GenerationJob = {
   watermark: boolean;
   /** Free live raw provider URL must not be downloadable (T6). */
   downloadAllowed: boolean;
+  /** Attached only by a future server-owned T6 worker after verification. */
+  bakedDerivative?: BakedWatermarkDerivative;
   videoUrl?: string;
   model?: string;
   duration?: number;

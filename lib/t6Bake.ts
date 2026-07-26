@@ -1,99 +1,38 @@
 /**
- * T6 file watermark bake — call external worker or skip.
- * Worker contract (POST JSON):
- *   { videoUrl: string, text: string, jobId?: string }
- * Response JSON:
- *   { ok: true, bakedUrl: string } | { ok: false, error: string }
+ * Legacy download-time bake adapter — intentionally fail-closed.
  *
- * Worker must return https baked file; do not return raw free provider URLs.
+ * T6 v1 must be a server-owned job/output pipeline, not an HTTP relay that
+ * accepts a provider URL at download time. Keep this compatibility export so
+ * older imports cannot accidentally re-enable a raw-provider fallback.
  */
 
-import { isSafeDeliverableUrl } from "@/lib/createTrust";
-
 export type BakeResult =
-  | { ok: true; bakedUrl: string; via: "worker" }
-  | { ok: false; error: string; code: "NO_WORKER" | "WORKER_FAIL" | "UNSAFE" };
+  | { ok: true; bakedUrl: string; via: "owned-derivative" }
+  | {
+      ok: false;
+      error: string;
+      code: "SERVER_WORKER_DISABLED" | "UNSAFE";
+    };
 
 export function watermarkWorkerUrl(): string | null {
-  const u = (process.env.PIKBO_WATERMARK_WORKER_URL || "").trim();
-  return u.startsWith("http") ? u : null;
+  // External worker URLs are not a readiness signal and are never invoked.
+  return null;
 }
 
-export async function bakeWatermarkedVideo(input: {
+export async function bakeWatermarkedVideo(_input: {
   videoUrl: string;
   text?: string;
   jobId?: string;
 }): Promise<BakeResult> {
-  const worker = watermarkWorkerUrl();
-  if (!worker) {
-    return {
-      ok: false,
-      code: "NO_WORKER",
-      error:
-        "PIKBO_WATERMARK_WORKER_URL not set — Free live file bake unavailable",
-    };
-  }
-  if (!isSafeDeliverableUrl(input.videoUrl)) {
-    return { ok: false, code: "UNSAFE", error: "Source video URL is unsafe" };
-  }
-
-  const text =
-    input.text?.trim() ||
-    process.env.PIKBO_WATERMARK_TEXT?.trim() ||
-    "Pikbo Free Mini · pikbo.ai";
-
-  try {
-    const res = await fetch(worker, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(process.env.PIKBO_WATERMARK_WORKER_SECRET
-          ? {
-              Authorization: `Bearer ${process.env.PIKBO_WATERMARK_WORKER_SECRET}`,
-            }
-          : {}),
-      },
-      body: JSON.stringify({
-        videoUrl: input.videoUrl,
-        text,
-        jobId: input.jobId,
-      }),
-      signal: AbortSignal.timeout(
-        Number(process.env.PIKBO_WATERMARK_TIMEOUT_MS || 120_000)
-      ),
-    });
-    const data = (await res.json().catch(() => ({}))) as {
-      ok?: boolean;
-      bakedUrl?: string;
-      error?: string;
-    };
-    if (!res.ok || !data.ok || typeof data.bakedUrl !== "string") {
-      return {
-        ok: false,
-        code: "WORKER_FAIL",
-        error: data.error || `Worker HTTP ${res.status}`,
-      };
-    }
-    if (!isSafeDeliverableUrl(data.bakedUrl)) {
-      return {
-        ok: false,
-        code: "UNSAFE",
-        error: "Worker returned unsafe bakedUrl",
-      };
-    }
-    return { ok: true, bakedUrl: data.bakedUrl, via: "worker" };
-  } catch (e) {
-    return {
-      ok: false,
-      code: "WORKER_FAIL",
-      error: e instanceof Error ? e.message : "Worker request failed",
-    };
-  }
+  void _input;
+  return {
+    ok: false,
+    code: "SERVER_WORKER_DISABLED",
+    error:
+      "Download-time watermark relaying is disabled. A verified server-owned T6 derivative is required.",
+  };
 }
 
-/** health: bake is ready when worker configured OR operator forced flag */
 export function t6BakePipelineConfigured(): boolean {
-  return (
-    Boolean(watermarkWorkerUrl()) || process.env.PIKBO_T6_FILE_BAKE === "1"
-  );
+  return false;
 }
