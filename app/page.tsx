@@ -6,6 +6,7 @@ import {
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
 import { HomeViralWall } from "@/components/HomeViralWall";
+import { HomeBrowseCta } from "@/components/HomeBrowseCta";
 import { LandingToolPanel } from "@/components/LandingToolPanel";
 import { HomeSeoBody } from "@/components/HomeSeoBody";
 import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
@@ -95,6 +96,9 @@ export default function Home() {
 
       {/* 2 · Dense toy video wall — browse & remake (no strip between cinema→wall) */}
       <HomeViralWall items={viralWall.length ? viralWall : showcase} />
+
+      {/* Sticky convert while browsing wall (hides at #home-create) */}
+      <HomeBrowseCta />
 
       {/* Soft-live honesty — after wall, before generate (does not break cinema dwell) */}
       <SoftLaunchStrip />

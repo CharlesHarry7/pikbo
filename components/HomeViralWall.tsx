@@ -82,8 +82,19 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
     [filter, items]
   );
 
-  const visible = expanded ? wall : wall.slice(0, INITIAL_WALL);
-  const hasMore = wall.length > INITIAL_WALL && !expanded;
+  /** Large premiere strip (only on "all" — more cinema energy before dense grid) */
+  const featured = useMemo(
+    () => (filter === "all" ? wall.slice(0, 4) : []),
+    [filter, wall]
+  );
+  const gridPool = useMemo(() => {
+    if (filter !== "all" || featured.length === 0) return wall;
+    const ids = new Set(featured.map((f) => f.id));
+    return wall.filter((w) => !ids.has(w.id));
+  }, [wall, featured, filter]);
+
+  const visible = expanded ? gridPool : gridPool.slice(0, INITIAL_WALL);
+  const hasMore = gridPool.length > INITIAL_WALL && !expanded;
 
   const nameTicker = useMemo(
     () => wall.slice(0, 32).map((i) => i.title.toUpperCase()),
@@ -169,6 +180,60 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
       </div>
 
       <div className="px-1 py-3 sm:px-1.5 sm:py-4">
+        {/* Premiere row — bigger cards, viewport play */}
+        {featured.length > 0 ? (
+          <div
+            data-wall-featured="premiere"
+            className="mb-2 grid grid-cols-2 gap-1 sm:mb-3 sm:gap-1.5 md:grid-cols-4"
+          >
+            {featured.map((item, i) => (
+              <article
+                key={`feat-${item.id}`}
+                className="group relative aspect-[9/14] overflow-hidden rounded-lg bg-zinc-950 ring-1 ring-[#c8ff3d]/20 sm:aspect-[3/4] sm:rounded-xl"
+              >
+                <Link
+                  href={item.href}
+                  className="absolute inset-0"
+                  onClick={() =>
+                    track({
+                      event: "recipe_use",
+                      path: "/",
+                      recipe: item.recipeSlug,
+                      meta: { source: "toy_wall_featured" },
+                    })
+                  }
+                  aria-label={`${item.title} · 生成同款`}
+                >
+                  <AutoPlayVideo
+                    poster={item.demo.poster}
+                    webm={item.demo.webm}
+                    mp4={item.demo.mp4}
+                    focusable={false}
+                    desktopPlayMode="viewport"
+                    lazySources={i > 0}
+                    wallDense
+                    eager={i === 0}
+                    label={item.title}
+                    className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                  <span className="absolute left-2 top-2 rounded-full border border-[#c8ff3d]/40 bg-black/60 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#c8ff3d] backdrop-blur">
+                    Premiere
+                  </span>
+                  <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
+                    <p className="line-clamp-2 text-xs font-black uppercase tracking-wide text-white sm:text-sm">
+                      {item.title}
+                    </p>
+                    <span className="mt-1.5 inline-flex rounded-full bg-[#c8ff3d] px-2.5 py-1 text-[10px] font-black text-black">
+                      生成同款
+                    </span>
+                  </div>
+                </Link>
+              </article>
+            ))}
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-2 gap-0.5 sm:grid-cols-3 sm:gap-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
           {visible.map((item, i) => (
             <article

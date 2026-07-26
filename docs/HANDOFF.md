@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Home wall premiere row + sticky browse CTA
+- `HomeBrowseCta`: fixed bottom “看够了？用你的潮玩生成” while on wall;
+  hides at `#home-create`.
+- Wall premiere strip (4 large cards on “全部”) above dense grid.
+
 ### 2026-07-26 — [grok] Home wall viewport multi-play + denser toy chrome
 - `AutoPlayVideo`: `wallDense` + viewport lazy load/play (budget 4 desktop / 2
   mobile); sources attach on intersection.

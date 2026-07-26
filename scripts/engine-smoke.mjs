@@ -2993,12 +2993,16 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /TOY_WALL_FILTERS|生成同款|360°展示|data-home-wall|sticky|wallDense|viewport-dense/
+  /TOY_WALL_FILTERS|生成同款|360°展示|data-home-wall|sticky|wallDense|viewport-dense|Premiere|data-wall-featured/
 );
-assert.match(homePageSrc, /HomeCinemaHero items=|SoftLaunchStrip/);
+assert.match(homePageSrc, /HomeCinemaHero items=|SoftLaunchStrip|HomeBrowseCta/);
 assert.match(
   fs.readFileSync(join(root, "components/AutoPlayVideo.tsx"), "utf8"),
   /wallDense|playbackBudget/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HomeBrowseCta.tsx"), "utf8"),
+  /data-home-browse-cta|用你的潮玩生成|#home-create/
 );
 
 // Five-step toy identity + delivery honesty + landing assetId + workflows
