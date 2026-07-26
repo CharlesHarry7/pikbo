@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Multi-agent playbook + Grok self-ops on GitHub
+- `docs/MULTI_AGENT_PLAYBOOK.md`: Grok/Claude/Codex/WorkBuddy lanes; GitHub bus.
+- `docs/prompts/GROK_SELF_OPS.md`: paste prompt — Google watch + HF product + X radar.
+- `docs/ops/SITE_WATCH.md`: living log (softLive / SERP / product gaps / X).
+- AGENT_BUS expanded. Boss onboards Claude+Codex without messenger relay.
+
 ### 2026-07-27 — [grok] Seller Pack job.href AfterPath + Create redirect
 - GenerateAfterPath: jobs with `href` (Seller Pack) use mode=seller-pack for
   Next SKU / Full Generate (+ sku · try), not /create?job=seller-pack.

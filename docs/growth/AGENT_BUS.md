@@ -11,8 +11,11 @@
 
 | 通道 | 路径 / 命令 | 用途 |
 |------|-------------|------|
-| **实时活动流** | `git log origin/main --oneline -30` | 对方刚做了什么（commit message 就是广播） |
+| **实时活动流** | `git log origin/main --oneline -40` | 对方刚做了什么（commit message 就是广播） |
 | **工程交付** | `docs/HANDOFF.md` | Grok 可复用交付摘要（newest first） |
+| **多 Agent 手册** | `docs/MULTI_AGENT_PLAYBOOK.md` | Grok / Claude / Codex / WorkBuddy 车道 |
+| **Grok 自驱提示** | `docs/prompts/GROK_SELF_OPS.md` | 谷歌观察 + 产品迭代 + X 雷达 |
+| **站点观察日志** | `docs/ops/SITE_WATCH.md` | softLive / SERP / HF 缺口 / X |
 | **增长状态看板** | `docs/growth/AGENT_STATE.md` | 覆盖写：谁、何时、tip、下一步 |
 | **增长报告** | `docs/growth/runs/*-report.md` | 每次目录/外链跑完的结果表 |
 | **本协议** | `docs/growth/AGENT_BUS.md` | 协作铁律（本文件） |
@@ -25,8 +28,10 @@
 
 | 角色 | 写什么 | 推什么 |
 |------|--------|--------|
-| **Grok（工程）** | 产品 / Generate 闭环 / 诚实度 / SEO 代码 | `main`：代码 + HANDOFF + 可更新 AGENT_STATE |
-| **WorkBuddy（增长）** | 外链 / 目录 / PH 素材 / GSC 快照 | `main` 仅 `docs/growth/**`（或 `agent/workbuddy/*` 分支） |
+| **Grok（工程 + 观察）** | Generate 闭环 / 诚实度 / HF 密度 / SITE_WATCH·X | `main`：代码 + HANDOFF + `docs/ops/` |
+| **Claude（UI/IA）** | 密度 / 交互 / i18n | `main`：components/app UI；HANDOFF |
+| **Codex（文案/元信息）** | 诚实文案、SEO 元信息（不乱扩 URL） | `main`：copy / 元信息；HANDOFF |
+| **WorkBuddy（增长）** | 外链 / 目录 / PH / GSC 快照 | `docs/growth/**`（或 `agent/workbuddy/*`） |
 
 权威域名：**https://pikbo.ai**（禁止提交 pikbo.com）
 
