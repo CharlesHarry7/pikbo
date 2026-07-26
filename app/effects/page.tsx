@@ -123,12 +123,6 @@ export default function EffectsHub() {
               className="btn btn-primary !px-4 !py-2 text-xs font-black"
             />
             <Link
-              href="/flow"
-              className="btn btn-ghost !px-3 !py-2 text-xs"
-            >
-              Flow
-            </Link>
-            <Link
               href="/create"
               className="btn btn-ghost !px-3 !py-2 text-xs"
             >
@@ -139,6 +133,19 @@ export default function EffectsHub() {
               className="btn btn-ghost !px-3 !py-2 text-xs"
             >
               Seller Pack
+            </Link>
+            <Link
+              href="/modules"
+              className="btn btn-ghost !px-3 !py-2 text-xs"
+            >
+              Modules
+            </Link>
+            <Link
+              href="/flow"
+              className="btn btn-ghost !px-3 !py-2 text-xs text-white/50"
+              title="Preview media wall — not a live Seedance job"
+            >
+              Flow · Preview
             </Link>
           </div>
         </div>

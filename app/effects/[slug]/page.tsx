@@ -142,10 +142,10 @@ export default async function EffectPage({
                 className="btn btn-ghost !px-3 !py-2 text-xs"
               />
               <Link
-                href="/flow"
+                href="/create?mode=seller-pack"
                 className="btn btn-ghost !px-3 !py-2 text-xs"
               >
-                Flow
+                Seller Pack
               </Link>
               <Link
                 href="/modules"
@@ -154,10 +154,11 @@ export default async function EffectPage({
                 Modules
               </Link>
               <Link
-                href="/create?mode=seller-pack"
-                className="btn btn-ghost !px-3 !py-2 text-xs"
+                href="/flow"
+                className="btn btn-ghost !px-3 !py-2 text-xs text-white/50"
+                title="Preview media wall — not a live Seedance job"
               >
-                Seller Pack
+                Flow · Preview
               </Link>
             </div>
           </div>

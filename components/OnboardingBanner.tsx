@@ -51,11 +51,11 @@ export function OnboardingBanner() {
             className="btn btn-primary px-3.5 py-1.5 text-xs font-black"
           />
           <Link
-            href="/flow"
+            href="/create?mode=seller-pack"
             onClick={dismiss}
             className="btn btn-ghost px-3 py-1.5 text-xs"
           >
-            {t("nav.flow")}
+            Seller Pack
           </Link>
           <Link
             href="/modules"
@@ -63,6 +63,14 @@ export function OnboardingBanner() {
             className="btn btn-ghost px-3 py-1.5 text-xs"
           >
             {t("nav.modules")}
+          </Link>
+          <Link
+            href="/flow"
+            onClick={dismiss}
+            className="btn btn-ghost px-3 py-1.5 text-xs text-white/50"
+            title="Preview media wall — not a live Seedance job"
+          >
+            Flow · Preview
           </Link>
           <button
             type="button"

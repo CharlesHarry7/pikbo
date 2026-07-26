@@ -75,9 +75,10 @@ export function SeedanceCampaign() {
             </Link>
             <Link
               href="/flow"
-              className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-white/75 transition hover:border-white/30 hover:text-white"
+              className="rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-white/45 transition hover:border-white/25 hover:text-white/70"
+              title="Preview media wall — not a live Seedance job"
             >
-              Flow
+              Flow · Preview
             </Link>
             <Link
               href="/community"

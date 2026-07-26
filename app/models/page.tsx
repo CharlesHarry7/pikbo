@@ -59,11 +59,21 @@ export default function ModelsPage() {
             labelTry="Try free · Lab"
             hideClipsChip
           />
-          <Link href="/flow" className="btn btn-ghost text-sm">
-            Flow
-          </Link>
           <Link href="/modules" className="btn btn-ghost text-sm">
             Toy Modules
+          </Link>
+          <Link
+            href="/create?mode=seller-pack"
+            className="btn btn-ghost text-sm"
+          >
+            Seller Pack
+          </Link>
+          <Link
+            href="/flow"
+            className="btn btn-ghost text-sm text-white/50"
+            title="Preview media wall — not a live Seedance job"
+          >
+            Flow · Preview
           </Link>
           <Link href="/image" className="btn btn-ghost text-sm">
             Flux stills · Preview

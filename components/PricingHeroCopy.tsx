@@ -100,10 +100,10 @@ export function PricingHeroCopy({
             Library
           </Link>
           <Link
-            href="/flow"
+            href="/create?mode=seller-pack"
             className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
           >
-            Flow matrix
+            Seller Pack
           </Link>
           <Link
             href="/modules"
@@ -112,10 +112,11 @@ export function PricingHeroCopy({
             Modules
           </Link>
           <Link
-            href="/create?mode=seller-pack"
-            className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
+            href="/flow"
+            className="rounded-full border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[11px] font-semibold text-white/40 transition hover:border-white/20 hover:text-white/65"
+            title="Preview media wall — not a live Seedance job"
           >
-            Seller Pack · 3 clips
+            Flow · Preview
           </Link>
         </div>
         <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-[var(--fg-dim)]">

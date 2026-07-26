@@ -139,17 +139,24 @@ export default function AppsPage() {
             Toy Modules
           </Link>
           <FreeTrialCta path="/apps" variant="ghost" />
-          <Link href="/flow" className="btn btn-ghost text-sm">
-            Flow
-          </Link>
           <Link href="/create" className="btn btn-ghost text-sm">
             Open Generate
           </Link>
-          <Link href="/create?mode=seller-pack" className="btn btn-ghost text-sm">
+          <Link
+            href="/create?mode=seller-pack"
+            className="btn btn-ghost text-sm"
+          >
             Seller Pack
           </Link>
           <Link href="/effects" className="btn btn-ghost text-sm">
             Recipe wall
+          </Link>
+          <Link
+            href="/flow"
+            className="btn btn-ghost text-sm text-white/50"
+            title="Preview media wall — not a live Seedance job"
+          >
+            Flow · Preview
           </Link>
         </div>
 

@@ -45,16 +45,17 @@ export function WorkflowShelf({
           </div>
           <div className="flex items-center gap-3">
             <Link
-              href="/flow"
-              className="text-[10px] font-semibold text-white/45 hover:text-white hover:underline"
-            >
-              Flow
-            </Link>
-            <Link
               href="/modules"
               className="text-[10px] font-semibold text-[var(--mint)] hover:underline"
             >
               All modules →
+            </Link>
+            <Link
+              href="/flow"
+              className="text-[10px] font-semibold text-white/35 hover:text-white/65 hover:underline"
+              title="Preview media wall — not a live Seedance job"
+            >
+              Flow · Preview
             </Link>
           </div>
         </div>

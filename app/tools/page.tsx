@@ -94,11 +94,21 @@ export default function ToolsIndexPage() {
             Open Generate
           </Link>
           <FreeTrialCta path="/tools" variant="ghost" />
-          <Link href="/flow" className="btn btn-ghost text-sm">
-            Flow
-          </Link>
           <Link href="/modules" className="btn btn-ghost text-sm">
             Modules
+          </Link>
+          <Link
+            href="/create?mode=seller-pack"
+            className="btn btn-ghost text-sm"
+          >
+            Seller Pack
+          </Link>
+          <Link
+            href="/flow"
+            className="btn btn-ghost text-sm text-white/50"
+            title="Preview media wall — not a live Seedance job"
+          >
+            Flow · Preview
           </Link>
         </div>
 

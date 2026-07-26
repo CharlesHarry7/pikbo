@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] residual Flow · Preview on suite shelves
+- Effects / tools / guides / apps / models / onboarding / PricingHero /
+  SeedanceCampaign / WorkflowShelf: product CTAs first; Flow labeled Preview.
+- No duplicate Seller Pack chips. Verified: engine-smoke · tsc.
+
 ### 2026-07-26 — [grok] CD Phase A + product-first suite exits
 - North star §6: CD product layer (Launch Pack path, Sales fidelity, phased A/B/C).
 - Create: commercial `JobIntentBar` all viewports; mobile CD strip; recipe rail
