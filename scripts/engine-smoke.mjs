@@ -2474,6 +2474,31 @@ const loginForm = fs.readFileSync(
 assert.match(loginForm, /signInWithOAuth|Continue with Google/);
 assert.match(loginForm, /SUPABASE_AUTH_GOOGLE/);
 assert.match(genJobIdRoute, /cancelJob/);
+// Generate abort cancel ledger (parity with image cancelImageLedger)
+// genJobsStore already loaded above; generations list route + generateClient
+assert.match(
+  fs.readFileSync(join(root, "app/api/generations/route.ts"), "utf8"),
+  /export async function DELETE/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/generations/route.ts"), "utf8"),
+  /X-Pikbo-Jobs-Canceled/
+);
+assert.match(genJobsStore, /idempotencyKey\?:/);
+assert.match(genJobsStore, /creditsOutcome:\s*["']refund unconfirmed["']/);
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /cancelGenerateLedger/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /method:\s*["']DELETE["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /keepalive:\s*true/
+);
+
 assert.match(genJobIdRoute, /export async function DELETE/);
 const assetContent = fs.readFileSync(
   join(root, "app/api/assets/[id]/content/route.ts"),

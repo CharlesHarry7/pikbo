@@ -56,7 +56,9 @@ export async function DELETE(_req: Request, { params }: Props) {
         ? 404
         : result.code === "NOT_OWNED"
           ? 403
-          : 409;
+          : result.code === "INVALID"
+            ? 400
+            : 409;
     return NextResponse.json(
       {
         ok: false,

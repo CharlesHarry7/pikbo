@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ensureSession, publicSession } from "@/lib/session";
 import {
+  cancelJob,
   createJob,
   jobTimeoutMs,
   listJobsForSession,
@@ -22,10 +23,12 @@ export async function HEAD() {
   let open = 0;
   let succeeded = 0;
   let failed = 0;
+  let canceled = 0;
   for (const j of listed) {
     if (j.status === "queued" || j.status === "running") open += 1;
     else if (j.status === "succeeded") succeeded += 1;
-    else if (j.status === "failed" || j.status === "canceled") failed += 1;
+    else if (j.status === "failed") failed += 1;
+    else if (j.status === "canceled") canceled += 1;
   }
   return new NextResponse(null, {
     status: 200,
@@ -35,8 +38,78 @@ export async function HEAD() {
       "X-Pikbo-Jobs-Open": String(open),
       "X-Pikbo-Jobs-Succeeded": String(succeeded),
       "X-Pikbo-Jobs-Failed": String(failed),
+      "X-Pikbo-Jobs-Canceled": String(canceled),
       "X-Pikbo-Job-Timeout-Ms": String(jobTimeoutMs()),
     },
+  });
+}
+
+/**
+ * Cancel by jobId / requestId / idempotencyKey (body or query).
+ * Parity with DELETE /api/image — used when client aborts mid-POST before
+ * a jobId is known. Does not interrupt soft-launch fal mid-flight.
+ */
+export async function DELETE(req: Request) {
+  const session = await ensureSession();
+  const url = new URL(req.url);
+  let body: {
+    jobId?: string;
+    requestId?: string;
+    id?: string;
+    idempotencyKey?: string;
+  } = {};
+  try {
+    const text = await req.text();
+    if (text.trim()) body = JSON.parse(text) as typeof body;
+  } catch {
+    /* query-only ok */
+  }
+  const id =
+    (typeof body.jobId === "string" && body.jobId.trim()) ||
+    (typeof body.requestId === "string" && body.requestId.trim()) ||
+    (typeof body.id === "string" && body.id.trim()) ||
+    url.searchParams.get("jobId")?.trim() ||
+    url.searchParams.get("requestId")?.trim() ||
+    url.searchParams.get("id")?.trim() ||
+    undefined;
+  const idempotencyKey =
+    (typeof body.idempotencyKey === "string" && body.idempotencyKey.trim()) ||
+    url.searchParams.get("idempotencyKey")?.trim() ||
+    undefined;
+
+  const result = cancelJob({
+    sessionId: session.id,
+    id,
+    idempotencyKey,
+  });
+  if (!result.ok) {
+    const status =
+      result.code === "NOT_FOUND"
+        ? 404
+        : result.code === "NOT_OWNED"
+          ? 403
+          : result.code === "INVALID"
+            ? 400
+            : 409;
+    return NextResponse.json(
+      {
+        ok: false,
+        code: result.code,
+        message: result.message,
+        jobId: result.job?.id,
+      },
+      { status }
+    );
+  }
+  return NextResponse.json({
+    ok: true,
+    mode: "local-memory",
+    durable: false,
+    jobId: result.job.id,
+    status: result.job.status,
+    errorCode: result.job.errorCode,
+    creditsOutcome: result.job.creditsOutcome,
+    note: "Ledger marked canceled. Soft-launch sync fal may still complete server-side.",
   });
 }
 

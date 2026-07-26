@@ -259,17 +259,35 @@ export function jobLedgerInFlightRetryAfterSec(job: GenerationJob): number {
  */
 export function cancelJob(input: {
   sessionId: string;
-  id: string;
+  /** Job id or provider requestId */
+  id?: string;
+  /** Client-minted key when abort races before jobId is known */
+  idempotencyKey?: string;
 }):
   | { ok: true; job: GenerationJob }
   | {
       ok: false;
-      code: "NOT_FOUND" | "NOT_OWNED" | "NOT_CANCELABLE";
+      code: "NOT_FOUND" | "NOT_OWNED" | "NOT_CANCELABLE" | "INVALID";
       message: string;
       job?: GenerationJob;
     } {
-  // Resolve job id or provider requestId (getJob sweeps timeouts).
-  const job = getJob(input.id);
+  let job: GenerationJob | null = null;
+  if (input.id && input.id.trim()) {
+    // Resolve job id or provider requestId (getJob sweeps timeouts).
+    job = getJob(input.id.trim());
+  } else if (input.idempotencyKey && input.idempotencyKey.trim()) {
+    sweepTimedOutJobs();
+    job = findJobByIdempotencyKey(
+      input.sessionId,
+      input.idempotencyKey.trim()
+    );
+  } else {
+    return {
+      ok: false,
+      code: "INVALID",
+      message: "Provide job id or idempotencyKey to cancel",
+    };
+  }
   if (!job) {
     return {
       ok: false,
@@ -282,6 +300,7 @@ export function cancelJob(input: {
       ok: false,
       code: "NOT_OWNED",
       message: "Job belongs to another session",
+      job,
     };
   }
   if (job.status === "canceled") {
@@ -299,6 +318,9 @@ export function cancelJob(input: {
     status: "canceled",
     error: "Canceled by client",
     errorCode: "CANCELED",
+    // Soft-launch: abort may leave debit ambiguous until provider settles.
+    creditsOutcome: "refund unconfirmed",
+    creditsRefunded: undefined,
   });
   if (!next) {
     return {

@@ -147,9 +147,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- Image cancel ledger: DELETE /api/image · abort best-effort · complete>cancel.
-- engine-smoke + tsc PASS · Create soft-apply lint deferred (setTimeout).
+- Generate cancel-on-abort: DELETE /api/generations · idempotencyKey · ledger refund unconfirmed.
+- Image cancel already shipped; both clients best-effort cancel on AbortError.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 ---

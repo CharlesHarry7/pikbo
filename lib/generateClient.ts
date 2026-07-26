@@ -190,6 +190,39 @@ async function generateAuthHeaders(): Promise<Record<string, string>> {
   return headers;
 }
 
+/**
+ * Best-effort video ledger cancel (DELETE /api/generations).
+ * Soft-launch fal may still complete; completeSync wins over cancel.
+ * Prefer jobId when known; else idempotencyKey from the aborted attempt.
+ */
+export async function cancelGenerateLedger(opts: {
+  jobId?: string;
+  idempotencyKey?: string;
+}): Promise<void> {
+  try {
+    const payload: Record<string, string> = {};
+    if (opts.jobId) payload.jobId = opts.jobId;
+    if (opts.idempotencyKey) payload.idempotencyKey = opts.idempotencyKey;
+    if (!payload.jobId && !payload.idempotencyKey) return;
+    // Prefer collection DELETE (idempotencyKey); fall back to /[id] when only jobId.
+    if (payload.idempotencyKey || !payload.jobId) {
+      await fetch("/api/generations", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      });
+    } else {
+      await fetch(
+        `/api/generations/${encodeURIComponent(payload.jobId)}`,
+        { method: "DELETE", keepalive: true }
+      );
+    }
+  } catch {
+    /* ignore — client already refund-unconfirmed */
+  }
+}
+
 export async function postGenerate(
   body: GenerateRequestBody,
   init?: { signal?: AbortSignal }
@@ -215,6 +248,9 @@ export async function postGenerate(
       (typeof DOMException !== "undefined" &&
         e instanceof DOMException &&
         e.name === "AbortError");
+    if (aborted && body.idempotencyKey) {
+      void cancelGenerateLedger({ idempotencyKey: body.idempotencyKey });
+    }
     return {
       ok: false,
       status: 0,
@@ -514,6 +550,7 @@ export async function postGenerateWithRetry(
           e instanceof DOMException &&
           e.name === "AbortError");
       if (aborted) {
+        void cancelGenerateLedger({ idempotencyKey });
         return {
           ok: false,
           status: 0,

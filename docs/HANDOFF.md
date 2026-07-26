@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Generate cancel-on-abort + idempotencyKey DELETE
+- `cancelJob` accepts `idempotencyKey` (abort before jobId known); stamps
+  `creditsOutcome: refund unconfirmed`.
+- `DELETE /api/generations` collection cancel; HEAD `X-Pikbo-Jobs-Canceled`.
+- `generateClient.cancelGenerateLedger` on AbortError (keepalive) — image parity.
+- Verified: typecheck · engine-smoke · lint 0 errors.
+
 ### 2026-07-26 — [grok] Home cinema/wall i18n + create prefetch
 - EN/ZH keys for cinema, wall filters, remake, browse CTA.
 - Prefetch `/create` from hero mount + browse CTA; wall Links `prefetch`.
