@@ -3002,7 +3002,11 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/HomeBrowseCta.tsx"), "utf8"),
-  /data-home-browse-cta|用你的潮玩生成|#home-create/
+  /data-home-browse-cta|用你的潮玩生成|#home-create|4\.75rem/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/AutoPlayVideo.tsx"), "utf8"),
+  /visibilitychange|visibilityState/
 );
 
 // Five-step toy identity + delivery honesty + landing assetId + workflows

@@ -4,6 +4,10 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Home browse CTA above mobile nav + tab pause
+- `HomeBrowseCta` bottom offset `4.75rem` on mobile (clears suite bar); z-35.
+- `AutoPlayVideo`: pause all claimed clips on `visibilitychange` hidden.
+
 ### 2026-07-26 — [grok] Home wall premiere row + sticky browse CTA
 - `HomeBrowseCta`: fixed bottom “看够了？用你的潮玩生成” while on wall;
   hides at `#home-create`.

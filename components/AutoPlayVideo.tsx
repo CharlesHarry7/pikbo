@@ -3,18 +3,46 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 const playing = new Set<HTMLVideoElement>();
+let visibilityHooked = false;
+
+/** Pause every claimed clip when the tab is hidden (battery / background). */
+function ensureVisibilityHook() {
+  if (visibilityHooked || typeof document === "undefined") return;
+  visibilityHooked = true;
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      for (const v of [...playing]) {
+        v.pause();
+      }
+      return;
+    }
+    // Resume only still-registered clips (viewport logic re-claims on scroll)
+    for (const v of [...playing]) {
+      v.muted = true;
+      void v.play().catch(() => undefined);
+    }
+  });
+}
 
 /** Desktop wall can hold a few muted clips; mobile stays tight for battery. */
 function playbackBudget(wallDense?: boolean) {
   if (typeof window === "undefined") return 2;
+  if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+    return 0;
+  }
   const mobile = window.matchMedia("(max-width: 768px)").matches;
   if (wallDense) return mobile ? 2 : 4;
   return mobile ? 1 : 2;
 }
 
 function claim(v: HTMLVideoElement, wallDense?: boolean) {
+  ensureVisibilityHook();
+  if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+    return;
+  }
   if (playing.has(v)) return;
   const budget = playbackBudget(wallDense);
+  if (budget <= 0) return;
   while (playing.size >= budget) {
     const oldest = playing.values().next().value;
     if (!oldest || oldest === v) break;

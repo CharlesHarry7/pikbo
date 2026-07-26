@@ -119,7 +119,10 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               <span className="text-[#c8ff3d]">怎么动</span>
             </h2>
             <p className="mt-1.5 max-w-xl text-sm text-white/45">
-              划过即播 · 官方 Lab · 点「生成同款」换成你的玩具
+              划过即播（静音）· 官方 Lab · 点「生成同款」换成你的玩具
+            </p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/30">
+              muted autoplay · leave tab pauses
             </p>
           </div>
           <Link

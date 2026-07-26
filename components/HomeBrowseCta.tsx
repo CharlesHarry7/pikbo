@@ -63,23 +63,24 @@ export function HomeBrowseCta() {
   return (
     <div
       data-home-browse-cta={visible ? "on" : "off"}
-      className={`pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 transition duration-300 ${
+      /* Mobile: sit above sticky bottom suite bar (~4.75rem); desktop: float at edge */
+      className={`pointer-events-none fixed inset-x-0 z-[35] flex justify-center px-3 pt-2 transition duration-300 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-0 lg:pb-[max(0.85rem,env(safe-area-inset-bottom))] ${
         visible
           ? "translate-y-0 opacity-100"
-          : "translate-y-4 opacity-0"
+          : "pointer-events-none translate-y-3 opacity-0"
       }`}
       aria-hidden={!visible}
     >
       <a
         href="#home-create"
         tabIndex={visible ? 0 : -1}
-        className={`pointer-events-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl border border-[#c8ff3d]/45 bg-black/90 px-4 py-3 shadow-[0_0_40px_rgba(200,255,61,0.2),0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl transition hover:border-[#c8ff3d] hover:bg-black sm:max-w-lg ${
+        className={`pointer-events-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl border border-[#c8ff3d]/50 bg-black/92 px-4 py-3 shadow-[0_0_40px_rgba(200,255,61,0.22),0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl transition hover:border-[#c8ff3d] hover:bg-black sm:max-w-lg ${
           visible ? "" : "pointer-events-none"
         }`}
       >
         <span className="min-w-0 text-left">
           <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#c8ff3d]/90">
-            Free Mini · no card
+            Free Mini · 静音墙 · no card
           </span>
           <span className="block truncate text-sm font-black text-white">
             看够了？用你的潮玩生成
