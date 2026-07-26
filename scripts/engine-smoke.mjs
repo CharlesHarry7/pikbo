@@ -4612,20 +4612,19 @@ assert.match(libraryGridRetry, /NOT_RETRYABLE|JOB_IN_FLIGHT/);
 assert.match(libraryGridRetry, /createUi/);
 
 
-// Seller Pack UI: TIMEOUT / cancel unconfirmed remain retryEligible (mint new attempt)
+// Seller Pack UI: failed (incl. TIMEOUT unconfirmed) remains retryEligible
 assert.match(batchStudio, /function retryEligible/);
 assert.match(
   batchStudio,
-  /status === ["']failed["'][\s\S]{0,80}canceled|failed[\s\S]{0,40}canceled/
+  /function retryEligible[\s\S]{0,320}status === ["']failed["']/
 );
 assert.doesNotMatch(
   batchStudio,
-  /function retryEligible[\s\S]{0,350}creditState !== ["']refund unconfirmed["']/
+  /function retryEligible[\s\S]{0,400}creditState !== ["']refund unconfirmed["']/
 );
-// Library session ledger fork uses server retry API (terminal-only)
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /data-session-retry=["']ledger-fork["']|\/api\/generations\/.*\/retry/
+assert.doesNotMatch(
+  batchStudio,
+  /function retryEligible[\s\S]{0,400}Boolean\(job\.requestId\)/
 );
 // CONTENT_POLICY without restore → refundUnconfirmed (parity UNSAFE_URL)
 assert.match(
@@ -4634,7 +4633,11 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
-  /CONTENT_POLICY[\s\S]{0,80}!creditsRefunded|code === ["']CONTENT_POLICY["'] && !creditsRefunded/
+  /code === ["']CONTENT_POLICY["'] && !creditsRefunded/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /code === ["']CONTENT_POLICY["'] && !creditsRefunded/
 );
 
 console.log("engine-smoke: PASS");

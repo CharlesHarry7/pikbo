@@ -153,8 +153,10 @@ export function requestCreditStateFromFailure(result: {
     // Process-memory ledger TIMEOUT (kill mid-flight) — never claim restored.
     result.code === "TIMEOUT" ||
     result.code === "PROVIDER_TIMEOUT" ||
-    // Unusable media after a live attempt — only "restored" when creditsRefunded above.
-    result.code === "UNSAFE_URL"
+    // Unusable media / content reject after a live attempt — restored only via
+    // creditsRefunded early-return above.
+    result.code === "UNSAFE_URL" ||
+    result.code === "CONTENT_POLICY"
   ) {
     return "refund unconfirmed";
   }

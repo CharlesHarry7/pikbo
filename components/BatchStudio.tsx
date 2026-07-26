@@ -170,14 +170,18 @@ function toRecoveredJob(child: ReturnType<typeof reconcileSellerPackRecovery>["c
   return job;
 }
 
+/**
+ * Seller Pack / batch partial-retry eligibility.
+ * Allow failed with TIMEOUT / cancel settlement (refund unconfirmed) —
+ * Retry mints a new generate attempt; blocking unconfirmed left users stuck.
+ * Never retry succeeded / running mid-flight (server forkRetry parity).
+ */
 function retryEligible(job: Job): boolean {
   if (job.status === "not_started") return true;
-  if (job.status === "refunded") return Boolean(job.requestId);
-  return (
-    job.status === "failed" &&
-    job.creditState !== "refund unconfirmed" &&
-    Boolean(job.requestId)
-  );
+  if (job.status === "refunded") return true;
+  // failed covers TIMEOUT · cancel-as-failed · provider fails (any creditState)
+  if (job.status === "failed") return true;
+  return false;
 }
 
 /**

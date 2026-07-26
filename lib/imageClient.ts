@@ -181,7 +181,8 @@ export function interpretImageResponse(
     code === "TIMEOUT" ||
     code === "PROVIDER_NETWORK" ||
     code === "PROVIDER_TIMEOUT" ||
-    (code === "UNSAFE_URL" && !creditsRefunded);
+    (code === "UNSAFE_URL" && !creditsRefunded) ||
+    (code === "CONTENT_POLICY" && !creditsRefunded);
 
   let error =
     body.error ||

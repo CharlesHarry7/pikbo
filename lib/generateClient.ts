@@ -153,7 +153,8 @@ export function interpretGenerateResponse(
     code === "PROVIDER_NETWORK" ||
     code === "PROVIDER_TIMEOUT" ||
     // Provider returned unusable URL after a live attempt may have debited.
-    (code === "UNSAFE_URL" && !creditsRefunded);
+    (code === "UNSAFE_URL" && !creditsRefunded) ||
+    (code === "CONTENT_POLICY" && !creditsRefunded);
   if (
     refundUnconfirmed &&
     !creditsRefunded &&

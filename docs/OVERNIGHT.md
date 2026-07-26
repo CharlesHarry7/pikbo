@@ -144,7 +144,9 @@
 103. [x] Residual createRemixHref: Batch/HfExplore/Hero/Community/Effects
 104. [x] Retry createUi remix + UNSAFE_URL refundUnconfirmed + FailPanel Seller Pack
 105. [x] forkRetryJob terminal-only (no success/in-flight fork)
-106. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+106. [x] Library session Ledger retry fork API
+107. [x] Pack retryEligible allows TIMEOUT unconfirmed + CONTENT_POLICY settle
+108. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -158,9 +160,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- forkRetryJob: only failed|canceled parents (409 in-flight · 422 success).
-- Retry createUi remix + UNSAFE_URL refundUnconfirmed already on main.
+- Pack retryEligible: failed/TIMEOUT unconfirmed can Retry (was stuck).
+- CONTENT_POLICY + UNSAFE_URL without restore → refundUnconfirmed.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 

@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Pack retryEligible allows TIMEOUT unconfirmed
+- BatchStudio retryEligible no longer blocks creditState refund unconfirmed
+  (TIMEOUT/cancel settlement) or requires requestId — Retry mints new generate.
+- CONTENT_POLICY without confirmed restore → refundUnconfirmed (createTrust +
+  generate/image clients). Smoke locks eligibility + policy codes.
+
 ### 2026-07-27 — [grok] Library session Ledger retry (fork + createUi)
 - SessionJobsPanel: failed|canceled → "Ledger retry" POSTs
   /api/generations/[id]/retry then navigates to next.createUi (remix).
