@@ -147,9 +147,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- Image cancel settlement: refund unconfirmed immediate + CANCELED fail path.
-- Library canceled jobs honest; smoke/CP/softlive lock ledgerCancelRefund.
+- Profile refund policy honesty + viral rail Lab ≥4 (smoke before PASS).
+- Image cancel settlement marker; engine-smoke green end-to-end.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 

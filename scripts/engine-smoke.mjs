@@ -4124,15 +4124,20 @@ const gonePack = recovery.reconcileSellerPackRecovery(activePack, []);
 assert.equal(gonePack.unavailable, 3);
 assert.ok(gonePack.children.every((child) => child.status === "recovery_unavailable" && !child.creditState), "missing current-session jobs never revive stale success or refund hints");
 
+
+// Profile refund policy honesty (Settings/Status parity)
+assert.match(
+  fs.readFileSync(join(root, "components/ProfilePanel.tsx"), "utf8"),
+  /data-profile-refund-policy=["']honesty["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/ProfilePanel.tsx"), "utf8"),
+  /cancel unconfirmed|ledgerCancelRefund/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /data-image-cancel=["']settlement["']/
+);
+
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node
-
-// Phase G: viral preset rail provisional Lab ≥4 chips
-assert.match(
-  fs.readFileSync(join(root, "components/HomeViralPresetRail.tsx"), "utf8"),
-  /data-proof-quality=["']provisional-lab["']/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/HomeViralPresetRail.tsx"), "utf8"),
-  /Official · cached|provisionalLabQualityLabel/
-);

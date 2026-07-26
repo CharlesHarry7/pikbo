@@ -271,6 +271,7 @@ export default function ImageStudioPage() {
                   onClick={cancelInFlight}
                   className="btn btn-ghost w-full border border-white/20"
                   title="Aborts this browser request. Soft-launch may still finish server-side."
+                  data-image-cancel="settlement"
                 >
                   Cancel request
                 </button>

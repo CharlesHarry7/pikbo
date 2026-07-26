@@ -331,6 +331,29 @@ export function ProfilePanel() {
         </div>
       ) : null}
 
+      {session?.freeTrial &&
+      (session.freeTrial.failedLiveRefundPolicy ||
+        session.freeTrial.ledgerTimeoutRefund ||
+        session.freeTrial.ledgerCancelRefund) ? (
+        <div
+          className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] leading-relaxed text-[var(--fg-muted)]"
+          data-profile-refund-policy="honesty"
+        >
+          <span className="font-semibold text-white/80">Live fail refunds</span>
+          {" · "}
+          {session.freeTrial.failedLiveRefundPolicy === "when_confirmed" ||
+          session.freeTrial.failedLiveRefunds
+            ? "when confirmed"
+            : "—"}
+          {session.freeTrial.ledgerTimeoutRefund === "unconfirmed"
+            ? " · TIMEOUT unconfirmed"
+            : ""}
+          {session.freeTrial.ledgerCancelRefund === "unconfirmed"
+            ? " · cancel unconfirmed"
+            : ""}
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-3 gap-2 border-t border-[var(--border)] pt-4 text-center">
         <div className="rounded-xl bg-[var(--bg-soft)] py-3">
           <p className="text-lg font-bold text-[var(--mint)]">

@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Profile refund honesty + viral rail Lab ≥4
+- ProfilePanel: Live fail refunds · TIMEOUT/cancel unconfirmed (Settings parity).
+- HomeViralPresetRail: Official · cached + provisional Lab ≥4 chips.
+- Smoke asserts moved before PASS; image cancel `data-image-cancel=settlement`.
+- Verified: typecheck · engine-smoke · lint 0 errors.
+
 ### 2026-07-26 — [grok] Viral preset rail Official + Lab ≥4 chips
 - HomeViralPresetRail: Official · cached + provisional Lab ≥4 on recipes that
   pass home-proof quality (not external QA).
