@@ -2354,6 +2354,8 @@ assert.match(t6Worker, /t6-baked\//);
 assert.match(t6Worker, /t6OwnedDeliveryPath|\/api\/t6-derivatives/);
 assert.match(t6Worker, /transitionT6Derivative|DERIVATIVE_UNVERIFIED/);
 assert.match(t6Worker, /isVerifiedT6DerivativeForJob|DERIVATIVE_IDENTITY_MISMATCH/);
+assert.match(t6Worker, /t6DeliveryReadiness|canServeVerifiedT6Derivative/);
+assert.match(genJobsStore, /canServeVerifiedT6Derivative/);
 assert.match(t6Worker, /SERVER_WORKER_DISABLED/);
 assert.match(t6Worker, /derivativeServingImplemented = false|storageAdapterImplemented = false/);
 assert.match(t6, /derivativeServingImplemented|storageAdapterImplemented/);

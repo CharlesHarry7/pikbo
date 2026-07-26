@@ -6,10 +6,12 @@
 import assert from "node:assert/strict";
 import {
   createServerOwnedT6Input,
+  canServeVerifiedT6Derivative,
   hasOnlyPublicResolvedAddresses,
   isVerifiedT6DerivativeForJob,
   runT6PipelineWithInjectedRunner,
   t6DerivativeObjectKey,
+  t6DeliveryReadiness,
   t6OwnedDeliveryPath,
   transitionT6Derivative,
 } from "../lib/t6Worker.ts";
@@ -71,6 +73,16 @@ assert.equal(
   }),
   true,
   "delivery gate accepts only the exact verified derivative for this job"
+);
+assert.equal(t6DeliveryReadiness().effective, false, "T6 delivery stack remains hard-disabled");
+assert.equal(
+  canServeVerifiedT6Derivative({
+    jobId: job.jobId,
+    providerRequestId: job.providerRequestId,
+    derivative: succeeded,
+  }),
+  false,
+  "verified metadata cannot unlock delivery before worker, storage, and route are implemented"
 );
 
 const replay = await runT6PipelineWithInjectedRunner({

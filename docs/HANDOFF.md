@@ -30,7 +30,8 @@ Newest first. One block per meaningful landing.
   fail closed. The fixture imports and runs the production worker core.
 - The expected `/api/t6-derivatives/...` serving route and owned storage adapter
   are explicitly marked unimplemented in readiness; metadata alone cannot
-  unlock Free delivery.
+  unlock Free delivery: the final public/download gate also requires the
+  authoritative hard-false delivery readiness.
 - This host has no `ffmpeg` or `ffprobe`. Operator requirement before enabling:
   install pinned ffmpeg+ffprobe in the persistent worker runtime; add durable
   job/storage locking; run the real MP4 derivative fixture proving distinct

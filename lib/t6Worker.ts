@@ -70,6 +70,23 @@ export function t6WorkerReadiness(): T6WorkerReadiness {
   };
 }
 
+/**
+ * Authoritative customer-delivery gate. A syntactically verified metadata row
+ * is insufficient: the worker, owned storage, and serving route must all be
+ * genuinely implemented and explicitly requested before a Free URL exists.
+ */
+export function t6DeliveryReadiness(): T6WorkerReadiness {
+  const worker = t6WorkerReadiness();
+  return {
+    ...worker,
+    effective:
+      worker.envRequested &&
+      worker.implemented &&
+      worker.derivativeServingImplemented &&
+      worker.storageAdapterImplemented,
+  };
+}
+
 /** Deterministic across retries, separate from the provider URL / raw object. */
 export function t6DerivativeIdempotencyKey(input: {
   jobId: string;
@@ -130,6 +147,18 @@ export function isVerifiedT6DerivativeForJob(input: {
     Boolean(derivative.outputChecksum) &&
     derivative.sourceChecksum !== derivative.outputChecksum &&
     derivative.probe?.bakedMarkSignal === true
+  );
+}
+
+/** Final delivery decision: verified metadata AND a real owned delivery stack. */
+export function canServeVerifiedT6Derivative(input: {
+  jobId: string;
+  providerRequestId?: string;
+  derivative?: Parameters<typeof isVerifiedT6DerivativeForJob>[0]["derivative"];
+}): boolean {
+  return (
+    t6DeliveryReadiness().effective &&
+    isVerifiedT6DerivativeForJob(input)
   );
 }
 

@@ -6,7 +6,7 @@
 
 import { canDownloadResult, isSafeDeliverableUrl } from "@/lib/createTrust";
 import {
-  isVerifiedT6DerivativeForJob,
+  canServeVerifiedT6Derivative,
 } from "@/lib/t6Worker";
 import type {
   BakedWatermarkDerivative,
@@ -74,7 +74,7 @@ export function downloadAllowedForJob(opts: {
 }): boolean {
   if (opts.status !== "succeeded") return false;
   const bakedDerivativeVerified = Boolean(opts.jobId) &&
-    isVerifiedT6DerivativeForJob({
+    canServeVerifiedT6Derivative({
       jobId: opts.jobId!,
       providerRequestId: opts.providerRequestId,
       derivative: opts.bakedDerivative,
@@ -91,7 +91,7 @@ export function publicVideoUrlForJob(job: GenerationJob): string | undefined {
   if (job.demo || !job.watermark) return job.videoUrl;
   const derivative = job.bakedDerivative;
   if (
-    isVerifiedT6DerivativeForJob({
+    canServeVerifiedT6Derivative({
       jobId: job.id,
       providerRequestId: job.requestId,
       derivative,
