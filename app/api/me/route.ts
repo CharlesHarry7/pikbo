@@ -67,6 +67,8 @@ export async function GET(req: Request) {
       failedLiveRefunds: true as const,
       failedLiveRefundPolicy: "when_confirmed" as const,
       ledgerTimeoutRefund: "unconfirmed" as const,
+      /** Soft-launch cancel (client abort / DELETE ledger) never invents restore. */
+      ledgerCancelRefund: "unconfirmed" as const,
       freeLive:
         session.plan === "free"
           ? {

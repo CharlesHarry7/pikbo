@@ -165,6 +165,8 @@ export async function GET() {
         failedLiveRefundPolicy: "when_confirmed" as const,
         /** Process kill / ledger TIMEOUT → refund unconfirmed (check balance). */
         ledgerTimeoutRefund: "unconfirmed" as const,
+        /** Soft-launch cancel never invents restore. */
+        ledgerCancelRefund: "unconfirmed" as const,
         /** Free 10 credits = Create video Mini only — not Flux stills. */
         scope: "video-create-only",
         stillsOnFree: "demo-only",

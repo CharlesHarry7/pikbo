@@ -147,9 +147,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- Shared classifyDownloadHead: Create/Library/history HEAD gate (cancel/timeout/T6).
-- Batch multi-save counts blocked; softlive product cancel paths; CANCELED settlement.
+- Library session jobs: HEAD-gated download (no raw 403 JSON tabs).
+- me/health ledgerCancelRefund=unconfirmed; mode-a cancel policy gate.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 

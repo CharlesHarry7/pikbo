@@ -2494,6 +2494,18 @@ assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
   /PROVIDER_TIMEOUT/
 );
+// Library session jobs: HEAD-gated download (not raw <a> to 403 JSON)
+assert.match(library, /data-session-download=["']gated["']/);
+assert.match(library, /downloadSessionJob|onDownload/);
+assert.match(
+  fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8"),
+  /ledgerCancelRefund/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/health/route.ts"), "utf8"),
+  /ledgerCancelRefund/
+);
+
 
 
 

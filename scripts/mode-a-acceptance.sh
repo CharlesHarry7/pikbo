@@ -100,6 +100,10 @@ if bft:
         sys.exit("FAIL freeTrial.failedLiveRefundPolicy must be when_confirmed when set")
     if bft.get("ledgerTimeoutRefund") not in (None, "unconfirmed"):
         sys.exit("FAIL freeTrial.ledgerTimeoutRefund must be unconfirmed when set")
+    if bft.get("ledgerCancelRefund") not in (None, "unconfirmed"):
+        sys.exit("FAIL freeTrial.ledgerCancelRefund must be unconfirmed when set")
+    if bft.get("ledgerCancelRefund") == "unconfirmed":
+        print("cancel refund policy=unconfirmed")
     if bft.get("failedLiveRefundPolicy") == "when_confirmed":
         print("refund policy=when_confirmed · TIMEOUT unconfirmed")
     if bft.get("scope") not in (None, "video-create-only"):

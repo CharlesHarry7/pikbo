@@ -96,12 +96,15 @@ function SessionJobsPanel({
   cancellingId,
   onCancel,
   onRefresh,
+  onDownload,
 }: {
   jobs: SessionJob[];
   meta: SessionJobsMeta;
   cancellingId: string | null;
   onCancel: (id: string) => void;
   onRefresh: () => void;
+  /** HEAD gate then open — never raw <a> that dumps 403 JSON into a tab. */
+  onDownload: (job: SessionJob) => void;
 }) {
   if (jobs.length === 0) return null;
   const { byStatus, open, jobTimeoutMs, timedOutThisSweep } = meta;
@@ -265,18 +268,15 @@ function SessionJobsPanel({
                 </button>
               ) : null}
               {j.status === "succeeded" && j.downloadAllowed && j.videoUrl ? (
-                <a
-                  href={
-                    j.requestId || j.id
-                      ? `/api/downloads/${encodeURIComponent(j.requestId || j.id)}`
-                      : j.videoUrl
-                  }
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={() => onDownload(j)}
                   className="text-[var(--fg-muted)] hover:text-white"
+                  title="HEAD gate then open — T6 / cancel / timeout honest"
+                  data-session-download="gated"
                 >
                   Download
-                </a>
+                </button>
               ) : j.status === "succeeded" && !j.downloadAllowed ? (
                 <span
                   className="text-amber-100/70"
@@ -400,6 +400,56 @@ export function LibraryGrid() {
     }, 8000);
     return () => window.clearInterval(t);
   }, [sessionJobs, sessionMeta.open]);
+
+
+  async function downloadSessionJob(job: SessionJob) {
+    const id = (job.requestId || job.id || "").trim();
+    if (!id) {
+      if (job.videoUrl && isSafeDeliverableUrl(job.videoUrl)) {
+        window.open(job.videoUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+      toast("No download id for this session job");
+      return;
+    }
+    const gateUrl = `/api/downloads/${encodeURIComponent(id)}`;
+    try {
+      const head = await fetch(gateUrl, { method: "HEAD" });
+      const decision = interpretDownloadHead({
+        status: head.status,
+        code: head.headers.get("X-Pikbo-Download-Code"),
+        t6Mode: head.headers.get("X-Pikbo-T6"),
+      });
+      if (decision.action === "block") {
+        toast(decision.toast);
+        return;
+      }
+      if (decision.action === "allow") {
+        track({
+          event: "export_click",
+          path: "/library",
+          recipe: job.effect,
+          demo: Boolean(job.demo),
+          meta: { via: "downloads_api", surface: "session_jobs", head: "allowed" },
+        });
+        window.open(gateUrl, "_blank", "noopener,noreferrer");
+        toast("Download via server gate…");
+        return;
+      }
+      if (decision.action === "fallthrough" && decision.toast) {
+        toast(decision.toast);
+      }
+    } catch {
+      /* network */
+    }
+    // Last resort: open gate GET (re-applies auth) or safe videoUrl
+    if (job.videoUrl && isSafeDeliverableUrl(job.videoUrl) && job.demo) {
+      window.open(job.videoUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    window.open(gateUrl, "_blank", "noopener,noreferrer");
+    toast("Download via server gate…");
+  }
 
   async function cancelSessionJob(id: string) {
     setCancellingId(id);
@@ -671,6 +721,7 @@ export function LibraryGrid() {
           cancellingId={cancellingId}
           onCancel={(id) => void cancelSessionJob(id)}
           onRefresh={() => void refreshSessionJobs()}
+          onDownload={(job) => void downloadSessionJob(job)}
         />
         <div className="media-stage grid place-items-center py-16 text-center sm:py-20">
           <div className="relative z-[2] flex flex-col items-center px-4">
@@ -762,6 +813,7 @@ export function LibraryGrid() {
         cancellingId={cancellingId}
         onCancel={(id) => void cancelSessionJob(id)}
         onRefresh={() => void refreshSessionJobs()}
+          onDownload={(job) => void downloadSessionJob(job)}
       />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

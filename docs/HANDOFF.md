@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Library session-job download HEAD gate + cancel refund policy
+- Session jobs panel: Download is HEAD-gated (`data-session-download=gated`) —
+  no raw `<a href=/api/downloads>` dumping 403 JSON tabs.
+- `/api/me` + health `freeTrial.ledgerCancelRefund: unconfirmed` (cancel never invents restore).
+- mode-a accepts cancel refund policy when present.
+- Verified: typecheck · engine-smoke · lint 0 errors.
+
 ### 2026-07-26 — [grok] Seller Pack per-child HEAD download gate
 - BatchStudio `downloadChild`: HEAD /api/downloads first (CANCELED/TIMEOUT/IN_FLIGHT
   honest errors); no dead-tab open for failed ledger rows.
