@@ -132,8 +132,10 @@ export function LandingToolPanel({
     if (!ctrl) return;
     ctrl.abort();
     generateAbortRef.current = null;
+    // Immediate settlement honesty until the aborted POST resolves.
+    setFailCreditState("refund unconfirmed");
     toast(
-      "Canceled · check balance before retry if live debit may have started"
+      "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"
     );
   }
 

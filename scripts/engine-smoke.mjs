@@ -2498,6 +2498,22 @@ assert.match(
   fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
   /keepalive:\s*true/
 );
+// Settings shows canceled counts separately (not failed/canceled lumped)
+// settingsPage already loaded above
+assert.match(settingsPage, /X-Pikbo-Jobs-Canceled/);
+assert.match(settingsPage, /X-Pikbo-Image-Jobs-Canceled/);
+assert.match(settingsPage, /data-settings-jobs-detail=["']video["']/);
+assert.match(settingsPage, /data-settings-jobs-detail=["']image["']/);
+assert.match(settingsPage, /\{jobsProbe\.canceled\} canceled/);
+// Create cancel sets refund unconfirmed immediately
+assert.match(
+  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
+  /setLastRequestCreditState\(["']refund unconfirmed["']\)/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
+  /setFailCreditState\(["']refund unconfirmed["']\)/
+);
 
 assert.match(genJobIdRoute, /export async function DELETE/);
 const assetContent = fs.readFileSync(

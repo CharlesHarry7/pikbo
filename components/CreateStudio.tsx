@@ -303,7 +303,11 @@ export function CreateStudio({
     if (!ctrl) return;
     ctrl.abort();
     generateAbortRef.current = null;
-    toast("Canceled · check balance before retry if live debit may have started");
+    // Immediate Wave B settlement until the aborted POST resolves (also refundUnconfirmed).
+    setLastRequestCreditState("refund unconfirmed");
+    toast(
+      "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"
+    );
   }
 
   const preset = useMemo(

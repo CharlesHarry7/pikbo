@@ -21,6 +21,8 @@ type SessionJobsProbe = {
   total: number;
   succeeded: number;
   failed: number;
+  /** Process-memory canceled (abort / client DELETE) — not multi-node cloud */
+  canceled: number;
 };
 
 type T6Probe = {
@@ -35,6 +37,7 @@ type ImageJobsProbe = {
   open: number;
   succeeded?: number;
   failed?: number;
+  canceled?: number;
   timeoutMs?: number;
 };
 
@@ -73,11 +76,15 @@ export default function SettingsPage() {
           res.headers.get("X-Pikbo-Jobs-Succeeded") || "0"
         );
         const failed = Number(res.headers.get("X-Pikbo-Jobs-Failed") || "0");
+        const canceled = Number(
+          res.headers.get("X-Pikbo-Jobs-Canceled") || "0"
+        );
         setJobsProbe({
           open: Number.isFinite(open) ? open : 0,
           total: Number.isFinite(total) ? total : 0,
           succeeded: Number.isFinite(succeeded) ? succeeded : 0,
           failed: Number.isFinite(failed) ? failed : 0,
+          canceled: Number.isFinite(canceled) ? canceled : 0,
         });
       } catch {
         setJobsProbe(null);
@@ -100,6 +107,9 @@ export default function SettingsPage() {
         const failed = Number(
           res.headers.get("X-Pikbo-Image-Jobs-Failed") || "0"
         );
+        const canceled = Number(
+          res.headers.get("X-Pikbo-Image-Jobs-Canceled") || "0"
+        );
         const timeoutMs = Number(
           res.headers.get("X-Pikbo-Image-Job-Timeout-Ms") || "0"
         );
@@ -108,6 +118,7 @@ export default function SettingsPage() {
           open: Number.isFinite(open) ? open : 0,
           succeeded: Number.isFinite(succeeded) ? succeeded : 0,
           failed: Number.isFinite(failed) ? failed : 0,
+          canceled: Number.isFinite(canceled) ? canceled : 0,
           timeoutMs: Number.isFinite(timeoutMs) ? timeoutMs : undefined,
         });
       } catch {
@@ -348,7 +359,10 @@ export default function SettingsPage() {
           ) : null}
           <div className="flex justify-between gap-4">
             <span className="text-[var(--fg-muted)]">Session jobs</span>
-            <span className="text-right text-xs font-semibold leading-snug">
+            <span
+              className="text-right text-xs font-semibold leading-snug"
+              data-settings-jobs="video"
+            >
               {jobsProbe
                 ? `${jobsProbe.open} open · ${jobsProbe.total} total (process-memory)`
                 : "—"}
@@ -356,16 +370,24 @@ export default function SettingsPage() {
           </div>
           <div className="flex justify-between gap-4">
             <span className="text-[var(--fg-muted)]">Still image jobs</span>
-            <span className="text-right text-xs font-semibold leading-snug">
+            <span
+              className="text-right text-xs font-semibold leading-snug"
+              data-settings-jobs="image"
+            >
               {imageJobsProbe
                 ? `${imageJobsProbe.open} open · ${imageJobsProbe.total} total (process-memory · Flux)`
                 : "—"}
             </span>
           </div>
           {imageJobsProbe ? (
-            <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
+            <p
+              className="text-[10px] leading-relaxed text-[var(--fg-dim)]"
+              data-settings-jobs-detail="image"
+            >
               {imageJobsProbe.succeeded ?? 0} succeeded ·{" "}
-              {imageJobsProbe.failed ?? 0} failed · HEAD /api/image sweeps TIMEOUT
+              {imageJobsProbe.failed ?? 0} failed ·{" "}
+              {imageJobsProbe.canceled ?? 0} canceled · HEAD /api/image sweeps
+              TIMEOUT
               {imageJobsProbe.timeoutMs
                 ? ` (~${Math.round(imageJobsProbe.timeoutMs / 1000)}s)`
                 : ""}
@@ -376,20 +398,25 @@ export default function SettingsPage() {
               >
                 Still Studio
               </Link>{" "}
-              retries mint a new key after fail; refund unconfirmed on crash.
+              retries mint a new key after fail; abort/cancel stays refund
+              unconfirmed until confirmed.
             </p>
           ) : null}
           {jobsProbe && jobsProbe.total > 0 ? (
-            <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
-              {jobsProbe.succeeded} succeeded · {jobsProbe.failed} failed/canceled ·
-              this server instance only —{" "}
+            <p
+              className="text-[10px] leading-relaxed text-[var(--fg-dim)]"
+              data-settings-jobs-detail="video"
+            >
+              {jobsProbe.succeeded} succeeded · {jobsProbe.failed} failed ·{" "}
+              {jobsProbe.canceled} canceled · this server instance only —{" "}
               <Link
                 href="/library"
                 className="text-[var(--mint)] underline-offset-2 hover:underline"
               >
                 Library recovery
               </Link>
-              . Not multi-node cloud.
+              . Not multi-node cloud. Abort marks ledger canceled; soft-launch
+              fal may still finish server-side.
             </p>
           ) : null}
           <div className="flex justify-between">

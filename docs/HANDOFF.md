@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Settings canceled counts + cancel settlement UX
+- Settings HEAD probes `X-Pikbo-Jobs-Canceled` / Image-Jobs-Canceled; detail
+  lines separate failed vs canceled (process-memory honesty).
+- Create + Landing cancel: immediate `refund unconfirmed` + ledger toast.
+- Smoke locks data-settings-jobs-detail + setLastRequestCreditState.
+
 ### 2026-07-26 — [grok] Generate cancel-on-abort + idempotencyKey DELETE
 - `cancelJob` accepts `idempotencyKey` (abort before jobId known); stamps
   `creditsOutcome: refund unconfirmed`.
