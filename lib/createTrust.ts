@@ -238,6 +238,30 @@ export function isPlayableResultVideoUrl(opts: {
 }
 
 /**
+ * Community UGC must be a public absolute http(s) media URL.
+ * Controlled Free download endpoints and app-relative paths are not public.
+ */
+export function isPublicCommunityVideoUrl(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t || t.length > 2000) return false;
+  // Free T6 gate path is session-owned, not a public Community deliverable.
+  if (t.startsWith("/api/downloads/") || t.includes("/api/downloads/")) {
+    return false;
+  }
+  // Relative paths (including /demos Lab clips) stay off Community UGC.
+  if (t.startsWith("/") || t.startsWith("//")) return false;
+  try {
+    const u = new URL(t);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    if (!u.hostname || u.username || u.password) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Safe redirect targets for /api/downloads — relative same-origin paths or http(s).
  * Rejects javascript:/data:/protocol-relative //open-redirect tricks.
  */

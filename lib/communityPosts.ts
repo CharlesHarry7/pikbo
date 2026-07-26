@@ -4,7 +4,10 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { isSafeDeliverableUrl } from "@/lib/createTrust";
+import {
+  isPublicCommunityVideoUrl,
+  isSafeDeliverableUrl,
+} from "@/lib/createTrust";
 
 export type CommunityPost = {
   id: string;
@@ -105,11 +108,28 @@ export async function publishCommunityPost(input: {
   videoUrl: string;
   posterUrl?: string;
 }): Promise<{ ok: true; id: string } | { ok: false; error: string; code: string }> {
-  if (!isSafeDeliverableUrl(input.videoUrl)) {
-    return { ok: false, code: "UNSAFE_URL", error: "videoUrl must be http(s)" };
+  // Public UGC only — Free /api/downloads paths and relative Lab demos fail closed.
+  if (!isPublicCommunityVideoUrl(input.videoUrl)) {
+    return {
+      ok: false,
+      code: "UNSAFE_URL",
+      error:
+        "videoUrl must be a public http(s) media URL (not Free download or app-local paths)",
+    };
   }
-  if (input.posterUrl && !isSafeDeliverableUrl(input.posterUrl)) {
-    return { ok: false, code: "UNSAFE_URL", error: "posterUrl must be http(s)" };
+  if (
+    input.posterUrl &&
+    !(
+      isPublicCommunityVideoUrl(input.posterUrl) ||
+      (isSafeDeliverableUrl(input.posterUrl) &&
+        input.posterUrl.startsWith("https://"))
+    )
+  ) {
+    return {
+      ok: false,
+      code: "UNSAFE_URL",
+      error: "posterUrl must be a public http(s) image URL",
+    };
   }
   const client = supabaseAnonWithToken(input.accessToken);
   if (!client) {

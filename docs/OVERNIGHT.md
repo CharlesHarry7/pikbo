@@ -131,7 +131,8 @@
 90. [x] Create empty remix honesty + first-fold (identity in Advanced · Lab collapsed)
 91. [x] Free live generate never echoes provider raw URL · controlled /api/downloads only
 92. [x] Seller Pack session recovery + Batch/Library Free live playable gate + login product-first guest
-93. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+93. [x] T5 server-owned jobs hard-false on health · Community public URL gate · project product-first
+94. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -145,8 +146,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Seller Pack: sessionStorage pointer + `/api/generations` authority after refresh; fail jobId echo.  
-- Batch/Library Free live not mounted as video until T6; login guest path product-first.  
+- T5: SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED=false; health paid needs jobs.effective.  
+- Community: Free /api/downloads + Lab relative paths rejected server-side.  
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 ---

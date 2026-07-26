@@ -2007,6 +2007,32 @@ assert.match(
 );
 assert.match(createStudio, /shareX[\s\S]{0,400}downloadAllowed|!downloadAllowed/);
 
+// Phase H + product-first: /projects/[slug] noindex cold-start; suite CTAs Seller first
+const projectPageSrc = fs.readFileSync(
+  join(root, "app/projects/[slug]/page.tsx"),
+  "utf8"
+);
+assert.match(projectPageSrc, /CONCEPT_ROBOTS/);
+assert.match(projectPageSrc, /data-project-path="product-first"/);
+assert.match(projectPageSrc, /data-project-cta="product-first"/);
+assert.match(projectPageSrc, /data-project-footer="product-first"/);
+assert.match(projectPageSrc, /mode=seller-pack/);
+assert.ok(
+  projectPageSrc.indexOf("mode=seller-pack") <
+    projectPageSrc.indexOf('href="/modules"') ||
+    projectPageSrc.indexOf("mode=seller-pack") <
+      projectPageSrc.indexOf("Modules"),
+  "Project page: Seller Pack before Modules"
+);
+// Breadcrumb is Home / Explore / title — not Flow preview
+assert.doesNotMatch(
+  projectPageSrc.slice(
+    projectPageSrc.indexOf('aria-label="Breadcrumb"'),
+    projectPageSrc.indexOf("Inside project")
+  ),
+  /href=["']\/flow["']/
+);
+
 // Phase G homepage proof quality gate (all dimensions ≥4)
 function passesHomeProofQuality(scores) {
   if (!scores) return false;
@@ -2065,7 +2091,44 @@ assert.match(createTrust, /export function isSafeDeliverableUrl/);
 // Free live generate success must not echo raw provider URLs (T6 honesty)
 assert.match(createTrust, /export function customerFacingGenerateVideoUrl/);
 assert.match(createTrust, /export function isPlayableResultVideoUrl/);
+assert.match(createTrust, /export function isPublicCommunityVideoUrl/);
 assert.match(genRoute, /customerFacingGenerateVideoUrl/);
+// Pure community public URL parity
+function isPublicCommunityVideoUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t || t.length > 2000) return false;
+  if (t.startsWith("/api/downloads/") || t.includes("/api/downloads/")) return false;
+  if (t.startsWith("/") || t.startsWith("//")) return false;
+  try {
+    const u = new URL(t);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    if (!u.hostname || u.username || u.password) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+assert.equal(isPublicCommunityVideoUrl("https://cdn.example/v.mp4"), true);
+assert.equal(isPublicCommunityVideoUrl("/api/downloads/job_1"), false);
+assert.equal(isPublicCommunityVideoUrl("/demos/orbit-dance.mp4"), false);
+assert.equal(isPublicCommunityVideoUrl("javascript:alert(1)"), false);
+assert.match(
+  fs.readFileSync(join(root, "lib/communityPosts.ts"), "utf8"),
+  /isPublicCommunityVideoUrl/
+);
+// T5 server-owned jobs hard-false (env alone cannot enable multi-node paid)
+const durableCreditsIdx = fs.readFileSync(
+  join(root, "lib/durableCredits/index.ts"),
+  "utf8"
+);
+assert.match(
+  durableCreditsIdx,
+  /SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED\s*=\s*false/
+);
+assert.match(durableCreditsIdx, /durableServerOwnedJobsStatus|durableServerOwnedJobsReady/);
+assert.match(health, /durableServerOwnedJobs/);
+assert.match(health, /durableCreditsBackendNote|single-node/);
 // Seller Pack + Library must not mount Free live as <video> (parity with Create)
 assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),

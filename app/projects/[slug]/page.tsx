@@ -11,6 +11,7 @@ import { getPreset } from "@/lib/presets";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { ProjectOpenBeacon } from "@/components/ProjectOpenBeacon";
+import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -31,6 +32,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${project.title} · Inside the project`,
     description: `${project.result} Inspect the owned input, cached output, recipe, and generation record.`,
     alternates: { canonical: `/projects/${project.slug}` },
+    // Phase H cold-start: proof pages stay reachable but out of the 9-URL index budget.
+    robots: CONCEPT_ROBOTS,
     openGraph: {
       title: `${project.title} · PIKBO Lab`,
       description: project.result,
@@ -62,6 +65,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
         <nav
           aria-label="Breadcrumb"
           className="mb-6 flex flex-wrap items-center gap-2 text-[11px] text-white/45"
+          data-project-path="product-first"
         >
           <Link href="/" className="hover:text-white">
             Home
@@ -69,10 +73,6 @@ export default async function ShowcaseProjectPage({ params }: Props) {
           <span aria-hidden>/</span>
           <Link href="/explore" className="hover:text-white">
             Explore
-          </Link>
-          <span aria-hidden>/</span>
-          <Link href="/flow" className="hover:text-white">
-            Flow
           </Link>
           <span aria-hidden>/</span>
           <span className="text-white/70">{project.title}</span>
@@ -98,7 +98,10 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               {project.result}
             </p>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[16rem]">
+          <div
+            className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[16rem]"
+            data-project-cta="product-first"
+          >
             <Link
               href={showcaseRecipeHref(project)}
               className="inline-flex w-full items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_40px_rgba(200,255,61,0.25)] transition hover:-translate-y-0.5 hover:shadow-[0_0_48px_rgba(200,255,61,0.35)]"
@@ -107,10 +110,10 @@ export default async function ShowcaseProjectPage({ params }: Props) {
             </Link>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
               <Link
-                href="/flow"
+                href="/create?mode=seller-pack"
                 className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-[#c8ff3d]/40 hover:text-[#c8ff3d]"
               >
-                Flow
+                Seller Pack
               </Link>
               <Link
                 href="/modules"
@@ -119,10 +122,10 @@ export default async function ShowcaseProjectPage({ params }: Props) {
                 Modules
               </Link>
               <Link
-                href="/create?mode=seller-pack"
+                href="/library"
                 className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-[#c8ff3d]/40 hover:text-[#c8ff3d]"
               >
-                Seller Pack
+                Library
               </Link>
               <FreeTrialCta
                 path={`/projects/${project.slug}`}
@@ -320,7 +323,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               </div>
             ) : null}
 
-            <div className="mt-6 grid gap-2">
+            <div className="mt-6 grid gap-2" data-project-footer="product-first">
               <Link
                 href={showcaseRecipeHref(project)}
                 className="rounded-full bg-[#c8ff3d] px-5 py-3 text-center text-sm font-black text-black shadow-[0_0_28px_rgba(200,255,61,0.2)] transition hover:-translate-y-0.5"
@@ -335,10 +338,10 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               </Link>
               <div className="grid grid-cols-2 gap-2">
                 <Link
-                  href="/flow"
+                  href="/create?mode=seller-pack"
                   className="rounded-full border border-white/12 px-3 py-2 text-center text-[11px] font-semibold text-white/55 hover:text-white"
                 >
-                  Flow
+                  Seller Pack
                 </Link>
                 <Link
                   href="/explore"

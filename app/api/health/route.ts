@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { probeEntitlementsStore } from "@/lib/entitlements";
 import {
   durableExpireStaleReservations,
+  durableServerOwnedJobsStatus,
   probeDurableCreditsStore,
 } from "@/lib/durableCredits";
 import { generateMode } from "@/lib/requestMeta";
@@ -57,17 +58,22 @@ export async function GET() {
   const payments = paymentsReadiness();
   const durableGate =
     process.env.REQUIRE_DURABLE_CREDITS === "1" && !durableCredits.writable;
+  const durableServerOwnedJobs = durableServerOwnedJobsStatus();
 
   /** Demo / soft-live / paid ladders — honest gates for ops */
   const ready = {
     /** Cached Lab + Studio demo path (no provider key; free, no credit burn) */
     demo: true,
-    /** Live Mini/full Seedance when FAL_KEY + session secret present */
+    /**
+     * Soft-live: cookie generate + FAL. Multi-node durable job worker is NOT
+     * required for soft-launch Mode A (process-memory ledger is honest).
+     */
     softLive: fal && (sessionSecret || !production) && !durableGate,
     /**
      * Real charges — needs durable entitlements (PRELAUNCH R1).
      * File store unwritable ⇒ paid stays false even if Stripe env is set.
      * Also requires Phase I test readiness (not live keys by accident).
+     * Multi-node paid requires server-owned generation jobs (still hard-false).
      */
     paid:
       fal &&
@@ -76,9 +82,13 @@ export async function GET() {
       stripeWebhook &&
       entitlements.writable &&
       durableCredits.writable &&
-      payments.readyForTestCheckout,
-    /** T5 local adapter or Supabase — not live Stripe */
-    durableCredits: durableCredits.writable && durableCredits.configured,
+      payments.readyForTestCheckout &&
+      durableServerOwnedJobs.effective,
+    /** T5 local adapter or Supabase — not live Stripe; multi-node needs jobs */
+    durableCredits:
+      durableCredits.writable &&
+      durableCredits.configured &&
+      (!production || durableServerOwnedJobs.effective),
   };
 
   return NextResponse.json({
@@ -101,6 +111,13 @@ export async function GET() {
     payments,
     /** Local durable reservation TTL sweep since last probe */
     reservationSweep,
+    /**
+     * T5 server-owned generation jobs — env request never enables without
+     * SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED=true (still hard-false).
+     */
+    durableServerOwnedJobs,
+    durableCreditsBackendNote:
+      "local-file is single-node verification only; multi-node accounting needs Supabase RPCs + server-owned jobs",
     service: "pikbo",
     foundation: "L0-L3",
     time: new Date().toISOString(),

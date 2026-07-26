@@ -51,6 +51,35 @@ import {
   supabaseSettle,
 } from "./supabaseStore";
 
+/**
+ * Deliberate launch capability, not an env toggle. Stay false until a server
+ * worker creates durable generation_jobs and atomically settles/releases.
+ */
+export const SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED = false;
+
+export function durableServerOwnedJobsStatus(): {
+  envRequested: boolean;
+  implemented: boolean;
+  effective: boolean;
+  reason: string;
+} {
+  const envRequested = process.env.PIKBO_SERVER_OWNED_JOBS === "1";
+  const implemented = SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED;
+  return {
+    envRequested,
+    implemented,
+    effective: envRequested && implemented,
+    reason: implemented
+      ? "Server-owned generation jobs ready when env-requested"
+      : "Hard-disabled until a durable generation_jobs worker settles provider completion",
+  };
+}
+
+/** True only when env request AND implementation flag are both real. */
+export function durableServerOwnedJobsReady(): boolean {
+  return durableServerOwnedJobsStatus().effective;
+}
+
 async function prefersSupabaseBackend(): Promise<boolean> {
   if (process.env.PIKBO_DURABLE_BACKEND === "local") return false;
   if (process.env.PIKBO_DURABLE_BACKEND === "supabase") {

@@ -4,6 +4,24 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] T5 server-owned jobs hard-false + Community public URL gate
+- `SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED=false` + `durableServerOwnedJobsStatus`
+  on durable credits; env `PIKBO_SERVER_OWNED_JOBS=1` alone never enables.
+- Health: `durableServerOwnedJobs` + backend note; multi-node `paid` /
+  production `durableCredits` require jobs.effective (still false). Soft-live
+  Mode A cookie generate stays independent.
+- Community publish requires `isPublicCommunityVideoUrl` (absolute http(s) only;
+  Free `/api/downloads/*` and `/demos` Lab paths fail closed server-side).
+- Project page product-first + Phase H `CONCEPT_ROBOTS` noindex (breadcrumb/
+  CTAs: Seller Pack before Modules; Flow out of cold-start path).
+- Verified: engine-smoke PASS · tsc PASS.
+
+### 2026-07-26 — [grok] Project page product-first + Phase H noindex
+- `/projects/[slug]`: cold-start `CONCEPT_ROBOTS` (crawlable, not in 9-URL index).
+- Breadcrumb Home → Explore → title (Flow removed). CTAs: Use recipe · Seller
+  Pack · Modules · Library (product before Flow preview).
+- engine-smoke locks data-project-* + Seller-before-Modules + noindex import.
+
 ### 2026-07-26 — [grok] T8 Seller Pack recovery + Free live player parity
 - BatchStudio sessionStorage holds only active-pack child pointers (no photo/
   video/balance). `GET /api/generations` is authoritative after refresh; missing
