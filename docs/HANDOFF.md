@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Deploy SEO checklist (prod lag vs main 7de8049)
+- Prod still sitemap 9 + long-tail noindex; code on main is 13 + indexable TDH.
+- Boss action: Vercel redeploy main; then GSC + WorkBuddy. Checklist:
+  `docs/growth/DEPLOY_SEO_CHECKLIST.md`.
+
 ### 2026-07-27 — [grok] Explore noindex + LandingResults Lab ≥4 + Pack still
 - `/explore`: CONCEPT_ROBOTS (noindex,follow) — matches cold-start sitemap drop
   (13 long-tail URLs; Lab wall not rank battlefield).
