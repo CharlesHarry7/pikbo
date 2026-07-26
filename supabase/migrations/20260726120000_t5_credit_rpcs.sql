@@ -2,20 +2,13 @@
 -- Idempotent: safe to re-run after 20260723120000_t5_auth_credits.sql.
 -- This migration is source-only until an operator applies it to Supabase.
 
+begin;
+
 create table if not exists public.pikbo_schema_versions (
   component text primary key,
   version integer not null check (version > 0),
   applied_at timestamptz not null default now()
 );
-
-insert into public.pikbo_schema_versions (component, version, applied_at)
-values ('durable_credits', 2, now())
-on conflict (component) do update
-set version = greatest(public.pikbo_schema_versions.version, excluded.version),
-    applied_at = case
-      when public.pikbo_schema_versions.version < excluded.version then excluded.applied_at
-      else public.pikbo_schema_versions.applied_at
-    end;
 
 alter table public.pikbo_schema_versions enable row level security;
 revoke all on table public.pikbo_schema_versions from anon, authenticated;
@@ -699,3 +692,16 @@ comment on table public.credit_reservation_items is
   'Server-priced 10-credit reservation items; exactly one terminal outcome per item.';
 comment on function public.pikbo_credits_schema_probe() is
   'T5 readiness probe: required schema version, tables and transactional RPCs.';
+
+-- Mark v2 only after every table, policy, function and privilege above parsed
+-- successfully. The explicit transaction prevents a partially applied v2.
+insert into public.pikbo_schema_versions (component, version, applied_at)
+values ('durable_credits', 2, now())
+on conflict (component) do update
+set version = greatest(public.pikbo_schema_versions.version, excluded.version),
+    applied_at = case
+      when public.pikbo_schema_versions.version < excluded.version then excluded.applied_at
+      else public.pikbo_schema_versions.applied_at
+    end;
+
+commit;

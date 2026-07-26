@@ -2348,6 +2348,35 @@ assert.match(
   t5RpcMigration,
   /revoke all[\s\S]+from public, anon, authenticated/
 );
+assert.match(t5RpcMigration, /^\s*begin;\s*$/im);
+assert.match(t5RpcMigration, /^\s*commit;\s*$/im);
+assert.ok(
+  t5RpcMigration.lastIndexOf(
+    "insert into public.pikbo_schema_versions"
+  ) >
+    t5RpcMigration.indexOf(
+      "create or replace function public.pikbo_credits_schema_probe"
+    ),
+  "schema v2 marker must be written only after the full RPC contract"
+);
+assert.equal(
+  (
+    t5RpcMigration.match(
+      /message = 'PIKBO_CREDITS:INVALID_PURPOSE'/g
+    ) || []
+  ).length,
+  1,
+  "INVALID_PURPOSE exception must not contain duplicated SQL assignments"
+);
+assert.equal(
+  (
+    t5RpcMigration.match(
+      /where guest_session_id_hash = p_guest_session_id_hash/g
+    ) || []
+  ).length,
+  1,
+  "guest migration lookup predicate must occur exactly once"
+);
 assert.match(sbStore, /admin\.rpc\("pikbo_credits_schema_probe"\)/);
 assert.match(sbStore, /schemaVersion/);
 assert.match(sbStore, /pikbo_reserve_credits/);
