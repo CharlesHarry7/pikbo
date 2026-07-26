@@ -80,10 +80,23 @@ export function buildCreateRemixHref(intent: RemixIntent): string {
   return `/create?${q.toString()}`;
 }
 
-export function createRemixHref(recipeSlug: string, sourceId?: string): string {
+/**
+ * Library / Explore remake deep link.
+ * Optional sku keeps Toy Identity label on Create (device-local bible, not Soul ID).
+ */
+export function createRemixHref(
+  recipeSlug: string,
+  sourceId?: string,
+  sku?: string | null
+): string {
   const intent = remixIntentFromRecipe(recipeSlug, sourceId);
-  if (!intent) return `/create?effect=${encodeURIComponent(recipeSlug)}`;
-  return buildCreateRemixHref(intent);
+  const base = intent
+    ? buildCreateRemixHref(intent)
+    : `/create?effect=${encodeURIComponent(recipeSlug)}`;
+  const cleanSku = (sku || "").trim().slice(0, 64);
+  if (!cleanSku) return base;
+  const joiner = base.includes("?") ? "&" : "?";
+  return `${base}${joiner}sku=${encodeURIComponent(cleanSku)}`;
 }
 
 export type ParsedRemixQuery = {

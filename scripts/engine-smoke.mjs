@@ -716,6 +716,11 @@ const libraryGrid = fs.readFileSync(
   "utf8"
 );
 assert.match(libraryGrid, /Remix again|createRemixHref/);
+assert.match(libraryGrid, /data-library-remake=["']sku-carry["']/);
+const remixIntentSrc = fs.readFileSync(join(root, "lib/remixIntent.ts"), "utf8");
+assert.match(remixIntentSrc, /sku\?:\s*string/);
+assert.match(remixIntentSrc, /sku=\$\{encodeURIComponent/);
+
 
 // One-tap Lab sample honesty (not "free" when live)
 assert.match(createStudio, /loadSampleToy/);

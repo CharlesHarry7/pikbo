@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Library Remake carries SKU into Create
+- `createRemixHref(recipe, source?, sku?)` appends `?sku=` for bible hydrate.
+- Library group + card Regenerate use sku-carry; Seller Pack group link too.
+- Smoke: data-library-remake + remixIntent sku param.
+
 ### 2026-07-26 — [grok] CD AfterPath job+SKU carry (commercial loop)
 - `GenerateAfterPath`: carries `job` + `sku` + `effect` into Next SKU / Full
   Generate / Seller Pack links; shows active job label when set.

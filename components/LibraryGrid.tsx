@@ -1001,15 +1001,21 @@ export function LibraryGrid() {
                   <Link
                     href={createRemixHref(
                       group.items[0].effect,
-                      group.items[0].sourceProject
+                      group.items[0].sourceProject,
+                      group.items[0].sku
                     )}
                     className="rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/10 px-2.5 py-1 text-[10px] font-bold text-[var(--mint)] hover:border-[var(--mint)]"
+                    data-library-remake="sku-carry"
                   >
                     Remake · same recipe
                   </Link>
                 ) : null}
                 <Link
-                  href="/create?mode=seller-pack"
+                  href={
+                    group.items[0]?.sku
+                      ? `/create?mode=seller-pack&sku=${encodeURIComponent(group.items[0].sku)}`
+                      : "/create?mode=seller-pack"
+                  }
                   className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70 hover:border-white/30"
                 >
                   Seller Pack
@@ -1192,10 +1198,15 @@ export function LibraryGrid() {
                     <Link
                       href={
                         item.sourceProject
-                          ? createRemixHref(item.effect, item.sourceProject)
-                          : `/create?effect=${encodeURIComponent(item.effect)}`
+                          ? createRemixHref(
+                              item.effect,
+                              item.sourceProject,
+                              item.sku
+                            )
+                          : createRemixHref(item.effect, undefined, item.sku)
                       }
                       className="text-xs text-[var(--fg-muted)] hover:text-[var(--mint)]"
+                      data-library-remake="sku-carry"
                     >
                       Regenerate
                     </Link>
