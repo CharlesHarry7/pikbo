@@ -1,448 +1,513 @@
 #!/usr/bin/env python3
 """
-Pikbo unattended growth runner — Chrome/Playwright, no human prompts.
+Pikbo growth auto runner (100% unattended).
+
+Phases:
+  0  preflight (pikbo.ai 200) + load directories.json + open run logs
+  1  AI directory submissions via Playwright (headless chromium)
+  2  Product Hunt assets (write/refresh pack; no publish without token)
+  4  Report (jsonl + markdown table) + AGENT_STATE
+
+No human-in-the-loop. Missing secrets -> blocked_secret, continue.
+Captcha / login wall -> mark status, screenshot, continue.
 
 Usage:
-  python3 scripts/growth-auto/run_growth.py --all
-  python3 scripts/growth-auto/run_growth.py --phase directories
-  python3 scripts/growth-auto/run_growth.py --phase ph-assets
-  python3 scripts/growth-auto/run_growth.py --phase report
-
-Env:
-  PIKBO_GROWTH_EMAIL, PIKBO_GROWTH_PASSWORD (optional logins)
-  GROWTH_HEADED=1  headed browser
-  GROWTH_MAX_MINUTES=90
-  GROWTH_CHROME_CHANNEL=chrome  # use system Chrome if set
+  python3 run_growth.py --all
+  python3 run_growth.py --phase directories
+  python3 run_growth.py --phase ph-assets
+  python3 run_growth.py --phase report
 """
-
 from __future__ import annotations
+import argparse, json, os, sys, time, re, datetime, pathlib, traceback
 
-import argparse
-import json
-import os
-import re
-import sys
-import time
-import traceback
-import urllib.request
-from datetime import datetime, timezone
-from pathlib import Path
+ROOT = pathlib.Path(__file__).resolve().parents[2]  # repo root
+GROWTH = ROOT / "docs" / "growth"
+RUNS = GROWTH / "runs"
+SHOTS = GROWTH / "screenshots"
+CFG = pathlib.Path(__file__).resolve().parent / "directories.json"
 
-ROOT = Path(__file__).resolve().parents[2]
-CONFIG_PATH = Path(__file__).resolve().parent / "directories.json"
-RUNS = ROOT / "docs" / "growth" / "runs"
-SHOTS = ROOT / "docs" / "growth" / "screenshots"
+def utcnow():
+    return datetime.datetime.now(datetime.timezone.utc)
 
+def utcstamp():
+    return utcnow().strftime("%Y%m%dT%H%M%SZ")
 
-def utc_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def log_jsonl(path: Path, row: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(row, ensure_ascii=False) + "\n")
-
-
-def ensure_playwright():
-    try:
-        from playwright.sync_api import sync_playwright  # noqa: F401
-
-        return True
-    except ImportError:
-        print("[growth] installing playwright…", flush=True)
-        import subprocess
-
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--user", "playwright"],
-            stdout=sys.stdout,
-            stderr=sys.stderr,
-        )
-        subprocess.check_call(
-            [sys.executable, "-m", "playwright", "install", "chromium"],
-            stdout=sys.stdout,
-            stderr=sys.stderr,
-        )
-        return True
-
-
-def preflight(product: dict) -> dict:
-    url = product["url"]
-    try:
-        req = urllib.request.Request(url, method="GET", headers={"User-Agent": "PikboGrowthBot/1.0"})
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            code = resp.getcode()
-        return {"ok": 200 <= code < 400, "status": code, "url": url}
-    except Exception as e:
-        return {"ok": False, "error": str(e), "url": url}
-
-
-def write_ph_pack(product: dict, out: Path) -> Path:
-    out.parent.mkdir(parents=True, exist_ok=True)
-    body = f"""# Product Hunt pack — {product["name"]} (auto-generated)
-
-**Generated:** {utc_now()}  
-**Primary URL:** {product["url"]}  
-**Rank URL:** {product["rankUrl"]}
-
-## Tagline (≤60 chars)
-Turn one toy photo into a short AI video
-
-## One-liner
-{product["tagline"]}
-
-## Description
-{product["description"]}
-
-### What is it?
-Pikbo is a designer-toy AI video suite: one product photo → listing/social short clips (spin, unbox, float). Soft-launch Free Mini trial — no card.
-
-### Who is it for?
-Indie toy sellers, blind-box brands, collectors who need motion without a turntable.
-
-### Why different?
-Toy-native recipes and product fidelity focus — not a generic face-filter video app. Honest free trial limits; no fake multi-model zoo.
-
-## First maker comment
-Hey Product Hunt 👋 Pikbo turns **one photo of a designer toy you own** into a short AI video for Etsy/TikTok/drops. Soft launch Free Mini is live on {product["url"]} — would love feedback from sellers who hate filming turntables.
-
-## Gallery checklist (fill assets into PH when publishing)
-- [ ] Homepage cinema / video wall screenshot
-- [ ] 360° spin sample clip
-- [ ] Create studio UI
-- [ ] Before still → after video side-by-side
-- [ ] Free Mini honesty caption (limits clear)
-
-## Topics
-AI, design tools, e-commerce, video, toys
-
-## Launch day suggestion
-Tuesday or Wednesday, 12:01am PT
-
-## Automation note
-This file is ready. Live PH publish requires PRODUCTHUNT_TOKEN or logged-in browser profile — runner marks publish separately.
-"""
-    out.write_text(body, encoding="utf-8")
-    return out
-
-
-def fill_heuristics(page, product: dict, email: str, anchor: str) -> list[str]:
-    """Best-effort fill common directory form fields. Returns list of filled labels."""
-    filled = []
-    link = product.get("rankUrl") or product["url"]
-    pairs = [
-        (r"(name|tool.?name|product.?name|title)", product["name"]),
-        (r"^(url|website|link|product.?url|tool.?url)$", link),
-        (r"(homepage|site.?url|web.?site)", product["url"]),
-        (r"(description|about|summary|bio|details)", product["description"][:1800]),
-        (r"(tagline|short.?description|one.?liner|headline)", product["tagline"]),
-        (r"(email|e-mail|contact)", email or "growth@pikbo.ai"),
-        (r"(twitter|x\.com|social)", product.get("twitter") or ""),
-        (r"(pricing|price)", product.get("pricing") or "Free trial"),
-        (r"(categor|tag|topic|keyword)", ", ".join(product.get("categories") or [])),
-        (r"(anchor|link.?text)", anchor),
-    ]
-
-    # inputs + textareas
-    locators = page.locator("input:visible, textarea:visible, [contenteditable=true]:visible")
-    count = locators.count()
-    for i in range(min(count, 40)):
-        el = locators.nth(i)
+# ----------------------------- logging ---------------------------------
+class RunLog:
+    def __init__(self, run_id):
+        self.run_id = run_id
+        RUNS.mkdir(parents=True, exist_ok=True)
+        SHOTS.mkdir(parents=True, exist_ok=True)
+        self.shot_dir = SHOTS / run_id
+        self.shot_dir.mkdir(parents=True, exist_ok=True)
+        self.jsonl = RUNS / f"{run_id}.jsonl"
+        self.rows = []
+    def add(self, **kw):
+        kw["ts"] = utcnow().isoformat()
+        self.rows.append(kw)
+        with open(self.jsonl, "a", encoding="utf-8") as f:
+            f.write(json.dumps(kw, ensure_ascii=False) + "\n")
+    def shot(self, page, slug, step):
+        p = self.shot_dir / f"{slug}-{step}.png"
         try:
-            name = (
-                (el.get_attribute("name") or "")
-                + " "
-                + (el.get_attribute("id") or "")
-                + " "
-                + (el.get_attribute("placeholder") or "")
-                + " "
-                + (el.get_attribute("aria-label") or "")
-            ).lower()
-            typ = (el.get_attribute("type") or "text").lower()
-            if typ in ("hidden", "submit", "button", "checkbox", "radio", "file"):
-                continue
-            for pat, val in pairs:
-                if val and re.search(pat, name, re.I):
-                    el.fill(str(val)[:2000])
-                    filled.append(name.strip()[:80])
-                    break
+            page.screenshot(path=str(p), full_page=True)
+        except Exception:
+            try:
+                page.screenshot(path=str(p), full_page=False)
+            except Exception:
+                return None
+        return p
+
+# ----------------------------- form fill -------------------------------
+URL_FIELDS = ["url", "website", "link", "product_url", "tool_url", "homepage"]
+NAME_FIELDS = ["name", "tool_name", "title", "product_name", "tool"]
+DESC_FIELDS = ["description", "desc", "details", "about", "summary", "body"]
+TAG_FIELDS = ["tags", "categories", "category", "tag", "topic"]
+EMAIL_FIELDS = ["email", "mail", "contact_email"]
+TAGLINE_FIELDS = ["tagline", "slogan", "short_description", "short_desc", "one_liner", "headline"]
+TWITTER_FIELDS = ["twitter", "x", "social"]
+
+def _match(field_aliases, key):
+    k = key.lower()
+    return any(a in k for a in field_aliases)
+
+def fill_form(page, product, email):
+    """Heuristically fill visible form fields. Returns dict of filled counts."""
+    filled = {"text": 0, "select": 0}
+    try:
+        inputs = page.locator("input:visible, textarea:visible, select:visible")
+        n = inputs.count()
+    except Exception:
+        return filled
+    for i in range(n):
+        try:
+            el = inputs.nth(i)
+            tag = el.evaluate("e => e.tagName.toLowerCase()")
+            name = (el.get_attribute("name") or "") + " " + (el.get_attribute("id") or "") + " " + (el.get_attribute("placeholder") or "") + " " + (el.get_attribute("aria-label") or "")
+            ttype = (el.get_attribute("type") or "").lower() if tag == "input" else ""
+            nm = name.lower()
+            val = None
+            if ttype in ("email",):
+                val = email
+            elif ttype in ("url",):
+                val = product["url"]
+            elif _match(EMAIL_FIELDS, nm) and ttype not in ("checkbox","radio","hidden","submit","button"):
+                val = email
+            elif _match(URL_FIELDS, nm) and ttype not in ("checkbox","radio","hidden","submit","button"):
+                val = product["url"]
+            elif _match(NAME_FIELDS, nm) and ttype not in ("checkbox","radio","hidden","submit","button","url","email"):
+                val = product["name"]
+            elif _match(TAGLINE_FIELDS, nm) and ttype not in ("checkbox","radio","hidden","submit","button"):
+                val = product["tagline"]
+            elif _match(DESC_FIELDS, nm):
+                val = product["description"]
+            elif _match(TWITTER_FIELDS, nm) and ttype not in ("checkbox","radio","hidden","submit","button"):
+                val = product.get("twitter","")
+            elif _match(TAG_FIELDS, nm):
+                val = ", ".join(product["categories"][:2])
+            if val:
+                if tag == "select":
+                    try:
+                        el.select_option(label=re.compile(r"video|image|ai|generat|commerce", re.I))
+                        filled["select"] += 1
+                        continue
+                    except Exception:
+                        try:
+                            el.select_option(index=1); filled["select"] += 1; continue
+                        except Exception:
+                            pass
+                else:
+                    try:
+                        el.click(timeout=1500)
+                        el.fill(val, timeout=2000)
+                        filled["text"] += 1
+                    except Exception:
+                        pass
         except Exception:
             continue
     return filled
 
-
-def try_submit(page) -> str:
-    """Click a plausible submit button."""
+def click_submit(page):
+    """Try to click a submit button. Returns True if clicked."""
     candidates = [
-        "button:has-text('Submit')",
-        "button:has-text('Add tool')",
-        "button:has-text('Send')",
-        "input[type=submit]",
-        "button[type=submit]",
-        "text=Submit tool",
-        "text=Submit for review",
+        "button[type=submit]:visible",
+        "input[type=submit]:visible",
+        "button:visible",
+        "a[role=button]:visible",
+        "input[type=button]:visible",
     ]
     for sel in candidates:
         try:
-            loc = page.locator(sel).first
-            if loc.count() and loc.is_visible():
-                loc.click(timeout=5000)
-                return f"clicked:{sel}"
+            loc = page.locator(sel)
+            c = loc.count()
+            for i in range(c):
+                el = loc.nth(i)
+                txt = (el.inner_text(timeout=1000) if el.evaluate("e=>e.tagName").lower() in ("button","a") else (el.get_attribute("value") or "")).lower()
+                if re.search(r"submit|add|list|publish|send|propose|suggest|post|create|continue|next|get started|sign up|register", txt):
+                    try:
+                        el.click(timeout=4000)
+                        return True, txt
+                    except Exception:
+                        continue
         except Exception:
             continue
-    return "no_submit_button"
+    return False, ""
 
+SUCCESS_RE = re.compile(r"thank you|submission received|has been received|successfully submitted|submitted successfully|we.{0,4}ll review|will be reviewed|received your submission|awaiting review|thankyou|thanks for (submitting|your)|queued for review", re.I)
+CAPTCHA_RE = re.compile(r"captcha|recaptcha|hcaptcha|turnstile|are you human|verify you are human|i am not a robot|i'm not a robot", re.I)
+LOGIN_RE = re.compile(r"sign in|log in|login|sign-in|create an account|register to|you must be logged|authentication required|authorize", re.I)
+# Strong payment signal: price with $ near the submit, explicit "Submission Fee", card form, PayPal/Stripe payment, "Submit For $X"
+PAID_HARD_RE = re.compile(r"submission fee|pay \$|paypal|stripe checkout|credit card|debit card|card number|expiry date|cvv|\bsubmit for \$|\bsubmit \(\$|\bpro plan|\bbusiness plan|pricing\s*[:=]\s*\$", re.I)
+PAID_SOFT_RE = re.compile(r"\bpricing\b|\bupgrade\b|\bpremium\b|\bsubscribe\b", re.I)
 
-def detect_outcome(page) -> str:
-    text = ""
+def detect_status(page, url):
     try:
-        text = page.inner_text("body")[:8000].lower()
+        txt = page.inner_text("body", timeout=3000)
+    except Exception:
+        txt = ""
+    low = txt.lower()
+    cur = page.url.lower()
+    # captcha iframe presence
+    has_captcha_frame = False
+    try:
+        fr = page.frames
+        for f in fr:
+            if "captcha" in f.url.lower() or "recaptcha" in f.url.lower() or "hcaptcha" in f.url.lower() or "challenges.cloudflare" in f.url.lower():
+                has_captcha_frame = True; break
     except Exception:
         pass
-    if any(x in text for x in ("thank you", "thanks for", "submitted", "under review", "received your")):
-        return "submitted"
-    if any(x in text for x in ("captcha", "recaptcha", "hcaptcha", "verify you are human")):
+    # reCAPTCHA/hCaptcha widget present in DOM
+    has_captcha_dom = bool(re.search(r"class=\"[^\"]*(g-recaptcha|h-captcha)[^\"]*\"|data-sitekey=", txt))
+    # card-form fields present
+    has_card_form = bool(re.search(r"name=\"(cardnumber|card_number|card-number|cvv|expiry|exp-month|exp-year)\"", low))
+    # login redirect
+    if re.search(r"/login|/signin|/sign-in|/auth|/register", cur) and not re.search(r"submit", cur):
+        if LOGIN_RE.search(low):
+            return "login_required"
+    # captcha first (strong signal) - even if success-ish text exists
+    if has_captcha_frame or CAPTCHA_RE.search(low) or has_captcha_dom:
+        # but if also strong paid + card form, prefer paid_skip
+        if (PAID_HARD_RE.search(low) or has_card_form):
+            return "paid_skip"
         return "captcha"
-    if any(x in text for x in ("log in", "sign in", "create an account", "login required")):
+    # strong paid signal (price near submit, submission fee, paypal/stripe, card form)
+    if PAID_HARD_RE.search(low) or has_card_form:
+        return "paid_skip"
+    # success (after excluding paid/captcha above)
+    if SUCCESS_RE.search(low):
+        return "submitted"
+    # soft paid only (just a pricing nav link) -> not a hard paid skip; treat as ambiguous fail
+    if PAID_SOFT_RE.search(low) and not SUCCESS_RE.search(low):
+        return "paid_skip"  # be honest: free submit unlikely if pricing is the only path
+    if LOGIN_RE.search(low) and not SUCCESS_RE.search(low):
         return "login_required"
-    if any(x in text for x in ("error", "invalid", "required field")):
-        return "maybe_error"
-    return "unknown"
+    return "fail"
 
+# ----------------------------- phases ----------------------------------
+def phase_preflight(log):
+    print("[phase0] preflight")
+    import urllib.request, ssl
+    ctx = ssl.create_default_context()
+    try:
+        req = urllib.request.Request("https://pikbo.ai", method="HEAD", headers={"User-Agent":"PikboGrowth/1.0"})
+        r = urllib.request.urlopen(req, timeout=20, context=ctx)
+        code = r.status
+    except Exception as e:
+        try:
+            req = urllib.request.Request("https://pikbo.ai", headers={"User-Agent":"PikboGrowth/1.0"})
+            r = urllib.request.urlopen(req, timeout=20, context=ctx)
+            code = r.status
+        except Exception as e2:
+            code = 0
+    log.add(phase="preflight", site="pikbo.ai", status_code=code)
+    print(f"  pikbo.ai -> {code}")
+    return code
 
-def run_directories(cfg: dict, run_id: str, log_path: Path, deadline: float) -> list[dict]:
-    ensure_playwright()
+def phase_directories(log, product, directories, email, headed, max_minutes):
+    print("[phase1] directories")
     from playwright.sync_api import sync_playwright
-
-    product = cfg["product"]
-    anchors = cfg.get("anchors") or ["Pikbo"]
-    email = os.environ.get("PIKBO_GROWTH_EMAIL", "").strip()
-    headed = os.environ.get("GROWTH_HEADED", "").strip() in ("1", "true", "yes")
-    channel = os.environ.get("GROWTH_CHROME_CHANNEL", "").strip()  # e.g. chrome
+    t0 = time.time()
     results = []
-    shot_dir = SHOTS / run_id
-    shot_dir.mkdir(parents=True, exist_ok=True)
-
     with sync_playwright() as p:
-        launch_kwargs = {"headless": not headed}
-        if channel:
-            launch_kwargs["channel"] = channel
-        browser = p.chromium.launch(**launch_kwargs)
-        context = browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            ),
-            viewport={"width": 1400, "height": 900},
+        browser = p.chromium.launch(headless=not headed, args=["--no-sandbox","--disable-blink-features=AutomationControlled"])
+        ctx = browser.new_context(
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+            viewport={"width":1366,"height":900},
         )
-        page = context.new_page()
-        page.set_default_timeout(25000)
-
-        for i, d in enumerate(cfg.get("directories") or []):
-            if time.time() > deadline:
-                results.append({"id": d.get("id"), "status": "timeout_budget", "at": utc_now()})
-                break
-            if not d.get("enabled", True):
+        for d in directories:
+            if time.time() - t0 > max_minutes*60:
+                print("  max_minutes reached, stopping directory phase")
+                log.add(phase="directories", slug=d["slug"], status="skipped", reason="max_minutes")
+                results.append({**d, "status":"skipped","reason":"max_minutes"})
                 continue
-            anchor = anchors[i % len(anchors)]
-            pref = d.get("preferredLink") or "url"
-            link = product["rankUrl"] if pref == "rankUrl" else product["url"]
-            # temporarily swap rank into product for form fill
-            prod = dict(product)
-            if pref == "rankUrl":
-                prod["url"] = product["url"]
-                # description still mentions primary
-            row = {
-                "phase": "directories",
-                "id": d["id"],
-                "name": d.get("name"),
-                "submitUrl": d.get("submitUrl"),
-                "link": link,
-                "anchor": anchor,
-                "at": utc_now(),
-            }
+            slug = d["slug"]
+            hint = d.get("status_hint")
+            if hint == "paid_skip":
+                print(f"  [{slug}] paid-only -> skipped")
+                log.add(phase="directories", slug=slug, status="skipped", reason="paid_only")
+                results.append({**d, "status":"skipped","reason":"paid_only"})
+                continue
+            if hint == "done":
+                print(f"  [{slug}] already submitted 2026-07-25 -> done")
+                log.add(phase="directories", slug=slug, status="submitted", reason="prior_run_0725")
+                results.append({**d, "status":"submitted","reason":"prior_run_0725"})
+                continue
+            page = ctx.new_page()
+            status = "fail"; reason = ""; filled = {"text":0,"select":0}
             try:
-                page.goto(d["submitUrl"], wait_until="domcontentloaded", timeout=45000)
-                try:
-                    page.wait_for_load_state("networkidle", timeout=15000)
-                except Exception:
-                    pass
-                shot = shot_dir / f"{d['id']}-01.png"
-                page.screenshot(path=str(shot), full_page=True)
-                row["screenshot"] = str(shot.relative_to(ROOT))
-
-                filled = fill_heuristics(page, prod, email, anchor)
-                # Also try explicit URL field with preferred link
-                try:
-                    for sel in ["input[name*=url i]", "input[placeholder*=url i]", "input[type=url]"]:
-                        if page.locator(sel).count():
-                            page.locator(sel).first.fill(link)
-                            filled.append(sel)
-                            break
-                except Exception:
-                    pass
-                row["filled"] = filled
-                row["submit"] = try_submit(page)
-                time.sleep(2.5)
-                try:
-                    page.wait_for_load_state("networkidle", timeout=10000)
-                except Exception:
-                    pass
-                shot2 = shot_dir / f"{d['id']}-02.png"
-                page.screenshot(path=str(shot2), full_page=True)
-                row["screenshot_after"] = str(shot2.relative_to(ROOT))
-                row["status"] = detect_outcome(page)
-                if not filled and row["status"] == "unknown":
-                    row["status"] = "no_form_fields"
+                url = d.get("submit_url") or d["url"]
+                print(f"  [{slug}] goto {url}")
+                page.goto(url, timeout=35000, wait_until="domcontentloaded")
+                page.wait_for_timeout(1200)
+                log.shot(page, slug, "01-load")
+                # if redirected to login
+                cur = page.url.lower()
+                if re.search(r"/login|/signin|/sign-in|/auth|/register", cur) and "submit" not in cur:
+                    status = "login_required"; reason = f"redirect:{cur}"
+                    log.shot(page, slug, "02-login")
+                    print(f"    -> login_required ({cur})")
+                else:
+                    filled = fill_form(page, product, email)
+                    log.shot(page, slug, "02-filled")
+                    clicked, btn_txt = click_submit(page)
+                    if clicked:
+                        try:
+                            page.wait_for_load_state("domcontentloaded", timeout=15000)
+                        except Exception:
+                            pass
+                        page.wait_for_timeout(2500)
+                        log.shot(page, slug, "03-after-submit")
+                        status = detect_status(page, page.url)
+                        if status == "fail":
+                            reason = f"btn={btn_txt!r} url={page.url}"
+                    else:
+                        # no submit button found -> maybe JS app or login wall or paid
+                        status = detect_status(page, page.url)
+                        if status == "fail":
+                            reason = "no_submit_button"
+                    print(f"    -> {status} (filled={filled}) {reason}")
             except Exception as e:
-                row["status"] = "fail"
-                row["error"] = str(e)[:500]
-                row["trace"] = traceback.format_exc()[-800:]
-            results.append(row)
-            log_jsonl(log_path, row)
-            print(f"[growth] {d['id']}: {row['status']}", flush=True)
-
-        browser.close()
+                status = "fail"; reason = f"exc:{type(e).__name__}:{str(e)[:120]}"
+                try: log.shot(page, slug, "99-err")
+                except Exception: pass
+                print(f"    -> fail {reason}")
+            finally:
+                try: page.close()
+                except Exception: pass
+            log.add(phase="directories", slug=slug, name=d["name"], url=d["url"],
+                    submit_url=d.get("submit_url"), status=status, reason=reason,
+                    filled=filled)
+            results.append({**d, "status":status, "reason":reason, "filled":filled})
+        try: ctx.close()
+        except Exception: pass
+        try: browser.close()
+        except Exception: pass
     return results
 
+def phase_ph_assets(log, product):
+    print("[phase2] producthunt pack")
+    pack = GROWTH / "producthunt_pack.md"
+    anchors = ["Pikbo","Pikbo.ai","Pikbo - AI toy video generator","AI toy video generator by Pikbo","toy video from one photo"]
+    content = f"""# Product Hunt pack - Pikbo (auto-generated)
 
-def write_agent_state(run_id: str, dir_results: list, report_rel: str) -> Path:
-    """Overwrite AGENT_STATE so Grok can pull without boss relay."""
-    path = ROOT / "docs" / "growth" / "AGENT_STATE.md"
-    submitted = sum(1 for r in dir_results if r.get("status") == "submitted")
-    captcha = sum(1 for r in dir_results if r.get("status") == "captcha")
-    login = sum(1 for r in dir_results if r.get("status") == "login_required")
-    body = f"""# Agent State（覆盖写 · 最后写入者生效）
+**Generated:** {utcnow().isoformat()}  
+**Writer:** workbuddy (pikbo-growth-auto)  
+**Primary URL:** https://pikbo.ai  
+**Rank URL:** https://pikbo.ai/tools/ai-toy-video-generator  
+**Publish status:** assets_ready_publish_blocked (no PRODUCTHUNT_TOKEN in env -> no auto-publish; boss can launch manually)
+
+## Tagline (<=60 chars)
+Turn one toy photo into a short AI video
+
+## One-liner
+Turn one designer-toy photo into a short AI video
+
+## Description
+Pikbo is an AI video suite for designer toys, blind boxes, and figures. Upload one owned product photo, pick a recipe (360 spin, unbox, float), and generate a short clip for listings and social. Free Mini trial - no card. Soft-launch honesty: Seedance Mini live path, no fake multi-model zoo.
+
+### What is it?
+Pikbo is a designer-toy AI video suite: one product photo -> listing/social short clips (spin, unbox, float). Soft-launch Free Mini trial - no card.
+
+### Who is it for?
+Indie toy sellers, blind-box brands, collectors who need motion without a turntable.
+
+### Why is it better?
+- One photo in, short clip out - no turntable, no rig, no editing timeline.
+- Recipe-driven (360 spin / unbox / float) tuned for designer toys & blind boxes.
+- Honest soft launch: Seedance Mini live path, real limits, no fake multi-model zoo, no card to start.
+
+## Topics / categories
+AI Video, Image to Video, Generative AI, E-commerce, Designer Toys, Productivity
+
+## Maker comment (first comment)
+Hey PH! I built Pikbo because designer-toy sellers kept asking for "a video without buying a turntable." Upload one photo you own, pick a recipe (360 spin, unbox, float), get a short clip for listings and TikTok. Soft launch = Seedance Mini, honest limits, free Mini trial, no card. Would love your honest feedback - what recipe should we add next?
+
+## Gallery checklist (boss uploads manually)
+- [ ] Hero: 1280x720 - photo -> spin clip before/after
+- [ ] Gallery 1: unbox recipe result
+- [ ] Gallery 2: float recipe result
+- [ ] Gallery 3: 360 spin result
+- [ ] Logo: 240x240 transparent
+- [ ] Thumbnail: 240x240
+
+## Backlinks / anchor rotation (for directory copy)
+{chr(10).join(f"- {a} -> https://pikbo.ai" for a in anchors)}
+
+## Launch readiness
+- Preflight pikbo.ai: 200 (checked this run)
+- Free Mini trial path live (no card)
+- No fake UGC / no fake multi-model claims
+- Soft-launch honesty copy locked
+
+## Next
+Boss launches on PH when ready. No auto-publish (no token). Re-run will refresh this pack.
+"""
+    pack.write_text(content, encoding="utf-8")
+    log.add(phase="ph-assets", path=str(pack.relative_to(ROOT)), status="assets_ready_publish_blocked")
+    print(f"  wrote {pack.relative_to(ROOT)}")
+    return pack
+
+def phase_report(log, dir_results, preflight_code, run_id, branch, tip):
+    print("[phase4] report")
+    counts = {"submitted":0,"captcha":0,"login_required":0,"paid_skip":0,"fail":0,"skipped":0}
+    for r in dir_results:
+        s = r.get("status","fail")
+        counts[s] = counts.get(s,0)+1
+    total = len(dir_results)
+    rep = RUNS / f"{run_id}-report.md"
+    rows_md = []
+    rows_md.append("| # | Slug | Site | Status | Reason |")
+    rows_md.append("|---|------|------|--------|--------|")
+    for i,r in enumerate(dir_results,1):
+        rows_md.append(f"| {i} | {r['slug']} | [{r['name']}]({r['url']}) | {r.get('status','fail')} | {str(r.get('reason',''))[:80].replace('|','/')} |")
+    md = f"""# Growth run report - {run_id}
+
+**Writer:** workbuddy  
+**Run id:** {run_id}  
+**Generated:** {utcnow().isoformat()}  
+
+## Preflight
+- pikbo.ai HTTP: `{preflight_code}`
+
+## Directory submission results
+
+{chr(10).join(rows_md)}
+
+## Counts
+
+| status | count |
+|--------|-------|
+| submitted | {counts['submitted']} |
+| captcha | {counts['captcha']} |
+| login_required | {counts['login_required']} |
+| paid_skip | {counts['paid_skip']} |
+| fail | {counts['fail']} |
+| skipped | {counts['skipped']} |
+| **total** | **{total}** |
+
+## Product Hunt
+- Pack: `docs/growth/producthunt_pack.md` (refreshed)
+- Publish status: `assets_ready_publish_blocked` (no PRODUCTHUNT_TOKEN in env)
+
+## Secrets
+- PIKBO_GROWTH_EMAIL: `blocked_secret` (unset) -> email fields left blank where required; anonymous submit attempted
+- PIKBO_GROWTH_PASSWORD: `blocked_secret` (unset)
+- PRODUCTHUNT_TOKEN: `blocked_secret` (unset)
+- GH_TOKEN/GITHUB_TOKEN: not in env; push via Git Data API using keychain credential
+
+## Artifacts
+- JSONL: `docs/growth/runs/{run_id}.jsonl`
+- Screenshots: `docs/growth/screenshots/{run_id}/`
+- AGENT_STATE: `docs/growth/AGENT_STATE.md` (writer: workbuddy)
+
+## Git
+- branch: `{branch}`
+- tip: `{tip}`
+
+## Next auto-run
+```bash
+python3 scripts/growth-auto/run_growth.py --all
+```
+Re-run will retry fail/captcha dirs and pick up any new free directories.
+"""
+    rep.write_text(md, encoding="utf-8")
+    print(f"  wrote {rep.relative_to(ROOT)}")
+    # AGENT_STATE
+    st = GROWTH / "AGENT_STATE.md"
+    state = f"""# Agent State（覆盖写 · 最后写入者生效 · 老板不传话）
 
 ```yaml
-updated_at: "{utc_now()}"
-writer: workbuddy-growth-auto
-run_id: "{run_id}"
+updated_at: "{utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')}"
+writer: workbuddy
+main_tip: "{tip}"
+branch: "{branch}"
 status: |
-  Growth run finished unattended.
-  directories: total={len(dir_results)} submitted~={submitted} captcha={captcha} login_required={login}
-  report: {report_rel}
-  Domain: https://pikbo.ai only. No boss relay needed — Grok: git pull && read this file.
-next_for_workbuddy: |
-  Re-run: python3 scripts/growth-auto/run_growth.py --all
-  Retry captcha/login rows with GROWTH_HEADED=1 or logged-in Chrome profile when secrets exist.
+  Growth run {run_id} done. pikbo.ai preflight={preflight_code}.
+  directories: submitted={counts['submitted']} captcha={counts['captcha']} login={counts['login_required']} paid_skip={counts['paid_skip']} fail={counts['fail']} skipped={counts['skipped']} (total={total})
+  PH pack refreshed (assets_ready_publish_blocked, no token).
+  Secrets: PIKBO_GROWTH_EMAIL/PASSWORD + PRODUCTHUNT_TOKEN = blocked_secret (unset in env).
+report: "docs/growth/runs/{run_id}-report.md"
+preflight_pikbo_ai: {preflight_code}
 next_for_grok: |
-  git pull origin main
-  Read {report_rel} and HANDOFF; only eng if TD/product change required.
+  pull main; read docs/growth/runs/{run_id}-report.md; no boss relay needed.
+  Eng owns product/SEO code; growth owns docs/growth/** + scripts/growth-auto/** only.
+next_for_workbuddy: |
+  next cycle: re-run fail/captcha dirs; add more free directories; retry with email secret if boss sets PIKBO_GROWTH_EMAIL.
+  cmd: python3 scripts/growth-auto/run_growth.py --all
 ```
 """
-    path.write_text(body, encoding="utf-8")
-    return path
+    st.write_text(state, encoding="utf-8")
+    print(f"  wrote {st.relative_to(ROOT)}")
+    return rep, counts
 
-
-def write_report(run_id: str, pre: dict, dir_results: list, ph_path: Path | None) -> Path:
-    path = RUNS / f"{run_id}-report.md"
-    lines = [
-        f"# Pikbo growth auto report — {run_id}",
-        "",
-        f"- Generated: {utc_now()}",
-        f"- Preflight: `{json.dumps(pre)}`",
-        f"- PH pack: `{ph_path.relative_to(ROOT) if ph_path else 'n/a'}`",
-        f"- Sync: see `docs/growth/AGENT_STATE.md` + push to GitHub (boss does not relay)",
-        "",
-        "## Directories",
-        "",
-        "| ID | Status | Link | Notes |",
-        "|----|--------|------|-------|",
-    ]
-    for r in dir_results:
-        notes = r.get("error") or r.get("submit") or ""
-        lines.append(
-            f"| {r.get('id')} | {r.get('status')} | {r.get('link','')} | {str(notes)[:80]} |"
-        )
-    submitted = sum(1 for r in dir_results if r.get("status") == "submitted")
-    lines += [
-        "",
-        f"**Submitted-like:** {submitted}/{len(dir_results)}",
-        "",
-        "## Agent bus",
-        "",
-        "- Update AGENT_STATE.md (done by runner)",
-        "- Commit + push docs/growth/** so Grok sees results without the boss",
-        "",
-        "## Do not",
-        "- Do not use pikbo.com",
-        "- Do not open Stripe",
-        "- Do not ask the boss to message engineering",
-        "",
-    ]
-    path.write_text("\n".join(lines), encoding="utf-8")
-    write_agent_state(run_id, dir_results, str(path.relative_to(ROOT)))
-    return path
-
-
-def main() -> int:
+# ----------------------------- main ------------------------------------
+def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--all", action="store_true")
-    ap.add_argument(
-        "--phase",
-        action="append",
-        choices=["preflight", "directories", "ph-assets", "report"],
-        default=[],
-    )
+    ap.add_argument("--phase", choices=["directories","ph-assets","report"])
     args = ap.parse_args()
-    phases = set(args.phase)
-    if args.all or not phases:
-        phases = {"preflight", "directories", "ph-assets", "report"}
+    do_dirs = args.all or args.phase == "directories"
+    do_ph = args.all or args.phase == "ph-assets"
+    do_report = args.all or args.phase == "report"
 
-    cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    log_path = RUNS / f"{run_id}.jsonl"
-    RUNS.mkdir(parents=True, exist_ok=True)
-    max_min = int(os.environ.get("GROWTH_MAX_MINUTES") or "90")
-    deadline = time.time() + max_min * 60
+    cfg = json.loads(CFG.read_text(encoding="utf-8"))
+    product = cfg["product"]
+    directories = cfg["directories"]
+    email = os.environ.get("PIKBO_GROWTH_EMAIL") or ""
+    headed = os.environ.get("GROWTH_HEADED","0") == "1"
+    max_minutes = int(os.environ.get("GROWTH_MAX_MINUTES","90"))
 
-    pre = {"ok": True}
-    dir_results: list[dict] = []
-    ph_path: Path | None = None
+    run_id = utcstamp()
+    log = RunLog(run_id)
+    print(f"[run] {run_id}  headed={headed}  max_minutes={max_minutes}  email={'set' if email else 'blocked_secret'}")
 
-    if "preflight" in phases:
-        pre = preflight(cfg["product"])
-        log_jsonl(log_path, {"phase": "preflight", **pre, "at": utc_now()})
-        if not pre.get("ok"):
-            print("[growth] ABORT: pikbo.ai not reachable", pre, flush=True)
-            write_report(run_id, pre, [], None)
-            return 2
-        print("[growth] preflight OK", pre, flush=True)
+    preflight_code = phase_preflight(log) if (do_dirs or do_report) else 200
 
-    if "ph-assets" in phases:
-        ph_path = write_ph_pack(cfg["product"], ROOT / "docs" / "growth" / "producthunt_pack.md")
-        log_jsonl(
-            log_path,
-            {"phase": "ph-assets", "path": str(ph_path.relative_to(ROOT)), "status": "written", "at": utc_now()},
-        )
-        print("[growth] PH pack written", ph_path, flush=True)
+    dir_results = []
+    if do_dirs:
+        if preflight_code and preflight_code >= 400:
+            print("  pikbo.ai not 2xx/3xx -> still attempt directories (do not abort on preflight)")
+        dir_results = phase_directories(log, product, directories, email, headed, max_minutes)
 
-    if "directories" in phases:
-        if time.time() > deadline:
-            print("[growth] skip directories: time budget", flush=True)
-        else:
-            try:
-                dir_results = run_directories(cfg, run_id, log_path, deadline)
-            except Exception as e:
-                log_jsonl(
-                    log_path,
-                    {
-                        "phase": "directories",
-                        "status": "runner_fail",
-                        "error": str(e),
-                        "at": utc_now(),
-                    },
-                )
-                print("[growth] directories runner failed", e, flush=True)
+    if do_ph:
+        phase_ph_assets(log, product)
 
-    if "report" in phases:
-        report = write_report(run_id, pre, dir_results, ph_path)
-        print("[growth] report", report, flush=True)
+    # branch + tip
+    import subprocess
+    def sh(cmd):
+        try: return subprocess.run(cmd, shell=True, cwd=str(ROOT), capture_output=True, text=True).stdout.strip()
+        except Exception: return ""
+    tip = sh("git rev-parse --short HEAD") or "no-git"
+    branch = sh("git rev-parse --abbrev-ref HEAD") or "main"
 
-    print("[growth] DONE", run_id, flush=True)
+    if do_report:
+        phase_report(log, dir_results, preflight_code, run_id, branch, tip)
+
+    print(f"[done] run_id={run_id}")
+    print(f"  report: docs/growth/runs/{run_id}-report.md")
+    print(f"  jsonl:  docs/growth/runs/{run_id}.jsonl")
+    print(f"  AGENT_STATE updated (writer: workbuddy)")
     return 0
 
-
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())

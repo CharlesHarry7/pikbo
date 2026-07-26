@@ -1,86 +1,42 @@
 {
+  "_comment": "Free AI directory submit list for Pikbo (https://pikbo.ai). Paid-only sites -> skipped. Prior queue from docs/growth/FREE_DIRECTORY_SUBMIT.md + extra free dirs. Already-submitted (2026-07-25) kept with status_hint=done.",
   "product": {
     "name": "Pikbo",
     "url": "https://pikbo.ai",
-    "rankUrl": "https://pikbo.ai/tools/ai-toy-video-generator",
-    "createUrl": "https://pikbo.ai/create",
+    "rank_url": "https://pikbo.ai/tools/ai-toy-video-generator",
+    "alt_url": "https://pikbo.ai/for/photo-to-video-for-toys",
     "tagline": "Turn one designer-toy photo into a short AI video",
-    "description": "Pikbo is an AI video suite for designer toys, blind boxes, and figures. Upload one owned product photo, pick a recipe (360° spin, unbox, float), and generate a short clip for listings and social. Free Mini trial — no card. Soft launch honesty: Seedance Mini live path, no fake multi-model zoo.",
-    "categories": ["AI Video", "Image to Video", "Generative AI", "E-commerce", "Marketing"],
-    "pricing": "Free trial",
-    "twitter": "@pikbo_ai"
+    "description": "Pikbo is an AI video suite for designer toys, blind boxes, and figures. Upload one owned product photo, pick a recipe (360 spin, unbox, float), generate a short clip for listings and social. Free Mini trial - no card. Soft launch: Seedance Mini, honest limits, no fake multi-model zoo.",
+    "categories": ["AI Video", "Image to Video", "Generative AI", "E-commerce"],
+    "pricing": "Free trial / freemium",
+    "twitter": "@pikbo_ai",
+    "email_env": "PIKBO_GROWTH_EMAIL"
   },
-  "anchors": [
+  "anchor_texts": [
     "Pikbo",
     "Pikbo.ai",
-    "Pikbo — AI toy video generator",
+    "Pikbo - AI toy video generator",
     "AI toy video generator by Pikbo",
     "toy video from one photo"
   ],
   "directories": [
-    {
-      "id": "theresanaiforthat",
-      "name": "There's An AI For That",
-      "submitUrl": "https://theresanaiforthat.com/submit/",
-      "homeUrl": "https://theresanaiforthat.com/",
-      "preferredLink": "rankUrl",
-      "enabled": true
-    },
-    {
-      "id": "futuretools",
-      "name": "FutureTools",
-      "submitUrl": "https://www.futuretools.io/submit-a-tool",
-      "homeUrl": "https://www.futuretools.io/",
-      "preferredLink": "url",
-      "enabled": true
-    },
-    {
-      "id": "futurepedia",
-      "name": "Futurepedia",
-      "submitUrl": "https://www.futurepedia.io/submit-tool",
-      "homeUrl": "https://www.futurepedia.io/",
-      "preferredLink": "url",
-      "enabled": true
-    },
-    {
-      "id": "topaitools",
-      "name": "TopAI.tools",
-      "submitUrl": "https://topai.tools/submit",
-      "homeUrl": "https://topai.tools/",
-      "preferredLink": "rankUrl",
-      "enabled": true
-    },
-    {
-      "id": "saashub",
-      "name": "SaaSHub",
-      "submitUrl": "https://www.saashub.com/submit",
-      "homeUrl": "https://www.saashub.com/",
-      "preferredLink": "url",
-      "enabled": true
-    },
-    {
-      "id": "aitoolsguru",
-      "name": "AI Tools Guru",
-      "submitUrl": "https://aitoolsguru.com/submit-tool/",
-      "homeUrl": "https://aitoolsguru.com/",
-      "preferredLink": "url",
-      "enabled": true
-    },
-    {
-      "id": "toolify",
-      "name": "Toolify",
-      "submitUrl": "https://www.toolify.ai/submit",
-      "homeUrl": "https://www.toolify.ai/",
-      "preferredLink": "rankUrl",
-      "enabled": true
-    },
-    {
-      "id": "aitools_fyi",
-      "name": "AITools.fyi",
-      "submitUrl": "https://aitools.fyi/submit",
-      "homeUrl": "https://aitools.fyi/",
-      "preferredLink": "url",
-      "enabled": true
-    }
+    { "slug": "aitools-fyi", "name": "AI Tools FYI", "url": "https://www.aitools.fyi", "submit_url": "https://www.aitools.fyi/submit", "free": true },
+    { "slug": "topai-tools", "name": "TopAI Tools", "url": "https://topai.tools", "submit_url": "https://topai.tools/submit", "free": true },
+    { "slug": "futuretools-io", "name": "FutureTools", "url": "https://www.futuretools.io", "submit_url": "https://www.futuretools.io/submit", "free": true },
+    { "slug": "aitoolnet", "name": "AI Tool Net", "url": "https://www.aitoolnet.com", "submit_url": "https://www.aitoolnet.com/submit", "free": true },
+    { "slug": "awesomeaitools", "name": "Awesome AI Tools", "url": "https://awesomeaitools.com", "submit_url": "https://awesomeaitools.com/submit", "free": true },
+    { "slug": "dang-ai", "name": "Dang.ai", "url": "https://dang.ai", "submit_url": "https://dang.ai/submit", "free": true },
+    { "slug": "aivalley", "name": "AI Valley", "url": "https://aivalley.ai", "submit_url": "https://aivalley.ai/submit/", "free": true },
+    { "slug": "aiwizard", "name": "AI Wizard", "url": "https://www.aiwizard.io", "submit_url": "https://www.aiwizard.io/submit", "free": true },
+    { "slug": "aitoolhunt", "name": "AI Tool Hunt", "url": "https://www.aitoolhunt.com", "submit_url": "https://www.aitoolhunt.com/submit", "free": true },
+    { "slug": "bestofai", "name": "Best of AI", "url": "https://bestofai.com", "submit_url": "https://bestofai.com/submit", "free": true },
+    { "slug": "insidr", "name": "Insidr AI", "url": "https://www.insidr.ai", "submit_url": "https://www.insidr.ai/submit", "free": true },
+    { "slug": "aitools-inc", "name": "AI Tools Inc", "url": "https://aitools.inc", "submit_url": "https://aitools.inc/submit", "free": true },
+    { "slug": "saasaitools", "name": "SaaS AI Tools", "url": "https://www.saasaitools.com", "submit_url": "https://www.saasaitools.com/submit", "free": true },
+    { "slug": "ai-tools-io", "name": "AI Tools.io", "url": "https://ai-tools.io", "submit_url": "https://ai-tools.io/submit", "free": true },
+    { "slug": "aitoolsdirectory-done", "name": "AI Tools Directory (done 07-25)", "url": "https://aitoolsdirectory.com", "submit_url": "https://aitoolsdirectory.com/submit", "free": true, "status_hint": "done" },
+    { "slug": "theresanaiforthat", "name": "TheresAnAIForThat", "url": "https://theresanaiforthat.com", "submit_url": "https://theresanaiforthat.com/submit", "free": false, "status_hint": "paid_skip" },
+    { "slug": "toolify", "name": "Toolify", "url": "https://www.toolify.ai", "submit_url": "https://www.toolify.ai/submit", "free": false, "status_hint": "paid_skip" },
+    { "slug": "futurepedia", "name": "Futurepedia", "url": "https://www.futurepedia.io", "submit_url": "https://www.futurepedia.io/submit", "free": false, "status_hint": "paid_skip" }
   ]
 }
