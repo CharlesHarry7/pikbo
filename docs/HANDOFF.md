@@ -13,6 +13,33 @@ Newest first. One block per meaningful landing.
   `|| true`.
 
 ---
+### 2026-07-26 — [grok] Create first-fold + default Remix P0 fix
+- Commit 292fc46 moves the 390px path back to Upload → Choose recipe →
+  Generate: optional Toy Identity is inside Advanced, and official Lab samples
+  are a collapsed details block after the recipe instead of four first-fold cards.
+- parseRemixSearchParams({}) now returns a fully null remix context, so a
+  fresh /create cannot fabricate the Packshot/Scout remix banner. Valid deep
+  links retain source, recipe, ratio, duration, and channel; invalid effects
+  still return the unknown-recipe notice.
+- Files: components/CreateStudio.tsx, lib/remixIntent.ts,
+  scripts/engine-smoke.mjs, docs/STATUS.md.
+- Verified: engine-smoke (production parser fixture for empty/valid/invalid
+  remix); lint (0 errors, 3 existing warnings); typecheck; production build
+  (189 routes). The shared browser at 127.0.0.1:3457 served a stale checkout
+  during this pass, so it was not counted as evidence for the new layout.
+
+### 2026-07-26 — [grok] T6 hard gate: bind Free derivative to job identity
+- Free live download no longer trusts free-floating derivative metadata. Gate
+  requires `canServeVerifiedT6Derivative({ jobId, providerRequestId, derivative })`:
+  exact idempotencyKey/objectKey/deliveryPath, distinct checksums, baked-mark
+  probe, **and** `t6DeliveryReadiness` (env + IMPLEMENTED + serving + storage;
+  serving/storage stay hard-false).
+- `downloadAllowedForJob` / `publicVideoUrlForJob` / `/api/downloads` pass
+  `jobId` + `providerRequestId`. `updateJob` recomputes when `bakedDerivative`
+  or `requestId` attaches.
+- Worker rejects foreign terminal rows with `DERIVATIVE_IDENTITY_MISMATCH`.
+  Fixture imports production `lib/t6Worker.ts` via `--experimental-strip-types`.
+- Verified: engine-smoke PASS · tsc PASS · t6 fixture PASS.
 
 ### 2026-07-26 — [grok] Create first-run conversion (Phase F 390px)
 - Mobile Create path is three steps: Upload → Choose recipe → Generate.
