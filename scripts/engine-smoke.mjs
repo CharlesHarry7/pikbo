@@ -4726,5 +4726,15 @@ assert.match(
   /MODEL_EMPTY[\s\S]{0,200}refundUnconfirmed|refundUnconfirmed[\s\S]{0,120}MODEL_EMPTY/
 );
 
+// Image studio FailPanel uses shared createTrust settlement (not a partial code list)
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /requestCreditStateFromFailure/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /from ["']@\/lib\/createTrust["']/
+);
+
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

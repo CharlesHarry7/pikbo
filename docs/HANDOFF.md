@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Image FailPanel shared settlement
+- `/image` FailPanel no longer hand-rolls a partial code list (TIMEOUT ·
+  UNSAFE_URL · REQUEST_CANCELED only) — uses `requestCreditStateFromFailure`
+  (Create/Landing/Batch parity).
+- Covers CONTENT_POLICY · PROVIDER_NETWORK · PROVIDER_TIMEOUT · MODEL_EMPTY ·
+  NETWORK_ERROR · CANCELED without inventing restore.
+- Smoke: image page imports createTrust settlement.
+
 ### 2026-07-27 — [grok] Remix job params + MODEL_EMPTY refund honesty
 - createRemixHref(opts) + remixOptsFromRecord: Retry/Remake reopen Create with
   actual generation params (not preset defaults only).

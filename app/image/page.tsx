@@ -15,6 +15,7 @@ import {
   mintImageIdempotencyKey,
   postImageWithRetry,
 } from "@/lib/imageClient";
+import { requestCreditStateFromFailure } from "@/lib/createTrust";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
@@ -128,18 +129,19 @@ export default function ImageStudioPage() {
             ? result.retryAfterSec
             : null;
         setFailRetryAfterSec(retryAfter);
-        if (result.creditsRefunded === true) {
-          setFailCreditState("10 restored");
-        } else if (
-          result.refundUnconfirmed === true ||
-          result.code === "TIMEOUT" ||
-          result.code === "UNSAFE_URL" ||
-          result.code === "REQUEST_CANCELED"
-        ) {
-          setFailCreditState("refund unconfirmed");
-        } else {
-          setFailCreditState(null);
-        }
+        // Shared settlement map (Create/Landing parity) — CONTENT_POLICY ·
+        // PROVIDER_NETWORK · MODEL_EMPTY · TIMEOUT · cancel never invent restore.
+        const settlement = requestCreditStateFromFailure({
+          creditsRefunded: result.creditsRefunded,
+          refundUnconfirmed: result.refundUnconfirmed,
+          status: result.status,
+          code: result.code,
+        });
+        setFailCreditState(
+          settlement === "10 restored" || settlement === "refund unconfirmed"
+            ? settlement
+            : null
+        );
         if (result.session) {
           setMe((prev) => mergeMeSession(prev, result.session as MeResponse));
         }

@@ -146,7 +146,9 @@
 105. [x] forkRetryJob terminal-only (no success/in-flight fork)
 106. [x] Library session Ledger retry fork API
 107. [x] Pack retryEligible allows TIMEOUT unconfirmed + CONTENT_POLICY settle
-108. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+108. [x] Remix remake carries job ratio/duration + MODEL_EMPTY honesty
+109. [x] Image FailPanel uses requestCreditStateFromFailure (Create/Landing parity)
+110. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -160,8 +162,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Pack retryEligible: failed/TIMEOUT unconfirmed can Retry (was stuck).
-- CONTENT_POLICY + UNSAFE_URL without restore → refundUnconfirmed.
+- Image FailPanel: shared createTrust settlement (CONTENT_POLICY/NETWORK/MODEL_EMPTY).
+- Prior: remixOptsFromRecord + MODEL_EMPTY/empty-200 refundUnconfirmed.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 
