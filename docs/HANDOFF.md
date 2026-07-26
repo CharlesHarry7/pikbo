@@ -62,6 +62,11 @@ Newest first. One block per meaningful landing.
 - LandingHowItWorks: Photo → Recipe → Video draft + HowTo JSON-LD on tools/for with tools.
 - Verified: typecheck · engine-smoke.
 
+### 2026-07-26 — [grok] rehydrateFreeTrial keeps refund policy
+- mergeMeSession no longer drops failedLiveRefundPolicy / ledgerTimeoutRefund after generate.
+- Settings “Live fail refunds”; guides Free Mini SEO; critical-path prints policy.
+- Verified: typecheck · engine-smoke.
+
 ### 2026-07-26 — [grok] health/me refund policy honesty
 - billing.freeTrial: failedLiveRefundPolicy=when_confirmed · ledgerTimeoutRefund=unconfirmed.
 - /api/me freeTrial same fields; imageClient network always refundUnconfirmed; StatusProbe labels.

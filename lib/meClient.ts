@@ -73,6 +73,13 @@ export function rehydrateFreeTrial(me: MeResponse): MeResponse {
   const credits = typeof me.credits === "number" ? Math.max(0, me.credits) : 0;
   const clipsLeft = Math.floor(credits / need);
 
+  // Preserve refund-policy honesty from /api/me across PublicSession merges.
+  const refundPolicy = {
+    failedLiveRefunds: me.freeTrial?.failedLiveRefunds,
+    failedLiveRefundPolicy: me.freeTrial?.failedLiveRefundPolicy,
+    ledgerTimeoutRefund: me.freeTrial?.ledgerTimeoutRefund,
+  };
+
   if (me.plan !== "free") {
     if (!me.freeTrial) return me;
     const { stillsOnFree: _drop, ...restFt } = me.freeTrial;
@@ -81,6 +88,7 @@ export function rehydrateFreeTrial(me: MeResponse): MeResponse {
       ...me,
       freeTrial: {
         ...restFt,
+        ...refundPolicy,
         planId: me.plan,
         isFreePlan: false,
         credits,
@@ -110,6 +118,12 @@ export function rehydrateFreeTrial(me: MeResponse): MeResponse {
       },
       exhausted: credits < need,
       stillsOnFree: "demo-only",
+      // Keep /api/me refund honesty after generate success merges PublicSession only.
+      ...refundPolicy,
+      failedLiveRefunds: refundPolicy.failedLiveRefunds ?? true,
+      failedLiveRefundPolicy:
+        refundPolicy.failedLiveRefundPolicy ?? "when_confirmed",
+      ledgerTimeoutRefund: refundPolicy.ledgerTimeoutRefund ?? "unconfirmed",
     },
   };
 }

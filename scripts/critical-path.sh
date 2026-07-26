@@ -159,12 +159,20 @@ else:
     if ft.get("isFreePlan") is True and ft.get("freeLive"):
         fl=ft["freeLive"]
         print(f"freeLive {fl.get('modelClass')} {fl.get('resolution')} {fl.get('durationSec')}s")
+    if ft.get("failedLiveRefundPolicy"):
+        print(
+            f"me.refundPolicy={ft.get('failedLiveRefundPolicy')} "
+            f"timeout={ft.get('ledgerTimeoutRefund')}"
+        )
 billing=(h.get("billing") or {})
 bft=billing.get("freeTrial") or {}
 if bft:
     print(
         f"health.billing.freeTrial clips={bft.get('clipsPerPeriod')} "
-        f"refunds={bft.get('failedLiveRefunds')} scope={bft.get('scope')}"
+        f"refunds={bft.get('failedLiveRefunds')} "
+        f"policy={bft.get('failedLiveRefundPolicy')} "
+        f"timeout={bft.get('ledgerTimeoutRefund')} "
+        f"scope={bft.get('scope')}"
     )
     if bft.get("scope") == "video-create-only":
         print(f"stillsOnFree={bft.get('stillsOnFree')}")

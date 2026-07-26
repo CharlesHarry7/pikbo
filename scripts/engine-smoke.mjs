@@ -1945,6 +1945,42 @@ assert.match(
   fs.readFileSync(join(root, "components/StatusProbe.tsx"), "utf8"),
   /refunds when confirmed|TIMEOUT unconfirmed/
 );
+// rehydrateFreeTrial must not drop refund-policy fields after generate merge
+const meClientSrc = fs.readFileSync(join(root, "lib/meClient.ts"), "utf8");
+assert.match(meClientSrc, /failedLiveRefundPolicy/);
+assert.match(meClientSrc, /ledgerTimeoutRefund/);
+assert.match(meClientSrc, /Preserve refund-policy|refundPolicy/);
+// Pure rehydrate keeps when_confirmed / unconfirmed across free plan rebuild
+function rehydrateFreeTrialPolicyPure(me) {
+  const refundPolicy = {
+    failedLiveRefunds: me.freeTrial?.failedLiveRefunds,
+    failedLiveRefundPolicy: me.freeTrial?.failedLiveRefundPolicy,
+    ledgerTimeoutRefund: me.freeTrial?.ledgerTimeoutRefund,
+  };
+  if (me.plan !== "free") return refundPolicy;
+  return {
+    failedLiveRefunds: refundPolicy.failedLiveRefunds ?? true,
+    failedLiveRefundPolicy:
+      refundPolicy.failedLiveRefundPolicy ?? "when_confirmed",
+    ledgerTimeoutRefund: refundPolicy.ledgerTimeoutRefund ?? "unconfirmed",
+  };
+}
+{
+  const kept = rehydrateFreeTrialPolicyPure({
+    plan: "free",
+    freeTrial: {
+      failedLiveRefunds: true,
+      failedLiveRefundPolicy: "when_confirmed",
+      ledgerTimeoutRefund: "unconfirmed",
+    },
+  });
+  assert.equal(kept.failedLiveRefundPolicy, "when_confirmed");
+  assert.equal(kept.ledgerTimeoutRefund, "unconfirmed");
+}
+assert.match(
+  fs.readFileSync(join(root, "app/settings/page.tsx"), "utf8"),
+  /Live fail refunds|when confirmed|TIMEOUT unconfirmed/
+);
 assert.match(health, /seedance-mini|clipsPerPeriod/);
 // Pure safe-url checks
 function isSafeDeliverableUrlPure(url) {

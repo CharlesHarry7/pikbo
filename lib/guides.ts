@@ -247,7 +247,7 @@ export const GUIDES: Guide[] = [
     dek: "Honest soft-launch limits so searchers are not sold unlimited generation.",
     seoTitle: "Free AI Toy Video Generator Limits | Pikbo Free Mini",
     seoDescription:
-      "What Pikbo Free Mini includes: Seedance Mini, 5s, 480p, on-player mark, one live clip path, refunds on failed live jobs. No fake unlimited AI.",
+      "What Pikbo Free Mini includes: Seedance Mini, 5s, 480p, on-player mark, one live clip path, refunds when the server confirms failure (TIMEOUT stays unconfirmed). No fake unlimited AI.",
     readMins: 3,
     intro:
       "Searchers looking for a free AI toy video generator should see real caps. Soft launch Free Mini is a constrained live path — not unlimited generation and not a multi-model marketplace.",

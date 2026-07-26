@@ -314,6 +314,18 @@ export default function SettingsPage() {
             </span>
           </div>
           <div className="flex justify-between gap-4">
+            <span className="text-[var(--fg-muted)]">Live fail refunds</span>
+            <span className="max-w-[58%] text-right text-xs font-semibold leading-snug">
+              {session?.freeTrial?.failedLiveRefundPolicy === "when_confirmed" ||
+              session?.freeTrial?.failedLiveRefunds
+                ? "when confirmed"
+                : "—"}
+              {session?.freeTrial?.ledgerTimeoutRefund === "unconfirmed"
+                ? " · TIMEOUT unconfirmed"
+                : ""}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
             <span className="text-[var(--fg-muted)]">Free raw download</span>
             <span className="max-w-[58%] text-right text-xs font-semibold leading-snug text-amber-100/90">
               {t6DownloadLabel}
