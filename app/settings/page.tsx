@@ -199,9 +199,18 @@ export default function SettingsPage() {
           Supabase Postgres when the T5 migration is applied. Soft-launch live
           Generate still debits the guest cookie.
         </p>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div
+          className="mt-4 flex flex-wrap items-center gap-2"
+          data-settings-path="product-first"
+        >
           <Link href="/create" className="btn btn-primary !px-3 !py-1.5 text-xs">
             Generate
+          </Link>
+          <Link
+            href="/create?mode=seller-pack"
+            className="btn btn-ghost !px-3 !py-1.5 text-xs"
+          >
+            Seller Pack
           </Link>
           <FreeTrialCta
             path="/settings"

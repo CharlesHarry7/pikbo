@@ -698,11 +698,77 @@ export function LandingToolPanel({
                   Download unlocks only after server-owned T6 bake.
                 </p>
               )}
-              <p className="mt-1 text-center text-[10px] text-[var(--fg-dim)]">
-                {(usedModel || "Seedance").split("/").pop()} · {duration}s ·{" "}
-                {aspectRatio}
-                {resultResolution ? ` · ${resultResolution}` : ""} ·{" "}
-                {demo ? PROVENANCE.cachedDemo : localLibraryNote()}
+              <dl
+                className="mx-auto mt-3 grid max-w-sm grid-cols-2 gap-x-3 gap-y-1.5 rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-[10px] sm:grid-cols-3"
+                data-landing-result-meta="server-echo"
+              >
+                <div>
+                  <dt className="text-[var(--fg-dim)]">Recipe</dt>
+                  <dd className="font-semibold text-[var(--fg)]">{effectName}</dd>
+                </div>
+                <div>
+                  <dt className="text-[var(--fg-dim)]">Model</dt>
+                  <dd className="font-semibold text-[var(--fg)]">
+                    {(usedModel || "Seedance").split("/").pop()}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[var(--fg-dim)]">Duration</dt>
+                  <dd className="font-semibold text-[var(--fg)]">{duration}s</dd>
+                </div>
+                <div>
+                  <dt className="text-[var(--fg-dim)]">Aspect</dt>
+                  <dd className="font-semibold text-[var(--fg)]">{aspectRatio}</dd>
+                </div>
+                <div>
+                  <dt className="text-[var(--fg-dim)]">Resolution</dt>
+                  <dd className="font-semibold text-[var(--fg)]">
+                    {resultResolution || "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[var(--fg-dim)]">Settlement</dt>
+                  <dd className="font-semibold text-[var(--fg)]">
+                    {resultSettlement || (demo ? "0 cached" : "10 used")}
+                  </dd>
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <dt className="text-[var(--fg-dim)]">Download policy</dt>
+                  <dd
+                    className="font-semibold text-[var(--fg)]"
+                    data-download-policy={
+                      downloadAllowed
+                        ? demo
+                          ? "demo-open"
+                          : "allowed"
+                        : "t6-held"
+                    }
+                  >
+                    {downloadPolicyLabel({ demo, downloadAllowed })}
+                  </dd>
+                </div>
+                {typeof costCredits === "number" ? (
+                  <div>
+                    <dt className="text-[var(--fg-dim)]">Cost (server)</dt>
+                    <dd className="font-semibold text-[var(--fg)]">
+                      {costCredits} cr
+                    </dd>
+                  </div>
+                ) : null}
+                {requestId ? (
+                  <div className="col-span-2 sm:col-span-3">
+                    <dt className="text-[var(--fg-dim)]">Task ID</dt>
+                    <dd className="truncate font-mono text-[9px] text-[var(--fg-muted)]">
+                      {requestId}
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
+              <p className="mt-1.5 text-center text-[10px] text-[var(--fg-dim)]">
+                {serverEcho
+                  ? "Metadata includes server-echoed fields when the API returned them."
+                  : "Metadata uses the last response when available."}{" "}
+                · {demo ? PROVENANCE.cachedDemo : localLibraryNote()}
               </p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
                 {downloadAllowed &&
@@ -746,9 +812,10 @@ export function LandingToolPanel({
                     }
                     className="btn btn-primary cursor-not-allowed px-3 py-1.5 text-xs opacity-50"
                   >
-                    {downloadAllowed
-                      ? "Download blocked · unsafe URL"
-                      : "Download blocked · Free raw"}
+                    {downloadBlockedCtaLabel({
+                      downloadAllowed,
+                      unsafeUrl: downloadAllowed,
+                    })}
                   </button>
                 )}
                 <button
