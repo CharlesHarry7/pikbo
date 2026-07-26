@@ -1568,106 +1568,6 @@ export function CreateStudio({
               />
             </label>
 
-            {/* Toy Identity — 2 fields only (five-step: not Character cloud) */}
-            <div className="mt-3 rounded-xl border border-[var(--mint)]/15 bg-gradient-to-br from-[var(--mint)]/[0.06] to-black/30 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]/90">
-                    {t("create.toyIdentity")}
-                  </p>
-                  <p className="mt-0.5 text-[10px] leading-snug text-white/40">
-                    {t("create.toyIdentity.hint")}
-                  </p>
-                </div>
-                {(toyIdentity.sku || toyIdentity.preserve) && (
-                  <span className="shrink-0 rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/10 px-1.5 py-0.5 text-[9px] font-bold text-[var(--mint)]">
-                    {t("create.active")}
-                  </span>
-                )}
-              </div>
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                <label className="block">
-                  <span className="text-[10px] font-semibold text-[var(--fg-dim)]">
-                    {t("create.sku")}
-                  </span>
-                  <input
-                    value={toyIdentity.sku}
-                    onChange={(e) => updateToyIdentity({ sku: e.target.value })}
-                    placeholder="e.g. Scout pink #3"
-                    maxLength={48}
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 text-xs outline-none transition focus:border-[var(--mint)] focus:ring-1 focus:ring-[var(--mint)]/30"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-[10px] font-semibold text-[var(--fg-dim)]">
-                    {t("create.preserve")}
-                  </span>
-                  <input
-                    value={toyIdentity.preserve}
-                    onChange={(e) =>
-                      updateToyIdentity({ preserve: e.target.value })
-                    }
-                    placeholder="paint lines, logo, sculpt"
-                    maxLength={120}
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 text-xs outline-none transition focus:border-[var(--mint)] focus:ring-1 focus:ring-[var(--mint)]/30"
-                  />
-                </label>
-              </div>
-            </div>
-
-            {!image && (
-              <div className="mt-3 rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-3">
-                <p className="text-sm font-bold text-[var(--fg)]">
-                  {t("create.noPhotoSample")}
-                </p>
-                <p className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
-                  Official Pikbo stills (not a customer upload). Cached demos
-                  cost 0 credits; live Mini uses 10 when the provider is on.
-                  One tap loads the recipe and starts generate.
-                </p>
-                <p className="mt-1 text-[10px] font-semibold text-[var(--mint)]">
-                  Try free · Lab samples are official examples, not your upload.
-                </p>
-                <button
-                  type="button"
-                  disabled={sampleLoading || busy}
-                  onClick={() => void loadSampleToy("scout", true)}
-                  className="btn btn-primary mt-3 w-full py-3 text-sm disabled:opacity-50"
-                >
-                  {sampleLoading || busy
-                    ? t("create.generating")
-                    : demoMode
-                      ? t("create.oneTapCached")
-                      : t("create.oneTapMini")}
-                </button>
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {SAMPLE_TOYS.map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      disabled={sampleLoading || busy}
-                      className="group overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg)] text-left transition hover:border-[var(--mint)] disabled:opacity-50"
-                      onClick={() => void loadSampleToy(s.id, true)}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={s.path}
-                        alt={s.label}
-                        className="aspect-square w-full object-cover transition group-hover:scale-[1.03]"
-                      />
-                      <span className="block px-2 py-1.5 text-[11px] font-bold">
-                        {s.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                {sampleLoading && (
-                  <p className="mt-2 text-[11px] text-[var(--mint)]">
-                    Loading sample…
-                  </p>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Step 2 — Recipe (mobile chips; desktop uses rail) */}
@@ -1779,6 +1679,56 @@ export function CreateStudio({
             </div>
           </div>
 
+          {!image && (
+            <details className="rounded-xl border border-[var(--mint)]/20 bg-[var(--mint)]/[0.04] px-3 py-2.5">
+              <summary className="cursor-pointer text-xs font-semibold text-[var(--mint)] marker:text-white/40">
+                {t("create.noPhotoSample")} · Try free · Lab
+              </summary>
+              <p className="mt-2 text-[11px] text-[var(--fg-muted)]">
+                Official Pikbo stills are not customer uploads. Cached demos cost
+                0 credits; live Mini uses 10 when the provider is on.
+              </p>
+              <button
+                type="button"
+                disabled={sampleLoading || busy}
+                onClick={() => void loadSampleToy("scout", true)}
+                className="btn btn-primary mt-3 w-full py-3 text-sm disabled:opacity-50"
+              >
+                {sampleLoading || busy
+                  ? t("create.generating")
+                  : demoMode
+                    ? t("create.oneTapCached")
+                    : t("create.oneTapMini")}
+              </button>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {SAMPLE_TOYS.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    disabled={sampleLoading || busy}
+                    className="group overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg)] text-left transition hover:border-[var(--mint)] disabled:opacity-50 motion-reduce:transition-none"
+                    onClick={() => void loadSampleToy(s.id, true)}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={s.path}
+                      alt={s.label}
+                      className="aspect-square w-full object-cover transition group-hover:scale-[1.03] motion-reduce:transition-none"
+                    />
+                    <span className="block px-2 py-1.5 text-[11px] font-bold">
+                      {s.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {sampleLoading && (
+                <p className="mt-2 text-[11px] text-[var(--mint)]">
+                  Loading sample…
+                </p>
+              )}
+            </details>
+          )}
+
           {/* Advanced — models, duration, seed, prompt (collapsed by default) */}
           <div className="rounded-xl border border-white/10 bg-black/25">
             <button
@@ -1800,6 +1750,52 @@ export function CreateStudio({
                 id="create-advanced-options"
                 className="space-y-3 border-t border-[var(--border)] p-3"
               >
+                {/* Optional identity lock stays out of the first-run decision path. */}
+                <div className="rounded-xl border border-[var(--mint)]/15 bg-gradient-to-br from-[var(--mint)]/[0.06] to-black/30 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]/90">
+                        {t("create.toyIdentity")}
+                      </p>
+                      <p className="mt-0.5 text-[10px] leading-snug text-white/40">
+                        {t("create.toyIdentity.hint")}
+                      </p>
+                    </div>
+                    {(toyIdentity.sku || toyIdentity.preserve) && (
+                      <span className="shrink-0 rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/10 px-1.5 py-0.5 text-[9px] font-bold text-[var(--mint)]">
+                        {t("create.active")}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-[10px] font-semibold text-[var(--fg-dim)]">
+                        {t("create.sku")}
+                      </span>
+                      <input
+                        value={toyIdentity.sku}
+                        onChange={(e) => updateToyIdentity({ sku: e.target.value })}
+                        placeholder="e.g. Scout pink #3"
+                        maxLength={48}
+                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 text-xs outline-none transition focus:border-[var(--mint)] focus:ring-1 focus:ring-[var(--mint)]/30"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-[10px] font-semibold text-[var(--fg-dim)]">
+                        {t("create.preserve")}
+                      </span>
+                      <input
+                        value={toyIdentity.preserve}
+                        onChange={(e) =>
+                          updateToyIdentity({ preserve: e.target.value })
+                        }
+                        placeholder="paint lines, logo, sculpt"
+                        maxLength={120}
+                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 text-xs outline-none transition focus:border-[var(--mint)] focus:ring-1 focus:ring-[var(--mint)]/30"
+                      />
+                    </label>
+                  </div>
+                </div>
                 <div>
                   <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
                     Duration

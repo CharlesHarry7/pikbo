@@ -93,15 +93,27 @@ export type ParsedRemixQuery = {
   sourcePoster: string | null;
 };
 
-/** Parse /create query params; invalid values ignored with notices. */
-export function parseRemixSearchParams(sp: {
+export type RemixSearchParams = {
   effect?: string;
   source?: string;
   ratio?: string;
   duration?: string;
   channel?: string;
-}): ParsedRemixQuery {
+};
+
+/** A plain /create visit is a new job, never an implicit remix of PRESETS[0]. */
+export function hasRemixSearchParams(sp: RemixSearchParams): boolean {
+  return Boolean(
+    sp.effect || sp.source || sp.ratio || sp.duration || sp.channel
+  );
+}
+
+/** Parse /create query params; invalid values ignored with notices. */
+export function parseRemixSearchParams(sp: RemixSearchParams): ParsedRemixQuery {
   const notices: string[] = [];
+  if (!hasRemixSearchParams(sp)) {
+    return { intent: null, notices, sourceLabel: null, sourcePoster: null };
+  }
   const recipeSlug =
     sp.effect && PRESETS.some((p) => p.slug === sp.effect)
       ? sp.effect
