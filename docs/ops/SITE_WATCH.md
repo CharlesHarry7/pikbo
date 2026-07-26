@@ -5,6 +5,50 @@ Grok 主写（见 `docs/prompts/GROK_SELF_OPS.md`）。Claude/Codex 可补产品
 
 ---
 
+## 2026-07-27 · ops cycle（Grok · SERP + X + Flow density ship）
+
+```yaml
+writer: grok-eng
+main_tip: "pre-push · FlowMediaCard proof + Modules Photo→Clip (this cycle)"
+production:
+  health: "softLive true · ok · paid false · T6 blocked"
+  home: 200
+  create: 200
+  tools_rank: 200
+  effects: 200
+  sitemap: 200
+  domain: "https://pikbo.ai only"
+google_seo:
+  site_operator: |
+    site:pikbo.ai 已被收录：home、/effects、/pricing、/community、/for、/modules、
+    /create、/tools 及多条 /tools/* · /for/* 出现在 SERP 摘要中。
+    最近抓取时间多在 2026-07-26（UTC 附近）——爬虫在访问 softLive。
+  rank_anchor: |
+    主词「AI toy video generator」查询：首页与 /tools 相关页可见；
+    未改 TDH/H1。冷启动仍靠外链，不是再堆 URL。
+  growth_runs: "none on main — WorkBuddy 仍无 [workbuddy] push"
+product_vs_hf:
+  shipped_this_round:
+    - "FlowMediaCard: Official·cached + Lab≥4 + Remake·your toy photo（HF Flow 密度）"
+    - "Modules CTAs: Photo→Clip + Seller Pack 高亮（product-to-video 诚实路径）"
+  gaps: |
+    HF 在推 multi-model free / Product-to-Video 场景合成 / Premiere 插件叙事。
+    Pikbo 红线：多模型只 Soon 不假 live；我们强化「一玩具照片→配方 Remake」垂直路径。
+    仍缺：真 UGC、云 Library、付费、T6 bake。
+x_radar:
+  - "HF Product-to-Video（产品图进场景）仍是内容创作者主话题 → 我们用 Seller Pack + Remake 对齐卖家 job，不抄场景库"
+  - "HF 多模型免费获客话术常见 → Pikbo 保持 Seedance Mini softLive + Soon 诚实"
+  - "用户在意 TOS/训练数据权属 → 持续强调 owned photo only（已有勾选路径，不扩假承诺）"
+  - "Seedance 同模多平台比价讨论 → 产品差异靠潮玩垂直与 listing/unbox 工作流，不靠模型动物园"
+next:
+  grok: "下一刀 Generate/Home 密度或 fail 恢复；继续 SITE_WATCH"
+  claude: "UI/IA 密度（Create 首屏 / Flow 矩阵）"
+  codex: "诚实文案；不扩 URL"
+  workbuddy: "必须跑 growth-auto 并 push runs（外链主线空转）"
+```
+
+---
+
 ## 2026-07-27 · seed（Grok · 多 Agent 作战架设）
 
 ```yaml

@@ -239,6 +239,9 @@ export default function FlowPage() {
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               {sec.items.map((f) => {
                 const demo = resolveDemo(f);
+                const exactDemo = Boolean(
+                  f.demoId && DEMO_VIDEOS.some((d) => d.id === f.demoId)
+                );
                 return (
                   <FlowMediaCard
                     key={f.id}
@@ -250,6 +253,8 @@ export default function FlowPage() {
                     poster={demo.poster}
                     webm={demo.webm}
                     mp4={demo.mp4}
+                    recipeSlug={demo.preset}
+                    exactDemo={exactDemo}
                   />
                 );
               })}

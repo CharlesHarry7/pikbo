@@ -2,11 +2,15 @@
 
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /**
  * Flow matrix card — Lab media with shared AutoPlay budget
  * (mobile ≤1 concurrent · preload none · Link owns focus).
  * Never autoPlay all cards at once.
+ *
+ * HF Flow density: Official · cached + provisional Lab ≥4 when recipe is proof-grade;
+ * hover CTA is Remake (product path), not a fake multi-model door.
  */
 export function FlowMediaCard({
   href,
@@ -17,6 +21,8 @@ export function FlowMediaCard({
   poster,
   webm,
   mp4,
+  recipeSlug,
+  exactDemo = false,
 }: {
   href: string;
   title: string;
@@ -26,12 +32,21 @@ export function FlowMediaCard({
   poster: string;
   webm?: string;
   mp4: string;
+  /** When set and exact Lab demo, show Official · cached + optional Lab ≥4 */
+  recipeSlug?: string;
+  /** True when poster/mp4 is the registered DEMO for this recipe (not concept fill) */
+  exactDemo?: boolean;
 }) {
+  const labQuality =
+    exactDemo && recipeSlug ? provisionalLabQualityLabel(recipeSlug) : null;
+  const ctaLabel = isPreview ? "Preview path →" : "Remake →";
+
   return (
     <Link
       href={href}
       className="group relative overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/10 transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_-28px_rgba(200,255,61,0.2)] hover:ring-[#c8ff3d]/50"
-      aria-label={`Open ${title}`}
+      aria-label={`${isPreview ? "Preview" : "Remake"} ${title}`}
+      data-flow-card={isPreview ? "preview" : "live-path"}
     >
       <div className="relative aspect-video overflow-hidden">
         <AutoPlayVideo
@@ -44,20 +59,39 @@ export function FlowMediaCard({
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c8ff3d]/40 to-transparent opacity-0 transition group-hover:opacity-100" />
-        <span
-          className={`absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-sm ${
-            isPreview
-              ? "bg-amber-400/90 text-black"
-              : "bg-black/65 text-[#c8ff3d] backdrop-blur-sm"
-          }`}
-        >
-          {badge}
-        </span>
+        <div className="absolute left-2.5 top-2.5 flex max-w-[75%] flex-wrap gap-0.5">
+          <span
+            className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-sm ${
+              isPreview
+                ? "bg-amber-400/90 text-black"
+                : "bg-black/65 text-[#c8ff3d] backdrop-blur-sm"
+            }`}
+          >
+            {badge}
+          </span>
+          {exactDemo ? (
+            <span
+              className="rounded-full border border-white/10 bg-black/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur-sm"
+              title="Official Lab cached demo · not live customer output"
+            >
+              Official · cached
+            </span>
+          ) : null}
+          {labQuality ? (
+            <span
+              className="rounded-full border border-amber-200/25 bg-black/55 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur-sm"
+              title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
+              data-proof-quality="provisional-lab"
+            >
+              Lab ≥4
+            </span>
+          ) : null}
+        </div>
         <span className="absolute bottom-2 right-2 rounded-full bg-black/55 px-1.5 py-0.5 text-[9px] font-medium text-white/50 backdrop-blur-sm">
           Lab media
         </span>
         <span className="absolute bottom-2 left-2 translate-y-1 rounded-full bg-[#c8ff3d] px-2.5 py-1 text-[10px] font-black text-black opacity-0 shadow-[0_0_20px_rgba(200,255,61,0.35)] transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-          Open →
+          {ctaLabel}
         </span>
       </div>
       <div className="p-4">
@@ -66,7 +100,7 @@ export function FlowMediaCard({
         </h3>
         <p className="mt-1 text-sm leading-snug text-white/50">{blurb}</p>
         <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-[#c8ff3d]/90">
-          {isPreview ? "Preview path" : "Open workspace"} →
+          {isPreview ? "Preview path" : "Remake · your toy photo"} →
         </p>
       </div>
     </Link>

@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Flow matrix proof chips + Modules product-to-clip CTAs
+- FlowMediaCard: Official · cached + provisional Lab ≥4 when exact demo recipe
+  passes home-proof; hover/footer CTA = Remake · your toy photo (HF Flow density).
+- flow page passes recipeSlug + exactDemo from DEMO_VIDEOS.
+- ModulesSuiteCtas: Photo → Clip + mint Seller Pack (honest product-to-video path).
+- SITE_WATCH: SERP site:pikbo.ai crawl notes + X radar (HF product-to-video / multi-model).
+- engine-smoke: FlowMediaCard proof locks.
+
 ### 2026-07-27 — [grok] Multi-agent playbook + Grok self-ops on GitHub
 - `docs/MULTI_AGENT_PLAYBOOK.md`: Grok/Claude/Codex/WorkBuddy lanes; GitHub bus.
 - `docs/prompts/GROK_SELF_OPS.md`: paste prompt — Google watch + HF product + X radar.

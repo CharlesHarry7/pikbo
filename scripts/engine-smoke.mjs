@@ -1811,6 +1811,19 @@ assert.match(
   /FlowMediaCard|PREVIEW_ROBOTS/
 );
 assert.match(
+  fs.readFileSync(join(root, "app/flow/page.tsx"), "utf8"),
+  /exactDemo|recipeSlug=\{demo\.preset\}/
+);
+const flowMediaCardSrc = fs.readFileSync(
+  join(root, "components/FlowMediaCard.tsx"),
+  "utf8"
+);
+assert.match(flowMediaCardSrc, /data-flow-card/);
+assert.match(flowMediaCardSrc, /Official · cached/);
+assert.match(flowMediaCardSrc, /data-proof-quality=["']provisional-lab["']/);
+assert.match(flowMediaCardSrc, /Remake · your toy photo/);
+assert.match(flowMediaCardSrc, /provisionalLabQualityLabel/);
+assert.match(
   fs.readFileSync(join(root, "components/HomeViralPresetRail.tsx"), "utf8"),
   /AutoPlayVideo/
 );

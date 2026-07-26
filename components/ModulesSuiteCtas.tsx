@@ -77,12 +77,14 @@ export function ModulesSuiteCtas() {
       <Link
         href="/create"
         className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"
+        title="One owned toy photo → short listing or social clip"
       >
-        Video
+        Photo → Clip
       </Link>
       <Link
         href="/create?mode=seller-pack"
-        className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-white/55"
+        className="rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/10 px-4 py-2 text-xs font-bold text-[var(--mint)]"
+        title="Listing + reveal + hook from one photo"
       >
         Seller Pack
       </Link>
