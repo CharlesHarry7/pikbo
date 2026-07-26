@@ -384,6 +384,26 @@ export function getShowcaseProject(slug: string): ShowcaseProject | null {
   return projects.find((project) => project.slug === slug) ?? null;
 }
 
+/** Resolve Lab project by recipe slug (home wall / explore proof chips). */
+export function getShowcaseProjectByRecipe(
+  recipeSlug: string
+): ShowcaseProject | null {
+  return projects.find((project) => project.recipeSlug === recipeSlug) ?? null;
+}
+
+/**
+ * Phase G honesty chip: provisional Lab self-check ≥4/5, never claimed as
+ * external human QA. Null when recipe has no registry row or fails gate.
+ */
+export function provisionalLabQualityLabel(
+  recipeSlug: string | undefined | null
+): "Lab ≥4 · provisional" | null {
+  if (!recipeSlug) return null;
+  const project = getShowcaseProjectByRecipe(recipeSlug);
+  if (!project || !passesHomeProofQuality(project.qualityScores)) return null;
+  return "Lab ≥4 · provisional";
+}
+
 export function listShowcaseProjectSlugs(): string[] {
   return projects.map((project) => project.slug);
 }

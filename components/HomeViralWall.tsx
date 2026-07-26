@@ -6,6 +6,7 @@ import type { FeedItem } from "@/lib/videoFeed";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
 import { useI18n } from "@/components/LanguageProvider";
+import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /**
  * Dense toy video wall — browse first, then remake.
@@ -224,9 +225,25 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                     className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                  <span className="absolute left-2 top-2 rounded-full border border-[#c8ff3d]/40 bg-black/60 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#c8ff3d] backdrop-blur">
-                    Premiere
-                  </span>
+                  <div className="absolute left-2 top-2 flex max-w-[90%] flex-wrap gap-1">
+                    <span className="rounded-full border border-[#c8ff3d]/40 bg-black/60 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#c8ff3d] backdrop-blur">
+                      Premiere
+                    </span>
+                    {item.badge ? (
+                      <span className="rounded-full border border-white/15 bg-black/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/80 backdrop-blur">
+                        {item.badge}
+                      </span>
+                    ) : null}
+                    {provisionalLabQualityLabel(item.recipeSlug) ? (
+                      <span
+                        className="rounded-full border border-amber-200/25 bg-black/60 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur"
+                        title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
+                        data-proof-quality="provisional-lab"
+                      >
+                        Lab ≥4
+                      </span>
+                    ) : null}
+                  </div>
                   <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
                     <p className="line-clamp-2 text-xs font-black uppercase tracking-wide text-white sm:text-sm">
                       {item.title}
@@ -291,6 +308,26 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent opacity-90" />
                 <div className="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100 bg-[radial-gradient(circle_at_50%_80%,rgba(200,255,61,0.12),transparent_55%)]" />
+                <div className="pointer-events-none absolute left-1.5 top-1.5 z-[1] flex max-w-[92%] flex-wrap gap-0.5">
+                  {item.badge ? (
+                    <span className="rounded-full border border-white/10 bg-black/65 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur sm:text-[9px]">
+                      {item.badge}
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-white/10 bg-black/65 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/65 backdrop-blur sm:text-[9px]">
+                      Lab demo
+                    </span>
+                  )}
+                  {provisionalLabQualityLabel(item.recipeSlug) ? (
+                    <span
+                      className="rounded-full border border-amber-200/25 bg-black/65 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur sm:text-[9px]"
+                      title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
+                      data-proof-quality="provisional-lab"
+                    >
+                      Lab ≥4
+                    </span>
+                  ) : null}
+                </div>
               </Link>
 
               <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 p-2 sm:p-2.5">

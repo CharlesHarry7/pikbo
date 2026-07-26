@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Home proof Lab ≥4 provisional chips
+- `provisionalLabQualityLabel` / recipe lookup for wall + home project grid.
+- Premiere + dense wall + HfExploreHome show **Lab ≥4** (not external QA).
+- Smoke locks `data-proof-quality=provisional-lab`.
+
 ### 2026-07-26 — [grok] meClient cancel-refund rehydrate + Status/Settings
 - `MeFreeTrial.ledgerCancelRefund` preserved in `rehydrateFreeTrial` (default
   unconfirmed) so generate merges do not drop cancel honesty.

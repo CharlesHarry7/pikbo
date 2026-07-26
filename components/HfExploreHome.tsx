@@ -6,6 +6,7 @@ import type { DemoVideo } from "@/lib/demoVideos";
 import type { FeedItem } from "@/lib/videoFeed";
 import { getPreset } from "@/lib/presets";
 import {
+  passesHomeProofQuality,
   showcaseProjectAsDemo,
   showcaseProjectHref,
   showcaseRecipeHref,
@@ -299,6 +300,16 @@ export function HfExploreHome({
               <dt className="inline text-white/35">Mode · </dt>
               <dd className="inline">Cached Lab · not live</dd>
             </div>
+            <div>
+              <dt className="inline text-white/35">Quality · </dt>
+              <dd
+                className="inline"
+                title="Provisional Lab self-check · not external human QA"
+                data-proof-quality="provisional-lab"
+              >
+                Lab ≥4 · provisional
+              </dd>
+            </div>
           </dl>
           <div className="mt-7 flex flex-wrap gap-2">
             <Link
@@ -361,9 +372,20 @@ export function HfExploreHome({
                       className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                    <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#c8ff3d] ring-1 ring-white/10">
-                      Official example · cached
-                    </span>
+                    <div className="absolute left-2 top-2 flex max-w-[92%] flex-wrap gap-1">
+                      <span className="rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#c8ff3d] ring-1 ring-white/10">
+                        Official example · cached
+                      </span>
+                      {passesHomeProofQuality(project.qualityScores) ? (
+                        <span
+                          className="rounded-full border border-amber-200/25 bg-black/70 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-100/90 ring-1 ring-white/10"
+                          title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
+                          data-proof-quality="provisional-lab"
+                        >
+                          Lab ≥4
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="absolute inset-x-0 bottom-12 p-2 text-[11px] font-bold uppercase leading-tight tracking-wide sm:text-xs">
                       {project.title}
                     </p>

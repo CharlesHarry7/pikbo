@@ -952,6 +952,21 @@ assert.match(createStudio, /preserveRequestSettlementOnVersionRestore/);
 // canonical ShowcaseProject registry that powers homepage/videoFeed.
 const softLaunch = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
 assert.match(softLaunch, /HOME_PROOF_SLUGS/);
+
+// Phase G: provisional Lab ≥4 proof chips on home wall / explore home
+assert.match(
+  fs.readFileSync(join(root, "lib/showcaseProjects.ts"), "utf8"),
+  /provisionalLabQualityLabel|Lab ≥4 · provisional/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
+  /data-proof-quality=["']provisional-lab["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
+  /data-proof-quality=["']provisional-lab["']/
+);
+
 assert.match(softLaunch, /floating-hero/);
 assert.match(softLaunch, /mystery-box-reveal/);
 assert.match(softLaunch, /display-case-glam/);
