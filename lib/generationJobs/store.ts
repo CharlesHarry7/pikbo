@@ -891,16 +891,21 @@ export function applyProviderWebhookEvent(input: {
     };
   }
 
+  const failCode = input.errorCode || input.status.toUpperCase();
   const next = updateJob(job.id, {
     status: input.status === "canceled" ? "canceled" : "failed",
     error: input.error || `Provider ${input.status}`,
-    errorCode: input.errorCode || input.status.toUpperCase(),
+    errorCode: failCode,
     videoUrl: undefined,
     // Provider cancel/fail via webhook never invents a confirmed refund.
+    // Ambiguous debit codes stamp refund unconfirmed (failSync parity).
     creditsOutcome:
       input.status === "canceled"
         ? "refund unconfirmed"
-        : job.creditsOutcome,
+        : failedLedgerCreditsOutcome({
+            creditsRefunded: job.creditsRefunded,
+            errorCode: failCode,
+          }) ?? job.creditsOutcome,
     creditsRefunded:
       input.status === "canceled" ? undefined : job.creditsRefunded,
   });

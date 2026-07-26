@@ -297,7 +297,7 @@ export function classifyDownloadHead(opts: {
         "Session job not on this server process — try remake or open Library recovery",
     };
   }
-  if (code === "CANCELED") {
+  if (code === "CANCELED" || code === "REQUEST_CANCELED") {
     return {
       kind: "block",
       message:
@@ -317,7 +317,39 @@ export function classifyDownloadHead(opts: {
         "Job timed out — no file. Check balance (refund may be unconfirmed).",
     };
   }
-  if (code === "GENERATION_FAILED") {
+  // Terminal fail codes must run BEFORE generic 409/NOT_READY — downloads gate
+  // returns 409 for most failed jobs, which used to toast "not ready" dishonestly.
+  if (code === "PROVIDER_NETWORK") {
+    return {
+      kind: "block",
+      message:
+        "Provider network failed — no file. Check balance (refund may be unconfirmed).",
+    };
+  }
+  if (code === "CONTENT_POLICY") {
+    return {
+      kind: "block",
+      message:
+        "Provider rejected content — no file. Check balance if debit is unconfirmed.",
+    };
+  }
+  if (code === "MODEL_EMPTY") {
+    return {
+      kind: "block",
+      message:
+        "Provider returned empty media — no file. Check balance if debit is unconfirmed.",
+    };
+  }
+  if (status === 422 || code === "UNSAFE_URL") {
+    return {
+      kind: "block",
+      message: "Unsafe deliverable URL — download blocked",
+    };
+  }
+  if (
+    code === "GENERATION_FAILED" ||
+    isAmbiguousDebitFailureCode(code)
+  ) {
     return {
       kind: "block",
       message:
@@ -328,12 +360,6 @@ export function classifyDownloadHead(opts: {
     return {
       kind: "block",
       message: "Deliverable not ready yet — refresh or remake",
-    };
-  }
-  if (status === 422 || code === "UNSAFE_URL") {
-    return {
-      kind: "block",
-      message: "Unsafe deliverable URL — download blocked",
     };
   }
   if (status >= 200 && status < 300) {

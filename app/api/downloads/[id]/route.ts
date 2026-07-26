@@ -94,10 +94,19 @@ function gateDownload(
       const code =
         job.errorCode === "TIMEOUT" || job.errorCode === "PROVIDER_TIMEOUT"
           ? "TIMEOUT"
-          : job.errorCode || "GENERATION_FAILED";
+          : job.errorCode === "PROVIDER_NETWORK"
+            ? "PROVIDER_NETWORK"
+            : job.errorCode || "GENERATION_FAILED";
+      // Honest HTTP: timeout 504 · provider blip 503 · other terminal fails 409.
+      const status =
+        code === "TIMEOUT" || code === "PROVIDER_TIMEOUT"
+          ? 504
+          : code === "PROVIDER_NETWORK"
+            ? 503
+            : 409;
       return {
         ok: false,
-        status: code === "TIMEOUT" || code === "PROVIDER_TIMEOUT" ? 504 : 409,
+        status,
         body: {
           ok: false,
           code,
@@ -107,6 +116,9 @@ function gateDownload(
           status: job.status,
           creditsOutcome: job.creditsOutcome,
           creditsRefunded: job.creditsRefunded,
+          ...(job.creditsOutcome === "refund unconfirmed"
+            ? { refundUnconfirmed: true }
+            : {}),
         },
       };
     }
@@ -203,12 +215,19 @@ export async function HEAD(_req: Request, { params }: Props) {
       typeof gate.body.code === "string" ? gate.body.code : "BLOCKED";
     const jobStatus =
       typeof gate.body.status === "string" ? gate.body.status : "";
+    const creditsOutcome =
+      typeof gate.body.creditsOutcome === "string"
+        ? gate.body.creditsOutcome
+        : "";
     return new NextResponse(null, {
       status: gate.status,
       headers: {
         "X-Pikbo-Download": "blocked",
         "X-Pikbo-Download-Code": code,
         ...(jobStatus ? { "X-Pikbo-Job-Status": jobStatus } : {}),
+        ...(creditsOutcome
+          ? { "X-Pikbo-Credits-Outcome": creditsOutcome }
+          : {}),
         "X-Pikbo-T6": t6.freeLiveRawDownload,
         "Cache-Control": "no-store",
       },

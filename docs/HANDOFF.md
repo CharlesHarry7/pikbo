@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Download HEAD fail-code honesty
+- `classifyDownloadHead`: terminal fail codes (PROVIDER_NETWORK · CONTENT_POLICY ·
+  MODEL_EMPTY · UNSAFE_URL · cancel) evaluated **before** generic 409/NOT_READY
+  so Library/Create no longer toast “not ready” on failed jobs.
+- `/api/downloads` failed gate: PROVIDER_NETWORK → 503; HEAD echoes
+  `X-Pikbo-Credits-Outcome` when present.
+- Webhook provider fail applies `failedLedgerCreditsOutcome` (failSync parity).
+- Smoke: pure 409+PROVIDER_NETWORK → network message (not not-ready).
+
 ### 2026-07-27 — [grok] Fail ledger refund-unconfirmed parity
 - `failedLedgerCreditsOutcome` + `isAmbiguousDebitFailureCode` in createTrust.
 - generate failSync/recordFailed + image failImageJob stamp refund unconfirmed

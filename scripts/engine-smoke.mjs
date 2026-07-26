@@ -4822,5 +4822,83 @@ assert.match(
   /code === ["']MODEL_EMPTY["'] && !creditsRefunded/
 );
 
+// Download HEAD: terminal fail codes must not toast "not ready" (409 trap)
+function classifyDownloadHeadPure(opts) {
+  const code = (opts.code || "").trim();
+  const status = opts.status;
+  if (status === 403 || code === "DOWNLOAD_BLOCKED") {
+    return { kind: "block", message: "t6" };
+  }
+  if (status === 404 || code === "NOT_FOUND") {
+    return { kind: "not_found", message: "miss" };
+  }
+  if (code === "CANCELED" || code === "REQUEST_CANCELED") {
+    return { kind: "block", message: "canceled" };
+  }
+  if (code === "JOB_IN_FLIGHT") {
+    return { kind: "block", message: "inflight" };
+  }
+  if (code === "TIMEOUT" || code === "PROVIDER_TIMEOUT" || status === 504) {
+    return { kind: "block", message: "timeout" };
+  }
+  if (code === "PROVIDER_NETWORK") {
+    return { kind: "block", message: "network" };
+  }
+  if (code === "CONTENT_POLICY") {
+    return { kind: "block", message: "policy" };
+  }
+  if (code === "MODEL_EMPTY") {
+    return { kind: "block", message: "empty" };
+  }
+  if (status === 422 || code === "UNSAFE_URL") {
+    return { kind: "block", message: "unsafe" };
+  }
+  if (code === "GENERATION_FAILED") {
+    return { kind: "block", message: "failed" };
+  }
+  if (status === 409 || code === "NOT_READY") {
+    return { kind: "block", message: "not-ready" };
+  }
+  if (status >= 200 && status < 300) return { kind: "allow" };
+  return { kind: "unknown" };
+}
+assert.equal(
+  classifyDownloadHeadPure({ status: 409, code: "PROVIDER_NETWORK" }).message,
+  "network"
+);
+assert.equal(
+  classifyDownloadHeadPure({ status: 409, code: "CONTENT_POLICY" }).message,
+  "policy"
+);
+assert.equal(
+  classifyDownloadHeadPure({ status: 409, code: "MODEL_EMPTY" }).message,
+  "empty"
+);
+assert.equal(
+  classifyDownloadHeadPure({ status: 409, code: "NOT_READY" }).message,
+  "not-ready"
+);
+assert.equal(
+  classifyDownloadHeadPure({ status: 409, code: "JOB_IN_FLIGHT" }).message,
+  "inflight"
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /Terminal fail codes must run BEFORE generic 409|PROVIDER_NETWORK[\s\S]{0,200}NOT_READY/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/downloads/[id]/route.ts"), "utf8"),
+  /PROVIDER_NETWORK[\s\S]{0,80}503|code === ["']PROVIDER_NETWORK["'][\s\S]{0,40}503/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/downloads/[id]/route.ts"), "utf8"),
+  /X-Pikbo-Credits-Outcome/
+);
+// Webhook fail path uses failedLedgerCreditsOutcome (not silent undefined)
+assert.match(
+  fs.readFileSync(join(root, "lib/generationJobs/store.ts"), "utf8"),
+  /applyProviderWebhookEvent[\s\S]{0,2500}failedLedgerCreditsOutcome|failedLedgerCreditsOutcome[\s\S]{0,400}webhook/
+);
+
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node
