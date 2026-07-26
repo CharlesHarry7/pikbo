@@ -78,7 +78,7 @@ if [[ "$gens_head" != "200" ]]; then
   echo "FAIL HEAD /api/generations → HTTP ${gens_head}"
   exit 1
 fi
-echo "OK   HEAD /api/generations → ${gens_head} open=$(grep -i '^X-Pikbo-Jobs-Open:' /tmp/pikbo-gens.headers | tr -d '\r' | awk '{print $2}') total=$(grep -i '^X-Pikbo-Jobs:' /tmp/pikbo-gens.headers | tr -d '\r' | awk '{print $2}')"
+echo "OK   HEAD /api/generations → ${gens_head} open=$(grep -i '^X-Pikbo-Jobs-Open:' /tmp/pikbo-gens.headers | tr -d '\r' | awk '{print $2}') total=$(grep -i '^X-Pikbo-Jobs:' /tmp/pikbo-gens.headers | tr -d '\r' | awk '{print $2}') canceled=$(grep -i '^X-Pikbo-Jobs-Canceled:' /tmp/pikbo-gens.headers | tr -d '\r' | awk '{print $2}')"
 
 # HEAD /api/image — still ledger open count (TIMEOUT sweep honesty)
 img_head=$(curl --noproxy '*' -sS -D /tmp/pikbo-img.headers -o /dev/null -w "%{http_code}" -m 10 -I "${BASE}/api/image" || echo "000")
@@ -86,7 +86,7 @@ if [[ "$img_head" != "200" ]]; then
   echo "FAIL HEAD /api/image → HTTP ${img_head}"
   exit 1
 fi
-echo "OK   HEAD /api/image → ${img_head} open=$(grep -i '^X-Pikbo-Image-Jobs-Open:' /tmp/pikbo-img.headers | tr -d '\r' | awk '{print $2}') total=$(grep -i '^X-Pikbo-Image-Jobs:' /tmp/pikbo-img.headers | tr -d '\r' | awk '{print $2}')"
+echo "OK   HEAD /api/image → ${img_head} open=$(grep -i '^X-Pikbo-Image-Jobs-Open:' /tmp/pikbo-img.headers | tr -d '\r' | awk '{print $2}') total=$(grep -i '^X-Pikbo-Image-Jobs:' /tmp/pikbo-img.headers | tr -d '\r' | awk '{print $2}') canceled=$(grep -i '^X-Pikbo-Image-Jobs-Canceled:' /tmp/pikbo-img.headers | tr -d '\r' | awk '{print $2}')"
 
 # HEAD community UGC configured flag
 comm_head=$(curl --noproxy '*' -sS -D /tmp/pikbo-comm.headers -o /dev/null -w "%{http_code}" -m 10 -I "${BASE}/api/community/posts" || echo "000")
@@ -115,6 +115,27 @@ mode=h.get("mode","?")
 fal=h.get("fal")
 ready=h.get("ready") or {}
 print(f"health mode={mode} fal={fal} foundation={h.get('foundation')} ready={ready}")
+
+# Cancel ledger honesty (Phase D): byStatus must expose canceled (even if 0)
+jobs_probe = h.get("jobs") or {}
+bs = jobs_probe.get("byStatus") or {}
+if jobs_probe.get("mode") == "local-memory" and "canceled" not in bs and jobs_probe.get("count", 0) >= 0:
+    # empty ledger still returns zeroed histogram from generationJobsProbe
+    if bs is not None and len(bs) > 0 and "canceled" not in bs:
+        raise SystemExit("FAIL health.jobs.byStatus missing canceled key")
+    if not bs and jobs_probe.get("count") is not None:
+        # probe always returns full byStatus — warn if absent entirely
+        if "byStatus" not in jobs_probe:
+            print("WARN health.jobs.byStatus missing")
+        else:
+            print("jobs.byStatus.canceled present check skipped (empty hist)")
+elif "canceled" in bs:
+    print(f"jobs.byStatus.canceled={bs.get('canceled')}")
+img_probe = h.get("imageJobs") or {}
+ibs = img_probe.get("byStatus") or {}
+if "canceled" in ibs:
+    print(f"imageJobs.byStatus.canceled={ibs.get('canceled')}")
+
 # Phase B: default critical-path accepts *demo-cached* readiness without secrets.
 # Soft-live strict mode only when REQUIRE_SOFT_LIVE=1.
 require_soft = os.environ.get("REQUIRE_SOFT_LIVE") == "1"

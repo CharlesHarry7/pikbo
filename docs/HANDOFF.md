@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Cancel ops honesty + pack child idempotency
+- Webhook cancel stamps `creditsOutcome: refund unconfirmed` (never invent restore).
+- Seller Pack: per-child `idempotencyKey` so abort cancel hits the right ledger row.
+- critical-path HEAD prints Jobs/Image canceled; mode-a requires jobs.byStatus.canceled.
+- Lint: drop unused `primary` in for/toys SEO metadata.
+- Verified: typecheck · engine-smoke · lint 0 errors.
+
 ### 2026-07-26 — [grok] StatusProbe byStatus canceled honesty
 - Session + still ledgers show ok/fail/canceled from health `byStatus`.
 - Video row tagged process-memory; image keeps Flux idempotency note.

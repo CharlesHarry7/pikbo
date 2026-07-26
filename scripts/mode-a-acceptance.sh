@@ -65,6 +65,18 @@ if jobs:
     print(f"jobs count={jobs.get('count')} mode={jobs.get('mode')} open={jobs.get('open')} byStatus={jobs.get('byStatus')}")
     if "byStatus" not in jobs and jobs.get("mode") == "local-memory":
         print("WARN health.jobs.byStatus missing — preferred after jobId/probe ship")
+    bs = jobs.get("byStatus") or {}
+    if jobs.get("mode") == "local-memory" and bs and "canceled" not in bs:
+        sys.exit("FAIL health.jobs.byStatus must include canceled (cancel ledger honesty)")
+    if "canceled" in bs:
+        print(f"jobs.byStatus.canceled={bs.get('canceled')}")
+image_jobs = h.get("imageJobs") or {}
+if image_jobs:
+    ibs = image_jobs.get("byStatus") or {}
+    print(f"imageJobs total={image_jobs.get('total')} open={image_jobs.get('open')} byStatus={ibs}")
+    if ibs and "canceled" not in ibs and image_jobs.get("total", 0) > 0:
+        # byStatus only has keys that appeared — empty canceled ok when no canceled jobs
+        print("imageJobs.byStatus (sparse keys ok for still ledger)")
 product=h.get("product") or {}
 if product:
     print(f"product primary={product.get('primary')} stills={product.get('stills')}")

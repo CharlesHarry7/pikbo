@@ -2514,6 +2514,27 @@ assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /setFailCreditState\(["']refund unconfirmed["']\)/
 );
+// Webhook cancel stamps refund unconfirmed (never invent restore)
+assert.match(genJobsStore, /Canceled by provider[\s\S]{0,120}refund unconfirmed|status === "canceled"[\s\S]{0,200}refund unconfirmed/);
+// Seller Pack child idempotency for abort cancel targeting
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /idempotencyKey:\s*childIdempotencyKey|pack:\$\{projectId\}/
+);
+// Ops scripts surface canceled HEAD counters
+assert.match(
+  fs.readFileSync(join(root, "scripts/critical-path.sh"), "utf8"),
+  /X-Pikbo-Jobs-Canceled|Jobs-Canceled/
+);
+assert.match(
+  fs.readFileSync(join(root, "scripts/critical-path.sh"), "utf8"),
+  /X-Pikbo-Image-Jobs-Canceled|Image-Jobs-Canceled/
+);
+assert.match(
+  fs.readFileSync(join(root, "scripts/mode-a-acceptance.sh"), "utf8"),
+  /byStatus\.canceled|canceled key/
+);
+
 
 assert.match(genJobIdRoute, /export async function DELETE/);
 const assetContent = fs.readFileSync(
