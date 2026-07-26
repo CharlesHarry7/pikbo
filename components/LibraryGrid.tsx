@@ -106,7 +106,10 @@ function SessionJobsPanel({
       : null;
 
   return (
-    <section className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <section
+      className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+      data-library-panel="session-jobs"
+    >
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <p className="text-[10px] font-black uppercase tracking-wider text-[var(--fg-dim)]">
@@ -116,12 +119,28 @@ function SessionJobsPanel({
                 · {open} open
               </span>
             ) : null}
+            {meta.mode ? (
+              <span className="ml-1.5 font-semibold text-white/40">
+                · {meta.mode}
+                {meta.mode.includes("local") || meta.mode.includes("memory")
+                  ? " · not durable cloud"
+                  : ""}
+              </span>
+            ) : (
+              <span className="ml-1.5 font-semibold text-white/40">
+                · process-memory · not durable cloud
+              </span>
+            )}
           </p>
           <p className="mt-1 text-xs text-[var(--fg-muted)]">
             Local ledger from Generate (not multi-node cloud). Device Library
-            below is this browser only — empty until a clip is saved here.
-            Cancel marks the ledger only; in-flight fal may still finish.
-            TIMEOUT rows show refund unconfirmed (check balance) — not a confirmed restore.
+            below is{" "}
+            <span className="font-semibold text-[var(--mint)]">
+              Saved on this device
+            </span>{" "}
+            only — empty until a clip is saved here. Cancel marks the ledger
+            only; in-flight fal may still finish. TIMEOUT rows show refund
+            unconfirmed (check balance) — not a confirmed restore.
             {timeoutMin ? (
               <span className="text-[var(--fg-dim)]">
                 {" "}
@@ -612,10 +631,40 @@ export function LibraryGrid() {
     );
   }
 
+  const stickyCta = (
+    <div
+      className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+      data-library-sticky="mobile"
+    >
+      <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
+        {items.length > 0
+          ? `${items.length} clip${items.length === 1 ? "" : "s"} · Saved on this device`
+          : "Saved on this device · not multi-device cloud"}
+        {sessionMeta.open > 0 ? ` · ${sessionMeta.open} session open` : ""}
+      </p>
+      <div className="flex gap-2">
+        <Link
+          href="/create"
+          className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
+          data-library-action="generate"
+        >
+          Generate
+        </Link>
+        <Link
+          href="/create?mode=seller-pack"
+          className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm"
+          data-library-action="seller-pack"
+        >
+          Seller Pack
+        </Link>
+      </div>
+    </div>
+  );
+
   // Device history empty: still surface process-memory session jobs (Phase D recovery).
   if (items.length === 0) {
     return (
-      <div className="mt-6" id="library-assets">
+      <div className="mt-6 pb-36 lg:pb-0" id="library-assets" data-library-state="empty">
         <LibraryStorageBanner
           deviceCount={0}
           sessionOpen={sessionMeta.open}
@@ -645,26 +694,26 @@ export function LibraryGrid() {
                   <span className="font-semibold text-[var(--mint)]">
                     {PROVENANCE.localLibrary}
                   </span>{" "}
-                  when storage allows — not cloud-synced.
+                  (
+                  <span className="font-semibold text-white/80">
+                    Saved on this device
+                  </span>
+                  ) when storage allows — not cloud-synced.
                 </>
               ) : (
                 <>
-                  {PROVENANCE.localLibrary} · this device only. One photo → job
-                  (Etsy spin, TikTok hook, reveal) → generate → optional
-                  Community publish when signed in.
+                  {PROVENANCE.localLibrary} ·{" "}
+                  <span className="font-semibold text-[var(--mint)]">
+                    Saved on this device
+                  </span>
+                  . One photo → recipe → generate. Cloud multi-device assets
+                  wait on durable storage.
                 </>
               )}
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              <FreeTrialCta
-                path="/library"
-                variant="mint"
-                labelTry="▶ Free sample · Mini 5s"
-                labelDemo="▶ Lab sample · free"
-                labelPlans="Compare plans"
-              />
-              <Link href="/modules" className="btn btn-ghost text-sm">
-                Toy Modules
+              <Link href="/create" className="btn btn-primary text-sm">
+                Generate · upload toy photo
               </Link>
               <Link
                 href="/create?mode=seller-pack"
@@ -672,8 +721,15 @@ export function LibraryGrid() {
               >
                 Seller Pack · 3 outputs
               </Link>
-              <Link href="/flow" className="btn btn-ghost text-sm">
-                Browse Flow
+              <FreeTrialCta
+                path="/library"
+                variant="ghost"
+                labelTry="▶ Free sample · Mini 5s"
+                labelDemo="▶ Lab sample · free"
+                labelPlans="Compare plans"
+              />
+              <Link href="/modules" className="btn btn-ghost text-sm">
+                Toy Modules
               </Link>
             </div>
             <p className="mt-4 max-w-xs text-[10px] text-[var(--fg-dim)]">
@@ -682,12 +738,24 @@ export function LibraryGrid() {
             </p>
           </div>
         </div>
+        {stickyCta}
       </div>
     );
   }
 
   return (
-    <div className="mt-6" id="library-assets">
+    <div
+      className="mt-6 pb-36 lg:pb-0"
+      id="library-assets"
+      data-library-state="filled"
+    >
+      <p
+        className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/[0.08] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]"
+        data-library-label="device-local"
+      >
+        Saved on this device · {items.length} clip
+        {items.length === 1 ? "" : "s"} · not multi-device cloud
+      </p>
       <LibraryStorageBanner
         deviceCount={items.length}
         sessionOpen={sessionMeta.open}
@@ -737,7 +805,7 @@ export function LibraryGrid() {
             <option value="flat">Flat list</option>
           </select>
           <span className="text-[10px] text-[var(--fg-dim)]">
-            {filtered.length} / {items.length} · this browser only
+            {filtered.length} / {items.length} · Saved on this device
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -1061,6 +1129,7 @@ export function LibraryGrid() {
           No saved results match this filter
         </p>
       )}
+      {stickyCta}
     </div>
   );
 }

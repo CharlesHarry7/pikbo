@@ -1327,11 +1327,29 @@ assert.match(
 // Library honesty: HF Assets IA + device-local labels (banner, not raw page string)
 assert.match(
   fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /LibraryStorageBanner|LibraryGrid|device-local|this browser|local storage/i
+  /LibraryStorageBanner|LibraryGrid|device-local|this browser|local storage|Saved on this device/i
 );
 assert.match(
   fs.readFileSync(join(root, "components/LibraryStorageBanner.tsx"), "utf8"),
-  /device-local|this browser|export JSON|no fake multi-device/i
+  /device-local|this browser|export JSON|no fake multi-device|Saved on this device/i
+);
+// Library Phase F first-run: sticky Generate/Seller Pack + device-local honesty
+const libraryFirstRun = fs.readFileSync(
+  join(root, "components/LibraryGrid.tsx"),
+  "utf8"
+);
+assert.match(libraryFirstRun, /data-library-sticky="mobile"/);
+assert.match(libraryFirstRun, /data-library-action="generate"/);
+assert.match(libraryFirstRun, /data-library-action="seller-pack"/);
+assert.match(libraryFirstRun, /data-library-state="empty"/);
+assert.match(libraryFirstRun, /data-library-state="filled"/);
+assert.match(libraryFirstRun, /data-library-label="device-local"/);
+assert.match(libraryFirstRun, /data-library-panel="session-jobs"/);
+assert.match(libraryFirstRun, /Saved on this device/);
+assert.match(libraryFirstRun, /not durable cloud|not multi-device cloud/);
+assert.match(
+  fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
+  /Saved on this device/
 );
 assert.match(
   fs.readFileSync(
@@ -2044,6 +2062,56 @@ assert.doesNotMatch(
 );
 // Download redirect safety
 assert.match(createTrust, /export function isSafeDeliverableUrl/);
+// Free live generate success must not echo raw provider URLs (T6 honesty)
+assert.match(createTrust, /export function customerFacingGenerateVideoUrl/);
+assert.match(createTrust, /export function isPlayableResultVideoUrl/);
+assert.match(genRoute, /customerFacingGenerateVideoUrl/);
+assert.match(
+  genRoute,
+  /Free live provider output stays server-only|Never expose the raw Free provider/
+);
+// Pure helper parity (mirrors createTrust)
+function customerFacingGenerateVideoUrl(opts) {
+  if (opts.demo || !opts.watermark) return opts.videoUrl;
+  const id = (opts.jobId || "").trim();
+  if (!id) return "/api/downloads/unavailable";
+  return `/api/downloads/${encodeURIComponent(id)}`;
+}
+assert.equal(
+  customerFacingGenerateVideoUrl({
+    demo: true,
+    watermark: true,
+    jobId: "job_1",
+    videoUrl: "/demos/orbit-dance.mp4",
+  }),
+  "/demos/orbit-dance.mp4"
+);
+assert.equal(
+  customerFacingGenerateVideoUrl({
+    demo: false,
+    watermark: false,
+    jobId: "job_paid",
+    videoUrl: "https://cdn.example/paid.mp4",
+  }),
+  "https://cdn.example/paid.mp4"
+);
+assert.equal(
+  customerFacingGenerateVideoUrl({
+    demo: false,
+    watermark: true,
+    jobId: "job_free",
+    videoUrl: "https://fal.media/raw.mp4",
+  }),
+  "/api/downloads/job_free"
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /\/api\/downloads\/|customerFacing|watermark/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
+  /isPlayableResultVideoUrl|Free live held for T6/
+);
 const downloadRouteSrc = fs.readFileSync(
   join(root, "app/api/downloads/[id]/route.ts"),
   "utf8"

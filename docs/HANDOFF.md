@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Library first-run + device-local honesty (Phase F)
+- Sticky mobile CTA: Generate · Seller Pack; clip count + “Saved on this device”.
+- Empty state product-first (Generate/Seller before Lab); filled chip labels
+  device-local only. Session jobs panel shows process-memory · not durable cloud.
+- Storage banner + page copy use exact “Saved on this device”; smoke locks
+  data-library-* markers.
+
 ### 2026-07-26 — [grok] Create first-run order + plain /create remix honesty
 - Create: recipe chips before Lab samples; Toy Identity only under Advanced.
 - `hasRemixSearchParams` — empty /create is not an implicit PRESETS[0] remix.

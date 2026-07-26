@@ -32,31 +32,29 @@ export default function LibraryPage() {
               Your clips
             </h1>
             <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
-              HF-style asset shelf for designer toys: group by project or SKU ·
+              Device asset shelf for designer toys: group by project or SKU ·
               remake into Generate · publish live results to Community when
               signed in. Storage is{" "}
               <span className="font-semibold text-[var(--mint)]">
-                this device + session ledger
+                Saved on this device
               </span>{" "}
-              until multi-device cloud ships — we never claim fake sync.
+              plus a process-memory session ledger — never multi-device cloud
+              until durable assets ship.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="hidden flex-wrap items-center gap-2 sm:flex">
             <Link href="/create" className="btn btn-primary text-sm">
               Generate
-            </Link>
-            <FreeTrialCta path="/library" variant="ghost" />
-            <Link href="/community" className="btn btn-ghost text-sm">
-              Community
-            </Link>
-            <Link href="/flow" className="btn btn-ghost text-sm">
-              Flow
             </Link>
             <Link
               href="/create?mode=seller-pack"
               className="btn btn-ghost text-sm"
             >
               Seller Pack
+            </Link>
+            <FreeTrialCta path="/library" variant="ghost" />
+            <Link href="/community" className="btn btn-ghost text-sm">
+              Community
             </Link>
           </div>
         </div>
