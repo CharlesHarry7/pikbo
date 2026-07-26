@@ -2218,6 +2218,8 @@ assert.match(createTrust, /export function isSafeDeliverableUrl/);
 assert.match(createTrust, /export function customerFacingGenerateVideoUrl/);
 assert.match(createTrust, /export function isPlayableResultVideoUrl/);
 assert.match(createTrust, /export function isPublicCommunityVideoUrl/);
+assert.match(createTrust, /export function isSessionGatedDownloadUrl/);
+assert.match(createTrust, /export function publicShareableVideoUrl/);
 assert.match(genRoute, /customerFacingGenerateVideoUrl/);
 // Pure community public URL parity
 function isPublicCommunityVideoUrl(url) {
@@ -2239,6 +2241,44 @@ assert.equal(isPublicCommunityVideoUrl("https://cdn.example/v.mp4"), true);
 assert.equal(isPublicCommunityVideoUrl("/api/downloads/job_1"), false);
 assert.equal(isPublicCommunityVideoUrl("/demos/orbit-dance.mp4"), false);
 assert.equal(isPublicCommunityVideoUrl("javascript:alert(1)"), false);
+// Pure share-link honesty: session gate never portable; relative demos need origin
+function isSessionGatedDownloadUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  return t.startsWith("/api/downloads/") || t.includes("/api/downloads/");
+}
+function publicShareableVideoUrl(url, origin) {
+  if (!url || typeof url !== "string") return null;
+  const t = url.trim();
+  if (!t || t.length > 2000) return null;
+  if (isSessionGatedDownloadUrl(t)) return null;
+  if (t.startsWith("/") && !t.startsWith("//")) {
+    const o = (origin || "").replace(/\/$/, "");
+    if (!o || !/^https?:\/\//i.test(o)) return null;
+    return `${o}${t}`;
+  }
+  if (/^https?:\/\//i.test(t)) {
+    try {
+      const u = new URL(t);
+      if (!u.hostname || u.username || u.password) return null;
+      return t;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+assert.equal(isSessionGatedDownloadUrl("/api/downloads/job_1"), true);
+assert.equal(publicShareableVideoUrl("/api/downloads/job_1", "https://pikbo.ai"), null);
+assert.equal(
+  publicShareableVideoUrl("/demos/orbit-dance.mp4", "https://pikbo.ai"),
+  "https://pikbo.ai/demos/orbit-dance.mp4"
+);
+assert.equal(publicShareableVideoUrl("/demos/x.mp4"), null);
+assert.equal(
+  publicShareableVideoUrl("https://cdn.example/v.mp4", "https://pikbo.ai"),
+  "https://cdn.example/v.mp4"
+);
 assert.match(
   fs.readFileSync(join(root, "lib/communityPosts.ts"), "utf8"),
   /isPublicCommunityVideoUrl/
@@ -2600,14 +2640,15 @@ assert.doesNotMatch(
   library,
   /Open result[\s\S]{0,120}href=\{\s*item\.requestId/
 );
-// downloadVideoFile: never window.open controlled /api/downloads on fetch fail
+// downloadVideoFile: HEAD block/JSON → blocked; HEAD allow + CORS may open gate
 const historyLibSrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historyLibSrc, /downloadVideoFile|classifyDownloadHead/);
 assert.match(historyLibSrc, /return ["']blocked["']/);
+assert.match(historyLibSrc, /gateHeadAllowed/);
 assert.ok(
   historyLibSrc.includes("/api/downloads/") &&
     historyLibSrc.includes('return "blocked"'),
-  "downloadVideoFile must block /api/downloads open-on-fail"
+  "downloadVideoFile must block /api/downloads when HEAD refuses"
 );
 // Reject JSON/text Content-Type so gate error bodies never save as .mp4
 assert.match(
@@ -2624,6 +2665,10 @@ assert.match(batchStudio, /downloadVideoFile/);
 assert.match(createStudio, /downloads_api_blob|downloadVideoFile\(gateUrl/);
 assert.match(library, /downloads_api_blob|downloadVideoFile\(gateUrl/);
 assert.match(landingTool, /downloads_api_blob|downloadVideoFile\(gateUrl/);
+// Copy/Share: never present session-gated /api/downloads as a public link
+assert.match(createStudio, /publicShareableVideoUrl/);
+assert.match(createStudio, /isSessionGatedDownloadUrl|Session download only/);
+assert.match(library, /publicShareableVideoUrl/);
 assert.doesNotMatch(
   createStudio,
   /window\.open\(\s*gateUrl/

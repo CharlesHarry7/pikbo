@@ -134,7 +134,8 @@
 93. [x] T5 server-owned jobs hard-false on health · Community public URL gate · project product-first
 94. [x] CD Phase A: Creative Director narrative + product-first suite exits · JobIntentBar goals all viewports
 95. [x] All surfaces blob-download gate (no window.open JSON tabs) · Content-Type guard
-96. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+96. [x] Share/copy session-gate honesty + HEAD-allow download open fallback
+97. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -148,9 +149,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- All surfaces blob-download /api/downloads (Create/Landing/Library/Pack) — no JSON tabs.
-- downloadVideoFile rejects application/json · text/*; smoke locks no window.open(gateUrl).
+- Share/copy refuse session /api/downloads as public links; demos origin-absolute.
+- downloadVideoFile: HEAD allow + CORS may open gate; HEAD block/JSON still blocked.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 
