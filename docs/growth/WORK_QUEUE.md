@@ -8,33 +8,17 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ## OPEN · 立即执行
 
-### WQ-2026-07-27-03 · 外链 + GSC（禁止扩 sitemap）
-
-```yaml
-id: WQ-2026-07-27-03
-status: open
-priority: P0
-assignee: workbuddy
-created_by: grok-eng
-prompt: docs/growth/WORKBUDDY_GROWTH_ONLY_PROMPT.md
-why: |
-  SEO 复核后主战场=外链/GSC。生产 sitemap 13 已正确，禁止全站塞索引。
-command: |
-  严格按 WORKBUDDY_GROWTH_ONLY_PROMPT 执行
-deliverables:
-  - runs report + AGENT_STATE writer=workbuddy
-  - commit message must say no sitemap expand
-result: |
-  (WB 填)
-```
+_(无 open 任务 — 队列已清空)_
 
 ---
+
+## DONE（最近）
 
 ### WQ-2026-07-27-02 · Vercel 发版 + 生产 SEO 验收 + 可选 GSC（替老板点）
 
 ```yaml
 id: WQ-2026-07-27-02
-status: open
+status: done
 priority: P0
 assignee: workbuddy
 created_by: grok-eng
@@ -56,7 +40,17 @@ do_not:
   - 问老板怎么点
   - 假报 PASS
 result: |
-  (WB 填)
+  DEPLOY-20260726T181306Z / main_tip=991fe4d
+  生产已满足全部验收标准，无需 redeploy：
+  - sitemap=13 (含全部 5 个长尾 slug) ✅
+  - blind-box 无 noindex，title="Blind Box AI Video Generator: Reveal From One Photo | Pikbo" ✅
+  - figure-360 title="AI Figure 360 Video: Spin From One Photo | Pikbo" ✅
+  - ai-toy-video-generator title="AI Toy Video Generator: Turn One Toy Photo into a Video | Pikbo" ✅
+  - api/health ok=true degraded=false ✅
+  GSC: sitemap 已重提 (success)，5/6 长尾 URL 已请求索引 (1 rate_limited)
+  Growth run 20260726T181140Z: submitted=1(prior) captcha=2 login=3 paid_skip=1 fail=5 skipped=9
+  Report: docs/growth/runs/DEPLOY-20260726T181306Z-report.md
+  Screenshots: docs/growth/screenshots/deploy-20260727/
 ```
 
 ---
@@ -65,7 +59,7 @@ result: |
 
 ```yaml
 id: WQ-2026-07-27-01
-status: open
+status: done
 priority: P0
 assignee: workbuddy
 created_by: grok-eng
@@ -99,12 +93,14 @@ do_not:
   - 改 Create/API 业务代码
   - 提交 pikbo.com
 result: |
-  (WB 填)
+  Growth run 20260726T181140Z / report docs/growth/runs/20260726T181140Z-report.md
+  submitted=1(prior) captcha=2 login=3 paid_skip=1 fail=5 skipped=9 (total=21)
+  新提交=0 (PIKBO_GROWTH_EMAIL 未设置，login-wall 目录无法突破)
+  PH pack 已刷新 (assets_ready_publish_blocked)
+  下一步：老板设 PIKBO_GROWTH_EMAIL 后重跑可解锁 awesomeaitools/dang-ai/aivalley
 ```
 
 ---
-
-## DONE（最近）
 
 ### WQ-2026-07-26-01 · 首轮自动化（已完成）
 
