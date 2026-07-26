@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { isSafeDeliverableUrl } from "@/lib/createTrust";
+import {
+  isPublicCommunityVideoUrl,
+  isSafeDeliverableUrl,
+  isSessionGatedDownloadUrl,
+} from "@/lib/createTrust";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import { useToast } from "@/components/Toast";
 import { track } from "@/lib/analytics";
@@ -58,14 +62,19 @@ export function CommunityPublishButton({
   }
 
   async function publish() {
+    // Fail closed before network: session /api/downloads and Lab /demos are not UGC.
+    if (isSessionGatedDownloadUrl(videoUrl)) {
+      toast("Session download only — not a public Community URL");
+      return;
+    }
     const abs = toPublicVideoUrl(videoUrl);
     if (!abs) {
       toast("Need a public http(s) video URL to publish");
       return;
     }
-    // Relative /demos paths become absolute — still require safe scheme.
-    if (!isSafeDeliverableUrl(abs)) {
-      toast("Unsafe video URL — not published");
+    // Server uses isPublicCommunityVideoUrl — match client-side (no /demos paste).
+    if (!isPublicCommunityVideoUrl(abs) || !isSafeDeliverableUrl(abs)) {
+      toast("Unsafe or non-public video URL — not published");
       return;
     }
     const sb = getSupabaseBrowser();
@@ -164,10 +173,24 @@ export function CommunityPublishButton({
 
 function toPublicVideoUrl(url: string): string | null {
   if (!isSafeDeliverableUrl(url)) return null;
+  if (isSessionGatedDownloadUrl(url)) return null;
   const t = url.trim();
-  if (t.startsWith("http://") || t.startsWith("https://")) return t;
-  if (t.startsWith("/") && typeof window !== "undefined") {
-    return `${window.location.origin}${t}`;
+  // Lab /demos relative paths must not become absolute "public" UGC.
+  if (t.startsWith("/demos/") || t.includes("/demos/")) return null;
+  if (t.startsWith("http://") || t.startsWith("https://")) {
+    try {
+      const u = new URL(t);
+      if (
+        u.pathname.startsWith("/demos/") ||
+        u.pathname.includes("/api/downloads/")
+      ) {
+        return null;
+      }
+    } catch {
+      return null;
+    }
+    return t;
   }
+  // Other same-origin relative paths are not public Community media.
   return null;
 }

@@ -244,8 +244,9 @@ function SessionJobsPanel({
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
               <Link
-                href={`/create?effect=${encodeURIComponent(j.effect)}`}
+                href={createRemixHref(j.effect)}
                 className="text-[var(--mint)] hover:underline"
+                data-session-remake="remix"
               >
                 {j.status === "failed" || j.status === "canceled"
                   ? "Retry recipe"

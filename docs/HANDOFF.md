@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Community UGC fail-closed + PROVIDER_NETWORK settlement
+- CommunityPublishButton: refuse session /api/downloads + Lab /demos before network;
+  match server isPublicCommunityVideoUrl (no origin-absolute demos).
+- requestCreditStateFromFailure: PROVIDER_NETWORK → refund unconfirmed (not null).
+- HeroUpload + Library session Retry: createRemixHref (ratio/channel carry).
+- HomeFeatureCarousel: remake remix hrefs + Seller Pack door (not /supercomputer).
+
 ### 2026-07-27 — [grok] Home feature carousel remake + Seller Pack path
 - HomeFeatureCarousel: recipe cards use createRemixHref; Seller Pack door →
   /create?mode=seller-pack (not /supercomputer); Official · Lab ≥4 chips.

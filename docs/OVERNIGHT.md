@@ -139,7 +139,8 @@
 98. [x] SKU hydrate Create/Batch + Landing history (prior)
 99. [x] Seller Pack ?try=1 Lab still + AfterPath auto-SKU + supercomputer query carry
 100. [x] BatchStudio adopts Image pikbo_pending_still (Seller Pack handoff)
-101. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+101. [x] Community UGC fail-closed + PROVIDER_NETWORK settlement + session remake remix
+102. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -153,9 +154,10 @@
 
 ## Grok 本拍状态（3 行）
 
-- BatchStudio adopts Image studio `pikbo_pending_still` (Seller Pack was empty).
-- Image handoff CTAs carry sku + data-image-handoff; pending beats try=1 sample.
+- Community publish refuses session gate + Lab /demos (client = server).
+- PROVIDER_NETWORK fail → refund unconfirmed settlement; Library session Retry remix href.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+
 
 
 

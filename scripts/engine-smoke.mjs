@@ -819,8 +819,11 @@ function requestCreditStateFromFailure(result) {
     result.refundUnconfirmed === true ||
     result.status === 0 ||
     result.code === "NETWORK_ERROR" ||
+    result.code === "PROVIDER_NETWORK" ||
     result.code === "REQUEST_CANCELED" ||
-    result.code === "TIMEOUT"
+    result.code === "CANCELED" ||
+    result.code === "TIMEOUT" ||
+    result.code === "PROVIDER_TIMEOUT"
   ) {
     return "refund unconfirmed";
   }
@@ -1886,8 +1889,11 @@ function requestCreditStateFromFailurePure(result) {
     result.refundUnconfirmed === true ||
     result.status === 0 ||
     result.code === "NETWORK_ERROR" ||
+    result.code === "PROVIDER_NETWORK" ||
     result.code === "REQUEST_CANCELED" ||
-    result.code === "TIMEOUT"
+    result.code === "CANCELED" ||
+    result.code === "TIMEOUT" ||
+    result.code === "PROVIDER_TIMEOUT"
   ) {
     return "refund unconfirmed";
   }
@@ -1904,6 +1910,17 @@ assert.equal(
 assert.equal(
   requestCreditStateFromFailurePure({ status: 504, code: "TIMEOUT" }),
   "refund unconfirmed"
+);
+assert.equal(
+  requestCreditStateFromFailurePure({
+    status: 503,
+    code: "PROVIDER_NETWORK",
+  }),
+  "refund unconfirmed"
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /PROVIDER_NETWORK/
 );
 assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
@@ -4423,6 +4440,19 @@ assert.match(featureCarousel, /data-proof-quality=["']provisional-lab["']|provis
 assert.match(
   fs.readFileSync(join(root, "components/HeroUpload.tsx"), "utf8"),
   /createRemixHref/
+);
+// Community: never promote session gate / Lab demos to absolute UGC
+const communityPublish = fs.readFileSync(
+  join(root, "components/CommunityPublishButton.tsx"),
+  "utf8"
+);
+assert.match(communityPublish, /isPublicCommunityVideoUrl/);
+assert.match(communityPublish, /isSessionGatedDownloadUrl/);
+assert.match(communityPublish, /\/demos\//);
+// Library session Retry uses remix contract (ratio/duration/channel)
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /data-session-remake=["']remix["']|createRemixHref\(j\.effect\)/
 );
 
 console.log("engine-smoke: PASS");

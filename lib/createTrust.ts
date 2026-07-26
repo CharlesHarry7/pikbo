@@ -145,6 +145,8 @@ export function requestCreditStateFromFailure(result: {
     result.refundUnconfirmed === true ||
     result.status === 0 ||
     result.code === "NETWORK_ERROR" ||
+    // Upstream 502/503 blip — debit may have started; never invent restore.
+    result.code === "PROVIDER_NETWORK" ||
     result.code === "REQUEST_CANCELED" ||
     // Ledger cancel (soft-launch) — debit may be ambiguous until balance confirms.
     result.code === "CANCELED" ||
