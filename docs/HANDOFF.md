@@ -4,6 +4,10 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Home cinema dwell: multi-clip + sticky wall
+- Hero rotates ≤6 Lab clips (7s) + dots + scroll cue; SoftLaunch under wall.
+- Wall: sticky chips with counts, INITIAL 24, denser grid, 生成同款 always on.
+
 ### 2026-07-26 — [grok] Image cancel ledger + abort best-effort DELETE
 - `ImageJobStatus` + `cancelImageJob` / `findImageJobByRequestOrId` (process-memory).
 - `DELETE /api/image` (jobId | requestId | idempotencyKey); HEAD

@@ -63,9 +63,12 @@ export default function Home() {
   const demos = showcase.map((item) => item.demo);
   const labDemos = demos.length ? demos : DEMO_VIDEOS.slice(0, 8);
   const videoLd = labDemos.slice(0, 6).map(videoObjectJsonLd);
-  const heroItem = showcase[0] ?? viralWall[0] ?? null;
+  const heroClips =
+    showcase.length > 0
+      ? showcase.slice(0, 6)
+      : viralWall.slice(0, 6);
   const lcpPoster =
-    heroItem?.demo?.poster ||
+    heroClips[0]?.demo?.poster ||
     viralWall[0]?.demo?.poster ||
     labDemos[0]?.poster ||
     DEMO_VIDEOS[0]?.poster ||
@@ -87,14 +90,14 @@ export default function Home() {
         ]}
       />
 
-      {/* 1 · Cinema hero — video first, minimal copy */}
-      <HomeCinemaHero item={heroItem} />
+      {/* 1 · Cinema hero — multi-clip rotate, minimal copy */}
+      <HomeCinemaHero items={heroClips} />
 
-      {/* Soft-live honesty strip — thin, not competing with cinema */}
-      <SoftLaunchStrip />
-
-      {/* 2 · Dense toy video wall — browse & remake */}
+      {/* 2 · Dense toy video wall — browse & remake (no strip between cinema→wall) */}
       <HomeViralWall items={viralWall.length ? viralWall : showcase} />
+
+      {/* Soft-live honesty — after wall, before generate (does not break cinema dwell) */}
+      <SoftLaunchStrip />
 
       {/* 3 · Generate after wall — “your turn” */}
       <section

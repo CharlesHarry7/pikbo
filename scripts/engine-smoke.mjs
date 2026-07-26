@@ -2986,12 +2986,13 @@ const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero|HomeViralWall|home-create/);
 assert.match(
   fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /用我的潮玩生成|先看看示例|data-home-hero/
+  /用我的潮玩生成|先看看示例|data-home-hero|setInterval|items/
 );
 assert.match(
   fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /TOY_WALL_FILTERS|生成同款|360°展示|data-home-wall/
+  /TOY_WALL_FILTERS|生成同款|360°展示|data-home-wall|sticky/
 );
+assert.match(homePageSrc, /HomeCinemaHero items=|SoftLaunchStrip/);
 
 // Five-step toy identity + delivery honesty + landing assetId + workflows
 const toyIdSrc = fs.readFileSync(join(root, "lib/toyIdentity.ts"), "utf8");
