@@ -130,7 +130,8 @@ export default async function CreatePage({
               </Link>
             </div>
             <div className="mt-6">
-              <BatchStudio pack="seller" />
+              {/* AfterPath ?sku= must hydrate Seller Pack bible + Library history */}
+              <BatchStudio pack="seller" initialSku={sp.sku} />
             </div>
           </div>
         </div>

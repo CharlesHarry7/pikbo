@@ -107,6 +107,19 @@ export function loadToyIdentity(): ToyIdentity {
   }
 }
 
+/**
+ * Prefer ?sku= query carry over device-local bible so AfterPath / Next SKU /
+ * Library remake hops show the commercial label (and persist it).
+ */
+export function hydrateToyIdentityFromQuery(
+  querySku?: string | null
+): ToyIdentity {
+  const base = loadToyIdentity();
+  const q = sanitizeSku(querySku);
+  if (!q) return base;
+  return saveToyIdentity({ ...base, sku: q });
+}
+
 export function saveToyIdentity(identity: ToyIdentity): ToyIdentity {
   const next = sanitizeToyIdentity(identity);
   if (typeof window === "undefined") return next;

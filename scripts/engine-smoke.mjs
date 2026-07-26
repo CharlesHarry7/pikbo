@@ -3351,6 +3351,9 @@ assert.match(
 const toyIdSrc = fs.readFileSync(join(root, "lib/toyIdentity.ts"), "utf8");
 assert.match(toyIdSrc, /composeExtraWithIdentity/);
 assert.match(toyIdSrc, /sanitizeToyIdentity|ToyIdentity/);
+// Query ?sku= must win over device bible (Next SKU / AfterPath carry)
+assert.match(toyIdSrc, /hydrateToyIdentityFromQuery/);
+assert.match(createStudio, /hydrateToyIdentityFromQuery\(initialSku\)/);
 const deliverySrc = fs.readFileSync(join(root, "lib/deliveryPack.ts"), "utf8");
 assert.match(deliverySrc, /deliveryItemsForJob/);
 assert.match(deliverySrc, /downloadAllowed|T6/);
@@ -3365,13 +3368,26 @@ assert.match(
   /freeTrialExhausted|Trial used|clipsLeft/
 );
 // Batch / Seller Pack + effect landings share freeTrial honesty (Phase F)
+const batchSkuSrc = fs.readFileSync(
+  join(root, "components/BatchStudio.tsx"),
+  "utf8"
+);
 assert.match(
-  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  batchSkuSrc,
   /freeTrialExhausted|Free Mini trial used|clipsLeft/
 );
+// Seller Pack: hydrate ?sku= + Library history carries sku for Remake
+assert.match(batchSkuSrc, /initialSku/);
+assert.match(batchSkuSrc, /hydrateToyIdentityFromQuery\(initialSku\)/);
+assert.match(batchSkuSrc, /sku:\s*toyIdentity\.sku/);
+assert.match(createPage, /BatchStudio pack=["']seller["'][\s\S]{0,80}initialSku/);
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /freeTrialExhausted|Free Mini trial exhausted|clipsLeft|compare plans/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
+  /sku=\{toySku|sku: toySku/
 );
 assert.match(
   fs.readFileSync(join(root, "components/HomeProjectsExplore.tsx"), "utf8"),
@@ -4116,6 +4132,24 @@ assert.match(
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /GenerateAfterPath/
+);
+// Landing + Image AfterPath carry device-local bible SKU (Create/Batch parity)
+assert.match(
+  fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
+  /loadToyIdentity|sku=\{toySku/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /loadToyIdentity|sku=\{toySku/
+);
+// SEO related-recipe PresetCard honesty chips
+assert.match(
+  fs.readFileSync(join(root, "components/PresetCard.tsx"), "utf8"),
+  /recipeHasUniqueProof|Official · cached/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/PresetCard.tsx"), "utf8"),
+  /data-proof-quality=["']provisional-lab["']|provisionalLabQualityLabel/
 );
 assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),

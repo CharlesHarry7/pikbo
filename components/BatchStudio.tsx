@@ -11,7 +11,7 @@ import {
 } from "@/lib/assetBrief";
 import {
   composeExtraWithIdentity,
-  loadToyIdentity,
+  hydrateToyIdentityFromQuery,
   saveToyIdentity,
   type ToyIdentity,
 } from "@/lib/toyIdentity";
@@ -186,10 +186,13 @@ function retryEligible(job: Job): boolean {
 export function BatchStudio({
   initialEffects,
   pack,
+  initialSku,
 }: {
   initialEffects?: string[];
   /** Named pack from SELLER_PACK PRD — freezes the three seller outputs. */
   pack?: "seller" | string;
+  /** Character bible SKU from ?sku= (AfterPath / Next SKU carry). */
+  initialSku?: string;
 }) {
   const isSellerPack = pack === "seller";
 
@@ -218,7 +221,7 @@ export function BatchStudio({
   const [labStill, setLabStill] = useState(false);
   const [briefCollapsed, setBriefCollapsed] = useState(false);
   const [toyIdentity, setToyIdentity] = useState<ToyIdentity>({
-    sku: "",
+    sku: (initialSku || "").trim().slice(0, 64),
     preserve: "",
   });
   const [selected, setSelected] = useState<string[]>(defaults);
@@ -251,14 +254,15 @@ export function BatchStudio({
   useEffect(() => {
     const t = window.setTimeout(() => {
       void fetchMe().then(setMe);
-      setToyIdentity(loadToyIdentity());
+      // Query ?sku= wins so Seller Pack AfterPath carry is not wiped by localStorage.
+      setToyIdentity(hydrateToyIdentityFromQuery(initialSku));
     }, 0);
     return () => {
       window.clearTimeout(t);
       packAbortRef.current?.abort();
       packAbortRef.current = null;
     };
-  }, []);
+  }, [initialSku]);
 
   /**
    * Re-open only this browser's active pack against the current local ledger.
@@ -598,6 +602,8 @@ export function BatchStudio({
           image && image.length <= 300_000 ? image : undefined,
         channel: SELLER_PACK_ITEMS.find((item) => item.slug === job.slug)
           ?.channel,
+        // SKU for Library By-SKU + Remake bible carry
+        sku: toyIdentity.sku || undefined,
       })
     );
     emitSessionRefresh();

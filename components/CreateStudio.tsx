@@ -79,8 +79,8 @@ import { getJobIntent, JOB_INTENTS, type JobIntentId } from "@/lib/jobIntents";
 import type { Workflow } from "@/lib/workflows";
 import {
   composeExtraWithIdentity,
+  hydrateToyIdentityFromQuery,
   identityProjectName,
-  loadToyIdentity,
   saveToyIdentity,
   type ToyIdentity,
 } from "@/lib/toyIdentity";
@@ -516,10 +516,11 @@ export function CreateStudio({
   );
 
   // Favorites + toy identity + optional still from Image studio (after adoptImage exists).
+  // Query ?sku= wins over device bible so Next SKU / AfterPath carry survives mount.
   useEffect(() => {
     const t = window.setTimeout(() => {
       setFavorites(loadFavorites());
-      setToyIdentity(loadToyIdentity());
+      setToyIdentity(hydrateToyIdentityFromQuery(initialSku));
       try {
         const pending = sessionStorage.getItem("pikbo_pending_still");
         if (pending?.startsWith("data:image")) {
@@ -542,7 +543,7 @@ export function CreateStudio({
       }
     }, 0);
     return () => window.clearTimeout(t);
-  }, [adoptImage]);
+  }, [adoptImage, initialSku]);
 
   function loadFile(file: File | undefined | null) {
     if (!file || !file.type.startsWith("image/")) {

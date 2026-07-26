@@ -43,6 +43,7 @@ import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateWaitStage } from "@/components/GenerateWaitStage";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { track } from "@/lib/analytics";
+import { loadToyIdentity } from "@/lib/toyIdentity";
 
 type Status = "idle" | "generating" | "done" | "error";
 
@@ -88,6 +89,8 @@ export function LandingToolPanel({
   >(null);
   const [serverEcho, setServerEcho] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
+  /** Device-local bible SKU — carry into AfterPath Next SKU / Seller Pack hops. */
+  const [toySku, setToySku] = useState<string>("");
   const generateAbortRef = useRef<AbortController | null>(null);
   const toast = useToast();
   const downloadAllowed = canDownloadResult({
@@ -215,6 +218,13 @@ export function LandingToolPanel({
   useEffect(() => {
     const t = window.setTimeout(() => {
       void refreshSession();
+      // Device-local character bible SKU for commercial AfterPath carry.
+      try {
+        const id = loadToyIdentity();
+        if (id.sku) setToySku(id.sku);
+      } catch {
+        /* private mode */
+      }
       // Still studio → effect page handoff
       try {
         const pending = sessionStorage.getItem("pikbo_pending_still");
@@ -416,6 +426,8 @@ export function LandingToolPanel({
         fallbackDuration: duration,
         fallbackAspect: aspectRatio,
         fallbackResolution: resolution,
+        // Device bible SKU for Library By-SKU + Remake carry
+        sku: toySku || undefined,
       })
     );
     emitSessionRefresh();
@@ -887,6 +899,7 @@ export function LandingToolPanel({
                 demo={demo}
                 compact
                 className="mt-2"
+                sku={toySku || null}
               />
               {/* First-principles delivery steps (honest Free download). */}
               <DeliveryChecklist

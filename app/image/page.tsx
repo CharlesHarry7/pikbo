@@ -18,6 +18,7 @@ import {
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
+import { loadToyIdentity } from "@/lib/toyIdentity";
 
 /** Handoff stills into Create — http(s) or same-origin path only. */
 function canHandOffStill(url: string | null | undefined): url is string {
@@ -58,6 +59,8 @@ export default function ImageStudioPage() {
   const [me, setMe] = useState<MeResponse | null>(null);
   /** Phase D/F parity — cancel mid still; refund unconfirmed if live debit started. */
   const abortRef = useRef<AbortController | null>(null);
+  /** Device-local bible SKU — AfterPath hops (Create/Batch parity). */
+  const [toySku, setToySku] = useState("");
 
   // Default optimistic Free until /api/me resolves (soft-launch default plan).
   const freeStillsDemoOnly =
@@ -68,6 +71,12 @@ export default function ImageStudioPage() {
   useEffect(() => {
     const t = window.setTimeout(() => {
       setHistory(loadImageHistory());
+      try {
+        const id = loadToyIdentity();
+        if (id.sku) setToySku(id.sku);
+      } catch {
+        /* private mode */
+      }
     }, 0);
     let cancelled = false;
     void fetchMe().then((m) => {
@@ -230,7 +239,12 @@ export default function ImageStudioPage() {
             >
               Generate video
             </Link>
-            <GenerateAfterPath compact demo className="justify-end" />
+            <GenerateAfterPath
+              compact
+              demo
+              className="justify-end"
+              sku={toySku || null}
+            />
           </div>
         </div>
 
@@ -386,6 +400,7 @@ export default function ImageStudioPage() {
                   demo={demo}
                   className="mt-1"
                   compact
+                  sku={toySku || null}
                 />
               </div>
             )}

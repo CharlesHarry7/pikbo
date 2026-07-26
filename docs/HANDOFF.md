@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Landing/Image AfterPath SKU + PresetCard proof chips
+- LandingToolPanel + Image studio: load device-local bible SKU → GenerateAfterPath
+  (Next SKU / Create / Seller Pack hops; Create/Batch parity).
+- Landing history push includes SKU; Create/Seller Pack hydrate `?sku=` via
+  `hydrateToyIdentityFromQuery` (query wins over localStorage).
+- PresetCard (SEO related recipes): Official · cached | Concept + Lab ≥4 when
+  recipe passes home-proof quality.
+- Smoke locks loadToyIdentity sku carry + PresetCard data-proof-quality.
+
 ### 2026-07-26 — [grok] Library Remake carries SKU into Create
 - `createRemixHref(recipe, source?, sku?)` appends `?sku=` for bible hydrate.
 - Library group + card Regenerate use sku-carry; Seller Pack group link too.
