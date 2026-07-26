@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] Share/copy never leak session /api/downloads
+- `isSessionGatedDownloadUrl` + `publicShareableVideoUrl` in createTrust.
+- Create copy/share-X + Library copy: block gate URLs; absolute only when public.
+- downloadVideoFile: after HEAD allow, CORS fail may open gate tab (302); HEAD
+  block stays blocked (no JSON error tabs).
+- Smoke pure + Create/Library locks.
+
 ### 2026-07-26 — [grok] Effects + VideoTile proof chips (Official · Lab ≥4)
 - PresetPreviewCard (/effects wall): exact Lab → Official · cached + provisional
   Lab ≥4; concept recipes stay Concept only.

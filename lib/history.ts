@@ -257,11 +257,13 @@ export async function downloadVideoFile(
   filename: string
 ): Promise<"ok" | "fallback" | "fail" | "unsafe" | "blocked"> {
   if (!isSafeDeliverableUrl(url)) return "unsafe";
+  const isGate =
+    url.startsWith("/api/downloads/") || url.includes("/api/downloads/");
   // Controlled gate: HEAD first so cancel/timeout never blob-fetch 409 JSON.
-  if (
-    url.startsWith("/api/downloads/") ||
-    url.includes("/api/downloads/")
-  ) {
+  // Track HEAD allow so CORS/network on the redirect target can still open the
+  // gate tab (browser follows 302 to video) without dumping error JSON.
+  let gateHeadAllowed = false;
+  if (isGate) {
     try {
       const head = await fetch(url, { method: "HEAD" });
       const gate = classifyDownloadHead({
@@ -272,7 +274,9 @@ export async function downloadVideoFile(
       if (gate.kind === "block" || gate.kind === "not_found") {
         return "blocked";
       }
-      if (gate.kind !== "allow" && !head.ok) {
+      if (gate.kind === "allow") {
+        gateHeadAllowed = true;
+      } else if (!head.ok) {
         return "blocked";
       }
     } catch {
@@ -284,7 +288,11 @@ export async function downloadVideoFile(
   try {
     // Relative /demos/... works same-origin; absolute fal needs CORS.
     const res = await fetch(url, { mode: "cors", signal: ctrl.signal });
-    if (!res.ok) throw new Error(String(res.status));
+    // Hard HTTP fail on gate = JSON error body — never open as a tab.
+    if (!res.ok) {
+      if (isGate) return "blocked";
+      throw new Error(String(res.status));
+    }
     // Gate / error bodies are application/json — never save JSON as "video".
     const ct = (res.headers.get("Content-Type") || "").toLowerCase();
     if (
@@ -298,7 +306,7 @@ export async function downloadVideoFile(
     if (!blob || blob.size < 32) throw new Error("empty");
     // Second line of defense if Content-Type was missing/mis-set.
     if (
-      (url.startsWith("/api/downloads/") || url.includes("/api/downloads/")) &&
+      isGate &&
       blob.type &&
       (blob.type.includes("json") || blob.type.startsWith("text/"))
     ) {
@@ -318,12 +326,13 @@ export async function downloadVideoFile(
     try {
       // Re-check: never open unsafe schemes even on fetch failure path.
       if (!isSafeDeliverableUrl(url)) return "unsafe";
-      // Controlled /api/downloads GET is JSON on failure (403/409) — never open a
-      // new tab as "fallback" or users see error JSON instead of a video file.
-      if (
-        url.startsWith("/api/downloads/") ||
-        url.includes("/api/downloads/")
-      ) {
+      if (isGate) {
+        // CORS/network after HEAD allow: browser tab can follow 302 to the file.
+        // HEAD block / JSON body already returned "blocked" above.
+        if (gateHeadAllowed) {
+          window.open(url, "_blank", "noopener,noreferrer");
+          return "fallback";
+        }
         return "blocked";
       }
       window.open(url, "_blank", "noopener,noreferrer");

@@ -386,6 +386,36 @@ export function isPlayableResultVideoUrl(opts: {
 }
 
 /**
+ * Session-owned /api/downloads gate — cookie-bound, not a public share link.
+ * Copy/Share must not present these as portable media URLs.
+ */
+export function isSessionGatedDownloadUrl(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  return t.startsWith("/api/downloads/") || t.includes("/api/downloads/");
+}
+
+/**
+ * Absolute URL safe for clipboard / X share (never session-gated downloads).
+ * Relative same-origin paths become origin-absolute when `origin` is provided.
+ */
+export function publicShareableVideoUrl(
+  url: string,
+  origin?: string
+): string | null {
+  if (!isSafeDeliverableUrl(url)) return null;
+  if (isSessionGatedDownloadUrl(url)) return null;
+  const t = url.trim();
+  if (t.startsWith("/") && !t.startsWith("//")) {
+    const o = (origin || "").replace(/\/$/, "");
+    if (!o || !/^https?:\/\//i.test(o)) return null;
+    return `${o}${t}`;
+  }
+  if (/^https?:\/\//i.test(t)) return t;
+  return null;
+}
+
+/**
  * Community UGC must be a public absolute http(s) media URL.
  * Controlled Free download endpoints and app-relative paths are not public.
  */
@@ -394,7 +424,7 @@ export function isPublicCommunityVideoUrl(url: string): boolean {
   const t = url.trim();
   if (!t || t.length > 2000) return false;
   // Free T6 gate path is session-owned, not a public Community deliverable.
-  if (t.startsWith("/api/downloads/") || t.includes("/api/downloads/")) {
+  if (isSessionGatedDownloadUrl(t)) {
     return false;
   }
   // Relative paths (including /demos Lab clips) stay off Community UGC.

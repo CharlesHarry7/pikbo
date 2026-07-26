@@ -40,6 +40,8 @@ import {
   freeLiveDownloadBlockReason,
   internSourceImage,
   isSafeDeliverableUrl,
+  isSessionGatedDownloadUrl,
+  publicShareableVideoUrl,
   preserveRequestSettlementOnVersionRestore,
   requestCreditStateFromFailure,
   requestCreditStateFromSuccess,
@@ -950,12 +952,21 @@ export function CreateStudio({
       toast(freeLiveDownloadBlockReason());
       return;
     }
-    if (!isSafeDeliverableUrl(videoUrl)) {
-      toast("Unsafe deliverable URL — not copied");
+    // /api/downloads is session-cookie gated — not a portable public link.
+    const share = publicShareableVideoUrl(
+      videoUrl,
+      typeof window !== "undefined" ? window.location.origin : undefined
+    );
+    if (!share) {
+      toast(
+        isSessionGatedDownloadUrl(videoUrl)
+          ? "Session download only — use Download (not a public link)"
+          : "Unsafe deliverable URL — not copied"
+      );
       return;
     }
     try {
-      await navigator.clipboard.writeText(videoUrl);
+      await navigator.clipboard.writeText(share);
       setCopied(true);
       markActivationShared();
       toast("Link copied");
@@ -1088,15 +1099,24 @@ export function CreateStudio({
       toast(freeLiveDownloadBlockReason());
       return;
     }
-    if (!isSafeDeliverableUrl(videoUrl)) {
-      toast("Unsafe deliverable URL — not shared");
+    // Never tweet a session-gated /api/downloads path (cookie-bound · not public).
+    const share = publicShareableVideoUrl(
+      videoUrl,
+      typeof window !== "undefined" ? window.location.origin : undefined
+    );
+    if (!share) {
+      toast(
+        isSessionGatedDownloadUrl(videoUrl)
+          ? "Session download only — use Download (not a public X link)"
+          : "Unsafe deliverable URL — not shared"
+      );
       return;
     }
     markActivationShared();
     const text = encodeURIComponent(
       `Made with ${site.name} — ${preset.name} 🧸`
     );
-    const url = encodeURIComponent(videoUrl);
+    const url = encodeURIComponent(share);
     window.open(
       `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
       "_blank",

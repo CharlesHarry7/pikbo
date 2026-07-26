@@ -20,6 +20,8 @@ import {
   interpretDownloadHead,
   isPlayableResultVideoUrl,
   isSafeDeliverableUrl,
+  isSessionGatedDownloadUrl,
+  publicShareableVideoUrl,
 } from "@/lib/createTrust";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { useToast } from "@/components/Toast";
@@ -611,12 +613,21 @@ export function LibraryGrid() {
   }
 
   async function copyLink(url: string) {
-    if (!isSafeDeliverableUrl(url)) {
-      toast("Unsafe deliverable URL — not copied");
+    // Session-gated /api/downloads is cookie-bound — not a portable public link.
+    const share = publicShareableVideoUrl(
+      url,
+      typeof window !== "undefined" ? window.location.origin : undefined
+    );
+    if (!share) {
+      toast(
+        isSessionGatedDownloadUrl(url)
+          ? "Session download only — use Download (not a public link)"
+          : "Unsafe deliverable URL — not copied"
+      );
       return;
     }
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(share);
       toast("Link copied");
     } catch {
       toast("Could not copy");
