@@ -16,7 +16,8 @@ const JOB_I18N: Record<
 };
 
 /**
- * Outcome-first chips — pick a job, not a model name.
+ * Creative Director commercial goals — pick an outcome, not a model name.
+ * Visible on all viewports (Phase A); Seller Pack is the default launch path.
  */
 export function JobIntentBar({
   activeId,
@@ -28,12 +29,17 @@ export function JobIntentBar({
   const { t } = useI18n();
 
   return (
-    <div className="border-b border-white/10 bg-gradient-to-r from-[var(--mint)]/[0.04] via-black/50 to-black/40 px-4 py-3">
+    <div className="border-b border-white/10 bg-gradient-to-r from-[var(--mint)]/[0.05] via-black/50 to-black/40 px-3 py-2.5 sm:px-4 sm:py-3">
       <div className="mx-auto max-w-6xl">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]/80">
-          {t("job.what")}
-        </p>
-        <div className="mt-2 flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]/85">
+            {t("job.what")}
+          </p>
+          <p className="text-[9px] text-white/35 sm:text-[10px]">
+            Sales mode · fidelity first · own photos only
+          </p>
+        </div>
+        <div className="mt-2 flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {JOB_INTENTS.map((job) => {
             const i18n = JOB_I18N[job.id];
             const label = t(i18n.label);
@@ -43,7 +49,7 @@ export function JobIntentBar({
                 <Link
                   key={job.id}
                   href={job.href}
-                  className="shrink-0 rounded-2xl border border-[var(--mint)]/40 bg-[var(--mint)]/[0.1] px-3.5 py-2 text-left shadow-[0_0_20px_rgba(200,255,61,0.08)] transition hover:border-[var(--mint)] hover:bg-[var(--mint)]/18"
+                  className="shrink-0 rounded-2xl border border-[var(--mint)]/45 bg-[var(--mint)]/[0.12] px-3 py-2 text-left shadow-[0_0_20px_rgba(200,255,61,0.1)] transition hover:border-[var(--mint)] hover:bg-[var(--mint)]/20 sm:px-3.5"
                 >
                   <span className="block text-[11px] font-bold text-[var(--mint)]">
                     {label}
@@ -60,7 +66,7 @@ export function JobIntentBar({
                 key={job.id}
                 type="button"
                 onClick={() => onPick(job.id)}
-                className={`shrink-0 rounded-2xl border px-3.5 py-2 text-left transition ${
+                className={`shrink-0 rounded-2xl border px-3 py-2 text-left transition sm:px-3.5 ${
                   active
                     ? "border-[var(--mint)] bg-[var(--mint)]/15 text-[var(--mint)] shadow-[0_0_22px_rgba(200,255,61,0.12)]"
                     : "border-white/12 bg-black/30 text-white/75 hover:border-white/30 hover:bg-black/45"

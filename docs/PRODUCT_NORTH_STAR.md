@@ -98,4 +98,43 @@
 **增长 = 哥飞养站（并行，不改产品身份）。**  
 **工程 = 每周硬补 HF 模块 + 每天保生成与收录。**
 
-文档版本：2026-07-25 · v2（老板再次确认后）  
+---
+
+## 6. Creative Director 产品层（2026-07-26 老板确认）
+
+Pikbo 对外体感不是「通用 AI 视频」，而是用户的 **潮玩创意总监（Creative Director）**：
+
+> 一张照片 / 一个想法 / 一个角色 → 专业、可商业、可传播、可制造的潮玩视觉资产。
+
+与 AGENTS 宪法对齐（不另起炉灶）：
+
+| CD 原则 | 产品对应 |
+|---------|----------|
+| 潮玩美学优先 | Recipes + 玩具场景墙；拒绝通用模型动物园叙事 |
+| 保真与一致性 | **Toy Identity** · Sales mode 保真压过炫技 |
+| 商业可用 | **Toy Launch Pack / Seller Pack** · listing / reveal / hook |
+| 版权安全 | 仅自有/有权照片；权利确认勾选；不做未授权大 IP 精仿承诺 |
+| 成本意识 | 生成前预估积分；Seller Pack 分 child 计费诚实 |
+
+### 默认用户路径（产品验收）
+
+```
+Explore 证明墙
+  → 上传自有潮玩照片
+  → 商业目标（Listing / Reveal / Hook / Seller Pack）
+  → Recipe（360 · Box Reveal · Zero-G · Dance · Display Glow…）
+  → 确认消耗 → 生成
+  → 质检 / 下载 / 下一 SKU
+```
+
+### 分期
+
+| 期 | 交付 | 状态 |
+|----|------|------|
+| **A** | 叙事 + 动线：目标先于模型、Seller Pack 默认推荐、版权提示、结果台下一 SKU | 本分支 |
+| B | 上传后 Asset Brief + 角色圣经草案（可编辑特征） | 未开 |
+| C | 真 Toy Soul ID / 多静帧 / 3D 可打印 | 未开 · 标 Soon |
+
+**红线不变：** 不假 UGC、不假多模型 live、不扩冷启动 SEO 页预算、不提前 Stripe 装成熟、不 force-push main。
+
+文档版本：2026-07-26 · v3（Creative Director 产品层）

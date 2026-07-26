@@ -18,21 +18,30 @@ export function Footer() {
               {site.tagline} Video-first studio for toys you own — Generate,
               Modules, Seller Pack.
             </p>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div
+              className="mt-4 flex flex-wrap items-center gap-2"
+              data-footer-path="product-first"
+            >
               <Link
                 href="/#home-tool"
                 className="btn btn-primary !px-3 !py-1.5 text-xs"
               >
                 Generate
               </Link>
-              <Link href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-                Library
-              </Link>
-              <Link href="/flow" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-                Flow
+              <Link
+                href="/create?mode=seller-pack"
+                className="btn btn-ghost !px-3 !py-1.5 text-xs"
+              >
+                Seller Pack
               </Link>
               <Link href="/modules" className="btn btn-ghost !px-3 !py-1.5 text-xs">
                 Modules
+              </Link>
+              <Link href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
+                Library
+              </Link>
+              <Link href="/flow" className="btn btn-ghost !px-3 !py-1.5 text-xs text-white/50">
+                Flow · Preview
               </Link>
               <FreeTrialCta
                 path="/"

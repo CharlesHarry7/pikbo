@@ -132,7 +132,8 @@
 91. [x] Free live generate never echoes provider raw URL · controlled /api/downloads only
 92. [x] Seller Pack session recovery + Batch/Library Free live playable gate + login product-first guest
 93. [x] T5 server-owned jobs hard-false on health · Community public URL gate · project product-first
-94. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+94. [x] CD Phase A: Creative Director narrative + product-first suite exits · JobIntentBar goals all viewports
+95. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -146,8 +147,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- T5: SERVER_OWNED_GENERATION_JOBS_IMPLEMENTED=false; health paid needs jobs.effective.  
-- Community: Free /api/downloads + Lab relative paths rejected server-side.  
+- CD Phase A shipped: commercial goals first · Launch Pack path · Flow demoted to Preview.  
+- engine-smoke PASS · product-first markers on Footer/Profile/Explore/Community/Pricing/AfterPath.  
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 ---

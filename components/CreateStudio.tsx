@@ -1187,14 +1187,21 @@ export function CreateStudio({
             Image · optional
           </Link>
           <Link
-            href="/flow"
+            href="/create?mode=seller-pack"
             className="ml-auto rounded-full border border-white/10 px-2.5 py-1 font-semibold text-[#c8ff3d]/90 hover:border-[#c8ff3d]/40"
           >
-            Flow →
+            Seller Pack →
+          </Link>
+          <Link
+            href="/flow"
+            className="rounded-full border border-white/10 px-2.5 py-1 text-white/40 hover:border-white/25 hover:text-white/70"
+            title="Preview media wall — not a live Seedance job"
+          >
+            Flow · Preview
           </Link>
         </div>
       </div>
-      {/* Activation + job shelf: desktop only — free 390px for first-run core */}
+      {/* Activation + workflow shelf: desktop density; goals on all viewports (CD Phase A) */}
       <div className="hidden lg:block">
         <ActivationChecklist
           hasImage={Boolean(image)}
@@ -1205,8 +1212,9 @@ export function CreateStudio({
           activeId={jobIntentId}
           onPick={applyWorkflow}
         />
-        <JobIntentBar activeId={jobIntentId} onPick={applyJobIntent} />
       </div>
+      {/* Creative Director: commercial goal before model/recipe density */}
+      <JobIntentBar activeId={jobIntentId} onPick={applyJobIntent} />
       {/* ── Mode banner: demo vs live (W5) · tighter on phone ── */}
       <div
         role="status"
@@ -1340,16 +1348,19 @@ export function CreateStudio({
         </div>
       )}
 
-      {/* ── Mobile first-run: upload → recipe → generate (Phase F 390px) ── */}
+      {/* ── Mobile first-run: goal → upload → recipe → generate (CD Phase A) ── */}
       <div className="border-b border-[var(--border)] px-4 py-2 lg:hidden">
+        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--mint)]/85">
+          Creative Director · commercial path
+        </p>
         <ol
           className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide"
           aria-label="Create steps"
         >
           {(
             [
-              { n: 1 as const, label: "Upload" },
-              { n: 2 as const, label: "Choose recipe" },
+              { n: 1 as const, label: "Photo" },
+              { n: 2 as const, label: "Recipe" },
               { n: 3 as const, label: "Generate" },
             ] as const
           ).map((s, i) => (
@@ -1382,13 +1393,16 @@ export function CreateStudio({
       <div className="grid flex-1 lg:min-h-0 lg:grid-cols-[220px_minmax(280px,0.8fr)_minmax(0,1.4fr)] xl:grid-cols-[240px_minmax(300px,0.75fr)_minmax(0,1.5fr)]">
         {/* ── Recipe rail (desktop) — HF Viral Presets density ── */}
         <aside className="hidden max-h-[calc(100vh-7rem)] overflow-y-auto border-r border-white/[0.07] bg-[#050506] p-2.5 lg:block">
-          <p className="mb-2 px-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]/90">
-            Viral presets
+          <p className="mb-0.5 px-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]/90">
+            Toy recipes
+          </p>
+          <p className="mb-2 px-1 text-[9px] leading-snug text-white/35">
+            360 · Reveal · Zero-G · Dance · Glow
           </p>
           <input
             value={presetFilter}
             onChange={(e) => setPresetFilter(e.target.value)}
-            placeholder="Search spin, unbox…"
+            placeholder="Search spin, reveal, zero-g…"
             className="mb-2 w-full rounded-lg border border-white/10 bg-black/50 px-2.5 py-2 text-xs outline-none focus:border-[var(--mint)]/50 focus:shadow-[0_0_0_3px_rgba(200,255,61,0.12)]"
           />
           {favorites.length > 0 && !presetFilter && (

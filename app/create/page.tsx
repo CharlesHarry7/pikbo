@@ -22,9 +22,9 @@ export async function generateMetadata({
   // Keep crawlable + follow for deep links; stay out of the 9-URL index budget.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return {
-      title: { absolute: `Seller Pack · 3 outputs | ${site.name}` },
+      title: { absolute: `Seller Pack · Launch Pack | ${site.name}` },
       description:
-        "One owned toy photo → listing spin, blind-box reveal, and social hook. Three fixed seller formats. Cached demos free; live jobs charge per child.",
+        "Creative Director default: one owned toy photo → listing 360°, box reveal, and social hook. Three commercial formats. Lab demos free; live jobs charge per child.",
       alternates: { canonical: "/create?mode=seller-pack" },
       robots: CONCEPT_ROBOTS,
     };
@@ -39,15 +39,15 @@ export async function generateMetadata({
     };
   }
   return {
-    title: "Generate · Toy Studio",
+    title: "Generate · Toy Creative Director",
     description:
-      "Pikbo Generate — designer-toy workbench. Upload a photo you own, pick a listing, reveal, or social module, and export a short clip. Free Mini trial: 5s · 480p · on-player mark.",
+      "Pikbo Generate — designer-toy Creative Director. Upload a photo you own, pick a commercial goal (listing, reveal, hook, or Seller Pack), and export a short clip. Free Mini: 5s · 480p · on-player mark.",
     alternates: { canonical: "/create" },
     robots: CONCEPT_ROBOTS,
     openGraph: {
-      title: `Generate · Toy Studio | ${site.name}`,
+      title: `Generate · Toy Creative Director | ${site.name}`,
       description:
-        "Upload a toy photo you own and generate a short AI video. Free Mini trial — no card.",
+        "Upload a toy photo you own. Commercial goal first, then recipe. Free Mini trial — no card.",
       url: `${site.url}/create`,
     },
   };
@@ -89,15 +89,17 @@ export default async function CreatePage({
         </Suspense>
         <div className="px-4 py-8 sm:px-8">
           <div className="mx-auto max-w-6xl">
-            <span className="chip">Seller Pack · 3 videos</span>
+            <span className="chip">Seller Pack · Launch Pack</span>
             <h1 className="mt-3 font-display text-3xl font-black uppercase tracking-tight">
-              One photo → three short videos
+              One photo → three commercial clips
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
-              Product-studio for toys: Listing Spin (1:1), Blind-box Reveal
-              (9:16), Social Flash (9:16) — all <b className="text-white/80">video</b>.
-              Lab demos free and labeled. Live charges per successful child;
-              failures restore credits when confirmed.
+              Creative Director default path: Listing 360° Spin (1:1), Box
+              Reveal (9:16), Social Hook (9:16) — all{" "}
+              <b className="text-white/80">video</b>, built for Etsy / TikTok /
+              drop day. Own photos only. Lab demos free and labeled. Live
+              charges per successful child; failures restore credits when
+              confirmed.
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <FreeTrialCta
@@ -110,7 +112,7 @@ export default async function CreatePage({
                 href="/create"
                 className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"
               >
-                Single Generate
+                Single recipe
               </Link>
               <Link
                 href="/modules"
@@ -142,10 +144,10 @@ export default async function CreatePage({
     <>
       <JsonLd
         data={softwareApplicationJsonLd({
-          name: `${site.name} Generate — AI Toy Video Studio`,
+          name: `${site.name} Generate — Toy Creative Director`,
           url: `${site.url}/create`,
           description:
-            "Upload a photo of a designer toy you own and generate a short AI video for listings, TikTok, and drops. Free Mini trial with honest caps.",
+            "Upload a photo of a designer toy you own. Pick a commercial goal, generate listing, reveal, or social clips. Free Mini trial with honest caps.",
         })}
       />
       {/* V2 tool core — remix deep link: effect/source/ratio/duration/channel */}

@@ -440,33 +440,35 @@ export function HfExploreHome({
         </div>
       </section>
 
-      {/* Lower: Seller Pack + CTA */}
+      {/* Lower: Seller Pack = Creative Director default Launch Pack */}
       <section className="px-3 pb-6 sm:px-5">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent p-5 sm:flex-row sm:items-center sm:p-6">
           <div>
             <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
-              Seller Pack · 3 videos
+              Creative Director · Seller Pack
             </p>
             <h3 className="mt-1 font-display text-lg font-bold uppercase tracking-tight sm:text-xl">
-              One photo → three short videos
+              One photo → three commercial clips
             </h3>
             <p className="mt-1 max-w-md text-[12px] text-white/50">
-              Listing spin + reveal + social hook — all video outputs. Lab
-              examples free to watch; live jobs bill per clip.
+              Listing 360° + Box Reveal + Social Hook — launch-ready video for
+              shops and feeds. Own photos only. Lab free to watch; live per
+              clip.
             </p>
           </div>
           <Link
             href="/create?mode=seller-pack"
             className="inline-flex shrink-0 items-center rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-sm font-bold text-[#c8ff3d] transition hover:bg-[#c8ff3d]/10"
           >
-            Open Seller Pack →
+            Open Launch Pack →
           </Link>
         </div>
       </section>
 
       <section className="px-3 pb-10 text-center sm:px-5">
         <p className="mb-3 text-[12px] text-white/40">
-          Watch what a toy recipe does. Replace the toy. Generate your version.
+          Watch a toy recipe. Replace with your figure. Generate a sellable
+          clip.
         </p>
         <Link
           href={item.href}

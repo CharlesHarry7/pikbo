@@ -81,16 +81,23 @@ export function ModulesSuiteCtas() {
         Video
       </Link>
       <Link
-        href="/flow"
-        className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-white/55"
-      >
-        Flow
-      </Link>
-      <Link
         href="/create?mode=seller-pack"
         className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-white/55"
       >
         Seller Pack
+      </Link>
+      <Link
+        href="/library"
+        className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-white/55"
+      >
+        Library
+      </Link>
+      <Link
+        href="/flow"
+        className="rounded-full border border-white/10 px-4 py-2 text-xs font-bold text-white/40"
+        title="Preview media wall — not a live Seedance job"
+      >
+        Flow · Preview
       </Link>
     </div>
   );

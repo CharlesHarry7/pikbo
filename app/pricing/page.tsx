@@ -226,18 +226,26 @@ export default async function PricingPage({
                 and review the result before you publish it.
               </p>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2 sm:mt-0">
+            <div
+              className="mt-4 flex flex-wrap gap-2 sm:mt-0"
+              data-pricing-path="product-first"
+            >
               <Button asChild>
                 <Link href="/create?source=pricing-bottom">Animate one SKU</Link>
               </Button>
               <Button asChild variant="secondary">
-                <Link href="/flow">Flow</Link>
+                <Link href="/create?mode=seller-pack">Seller Pack</Link>
               </Button>
               <Button asChild variant="secondary">
                 <Link href="/modules">Toy Modules</Link>
               </Button>
               <Button asChild variant="secondary">
-                <Link href="/create?mode=seller-pack">Seller Pack</Link>
+                <Link href="/library">Library</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link href="/flow" title="Preview media wall — not a live job">
+                  Flow · Preview
+                </Link>
               </Button>
               <FreeTrialCta
                 path="/pricing#bottom"

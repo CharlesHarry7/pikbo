@@ -88,17 +88,17 @@ export function ModulesMobileCta() {
           {t("modules.mobile.pack")}
         </Link>
         <Link
-          href="/flow"
+          href="/library"
           onClick={() =>
             track({
               event: "landing_view",
               path: "/modules",
-              meta: { cta: "flow" },
+              meta: { cta: "library" },
             })
           }
           className="btn btn-ghost shrink-0 border border-white/15 px-3 py-3 text-xs font-bold"
         >
-          {t("nav.flow")}
+          Library
         </Link>
       </div>
     </div>

@@ -358,7 +358,7 @@ export function ProfilePanel() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" data-profile-path="product-first">
         <Link href="/create" className="btn btn-primary px-3 py-1.5 text-xs">
           Generate
         </Link>
@@ -371,8 +371,8 @@ export function ProfilePanel() {
         >
           Seller Pack
         </Link>
-        <Link href="/flow" className="btn btn-ghost px-3 py-1.5 text-xs">
-          Flow
+        <Link href="/modules" className="btn btn-ghost px-3 py-1.5 text-xs">
+          Modules
         </Link>
         {!auth.signedIn ? (
           <Link href="/login" className="btn btn-ghost px-3 py-1.5 text-xs">
@@ -397,21 +397,28 @@ export function ProfilePanel() {
         <Link href="/create" className="btn btn-primary w-full text-sm">
           Open Generate
         </Link>
-        <div className="grid grid-cols-2 gap-2">
-          <Link href="/modules" className="btn btn-ghost w-full text-sm">
-            Modules
-          </Link>
+        <div
+          className="grid grid-cols-2 gap-2"
+          data-profile-suite="product-first"
+        >
           <Link
             href="/create?mode=seller-pack"
             className="btn btn-ghost w-full text-sm"
           >
             Seller Pack
           </Link>
-          <Link href="/flow" className="btn btn-ghost w-full text-sm">
-            Flow
+          <Link href="/modules" className="btn btn-ghost w-full text-sm">
+            Modules
           </Link>
           <Link href="/status" className="btn btn-ghost w-full text-sm">
             System status
+          </Link>
+          <Link
+            href="/flow"
+            className="btn btn-ghost w-full text-sm text-white/50"
+            title="Preview media wall — not a live Seedance job"
+          >
+            Flow · Preview
           </Link>
         </div>
         {!auth.signedIn ? (

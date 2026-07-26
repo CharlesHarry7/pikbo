@@ -25,43 +25,44 @@ export type JobIntent = {
   href?: string;
 };
 
+/** Commercial goals first (Creative Director) — not model/feature names. */
 export const JOB_INTENTS: JobIntent[] = [
   {
     id: "etsy-listing",
-    label: "Etsy listing spin",
-    blurb: "1:1 packshot that turns on the listing gallery",
+    label: "Listing · 360° Spin",
+    blurb: "1:1 packshot for Etsy / Shopify / Amazon galleries",
     effect: "360-spin-showcase",
     aspectRatio: "1:1",
     channel: "etsy",
   },
   {
     id: "tiktok-hook",
-    label: "TikTok / Reels hook",
-    blurb: "9:16 flash motion for the first 1–2 seconds",
+    label: "Social Hook",
+    blurb: "9:16 first-second flash for TikTok / Reels / 小红书",
     effect: "paparazzi-flash",
     aspectRatio: "9:16",
     channel: "tiktok",
   },
   {
     id: "blind-box-drop",
-    label: "Blind-box reveal",
-    blurb: "Unbox beat for restocks and drop day posts",
+    label: "Box Reveal",
+    blurb: "Unbox beat for restocks, drops, and open-box posts",
     effect: "blind-box-unboxing",
     aspectRatio: "9:16",
     channel: "tiktok",
   },
   {
     id: "shelf-display",
-    label: "Shelf / display case",
-    blurb: "Clean studio hold for collectors and PDP",
+    label: "Display Glow",
+    blurb: "Clean shelf / case hold for collectors and PDP",
     effect: "display-case-glam",
     aspectRatio: "9:16",
     channel: "pdp",
   },
   {
     id: "seller-pack",
-    label: "Seller Pack · 3 clips",
-    blurb: "Listing + reveal + social from one photo",
+    label: "Seller Pack · Launch",
+    blurb: "Default commercial path: listing + reveal + hook",
     effect: "360-spin-showcase",
     aspectRatio: "1:1",
     channel: "etsy",

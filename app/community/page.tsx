@@ -115,13 +115,19 @@ export default async function CommunityPage() {
                 : "See what each toy-video recipe is designed to make"}
             </h1>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="flex flex-wrap items-center gap-2"
+            data-community-path="product-first"
+          >
             <FreeTrialCta path="/community" variant="mint" />
             <Link href="/create" className="btn btn-ghost !px-3 !py-2 text-xs">
               Generate
             </Link>
-            <Link href="/flow" className="btn btn-ghost !px-3 !py-2 text-xs">
-              Flow
+            <Link
+              href="/create?mode=seller-pack"
+              className="btn btn-ghost !px-3 !py-2 text-xs"
+            >
+              Seller Pack
             </Link>
             <Link
               href="/modules"
@@ -130,19 +136,30 @@ export default async function CommunityPage() {
               Modules
             </Link>
             <Link
-              href="/create?mode=seller-pack"
+              href="/library"
               className="btn btn-ghost !px-3 !py-2 text-xs"
             >
-              Seller Pack
-            </Link>
-            <Link href="/image" className="btn btn-ghost !px-3 !py-2 text-xs">
-              Stills
+              Library
             </Link>
             <Link
               href="/effects"
               className="btn btn-ghost !px-3 !py-2 text-xs"
             >
-              All presets
+              Recipes
+            </Link>
+            <Link
+              href="/flow"
+              className="btn btn-ghost !px-3 !py-2 text-xs text-white/50"
+              title="Preview media wall — not a live Seedance job"
+            >
+              Flow · Preview
+            </Link>
+            <Link
+              href="/image"
+              className="btn btn-ghost !px-3 !py-2 text-xs text-white/50"
+              title="Optional stills preview"
+            >
+              Stills · Preview
             </Link>
           </div>
         </div>

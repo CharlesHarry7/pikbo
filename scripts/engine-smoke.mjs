@@ -372,14 +372,32 @@ assert.ok(
   firstRunAdvancedAt >= 0 && firstRunAdvancedAt < firstRunIdentityAt,
   "Toy Identity must be inside Advanced, not in the upload step"
 );
-// Mobile first-run: activation/workflow chrome desktop-only (lg+)
+// Mobile first-run: activation/workflow chrome desktop-only (lg+).
+// CD Phase A: JobIntentBar commercial goals stay on all viewports (goal-first).
 assert.match(
   createFirstRunStudio,
-  /Activation \+ job shelf: desktop only/
+  /Activation \+ workflow shelf: desktop density/
 );
 assert.match(
   createFirstRunStudio,
+  /Creative Director: commercial goal before model\/recipe density/
+);
+assert.match(createFirstRunStudio, /JobIntentBar activeId=\{jobIntentId\}/);
+// Model/mode strip still hidden on 390px (upload→recipe→generate core)
+assert.match(
+  createFirstRunStudio,
   /hidden border-b border-white\/10 bg-\[#050506\] px-3 py-1\.5 sm:block/
+);
+// Activation+Workflow remain inside hidden lg:block; JobIntentBar after that close
+const actBlockAt = createFirstRunStudio.indexOf(
+  "Activation + workflow shelf: desktop density"
+);
+const jobBarCommentAt = createFirstRunStudio.indexOf(
+  "Creative Director: commercial goal before model/recipe density"
+);
+assert.ok(
+  actBlockAt >= 0 && jobBarCommentAt > actBlockAt,
+  "CD Phase A: JobIntentBar comment after desktop-only activation block"
 );
 
 // Seller Pack first-run (Phase F 390px): compact steps + sticky actions.
@@ -2863,12 +2881,18 @@ assert.match(modeA, /videoWebhook|assets count|jobs count/);
 const pkgJson = fs.readFileSync(join(root, "package.json"), "utf8");
 assert.match(pkgJson, /mode-a-acceptance/);
 
-assert.match(fs.readFileSync(join(root, "lib/jobIntents.ts"), "utf8"), /JOB_INTENTS/);
+const jobIntentsSrc = fs.readFileSync(join(root, "lib/jobIntents.ts"), "utf8");
+assert.match(jobIntentsSrc, /JOB_INTENTS/);
+assert.match(jobIntentsSrc, /Listing · 360|Seller Pack · Launch|Social Hook/);
 assert.match(
   fs.readFileSync(join(root, "components/JobIntentBar.tsx"), "utf8"),
-  /job\.what|What are you making/
+  /job\.what|Sales mode|Creative Director/
 );
 assert.match(createStudio, /JobIntentBar|ActivationChecklist/);
+assert.match(
+  fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
+  /job\.seller["']:\s*["']Seller Pack · Launch/
+);
 
 // Five-step toy identity + delivery honesty + landing assetId + workflows
 const toyIdSrc = fs.readFileSync(join(root, "lib/toyIdentity.ts"), "utf8");
@@ -3520,11 +3544,65 @@ const afterPathSrc = fs.readFileSync(
   "utf8"
 );
 assert.match(afterPathSrc, /aria-label=["']After generate["']/);
+assert.match(afterPathSrc, /data-after-path=["']product-first["']/);
 assert.match(afterPathSrc, /Publish path/);
 assert.match(afterPathSrc, /Library/);
 assert.match(afterPathSrc, /Seller Pack/);
+assert.match(afterPathSrc, /Next SKU/);
 assert.match(afterPathSrc, /\/modules/);
+assert.match(afterPathSrc, /Flow · Preview/);
+// Product path before Flow · Preview on after-generate chips
+assert.ok(
+  afterPathSrc.indexOf("mode=seller-pack") < afterPathSrc.indexOf('href="/flow"'),
+  "AfterPath: Seller Pack before Flow"
+);
+assert.ok(
+  afterPathSrc.indexOf('href="/modules"') < afterPathSrc.indexOf('href="/flow"'),
+  "AfterPath: Modules before Flow"
+);
+assert.ok(
+  afterPathSrc.indexOf("Next SKU") < afterPathSrc.indexOf("Flow · Preview"),
+  "AfterPath: Next SKU before Flow Preview"
+);
 assert.match(createStudioSmoke, /GenerateAfterPath/);
+// Footer / Profile / Explore / Community product-first suite exits
+assert.match(
+  fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
+  /data-footer-path=["']product-first["']/
+);
+// profilePanelSrc already loaded above (credits authority block)
+assert.match(profilePanelSrc, /data-profile-path=["']product-first["']/);
+assert.match(profilePanelSrc, /data-profile-suite=["']product-first["']/);
+assert.match(profilePanelSrc, /Flow · Preview/);
+assert.ok(
+  profilePanelSrc.indexOf("mode=seller-pack") <
+    profilePanelSrc.indexOf('href="/flow"'),
+  "Profile: Seller Pack before Flow"
+);
+assert.match(
+  fs.readFileSync(join(root, "app/profile/page.tsx"), "utf8"),
+  /data-profile-page-path=["']product-first["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/explore/page.tsx"), "utf8"),
+  /data-explore-path=["']product-first["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/community/page.tsx"), "utf8"),
+  /data-community-path=["']product-first["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/pricing/page.tsx"), "utf8"),
+  /data-pricing-path=["']product-first["']/
+);
+// Modules suite CTAs: Seller Pack + Library before Flow Preview
+assert.ok(
+  modulesSuiteCtasSrc.indexOf("mode=seller-pack") <
+    modulesSuiteCtasSrc.indexOf('href="/flow"'),
+  "ModulesSuiteCtas: Seller Pack before Flow"
+);
+assert.match(modulesSuiteCtasSrc, /Flow · Preview/);
+assert.match(modulesMobileCtaSrc, /href=["']\/library["']/);
 assert.match(
   fs.readFileSync(join(root, "components/LandingToolPanel.tsx"), "utf8"),
   /GenerateWaitStage/

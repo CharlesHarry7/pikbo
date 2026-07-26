@@ -15,7 +15,7 @@ export const site = {
   tagline: "Designer toy AI video suite",
   /** Meta description — brand suite + trial; primary keyword lives on /tools */
   description:
-    "Pikbo is a designer-toy AI video suite: turn photos of figures you own into short clips for listings and social. Free Mini trial. No card. Failed live jobs restore credits when confirmed.",
+    "Pikbo is the designer-toy Creative Director: turn photos of figures you own into listing, reveal, and social clips. Free Mini trial. No card. Failed live jobs restore credits when confirmed.",
   /**
    * Document title (homepage default) — brand first.
    * 哥飞 P0: must NOT match tools rank-page title.
@@ -25,11 +25,11 @@ export const site = {
    * Homepage H1 — brand + scene, not the full primary keyword phrase.
    * Rank H1 stays on /tools/ai-toy-video-generator.
    */
-  homeH1: "Turn your toy photos into short videos",
+  homeH1: "Turn your toy photos into launch-ready videos",
   /** Primary rank keyword — tools page only; not homepage Title/H1 */
   keyword: "AI toy video generator",
   /** Rank battlefield URL for internal links */
   rankToolPath: "/tools/ai-toy-video-generator" as const,
   twitter: "@pikbo_ai",
-  suiteLine: "AI video for toys · Seedance live",
+  suiteLine: "Toy Launch Pack · Seedance live",
 } as const;

@@ -4,6 +4,17 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-26 — [grok] CD Phase A + product-first suite exits
+- North star §6: CD product layer (Launch Pack path, Sales fidelity, phased A/B/C).
+- Create: commercial `JobIntentBar` all viewports; mobile CD strip; recipe rail
+  “Toy recipes · 360 · Reveal · Zero-G · Dance · Glow”.
+- i18n EN/ZH: Listing 360 / Social Hook / Box Reveal / Display Glow /
+  Seller Pack · Launch; ready/next-job commercial copy.
+- `GenerateAfterPath` + Footer/Profile/Explore/Community/Pricing/Modules:
+  product path first; **Flow · Preview** last (`data-*-path=product-first`).
+- `site.homeH1` launch-ready; description Creative Director (rank Title/keywords untouched).
+- Verified: engine-smoke · tsc. No SEO page budget · no Stripe · no Wave C.
+
 ### 2026-07-26 — [grok] Project product-first + T5 jobs hard-false + Community gate
 - `/projects/[slug]`: cold-start `CONCEPT_ROBOTS`; CTAs Seller Pack · Modules ·
   Library (Flow demoted); breadcrumb Home→Explore→title.

@@ -34,9 +34,18 @@ export default function ProfilePage() {
             Sign-in status →
           </Link>
         </p>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div
+          className="mt-4 flex flex-wrap gap-2"
+          data-profile-page-path="product-first"
+        >
           <Link href="/create" className="btn btn-primary !px-3 !py-1.5 text-xs">
             Generate
+          </Link>
+          <Link
+            href="/create?mode=seller-pack"
+            className="btn btn-ghost !px-3 !py-1.5 text-xs"
+          >
+            Seller Pack
           </Link>
           <Link href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Library
@@ -44,8 +53,12 @@ export default function ProfilePage() {
           <Link href="/pricing" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Plans
           </Link>
-          <Link href="/flow" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-            Flow
+          <Link
+            href="/flow"
+            className="btn btn-ghost !px-3 !py-1.5 text-xs text-white/50"
+            title="Preview media wall — not a live Seedance job"
+          >
+            Flow · Preview
           </Link>
         </div>
         <ProfilePanel />

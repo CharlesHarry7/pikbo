@@ -103,7 +103,10 @@ export default async function ExplorePage({
               registered recipe, and an honest cached/live record.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="flex flex-wrap items-center gap-2"
+            data-explore-path="product-first"
+          >
             <FreeTrialCta path="/explore" variant="primary" />
             <Link
               href="/create"
@@ -112,10 +115,10 @@ export default async function ExplorePage({
               Generate
             </Link>
             <Link
-              href="/flow"
+              href="/create?mode=seller-pack"
               className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/80 transition hover:border-white/30"
             >
-              Flow
+              Seller Pack
             </Link>
             <Link
               href="/modules"
@@ -134,6 +137,13 @@ export default async function ExplorePage({
               className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/70 transition hover:border-white/30"
             >
               Recipes
+            </Link>
+            <Link
+              href="/flow"
+              className="rounded-full border border-white/10 bg-white/[0.02] px-4 py-2.5 text-xs font-bold text-white/45 transition hover:border-white/20"
+              title="Preview media wall — not a live Seedance job"
+            >
+              Flow · Preview
             </Link>
           </div>
         </div>

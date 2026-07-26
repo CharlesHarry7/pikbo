@@ -18,22 +18,22 @@ export const CATEGORIES: Category[] = [
   {
     id: "showcase",
     label: "Product Showcase",
-    blurb: "Clean product-video drafts for listings, launches, and ads.",
+    blurb: "Commercial packshots: 360°, Zero-G, Display Glow for listings.",
   },
   {
     id: "unboxing",
     label: "Unboxing & Reveal",
-    blurb: "The reveal beat collectors can't scroll past.",
+    blurb: "Box Reveal beat for drops, restocks, and open-box posts.",
   },
   {
     id: "comealive",
     label: "Come Alive",
-    blurb: "Make the toy you own move, dance, and wave.",
+    blurb: "Toy Dance, walk, wave — social motion on the figure you own.",
   },
   {
     id: "scene",
     label: "Scenes & Worlds",
-    blurb: "Drop your figure into a tiny cinematic world.",
+    blurb: "Story mode: tiny worlds while keeping the toy recognizable.",
   },
 ];
 
