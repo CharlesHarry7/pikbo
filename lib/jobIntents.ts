@@ -47,8 +47,8 @@ export const JOB_INTENTS: JobIntent[] = [
   },
   {
     id: "blind-box-drop",
-    label: "Box Reveal",
-    blurb: "Unbox beat for restocks, drops, and open-box posts",
+    label: "Unboxing",
+    blurb: "9:16 reveal beat for restocks, drops, and open-box posts",
     effect: "blind-box-unboxing",
     aspectRatio: "9:16",
     channel: "tiktok",
@@ -63,8 +63,8 @@ export const JOB_INTENTS: JobIntent[] = [
   },
   {
     id: "seller-pack",
-    label: "Seller Starter Pack · 3 clips",
-    blurb: "Default commercial path: listing + reveal + hook",
+    label: "Starter Pack · 3 clips",
+    blurb: "Listing + unboxing + social hook · 30 credits live",
     effect: "360-spin-showcase",
     aspectRatio: "1:1",
     channel: "etsy",

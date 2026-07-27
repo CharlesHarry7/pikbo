@@ -11,6 +11,11 @@ export type AnalyticsEvent =
   | "project_open"
   | "recipe_use"
   | "upload_ready"
+  | "asset_upload_complete"
+  | "recipe_selected"
+  | "generation_quote_view"
+  | "pack_quote_view"
+  | "pack_start"
   | "generate_start"
   | "generate_result"
   | "export_click";

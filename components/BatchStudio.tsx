@@ -81,6 +81,7 @@ import {
   type SellerPackPublicJob,
   type SellerPackRecoveryRun,
 } from "@/lib/sellerPackRecovery";
+import { track } from "@/lib/analytics";
 
 type Job = {
   slug: string;
@@ -230,7 +231,7 @@ export function BatchStudio({
   const [image, setImage] = useState<string | null>(null);
   const [imageProbe, setImageProbe] = useState<ImageProbe | null>(null);
   const [labStill, setLabStill] = useState(false);
-  const [briefCollapsed, setBriefCollapsed] = useState(false);
+  const [briefCollapsed, setBriefCollapsed] = useState(true);
   const [toyIdentity, setToyIdentity] = useState<ToyIdentity>({
     sku: (initialSku || "").trim().slice(0, 64),
     preserve: "",
@@ -259,6 +260,7 @@ export function BatchStudio({
   const [packElapsed, setPackElapsed] = useState(0);
   /** Abort in-flight pack child + rate-limit waits (parity with Create Cancel). */
   const packAbortRef = useRef<AbortController | null>(null);
+  const quoteEventRef = useRef("");
 
   const { locale } = useI18n();
 
@@ -296,7 +298,7 @@ export function BatchStudio({
               setImage(pending);
               setLabStill(false);
               setImageProbe(null);
-              setBriefCollapsed(false);
+              setBriefCollapsed(true);
               setError(null);
               // Do not setOwnsRights — customer still needs ownership confirm.
               void probeImageSize(pending).then((meta) => {
@@ -315,7 +317,7 @@ export function BatchStudio({
                 setImage(dataUrl);
                 setLabStill(false);
                 setImageProbe(null);
-                setBriefCollapsed(false);
+                setBriefCollapsed(true);
                 setError(null);
                 void probeImageSize(dataUrl).then((meta) => {
                   if (!canceled && meta) setImageProbe(meta);
@@ -349,7 +351,7 @@ export function BatchStudio({
           setImage(dataUrl);
           setLabStill(true);
           setImageProbe(null);
-          setBriefCollapsed(false);
+          setBriefCollapsed(true);
           // Official Pikbo Lab stills — product-owned samples, not a visitor upload.
           setOwnsRights(true);
           setError(null);
@@ -530,8 +532,15 @@ export function BatchStudio({
       setImage(dataUrl);
       setImageProbe(null);
       setLabStill(false);
-      setBriefCollapsed(false);
+      setBriefCollapsed(true);
       setError(null);
+      track({
+        event: "asset_upload_complete",
+        path: "/create",
+        recipe: sellerPackActive ? "seller-starter-pack" : "custom-batch",
+        demo: demoMode,
+        meta: { source: "owned_upload" },
+      });
       void probeImageSize(dataUrl).then((meta) => {
         if (meta) setImageProbe(meta);
       });
@@ -761,6 +770,16 @@ export function BatchStudio({
       return;
     }
 
+    track({
+      event: "pack_start",
+      path: "/create",
+      recipe: sellerPackActive ? "seller-starter-pack" : "custom-batch",
+      demo: demoMode,
+      meta: {
+        outputs: selected.length,
+        credits: demoMode ? 0 : selected.length * CREDITS_PER_VIDEO,
+      },
+    });
     setError(null);
     setFailRetryAfterSec(null);
     setPackElapsed(0);
@@ -1232,6 +1251,29 @@ export function BatchStudio({
     [demoMode, sellerPackActive, selected.length]
   );
   const liveQuoteCovered = sellerPackBalanceCovers(packQuote, me?.credits);
+
+  useEffect(() => {
+    if (!image || selected.length === 0) return;
+    const signature = `${sellerPackActive}:${selected.join(",")}:${packQuote.totalCredits}:${demoMode}`;
+    if (quoteEventRef.current === signature) return;
+    quoteEventRef.current = signature;
+    track({
+      event: "pack_quote_view",
+      path: "/create",
+      recipe: sellerPackActive ? "seller-starter-pack" : "custom-batch",
+      demo: demoMode,
+      meta: {
+        outputs: selected.length,
+        credits: packQuote.totalCredits,
+      },
+    });
+  }, [
+    image,
+    selected,
+    sellerPackActive,
+    packQuote.totalCredits,
+    demoMode,
+  ]);
 
   /** CD Phase B3 — Seller Pack Director Plan (total cost before run). */
   const sellerDirectorPlan = useMemo(() => {

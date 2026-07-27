@@ -15,9 +15,16 @@ const JOB_I18N: Record<
   "seller-pack": { label: "job.seller", blurb: "job.seller.blurb" },
 };
 
+const FIRST_RUN_JOBS: JobIntentId[] = [
+  "etsy-listing",
+  "blind-box-drop",
+  "tiktok-hook",
+  "seller-pack",
+];
+
 /**
- * Creative Director commercial goals — pick an outcome, not a model name.
- * Visible on all viewports (Phase A); Seller Pack is the default launch path.
+ * First-run selling tasks — four outcomes, not a model shelf.
+ * The broader recipe catalog remains available inside Advanced.
  */
 export function JobIntentBar({
   activeId,
@@ -29,18 +36,20 @@ export function JobIntentBar({
   const { t } = useI18n();
 
   return (
-    <div className="border-b border-white/10 bg-gradient-to-r from-[var(--mint)]/[0.05] via-black/50 to-black/40 px-3 py-2.5 sm:px-4 sm:py-3">
-      <div className="mx-auto max-w-6xl">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]/85">
-            {t("job.what")}
-          </p>
-          <p className="text-[9px] text-white/35 sm:text-[10px]">
-            Sales mode · fidelity first · own photos only
-          </p>
-        </div>
-        <div className="mt-2 flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {JOB_INTENTS.map((job) => {
+    <div data-first-run-step="recipe">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <p className="text-xs font-bold uppercase tracking-wide text-[var(--fg-muted)]">
+          <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black">
+            2
+          </span>
+          Choose a selling task
+        </p>
+        <p className="text-[10px] text-white/40">
+          One tap sets the recipe and format
+        </p>
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+          {JOB_INTENTS.filter((job) => FIRST_RUN_JOBS.includes(job.id)).map((job) => {
             const i18n = JOB_I18N[job.id];
             const label = t(i18n.label);
             const blurb = t(i18n.blurb);
@@ -49,12 +58,13 @@ export function JobIntentBar({
                 <Link
                   key={job.id}
                   href={job.href}
-                  className="shrink-0 rounded-2xl border border-[var(--mint)]/45 bg-[var(--mint)]/[0.12] px-3 py-2 text-left shadow-[0_0_20px_rgba(200,255,61,0.1)] transition hover:border-[var(--mint)] hover:bg-[var(--mint)]/20 sm:px-3.5"
+                  onClick={() => onPick(job.id)}
+                  className="min-w-0 rounded-xl border border-[var(--mint)]/45 bg-[var(--mint)]/[0.12] px-3 py-2.5 text-left shadow-[0_0_20px_rgba(200,255,61,0.1)] transition hover:border-[var(--mint)] hover:bg-[var(--mint)]/20"
                 >
-                  <span className="block text-[11px] font-bold text-[var(--mint)]">
+                  <span className="block text-[11px] font-bold leading-tight text-[var(--mint)]">
                     {label}
                   </span>
-                  <span className="mt-0.5 block max-w-[11rem] text-[10px] leading-snug text-white/50">
+                  <span className="mt-1 block text-[9px] leading-snug text-white/50">
                     {blurb}
                   </span>
                 </Link>
@@ -66,20 +76,19 @@ export function JobIntentBar({
                 key={job.id}
                 type="button"
                 onClick={() => onPick(job.id)}
-                className={`shrink-0 rounded-2xl border px-3 py-2 text-left transition sm:px-3.5 ${
+                className={`min-w-0 rounded-xl border px-3 py-2.5 text-left transition ${
                   active
                     ? "border-[var(--mint)] bg-[var(--mint)]/15 text-[var(--mint)] shadow-[0_0_22px_rgba(200,255,61,0.12)]"
                     : "border-white/12 bg-black/30 text-white/75 hover:border-white/30 hover:bg-black/45"
                 }`}
               >
-                <span className="block text-[11px] font-bold">{label}</span>
-                <span className="mt-0.5 block max-w-[11rem] text-[10px] leading-snug opacity-70">
+                <span className="block text-[11px] font-bold leading-tight">{label}</span>
+                <span className="mt-1 block text-[9px] leading-snug opacity-70">
                   {blurb}
                 </span>
               </button>
             );
           })}
-        </div>
       </div>
     </div>
   );

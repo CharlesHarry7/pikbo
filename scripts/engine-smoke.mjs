@@ -363,10 +363,15 @@ const createFirstRunStudio = fs.readFileSync(
   join(root, "components/CreateStudio.tsx"),
   "utf8"
 );
+const createFirstRunJobs = fs.readFileSync(
+  join(root, "components/JobIntentBar.tsx"),
+  "utf8"
+);
 assert.match(createFirstRunStudio, /data-first-run-step="upload"/);
 assert.match(createFirstRunStudio, /Upload owned toy photo/);
-assert.match(createFirstRunStudio, /data-first-run-step="recipe"/);
-assert.match(createFirstRunStudio, /Choose recipe/);
+assert.match(createFirstRunStudio, /<JobIntentBar/);
+assert.match(createFirstRunJobs, /data-first-run-step="recipe"/);
+assert.match(createFirstRunJobs, /Choose a selling task/);
 assert.match(createFirstRunStudio, /data-first-run-action="generate"/);
 assert.match(createFirstRunStudio, /CREDITS_PER_VIDEO\} credits/);
 assert.match(
@@ -375,14 +380,14 @@ assert.match(
 );
 assert.match(createFirstRunStudio, /aria-expanded=\{showAdvanced\}/);
 const firstRunRecipeAt = createFirstRunStudio.indexOf(
-  'data-first-run-step="recipe"'
+  "<JobIntentBar"
 );
 const firstRunLabAt = createFirstRunStudio.indexOf("Try free · Lab");
 const firstRunAdvancedAt = createFirstRunStudio.indexOf(
   'id="create-advanced-options"'
 );
 const firstRunIdentityAt = createFirstRunStudio.indexOf(
-  't("create.toyIdentity")'
+  "<AssetBriefPanel"
 );
 assert.ok(
   firstRunRecipeAt >= 0 && firstRunRecipeAt < firstRunLabAt,
@@ -390,34 +395,20 @@ assert.ok(
 );
 assert.ok(
   firstRunAdvancedAt >= 0 && firstRunAdvancedAt < firstRunIdentityAt,
-  "Toy Identity must be inside Advanced, not in the upload step"
+  "asset brief and toy fidelity guidance must stay inside Advanced"
 );
-// Mobile first-run: activation/workflow chrome desktop-only (lg+).
-// CD Phase A: JobIntentBar commercial goals stay on all viewports (goal-first).
+// First-run stays seller-task-first; old activation/workflow shelves are gone.
+assert.doesNotMatch(createFirstRunStudio, /<WorkflowShelf/);
+assert.doesNotMatch(createFirstRunStudio, /<ActivationChecklist/);
 assert.match(
+  createFirstRunStudio,
+  /JobIntentBar activeId=\{activeSellingTask\}/
+);
+// Model shelf and activation chrome are removed from the first-run path.
+assert.doesNotMatch(createFirstRunStudio, /Seedance · live/);
+assert.doesNotMatch(
   createFirstRunStudio,
   /Activation \+ workflow shelf: desktop density/
-);
-assert.match(
-  createFirstRunStudio,
-  /Creative Director: commercial goal before model\/recipe density/
-);
-assert.match(createFirstRunStudio, /JobIntentBar activeId=\{jobIntentId\}/);
-// Model/mode strip still hidden on 390px (upload→recipe→generate core)
-assert.match(
-  createFirstRunStudio,
-  /hidden border-b border-white\/10 bg-\[#050506\] px-3 py-1\.5 sm:block/
-);
-// Activation+Workflow remain inside hidden lg:block; JobIntentBar after that close
-const actBlockAt = createFirstRunStudio.indexOf(
-  "Activation + workflow shelf: desktop density"
-);
-const jobBarCommentAt = createFirstRunStudio.indexOf(
-  "Creative Director: commercial goal before model/recipe density"
-);
-assert.ok(
-  actBlockAt >= 0 && jobBarCommentAt > actBlockAt,
-  "CD Phase A: JobIntentBar comment after desktop-only activation block"
 );
 
 // Seller Pack first-run (Phase F 390px): compact steps + sticky actions.
@@ -3510,16 +3501,16 @@ const jobIntentsSrc = fs.readFileSync(join(root, "lib/jobIntents.ts"), "utf8");
 assert.match(jobIntentsSrc, /JOB_INTENTS/);
 assert.match(
   jobIntentsSrc,
-  /Listing · 360|Seller Starter Pack · 3 clips|Social Hook/
+  /Listing · 360|Starter Pack · 3 clips|Social Hook/
 );
 assert.match(
   fs.readFileSync(join(root, "components/JobIntentBar.tsx"), "utf8"),
-  /job\.what|Sales mode|Creative Director/
+  /Choose a selling task|First-run selling tasks/
 );
 assert.match(createStudio, /JobIntentBar|ActivationChecklist/);
 assert.match(
   fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
-  /job\.seller["']:\s*["']Seller Starter Pack · 3 clips/
+  /job\.seller["']:\s*["']Starter Pack · 3 clips/
 );
 
 // CD Phase B — rule-based Asset Brief + character bible draft (not cloud vision)
@@ -3759,7 +3750,7 @@ assert.match(
   fs.readFileSync(join(root, "lib/workflows.ts"), "utf8"),
   /listCreateShelfWorkflows|Workflow/
 );
-assert.match(createStudio, /WorkflowShelf/);
+assert.doesNotMatch(createStudio, /<WorkflowShelf/);
 assert.match(historySrcLib, /sku\?:/);
 assert.match(library, /i\.sku|sku/);
 
