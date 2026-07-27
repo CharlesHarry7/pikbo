@@ -393,6 +393,33 @@
       "free": true,
       "status_hint": "pending",
       "note": "WB 20260727c2: New dir. Softr page slow to load. May need longer wait."
+    },
+    {
+      "slug": "nextgentools",
+      "name": "NextGenTools",
+      "url": "https://nextgentools.me",
+      "submit_url": "https://nextgentools.me/submit-your-tool",
+      "free": true,
+      "status_hint": "pending",
+      "note": "WB 20260727c3: From HansP95 dataset. Free submit form (Tool name, Category, URL, Contact). Paid promotion optional. No login required."
+    },
+    {
+      "slug": "aimarketing-directory",
+      "name": "AI Marketing Directory",
+      "url": "https://www.aimarketing.directory",
+      "submit_url": "https://www.aimarketing.directory/submit",
+      "free": true,
+      "status_hint": "pending",
+      "note": "WB 20260727c3: From HansP95 dataset. Free submit form (Tool name, Website, Description, Name, Email). Paid fast-track optional. No login required."
+    },
+    {
+      "slug": "aihunter",
+      "name": "AI Hunter",
+      "url": "https://ai-hunter.io",
+      "submit_url": "https://ai-hunter.io/submit-ai-tool/",
+      "free": true,
+      "status_hint": "pending",
+      "note": "WB 20260727c3: From HansP95 dataset. Free basic submission available. $19 fast-track option. Form: Name, Email, Website, Category, Pricing, Description. No login required."
     }
   ]
 }
