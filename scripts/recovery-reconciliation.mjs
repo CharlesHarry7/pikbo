@@ -45,6 +45,15 @@ assert.match(adapter, /claimDurableReconciliation/);
 assert.match(adapter, /finishDurableReconciliation/);
 assert.match(adapter, /payload\.deliverable !== false/);
 assert.match(route, /recordProviderSucceededWithheld/);
+// Image live Flux must enqueue the same R1c withheld path (never free still).
+const imageRoute = readFileSync(join(root, "app/api/image/route.ts"), "utf8");
+assert.match(imageRoute, /recordProviderSucceededWithheld/);
+assert.match(imageRoute, /recordConfirmedPreOutputFailure|recordSettlementUnknown/);
+assert.match(
+  imageRoute,
+  /capture_failed|late output enqueue|image capture enqueue/
+);
+assert.match(imageRoute, /recon:image:/);
 
 const base = createReconciliationCase({
   jobId: "job-1",

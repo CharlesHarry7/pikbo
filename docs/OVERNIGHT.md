@@ -168,7 +168,8 @@
 127. [x] R1b-lite: fixed job deadline (createdAt) + explicit retryJobId promote (no effect/prompt guess)
 128. [x] Health/Seller Pack honesty post-R0 · createUi carries retryToken · image fork parity
 129. [x] Image R1b parity: claimRetryImageJob + deadlineAt + read-only GET + late Flux withhold
-130. 下一拍：R1c durable reconciliation worker · Mode A Vercel/SQL (boss) · T6 bake
+130. [x] Image R1c parity: recordProviderSucceededWithheld + release enqueue on live Flux
+131. 下一拍：R1c SQL non-prod rehearsal (boss) · Mode A Vercel · T6 bake
 
 ### 老板醒来验收
 
@@ -182,9 +183,9 @@
 
 ## Grok 本拍状态（3 行）
 
-- Image R1b parity with video: exact parent id, one-time retryToken claim, fixed deadlineAt, late Flux withheld.
-- GET still list/poll read-only; Library sessionStorage bearer handoff; recovery-retry-deadline + engine-smoke PASS.
-- Next: R1c durable recon worker · SQL apply (boss) · T6 bake; live CI workflow re-copy still blocked.
+- Image R1c: late/capture-fail Flux enqueues recordProviderSucceededWithheld; release fail → release_pending/unknown.
+- recovery-reconciliation asserts generate+image; recovery-qa + engine-smoke PASS.
+- Next: R1c/R1a SQL non-prod apply (boss) · Mode A Vercel · T6 bake · CI workflow re-copy.
 
 
 

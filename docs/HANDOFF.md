@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] Image R1c reconciliation enqueue parity
+- Live `/api/image`: late Flux (cancel/timeout) and capture-fail both call `recordProviderSucceededWithheld` with private `outputRef` (never public free still).
+- Release failure enqueues `recordConfirmedPreOutputFailure` / `recordSettlementUnknown` (generate parity).
+- `recovery-reconciliation` locks generate + image route wiring.
+- SQL still unapplied — follow `docs/ops/R1C_NON_PROD_REHEARSAL.md`.
+- PASS: recovery-reconciliation + recovery-qa + engine-smoke + typecheck.
+
 ### 2026-07-28 — [claude] public Live capability copy gate
 - Home, Create, Pricing, Apps, Modules, Flow, Cinema, core tool/use-case content and structured data now lead with `cached prototype · 0 credits · upload not processed`; a model key alone is never presented as public Live.
 - Recipe doors are labeled READY/PREFILLED rather than LIVE. Seller Starter Pack static copy describes three recipes; a 30-credit Live quote appears only inside an eligible runtime state.

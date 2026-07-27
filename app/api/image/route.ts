@@ -21,6 +21,11 @@ import {
   settleStrictLiveGeneration,
   type StrictLiveReservation,
 } from "@/lib/durableCredits/liveReservation";
+import {
+  recordConfirmedPreOutputFailure,
+  recordProviderSucceededWithheld,
+  recordSettlementUnknown,
+} from "@/lib/durableCredits/reconciliation";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 import {
   invokeReservedProvider,
@@ -46,6 +51,17 @@ import {
   type ImageJob,
 } from "@/lib/imageJobs";
 import { providerCompletionDecision } from "@/lib/generationReliability.mjs";
+
+function reconciliationEventId(
+  kind: "provider_succeeded" | "release_pending" | "settlement_unknown",
+  jobId: string,
+  suffix?: string
+): string {
+  return `recon:image:${kind}:${jobId}${suffix ? `:${suffix}` : ""}`.slice(
+    0,
+    160
+  );
+}
 
 type ImageDemoReason =
   | "no_provider_key"
@@ -589,11 +605,39 @@ export async function POST(req: Request) {
     await saveSession(session);
     const releaseReservation = async (reason: string): Promise<boolean> => {
       if (!liveReservation) return false;
-      const released = await releaseStrictLiveGeneration(
-        liveReservation,
-        reason
-      );
-      if (!released.ok) return false;
+      const target = liveReservation;
+      const released = await releaseStrictLiveGeneration(target, reason);
+      if (!released.ok) {
+        // R1c parity with generate: enqueue release_pending or settlement_unknown.
+        const confirmedPreOutput = new Set([
+          "force_fail",
+          "retry_claim_rejected",
+        ]).has(reason);
+        const recorded = confirmedPreOutput
+          ? await recordConfirmedPreOutputFailure(target, {
+              eventId: reconciliationEventId(
+                "release_pending",
+                target.jobId,
+                reason
+              ),
+              reason,
+            })
+          : await recordSettlementUnknown(target, {
+              eventId: reconciliationEventId(
+                "settlement_unknown",
+                target.jobId,
+                reason
+              ),
+              reason,
+            });
+        if (!recorded.ok) {
+          console.error(
+            "[live-reconciliation] image release enqueue failed",
+            recorded.code
+          );
+        }
+        return false;
+      }
       session = {
         ...session,
         credits: released.data.availableCredits,
@@ -720,11 +764,35 @@ export async function POST(req: Request) {
         return NextResponse.json(failBody, { status: 502 });
       }
 
-      // Late Flux after cancel/timeout: withhold output (R1b video parity).
+      const providerRequestId =
+        typeof (result as { requestId?: string }).requestId === "string"
+          ? (result as { requestId?: string }).requestId
+          : undefined;
+
+      // Late Flux after cancel/timeout: withhold + R1c enqueue (never free still).
       if (liveJobId) {
         const deadlineState = getImageJob(liveJobId);
         const completionDecision = providerCompletionDecision(deadlineState);
         if (!completionDecision.allow) {
+          const recorded = await recordProviderSucceededWithheld(
+            reserved.reservation,
+            {
+              eventId: reconciliationEventId(
+                "provider_succeeded",
+                reserved.reservation.jobId
+              ),
+              providerRequestId:
+                providerRequestId || liveJobId || reserved.reservation.jobId,
+              outputRef: imageUrl,
+              reason: completionDecision.code,
+            }
+          );
+          if (!recorded.ok) {
+            console.error(
+              "[live-reconciliation] image late output enqueue failed",
+              recorded.code
+            );
+          }
           return NextResponse.json(
             {
               error: completionDecision.message,
@@ -739,11 +807,6 @@ export async function POST(req: Request) {
         }
       }
 
-      const providerRequestId =
-        typeof (result as { requestId?: string }).requestId === "string"
-          ? (result as { requestId?: string }).requestId
-          : undefined;
-
       const captured = await settleStrictLiveGeneration(
         reserved.reservation,
         providerRequestId || liveJobId || reserved.reservation.reservationId
@@ -754,6 +817,27 @@ export async function POST(req: Request) {
           captured.code,
           captured.error
         );
+        const recorded = await recordProviderSucceededWithheld(
+          reserved.reservation,
+          {
+            eventId: reconciliationEventId(
+              "provider_succeeded",
+              reserved.reservation.jobId
+            ),
+            providerRequestId:
+              providerRequestId || liveJobId || reserved.reservation.jobId,
+            outputRef: imageUrl,
+            reason: "capture_failed",
+          }
+        );
+        if (!recorded.ok) {
+          console.error(
+            "[live-reconciliation] image capture enqueue failed",
+            recorded.code
+          );
+        }
+        // Provider still exists — never release for a free still; R1c worker
+        // owns capture/release. Same idempotency key stays blocked.
         return NextResponse.json(
           {
             error:
