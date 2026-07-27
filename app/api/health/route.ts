@@ -15,6 +15,7 @@ import { localAssetsProbe } from "@/lib/localAssets";
 import { probeDemoAssets } from "@/lib/demoClips";
 import { communityUgcConfigured } from "@/lib/communityPosts";
 import { imageJobsProbe } from "@/lib/imageJobs";
+import { probeDurableReconciliationSchema } from "@/lib/durableCredits/reconciliation";
 // NextResponse used for GET + HEAD
 
 export const runtime = "nodejs";
@@ -22,6 +23,7 @@ export const runtime = "nodejs";
 type HealthTruthInput = {
   authConfigured: boolean;
   durableAtomicReservationConfigured: boolean;
+  durableReconciliationConfigured: boolean;
   providerConfigured: boolean;
   serverOwnedDeliverableConfigured: boolean;
 };
@@ -35,6 +37,9 @@ function evaluateHealthTruth(input: HealthTruthInput) {
   if (!input.authConfigured) missing.push("authConfigured");
   if (!input.durableAtomicReservationConfigured) {
     missing.push("durableAtomicReservationConfigured");
+  }
+  if (!input.durableReconciliationConfigured) {
+    missing.push("durableReconciliationConfigured");
   }
   if (!input.providerConfigured) missing.push("providerConfigured");
   if (!input.serverOwnedDeliverableConfigured) {
@@ -73,6 +78,7 @@ export async function GET() {
 
   const entitlements = await probeEntitlementsStore();
   const durableCredits = await probeDurableCreditsStore();
+  const durableReconciliation = await probeDurableReconciliationSchema();
   // Best-effort local reservation TTL sweep (no-op on Supabase backend)
   let reservationSweep = {
     expired: 0,
@@ -102,6 +108,10 @@ export async function GET() {
     durableCredits.writable &&
     durableCredits.schemaReady === true &&
     supabase.hasServiceRole;
+  const durableReconciliationConfigured =
+    process.env.PIKBO_R1_RECONCILIATION_READY === "1" &&
+    durableReconciliation.configured &&
+    durableReconciliation.schemaReady;
   const serverOwnedDeliverableConfigured =
     t6.status === "ready" &&
     t6.fileBake === true &&
@@ -112,6 +122,7 @@ export async function GET() {
   const truth = evaluateHealthTruth({
     authConfigured,
     durableAtomicReservationConfigured,
+    durableReconciliationConfigured,
     providerConfigured: fal,
     serverOwnedDeliverableConfigured,
   });
@@ -125,6 +136,7 @@ export async function GET() {
     provider: fal,
     auth: authConfigured,
     durableAtomicReservation: durableAtomicReservationConfigured,
+    durableReconciliation: durableReconciliationConfigured,
     serverOwnedDeliverable: serverOwnedDeliverableConfigured,
     /**
      * Real charges — needs durable entitlements (PRELAUNCH R1).
@@ -142,7 +154,8 @@ export async function GET() {
       payments.readyForTestCheckout &&
       durableServerOwnedJobs.effective,
     /** Only the Supabase atomic reservation path is live-spend authority. */
-    durableCredits: durableAtomicReservationConfigured,
+    durableCredits:
+      durableAtomicReservationConfigured && durableReconciliationConfigured,
   };
 
   return NextResponse.json({
@@ -186,9 +199,16 @@ export async function GET() {
         "supabase/migrations/20260727213000_r1_atomic_generation_credits.sql",
       smoke: "npm run recovery-ledger",
       appliedRequiresBoss: true,
-      r1bRetryDeadlineOpen: true,
+      r1bRetryDeadlineSource: true,
+      r1cReconciliationSource: true,
+      r1cMigration:
+        "supabase/migrations/20260727233000_r1c_generation_reconciliation.sql",
+      r1cSmoke: "npm run recovery-reconciliation",
+      r1cSchemaReady: durableReconciliation.schemaReady,
+      r1cEnabledByOperator:
+        process.env.PIKBO_R1_RECONCILIATION_READY === "1",
       note:
-        "Source-only until migration preflight + non-prod apply; live beta stays fail-closed without schema",
+        "R1a/R1c are source-only until migration preflight + non-prod rehearsal; live beta stays fail-closed without both schemas",
     },
     service: "pikbo",
     foundation: "L0-L3",
@@ -319,10 +339,13 @@ export async function GET() {
       requireDurableCredits: process.env.REQUIRE_DURABLE_CREDITS === "1",
       atomicReservationOperatorReady:
         process.env.PIKBO_R1_ATOMIC_RESERVATION_READY === "1",
+      reconciliationOperatorReady:
+        process.env.PIKBO_R1_RECONCILIATION_READY === "1",
       supabaseConfigured: supabase.configured,
       supabaseServiceRole: supabase.hasServiceRole,
       authConfigured,
       durableAtomicReservationConfigured,
+      durableReconciliationConfigured,
       serverOwnedDeliverableConfigured,
     },
     /** Live-readiness checklist (presence only — never echo secrets) */
@@ -335,12 +358,15 @@ export async function GET() {
       AUTH_CONFIGURED: authConfigured,
       DURABLE_ATOMIC_RESERVATION_CONFIGURED:
         durableAtomicReservationConfigured,
+      DURABLE_RECONCILIATION_CONFIGURED:
+        durableReconciliationConfigured,
       PROVIDER_CONFIGURED: fal,
       SERVER_OWNED_DELIVERABLE_CONFIGURED:
         serverOwnedDeliverableConfigured,
       requiredForSoftLive: [
         "AUTH_CONFIGURED",
         "DURABLE_ATOMIC_RESERVATION_CONFIGURED",
+        "DURABLE_RECONCILIATION_CONFIGURED",
         "PROVIDER_CONFIGURED",
         "SERVER_OWNED_DELIVERABLE_CONFIGURED",
       ],
@@ -353,9 +379,11 @@ export async function GET() {
         "Demo works without FAL_KEY (cached Lab clips, 0 credits)",
         "R0: anonymous + Free always cached demos; live needs auth + durable reserve RPC",
         "R1a: live reserve/capture/release uses pikbo_*_generation_v1 atomic RPCs (migration apply required)",
+        "R1c: ambiguous provider outcomes remain withheld until a leased reconciliation worker confirms capture or release",
         "Provider and session secrets alone never make Soft Live ready",
         "Set PIKBO_R1_ATOMIC_RESERVATION_READY only after the reviewed RPC migration passes non-production integration",
-        "Live requires configured auth, Supabase atomic reservation, provider, and server-owned delivery",
+        "Set PIKBO_R1_RECONCILIATION_READY only after the R1c migration and crash/race rehearsal pass in non-production",
+        "Live requires configured auth, Supabase atomic reservation, durable reconciliation, provider, and server-owned delivery",
         "Paid later: durable entitlements + Stripe price IDs + webhook",
         "PIKBO_FORCE_GENERATE_FAIL is ops-only and hard-off in production",
         "See docs/LAUNCH.md",
