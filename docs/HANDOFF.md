@@ -4,10 +4,10 @@ Newest first. One block per meaningful landing.
 
 ---
 
-### 2026-07-28 — [grok] Phase G mobile video poster-first LCP
-- `AutoPlayVideo`: mobile keeps `preload=none` for wall cards; desktop wallDense may warm metadata; tighter mobile rootMargin.
-- Home featured wall no longer `eager={i===0}` (hero owns LCP poster preload).
-- `data-video-mobile-poster-first` + engine-smoke locks. PASS: engine-smoke + typecheck.
+### 2026-07-28 — [grok] local R1c withhold journal + mobile poster-first LCP
+- Process-memory `localReconciliationJournal` when Supabase R1c off: idempotent withhold facts, never stores `outputRef`, health counts only.
+- Phase G: mobile wall `preload=none`; featured wall not LCP-eager; hero keeps poster preload.
+- PASS: recovery-reconciliation + engine-smoke + typecheck.
 
 ### 2026-07-28 — [grok] Webhook late/orphan withhold + Seller Pack shadow copy
 - `applyProviderWebhookEvent`: orphan live success → `WITHHELD_ORPHAN` (no free clip / no "10 used"); late success after cancel/timeout uses `providerCompletionDecision` and withholds media.
