@@ -212,7 +212,7 @@ export const TOOLS: Tool[] = [
       },
       {
         q: "What if the motion looks off?",
-        a: "AI motion varies run to run. Regenerate for a different take — failed live jobs refund the credits.",
+        a: "AI motion varies run to run. Regenerate for a different take — failed live jobs refund when the server can confirm failure.",
       },
     ],
   },
@@ -627,11 +627,12 @@ export const TOOLS: Tool[] = [
      * Brand campaign SEO lives on /for/blind-box-brand-marketing (no duplicate page).
      * Original designer-toy / indie blind-box stills only — no franchise names.
      */
-    // CTR 优化 2026-07-27: Description 加入 Free Mini 驱动点击
+    // CTR: unboxing energy + one-photo constraint (not toddler shopping lists)
     h1: "Blind Box AI Video Generator — Reveal From One Photo",
-    seoTitle: "Blind Box AI Video Generator: Reveal From One Photo | Pikbo",
+    seoTitle:
+      "Blind Box Reveal Video From One Photo (No Filming) | Pikbo",
     seoDescription:
-      "Blind box AI video generator for sellers and collectors. One owned photo → reveal/unbox short for TikTok and drops. Free Mini trial — no card, honest limits.",
+      "Need unboxing energy with only a still? Generate a blind-box reveal short from one owned photo. Free Mini trial — no card, honest caps.",
     intro:
       "A blind box AI video generator is for pull energy, not generic face filters. Upload one photo of an original or rights-owned blind-box figure (not a selfie) and draft an unboxing-style short for TikTok, Reels, or restock posts.",
     body: [

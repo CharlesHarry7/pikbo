@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] 30d GeFei plan + unboxing-bridge guide (not toddler list)
+- PLAN_30D_GEFEI_CROSSCHECK: correct product identity; Grok vs WB split.
+- Guide toy-unboxing-video-from-one-photo bridges SERP probes without shopping-list intent.
+- Blind-box tool Title/D CTR; WB week1 prompt. No sitemap expand, no main H1 change.
+
 ### 2026-07-27 — [grok] Soft-launch Generate remix + tool FAQ refund honesty
 - SoftLaunchStrip Open Generate → createRemixHref(360-spin) remix contract
   (ratio/duration/channel), not bare /create.
