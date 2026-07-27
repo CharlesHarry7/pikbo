@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] beginSync aspect stamp for fail/cancel remake
+- `beginSyncGenerateJob` stores duration/aspectRatio/resolution at open so
+  Library remake/retry after fail/cancel still carries the attempted run.
+- generate route passes secs/aspect/resolution into beginSync.
+- Downloads CANCELED body echoes refundUnconfirmed; SuiteDoorLinks default
+  Generate uses createRemixHref(360-spin); Create provenance when confirmed.
+- Smoke: beginSync aspect/duration + cancel refundUnconfirmed.
+
 ### 2026-07-27 — [grok] Suite/HowItWorks/HomeSeo Generate remix doors
 - HowItWorks Open Generate · SuiteEntryStrip flagship + open link · HomeSeoBody
   full Generate → createRemixHref(360-spin) (ratio/duration/channel).
