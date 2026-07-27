@@ -1,8 +1,12 @@
 /**
- * Phase H + 哥飞 cold-start crawl budget (2026-07-25 二轮拍板):
+ * Phase H + 哥飞 cold-start crawl budget:
  * - Index: home + primary rank tool + few quality pages only
  * - noindex: thin hubs, Lab-only community, preview suite, extra landings
  * Concept recipes without unique Lab proof stay noindex until proof lands.
+ *
+ * 2026-07-28 WorkBuddy five-page marketing release budget
+ * (docs/growth/SEO_INDEXABLE_10_RELEASE.md). Long-tail tools/for leave the
+ * index allowlist (reachable + noindex) until proof + query evidence exist.
  */
 
 import type { Metadata } from "next";
@@ -45,36 +49,36 @@ export const PREVIEW_ROBOTS: NonNullable<Metadata["robots"]> = {
 };
 
 /**
- * 哥飞: 冷启动只保首页 + 主词页 + 少量高质量页（+ 法务）。
- * 2026-07-27: 长尾无人蓝海词扩 3 个 proof 工具页 + 1 个 action-figure /for
- * （一词一页 · 不重复主词 TDH）。路径无尾斜杠；根为 "/"。
+ * Marketing index allowlist — exactly five pages (WorkBuddy release budget).
+ * Paths have no trailing slash; root is "/".
  */
-export const COLD_START_INDEX_PATHS = [
+export const COLD_START_MARKETING_INDEX_PATHS = [
   "/",
   "/tools/ai-toy-video-generator",
-  "/tools/figure-360-product-video",
   "/tools/blind-box-reveal-video-maker",
-  "/tools/one-photo-product-video",
-  "/tools/ai-product-video-generator-for-toys",
-  "/for/photo-to-video-for-toys",
-  "/for/etsy-listing-videos",
-  "/for/action-figure-product-videos",
   "/guides/how-to-photograph-toys-for-ai-video",
   "/pricing",
+] as const;
+
+/** Legal surfaces kept indexable (not marketing crawl budget). */
+export const COLD_START_LEGAL_INDEX_PATHS = [
   "/privacy",
   "/terms",
 ] as const;
 
+/** Full sitemap / robots allowlist = marketing five + legal. */
+export const COLD_START_INDEX_PATHS = [
+  ...COLD_START_MARKETING_INDEX_PATHS,
+  ...COLD_START_LEGAL_INDEX_PATHS,
+] as const;
+
 /**
  * Tools allowed to index in cold start (must also appear in COLD_START_INDEX_PATHS).
- * Primary rank + long-tail blue-ocean cluster 2026-07-27.
+ * Release budget: primary category tool + one distinct commercial tool only.
  */
 export const COLD_START_INDEXABLE_TOOL_SLUGS = [
   "ai-toy-video-generator",
-  "figure-360-product-video",
   "blind-box-reveal-video-maker",
-  "one-photo-product-video",
-  "ai-product-video-generator-for-toys",
 ] as const;
 
 const COLD_START_SET = new Set<string>(COLD_START_INDEX_PATHS);
@@ -107,7 +111,7 @@ export function robotsForRecipe(slug: string): Metadata["robots"] | undefined {
   return CONCEPT_ROBOTS;
 }
 
-/** Tools: cold-start allowlist only (primary + long-tail cluster). */
+/** Tools: cold-start allowlist only (primary + one commercial tool). */
 export function robotsForToolSlug(slug: string): Metadata["robots"] | undefined {
   if (
     (COLD_START_INDEXABLE_TOOL_SLUGS as readonly string[]).includes(slug)

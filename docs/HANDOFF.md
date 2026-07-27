@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] Phase H five-page SEO cold-start budget
+- Marketing index allowlist = 5 (`/`, primary tool, blind-box tool, photography guide, `/pricing`) per WorkBuddy `SEO_INDEXABLE_10_RELEASE.md`.
+- Legal `/privacy` + `/terms` stay indexable; long-tail tools/for leave sitemap (reachable + noindex).
+- `npm run seo-cold-start-smoke` + docs/ci gate; engine-smoke locks marketing count=5.
+- GSC submit still NO-GO until deploy + live-copy/evidence gates green.
+- Checks: seo-cold-start-smoke + engine-smoke + typecheck PASS.
+
 ### 2026-07-28 — [grok] Image R1c reconciliation enqueue parity
 - Live `/api/image`: late Flux (cancel/timeout) and capture-fail both call `recordProviderSucceededWithheld` with private `outputRef` (never public free still).
 - Release failure enqueues `recordConfirmedPreOutputFailure` / `recordSettlementUnknown` (generate parity).

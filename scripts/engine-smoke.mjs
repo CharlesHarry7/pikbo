@@ -967,6 +967,7 @@ assert.match(ciYml, /recovery-qa|recovery-cost-gate/);
 assert.match(ciYml, /recovery-ledger/);
 assert.match(ciYml, /recovery-retry-deadline/);
 assert.match(ciYml, /showcase-evidence-smoke/);
+assert.match(ciYml, /seo-cold-start-smoke/);
 assert.match(ciYml, /typecheck/);
 assert.match(ciYml, /npm run build/);
 assert.match(ciYml, /npm run critical-path/);
@@ -2183,25 +2184,35 @@ assert.match(landingResults, /recipeHasUniqueProof/);
 const sitemapSrc = fs.readFileSync(join(root, "app/sitemap.ts"), "utf8");
 assert.match(sitemapSrc, /COLD_START_INDEX_PATHS/);
 assert.doesNotMatch(sitemapSrc, /\/cinema|\/supercomputer|\/models|\/community/);
-// Cold-start sitemap allowlist size (not a 90+ dump). 2026-07-27 long-tail cluster → 13.
+// Phase H: WorkBuddy five-page marketing budget + legal (not 13 long-tail dump).
 const seoIndexSrc = fs.readFileSync(join(root, "lib/seoIndex.ts"), "utf8");
 assert.match(seoIndexSrc, /COLD_START_INDEX_PATHS/);
+assert.match(seoIndexSrc, /COLD_START_MARKETING_INDEX_PATHS/);
+assert.match(seoIndexSrc, /COLD_START_LEGAL_INDEX_PATHS/);
 {
-  const m = seoIndexSrc.match(
-    /COLD_START_INDEX_PATHS\s*=\s*\[([\s\S]*?)\]\s*as const/
+  const mkt = seoIndexSrc.match(
+    /COLD_START_MARKETING_INDEX_PATHS\s*=\s*\[([\s\S]*?)\]\s*as const/
   );
-  assert.ok(m, "COLD_START_INDEX_PATHS present");
-  const n = (m[1].match(/"[^"]+"/g) || []).length;
+  assert.ok(mkt, "COLD_START_MARKETING_INDEX_PATHS present");
+  const n = (mkt[1].match(/"[^"]+"/g) || []).length;
   assert.equal(
     n,
-    13,
-    `sitemap allowlist must stay 13 URLs (long-tail cluster), got ${n}`
+    5,
+    `marketing index allowlist must be 5 URLs (WorkBuddy release budget), got ${n}`
   );
 }
 assert.match(seoIndexSrc, /COLD_START_INDEXABLE_TOOL_SLUGS/);
-assert.match(seoIndexSrc, /figure-360-product-video/);
+assert.match(seoIndexSrc, /ai-toy-video-generator/);
 assert.match(seoIndexSrc, /blind-box-reveal-video-maker/);
-assert.match(seoIndexSrc, /one-photo-product-video/);
+// Long-tail tools remain reachable but leave the cold-start index tool set
+assert.doesNotMatch(
+  seoIndexSrc,
+  /COLD_START_INDEXABLE_TOOL_SLUGS\s*=\s*\[[\s\S]*?figure-360-product-video/
+);
+assert.doesNotMatch(
+  seoIndexSrc,
+  /COLD_START_MARKETING_INDEX_PATHS\s*=\s*\[[\s\S]*?etsy-listing-videos/
+);
 assert.match(toolsSrc, /one photo toy video AI|One Photo Toy Video AI/i);
 assert.match(toolsSrc, /blind box AI video generator|Blind Box AI Video Generator/i);
 assert.match(toolsSrc, /AI figure 360 video|AI Figure 360 Video/i);

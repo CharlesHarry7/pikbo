@@ -16,6 +16,7 @@
     "showcase-evidence-smoke": "node scripts/showcase-evidence-smoke.mjs",
     "showcase-promotion-gate": "node scripts/showcase-promotion-gate.mjs",
     "live-copy-smoke": "node scripts/live-capability-copy-smoke.mjs",
+    "seo-cold-start-smoke": "node scripts/seo-cold-start-smoke.mjs",
     "recovery-cost-gate": "node scripts/recovery-cost-gate.mjs",
     "recovery-qa": "node scripts/recovery-qa.mjs",
     "recovery-ledger": "node scripts/recovery-ledger.mjs",
