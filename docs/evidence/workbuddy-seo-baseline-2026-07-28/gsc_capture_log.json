@@ -1,0 +1,74 @@
+[
+  {
+    "name": "gsc-00-overview",
+    "requested": "https://search.google.com/search-console?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "final_url": "https://search.google.com/search-console?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "title": "概述",
+    "captured_at": "2026-07-28T03:37:45+08:00",
+    "screenshot": "gsc-00-overview.png",
+    "body_text": "\n\t\n\nhome\n概述\nlightbulb_2\n数据洞见\ntrending_up\n效果\nsearch\n网址检查\n编制索引\nkeyboard_arrow_up\nfile_copy\n网页\naccount_tree\n站点地图\nvisibility_off\n移除\n体验\nkeyboard_arrow_up\nspeed\n核心网页指标\nlock\nHTTPS\n增强功能\nkeyboard_arrow_up\nlayers\n视频\n安全问题和人工处置措施\nkeyboard_arrow_down\nlink_2\n链接数量\ntrophy\n成就\nsettings\n设置\nfeedback\n提交反馈\ninfo\nSearch Console 简介\n隐私权条款\n概述\nlightbulb_outline\n深入了解网站在 Google 搜索中的表现\nchevron_right\n探索数据分析\n效果\nchevron_right\n完整报告\n共有 0 次网页搜索点击\n2026/7/23\n2026/7/24\n2026/7/25\n3\n2\n1\n0\n编制索引\nchevron_right\n完整报告\n67 个网页未编入索引\n30 个网页已编入索引\n2026/4/28\n2026/5/9\n2026/5/20\n2026/5/31\n2026/6/11\n2026/6/22\n2026/7/3\n2026/7/14\n75\n50\n25\n0\n体验\n类型\t\t良好\t需要改进\t欠佳\t趋势\t\n\n核心网页指标\n\t\n移动设备\n桌面\n\t\n无数据\n无数据\n\t\n无数据\n无数据\n\t\n无数据\n无数据\n\t\n\t\tHTTPS\t\t非 HTTPS\t\t\n\nHTTPS\n\t\t\n11\n\t\t\n0\n\t\n\t\nchevron_right\n增强功能\n类型\t有效网页\t无效\t趋势\t\n\n视频\n\t\n6\n\t\n0\n\t\n\t\nchevron_right"
+  },
+  {
+    "name": "gsc-01-performance",
+    "requested": "https://search.google.com/search-console/performance/search-analytics?resource_id=https%3A%2F%2Fpikbo.ai%2F&num_of_months=3",
+    "final_url": "https://search.google.com/search-console/performance/search-analytics?resource_id=https%3A%2F%2Fpikbo.ai%2F&num_of_months=3",
+    "title": "在 Google 搜索结果中的表现",
+    "captured_at": "2026-07-28T03:37:58+08:00",
+    "screenshot": "gsc-01-performance.png",
+    "body_text": "\n\t\n\nhome\n概述\nlightbulb_2\n数据洞见\ntrending_up\n效果\nsearch\n网址检查\n编制索引\nkeyboard_arrow_up\nfile_copy\n网页\naccount_tree\n站点地图\nvisibility_off\n移除\n体验\nkeyboard_arrow_up\nspeed\n核心网页指标\nlock\nHTTPS\n增强功能\nkeyboard_arrow_up\nlayers\n视频\n安全问题和人工处置措施\nkeyboard_arrow_down\nlink_2\n链接数量\ntrophy\n成就\nsettings\n设置\nfeedback\n提交反馈\ninfo\nSearch Console 简介\n隐私权条款\n效果\n\n导出\n24 小时\n7 天\n28 天\n3 个月\n详细信息\narrow_drop_down\n搜索类型：网络\narrow_drop_down\n搜索类型：网络\nadd\n添加过滤条件\n添加过滤条件\nfilter_list_spark\n使用 AI 自定义效果报告\n上次更新日期：5小时前\n\n总点击次数\n0\n\n\n总曝光次数\n16\n\n平均点击率\n0%\n\n平均排名\n4.1\n\n每日\n点击次数\n展示\n2026/7/23\n2026/7/24\n2026/7/25\n3\n2\n1\n0\n12\n8\n4\n0\n图表，包含从 2026年7月23日到 2026年7月25日的总点击次数、总曝光次数、平均点击率和平均排名计数\n查询数\n网页\n国家/地区\n设备\n搜索结果呈现\n天\n\n热门查询\n\t\n点击次数\n\t\n展示\n\n\"toy unboxing\" -site:reddit.com -site:twitter.com -site:x.com -site:wykop.pl -site:tripadvisor.com -site:youtube.com -site:yelp.com -site:booking.com -site:facebook.com -site:instagram.com -site:tiktok.com\t0\t9\npikbo\t0\t3\n每页行数：\n5\n10\n25\n50\n100\n250\n500\n第 1-2 行，共 2 行\n上一页\n下一页"
+  },
+  {
+    "name": "gsc-02-index-pages",
+    "requested": "https://search.google.com/search-console/index?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "final_url": "https://search.google.com/search-console/index?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "title": "网页索引编制",
+    "captured_at": "2026-07-28T03:38:10+08:00",
+    "screenshot": "gsc-02-index-pages.png",
+    "body_text": "\n\t\n\nhome\n概述\nlightbulb_2\n数据洞见\ntrending_up\n效果\nsearch\n网址检查\n编制索引\nkeyboard_arrow_up\nfile_copy\n网页\naccount_tree\n站点地图\nvisibility_off\n移除\n体验\nkeyboard_arrow_up\nspeed\n核心网页指标\nlock\nHTTPS\n增强功能\nkeyboard_arrow_up\nlayers\n视频\n安全问题和人工处置措施\nkeyboard_arrow_down\nlink_2\n链接数量\ntrophy\n成就\nsettings\n设置\nfeedback\n提交反馈\ninfo\nSearch Console 简介\n隐私权条款\n网页索引编制\n\n导出\n所有已知网页\n所有已提交的网页\n仅未提交的网页\n/sitemap.xml\n上次更新日期：2026/7/24\n\n未编入索引\n67\n3 个原因\n\n\n已编入索引\n30\n\n展示\n网页\n2026/4/28\n2026/5/9\n2026/5/20\n2026/5/31\n2026/6/11\n2026/6/22\n2026/7/3\n2026/7/14\n120\n80\n40\n0\ncheck_circle\n查看关于已编入索引网页的数据\n\ninfo_filled\n网页未被编入索引的原因\n未编入索引的网页无法显示在 Google 中\n\n原因\n\t来源\n\n\t验证\n\t趋势\t\n网页\n被“noindex”标记排除了\t网站\t\n\n未启动\n\t\t3\n已发现 - 尚未编入索引\tGoogle 系统\t\n\n未启动\n\t\t46\n已抓取 - 尚未编入索引\tGoogle 系统\t\n\n未启动\n\t\t18\n每页行数：\n5\n10\n25\n50\n100\n250\n500\n第 1-3 行，共 3 行\n"
+  },
+  {
+    "name": "gsc-03-sitemaps",
+    "requested": "https://search.google.com/search-console/sitemaps?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "final_url": "https://search.google.com/search-console/sitemaps?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "title": "站点地图",
+    "captured_at": "2026-07-28T03:38:21+08:00",
+    "screenshot": "gsc-03-sitemaps.png",
+    "body_text": "\n\t\n\nhome\n概述\nlightbulb_2\n数据洞见\ntrending_up\n效果\nsearch\n网址检查\n编制索引\nkeyboard_arrow_up\nfile_copy\n网页\naccount_tree\n站点地图\nvisibility_off\n移除\n体验\nkeyboard_arrow_up\nspeed\n核心网页指标\nlock\nHTTPS\n增强功能\nkeyboard_arrow_up\nlayers\n视频\n安全问题和人工处置措施\nkeyboard_arrow_down\nlink_2\n链接数量\ntrophy\n成就\nsettings\n设置\nfeedback\n提交反馈\ninfo\nSearch Console 简介\n隐私权条款\n站点地图\n添加新的站点地图\nhttps://pikbo.ai/\n输入站点地图网址\n提交\n已提交的站点地图\n\n站点地图\n\t类型\n\t已提交的网址数\n\t上次读取时间\n\t状态\n\t\n已发现的网页\t\n已发现的视频\t\n/sitemap.xml\t站点地图\t2026年7月27日\t2026年7月27日\t成功\t13\t0\t\n每页行数：\n5\n10\n25\n50\n100\n250\n500\n第 1-1 行，共 1 行\n"
+  },
+  {
+    "name": "gsc-04-video",
+    "requested": "https://search.google.com/search-console/video-unified?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "final_url": "https://search.google.com/search-console/video-unified?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "title": "Error 404 (找不到)!!1",
+    "captured_at": "2026-07-28T03:38:34+08:00",
+    "screenshot": "gsc-04-video.png",
+    "body_text": "404. 出现了错误。\n\n在此服务器上找不到请求的网址。 这就是我们所知道的全部信息。"
+  },
+  {
+    "name": "gsc-05-links",
+    "requested": "https://search.google.com/search-console/links?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "final_url": "https://search.google.com/search-console/links?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "title": "链接数量",
+    "captured_at": "2026-07-28T03:38:45+08:00",
+    "screenshot": "gsc-05-links.png",
+    "body_text": "\n\t\n\nhome\n概述\nlightbulb_2\n数据洞见\ntrending_up\n效果\nsearch\n网址检查\n编制索引\nkeyboard_arrow_up\nfile_copy\n网页\naccount_tree\n站点地图\nvisibility_off\n移除\n体验\nkeyboard_arrow_up\nspeed\n核心网页指标\nlock\nHTTPS\n增强功能\nkeyboard_arrow_up\nlayers\n视频\n安全问题和人工处置措施\nkeyboard_arrow_down\nlink_2\n链接数量\ntrophy\n成就\nsettings\n设置\nfeedback\n提交反馈\ninfo\nSearch Console 简介\n隐私权条款\n链接数量\n\n导出外部链接\n\n正在处理数据，请过 1 天左右再来查看"
+  },
+  {
+    "name": "gsc-06-core-web-vitals",
+    "requested": "https://search.google.com/search-console/core-web-vitals?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "final_url": "https://search.google.com/search-console/core-web-vitals?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "title": "核心网页指标",
+    "captured_at": "2026-07-28T03:38:55+08:00",
+    "screenshot": "gsc-06-core-web-vitals.png",
+    "body_text": "\n\t\n\nhome\n概述\nlightbulb_2\n数据洞见\ntrending_up\n效果\nsearch\n网址检查\n编制索引\nkeyboard_arrow_up\nfile_copy\n网页\naccount_tree\n站点地图\nvisibility_off\n移除\n体验\nkeyboard_arrow_up\nspeed\n核心网页指标\nlock\nHTTPS\n增强功能\nkeyboard_arrow_up\nlayers\n视频\n安全问题和人工处置措施\nkeyboard_arrow_down\nlink_2\n链接数量\ntrophy\n成就\nsettings\n设置\nfeedback\n提交反馈\ninfo\nSearch Console 简介\n隐私权条款\n核心网页指标\n来源：Chrome 用户体验报告\n\n上次更新时间：2026/7/26\n移动设备\n打开报告\n\n在过去 90 天内未针对此设备类型获得足够的使用情况数据。\n了解详情\n尝试使用 PageSpeed Insights\n桌面\n打开报告\n\n在过去 90 天内未针对此设备类型获得足够的使用情况数据。\n了解详情\n尝试使用 PageSpeed Insights\n\n\"核心网页指标\"报告\n根据实际使用数据，了解您网站的表现。\n了解详情\n知道了"
+  },
+  {
+    "name": "gsc-07-https",
+    "requested": "https://search.google.com/search-console/https?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "final_url": "https://search.google.com/search-console/https?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "title": "HTTPS",
+    "captured_at": "2026-07-28T03:39:06+08:00",
+    "screenshot": "gsc-07-https.png",
+    "body_text": "\n\t\n\nhome\n概述\nlightbulb_2\n数据洞见\ntrending_up\n效果\nsearch\n网址检查\n编制索引\nkeyboard_arrow_up\nfile_copy\n网页\naccount_tree\n站点地图\nvisibility_off\n移除\n体验\nkeyboard_arrow_up\nspeed\n核心网页指标\nlock\nHTTPS\n增强功能\nkeyboard_arrow_up\nlayers\n视频\n安全问题和人工处置措施\nkeyboard_arrow_down\nlink_2\n链接数量\ntrophy\n成就\nsettings\n设置\nfeedback\n提交反馈\ninfo\nSearch Console 简介\n隐私权条款\nHTTPS\n\n导出\n上次更新日期：2026/7/26\n\n非 HTTPS 网址\n0\n无严重问题\n\n\nHTTPS 网址\n11\n\n网页\n2026/4/28\n2026/5/10\n2026/5/22\n2026/6/3\n2026/6/14\n2026/6/26\n2026/7/8\n2026/7/20\n12\n8\n4\n0\ncheck_circle\n查看 HTTPS 网页示例\n\n真棒！\n过去 90 天内未检测到任何问题"
+  }
+]

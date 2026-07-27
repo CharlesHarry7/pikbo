@@ -1,0 +1,26 @@
+[
+  {
+    "name": "gsc-04-video-indexing",
+    "final_url": "https://search.google.com/search-console/video-indexing?resource_id=https%3A%2F%2Fpikbo.ai%2F",
+    "title": "Error 404 (找不到)!!1",
+    "captured_at": "2026-07-28T03:39:50+08:00",
+    "screenshot": "gsc-04-video-indexing.png",
+    "body_text": "404. 出现了错误。\n\n在此服务器上找不到请求的网址。 这就是我们所知道的全部信息。"
+  },
+  {
+    "name": "gsc-08-notidx-discovered",
+    "final_url": "https://search.google.com/search-console/index/drilldown?resource_id=https%3A%2F%2Fpikbo.ai%2F&item_key=CAMYDSAC",
+    "title": "网页索引编制",
+    "captured_at": "2026-07-28T03:39:59+08:00",
+    "screenshot": "gsc-08-notidx-discovered.png",
+    "body_text": "\n\t\n\nhome\n概述\nlightbulb_2\n数据洞见\ntrending_up\n效果\nsearch\n网址检查\n编制索引\nkeyboard_arrow_up\nfile_copy\n网页\naccount_tree\n站点地图\nvisibility_off\n移除\n体验\nkeyboard_arrow_up\nspeed\n核心网页指标\nlock\nHTTPS\n增强功能\nkeyboard_arrow_up\nlayers\n视频\n安全问题和人工处置措施\nkeyboard_arrow_down\nlink_2\n链接数量\ntrophy\n成就\nsettings\n设置\nfeedback\n提交反馈\ninfo\nSearch Console 简介\n隐私权条款\n网页索引编制\n\n未找到 (404)\n\n分享\n所有已知网页\n所有已提交的网页\n仅未提交的网页\n/sitemap.xml\n上次更新日期：2026/7/24\ninfo\n未找到 (404)\n此类网页未编入索引或不会显示在 Google 搜索结果中\n了解详情\n\n我们未找到任何数据\n请稍后再查看"
+  },
+  {
+    "name": "gsc-09-notidx-crawled",
+    "final_url": "https://search.google.com/search-console/index/drilldown?resource_id=https%3A%2F%2Fpikbo.ai%2F&item_key=CAMYDSAB",
+    "title": "网页索引编制",
+    "captured_at": "2026-07-28T03:40:10+08:00",
+    "screenshot": "gsc-09-notidx-crawled.png",
+    "body_text": "\n\t\n\nhome\n概述\nlightbulb_2\n数据洞见\ntrending_up\n效果\nsearch\n网址检查\n编制索引\nkeyboard_arrow_up\nfile_copy\n网页\naccount_tree\n站点地图\nvisibility_off\n移除\n体验\nkeyboard_arrow_up\nspeed\n核心网页指标\nlock\nHTTPS\n增强功能\nkeyboard_arrow_up\nlayers\n视频\n安全问题和人工处置措施\nkeyboard_arrow_down\nlink_2\n链接数量\ntrophy\n成就\nsettings\n设置\nfeedback\n提交反馈\ninfo\nSearch Console 简介\n隐私权条款\n网页索引编制\n\n已编入索引的网页数量\n\n导出\n\n分享\n所有已知网页\n所有已提交的网页\n仅未提交的网页\n/sitemap.xml\n上次更新日期：2026/7/24\ncheck_circle\n已编入索引的网页数量\n这些网页可以显示在 Google 搜索结果中\n了解详情\n受影响的网页数\n30\n2026/4/28\n2026/5/9\n2026/5/20\n2026/5/31\n2026/6/11\n2026/6/22\n2026/7/3\n2026/7/14\n45\n30\n15\n0\n示例\n\n\n网址\n\t\n上次抓取日期\n\nhttps://pikbo.ai/tools/one-photo-product-video\n\t2026年7月25日\n\nhttps://pikbo.ai/projects/orbit-cgi\n\t2026年7月25日\n\nhttps://pikbo.ai/toys/tabletop-miniatures\n\t2026年7月25日\n\nhttps://pikbo.ai/tools/toy-social-content-pack\n\t2026年7月25日\n\nhttps://pikbo.ai/tools/custom-toy-product-video\n\t2026年7月25日\n\nhttps://pikbo.ai/tools/ai-toy-video-generator\n\t2026年7月25日\n\nhttps://pikbo.ai/for/mercari-listing-videos\n\t2026年7月25日\n\nhttps://pikbo.ai/tools/blind-box-reveal-video-maker\n\t2026年7月25日\n\nhttps://pikbo.ai/for/reddit-collector-showcase-videos\n\t2026年7月25日\n\nhttps://pikbo.ai/tools/toy-launch-teaser-generator\n\t2026年7月25日\n每页行数：\n5\n10\n25\n50\n100\n250\n500\n第 1-10 行，共 30 行\n"
+  }
+]

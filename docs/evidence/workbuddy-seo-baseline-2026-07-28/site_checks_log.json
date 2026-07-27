@@ -1,0 +1,152 @@
+[
+  {
+    "name": "robots",
+    "url": "https://pikbo.ai/robots.txt",
+    "status": 200,
+    "captured_at": "2026-07-28T03:45:20+08:00",
+    "content": "User-Agent: *\nAllow: /\nDisallow: /api/\nDisallow: /profile\nDisallow: /settings\nDisallow: /library\nDisallow: /login\nDisallow: /auth/\nDisallow: /checkout\nDisallow: /status\nDisallow: /generate\n\nSitemap: https://pikbo.ai/sitemap.xml\n"
+  },
+  {
+    "name": "sitemap",
+    "url": "https://pikbo.ai/sitemap.xml",
+    "status": 200,
+    "captured_at": "2026-07-28T03:45:21+08:00",
+    "content": "This XML file does not appear to have any style information associated with it. The document tree is shown below.\n\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" xmlns:video=\"http://www.google.com/schemas/sitemap-video/1.1\">\n<script src=\"chrome-extension://hoklmmgfnpapgjgcpechhaamimifchmp/frame_ant/frame_ant.js\"/>\n<url>\n<loc>https://pikbo.ai</loc>\n<lastmod>2026-07-28</lastmod>\n<changefreq>daily</changefreq>\n<priority>1</priority>\n</url>\n<url>\n<loc>https://pikbo.ai/tools/ai-toy-video-generator</loc>\n<video:video>\n<video:title>Listing-ready spin</video:title>\n<video:thumbnail_loc>https://pikbo.ai/demos/scout-still.webp</video:thumbnail_loc>\n<video:description>A cached Pikbo Lab prototype showing a listing-ready toy spin from one product photo.</video:description>\n<video:content_loc>https://pikbo.ai/demos/scout-packshot-spin.mp4</video:content_loc>\n<video:duration>5</video:duration>\n<video:tag>AI toy video generator</video:tag>\n<video:publication_date>2026-07-22T11:57:06Z</video:publication_date>\n<video:family_friendly>yes</video:family_friendly>\n</video:video>\n<lastmod>2026-07-28</lastmod>\n<changefreq>daily</changefreq>\n<priority>0.95</priority>\n</url>\n<url>\n<loc>https://pikbo.ai/tools/blind-box-reveal-video-maker</loc>\n<lastmod>2026-07-28</lastmod>\n<changefreq>weekly</changefreq>\n<priority>0.85</priority>\n</url>\n<url>\n<loc>https://pikbo.ai/guides/how-to-photograph-toys-for-ai-video</loc>\n<lastmod>2026-07-28</lastmod>\n<changefreq>weekly</changefreq>\n<priority>0.8</priority>\n</url>\n<url>\n<loc>https://pikbo.ai/pricing</loc>\n<lastmod>2026-07-28</lastmod>\n<changefreq>weekly</changefreq>\n<priority>0.8</priority>\n</url>\n<url>\n<loc>https://pikbo.ai/privacy</loc>\n<lastmod>2026-07-28</lastmod>\n<changefreq>weekly</changefreq>\n<priority>0.5</priority>\n</url>\n<url>\n<loc>https://pikbo.ai/terms</loc>\n<lastmod>2026-07-28</lastmod>\n<changefreq>weekly</changefreq>\n<priority>0.5</priority>\n</url>\n</urlset>"
+  },
+  {
+    "title": "Pikbo — Turn Toy Photos into Videos",
+    "metaDescription": "Turn one owned toy photo into a short-video recipe for spins, reveals, and hero clips. Preview cached Pikbo Lab prototypes before gated generation.",
+    "robots": "index, follow",
+    "canonical": "https://pikbo.ai",
+    "ogTitle": "Pikbo — Turn Toy Photos into Videos",
+    "h1": "你的潮玩。\n动起来。",
+    "ldTypes": [
+      "WebSite",
+      "Organization",
+      "SoftwareApplication",
+      "FAQPage"
+    ],
+    "videoCount": 10,
+    "url": "https://pikbo.ai/",
+    "status": 200,
+    "captured_at": "2026-07-28T03:45:22+08:00"
+  },
+  {
+    "title": "AI Toy Video Generator: One Photo to Toy Video | Pikbo",
+    "metaDescription": "Turn one owned toy photo into a spin, reveal, or hero-video recipe. Preview cached Pikbo Lab prototypes; eligible Live generation is clearly gated.",
+    "robots": null,
+    "canonical": "https://pikbo.ai/tools/ai-toy-video-generator",
+    "ogTitle": "AI Toy Video Generator: One Photo to Toy Video | Pikbo",
+    "h1": "AI Toy Video Generator — Photo to Short Video for Designer Toys",
+    "ldTypes": [
+      "FAQPage",
+      "SoftwareApplication",
+      "HowTo",
+      "VideoObject"
+    ],
+    "videoCount": 1,
+    "url": "https://pikbo.ai/tools/ai-toy-video-generator",
+    "status": 200,
+    "captured_at": "2026-07-28T03:45:26+08:00"
+  },
+  {
+    "title": "Melt & Reform Toy Video Effect From One Photo | Pikbo",
+    "metaDescription": "Turn one toy photo into a satisfying melt-and-reform loop. The figure melts into liquid then reassembles — a scroll-stopping effect for Reels and TikTok.",
+    "robots": "noindex, follow",
+    "canonical": "https://pikbo.ai/effects/melt-and-reform",
+    "ogTitle": "Melt & Reform Toy Video Effect From One Photo | Pikbo",
+    "h1": "Make a Melt-and-Reform Toy Video From One Photo",
+    "ldTypes": [
+      "FAQPage",
+      "HowTo",
+      "SoftwareApplication"
+    ],
+    "videoCount": 0,
+    "url": "https://pikbo.ai/effects/melt-and-reform",
+    "status": 200,
+    "captured_at": "2026-07-28T03:45:31+08:00"
+  },
+  {
+    "title": "Collection Shelf Video Maker for Collectors | Pikbo",
+    "metaDescription": "Turn a photo of your shelf into a slow cinematic pan. Show off your whole collection in one scroll-stopping clip.",
+    "robots": "noindex, follow",
+    "canonical": "https://pikbo.ai/effects/collection-shelf-pan",
+    "ogTitle": "Collection Shelf Video Maker for Collectors | Pikbo",
+    "h1": "Collection Shelf Pan Video Maker",
+    "ldTypes": [
+      "FAQPage",
+      "HowTo",
+      "SoftwareApplication"
+    ],
+    "videoCount": 0,
+    "url": "https://pikbo.ai/effects/collection-shelf-pan",
+    "status": 200,
+    "captured_at": "2026-07-28T03:45:35+08:00"
+  },
+  {
+    "title": "Blind Box Unboxing Video Generator | Pikbo",
+    "metaDescription": "Create an unboxing reveal video from one photo. The box opens, the figure drops in — the exact moment collectors love. Made for Reels, Shorts, and TikTok.",
+    "robots": "noindex, follow",
+    "canonical": "https://pikbo.ai/effects/blind-box-unboxing",
+    "ogTitle": "Blind Box Unboxing Video Generator | Pikbo",
+    "h1": "Create a Blind Box Unboxing Video From One Product Photo",
+    "ldTypes": [
+      "FAQPage",
+      "HowTo",
+      "SoftwareApplication"
+    ],
+    "videoCount": 1,
+    "url": "https://pikbo.ai/effects/blind-box-unboxing",
+    "status": 200,
+    "captured_at": "2026-07-28T03:45:39+08:00"
+  },
+  {
+    "title": "UGC-Style Toy Ad Generator From Product Photos | Pikbo",
+    "metaDescription": "Draft a UGC-style toy ad from a product photo. Casual, social-native motion for TikTok Shop and Reels ad creative — commercial use on paid clips.",
+    "robots": "noindex, follow",
+    "canonical": "https://pikbo.ai/tools/toy-ugc-ad-generator",
+    "ogTitle": "UGC-Style Toy Ad Generator From Product Photos | Pikbo",
+    "h1": "Create a UGC-Style Toy Ad From Product Photos",
+    "ldTypes": [
+      "FAQPage",
+      "SoftwareApplication",
+      "HowTo"
+    ],
+    "videoCount": 1,
+    "url": "https://pikbo.ai/tools/toy-ugc-ad-generator",
+    "status": 200,
+    "captured_at": "2026-07-28T03:45:43+08:00"
+  },
+  {
+    "title": "Explore PIKBO Lab Toy Video Prototypes | Pikbo",
+    "metaDescription": "Open PIKBO Lab toy-video prototypes, inspect the reference poster and cached output, then reuse the recipe with a toy photo you own.",
+    "robots": "noindex, follow",
+    "canonical": "https://pikbo.ai/explore",
+    "ogTitle": "Explore cached toy video prototypes | Pikbo",
+    "h1": "OPEN THE PROJECT, NOT JUST THE CLIP",
+    "ldTypes": [
+      "ItemList",
+      "FAQPage"
+    ],
+    "videoCount": 12,
+    "url": "https://pikbo.ai/explore",
+    "status": 200,
+    "captured_at": "2026-07-28T03:45:47+08:00"
+  },
+  {
+    "title": "Apps & Workflows · Toy video mini-apps | Pikbo",
+    "metaDescription": "Pikbo toy-native workflows — listing spin, TikTok hook, blind-box drop, Seller Starter Pack. Same Create engine, job-first mini-apps (Yiha/lego-style shelf, legal IA only).",
+    "robots": "noindex, follow",
+    "canonical": "https://pikbo.ai/apps",
+    "ogTitle": "Apps & Workflows | Pikbo",
+    "h1": "APPS & WORKFLOWS",
+    "ldTypes": [
+      "ItemList",
+      "FAQPage"
+    ],
+    "videoCount": 0,
+    "url": "https://pikbo.ai/apps",
+    "status": 200,
+    "captured_at": "2026-07-28T03:45:51+08:00"
+  }
+]

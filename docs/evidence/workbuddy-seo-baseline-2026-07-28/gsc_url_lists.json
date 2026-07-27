@@ -1,0 +1,59 @@
+{
+  "noindex_3": {
+    "captured_at": "2026-07-28T03:42:30+08:00",
+    "count": 3,
+    "urls": [
+      "https://pikbo.ai/effects/melt-and-reform",
+      "https://pikbo.ai/create?effect=paint-splash&source=paint-splash&ratio=1:1&duration=5&channel=etsy",
+      "https://pikbo.ai/effects/collection-shelf-pan"
+    ]
+  },
+  "discovered_46": {
+    "captured_at": "2026-07-28T03:42:45+08:00",
+    "count": 10,
+    "urls": [
+      "https://pikbo.ai/apps",
+      "https://pikbo.ai/effects/blind-box-unboxing",
+      "https://pikbo.ai/effects/display-case-glam",
+      "https://pikbo.ai/effects/floating-hero",
+      "https://pikbo.ai/effects/make-figure-walk",
+      "https://pikbo.ai/effects/mystery-box-reveal",
+      "https://pikbo.ai/effects/paparazzi-flash",
+      "https://pikbo.ai/effects/smoke-burst-entrance",
+      "https://pikbo.ai/explore",
+      "https://pikbo.ai/for/amazon-product-videos"
+    ]
+  },
+  "crawled_18": {
+    "captured_at": "2026-07-28T03:43:00+08:00",
+    "count": 10,
+    "urls": [
+      "https://pikbo.ai/toys/action-figures",
+      "https://pikbo.ai/tools/figure-360-product-video",
+      "https://pikbo.ai/effects/360-spin-showcase",
+      "https://pikbo.ai/tools/toy-animation-from-photo",
+      "https://pikbo.ai/effects/power-aura",
+      "https://pikbo.ai/projects/scout-walk",
+      "https://pikbo.ai/tools/restock-announcement-video",
+      "https://pikbo.ai/effects/neon-city-night",
+      "https://pikbo.ai/tools/toy-cgi-video-generator",
+      "https://pikbo.ai/tools/toy-ugc-ad-generator"
+    ]
+  },
+  "indexed_30": {
+    "captured_at": "2026-07-28T03:43:15+08:00",
+    "count": 10,
+    "urls": [
+      "https://pikbo.ai/tools/one-photo-product-video",
+      "https://pikbo.ai/projects/orbit-cgi",
+      "https://pikbo.ai/toys/tabletop-miniatures",
+      "https://pikbo.ai/tools/toy-social-content-pack",
+      "https://pikbo.ai/tools/custom-toy-product-video",
+      "https://pikbo.ai/tools/ai-toy-video-generator",
+      "https://pikbo.ai/for/mercari-listing-videos",
+      "https://pikbo.ai/tools/blind-box-reveal-video-maker",
+      "https://pikbo.ai/for/reddit-collector-showcase-videos",
+      "https://pikbo.ai/tools/toy-launch-teaser-generator"
+    ]
+  }
+}
