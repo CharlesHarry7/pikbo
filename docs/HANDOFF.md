@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [claude] seller-first Create three-step path
+- First run is now `upload owned toy photo → choose Listing/Unboxing/Social Hook/Starter Pack → review exact quote and generate`.
+- Model shelf, workflow shelf, activation checklist, full recipe catalog, prompt, model, duration, seed and fidelity guidance no longer obstruct first activation; advanced controls remain available collapsed.
+- Mobile keeps one sticky primary Generate action; the single-clip path emits `generation_quote_view`/`generate_start`, while only BatchStudio emits `pack_quote_view`/`pack_start`.
+- Starter Pack stays three independent outputs at 30 live credits; the rule-based asset brief is labeled guidance, not an identity-scoring engine.
+- PASS: recovery QA, atomic-ledger smoke, product-proof smoke, engine smoke, typecheck, lint (0 errors / 2 pre-existing warnings), webpack build (193 routes).
+
 ### 2026-07-27 — [grok] R3 recovery QA + image still R0 + CI fail-closed
 - `scripts/recovery-qa.mjs`: R0 cost gate, concurrent overspend (50→5/6), confirmed-failure refund, no double settle/release, Seller Pack partial, generate+image route order, no Cookie debit, CI critical-path fail-closed.
 - `/api/image` live Flux: same R0 gate as generate (cached demo for anonymous/Free; durable reserve + `invokeReservedProvider`; no Cookie debit).
