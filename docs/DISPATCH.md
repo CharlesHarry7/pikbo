@@ -10,18 +10,59 @@
 三 agent 研究成果进仓库 · 索引 `docs/research/README.md` · 粘贴 `docs/PASTE_SHARED_RESEARCH.md` · 共识 `docs/research/SHARED_SYNTHESIS.md`。  
 开工前先读 research；禁止只在对话里研究不落盘。
 
-## 当前唯一派工：Grok 全面接管
+## 当前唯一派工：Recovery Wave（2026-07-27）
 
-老板 2026-07-23 决定：Claude 暂停、GPT 额度不足期间，剩余工作全部交给
-Grok。**唯一完整执行单：`docs/GROK_FINAL_TAKEOVER.md`。**
+Grok 临时全面接管已经结束。最新审计见 `docs/AUDIT_2026-07-27.md`。
+直到 R0–R3 通过，禁止新增 SEO 页面、目录自动化、空壳产品入口和大型 UI
+模块。
 
-分支：`agent/grok/final-takeover`。先完成 Wave B 可信度与 CI，再依次完成
-持久化账户积分、异步任务、文件水印、产品收口、证明资产、性能 SEO、
-Stripe 测试准备和私人候选版。遇到外部密钥或费用阻塞不得停工；完成所有
-无成本工作后，用一份 `docs/BLOCKERS_REQUEST.md` 统一向老板申请。
+### Claude — 工程主线
 
-本段覆盖下方仍保留的历史角色派工。Stripe live、公开收费和正式 DNS 不因
-“全面接管”而自动获得授权。
+1. **R0 匿名成本闸门（P0）**
+   - 匿名用户只能使用 cached official demo，0 credits。
+   - 真实 FAL 生成必须登录，且持久化 reservation 成功才允许调用 provider。
+   - durable reserve 失败必须 fail closed，禁止回退 Cookie 扣费。
+2. **R1 原子积分与任务（P0/P1）**
+   - Supabase RPC 单事务锁钱包、幂等预扣、reservation、ledger。
+   - retry 必须使用明确的新 job ID/token，禁止按 effect/prompt 猜任务。
+   - GET 轮询不得延长任务 deadline；worker heartbeat 与用户读取分离。
+3. **R2 可交付免费结果（P1）**
+   - T6 未完成前保持 Free live 关闭。
+   - 后续实现服务端对象存储、真实烧录水印和受控下载。
+4. **R3 可失败的 CI（P1）**
+   - 去掉 `critical-path || true`；增加路由、账务并发和主路径集成测试。
+
+### GPT/Codex — 产品与验收
+
+1. 冻结匿名/登录/付费权益状态机和 Toy Launch Pack 事件契约。
+2. 首页与核心 SEO 页主成交路径统一为：
+   `一个玩具 → 三条发布素材 → 导出 Launch Pack`。
+3. 同步 STATUS、README、上线事实和能力口径。
+4. 为案例证据账本定义必填字段和 5 维人工 Pass 标准。
+
+### Grok — 增长验证与 QA
+
+1. 停止页面扩张、泛 AI 目录提交和小提交刷量。
+2. 核验现有案例：输入图、provider task ID、模型、参数、输出、人工评分；
+   没证据就删除评分或降级为 prototype。
+3. 把增长记录改为 `submitted / pending / published / verified backlink`，
+   不再把提交数当外链或流量。
+4. 为 R0–R3 补成本滥用、并发扣费、失败退款和端到端测试，不主写业务实现。
+
+### WorkBuddy — 只读增长执行
+
+- 可做：GSC、AITDK/哥飞关键词原始数据、SERP 证据、公开 listing URL 核验。
+- 不可做：业务代码、生产密钥、数据库、Vercel/Supabase、直接 push main。
+- GSC 当前只有约 6 次曝光、0 点击；在达到可解释样本前不得宣称排名成功。
+
+### 本轮验收
+
+- 清 Cookie 不会获得可调用付费模型的新免费额度。
+- 未登录、durable reserve 失败、数据库不可用都不会调用 FAL。
+- 免费体验能看 cached official demo，但不得冒充处理了上传图。
+- CI 的关键路径失败会让工作流失败。
+- 主入口不再卖“单条免费片”，而是引导完成三条 Toy Launch Pack。
+- 真实案例和外链均有可审计证据。
 
 ---
 

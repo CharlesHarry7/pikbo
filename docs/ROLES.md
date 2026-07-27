@@ -8,17 +8,18 @@
 Grok / GPT / Claude **都必须做竞品与产品研究**，成果 **写入仓库** `docs/research/`，三方 **共同阅读**。  
 协议与索引：`docs/research/README.md` · 粘贴任务：`docs/PASTE_SHARED_RESEARCH.md`。
 
-## 临时最高优先级覆盖（老板 2026-07-23）
+## 2026-07-27：临时接管结束
 
-Claude 订阅暂停、GPT 额度接近上限期间，**所有未完成产品、工程、测试与
-私人发布准备工作统一由 Grok 接管**。完整执行单：
-`docs/GROK_FINAL_TAKEOVER.md`。
+Claude 与 GPT 已恢复工作。2026-07-23 的 Grok 全面接管到此结束，下面的
+默认分工重新成为唯一权威：
 
-- Grok 当前可以跨越下方默认车道编写前后端、测试、迁移和发布准备代码。
-- 旧 Claude/GPT 分支只能先审 diff，再选择性 cherry-pick，禁止整分支覆盖新 main。
-- 缺密钥、付费调用、外部登录或公开 DNS 时，记录阻塞并继续其他无成本任务。
-- Stripe live、公开收费和 `pikbo.ai` DNS 仍必须由老板另行明确批准。
-- 本覆盖持续到老板明确撤销；与下方默认分工冲突时，以本节为准。
+- Claude 主写前后端、测试、迁移与重构。
+- GPT/Codex 负责 PRD、状态机、商业规则、验收和任务拆分。
+- Grok 负责增长验证、趋势、案例素材和测试协助，不再默认跨车道堆业务代码。
+- WorkBuddy 只做调研、GSC、外部提交和报告；不得读取生产密钥、改数据库、
+  操作 Vercel/Supabase、直接推 main 或修改业务代码。
+
+旧 `docs/GROK_FINAL_TAKEOVER.md` 仅作为历史记录，不再派工。
 
 ---
 

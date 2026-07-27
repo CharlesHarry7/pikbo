@@ -12,6 +12,12 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 
 | ID | Task | Owner | Status | Branch | Notes |
 |---|---|---|---|---|---|
+| R0 | Disable anonymous live generation; cached demo only until authenticated durable reserve | Claude | todo | agent/claude/recovery-cost-gate | P0 provider-spend protection; audit 2026-07-27 |
+| R1 | Atomic Supabase credit reservation + explicit retry token + fixed deadline | Claude | todo | agent/claude/recovery-ledger | Must fail closed before provider call |
+| R2 | Toy Launch Pack primary funnel + event contract | GPT / Claude | doing | agent/gpt/recovery-dispatch | GPT freezes contract; Claude implements |
+| R3 | Real integration tests + CI fail on critical path | Grok / Claude | todo | agent/grok/recovery-qa | Grok QA; Claude supplies injectable boundaries |
+| R4 | Public-example evidence ledger and honest scoring | Grok | todo | agent/grok/proof-ledger | No input/task ID/model/output evidence = prototype |
+| R5 | Growth claims cleanup and WorkBuddy permission boundary | GPT / Grok | doing | agent/gpt/recovery-dispatch | Submitted is not verified backlink |
 | GO | Public pikbo.ai Mode B | Grok | **blocked** | agent/grok/final-takeover | Grok owns readiness; boss still must explicitly approve public DNS and charging |
 | GROK-TAKEOVER | Complete every remaining no-cost product, engineering, QA and private-release task | Grok | doing | main | 2026-07-24: Flow path + Seller Pack WaitStage + HF smoke locks. Still blocked on boss Vercel/DNS, T5 SQL multi-node, T6 bake |
 | SUITE | 潮玩版 HF Generate + Yiha Modules 产品壳 | Grok | **review** | main | `/create` `/modules` suite chrome; softLaunch PRIMARY/MOBILE nav freeze; suite doors sitewide |

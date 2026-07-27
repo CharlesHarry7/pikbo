@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [gpt] recovery audit and restored role split
+- Audited production, generation accounting, product funnel and WorkBuddy growth claims.
+- P0: public FAL is live while auth/durable credits are disabled; anonymous live must close.
+- Restored Claude=engineering, GPT=product contract, Grok=growth/QA; WorkBuddy is read-only growth.
+- Froze page expansion and directory automation until cost safety and Toy Launch Pack close.
+- Full evidence and acceptance: `docs/AUDIT_2026-07-27.md` and top of `docs/DISPATCH.md`.
+
 ### 2026-07-27 — [grok] Cinema compose + /generate alias remix
 - Cinema Render → createRemixHref(effect)+prompt+sku (ratio/duration/channel);
   data-cinema-compose=remix. Not bare /create?effect&prompt.
