@@ -1299,6 +1299,8 @@ export function generationJobsProbe(): {
   byStatus: Record<GenerationJobStatus, number>;
   /** queued + running — cancel/timeout targets */
   open: number;
+  /** R1b/R1c withheld terminal failures (orphan/late provider success). */
+  withheld: number;
   webhookEvents: number;
   jobTimeoutMs: number;
   timedOutThisProbe: number;
@@ -1312,8 +1314,17 @@ export function generationJobsProbe(): {
     failed: 0,
     canceled: 0,
   };
+  let withheld = 0;
   for (const j of jobs.values()) {
     byStatus[j.status] = (byStatus[j.status] ?? 0) + 1;
+    if (
+      j.errorCode === "WITHHELD_ORPHAN" ||
+      (j.errorCode === "REQUEST_CANCELED" &&
+        /withheld/i.test(j.error || "")) ||
+      (j.errorCode === "TIMEOUT" && /withheld/i.test(j.error || ""))
+    ) {
+      withheld += 1;
+    }
   }
   const open = byStatus.queued + byStatus.running;
   return {
@@ -1322,6 +1333,7 @@ export function generationJobsProbe(): {
     count: jobs.size,
     byStatus,
     open,
+    withheld,
     webhookEvents: webhookEvents.size,
     jobTimeoutMs: jobTimeoutMs(),
     timedOutThisProbe: timedOut.length,
@@ -1330,7 +1342,9 @@ export function generationJobsProbe(): {
         ? `Process-memory ledger; swept ${timedOut.length} timed-out job(s) this probe`
         : open > 0
           ? `Process-memory ledger; ${open} open (queued/running) job(s)`
-          : "Process-memory ledger; not multi-node durable",
+          : withheld > 0
+            ? `Process-memory ledger; ${withheld} withheld late/orphan event(s)`
+            : "Process-memory ledger; not multi-node durable",
   };
 }
 

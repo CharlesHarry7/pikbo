@@ -16,6 +16,7 @@ import { probeDemoAssets } from "@/lib/demoClips";
 import { communityUgcConfigured } from "@/lib/communityPosts";
 import { imageJobsProbe } from "@/lib/imageJobs";
 import { probeDurableReconciliationSchema } from "@/lib/durableCredits/reconciliation";
+import { localReconciliationProbe } from "@/lib/durableCredits/localReconciliationJournal";
 // NextResponse used for GET + HEAD
 
 export const runtime = "nodejs";
@@ -207,8 +208,10 @@ export async function GET() {
       r1cSchemaReady: durableReconciliation.schemaReady,
       r1cEnabledByOperator:
         process.env.PIKBO_R1_RECONCILIATION_READY === "1",
+      /** Process-memory withhold journal (never delivers; no outputRef echo). */
+      localJournal: localReconciliationProbe(),
       note:
-        "R1a/R1c are source-only until migration preflight + non-prod rehearsal; live beta stays fail-closed without both schemas",
+        "R1a/R1c are source-only until migration preflight + non-prod rehearsal; live beta stays fail-closed without both schemas. localJournal holds process-memory withhold facts when SQL is off.",
     },
     service: "pikbo",
     foundation: "L0-L3",

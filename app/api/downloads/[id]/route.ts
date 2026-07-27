@@ -96,6 +96,35 @@ function gateDownload(
       };
     }
     if (job.status === "failed") {
+      // R1b/R1c: withheld late/orphan provider success is not a free download.
+      if (
+        job.errorCode === "WITHHELD_ORPHAN" ||
+        job.errorCode === "REQUEST_CANCELED" ||
+        (job.errorCode === "TIMEOUT" && /withheld/i.test(job.error || ""))
+      ) {
+        return {
+          ok: false,
+          status: 409,
+          body: {
+            ok: false,
+            code:
+              job.errorCode === "WITHHELD_ORPHAN"
+                ? "WITHHELD_ORPHAN"
+                : job.errorCode === "REQUEST_CANCELED"
+                  ? "REQUEST_CANCELED"
+                  : "TIMEOUT",
+            error:
+              job.error ||
+              "Provider output is withheld — not downloadable. Settlement remains unconfirmed until durable reconciliation.",
+            status: job.status,
+            withheld: true,
+            creditsOutcome: job.creditsOutcome,
+            ...(job.creditsOutcome === "refund unconfirmed"
+              ? { refundUnconfirmed: true }
+              : {}),
+          },
+        };
+      }
       const code =
         job.errorCode === "TIMEOUT" || job.errorCode === "PROVIDER_TIMEOUT"
           ? "TIMEOUT"

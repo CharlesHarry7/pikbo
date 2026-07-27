@@ -44,6 +44,7 @@ assert.match(adapter, /recordProviderSucceededWithheld/);
 assert.match(adapter, /claimDurableReconciliation/);
 assert.match(adapter, /finishDurableReconciliation/);
 assert.match(adapter, /payload\.deliverable !== false/);
+assert.match(adapter, /recordLocalReconciliationEvent/);
 assert.match(route, /recordProviderSucceededWithheld/);
 // Image live Flux must enqueue the same R1c withheld path (never free still).
 const imageRoute = readFileSync(join(root, "app/api/image/route.ts"), "utf8");
@@ -53,6 +54,41 @@ assert.match(
   imageRoute,
   /capture_failed|late output enqueue|image capture enqueue/
 );
+// Process-memory fallback journal — never stores outputRef, never delivers.
+const localJournal = readFileSync(
+  join(root, "lib/durableCredits/localReconciliationJournal.ts"),
+  "utf8"
+);
+assert.match(localJournal, /export function recordLocalReconciliationEvent/);
+assert.match(localJournal, /export function localReconciliationProbe/);
+assert.match(localJournal, /hasOutputRef/);
+assert.doesNotMatch(localJournal, /outputRef:\s*string/);
+const healthRoute = readFileSync(join(root, "app/api/health/route.ts"), "utf8");
+assert.match(healthRoute, /localJournal|localReconciliationProbe/);
+assert.match(healthRoute, /localReconciliationProbe/);
+// Pure idempotent journal model (mirrors localReconciliationJournal.ts).
+function pureLocalJournal() {
+  const map = new Map();
+  return {
+    record(eventId) {
+      if (map.has(eventId)) return { ok: true, idempotent: true };
+      map.set(eventId, { type: "provider_succeeded_withheld" });
+      return { ok: true, idempotent: false };
+    },
+    probe() {
+      let openWithheld = 0;
+      for (const e of map.values()) {
+        if (e.type === "provider_succeeded_withheld") openWithheld += 1;
+      }
+      return { total: map.size, openWithheld };
+    },
+  };
+}
+const j = pureLocalJournal();
+assert.equal(j.record("e1").idempotent, false);
+assert.equal(j.record("e1").idempotent, true);
+assert.equal(j.probe().openWithheld, 1);
+assert.equal(j.probe().total, 1);
 assert.match(imageRoute, /recon:image:/);
 
 const base = createReconciliationCase({

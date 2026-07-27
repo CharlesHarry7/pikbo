@@ -8,6 +8,7 @@
 
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import type { StrictLiveReservation } from "@/lib/durableCredits/liveReservation";
+import { recordLocalReconciliationEvent } from "@/lib/durableCredits/localReconciliationJournal";
 
 export type DurableReconciliationState =
   | "review_required"
@@ -176,11 +177,34 @@ async function recordOutcome(
   | { ok: true; data: DurableReconciliationTruth }
   | DurableReconciliationFailure
 > {
+  // Process-memory fallback always — never lose withhold facts when SQL is off.
+  // Never stores outputRef string (presence flag only).
+  const localType =
+    input.eventType === "provider_succeeded"
+      ? ("provider_succeeded_withheld" as const)
+      : input.eventType === "confirmed_pre_output_failure"
+        ? ("confirmed_pre_output_failure" as const)
+        : ("settlement_unknown" as const);
+  try {
+    recordLocalReconciliationEvent({
+      eventId: input.eventId,
+      type: localType,
+      jobId: reservation.jobId,
+      reservationId: reservation.reservationId,
+      userId: reservation.userId,
+      reason: input.reason,
+      providerRequestId: input.providerRequestId,
+      hasOutputRef: Boolean(input.outputRef),
+    });
+  } catch {
+    /* journal must never throw into the live path */
+  }
+
   const admin = getSupabaseAdmin();
   if (!admin) {
     return failure(
       "DURABLE_CREDITS_UNAVAILABLE",
-      "Supabase service role unavailable"
+      "Supabase service role unavailable — event kept in process-memory journal only"
     );
   }
   const { data, error } = await admin.rpc(
