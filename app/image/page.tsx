@@ -25,6 +25,20 @@ import { createRemixHref } from "@/lib/remixIntent";
 /** Default video recipe when handing a still into Generate (listing spin). */
 const IMAGE_HANDOFF_EFFECT = "360-spin-showcase";
 
+/** Process-memory still ledger row (GET /api/image — no multi-node claim). */
+type SessionStillJob = {
+  id: string;
+  status: string;
+  prompt?: string;
+  aspect?: string;
+  hasImage?: boolean;
+  imageUrl?: string;
+  demo?: boolean;
+  creditsOutcome?: string;
+  errorCode?: string;
+  error?: string;
+};
+
 /** Handoff stills into Create — http(s) or same-origin path only. */
 function canHandOffStill(url: string | null | undefined): url is string {
   if (!url) return false;
@@ -66,6 +80,16 @@ export default function ImageStudioPage() {
   const abortRef = useRef<AbortController | null>(null);
   /** Device-local bible SKU — AfterPath hops (Create/Batch parity). */
   const [toySku, setToySku] = useState("");
+  /** Process-memory Flux ledger (GET /api/image) — recovery honesty. */
+  const [sessionStillJobs, setSessionStillJobs] = useState<SessionStillJob[]>(
+    []
+  );
+  const [sessionStillMeta, setSessionStillMeta] = useState<{
+    open: number;
+    total: number;
+    failed: number;
+    canceled: number;
+  } | null>(null);
 
   // Default optimistic Free until /api/me resolves (soft-launch default plan).
   const freeStillsDemoOnly =
@@ -87,9 +111,43 @@ export default function ImageStudioPage() {
     void fetchMe().then((m) => {
       if (!cancelled) setMe(m);
     });
+
+    async function loadSessionStills() {
+      try {
+        const res = await fetch("/api/image", {
+          method: "GET",
+          cache: "no-store",
+        });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as {
+          jobs?: SessionStillJob[];
+          open?: number;
+          total?: number;
+          byStatus?: { failed?: number; canceled?: number };
+        };
+        if (cancelled) return;
+        const jobs = Array.isArray(data.jobs) ? data.jobs : [];
+        setSessionStillJobs(jobs.slice(0, 8));
+        setSessionStillMeta({
+          open: typeof data.open === "number" ? data.open : 0,
+          total: typeof data.total === "number" ? data.total : jobs.length,
+          failed: data.byStatus?.failed ?? 0,
+          canceled: data.byStatus?.canceled ?? 0,
+        });
+      } catch {
+        /* offline / private */
+      }
+    }
+    void loadSessionStills();
+    // Soft-launch: poll process-memory still ledger (GET touches open TTL).
+    const poll = window.setInterval(() => {
+      if (!cancelled) void loadSessionStills();
+    }, 5000);
+
     return () => {
       cancelled = true;
       window.clearTimeout(t);
+      window.clearInterval(poll);
       abortRef.current?.abort();
       abortRef.current = null;
     };
@@ -466,6 +524,82 @@ export default function ImageStudioPage() {
             ) : null}
           </div>
         </div>
+
+        {sessionStillMeta && sessionStillMeta.total > 0 ? (
+          <div
+            className="mt-8 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3"
+            data-image-session-ledger="process-memory"
+          >
+            <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">
+              Session still ledger · this instance
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-white/55">
+              {sessionStillMeta.open > 0
+                ? `${sessionStillMeta.open} open · `
+                : ""}
+              {sessionStillMeta.total} Flux process-memory job
+              {sessionStillMeta.total === 1 ? "" : "s"}
+              {sessionStillMeta.failed > 0 || sessionStillMeta.canceled > 0
+                ? ` · ${sessionStillMeta.failed} failed · ${sessionStillMeta.canceled} canceled`
+                : ""}
+              {" · "}
+              not multi-device cloud · TIMEOUT refund unconfirmed until balance
+              confirms
+            </p>
+            {sessionStillJobs.length > 0 ? (
+              <ul className="mt-2 space-y-1.5">
+                {sessionStillJobs.map((j) => (
+                  <li
+                    key={j.id}
+                    className="flex flex-wrap items-center gap-2 text-[11px] text-white/60"
+                    data-image-session-job={j.status}
+                  >
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${
+                        j.status === "succeeded"
+                          ? "bg-[var(--mint)]/15 text-[var(--mint)]"
+                          : j.status === "running"
+                            ? "bg-amber-400/15 text-amber-100"
+                            : j.status === "canceled"
+                              ? "bg-white/10 text-white/50"
+                              : "bg-red-400/15 text-red-200"
+                      }`}
+                    >
+                      {j.status}
+                    </span>
+                    <span className="max-w-[14rem] truncate text-white/45 sm:max-w-xs">
+                      {(j.prompt || j.id).slice(0, 48)}
+                    </span>
+                    {j.creditsOutcome ? (
+                      <span className="text-white/35">{j.creditsOutcome}</span>
+                    ) : null}
+                    {j.errorCode ? (
+                      <span className="text-amber-200/80">{j.errorCode}</span>
+                    ) : null}
+                    {j.status === "succeeded" && j.imageUrl ? (
+                      <button
+                        type="button"
+                        className="text-[var(--mint)] hover:underline"
+                        onClick={() => {
+                          setImageUrl(j.imageUrl || null);
+                          setDemo(Boolean(j.demo));
+                          setLastSettlement(
+                            j.creditsOutcome === "0 cached" ||
+                              j.creditsOutcome === "10 used"
+                              ? j.creditsOutcome
+                              : null
+                          );
+                        }}
+                      >
+                        Open
+                      </button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
 
         {history.length > 0 && (
           <div className="mt-10">

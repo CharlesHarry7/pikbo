@@ -159,7 +159,8 @@
 118. [x] Residual suite Generate doors → createRemixHref (Explore/Community/Apps/Flow/…)
 119. [x] createJobRemixHref registries + FreeTrial Lab sample remix try path
 120. [x] Residual Lab sample try → createLabSampleTryHref
-121. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+121. [x] GET /api/image session still ledger (list+touch+public) · Image recovery UI
+122. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -173,8 +174,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Residual Lab sample try doors use createLabSampleTryHref (remix + try/sample).
-- Modules/SoftLaunch/HomeFeatureCarousel aligned with FreeTrial/Fail/Library/cmd.
+- GET /api/image lists process-memory stills (byStatus/open/total + touch open TTL).
+- toPublicImageJob URL-safe; data: demos use hasImage (no multi-KB list bodies).
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 

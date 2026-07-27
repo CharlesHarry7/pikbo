@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] GET /api/image session still ledger
+- `listImageJobsForSession` · `touchOpenImageJobsForSession` · `toPublicImageJob`
+  (safe http only; data: demos → hasImage, no multi-KB list JSON).
+- GET /api/image parity with GET /api/generations: byStatus/open/total full-session,
+  newest page, TIMEOUT sweep, touch open. HEAD echoes List-Limit.
+- /image shows process-memory session ledger strip (failed/canceled honesty).
+- Smoke: image GET + list/touch/public + data-image-session-ledger.
+
 ### 2026-07-27 — [grok] Residual Lab sample try → createLabSampleTryHref
 - ModulesSuiteCtas · ModulesMobileCta · SoftLaunchStrip demo try ·
   HomeFeatureCarousel Seedance Mini use createLabSampleTryHref(scout)

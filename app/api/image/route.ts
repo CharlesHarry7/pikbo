@@ -22,10 +22,15 @@ import {
   completeImageJob,
   failImageJob,
   findImageJobByIdempotencyKey,
+  IMAGE_JOBS_LIST_LIMIT,
   imageJobInFlightRetryAfterSec,
   imageJobTimeoutMs,
   listImageJobCountsForSession,
+  listImageJobsForSession,
   normalizeImageIdempotencyKey,
+  sweepTimedOutImageJobs,
+  touchOpenImageJobsForSession,
+  toPublicImageJob,
   type ImageJob,
 } from "@/lib/imageJobs";
 
@@ -49,7 +54,54 @@ export async function HEAD() {
       "X-Pikbo-Image-Jobs-Failed": String(counts.failed),
       "X-Pikbo-Image-Jobs-Canceled": String(counts.canceled),
       "X-Pikbo-Image-Job-Timeout-Ms": String(imageJobTimeoutMs()),
+      "X-Pikbo-Image-Jobs-List-Limit": String(IMAGE_JOBS_LIST_LIMIT),
     },
+  });
+}
+
+/**
+ * Phase D still ledger list — parity with GET /api/generations.
+ * Newest page for Image recovery UI; byStatus/open/total are full-session.
+ * Touches open jobs so poll does not false-TIMEOUT mid-Flux.
+ * Never dumps multi-KB data: URLs into the list JSON.
+ */
+export async function GET() {
+  const session = await ensureSession();
+  const timedOut = sweepTimedOutImageJobs().filter(
+    (j) => j.sessionId === session.id
+  ).length;
+  const touchedOpen = touchOpenImageJobsForSession(session.id);
+  const listed = listImageJobsForSession(session.id, IMAGE_JOBS_LIST_LIMIT);
+  const jobs = listed.map((j) => toPublicImageJob(j, session.id));
+  const full = listImageJobCountsForSession(session.id);
+  const byStatus = {
+    running: full.running,
+    succeeded: full.succeeded,
+    failed: full.failed,
+    canceled: full.canceled,
+  };
+  return NextResponse.json({
+    ok: true,
+    mode: "local-memory",
+    adapter: "process-memory",
+    durable: false,
+    jobTimeoutMs: imageJobTimeoutMs(),
+    timedOutThisSweep: timedOut,
+    touchedOpen,
+    listLimit: IMAGE_JOBS_LIST_LIMIT,
+    listed: jobs.length,
+    total: full.total,
+    byStatus,
+    open: full.open,
+    note:
+      "In-process still ledger for soft-launch recovery. Not multi-node durable. Use POST /api/image for work. Running jobs past jobTimeoutMs fail with TIMEOUT. GET touches all open stills; byStatus/open/total are full-session. data: demo URLs omitted from list (hasImage flag only).",
+    compatibility: {
+      syncImage: "/api/image",
+      cancel: "DELETE /api/image",
+      counts: "HEAD /api/image",
+    },
+    session: publicSession(session),
+    jobs,
   });
 }
 

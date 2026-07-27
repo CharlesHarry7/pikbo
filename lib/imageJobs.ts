@@ -4,7 +4,10 @@
  * Not multi-node durable — Vercel multi-instance needs Redis/Supabase later.
  */
 
-import { failedLedgerCreditsOutcome } from "@/lib/createTrust";
+import {
+  failedLedgerCreditsOutcome,
+  isSafeDeliverableUrl,
+} from "@/lib/createTrust";
 
 export type ImageJobStatus = "running" | "succeeded" | "failed" | "canceled";
 
@@ -32,6 +35,35 @@ export type ImageJob = {
   requestId?: string;
   createdAt: string;
   updatedAt: string;
+};
+
+/** Soft-launch Image recovery page size (newest first) — generations parity. */
+export const IMAGE_JOBS_LIST_LIMIT = 50;
+
+/**
+ * Session-safe still job for GET /api/image — never leaks another session,
+ * never echoes unsafe URLs (and never dumps huge data: URLs into list JSON).
+ */
+export type PublicImageJob = {
+  id: string;
+  status: ImageJobStatus;
+  prompt: string;
+  aspect?: string;
+  /** Safe http(s)/same-origin only; demo data: URLs omitted from list (size). */
+  imageUrl?: string;
+  hasImage?: boolean;
+  demo?: boolean;
+  demoReason?: "no_provider_key" | "free_trial_video_only";
+  model?: string;
+  costCredits?: number;
+  creditsOutcome?: ImageJob["creditsOutcome"];
+  creditsRefunded?: boolean;
+  error?: string;
+  errorCode?: string;
+  requestId?: string;
+  createdAt: string;
+  updatedAt: string;
+  owned: boolean;
 };
 
 const jobs = new Map<string, ImageJob>();
@@ -465,6 +497,7 @@ export function listImageJobCountsForSession(sessionId: string): {
   succeeded: number;
   failed: number;
   canceled: number;
+  running: number;
 } {
   trimStore();
   sweepTimedOutImageJobs();
@@ -473,15 +506,100 @@ export function listImageJobCountsForSession(sessionId: string): {
   let succeeded = 0;
   let failed = 0;
   let canceled = 0;
+  let running = 0;
   for (const j of jobs.values()) {
     if (j.sessionId !== sessionId) continue;
     total += 1;
-    if (j.status === "running") open += 1;
-    else if (j.status === "succeeded") succeeded += 1;
+    if (j.status === "running") {
+      open += 1;
+      running += 1;
+    } else if (j.status === "succeeded") succeeded += 1;
     else if (j.status === "failed") failed += 1;
     else if (j.status === "canceled") canceled += 1;
   }
-  return { total, open, succeeded, failed, canceled };
+  return { total, open, succeeded, failed, canceled, running };
+}
+
+/**
+ * Newest-first still jobs for this session (Library/Image recovery).
+ * Full histogram uses listImageJobCountsForSession — not this page slice.
+ */
+export function listImageJobsForSession(
+  sessionId: string,
+  limit = IMAGE_JOBS_LIST_LIMIT
+): ImageJob[] {
+  trimStore();
+  sweepTimedOutImageJobs();
+  return [...jobs.values()]
+    .filter((j) => j.sessionId === sessionId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, Math.max(1, Math.min(limit, 100)));
+}
+
+/**
+ * Slide TTL on every open still for this session (GET poll honesty).
+ * Prevents false TIMEOUT while Image studio polls mid-Flux.
+ */
+export function touchOpenImageJobsForSession(sessionId: string): number {
+  trimStore();
+  sweepTimedOutImageJobs();
+  let n = 0;
+  const t = nowIso();
+  for (const j of jobs.values()) {
+    if (j.sessionId !== sessionId) continue;
+    if (j.status !== "running") continue;
+    jobs.set(j.id, { ...j, updatedAt: t });
+    n += 1;
+  }
+  return n;
+}
+
+/**
+ * Public still job for GET /api/image — session-gated, URL-safe.
+ * data: demo stills are marked hasImage without echoing multi-KB bodies.
+ */
+export function toPublicImageJob(
+  job: ImageJob,
+  sessionId: string
+): PublicImageJob {
+  if (job.sessionId !== sessionId) {
+    return {
+      id: job.id,
+      status: "failed",
+      prompt: "",
+      error: "Not found",
+      createdAt: job.createdAt,
+      updatedAt: job.updatedAt,
+      owned: false,
+    };
+  }
+  const raw = job.imageUrl;
+  const isData = Boolean(raw && raw.startsWith("data:image/"));
+  const safeHttp = Boolean(raw && isSafeDeliverableUrl(raw));
+  const publicUrl =
+    job.status === "succeeded" && safeHttp && !isData ? raw : undefined;
+  return {
+    id: job.id,
+    status: job.status,
+    prompt: job.prompt.slice(0, 240),
+    aspect: job.aspect,
+    ...(publicUrl ? { imageUrl: publicUrl } : {}),
+    hasImage: Boolean(
+      job.status === "succeeded" && raw && (safeHttp || isData)
+    ),
+    demo: job.demo,
+    ...(job.demoReason ? { demoReason: job.demoReason } : {}),
+    model: job.model,
+    costCredits: job.costCredits,
+    creditsOutcome: job.creditsOutcome,
+    creditsRefunded: job.creditsRefunded,
+    error: job.error,
+    errorCode: job.errorCode,
+    requestId: job.requestId || job.id,
+    createdAt: job.createdAt,
+    updatedAt: job.updatedAt,
+    owned: true,
+  };
 }
 
 export function __resetImageJobsForTests(): void {

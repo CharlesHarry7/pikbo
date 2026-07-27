@@ -1734,13 +1734,27 @@ assert.match(imageJobsSrc, /export function sweepTimedOutImageJobs/);
 assert.match(imageJobsSrc, /export function imageJobTimeoutMs/);
 assert.match(imageJobsSrc, /export function imageJobInFlightRetryAfterSec/);
 assert.match(imageJobsSrc, /TIMEOUT|refund unconfirmed/);
+// Still ledger list parity with GET /api/generations
+assert.match(imageJobsSrc, /export function listImageJobsForSession/);
+assert.match(imageJobsSrc, /export function touchOpenImageJobsForSession/);
+assert.match(imageJobsSrc, /export function toPublicImageJob/);
+assert.match(imageJobsSrc, /IMAGE_JOBS_LIST_LIMIT/);
+assert.match(imageJobsSrc, /hasImage|isSafeDeliverableUrl/);
 assert.match(imageRoute, /findImageJobByIdempotencyKey/);
 assert.match(imageRoute, /idempotentReplay/);
 assert.match(imageRoute, /normalizeImageIdempotencyKey/);
 assert.match(imageRoute, /requestId/);
 assert.match(imageRoute, /export async function HEAD/);
+assert.match(imageRoute, /export async function GET/);
+assert.match(imageRoute, /listImageJobsForSession|toPublicImageJob/);
+assert.match(imageRoute, /touchOpenImageJobsForSession/);
 assert.match(imageRoute, /X-Pikbo-Image-Jobs-Open/);
+assert.match(imageRoute, /X-Pikbo-Image-Jobs-List-Limit/);
 assert.match(imageRoute, /imageJobInFlightRetryAfterSec/);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /data-image-session-ledger=["']process-memory["']/
+);
 // Pure image timeout sweep (crash mid-Flux must not leave infinite JOB_IN_FLIGHT)
 function sweepTimedOutImageJobsPure(jobs, now, timeoutMs) {
   const timedOut = [];
