@@ -118,6 +118,21 @@ export async function GET() {
     durableServerOwnedJobs,
     durableCreditsBackendNote:
       "local-file is single-node verification only; multi-node accounting needs Supabase RPCs + server-owned jobs",
+    /**
+     * R1a atomic generation ledger — source migration + smoke exist on main.
+     * Applied=false until boss runs SQL in non-prod and probe sees RPCs.
+     * Presence-only honesty (never claims multi-node ready from source alone).
+     */
+    recoveryLedger: {
+      r1aAtomicRpcSource: true,
+      migration:
+        "supabase/migrations/20260727213000_r1_atomic_generation_credits.sql",
+      smoke: "npm run recovery-ledger",
+      appliedRequiresBoss: true,
+      r1bRetryDeadlineOpen: true,
+      note:
+        "Source-only until migration preflight + non-prod apply; live beta stays fail-closed without schema",
+    },
     service: "pikbo",
     foundation: "L0-L3",
     time: new Date().toISOString(),

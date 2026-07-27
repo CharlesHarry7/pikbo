@@ -39,6 +39,9 @@ jobs:
       - name: Recovery QA (R0–R3 cost · ledger · CI honesty)
         run: npm run recovery-qa
 
+      - name: Recovery ledger (R1a atomic reserve/capture fixture)
+        run: npm run recovery-ledger
+
       - name: Lint
         run: npm run lint
 

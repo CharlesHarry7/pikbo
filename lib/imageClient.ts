@@ -10,6 +10,10 @@ import { sleep } from "@/lib/generateClient";
 export type ImageErrorCode =
   | "INVALID_REQUEST"
   | "INSUFFICIENT_CREDITS"
+  | "AUTH_REQUIRED"
+  | "LIVE_ACCESS_REQUIRED"
+  | "DURABLE_CREDITS_UNAVAILABLE"
+  | "RESERVATION_FAILED"
   | "RATE_LIMITED"
   | "JOB_IN_FLIGHT"
   | "MODEL_EMPTY"
@@ -182,6 +186,23 @@ export function interpretImageResponse(
       ? body.retryAfterSec
       : undefined;
   const creditsRefunded = body.creditsRefunded === true;
+
+  // R1a capture ambiguity parity with generateClient — withhold, no invented refund.
+  if (code === "DURABLE_CREDITS_UNAVAILABLE") {
+    return {
+      ok: false,
+      status,
+      error:
+        body.error ||
+        "Credits could not be finalized. Still withheld while the durable reservation is reconciled — do not retry with the same idempotency key.",
+      code,
+      session: body.session,
+      retryAfterSec,
+      creditsRefunded: undefined,
+      refundUnconfirmed: undefined,
+    };
+  }
+
   // TIMEOUT / provider blip / unsafe deliverable after debit — never invent restore.
   const refundUnconfirmed =
     body.refundUnconfirmed === true ||
@@ -199,23 +220,29 @@ export function interpretImageResponse(
       ? `Too many image jobs — wait ${retryAfterSec ?? "a few"}s, then Retry`
       : code === "JOB_IN_FLIGHT"
         ? `An image job is already running — wait ${retryAfterSec ?? "a few"}s`
-        : code === "PROVIDER_BALANCE"
-          ? "Upstream provider balance empty — credits restored when the debit was confirmed."
-          : code === "PROVIDER_RATE_LIMIT"
-            ? `Provider busy — try again in ${retryAfterSec ?? "a few"}s`
-            : code === "PROVIDER_TIMEOUT"
-              ? `Provider timed out — Retry in ${retryAfterSec ?? "a few"}s`
-              : code === "PROVIDER_NETWORK"
-                ? `Provider network blip — Retry in ${retryAfterSec ?? "a few"}s`
-                : code === "TIMEOUT"
-                  ? "Prior still job timed out — mint a new attempt (Retry). Check balance if refund is unconfirmed."
-                  : code === "CONTENT_POLICY"
-                    ? "Provider rejected this prompt — try a clearer product description"
-                    : code === "UNSAFE_URL"
-                      ? "Provider returned an unsafe image URL — check balance"
-                      : code === "INSUFFICIENT_CREDITS"
-                        ? "Not enough credits — top up on Pricing or wait for plan refresh"
-                        : "Image generation failed — Retry keeps your prompt");
+        : code === "AUTH_REQUIRED"
+          ? "Sign in before requesting live Flux stills"
+          : code === "LIVE_ACCESS_REQUIRED"
+            ? "This account cannot run live stills yet — use labeled demos for Free"
+            : code === "RESERVATION_FAILED"
+              ? "Could not reserve credits for live stills — mint a new attempt key"
+              : code === "PROVIDER_BALANCE"
+                ? "Upstream provider balance empty — credits restored when the debit was confirmed."
+                : code === "PROVIDER_RATE_LIMIT"
+                  ? `Provider busy — try again in ${retryAfterSec ?? "a few"}s`
+                  : code === "PROVIDER_TIMEOUT"
+                    ? `Provider timed out — Retry in ${retryAfterSec ?? "a few"}s`
+                    : code === "PROVIDER_NETWORK"
+                      ? `Provider network blip — Retry in ${retryAfterSec ?? "a few"}s`
+                      : code === "TIMEOUT"
+                        ? "Prior still job timed out — mint a new attempt (Retry). Check balance if refund is unconfirmed."
+                        : code === "CONTENT_POLICY"
+                          ? "Provider rejected this prompt — try a clearer product description"
+                          : code === "UNSAFE_URL"
+                            ? "Provider returned an unsafe image URL — check balance"
+                            : code === "INSUFFICIENT_CREDITS"
+                              ? "Not enough credits — top up on Pricing or wait for plan refresh"
+                              : "Image generation failed — Retry keeps your prompt");
 
   if (creditsRefunded && !/refund|restored|credit/i.test(error)) {
     error = `${error} · 10 credits restored`;

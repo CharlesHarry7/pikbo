@@ -961,6 +961,7 @@ const ciYml = fs.readFileSync(
 );
 assert.match(ciYml, /engine-smoke/);
 assert.match(ciYml, /recovery-qa|recovery-cost-gate/);
+assert.match(ciYml, /recovery-ledger/);
 assert.match(ciYml, /typecheck/);
 assert.match(ciYml, /npm run build/);
 assert.match(ciYml, /npm run critical-path/);
@@ -973,8 +974,26 @@ assert.match(
   /"recovery-qa"/
 );
 assert.match(
+  fs.readFileSync(join(root, "package.json"), "utf8"),
+  /"recovery-ledger"/
+);
+assert.match(
   fs.readFileSync(join(root, "scripts/recovery-qa.mjs"), "utf8"),
   /concurrent reserves must not overspend/
+);
+// R1a capture-ambiguity client: withhold, never invent refund
+assert.match(gen, /DURABLE_CREDITS_UNAVAILABLE/);
+assert.match(
+  gen,
+  /code === "DURABLE_CREDITS_UNAVAILABLE"[\s\S]{0,500}refundUnconfirmed:\s*undefined/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/health/route.ts"), "utf8"),
+  /recoveryLedger/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/health/route.ts"), "utf8"),
+  /r1aAtomicRpcSource:\s*true/
 );
 // Pure module must export Wave B helpers
 const createTrust = fs.readFileSync(
@@ -1552,12 +1571,16 @@ const genJobsStore = fs.readFileSync(
 assert.match(genJobsStore, /recordSucceededGenerate/);
 assert.match(genJobsStore, /recordFailedGenerate/);
 assert.match(genJobsStore, /export function beginSyncGenerateJob/);
-// Ledger-retry fork promote: beginSync reuses queued parentJobId+effect row
+// R1b: promote only with explicit retryJobId fork token (never effect/prompt guess)
+assert.match(genJobsStore, /retryJobId/);
 assert.match(
   genJobsStore,
-  /beginSyncGenerateJob[\s\S]{0,1200}queuedForks|parentJobId[\s\S]{0,200}promote|promote[\s\S]{0,80}parentJobId/
+  /beginSyncGenerateJob[\s\S]{0,2500}retryJobId[\s\S]{0,900}parentJobId/
 );
-assert.match(genJobsStore, /queuedForks|Boolean\(j\.parentJobId\)/);
+assert.match(
+  genJobsStore,
+  /Never promote by effect\/prompt guess|explicit fork token|explicit retry token/
+);
 assert.match(genJobsStore, /export function completeSyncGenerateJob/);
 assert.match(genJobsStore, /export function failSyncGenerateJob/);
 assert.match(genJobsStore, /export function touchJob/);
@@ -1766,9 +1789,12 @@ assert.match(
 const imageJobsSrc = fs.readFileSync(join(root, "lib/imageJobs.ts"), "utf8");
 assert.match(imageJobsSrc, /export function findImageJobByIdempotencyKey/);
 assert.match(imageJobsSrc, /export function beginImageJob/);
-// Ledger-retry fork promote: beginImageJob reuses queued same-prompt row
-assert.match(imageJobsSrc, /status === ["']queued["'][\s\S]{0,200}promote|promote[\s\S]{0,120}queued/);
-assert.match(imageJobsSrc, /beginImageJob[\s\S]{0,800}queued/);
+// R1b stills: promote only with explicit retryJobId fork token (never prompt guess)
+assert.match(imageJobsSrc, /retryJobId/);
+assert.match(
+  imageJobsSrc,
+  /beginImageJob[\s\S]{0,2500}retryJobId[\s\S]{0,900}parentJobId|Never guess by prompt/
+);
 assert.match(imageJobsSrc, /export function completeImageJob/);
 assert.match(imageJobsSrc, /export function failImageJob/);
 assert.match(imageJobsSrc, /export function imageJobsProbe/);

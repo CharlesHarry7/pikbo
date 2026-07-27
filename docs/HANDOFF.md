@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] R1a capture-ambiguity client + recovery-ledger CI
+- `generateClient` / `imageClient`: `DURABLE_CREDITS_UNAVAILABLE` withholds output and never invents refund or "10 used"; AUTH/LIVE_ACCESS/RESERVATION fail copy honest.
+- Health exposes `recoveryLedger` (r1a source true, appliedRequiresBoss, r1b open) — presence only.
+- `docs/ci`: `npm run recovery-ledger` after recovery-qa; recovery-qa/engine-smoke lock CI + client honesty.
+- Boss still re-copy `docs/ci/github-actions-ci.yml` → `.github/workflows/ci.yml`.
+- Checks: recovery-qa + recovery-ledger + engine-smoke + typecheck PASS.
+
 ### 2026-07-27 — [claude] seller-first Create three-step path
 - First run is now `upload owned toy photo → choose Listing/Unboxing/Social Hook/Starter Pack → review exact quote and generate`.
 - Model shelf, workflow shelf, activation checklist, full recipe catalog, prompt, model, duration, seed and fidelity guidance no longer obstruct first activation; advanced controls remain available collapsed.

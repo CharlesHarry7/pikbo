@@ -427,11 +427,37 @@ assert.doesNotMatch(
   "strict live path must not fall back to local/file shadow wallet"
 );
 
+// ─── R1a capture-ambiguity client honesty (never invent refund / 10 used) ───
+
+const generateClient = readFileSync(
+  join(root, "lib/generateClient.ts"),
+  "utf8"
+);
+assert.match(
+  generateClient,
+  /code === "DURABLE_CREDITS_UNAVAILABLE"[\s\S]{0,400}do not retry/
+);
+assert.match(
+  generateClient,
+  /code === "DURABLE_CREDITS_UNAVAILABLE"[\s\S]{0,500}refundUnconfirmed:\s*undefined/
+);
+assert.doesNotMatch(
+  generateClient,
+  /code === "DURABLE_CREDITS_UNAVAILABLE"[\s\S]{0,400}10 credits restored/
+);
+const imageClient = readFileSync(join(root, "lib/imageClient.ts"), "utf8");
+assert.match(imageClient, /DURABLE_CREDITS_UNAVAILABLE/);
+assert.match(
+  imageClient,
+  /code === "DURABLE_CREDITS_UNAVAILABLE"[\s\S]{0,500}refundUnconfirmed:\s*undefined/
+);
+
 // ─── R3: CI template must fail on critical-path (demo mode; no || true) ───
 
 const ciYml = readFileSync(join(root, "docs/ci/github-actions-ci.yml"), "utf8");
 assert.match(ciYml, /engine-smoke/);
 assert.match(ciYml, /recovery-qa|recovery-cost-gate/);
+assert.match(ciYml, /recovery-ledger/);
 assert.match(ciYml, /npm run typecheck/);
 assert.match(ciYml, /npm run build/);
 assert.match(ciYml, /npm run link-check/);
@@ -451,6 +477,7 @@ assert.doesNotMatch(
 const packageJson = readFileSync(join(root, "package.json"), "utf8");
 assert.match(packageJson, /"recovery-qa"/);
 assert.match(packageJson, /"recovery-cost-gate"/);
+assert.match(packageJson, /"recovery-ledger"/);
 assert.match(packageJson, /"critical-path"/);
 
 const criticalPath = readFileSync(join(root, "scripts/critical-path.sh"), "utf8");

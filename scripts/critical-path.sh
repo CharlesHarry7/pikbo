@@ -162,6 +162,15 @@ if payments:
 t6=h.get("t6") or {}
 if t6:
     print(f"t6 status={t6.get('status')} freeLiveRawDownload={t6.get('freeLiveRawDownload')}")
+rl=h.get("recoveryLedger") or {}
+if rl:
+    print(
+        f"recoveryLedger r1aSource={rl.get('r1aAtomicRpcSource')} "
+        f"appliedRequiresBoss={rl.get('appliedRequiresBoss')} "
+        f"r1bOpen={rl.get('r1bRetryDeadlineOpen')} smoke={rl.get('smoke')}"
+    )
+else:
+    print("WARN health.recoveryLedger missing — R1a source honesty preferred")
 me=json.load(open("/tmp/pikbo-me.json"))
 assert "credits" in me and "plan" in me
 assert me.get("mode") in ("live-generate", "demo-cached")

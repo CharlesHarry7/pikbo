@@ -120,35 +120,62 @@ export function interpretGenerateResponse(
     code === "INSUFFICIENT_CREDITS" || code === "PROVIDER_BALANCE";
   const creditsRefunded = body.creditsRefunded === true;
 
+  // R1a capture ambiguity: provider may have produced media, but durable
+  // settle did not commit. Output is withheld; never invent "10 used" or refund.
+  if (code === "DURABLE_CREDITS_UNAVAILABLE") {
+    return {
+      ok: false,
+      status,
+      error:
+        body.error ||
+        "Credits could not be finalized. Output is withheld while the durable reservation is reconciled — do not retry with the same idempotency key.",
+      code,
+      session: body.session,
+      retryAfterSec,
+      jobId: typeof body.jobId === "string" ? body.jobId : undefined,
+      // Hold is open / unknown — not a confirmed refund path.
+      creditsRefunded: undefined,
+      refundUnconfirmed: undefined,
+      fatal: false,
+      paywall: false,
+    };
+  }
+
   let error =
     body.error ||
     (code === "RATE_LIMITED"
       ? `Too many generates — wait ${retryAfterSec ?? "a few"}s, then Retry`
       : code === "JOB_IN_FLIGHT"
         ? `A generate is already running — wait ${retryAfterSec ?? "a few"}s or Cancel first`
-        : code === "PROVIDER_BALANCE"
-          ? "Upstream provider balance empty — credits restored when the debit was confirmed."
-          : code === "RIGHTS_REQUIRED"
-            ? "Confirm you own this photo and have the right to animate it"
-            : code === "UNKNOWN_EFFECT"
-              ? "Unknown effect — open Recipes and pick a registered toy recipe"
-              : code === "IMAGE_TOO_LARGE"
-                ? "Image too large (max ~8MB) — compress or crop the product photo"
-                : code === "ASSET_NOT_FOUND"
-                  ? "Photo asset expired on the server — re-upload or Retry with the same still"
-                  : code === "UNSAFE_URL"
-                    ? "Provider returned an unsafe video URL — credits restored when confirmed. Retry generate."
-                    : code === "PROVIDER_RATE_LIMIT"
-                      ? `Provider busy — try again in ${retryAfterSec ?? "a few"}s`
-                      : code === "PROVIDER_TIMEOUT"
-                        ? `Provider timed out — Retry in ${retryAfterSec ?? "a few"}s (same still kept)`
-                        : code === "PROVIDER_NETWORK"
-                          ? `Provider network blip — Retry in ${retryAfterSec ?? "a few"}s (same still kept)`
-                          : code === "TIMEOUT"
-                            ? "Prior job timed out on the server — mint a new attempt (Retry). Check balance if refund is unconfirmed."
-                            : code === "CONTENT_POLICY"
-                              ? "Provider rejected this still or prompt — use a clear product photo on a simple background"
-                              : "Generation failed — Retry keeps your still, or try another recipe");
+        : code === "AUTH_REQUIRED"
+          ? "Sign in before requesting live generation"
+          : code === "LIVE_ACCESS_REQUIRED"
+            ? "This account cannot run live generation yet — use cached demos or upgrade when beta opens"
+            : code === "RESERVATION_FAILED"
+              ? "Could not reserve credits for live generation — try again with a new attempt key"
+              : code === "PROVIDER_BALANCE"
+                ? "Upstream provider balance empty — credits restored when the debit was confirmed."
+                : code === "RIGHTS_REQUIRED"
+                  ? "Confirm you own this photo and have the right to animate it"
+                  : code === "UNKNOWN_EFFECT"
+                    ? "Unknown effect — open Recipes and pick a registered toy recipe"
+                    : code === "IMAGE_TOO_LARGE"
+                      ? "Image too large (max ~8MB) — compress or crop the product photo"
+                      : code === "ASSET_NOT_FOUND"
+                        ? "Photo asset expired on the server — re-upload or Retry with the same still"
+                        : code === "UNSAFE_URL"
+                          ? "Provider returned an unsafe video URL — credits restored when confirmed. Retry generate."
+                          : code === "PROVIDER_RATE_LIMIT"
+                            ? `Provider busy — try again in ${retryAfterSec ?? "a few"}s`
+                            : code === "PROVIDER_TIMEOUT"
+                              ? `Provider timed out — Retry in ${retryAfterSec ?? "a few"}s (same still kept)`
+                              : code === "PROVIDER_NETWORK"
+                                ? `Provider network blip — Retry in ${retryAfterSec ?? "a few"}s (same still kept)`
+                                : code === "TIMEOUT"
+                                  ? "Prior job timed out on the server — mint a new attempt (Retry). Check balance if refund is unconfirmed."
+                                  : code === "CONTENT_POLICY"
+                                    ? "Provider rejected this still or prompt — use a clear product photo on a simple background"
+                                    : "Generation failed — Retry keeps your still, or try another recipe");
 
   // PRD §5: recoverable failures must say whether the 10 credits were restored.
   if (
@@ -158,6 +185,7 @@ export function interpretGenerateResponse(
     error = `${error} · 10 credits restored`;
   }
   // Ledger kill / provider blip / unsafe deliverable after debit — never invent restore.
+  // Capture-pending (DURABLE_CREDITS_UNAVAILABLE) is handled above — not refundUnconfirmed.
   const refundUnconfirmed =
     body.refundUnconfirmed === true ||
     code === "TIMEOUT" ||
