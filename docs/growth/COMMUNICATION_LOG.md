@@ -7,6 +7,12 @@
 
 ## 2026-07-27 沟通记录
 
+### 10:45 — 登录交给 WorkBuddy（Grok）
+- **老板：** 让 WorkBuddy 去做（登录）。
+- **Grok：** 写 `WORKBUDDY_AUTH_ENABLE_PROMPT.md` + WORK_QUEUE **WQ-09**。
+- 成功=生产 auth.configured；失败=blocked_secret 并继续外链。老板不传话。
+
+
 ### 10:20 — 都做 + 用户登录状态（Grok）
 - **老板：** 都做；用户登录做了么？
 - **生产核查：** `/api/health` → `auth.mode=disabled` · `authConfigured=false`
