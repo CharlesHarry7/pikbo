@@ -1,9 +1,11 @@
 /**
- * Traceable, owned PIKBO Lab projects.
+ * PIKBO Lab cached prototype projects.
  *
  * Home, Explore, Community, the sitemap, and /projects/[slug] all read this
- * registry. A project is registered only when it has a source still and a
- * distinct output file. Cached means playback never processes a visitor upload.
+ * registry. The current repository does not contain the provider task IDs,
+ * rights records, distinct input assets, or signed QA needed for a verified
+ * case study. The poster is therefore a reference poster, never claimed as the
+ * provider input that produced the cached clip.
  */
 
 import { DEMO_VIDEOS, type DemoVideo } from "@/lib/demoVideos";
@@ -16,7 +18,7 @@ import { createRemixHref } from "@/lib/remixIntent";
 import { viralName } from "@/lib/viralNames";
 
 export type ShowcaseProvenance =
-  | "official_cached"
+  | "cached_prototype"
   | "live_generated"
   | "concept";
 
@@ -27,47 +29,12 @@ export type ShowcaseCategory =
   | "social-hooks"
   | "story";
 
-export type ShowcaseQualityScores = {
-  identity: number;
-  motion: number;
-  artifacts: number;
-  composition: number;
-  commercialUse: number;
-};
-
-/**
- * Phase G: homepage proof requires every score ≥ 4/5.
- * Provisional Lab self-check until external human QA (honest, not fabricated UGC).
- */
-export const PROVISIONAL_LAB_SCORES: ShowcaseQualityScores = {
-  identity: 4,
-  motion: 4,
-  artifacts: 4,
-  composition: 4,
-  commercialUse: 4,
-};
-
-export function passesHomeProofQuality(
-  scores?: ShowcaseQualityScores | null
-): boolean {
-  if (!scores) return false;
-  const values = [
-    scores.identity,
-    scores.motion,
-    scores.artifacts,
-    scores.composition,
-    scores.commercialUse,
-  ];
-  return values.every(
-    (n) => typeof n === "number" && n >= 4 && n <= 5 && Number.isFinite(n)
-  );
-}
-
 export type ShowcaseProject = {
   slug: string;
   title: string;
   character: string;
-  inputImage: string;
+  /** Reference poster only; not proven to be the provider input frame. */
+  referencePoster: string;
   outputVideo: string;
   outputWebm?: string;
   poster: string;
@@ -79,9 +46,6 @@ export type ShowcaseProject = {
   resolution: string;
   promptSummary: string;
   negativeConstraints: string[];
-  qualityScores?: ShowcaseQualityScores;
-  /** Honest review note — provisional Lab vs external QA. */
-  reviewerNotes?: string;
   category: ShowcaseCategory;
   result: string;
   eyebrow: string;
@@ -101,9 +65,6 @@ export const SHOWCASE_CATEGORIES: ReadonlyArray<{
   { id: "story", label: "Story" },
 ];
 
-const LAB_PROVISIONAL_NOTE =
-  "Provisional Lab self-check (all dimensions 4/5) · external human QA still open · not fake UGC";
-
 const PROJECT_META: Record<
   string,
   Pick<
@@ -114,58 +75,50 @@ const PROJECT_META: Record<
     | "promptSummary"
     | "negativeConstraints"
     | "sourceRecord"
-    | "qualityScores"
-    | "reviewerNotes"
   >
 > = {
   "orbit-cgi": {
     category: "listing",
-    model: "PIKBO Lab prototype render",
+    model: "Provider unverified · cached prototype",
     resolution: "Web preview",
     promptSummary:
-      "Lift the owned figure into a clean product-hero frame with a restrained orbit and stable studio light.",
+      "Lift the figure into a clean product-hero frame with a restrained orbit and stable studio light.",
     negativeConstraints: [
       "Keep silhouette and paint colors stable",
       "Do not invent packaging text",
       "No duplicate figure or extra limbs",
     ],
-    sourceRecord: "PIKBO Lab prototype asset",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
   "moon-reveal": {
     category: "unboxing",
-    model: "PIKBO Lab prototype render",
+    model: "Provider unverified · cached prototype",
     resolution: "Web preview",
     promptSummary:
-      "Reveal the owned figure from a blind-box style setup with a quick opening beat and a clean final hold.",
+      "Reveal the figure from a blind-box style setup with a quick opening beat and a clean final hold.",
     negativeConstraints: [
       "Do not claim unseen box artwork is exact",
       "Keep the face and colorway stable",
       "No human hands fused with the toy",
     ],
-    sourceRecord: "PIKBO Lab prototype asset",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
   "scout-story": {
     category: "story",
-    model: "PIKBO Lab prototype render",
+    model: "Provider unverified · cached prototype",
     resolution: "Web preview",
     promptSummary:
-      "Place the owned figure inside a miniature cinematic environment with gentle camera travel and readable scale.",
+      "Place the figure inside a miniature cinematic environment with gentle camera travel and readable scale.",
     negativeConstraints: [
       "Keep proportions and material stable",
       "No duplicate character",
       "Avoid illegible signs and logos",
     ],
-    sourceRecord: "PIKBO Lab prototype asset",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
   "beatbot-hook": {
     category: "social-hooks",
-    model: "PIKBO Lab prototype render",
+    model: "Provider unverified · cached prototype",
     resolution: "Web preview",
     promptSummary:
       "Open with a fast flash-and-motion hook, preserve the figure, then hold a clean drop-day product frame.",
@@ -174,13 +127,11 @@ const PROJECT_META: Record<
       "Keep paint and accessories stable",
       "No fake brand or price text",
     ],
-    sourceRecord: "PIKBO Lab prototype asset",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
   "scout-spin": {
     category: "listing",
-    model: "PIKBO Lab prototype render",
+    model: "Provider unverified · cached prototype",
     resolution: "Web preview",
     promptSummary:
       "Create a controlled product spin that keeps the silhouette centered and suitable for a marketplace listing.",
@@ -189,58 +140,50 @@ const PROJECT_META: Record<
       "No warped base or accessories",
       "Keep background uncluttered",
     ],
-    sourceRecord: "PIKBO Lab prototype asset",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
   "beatbot-unboxed": {
     category: "unboxing",
-    model: "PIKBO Lab prototype render",
+    model: "Provider unverified · cached prototype",
     resolution: "Web preview",
     promptSummary:
-      "Stage an energetic collector reveal around the owned figure, finishing on a clear product shot.",
+      "Stage an energetic collector reveal around the figure, finishing on a clear product shot.",
     negativeConstraints: [
       "No invented readable packaging copy",
       "No duplicate figure",
       "Keep character identity stable",
     ],
-    sourceRecord: "PIKBO Lab prototype asset",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
   "orbit-dance": {
     category: "come-alive",
-    model: "Seedance Mini via fal.ai",
+    model: "Provider unverified · cached prototype",
     resolution: "480p cached source",
     promptSummary:
-      "Give the owned figure a short rhythmic dance while keeping its toy proportions and painted expression.",
+      "Give the figure a short rhythmic dance while keeping its toy proportions and painted expression.",
     negativeConstraints: [
       "No humanized face",
       "No extra limbs",
       "Keep feet and base geometry stable",
     ],
-    sourceRecord: "PIKBO Lab fal render · cached 2026-07-23",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
   "moon-glow": {
     category: "listing",
-    model: "Seedance Mini via fal.ai",
+    model: "Provider unverified · cached prototype",
     resolution: "480p cached source",
     promptSummary:
-      "Add boutique display-case lighting and a slow premium camera move around the owned figure.",
+      "Add boutique display-case lighting and a slow premium camera move around the figure.",
     negativeConstraints: [
       "No colorway drift",
       "No added logos or readable text",
       "Keep material finish stable",
     ],
-    sourceRecord: "PIKBO Lab fal render · cached 2026-07-23",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
   "scout-walk": {
     category: "come-alive",
-    model: "Seedance Mini via fal.ai",
+    model: "Provider unverified · cached prototype",
     resolution: "480p cached source",
     promptSummary:
       "Animate a short toy-scale walk cycle with stable proportions and a simple camera follow.",
@@ -249,54 +192,46 @@ const PROJECT_META: Record<
       "No rubbery body deformation",
       "Keep the painted face unchanged",
     ],
-    sourceRecord: "PIKBO Lab fal render · cached 2026-07-23",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
   "beatbot-neon": {
     category: "story",
-    model: "Seedance Mini via fal.ai",
+    model: "Provider unverified · cached prototype",
     resolution: "480p cached source",
     promptSummary:
-      "Move the owned figure through a neon miniature scene with controlled parallax and a clear final hero frame.",
+      "Move the figure through a neon miniature scene with controlled parallax and a clear final hero frame.",
     negativeConstraints: [
       "No fake readable city signage",
       "No character duplication",
       "Keep accessories attached",
     ],
-    sourceRecord: "PIKBO Lab fal render · cached 2026-07-23",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
   "orbit-aura": {
     category: "social-hooks",
-    model: "Seedance Mini via fal.ai",
+    model: "Provider unverified · cached prototype",
     resolution: "480p cached source",
     promptSummary:
-      "Build an energy-aura reveal around the owned figure while preserving its silhouette and paint treatment.",
+      "Build an energy-aura reveal around the figure while preserving its silhouette and paint treatment.",
     negativeConstraints: [
       "Effects must not cover the product",
       "No anatomy changes",
       "No added trademarks",
     ],
-    sourceRecord: "PIKBO Lab fal render · cached 2026-07-23",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
   "moon-smoke": {
     category: "social-hooks",
-    model: "Seedance Mini via fal.ai",
+    model: "Provider unverified · cached prototype",
     resolution: "480p cached source",
     promptSummary:
-      "Use a brief smoke-burst entrance as the hook, then reveal the owned figure in a readable product frame.",
+      "Use a brief smoke-burst entrance as the hook, then reveal the figure in a readable product frame.",
     negativeConstraints: [
       "Smoke must not hide the final product",
       "No identity or color drift",
       "No duplicate figure",
     ],
-    sourceRecord: "PIKBO Lab fal render · cached 2026-07-23",
-    qualityScores: { ...PROVISIONAL_LAB_SCORES },
-    reviewerNotes: LAB_PROVISIONAL_NOTE,
+    sourceRecord: "Cached prototype media · no provider task ID or rights record",
   },
 };
 
@@ -309,21 +244,19 @@ function projectFromDemo(demo: DemoVideo): ShowcaseProject | null {
     slug: demo.id,
     title: `${demo.character} · ${viralName(demo.preset, demo.title)}`,
     character: demo.character,
-    inputImage: demo.poster,
+    referencePoster: demo.poster,
     outputVideo: demo.mp4,
     outputWebm:
       demo.webm && demo.webm.endsWith(".webm") ? demo.webm : undefined,
     poster: demo.poster,
     recipeSlug: demo.preset,
-    provenance: "official_cached",
+    provenance: "cached_prototype",
     model: meta.model,
     aspectRatio: demo.ratio,
     durationSeconds: preset.duration,
     resolution: meta.resolution,
     promptSummary: meta.promptSummary,
     negativeConstraints: meta.negativeConstraints,
-    qualityScores: meta.qualityScores,
-    reviewerNotes: meta.reviewerNotes,
     category: meta.category,
     result: demo.result,
     eyebrow: demo.eyebrow,
@@ -351,17 +284,13 @@ function assertRegistryIntegrity(list: ShowcaseProject[]) {
     slugs.add(project.slug);
     outputs.add(project.outputVideo);
   }
-  // Phase G: every HOME_PROOF recipe must resolve and pass ≥4/5 quality gate.
+  // Retention wall: every whitelisted recipe needs its own distinct cached clip.
+  // This is not a verified or quality-scored proof gate.
   const byRecipe = new Map(list.map((p) => [p.recipeSlug, p]));
   for (const recipe of HOME_PROOF_SLUGS) {
     const p = byRecipe.get(recipe);
     if (!p) {
       throw new Error(`HOME_PROOF recipe missing ShowcaseProject: ${recipe}`);
-    }
-    if (!passesHomeProofQuality(p.qualityScores)) {
-      throw new Error(
-        `HOME_PROOF quality gate failed for ${recipe} (need all scores ≥4)`
-      );
     }
   }
 }
@@ -376,7 +305,6 @@ export function listHomeShowcaseProjects(): ShowcaseProject[] {
   const byRecipe = new Map(projects.map((project) => [project.recipeSlug, project]));
   return HOME_PROOF_SLUGS.map((slug) => byRecipe.get(slug))
     .filter((project): project is ShowcaseProject => Boolean(project))
-    .filter((project) => passesHomeProofQuality(project.qualityScores))
     .slice(0, HOME_PROOF_LIMIT);
 }
 
@@ -389,19 +317,6 @@ export function getShowcaseProjectByRecipe(
   recipeSlug: string
 ): ShowcaseProject | null {
   return projects.find((project) => project.recipeSlug === recipeSlug) ?? null;
-}
-
-/**
- * Phase G honesty chip: provisional Lab self-check ≥4/5, never claimed as
- * external human QA. Null when recipe has no registry row or fails gate.
- */
-export function provisionalLabQualityLabel(
-  recipeSlug: string | undefined | null
-): "Lab ≥4 · provisional" | null {
-  if (!recipeSlug) return null;
-  const project = getShowcaseProjectByRecipe(recipeSlug);
-  if (!project || !passesHomeProofQuality(project.qualityScores)) return null;
-  return "Lab ≥4 · provisional";
 }
 
 export function listShowcaseProjectSlugs(): string[] {
@@ -457,7 +372,7 @@ export function showcaseProvenanceLabel(
 ): string {
   if (provenance === "live_generated") return "Live generation";
   if (provenance === "concept") return "Concept recipe";
-  return "Official example · cached";
+  return "PIKBO Lab · cached prototype";
 }
 
 /** Recipe still registered? Used by static smoke checks and project integrity. */

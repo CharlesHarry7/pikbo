@@ -10,7 +10,6 @@ import {
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
 import { useI18n } from "@/components/LanguageProvider";
-import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /**
  * Dense toy video wall — browse first, then remake.
@@ -242,15 +241,6 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                         {item.badge}
                       </span>
                     ) : null}
-                    {provisionalLabQualityLabel(item.recipeSlug) ? (
-                      <span
-                        className="rounded-full border border-amber-200/25 bg-black/60 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur"
-                        title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-                        data-proof-quality="provisional-lab"
-                      >
-                        Lab ≥4
-                      </span>
-                    ) : null}
                   </div>
                   <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
                     <p className="line-clamp-2 text-xs font-black uppercase tracking-wide text-white sm:text-sm">
@@ -326,15 +316,6 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                       Lab demo
                     </span>
                   )}
-                  {provisionalLabQualityLabel(item.recipeSlug) ? (
-                    <span
-                      className="rounded-full border border-amber-200/25 bg-black/65 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur sm:text-[9px]"
-                      title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-                      data-proof-quality="provisional-lab"
-                    >
-                      Lab ≥4
-                    </span>
-                  ) : null}
                 </div>
               </Link>
 

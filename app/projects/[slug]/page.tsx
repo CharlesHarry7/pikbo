@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   return {
     title: `${project.title} · Inside the project`,
-    description: `${project.result} Inspect the owned input, cached output, recipe, and generation record.`,
+    description: `${project.result} Inspect the reference poster, cached prototype, recipe, and missing evidence record.`,
     alternates: { canonical: `/projects/${project.slug}` },
     // Phase H cold-start: proof pages stay reachable but out of the 9-URL index budget.
     robots: CONCEPT_ROBOTS,
@@ -41,14 +41,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
   };
 }
-
-const QUALITY_LABELS = {
-  identity: "Toy identity",
-  motion: "Motion",
-  artifacts: "Artifact control",
-  composition: "Composition",
-  commercialUse: "Commercial usefulness",
-} as const;
 
 export default async function ShowcaseProjectPage({ params }: Props) {
   const { slug } = await params;
@@ -136,16 +128,18 @@ export default async function ShowcaseProjectPage({ params }: Props) {
         </header>
 
         <section
-          aria-label="Input and output comparison"
+          aria-label="Reference poster and cached prototype"
           className="grid gap-3 lg:grid-cols-2"
         >
           <article className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] shadow-[0_20px_50px_-30px_rgba(0,0,0,0.9)]">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-white/40">
-                  Input
+                  Reference poster
                 </p>
-                <h2 className="text-sm font-bold">Owned PIKBO Lab still</h2>
+                <h2 className="text-sm font-bold">
+                  Not a verified provider input
+                </h2>
               </div>
               <span className="text-[10px] text-white/35">
                 {project.character}
@@ -154,8 +148,8 @@ export default async function ShowcaseProjectPage({ params }: Props) {
             <div className="media-stage m-3 grid min-h-[320px] place-items-center p-3 sm:min-h-[480px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={project.inputImage}
-                alt={`Input still for ${project.title}`}
+                src={project.referencePoster}
+                alt={`Reference poster for ${project.title}`}
                 className="relative z-[2] max-h-[64vh] w-full rounded-xl object-contain"
               />
             </div>
@@ -165,7 +159,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
-                  Output
+                  Cached prototype
                 </p>
                 <h2 className="text-sm font-bold">{provenance}</h2>
               </div>
@@ -254,74 +248,29 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               </div>
             </dl>
             <p className="mt-5 border-t border-white/10 pt-4 text-[11px] leading-relaxed text-white/40">
-              Source record: {project.sourceRecord}. Cached playback costs 0
-              credits and did not process your current upload. A new live run
-              uses your confirmed owned photo and currently costs{" "}
-              {CREDITS_PER_VIDEO} credits.
+              Evidence record: {project.sourceRecord}. The repository does not
+              link this poster and clip through a provider task ID, so this page
+              does not claim an input-to-output transformation or formal QA.
+              Cached playback costs 0 credits and did not process your current
+              upload. When live generation is enabled for an eligible account,
+              the current configured quote is {CREDITS_PER_VIDEO} credits.
             </p>
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
-                Quality review
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
+              Evidence status
+            </p>
+            <div className="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-4">
+              <p className="text-sm font-bold text-amber-100">
+                Prototype · formal evidence pending
               </p>
-              {project.qualityScores ? (
-                <span className="rounded-full border border-amber-200/25 bg-amber-200/[0.08] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-100/85">
-                  Provisional Lab
-                </span>
-              ) : null}
+              <p className="mt-1 text-xs leading-relaxed text-white/45">
+                No provider task ID, distinct verified input, rights record, or
+                signed QA is stored for this cached clip. Pikbo therefore shows
+                no numeric score and makes no verified customer-case claim.
+              </p>
             </div>
-            {project.qualityScores ? (
-              <dl className="mt-4 space-y-3">
-                {Object.entries(QUALITY_LABELS).map(([key, label]) => {
-                  const score =
-                    project.qualityScores?.[
-                      key as keyof typeof project.qualityScores
-                    ] ?? 0;
-                  return (
-                    <div
-                      key={key}
-                      className="grid grid-cols-[1fr_auto] items-center gap-3"
-                    >
-                      <div>
-                        <dt className="text-xs text-white/60">{label}</dt>
-                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
-                          <div
-                            className="h-full rounded-full bg-[#c8ff3d]"
-                            style={{ width: `${Math.max(0, Math.min(5, score)) * 20}%` }}
-                          />
-                        </div>
-                      </div>
-                      <dd className="text-sm font-black">{score}/5</dd>
-                    </div>
-                  );
-                })}
-              </dl>
-            ) : (
-              <div className="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-4">
-                <p className="text-sm font-bold text-amber-100">
-                  Formal five-score review pending
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-white/45">
-                  We do not fabricate quality ratings. This cached example stays
-                  outside any “top rated” claim until identity, motion,
-                  artifacts, composition, and commercial usefulness are
-                  reviewed.
-                </p>
-              </div>
-            )}
-
-            {project.reviewerNotes ? (
-              <div className="mt-4 rounded-xl border border-white/10 bg-black/30 px-3 py-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-white/40">
-                  Reviewer notes
-                </p>
-                <p className="mt-1.5 text-xs leading-relaxed text-white/55">
-                  {project.reviewerNotes}
-                </p>
-              </div>
-            ) : null}
 
             <div className="mt-6 grid gap-2" data-project-footer="product-first">
               <Link

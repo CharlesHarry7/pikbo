@@ -25,7 +25,7 @@ export type FeedItem = {
   href: string;
   /** SEO / detail page when href is generate */
   detailHref?: string;
-  /** Project inspect page (official Lab) */
+  /** Project inspect page (cached Lab prototype) */
   projectHref?: string;
   badge?: string;
   ratio: "9:16" | "1:1" | "16:9" | "video";
@@ -53,7 +53,7 @@ export type CommunityProject = {
   look: string;
   remakeHref: string;
   detailHref: string;
-  visibility: "Concept" | "Official example";
+  visibility: "Concept" | "Cached prototype";
   author: { name: string; initials: string; badge?: string };
   demo: DemoVideo;
 };
@@ -70,8 +70,8 @@ function createHref(presetSlug: string, sourceId?: string) {
 export const HOME_SHOWCASE_LIMIT = HOME_PROOF_LIMIT;
 
 /**
- * HF Viral Presets–density wall for home: every unique Lab demo + every
- * showcase project card. Uses only owned footage (no shared-loop fakes).
+ * HF Viral Presets–density wall for home: every unique cached Lab preview.
+ * Media rights/provider evidence is still pending; no shared-loop fakes.
  */
 export function buildViralPresetsWallFeed(): FeedVideoItem[] {
   return buildHomeShowcaseFeed();
@@ -109,7 +109,7 @@ export function buildHomeShowcaseFeed(
 }
 
 /**
- * Lab / Feed catalog — **official unique demos only** (G2/G3).
+ * Lab / Feed catalog — **unique cached prototypes only**.
  * Concept recipes without their own footage live on `/effects`, not a
  * shared-loop density wall that looks like a full product catalog.
  */
@@ -123,7 +123,7 @@ export function buildVideoFeed(): FeedVideoItem[] {
       href: showcaseRecipeHref(project),
       detailHref: `/effects/${project.recipeSlug}`,
       projectHref: showcaseProjectHref(project),
-      badge: "Official example · cached",
+      badge: "PIKBO Lab · cached prototype",
       ratio:
         project.aspectRatio === "1:1" || project.aspectRatio === "16:9"
           ? project.aspectRatio
@@ -150,7 +150,7 @@ export function featuredStrip(): FeedVideoItem[] {
     href: showcaseRecipeHref(project),
     detailHref: `/effects/${project.recipeSlug}`,
     projectHref: showcaseProjectHref(project),
-    badge: "Official example · cached",
+    badge: "PIKBO Lab · cached prototype",
     ratio:
       project.aspectRatio === "1:1" || project.aspectRatio === "16:9"
         ? project.aspectRatio
@@ -163,14 +163,14 @@ export function featuredStrip(): FeedVideoItem[] {
 
 /** PIKBO Lab projects only; no user identity or engagement is fabricated. */
 export function communityProjects(): CommunityProject[] {
-  // Official Lab demos only — no remixed concept filler that reuses loops.
+  // Cached Lab prototypes only — no remixed concept filler that reuses loops.
   return listShowcaseProjects().map((project) => ({
     id: `proj-${project.slug}`,
     title: project.title,
     look: project.eyebrow,
     remakeHref: showcaseRecipeHref(project),
     detailHref: showcaseProjectHref(project),
-    visibility: "Official example" as const,
+    visibility: "Cached prototype" as const,
     author: {
       name: "Pikbo Lab",
       initials: "P",
@@ -180,8 +180,8 @@ export function communityProjects(): CommunityProject[] {
   }));
 }
 
-/** Resolve official Lab project by demo id (for /projects/[slug]). */
-export function getOfficialProject(slug: string) {
+/** Resolve cached Lab prototype by demo id (for /projects/[slug]). */
+export function getCachedLabProject(slug: string) {
   const project = getShowcaseProject(slug);
   if (!project) return null;
   return {
@@ -192,8 +192,8 @@ export function getOfficialProject(slug: string) {
   };
 }
 
-/** All official Lab project slugs — SSG + sitemap. */
-export function listOfficialProjectSlugs(): string[] {
+/** All cached Lab prototype slugs — SSG + sitemap. */
+export function listCachedLabProjectSlugs(): string[] {
   return listShowcaseProjectSlugs();
 }
 
@@ -243,7 +243,7 @@ export function feedByCategory(cat: CategoryId): FeedItem[] {
       // footage can be remixed into the advertised result.
       href: mapped ? createHref(p.slug, mapped.id) : `/effects/${p.slug}`,
       detailHref: `/effects/${p.slug}`,
-      badge: mapped ? "Official example" : "Concept",
+      badge: mapped ? "PIKBO Lab · cached prototype" : "Concept",
       ratio:
         p.aspectRatio === "1:1"
           ? "1:1"

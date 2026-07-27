@@ -17,16 +17,16 @@ import { isSafeDeliverableUrl } from "@/lib/createTrust";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 export const metadata: Metadata = {
-  title: "Official AI Toy Video Examples",
+  title: "PIKBO Lab Cached Toy Video Prototypes",
   description:
-    "Browse official cached Pikbo examples and toy-video recipes. These are product demonstrations, not customer posts or claimed community activity.",
+    "Browse cached Lab prototype Pikbo examples and toy-video recipes. These are product demonstrations, not customer posts or claimed community activity.",
   alternates: { canonical: "/community" },
   // 哥飞: Lab-only community — noindex (empty/false UGC hurts trust + crawl budget)
   robots: CONCEPT_ROBOTS,
   openGraph: {
-    title: `Official AI Toy Video Examples | ${site.name}`,
+    title: `Cached AI Toy Video Prototypes | ${site.name}`,
     description:
-      "PIKBO Lab cached demos — owned inputs, distinct outputs, honest official-example labels. Not customer UGC.",
+      "PIKBO Lab cached prototypes — reference posters, distinct outputs, and honest evidence-pending labels. Not customer UGC.",
     url: `${site.url}/community`,
   },
 };
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 const COMMUNITY_FAQ = [
   {
     q: "Is this real customer community content?",
-    a: "Only when signed-in makers publish from Library. Until then Community shows PIKBO Lab only — official cached demos. We never invent likes, fake accounts, or customer posts.",
+    a: "Only when signed-in makers publish from Library. Until then Community shows PIKBO Lab only — cached Lab prototype demos. We never invent likes, fake accounts, or customer posts.",
   },
   {
     q: "How do I publish my clip?",
@@ -43,7 +43,7 @@ const COMMUNITY_FAQ = [
   },
   {
     q: "What is Remix vs Inside?",
-    a: "Remix opens Generate with that recipe on a toy photo you own. Inside shows input still, settings, and provenance for the Lab example.",
+    a: "Remix opens Generate with that recipe on a toy photo you own. Inside shows a reference poster, cached output, settings, and the evidence status.",
   },
   {
     q: "Do Lab demos use Free Mini credits?",
@@ -60,13 +60,13 @@ export default async function CommunityPage() {
   const ugc = await listPublicCommunityPosts(24);
   const realPosts = ugc.posts;
 
-  // Phase H: ItemList of official Lab project detail URLs only (no fake UGC).
+  // Phase H: ItemList of PIKBO Lab prototype project detail URLs only (no fake UGC).
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Pikbo Lab official toy video examples",
+    name: "Pikbo Lab cached toy video prototypes",
     description:
-      "Official cached demonstrations with owned inputs and distinct outputs — not community posts.",
+      "Cached Lab prototype demonstrations with reference posters and distinct outputs — not community posts or verified provider runs.",
     numberOfItems: projects.length,
     itemListElement: projects.map((p, i) => ({
       "@type": "ListItem",
@@ -108,11 +108,11 @@ export default async function CommunityPage() {
             <p className="section-label">
               {realPosts.length > 0
                 ? `Community · ${realPosts.length} real posts + Lab`
-                : "Official examples · Lab only"}
+                : "Cached prototypes · Lab only"}
             </p>
             <h1 className="font-display text-lg font-black tracking-tight sm:text-xl">
               {realPosts.length > 0
-                ? "Real maker clips + official Lab demos"
+                ? "Real maker clips + PIKBO Lab prototype demos"
                 : "See what each toy-video recipe is designed to make"}
             </h1>
           </div>
@@ -170,7 +170,7 @@ export default async function CommunityPage() {
         </div>
         <p className="mt-1 text-[11px] text-[var(--fg-dim)]">
           {realPosts.length > 0
-            ? "Real posts below are signed-in publishes. Lab cards stay official demos — we never invent fake UGC."
+            ? "Real posts below are signed-in publishes. Lab cards stay cached prototypes — we never invent fake UGC."
             : "No real community posts yet — showing PIKBO Lab only. Sign in to publish from Library when UGC SQL is live."}{" "}
           <b className="font-semibold text-[var(--fg-muted)]">
             Remix = use recipe with your toy photo
@@ -257,12 +257,12 @@ export default async function CommunityPage() {
                   Community · waiting for real posts
                 </p>
                 <p className="mt-1 text-sm font-semibold text-white">
-                  No invented UGC — Lab demos below stay official
+                  No invented UGC — Lab cards below stay cached prototypes
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-white/50">
-                  Pipeline is live: sign in → Generate a live clip → Library →
-                  <span className="text-white/70"> Publish to Community</span>.
-                  Needs Supabase + migration{" "}
+                  Validation path: browse cached prototypes → reuse a recipe →
+                  save locally. Future eligible live accounts may publish from
+                  Library after Supabase + migration{" "}
                   <code className="text-[10px] text-white/35">
                     community_ugc
                   </code>
@@ -295,7 +295,7 @@ export default async function CommunityPage() {
       <section className="border-b border-[var(--border)] px-3 py-6 sm:px-5">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2 px-1">
           <div>
-            <p className="section-label">Pikbo Lab · official examples</p>
+            <p className="section-label">Pikbo Lab · cached prototypes</p>
             <h2 className="mt-1 text-xl font-bold tracking-tight">
               Start from a demonstrated look
             </h2>
@@ -314,7 +314,7 @@ export default async function CommunityPage() {
 
       <VideoRail
         label="Product workflow references"
-        title="Official cached examples · no claimed customer activity"
+        title="Cached Lab prototype examples · no claimed customer activity"
         href="/apps"
         items={suite}
         wide
@@ -323,7 +323,7 @@ export default async function CommunityPage() {
       <section className="px-2 py-6 sm:px-4">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2 px-1">
           <div>
-            <p className="section-label">Official Lab clips</p>
+            <p className="section-label">PIKBO Lab prototype clips</p>
             <h2 className="mt-1 text-xl font-bold tracking-tight">
               Unique demos · tap to configure
             </h2>

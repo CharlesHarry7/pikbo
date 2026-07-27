@@ -13,6 +13,7 @@
     "g6-api-smoke": "node scripts/g6-api-smoke.mjs",
     "engine-smoke": "node scripts/engine-smoke.mjs",
     "product-proof-smoke": "node scripts/product-proof-smoke.mjs",
+    "showcase-evidence-smoke": "node scripts/showcase-evidence-smoke.mjs",
     "recovery-cost-gate": "node scripts/recovery-cost-gate.mjs",
     "recovery-qa": "node scripts/recovery-qa.mjs",
     "recovery-ledger": "node scripts/recovery-ledger.mjs",

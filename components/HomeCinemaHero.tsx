@@ -10,7 +10,6 @@ import {
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
 import { useI18n } from "@/components/LanguageProvider";
-import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 import { createRemixHref } from "@/lib/remixIntent";
 
 /**
@@ -149,15 +148,6 @@ export function HomeCinemaHero({
           {item.badge ? (
             <span className="rounded-full border border-white/15 bg-black/40 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/75">
               {item.badge}
-            </span>
-          ) : null}
-          {provisionalLabQualityLabel(item.recipeSlug) ? (
-            <span
-              className="rounded-full border border-amber-200/30 bg-black/45 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-100/90"
-              title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-              data-proof-quality="provisional-lab"
-            >
-              Lab ≥4 · provisional
             </span>
           ) : null}
         </div>

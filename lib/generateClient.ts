@@ -331,7 +331,7 @@ export function historyFieldsFromSuccess(
     fallbackDuration?: number;
     fallbackAspect?: string;
     fallbackResolution?: string;
-    /** Remix handoff — official Lab project id */
+    /** Remix handoff — PIKBO Lab prototype project id */
     sourceProject?: string;
     channel?: string;
     /** Existing same-browser Library grouping. */

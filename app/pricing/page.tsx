@@ -46,7 +46,7 @@ function pricingFaqItems(): { q: string; a: string }[] {
     },
     {
       q: "Can I test this with one real product photo?",
-      a: `Yes. Browse cached official ${site.name} examples, then open Studio with a photo of a toy you own. With provider access configured, Free includes one 5-second 480p Mini live trial; otherwise Studio returns a clearly labeled cached demo that does not animate your upload.`,
+      a: `Yes. Browse ${site.name} Lab cached prototypes, then open Studio with a photo of a toy you own. Only an eligible signed-in account with durable credits and live provider access can submit a 5-second 480p Mini render; otherwise Studio returns a clearly labeled cached prototype that does not animate your upload.`,
     },
     {
       q: "Can I use clips commercially?",

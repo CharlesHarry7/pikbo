@@ -352,7 +352,7 @@ export function BatchStudio({
           setLabStill(true);
           setImageProbe(null);
           setBriefCollapsed(true);
-          // Official Pikbo Lab stills — product-owned samples, not a visitor upload.
+          // PIKBO Lab reference stills — not a visitor upload or verified provider input.
           setOwnsRights(true);
           setError(null);
           void probeImageSize(dataUrl).then((meta) => {
@@ -489,7 +489,16 @@ export function BatchStudio({
   }
 
   const isFree = me?.plan === "free" || me?.watermark === true;
-  const demoMode = isDemoMode(me) || me?.mode === "demo-cached";
+  const liveEntitled =
+    me?.signedIn === true &&
+    me?.durableCreditsActive === true &&
+    me?.mode === "live-generate" &&
+    typeof me?.credits === "number" &&
+    me.credits >= CREDITS_PER_VIDEO;
+  // Packs fail closed unless capability, durable entitlement, and balance
+  // are all explicit.
+  const demoMode =
+    isDemoMode(me) || me?.mode === "demo-cached" || !liveEntitled;
   /** Soft-launch freeTrial honesty — same contract as Create / SoftLaunchStrip. */
   const trialDone = freeTrialExhausted(me);
   const freeLive = me?.freeTrial?.freeLive;
@@ -1402,12 +1411,14 @@ export function BatchStudio({
           <div className="space-y-3">
             <div className="rounded-2xl border border-[var(--mint)]/35 bg-gradient-to-br from-[var(--mint)]/[0.1] to-black/40 px-3.5 py-3 text-xs text-[var(--fg-muted)] shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
               <p className="font-bold text-[var(--mint)]">
-                Seller Starter Pack — 3 clips / 30 credits
+                {demoMode
+                  ? "Seller Starter Pack — 3 cached prototype previews"
+                  : "Seller Starter Pack — 3 live clips / 30 credits"}
               </p>
               <p className="mt-1 leading-relaxed text-white/55">
-                Upload product photo → confirm pack cost → three commercial
-                formats → export & post. Listing Spin (1:1) · Box Reveal (9:16)
-                · Social Hook (9:16).
+                {demoMode
+                  ? "Preview three formats at 0 credits. Cached prototypes do not process your upload."
+                  : "Eligible live account. Review the 30-credit quote, then submit three independent jobs."}
               </p>
               {/* Y5 + CD B3: full Director Plan when still ready; strip before photo */}
               {sellerDirectorPlan?.ready ? (
@@ -1564,7 +1575,7 @@ export function BatchStudio({
                 </button>
               ))}
               <p className="w-full text-[10px] font-semibold text-[var(--mint)]">
-                Lab samples are official examples · not a customer upload.
+                Lab samples are cached prototypes · not a customer upload.
               </p>
             </div>
           )}
@@ -1955,7 +1966,9 @@ export function BatchStudio({
                   href="/create?mode=seller-pack"
                   className="rounded-full border border-white/15 px-3 py-1.5 text-[11px] font-bold text-white/70"
                 >
-                  Seller Starter Pack — 3 clips / 30 credits
+                  {demoMode
+                    ? "Seller Starter Pack — 3 cached previews / 0 credits"
+                    : "Seller Starter Pack — 3 live clips / 30 credits"}
                 </Link>
               ) : (
                 <Link
@@ -2234,7 +2247,7 @@ export function BatchStudio({
                 }
               }}
               className="btn btn-ghost shrink-0 px-3 py-3 text-xs"
-              title="Official Lab sample · not a customer upload"
+              title="PIKBO Lab prototype sample · not a customer upload"
             >
               Try free · Lab
             </button>

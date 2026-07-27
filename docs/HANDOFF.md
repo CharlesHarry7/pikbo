@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [claude] R4 showcase evidence truth at runtime
+- The canonical Showcase registry now uses `cached_prototype` and `referencePoster`; it does not claim posters are provider inputs or expose invented 4/5 scores/reviewer notes.
+- Home retains eight distinct cached videos for watch time, but every proof surface labels them `PIKBO Lab · cached prototype`; concepts remain static Recipe art.
+- Inside Project discloses missing provider task ID, rights record and formal QA. Community/Explore no longer imply verified cases, customers, or a live public publish pipeline.
+- Create and Seller Pack fail closed to 0-credit cached previews unless signed-in + durable credits + explicit live mode + enough balance are all present.
+- PASS: `showcase-evidence-smoke`, `product-proof-smoke`, `engine-smoke`, typecheck, lint (0 errors / 2 pre-existing warnings), webpack build (193 routes).
+
 ### 2026-07-27 — [claude] R1b exact retry + fixed generation deadline
 - Video retry now forks only from an exact terminal parent job ID and returns a new child ID plus a one-time bearer; Create claims that exact child and never guesses by effect, prompt or list order.
 - The bearer is hashed server-side, handed through session storage, removed after hydration and consumed once; a 20-way concurrent claim regression has exactly one winner.

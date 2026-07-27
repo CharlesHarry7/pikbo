@@ -166,7 +166,7 @@ export function CreateStudio({
   initialResolution?: string;
   initialMode?: Mode;
   initialPrompt?: string;
-  /** Official Lab project id (remix attribution) — RETENTION_REMIX_LOOP */
+  /** PIKBO Lab prototype project id (remix attribution) — RETENTION_REMIX_LOOP */
   initialSource?: string;
   initialRatio?: string;
   initialDuration?: string;
@@ -223,7 +223,7 @@ export function CreateStudio({
   const [assetId, setAssetId] = useState<string | null>(null);
   /** CD Phase B — natural size for rule-based Asset Brief */
   const [imageProbe, setImageProbe] = useState<ImageProbe | null>(null);
-  /** True when still is official Lab sample (not customer SKU) */
+  /** True when still is PIKBO Lab prototype sample (not customer SKU) */
   const [labStill, setLabStill] = useState(false);
   const [briefCollapsed, setBriefCollapsed] = useState(true);
   /** Phase C-lite: claimed angles + secondary still (client preview only). */
@@ -373,7 +373,7 @@ export function CreateStudio({
     }
   }
 
-  /** One-tap joy path: official Lab still + matching recipe. Rights = Lab sample. */
+  /** One-tap joy path: PIKBO Lab prototype still + matching recipe. Rights = Lab sample. */
   async function loadSampleToy(sampleId: string, autoGenerate = false) {
     const s = SAMPLE_TOYS.find((x) => x.id === sampleId) ?? SAMPLE_TOYS[0];
     setSampleLoading(true);
@@ -382,13 +382,13 @@ export function CreateStudio({
       const data = await sampleToDataUrl(s.path);
       await adoptImage(data, { labSample: true });
       selectEffect(s.effect);
-      // Official Pikbo Lab stills — product-owned samples, not a visitor upload.
+      // PIKBO Lab reference stills — not a visitor upload or verified provider input.
       setOwnsRights(true);
       if (autoGenerate) {
         toast(
           demoMode
-            ? "Generating official Lab sample · cached demo free…"
-            : "Generating official Lab sample · live Mini uses 10 credits…"
+            ? "Generating PIKBO Lab prototype sample · cached demo free…"
+            : "Generating PIKBO Lab prototype sample · eligible live render · 10 credits…"
         );
         await generate({
           imageOverride: data,
@@ -397,7 +397,7 @@ export function CreateStudio({
           labSampleId: s.id,
         });
       } else {
-        toast("Official Lab still ready — tap Generate when you want the clip");
+        toast("PIKBO Lab prototype still ready — tap Generate when you want the clip");
       }
     } catch {
       setError("Could not load sample photo — try another or upload your own");
@@ -579,7 +579,7 @@ export function CreateStudio({
         recipe: effect,
         demo: Boolean(opts?.labSample),
         meta: {
-          source: opts?.labSample ? "official_lab" : "owned_upload",
+          source: opts?.labSample ? "lab_prototype" : "owned_upload",
         },
       });
       // Geometry for Asset Brief (rule-based, not vision).
@@ -650,9 +650,17 @@ export function CreateStudio({
   }
 
   const creditsLeft = session?.credits ?? null;
-  const canAfford = creditsLeft === null || creditsLeft >= CREDITS_PER_VIDEO;
+  const liveEntitled =
+    session?.signedIn === true &&
+    session?.durableCreditsActive === true &&
+    session?.mode === "live-generate" &&
+    creditsLeft !== null &&
+    creditsLeft >= CREDITS_PER_VIDEO;
+  const canAfford = liveEntitled;
   const isFree = session?.plan === "free" || session?.watermark;
-  const demoMode = isDemoMode(session);
+  // Fail closed: anonymous, non-durable, unknown, and zero-credit sessions
+  // may only use the cached prototype path.
+  const demoMode = isDemoMode(session) || !liveEntitled;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
   const clipsLeft =
@@ -669,7 +677,7 @@ export function CreateStudio({
     effectOverride?: string;
     aspectOverride?: "9:16" | "16:9" | "1:1";
     rightsOverride?: boolean;
-    /** Official Lab sample id — stored as Library sourceProject for support */
+    /** PIKBO Lab prototype sample id — stored as Library sourceProject for support */
     labSampleId?: string;
     /**
      * Wave B Retry — immutable GenerationSpec from a prior success.
@@ -1786,10 +1794,14 @@ export function CreateStudio({
             className="mt-3 block rounded-xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] px-3 py-2.5 text-[11px] leading-snug text-[var(--fg-muted)] transition hover:border-[var(--mint)]/50"
           >
             <span className="font-bold text-[var(--mint)]">
-              Seller Starter Pack — 3 clips / 30 credits
+              {demoMode
+                ? "Seller Starter Pack — 3 cached prototype previews"
+                : "Seller Starter Pack — 3 live clips / 30 credits"}
             </span>
             <span className="mt-0.5 block text-[10px] text-[var(--fg-dim)]">
-              Listing spin + reveal + social hook from one photo
+              {demoMode
+                ? "0 credits · your upload is not processed"
+                : "Eligible live account · review the quote before submission"}
             </span>
           </Link>
         </aside>
@@ -1906,12 +1918,12 @@ export function CreateStudio({
                 {t("create.noPhotoSample")}
               </p>
               <p className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
-                Official Pikbo stills (not a customer upload). Cached demos
-                cost 0 credits; live Mini uses 10 when the provider is on.
-                One tap loads the recipe and starts generate.
+                PIKBO Lab reference stills (not a customer upload). Cached
+                prototypes cost 0 credits and never process your photo. One
+                tap loads the recipe and opens the preview path.
               </p>
               <p className="mt-1 text-[10px] font-semibold text-[var(--mint)]">
-                Try free · Lab samples are official examples, not your upload.
+                Try free · Lab samples are cached prototypes, not your upload.
               </p>
               <button
                 type="button"
@@ -2319,7 +2331,7 @@ export function CreateStudio({
             )}
             {image && demoMode ? (
               <p className="mt-2 rounded-lg border border-white/10 bg-black/25 px-2.5 py-2 text-[10px] leading-snug text-white/55">
-                Cached official example · your uploaded photo is not sent to a
+                Cached prototype · your uploaded photo is not sent to a
                 model or used in this preview.
               </p>
             ) : null}

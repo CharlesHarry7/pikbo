@@ -32,7 +32,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     title: "Zero-gravity product hero",
     character: "Orbit",
     eyebrow: "Product showcase",
-    result: "A clean launch visual from one owned-toy photo.",
+    result: "A cached product-hero prototype for recipe preview.",
     preset: "floating-hero",
     ratio: "9:16",
     poster: "/demos/orbit-still.webp",
@@ -111,7 +111,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     accent: "#74e4ff",
     publishedAt: "2026-07-22T11:57:06Z",
   },
-  // --- Seedance Mini lab batch 2026-07-23 (real fal renders, cached) ---
+  // --- Cached Mini Lab batch added 2026-07-23; provider task evidence is absent ---
   {
     id: "orbit-dance",
     title: "Toy dance drop",
@@ -145,7 +145,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     title: "Figure walk cycle",
     character: "Scout",
     eyebrow: "Come alive",
-    result: "Walk cycle from one still.",
+    result: "A cached walk-cycle prototype for recipe preview.",
     preset: "make-figure-walk",
     ratio: "9:16",
     poster: "/demos/scout-still.webp",

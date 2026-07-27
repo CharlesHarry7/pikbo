@@ -433,7 +433,8 @@ assert.match(batchFirstRun, /data-seller-pack-action="library"/);
 assert.match(batchFirstRun, /data-seller-pack-action="retry-failed"/);
 assert.match(batchFirstRun, /data-seller-pack-sticky="mobile"/);
 assert.match(batchFirstRun, /Retry failed only/);
-assert.match(batchFirstRun, /Lab samples are official examples/);
+assert.match(batchFirstRun, /cached prototype/i);
+assert.doesNotMatch(batchFirstRun, /Lab samples are official examples/i);
 
 const meClient = fs.readFileSync(join(root, "lib/meClient.ts"), "utf8");
 assert.match(meClient, /export async function fetchMe/);
@@ -739,7 +740,7 @@ assert.match(projectsPage, /generateStaticParams/);
 assert.match(projectsPage, /listShowcaseProjectSlugs/);
 assert.match(projectsPage, /getShowcaseProject/);
 const videoFeedSrc = fs.readFileSync(join(root, "lib/videoFeed.ts"), "utf8");
-assert.match(videoFeedSrc, /export function listOfficialProjectSlugs/);
+assert.match(videoFeedSrc, /export function listCachedLabProjectSlugs/);
 assert.match(health, /forceGenerateFail/);
 assert.match(imgRoute, /PIKBO_FORCE_GENERATE_FAIL/);
 const libraryGrid = fs.readFileSync(
@@ -760,7 +761,8 @@ assert.match(remixIntentSrc, /opts\?\.ratio|opts\?\.duration|opts\?\.channel/);
 // One-tap Lab sample honesty (not "free" when live)
 assert.match(createStudio, /loadSampleToy/);
 assert.match(createStudio, /labSampleId|lab-sample-/);
-assert.match(createStudio, /Official Lab|official Lab/);
+assert.match(createStudio, /PIKBO Lab prototype sample/);
+assert.doesNotMatch(createStudio, /Official Lab|official Lab/);
 assert.match(createStudio, /10 credits|cached demo free/i);
 
 // Wave A Create versions: stack + Before/After per-version still
@@ -794,7 +796,7 @@ const showcase = fs.readFileSync(
 assert.match(showcase, /listShowcaseProjects/);
 assert.match(showcase, /getShowcaseProject/);
 for (const field of [
-  "inputImage",
+  "referencePoster",
   "outputVideo",
   "poster",
   "recipeSlug",
@@ -1032,49 +1034,30 @@ assert.match(createStudio, /preserveRequestSettlementOnVersionRestore/);
 const softLaunch = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
 assert.match(softLaunch, /HOME_PROOF_SLUGS/);
 
-// Phase G: provisional Lab ≥4 proof chips on home wall / explore home
-assert.match(
-  fs.readFileSync(join(root, "lib/showcaseProjects.ts"), "utf8"),
-  /provisionalLabQualityLabel|Lab ≥4 · provisional/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /data-proof-quality=["']provisional-lab["']/
-);
-
-// Phase G: cinema / projects explore / community ProjectCard provisional chips
-assert.match(
-  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /data-proof-quality=["']provisional-lab["']/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/HomeProjectsExplore.tsx"), "utf8"),
-  /data-proof-quality=["']provisional-lab["']/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/ProjectCard.tsx"), "utf8"),
-  /data-proof-quality=["']provisional-lab["']/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
-  /data-proof-quality=["']provisional-lab["']/
-);
-// Effects wall + community VideoTile residual proof honesty
+// Recovery R4: no provisional numeric QA may appear without evidence records.
+for (const relative of [
+  "lib/showcaseProjects.ts",
+  "components/HomeViralWall.tsx",
+  "components/HomeCinemaHero.tsx",
+  "components/HomeProjectsExplore.tsx",
+  "components/ProjectCard.tsx",
+  "components/HfExploreHome.tsx",
+  "components/PresetPreviewCard.tsx",
+  "components/VideoTile.tsx",
+]) {
+  const source = fs.readFileSync(join(root, relative), "utf8");
+  assert.doesNotMatch(
+    source,
+    /provisionalLabQualityLabel|Lab\s*≥\s*4|data-proof-quality|Official · cached/
+  );
+}
 assert.match(
   fs.readFileSync(join(root, "components/PresetPreviewCard.tsx"), "utf8"),
-  /data-proof-quality=["']provisional-lab["']/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/PresetPreviewCard.tsx"), "utf8"),
-  /Official · cached/
+  /Lab · cached prototype/
 );
 assert.match(
   fs.readFileSync(join(root, "components/VideoTile.tsx"), "utf8"),
-  /data-proof-quality=["']provisional-lab["']/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/VideoTile.tsx"), "utf8"),
-  /provisionalLabQualityLabel/
+  /Lab · cached prototype/
 );
 
 assert.match(softLaunch, /floating-hero/);
@@ -1086,7 +1069,7 @@ assert.match(showcase, /listHomeShowcaseProjects/);
 assert.match(videoFeed, /HOME_PROOF_SLUGS|HOME_SHOWCASE_LIMIT/);
 assert.match(videoFeed, /listHomeShowcaseProjects/);
 assert.match(videoFeed, /conceptRecipeCount/);
-assert.match(videoFeed, /official unique demos only|Official unique demos only/i);
+assert.match(videoFeed, /cached Lab prototypes only/i);
 // Claude viral presets (SEO mesh) must remain registered
 const presetsSrc = fs.readFileSync(join(root, "lib/presets.ts"), "utf8");
 for (const slug of [
@@ -1741,7 +1724,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "app/community/page.tsx"), "utf8"),
-  /ItemList|official Lab/
+  /ItemList|cached toy video prototypes/
 );
 const projectCard = fs.readFileSync(
   join(root, "components/ProjectCard.tsx"),
@@ -1755,7 +1738,7 @@ const videoTile = fs.readFileSync(
 );
 assert.match(videoTile, /AutoPlayVideo/);
 assert.match(videoTile, /focusable=\{false\}/);
-assert.match(videoTile, /data-proof-quality=["']provisional-lab["']/);
+assert.doesNotMatch(videoTile, /data-proof-quality|Lab\s*≥\s*4/);
 assert.match(
   fs.readFileSync(join(root, "app/effects/page.tsx"), "utf8"),
   /proofBackedRecipeSlugs|ItemList/
@@ -1985,10 +1968,10 @@ const flowMediaCardSrc = fs.readFileSync(
   "utf8"
 );
 assert.match(flowMediaCardSrc, /data-flow-card/);
-assert.match(flowMediaCardSrc, /Official · cached/);
-assert.match(flowMediaCardSrc, /data-proof-quality=["']provisional-lab["']/);
+assert.match(flowMediaCardSrc, /Lab · cached prototype/);
+assert.doesNotMatch(flowMediaCardSrc, /Official · cached|data-proof-quality/);
 assert.match(flowMediaCardSrc, /Remake · your toy photo/);
-assert.match(flowMediaCardSrc, /provisionalLabQualityLabel/);
+assert.doesNotMatch(flowMediaCardSrc, /provisionalLabQualityLabel|Lab\s*≥\s*4/);
 assert.match(
   fs.readFileSync(join(root, "components/HomeViralPresetRail.tsx"), "utf8"),
   /AutoPlayVideo/
@@ -2423,37 +2406,14 @@ assert.doesNotMatch(
   /href=["']\/flow["']/
 );
 
-// Phase G homepage proof quality gate (all dimensions ≥4)
-function passesHomeProofQuality(scores) {
-  if (!scores) return false;
-  return ["identity", "motion", "artifacts", "composition", "commercialUse"].every(
-    (k) => typeof scores[k] === "number" && scores[k] >= 4 && scores[k] <= 5
-  );
-}
-assert.equal(
-  passesHomeProofQuality({
-    identity: 4,
-    motion: 4,
-    artifacts: 4,
-    composition: 4,
-    commercialUse: 4,
-  }),
-  true
+// Recovery R4: the repo has no task IDs, signed QA, or rights evidence, so
+// homepage retention previews must not manufacture quality scores.
+assert.match(showcase, /cached_prototype/);
+assert.match(showcase, /referencePoster/);
+assert.doesNotMatch(
+  showcase,
+  /passesHomeProofQuality|PROVISIONAL_LAB_SCORES|qualityScores|reviewerNotes/
 );
-assert.equal(
-  passesHomeProofQuality({
-    identity: 3,
-    motion: 5,
-    artifacts: 5,
-    composition: 5,
-    commercialUse: 5,
-  }),
-  false
-);
-assert.match(showcase, /passesHomeProofQuality/);
-assert.match(showcase, /PROVISIONAL_LAB_SCORES/);
-assert.match(showcase, /HOME_PROOF quality gate|qualityScores/);
-assert.match(showcase, /reviewerNotes/);
 
 // Phase C — auth claim + guest migrate after Supabase magic link
 const authClaim = fs.readFileSync(
@@ -3008,7 +2968,9 @@ const projectPage = fs.readFileSync(
   join(root, "app/projects/[slug]/page.tsx"),
   "utf8"
 );
-assert.match(projectPage, /reviewerNotes/);
+assert.match(projectPage, /No provider task ID/);
+assert.match(projectPage, /formal evidence pending/);
+assert.doesNotMatch(projectPage, /reviewerNotes|\b[0-5](?:\.\d+)?\s*\/\s*5\b/);
 const loginForm = fs.readFileSync(
   join(root, "components/LoginForm.tsx"),
   "utf8"
@@ -3499,13 +3461,14 @@ assert.match(
   /signed-in durable|durable wallet/
 );
 
-// Pricing FAQ JSON-LD + Explore proof labels
+// Pricing FAQ JSON-LD + Explore evidence labels
 const pricingPage = fs.readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
 assert.match(pricingPage, /canonical:\s*[\"']\/pricing[\"']/);
 assert.match(pricingPage, /FAQPage|application\/ld\+json/);
 assert.match(pricingPage, /pricingFaqItems/);
 // exploreGrid already loaded earlier in this script
-assert.match(exploreGrid, /passesHomeProofQuality|Lab ≥4|Lab >=4/);
+assert.match(exploreGrid, /Evidence pending|cached prototype/i);
+assert.doesNotMatch(exploreGrid, /passesHomeProofQuality|Lab\s*≥\s*4|Lab >=4/);
 assert.match(exploreGrid, /recipe_use/);
 const critPathModeA = fs.readFileSync(
   join(root, "scripts/critical-path.sh"),
@@ -3773,7 +3736,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/PresetPreviewCard.tsx"), "utf8"),
-  /Official · cached|data-proof-quality=["']provisional-lab["']/
+  /Lab · cached prototype/
 );
 assert.match(
   fs.readFileSync(join(root, "lib/workflows.ts"), "utf8"),
@@ -4094,9 +4057,12 @@ assert.match(modulesPageSrc, /FAQPage/);
 assert.match(modulesPageSrc, /ModulesSuiteCtas/);
 assert.doesNotMatch(modulesPageSrc, /Generate free/);
 assert.match(modulesPageSrc, /data-module-card/);
-assert.match(modulesPageSrc, /Official · cached/);
+assert.match(modulesPageSrc, /Lab · cached prototype/);
 assert.match(modulesPageSrc, /Remake · your toy photo/);
-assert.match(modulesPageSrc, /provisionalLabQualityLabel/);
+assert.doesNotMatch(
+  modulesPageSrc,
+  /Official · cached|provisionalLabQualityLabel|Lab\s*≥\s*4/
+);
 const modulesSuiteCtasSrc = fs.readFileSync(
   join(root, "components/ModulesSuiteCtas.tsx"),
   "utf8"
@@ -4142,14 +4108,15 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "lib/seoIndex.ts"), "utf8"),
   /COLD_START_INDEX_PATHS[\s\S]{0,400}"\/explore"/
 );
-// Tool landing proof chips (SSR crawlers see Official · Lab ≥4)
-assert.match(
-  fs.readFileSync(join(root, "components/LandingResults.tsx"), "utf8"),
-  /data-proof-quality=["']provisional-lab["']|provisionalLabQualityLabel/
+// Tool landing cards disclose cached prototypes; no unsupported numeric QA.
+const landingResultsSrc = fs.readFileSync(
+  join(root, "components/LandingResults.tsx"),
+  "utf8"
 );
-assert.match(
-  fs.readFileSync(join(root, "components/LandingResults.tsx"), "utf8"),
-  /Official · cached/
+assert.match(landingResultsSrc, /cached Lab prototype/i);
+assert.doesNotMatch(
+  landingResultsSrc,
+  /data-proof-quality|provisionalLabQualityLabel|Official · cached|Lab\s*≥\s*4/
 );
 assert.match(explorePageSrc, /FreeTrialCta/);
 const communityPageSrc = fs.readFileSync(
@@ -4601,14 +4568,15 @@ assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /loadToyIdentity|sku=\{toySku/
 );
-// SEO related-recipe PresetCard honesty chips
-assert.match(
-  fs.readFileSync(join(root, "components/PresetCard.tsx"), "utf8"),
-  /recipeHasUniqueProof|Official · cached/
+// SEO related recipes disclose cached prototype vs concept without fake scores.
+const presetCardSrc = fs.readFileSync(
+  join(root, "components/PresetCard.tsx"),
+  "utf8"
 );
-assert.match(
-  fs.readFileSync(join(root, "components/PresetCard.tsx"), "utf8"),
-  /data-proof-quality=["']provisional-lab["']|provisionalLabQualityLabel/
+assert.match(presetCardSrc, /Lab · cached prototype/);
+assert.doesNotMatch(
+  presetCardSrc,
+  /Official · cached|data-proof-quality|provisionalLabQualityLabel|Lab\s*≥\s*4/
 );
 assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
@@ -4773,7 +4741,11 @@ const featureCarousel = fs.readFileSync(
 assert.match(featureCarousel, /createRemixHref/);
 assert.match(featureCarousel, /mode=seller-pack|data-home-promo-path=["']seller-pack["']/);
 assert.doesNotMatch(featureCarousel, /href:\s*["']\/supercomputer["']/);
-assert.match(featureCarousel, /data-proof-quality=["']provisional-lab["']|provisionalLabQualityLabel/);
+assert.match(featureCarousel, /Lab · cached prototype/);
+assert.doesNotMatch(
+  featureCarousel,
+  /data-proof-quality|provisionalLabQualityLabel|Lab\s*≥\s*4/
+);
 assert.match(
   fs.readFileSync(join(root, "components/HeroUpload.tsx"), "utf8"),
   /createRemixHref/

@@ -25,7 +25,7 @@ const FAQ = [
   },
   {
     q: "Do Lab demos use my photo?",
-    a: "No. Homepage Lab samples are official cached demos. Your photo is only used when you run a live generate.",
+    a: "No. Homepage Lab samples are cached Lab prototype demos. Your photo is only used when you run a live generate.",
   },
   {
     q: "Where is the main keyword page for AI toy video?",
@@ -77,7 +77,7 @@ export function HomeSeoBody() {
             . This homepage embeds the same photo-to-video control for people who
             arrive by brand: upload, confirm rights, run Free Mini or live
             credits, wait for the render (often one to three minutes), then
-            preview. Lab wall demos stay labeled official examples—not fake
+            preview. Lab wall demos stay labeled cached prototypes—not fake
             customer UGC.
           </p>
           <nav
@@ -255,13 +255,13 @@ export function HomeSeoBody() {
 
         <div>
           <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            Recipes, Lab demos, and official examples
+            Recipes, Lab demos, and cached prototypes
           </h2>
           <p className="mt-4">
             The dense wall below the tool is not a fake UGC feed. Each card is an
-            official Lab sample or a recipe deep-link into Generate. Remix means
-            “run this recipe on a photo you own.” Inside pages show input stills
-            and provenance for Lab projects.
+            PIKBO Lab prototype sample or a recipe deep-link into Generate. Remix means
+            “run this recipe on a photo you own.” Inside pages show reference
+            posters, cached outputs, and evidence status for Lab prototypes.
           </p>
           <p className="mt-3">
             Prefer a full preset browser? Visit{" "}

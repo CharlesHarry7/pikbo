@@ -178,7 +178,7 @@ export default async function EffectPage({
               </span>
             ) : (
               <span className="rounded-full border border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[var(--mint)]">
-                Official example · cached
+                PIKBO Lab · cached prototype
               </span>
             )}
           </div>

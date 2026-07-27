@@ -5,7 +5,6 @@ import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { createLabSampleTryHref } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
-import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /** Seedance Mini trial door — Lab sample remix + try/sample flags. */
 const FEATURE_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
@@ -32,7 +31,7 @@ const PROMOS: Promo[] = [
     blurb: "Cached preview · live: 5s / 480p",
     suiteHref: FEATURE_LAB_SAMPLE_HREF,
     cta: "Try Mini",
-    badge: "Official example · cached",
+    badge: "PIKBO Lab · cached prototype",
     demoIndex: 0,
   },
   {
@@ -116,9 +115,6 @@ export function HomeFeatureCarousel() {
           const recipe =
             promo.recipeSlug ||
             (demo?.preset && !promo.sellerPack ? demo.preset : undefined);
-          const labQuality = recipe
-            ? provisionalLabQualityLabel(recipe)
-            : null;
           const href = promoHref(
             promo,
             recipe && demo?.preset === recipe ? demo.id : undefined
@@ -155,20 +151,11 @@ export function HomeFeatureCarousel() {
                 ) : (
                   <span
                     className="rounded-full border border-white/10 bg-black/55 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-white/80 backdrop-blur"
-                    title="Official Lab cached demo · not live customer output"
+                    title="Cached Lab prototype · provider evidence pending"
                   >
-                    Official · cached
+                    Lab · cached prototype
                   </span>
                 )}
-                {labQuality ? (
-                  <span
-                    className="rounded-full border border-amber-200/25 bg-black/55 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur"
-                    title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-                    data-proof-quality="provisional-lab"
-                  >
-                    Lab ≥4
-                  </span>
-                ) : null}
               </div>
               <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
                 <h3 className="text-lg font-bold leading-tight text-white sm:text-xl">

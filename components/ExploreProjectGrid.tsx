@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import {
   SHOWCASE_CATEGORIES,
-  passesHomeProofQuality,
   showcaseProjectHref,
   showcaseProvenanceLabel,
   showcaseRecipeHref,
@@ -113,21 +112,12 @@ export function ExploreProjectGrid({
                     <span className="rounded-full border border-white/10 bg-black/65 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-[#c8ff3d] backdrop-blur">
                       {showcaseProvenanceLabel(project.provenance)}
                     </span>
-                    {passesHomeProofQuality(project.qualityScores) ? (
-                      <span
-                        className="rounded-full border border-amber-200/25 bg-black/65 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur"
-                        title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-                      >
-                        Lab ≥4
-                      </span>
-                    ) : (
-                      <span
-                        className="rounded-full border border-white/15 bg-black/65 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white/55 backdrop-blur"
-                        title="Formal five-score review pending — not top-rated"
-                      >
-                        Review pending
-                      </span>
-                    )}
+                    <span
+                      className="rounded-full border border-white/15 bg-black/65 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white/55 backdrop-blur"
+                      title="Provider task ID and formal QA are not recorded"
+                    >
+                      Evidence pending
+                    </span>
                   </div>
                   <div className="absolute inset-x-0 bottom-0 p-3">
                     <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/45">

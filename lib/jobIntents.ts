@@ -64,7 +64,7 @@ export const JOB_INTENTS: JobIntent[] = [
   {
     id: "seller-pack",
     label: "Starter Pack · 3 clips",
-    blurb: "Listing + unboxing + social hook · 30 credits live",
+    blurb: "Listing + unboxing + social hook · quote shown before run",
     effect: "360-spin-showcase",
     aspectRatio: "1:1",
     channel: "etsy",

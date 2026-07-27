@@ -52,5 +52,5 @@ export function isHomeProofSlug(slug: string): slug is HomeProofSlug {
   return (HOME_PROOF_SLUGS as readonly string[]).includes(slug);
 }
 
-/** Badge required on soft-launch proof cards (not Live generation). */
-export const HOME_PROOF_BADGE = "Official example · cached" as const;
+/** Retention preview badge; it is not provider provenance or formal QA. */
+export const HOME_PROOF_BADGE = "PIKBO Lab · cached prototype" as const;

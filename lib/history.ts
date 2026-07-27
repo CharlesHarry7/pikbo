@@ -25,7 +25,7 @@ export type HistoryItem = {
   aspectRatio?: string;
   resolution?: string;
   requestId?: string;
-  /** Official Lab project id when generated via remix handoff */
+  /** PIKBO Lab prototype project id when generated via remix handoff */
   sourceProject?: string;
   /** Remix channel hint (etsy / reels / …) */
   channel?: string;
