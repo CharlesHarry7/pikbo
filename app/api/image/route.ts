@@ -117,6 +117,10 @@ export async function DELETE(req: Request) {
     status: result.job.status,
     errorCode: result.job.errorCode,
     creditsOutcome: result.job.creditsOutcome,
+    // Soft-launch cancel never invents restore (generate DELETE parity).
+    ...(result.job.creditsOutcome === "refund unconfirmed"
+      ? { refundUnconfirmed: true }
+      : {}),
     note: "Still ledger marked canceled. Soft-launch Flux may still complete server-side.",
   });
 }

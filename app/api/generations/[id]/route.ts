@@ -77,6 +77,11 @@ export async function DELETE(_req: Request, { params }: Props) {
     mode: "local-memory",
     durable: false,
     job: toPublicJob(result.job, session.id),
+    creditsOutcome: result.job.creditsOutcome,
+    // Soft-launch cancel never invents restore (list DELETE + downloads parity).
+    ...(result.job.creditsOutcome === "refund unconfirmed"
+      ? { refundUnconfirmed: true }
+      : {}),
     note: "Ledger marked canceled. Soft-launch sync fal jobs may still complete server-side.",
   });
 }

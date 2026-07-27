@@ -2450,6 +2450,17 @@ assert.match(loginFormSrc, /data-auth-guest-path="product-first"/);
 assert.match(loginPageSrc, /data-auth-guest-path="product-first"/);
 assert.match(loginFormSrc, /mode=seller-pack/);
 assert.match(loginPageSrc, /mode=seller-pack/);
+// Guest Generate carries remix contract (createRemixHref), not bare /create
+assert.match(loginFormSrc, /createRemixHref|data-login-guest=["']generate-remix["']/);
+assert.match(loginPageSrc, /createRemixHref|data-login-guest=["']generate-remix["']/);
+assert.doesNotMatch(
+  loginPageSrc,
+  /data-login-guest=["']generate-remix["'][\s\S]{0,80}href=["']\/create["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/MobileGenerateBar.tsx"), "utf8"),
+  /createRemixHref|data-mobile-bar=["']generate-remix["']/
+);
 assert.ok(
   loginFormSrc.indexOf("mode=seller-pack") < loginFormSrc.indexOf("/modules"),
   "LoginForm guest: Seller Pack before Modules"
@@ -5135,8 +5146,37 @@ assert.match(
   /code:\s*["']CANCELED["'][\s\S]{0,500}refundUnconfirmed/
 );
 
-console.log("engine-smoke: PASS");
-void pathToFileURL; // keep import used on older node
+// Login guest Generate: remix contract (not bare /create) — page + form
+assert.match(
+  fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
+  /createRemixHref\(["']360-spin-showcase["']\)|data-login-guest=["']generate-remix["']/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
+  /Continue as guest[\s\S]{0,80}href=["']\/create["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
+  /createRemixHref\(["']360-spin-showcase["']\)/
+);
+// DELETE cancel ledgers echo refundUnconfirmed (client settlement honesty)
+assert.match(
+  fs.readFileSync(join(root, "app/api/generations/route.ts"), "utf8"),
+  /creditsOutcome === ["']refund unconfirmed["'][\s\S]{0,80}refundUnconfirmed:\s*true/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/image/route.ts"), "utf8"),
+  /creditsOutcome === ["']refund unconfirmed["'][\s\S]{0,80}refundUnconfirmed:\s*true/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/generations/[id]/route.ts"), "utf8"),
+  /refundUnconfirmed:\s*true/
+);
+// Mobile sticky Generate also remix (product-first)
+assert.match(
+  fs.readFileSync(join(root, "components/MobileGenerateBar.tsx"), "utf8"),
+  /createRemixHref|data-mobile-bar=["']generate-remix["']/
+);
 assert.match(
   fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
   /Sign-in not live yet|data-login-guest/
@@ -5145,3 +5185,6 @@ assert.match(
   fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
   /guest cookie|Supabase/
 );
+
+console.log("engine-smoke: PASS");
+void pathToFileURL; // keep import used on older node

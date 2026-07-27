@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Login + mobile bar guest Generate remix
+- /login guest Continue → Generate + LoginForm disabled CTA use
+  createRemixHref(360-spin) (not bare /create / partial query).
+- MobileGenerateBar sticky Generate → same remix contract.
+- Smoke: data-login-guest / data-mobile-bar generate-remix.
+
 ### 2026-07-27 — [grok] Login honesty: prod auth disabled; guest softLive
 - Production: auth.mode=disabled (no Supabase). Guest cookie generate works.
 - /login explains live-now vs needs-keys; guest Generate remix CTA.

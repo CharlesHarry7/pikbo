@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createRemixHref } from "@/lib/remixIntent";
 
 /** Sticky mobile CTA when not already on Generate / Seller Pack */
+const MOBILE_GENERATE_HREF = createRemixHref("360-spin-showcase");
+
 export function MobileGenerateBar() {
   const path = usePathname() || "/";
   // Hide when a full tool surface is already on-screen
@@ -40,8 +43,9 @@ export function MobileGenerateBar() {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[4.75rem] z-30 flex justify-center gap-2 px-4 lg:hidden">
       <Link
-        href="/create"
+        href={MOBILE_GENERATE_HREF}
         className="pointer-events-auto btn btn-primary px-5 py-2.5 text-xs shadow-[0_0_30px_rgba(200,255,61,0.35)]"
+        data-mobile-bar="generate-remix"
       >
         Generate
       </Link>

@@ -104,6 +104,10 @@ export async function DELETE(req: Request) {
     status: result.job.status,
     errorCode: result.job.errorCode,
     creditsOutcome: result.job.creditsOutcome,
+    // Soft-launch cancel never invents restore (downloads HEAD parity).
+    ...(result.job.creditsOutcome === "refund unconfirmed"
+      ? { refundUnconfirmed: true }
+      : {}),
     note: "Ledger marked canceled. Soft-launch sync fal may still complete server-side.",
   });
 }

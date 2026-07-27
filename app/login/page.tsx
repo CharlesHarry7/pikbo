@@ -5,6 +5,10 @@ import { site } from "@/lib/site";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { LoginForm } from "@/components/LoginForm";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
+import { createRemixHref } from "@/lib/remixIntent";
+
+/** Guest Generate from login — listing spin remix (ratio/duration/channel). */
+const LOGIN_GUEST_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -64,7 +68,11 @@ export default function LoginPage() {
           className="mt-8 flex flex-wrap items-center gap-3 text-sm"
           data-auth-guest-path="product-first"
         >
-          <Link href="/create" className="font-semibold text-[var(--mint)] hover:underline">
+          <Link
+            href={LOGIN_GUEST_GENERATE_HREF}
+            className="font-semibold text-[var(--mint)] hover:underline"
+            data-login-guest="generate-remix"
+          >
             Continue as guest → Generate
           </Link>
           <Link

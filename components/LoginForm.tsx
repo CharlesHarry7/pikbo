@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
+import { createRemixHref } from "@/lib/remixIntent";
+
+const LOGIN_GUEST_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 type AuthPublic = {
   configured: boolean;
@@ -31,7 +34,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
           data-auth-guest-path="product-first"
         >
           <a
-            href="/create?effect=360-spin-showcase&ratio=1%3A1&duration=5"
+            href={LOGIN_GUEST_GENERATE_HREF}
             className="btn btn-primary !px-3 !py-1.5 text-xs"
             data-login-guest="generate-remix"
           >
