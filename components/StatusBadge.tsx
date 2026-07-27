@@ -38,7 +38,7 @@ export function StatusBadge() {
             : "bg-white/10 text-[var(--fg-dim)]"
         }`}
       >
-        {live ? "Seedance live" : "Demo free"}
+        {live ? "Live access ready" : "Cached demo"}
       </span>
       {h.stripe && (
         <span className="rounded-full bg-[var(--brand)]/15 px-2 py-0.5 text-[var(--brand)]">

@@ -1052,15 +1052,15 @@ export const PRESETS: Preset[] = [
 export const COMMON_FAQ: { q: string; a: string }[] = [
   {
     q: "Is there a watermark?",
-    a: "With provider access configured, Free includes one Seedance Mini 5-second 480p live trial with an on-player Pikbo mark. Creator and Shop use the 720p path without that player mark; server-burned file watermarking is still a separate launch task.",
+    a: "Cached Pikbo Lab prototypes do not process your upload. When Live is enabled for an eligible account, the configured Free path is one 5-second 480p Mini job with a player mark. Protected file delivery remains a separate launch gate.",
   },
   {
     q: "How many live clips are included?",
-    a: "At the current flat 10-credit rate, Free is about 1 Mini trial, Creator about 5 live jobs, and Shop about 15. Live generation is finite; cached Lab references can be replayed without credits. Model, duration, and resolution weighting is a future server-enforced change, not a current promise.",
+    a: "Configured allowances are about 1 / 5 / 15 jobs at the current flat 10-credit model when Live is enabled. These are planning estimates, not current availability. Cached Lab references can be replayed without credits and never process your upload.",
   },
   {
     q: "Can I use the videos commercially — for my shop or ads?",
-    a: "Paid plans include commercial use, so you can run reviewed clips on your Etsy, TikTok Shop, Amazon, or paid ads. The single Free Mini live trial is for personal use and shows an on-player mark.",
+    a: "The planned paid terms include commercial use for reviewed clips made from assets you own. Live billing is closed during validation; cached prototypes are references, not generated customer deliverables.",
   },
   {
     q: "How many photos do I need?",

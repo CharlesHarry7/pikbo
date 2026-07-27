@@ -30,19 +30,19 @@ export const TOOLS: Tool[] = [
     // 哥飞/养站对齐 2026-07-26：只动 T+D 提 CTR，H1 不动；主词仍在 Title 前部
     // CTR 优化 2026-07-27: 缩短至 55 字符避免 SERP 截断；加入 Free 驱动点击
     h1: "AI Toy Video Generator — Photo to Short Video for Designer Toys",
-    seoTitle: "AI Toy Video Generator: One Photo to Video, Free | Pikbo",
+    seoTitle: "AI Toy Video Generator: One Photo to Toy Video | Pikbo",
     seoDescription:
-      "Turn one toy photo into a short AI video in minutes. Spin, reveal, or hero clip — no turntable, no rig. Free Mini trial, no card needed.",
+      "Turn one owned toy photo into a spin, reveal, or hero-video recipe. Preview cached Pikbo Lab prototypes; eligible Live generation is clearly gated.",
     intro:
       "This is Pikbo’s focused page for turning one owned figure photo into short motion. Upload a blind box, vinyl, or art toy still, pick a toy-native recipe, and generate a clip here — no turntable, no stop-motion rig, no multi-model theater.",
     body: [
       "An AI toy video generator is not a generic face-filter app. Collectors and sellers need paint, sculpt, and packaging to stay readable while motion sells depth on Etsy, TikTok Shop, and Instagram. Pikbo keeps your still as the visual reference and applies recipes built for toys: 360° spin, floating hero, unbox energy, and more.",
-      "Use this tool when you already have a clean product photo. Front-facing, even light, plain background, full figure in frame. Busy shelves and harsh shadows lower quality. Confirm you own the photo — required before live jobs.",
-      "How soft launch works: eligible signed-in accounts can run Seedance Mini at about 5 seconds and 480p with an on-player mark. Live renders often take one to three minutes — keep the tab open. Failed live jobs restore the 10-credit debit only when the server confirms failure. Cached Lab prototypes never process your upload.",
+      "Use this tool when you already have a clean product photo. Front-facing, even light, plain background, full figure in frame. Busy shelves and harsh shadows lower quality. Confirm you own the photo before any eligible Live submission.",
+      "How validation works: every visitor can preview a cached Pikbo Lab prototype for 0 credits, and that preview never processes the upload. When Live is enabled for a signed-in, durable-credit account with protected delivery, Generate shows the exact duration, resolution, and credit quote before submission.",
       "Why a dedicated URL? Search engines and users both need a clear job. This page owns the head term above; related jobs live elsewhere so signals stay clean: photo-to-video scenes on /for/photo-to-video-for-toys, Etsy listings on /for/etsy-listing-videos, and the brand home at pikbo.ai with an embedded generate panel for people who arrive by brand.",
-      "Compared with broad “photo to short video” apps, toy video AI for designer figures prioritizes product identity over cinematic chaos. We do not advertise Kling, Veo, or Sora as live unless keys and routes are real. Soft launch honesty: no fake multi-model carousel, no unlimited free 4K, no guaranteed sales.",
+      "Compared with broad “photo to short video” apps, toy video AI for designer figures prioritizes product identity over cinematic chaos. We do not advertise a model as available from a configured key alone. Validation honesty: no fake multi-model carousel, no unlimited free 4K, no guaranteed sales.",
       "Best path: clean owned photo → recipe (spin for listings, float for drops, unbox for social) → generate → wait → QA paint and logos → post or list. Need three formats from one still? Open Seller Pack from Generate. Need the full recipe browser? Visit Effects or Flow.",
-      "Free Mini is intentionally small so you can finish one real loop: upload → generate → preview. That loop builds dwell time and learning for search without promising unlimited free production. When search traffic is stable, paid plans can expand credits — Stripe stays off until then.",
+      "The cached prototype path is intentionally small: upload → choose recipe → preview the product flow without a provider call. Live purchase stays closed until durable credits and protected delivery pass the launch gate.",
       "Internal links for crawlers and humans: brand home, photo-to-video for toys use case, Etsy listing videos, guides on photographing toys for motion, and the full tools index. Each page keeps one primary job; this page’s job is the head-term tool above.",
     ],
     keywords: [
@@ -63,7 +63,7 @@ export const TOOLS: Tool[] = [
       },
       {
         q: "Is this free to try?",
-        a: "Yes. Soft launch Free Mini runs Seedance Mini at about 5s · 480p with an on-player mark. No card required. Lab demos are free cached samples.",
+        a: "Yes. The cached Pikbo Lab prototype costs 0 credits, needs no card, and does not process your upload. Live availability and its exact quote appear only for an eligible account.",
       },
       {
         q: "Can it replace a real turntable shoot?",
@@ -121,7 +121,7 @@ export const TOOLS: Tool[] = [
     // CTR 优化 2026-07-27: 加入 Free 驱动点击
     seoTitle: "Toy Product Video AI: Listing Clips, Free Mini | Pikbo",
     seoDescription:
-      "Toy product video AI for Etsy, TikTok Shop, and storefronts. One owned photo → clean spin or hero clip. Free Mini trial — no card, no studio.",
+      "Toy product video recipes for Etsy, TikTok Shop, and storefronts. One owned photo → clean spin or hero workflow, with a cached preview first.",
     intro:
       "Toy product video AI is for sellers who already have a packshot. Pikbo turns one product photo into a clean spin or hero clip that shows your figure off for a storefront — without a camera studio.",
     body: [
@@ -352,7 +352,7 @@ export const TOOLS: Tool[] = [
     // CTR 优化 2026-07-27: 加入 Free 驱动点击
     seoTitle: "One Photo Toy Video AI: Still to Short Clip, Free | Pikbo",
     seoDescription:
-      "One photo toy video AI for designers and sellers. Turn a single owned toy still into a short hero or spin — Free Mini, no card, no photo shoot.",
+      "One-photo toy-video recipes for designers and sellers. Preview a cached hero or spin workflow before gated Live submission.",
     intro:
       "One photo toy video AI means you skip the multi-angle shoot. Pikbo turns a single product photo of your toy into a short video — floating hero or clean spin — from that one image.",
     body: [
@@ -392,7 +392,7 @@ export const TOOLS: Tool[] = [
     seoTitle:
       "Toy Unboxing Hook Video From One Photo — Free Mini | Pikbo",
     seoDescription:
-      "Make a scroll-stopping toy unboxing hook from one photo. Vertical reveal openers for Reels, Shorts, and TikTok. Free Mini trial — no card needed.",
+      "Plan a toy unboxing hook from one photo. Preview cached vertical reveal recipes for Reels, Shorts, and TikTok before gated submission.",
     intro:
       "The first second decides whether anyone watches. Pikbo turns one photo of your figure into a punchy unboxing hook — the reveal opener built to stop the scroll.",
     body: [
@@ -586,7 +586,7 @@ export const TOOLS: Tool[] = [
     // CTR 优化 2026-07-27: 加入 Free 驱动点击
     seoTitle: "AI Figure 360 Video: Spin From One Photo, Free | Pikbo",
     seoDescription:
-      "AI figure 360 video from one photo — no turntable. Short product spins for toy listings and storefronts. Free Mini trial, no card needed.",
+      "AI figure 360 recipe from one photo — no turntable. Preview cached product-spin examples, then check gated Live access.",
     intro:
       "AI figure 360 video is the turntable look without the rig. This tool turns one owned figure photo into a short 360-style product spin for listings and shop pages.",
     body: [
@@ -633,13 +633,13 @@ export const TOOLS: Tool[] = [
     seoTitle:
       "Blind Box Reveal Video From One Photo (No Filming) | Pikbo",
     seoDescription:
-      "Need unboxing energy with only a still? Generate a blind-box reveal short from one owned photo. Free Mini trial — no card, honest caps.",
+      "Draft a blind-box reveal recipe from one owned photo. Preview a cached Pikbo Lab prototype first; eligible Live access is checked before submission.",
     intro:
       "A blind box AI video generator is for pull energy, not generic face filters. Upload one photo of an original or rights-owned blind-box figure (not a selfie) and draft an unboxing-style short for TikTok, Reels, or restock posts.",
     body: [
       "This tool page owns the blind box AI video generator job: make a reveal clip from one photo. Brand-wide drop campaigns and series teasers belong on /for/blind-box-brand-marketing — same engine, different intent, one canonical each.",
-      "Lead with the first second: lid motion or mystery light works better than a slow fade. Use vertical recipes for TikTok/Reels. Keep Free Mini caps in mind (5s · 480p · mark).",
-      "Collectors flex a pull; small shops draft restock hooks. Always confirm you own the photo and the product rights before live generate.",
+      "Lead with the first second: lid motion or mystery light works better than a slow fade. Use vertical recipes for TikTok/Reels. Cached prototypes show pacing without processing your upload.",
+      "Collectors flex a pull; small shops draft restock hooks. Always confirm you own the photo and product rights before an eligible Live submission.",
       "Channel SEO (TikTok Shop, Etsy) stays on /for/* platform pages. Link out for distribution; do not re-title this tool as a brand marketing page.",
     ],
     keywords: [
@@ -673,7 +673,7 @@ export const TOOLS: Tool[] = [
     h1: "TikTok Toy Video From One Photo",
     seoTitle: "TikTok Toy Video Generator From Photo | Pikbo",
     seoDescription:
-      "Make a short TikTok toy video from one photo — vertical hooks for figures and blind boxes. Free Mini trial, no card.",
+      "Plan a short TikTok toy video from one photo — cached vertical-hook previews for figures and blind boxes, with Live access gated.",
     intro:
       "Short-form toy content needs a strong open. Upload one owned photo, pick a vertical-friendly recipe, and draft a TikTok-ready clip.",
     body: [
@@ -703,7 +703,7 @@ export const TOOLS: Tool[] = [
     h1: "Shopify Product Video for Toys From One Photo",
     seoTitle: "Shopify Toy Product Video Generator | Pikbo",
     seoDescription:
-      "Add a product video to Shopify toy listings from one photo. Calm spins and hero floats for DTC shops. Free Mini trial.",
+      "Plan a Shopify toy-listing video from one photo. Preview cached calm-spin and hero-float recipes before gated Live submission.",
     intro:
       "DTC toy shops on Shopify convert better with motion on the PDP. Draft a spin or hero clip from the packshot you already use.",
     body: [
@@ -733,7 +733,7 @@ export const TOOLS: Tool[] = [
     h1: "Designer Toy AI Video — Teaser From One Photo",
     seoTitle: "Designer Toy AI Video: Teaser From One Photo | Pikbo",
     seoDescription:
-      "Designer toy AI video for drops and lookbooks. One owned still → floating hero or reveal teaser. Free Mini trial — vertical toy-native, not generic stock.",
+      "Designer-toy video recipes for drops and lookbooks. One owned still → cached floating-hero or reveal preview, with Live access gated.",
     intro:
       "Designer toy AI video is for indie vinyl, art toys, and lookbook stills — not mass face filters. Reuse one owned photo as a short floating hero or mystery reveal without a full motion studio.",
     body: [

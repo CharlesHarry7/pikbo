@@ -19,7 +19,7 @@ const STEPS = [
   {
     n: "3",
     t: "Generate with Seedance",
-    d: "Live Mini often 1–3 minutes. Keep the tab open. Failed live jobs restore credits when confirmed; TIMEOUT stays unconfirmed.",
+    d: "Eligible Live jobs use a fixed deadline. Failed jobs restore credits only when release is confirmed; TIMEOUT stays unconfirmed.",
   },
   {
     n: "4",

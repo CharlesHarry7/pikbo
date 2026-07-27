@@ -29,7 +29,7 @@ const COPY: Record<
       </>
     ),
     description:
-      "Reuse the product photos you already have instead of setting up a new shoot for every listing or drop. Start with one 5-second Mini trial; paid plans add finite commercial-use credits.",
+      "Reuse the product photos you already have instead of setting up a new shoot for every listing or drop. Preview cached Lab prototypes now; eligible Live accounts receive an exact quote before submission.",
     primary: "Animate one SKU",
     secondary: "See seller plans",
   },
@@ -44,7 +44,7 @@ const COPY: Record<
       </>
     ),
     description:
-      "The current validation contract is Free ~1, Creator ~5, and Shop ~15 live jobs at 10 credits each. That is a planning estimate—not a sales guarantee or an unlimited-generation promise.",
+      "Configured allowances are about 1 / 5 / 15 jobs at the current flat 10-credit model when Live is enabled. This is a planning estimate—not current availability, a sales guarantee, or an unlimited promise.",
     primary: "Build my first clip",
     secondary: "Compare allowances",
   },

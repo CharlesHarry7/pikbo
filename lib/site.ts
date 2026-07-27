@@ -17,13 +17,13 @@ export const site = {
    * Meta description — 哥飞 CTR 优化 2026-07-27: 加入搜索意图词 + 利益点驱动
    */
   description:
-    "Turn one toy photo into a short AI video — spin, reveal, or hero clip. Free Mini trial, no card. Built for designer toys, blind boxes, and collectibles.",
+    "Turn one owned toy photo into a short-video recipe for spins, reveals, and hero clips. Preview cached Pikbo Lab prototypes before gated generation.",
   /**
    * Document title (homepage default) — brand first.
    * 哥飞 P0: must NOT match tools rank-page title.
    * CTR 优化 2026-07-27: "Designer Toy AI Video Suite" → "Turn Toy Photos into Videos" (利益点驱动)
    */
-  titleDefault: "Pikbo — Turn Toy Photos into Videos | Free Mini, No Card",
+  titleDefault: "Pikbo — Turn Toy Photos into Videos",
   /**
    * Homepage H1 — brand + scene, not the full primary keyword phrase.
    * Rank H1 stays on /tools/ai-toy-video-generator.
@@ -34,5 +34,5 @@ export const site = {
   /** Rank battlefield URL for internal links */
   rankToolPath: "/tools/ai-toy-video-generator" as const,
   twitter: "@pikbo_ai",
-  suiteLine: "Seller Starter Pack · 3 clips / 30 credits",
+  suiteLine: "Seller Starter Pack · 3 recipe previews",
 } as const;

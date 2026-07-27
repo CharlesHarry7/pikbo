@@ -200,7 +200,7 @@ export function HfExploreHome({
             </Link>
           </div>
           <p className="mt-3 text-[11px] text-white/45">
-            Designer-toy suite · Lab demos free · live Mini often 1–3 min
+            Designer-toy suite · cached Lab prototypes · Live access gated
           </p>
 
           {/* Progress rail */}
@@ -447,7 +447,7 @@ export function HfExploreHome({
               { href: "/effects", label: "Video presets", sub: "Viral recipes" },
               { href: "/library", label: "Library", sub: "This device" },
               { href: "/flow", label: "Flow · Preview", sub: "Media wall" },
-              { href: "/models", label: "Engines · Preview", sub: "Seedance live" },
+              { href: "/models", label: "Engines · Preview", sub: "Access gated" },
             ].map((c) => (
               <Link
                 key={c.href}

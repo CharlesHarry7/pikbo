@@ -58,7 +58,7 @@ const SHOT_TEMPLATES = [
 
 /**
  * Cinema Studio — HF-class director board for toy video.
- * Compose lens / move / grade → Generate with Seedance (Preview · not offline renderer).
+ * Compose lens / move / grade → gated Generate workbench (Preview · not renderer).
  */
 export default function CinemaPage() {
   const [lens, setLens] = useState<(typeof LENSES)[number]>(LENSES[1]);
@@ -146,8 +146,8 @@ export default function CinemaPage() {
               Cinema Studio · Preview
             </p>
             <p className="mt-0.5 text-xs text-white/45">
-              Director board for toys → opens Generate · Seedance live · not a
-              separate offline renderer
+              Director board for toys → opens the gated Generate workbench ·
+              not a separate renderer
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">

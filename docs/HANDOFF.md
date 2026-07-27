@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [claude] public Live capability copy gate
+- Home, Create, Pricing, Apps, Modules, Flow, Cinema, core tool/use-case content and structured data now lead with `cached prototype · 0 credits · upload not processed`; a model key alone is never presented as public Live.
+- Recipe doors are labeled READY/PREFILLED rather than LIVE. Seller Starter Pack static copy describes three recipes; a 30-credit Live quote appears only inside an eligible runtime state.
+- Plan allowances remain visible as conditional planning estimates (`when Live is enabled`), while checkout and protected delivery stay explicitly closed during validation.
+- Added `live-capability-copy-smoke`: 18 promise-bearing source files plus generated route HTML reject unconditional Live/Free-Mini phrases; the documented CI template runs it before and after build.
+- PASS: source contract, product-proof contract, TypeScript, ESLint (0 errors / 1 pre-existing warning), Webpack production build (193 routes), rendered contract across 164 HTML routes.
+
+---
+
 ### 2026-07-28 — [claude] R1c durable settlement reconciliation (source only)
 - Added a service-role-only reconciliation queue and immutable event table for `provider_succeeded_output_withheld`, `capture_pending`, `release_pending`, `captured`, `released` and unknown-review state.
 - Provider success after timeout/cancel or an ambiguous capture response is persisted as withheld; confirmed pre-output release failures are queued, while unknown provider failures stay manual/unconfirmed.

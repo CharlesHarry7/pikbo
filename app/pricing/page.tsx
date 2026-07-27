@@ -42,7 +42,7 @@ function pricingFaqItems(): { q: string; a: string }[] {
   return [
     {
       q: "What does the current credit number mean?",
-      a: `The current foundation charges ${CREDITS_PER_VIDEO} credits per eligible generation. Model-, resolution-, and duration-aware weights are next. Failed live generations are refunded.`,
+      a: `The configured quote is ${CREDITS_PER_VIDEO} credits per eligible generation. It is a planning estimate while Live purchase is closed. A failure may be called refunded only after the server confirms release.`,
     },
     {
       q: "Can I test this with one real product photo?",
@@ -101,10 +101,10 @@ export default async function PricingPage({
                 Plan around finished product clips — not vague AI usage
               </p>
               <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--fg-muted)]">
-                Validation allowances: Free ~1 trial · Creator ~5 · Shop ~15 at
-                the flat 10-credit rate. Compare production capacity — not a
-                sales guarantee. Stripe live checkout stays gated until public
-                Mode A.
+                Configured allowances: about 1 / 5 / 15 jobs at the flat
+                10-credit model when Live is enabled. Compare planned capacity
+                — not current availability or a sales guarantee. Checkout and
+                protected delivery stay closed during validation.
               </p>
             </div>
             <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
