@@ -48,6 +48,9 @@ jobs:
       - name: Showcase evidence honesty
         run: npm run showcase-evidence-smoke
 
+      - name: Recovery reconciliation (R1c lease + settlement replay)
+        run: npm run recovery-reconciliation
+
       - name: Lint
         run: npm run lint
 

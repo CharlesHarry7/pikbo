@@ -45,11 +45,12 @@ assert.equal(typeof evaluateHealthTruth, "function");
 const keys = [
   "authConfigured",
   "durableAtomicReservationConfigured",
+  "durableReconciliationConfigured",
   "providerConfigured",
   "serverOwnedDeliverableConfigured",
 ];
 
-for (let mask = 0; mask < 16; mask += 1) {
+for (let mask = 0; mask < 32; mask += 1) {
   const input = Object.fromEntries(
     keys.map((key, index) => [key, Boolean(mask & (1 << index))])
   );
@@ -59,7 +60,7 @@ for (let mask = 0; mask < 16; mask += 1) {
   assert.equal(
     result.softLive,
     allReady,
-    `softLive must be all-four AND for mask ${mask}`
+    `softLive must be all-five AND for mask ${mask}`
   );
   assert.equal(
     result.mode,
@@ -83,6 +84,11 @@ assert.match(
   route,
   /process\.env\.PIKBO_R1_ATOMIC_RESERVATION_READY\s*===\s*"1"/
 );
+assert.match(
+  route,
+  /process\.env\.PIKBO_R1_RECONCILIATION_READY\s*===\s*"1"/
+);
+assert.match(route, /probeDurableReconciliationSchema/);
 assert.match(route, /t6\.tooling\.serverOwnedWorkerReady/);
 assert.match(route, /t6\.tooling\.derivativeServingImplemented/);
 assert.match(route, /t6\.tooling\.storageAdapterImplemented/);
@@ -94,4 +100,4 @@ assert.match(
 assert.match(route, /cached Pikbo Lab prototypes only/);
 assert.doesNotMatch(route, /cached official media only/i);
 
-console.log("health truth contract: 16/16 prerequisite combinations passed");
+console.log("health truth contract: 32/32 prerequisite combinations passed");

@@ -19,6 +19,7 @@
     "recovery-qa": "node scripts/recovery-qa.mjs",
     "recovery-ledger": "node scripts/recovery-ledger.mjs",
     "recovery-retry-deadline": "node scripts/recovery-retry-deadline.mjs",
+    "recovery-reconciliation": "node scripts/recovery-reconciliation.mjs",
     "softlive-checklist": "bash scripts/softlive-checklist.sh",
     "typecheck": "tsc --noEmit",
     "check:conflicts": "git grep -nE \"^(<<<<<<<|>>>>>>>|=======)\" -- app lib components && exit 1 || exit 0",

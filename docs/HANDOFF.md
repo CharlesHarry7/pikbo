@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [claude] R1c durable settlement reconciliation (source only)
+- Added a service-role-only reconciliation queue and immutable event table for `provider_succeeded_output_withheld`, `capture_pending`, `release_pending`, `captured`, `released` and unknown-review state.
+- Provider success after timeout/cancel or an ambiguous capture response is persisted as withheld; confirmed pre-output release failures are queued, while unknown provider failures stay manual/unconfirmed.
+- `FOR UPDATE SKIP LOCKED` worker leases prevent double processing; expired leases can be reclaimed, and duplicate event/finish calls return the same terminal truth without a second ledger mutation.
+- The finish RPC delegates to R1a atomic capture/release: confirmed capture proves financial settlement only; raw provider output remains service-private and withheld until a separate T6 server-owned derivative passes delivery checks. Only confirmed release can claim a refund. Health remains fail-closed until the R1c schema probe and operator flag both pass.
+- Depends on pgcrypto + T5 + R1a. Migration was **not** applied anywhere; follow `docs/ops/R1C_NON_PROD_REHEARSAL.md` before any operator flag or live beta.
+- PASS: 20-way lease race, duplicate facts, crash takeover, timeout-late capture, capture/release race, health 32/32, recovery suites, typecheck, lint (0 errors / 2 pre-existing warnings), and Webpack build (193 routes).
+
 ### 2026-07-28 — [claude] R4b verified showcase promotion gate
 - `lib/showcaseEvidence.ts` is the canonical evidence schema: rights/source records, distinct hashed input, provider task+request IDs, model parameters, hashed output, named reviewer/time, and five 4–5 pass dimensions.
 - Registry import and provenance labels call a fail-closed promotion gate; `official/live` without every evidence field now throws and fails the build.

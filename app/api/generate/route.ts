@@ -41,6 +41,11 @@ import {
   settleStrictLiveGeneration,
   type StrictLiveReservation,
 } from "@/lib/durableCredits/liveReservation";
+import {
+  recordConfirmedPreOutputFailure,
+  recordProviderSucceededWithheld,
+  recordSettlementUnknown,
+} from "@/lib/durableCredits/reconciliation";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 import {
   invokeReservedProvider,
@@ -78,6 +83,14 @@ function normalizeIdempotencyKey(raw: unknown): string | undefined {
   // Reject tiny keys (collision / abuse); UUID is 36 chars.
   if (t.length < 8) return undefined;
   return t;
+}
+
+function reconciliationEventId(
+  kind: "provider_succeeded" | "release_pending" | "settlement_unknown",
+  jobId: string,
+  suffix?: string
+): string {
+  return `recon:${kind}:${jobId}${suffix ? `:${suffix}` : ""}`.slice(0, 160);
 }
 
 function successFromJob(
@@ -533,11 +546,45 @@ export async function POST(req: Request) {
     await saveSession(session);
     const releaseReservation = async (reason: string): Promise<boolean> => {
       if (!liveReservation) return false;
+      const target = liveReservation;
       const released = await releaseStrictLiveGeneration(
-        liveReservation,
+        target,
         reason
       );
-      if (!released.ok) return false;
+      if (!released.ok) {
+        const confirmedPreOutput = new Set([
+          "retry_claim_rejected",
+          "force_fail",
+          "invalid_image",
+          "empty_image",
+          "deadline_before_upload",
+          "deadline_before_generation",
+        ]).has(reason);
+        const recorded = confirmedPreOutput
+          ? await recordConfirmedPreOutputFailure(target, {
+              eventId: reconciliationEventId(
+                "release_pending",
+                target.jobId,
+                reason
+              ),
+              reason,
+            })
+          : await recordSettlementUnknown(target, {
+              eventId: reconciliationEventId(
+                "settlement_unknown",
+                target.jobId,
+                reason
+              ),
+              reason,
+            });
+        if (!recorded.ok) {
+          console.error(
+            "[live-reconciliation] release enqueue failed",
+            recorded.code
+          );
+        }
+        return false;
+      }
       session = {
         ...session,
         credits: released.data.availableCredits,
@@ -749,6 +796,24 @@ export async function POST(req: Request) {
       const deadlineState = getJob(liveJobId);
       const completionDecision = providerCompletionDecision(deadlineState);
       if (!completionDecision.allow) {
+        const recorded = await recordProviderSucceededWithheld(
+          reserved.reservation,
+          {
+            eventId: reconciliationEventId(
+              "provider_succeeded",
+              reserved.reservation.jobId
+            ),
+            providerRequestId: result.requestId || liveJobId,
+            outputRef: videoUrl,
+            reason: completionDecision.code,
+          }
+        );
+        if (!recorded.ok) {
+          console.error(
+            "[live-reconciliation] late output enqueue failed",
+            recorded.code
+          );
+        }
         const failBody: GenerateErrorBody = {
           error: completionDecision.message,
           code: completionDecision.code,
@@ -770,6 +835,24 @@ export async function POST(req: Request) {
           captured.code,
           captured.error
         );
+        const recorded = await recordProviderSucceededWithheld(
+          reserved.reservation,
+          {
+            eventId: reconciliationEventId(
+              "provider_succeeded",
+              reserved.reservation.jobId
+            ),
+            providerRequestId: result.requestId || liveJobId,
+            outputRef: videoUrl,
+            reason: "capture_failed",
+          }
+        );
+        if (!recorded.ok) {
+          console.error(
+            "[live-reconciliation] capture enqueue failed",
+            recorded.code
+          );
+        }
         // Provider work exists, so releasing would create a free result; but
         // claiming "10 used" would also be false because the durable capture
         // did not commit. Withhold the output and leave the reservation for
