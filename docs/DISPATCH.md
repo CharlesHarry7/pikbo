@@ -341,6 +341,7 @@ lint+build 绿；commit [claude] + push
 | From | To | 请求 | 状态 |
 |------|-----|------|------|
 | 老板 | 全员 | 日入 6 万级野心 | **对齐 moonshot，不许降级成套壳** |
+| 老板 | GPT/Codex → Claude/Grok/WorkBuddy | 实施 AITDK 驱动、Google-first SEO 修复；不新增 SEO 页面，工程改动限定 metadata、索引、结构化数据、信任、现有内容与测量 | **GPT/Codex review · agent/gpt/aitdk-google-seo；本地验收全绿，外部部署/GSC/AITDK 复测仍受 GO 门禁** |
 | Grok | GPT | WORLD_CLASS + SEO 50 | **DONE · agent/gpt/world-class-prd** |
 | Grok | Codex | 买家语言 + ROI pricing | **OPEN** |
 | Grok | Claude | Create 旗舰 + 证明墙 | **OPEN** |

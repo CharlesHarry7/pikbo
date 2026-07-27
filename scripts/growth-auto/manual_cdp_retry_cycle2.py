@@ -15,7 +15,8 @@ PRODUCT = {
     "description": "Pikbo is an AI video suite for designer toys, blind boxes, and figures. Upload one owned product photo, pick a recipe (360 spin, unbox, float), generate a short clip for listings and social. Free Mini trial - no card.",
     "categories": "AI Video, Image to Video",
     "email": os.environ.get("PIKBO_GROWTH_EMAIL", ""),
-    "twitter": "@pikbo_ai",
+    # Keep blank until an official profile resolves publicly.
+    "twitter": "",
 }
 
 

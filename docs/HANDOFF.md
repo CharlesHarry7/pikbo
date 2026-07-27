@@ -16,6 +16,18 @@ Newest first. One block per meaningful landing.
 - Provider webhook: orphan/late live success withheld (no free `10 used` media); response `withheld` flag; Seller Pack `DURABLE_OFF` copy honest.
 - PASS: engine-smoke + typecheck.
 
+### 2026-07-28 — [gpt] AITDK / Google-first technical SEO remediation
+- Branch: `agent/gpt/aitdk-google-seo`; no new SEO routes, generation API, billing, credits or provider logic.
+- Social metadata now uses the real `/opengraph-image.png` and `/twitter-image.png` routes through `lib/site.ts`; dead `@pikbo_ai`, retired `SearchAction`, empty `sameAs` and emitted meta keywords were removed.
+- Sitemap remains the five reviewed marketing URLs plus Privacy and Terms. Other tools, effects, use cases, toys, projects and non-core guides remain reachable with `noindex,follow`.
+- Home defaults new visitors to English, removes mixed-language indexed CTAs and six decorative video entities, and adds a compact About/guide/Privacy/Terms/contact trust surface.
+- The primary tool has one prominent, playable cached prototype plus one truthful `VideoObject`; the sitemap adds the same verified media values. The photography guide adds dated organizational authorship, a concrete preflight table and three primary sources.
+- Added `public/llms.txt` with exactly the seven canonical URLs. Existing analytics remains environment-gated and privacy-sanitized; owner must supply a real `NEXT_PUBLIC_GA_MEASUREMENT_ID`.
+- PASS: SEO cold-start smoke; engine smoke (32/32); TypeScript; ESLint with zero warnings; production build (193 routes); link-check; seven-page rendered canonical/title/description/social-card audit; long-tail noindex samples; 1440px and 390px visual QA with no console errors or horizontal scrolling.
+- Public deployment, AITDK rescan, sitemap refresh and GSC indexing requests were not performed: `GO` is still blocked. Run them only after the public-release owner authorizes the deployment.
+
+---
+
 ### 2026-07-28 — [grok] Phase H five-page SEO cold-start budget
 - Marketing index allowlist = 5 (`/`, primary tool, blind-box tool, photography guide, `/pricing`) per WorkBuddy `SEO_INDEXABLE_10_RELEASE.md`.
 - Legal `/privacy` + `/terms` stay indexable; long-tail tools/for leave sitemap (reachable + noindex).

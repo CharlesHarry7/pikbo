@@ -34,7 +34,9 @@ export function organizationJsonLd() {
     url: site.url,
     description: site.description,
     slogan: site.tagline,
-    sameAs: [] as string[],
+    ...(site.officialProfiles.length > 0
+      ? { sameAs: [...site.officialProfiles] }
+      : {}),
   };
 }
 
@@ -50,11 +52,6 @@ export function websiteJsonLd() {
       "@type": "Organization",
       name: site.name,
       url: site.url,
-    },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${site.url}/tools?q={search_term_string}`,
-      "query-input": "required name=search_term_string",
     },
   };
 }
@@ -95,7 +92,10 @@ export function softwareApplicationJsonLd(opts?: {
   };
 }
 
-export function videoObjectJsonLd(demo: DemoVideo) {
+export function videoObjectJsonLd(
+  demo: DemoVideo,
+  watchPagePath?: string
+) {
   // Duration only from registered recipe metadata — never invent play counts / ratings.
   const presetDuration = getPreset(demo.preset)?.duration;
   const duration =
@@ -117,6 +117,12 @@ export function videoObjectJsonLd(demo: DemoVideo) {
     description: `${demo.result} PIKBO Lab cached prototype (not a visitor upload; provider task evidence pending).`,
     thumbnailUrl: `${site.url}${demo.poster}`,
     contentUrl: `${site.url}${demo.mp4}`,
+    ...(watchPagePath
+      ? {
+          url: `${site.url}${watchPagePath}`,
+          mainEntityOfPage: `${site.url}${watchPagePath}`,
+        }
+      : {}),
     uploadDate: demo.publishedAt,
     ...(duration ? { duration } : {}),
     isFamilyFriendly: true,

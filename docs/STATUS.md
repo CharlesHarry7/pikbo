@@ -30,6 +30,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | SUITE | 潮玩版 HF Generate + Yiha Modules 产品壳 | Grok | **review** | main | `/create` `/modules` suite chrome; softLaunch PRIMARY/MOBILE nav freeze; suite doors sitewide |
 | G1 | Nav whitelist / kill empty doors | Grok | **review** | agent/grok/seo-gsc-p0 | GSC P0: PRIMARY = Explore·Create·Effects·Pricing; Preview/Lab in More |
 | SEO-GSC | GSC VideoObject + crawl/noindex contract | Grok | **review** | main | Five-page marketing sitemap + legal (WorkBuddy budget); long-tail noindex; seo-cold-start-smoke in docs/ci; **boss: GSC after deploy still NO-GO** |
+| SEO-AITDK | Google-first metadata, trust, content and AITDK remediation | GPT/Codex | **review** | agent/gpt/aitdk-google-seo | Implementation and local acceptance green: correct social cards, seven-URL sitemap, long-tail noindex, one primary-tool video, trust contacts, guide evidence, English default and llms.txt. Public deploy/GSC/AITDK rescan remain GO-gated; GA4 ID still required |
 | G2 | ≤8 hero presets, unique demos | Grok | **review** | main + agent/gpt/world-class-prd | Reassigned for proof audit; exact eight proof slugs are frozen |
 | G3 | Official demos copy (no fake UGC) | Codex | **done** | main @ `32c634c` | Official example / cached / concept language merged |
 | G4 | Zero 404 on linked URLs | Claude | **done** | main @ `5d25fb3` | Redirect aliases and link-check passed |

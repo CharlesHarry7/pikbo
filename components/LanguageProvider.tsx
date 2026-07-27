@@ -10,7 +10,6 @@ import {
 } from "react";
 import {
   DEFAULT_LOCALE,
-  detectLocaleFromNavigator,
   isLocale,
   type Locale,
   translate,
@@ -32,7 +31,8 @@ const STORAGE_KEY = "pikbo_locale";
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // Start at the default so SSR and first client render match (no hydration
-  // mismatch); adopt stored / browser locale on mount.
+  // mismatch). Respect an explicit saved choice, but keep first visits in
+  // English so the single global URL has one stable default language.
   const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
 
   useEffect(() => {
@@ -42,19 +42,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setLocaleState(stored);
         return;
-      }
-      // First visit: prefer browser language (zh-CN / zh-TW → 中文).
-      const detected = detectLocaleFromNavigator(
-        typeof navigator !== "undefined" ? navigator.language : null
-      );
-      if (detected && detected !== DEFAULT_LOCALE) {
-        setLocaleState(detected);
-        try {
-          localStorage.setItem(STORAGE_KEY, detected);
-          document.cookie = `${STORAGE_KEY}=${detected};path=/;max-age=31536000;samesite=lax`;
-        } catch {
-          /* private mode */
-        }
       }
     } catch {
       // ignore storage errors

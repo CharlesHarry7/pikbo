@@ -4,10 +4,13 @@
  * - 首页 Title/H1 走品牌 + suite，避免与 tools 页 cannibalization
  * - Keyword mesh: tools/for 承担意图；root = brand + embedded tool
  */
+const SITE_DOMAIN = "pikbo.ai";
+const SITE_URL = `https://${SITE_DOMAIN}`;
+
 export const site = {
   name: "Pikbo",
-  domain: "pikbo.ai",
-  url: "https://pikbo.ai",
+  domain: SITE_DOMAIN,
+  url: SITE_URL,
   /**
    * VIDEO-first product. Photo = input; short AI video = output.
    * Soft launch: free Mini trial / labeled Lab demos; no fake multi-model.
@@ -33,6 +36,21 @@ export const site = {
   keyword: "AI toy video generator",
   /** Rank battlefield URL for internal links */
   rankToolPath: "/tools/ai-toy-video-generator" as const,
-  twitter: "@pikbo_ai",
+  socialImages: {
+    openGraph: `${SITE_URL}/opengraph-image.png`,
+    twitter: `${SITE_URL}/twitter-image.png`,
+    width: 1731,
+    height: 909,
+    alt: "Pikbo — turn an owned designer-toy photo into launch-ready video",
+  },
+  contact: {
+    privacyEmail: `privacy@${SITE_DOMAIN}`,
+    legalEmail: `legal@${SITE_DOMAIN}`,
+  },
+  /**
+   * Add only profiles that have been verified to resolve publicly.
+   * The former @pikbo_ai URL returned 404 and must not be an entity signal.
+   */
+  officialProfiles: [] as readonly string[],
   suiteLine: "Seller Starter Pack · 3 recipe previews",
 } as const;

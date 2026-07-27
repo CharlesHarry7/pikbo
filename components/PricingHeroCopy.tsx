@@ -23,9 +23,9 @@ const COPY: Record<
     eyebrow: "For collectors, toy sellers, and small shops",
     title: (
       <>
-        Turn one toy photo into
+        Pikbo pricing for toy sellers.
         <br />
-        <span className="text-grad">a listing-ready product clip.</span>
+        <span className="text-grad">Choose capacity for launch-ready clips.</span>
       </>
     ),
     description:

@@ -230,9 +230,10 @@ export function HomeSeoBody() {
             claim unlimited free 4K or model access we have not shipped.
           </p>
           <p className="mt-3">
-            Stripe checkout stays off until search traffic is stable—soft launch
-            prioritizes usable trials and crawlable tool pages over premature
-            paywalls. When you need more recipes or Seller Starter Pack formats, open{" "}
+            Stripe checkout stays off until durable accounts, protected delivery,
+            and billing validation pass. Soft launch prioritizes an honest product
+            path over premature charging. When you need more recipes or Seller
+            Starter Pack formats, open{" "}
             <Link
               href={SEO_BODY_GENERATE_HREF}
               className="text-[var(--mint)] hover:underline"
@@ -256,7 +257,7 @@ export function HomeSeoBody() {
             Recipes, Lab demos, and cached prototypes
           </h2>
           <p className="mt-4">
-            The dense wall below the tool is not a fake UGC feed. Each card is an
+            The dense wall above the tool is not a fake UGC feed. Each card is a
             PIKBO Lab prototype sample or a recipe deep-link into Generate. Remix means
             “run this recipe on a photo you own.” Inside pages show reference
             posters, cached outputs, and evidence status for Lab prototypes.
@@ -277,7 +278,14 @@ export function HomeSeoBody() {
             >
               {site.rankToolPath}
             </Link>
-            . Guides such as{" "}
+            . Start with{" "}
+            <Link
+              href="/guides/how-to-photograph-toys-for-ai-video"
+              className="text-[var(--mint)] hover:underline"
+            >
+              how to photograph a toy for AI video
+            </Link>{" "}
+            or continue with{" "}
             <Link
               href="/guides/how-to-make-a-figure-spin-video"
               className="text-[var(--mint)] hover:underline"

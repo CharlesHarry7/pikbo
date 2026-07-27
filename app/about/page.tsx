@@ -19,6 +19,16 @@ export const metadata: Metadata = {
     description:
       "Toy-vertical photo → short video for sellers and collectors. Owned photos only.",
     url: `${site.url}/about`,
+    siteName: site.name,
+    type: "website",
+    images: [site.socialImages.openGraph],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `About ${site.name}`,
+    description:
+      "Toy-vertical photo → short video for sellers and collectors. Owned photos only.",
+    images: [site.socialImages.twitter],
   },
 };
 
@@ -98,9 +108,29 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <p className="mt-12 text-xs leading-relaxed text-white/35">
-          Contact for product questions: use in-app support paths when available.
-          Privacy:{" "}
+        <p className="mt-12 text-xs leading-relaxed text-white/40">
+          Product help starts with the{" "}
+          <Link
+            href="/guides/how-to-photograph-toys-for-ai-video"
+            className="text-white/60 underline"
+          >
+            toy-photo guide
+          </Link>
+          . Privacy questions:{" "}
+          <a
+            href={`mailto:${site.contact.privacyEmail}`}
+            className="text-white/60 underline"
+          >
+            {site.contact.privacyEmail}
+          </a>
+          . Legal questions:{" "}
+          <a
+            href={`mailto:${site.contact.legalEmail}`}
+            className="text-white/60 underline"
+          >
+            {site.contact.legalEmail}
+          </a>
+          . Privacy:{" "}
           <Link href="/privacy" className="text-white/50 underline">
             /privacy
           </Link>
