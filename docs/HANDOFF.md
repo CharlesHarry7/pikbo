@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Soft-launch Generate remix + tool FAQ refund honesty
+- SoftLaunchStrip Open Generate → createRemixHref(360-spin) remix contract
+  (ratio/duration/channel), not bare /create.
+- tools FAQ “motion looks off”: refund when server can confirm (not bare
+  “refund the credits”).
+- Smoke: data-soft-launch=generate-remix · tools.ts doesNotMatch bare refund.
+
 ### 2026-07-27 — [grok] GET generations full-session byStatus + touch all open
 - `touchOpenJobsForSession`: Library poll slides TTL on **every** open job
   (not only the newest list page) — prevents false TIMEOUT on unlisted rows.

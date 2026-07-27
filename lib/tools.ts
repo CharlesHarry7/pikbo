@@ -210,7 +210,7 @@ export const TOOLS: Tool[] = [
       },
       {
         q: "What if the motion looks off?",
-        a: "AI motion varies run to run. Regenerate for a different take — failed live jobs refund the credits.",
+        a: "AI motion varies run to run. Regenerate for a different take — failed live jobs refund when the server can confirm failure (TIMEOUT/cancel stay unconfirmed until balance settles).",
       },
     ],
   },

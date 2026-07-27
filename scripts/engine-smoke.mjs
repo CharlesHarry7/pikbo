@@ -3488,10 +3488,24 @@ assert.match(
   fs.readFileSync(join(root, "components/SoftLaunchStrip.tsx"), "utf8"),
   /freeTrialExhausted|Trial used|clipsLeft/
 );
+// Soft-launch Open Generate carries remix contract (ratio/duration/channel)
+assert.match(
+  fs.readFileSync(join(root, "components/SoftLaunchStrip.tsx"), "utf8"),
+  /createRemixHref|data-soft-launch=["']generate-remix["']/
+);
 // Refund honesty: never bare "failed jobs refund" (TIMEOUT/cancel stay unconfirmed)
 assert.match(
   fs.readFileSync(join(root, "components/SoftLaunchStrip.tsx"), "utf8"),
   /refunds when confirmed/
+);
+// Tool FAQ: motion-off refund is when-confirmed (not bare "refund the credits")
+assert.match(
+  fs.readFileSync(join(root, "lib/tools.ts"), "utf8"),
+  /refund when the server can confirm|refunds when confirmed/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "lib/tools.ts"), "utf8"),
+  /failed live jobs refund the credits\./
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/SoftLaunchStrip.tsx"), "utf8"),

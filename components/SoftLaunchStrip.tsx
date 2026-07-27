@@ -9,7 +9,11 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
+import { createRemixHref } from "@/lib/remixIntent";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
+
+/** Default listing recipe when opening full studio from the soft-launch strip. */
+const SOFT_LAUNCH_GENERATE_EFFECT = "360-spin-showcase";
 
 /**
  * Soft-launch conversion strip (哥飞 P0): honest free trial + primary Generate CTA.
@@ -94,7 +98,7 @@ export function SoftLaunchStrip() {
             {primaryLabel}
           </Link>
           <Link
-            href="/create"
+            href={createRemixHref(SOFT_LAUNCH_GENERATE_EFFECT)}
             onClick={() =>
               track({
                 event: "landing_view",
@@ -103,6 +107,7 @@ export function SoftLaunchStrip() {
               })
             }
             className="rounded-full border border-white/20 px-3 py-1.5 text-[12px] font-bold text-white/85 hover:border-[#c8ff3d]/40"
+            data-soft-launch="generate-remix"
           >
             Open Generate
           </Link>
