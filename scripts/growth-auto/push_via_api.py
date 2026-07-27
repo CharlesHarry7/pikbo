@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Push files to GitHub via Git Data API (bypasses github.com:443 block)."""
+"""Push Title/Description CTR optimization + docs to GitHub via Git Data API."""
 import base64, json, os, subprocess, sys, urllib.request, urllib.error, pathlib, ssl
 
 REPO = "CharlesHarry7/pikbo"
@@ -62,16 +62,12 @@ print(f"  Base tree: {base_tree[:12]}")
 files_to_push = []
 
 text_files = [
-    "docs/growth/runs/20260726T192022Z-report.md",
-    "docs/growth/runs/20260726T192022Z.jsonl",
+    "lib/site.ts",
+    "lib/tools.ts",
+    "lib/usecases.ts",
     "docs/growth/AGENT_STATE.md",
-    "docs/growth/WORK_QUEUE.md",
-    "docs/growth/producthunt_pack.md",
-    "scripts/growth-auto/directories.json",
-    "scripts/growth-auto/run_growth.py",
-    "scripts/growth-auto/manual_cdp_retry_cycle2.py",
-    "scripts/growth-auto/manual_devpages_retry.py",
-    "scripts/growth-auto/gsc_recheck.py",
+    "docs/growth/WEBSITE_PERFORMANCE_SUMMARY.md",
+    "docs/growth/PROFESSIONAL_DIAGNOSIS_FEEDBACK.md",
     "scripts/growth-auto/push_via_api.py",
 ]
 
@@ -82,21 +78,6 @@ for f in text_files:
         print(f"  + {f} ({p.stat().st_size} bytes)")
     else:
         print(f"  - {f} (not found)")
-
-# Screenshots
-screenshot_dirs = [
-    "docs/growth/screenshots/20260726T192022Z",
-    "docs/growth/screenshots/manual-cdp-cycle2",
-]
-
-for d in screenshot_dirs:
-    sd = REPO_ROOT / d
-    if sd.exists():
-        for p in sorted(sd.iterdir()):
-            if p.suffix in (".png", ".json"):
-                rel = str(p.relative_to(REPO_ROOT))
-                files_to_push.append((rel, p.read_bytes(), "base64" if p.suffix == ".png" else "utf-8"))
-                print(f"  + {rel} ({p.stat().st_size} bytes)")
 
 print(f"\n  Total files: {len(files_to_push)}")
 
@@ -122,8 +103,7 @@ for i, (path, content, encoding) in enumerate(files_to_push):
         "type": "blob",
         "sha": blob["sha"]
     })
-    if (i + 1) % 5 == 0:
-        print(f"  {i+1}/{len(files_to_push)} blobs created")
+    print(f"  [{i+1}/{len(files_to_push)}] blob: {path}")
 
 print(f"  Total blobs: {len(tree_items)}")
 
@@ -141,7 +121,7 @@ print(f"  New tree: {new_tree_sha[:12]}")
 
 # 6. Create commit
 print("\n[5] Creating commit...")
-commit_msg = "[workbuddy] growth 24h cycle2: submitted=3 (prior) captcha=4 login=11 paid=5 fail=8 (no sitemap expand)"
+commit_msg = "[workbuddy] CTR optimization: Title/Description for 10 core pages (gefei P0 feedback)"
 new_commit = api_call("POST", "/git/commits", {
     "message": commit_msg,
     "tree": new_tree_sha,

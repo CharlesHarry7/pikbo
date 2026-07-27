@@ -13,14 +13,17 @@ export const site = {
    * Soft launch: free Mini trial / labeled Lab demos; no fake multi-model.
    */
   tagline: "Designer toy AI video suite",
-  /** Meta description — brand suite + trial; primary keyword lives on /tools */
+  /**
+   * Meta description — 哥飞 CTR 优化 2026-07-27: 加入搜索意图词 + 利益点驱动
+   */
   description:
-    "Pikbo is the designer-toy Creative Director: turn photos of figures you own into listing, reveal, and social clips. Free Mini trial. No card. Failed live jobs restore credits when confirmed.",
+    "Turn one toy photo into a short AI video — spin, reveal, or hero clip. Free Mini trial, no card. Built for designer toys, blind boxes, and collectibles.",
   /**
    * Document title (homepage default) — brand first.
    * 哥飞 P0: must NOT match tools rank-page title.
+   * CTR 优化 2026-07-27: "Designer Toy AI Video Suite" → "Turn Toy Photos into Videos" (利益点驱动)
    */
-  titleDefault: "Pikbo — Designer Toy AI Video Suite | Free Mini Trial",
+  titleDefault: "Pikbo — Turn Toy Photos into Videos | Free Mini, No Card",
   /**
    * Homepage H1 — brand + scene, not the full primary keyword phrase.
    * Rank H1 stays on /tools/ai-toy-video-generator.

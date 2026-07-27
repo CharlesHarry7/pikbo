@@ -30,9 +30,10 @@ export const USE_CASES: UseCase[] = [
     label: "Etsy sellers",
     audience: "seller",
     h1: "Make an Etsy Listing Video for a Toy From One Photo",
-    seoTitle: "Etsy Toy Listing Video Generator From One Photo | Pikbo",
+    // CTR 优化 2026-07-27: 加入 Free Mini 驱动点击
+    seoTitle: "Etsy Toy Listing Video Generator, Free Mini | Pikbo",
     seoDescription:
-      "Turn one owned product photo into a short Etsy listing video. Generate a spin, floating hero, or glam look without setting up a new product shoot.",
+      "Turn one owned product photo into a short Etsy listing video. Spin, floating hero, or glam look — no new shoot. Free Mini trial, no card needed.",
     intro:
       "Pikbo turns one photo of your handmade toy or collectible into a short listing-video draft—no camera rig or turntable. Review generated angles and product details before publishing.",
     body: [
@@ -278,7 +279,8 @@ export const USE_CASES: UseCase[] = [
     label: "Photo → video",
     audience: "seller",
     h1: "Photo to Video for Toys & Collectibles (One Still)",
-    seoTitle: "Photo to Video AI for Toys & Collectibles | Pikbo",
+    // CTR 优化 2026-07-27: 加入 Free 驱动点击
+    seoTitle: "Photo to Video AI for Toys & Collectibles, Free | Pikbo",
     seoDescription:
       "Turn one owned toy photo into a short AI video. Free Mini trial for designer toys, figures, and blind-box drops. No card. No fake multi-model claims.",
     intro:
@@ -323,7 +325,8 @@ export const USE_CASES: UseCase[] = [
      * Aliases (video-generator, action-figures short) 301 here — no duplicate pages.
      */
     h1: "AI Action Figure Video Generator — Product Clips From One Photo",
-    seoTitle: "AI Action Figure Video Generator From One Photo | Pikbo",
+    // CTR 优化 2026-07-27: 加入 Free Mini 驱动点击
+    seoTitle: "AI Action Figure Video Generator, Free Mini | Pikbo",
     seoDescription:
       "AI action figure video generator for sellers. One owned photo → spin, hero float, or shelf glam for listings and social. Free Mini trial, no card.",
     intro:

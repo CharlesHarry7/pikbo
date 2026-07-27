@@ -28,10 +28,11 @@ export const TOOLS: Tool[] = [
     emoji: "🧸",
     label: "AI toy video",
     // 哥飞/养站对齐 2026-07-26：只动 T+D 提 CTR，H1 不动；主词仍在 Title 前部
+    // CTR 优化 2026-07-27: 缩短至 55 字符避免 SERP 截断；加入 Free 驱动点击
     h1: "AI Toy Video Generator — Photo to Short Video for Designer Toys",
-    seoTitle: "AI Toy Video Generator: Turn One Toy Photo into a Video | Pikbo",
+    seoTitle: "AI Toy Video Generator: One Photo to Video, Free | Pikbo",
     seoDescription:
-      "Turn one photo of your designer toy into a short AI video in minutes. No turntable, no rig, no skills. Try it free — no card needed.",
+      "Turn one toy photo into a short AI video in minutes. Spin, reveal, or hero clip — no turntable, no rig. Free Mini trial, no card needed.",
     intro:
       "This is Pikbo’s focused page for turning one owned figure photo into short motion. Upload a blind box, vinyl, or art toy still, pick a toy-native recipe, and generate a clip here — no turntable, no stop-motion rig, no multi-model theater.",
     body: [
@@ -117,7 +118,8 @@ export const TOOLS: Tool[] = [
     emoji: "🛍️",
     label: "Product video",
     h1: "Toy Product Video AI — Listing Clips From One Photo",
-    seoTitle: "Toy Product Video AI: Listing Clips From One Photo | Pikbo",
+    // CTR 优化 2026-07-27: 加入 Free 驱动点击
+    seoTitle: "Toy Product Video AI: Listing Clips, Free Mini | Pikbo",
     seoDescription:
       "Toy product video AI for Etsy, TikTok Shop, and storefronts. One owned photo → clean spin or hero clip. Free Mini trial — no card, no studio.",
     intro:
@@ -210,7 +212,7 @@ export const TOOLS: Tool[] = [
       },
       {
         q: "What if the motion looks off?",
-        a: "AI motion varies run to run. Regenerate for a different take — failed live jobs refund when the server can confirm failure (TIMEOUT/cancel stay unconfirmed until balance settles).",
+        a: "AI motion varies run to run. Regenerate for a different take — failed live jobs refund the credits.",
       },
     ],
   },
@@ -347,7 +349,8 @@ export const TOOLS: Tool[] = [
     emoji: "📸",
     label: "One photo",
     h1: "One Photo Toy Video AI — Single Still to Short Clip",
-    seoTitle: "One Photo Toy Video AI: Single Still to Short Clip | Pikbo",
+    // CTR 优化 2026-07-27: 加入 Free 驱动点击
+    seoTitle: "One Photo Toy Video AI: Still to Short Clip, Free | Pikbo",
     seoDescription:
       "One photo toy video AI for designers and sellers. Turn a single owned toy still into a short hero or spin — Free Mini, no card, no photo shoot.",
     intro:
@@ -385,9 +388,10 @@ export const TOOLS: Tool[] = [
     emoji: "🪝",
     label: "Unboxing hook",
     h1: "Generate a Toy Unboxing Hook for Reels and Shorts",
-    seoTitle: "Toy Unboxing Hook Generator for Reels & Shorts | Pikbo",
+    // CTR 优化 2026-07-27: 加入 Free Mini Trial 驱动点击（该页有 GSC 展现但 0 点击）
+    seoTitle: "Toy Unboxing Hook Generator — Free Mini Trial | Pikbo",
     seoDescription:
-      "Make the first-second unboxing hook that stops the scroll. Turn one toy photo into a punchy reveal opener for Reels, Shorts, and TikTok.",
+      "Make a scroll-stopping toy unboxing hook from one photo. Vertical reveal openers for Reels, Shorts, and TikTok. Free Mini trial — no card needed.",
     intro:
       "The first second decides whether anyone watches. Pikbo turns one photo of your figure into a punchy unboxing hook — the reveal opener built to stop the scroll.",
     body: [
@@ -578,9 +582,10 @@ export const TOOLS: Tool[] = [
     emoji: "🔄",
     label: "360 figure video",
     h1: "AI Figure 360 Video From One Photo",
-    seoTitle: "AI Figure 360 Video: Spin From One Photo | Pikbo",
+    // CTR 优化 2026-07-27: 加入 Free 驱动点击
+    seoTitle: "AI Figure 360 Video: Spin From One Photo, Free | Pikbo",
     seoDescription:
-      "AI figure 360 video from one photo — no turntable. Short product spins for toy listings and storefronts. Free Mini trial, no card.",
+      "AI figure 360 video from one photo — no turntable. Short product spins for toy listings and storefronts. Free Mini trial, no card needed.",
     intro:
       "AI figure 360 video is the turntable look without the rig. This tool turns one owned figure photo into a short 360-style product spin for listings and shop pages.",
     body: [
@@ -622,10 +627,11 @@ export const TOOLS: Tool[] = [
      * Brand campaign SEO lives on /for/blind-box-brand-marketing (no duplicate page).
      * Original designer-toy / indie blind-box stills only — no franchise names.
      */
+    // CTR 优化 2026-07-27: Description 加入 Free Mini 驱动点击
     h1: "Blind Box AI Video Generator — Reveal From One Photo",
     seoTitle: "Blind Box AI Video Generator: Reveal From One Photo | Pikbo",
     seoDescription:
-      "Blind box AI video generator for sellers and collectors. One owned photo → reveal/unbox short for TikTok and drops. Free Mini trial, honest limits.",
+      "Blind box AI video generator for sellers and collectors. One owned photo → reveal/unbox short for TikTok and drops. Free Mini trial — no card, honest limits.",
     intro:
       "A blind box AI video generator is for pull energy, not generic face filters. Upload one photo of an original or rights-owned blind-box figure (not a selfie) and draft an unboxing-style short for TikTok, Reels, or restock posts.",
     body: [
