@@ -3856,10 +3856,20 @@ const suiteEntrySrc = fs.readFileSync(
   "utf8"
 );
 assert.match(suiteEntrySrc, /suite\.tag\.preview|tagKey:\s*["']suite\.tag\.preview/);
+// Suite Generate door uses remix contract (not bare /create)
+assert.match(suiteEntrySrc, /createRemixHref|SUITE_GENERATE_HREF/);
+assert.match(suiteEntrySrc, /data-suite-entry=["']generate-remix["']/);
 assert.ok(
-  suiteEntrySrc.indexOf('href: "/create"') <
-    suiteEntrySrc.indexOf('href: "/flow"'),
-  "Generate before Flow on home suite rail"
+  suiteEntrySrc.indexOf("SUITE_GENERATE_HREF") <
+    suiteEntrySrc.indexOf('href: "/flow"') ||
+    suiteEntrySrc.indexOf("createRemixHref") <
+      suiteEntrySrc.indexOf('href: "/flow"'),
+  "Generate remix door before Flow on home suite rail"
+);
+// How it works Open Generate carries remix contract
+assert.match(
+  fs.readFileSync(join(root, "components/HowItWorks.tsx"), "utf8"),
+  /createRemixHref|data-how-it-works=["']generate-remix["']/
 );
 assert.match(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),

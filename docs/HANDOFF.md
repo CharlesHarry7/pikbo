@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Suite/HowItWorks/HomeSeo Generate remix doors
+- HowItWorks Open Generate · SuiteEntryStrip flagship + open link · HomeSeoBody
+  full Generate → createRemixHref(360-spin) (ratio/duration/channel).
+- Smoke: data-how-it-works / data-suite-entry generate-remix; no bare href:/create
+  as suite Generate first door.
+
 ### 2026-07-27 — [grok] AGENT_SYNC iron rule: all work must hit GitHub main
 - `docs/growth/AGENT_SYNC.md`: pull → read log/STATE/COMMUNICATION/HANDOFF → work → push
 - COMMUNICATION_LOG multi-agent; PLAYBOOK + AGENT_BUS linked

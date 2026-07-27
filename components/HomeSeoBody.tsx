@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
+import { createRemixHref } from "@/lib/remixIntent";
+
+/** Default listing recipe for SEO body Generate doors. */
+const SEO_BODY_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 /**
  * 哥飞：首页正文厚度 + 品牌场景；主词完整词组克制使用。
@@ -132,8 +136,9 @@ export function HomeSeoBody() {
               <strong className="text-white/90">Use the tool above</strong>—or
               open{" "}
               <Link
-                href="/create"
+                href={SEO_BODY_GENERATE_HREF}
                 className="text-[var(--mint)] hover:underline"
+                data-home-seo="generate-remix"
               >
                 full Generate
               </Link>{" "}
@@ -230,7 +235,11 @@ export function HomeSeoBody() {
             Stripe checkout stays off until search traffic is stable—soft launch
             prioritizes usable trials and crawlable tool pages over premature
             paywalls. When you need more recipes or Seller Pack formats, open{" "}
-            <Link href="/create" className="text-[var(--mint)] hover:underline">
+            <Link
+              href={SEO_BODY_GENERATE_HREF}
+              className="text-[var(--mint)] hover:underline"
+              data-home-seo="generate-remix"
+            >
               Generate
             </Link>{" "}
             or{" "}

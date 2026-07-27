@@ -4,15 +4,20 @@ import Link from "next/link";
 import { track } from "@/lib/analytics";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { useI18n } from "@/components/LanguageProvider";
+import { createRemixHref } from "@/lib/remixIntent";
 
 /**
  * Toy suite entry rail — HF Generate + Yiha modules pattern, verticalized.
  * Used on Home after premiere so users hit real product doors, not model zoo.
  */
+/** Default listing recipe for suite Generate doors (remix contract). */
+const SUITE_GENERATE_EFFECT = "360-spin-showcase";
+const SUITE_GENERATE_HREF = createRemixHref(SUITE_GENERATE_EFFECT);
+
 /** Product doors first; Flow is Preview (not a live Seedance job peer). */
 const ENTRY_DEFS = [
   {
-    href: "/create",
+    href: SUITE_GENERATE_HREF,
     labelKey: "suite.generate",
     blurbKey: "suite.generate.blurb",
     emoji: "✦",
@@ -86,8 +91,9 @@ export function SuiteEntryStrip({
               {t("suite.browseFlow")}
             </Link>
             <Link
-              href="/create"
+              href={SUITE_GENERATE_HREF}
               className="text-[11px] font-semibold text-[#c8ff3d] hover:underline"
+              data-suite-entry="generate-remix"
             >
               {t("suite.openGenerate")}
             </Link>
