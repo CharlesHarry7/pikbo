@@ -271,6 +271,12 @@ export function forkRetryImageJob(input: {
   return { ok: true, job, parent };
 }
 
+/**
+ * Open a running still for POST /api/image.
+ * If a ledger-retry fork is still `queued` for this session (same prompt
+ * preferred), promote it instead of leaving an orphan until TIMEOUT.
+ * Parity goal: forkRetryImageJob → re-POST reuses the fork row.
+ */
 export function beginImageJob(input: {
   sessionId: string;
   prompt: string;
@@ -280,11 +286,48 @@ export function beginImageJob(input: {
   trimStore();
   sweepTimedOutImageJobs();
   const t = nowIso();
+  const prompt = input.prompt.slice(0, 2000);
+
+  // Newest queued fork first; prefer exact prompt match (retry handoff).
+  const queued = [...jobs.values()]
+    .filter((j) => j.sessionId === input.sessionId && j.status === "queued")
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const promote =
+    queued.find((j) => j.prompt === prompt) ||
+    (queued.length === 1 ? queued[0] : undefined);
+
+  if (promote) {
+    if (promote.idempotencyKey) {
+      byIdempotency.delete(`${input.sessionId}:${promote.idempotencyKey}`);
+    }
+    const next: ImageJob = {
+      ...promote,
+      status: "running",
+      prompt,
+      aspect: input.aspect ?? promote.aspect,
+      idempotencyKey: input.idempotencyKey,
+      // Clear prior cancel/fail noise if any leaked onto the fork.
+      error: undefined,
+      errorCode: undefined,
+      imageUrl: undefined,
+      creditsOutcome: undefined,
+      creditsRefunded: undefined,
+      demo: undefined,
+      demoReason: undefined,
+      updatedAt: t,
+    };
+    jobs.set(promote.id, next);
+    if (input.idempotencyKey) {
+      byIdempotency.set(`${input.sessionId}:${input.idempotencyKey}`, promote.id);
+    }
+    return next;
+  }
+
   const job: ImageJob = {
     id: newId(),
     sessionId: input.sessionId,
     status: "running",
-    prompt: input.prompt.slice(0, 2000),
+    prompt,
     aspect: input.aspect,
     idempotencyKey: input.idempotencyKey,
     createdAt: t,

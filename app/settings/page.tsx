@@ -39,6 +39,7 @@ type T6Probe = {
 type ImageJobsProbe = {
   total: number;
   open: number;
+  queued?: number;
   succeeded?: number;
   failed?: number;
   canceled?: number;
@@ -105,6 +106,9 @@ export default function SettingsPage() {
         }
         const total = Number(res.headers.get("X-Pikbo-Image-Jobs") || "0");
         const open = Number(res.headers.get("X-Pikbo-Image-Jobs-Open") || "0");
+        const queued = Number(
+          res.headers.get("X-Pikbo-Image-Jobs-Queued") || "0"
+        );
         const succeeded = Number(
           res.headers.get("X-Pikbo-Image-Jobs-Succeeded") || "0"
         );
@@ -120,6 +124,7 @@ export default function SettingsPage() {
         setImageJobsProbe({
           total: Number.isFinite(total) ? total : 0,
           open: Number.isFinite(open) ? open : 0,
+          queued: Number.isFinite(queued) ? queued : 0,
           succeeded: Number.isFinite(succeeded) ? succeeded : 0,
           failed: Number.isFinite(failed) ? failed : 0,
           canceled: Number.isFinite(canceled) ? canceled : 0,
@@ -386,7 +391,11 @@ export default function SettingsPage() {
               data-settings-jobs="image"
             >
               {imageJobsProbe
-                ? `${imageJobsProbe.open} open · ${imageJobsProbe.total} total (process-memory · Flux)`
+                ? `${imageJobsProbe.open} open${
+                    (imageJobsProbe.queued ?? 0) > 0
+                      ? ` · ${imageJobsProbe.queued} queued`
+                      : ""
+                  } · ${imageJobsProbe.total} total (process-memory · Flux)`
                 : "—"}
             </span>
           </div>
@@ -395,6 +404,9 @@ export default function SettingsPage() {
               className="text-[10px] leading-relaxed text-[var(--fg-dim)]"
               data-settings-jobs-detail="image"
             >
+              {(imageJobsProbe.queued ?? 0) > 0
+                ? `${imageJobsProbe.queued} queued · `
+                : ""}
               {imageJobsProbe.succeeded ?? 0} succeeded ·{" "}
               {imageJobsProbe.failed ?? 0} failed ·{" "}
               {imageJobsProbe.canceled ?? 0} canceled · HEAD /api/image sweeps

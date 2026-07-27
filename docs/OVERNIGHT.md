@@ -163,7 +163,8 @@
 122. [x] GET/DELETE /api/image/[id] single still poll+touch · includeDataUrl · ledger cancel/retry UI
 123. [x] Library session stills panel (GET /api/image) · cancel · Open/Retry → /image?prompt&job
 124. [x] forkRetryImageJob + POST /api/image/[id]/retry · queued status · Library ledger-fork
-125. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+125. [x] Promote queued ledger-retry forks on beginImageJob / beginSyncGenerateJob
+126. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -177,8 +178,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Library stills: poll/cancel + Ledger retry fork (POST /api/image/[id]/retry).
-- forkRetryImageJob queued status · byStatus.queued · HEAD X-Pikbo-Image-Jobs-Queued.
+- beginImageJob/beginSync promote matching queued ledger-retry forks (no TIMEOUT orphans).
+- Settings/Profile HEAD Image-Jobs-Queued honesty · health imageRetry + ledgerRetryPromote.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 

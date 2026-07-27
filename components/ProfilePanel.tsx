@@ -37,6 +37,7 @@ type SessionJobsProbe = {
 type ImageJobsProbe = {
   open: number;
   total: number;
+  queued?: number;
   failed?: number;
   canceled?: number;
 };
@@ -100,6 +101,9 @@ export function ProfilePanel() {
         }
         const total = Number(res.headers.get("X-Pikbo-Image-Jobs") || "0");
         const open = Number(res.headers.get("X-Pikbo-Image-Jobs-Open") || "0");
+        const queued = Number(
+          res.headers.get("X-Pikbo-Image-Jobs-Queued") || "0"
+        );
         const failed = Number(
           res.headers.get("X-Pikbo-Image-Jobs-Failed") || "0"
         );
@@ -109,6 +113,7 @@ export function ProfilePanel() {
         setImageJobsProbe({
           open: Number.isFinite(open) ? open : 0,
           total: Number.isFinite(total) ? total : 0,
+          queued: Number.isFinite(queued) ? queued : 0,
           failed: Number.isFinite(failed) ? failed : 0,
           canceled: Number.isFinite(canceled) ? canceled : 0,
         });
@@ -355,6 +360,9 @@ export function ProfilePanel() {
           {" · "}
           {imageJobsProbe.open > 0
             ? `${imageJobsProbe.open} open · `
+            : null}
+          {(imageJobsProbe.queued ?? 0) > 0
+            ? `${imageJobsProbe.queued} queued · `
             : null}
           {imageJobsProbe.total} Flux process-memory this instance
           {(imageJobsProbe.failed ?? 0) > 0 ||

@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Promote queued ledger-retry forks on re-POST
+- `beginImageJob`: promote newest same-prompt `queued` fork (or sole queued)
+  instead of orphan TIMEOUT; rebinds client idempotency key.
+- `beginSyncGenerateJob`: promote newest queued fork with parentJobId+effect.
+- Settings/Profile: HEAD `X-Pikbo-Image-Jobs-Queued`; health imageRetry +
+  ledgerRetryPromote. Smoke locked.
+
 ### 2026-07-27 — [grok] /image studio ledger-fork Retry UI
 - Still strip Retry → POST /api/image/[id]/retry then re-POST Flux (new key).
 - Cancel covers queued forks; data-image-session-retry-mode=ledger-fork.

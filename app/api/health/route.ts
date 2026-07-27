@@ -137,12 +137,16 @@ export async function GET() {
       imagePath: "/api/image",
       /** Single still poll + touch (parity GET /api/generations/[id]). */
       imageJobStatus: "/api/image/[id]",
+      /** Ledger retry fork (parity POST /api/generations/[id]/retry). */
+      imageRetry: "POST /api/image/[id]/retry",
       /** Generate + image both accept client-minted session-scoped keys. */
       idempotency: "client-key-session-scoped",
       imageIdempotency: "client-key-session-scoped",
       /** Ledger cancel (soft-launch; does not kill provider mid-flight). */
       cancelGenerate: "DELETE /api/generations",
       cancelImage: "DELETE /api/image or DELETE /api/image/[id]",
+      /** POST re-submit promotes matching queued ledger-retry forks. */
+      ledgerRetryPromote: "queued-fork-same-effect-or-prompt",
       downloadGate: "/api/downloads/{jobId|requestId}",
     },
     /** Honesty contract: cached demos free; live jobs charge flat credits */

@@ -488,6 +488,82 @@ export function beginSyncGenerateJob(input: {
   aspectRatio?: string;
   resolution?: string;
 }): GenerationJob {
+  // Prefer promoting a ledger-retry fork (queued + same effect) so Library
+  // "Ledger retry" does not leave an orphan until jobTimeoutMs.
+  // Idempotency short-circuit still wins via createJob when key already bound.
+  if (!input.idempotencyKey) {
+    /* fall through to create */
+  } else {
+    const existingId = byIdempotency.get(
+      `${input.sessionId}:${input.idempotencyKey}`
+    );
+    if (existingId) {
+      const existing = jobs.get(existingId);
+      if (existing) {
+        if (existing.status !== "running" && existing.status !== "queued") {
+          return existing;
+        }
+        return (
+          updateJob(existing.id, {
+            status: "running",
+            model: input.model,
+            watermark: input.watermark ?? true,
+            provider: input.provider,
+            demo: false,
+            downloadAllowed: false,
+            duration: input.duration,
+            aspectRatio: input.aspectRatio,
+            resolution: input.resolution,
+          }) ?? existing
+        );
+      }
+    }
+  }
+
+  const queuedForks = [...jobs.values()]
+    .filter(
+      (j) =>
+        j.sessionId === input.sessionId &&
+        j.status === "queued" &&
+        j.effect === input.effect &&
+        Boolean(j.parentJobId)
+    )
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const promote = queuedForks[0];
+  if (promote) {
+    // Rebind client idempotency key onto the fork (updateJob omits key field).
+    if (promote.idempotencyKey) {
+      byIdempotency.delete(`${input.sessionId}:${promote.idempotencyKey}`);
+    }
+    if (input.idempotencyKey) {
+      byIdempotency.set(
+        `${input.sessionId}:${input.idempotencyKey}`,
+        promote.id
+      );
+    }
+    const next: GenerationJob = {
+      ...promote,
+      status: "running",
+      model: input.model,
+      watermark: input.watermark ?? true,
+      provider: input.provider,
+      demo: false,
+      downloadAllowed: false,
+      idempotencyKey: input.idempotencyKey,
+      duration: input.duration,
+      aspectRatio: input.aspectRatio,
+      resolution: input.resolution,
+      error: undefined,
+      errorCode: undefined,
+      videoUrl: undefined,
+      creditsOutcome: undefined,
+      creditsRefunded: undefined,
+      updatedAt: nowIso(),
+    };
+    jobs.set(promote.id, next);
+    return next;
+  }
+
   const job = createJob({
     sessionId: input.sessionId,
     effect: input.effect,

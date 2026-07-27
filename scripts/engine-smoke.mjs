@@ -1537,6 +1537,12 @@ const genJobsStore = fs.readFileSync(
 assert.match(genJobsStore, /recordSucceededGenerate/);
 assert.match(genJobsStore, /recordFailedGenerate/);
 assert.match(genJobsStore, /export function beginSyncGenerateJob/);
+// Ledger-retry fork promote: beginSync reuses queued parentJobId+effect row
+assert.match(
+  genJobsStore,
+  /beginSyncGenerateJob[\s\S]{0,1200}queuedForks|parentJobId[\s\S]{0,200}promote|promote[\s\S]{0,80}parentJobId/
+);
+assert.match(genJobsStore, /queuedForks|Boolean\(j\.parentJobId\)/);
 assert.match(genJobsStore, /export function completeSyncGenerateJob/);
 assert.match(genJobsStore, /export function failSyncGenerateJob/);
 assert.match(genJobsStore, /export function touchJob/);
@@ -1745,6 +1751,9 @@ assert.match(
 const imageJobsSrc = fs.readFileSync(join(root, "lib/imageJobs.ts"), "utf8");
 assert.match(imageJobsSrc, /export function findImageJobByIdempotencyKey/);
 assert.match(imageJobsSrc, /export function beginImageJob/);
+// Ledger-retry fork promote: beginImageJob reuses queued same-prompt row
+assert.match(imageJobsSrc, /status === ["']queued["'][\s\S]{0,200}promote|promote[\s\S]{0,120}queued/);
+assert.match(imageJobsSrc, /beginImageJob[\s\S]{0,800}queued/);
 assert.match(imageJobsSrc, /export function completeImageJob/);
 assert.match(imageJobsSrc, /export function failImageJob/);
 assert.match(imageJobsSrc, /export function imageJobsProbe/);
@@ -1915,6 +1924,8 @@ assert.match(
   /requestId\?:/
 );
 assert.match(healthRoute, /imageJobs|imageIdempotency/);
+assert.match(healthRoute, /imageRetry|POST \/api\/image\/\[id\]\/retry/);
+assert.match(healthRoute, /ledgerRetryPromote/);
 assert.match(createStudio, /useCallback[\s\S]*adoptImage|adoptImage = useCallback/);
 // Flow + home viral: shared AutoPlay (no multi-autoPlay)
 assert.match(
@@ -2992,6 +3003,7 @@ assert.match(
 // settingsPage already loaded above
 assert.match(settingsPage, /X-Pikbo-Jobs-Canceled/);
 assert.match(settingsPage, /X-Pikbo-Image-Jobs-Canceled/);
+assert.match(settingsPage, /X-Pikbo-Image-Jobs-Queued/);
 assert.match(settingsPage, /data-settings-jobs-detail=["']video["']/);
 assert.match(settingsPage, /data-settings-jobs-detail=["']image["']/);
 assert.match(settingsPage, /\{jobsProbe\.canceled\} canceled/);
@@ -4252,6 +4264,7 @@ assert.match(profilePanelSrc, /X-Pikbo-Image-Jobs|\/api\/image/);
 assert.match(profilePanelSrc, /data-profile-jobs=["']image["']/);
 assert.match(profilePanelSrc, /data-profile-jobs=["']video["']/);
 assert.match(profilePanelSrc, /X-Pikbo-Image-Jobs-Canceled|Image-Jobs-Canceled/);
+assert.match(profilePanelSrc, /X-Pikbo-Image-Jobs-Queued/);
 assert.match(profilePanelSrc, /local-file|supabase/);
 assert.match(profilePanelSrc, /process-memory/);
 const claimRouteSrc = fs.readFileSync(
