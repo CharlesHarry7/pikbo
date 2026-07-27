@@ -3102,6 +3102,46 @@ assert.match(spReserve, /SELLER_PACK_QUOTE_CREDITS|quoteCredits/);
 // R0/R1 honesty: cookie is not live-spend authority after cost gate
 assert.doesNotMatch(spReserve, /cookie-generate-still-authoritative/);
 assert.match(spReserve, /generate-route-cost-gate|durable-shadow-audit-plus-generate-gate/);
+
+// Phase F Seller Pack Free Mini cannot start full 30-credit live pack
+{
+  const quoteSrc = fs.readFileSync(join(root, "lib/sellerPackQuote.ts"), "utf8");
+  assert.match(quoteSrc, /export function sellerPackLiveStartAllowed/);
+  assert.match(quoteSrc, /FREE_MINI_FULL_PACK/);
+  assert.match(
+    fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+    /sellerPackLiveStartAllowed/
+  );
+  assert.doesNotMatch(
+    fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+    /cookie generate remains authoritative/
+  );
+  assert.match(
+    fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+    /data-seller-pack-free-mini=["']single-child["']/
+  );
+  // Pure policy: demo always ok; 10 credits blocks 3-child live pack
+  function sellerPackLiveStartAllowed(opts) {
+    if (opts.demo) return { ok: true };
+    if (opts.balance === undefined) return { ok: true };
+    const need = Math.max(1, opts.childCount) * 10;
+    const have = opts.balance;
+    if (have >= need) return { ok: true };
+    if (have < need && have < 30 && need >= 30) {
+      return { ok: false, code: "FREE_MINI_FULL_PACK" };
+    }
+    return { ok: false, code: "INSUFFICIENT_CREDITS" };
+  }
+  assert.equal(sellerPackLiveStartAllowed({ demo: true, balance: 0, childCount: 3 }).ok, true);
+  assert.equal(sellerPackLiveStartAllowed({ demo: false, balance: 10, childCount: 3 }).ok, false);
+  assert.equal(
+    sellerPackLiveStartAllowed({ demo: false, balance: 10, childCount: 3 }).code,
+    "FREE_MINI_FULL_PACK"
+  );
+  assert.equal(sellerPackLiveStartAllowed({ demo: false, balance: 30, childCount: 3 }).ok, true);
+  assert.equal(sellerPackLiveStartAllowed({ demo: false, balance: 20, childCount: 2 }).ok, true);
+}
+
 assert.match(
   fs.readFileSync(join(root, "app/api/seller-pack/settle/route.ts"), "utf8"),
   /settleSellerPackChild/
@@ -3163,6 +3203,35 @@ function sellerPackBalanceCoversPure(quote, balance) {
 assert.equal(sellerPackBalanceCoversPure(sellerPackQuotePure(false), 30), true);
 assert.equal(sellerPackBalanceCoversPure(sellerPackQuotePure(false), 10), false);
 assert.equal(sellerPackBalanceCoversPure(sellerPackQuotePure(false), undefined), true);
+// Free Mini cannot start a 3-child live pack (PRD §6)
+function sellerPackLiveStartAllowedPure(opts) {
+  if (opts.demo) return { ok: true };
+  if (opts.balance === undefined) return { ok: true };
+  const need = Math.max(1, opts.childCount) * 10;
+  const have = opts.balance;
+  if (have >= need) return { ok: true };
+  if (have < need && have < 30 && need >= 30) {
+    return { ok: false, code: "FREE_MINI_FULL_PACK" };
+  }
+  return { ok: false, code: "INSUFFICIENT_CREDITS" };
+}
+assert.equal(
+  sellerPackLiveStartAllowedPure({ demo: true, balance: 0, childCount: 3 }).ok,
+  true
+);
+assert.equal(
+  sellerPackLiveStartAllowedPure({ demo: false, balance: 10, childCount: 3 }).ok,
+  false
+);
+assert.equal(
+  sellerPackLiveStartAllowedPure({ demo: false, balance: 10, childCount: 3 })
+    .code,
+  "FREE_MINI_FULL_PACK"
+);
+assert.equal(
+  sellerPackLiveStartAllowedPure({ demo: false, balance: 30, childCount: 3 }).ok,
+  true
+);
 
 // Library Assets-like SKU group
 assert.match(library, /By SKU|groupMode === "sku"|value="sku"/);

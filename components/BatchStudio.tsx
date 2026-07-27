@@ -55,6 +55,7 @@ import { downloadVideoFile } from "@/lib/history";
 import {
   batchQuoteLabel,
   sellerPackBalanceCovers,
+  sellerPackLiveStartAllowed,
   sellerPackQuote,
   sellerPackQuoteLabel,
   sellerPackShortfall,
@@ -779,6 +780,18 @@ export function BatchStudio({
       return;
     }
 
+    // Phase F / PRD §6: never start a live full pack on Free Mini (10 < 30).
+    // Cached demos stay free. Live children use generate cost gate (not cookie).
+    const liveStart = sellerPackLiveStartAllowed({
+      demo: demoMode,
+      balance: typeof me?.credits === "number" ? me.credits : undefined,
+      childCount: selected.length,
+    });
+    if (!liveStart.ok) {
+      setError(liveStart.message);
+      return;
+    }
+
     track({
       event: "pack_start",
       path: "/create",
@@ -802,8 +815,8 @@ export function BatchStudio({
     packAbortRef.current = abortCtrl;
 
     // Phase C: Seller Pack shadow-reserves 30 (or N×10) when durable is on.
-    // Shadow reserve is audit-only; live child spend uses generate cost gate.
-    // DURABLE_OFF is non-fatal (children still hit R0 cached/live path).
+    // Shadow is audit-only; live child spend is enforced by /api/generate
+    // durable reserve (R0) — cookie is never live-spend authority.
     let packReservationId: string | null = null;
     if (sellerPackActive && !demoMode) {
       const reserved = await reserveSellerPackShadowClient({
@@ -813,12 +826,12 @@ export function BatchStudio({
       if (reserved.ok && reserved.reservationId) {
         packReservationId = reserved.reservationId;
       } else if (reserved.code === "INSUFFICIENT_CREDITS") {
-        // Shadow wallet empty — still allow cookie path; surface honesty only.
         setError(
-          (reserved.error ||
-            "Durable shadow wallet short — continuing with cookie credits only") +
-            " · cookie generate remains authoritative"
+          reserved.error ||
+            "Durable pack shadow short — each live child still requires signed-in durable reserve on Generate; Free Mini cannot fund a full 30-credit pack."
         );
+      } else if (reserved.code === "DURABLE_OFF") {
+        // Non-fatal: children still hit generate cost gate (cached if free/anon).
       }
     }
 
@@ -1819,8 +1832,9 @@ export function BatchStudio({
             <p className="mt-1 text-[11px] text-white/50">
               {trialDone && isFree ? (
                 <>
-                  Cached Lab demos stay free. One live Mini job needs{" "}
-                  {CREDITS_PER_VIDEO} credits after top-up.{" "}
+                  Cached Lab demos stay free (0 credits · upload not processed).
+                  One live Mini job needs {CREDITS_PER_VIDEO} credits after
+                  top-up when Live is enabled.{" "}
                   <Link
                     href="/pricing"
                     className="font-semibold text-[var(--mint)] hover:underline"
@@ -1833,8 +1847,8 @@ export function BatchStudio({
                 <>
                   Free Mini covers one 10-cr job
                   {clipsLeft !== null ? ` (~${clipsLeft} left)` : ""} — not a
-                  full pack. Choose one recipe in single Generate; paid
-                  activation remains gated.
+                  full 30-credit pack. Pick one child recipe below for single
+                  Generate, or Preview the pack as cached demos.
                 </>
               )}
             </p>
@@ -1848,6 +1862,8 @@ export function BatchStudio({
                     toyIdentity.sku || null,
                     { ratio: item.aspectRatio }
                   )}
+                  data-seller-pack-free-mini="single-child"
+                  title="Open single Generate for this pack child (10 credits when Live)"
                   className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70"
                   data-pack-try-recipe={item.slug}
                   data-pack-try-ratio={item.aspectRatio}

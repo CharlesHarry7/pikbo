@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] Seller Pack Free Mini full-pack hard-block
+- `sellerPackLiveStartAllowed`: live 3-child start fails closed when balance < 30 (`FREE_MINI_FULL_PACK`); cached demos still 0 credits.
+- BatchStudio `runBatch` preflight + removed “cookie generate remains authoritative”; shadow short honesty points at durable reserve gate.
+- Shortfall UI: single-child Generate doors `data-seller-pack-free-mini=single-child` (PRD §6 choose-one path).
+- engine-smoke pure policy + source locks. PASS: engine-smoke + typecheck.
+
 ### 2026-07-28 — [grok] Phase H five-page SEO cold-start budget
 - Marketing index allowlist = 5 (`/`, primary tool, blind-box tool, photography guide, `/pricing`) per WorkBuddy `SEO_INDEXABLE_10_RELEASE.md`.
 - Legal `/privacy` + `/terms` stay indexable; long-tail tools/for leave sitemap (reachable + noindex).
