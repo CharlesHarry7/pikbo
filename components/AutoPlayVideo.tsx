@@ -90,7 +90,8 @@ export function AutoPlayVideo({
   /** Defer <source> until interaction or viewport entry. */
   lazySources = false,
   /**
-   * Home wall dense mode: higher concurrent muted plays when cards scroll in.
+   * Home wall dense mode: desktop may preload metadata for near cards.
+   * Mobile stays poster-first (preload=none) until claim — Phase G 4G LCP.
    * Only meaningful with desktopPlayMode="viewport".
    */
   wallDense = false,
@@ -114,7 +115,21 @@ export function AutoPlayVideo({
   const [sourcesOn, setSourcesOn] = useState(!lazySources || Boolean(eager));
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  /** SSR + first paint: assume mobile so wall cards stay poster-first. */
+  const [isNarrow, setIsNarrow] = useState(true);
   const wantPlay = useRef(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const sync = () => setIsNarrow(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  // Desktop wallDense may warm metadata; mobile never preloads non-hero clips.
+  const allowMetadataPreload =
+    Boolean(eager) || (Boolean(wallDense) && sourcesOn && !isNarrow);
 
   useEffect(() => {
     const v = ref.current;
@@ -124,7 +139,7 @@ export function AutoPlayVideo({
     // Interaction-only: no viewport autoplay (hover/tap walls).
     if (desktopPlayMode === "interaction" && !eager) {
       if (sourcesOn && wantPlay.current) {
-        if (v.preload === "none") v.preload = "metadata";
+        if (allowMetadataPreload && v.preload === "none") v.preload = "metadata";
         claim(v);
       }
       return () => {
@@ -149,7 +164,9 @@ export function AutoPlayVideo({
             setSourcesOn(true);
             return;
           }
-          if (v.preload === "none") v.preload = "metadata";
+          if (allowMetadataPreload && v.preload === "none") {
+            v.preload = "metadata";
+          }
           claim(v);
         } else if (!e.isIntersecting) {
           release(v);
@@ -157,7 +174,12 @@ export function AutoPlayVideo({
       },
       {
         threshold: [0, 0.12, 0.28, 0.45, 0.65],
-        rootMargin: wallDense ? "120px 0px" : "80px 0px",
+        // Tighter margin on mobile so wall does not warm many clips off-screen.
+        rootMargin: wallDense
+          ? isMobile
+            ? "40px 0px"
+            : "120px 0px"
+          : "80px 0px",
       }
     );
     io.observe(v);
@@ -165,7 +187,7 @@ export function AutoPlayVideo({
       io.disconnect();
       release(v);
     };
-  }, [desktopPlayMode, eager, mp4, sourcesOn, wallDense]);
+  }, [desktopPlayMode, eager, mp4, sourcesOn, wallDense, allowMetadataPreload]);
 
   // After lazy sources flip on from viewport, try play immediately.
   useEffect(() => {
@@ -181,10 +203,10 @@ export function AutoPlayVideo({
         ? Math.min(rect.bottom, vh) - Math.max(rect.top, 0) >= rect.height * 0.28
         : false;
     if (visible || eager) {
-      if (v.preload === "none") v.preload = "metadata";
+      if (allowMetadataPreload && v.preload === "none") v.preload = "metadata";
       claim(v);
     }
-  }, [sourcesOn, desktopPlayMode, eager, wallDense, mp4]);
+  }, [sourcesOn, desktopPlayMode, eager, wallDense, mp4, allowMetadataPreload]);
 
   function playFromInteraction() {
     if (desktopPlayMode !== "interaction") return;
@@ -195,7 +217,10 @@ export function AutoPlayVideo({
     }
     const video = ref.current;
     if (!video) return;
-    if (video.preload === "none") video.preload = "metadata";
+    // Interaction may still play with preload=none; browser fetches on play().
+    if (allowMetadataPreload && video.preload === "none") {
+      video.preload = "metadata";
+    }
     claim(video);
   }
 
@@ -245,7 +270,9 @@ export function AutoPlayVideo({
         muted
         loop
         playsInline
-        preload={eager || (wallDense && sourcesOn) ? "metadata" : "none"}
+        preload={allowMetadataPreload ? "metadata" : "none"}
+        data-video-preload={allowMetadataPreload ? "metadata" : "none"}
+        data-video-mobile-poster-first={isNarrow && !eager ? "1" : "0"}
         tabIndex={
           focusable && desktopPlayMode === "interaction" ? 0 : undefined
         }

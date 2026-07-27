@@ -2985,11 +2985,22 @@ const autoPlaySrc = fs.readFileSync(
   join(root, "components/AutoPlayVideo.tsx"),
   "utf8"
 );
+// Phase G: mobile wall poster-first; featured wall does not steal hero LCP
 assert.match(
   autoPlaySrc,
-  /preload=\{eager[^}]*"metadata" : "none"\}|preload=\{eager \? "metadata" : "none"\}/
+  /allowMetadataPreload|data-video-mobile-poster-first|isNarrow/
 );
+assert.match(autoPlaySrc, /preload=\{allowMetadataPreload \? "metadata" : "none"\}/);
 assert.match(autoPlaySrc, /lazySources/);
+assert.match(autoPlaySrc, /playbackBudget/);
+assert.match(
+  fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
+  /Hero owns LCP|lazySources/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
+  /eager=\{i === 0\}/
+);
 const projectPage = fs.readFileSync(
   join(root, "app/projects/[slug]/page.tsx"),
   "utf8"

@@ -225,9 +225,9 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                     mp4={item.demo.mp4}
                     focusable={false}
                     desktopPlayMode="viewport"
-                    lazySources={i > 0}
+                    // Hero owns LCP poster preload — wall cards stay lazy (Phase G).
+                    lazySources
                     wallDense
-                    eager={i === 0}
                     label={item.title}
                     className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]"
                   />
