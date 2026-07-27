@@ -76,6 +76,8 @@ export default async function CreatePage({
     job?: string;
     /** Character bible SKU carried from post-generate Next SKU */
     sku?: string;
+    /** R1b process-memory ledger retry fork id */
+    retryJobId?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -185,6 +187,7 @@ export default async function CreatePage({
           initialSample={firstRunSample}
           initialJob={sp.job}
           initialSku={sp.sku}
+          initialRetryJobId={sp.retryJobId}
         />
       </Suspense>
       {/* SSR landing copy + internal links for crawlers */}

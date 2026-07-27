@@ -157,6 +157,7 @@ export function CreateStudio({
   initialSample,
   initialJob,
   initialSku,
+  initialRetryJobId,
 }: {
   initialEffect?: string;
   initialModel?: string;
@@ -173,6 +174,11 @@ export function CreateStudio({
   initialJob?: string;
   /** Character bible SKU from ?sku= (Next SKU carry) */
   initialSku?: string;
+  /**
+   * R1b process-memory fork id from Library ledger retry
+   * (`?retryJobId=`). Passed once on the next generate POST.
+   */
+  initialRetryJobId?: string;
 }) {
   const { t, locale } = useI18n();
   const remix = useMemo(

@@ -76,6 +76,14 @@ function normalizeIdempotencyKey(raw: unknown): string | undefined {
   return t;
 }
 
+/** R1b explicit ledger-retry fork token (process-memory job id). */
+function normalizeRetryJobId(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const t = raw.trim().slice(0, 128);
+  if (t.length < 8) return undefined;
+  return t;
+}
+
 function successFromJob(
   job: GenerationJob,
   session: Parameters<typeof publicSession>[0],
@@ -194,6 +202,7 @@ export async function POST(req: Request) {
   // Idempotent replay BEFORE image/asset resolve — network retries must not
   // re-upload multi-MB stills or fail on expired assetId after success.
   const idempotencyKey = normalizeIdempotencyKey(body.idempotencyKey);
+  const retryJobId = normalizeRetryJobId(body.retryJobId);
   const ledgerIdempotencyKey =
     access.kind === "cached" && idempotencyKey
       ? `cached:${idempotencyKey}`.slice(0, 128)
@@ -495,6 +504,8 @@ export async function POST(req: Request) {
         watermark: plan.watermark,
         provider: "bytedance-seedance",
         idempotencyKey: ledgerIdempotencyKey,
+        // R1b: only promote the fork the client explicitly names.
+        retryJobId,
         // Stamp ratio/duration at open so Library remake after fail/cancel
         // still carries the attempted run (not only success completeSync).
         duration: secs,

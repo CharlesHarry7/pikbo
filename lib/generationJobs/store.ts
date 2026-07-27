@@ -227,8 +227,9 @@ export function forkRetryJob(input: {
 
 /**
  * Mark queued/running jobs past timeout as failed (timeout recovery).
- * Does not invent refunds — soft-launch cookie path already settled inline
- * for sync generate; async orphans get honest failed + TIMEOUT code.
+ * R1b: deadline is fixed from **createdAt** — GET poll / touchJob must not
+ * extend the window (orphan jobs must not live forever under polling).
+ * Does not invent refunds; async orphans get honest failed + TIMEOUT code.
  */
 export function sweepTimedOutJobs(opts?: {
   nowMs?: number;
@@ -239,8 +240,8 @@ export function sweepTimedOutJobs(opts?: {
   const timedOut: GenerationJob[] = [];
   for (const job of jobs.values()) {
     if (job.status !== "queued" && job.status !== "running") continue;
-    // Prefer updatedAt so re-touched running jobs get a full window.
-    const stamp = job.updatedAt || job.createdAt;
+    // Fixed deadline from open stamp — ignore updatedAt (touch must not extend).
+    const stamp = job.createdAt;
     if (ageMs(stamp, now) < limit) continue;
     const next = updateJob(job.id, {
       status: "failed",
@@ -261,9 +262,9 @@ export function getJob(id: string): GenerationJob | null {
 }
 
 /**
- * Slide updatedAt on open jobs while a client is polling.
- * Prevents false TIMEOUT when soft-launch sync fal is still working and the
- * operator set a short PIKBO_JOB_TIMEOUT_MS. Terminal jobs are unchanged.
+ * Mark last-seen on open jobs while a client is polling (ops / UI freshness).
+ * R1b: does **not** extend the TIMEOUT deadline (fixed from createdAt).
+ * Terminal jobs are unchanged.
  */
 export function touchJob(id: string): GenerationJob | null {
   const job = findJobByRequestOrId(id);
@@ -276,10 +277,11 @@ export function touchJob(id: string): GenerationJob | null {
  * Seconds until an open ledger job would TIMEOUT (JOB_IN_FLIGHT Retry-After).
  * Prefer this over the inflight lock alone — lock frees after process kill
  * while the process-memory row can stay open until sweep.
+ * R1b: remaining time is from **createdAt**, not last touch.
  */
 export function jobLedgerInFlightRetryAfterSec(job: GenerationJob): number {
   if (job.status !== "queued" && job.status !== "running") return 1;
-  const stamp = job.updatedAt || job.createdAt;
+  const stamp = job.createdAt;
   const remainingMs = jobTimeoutMs() - ageMs(stamp);
   if (remainingMs <= 0) return 1;
   return Math.max(1, Math.ceil(remainingMs / 1000));
@@ -483,17 +485,18 @@ export function beginSyncGenerateJob(input: {
   watermark?: boolean;
   provider?: string;
   idempotencyKey?: string;
+  /**
+   * R1b explicit retry token — the process-memory fork job id from
+   * POST /api/generations/[id]/retry. Never promote by effect/prompt guess.
+   */
+  retryJobId?: string;
   /** Stamp request params at open so fail/cancel remake still carries ratio. */
   duration?: number;
   aspectRatio?: string;
   resolution?: string;
 }): GenerationJob {
-  // Prefer promoting a ledger-retry fork (queued + same effect) so Library
-  // "Ledger retry" does not leave an orphan until jobTimeoutMs.
-  // Idempotency short-circuit still wins via createJob when key already bound.
-  if (!input.idempotencyKey) {
-    /* fall through to create */
-  } else {
+  // Idempotency short-circuit: same key already bound to a row.
+  if (input.idempotencyKey) {
     const existingId = byIdempotency.get(
       `${input.sessionId}:${input.idempotencyKey}`
     );
@@ -520,16 +523,24 @@ export function beginSyncGenerateJob(input: {
     }
   }
 
-  const queuedForks = [...jobs.values()]
-    .filter(
-      (j) =>
-        j.sessionId === input.sessionId &&
-        j.status === "queued" &&
-        j.effect === input.effect &&
-        Boolean(j.parentJobId)
-    )
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const promote = queuedForks[0];
+  // R1b: only promote when client presents the explicit fork token (job id).
+  // Guessing by effect/prompt is forbidden (wrong version risk under concurrent packs).
+  const retryToken = (input.retryJobId || "").trim();
+  const promote =
+    retryToken.length >= 8
+      ? (() => {
+          const fork = jobs.get(retryToken);
+          if (
+            !fork ||
+            fork.sessionId !== input.sessionId ||
+            fork.status !== "queued" ||
+            !fork.parentJobId
+          ) {
+            return undefined;
+          }
+          return fork;
+        })()
+      : undefined;
   if (promote) {
     // Rebind client idempotency key onto the fork (updateJob omits key field).
     if (promote.idempotencyKey) {
@@ -544,6 +555,8 @@ export function beginSyncGenerateJob(input: {
     const next: GenerationJob = {
       ...promote,
       status: "running",
+      // Allow client to re-assert effect from Create (may match parent).
+      effect: input.effect || promote.effect,
       model: input.model,
       watermark: input.watermark ?? true,
       provider: input.provider,

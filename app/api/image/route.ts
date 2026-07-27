@@ -251,7 +251,12 @@ function successFromImageJob(
 }
 
 export async function POST(req: Request) {
-  let body: { prompt?: string; aspect?: string; idempotencyKey?: string };
+  let body: {
+    prompt?: string;
+    aspect?: string;
+    idempotencyKey?: string;
+    retryJobId?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -262,6 +267,10 @@ export async function POST(req: Request) {
   }
 
   const prompt = body.prompt?.trim();
+  const retryJobId =
+    typeof body.retryJobId === "string" && body.retryJobId.trim().length >= 8
+      ? body.retryJobId.trim().slice(0, 128)
+      : undefined;
   if (!prompt || prompt.length < 4) {
     return NextResponse.json(
       { error: "Prompt required", code: "INVALID_REQUEST" },
@@ -406,6 +415,7 @@ export async function POST(req: Request) {
         prompt,
         aspect: aspectEcho,
         idempotencyKey: ledgerIdempotencyKey,
+        retryJobId,
       }).id;
     } catch {
       liveJobId = undefined;

@@ -90,6 +90,11 @@ export type RemixHrefOpts = {
   ratio?: string;
   duration?: number | string;
   channel?: string;
+  /**
+   * R1b process-memory retry fork id (from POST …/retry).
+   * Create re-submits this as retryJobId so beginSync promotes only this fork.
+   */
+  retryJobId?: string;
 };
 
 /** Pick validated remix overrides from a job or device-history row. */
@@ -171,9 +176,15 @@ export function createRemixHref(
     base = `/create?${q.toString()}`;
   }
   const cleanSku = (sku || "").trim().slice(0, 64);
-  if (!cleanSku) return base;
+  const retryJobId = (opts?.retryJobId || "").trim().slice(0, 128);
+  const extras: string[] = [];
+  if (cleanSku) extras.push(`sku=${encodeURIComponent(cleanSku)}`);
+  if (retryJobId.length >= 8) {
+    extras.push(`retryJobId=${encodeURIComponent(retryJobId)}`);
+  }
+  if (extras.length === 0) return base;
   const joiner = base.includes("?") ? "&" : "?";
-  return `${base}${joiner}sku=${encodeURIComponent(cleanSku)}`;
+  return `${base}${joiner}${extras.join("&")}`;
 }
 
 export type ParsedRemixQuery = {

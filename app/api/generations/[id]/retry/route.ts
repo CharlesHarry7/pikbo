@@ -39,26 +39,27 @@ export async function POST(_req: Request, { params }: Props) {
     );
   }
   const { job, parent } = result;
-  // Remix contract: carry parent job ratio/duration when recorded (not bare effect=).
-  const createUi = createRemixHref(
-    parent.effect,
-    undefined,
-    null,
-    remixOptsFromRecord(parent)
-  );
+  // R1b: createUi carries explicit fork token so beginSync never guesses by effect.
+  const createUi = createRemixHref(parent.effect, undefined, null, {
+    ...remixOptsFromRecord(parent),
+    retryJobId: job.id,
+  });
   return NextResponse.json(
     {
       ok: true,
       mode: "local-memory",
       durable: false,
       message:
-        "Retry job queued in process memory. Re-submit POST /api/generate with your owned toy photo and the same effect — this does not re-run fal by itself.",
+        "Retry job queued in process memory. Re-submit POST /api/generate with your owned toy photo, the same effect, and retryJobId — this does not re-run fal by itself.",
       parent: toPublicJob(parent, session.id),
       job: toPublicJob(job, session.id),
+      /** Explicit process-memory fork id — pass as body.retryJobId on re-POST. */
+      retryToken: job.id,
       next: {
         generate: "/api/generate",
         status: `/api/generations/${job.id}`,
         createUi,
+        retryJobId: job.id,
       },
       note: "Seller Pack: only this child is re-quoted; successful siblings stay available.",
     },

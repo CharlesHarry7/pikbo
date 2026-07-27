@@ -33,6 +33,12 @@ export type GenerateRequestBody = {
    * User Retry must mint a new key. Soft-launch process-memory only.
    */
   idempotencyKey?: string;
+  /**
+   * R1b explicit process-memory retry token — fork job id from
+   * POST /api/generations/[id]/retry. Server promotes only this fork; never
+   * guesses by effect/prompt.
+   */
+  retryJobId?: string;
 };
 
 export type GenerateSuccess = {

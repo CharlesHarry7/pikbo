@@ -144,7 +144,8 @@ export function sweepTimedOutImageJobs(opts?: {
   for (const job of jobs.values()) {
     // Open = queued (ledger retry fork) or running (Flux in flight).
     if (job.status !== "running" && job.status !== "queued") continue;
-    const stamp = job.updatedAt || job.createdAt;
+    // R1b: fixed deadline from createdAt — touch/poll must not extend TIMEOUT.
+    const stamp = job.createdAt;
     const age = now - Date.parse(stamp);
     if (!Number.isFinite(age) || age < limit) continue;
     const next: ImageJob = {
@@ -197,7 +198,8 @@ export function findImageJobByIdempotencyKey(
  */
 export function imageJobInFlightRetryAfterSec(job: ImageJob): number {
   if (job.status !== "running" && job.status !== "queued") return 1;
-  const stamp = job.updatedAt || job.createdAt;
+  // R1b: fixed deadline from createdAt (touch/poll does not extend).
+  const stamp = job.createdAt;
   const age = Date.now() - Date.parse(stamp);
   if (!Number.isFinite(age)) return 1;
   const remainingMs = imageJobTimeoutMs() - age;
@@ -281,28 +283,62 @@ export function forkRetryImageJob(input: {
 
 /**
  * Open a running still for POST /api/image.
- * If a ledger-retry fork is still `queued` for this session (same prompt
- * preferred), promote it instead of leaving an orphan until TIMEOUT.
- * Parity goal: forkRetryImageJob → re-POST reuses the fork row.
+ * R1b: only promote a ledger-retry fork when the client presents the explicit
+ * fork job id (`retryJobId`). Never guess by prompt alone (wrong still risk).
  */
 export function beginImageJob(input: {
   sessionId: string;
   prompt: string;
   aspect?: string;
   idempotencyKey?: string;
+  /** Explicit fork token from POST /api/image/[id]/retry */
+  retryJobId?: string;
 }): ImageJob {
   trimStore();
   sweepTimedOutImageJobs();
   const t = nowIso();
   const prompt = input.prompt.slice(0, 2000);
 
-  // Newest queued fork first; prefer exact prompt match (retry handoff).
-  const queued = [...jobs.values()]
-    .filter((j) => j.sessionId === input.sessionId && j.status === "queued")
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  // Idempotency bind first.
+  if (input.idempotencyKey) {
+    const existingId = byIdempotency.get(
+      `${input.sessionId}:${input.idempotencyKey}`
+    );
+    if (existingId) {
+      const existing = jobs.get(existingId);
+      if (existing && existing.sessionId === input.sessionId) {
+        if (existing.status === "running" || existing.status === "queued") {
+          const next: ImageJob = {
+            ...existing,
+            status: "running",
+            prompt,
+            aspect: input.aspect ?? existing.aspect,
+            updatedAt: t,
+          };
+          jobs.set(existing.id, next);
+          return next;
+        }
+        return existing;
+      }
+    }
+  }
+
+  const retryToken = (input.retryJobId || "").trim();
   const promote =
-    queued.find((j) => j.prompt === prompt) ||
-    (queued.length === 1 ? queued[0] : undefined);
+    retryToken.length >= 8
+      ? (() => {
+          const fork = jobs.get(retryToken);
+          if (
+            !fork ||
+            fork.sessionId !== input.sessionId ||
+            fork.status !== "queued" ||
+            !fork.parentJobId
+          ) {
+            return undefined;
+          }
+          return fork;
+        })()
+      : undefined;
 
   if (promote) {
     if (promote.idempotencyKey) {
