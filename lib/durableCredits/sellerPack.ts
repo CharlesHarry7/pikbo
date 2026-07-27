@@ -1,7 +1,7 @@
 /**
  * Seller Pack durable shadow — reserve 30, settle/release 10 per child.
- * Cookie debit on each /api/generate remains soft-launch authority.
- * This ledger audits signed-in (or guest) wallet when durableCreditsActive().
+ * Live child spend is enforced by /api/generate cost gate (R0) — cookie is not
+ * live-spend authority. This ledger audits wallets when durableCreditsActive().
  */
 
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";

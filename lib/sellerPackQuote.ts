@@ -4,11 +4,14 @@
  */
 
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
+import {
+  SELLER_PACK_CHILD_COUNT,
+  SELLER_PACK_LIVE_TOTAL_CREDITS,
+} from "@/lib/sellerPackContract";
 
-/** Fixed Seller Pack child count (must match durableCredits/sellerPack server). */
-export const SELLER_PACK_CHILD_COUNT = 3;
-export const SELLER_PACK_QUOTE_CREDITS =
-  SELLER_PACK_CHILD_COUNT * CREDITS_PER_VIDEO; // 30
+export { SELLER_PACK_CHILD_COUNT };
+/** @deprecated Prefer SELLER_PACK_LIVE_TOTAL_CREDITS from sellerPackContract */
+export const SELLER_PACK_QUOTE_CREDITS = SELLER_PACK_LIVE_TOTAL_CREDITS;
 
 export type SellerPackQuote = {
   childCount: number;

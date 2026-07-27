@@ -82,7 +82,18 @@ import {
   type SellerPackPublicJob,
   type SellerPackRecoveryRun,
 } from "@/lib/sellerPackRecovery";
+import {
+  SELLER_PACK_ITEMS,
+  SELLER_PACK_SLUGS,
+  isExactSellerPackSelection,
+} from "@/lib/sellerPackContract";
 import { track } from "@/lib/analytics";
+
+export {
+  SELLER_PACK_ITEMS,
+  SELLER_PACK_SLUGS,
+  isExactSellerPackSelection,
+} from "@/lib/sellerPackContract";
 
 type Job = {
   slug: string;
@@ -108,37 +119,8 @@ type Job = {
   retryCount: number;
 };
 
-/** SELLER_PACK PRD v1 — three fixed outputs, not arbitrary batch. */
-export const SELLER_PACK_ITEMS = [
-  {
-    key: "listing_spin",
-    slug: "360-spin-showcase",
-    label: "Listing Spin",
-    channel: "Marketplace gallery",
-    aspectRatio: "1:1" as const,
-  },
-  {
-    key: "blind_box_reveal",
-    slug: "blind-box-unboxing",
-    label: "Blind-box Reveal",
-    channel: "Launch / restock",
-    aspectRatio: "9:16" as const,
-  },
-  {
-    key: "social_flash",
-    slug: "paparazzi-flash",
-    label: "Social Flash",
-    channel: "TikTok / Reels / Shorts",
-    aspectRatio: "9:16" as const,
-  },
-] as const;
-
-export const SELLER_PACK_SLUGS = SELLER_PACK_ITEMS.map((i) => i.slug);
-
 function selectedMatchesSellerPack(slugs: string[]): boolean {
-  if (slugs.length !== SELLER_PACK_SLUGS.length) return false;
-  const set = new Set(slugs);
-  return SELLER_PACK_SLUGS.every((s) => set.has(s));
+  return isExactSellerPackSelection(slugs);
 }
 
 /** Active-run pointer only: no image/video, balance, credits, or Library history. */

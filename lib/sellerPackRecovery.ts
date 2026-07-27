@@ -5,6 +5,9 @@
  * remembers only how to find the three submitted children again; the current
  * session's `/api/generations` response is authoritative for every submitted
  * child result and credit settlement.
+ *
+ * Frozen children must match lib/sellerPackContract.ts (seller-pack-cached-smoke).
+ * Keep this module dependency-free so engine-smoke can transpile it in isolation.
  */
 
 export const SELLER_PACK_RECOVERY_KEY = "pikbo_seller_pack_active_v1";
@@ -36,6 +39,7 @@ export type SellerPackRecoveryRun = {
   children: SellerPackRecoveryChild[];
 };
 
+/** Must match SELLER_PACK_ITEMS in sellerPackContract.ts (order + slugs). */
 const FIXED_CHILDREN = [
   { slug: "360-spin-showcase", name: "Listing Spin", aspectRatio: "1:1" },
   { slug: "blind-box-unboxing", name: "Blind-box Reveal", aspectRatio: "9:16" },
