@@ -55,7 +55,10 @@ export type GenerateSuccess = {
   jobId?: string;
   provider?: string;
   /** why demo was returned — only when demo:true */
-  demoReason?: "no_provider_key";
+  demoReason?:
+    | "no_provider_key"
+    | "anonymous_cached_only"
+    | "free_live_delivery_blocked";
   /**
    * Wave B — server-validated recipe slug actually used for this job.
    * Client must only label "server returned" when this field is present.
@@ -76,6 +79,12 @@ export type GenerateErrorBody = {
   error: string;
   code?:
     | "INSUFFICIENT_CREDITS"
+    | "AUTH_REQUIRED"
+    | "LIVE_ACCESS_REQUIRED"
+    | "DURABLE_CREDITS_UNAVAILABLE"
+    | "RESERVATION_FAILED"
+    | "DELIVERY_PIPELINE_UNAVAILABLE"
+    | "PROVIDER_UNAVAILABLE"
     | "INVALID_REQUEST"
     | "IMAGE_TOO_LARGE"
     | "ASSET_NOT_FOUND"
