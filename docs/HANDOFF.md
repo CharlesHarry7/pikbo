@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [workbuddy] Read-only SEO baseline (AITDK + GSC + real browser)
+- Branch `agent/workbuddy/seo-baseline-2026-07-28`; report `docs/evidence/WORKBUDDY_SEO_BASELINE_2026-07-28.md` + timestamped artifacts (PNG screenshots + raw-text JSON) in `docs/evidence/workbuddy-seo-baseline-2026-07-28/`.
+- GSC property correction: only URL-prefix `https://pikbo.ai/` is accessible; `sc-domain:pikbo.ai` returns no-permission. 3-month web: **16 impressions / 0 clicks / avg pos 4.1** — only 2 queries (`pikbo` ×3, one bot-like boolean string ×9); sample too small for any ranking claim, per dispatch.
+- Index (GSC data 7/24): 30 indexed / 67 not (noindex ×3, discovered ×46, crawled ×18). **Cross-check with live Googlebot-UA curl (7/28 03:47): 8 of 10 sampled "indexed" URLs now serve `noindex,follow`** — c914eac slimming is live; sitemap is down to 7 URLs, all indexable. Expect indexed count to fall to ≈7–11; next baseline must not misread this as an incident.
+- Sitemap /sitemap.xml success (13 URLs at 7/27 read, 7 live now), 0 videos discovered by GSC despite valid `video:video` block on the primary tool page — recheck after next Google read. Videos enhancement 6 valid / 0 invalid; HTTPS 11/0; CWV no CrUX data; links report "processing, come back in ~1 day".
+- AITDK site profile 404 (domain 7 days old); AITDK extension SERP overlay: Monthly Visits 0, domain created 2026-07-21. Brand SERP `pikbo` returns pikbo.ai #1–2; main keyword `ai toy video generator` SERP has zero pikbo presence (YouTube/AI-Overview dominated).
+- Blockers logged, not bypassed: domain-property permission, links-report delay, video report 404, CrUX insufficient. No indexing request, no code change, no secrets/DB/deploy, no main push.
+
 ### 2026-07-28 — [grok] Seller Pack frozen contract + cached golden-path smoke
 - `lib/sellerPackContract.ts`: single source for 3 PRD slugs/aspects + pure cached golden settlement (0 provider, 0 credits).
 - BatchStudio re-exports contract; quote reuses live total; recovery keeps dependency-free FIXED_CHILDREN locked by smoke.
