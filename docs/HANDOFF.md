@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] R1b explicit retryJobId + fixed deadline
+- Process-memory promote only with client `retryJobId` fork token (generate/image/Create remix); never effect/prompt guess.
+- TIMEOUT deadline fixed from `createdAt`; `touchJob` / poll cannot extend.
+- `forkRetry` → remix `retryJobId` handoff; contracts accept body field.
+- Checks: engine-smoke + typecheck PASS. R1a SQL apply + R1b durable reconciliation still boss/Claude.
+
 ### 2026-07-27 — [grok] R1a capture-ambiguity client + recovery-ledger CI
 - `generateClient` / `imageClient`: `DURABLE_CREDITS_UNAVAILABLE` withholds output and never invents refund or "10 used"; AUTH/LIVE_ACCESS/RESERVATION fail copy honest.
 - Health exposes `recoveryLedger` (r1a source true, appliedRequiresBoss, r1b open) — presence only.
