@@ -797,3 +797,259 @@ export async function supabaseMigrateGuest(input: {
   });
   return { ok: true, data: { migrated, wallet } };
 }
+
+// R1a: the live provider path must use only these atomic RPC wrappers. The
+// legacy multi-call functions above remain for non-live migration work until a
+// later cleanup, but are not spend authority for /api/generate.
+
+export type AtomicGenerationReservation = {
+  reservationId: string;
+  jobId: string;
+  userId: string;
+  accountId: string;
+  amount: number;
+  status: "reserved";
+  idempotencyKey: string;
+  expiresAt: string;
+  planId: Exclude<PlanId, "free">;
+  availableCredits: number;
+  reservedCredits: number;
+  idempotent: boolean;
+  providerAuthorized: boolean;
+};
+
+export type AtomicGenerationSettlement = {
+  reservationId: string;
+  jobId: string;
+  status: "captured" | "released";
+  availableCredits: number;
+  reservedCredits: number;
+  idempotent: boolean;
+};
+
+type AtomicRpcFailure = {
+  ok: false;
+  code: string;
+  error: string;
+  need?: number;
+  have?: number;
+};
+
+function rpcPayload(data: unknown): Record<string, unknown> | null {
+  const value = Array.isArray(data) ? data[0] : data;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function numberField(
+  value: Record<string, unknown>,
+  key: string
+): number | null {
+  const n = value[key];
+  return typeof n === "number" && Number.isFinite(n) ? n : null;
+}
+
+function rpcFailure(
+  payload: Record<string, unknown> | null,
+  fallback: string
+): AtomicRpcFailure {
+  return {
+    ok: false,
+    code:
+      typeof payload?.code === "string" ? payload.code : "ATOMIC_RPC_FAILED",
+    error:
+      typeof payload?.error === "string" ? payload.error : fallback,
+    ...(numberField(payload || {}, "need") != null
+      ? { need: numberField(payload || {}, "need")! }
+      : {}),
+    ...(numberField(payload || {}, "have") != null
+      ? { have: numberField(payload || {}, "have")! }
+      : {}),
+  };
+}
+
+export async function supabaseReserveGenerationAtomic(input: {
+  userId: string;
+  idempotencyKey: string;
+  effectSlug: string;
+  quotedCredits: number;
+}): Promise<
+  | { ok: true; data: AtomicGenerationReservation }
+  | AtomicRpcFailure
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: "Supabase service role unavailable",
+    };
+  }
+  const { data, error } = await admin.rpc("pikbo_reserve_generation_v1", {
+    p_user_id: input.userId,
+    p_idempotency_key: input.idempotencyKey,
+    p_effect_slug: input.effectSlug,
+    p_quoted_credits: input.quotedCredits,
+  });
+  if (error) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: error.message.slice(0, 160),
+    };
+  }
+  const payload = rpcPayload(data);
+  if (!payload || payload.ok !== true) {
+    return rpcFailure(payload, "Atomic generation reservation failed");
+  }
+
+  const planId = payload.planId;
+  const amount = numberField(payload, "amount");
+  const availableCredits = numberField(payload, "availableCredits");
+  const reservedCredits = numberField(payload, "reservedCredits");
+  if (
+    typeof payload.reservationId !== "string" ||
+    typeof payload.jobId !== "string" ||
+    typeof payload.userId !== "string" ||
+    typeof payload.accountId !== "string" ||
+    typeof payload.idempotencyKey !== "string" ||
+    typeof payload.expiresAt !== "string" ||
+    payload.status !== "reserved" ||
+    typeof payload.idempotent !== "boolean" ||
+    typeof payload.providerAuthorized !== "boolean" ||
+    (planId !== "creator" && planId !== "shop") ||
+    amount == null ||
+    availableCredits == null ||
+    reservedCredits == null ||
+    payload.userId !== input.userId ||
+    payload.idempotencyKey !== input.idempotencyKey ||
+    amount !== input.quotedCredits ||
+    payload.providerAuthorized === payload.idempotent
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Atomic reservation returned an invalid payload",
+    };
+  }
+
+  return {
+    ok: true,
+    data: {
+      reservationId: payload.reservationId,
+      jobId: payload.jobId,
+      userId: payload.userId,
+      accountId: payload.accountId,
+      amount,
+      status: "reserved",
+      idempotencyKey: payload.idempotencyKey,
+      expiresAt: payload.expiresAt,
+      planId,
+      availableCredits,
+      reservedCredits,
+      idempotent: payload.idempotent === true,
+      providerAuthorized: payload.providerAuthorized === true,
+    },
+  };
+}
+
+async function settleGenerationAtomic(
+  rpcName:
+    | "pikbo_capture_generation_v1"
+    | "pikbo_release_generation_v1",
+  input: {
+    userId: string;
+    reservationId: string;
+    jobId: string;
+    providerRequestId?: string;
+    reason?: string;
+  }
+): Promise<
+  | { ok: true; data: AtomicGenerationSettlement }
+  | AtomicRpcFailure
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: "Supabase service role unavailable",
+    };
+  }
+  const args =
+    rpcName === "pikbo_capture_generation_v1"
+      ? {
+          p_user_id: input.userId,
+          p_reservation_id: input.reservationId,
+          p_job_id: input.jobId,
+          p_provider_request_id: input.providerRequestId || null,
+        }
+      : {
+          p_user_id: input.userId,
+          p_reservation_id: input.reservationId,
+          p_job_id: input.jobId,
+          p_reason: input.reason || "confirmed_pre_output_failure",
+        };
+  const { data, error } = await admin.rpc(rpcName, args);
+  if (error) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: error.message.slice(0, 160),
+    };
+  }
+  const payload = rpcPayload(data);
+  if (!payload || payload.ok !== true) {
+    return rpcFailure(payload, "Atomic generation settlement failed");
+  }
+  const availableCredits = numberField(payload, "availableCredits");
+  const reservedCredits = numberField(payload, "reservedCredits");
+  const expectedStatus =
+    rpcName === "pikbo_capture_generation_v1" ? "captured" : "released";
+  if (
+    typeof payload.reservationId !== "string" ||
+    typeof payload.jobId !== "string" ||
+    payload.reservationId !== input.reservationId ||
+    payload.jobId !== input.jobId ||
+    typeof payload.idempotent !== "boolean" ||
+    payload.status !== expectedStatus ||
+    availableCredits == null ||
+    reservedCredits == null
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Atomic settlement returned an invalid payload",
+    };
+  }
+  return {
+    ok: true,
+    data: {
+      reservationId: payload.reservationId,
+      jobId: payload.jobId,
+      status: expectedStatus,
+      availableCredits,
+      reservedCredits,
+      idempotent: payload.idempotent === true,
+    },
+  };
+}
+
+export async function supabaseCaptureGenerationAtomic(input: {
+  userId: string;
+  reservationId: string;
+  jobId: string;
+  providerRequestId?: string;
+}) {
+  return settleGenerationAtomic("pikbo_capture_generation_v1", input);
+}
+
+export async function supabaseReleaseGenerationAtomic(input: {
+  userId: string;
+  reservationId: string;
+  jobId: string;
+  reason: string;
+}) {
+  return settleGenerationAtomic("pikbo_release_generation_v1", input);
+}

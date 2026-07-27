@@ -57,6 +57,7 @@ const result = await invokeReservedProvider(
   {
     reservationId: "reservation-test-1",
     status: "reserved",
+    providerAuthorized: true,
   },
   provider
 );

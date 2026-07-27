@@ -434,11 +434,14 @@ export async function POST(req: Request) {
     const reserved = await reserveStrictLiveGeneration({
       userId: authUser.id,
       idempotencyKey,
+      effectSlug: preset.slug,
     });
     if (!reserved.ok) {
       const status =
         reserved.code === "INSUFFICIENT_CREDITS"
           ? 402
+          : reserved.code === "JOB_IN_FLIGHT"
+            ? 409
           : reserved.code === "LIVE_ACCESS_REQUIRED"
             ? 403
             : 503;
@@ -460,20 +463,16 @@ export async function POST(req: Request) {
       credits: reserved.availableCredits,
     };
     await saveSession(session);
-    const releaseReservation = async (
-      reason: string,
-      jobId?: string
-    ): Promise<boolean> => {
+    const releaseReservation = async (reason: string): Promise<boolean> => {
       if (!liveReservation) return false;
       const released = await releaseStrictLiveGeneration(
         liveReservation,
-        reason,
-        jobId
+        reason
       );
       if (!released.ok) return false;
       session = {
         ...session,
-        credits: released.data.wallet.availableCredits,
+        credits: released.data.availableCredits,
       };
       await saveSession(session);
       liveReservation = null;
@@ -513,7 +512,7 @@ export async function POST(req: Request) {
       process.env.NODE_ENV !== "production" &&
       process.env.VERCEL_ENV !== "production";
     if (forceFail) {
-      const released = await releaseReservation("force_fail", liveJobId);
+      const released = await releaseReservation("force_fail");
       const failBody: GenerateErrorBody = {
         error:
           released
@@ -536,7 +535,7 @@ export async function POST(req: Request) {
       try {
         blob = await (await fetch(image)).blob();
       } catch {
-        const released = await releaseReservation("invalid_image", liveJobId);
+        const released = await releaseReservation("invalid_image");
         const failBody: GenerateErrorBody = {
           error: "Could not read image data",
           code: "INVALID_REQUEST",
@@ -549,7 +548,7 @@ export async function POST(req: Request) {
         return err(failBody, 400);
       }
       if (!blob || blob.size < 32) {
-        const released = await releaseReservation("empty_image", liveJobId);
+        const released = await releaseReservation("empty_image");
         const failBody: GenerateErrorBody = {
           error: "Image data empty or too small",
           code: "INVALID_REQUEST",
@@ -593,7 +592,7 @@ export async function POST(req: Request) {
       const data = result.data as { video?: { url?: string } };
       const videoUrl = data?.video?.url;
       if (!videoUrl) {
-        const released = await releaseReservation("model_empty", liveJobId);
+        const released = await releaseReservation("model_empty");
         const failBody: GenerateErrorBody = {
           error: "Model returned no video",
           code: "MODEL_EMPTY",
@@ -608,7 +607,7 @@ export async function POST(req: Request) {
       // Refuse non-http(s) / non-relative deliverables (open-redirect / injection).
       // Code must be UNSAFE_URL (image + client + downloads parity — not MODEL_EMPTY).
       if (!isSafeDeliverableUrl(videoUrl)) {
-        const released = await releaseReservation("unsafe_url", liveJobId);
+        const released = await releaseReservation("unsafe_url");
         const failBody: GenerateErrorBody = {
           error: "Model returned an unsafe video URL — credits restored",
           code: "UNSAFE_URL",
@@ -631,9 +630,22 @@ export async function POST(req: Request) {
           captured.code,
           captured.error
         );
-      } else {
-        liveReservation = null;
+        // Provider work exists, so releasing would create a free result; but
+        // claiming "10 used" would also be false because the durable capture
+        // did not commit. Withhold the output and leave the reservation for
+        // the R1b reconciliation worker. The same idempotency key remains
+        // blocked by the durable job.
+        const failBody: GenerateErrorBody = {
+          error:
+            "The video was generated, but credits could not be finalized. The output is withheld while the durable reservation is reconciled; do not retry with the same idempotency key.",
+          code: "DURABLE_CREDITS_UNAVAILABLE",
+          model,
+          jobId: reserved.reservation.jobId,
+          session: publicSession(session),
+        };
+        return err(failBody, 503);
       }
+      liveReservation = null;
       let ledgerJobId = liveJobId;
       try {
         const job = completeSyncGenerateJob({
@@ -684,7 +696,7 @@ export async function POST(req: Request) {
       return NextResponse.json(payload);
     } catch (e) {
       console.error("generate error:", model, e);
-      const released = await releaseReservation("provider_error", liveJobId);
+      const released = await releaseReservation("provider_error");
       const raw =
         e && typeof e === "object" && "body" in e
           ? JSON.stringify((e as { body?: unknown }).body)
