@@ -10,6 +10,7 @@ import {
   photoRecipeDraftHowToJsonLd,
 } from "@/components/LandingHowItWorks";
 import { LandingResults } from "@/components/LandingResults";
+import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { robotsForToolSlug } from "@/lib/seoIndex";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
@@ -201,7 +202,11 @@ export default async function ToolPage({
                 photo to video for toys
               </Link>
               . Full studio:{" "}
-              <Link href="/create" className="text-[var(--mint)] hover:underline">
+              <Link
+                href={createRemixHref("360-spin-showcase")}
+                className="text-[var(--mint)] hover:underline"
+                data-tool-full-studio="remix"
+              >
                 Generate
               </Link>
               .

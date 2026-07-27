@@ -3,7 +3,11 @@ import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { MODELS } from "@/lib/catalog";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
+import { createRemixHref } from "@/lib/remixIntent";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
+
+/** Models Generate doors — listing spin remix (ratio/duration/channel). */
+const MODELS_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Models · Preview",
@@ -50,7 +54,11 @@ export default function ModelsPage() {
           don&apos;t fake Kling/Veo/Sora without keys.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Link href="/create" className="btn btn-primary text-sm">
+          <Link
+            href={MODELS_GENERATE_HREF}
+            className="btn btn-primary text-sm"
+            data-models-generate="remix"
+          >
             Generate with Seedance →
           </Link>
           <FreeTrialCta
@@ -88,8 +96,9 @@ export default function ModelsPage() {
           className="mt-5 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-white/50"
         >
           <Link
-            href="/create"
+            href={MODELS_GENERATE_HREF}
             className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+            data-models-path-generate="remix"
           >
             Generate
           </Link>

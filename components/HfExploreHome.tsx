@@ -98,7 +98,11 @@ export function HfExploreHome({
     return (
       <div className="min-h-screen bg-black px-4 py-20 text-center text-white">
         <p className="text-white/50">No official examples yet.</p>
-        <Link href="/create" className="mt-4 inline-block text-[#c8ff3d]">
+        <Link
+          href={createRemixHref("360-spin-showcase")}
+          className="mt-4 inline-block text-[#c8ff3d]"
+          data-hf-empty-generate="remix"
+        >
           Go to Generate →
         </Link>
       </div>
@@ -425,8 +429,9 @@ export function HfExploreHome({
               </h2>
             </div>
             <Link
-              href="/create"
+              href={createRemixHref("360-spin-showcase")}
               className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
+              data-hf-flow-generate="remix"
             >
               Open Generate →
             </Link>

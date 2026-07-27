@@ -121,7 +121,11 @@ export default async function CommunityPage() {
             data-community-path="product-first"
           >
             <FreeTrialCta path="/community" variant="mint" />
-            <Link href="/create" className="btn btn-ghost !px-3 !py-2 text-xs">
+            <Link
+              href={createRemixHref("360-spin-showcase")}
+              className="btn btn-ghost !px-3 !py-2 text-xs"
+              data-community-generate="remix"
+            >
               Generate
             </Link>
             <Link
@@ -275,7 +279,11 @@ export default async function CommunityPage() {
                 >
                   Sign in
                 </Link>
-                <Link href="/create" className="btn btn-ghost !px-3 !py-2 text-xs">
+                <Link
+                  href={createRemixHref("360-spin-showcase")}
+                  className="btn btn-ghost !px-3 !py-2 text-xs"
+                  data-community-empty-generate="remix"
+                >
                   Generate
                 </Link>
               </div>

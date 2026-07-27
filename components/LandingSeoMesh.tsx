@@ -3,7 +3,11 @@ import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { USE_CASES } from "@/lib/usecases";
 import { TOOLS } from "@/lib/tools";
 import { GUIDES } from "@/lib/guides";
+import { createRemixHref } from "@/lib/remixIntent";
 import { recipeHasUniqueProof } from "@/lib/seoIndex";
+
+/** Landing mesh Open Generate — listing spin remix (ratio/duration/channel). */
+const SEO_MESH_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 /**
  * 哥飞内链网：落地页底部相关 Tools / For / Guides（可爬、可点进工具）。
@@ -108,7 +112,11 @@ export function LandingSeoMesh({
           variant="mint"
           labelTry="Try free Mini"
         />
-        <Link href="/create" className="btn btn-ghost text-sm">
+        <Link
+          href={SEO_MESH_GENERATE_HREF}
+          className="btn btn-ghost text-sm"
+          data-seo-mesh-generate="remix"
+        >
           Open Generate
         </Link>
       </div>

@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Residual product Generate doors → createRemixHref
+- Page chrome + suite shelves (Library/Profile/Settings/Explore/Effects/Tools/
+  Community/Apps/Guides/Modules/Flow/Models/Batch/Cinema/Status) + home rail/
+  tool shelf/cmd palette/hero/Seedance/SEO mesh use createRemixHref(360-spin).
+- softLaunch PRIMARY/MOBILE nav stays bare /create (suite entry).
+- Smoke: residualGenerateDoors data-*-generate=remix locks.
+
 ### 2026-07-27 — [grok] Header/Library/Profile Generate remix + cancel toast
 - Header Create a clip · Library sticky/empty/session Open Create · Profile
   Generate → createRemixHref(360-spin).

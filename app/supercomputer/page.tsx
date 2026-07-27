@@ -4,7 +4,11 @@ import { redirect } from "next/navigation";
 import { BatchStudio } from "@/components/BatchStudio";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
+import { createRemixHref } from "@/lib/remixIntent";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
+
+/** Supercomputer Generate doors — listing spin remix (ratio/duration/channel). */
+const BATCH_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export async function generateMetadata({
   searchParams,
@@ -94,7 +98,11 @@ export default async function SupercomputerPage({
                 variant="ghost"
                 hideClipsChip
               />
-              <Link href="/create" className="btn btn-ghost text-sm">
+              <Link
+                href={BATCH_GENERATE_HREF}
+                className="btn btn-ghost text-sm"
+                data-batch-generate="remix"
+              >
                 Generate
               </Link>
             </div>
@@ -106,8 +114,9 @@ export default async function SupercomputerPage({
           className="mt-4 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-white/50"
         >
           <Link
-            href="/create"
+            href={BATCH_GENERATE_HREF}
             className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
+            data-batch-path-generate="remix"
           >
             Generate
           </Link>

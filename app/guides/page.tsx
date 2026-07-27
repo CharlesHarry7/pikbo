@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GUIDES } from "@/lib/guides";
+import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+
+/** Guides hub Open Generate — listing spin remix (ratio/duration/channel). */
+const GUIDES_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Guides",
@@ -89,7 +93,11 @@ export default function GuidesHub() {
       </div>
 
       <div className="relative mt-6 flex flex-wrap items-center gap-2">
-        <Link href="/create" className="btn btn-primary text-sm">
+        <Link
+          href={GUIDES_GENERATE_HREF}
+          className="btn btn-primary text-sm"
+          data-guides-generate="remix"
+        >
           Open Generate
         </Link>
         <FreeTrialCta path="/guides" variant="ghost" />

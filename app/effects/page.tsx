@@ -7,9 +7,13 @@ import { allCategoryFeeds } from "@/lib/videoFeed";
 import { VideoTile } from "@/components/VideoTile";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { listCreateShelfWorkflows } from "@/lib/workflows";
+import { createRemixHref } from "@/lib/remixIntent";
 import { proofBackedRecipeSlugs } from "@/lib/seoIndex";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+
+/** Effects wall Generate doors — listing spin remix (ratio/duration/channel). */
+const EFFECTS_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Toy video presets · Recipes",
@@ -110,7 +114,11 @@ export default function EffectsHub() {
             </h1>
             <p className="mt-0.5 text-[11px] text-white/45">
               Pixel-parity with suite viral walls — tap any card to Generate video ·{" "}
-              <Link href="/create" className="font-semibold text-[#c8ff3d] hover:underline">
+              <Link
+                href={EFFECTS_GENERATE_HREF}
+                className="font-semibold text-[#c8ff3d] hover:underline"
+                data-effects-generate="remix"
+              >
                 Open Generate →
               </Link>
             </p>
@@ -123,8 +131,9 @@ export default function EffectsHub() {
               className="btn btn-primary !px-4 !py-2 text-xs font-black"
             />
             <Link
-              href="/create"
+              href={EFFECTS_GENERATE_HREF}
               className="btn btn-ghost !px-3 !py-2 text-xs"
+              data-effects-video="remix"
             >
               Video
             </Link>

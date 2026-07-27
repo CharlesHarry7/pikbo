@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PRESETS } from "@/lib/presets";
+import { createRemixHref } from "@/lib/remixIntent";
+
+const CMD_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 /**
  * Critical path first (GSC P0).
@@ -12,7 +15,7 @@ import { PRESETS } from "@/lib/presets";
 const LINKS = [
   { href: "/", label: "Home · Explore" },
   { href: "/#home-tool", label: "Home · on-page Generate tool" },
-  { href: "/create", label: "Generate · Toy Studio" },
+  { href: CMD_GENERATE_HREF, label: "Generate · Toy Studio" },
   { href: "/effects", label: "Effects · toy presets" },
   { href: "/pricing", label: "Pricing · Free Mini / plans" },
   { href: "/explore", label: "Explore Lab projects" },

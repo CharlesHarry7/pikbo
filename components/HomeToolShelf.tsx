@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { createRemixHref } from "@/lib/remixIntent";
+
+const SHELF_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 /**
  * Suite chips under home — product doors first (Generate / Modules / Pack).
@@ -13,7 +16,7 @@ type ToolChip = {
 };
 
 const TOOLS: ToolChip[] = [
-  { href: "/create", label: "Generate", sub: "Workbench", emoji: "✦", hot: true },
+  { href: SHELF_GENERATE_HREF, label: "Generate", sub: "Workbench", emoji: "✦", hot: true },
   { href: "/modules", label: "Modules", sub: "Job blocks", emoji: "▦", hot: true },
   {
     href: "/create?mode=seller-pack",

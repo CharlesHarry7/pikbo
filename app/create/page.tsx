@@ -8,9 +8,13 @@ import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { getPreset } from "@/lib/presets";
+import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { softwareApplicationJsonLd } from "@/lib/jsonLd";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+
+/** Seller Pack chrome → single recipe with remix contract. */
+const CREATE_SINGLE_RECIPE_HREF = createRemixHref("360-spin-showcase");
 
 export async function generateMetadata({
   searchParams,
@@ -115,8 +119,9 @@ export default async function CreatePage({
                 className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
               />
               <Link
-                href="/create"
+                href={CREATE_SINGLE_RECIPE_HREF}
                 className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"
+                data-create-single-recipe="remix"
               >
                 Single recipe
               </Link>

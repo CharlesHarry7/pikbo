@@ -3896,9 +3896,15 @@ const hfRailSrc = fs.readFileSync(
   join(root, "components/HfProductRail.tsx"),
   "utf8"
 );
+// Seedance Video door uses remix contract (not bare /create)
+assert.match(hfRailSrc, /createRemixHref|GENERATE_REMIX_HREF/);
+assert.match(hfRailSrc, /data-hf-rail-generate=["']remix["']/);
 assert.ok(
-  hfRailSrc.indexOf('href: "/create"') < hfRailSrc.indexOf('href: "/flow"'),
-  "Generate before Flow on HfProductRail"
+  (hfRailSrc.indexOf("GENERATE_REMIX_HREF") >= 0
+    ? hfRailSrc.indexOf("GENERATE_REMIX_HREF")
+    : hfRailSrc.indexOf("createRemixHref")) <
+    hfRailSrc.indexOf('href: "/flow"'),
+  "Generate remix before Flow on HfProductRail"
 );
 assert.ok(
   hfRailSrc.indexOf('href: "/create?mode=seller-pack"') <
@@ -3909,6 +3915,10 @@ assert.match(hfRailSrc, /tag:\s*["']Preview["']/);
 assert.match(
   fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
   /Flow · Preview|Seller Pack/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
+  /data-hf-flow-generate=["']remix["']|createRemixHref/
 );
 
 assert.match(
@@ -5202,6 +5212,40 @@ assert.match(
   fs.readFileSync(join(root, "components/ProfilePanel.tsx"), "utf8"),
   /PROFILE_GENERATE_HREF|data-profile-generate=["']remix["']/
 );
+
+// Residual product-shell Generate doors carry remix contract (not bare /create)
+const residualGenerateDoors = [
+  ["app/library/page.tsx", /data-library-page-generate=["']remix["']/],
+  ["app/create/page.tsx", /data-create-single-recipe=["']remix["']/],
+  ["app/profile/page.tsx", /data-profile-page-generate=["']remix["']/],
+  ["app/settings/page.tsx", /data-settings-generate=["']remix["']/],
+  ["app/explore/page.tsx", /data-explore-generate=["']remix["']/],
+  ["app/community/page.tsx", /data-community-generate=["']remix["']/],
+  ["app/apps/page.tsx", /data-apps-generate=["']remix["']/],
+  ["app/effects/page.tsx", /data-effects-generate=["']remix["']/],
+  ["app/flow/page.tsx", /data-flow-start-generate=["']remix["']/],
+  ["app/supercomputer/page.tsx", /data-batch-generate=["']remix["']/],
+  ["app/models/page.tsx", /data-models-generate=["']remix["']/],
+  ["app/tools/page.tsx", /data-tools-generate=["']remix["']/],
+  ["app/status/page.tsx", /data-status-generate=["']remix["']/],
+  ["app/guides/page.tsx", /data-guides-generate=["']remix["']/],
+  ["app/modules/page.tsx", /data-modules-path-generate=["']remix["']/],
+  ["app/cinema/page.tsx", /data-cinema-generate=["']remix["']/],
+  ["components/SeedanceCampaign.tsx", /data-seedance-generate=["']remix["']/],
+  ["components/LandingSeoMesh.tsx", /data-seo-mesh-generate=["']remix["']/],
+  ["components/HeroVideoBanner.tsx", /data-hero-try-photo=["']remix["']/],
+  ["components/BatchStudio.tsx", /data-batch-single-generate=["']remix["']/],
+  ["components/HomeToolShelf.tsx", /SHELF_GENERATE_HREF|createRemixHref\(["']360-spin-showcase["']\)/],
+  ["components/CommandPalette.tsx", /CMD_GENERATE_HREF|createRemixHref\(["']360-spin-showcase["']\)/],
+];
+for (const [rel, re] of residualGenerateDoors) {
+  assert.match(
+    fs.readFileSync(join(root, rel), "utf8"),
+    re,
+    `${rel} primary Generate door must use createRemixHref remix marker`
+  );
+}
+
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

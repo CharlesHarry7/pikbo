@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { TOOLS } from "@/lib/tools";
+import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
 import { itemListJsonLd } from "@/lib/jsonLd";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+
+/** Tools hub Open Generate — listing spin remix (ratio/duration/channel). */
+const TOOLS_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Toy Video Tools",
@@ -90,7 +94,11 @@ export default function ToolsIndexPage() {
           honest FAQ. No unlimited generation and no guaranteed sales.
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          <Link href="/create" className="btn btn-primary text-sm">
+          <Link
+            href={TOOLS_GENERATE_HREF}
+            className="btn btn-primary text-sm"
+            data-tools-generate="remix"
+          >
             Open Generate
           </Link>
           <FreeTrialCta path="/tools" variant="ghost" />
@@ -139,7 +147,11 @@ export default function ToolsIndexPage() {
           {TOOLS.length} tools · every page links to a registered Create recipe
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-2">
-          <Link href="/create" className="btn btn-primary text-sm">
+          <Link
+            href={TOOLS_GENERATE_HREF}
+            className="btn btn-primary text-sm"
+            data-tools-footer-generate="remix"
+          >
             Open Generate
           </Link>
           <Link href="/modules" className="btn btn-ghost text-sm">

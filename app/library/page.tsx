@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { LibraryGrid } from "@/components/LibraryGrid";
+import { createRemixHref } from "@/lib/remixIntent";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
+
+/** Page chrome Generate — listing spin remix (ratio/duration/channel). */
+const LIBRARY_PAGE_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Library · Assets",
@@ -43,7 +47,11 @@ export default function LibraryPage() {
             </p>
           </div>
           <div className="hidden flex-wrap items-center gap-2 sm:flex">
-            <Link href="/create" className="btn btn-primary text-sm">
+            <Link
+              href={LIBRARY_PAGE_GENERATE_HREF}
+              className="btn btn-primary text-sm"
+              data-library-page-generate="remix"
+            >
               Generate
             </Link>
             <Link

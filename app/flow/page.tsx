@@ -6,8 +6,12 @@ import { listLiveWorkflows, listPreviewWorkflows } from "@/lib/workflows";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { FlowMediaCard } from "@/components/FlowMediaCard";
+import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
+
+/** Flow Generate doors — listing spin remix (ratio/duration/channel). */
+const FLOW_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Flow · Creation matrix",
@@ -190,8 +194,9 @@ export default function FlowPage() {
               className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
             />
             <Link
-              href="/create"
+              href={FLOW_GENERATE_HREF}
               className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"
+              data-flow-video="remix"
             >
               Video
             </Link>
@@ -272,7 +277,11 @@ export default function FlowPage() {
           aria-label="Core product path"
           className="mx-auto mt-5 flex max-w-3xl flex-wrap items-center justify-center gap-2 text-[11px] font-semibold text-white/55"
         >
-          <Link href="/create" className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]">
+          <Link
+            href={FLOW_GENERATE_HREF}
+            className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+            data-flow-path-generate="remix"
+          >
             Generate
           </Link>
           <span aria-hidden className="text-white/25">
@@ -304,8 +313,9 @@ export default function FlowPage() {
           </Link>
         </nav>
         <Link
-          href="/create"
+          href={FLOW_GENERATE_HREF}
           className="mt-6 inline-flex rounded-full bg-[#c8ff3d] px-8 py-3.5 text-sm font-black text-black shadow-[0_0_32px_rgba(200,255,61,0.25)]"
+          data-flow-start-generate="remix"
         >
           Start Generate video
         </Link>

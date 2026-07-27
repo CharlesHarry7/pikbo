@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StatusProbe } from "@/components/StatusProbe";
+import { createRemixHref } from "@/lib/remixIntent";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
+
+/** Status Generate door — listing spin remix (ratio/duration/channel). */
+const STATUS_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "System status",
@@ -30,7 +34,11 @@ export default function StatusPage() {
       </p>
       <StatusProbe />
       <div className="mt-8 flex flex-wrap gap-3 text-sm">
-        <Link href="/create" className="text-[var(--mint)] hover:underline">
+        <Link
+          href={STATUS_GENERATE_HREF}
+          className="text-[var(--mint)] hover:underline"
+          data-status-generate="remix"
+        >
           Generate →
         </Link>
         <Link href="/#home-tool" className="text-[var(--mint)] hover:underline">

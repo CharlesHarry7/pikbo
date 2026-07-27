@@ -14,7 +14,11 @@ import {
 } from "@/lib/meClient";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
+import { createRemixHref } from "@/lib/remixIntent";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
+
+/** Settings chrome Generate — listing spin remix (ratio/duration/channel). */
+const SETTINGS_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 type SessionJobsProbe = {
   open: number;
@@ -214,7 +218,11 @@ export default function SettingsPage() {
           className="mt-4 flex flex-wrap items-center gap-2"
           data-settings-path="product-first"
         >
-          <Link href="/create" className="btn btn-primary !px-3 !py-1.5 text-xs">
+          <Link
+            href={SETTINGS_GENERATE_HREF}
+            className="btn btn-primary !px-3 !py-1.5 text-xs"
+            data-settings-generate="remix"
+          >
             Generate
           </Link>
           <Link

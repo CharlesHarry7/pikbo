@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ProfilePanel } from "@/components/ProfilePanel";
 import { publicAuthStatus } from "@/lib/authConfig";
+import { createRemixHref } from "@/lib/remixIntent";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
+
+/** Page chrome Generate — listing spin remix (ratio/duration/channel). */
+const PROFILE_PAGE_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Profile",
@@ -38,7 +42,11 @@ export default function ProfilePage() {
           className="mt-4 flex flex-wrap gap-2"
           data-profile-page-path="product-first"
         >
-          <Link href="/create" className="btn btn-primary !px-3 !py-1.5 text-xs">
+          <Link
+            href={PROFILE_PAGE_GENERATE_HREF}
+            className="btn btn-primary !px-3 !py-1.5 text-xs"
+            data-profile-page-generate="remix"
+          >
             Generate
           </Link>
           <Link

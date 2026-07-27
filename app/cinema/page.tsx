@@ -6,8 +6,12 @@ import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { PRESETS } from "@/lib/presets";
+import { createRemixHref } from "@/lib/remixIntent";
 import { viralName } from "@/lib/viralNames";
 import { loadToyIdentity } from "@/lib/toyIdentity";
+
+/** Cinema Generate door — listing spin remix (ratio/duration/channel). */
+const CINEMA_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 const LENSES = ["24mm", "35mm", "50mm", "85mm", "100mm macro"] as const;
 const MOVES = [
@@ -146,8 +150,9 @@ export default function CinemaPage() {
           <div className="flex flex-col items-end gap-2">
             <div className="flex flex-wrap justify-end gap-2">
               <Link
-                href="/create"
+                href={CINEMA_GENERATE_HREF}
                 className="btn btn-ghost !px-3 !py-1.5 text-xs"
+                data-cinema-generate="remix"
               >
                 Generate
               </Link>

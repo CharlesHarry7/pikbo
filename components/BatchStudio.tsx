@@ -1914,8 +1914,9 @@ export function BatchStudio({
                 </Link>
               ) : (
                 <Link
-                  href="/create"
+                  href={createRemixHref("360-spin-showcase")}
                   className="rounded-full border border-white/15 px-3 py-1.5 text-[11px] font-bold text-white/70"
+                  data-batch-single-generate="remix"
                 >
                   Single Generate
                 </Link>

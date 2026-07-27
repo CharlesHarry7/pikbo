@@ -7,8 +7,12 @@ import {
   listShowcaseProjects,
   type ShowcaseCategory,
 } from "@/lib/showcaseProjects";
+import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+
+/** Explore Generate doors — listing spin remix (ratio/duration/channel). */
+const EXPLORE_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Explore Official AI Toy Video Projects",
@@ -114,8 +118,9 @@ export default async function ExplorePage({
           >
             <FreeTrialCta path="/explore" variant="primary" />
             <Link
-              href="/create"
+              href={EXPLORE_GENERATE_HREF}
               className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-2.5 text-xs font-black text-[#c8ff3d] transition hover:bg-[#c8ff3d]/15"
+              data-explore-generate="remix"
             >
               Generate
             </Link>
@@ -156,7 +161,11 @@ export default async function ExplorePage({
           <span className="text-[10px] font-normal text-white/30">
             Path ·
           </span>
-          <Link href="/create" className="text-[#c8ff3d] hover:underline">
+          <Link
+            href={EXPLORE_GENERATE_HREF}
+            className="text-[#c8ff3d] hover:underline"
+            data-explore-path-generate="remix"
+          >
             Generate
           </Link>
           <span aria-hidden className="text-white/20">

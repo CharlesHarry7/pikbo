@@ -12,7 +12,10 @@ import {
 } from "@/lib/workflows";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import { createRemixHref } from "@/lib/remixIntent";
 import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
+
+const MODULES_PATH_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Modules · Toy workflow blocks",
@@ -267,8 +270,9 @@ export default function ModulesPage() {
             className="mb-5 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-white/50"
           >
             <Link
-              href="/create"
+              href={MODULES_PATH_GENERATE_HREF}
               className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+              data-modules-path-generate="remix"
             >
               Generate
             </Link>

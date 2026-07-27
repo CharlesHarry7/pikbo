@@ -56,8 +56,9 @@ export function SeedanceCampaign() {
               className="rounded-full bg-[var(--mint)] px-6 py-2.5 text-sm font-black text-black shadow-[0_0_28px_rgba(200,255,61,0.25)] transition hover:-translate-y-0.5"
             />
             <Link
-              href="/create"
+              href={createRemixHref("360-spin-showcase")}
               className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-5 py-2.5 text-sm font-bold text-[var(--mint)] transition hover:bg-[var(--mint)]/15"
+              data-seedance-generate="remix"
             >
               Generate video
             </Link>

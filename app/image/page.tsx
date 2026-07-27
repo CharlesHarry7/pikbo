@@ -230,7 +230,11 @@ export default function ImageStudioPage() {
             <p className="mt-2 max-w-2xl text-sm text-[var(--fg-muted)]">
               Optional packaging mock before video — not the product. Free plan
               keeps the Mini trial for{" "}
-              <Link href="/create" className="text-[var(--mint)] underline-offset-2 hover:underline">
+              <Link
+                href={createRemixHref("360-spin-showcase")}
+                className="text-[var(--mint)] underline-offset-2 hover:underline"
+                data-image-create-video="remix"
+              >
                 Create video
               </Link>{" "}
               (stills stay labeled demo · 0 credits). Paid plans: Flux via fal (

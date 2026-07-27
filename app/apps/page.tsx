@@ -4,8 +4,12 @@ import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { WORKFLOWS } from "@/lib/workflows";
 import { APPS } from "@/lib/catalog";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
+import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+
+/** Apps Open Generate — listing spin remix (ratio/duration/channel). */
+const APPS_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 function posterForEffect(effect?: string): string | null {
   if (!effect) return null;
@@ -139,7 +143,11 @@ export default function AppsPage() {
             Toy Modules
           </Link>
           <FreeTrialCta path="/apps" variant="ghost" />
-          <Link href="/create" className="btn btn-ghost text-sm">
+          <Link
+            href={APPS_GENERATE_HREF}
+            className="btn btn-ghost text-sm"
+            data-apps-generate="remix"
+          >
             Open Generate
           </Link>
           <Link

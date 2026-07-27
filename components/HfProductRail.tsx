@@ -4,6 +4,10 @@ import Link from "next/link";
 import { track } from "@/lib/analytics";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
+import { createRemixHref } from "@/lib/remixIntent";
+
+/** Primary Generate door — listing spin remix (ratio/duration/channel). */
+const GENERATE_REMIX_HREF = createRemixHref("360-spin-showcase");
 
 /**
  * HF homepage product entry strip — media-backed capability cards.
@@ -20,7 +24,7 @@ const PRODUCTS: {
   demoIndex: number;
 }[] = [
   {
-    href: "/create",
+    href: GENERATE_REMIX_HREF,
     title: "Seedance Video",
     blurb: "Photo → short video",
     tag: "Video",
@@ -95,8 +99,9 @@ export function HfProductRail() {
               className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
             />
             <Link
-              href="/create"
+              href={GENERATE_REMIX_HREF}
               className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
+              data-hf-rail-generate="remix"
             >
               Open Generate →
             </Link>

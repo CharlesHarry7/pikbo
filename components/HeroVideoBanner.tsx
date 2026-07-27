@@ -70,7 +70,11 @@ export function HeroVideoBanner() {
             an owned-toy photo; live provider results can vary.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/create" className="btn btn-primary px-6 py-3 text-sm">
+            <Link
+              href={createRemixHref("360-spin-showcase")}
+              className="btn btn-primary px-6 py-3 text-sm"
+              data-hero-try-photo="remix"
+            >
               Try with my photo
             </Link>
             <Link
