@@ -1,5 +1,8 @@
 # WorkBuddy 全自动增长
 
+> **历史提示词，禁止直接执行（2026-07-27）：** 以 `WORK_QUEUE.md` 的
+> 只读证据任务为准；不得推 main、读密钥、改生产或自动刷目录。
+
 **超长完整版（推荐整段丢给 WorkBuddy）：** `docs/growth/WORKBUDDY_MEGA_PROMPT.md`
 
 # WorkBuddy 全自动增长（100% 无人 · Chrome · GitHub 同步 · 老板不传话）

@@ -1,5 +1,8 @@
 # WorkBuddy · 30 天计划第 1 周（整段复制）
 
+> **已被 evidence plan 取代（2026-07-27）：** 不再以外链提交量为目标。
+> 执行内容只认 `WORK_QUEUE.md`。
+
 ```text
 你是 Pikbo 增长 Agent。执行 30 天计划第 1 周（docs/growth/PLAN_30D_GEFEI_CROSSCHECK.md）。
 100% 无人。禁止扩 sitemap。禁止改主词 H1。禁止开 Stripe。禁止把站做成「买玩具导购」。

@@ -1691,3 +1691,20 @@ Newest first. One block per meaningful landing.
 - Reuse / pitfalls:
 - Depends on:
 ```
+# 2026-07-27 — [grok] R4/R5 growth evidence and WorkBuddy boundary
+
+- Added `docs/growth/SHOWCASE_EVIDENCE_LEDGER.md`: required schema plus an audit
+  of all 12 registered examples; current result is 0 official / 12 prototype,
+  with no numeric score until input rights, provider task, output and named
+  reviewer evidence are complete.
+- Rewrote the canonical keyword/performance/30-day reports to withdraw
+  unsupported search-volume, blue-ocean, ranking, exact-48-indexed-page and
+  submission-as-backlink claims.
+- Standardized external status as `submitted / pending / published /
+  verified_backlink`; historical forms currently yield 0 verified backlinks.
+- WorkBuddy queue now contains only raw GSC/AITDK/哥飞 evidence and public
+  listing verification; generic directory, auth, secrets, DB and deploy work is
+  paused/reassigned.
+- `scripts/growth-auto/push_via_api.py` is dry-run by default, never handles a
+  token, refuses dirty trees and permits pushes only to `agent/grok/*`; safety
+  tests cover main and branch-prefix rejection.

@@ -28,7 +28,7 @@ B) sitemap：https://pikbo.ai/sitemap.xml 约 **13** 个 <loc>
 C) 长尾页不再 noindex，例如：
    curl/浏览器看 https://pikbo.ai/tools/blind-box-reveal-video-maker
    - robots 不是 noindex
-   - <title> 含 Blind Box AI Video Generator（或仓库最新蓝海 Title）
+   - <title> 含仓库审核过的 Blind Box 产品意图（不得用“蓝海”作证据）
 D) 结果写进 GitHub 并 push：
    - docs/growth/runs/DEPLOY-<ts>-report.md
    - docs/growth/AGENT_STATE.md writer: workbuddy
@@ -188,7 +188,7 @@ python3 scripts/growth-auto/run_growth.py --all
 - 读 scripts/growth-auto/directories.json（free=true 优先）
 - 产出 docs/growth/runs/<ts>-report.md + screenshots
 - 域名只 pikbo.ai；主链优先 https://pikbo.ai/tools/ai-toy-video-generator
-- 锚文本可轮换蓝海词（见 LONG_TAIL_KEYWORD_MAP.md）
+- 使用真实品牌名和准确产品描述；不要按“蓝海词”机械轮换锚文本
 
 若发版 FAIL：仍可跑 growth（外链不依赖新 sitemap），但 report 标明 deploy_failed。
 

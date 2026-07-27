@@ -1,5 +1,9 @@
 # WorkBuddy：打开用户登录（整段复制给 WorkBuddy）
 
+> **撤销，禁止执行（2026-07-27）：** WorkBuddy 不再有生产密钥、数据库、
+> Supabase、Vercel 或部署权限。认证配置已转交恢复波次工程 owner。本文件只
+> 保留历史，不得复制执行。
+
 **老板用法：** 复制下方 fenced **全文** → 丢给 WorkBuddy。  
 老板不配密钥、不点 Vercel；你用 Chrome / 环境变量自己搞定。搞不定就 **诚实写 blocked**，再继续外链，禁止空转问老板。
 

@@ -1,5 +1,8 @@
 # WorkBuddy：只做外链 + GSC 验收（禁止扩 sitemap）
 
+> **历史提示词，泛目录提交已暂停（2026-07-27）：** 当前只执行
+> `WORK_QUEUE.md` 的原始 GSC/AITDK/哥飞证据收集和公开 listing 核验。
+
 **老板用法：** 复制下方 fenced **全文**丢给 WorkBuddy。  
 策略来自 SEO 复核：生产 sitemap **13 条已正确**；主战场是外链与收录，**禁止**把全站 /tools /for /effects 塞进 sitemap。
 
