@@ -55,6 +55,26 @@ export const SELLER_PACK_SLUGS: readonly SellerPackSlug[] = SELLER_PACK_ITEMS.ma
   (i) => i.slug
 );
 
+export type SellerPackChildOutcomeStatus =
+  | "queued"
+  | "running"
+  | "succeeded"
+  | "failed"
+  | "refunded"
+  | "not_started"
+  | "recovery_unavailable";
+
+/** A retry may target only work that did not produce a retained success. */
+export function isSellerPackRetryableStatus(
+  status: SellerPackChildOutcomeStatus
+): boolean {
+  return (
+    status === "failed" ||
+    status === "refunded" ||
+    status === "not_started"
+  );
+}
+
 /** True when the slug list is exactly the frozen pack (order-insensitive). */
 export function isExactSellerPackSelection(slugs: readonly string[]): boolean {
   if (slugs.length !== SELLER_PACK_SLUGS.length) return false;
@@ -79,7 +99,10 @@ export function sellerPackCachedGoldenSettlement(opts?: {
     slug: SellerPackSlug;
     credits: 0;
     demo: true;
-    status: "succeeded" | "failed" | "not_started";
+    status: Extract<
+      SellerPackChildOutcomeStatus,
+      "succeeded" | "failed" | "not_started"
+    >;
     refund: "n/a";
   }>;
   creditsCharged: 0;
@@ -92,8 +115,7 @@ export function sellerPackCachedGoldenSettlement(opts?: {
     demo: true as const,
     status: (failed.has(i) ? "failed" : "succeeded") as
       | "succeeded"
-      | "failed"
-      | "not_started",
+      | "failed",
     refund: "n/a" as const,
   }));
   return {

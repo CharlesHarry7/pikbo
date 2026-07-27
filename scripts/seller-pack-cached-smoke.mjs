@@ -7,6 +7,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import ts from "typescript";
 
 const root = process.cwd();
 const batch = readFileSync(join(root, "components/BatchStudio.tsx"), "utf8");
@@ -19,6 +20,31 @@ const liveGate = readFileSync(join(root, "lib/liveGenerationGate.mjs"), "utf8");
 const packageJson = readFileSync(join(root, "package.json"), "utf8");
 const ciYml = readFileSync(join(root, "docs/ci/github-actions-ci.yml"), "utf8");
 
+function loadTypeScriptModule(relativePath, dependencies = {}) {
+  const source = readFileSync(join(root, relativePath), "utf8");
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+    },
+  }).outputText;
+  const loaded = { exports: {} };
+  new Function("require", "exports", "module", compiled)(
+    (id) => {
+      if (Object.hasOwn(dependencies, id)) return dependencies[id];
+      throw new Error(`unexpected ${relativePath} import: ${id}`);
+    },
+    loaded.exports,
+    loaded
+  );
+  return loaded.exports;
+}
+
+const contractModule = loadTypeScriptModule("lib/sellerPackContract.ts");
+const recoveryModule = loadTypeScriptModule("lib/sellerPackRecovery.ts", {
+  "@/lib/sellerPackContract": contractModule,
+});
+
 // ─── Fixed trio in contract (PRD §4) ───
 const EXPECTED_SLUGS = [
   "360-spin-showcase",
@@ -28,6 +54,7 @@ const EXPECTED_SLUGS = [
 assert.match(contract, /export const SELLER_PACK_ITEMS/);
 assert.match(contract, /export function sellerPackCachedGoldenSettlement/);
 assert.match(contract, /export function isExactSellerPackSelection/);
+assert.match(contract, /export function isSellerPackRetryableStatus/);
 assert.match(contract, /SELLER_PACK_CHILD_COUNT = 3/);
 assert.match(contract, /providerCalls: 0/);
 assert.match(contract, /totalCredits: 0/);
@@ -39,47 +66,89 @@ for (const slug of EXPECTED_SLUGS) {
 assert.match(contract, /aspectRatio: "1:1"/);
 assert.match(contract, /aspectRatio: "9:16"/);
 assert.match(batch, /sellerPackContract/);
-// Recovery stays dependency-free but must list the same frozen slugs.
-assert.match(recovery, /360-spin-showcase/);
-assert.match(recovery, /blind-box-unboxing/);
-assert.match(recovery, /paparazzi-flash/);
+assert.match(recovery, /SELLER_PACK_ITEMS/);
+assert.doesNotMatch(recovery, /const FIXED_CHILDREN = \[\s*\{/);
 
-// Pure mirror of sellerPackCachedGoldenSettlement
-const FIXED = [
-  { slug: "360-spin-showcase" },
-  { slug: "blind-box-unboxing" },
-  { slug: "paparazzi-flash" },
-];
-function sellerPackCachedGoldenSettlement(opts) {
-  const failed = new Set(opts?.failedIndexes ?? []);
-  const children = FIXED.map((item, i) => ({
-    slug: item.slug,
-    credits: 0,
-    demo: true,
-    status: failed.has(i) ? "failed" : "succeeded",
-    refund: "n/a",
-  }));
-  return {
-    childCount: 3,
-    totalCredits: 0,
-    demo: true,
-    providerCalls: 0,
-    children,
-    creditsCharged: 0,
-    creditsRefunded: 0,
-  };
-}
-const full = sellerPackCachedGoldenSettlement();
+// Execute the real contract rather than a hand-written mirror.
+const full = contractModule.sellerPackCachedGoldenSettlement();
 assert.equal(full.providerCalls, 0);
 assert.equal(full.totalCredits, 0);
 assert.equal(full.creditsCharged, 0);
 assert.equal(full.creditsRefunded, 0);
 assert.ok(full.children.every((c) => c.demo && c.credits === 0 && c.refund === "n/a"));
-const partial = sellerPackCachedGoldenSettlement({ failedIndexes: [1] });
+assert.deepEqual(
+  full.children.map((child) => child.slug),
+  EXPECTED_SLUGS
+);
+const partial = contractModule.sellerPackCachedGoldenSettlement({
+  failedIndexes: [1],
+});
 assert.equal(partial.children[1].status, "failed");
 assert.equal(partial.children[1].refund, "n/a");
 assert.equal(partial.creditsRefunded, 0);
 assert.equal(partial.providerCalls, 0);
+assert.equal(
+  contractModule.isSellerPackRetryableStatus(partial.children[0].status),
+  false
+);
+assert.equal(
+  contractModule.isSellerPackRetryableStatus(partial.children[1].status),
+  true
+);
+assert.equal(contractModule.isSellerPackRetryableStatus("not_started"), true);
+assert.equal(
+  contractModule.isSellerPackRetryableStatus("recovery_unavailable"),
+  false
+);
+
+// Partial recovery is authoritative: success stays playable; only the failed
+// child is retryable; no sibling result or credit state is overwritten.
+const recoveredRun = {
+  version: 1,
+  projectId: "seller-pack-smoke",
+  savedAt: "2026-07-28T00:00:00.000Z",
+  children: contractModule.SELLER_PACK_ITEMS.map((item, index) => ({
+    slug: item.slug,
+    name: item.label,
+    aspectRatio: item.aspectRatio,
+    requestId: `job-${index + 1}`,
+    statusHint: index === 1 ? "failed" : "succeeded",
+    retryCount: 0,
+  })),
+};
+const recoveredPartial = recoveryModule.reconcileSellerPackRecovery(
+  recoveredRun,
+  contractModule.SELLER_PACK_ITEMS.map((item, index) => ({
+    id: `job-${index + 1}`,
+    effect: item.slug,
+    status: index === 1 ? "failed" : "succeeded",
+    videoUrl:
+      index === 1 ? undefined : `https://cdn.example.test/${item.slug}.mp4`,
+    demo: true,
+    creditsOutcome: index === 1 ? "0 cached" : "0 cached",
+    error: index === 1 ? "Injected cached failure" : undefined,
+  }))
+);
+assert.deepEqual(
+  recoveredPartial.children.map((child) => child.status),
+  ["succeeded", "failed", "succeeded"]
+);
+assert.deepEqual(
+  recoveredPartial.children
+    .filter((child) =>
+      contractModule.isSellerPackRetryableStatus(child.status)
+    )
+    .map((child) => child.slug),
+  ["blind-box-unboxing"]
+);
+assert.equal(
+  recoveredPartial.children[0].videoUrl,
+  "https://cdn.example.test/360-spin-showcase.mp4"
+);
+assert.equal(
+  recoveredPartial.children[2].videoUrl,
+  "https://cdn.example.test/paparazzi-flash.mp4"
+);
 
 // Free Mini full pack block
 assert.match(quote, /sellerPackLiveStartAllowed/);

@@ -7,8 +7,11 @@
  * child result and credit settlement.
  *
  * Frozen children must match lib/sellerPackContract.ts (seller-pack-cached-smoke).
- * Keep this module dependency-free so engine-smoke can transpile it in isolation.
+ * Keep state and settlement logic pure so engine-smoke can transpile it in
+ * isolation with the canonical contract injected.
  */
+
+import { SELLER_PACK_ITEMS } from "@/lib/sellerPackContract";
 
 export const SELLER_PACK_RECOVERY_KEY = "pikbo_seller_pack_active_v1";
 
@@ -39,12 +42,11 @@ export type SellerPackRecoveryRun = {
   children: SellerPackRecoveryChild[];
 };
 
-/** Must match SELLER_PACK_ITEMS in sellerPackContract.ts (order + slugs). */
-const FIXED_CHILDREN = [
-  { slug: "360-spin-showcase", name: "Listing Spin", aspectRatio: "1:1" },
-  { slug: "blind-box-unboxing", name: "Blind-box Reveal", aspectRatio: "9:16" },
-  { slug: "paparazzi-flash", name: "Social Flash", aspectRatio: "9:16" },
-] as const;
+const FIXED_CHILDREN = SELLER_PACK_ITEMS.map((item) => ({
+  slug: item.slug,
+  name: item.label,
+  aspectRatio: item.aspectRatio,
+}));
 
 export type SellerPackPublicJob = {
   id: string;

@@ -4770,7 +4770,8 @@ const sellerPackRecoverySrc = fs.readFileSync(
 assert.match(sellerPackRecoverySrc, /SELLER_PACK_RECOVERY_KEY/);
 assert.match(sellerPackRecoverySrc, /reconcileSellerPackRecovery/);
 assert.match(sellerPackRecoverySrc, /Job is no longer available in this device\/server session/);
-assert.match(sellerPackRecoverySrc, /360-spin-showcase/);
+assert.match(sellerPackRecoverySrc, /SELLER_PACK_ITEMS/);
+assert.doesNotMatch(sellerPackRecoverySrc, /const FIXED_CHILDREN = \[\s*\{/);
 assert.match(sellerPackRecoverySrc, /refund unconfirmed/);
 // Contract + recovery must stay in lockstep (golden smoke also asserts).
 assert.match(
@@ -5033,7 +5034,23 @@ assert.match(libraryGridRetry, /createUi/);
 assert.match(batchStudio, /function retryEligible/);
 assert.match(
   batchStudio,
-  /function retryEligible[\s\S]{0,320}status === ["']failed["']/
+  /function retryEligible[\s\S]{0,320}isSellerPackRetryableStatus/
+);
+const sellerPackContract = fs.readFileSync(
+  join(root, "lib/sellerPackContract.ts"),
+  "utf8"
+);
+assert.match(
+  sellerPackContract,
+  /status === ["']failed["']/
+);
+assert.match(
+  sellerPackContract,
+  /status === ["']refunded["']/
+);
+assert.match(
+  sellerPackContract,
+  /status === ["']not_started["']/
 );
 assert.doesNotMatch(
   batchStudio,
