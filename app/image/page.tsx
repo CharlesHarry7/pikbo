@@ -79,6 +79,8 @@ export default function ImageStudioPage() {
   const [me, setMe] = useState<MeResponse | null>(null);
   /** Phase D/F parity — cancel mid still; refund unconfirmed if live debit started. */
   const abortRef = useRef<AbortController | null>(null);
+  /** R1b one-shot fork token from ?retryJobId= (Library ledger retry). */
+  const retryJobIdRef = useRef<string | undefined>(undefined);
   /** Device-local bible SKU — AfterPath hops (Create/Batch parity). */
   const [toySku, setToySku] = useState("");
   /** Process-memory Flux ledger (GET /api/image) — recovery honesty. */
@@ -107,13 +109,17 @@ export default function ImageStudioPage() {
       } catch {
         /* private mode */
       }
-      // Library / deep-link recovery: ?prompt=&aspect=&job=
+      // Library / deep-link recovery: ?prompt=&aspect=&job=&retryJobId=
       try {
         const sp = new URLSearchParams(window.location.search);
         const p = sp.get("prompt")?.trim();
         const a = sp.get("aspect")?.trim();
+        const retry = sp.get("retryJobId")?.trim();
         if (p && p.length >= 4) setPrompt(p.slice(0, 2000));
         if (a && ["1:1", "3:4", "16:9", "9:16"].includes(a)) setAspect(a);
+        if (retry && retry.length >= 8) {
+          retryJobIdRef.current = retry.slice(0, 128);
+        }
       } catch {
         /* SSR / private */
       }
@@ -393,8 +399,15 @@ export default function ImageStudioPage() {
     setFailRetryAfterSec(null);
     setFailCreditState(null);
     try {
+      const ledgerRetryJobId = retryJobIdRef.current;
+      retryJobIdRef.current = undefined;
       const result = await postImageWithRetry(
-        { prompt: trimmed, aspect: aspectUse, idempotencyKey },
+        {
+          prompt: trimmed,
+          aspect: aspectUse,
+          idempotencyKey,
+          ...(ledgerRetryJobId ? { retryJobId: ledgerRetryJobId } : {}),
+        },
         { signal: abortCtrl.signal }
       );
       if (!result.ok) {

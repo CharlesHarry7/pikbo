@@ -793,7 +793,8 @@ export function BatchStudio({
     packAbortRef.current = abortCtrl;
 
     // Phase C: Seller Pack shadow-reserves 30 (or N×10) when durable is on.
-    // Cookie still debits per child; DURABLE_OFF is non-fatal.
+    // Shadow reserve is audit-only; live child spend uses generate cost gate.
+    // DURABLE_OFF is non-fatal (children still hit R0 cached/live path).
     let packReservationId: string | null = null;
     if (sellerPackActive && !demoMode) {
       const reserved = await reserveSellerPackShadowClient({

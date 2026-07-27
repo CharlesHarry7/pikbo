@@ -1581,6 +1581,19 @@ assert.match(
   genJobsStore,
   /Never promote by effect\/prompt guess|explicit fork token|explicit retry token/
 );
+// R1b fixed deadline: TIMEOUT uses createdAt, not last touch
+assert.match(
+  genJobsStore,
+  /Fixed deadline from open stamp|fixed from \*\*createdAt\*\*|createdAt only|Fixed deadline from createdAt|from \*\*createdAt\*\*/
+);
+assert.match(
+  genJobsStore,
+  /sweepTimedOutJobs[\s\S]{0,400}job\.createdAt/
+);
+assert.doesNotMatch(
+  genJobsStore,
+  /Prefer updatedAt so re-touched running jobs get a full window/
+);
 assert.match(genJobsStore, /export function completeSyncGenerateJob/);
 assert.match(genJobsStore, /export function failSyncGenerateJob/);
 assert.match(genJobsStore, /export function touchJob/);

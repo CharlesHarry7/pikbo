@@ -292,7 +292,13 @@ export async function cancelImageLedger(opts: {
 }
 
 export async function postImage(
-  body: { prompt: string; aspect?: string; idempotencyKey?: string },
+  body: {
+    prompt: string;
+    aspect?: string;
+    idempotencyKey?: string;
+    /** R1b process-memory fork token from POST /api/image/[id]/retry */
+    retryJobId?: string;
+  },
   init?: { signal?: AbortSignal }
 ): Promise<ImageResult> {
   try {
@@ -341,7 +347,12 @@ export async function postImage(
  * Never auto-retries ledger TIMEOUT — mint a new key after kill recovery.
  */
 export async function postImageWithRetry(
-  body: { prompt: string; aspect?: string; idempotencyKey?: string },
+  body: {
+    prompt: string;
+    aspect?: string;
+    idempotencyKey?: string;
+    retryJobId?: string;
+  },
   opts?: { maxRetries?: number; signal?: AbortSignal }
 ): Promise<ImageResult> {
   const maxRetries = opts?.maxRetries ?? 1;
