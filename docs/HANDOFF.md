@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] Three-Agent GitHub control plane
+- Canonical source is `https://github.com/CharlesHarry7/pikbo`; stale repository references are corrected and the local clone now fetches every remote branch.
+- SEO PR #31 merged to `main` as `c914eac` after 3/3 GitHub checks passed with no conflicts; no production deployment, GSC request or public release was triggered.
+- Active lanes are now one task/branch/PR each: Codex control plane, Grok sourced growth evidence, and WorkBuddy read-only AITDK/GSC baseline.
+- Hourly thread heartbeat is active and emits full Beijing 09:00/21:00 summaries; it will not duplicate busy tasks and stops a lane after the same blocker repeats three times.
+- Next Codex task after this control-plane PR: Seller Pack cached golden path. T6 remains fail-closed without ffmpeg, verified object storage and non-production proof.
+
 ### 2026-07-28 — [grok] Webhook late/orphan withhold + Seller Pack shadow copy
 - `applyProviderWebhookEvent`: orphan live success → `WITHHELD_ORPHAN` (no free clip / no "10 used"); late success after cancel/timeout uses `providerCompletionDecision` and withholds media.
 - Webhook JSON echoes `withheld`; only `running` pre-deadline attempts may complete to succeeded.

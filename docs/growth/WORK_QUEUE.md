@@ -4,18 +4,42 @@
 凡 `status: open` 的任务必须执行，完成后改成 `status: done` 并写
 `result`。WorkBuddy 不得读取生产密钥、改数据库/业务代码、操作
 Vercel/Supabase 或直接更新 `main`；需要落盘时提交到获准的
-`agent/grok/*` 分支等待审核。
+`agent/workbuddy/*` 分支等待审核。
 Grok **不能**远程启动你的进程——只能把任务写在这里；**你**要自己跑起来。
 
 ---
 
 ## OPEN · 立即执行
 
+### WQ-2026-07-28-12 · AITDK/GSC/浏览器 SEO 基线
+
+```yaml
+id: WQ-2026-07-28-12
+status: open
+priority: P0
+assignee: workbuddy
+branch: agent/workbuddy/seo-baseline-2026-07-28
+deliverable: docs/evidence/WORKBUDDY_SEO_BASELINE_2026-07-28.md
+must_include:
+  - page URL and Beijing timestamp for every finding
+  - AITDK category results, not only the total score
+  - GSC indexed/not-indexed reasons, impressions, clicks and CTR
+  - sitemap, video, structured-data, links and trust evidence
+  - screenshot/export path and retest state
+do_not:
+  - request indexing or submit directories
+  - change business code, production configuration or secrets
+  - touch database, Vercel, Supabase, Stripe or main
+  - bypass login, permission prompts or CAPTCHA
+result: |
+  (WB 填：commit SHA、PR、证据与阻塞)
+```
+
 ### WQ-2026-07-27-10 · 收集 GSC / AITDK / 哥飞原始证据
 
 ```yaml
 id: WQ-2026-07-27-10
-status: open
+status: superseded_by_WQ-2026-07-28-12
 priority: P0
 assignee: workbuddy
 why: |
@@ -40,7 +64,7 @@ result: |
 
 ```yaml
 id: WQ-2026-07-27-11
-status: open
+status: queued_after_baseline
 priority: P0
 assignee: workbuddy
 why: 历史报告记录了 submitted，但没有可审计 published / verified backlink URL

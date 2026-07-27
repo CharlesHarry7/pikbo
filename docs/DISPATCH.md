@@ -10,6 +10,46 @@
 三 agent 研究成果进仓库 · 索引 `docs/research/README.md` · 粘贴 `docs/PASTE_SHARED_RESEARCH.md` · 共识 `docs/research/SHARED_SYNTHESIS.md`。  
 开工前先读 research；禁止只在对话里研究不落盘。
 
+## 当前唯一派工：三 Agent GitHub 持续队列（2026-07-28）
+
+GitHub `CharlesHarry7/pikbo` 是唯一事实源。每个 Agent 同时只占一个任务、一个
+独立分支、一个 PR；先 fetch 全分支并检查 `STATUS`、远端分支和开放 PR。任务
+完成必须有提交/PR/报告和测试证据，不能把“正在思考”算进度。
+
+### Codex — `agent/gpt/three-agent-control-plane`
+
+1. PR #31 已在 3/3 checks 通过、无冲突后合并到 `main` (`c914eac`)。
+2. 修正残留旧仓库地址、分支 fetch、任务认领、PR 模板和交接规则。
+3. 合并本控制面后只认领 `agent/gpt/seller-pack-cached-golden-path`：
+   一张图、固定三条缓存演示、零 Provider 调用，覆盖失败、重试和部分成功。
+4. T6 可完善接口、测试和运行手册，但在缺少 ffmpeg、已验证对象存储和非生产
+   证明时 readiness 必须保持 `false`。
+
+### Grok — `agent/grok/pikbo-growth-evidence`
+
+- 输出 `docs/growth/SERP_INTENT_EVIDENCE_2026-07-28.md` 和
+  `docs/growth/LINK_OPPORTUNITIES_2026-07-28.csv`。
+- 只研究全球英文 SERP、竞争页面、潮玩卖家意图、内容差距和可获得外链。
+- 每条结论附来源与检索时间；不编造搜索量，不批量生成页面，不自动提交目录。
+- 审查核心 PR 是否仍是“潮玩领域的 Higgsfield”，而不是泛 AI 工具站。
+
+### WorkBuddy — `agent/workbuddy/seo-baseline-2026-07-28`
+
+- 使用 AITDK、GSC 和真实浏览器记录收录/未收录原因、曝光、点击、CTR、sitemap、
+  视频、结构化数据、链接和页面问题。
+- 输出 `docs/evidence/WORKBUDDY_SEO_BASELINE_2026-07-28.md`；每条结论包含页面、
+  截图/数据时间和复测结果，不能只报总分。
+- 部署前只读：不得请求收录、改业务代码、读取生产密钥、改数据库、部署或直接推
+  `main`。遇到登录、权限或验证码只记录阻塞，不绕过。
+
+### 持续与停止规则
+
+- 每小时检查 Agent 状态、远端提交、PR、CI 和阻塞；忙时不重复派工。
+- 北京时间 09:00 与 21:00 按 Agent 汇总完成项、SHA、PR、测试、阻塞和下一步。
+- 同一失败连续三轮后停止该工作线消耗，记录证据和老板需要完成的最小动作。
+- 公开 `pikbo.ai`、GSC 请求收录、DNS、Supabase/数据库、积分、计费、Stripe、
+  付费生成和生产部署继续等待老板单独明确 `GO`。
+
 ## 当前唯一派工：Recovery Wave（2026-07-27）
 
 Grok 临时全面接管已经结束。最新审计见 `docs/AUDIT_2026-07-27.md`。

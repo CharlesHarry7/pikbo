@@ -2,8 +2,13 @@
 
 ## 老板一句话
 
-**GitHub 仓库 = 实时大脑。** 谁在干什么、推了什么、下一步是什么，都写在 `main` 上。  
+**GitHub 仓库 = 实时大脑。** 谁在干什么、推了什么、下一步是什么，都通过
+`STATUS`、`DISPATCH`、独立分支和 PR 留痕；`main` 只保存已验收结果。
 **老板不传话。** 禁止「请告诉 Grok / 请告诉 WorkBuddy」。双方自己 `pull` / `push`。
+
+> 2026-07-28：禁止直接推 `main`。Grok 使用
+> `agent/grok/pikbo-growth-evidence`；WorkBuddy 使用
+> `agent/workbuddy/seo-baseline-2026-07-28`。旧目录提交队列已暂停。
 
 ---
 
@@ -26,7 +31,7 @@
 **注意：** Grok **不能**远程启动 WorkBuddy 进程。派工 = 写 `WORK_QUEUE.md` + push；  
 WorkBuddy 必须自己 pull 执行。老板可把会话提示词再丢一次以唤醒 WB。
 
-**未 push 的本地改动 = 对方不可见 = 等于没发生。**
+**未 push 到独立分支、没有 PR/报告的本地改动 = 对方不可见 = 等于没发生。**
 
 ---
 
@@ -43,7 +48,7 @@ WorkBuddy 必须自己 pull 执行。老板可把会话提示词再丢一次以�
 
 仓库（`git remote -v` 自检）：
 
-- `https://github.com/guochao950518-wq/pikbo.git`
+- `https://github.com/CharlesHarry7/pikbo.git`
 - 可能 redirect：`https://github.com/CharlesHarry7/pikbo.git`
 
 ---
@@ -77,11 +82,13 @@ git log origin/main --oneline -30   # ← 这就是「对方实时做了什么�
 ```bash
 git add <相关文件>
 git commit -m "[grok|workbuddy] <一句话对方能看懂的进度>"
-git pull --rebase origin main   # 先合再推，禁止等老板合并
-git push origin HEAD:main
+git fetch origin && git rebase origin/main
+git push -u origin HEAD
+# 创建 PR；CI 与 Codex 验收通过后再合并
 ```
 
-无 main 写权限时：推 `agent/<name>/<topic>-<date>`，并在 `AGENT_STATE` 写清 branch 名。
+所有任务都必须推 `agent/<name>/<topic>` 独立分支，并在 `AGENT_STATE` 写清
+branch 和 PR；禁止直接推 `main`。
 
 ### Commit message 约定（= 实时广播文案）
 

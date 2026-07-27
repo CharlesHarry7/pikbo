@@ -1,7 +1,10 @@
 # WorkBuddy：替老板完成 Vercel 发版 + SEO 验收（整段复制）
 
-**老板用法：** 复制下方 fenced **全文**丢给 WorkBuddy。  
-老板不懂点哪里——**禁止再问老板怎么点**；你用 Chrome 自己完成。
+> **撤销，禁止执行（2026-07-28）：** 当前 WorkBuddy 仅可执行
+> `agent/workbuddy/seo-baseline-2026-07-28` 的只读外部审计。不得部署、
+> 请求收录、读取密钥、改代码/数据库或直接推 `main`。
+
+**仅历史存档：不得复制下方 fenced 块给 WorkBuddy。**
 
 ---
 
@@ -38,7 +41,7 @@ E) 有余力：GSC 重提 sitemap；再跑一轮 growth-auto 外链
 权威域名只许 https://pikbo.ai（禁止 pikbo.com）
 
 仓库：
-- https://github.com/guochao950518-wq/pikbo.git
+- https://github.com/CharlesHarry7/pikbo.git
 - 可能 redirect: https://github.com/CharlesHarry7/pikbo.git
 
 ══════════════════════════════════════════════════════════════════

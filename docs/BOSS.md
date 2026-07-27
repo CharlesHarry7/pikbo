@@ -38,7 +38,7 @@
 ## 方法三：直接改 GitHub 网页（不用终端）
 
 1. 打开  
-   https://github.com/guochao950518-wq/pikbo/blob/main/docs/DISPATCH.md  
+   https://github.com/CharlesHarry7/pikbo/blob/main/docs/DISPATCH.md
 2. 点铅笔编辑  
 3. 在「老板原话」里写你的目标  
 4. Commit  
@@ -67,7 +67,7 @@
 ## 同一句开工口令（收藏）
 
 ```text
-仓库：https://github.com/guochao950518-wq/pikbo
+仓库：https://github.com/CharlesHarry7/pikbo
 git fetch && git checkout main && git pull --ff-only
 必读 docs/DISPATCH.md（只做分给你的一节）+ STATUS + HANDOFF
 分支 agent/<你>/<topic>，提交前缀 [你]，做完 push 并更新 DISPATCH/STATUS

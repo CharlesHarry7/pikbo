@@ -1,7 +1,7 @@
 # 专家视角审站 · Pikbo（2026-07-23）
 
 **对象：** 本机 softLive 站（`localhost:3000` · `live-generate` · 无 Stripe）  
-**仓库：** https://github.com/guochao950518-wq/pikbo  
+**仓库：** https://github.com/CharlesHarry7/pikbo
 **方法：** 竞品优先（HF 类）+ 哥飞 SEO（辅）+ Namya/AIDA 转化（辅）  
 **目标：** 周日 soft 上线前，老板能看懂「专家会挑什么」  
 

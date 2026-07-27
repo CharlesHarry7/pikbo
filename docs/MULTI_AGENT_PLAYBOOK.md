@@ -1,13 +1,18 @@
 # 多 Agent 作战手册 — Grok · Claude · Codex · WorkBuddy
 
 **总目标：** [pikbo.ai](https://pikbo.ai) = **潮玩版 [higgsfield.ai](https://higgsfield.ai/)**  
-产品 OS 体感 + 谷歌/外链养站 **双抓**。GitHub `main` = 唯一实时大脑。老板不传话。
+产品 OS 体感 + 谷歌/外链养站 **双抓**。GitHub 仓库 = 唯一实时大脑。老板不传话。
+
+> **2026-07-28 当前覆盖规则：** 活跃车道只有 Codex 工程与集成、Grok
+> 增长证据、WorkBuddy 只读外部审计。每个 Agent 同时一个任务/分支/PR；
+> 禁止直接推 `main`。以下历史分工与本规则冲突时，以
+> `docs/DISPATCH.md` 顶部的三 Agent 队列为准。
 
 权威域名：**https://pikbo.ai**（禁止 pikbo.com）
 
 仓库：
 
-- `https://github.com/guochao950518-wq/pikbo.git`
+- `https://github.com/CharlesHarry7/pikbo.git`
 - 可能 redirect：`https://github.com/CharlesHarry7/pikbo.git`
 
 ---
@@ -32,10 +37,10 @@
 
 | Agent | 主责 | 默认可写 | 少碰 |
 |-------|------|----------|------|
-| **Grok** | Generate 闭环、诚实度门控、HF 同构密度、SITE_WATCH、X 竞品雷达、growth 脚本加固 | `app/` `components/` `lib/` `scripts/` `docs/ops/` `docs/growth/`（状态） | 无老板令不开 Stripe live |
-| **Claude** | UI/IA、首页与 Create 视觉密度、i18n、交互打磨、无障碍 | `components/` `app/**/page.tsx` 样式与结构 | 计费 / durable SQL / 假 UGC |
-| **Codex** | 诚实文案、信任条、SEO 元信息与结构化数据（**不乱扩 URL**）、lint/type 洁癖 | `lib/site.ts` 文案字段、FAQ、少量 copy；测试锁 | 批量新 pSEO 页、改主词 H1/TDH 需明示 |
-| **WorkBuddy** | 外链目录、PH 素材、GSC 快照、Chrome 无人提交 | `docs/growth/**` `scripts/growth-auto/**` | 业务 Create/API |
+| **Codex** | 产品工程、集成、技术 SEO、测试与 PR/CI 验收 | 获准任务涉及的代码与控制文档 | 生产、付费、数据库、公开发布 |
+| **Grok** | 全球英文 SERP、卖家意图、竞争差距、可获得外链和定位审查 | `docs/growth/**`、`docs/research/**` | 批量造页、目录提交、编造搜索量、业务代码 |
+| **WorkBuddy** | AITDK/GSC/真实浏览器只读基线与复测 | 指定证据报告和最小 STATUS/HANDOFF | 请求收录、业务代码、密钥、生产系统 |
+| **Claude** | 既有工程成果维护；仅在 STATUS 明确认领后进入新队列 | 被认领分支范围 | 未认领的当前三 Agent 工作线 |
 
 交叉改同一文件：先 `git pull`，在 HANDOFF 留「交叉请求」一行，rebase 后 push。
 
@@ -46,7 +51,8 @@
 **完整细则：** `docs/growth/AGENT_SYNC.md`（开工必读）
 
 ```bash
-git fetch origin && git pull --ff-only origin main
+git fetch origin --prune
+git checkout main && git pull --ff-only origin main
 git log origin/main --oneline -40   # 这就是别人实时做了什么
 # 再读：AGENT_STATE · COMMUNICATION_LOG · HANDOFF · WORK_QUEUE · SITE_WATCH
 ```
@@ -56,8 +62,9 @@ git log origin/main --oneline -40   # 这就是别人实时做了什么
 ```bash
 # 可扫 commit；有老板沟通则 append COMMUNICATION_LOG.md
 git commit -m "[grok|claude|codex|workbuddy] <一句话>"
-git pull --rebase origin main && git push origin HEAD:main
-# 确认：git status 干净且 main == origin/main
+git fetch origin && git rebase origin/main
+git push -u origin HEAD
+# 创建 PR；CI 与 Codex 验收通过后再合并
 ```
 
 | 广播位置 | 谁写 |
@@ -81,7 +88,7 @@ git pull --rebase origin main && git push origin HEAD:main
 - [ ] `pikbo.ai` softLive / 主路径 200  
 - [ ] sitemap 可达  
 - [ ] 主词页 `/tools/ai-toy-video-generator` 仍是增长锚（不擅自换 H1/TDH）  
-- [ ] 外链/目录：WorkBuddy report 或记「无 push」  
+- [ ] 外链：只记录公开、可获得机会和已存在 listing 的核验；不自动提交目录
 - [ ] 不新增 SEO 垃圾内页；哥飞 14d：外链优先于装 Stripe  
 
 ### 4.2 产品能力（对标 HF）
@@ -104,7 +111,7 @@ git pull --rebase origin main && git push origin HEAD:main
 
 - 域名仅 **pikbo.ai**  
 - 不假 UGC、不假多模型 live  
-- 不 force-push `main`  
+- 不直接 push 或 force-push `main`
 - 不提前 Stripe live / 装成熟收费  
 - 不抄 HF 片源、商标、用户内容（可抄 IA/密度/工作流）  
 - T5 SQL / T6 bake / Mode A Vercel 等老板事项写入 `docs/BLOCKERS_REQUEST.md`，不空等停工  
@@ -114,11 +121,12 @@ git pull --rebase origin main && git push origin HEAD:main
 ## 6. 老板如何拉齐三人
 
 1. 仓库已含本手册 + `docs/prompts/GROK_SELF_OPS.md`。  
-2. 给 **Grok**：粘贴 `GROK_SELF_OPS.md` 里 fenced 提示词。  
+2. 给 **Grok**：执行 `DISPATCH` 顶部 `agent/grok/pikbo-growth-evidence`。
 3. 给 **Claude**：  
    > 读 `docs/MULTI_AGENT_PLAYBOOK.md` + `docs/PRODUCT_NORTH_STAR.md`，你是 UI/IA 车道；pull main → 做密度/交互 → HANDOFF + push。  
 4. 给 **Codex**：  
    > 读 PLAYBOOK + 北极星；你是诚实文案与 SEO 元信息车道；不扩 URL、不改冻结 TDH；pull → 改 → push。  
-5. 给 **WorkBuddy**：`docs/growth/WORKBUDDY_AUTO_PROMPT.md`。  
+5. 给 **WorkBuddy**：执行 `DISPATCH` 顶部
+   `agent/workbuddy/seo-baseline-2026-07-28`；旧 AUTO/DEPLOY 提示词均禁止执行。
 
 进度只看 GitHub：`git log` · `SITE_WATCH` · `HANDOFF` · growth runs。

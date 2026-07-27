@@ -1,6 +1,6 @@
 # 复制即派 · 紧急止血（2026-07-23）
 
-仓库：https://github.com/guochao950518-wq/pikbo  
+仓库：https://github.com/CharlesHarry7/pikbo
 先 `git pull origin main`。
 
 ---

@@ -1,7 +1,9 @@
 # WorkBuddy：教老板看 GSC 收录（整段复制）
 
-**老板用法：** 把下方 fenced **全文**丢给 WorkBuddy。  
-目标：WorkBuddy 用 Chrome **边演示边用中文教你**，直到你会自己看「谷歌收录了多少」。
+> **历史提示词，禁止直接执行（2026-07-28）：** 当前 WorkBuddy 只执行
+> `WORK_QUEUE.md` 的基线审计分支；不得直接推 `main` 或请求收录。
+
+**仅历史存档：不得复制下方 fenced 块给 WorkBuddy。**
 
 ---
 
@@ -16,7 +18,7 @@
 - 教学结束后把「老板已会的步骤摘要 + 截图路径 + 当前数字」写进 GitHub 并 push
 
 仓库：
-- https://github.com/guochao950518-wq/pikbo.git
+- https://github.com/CharlesHarry7/pikbo.git
 - 可能 redirect: https://github.com/CharlesHarry7/pikbo.git
 
 启动：

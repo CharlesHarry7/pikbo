@@ -1,5 +1,10 @@
 # Grok 自驱提示词（粘贴给 Grok · 也写在仓库里给 Claude / Codex 对齐）
 
+> **2026-07-28 当前覆盖规则：** Grok 只执行
+> `agent/grok/pikbo-growth-evidence` 的全球英文 SERP、卖家意图、竞争差距、
+> 可获得外链和定位审查。不得批量造页、提交目录、编造搜索量、修改业务代码或
+> 直接推 `main`。与下方历史提示词冲突时，以 `docs/DISPATCH.md` 顶部为准。
+
 **用途：** 老板把本文件 fenced 代码块整段丢给 Grok（或 Grok 自读本文件开工）。  
 **总目标：** 潮玩版 [higgsfield.ai](https://higgsfield.ai/) — 产品能力 + SEO/谷歌可见度 **双抓**，GitHub 为唯一同步脑。  
 **协作：** Grok · Claude · Codex · WorkBuddy 同仓；老板不传话。
@@ -16,7 +21,7 @@
 ## 0. 每次开工（强制）
 ════════════════════════════════════
 REPO:
-- https://github.com/guochao950518-wq/pikbo.git
+- https://github.com/CharlesHarry7/pikbo.git
 - 可能 redirect: https://github.com/CharlesHarry7/pikbo.git
 
 1) git fetch origin && git checkout main && git pull --ff-only origin main
