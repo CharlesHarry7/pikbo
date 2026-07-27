@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] R3 recovery QA + image still R0 + CI fail-closed
+- `scripts/recovery-qa.mjs`: R0 cost gate, concurrent overspend (50→5/6), confirmed-failure refund, no double settle/release, Seller Pack partial, generate+image route order, no Cookie debit, CI critical-path fail-closed.
+- `/api/image` live Flux: same R0 gate as generate (cached demo for anonymous/Free; durable reserve + `invokeReservedProvider`; no Cookie debit).
+- `docs/ci/github-actions-ci.yml`: runs `recovery-qa`; removes `critical-path || true` (demo-cached default).
+- `npm run recovery-qa` (+ alias `recovery-cost-gate`); engine-smoke locks.
+- Boss: re-copy `docs/ci/github-actions-ci.yml` → `.github/workflows/ci.yml` (OAuth lacks workflow scope).
+- Checks: recovery-qa + engine-smoke + typecheck PASS.
+
 ### 2026-07-27 — [claude] R0 anonymous provider-cost gate
 - Anonymous and Free Create requests now return official cached demos at 0 credits even when `FAL_KEY` exists.
 - Live calls require verified Supabase auth, a non-Free durable account and a committed Supabase reservation; no Cookie/local-file fallback.

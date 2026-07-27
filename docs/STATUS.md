@@ -16,7 +16,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | R0 | Disable anonymous live generation; cached demo only until authenticated durable reserve | Claude | review | agent/claude/recovery-cost-gate | Anonymous/Free cached-only even with FAL_KEY; strict Supabase reserve + provider guard; zero-call regression passes. R1 atomic RPC remains separate |
 | R1 | Atomic Supabase credit reservation + explicit retry token + fixed deadline | Claude | todo | agent/claude/recovery-ledger | Must fail closed before provider call |
 | R2 | Toy Launch Pack primary funnel + event contract | GPT / Claude | doing | agent/gpt/recovery-dispatch | GPT freezes contract; Claude implements |
-| R3 | Real integration tests + CI fail on critical path | Grok / Claude | todo | agent/grok/recovery-qa | Grok QA; Claude supplies injectable boundaries |
+| R3 | Real integration tests + CI fail on critical path | Grok / Claude | review | main | recovery-qa (cost/concurrent/refund) + docs/ci critical-path fail-closed; boss re-copy workflow; R1 atomic RPC still Claude |
 | R4 | Public-example evidence ledger and honest scoring | Grok | review | agent/grok/growth-truth | Ledger audits 0 official / 12 prototype; runtime score removal remains an engineering follow-up |
 | R5 | Growth claims cleanup and WorkBuddy permission boundary | GPT / Grok | review | agent/grok/growth-truth | Search/ranking/backlink claims corrected; generic directory automation and direct-main path disabled |
 | KB-BRIDGE | Connect outbound knowledge base to Pikbo execution gates | GPT | **review** | agent/gpt/outbound-kb-bridge | GitHub bridge, task map, 8-week gates and PR template ready; Feishu publish blocked on missing local write client |

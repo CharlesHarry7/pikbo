@@ -36,6 +36,9 @@ jobs:
       - name: Engine smoke
         run: npm run engine-smoke
 
+      - name: Recovery QA (R0–R3 cost · ledger · CI honesty)
+        run: npm run recovery-qa
+
       - name: Lint
         run: npm run lint
 
@@ -75,8 +78,9 @@ jobs:
 
           export BASE_URL="http://127.0.0.1:3456"
           npm run link-check
-          # Demo mode: soft-live may fail without FAL_KEY — do not fail the job
-          npm run critical-path || true
+          # R3: critical-path fails the job. Demo-cached is the default gate
+          # (ready.demo); soft-live only when REQUIRE_SOFT_LIVE=1.
+          npm run critical-path
         env:
           NEXT_TELEMETRY_DISABLED: "1"
           PORT: "3456"

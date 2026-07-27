@@ -215,15 +215,23 @@ assert.match(pe, /PROVIDER_TIMEOUT/);
 assert.match(pe, /CONTENT_POLICY/);
 
 const imgRoute = fs.readFileSync(join(root, "app/api/image/route.ts"), "utf8");
-const imgDemo = imgRoute.indexOf("if (!process.env.FAL_KEY)");
-const imgFreeTrialGate = imgRoute.indexOf('session.plan === "free"');
-const imgDeduct = imgRoute.indexOf("deductCredits(session");
-assert.ok(imgDemo > 0 && imgDeduct > imgDemo, "image demo path free before deduct");
+const imgAccess = imgRoute.indexOf("liveGenerationAccess({");
+const imgCached = imgRoute.indexOf('if (access.kind === "cached")');
+const imgReserve = imgRoute.indexOf("reserveStrictLiveGeneration({");
+const imgProvider = imgRoute.indexOf("invokeReservedProvider(");
 assert.ok(
-  imgFreeTrialGate > 0 && imgFreeTrialGate < imgDeduct,
-  "free plan stills must not debit Mini trial (before deductCredits)"
+  imgAccess > 0 &&
+    imgCached > imgAccess &&
+    imgReserve > imgCached &&
+    imgProvider > imgReserve,
+  "image cached gate + durable reserve must precede Flux provider"
+);
+assert.doesNotMatch(
+  imgRoute,
+  /shadowReserveForGenerate|shadowReserveForGuest|deductCredits\(session|checkCredits\(session|refundCredits\(session/
 );
 assert.match(imgRoute, /free_trial_video_only/);
+assert.match(imgRoute, /anonymous_cached_only/);
 assert.match(imgRoute, /costCredits:\s*0/);
 assert.match(imgRoute, /creditsOutcome:\s*"0 cached"|creditsOutcome:\s*"10 used"/);
 assert.match(imgRoute, /Retry-After/);
@@ -961,10 +969,22 @@ const ciYml = fs.readFileSync(
   "utf8"
 );
 assert.match(ciYml, /engine-smoke/);
+assert.match(ciYml, /recovery-qa|recovery-cost-gate/);
 assert.match(ciYml, /typecheck/);
 assert.match(ciYml, /npm run build/);
+assert.match(ciYml, /npm run critical-path/);
+// R3: demo critical-path must fail the job (no soft swallow)
+assert.doesNotMatch(ciYml, /critical-path\s*\|\|\s*true/);
 // install path documented for when workflow scope is available
 assert.match(ciYml, /name: CI/);
+assert.match(
+  fs.readFileSync(join(root, "package.json"), "utf8"),
+  /"recovery-qa"/
+);
+assert.match(
+  fs.readFileSync(join(root, "scripts/recovery-qa.mjs"), "utf8"),
+  /concurrent reserves must not overspend/
+);
 // Pure module must export Wave B helpers
 const createTrust = fs.readFileSync(
   join(root, "lib/createTrust.ts"),
@@ -1899,10 +1919,10 @@ function sweepTimedOutImageJobsPure(jobs, now, timeoutMs) {
     postAt
   );
   const budgetAt = imageRoute.indexOf("takeGenerateBudget(", postAt);
-  const deductAt = imageRoute.indexOf("deductCredits(session", postAt);
+  const reserveAt = imageRoute.indexOf("reserveStrictLiveGeneration({", postAt);
   assert.ok(postAt > 0 && idempAt > postAt, "image idempotency lookup in POST");
   assert.ok(idempAt < budgetAt, "image idempotency before rate budget");
-  assert.ok(idempAt < deductAt, "image idempotency before deductCredits");
+  assert.ok(idempAt < reserveAt, "image idempotency before durable reserve");
 }
 // Pure image idempotency key gate (parity with generate min length 8)
 function normalizeImageIdempotencyKeyPure(raw) {

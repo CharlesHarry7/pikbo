@@ -24,7 +24,11 @@ export type ImageJob = {
   aspect?: string;
   imageUrl?: string;
   demo?: boolean;
-  demoReason?: "no_provider_key" | "free_trial_video_only";
+  demoReason?:
+    | "no_provider_key"
+    | "anonymous_cached_only"
+    | "free_live_delivery_blocked"
+    | "free_trial_video_only";
   model?: string;
   costCredits?: number;
   creditsOutcome?:
@@ -60,7 +64,11 @@ export type PublicImageJob = {
   imageUrl?: string;
   hasImage?: boolean;
   demo?: boolean;
-  demoReason?: "no_provider_key" | "free_trial_video_only";
+  demoReason?:
+    | "no_provider_key"
+    | "anonymous_cached_only"
+    | "free_live_delivery_blocked"
+    | "free_trial_video_only";
   model?: string;
   costCredits?: number;
   creditsOutcome?: ImageJob["creditsOutcome"];
@@ -474,7 +482,11 @@ export function completeImageJob(input: {
   aspect?: string;
   imageUrl: string;
   demo: boolean;
-  demoReason?: "no_provider_key" | "free_trial_video_only";
+  demoReason?:
+    | "no_provider_key"
+    | "anonymous_cached_only"
+    | "free_live_delivery_blocked"
+    | "free_trial_video_only";
   model?: string;
   costCredits?: number;
   creditsOutcome?: "0 cached" | "10 used";

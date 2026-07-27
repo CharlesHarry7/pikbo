@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { fal } from "@fal-ai/client";
-import { checkCredits, deductCredits, refundCredits } from "@/lib/credits";
 import { IMAGE_MODEL } from "@/lib/models";
 import {
   classifyProviderError,
@@ -16,6 +15,17 @@ import {
 import { clientIp } from "@/lib/requestMeta";
 import { ensureSession, publicSession, saveSession } from "@/lib/session";
 import { isSafeDeliverableUrl } from "@/lib/createTrust";
+import {
+  releaseStrictLiveGeneration,
+  reserveStrictLiveGeneration,
+  settleStrictLiveGeneration,
+  type StrictLiveReservation,
+} from "@/lib/durableCredits/liveReservation";
+import { getAuthUserFromRequest } from "@/lib/supabase/user";
+import {
+  invokeReservedProvider,
+  liveGenerationAccess,
+} from "@/lib/liveGenerationGate.mjs";
 import {
   beginImageJob,
   cancelImageJob,
@@ -33,6 +43,12 @@ import {
   toPublicImageJob,
   type ImageJob,
 } from "@/lib/imageJobs";
+
+type ImageDemoReason =
+  | "no_provider_key"
+  | "anonymous_cached_only"
+  | "free_live_delivery_blocked"
+  | "free_trial_video_only";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -187,7 +203,7 @@ export async function DELETE(req: Request) {
 type ImageSuccessBody = {
   imageUrl: string;
   demo: boolean;
-  demoReason?: "no_provider_key" | "free_trial_video_only";
+  demoReason?: ImageDemoReason;
   model: string;
   aspect: string;
   session: ReturnType<typeof publicSession>;
@@ -260,16 +276,29 @@ export async function POST(req: Request) {
   }
 
   let session = await ensureSession();
+  const authUser = await getAuthUserFromRequest(req);
+  const access = liveGenerationAccess({
+    providerConfigured: Boolean(process.env.FAL_KEY),
+    authenticated: Boolean(authUser),
+    planId: session.plan,
+    // T6 is deliberately blocked. Free live Flux cannot reopen until a
+    // verified server-owned derivative path exists (same gate as video).
+    freeDeliveryReady: false,
+  });
 
   const aspectEcho =
     typeof body.aspect === "string" && body.aspect.trim()
       ? body.aspect.trim().slice(0, 16)
       : "3:4";
 
-  // Idempotent replay BEFORE locks/deduct — network retries must not double-charge Flux.
+  // Idempotent replay BEFORE locks/reserve — network retries must not double-charge Flux.
   const idempotencyKey = normalizeImageIdempotencyKey(body.idempotencyKey);
-  if (idempotencyKey) {
-    const prior = findImageJobByIdempotencyKey(session.id, idempotencyKey);
+  const ledgerIdempotencyKey =
+    access.kind === "cached" && idempotencyKey
+      ? `cached:${idempotencyKey}`.slice(0, 128)
+      : idempotencyKey;
+  if (ledgerIdempotencyKey) {
+    const prior = findImageJobByIdempotencyKey(session.id, ledgerIdempotencyKey);
     if (prior) {
       if (prior.status === "succeeded") {
         const replay = successFromImageJob(prior, session, aspectEcho, true);
@@ -376,21 +405,22 @@ export async function POST(req: Request) {
         sessionId: session.id,
         prompt,
         aspect: aspectEcho,
-        idempotencyKey,
+        idempotencyKey: ledgerIdempotencyKey,
       }).id;
     } catch {
       liveJobId = undefined;
     }
 
-    // Shared free/demo still — never charges credits (video-first free trial honesty).
-    const demoStillPayload = (
-      demoReason: "no_provider_key" | "free_trial_video_only"
-    ): ImageSuccessBody => {
+    // Shared free/demo still — never charges credits (R0 + video-first free trial).
+    const demoStillPayload = (demoReason: ImageDemoReason): ImageSuccessBody => {
       // placeholder gradient SVG data URL as demo (lime/black brand, not purple)
       const sub =
-        demoReason === "free_trial_video_only"
+        demoReason === "free_trial_video_only" ||
+        demoReason === "free_live_delivery_blocked"
           ? "Free trial is Create video · upgrade for Flux"
-          : "set FAL_KEY for Flux";
+          : demoReason === "anonymous_cached_only"
+            ? "sign in for paid Flux stills"
+            : "set FAL_KEY for Flux";
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a0a0a"/><stop offset="1" stop-color="#1a2e0a"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><text x="50%" y="48%" fill="#b8ff3c" font-size="28" text-anchor="middle" font-family="sans-serif">Pikbo demo still</text><text x="50%" y="54%" fill="#b8ff3c" font-size="14" text-anchor="middle" opacity=".75">${sub}</text></svg>`;
       const imageUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
       let requestId: string | undefined;
@@ -407,7 +437,7 @@ export async function POST(req: Request) {
           model: "demo",
           costCredits: 0,
           creditsOutcome: "0 cached",
-          idempotencyKey,
+          idempotencyKey: ledgerIdempotencyKey,
         });
         requestId = job.requestId || job.id;
         jobId = job.id;
@@ -429,36 +459,91 @@ export async function POST(req: Request) {
       };
     };
 
-    // Demo stills are free when no provider is configured (parity with video demos).
-    if (!process.env.FAL_KEY) {
-      await new Promise((r) => setTimeout(r, 800));
-      return NextResponse.json(demoStillPayload("no_provider_key"));
-    }
-
-    // Free plan Mini trial is Create video only — stills must not burn the 10-credit trial.
-    // Paid plans may live-charge Flux; free always labeled demo (0 credits).
-    if (session.plan === "free") {
+    // Cost gate: anonymous + Free always receive a labeled demo still, even when
+    // FAL_KEY exists. Cookie plan/credits are never live-spend authority.
+    if (access.kind === "cached") {
       await new Promise((r) => setTimeout(r, 600));
-      return NextResponse.json(demoStillPayload("free_trial_video_only"));
+      // Preserve free_trial_video_only product copy for free plan stills.
+      const demoReason: ImageDemoReason =
+        access.reason === "no_provider_key"
+          ? "no_provider_key"
+          : access.reason === "anonymous_cached_only"
+            ? "anonymous_cached_only"
+            : session.plan === "free"
+              ? "free_trial_video_only"
+              : "free_live_delivery_blocked";
+      return NextResponse.json(demoStillPayload(demoReason));
     }
 
-    // Paid plans only below (Free returned demo above — trial is video Create only).
-    const check = checkCredits(session);
-    if (!check.ok) {
+    // Live is fail-closed: verified Supabase user + committed Supabase reserve.
+    if (!authUser) {
       return NextResponse.json(
         {
-          error: "Not enough credits — top up on Pricing or wait for plan refresh",
-          code: "INSUFFICIENT_CREDITS",
-          need: check.need,
-          have: check.have,
+          error: "Sign in before requesting live Flux stills",
+          code: "AUTH_REQUIRED",
           session: publicSession(session),
         },
-        { status: 402 }
+        { status: 401 }
       );
     }
-
-    session = deductCredits(session, check.cost);
+    if (!idempotencyKey) {
+      return NextResponse.json(
+        {
+          error: "Live image generation requires a stable idempotency key",
+          code: "RESERVATION_FAILED",
+          session: publicSession(session),
+        },
+        { status: 400 }
+      );
+    }
+    const reserved = await reserveStrictLiveGeneration({
+      userId: authUser.id,
+      idempotencyKey: `image:${idempotencyKey}`,
+    });
+    if (!reserved.ok) {
+      const status =
+        reserved.code === "INSUFFICIENT_CREDITS"
+          ? 402
+          : reserved.code === "LIVE_ACCESS_REQUIRED"
+            ? 403
+            : 503;
+      return NextResponse.json(
+        {
+          error: reserved.error,
+          code: reserved.code,
+          need: reserved.need,
+          have: reserved.have,
+          session: publicSession(session),
+        },
+        { status }
+      );
+    }
+    let liveReservation: StrictLiveReservation | null = reserved.reservation;
+    session = {
+      ...session,
+      plan: liveReservation.planId,
+      credits: reserved.availableCredits,
+    };
     await saveSession(session);
+    const releaseReservation = async (
+      reason: string,
+      jobId?: string
+    ): Promise<boolean> => {
+      if (!liveReservation) return false;
+      const released = await releaseStrictLiveGeneration(
+        liveReservation,
+        reason,
+        jobId
+      );
+      if (!released.ok) return false;
+      session = {
+        ...session,
+        credits: released.data.wallet.availableCredits,
+      };
+      await saveSession(session);
+      liveReservation = null;
+      return true;
+    };
 
     // Match generate: non-prod forced fail for refund path tests (never production).
     const forceFail =
@@ -466,14 +551,14 @@ export async function POST(req: Request) {
       process.env.NODE_ENV !== "production" &&
       process.env.VERCEL_ENV !== "production";
     if (forceFail) {
-      session = refundCredits(session, check.cost);
-      await saveSession(session);
+      const released = await releaseReservation("force_fail", liveJobId);
       const failBody = {
         error:
           "Forced image failure (PIKBO_FORCE_GENERATE_FAIL) — credits restored",
         code: "GENERATION_FAILED" as const,
         session: publicSession(session),
-        creditsRefunded: true as const,
+        creditsRefunded: released,
+        ...(!released ? { refundUnconfirmed: true as const } : {}),
       };
       try {
         failImageJob({
@@ -482,8 +567,9 @@ export async function POST(req: Request) {
           prompt,
           error: failBody.error,
           errorCode: failBody.code,
-          creditsRefunded: true,
-          idempotencyKey,
+          creditsRefunded: released,
+          refundUnconfirmed: !released,
+          idempotencyKey: ledgerIdempotencyKey,
         });
       } catch {
         /* best-effort */
@@ -502,14 +588,18 @@ export async function POST(req: Request) {
         "16:9": "landscape_16_9",
       };
 
-      const result = await fal.subscribe(IMAGE_MODEL, {
-        input: {
-          prompt: `${prompt}. Product photography style, designer toy / collectible figure, sharp detail, studio lighting.`,
-          image_size: sizeMap[aspect] || "portrait_4_3",
-          num_images: 1,
-        },
-        logs: false,
-      });
+      const result = await invokeReservedProvider(
+        reserved.reservation,
+        () =>
+          fal.subscribe(IMAGE_MODEL, {
+            input: {
+              prompt: `${prompt}. Product photography style, designer toy / collectible figure, sharp detail, studio lighting.`,
+              image_size: sizeMap[aspect] || "portrait_4_3",
+              num_images: 1,
+            },
+            logs: false,
+          })
+      );
 
       const data = result.data as {
         images?: Array<{ url?: string }>;
@@ -517,13 +607,13 @@ export async function POST(req: Request) {
       };
       const imageUrl = data.images?.[0]?.url || data.image?.url;
       if (!imageUrl) {
-        session = refundCredits(session, check.cost);
-        await saveSession(session);
+        const released = await releaseReservation("model_empty", liveJobId);
         const failBody = {
           error: "No image returned",
           code: "MODEL_EMPTY" as const,
           session: publicSession(session),
-          creditsRefunded: true as const,
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true as const } : {}),
         };
         try {
           failImageJob({
@@ -533,8 +623,9 @@ export async function POST(req: Request) {
             error: failBody.error,
             errorCode: failBody.code,
             model: IMAGE_MODEL,
-            creditsRefunded: true,
-            idempotencyKey,
+            creditsRefunded: released,
+            refundUnconfirmed: !released,
+            idempotencyKey: ledgerIdempotencyKey,
           });
         } catch {
           /* best-effort */
@@ -543,13 +634,13 @@ export async function POST(req: Request) {
       }
       // Parity with /api/generate — refuse non-http(s) open-redirect / injection URLs.
       if (!isSafeDeliverableUrl(imageUrl)) {
-        session = refundCredits(session, check.cost);
-        await saveSession(session);
+        const released = await releaseReservation("unsafe_url", liveJobId);
         const failBody = {
           error: "Model returned an unsafe image URL — credits restored",
           code: "UNSAFE_URL" as const,
           session: publicSession(session),
-          creditsRefunded: true as const,
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true as const } : {}),
         };
         try {
           failImageJob({
@@ -559,8 +650,9 @@ export async function POST(req: Request) {
             error: failBody.error,
             errorCode: failBody.code,
             model: IMAGE_MODEL,
-            creditsRefunded: true,
-            idempotencyKey,
+            creditsRefunded: released,
+            refundUnconfirmed: !released,
+            idempotencyKey: ledgerIdempotencyKey,
           });
         } catch {
           /* best-effort */
@@ -573,6 +665,20 @@ export async function POST(req: Request) {
           ? (result as { requestId?: string }).requestId
           : undefined;
 
+      const captured = await settleStrictLiveGeneration(
+        reserved.reservation,
+        providerRequestId || liveJobId || reserved.reservation.reservationId
+      );
+      if (!captured.ok) {
+        console.error(
+          "[live-reservation] image capture failed",
+          captured.code,
+          captured.error
+        );
+      } else {
+        liveReservation = null;
+      }
+
       let jobId = liveJobId;
       let requestId = providerRequestId || liveJobId;
       try {
@@ -584,10 +690,10 @@ export async function POST(req: Request) {
           imageUrl,
           demo: false,
           model: IMAGE_MODEL,
-          costCredits: check.cost,
+          costCredits: reserved.reservation.credits,
           creditsOutcome: "10 used",
           requestId: providerRequestId,
-          idempotencyKey,
+          idempotencyKey: ledgerIdempotencyKey,
         });
         jobId = job.id;
         requestId = job.requestId || job.id;
@@ -602,15 +708,14 @@ export async function POST(req: Request) {
         aspect,
         session: publicSession(session),
         // Server-echo settlement (Wave B parity with generate).
-        costCredits: check.cost,
+        costCredits: reserved.reservation.credits,
         creditsOutcome: "10 used" as const,
         requestId,
         jobId,
       });
     } catch (err) {
       console.error("image gen error:", err);
-      session = refundCredits(session, check.cost);
-      await saveSession(session);
+      const released = await releaseReservation("provider_error", liveJobId);
       const raw =
         err && typeof err === "object" && "body" in err
           ? JSON.stringify((err as { body?: unknown }).body)
@@ -630,8 +735,9 @@ export async function POST(req: Request) {
           error: msg,
           errorCode: http.code,
           model: IMAGE_MODEL,
-          creditsRefunded: true,
-          idempotencyKey,
+          creditsRefunded: released,
+          refundUnconfirmed: !released,
+          idempotencyKey: ledgerIdempotencyKey,
         });
       } catch {
         /* best-effort */
@@ -641,7 +747,8 @@ export async function POST(req: Request) {
           error: msg,
           code: http.code,
           session: publicSession(session),
-          creditsRefunded: true,
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true as const } : {}),
           ...(http.retryAfterSec != null
             ? { retryAfterSec: http.retryAfterSec }
             : {}),

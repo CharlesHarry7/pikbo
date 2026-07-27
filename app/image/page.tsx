@@ -635,11 +635,14 @@ export default function ImageStudioPage() {
             ) : null}
             {demo && (
               <p className="mt-2 text-xs text-[var(--fg-dim)]">
-                {demoReason === "free_trial_video_only"
+                {demoReason === "free_trial_video_only" ||
+                demoReason === "free_live_delivery_blocked"
                   ? "Labeled demo — Free trial credits stay reserved for Create video Mini."
-                  : demoReason === "no_provider_key"
-                    ? "Demo placeholder — add FAL_KEY for Flux stills (paid plans)."
-                    : "Demo placeholder — labeled 0 credits."}
+                  : demoReason === "anonymous_cached_only"
+                    ? "Labeled demo — sign in with a paid plan for live Flux stills."
+                    : demoReason === "no_provider_key"
+                      ? "Demo placeholder — add FAL_KEY for Flux stills (paid plans)."
+                      : "Demo placeholder — labeled 0 credits."}
               </p>
             )}
             {canHandOffStill(imageUrl) && (
