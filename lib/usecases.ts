@@ -33,14 +33,14 @@ export const USE_CASES: UseCase[] = [
     // CTR 优化 2026-07-27: 加入 Free Mini 驱动点击
     seoTitle: "Etsy Toy Listing Video Generator, Free Mini | Pikbo",
     seoDescription:
-      "Turn one owned product photo into a short Etsy listing video. Spin, floating hero, or glam look — no new shoot. Free Mini trial, no card needed.",
+      "Turn one owned product photo into an Etsy listing-video recipe. Preview cached spin, floating-hero, or glam examples before gated Live submission.",
     intro:
       "Pikbo turns one photo of your handmade toy or collectible into a short listing-video draft—no camera rig or turntable. Review generated angles and product details before publishing.",
     body: [
       "Etsy shows listing videos right in the gallery, so a short spin or floating hero shot gives buyers the confidence a photo can't.",
       "Batch a whole shop's worth of product videos from the photos you already have, and keep a consistent look across every listing.",
       "Most handmade and designer-toy shops already have packshots. Pikbo reuses those stills so you do not rebook a photographer every time you add a SKU.",
-      "Soft launch Free Mini is one live Seedance Mini clip (5s · 480p · on-player mark). Use it to validate a listing hook, then generate more on paid credits when billing is live.",
+      "Public validation uses cached Lab prototypes at 0 credits and never processes your upload. An eligible Live account sees an exact quote before submission.",
       "Always confirm Etsy's current media rules and that every generated product detail matches the physical item before you publish.",
     ],
     keywords: [
@@ -117,7 +117,7 @@ export const USE_CASES: UseCase[] = [
       "A reviewed spin draft can provide another product view, but generated angles are not a substitute for accurate product documentation.",
       "No studio booking — produce listing videos for your whole catalog from existing product photos.",
       "Amazon media rules change. Always confirm length, format, and whether lifestyle motion is allowed for your category before you replace a main image gallery item.",
-      "Soft launch Free Mini is one constrained live path (Seedance Mini · 5s · 480p · mark). Use it to validate a single hero ASIN, then batch more when paid credits are available.",
+      "Use cached Lab prototypes to validate a hero-video recipe without a provider call. Live batching remains gated until account and delivery requirements pass.",
       "Never invent features the physical product does not have. If AI motion blurs a logo or accessory, re-shoot the still or regenerate with a cleaner packshot.",
     ],
     keywords: [
@@ -185,7 +185,7 @@ export const USE_CASES: UseCase[] = [
     body: [
       "This page is for brand marketing: series teaser, restock hype, and drop-day posts. For a one-off pull/reveal clip maker, use /tools/blind-box-reveal-video-maker instead — one job per URL.",
       "Shoot or use a clean packshot of your own sculpt. We never train your prompt on third-party franchises; only upload art and packaging you own or are licensed to market.",
-      "Tease a series before samples ship, then post a matching motion language on drop day. Soft launch Free Mini is enough to validate a campaign draft (5s · 480p · mark).",
+      "Tease a series before samples ship, then post a matching motion language on drop day. Cached Lab prototypes can validate the recipe direction without processing your upload.",
       "Keep a consistent look across a release with matching recipes (mystery energy for teaser, spin for product grid). Always QA logos and box text before paid ads.",
     ],
     keywords: [
@@ -282,15 +282,15 @@ export const USE_CASES: UseCase[] = [
     // CTR 优化 2026-07-27: 加入 Free 驱动点击
     seoTitle: "Photo to Video AI for Toys & Collectibles, Free | Pikbo",
     seoDescription:
-      "Turn one owned toy photo into a short AI video. Free Mini trial for designer toys, figures, and blind-box drops. No card. No fake multi-model claims.",
+      "Turn one owned toy photo into a short-video recipe for figures and blind-box drops. Cached Lab preview first; eligible Live access is gated.",
     intro:
       "Photo-to-video for toys is the whole product: one clear still of a figure you own becomes a short clip for listings, TikTok, or drops. Pikbo is built for designer toys — not generic stock footage.",
     body: [
       "Most “AI video” tools assume people or landscapes. Collectibles need a different job: keep the paint, silhouette, and product identity readable while adding motion a phone pan cannot fake in ten seconds.",
-      "Start with a sharp product photo — even light, full figure in frame, simple background. Soft launch Free Mini runs Seedance Mini at 5s · 480p with an on-player mark. Failed live jobs restore the 10-credit debit when confirmed.",
+      "Start with a sharp product photo — even light, full figure in frame, simple background. Cached Lab prototypes cost 0 credits and never process your upload; eligible Live jobs show an exact quote.",
       "Pick a recipe that matches the channel: 360° spin for marketplaces, unboxing energy for short-form, floating hero for launch teasers. Each landing page deep-links into Generate with the recipe pre-selected.",
       "This page is the search intent “photo to video for toys.” If you need Etsy, TikTok Shop, or Amazon specifically, use the /for/* channel pages — one commercial job per URL, same upload → generate loop.",
-      "Honest limits: free trial is one Mini live clip per free period, not unlimited generation. Lab wall clips are cached demos and never process your upload. No card required to try Free Mini.",
+      "Honest limits: public validation is a cached Lab prototype, not unlimited generation. It costs 0 credits and never processes your upload.",
     ],
     keywords: [
       "photo to video toys",
@@ -302,7 +302,7 @@ export const USE_CASES: UseCase[] = [
     faq: [
       {
         q: "Can I turn one toy photo into a video without filming?",
-        a: "Yes. Upload a photo you own, confirm rights, choose a recipe, and generate. Free Mini is live Seedance Mini with fixed caps (5s · 480p · mark).",
+        a: "Yes. Upload a photo you own, confirm rights, and choose a recipe. The cached preview is free; eligible Live submission and its exact quote are checked at runtime.",
       },
       {
         q: "Is this the same as a generic image-to-video app?",
@@ -328,13 +328,13 @@ export const USE_CASES: UseCase[] = [
     // CTR 优化 2026-07-27: 加入 Free Mini 驱动点击
     seoTitle: "AI Action Figure Video Generator, Free Mini | Pikbo",
     seoDescription:
-      "AI action figure video generator for sellers. One owned photo → spin, hero float, or shelf glam for listings and social. Free Mini trial, no card.",
+      "Action-figure video recipes for sellers. One owned photo → cached spin, hero-float, or shelf-glam preview before gated Live submission.",
     intro:
       "An AI action figure video generator helps sellers of articulated designer figures show scale, paint apps, and pose without a full studio. Upload one photo of a figure you own (not a selfie) and draft a listing-ready product clip.",
     body: [
       "This URL owns the AI action figure video generator job for product/listing motion. Dance/play motion for collectors lives on effect recipes; marketplace channel pages (Etsy, Amazon) own channel SEO — link out, do not duplicate.",
       "Buyers hesitate when they only see a single front-facing JPEG. A short spin or hero float answers “how does it look in the round?” faster than three more stills.",
-      "Use a neutral background when you can. Strong silhouettes survive AI motion better than cluttered shelves. Soft launch Free Mini is enough to validate a listing hook before you batch a whole roster.",
+      "Use a neutral background when you can. Strong silhouettes survive AI motion better than cluttered shelves. Validate the recipe with a cached prototype before any eligible batch.",
       "Recommended path: 360° spin for storefronts, floating hero for “new in stock” posts, display-case glam when the figure is a premium release. Always verify likeness and accessories before you publish.",
       "Rights matter: only upload figures and photos you own or are licensed to market. Do not upload third-party franchise packaging you do not control. Soft launch enforces an owns-rights checkbox server-side.",
     ],
@@ -380,7 +380,7 @@ export const USE_CASES: UseCase[] = [
       "Toy photographers and collectors often have a hard drive of excellent stills that die as single Instagram posts. Motion extends the life of a shot without restaging the set.",
       "Best inputs: sharp focus on the figure, controlled light, and a background you would be happy to see moving slightly. Busy city backdrops can distract; mini dioramas often shine with a gentle camera push.",
       "Use miniature-scene or floating-hero style recipes when the photo is already cinematic. Use spin when the photo is a clean product packshot and you want marketplace energy instead of story energy.",
-      "Soft launch honesty: Free Mini is one live clip with fixed caps. Cached Lab examples on the site are not generated from your upload. Failed live jobs restore credits when confirmed.",
+      "Validation honesty: cached Lab examples are not generated from your upload. Eligible Live jobs show finite quotes, and refunds are claimed only when confirmed.",
       "Workflow tip: shoot once for photo, generate variants for different platforms, keep the original RAW/JPEG archive as your source of truth.",
     ],
     keywords: [
@@ -409,12 +409,12 @@ export const USE_CASES: UseCase[] = [
     h1: "AI Video Generator for Collectibles",
     seoTitle: "AI Video Generator for Collectibles | Pikbo",
     seoDescription:
-      "AI video for collectibles: designer toys, figures, and blind boxes from one photo. Built for shelves, drops, and seller listings — Free Mini trial.",
+      "Collectible video recipes for designer toys, figures, and blind boxes from one photo. Cached previews for shelves, drops, and seller listings.",
     intro:
       "Collectible culture lives on motion now — restocks, pulls, and shelf flexes. Pikbo is an AI video generator aimed at that niche: one owned photo in, short clip out.",
     body: [
       "Generic AI video tools do not speak collector language. You need recipes that look like product hero films, unboxings, and display-case glamour — not random camera chaos.",
-      "Upload a photo of a piece you own. Choose a collectible-native recipe. Export a short clip for Discord, Instagram, TikTok, or a storefront. Soft launch Free Mini uses Seedance Mini with honest caps.",
+      "Upload a photo of a piece you own and choose a collectible-native recipe. Cached prototypes show the workflow; eligible Live access is gated before provider submission.",
       "Brands and indie makers can draft teaser loops before a drop; collectors can animate a grail for community posts. Always keep rights clear and do not claim fake multi-model stacks we have not shipped.",
       "Internal mesh: pair this page with effect landings (spin, unbox) and channel pages (Etsy, TikTok Shop) so each URL owns one search job while linking to the same Generate tool.",
       "Cold-start SEO note: this URL targets “AI video for collectibles / collectible video generator.” Title, H1, and body stay aligned; we do not rotate TDH weekly during freeze.",
@@ -429,11 +429,11 @@ export const USE_CASES: UseCase[] = [
     faq: [
       {
         q: "Is Pikbo only for sellers?",
-        a: "No. Collectors use it for shelf flexes and community posts; sellers use the same loop for listings. Free Mini is available on the free plan with fixed caps.",
+        a: "No. Collectors use recipes for shelf flexes and community posts; sellers use the same loop for listings. Public validation uses cached prototypes.",
       },
       {
         q: "Which model runs on Free Mini?",
-        a: "Soft launch free live path is Seedance Mini via fal (5s · 480p · on-player mark). We do not advertise models that are not live.",
+        a: "Public validation does not promise a Live model. Generate exposes a model and quote only after the full Live eligibility gate passes.",
       },
     ],
   },
@@ -445,13 +445,13 @@ export const USE_CASES: UseCase[] = [
     h1: "Designer Toy Marketing Videos From One Photo",
     seoTitle: "Designer Toy Marketing Video Generator | Pikbo",
     seoDescription:
-      "Draft designer toy marketing videos from one product photo — launch teasers, restock hooks, and listing spins. Free Mini trial for soft launch.",
+      "Draft designer-toy marketing recipes from one product photo — cached launch teaser, restock hook, and listing-spin previews.",
     intro:
       "Indie toy brands and makers need constant motion content. Pikbo drafts marketing clips from the product photos you already shot for the lookbook.",
     body: [
       "Launch weeks burn through creative. Instead of reshooting every SKU, reuse the hero packshot as the seed for a teaser, restock announcement, or listing spin.",
       "Map recipes to jobs: floating hero for “coming soon,” mystery reveal for blind-box lines, 360 spin for store pages, dance or paparazzi for social hooks when on-brand.",
-      "Keep claims honest: soft launch is Seedance Mini live for free trial, Lab demos are labeled cached examples, and Stripe checkout is off until you enable payments.",
+      "Keep claims honest: Lab prototypes are labeled cached, Live access requires the full runtime gate, and checkout remains off during validation.",
       "Team workflow: generate drafts in Generate, download, then finish captions and brand end-cards in your editor. Pikbo is the motion draft, not a full brand OS.",
       "Link this page from product pages and newsletters with a single CTA: upload photo → generate short video. One primary action beats five competing buttons.",
     ],
@@ -481,7 +481,7 @@ export const USE_CASES: UseCase[] = [
     h1: "eBay Listing Video for Toys From One Photo",
     seoTitle: "eBay Toy Listing Video Generator | Pikbo",
     seoDescription:
-      "Make an eBay listing video for toys and collectibles from one photo. Calm spins for auctions and Buy It Now. Free Mini trial.",
+      "Plan an eBay listing video for toys and collectibles from one photo. Preview cached calm-spin recipes before gated Live submission.",
     intro:
       "eBay buyers want to trust condition and form. Draft a short spin or hero clip from one owned product photo before you list or relaunch a SKU.",
     body: [

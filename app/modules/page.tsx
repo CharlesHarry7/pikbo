@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 const MODULES_FAQ = [
   {
     q: "What is a Pikbo Module?",
-    a: "A fixed video job — listing spin, social hook, unbox, or Seller Starter Pack — that opens Generate with a registered recipe and aspect ratio. One owned toy photo in, short Seedance clip out.",
+    a: "A fixed video recipe — listing spin, social hook, unbox, or Seller Starter Pack — that opens Generate with a registered effect and aspect ratio. Generate then checks whether the account can use Cached or Live mode.",
   },
   {
     q: "Are Lab posters my final video?",
@@ -37,7 +37,7 @@ const MODULES_FAQ = [
   },
   {
     q: "What does Free Mini cover on Modules?",
-    a: "About one live Seedance Mini clip (5s · 480p · on-player mark). After the trial, Lab cached demos stay free; live jobs need a plan. Free raw download stays gated until server watermark bake.",
+    a: "Cached Lab prototypes cost 0 credits and do not process your upload. The configured allowance is about one Mini job only when Live is enabled for an eligible account; protected Free delivery remains gated.",
   },
   {
     q: "What is Seller Starter Pack?",

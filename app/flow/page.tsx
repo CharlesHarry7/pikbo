@@ -7,7 +7,6 @@ import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { FlowMediaCard } from "@/components/FlowMediaCard";
 import { createWorkbenchHref } from "@/lib/jobIntents";
-import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
 
@@ -120,7 +119,7 @@ export default function FlowPage() {
     {
       id: "core-cinema",
       title: "Cinema board",
-      blurb: "Director board · lens / move / grade → Generate Seedance.",
+      blurb: "Director board · lens / move / grade → gated Generate workbench.",
       href: "/cinema",
       badge: "Cinema",
       tier: "core",
@@ -129,7 +128,7 @@ export default function FlowPage() {
     {
       id: "core-library",
       title: "Library · Assets",
-      blurb: "Device clips + session jobs · publish live to Community.",
+      blurb: "Device clips + session jobs · reopen or review saved work.",
       href: "/library",
       badge: "Assets",
       tier: "core",
@@ -150,7 +149,8 @@ export default function FlowPage() {
     {
       id: "prev-models",
       title: "Models shelf",
-      blurb: "Seedance live · Flux stills · others Soon — no fake keys.",
+      blurb:
+        "Seedance and Flux recipes · access gated · other model slots stay Soon.",
       href: "/models",
       badge: "Engines",
       tier: "preview",

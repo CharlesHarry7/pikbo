@@ -247,16 +247,16 @@ export const GUIDES: Guide[] = [
     dek: "Honest soft-launch limits so searchers are not sold unlimited generation.",
     seoTitle: "Free AI Toy Video Generator Limits | Pikbo Free Mini",
     seoDescription:
-      "What Pikbo Free Mini includes: Seedance Mini, 5s, 480p, on-player mark, one live clip path, refunds when the server confirms failure (TIMEOUT stays unconfirmed). No fake unlimited AI.",
+      "What Pikbo free validation includes: cached Lab prototypes at 0 credits. Live is gated; configured allowances and refund truth are explained without unlimited claims.",
     readMins: 3,
     intro:
-      "Searchers looking for a free AI toy video generator should see real caps. Soft launch Free Mini is a constrained live path — not unlimited generation and not a multi-model marketplace.",
+      "Searchers looking for a free AI toy video generator should see the current truth: public validation is a cached prototype path, not unlimited generation and not a multi-model marketplace.",
     sections: [
       {
         h2: "What Free Mini is",
         paragraphs: [
-          "One free-plan live path uses Seedance Mini via our provider at about 5 seconds, 480p, with an on-player mark. Cached Lab demos on the homepage never process your upload and do not spend live credits.",
-          "You must confirm you own the photo. Soft launch debits 10 credits for a live job and restores them when the provider path fails and the server can confirm a refund.",
+          "The public free path is a cached Pikbo Lab prototype at 0 credits. It never processes your upload and makes no provider call.",
+          "When Live is enabled for an eligible account, Generate shows the configured model, duration, resolution, and exact credit quote. A refund is only claimed after the server confirms release.",
         ],
       },
       {
@@ -270,18 +270,18 @@ export const GUIDES: Guide[] = [
         h2: "How to try without wasting a credit",
         paragraphs: [
           "Use a small, sharp product photo. Pick a simple spin or hero recipe. Keep the tab open for up to ~3 minutes. Canceling mid-request can leave refund status unconfirmed until balance refresh.",
-          "For recipe exploration without a live debit, watch Lab demos first, then run Free Mini once you know the look you want.",
+          "For recipe exploration without a provider debit, watch Lab prototypes first. Submit only after Generate confirms an eligible Live mode and exact quote.",
         ],
       },
     ],
     faq: [
       {
         q: "Is there a free AI toy video generator with no card?",
-        a: "Yes on soft launch Free Mini — no card. Caps apply (Mini · 5s · 480p · mark). Lab demos are free cached samples.",
+        a: "The cached Pikbo Lab prototype needs no card, costs 0 credits, and does not process your upload. It is not a generated customer result.",
       },
       {
         q: "Why did generation take so long?",
-        a: "Live Mini often takes 1–3 minutes. Leaving the page early can look like failure even if the server finishes.",
+        a: "Only eligible Live jobs enter a provider queue. Their status is tied to a fixed deadline; refreshing or polling does not extend it.",
       },
     ],
     relatedEffects: ["360-spin-showcase", "floating-hero", "blind-box-unboxing"],
@@ -418,8 +418,8 @@ export const GUIDES: Guide[] = [
       {
         h2: "Honest Free Mini vs unlimited claims",
         paragraphs: [
-          "Free Mini is intentionally small: Seedance Mini, about 5s · 480p · on-player mark, limited live path. Lab demos are cached Lab prototype samples and never process your upload.",
-          "Failed live jobs restore credits when the server can confirm failure. TIMEOUT/cancel can remain unconfirmed — that is honest ledger policy, not a silent debit.",
+          "Public validation is intentionally small: cached Lab prototypes cost 0 credits and never process your upload. Configured Live allowances appear only for eligible accounts.",
+          "A failed job is called refunded only after the server confirms release. TIMEOUT or cancel can remain unconfirmed — that is honest ledger policy, not a silent debit.",
         ],
       },
       {
@@ -437,7 +437,7 @@ export const GUIDES: Guide[] = [
       },
       {
         q: "Do you run every model live?",
-        a: "No. Soft launch is Seedance Mini for Free Mini. Other names stay Soon until real keys and routes exist.",
+        a: "No. A model key or route alone does not make it publicly Live. The full auth, durable-credit, provider, and protected-delivery gate must pass first.",
       },
       {
         q: "Where do I start if I only have one photo?",
@@ -462,7 +462,7 @@ export const GUIDES: Guide[] = [
       "Run Pikbo Seller Starter Pack: one owned toy photo → listing spin, box reveal, social hook. QC checklist, credit honesty, and next-SKU tips for sellers.",
     readMins: 5,
     intro:
-      "Seller Starter Pack is the commercial default: three clips from one still for 30 live credits. This workflow guide is for sellers who need listing motion, unbox energy, and a vertical hook without booking a studio.",
+      "Seller Starter Pack is the commercial default: three recipes from one still. Cached previews cost 0 credits; when Live is enabled for an eligible account, the current configured quote is 30 credits total.",
     sections: [
       {
         h2: "When to use Seller Starter Pack vs single recipe",
@@ -496,7 +496,7 @@ export const GUIDES: Guide[] = [
     faq: [
       {
         q: "How many credits is Seller Starter Pack?",
-        a: "The three live children cost 30 credits total. Lab demos are free cached samples. The 12-clip Launch Pack is coming later.",
+        a: "When Live is enabled for an eligible account, the three-child configured quote is 30 credits total. Lab prototypes are cached, cost 0 credits, and do not process your upload.",
       },
       {
         q: "Can I publish all three to every channel?",
@@ -519,7 +519,7 @@ export const GUIDES: Guide[] = [
     seoTitle:
       "Toy Unboxing Video From One Photo — No Camera Rig | Pikbo",
     seoDescription:
-      "Make a toy unboxing-style short from one owned photo. Blind-box reveal energy for TikTok and drops — Free Mini trial, honest limits, no fake multi-model zoo.",
+      "Plan a toy unboxing-style short from one owned photo. Preview a cached blind-box recipe, then check gated Live eligibility without fake model claims.",
     readMins: 7,
     intro:
       "Search interest in “toy unboxing” is dominated by YouTube and retailers. A new site cannot win that head term in week one. What you can win is a narrower job: you already own the figure, you only have one photo, and you need unbox/reveal motion for a listing, restock, or social post — without a filming rig. Pikbo is a photo-to-video tool for that job, not a “best toys for toddlers” shopping list.",
@@ -528,7 +528,7 @@ export const GUIDES: Guide[] = [
         h2: "What this page is (and is not)",
         paragraphs: [
           "Is: a practical path from one rights-owned product still to a short reveal-style clip (blind-box energy, lid-up beat, first-second hook).",
-          "Is not: a ranking of best unboxing toys for toddlers, an ASMR media network, or unlimited free 4K generation. Free Mini is a constrained soft-launch trial (Seedance Mini · about 5s · 480p · on-player mark), not a toy SKU called “mini unboxing.”",
+          "Is not: a ranking of best unboxing toys for toddlers, an ASMR media network, or unlimited free 4K generation. Public validation is a cached recipe preview, not a toy SKU called “mini unboxing.”",
           "If Google showed you a broad “toy unboxing” impression, treat it as a probe. Click-through depends on a title that promises a doable job — generate motion from a photo — not on beating Wikipedia.",
         ],
       },
@@ -552,8 +552,8 @@ export const GUIDES: Guide[] = [
         paragraphs: [
           "Photograph or pick one sharp still you own. Plain background beats a busy shelf for clean edges.",
           "Open the on-page tool path: start from /tools/blind-box-reveal-video-maker for reveal energy, or /tools/ai-toy-video-generator for the general head-term workflow. Confirm rights before live generate.",
-          "Run Free Mini once you know the look — Lab demos are free cached samples and never process your upload. Keep the tab open; live Mini often takes 1–3 minutes.",
-          "QC: edges, paint splits, logo readability, no random morph. Download only when HEAD/download gates allow. Failed live jobs refund when the server can confirm failure; TIMEOUT/cancel may stay unconfirmed.",
+          "Use the cached Lab prototype to learn the look; it never processes your upload. Submit only after Generate confirms an eligible Live mode and exact quote.",
+          "QC: edges, paint splits, logo readability, no random morph. Download only when delivery gates allow. A failed job is called refunded only when the server confirms release; TIMEOUT/cancel may stay unconfirmed.",
         ],
       },
       {
@@ -571,7 +571,7 @@ export const GUIDES: Guide[] = [
       },
       {
         q: "Is Free Mini the same as free unboxing toys?",
-        a: "No. Free Mini is Pikbo’s limited live trial for AI video. It does not ship physical toys.",
+        a: "No. Pikbo provides a cached video-workflow preview during validation; it does not ship physical toys or promise public Live generation.",
       },
       {
         q: "How do I get an ASMR-style unboxing clip?",

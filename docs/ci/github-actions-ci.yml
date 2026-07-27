@@ -48,6 +48,9 @@ jobs:
       - name: Showcase evidence honesty
         run: npm run showcase-evidence-smoke
 
+      - name: Public capability copy source contract
+        run: npm run live-copy-smoke
+
       - name: Lint
         run: npm run lint
 
@@ -58,6 +61,9 @@ jobs:
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
+
+      - name: Public capability copy rendered contract
+        run: npm run live-copy-smoke -- --require-rendered
 
       # Server must stay in the SAME step as link/critical checks
       # (background processes do not survive across GitHub Actions steps).

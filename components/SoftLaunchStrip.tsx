@@ -49,12 +49,12 @@ export function SoftLaunchStrip() {
       : null;
 
   const line = demo
-    ? "Demo-cached Lab clips free · live Mini when FAL_KEY is set"
+    ? "Cached Pikbo Lab prototypes · 0 credits · your upload is not processed"
     : trialDone
       ? "Free Mini trial used · Lab demos still free · compare finite plans"
       : freeLive
         ? `Free Mini · ${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · refunds when confirmed`
-        : "Free Mini · photo → short video · no card · live often 1–3 min · refunds when confirmed";
+        : "Live access is not confirmed · continue with cached Lab prototypes";
 
   // Homepage: keep convert on-page (#home-tool). Elsewhere: studio sample path.
   const primaryHref = trialDone
@@ -65,7 +65,7 @@ export function SoftLaunchStrip() {
   const primaryLabel = trialDone
     ? "Compare plans"
     : demo
-      ? "Try free Lab video"
+      ? "Preview cached Lab video"
       : "Try free · Mini 5s";
 
   return (
@@ -73,7 +73,11 @@ export function SoftLaunchStrip() {
       <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2">
         <p className="text-[12px] leading-snug text-white/80 sm:text-[13px]">
           <span className="font-black text-[#c8ff3d]">
-            {trialDone && !demo ? "Trial used" : "Free Mini trial"}
+            {demo
+              ? "Cached preview"
+              : trialDone
+                ? "Trial used"
+                : "Live eligibility"}
           </span>
           <span className="text-white/50"> · </span>
           {line}

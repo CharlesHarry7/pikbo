@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   void appDetailIndexable(workflow);
   return {
     title: `${title} · Toy workflow`,
-    description: `${blurb} One owned toy photo → short Seedance clip. Free Mini limits apply; Lab demos cost 0 credits.`,
+    description: `${blurb} One owned toy photo → a prefilled short-video recipe. Cached Lab prototypes cost 0 credits; Live access is gated in Generate.`,
     alternates: { canonical: `/apps/${slug}` },
     robots: CONCEPT_ROBOTS,
     openGraph: {
@@ -82,15 +82,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const APP_DETAIL_FAQ = [
   {
     q: "Is this a separate video engine?",
-    a: "No. App doors open the same Seedance Generate workbench with a prefilled recipe and aspect. Not a multi-model zoo.",
+    a: "No. App doors open the same Generate workbench with a prefilled recipe and aspect. Runtime eligibility determines whether the result is cached or Live.",
   },
   {
     q: "Does launching cost Free Mini credits?",
-    a: "Opening the door is free. Cached Lab samples cost 0 credits. A live Mini job uses your Free trial or paid credits (about 5s · 480p · on-player mark on Free).",
+    a: "Opening the door is free. Cached Lab prototypes cost 0 credits and do not process your upload. When Live is enabled for an eligible account, Generate shows the exact credit quote.",
   },
   {
     q: "Is the poster my final video?",
-    a: "No. Posters are PIKBO Lab prototype style demos only. Your upload is never those stills. Review live output before listing or social posts.",
+    a: "No. Posters are PIKBO Lab prototype references only. They are not made from your upload. Review any eligible generated output before listing or posting.",
   },
   {
     q: "Can Free Mini raw files be downloaded?",
@@ -160,7 +160,7 @@ export default async function AppDetailPage({ params }: Props) {
           <h1 className="text-3xl font-bold tracking-tight">{name}</h1>
           {live ? (
             <span className="rounded-full bg-[var(--mint)]/15 px-2 py-0.5 text-[10px] font-bold text-[var(--mint)]">
-              LIVE
+              READY RECIPE
             </span>
           ) : (
             <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-[var(--fg-dim)]">
@@ -189,7 +189,7 @@ export default async function AppDetailPage({ params }: Props) {
             </li>
             <li className="rounded-xl border border-white/10 bg-black/30 px-3 py-2">
               <span className="font-semibold text-white/80">Engine · </span>
-              Seedance image-to-video (same as Generate)
+              Generate workbench · Live access gated at runtime
             </li>
             {effect && (
               <li className="rounded-xl border border-white/10 bg-black/30 px-3 py-2">
@@ -214,8 +214,8 @@ export default async function AppDetailPage({ params }: Props) {
         )}
         {!workflow && (
           <p className="mt-4 text-xs text-[var(--fg-dim)]">
-            Catalog entry for suite parity. Core live path is Photo → Clip
-            (Seedance).
+            Catalog entry for suite parity. The Photo → Clip recipe opens
+            Generate, where cached or eligible Live access is decided.
           </p>
         )}
         <div className="mt-8 flex flex-wrap justify-center gap-3">

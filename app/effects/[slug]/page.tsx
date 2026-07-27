@@ -99,7 +99,8 @@ export default async function EffectPage({
       "@type": "Offer",
       price: "0",
       priceCurrency: "USD",
-      description: "One free Mini trial: 5-second 480p clip from a photo of a toy you own",
+      description:
+        "Cached Pikbo Lab recipe preview at 0 credits; eligible Live generation is checked in Create.",
     },
     description: preset.seoDescription,
     url: `${site.url}/effects/${preset.slug}`,

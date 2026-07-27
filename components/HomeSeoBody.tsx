@@ -17,7 +17,7 @@ const FAQ = [
   },
   {
     q: "Can I turn a photo into short video without filming?",
-    a: "Yes. Upload a clear product photo you own, pick a recipe such as 360° spin or floating hero, and generate. Soft launch Free Mini runs Seedance Mini at about 5 seconds and 480p with an on-player mark.",
+    a: "Yes. Upload a clear product photo you own and pick a recipe such as 360° spin or floating hero. Public validation shows a cached prototype first; eligible Live accounts receive an exact quote before submission.",
   },
   {
     q: "Is the homepage tool the same as /create?",
@@ -25,7 +25,7 @@ const FAQ = [
   },
   {
     q: "Do Lab demos use my photo?",
-    a: "No. Homepage Lab samples are cached Lab prototype demos. Your photo is only used when you run a live generate.",
+    a: "No. Homepage Lab samples are cached prototypes and never process your upload. Your photo is only sent after the server confirms an eligible Live submission.",
   },
   {
     q: "Where is the main keyword page for AI toy video?",
@@ -63,8 +63,8 @@ export function HomeSeoBody() {
               turn that photo into short video
             </strong>{" "}
             for listings, TikTok, and drops. You do not need a turntable, a studio
-            crew, or a multi-model zoo—soft launch live path is Seedance Mini with
-            honest Free Mini caps.
+            crew, or a multi-model zoo. Cached Lab prototypes show the workflow;
+            the Generate workbench checks Live eligibility before any provider call.
           </p>
           <p className="mt-3">
             For the full head-term guide and On Page battlefield, use our{" "}
@@ -75,10 +75,9 @@ export function HomeSeoBody() {
               AI toy video generator tool page
             </Link>
             . This homepage embeds the same photo-to-video control for people who
-            arrive by brand: upload, confirm rights, run Free Mini or live
-            credits, wait for the render (often one to three minutes), then
-            preview. Lab wall demos stay labeled cached prototypes—not fake
-            customer UGC.
+            arrive by brand: upload, confirm rights, choose a recipe, and review
+            the exact mode and quote. Lab wall demos stay labeled cached
+            prototypes—not fake customer UGC.
           </p>
           <nav
             aria-label="Long-tail toy video jobs"
@@ -221,15 +220,14 @@ export function HomeSeoBody() {
 
         <div>
           <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            Free Mini on soft launch (honest limits)
+            Cached preview first; Live remains gated
           </h2>
           <p className="mt-4">
-            Free plan soft launch is intentionally small: about ten credits, one
-            live Seedance Mini clip path, roughly five seconds, 480p, with an
-            on-player mark. Failed live jobs refund the debit when the server can
-            confirm failure. Cached Lab demos on the viral wall cost zero credits
-            and never process your upload. We do not claim unlimited free 4K or
-            multi-model live stacks we have not shipped.
+            Cached Lab prototypes on the viral wall cost zero credits and never
+            process your upload. When Live is enabled for an eligible account,
+            Generate shows the configured duration, resolution, and credit quote.
+            A refund is only claimed after the server confirms release. We do not
+            claim unlimited free 4K or model access we have not shipped.
           </p>
           <p className="mt-3">
             Stripe checkout stays off until search traffic is stable—soft launch

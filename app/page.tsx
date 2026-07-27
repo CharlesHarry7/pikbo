@@ -112,8 +112,8 @@ export default function Home() {
             轮到你的潮玩了
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/55 sm:text-[15px]">
-            Upload a photo you own — free Mini trial · ~5s · 480p · on-player
-            mark. 上传自有潮玩照片即可试。
+            Upload a photo you own — preview a cached Lab recipe first; Live
+            eligibility and the exact quote appear before submission. 上传自有潮玩照片即可预览流程。
             {" "}
             <a
               href={site.rankToolPath}

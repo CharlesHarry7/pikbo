@@ -79,13 +79,13 @@ export function softwareApplicationJsonLd(opts?: {
       price: "0",
       priceCurrency: "USD",
       description:
-        "Free Mini trial: one live Seedance Mini clip (5s · 480p · on-player mark). Paid plans coming soon.",
+        "Cached Pikbo Lab prototype preview at 0 credits. It does not process the visitor's upload; eligible Live access is gated.",
     },
     featureList: [
       "Photo to short toy video",
-      "Seedance Mini live generate",
+      "Cached recipe previews with gated generation",
       "Listing and social aspect ratios",
-      "Honest free trial limits",
+      "Explicit Live eligibility and credit quotes",
     ],
     publisher: {
       "@type": "Organization",

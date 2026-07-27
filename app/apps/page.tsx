@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: `Apps & Workflows | ${site.name}`,
     description:
-      "Live toy-native mini-apps — listing, social, drop, Seller Starter Pack. Same Generate engine.",
+      "Toy-native recipe doors for listing, social, drops, and Seller Starter Pack. Runtime access is checked in Generate.",
     url: `${site.url}/apps`,
   },
 };
@@ -41,15 +41,15 @@ const CATS = [
 const APPS_FAQ = [
   {
     q: "What are Pikbo Apps?",
-    a: "Live mini-apps that open Generate with a prefilled toy-video recipe (listing spin, social hook, unbox, Seller Starter Pack). Same Seedance engine as Create — not a multi-model zoo.",
+    a: "Recipe doors that open Generate with a prefilled toy-video job (listing spin, social hook, unbox, or Seller Starter Pack). Cached previews stay free; eligible Live access is checked at runtime.",
   },
   {
     q: "What does SOON mean?",
-    a: "Roadmap cards you can see but not run. Only LIVE / CONFIGURED cards start a real job. We never label preview tools as live Seedance.",
+    a: "Roadmap cards you can see but cannot run. READY cards open a registered recipe, but they do not promise a provider call; Generate checks account and deployment eligibility.",
   },
   {
     q: "Is Try free a live generation?",
-    a: "Lab sample path is a free cached demo (0 credits). Free Mini live is about one Seedance Mini clip (5s · 480p · on-player mark). After trial, Lab demos stay free; live needs a plan.",
+    a: "No. Try free plays a cached Pikbo Lab prototype for 0 credits and does not process your upload. When Live is enabled for an eligible account, Generate shows the exact quote before submission.",
   },
   {
     q: "How is Apps different from Modules?",
@@ -75,9 +75,9 @@ export default function AppsPage() {
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Pikbo live toy workflows",
+    name: "Pikbo toy recipe workflows",
     description:
-      "Live mini-apps that open Create with a prefilled recipe. Preview/soon items are omitted.",
+      "Recipe doors that open Create with a prefilled toy-video job. Preview/soon items are omitted.",
     numberOfItems: liveWorkflows.length + extraLive.length,
     itemListElement: [
       ...liveWorkflows.map((w, i) => ({
@@ -130,9 +130,9 @@ export default function AppsPage() {
           Apps & workflows
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
-          Vertical mini-apps for one photo of a toy you own — listing, social,
-          drop, and batch. Same Seedance Generate engine; each card is a prefilled
-          job (not a fake multi-model zoo). Canonical modular wall:{" "}
+          Recipe doors for one photo of a toy you own — listing, social, drop,
+          and batch. Each card prefills the same Generate workbench; runtime
+          access is checked there. Canonical modular wall:{" "}
           <Link href="/modules" className="text-[var(--mint)] hover:underline">
             /modules
           </Link>
@@ -170,7 +170,7 @@ export default function AppsPage() {
 
         <section className="mt-10">
           <h2 className="mb-1 text-xs font-bold uppercase tracking-wider text-[var(--mint)]">
-            Live workflows · {liveWorkflows.length}
+            Ready recipes · {liveWorkflows.length}
           </h2>
           <p className="mb-4 text-[11px] text-[var(--fg-dim)]">
             One tap opens Create with recipe + aspect (or batch mode) ready.
@@ -200,7 +200,7 @@ export default function AppsPage() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                     <span className="absolute left-2 top-2 rounded-full bg-[var(--mint)] px-1.5 py-0.5 text-[9px] font-black text-black">
-                      LIVE
+                      READY
                     </span>
                     <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-[var(--mint)] px-2 py-0.5 text-[9px] font-black uppercase text-black opacity-0 transition group-hover:opacity-100">
                       Launch
@@ -229,7 +229,7 @@ export default function AppsPage() {
         {extraLive.length > 0 && (
           <section className="mt-10">
             <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-[var(--mint)]">
-              More configured · {extraLive.length}
+              More prefilled · {extraLive.length}
             </h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {extraLive.map((app) => (
@@ -247,7 +247,7 @@ export default function AppsPage() {
                         {app.name}
                       </h3>
                       <span className="rounded-full bg-[var(--mint)]/15 px-1.5 py-0.5 text-[9px] font-bold text-[var(--mint)]">
-                        CONFIGURED
+                        PREFILLED
                       </span>
                     </div>
                     <p className="mt-1 text-xs text-[var(--fg-muted)]">

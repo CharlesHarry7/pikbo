@@ -26,9 +26,9 @@ export async function generateMetadata({
   // Keep crawlable + follow for deep links; stay out of the 9-URL index budget.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return {
-      title: { absolute: `Seller Starter Pack · 3 clips / 30 credits | ${site.name}` },
+      title: { absolute: `Seller Starter Pack · 3 toy-video recipes | ${site.name}` },
       description:
-        "Seller Starter Pack: one owned toy photo → listing 360°, box reveal, and social hook. Three clips cost 30 live credits. The 12-clip Launch Pack is coming later.",
+        "Seller Starter Pack: one owned toy photo → listing 360°, box reveal, and social hook. Cached previews cost 0 credits; eligible Live accounts see the exact three-job quote before submission.",
       alternates: { canonical: "/create?mode=seller-pack" },
       robots: CONCEPT_ROBOTS,
     };
@@ -45,13 +45,13 @@ export async function generateMetadata({
   return {
     title: "Generate · Toy Creative Director",
     description:
-      "Pikbo Generate — upload an owned toy photo, pick a commercial goal, or create a Seller Starter Pack with three clips for 30 credits. Free Mini: 5s · 480p · on-player mark.",
+      "Pikbo Generate — upload an owned toy photo, pick a commercial goal, or configure a three-recipe Seller Starter Pack. Cached previews stay free; Live access and quotes are gated.",
     alternates: { canonical: "/create" },
     robots: CONCEPT_ROBOTS,
     openGraph: {
       title: `Generate · Toy Creative Director | ${site.name}`,
       description:
-        "Upload a toy photo you own. Commercial goal first, then recipe. Free Mini trial — no card.",
+        "Upload a toy photo you own. Choose a commercial goal and recipe, preview cached Lab examples, and check Live eligibility in the workbench.",
       url: `${site.url}/create`,
     },
   };
@@ -103,7 +103,9 @@ export default async function CreatePage({
         </Suspense>
         <div className="px-4 py-8 sm:px-8">
           <div className="mx-auto max-w-6xl">
-            <span className="chip">Seller Starter Pack — 3 clips / 30 credits</span>
+            <span className="chip">
+              Seller Starter Pack — 3 recipes · quote shown before Live
+            </span>
             <h1 className="mt-3 font-display text-3xl font-black uppercase tracking-tight">
               One photo → three commercial clips
             </h1>
@@ -116,7 +118,7 @@ export default async function CreatePage({
               confirmed.
             </p>
             <p className="mt-2 text-xs font-semibold text-white/45">
-              Launch Pack — 12 clips / 120 credits · coming later
+              Launch Pack — 12 recipes · pricing coming later
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <FreeTrialCta
@@ -166,7 +168,7 @@ export default async function CreatePage({
           name: `${site.name} Generate — Toy Creative Director`,
           url: `${site.url}/create`,
           description:
-            "Upload a photo of a designer toy you own. Pick a commercial goal, generate listing, reveal, or social clips. Free Mini trial with honest caps.",
+            "Upload a designer-toy photo you own, pick a commercial goal, and preview a cached recipe. Eligible Live access and the exact quote are checked before submission.",
         })}
       />
       {/* V2 tool core — remix deep link: effect/source/ratio/duration/channel */}

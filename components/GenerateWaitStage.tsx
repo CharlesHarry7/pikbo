@@ -2,7 +2,7 @@
 
 /**
  * HF-class Generate wait surface — shared by CreateStudio + LandingToolPanel.
- * Live Mini is often 1–3 min; progress is paced for ~180s, not a fake 30s bar.
+ * Eligible Live work can take minutes; progress is paced, not a fake 30s bar.
  * No invented ETAs as hard promises — only phase labels + elapsed.
  */
 
@@ -52,7 +52,7 @@ export function waitPhaseForElapsed(
     return {
       id: "render",
       title: "Rendering motion",
-      detail: "Live Mini often 1–3 min — keep this tab open",
+      detail: "Eligible Live jobs can take minutes — keep this tab open",
       step: 2,
     };
   }
@@ -72,7 +72,7 @@ export function waitPhaseForElapsed(
   };
 }
 
-/** Pace bar toward ~3 min live Mini (not a hard ETA). */
+/** Pace the bar for a multi-minute provider job (not a hard ETA). */
 export function waitProgressPct(elapsed: number, demoMode: boolean): number {
   if (demoMode) return Math.min(92, 20 + elapsed * 8);
   return Math.min(96, 5 + elapsed * 0.52);

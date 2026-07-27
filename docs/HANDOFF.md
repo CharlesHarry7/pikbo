@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [claude] public Live capability copy gate
+- Home, Create, Pricing, Apps, Modules, Flow, Cinema, core tool/use-case content and structured data now lead with `cached prototype · 0 credits · upload not processed`; a model key alone is never presented as public Live.
+- Recipe doors are labeled READY/PREFILLED rather than LIVE. Seller Starter Pack static copy describes three recipes; a 30-credit Live quote appears only inside an eligible runtime state.
+- Plan allowances remain visible as conditional planning estimates (`when Live is enabled`), while checkout and protected delivery stay explicitly closed during validation.
+- Added `live-capability-copy-smoke`: 18 promise-bearing source files plus generated route HTML reject unconditional Live/Free-Mini phrases; the documented CI template runs it before and after build.
+- PASS: source contract, product-proof contract, TypeScript, ESLint (0 errors / 1 pre-existing warning), Webpack production build (193 routes), rendered contract across 164 HTML routes.
+
+---
+
 ### 2026-07-28 — [claude] R4b verified showcase promotion gate
 - `lib/showcaseEvidence.ts` is the canonical evidence schema: rights/source records, distinct hashed input, provider task+request IDs, model parameters, hashed output, named reviewer/time, and five 4–5 pass dimensions.
 - Registry import and provenance labels call a fail-closed promotion gate; `official/live` without every evidence field now throws and fails the build.

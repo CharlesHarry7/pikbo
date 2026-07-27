@@ -32,7 +32,7 @@ const FOR_FAQ = [
   },
   {
     q: "Does Try free Mini mean unlimited clips?",
-    a: "No. Free Mini is about one live Seedance Mini clip (5s · 480p · on-player mark). Lab samples cost 0. After trial, Lab stays free; live needs a plan.",
+    a: "No. Try free is a cached Lab prototype at 0 credits and does not process your upload. When Live is enabled for an eligible account, the configured allowance is finite and the exact quote appears before submission.",
   },
   {
     q: "Are sales guaranteed for sellers?",
@@ -90,14 +90,14 @@ export default function ForHubPage() {
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
           One URL, one search job. Every card opens a landing with an on-page
-          Generate tool — not a feature dump. Free Mini has fixed caps; Lab demos
-          are cached samples.
+          Generate tool — not a feature dump. Lab prototypes are cached; Live
+          eligibility and finite quotes are checked in the workbench.
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <FreeTrialCta
             path="/for"
             variant="mint"
-            labelTry="Try free Mini"
+            labelTry="Preview cached Lab"
           />
           <Link href="/tools" className="btn btn-ghost text-sm">
             Tools hub
