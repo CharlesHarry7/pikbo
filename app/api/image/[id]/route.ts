@@ -42,7 +42,7 @@ export async function GET(_req: Request, { params }: Props) {
     durable: false,
     job: toPublicImageJob(job, session.id, { includeDataUrl: true }),
     /** True when this GET extended the open still timeout window. */
-    touched: job.status === "running",
+    touched: job.status === "running" || job.status === "queued",
   });
 }
 

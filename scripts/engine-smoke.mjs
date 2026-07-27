@@ -1501,6 +1501,7 @@ assert.match(libraryFirstRun, /data-library-panel=["']session-stills["']/);
 assert.match(libraryFirstRun, /createStillStudioHref|data-library-still-retry/);
 assert.match(libraryFirstRun, /\/api\/image\/\$\{|\/api\/image\/\`|\/api\/image\//);
 assert.match(libraryFirstRun, /cancelSessionStill|data-library-still-cancel/);
+assert.match(libraryFirstRun, /forkSessionStillRetry|ledger-fork/);
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /URLSearchParams|searchParams[\s\S]{0,80}prompt|get\(["']prompt["']\)/
@@ -1508,6 +1509,11 @@ assert.match(
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /get\(["']job["']\)|jobId/
+);
+// Still forkRetry route exists (full asserts after imageJobsSrc load)
+assert.match(
+  fs.readFileSync(join(root, "app/api/image/[id]/retry/route.ts"), "utf8"),
+  /forkRetryImageJob/
 );
 assert.match(libraryFirstRun, /Saved on this device/);
 assert.match(libraryFirstRun, /not durable cloud|not multi-device cloud/);
@@ -1753,6 +1759,9 @@ assert.match(imageJobsSrc, /export function touchOpenImageJobsForSession/);
 assert.match(imageJobsSrc, /export function toPublicImageJob/);
 assert.match(imageJobsSrc, /export function getImageJob/);
 assert.match(imageJobsSrc, /export function touchImageJob/);
+assert.match(imageJobsSrc, /export function forkRetryImageJob/);
+assert.match(imageJobsSrc, /status:\s*["']queued["']/);
+assert.match(imageJobsSrc, /parentJobId/);
 assert.match(imageJobsSrc, /includeDataUrl/);
 assert.match(imageJobsSrc, /IMAGE_JOBS_LIST_LIMIT/);
 assert.match(imageJobsSrc, /hasImage|isSafeDeliverableUrl/);
@@ -1768,6 +1777,8 @@ assert.match(imageRoute, /X-Pikbo-Image-Jobs-Open/);
 assert.match(imageRoute, /X-Pikbo-Image-Jobs-List-Limit/);
 assert.match(imageRoute, /imageJobInFlightRetryAfterSec/);
 assert.match(imageRoute, /jobStatus:\s*["']\/api\/image\/\[id\]["']/);
+assert.match(imageRoute, /retry:\s*["']POST \/api\/image\/\[id\]\/retry["']/);
+assert.match(imageRoute, /queued:\s*full\.queued|byStatus[\s\S]*queued/);
 // Single still poll + cancel by path (generations/[id] parity)
 const imageByIdRoute = fs.readFileSync(
   join(root, "app/api/image/[id]/route.ts"),
@@ -1778,6 +1789,17 @@ assert.match(imageByIdRoute, /export async function DELETE/);
 assert.match(imageByIdRoute, /getImageJob|touchImageJob/);
 assert.match(imageByIdRoute, /includeDataUrl:\s*true/);
 assert.match(imageByIdRoute, /refundUnconfirmed:\s*true/);
+// Still ledger retry fork (generations/[id]/retry parity)
+const imageRetryRoute = fs.readFileSync(
+  join(root, "app/api/image/[id]/retry/route.ts"),
+  "utf8"
+);
+assert.match(imageRetryRoute, /export async function POST/);
+assert.match(imageRetryRoute, /forkRetryImageJob/);
+assert.match(imageRetryRoute, /status:\s*202|202/);
+assert.match(imageRetryRoute, /next:\s*\{[\s\S]*image:\s*["']\/api\/image["']/);
+assert.match(imageRetryRoute, /imageUi:/);
+assert.match(imageRetryRoute, /["']\/image["']/);
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /data-image-session-ledger=["']process-memory["']/
@@ -1786,11 +1808,16 @@ assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /data-image-session-cancel|data-image-session-retry|openSessionStill/
 );
+// Studio strip Retry uses generate overrides; Library uses ledger-fork POST.
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /data-library-still-retry=["']ledger-fork["']|\/api\/image\/.*\/retry/
+);
 // Pure image timeout sweep (crash mid-Flux must not leave infinite JOB_IN_FLIGHT)
 function sweepTimedOutImageJobsPure(jobs, now, timeoutMs) {
   const timedOut = [];
   for (const job of jobs) {
-    if (job.status !== "running") continue;
+    if (job.status !== "running" && job.status !== "queued") continue;
     const age = now - Date.parse(job.updatedAt || job.createdAt);
     if (!Number.isFinite(age) || age < timeoutMs) continue;
     job.status = "failed";

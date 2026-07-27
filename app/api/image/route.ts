@@ -50,6 +50,7 @@ export async function HEAD() {
       "Cache-Control": "no-store",
       "X-Pikbo-Image-Jobs": String(counts.total),
       "X-Pikbo-Image-Jobs-Open": String(counts.open),
+      "X-Pikbo-Image-Jobs-Queued": String(counts.queued),
       "X-Pikbo-Image-Jobs-Succeeded": String(counts.succeeded),
       "X-Pikbo-Image-Jobs-Failed": String(counts.failed),
       "X-Pikbo-Image-Jobs-Canceled": String(counts.canceled),
@@ -75,6 +76,7 @@ export async function GET() {
   const jobs = listed.map((j) => toPublicImageJob(j, session.id));
   const full = listImageJobCountsForSession(session.id);
   const byStatus = {
+    queued: full.queued,
     running: full.running,
     succeeded: full.succeeded,
     failed: full.failed,
@@ -94,11 +96,12 @@ export async function GET() {
     byStatus,
     open: full.open,
     note:
-      "In-process still ledger for soft-launch recovery. Not multi-node durable. Use POST /api/image for work. Running jobs past jobTimeoutMs fail with TIMEOUT. GET touches all open stills; byStatus/open/total are full-session. data: demo URLs omitted from list (hasImage flag only).",
+      "In-process still ledger for soft-launch recovery. Not multi-node durable. Use POST /api/image for work. Open (queued|running) jobs past jobTimeoutMs fail with TIMEOUT. GET touches all open stills; byStatus/open/total are full-session. data: demo URLs omitted from list (hasImage flag only).",
     compatibility: {
       syncImage: "/api/image",
       jobStatus: "/api/image/[id]",
       cancel: "DELETE /api/image or DELETE /api/image/[id]",
+      retry: "POST /api/image/[id]/retry",
       counts: "HEAD /api/image",
     },
     session: publicSession(session),

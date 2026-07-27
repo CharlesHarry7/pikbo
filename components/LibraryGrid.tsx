@@ -98,7 +98,7 @@ function isCancellableSessionJob(status: string): boolean {
 }
 
 function isCancellableStillJob(status: string): boolean {
-  return status === "running";
+  return status === "running" || status === "queued";
 }
 
 function statusTone(status: string): string {
@@ -146,6 +146,7 @@ type SessionStillMeta = {
   failed: number;
   canceled: number;
   running: number;
+  queued: number;
   jobTimeoutMs: number | null;
   listLimit: number | null;
   listed: number;
@@ -159,6 +160,7 @@ const EMPTY_STILL_META: SessionStillMeta = {
   failed: 0,
   canceled: 0,
   running: 0,
+  queued: 0,
   jobTimeoutMs: null,
   listLimit: SESSION_JOBS_UI_LIMIT,
   listed: 0,
@@ -173,13 +175,17 @@ function SessionStillJobsPanel({
   jobs,
   meta,
   cancellingId,
+  forkingId,
   onCancel,
+  onForkRetry,
   onRefresh,
 }: {
   jobs: SessionStillJob[];
   meta: SessionStillMeta;
   cancellingId: string | null;
+  forkingId: string | null;
   onCancel: (id: string) => void;
+  onForkRetry: (id: string) => void;
   onRefresh: () => void;
 }) {
   if (jobs.length === 0 && meta.total === 0) return null;
@@ -188,7 +194,11 @@ function SessionStillJobsPanel({
       ? Math.round(meta.jobTimeoutMs / 1000)
       : null;
   const histogramTotal =
-    meta.running + meta.succeeded + meta.failed + meta.canceled;
+    meta.queued +
+    meta.running +
+    meta.succeeded +
+    meta.failed +
+    meta.canceled;
 
   return (
     <section
@@ -250,6 +260,7 @@ function SessionStillJobsPanel({
       <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
         {(
           [
+            ["queued", meta.queued],
             ["running", meta.running],
             ["succeeded", meta.succeeded],
             ["failed", meta.failed],
@@ -312,17 +323,31 @@ function SessionStillJobsPanel({
                   </Link>
                 ) : null}
                 {j.status === "failed" || j.status === "canceled" ? (
-                  <Link
-                    href={createStillStudioHref({
-                      prompt: j.prompt,
-                      aspect: j.aspect,
-                    })}
-                    className="text-[var(--mint)] hover:underline"
-                    data-library-still-retry="prompt"
-                    title="Opens Still studio with this prompt — Generate mints a new key"
-                  >
-                    Retry still
-                  </Link>
+                  <>
+                    <Link
+                      href={createStillStudioHref({
+                        prompt: j.prompt,
+                        aspect: j.aspect,
+                      })}
+                      className="text-[var(--mint)] hover:underline"
+                      data-library-still-retry="prompt"
+                      title="Opens Still studio with this prompt — Generate mints a new key"
+                    >
+                      Retry still
+                    </Link>
+                    <button
+                      type="button"
+                      disabled={
+                        forkingId === j.id || cancellingId === j.id
+                      }
+                      onClick={() => onForkRetry(j.id)}
+                      className="text-[var(--mint)]/90 hover:text-[var(--mint)] disabled:opacity-50"
+                      data-library-still-retry="ledger-fork"
+                      title="Fork process-memory retry job then open Still studio (does not re-run Flux by itself)"
+                    >
+                      {forkingId === j.id ? "Forking…" : "Ledger retry"}
+                    </button>
+                  </>
                 ) : null}
                 {isCancellableStillJob(j.status) ? (
                   <button
@@ -651,6 +676,7 @@ export function LibraryGrid() {
     null
   );
   const [forkingId, setForkingId] = useState<string | null>(null);
+  const [forkingStillId, setForkingStillId] = useState<string | null>(null);
   const toast = useToast();
 
   function applyGenerationsBody(body: {
@@ -724,6 +750,7 @@ export function LibraryGrid() {
     ok?: boolean;
     jobs?: SessionStillJob[];
     byStatus?: {
+      queued?: number;
       running?: number;
       succeeded?: number;
       failed?: number;
@@ -744,18 +771,20 @@ export function LibraryGrid() {
     const jobs = body.jobs.slice(0, page);
     setSessionStills(jobs);
     const bs = body.byStatus ?? {};
+    const queued = Number(bs.queued) || 0;
     const running = Number(bs.running) || 0;
     const succeeded = Number(bs.succeeded) || 0;
     const failed = Number(bs.failed) || 0;
     const canceled = Number(bs.canceled) || 0;
     const openFromServer =
-      typeof body.open === "number" ? body.open : running;
+      typeof body.open === "number" ? body.open : queued + running;
     setSessionStillMeta({
       open: openFromServer,
       total:
         typeof body.total === "number"
           ? body.total
-          : running + succeeded + failed + canceled,
+          : queued + running + succeeded + failed + canceled,
+      queued,
       running,
       succeeded,
       failed,
@@ -982,6 +1011,65 @@ export function LibraryGrid() {
       toast("Network error canceling still");
     } finally {
       setCancellingStillId(null);
+    }
+  }
+
+  /**
+   * POST /api/image/[id]/retry forks a queued child (failed|canceled only).
+   * Navigate to imageUi handoff — does not re-run Flux.
+   */
+  async function forkSessionStillRetry(id: string) {
+    setForkingStillId(id);
+    try {
+      const res = await fetch(
+        `/api/image/${encodeURIComponent(id)}/retry`,
+        { method: "POST", cache: "no-store" }
+      );
+      const body = (await res.json()) as {
+        ok?: boolean;
+        message?: string;
+        code?: string;
+        next?: { imageUi?: string; prompt?: string; aspect?: string };
+      };
+      if (!res.ok || !body.ok) {
+        const code = body.code || "";
+        if (code === "JOB_IN_FLIGHT") {
+          toast(
+            body.message ||
+              "Still job still open — wait or cancel ledger first"
+          );
+        } else if (code === "NOT_RETRYABLE") {
+          toast(
+            body.message ||
+              "Not retryable on this still ledger — open Still studio"
+          );
+        } else {
+          toast(body.message || body.code || "Could not fork still retry");
+        }
+        return;
+      }
+      toast(
+        body.message ||
+          "Still ledger retry forked · open Still studio to re-run Flux"
+      );
+      await refreshSessionStills();
+      const parent = sessionStills.find((j) => j.id === id);
+      // Prefer prompt/aspect handoff so Still studio can re-POST Flux immediately.
+      const imageUi = createStillStudioHref({
+        prompt:
+          typeof body.next?.prompt === "string"
+            ? body.next.prompt
+            : parent?.prompt,
+        aspect:
+          typeof body.next?.aspect === "string"
+            ? body.next.aspect
+            : parent?.aspect,
+      });
+      window.location.href = imageUi;
+    } catch {
+      toast("Network error forking still retry");
+    } finally {
+      setForkingStillId(null);
     }
   }
 
@@ -1307,7 +1395,9 @@ export function LibraryGrid() {
           jobs={sessionStills}
           meta={sessionStillMeta}
           cancellingId={cancellingStillId}
+          forkingId={forkingStillId}
           onCancel={(id) => void cancelSessionStill(id)}
+          onForkRetry={(id) => void forkSessionStillRetry(id)}
           onRefresh={() => void refreshSessionStills()}
         />
         <div className="media-stage grid place-items-center py-16 text-center sm:py-20">
@@ -1412,7 +1502,9 @@ export function LibraryGrid() {
         jobs={sessionStills}
         meta={sessionStillMeta}
         cancellingId={cancellingStillId}
+        forkingId={forkingStillId}
         onCancel={(id) => void cancelSessionStill(id)}
+        onForkRetry={(id) => void forkSessionStillRetry(id)}
         onRefresh={() => void refreshSessionStills()}
       />
 

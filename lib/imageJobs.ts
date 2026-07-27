@@ -9,7 +9,12 @@ import {
   isSafeDeliverableUrl,
 } from "@/lib/createTrust";
 
-export type ImageJobStatus = "running" | "succeeded" | "failed" | "canceled";
+export type ImageJobStatus =
+  | "queued"
+  | "running"
+  | "succeeded"
+  | "failed"
+  | "canceled";
 
 export type ImageJob = {
   id: string;
@@ -33,6 +38,8 @@ export type ImageJob = {
   idempotencyKey?: string;
   /** Provider request id when available; else local id. */
   requestId?: string;
+  /** Parent still id when this row is a process-memory ledger retry fork. */
+  parentJobId?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -61,6 +68,7 @@ export type PublicImageJob = {
   error?: string;
   errorCode?: string;
   requestId?: string;
+  parentJobId?: string;
   createdAt: string;
   updatedAt: string;
   owned: boolean;
@@ -126,7 +134,8 @@ export function sweepTimedOutImageJobs(opts?: {
   const limit = opts?.timeoutMs ?? imageJobTimeoutMs();
   const timedOut: ImageJob[] = [];
   for (const job of jobs.values()) {
-    if (job.status !== "running") continue;
+    // Open = queued (ledger retry fork) or running (Flux in flight).
+    if (job.status !== "running" && job.status !== "queued") continue;
     const stamp = job.updatedAt || job.createdAt;
     const age = now - Date.parse(stamp);
     if (!Number.isFinite(age) || age < limit) continue;
@@ -134,7 +143,9 @@ export function sweepTimedOutImageJobs(opts?: {
       ...job,
       status: "failed",
       error:
-        "Still job timed out (process may have been killed mid-Flux) — mint a new idempotency key to retry",
+        job.status === "queued"
+          ? "Still retry fork timed out waiting for re-POST — mint a new key and re-submit POST /api/image"
+          : "Still job timed out (process may have been killed mid-Flux) — mint a new idempotency key to retry",
       errorCode: "TIMEOUT",
       // Soft-launch cookie debit may or may not have restored — never claim refund.
       creditsOutcome: "refund unconfirmed",
@@ -177,13 +188,87 @@ export function findImageJobByIdempotencyKey(
  * Prefer job age over inflight lock — lock can free after kill while ledger is open.
  */
 export function imageJobInFlightRetryAfterSec(job: ImageJob): number {
-  if (job.status !== "running") return 1;
+  if (job.status !== "running" && job.status !== "queued") return 1;
   const stamp = job.updatedAt || job.createdAt;
   const age = Date.now() - Date.parse(stamp);
   if (!Number.isFinite(age)) return 1;
   const remainingMs = imageJobTimeoutMs() - age;
   if (remainingMs <= 0) return 1;
   return Math.max(1, Math.ceil(remainingMs / 1000));
+}
+
+/**
+ * Soft-launch local still retry: fork a queued child from a failed|canceled parent.
+ * Does not re-call Flux — client re-submits POST /api/image with the same prompt.
+ * Parity with generationJobs.forkRetryJob (video ledger).
+ */
+export function forkRetryImageJob(input: {
+  sessionId: string;
+  parentId: string;
+}):
+  | { ok: true; job: ImageJob; parent: ImageJob }
+  | {
+      ok: false;
+      code: "NOT_FOUND" | "NOT_OWNED" | "JOB_IN_FLIGHT" | "NOT_RETRYABLE";
+      message: string;
+    } {
+  trimStore();
+  sweepTimedOutImageJobs();
+  const parent = findImageJobByRequestOrId(input.sessionId, input.parentId);
+  if (!parent) {
+    return {
+      ok: false,
+      code: "NOT_FOUND",
+      message: "Parent still not in this process ledger",
+    };
+  }
+  if (parent.sessionId !== input.sessionId) {
+    return {
+      ok: false,
+      code: "NOT_OWNED",
+      message: "Still job belongs to another session",
+    };
+  }
+  if (parent.status === "queued" || parent.status === "running") {
+    return {
+      ok: false,
+      code: "JOB_IN_FLIGHT",
+      message:
+        "Parent still open — wait for success/failure or cancel ledger first",
+    };
+  }
+  if (parent.status === "succeeded") {
+    return {
+      ok: false,
+      code: "NOT_RETRYABLE",
+      message:
+        "Parent already succeeded — open Still studio for a new prompt attempt",
+    };
+  }
+  if (parent.status !== "failed" && parent.status !== "canceled") {
+    return {
+      ok: false,
+      code: "NOT_RETRYABLE",
+      message: `Parent status “${parent.status}” is not retryable on this ledger`,
+    };
+  }
+  const t = nowIso();
+  const job: ImageJob = {
+    id: newId(),
+    sessionId: input.sessionId,
+    status: "queued",
+    prompt: parent.prompt,
+    aspect: parent.aspect,
+    parentJobId: parent.id,
+    idempotencyKey: `retry:${parent.id}:${Math.floor(Date.now() / 5000)}`,
+    createdAt: t,
+    updatedAt: t,
+  };
+  jobs.set(job.id, job);
+  if (job.idempotencyKey) {
+    byIdempotency.set(`${input.sessionId}:${job.idempotencyKey}`, job.id);
+  }
+  return { ok: true, job, parent };
 }
 
 export function beginImageJob(input: {
@@ -252,21 +337,21 @@ export function getImageJob(idOrRequestId: string): ImageJob | null {
 }
 
 /**
- * Slide updatedAt on a running still while a client polls GET /api/image/[id].
+ * Slide updatedAt on an open still while a client polls GET /api/image/[id].
  * Prevents false TIMEOUT mid-Flux when PIKBO_IMAGE_JOB_TIMEOUT_MS is short.
  * Terminal jobs are returned unchanged (generations touchJob parity).
  */
 export function touchImageJob(idOrRequestId: string): ImageJob | null {
   const job = getImageJob(idOrRequestId);
   if (!job) return null;
-  if (job.status !== "running") return job;
+  if (job.status !== "running" && job.status !== "queued") return job;
   const next: ImageJob = { ...job, updatedAt: nowIso() };
   jobs.set(job.id, next);
   return next;
 }
 
 /**
- * Mark a running still job canceled (ledger only — does not kill Flux mid-flight).
+ * Mark a running|queued still canceled (ledger only — does not kill Flux mid-flight).
  * Provider complete still wins after cancel (parity with generate completeSync).
  */
 export function cancelImageJob(input: {
@@ -324,6 +409,7 @@ export function cancelImageJob(input: {
       job,
     };
   }
+  // running | queued (ledger retry fork) are cancelable.
   const next: ImageJob = {
     ...job,
     status: "canceled",
@@ -491,8 +577,9 @@ export function imageJobsProbe(): {
 } {
   trimStore();
   const timedOut = sweepTimedOutImageJobs();
-  // Always expose full histogram (incl. canceled=0) for Mode A / StatusProbe honesty.
+  // Always expose full histogram (incl. queued/canceled=0) for Mode A honesty.
   const byStatus: Record<string, number> = {
+    queued: 0,
     running: 0,
     succeeded: 0,
     failed: 0,
@@ -501,7 +588,7 @@ export function imageJobsProbe(): {
   let open = 0;
   for (const j of jobs.values()) {
     byStatus[j.status] = (byStatus[j.status] || 0) + 1;
-    if (j.status === "running") open += 1;
+    if (j.status === "running" || j.status === "queued") open += 1;
   }
   return {
     total: jobs.size,
@@ -529,6 +616,7 @@ export function listImageJobCountsForSession(sessionId: string): {
   failed: number;
   canceled: number;
   running: number;
+  queued: number;
 } {
   trimStore();
   sweepTimedOutImageJobs();
@@ -538,17 +626,21 @@ export function listImageJobCountsForSession(sessionId: string): {
   let failed = 0;
   let canceled = 0;
   let running = 0;
+  let queued = 0;
   for (const j of jobs.values()) {
     if (j.sessionId !== sessionId) continue;
     total += 1;
     if (j.status === "running") {
       open += 1;
       running += 1;
+    } else if (j.status === "queued") {
+      open += 1;
+      queued += 1;
     } else if (j.status === "succeeded") succeeded += 1;
     else if (j.status === "failed") failed += 1;
     else if (j.status === "canceled") canceled += 1;
   }
-  return { total, open, succeeded, failed, canceled, running };
+  return { total, open, succeeded, failed, canceled, running, queued };
 }
 
 /**
@@ -578,7 +670,7 @@ export function touchOpenImageJobsForSession(sessionId: string): number {
   const t = nowIso();
   for (const j of jobs.values()) {
     if (j.sessionId !== sessionId) continue;
-    if (j.status !== "running") continue;
+    if (j.status !== "running" && j.status !== "queued") continue;
     jobs.set(j.id, { ...j, updatedAt: t });
     n += 1;
   }
@@ -632,6 +724,7 @@ export function toPublicImageJob(
     error: job.error,
     errorCode: job.errorCode,
     requestId: job.requestId || job.id,
+    ...(job.parentJobId ? { parentJobId: job.parentJobId } : {}),
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
     owned: true,

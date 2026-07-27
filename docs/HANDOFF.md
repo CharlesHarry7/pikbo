@@ -4,6 +4,20 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] POST /api/image/[id]/retry still ledger fork
+- `forkRetryImageJob` + ImageJobStatus `queued` + parentJobId (generations parity).
+- POST `/api/image/[id]/retry` forks tracking child; client re-POSTs Flux.
+- Sweep/touch/cancel/open counts include queued; GET list byStatus.queued.
+- /image Retry + Library Ledger retry: fork then studio handoff.
+- Smoke: imageRetryRoute + forkRetryImageJob + queued histogram locks.
+
+### 2026-07-27 — [grok] Library stills + forkRetryImageJob
+- LibraryGrid SessionStillJobsPanel: GET /api/image list+poll, DELETE cancel,
+  Open/Retry → `/image?job|prompt|aspect`, Ledger retry → POST …/retry.
+- `forkRetryImageJob` · queued status · parentJobId · byStatus.queued ·
+  HEAD X-Pikbo-Image-Jobs-Queued · POST /api/image/[id]/retry (202 + imageUi).
+- /image hydrates query prompt/aspect/job. Smoke: session-stills + forkRetry locks.
+
 ### 2026-07-27 — [grok] Library session stills recovery
 - LibraryGrid SessionStillJobsPanel: GET /api/image list+poll (touch open TTL),
   DELETE /api/image/[id] cancel with refund-unconfirmed toast.
