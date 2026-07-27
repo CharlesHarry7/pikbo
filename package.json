@@ -14,6 +14,7 @@
     "engine-smoke": "node scripts/engine-smoke.mjs",
     "product-proof-smoke": "node scripts/product-proof-smoke.mjs",
     "showcase-evidence-smoke": "node scripts/showcase-evidence-smoke.mjs",
+    "showcase-promotion-gate": "node scripts/showcase-promotion-gate.mjs",
     "recovery-cost-gate": "node scripts/recovery-cost-gate.mjs",
     "recovery-qa": "node scripts/recovery-qa.mjs",
     "recovery-ledger": "node scripts/recovery-ledger.mjs",

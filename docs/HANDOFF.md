@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [claude] R4b verified showcase promotion gate
+- `lib/showcaseEvidence.ts` is the canonical evidence schema: rights/source records, distinct hashed input, provider task+request IDs, model parameters, hashed output, named reviewer/time, and five 4–5 pass dimensions.
+- Registry import and provenance labels call a fail-closed promotion gate; `official/live` without every evidence field now throws and fails the build.
+- Current 12 rows stay cached prototypes with no public score. Homepage retains the same eight distinct videos; no media or layout was redesigned.
+- Inside Project adds a compact evidence checklist and keeps the Recipe CTA prominent; prototypes remain visibly unscored and promotion-locked.
+- PASS: promotion gate (1 valid + 8 invalid fixtures), showcase evidence, product proof, engine smoke, typecheck, lint (0 errors / 2 pre-existing warnings), webpack production build.
+
 ### 2026-07-27 — [grok] Image still R1b parity + CI recovery smokes
 - `forkRetryImageJob` / `claimRetryImageJob`: exact parent/child id, one-time bearer (hashed), fixed `deadlineAt`; no prompt promote.
 - Retry route returns real `retryToken` (not job id); Library stores `pikbo_retry_token:{id}`; Still studio one-shot claim.
