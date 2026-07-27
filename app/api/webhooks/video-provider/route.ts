@@ -143,8 +143,8 @@ export async function POST(req: Request) {
     );
   }
 
-  // Public view without session — strip video for orphan webhook-created jobs
-  // only when not owned by a real session; still return status for ops.
+  // Public view without session. Withheld/orphan live success never exposes
+  // a free deliverable URL (R1b/R1c). Ops still get status + withheld flag.
   const job = result.job
     ? toPublicJob(result.job, result.job.sessionId)
     : null;
@@ -156,9 +156,11 @@ export async function POST(req: Request) {
     durable: false,
     duplicate: result.duplicate,
     message: result.message,
+    /** R1b/R1c: late/orphan live success is withheld (not a free clip). */
+    withheld: result.withheld === true,
     job,
     note:
-      "Idempotent by eventId. Soft-launch generate still settles inline; raw provider URLs are not permanent customer storage.",
+      "Idempotent by eventId. Soft-launch generate settles inline. Orphan/late live success is withheld (no free delivery); durable R1c recon owns settlement after SQL apply.",
     secretConfigured: Boolean(expected),
   });
 }

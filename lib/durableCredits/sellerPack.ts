@@ -40,7 +40,8 @@ export async function reserveSellerPackShadow(input: {
     return {
       ok: false,
       code: "DURABLE_OFF",
-      error: "Durable credits not active — Seller Pack uses cookie debit only",
+      error:
+        "Durable credits not active — Seller Pack shadow not opened. Live children still use /api/generate cost gate (anonymous/Free = labeled demos only; cookie is not live-spend authority)",
     };
   }
   const kind = input.kind ?? "guest";

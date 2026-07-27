@@ -15,6 +15,7 @@ import {
   deadlineRemainingMs,
   fixedDeadlineAt,
   mintRetryToken,
+  providerCompletionDecision,
   retryTokenDigest,
   retryTokenMatches,
 } from "@/lib/generationReliability.mjs";
@@ -1008,9 +1009,13 @@ export function findJobByRequestOrId(
 }
 
 /**
- * Idempotent provider webhook apply (Phase D).
+ * Idempotent provider webhook apply (Phase D + R1b/R1c honesty).
  * Soft-launch generate still settles inline; this path is for async completions
  * and duplicate webhook retries without double-writing terminal state.
+ *
+ * R1b: success only while the exact attempt is still `running` and before
+ * fixed deadline. Cancel/timeout/orphan success is withheld — never invents
+ * free deliverable "10 used" creditsOutcome for unmatched provider events.
  */
 export function applyProviderWebhookEvent(input: {
   eventId: string;
@@ -1029,6 +1034,8 @@ export function applyProviderWebhookEvent(input: {
       duplicate: boolean;
       job: GenerationJob | null;
       message: string;
+      /** True when provider media was withheld (late/orphan/canceled). */
+      withheld?: boolean;
     }
   | { ok: false; code: string; message: string } {
   const eventId = input.eventId.trim().slice(0, 128);
@@ -1057,6 +1064,7 @@ export function applyProviderWebhookEvent(input: {
 
   if (!job) {
     // Unknown request: create a shell so retries still idempotent.
+    // R1c: orphan live success is withheld — never claim "10 used" free media.
     if (input.status === "succeeded" && input.videoUrl) {
       if (!isSafeDeliverableUrl(input.videoUrl)) {
         return {
@@ -1065,18 +1073,38 @@ export function applyProviderWebhookEvent(input: {
           message: "succeeded webhook videoUrl is not a safe http(s) or /path URL",
         };
       }
-      job = recordSucceededGenerate({
-        sessionId: "webhook-orphan",
-        effect: "unknown",
-        videoUrl: input.videoUrl,
-        demo: Boolean(input.demo),
-        watermark: input.watermark !== false,
-        model: input.model,
-        requestId,
-        provider: input.provider || "webhook",
-        preferredId: requestId,
-        creditsOutcome: input.demo ? "0 cached" : "10 used",
-      });
+      if (input.demo === true) {
+        job = recordSucceededGenerate({
+          sessionId: "webhook-orphan",
+          effect: "unknown",
+          videoUrl: input.videoUrl,
+          demo: true,
+          watermark: input.watermark !== false,
+          model: input.model,
+          requestId,
+          provider: input.provider || "webhook",
+          preferredId: requestId,
+          creditsOutcome: "0 cached",
+        });
+      } else {
+        job = recordFailedGenerate({
+          sessionId: "webhook-orphan",
+          effect: "unknown",
+          error:
+            "Orphan provider success withheld — no matching process-memory job; durable R1c reconciliation required before any delivery claim",
+          errorCode: "WITHHELD_ORPHAN",
+          preferredId: requestId,
+          refundUnconfirmed: true,
+        });
+        job = updateJob(job.id, {
+          requestId,
+          provider: input.provider || "webhook",
+          model: input.model,
+          // Never store deliverable URL on orphan live success.
+          videoUrl: undefined,
+          downloadAllowed: false,
+        })!;
+      }
     } else if (input.status === "failed" || input.status === "canceled") {
       job = recordFailedGenerate({
         sessionId: "webhook-orphan",
@@ -1084,6 +1112,7 @@ export function applyProviderWebhookEvent(input: {
         error: input.error || `Provider ${input.status}`,
         errorCode: input.errorCode || input.status.toUpperCase(),
         preferredId: requestId,
+        refundUnconfirmed: true,
       });
       if (input.status === "canceled") {
         job = updateJob(job.id, {
@@ -1111,11 +1140,15 @@ export function applyProviderWebhookEvent(input: {
       ok: true,
       duplicate: false,
       job,
-      message: "Created job from webhook (orphan / late event)",
+      withheld: job.status !== "succeeded" || Boolean(job.demo),
+      message:
+        job.status === "succeeded"
+          ? "Created demo job from webhook (orphan)"
+          : "Orphan provider event recorded withheld (no free live delivery)",
     };
   }
 
-  // Already terminal with same outcome → record event and no-op.
+  // Already terminal → record event and no-op (never reopen canceled/timeout).
   if (job.status === "succeeded" || job.status === "failed" || job.status === "canceled") {
     webhookEvents.set(eventId, {
       jobId: job.id,
@@ -1126,6 +1159,7 @@ export function applyProviderWebhookEvent(input: {
       ok: true,
       duplicate: false,
       job,
+      withheld: input.status === "succeeded" && job.status !== "succeeded",
       message: `Job already terminal (${job.status}); webhook recorded without overwrite`,
     };
   }
@@ -1145,8 +1179,48 @@ export function applyProviderWebhookEvent(input: {
         message: "succeeded webhook videoUrl is not a safe http(s) or /path URL",
       };
     }
-    // Never store raw provider URL as permanent customer storage claim —
-    // soft-launch still uses provider URL for playback; download gate applies.
+
+    // R1b: sweep deadline first, then only complete while still running.
+    sweepTimedOutJobs();
+    job = findJobByRequestOrId(requestId) || job;
+    const decision = providerCompletionDecision(job);
+    if (!decision.allow) {
+      // Late success after cancel/timeout — withhold media, stamp unconfirmed.
+      const withheld = updateJob(job.id, {
+        status: job.status === "canceled" ? "canceled" : "failed",
+        error: decision.message,
+        errorCode: decision.code,
+        videoUrl: undefined,
+        downloadAllowed: false,
+        creditsOutcome: "refund unconfirmed",
+        creditsRefunded: undefined,
+        requestId: job.requestId || requestId,
+        provider: input.provider || job.provider || "webhook",
+        model: input.model ?? job.model,
+      });
+      if (!withheld) {
+        return {
+          ok: false,
+          code: "UPDATE_FAILED",
+          message: "Could not stamp late webhook withhold",
+        };
+      }
+      webhookEvents.set(eventId, {
+        jobId: withheld.id,
+        status: withheld.status,
+        appliedAt: t,
+      });
+      return {
+        ok: true,
+        duplicate: false,
+        job: withheld,
+        withheld: true,
+        message:
+          "Late provider success withheld — attempt no longer running; R1c recon for durable settlement",
+      };
+    }
+
+    // Running within deadline — soft-launch may attach provider URL; download gate still applies.
     const next = updateJob(job.id, {
       status: "succeeded",
       videoUrl: input.videoUrl,
@@ -1156,6 +1230,13 @@ export function applyProviderWebhookEvent(input: {
       provider: input.provider || job.provider || "webhook",
       requestId: job.requestId || requestId,
       creditsOutcome: input.demo ? "0 cached" : job.creditsOutcome || "10 used",
+      downloadAllowed: downloadAllowedForJob({
+        demo: Boolean(input.demo),
+        watermark: input.watermark !== false,
+        status: "succeeded",
+        jobId: job.id,
+        providerRequestId: job.requestId || requestId,
+      }),
       error: undefined,
       errorCode: undefined,
     });
