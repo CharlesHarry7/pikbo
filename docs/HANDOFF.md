@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] Webhook late/orphan withhold + Seller Pack shadow copy
+- `applyProviderWebhookEvent`: orphan live success → `WITHHELD_ORPHAN` (no free clip / no "10 used"); late success after cancel/timeout uses `providerCompletionDecision` and withholds media.
+- Webhook JSON echoes `withheld`; only `running` pre-deadline attempts may complete to succeeded.
+- Seller Pack shadow error: cookie is not live-spend authority (generate cost gate).
+- PASS: engine-smoke + recovery-qa + recovery-reconciliation + typecheck.
+
 ### 2026-07-28 — [grok] Seller Pack Free Mini full-pack hard-block
 - `sellerPackLiveStartAllowed`: live 3-child start fails closed when balance < 30 (`FREE_MINI_FULL_PACK`); cached demos still 0 credits.
 - BatchStudio `runBatch` preflight + removed “cookie generate remains authoritative”; shadow short honesty points at durable reserve gate.
