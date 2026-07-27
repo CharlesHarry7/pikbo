@@ -19,6 +19,12 @@ Newest first. One block per meaningful landing.
 - Durable sellerPack header: cookie is not live-spend authority.
 - PASS: seller-pack-cached-smoke + engine-smoke + recovery-qa + typecheck.
 
+### 2026-07-28 — [grok] SERP intent + attainable link evidence (no page gen)
+- Paths: `docs/growth/SERP_INTENT_EVIDENCE_2026-07-28.md`, `docs/growth/LINK_OPPORTUNITIES_2026-07-28.csv`
+- Why good: English SERP clusters mapped to honest product capability (owned toy photo → seller launch assets); competitor gaps vs HF/Creatify/CapCut/Etsy documented with live URLs; link table prioritizes toy-vertical directories/communities over bulk AI spam; every row has source URL + Beijing timestamp.
+- Reuse: Keep five-page/index freeze; do not invent volume; prefer ToyListings / art-toy directory / PH personal launch after readiness; cite Etsy 3–15s silent listing rules when shaping exports.
+- Out of scope this PR: no directory submit, SEO pages, business code, deploy, GSC, secrets.
+
 ### 2026-07-28 — [grok] local R1c withhold journal + mobile poster-first LCP
 - Process-memory `localReconciliationJournal` when Supabase R1c off: idempotent withhold facts, never stores `outputRef`, health counts only.
 - Phase G: mobile wall `preload=none`; featured wall not LCP-eager; hero keeps poster preload.
