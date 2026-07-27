@@ -38,28 +38,47 @@ export async function POST(_req: Request, { params }: Props) {
       { status }
     );
   }
-  const { job, parent } = result;
-  // R1b: createUi carries explicit fork token so beginSync never guesses by effect.
-  const createUi = createRemixHref(parent.effect, undefined, null, {
-    ...remixOptsFromRecord(parent),
-    retryJobId: job.id,
-  });
+  const { job, parent, retryToken } = result;
+  // Remix contract: carry parent job ratio/duration when recorded (not bare effect=).
+  const baseCreateUi = createRemixHref(
+    parent.effect,
+    undefined,
+    null,
+    remixOptsFromRecord(parent)
+  );
+  const retryCreateUrl = new URL(baseCreateUi, "https://pikbo.local");
+  const parentModel = parent.generationSpec.model || parent.model || "";
+  retryCreateUrl.searchParams.set(
+    "model",
+    /mini/i.test(parentModel)
+      ? "seedance-mini"
+      : /fast/i.test(parentModel)
+        ? "seedance-fast"
+        : "seedance-2"
+  );
+  if (parent.generationSpec.resolution || parent.resolution) {
+    retryCreateUrl.searchParams.set(
+      "resolution",
+      parent.generationSpec.resolution || parent.resolution!
+    );
+  }
+  retryCreateUrl.searchParams.set("retryJobId", job.id);
+  const createUi = `${retryCreateUrl.pathname}${retryCreateUrl.search}`;
   return NextResponse.json(
     {
       ok: true,
       mode: "local-memory",
       durable: false,
       message:
-        "Retry job queued in process memory. Re-submit POST /api/generate with your owned toy photo, the same effect, and retryJobId — this does not re-run fal by itself.",
+        "Retry child queued. Open Create and submit with this exact child id and one-time token; effect-only re-posts cannot claim it.",
       parent: toPublicJob(parent, session.id),
       job: toPublicJob(job, session.id),
-      /** Explicit process-memory fork id — pass as body.retryJobId on re-POST. */
-      retryToken: job.id,
       next: {
         generate: "/api/generate",
         status: `/api/generations/${job.id}`,
         createUi,
         retryJobId: job.id,
+        retryToken,
       },
       note: "Seller Pack: only this child is re-quoted; successful siblings stay available.",
     },

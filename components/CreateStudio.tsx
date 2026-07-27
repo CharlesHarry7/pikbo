@@ -148,6 +148,7 @@ const MODELS = [
 export function CreateStudio({
   initialEffect,
   initialModel,
+  initialResolution,
   initialMode,
   initialPrompt,
   initialSource,
@@ -158,9 +159,11 @@ export function CreateStudio({
   initialJob,
   initialSku,
   initialRetryJobId,
+  initialRetryToken,
 }: {
   initialEffect?: string;
   initialModel?: string;
+  initialResolution?: string;
   initialMode?: Mode;
   initialPrompt?: string;
   /** Official Lab project id (remix attribution) — RETENTION_REMIX_LOOP */
@@ -174,13 +177,22 @@ export function CreateStudio({
   initialJob?: string;
   /** Character bible SKU from ?sku= (Next SKU carry) */
   initialSku?: string;
-  /**
-   * R1b process-memory fork id from Library ledger retry
-   * (`?retryJobId=`). Passed once on the next generate POST.
-   */
+  /** Exact process-ledger retry child + one-time token. */
   initialRetryJobId?: string;
+  initialRetryToken?: string;
 }) {
   const { t, locale } = useI18n();
+  const retryHandoffRef = useRef<{
+    retryJobId: string;
+    retryToken: string;
+  } | null>(
+    initialRetryJobId && initialRetryToken
+      ? {
+          retryJobId: initialRetryJobId,
+          retryToken: initialRetryToken,
+        }
+      : null
+  );
   const remix = useMemo(
     () =>
       parseRemixSearchParams({
@@ -274,7 +286,9 @@ export function CreateStudio({
   );
   const [favorites, setFavorites] = useState<string[]>([]);
   const [compare, setCompare] = useState(true);
-  const [resolution, setResolution] = useState<"480p" | "720p">("720p");
+  const [resolution, setResolution] = useState<"480p" | "720p">(
+    initialResolution === "480p" ? "480p" : "720p"
+  );
   const [seed, setSeed] = useState<string>("");
   /** Collapsed by default — soft launch is photo → recipe → one generate. */
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -295,13 +309,6 @@ export function CreateStudio({
     useState<RequestCreditState>(null);
   /** In-flight generate abort — cancel marks refund unconfirmed if network cut mid-debit. */
   const generateAbortRef = useRef<AbortController | null>(null);
-  /** Consume once on next generate POST (ledger-retry fork promote). */
-  const retryJobIdRef = useRef<string | undefined>(
-    typeof initialRetryJobId === "string" &&
-      initialRetryJobId.trim().length >= 8
-      ? initialRetryJobId.trim().slice(0, 128)
-      : undefined
-  );
   /** Avoid duplicate quote-view events while React rerenders the same quote. */
   const quoteEventRef = useRef("");
   const toast = useToast();
@@ -518,6 +525,37 @@ export function CreateStudio({
     };
   }, [refreshSession]);
 
+  // One-time retry bearers must not remain in browser history/referrers after
+  // hydration. The in-memory handoff is consumed by the next Generate submit.
+  useEffect(() => {
+    if (
+      !retryHandoffRef.current &&
+      initialRetryJobId &&
+      typeof window !== "undefined"
+    ) {
+      try {
+        const token = sessionStorage.getItem(
+          `pikbo_retry_token:${initialRetryJobId}`
+        );
+        if (token) {
+          retryHandoffRef.current = {
+            retryJobId: initialRetryJobId,
+            retryToken: token,
+          };
+          sessionStorage.removeItem(
+            `pikbo_retry_token:${initialRetryJobId}`
+          );
+        }
+      } catch {
+        /* Create remains a normal new-attempt surface. */
+      }
+    }
+    if (!initialRetryToken || typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("retryToken");
+    window.history.replaceState({}, "", url.pathname + url.search);
+  }, [initialRetryJobId, initialRetryToken]);
+
   const adoptImage = useCallback(
     async (dataUrl: string, opts?: { labSample?: boolean }) => {
       setImage(dataUrl);
@@ -719,9 +757,7 @@ export function CreateStudio({
     // Keep dual payload under rough Vercel body comfort (~3.5MB JSON).
     const dualImageOk =
       Boolean(fallbackStill) && (fallbackStill?.length ?? 0) < 3_500_000;
-    const ledgerRetryJobId = retryJobIdRef.current;
-    // One-shot: do not re-promote the same fork on user Retry/Variant.
-    retryJobIdRef.current = undefined;
+    const retryHandoff = retryHandoffRef.current;
     const result = await postGenerateWithRetry(
       {
         effect: fx,
@@ -737,11 +773,12 @@ export function CreateStudio({
         model: requestModel,
         resolution: requestRes,
         ownsRights: true,
+        retryJobId: retryHandoff?.retryJobId,
+        retryToken: retryHandoff?.retryToken,
         seed:
           typeof requestSeed === "number" && Number.isFinite(requestSeed)
             ? requestSeed
             : undefined,
-        ...(ledgerRetryJobId ? { retryJobId: ledgerRetryJobId } : {}),
       },
       {
         maxRetries: 1,
@@ -749,6 +786,29 @@ export function CreateStudio({
         signal: abortCtrl.signal,
       }
     );
+    // Keep the bearer when the server rejected work before the child claim
+    // (upload/rate/reserve preflight), or when transport failed. Clear it after
+    // success, an explicit retry rejection, or any provider-stage response.
+    const preClaimFailure =
+      !result.ok &&
+      [
+        "INVALID_REQUEST",
+        "IMAGE_TOO_LARGE",
+        "ASSET_NOT_FOUND",
+        "RATE_LIMITED",
+        "JOB_IN_FLIGHT",
+        "INSUFFICIENT_CREDITS",
+        "AUTH_REQUIRED",
+        "LIVE_ACCESS_REQUIRED",
+        "DURABLE_CREDITS_UNAVAILABLE",
+      ].includes(result.code || "");
+    if (
+      retryHandoffRef.current === retryHandoff &&
+      result.status !== 0 &&
+      !preClaimFailure
+    ) {
+      retryHandoffRef.current = null;
+    }
     if (generateAbortRef.current === abortCtrl) {
       generateAbortRef.current = null;
     }

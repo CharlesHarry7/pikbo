@@ -153,29 +153,35 @@ export function interpretGenerateResponse(
             ? "This account cannot run live generation yet — use cached demos or upgrade when beta opens"
             : code === "RESERVATION_FAILED"
               ? "Could not reserve credits for live generation — try again with a new attempt key"
-              : code === "PROVIDER_BALANCE"
-                ? "Upstream provider balance empty — credits restored when the debit was confirmed."
-                : code === "RIGHTS_REQUIRED"
-                  ? "Confirm you own this photo and have the right to animate it"
-                  : code === "UNKNOWN_EFFECT"
-                    ? "Unknown effect — open Recipes and pick a registered toy recipe"
-                    : code === "IMAGE_TOO_LARGE"
-                      ? "Image too large (max ~8MB) — compress or crop the product photo"
-                      : code === "ASSET_NOT_FOUND"
-                        ? "Photo asset expired on the server — re-upload or Retry with the same still"
-                        : code === "UNSAFE_URL"
-                          ? "Provider returned an unsafe video URL — credits restored when confirmed. Retry generate."
-                          : code === "PROVIDER_RATE_LIMIT"
-                            ? `Provider busy — try again in ${retryAfterSec ?? "a few"}s`
-                            : code === "PROVIDER_TIMEOUT"
-                              ? `Provider timed out — Retry in ${retryAfterSec ?? "a few"}s (same still kept)`
-                              : code === "PROVIDER_NETWORK"
-                                ? `Provider network blip — Retry in ${retryAfterSec ?? "a few"}s (same still kept)`
-                                : code === "TIMEOUT"
-                                  ? "Prior job timed out on the server — mint a new attempt (Retry). Check balance if refund is unconfirmed."
-                                  : code === "CONTENT_POLICY"
-                                    ? "Provider rejected this still or prompt — use a clear product photo on a simple background"
-                                    : "Generation failed — Retry keeps your still, or try another recipe");
+              : code === "RETRY_TOKEN_INVALID"
+                ? "Retry handoff expired or does not match this job — return to Library and choose Retry again"
+                : code === "RETRY_JOB_NOT_READY"
+                  ? "This retry child was already claimed or expired — choose Retry from the latest failed attempt"
+                  : code === "RETRY_SPEC_MISMATCH"
+                    ? "Retry settings changed — reopen Retry from Library to restore the selected attempt"
+                    : code === "PROVIDER_BALANCE"
+                      ? "Upstream provider balance empty — credits restored when the debit was confirmed."
+                      : code === "RIGHTS_REQUIRED"
+                        ? "Confirm you own this photo and have the right to animate it"
+                        : code === "UNKNOWN_EFFECT"
+                          ? "Unknown effect — open Recipes and pick a registered toy recipe"
+                          : code === "IMAGE_TOO_LARGE"
+                            ? "Image too large (max ~8MB) — compress or crop the product photo"
+                            : code === "ASSET_NOT_FOUND"
+                              ? "Photo asset expired on the server — re-upload or Retry with the same still"
+                              : code === "UNSAFE_URL"
+                                ? "Provider returned an unsafe video URL — credits restored when confirmed. Retry generate."
+                                : code === "PROVIDER_RATE_LIMIT"
+                                  ? `Provider busy — try again in ${retryAfterSec ?? "a few"}s`
+                                  : code === "PROVIDER_TIMEOUT"
+                                    ? `Provider timed out — Retry in ${retryAfterSec ?? "a few"}s (same still kept)`
+                                    : code === "PROVIDER_NETWORK"
+                                      ? `Provider network blip — Retry in ${retryAfterSec ?? "a few"}s (same still kept)`
+                                      : code === "TIMEOUT"
+                                        ? "Prior job timed out on the server — mint a new attempt (Retry). Check balance if refund is unconfirmed."
+                                        : code === "CONTENT_POLICY"
+                                          ? "Provider rejected this still or prompt — use a clear product photo on a simple background"
+                                          : "Generation failed — Retry keeps your still, or try another recipe");
 
   // PRD §5: recoverable failures must say whether the 10 credits were restored.
   if (
@@ -239,7 +245,8 @@ async function generateAuthHeaders(): Promise<Record<string, string>> {
 
 /**
  * Best-effort video ledger cancel (DELETE /api/generations).
- * Soft-launch fal may still complete; completeSync wins over cancel.
+ * Soft-launch fal may still complete upstream, but canceled local attempts
+ * fail closed and withhold the late output pending settlement reconciliation.
  * Prefer jobId when known; else idempotencyKey from the aborted attempt.
  */
 export async function cancelGenerateLedger(opts: {

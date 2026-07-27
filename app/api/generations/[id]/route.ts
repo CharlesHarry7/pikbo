@@ -3,7 +3,6 @@ import { ensureSession } from "@/lib/session";
 import {
   cancelJob,
   getJob,
-  touchJob,
   toPublicJob,
 } from "@/lib/generationJobs";
 
@@ -14,12 +13,8 @@ type Props = { params: Promise<{ id: string }> };
 export async function GET(_req: Request, { params }: Props) {
   const { id } = await params;
   const session = await ensureSession();
-  // getJob sweeps timeouts first; touch slides open-job TTL while clients poll.
-  let job = getJob(id);
-  if (job && job.sessionId === session.id) {
-    const touched = touchJob(job.id);
-    if (touched) job = touched;
-  }
+  // Read-only poll: getJob may sweep a fixed deadline, but never extends it.
+  const job = getJob(id);
   if (!job || job.sessionId !== session.id) {
     return NextResponse.json(
       {
@@ -37,8 +32,8 @@ export async function GET(_req: Request, { params }: Props) {
     mode: "local-memory",
     durable: false,
     job: toPublicJob(job, session.id),
-    /** True when this GET extended the open-job timeout window. */
-    touched: job.status === "queued" || job.status === "running",
+    touched: false,
+    note: "Read-only poll; deadlineAt is fixed at job creation.",
   });
 }
 
