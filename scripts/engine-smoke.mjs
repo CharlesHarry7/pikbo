@@ -1552,17 +1552,16 @@ const genJobsStore = fs.readFileSync(
 assert.match(genJobsStore, /recordSucceededGenerate/);
 assert.match(genJobsStore, /recordFailedGenerate/);
 assert.match(genJobsStore, /export function beginSyncGenerateJob/);
-// Ledger-retry fork promote: beginSync reuses queued parentJobId+effect row
-assert.match(
-  genJobsStore,
-  /beginSyncGenerateJob[\s\S]{0,1200}queuedForks|parentJobId[\s\S]{0,200}promote|promote[\s\S]{0,80}parentJobId/
-);
-assert.match(genJobsStore, /queuedForks|Boolean\(j\.parentJobId\)/);
+// R1b: retry forks are claimed only by exact child id + one-time token.
+assert.match(genJobsStore, /export function claimRetryJobForGenerate/);
+assert.match(genJobsStore, /jobs\.get\(input\.retryJobId\)/);
+assert.match(genJobsStore, /retryTokenMatches/);
+assert.doesNotMatch(genJobsStore, /queuedForks/);
 assert.match(genJobsStore, /export function completeSyncGenerateJob/);
 assert.match(genJobsStore, /export function failSyncGenerateJob/);
-assert.match(genJobsStore, /export function touchJob/);
+assert.match(genJobsStore, /export function recordWorkerHeartbeat/);
 assert.match(genJobsStore, /downloadAllowedForJob/);
-assert.match(
+assert.doesNotMatch(
   fs.readFileSync(join(root, "app/api/generations/[id]/route.ts"), "utf8"),
   /touchJob/
 );
@@ -1572,7 +1571,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "app/api/generations/route.ts"), "utf8"),
-  /touchJob|touchedOpen/
+  /touchedOpen:\s*0|GET is read-only/
 );
 assert.match(createStudio, /idempotentReplay|no second charge/);
 // Soft-launch free trial honesty on /api/me
@@ -1974,7 +1973,8 @@ assert.doesNotMatch(
 );
 assert.match(genJobsStore, /export function generationJobsProbe/);
 assert.match(genJobsStore, /byStatus|timedOutThisProbe/);
-assert.match(genJobsStore, /forkRetryJob[\s\S]*findJobByRequestOrId/);
+assert.match(genJobsStore, /forkRetryJob[\s\S]*jobs\.get\(input\.parentId\)/);
+assert.match(genJobsStore, /retryToken/);
 assert.match(genJobsStore, /NOT_RETRYABLE|JOB_IN_FLIGHT/);
 assert.match(genJobsStore, /status === ["']succeeded["']/);
 
@@ -5139,7 +5139,7 @@ assert.match(genJobsRouteHead, /SESSION_JOBS_LIST_LIMIT\s*=\s*50/);
 // GET list: full-session byStatus (countJobsForSession) + listLimit/listed
 assert.match(genJobsRouteHead, /listLimit:\s*SESSION_JOBS_LIST_LIMIT|listLimit,/);
 assert.match(genJobsRouteHead, /countJobsForSession/);
-assert.match(genJobsRouteHead, /touchOpenJobsForSession/);
+assert.doesNotMatch(genJobsRouteHead, /touchOpenJobsForSession/);
 assert.match(
   fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
   /SESSION_JOBS_UI_LIMIT\s*=\s*50/
@@ -5206,12 +5206,12 @@ assert.match(
   /PROVIDER_BALANCE/
 );
 
-// GET /api/generations: full-session byStatus + touch all open (not list page only)
-assert.match(
+// GET /api/generations: full-session byStatus; reads never move deadline.
+assert.doesNotMatch(
   fs.readFileSync(join(root, "lib/generationJobs/store.ts"), "utf8"),
   /export function touchOpenJobsForSession/
 );
-assert.match(
+assert.doesNotMatch(
   fs.readFileSync(join(root, "lib/generationJobs/index.ts"), "utf8"),
   /touchOpenJobsForSession/
 );
@@ -5219,7 +5219,8 @@ const genJobsGet = fs.readFileSync(
   join(root, "app/api/generations/route.ts"),
   "utf8"
 );
-assert.match(genJobsGet, /touchOpenJobsForSession\(session\.id\)/);
+assert.doesNotMatch(genJobsGet, /touchOpenJobsForSession\(session\.id\)/);
+assert.match(genJobsGet, /touchedOpen:\s*0|GET is read-only/);
 assert.match(genJobsGet, /full\.queued|counts\.queued/);
 assert.match(genJobsGet, /total:\s*full\.total|total:\s*counts\.total/);
 assert.match(genJobsGet, /listLimit:\s*SESSION_JOBS_LIST_LIMIT/);

@@ -126,6 +126,12 @@ export function interpretGenerateResponse(
       ? `Too many generates — wait ${retryAfterSec ?? "a few"}s, then Retry`
       : code === "JOB_IN_FLIGHT"
         ? `A generate is already running — wait ${retryAfterSec ?? "a few"}s or Cancel first`
+        : code === "RETRY_TOKEN_INVALID"
+          ? "Retry handoff expired or does not match this job — return to Library and choose Retry again"
+          : code === "RETRY_JOB_NOT_READY"
+            ? "This retry child was already claimed or expired — choose Retry from the latest failed attempt"
+            : code === "RETRY_SPEC_MISMATCH"
+              ? "Retry settings changed — reopen Retry from Library to restore the selected attempt"
         : code === "PROVIDER_BALANCE"
           ? "Upstream provider balance empty — credits restored when the debit was confirmed."
           : code === "RIGHTS_REQUIRED"
@@ -211,7 +217,8 @@ async function generateAuthHeaders(): Promise<Record<string, string>> {
 
 /**
  * Best-effort video ledger cancel (DELETE /api/generations).
- * Soft-launch fal may still complete; completeSync wins over cancel.
+ * Soft-launch fal may still complete upstream, but canceled local attempts
+ * fail closed and withhold the late output pending settlement reconciliation.
  * Prefer jobId when known; else idempotencyKey from the aborted attempt.
  */
 export async function cancelGenerateLedger(opts: {

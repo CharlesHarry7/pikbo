@@ -10,8 +10,17 @@ import {
   isSafeDeliverableUrl,
 } from "@/lib/createTrust";
 import { canServeVerifiedT6Derivative } from "@/lib/t6Worker";
+import {
+  deadlineExpired,
+  deadlineRemainingMs,
+  fixedDeadlineAt,
+  mintRetryToken,
+  retryTokenDigest,
+  retryTokenMatches,
+} from "@/lib/generationReliability.mjs";
 import type {
   BakedWatermarkDerivative,
+  GenerationAttemptSpec,
   GenerationJob,
   GenerationJobStatus,
   PublicGenerationJob,
@@ -38,14 +47,8 @@ const webhookEvents = new Map<
   { jobId: string; status: GenerationJobStatus; appliedAt: string }
 >();
 
-function nowIso(): string {
-  return new Date().toISOString();
-}
-
-function ageMs(iso: string, now = Date.now()): number {
-  const t = Date.parse(iso);
-  if (!Number.isFinite(t)) return 0;
-  return Math.max(0, now - t);
+function nowIso(now = Date.now()): string {
+  return new Date(now).toISOString();
 }
 
 function newId(): string {
@@ -127,6 +130,11 @@ export function createJob(input: {
   status?: GenerationJobStatus;
   idempotencyKey?: string;
   parentJobId?: string;
+  generationSpec?: GenerationAttemptSpec;
+  retryTokenHash?: string;
+  /** Test-only clock injection; production callers omit. */
+  nowMs?: number;
+  deadlineMs?: number;
 }): GenerationJob {
   if (input.idempotencyKey) {
     const existingId = byIdempotency.get(
@@ -137,7 +145,15 @@ export function createJob(input: {
       if (existing) return existing;
     }
   }
-  const t = nowIso();
+  const now = input.nowMs ?? Date.now();
+  const t = nowIso(now);
+  const generationSpec: GenerationAttemptSpec = {
+    effect: input.generationSpec?.effect || input.effect,
+    model: input.generationSpec?.model,
+    duration: input.generationSpec?.duration,
+    aspectRatio: input.generationSpec?.aspectRatio,
+    resolution: input.generationSpec?.resolution,
+  };
   const job: GenerationJob = {
     id: newId(),
     sessionId: input.sessionId,
@@ -148,6 +164,14 @@ export function createJob(input: {
     downloadAllowed: false,
     idempotencyKey: input.idempotencyKey,
     parentJobId: input.parentJobId,
+    generationSpec,
+    deadlineAt: fixedDeadlineAt(
+      now,
+      input.deadlineMs ?? jobTimeoutMs()
+    ),
+    workerHeartbeatAt:
+      (input.status ?? "queued") === "running" ? t : undefined,
+    retryTokenHash: input.retryTokenHash,
     createdAt: t,
     updatedAt: t,
   };
@@ -168,14 +192,21 @@ export function forkRetryJob(input: {
   sessionId: string;
   parentId: string;
 }):
-  | { ok: true; job: GenerationJob; parent: GenerationJob }
+  | {
+      ok: true;
+      job: GenerationJob;
+      parent: GenerationJob;
+      retryToken: string;
+    }
   | {
       ok: false;
       code: "NOT_FOUND" | "NOT_OWNED" | "JOB_IN_FLIGHT" | "NOT_RETRYABLE";
       message: string;
     } {
-  // Accept job id or provider requestId (Library / downloads may store either).
-  const parent = findJobByRequestOrId(input.parentId);
+  sweepTimedOutJobs();
+  // Retry authorization is bound to an exact immutable ledger job id.
+  // Provider request ids, effect names and prompt guesses are not accepted.
+  const parent = jobs.get(input.parentId);
   if (!parent) {
     return {
       ok: false,
@@ -215,14 +246,32 @@ export function forkRetryJob(input: {
       message: `Parent status “${parent.status}” is not retryable on this ledger`,
     };
   }
+
+  const existingChild = [...jobs.values()].find(
+    (job) =>
+      job.sessionId === input.sessionId &&
+      job.parentJobId === parent.id &&
+      (job.status === "queued" || job.status === "running")
+  );
+  if (existingChild) {
+    return {
+      ok: false,
+      code: "JOB_IN_FLIGHT",
+      message: `Retry child ${existingChild.id} is already ${existingChild.status}`,
+    };
+  }
+
+  const retryToken = mintRetryToken();
   const job = createJob({
     sessionId: input.sessionId,
     effect: parent.effect,
     status: "queued",
     parentJobId: parent.id,
-    idempotencyKey: `retry:${parent.id}:${Math.floor(Date.now() / 5000)}`,
+    idempotencyKey: `retry:${parent.id}:${retryTokenDigest(retryToken).slice(0, 24)}`,
+    retryTokenHash: retryTokenDigest(retryToken),
+    generationSpec: parent.generationSpec,
   });
-  return { ok: true, job, parent };
+  return { ok: true, job, parent, retryToken };
 }
 
 /**
@@ -235,13 +284,18 @@ export function sweepTimedOutJobs(opts?: {
   timeoutMs?: number;
 }): GenerationJob[] {
   const now = opts?.nowMs ?? Date.now();
-  const limit = opts?.timeoutMs ?? jobTimeoutMs();
   const timedOut: GenerationJob[] = [];
   for (const job of jobs.values()) {
     if (job.status !== "queued" && job.status !== "running") continue;
-    // Prefer updatedAt so re-touched running jobs get a full window.
-    const stamp = job.updatedAt || job.createdAt;
-    if (ageMs(stamp, now) < limit) continue;
+    // Legacy rows without deadlineAt use a derived fixed deadline. No read or
+    // heartbeat timestamp participates in timeout decisions.
+    const deadlineAt =
+      job.deadlineAt ||
+      fixedDeadlineAt(
+        Date.parse(job.createdAt),
+        opts?.timeoutMs ?? jobTimeoutMs()
+      );
+    if (!deadlineExpired(deadlineAt, now)) continue;
     const next = updateJob(job.id, {
       status: "failed",
       error:
@@ -261,15 +315,15 @@ export function getJob(id: string): GenerationJob | null {
 }
 
 /**
- * Slide updatedAt on open jobs while a client is polling.
- * Prevents false TIMEOUT when soft-launch sync fal is still working and the
- * operator set a short PIKBO_JOB_TIMEOUT_MS. Terminal jobs are unchanged.
+ * Trusted worker liveness signal. It is intentionally separate from reads and
+ * never changes deadlineAt.
  */
-export function touchJob(id: string): GenerationJob | null {
+export function recordWorkerHeartbeat(id: string): GenerationJob | null {
+  sweepTimedOutJobs();
   const job = findJobByRequestOrId(id);
   if (!job) return null;
   if (job.status !== "queued" && job.status !== "running") return job;
-  return updateJob(job.id, {}) ?? job;
+  return updateJob(job.id, { workerHeartbeatAt: nowIso() }) ?? job;
 }
 
 /**
@@ -279,8 +333,7 @@ export function touchJob(id: string): GenerationJob | null {
  */
 export function jobLedgerInFlightRetryAfterSec(job: GenerationJob): number {
   if (job.status !== "queued" && job.status !== "running") return 1;
-  const stamp = job.updatedAt || job.createdAt;
-  const remainingMs = jobTimeoutMs() - ageMs(stamp);
+  const remainingMs = deadlineRemainingMs(job.deadlineAt);
   if (remainingMs <= 0) return 1;
   return Math.max(1, Math.ceil(remainingMs / 1000));
 }
@@ -418,26 +471,21 @@ export function countJobsForSession(sessionId: string): {
   };
 }
 
-/**
- * Slide TTL on every open job for this session (Library poll honesty).
- * Must not be limited to the newest list page — older open children would
- * false-TIMEOUT while only the first page is touched.
- */
-export function touchOpenJobsForSession(sessionId: string): number {
-  sweepTimedOutJobs();
-  let n = 0;
-  for (const j of jobs.values()) {
-    if (j.sessionId !== sessionId) continue;
-    if (j.status !== "queued" && j.status !== "running") continue;
-    if (touchJob(j.id)) n += 1;
-  }
-  return n;
-}
-
 export function updateJob(
   id: string,
   patch: Partial<
-    Omit<GenerationJob, "id" | "sessionId" | "createdAt" | "idempotencyKey">
+    Omit<
+      GenerationJob,
+      | "id"
+      | "sessionId"
+      | "createdAt"
+      | "idempotencyKey"
+      | "parentJobId"
+      | "generationSpec"
+      | "deadlineAt"
+      | "retryTokenHash"
+      | "retryClaimedAt"
+    >
   >
 ): GenerationJob | null {
   const cur = jobs.get(id);
@@ -488,12 +536,9 @@ export function beginSyncGenerateJob(input: {
   aspectRatio?: string;
   resolution?: string;
 }): GenerationJob {
-  // Prefer promoting a ledger-retry fork (queued + same effect) so Library
-  // "Ledger retry" does not leave an orphan until jobTimeoutMs.
-  // Idempotency short-circuit still wins via createJob when key already bound.
-  if (!input.idempotencyKey) {
-    /* fall through to create */
-  } else {
+  // Network replay may reopen only the exact idempotency-bound attempt.
+  // Retry forks are claimed separately with their job id + one-time token.
+  if (input.idempotencyKey) {
     const existingId = byIdempotency.get(
       `${input.sessionId}:${input.idempotencyKey}`
     );
@@ -506,6 +551,7 @@ export function beginSyncGenerateJob(input: {
         return (
           updateJob(existing.id, {
             status: "running",
+            workerHeartbeatAt: nowIso(),
             model: input.model,
             watermark: input.watermark ?? true,
             provider: input.provider,
@@ -520,55 +566,18 @@ export function beginSyncGenerateJob(input: {
     }
   }
 
-  const queuedForks = [...jobs.values()]
-    .filter(
-      (j) =>
-        j.sessionId === input.sessionId &&
-        j.status === "queued" &&
-        j.effect === input.effect &&
-        Boolean(j.parentJobId)
-    )
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const promote = queuedForks[0];
-  if (promote) {
-    // Rebind client idempotency key onto the fork (updateJob omits key field).
-    if (promote.idempotencyKey) {
-      byIdempotency.delete(`${input.sessionId}:${promote.idempotencyKey}`);
-    }
-    if (input.idempotencyKey) {
-      byIdempotency.set(
-        `${input.sessionId}:${input.idempotencyKey}`,
-        promote.id
-      );
-    }
-    const next: GenerationJob = {
-      ...promote,
-      status: "running",
-      model: input.model,
-      watermark: input.watermark ?? true,
-      provider: input.provider,
-      demo: false,
-      downloadAllowed: false,
-      idempotencyKey: input.idempotencyKey,
-      duration: input.duration,
-      aspectRatio: input.aspectRatio,
-      resolution: input.resolution,
-      error: undefined,
-      errorCode: undefined,
-      videoUrl: undefined,
-      creditsOutcome: undefined,
-      creditsRefunded: undefined,
-      updatedAt: nowIso(),
-    };
-    jobs.set(promote.id, next);
-    return next;
-  }
-
   const job = createJob({
     sessionId: input.sessionId,
     effect: input.effect,
     status: "running",
     idempotencyKey: input.idempotencyKey,
+    generationSpec: {
+      effect: input.effect,
+      model: input.model,
+      duration: input.duration,
+      aspectRatio: input.aspectRatio,
+      resolution: input.resolution,
+    },
   });
   // Existing terminal row from same key is returned as-is by createJob —
   // callers must short-circuit via findJobByIdempotencyKey first.
@@ -578,6 +587,7 @@ export function beginSyncGenerateJob(input: {
   return (
     updateJob(job.id, {
       status: "running",
+      workerHeartbeatAt: nowIso(),
       model: input.model,
       watermark: input.watermark ?? true,
       provider: input.provider,
@@ -589,6 +599,109 @@ export function beginSyncGenerateJob(input: {
       resolution: input.resolution,
     }) ?? job
   );
+}
+
+export function claimRetryJobForGenerate(input: {
+  sessionId: string;
+  retryJobId: string;
+  retryToken: string;
+  idempotencyKey: string;
+  effect: string;
+  model?: string;
+  watermark?: boolean;
+  provider?: string;
+  duration?: number;
+  aspectRatio?: string;
+  resolution?: string;
+}):
+  | { ok: true; job: GenerationJob }
+  | {
+      ok: false;
+      code:
+        | "RETRY_TOKEN_INVALID"
+        | "RETRY_JOB_NOT_READY"
+        | "RETRY_SPEC_MISMATCH"
+        | "IDEMPOTENCY_CONFLICT";
+      message: string;
+    } {
+  sweepTimedOutJobs();
+  // Exact job id only. Never resolve provider request id, effect or list order.
+  const child = jobs.get(input.retryJobId);
+  if (
+    !child ||
+    child.sessionId !== input.sessionId ||
+    !child.parentJobId ||
+    !retryTokenMatches(child.retryTokenHash, input.retryToken)
+  ) {
+    return {
+      ok: false,
+      code: "RETRY_TOKEN_INVALID",
+      message: "Retry job or one-time token is invalid for this session",
+    };
+  }
+  if (child.status !== "queued" || child.retryClaimedAt) {
+    return {
+      ok: false,
+      code: "RETRY_JOB_NOT_READY",
+      message: `Retry child is ${child.status}; mint a retry from the selected terminal job`,
+    };
+  }
+
+  const expected = child.generationSpec;
+  const mismatch =
+    expected.effect !== input.effect ||
+    (expected.model != null && expected.model !== input.model) ||
+    (expected.duration != null && expected.duration !== input.duration) ||
+    (expected.aspectRatio != null &&
+      expected.aspectRatio !== input.aspectRatio) ||
+    (expected.resolution != null && expected.resolution !== input.resolution);
+  if (mismatch) {
+    return {
+      ok: false,
+      code: "RETRY_SPEC_MISMATCH",
+      message: "Retry settings do not match the selected parent attempt",
+    };
+  }
+
+  const bound = byIdempotency.get(
+    `${input.sessionId}:${input.idempotencyKey}`
+  );
+  if (bound && bound !== child.id) {
+    return {
+      ok: false,
+      code: "IDEMPOTENCY_CONFLICT",
+      message: "Idempotency key is already bound to another generation attempt",
+    };
+  }
+  if (child.idempotencyKey) {
+    byIdempotency.delete(`${input.sessionId}:${child.idempotencyKey}`);
+  }
+  byIdempotency.set(`${input.sessionId}:${input.idempotencyKey}`, child.id);
+  const t = nowIso();
+  const claimed: GenerationJob = {
+    ...child,
+    status: "running",
+    model: input.model,
+    watermark: input.watermark ?? true,
+    provider: input.provider,
+    demo: false,
+    downloadAllowed: false,
+    idempotencyKey: input.idempotencyKey,
+    duration: input.duration,
+    aspectRatio: input.aspectRatio,
+    resolution: input.resolution,
+    workerHeartbeatAt: t,
+    retryTokenHash: undefined,
+    retryClaimedAt: t,
+    error: undefined,
+    errorCode: undefined,
+    videoUrl: undefined,
+    creditsOutcome: undefined,
+    creditsRefunded: undefined,
+    updatedAt: t,
+  };
+  jobs.set(child.id, claimed);
+  return { ok: true, job: claimed };
 }
 
 /**
@@ -610,11 +723,16 @@ export function completeSyncGenerateJob(input: {
   requestId?: string;
   provider?: string;
 }): GenerationJob {
+  sweepTimedOutJobs();
   if (input.jobId) {
     const cur = jobs.get(input.jobId);
     if (cur && cur.sessionId === input.sessionId) {
-      // Provider finished wins: cancel is ledger abandon only (not fal kill).
-      // Still stamp success so Library can recover the deliverable.
+      if (cur.status === "failed" || cur.status === "canceled") {
+        // A fixed deadline/cancel is terminal. A late provider response is
+        // reconciled separately; it must not reopen or expose this attempt.
+        return cur;
+      }
+      // Open attempts may transition to success; terminal attempts never reopen.
       const next = updateJob(input.jobId, {
         status: "succeeded",
         videoUrl: input.videoUrl,
@@ -677,6 +795,9 @@ export function failSyncGenerateJob(input: {
     const cur = jobs.get(input.jobId);
     if (cur && cur.sessionId === input.sessionId) {
       if (cur.status === "canceled") {
+        return cur;
+      }
+      if (cur.status === "failed") {
         return cur;
       }
       if (cur.status === "succeeded") {
@@ -756,8 +877,16 @@ export function recordSucceededGenerate(input: {
     creditsOutcome: input.creditsOutcome,
     requestId: input.requestId,
     provider: input.provider,
+    generationSpec: {
+      effect: input.effect,
+      model: input.model,
+      duration: input.duration,
+      aspectRatio: input.aspectRatio,
+      resolution: input.resolution,
+    },
     createdAt: t,
     updatedAt: t,
+    deadlineAt: fixedDeadlineAt(Date.parse(t), jobTimeoutMs()),
   };
   jobs.set(id, job);
   if (input.idempotencyKey) {
@@ -803,8 +932,13 @@ export function recordFailedGenerate(input: {
     creditsRefunded: input.creditsRefunded,
     creditsOutcome,
     idempotencyKey: input.idempotencyKey,
+    generationSpec: {
+      effect: input.effect,
+      model: input.model,
+    },
     createdAt: t,
     updatedAt: t,
+    deadlineAt: fixedDeadlineAt(Date.parse(t), jobTimeoutMs()),
   };
   jobs.set(id, job);
   if (input.idempotencyKey) {
@@ -829,14 +963,22 @@ export function toPublicJob(
       watermark: true,
       downloadAllowed: false,
       error: "Not found",
+      generationSpec: { effect: job.effect },
+      deadlineAt: job.deadlineAt,
       createdAt: job.createdAt,
       updatedAt: job.updatedAt,
       owned: false,
     };
   }
-  const { sessionId: _s, downloadAllowed: _frozen, ...rest } = job;
+  const {
+    sessionId: _s,
+    downloadAllowed: _frozen,
+    retryTokenHash: _retrySecret,
+    ...rest
+  } = job;
   void _s;
   void _frozen;
+  void _retrySecret;
   // Recompute from verified derivative metadata, never an operator env flag.
   return {
     ...rest,

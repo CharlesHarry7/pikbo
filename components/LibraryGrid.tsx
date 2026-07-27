@@ -852,7 +852,8 @@ export function LibraryGrid() {
     return () => window.clearInterval(t);
   }, [sessionJobs, sessionMeta.open]);
 
-  // Poll open stills (GET touches running TTL — same honesty as generations).
+  // Legacy still ledger currently touches its TTL. Video generation polls are
+  // read-only and use fixed deadlineAt (R1b); image parity is a later change.
   useEffect(() => {
     const open =
       sessionStillMeta.open > 0 ||
@@ -1088,7 +1089,11 @@ export function LibraryGrid() {
         ok?: boolean;
         message?: string;
         code?: string;
-        next?: { createUi?: string };
+        next?: {
+          createUi?: string;
+          retryJobId?: string;
+          retryToken?: string;
+        };
       };
       if (!res.ok || !body.ok) {
         const code = body.code || "";
@@ -1122,6 +1127,20 @@ export function LibraryGrid() {
               null,
               parentJob ? remixOptsFromRecord(parentJob) : undefined
             );
+      if (
+        typeof body.next?.retryJobId === "string" &&
+        typeof body.next?.retryToken === "string"
+      ) {
+        try {
+          sessionStorage.setItem(
+            `pikbo_retry_token:${body.next.retryJobId}`,
+            body.next.retryToken
+          );
+        } catch {
+          toast("Retry token could not be stored — choose Retry again");
+          return;
+        }
+      }
       window.location.href = createUi;
     } catch {
       toast("Network error forking retry job");

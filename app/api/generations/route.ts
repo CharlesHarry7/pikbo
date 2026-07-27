@@ -7,7 +7,6 @@ import {
   jobTimeoutMs,
   listJobsForSession,
   sweepTimedOutJobs,
-  touchOpenJobsForSession,
   toPublicJob,
 } from "@/lib/generationJobs";
 
@@ -116,14 +115,12 @@ export async function DELETE(req: Request) {
  * Phase D — list recent jobs for this session (local memory adapter).
  * Durable async queue still requires Supabase; soft-launch sync path is
  * POST /api/generate, which records jobs into this ledger.
- * GET also sweeps timed-out queued/running jobs (timeout recovery) and
- * touches open jobs so Library poll does not false-TIMEOUT mid-generate.
+ * GET also sweeps queued/running jobs past their fixed deadline. Polling is
+ * read-only and never extends deadlineAt or worker liveness.
  */
 export async function GET() {
   const session = await ensureSession();
   const timedOut = sweepTimedOutJobs();
-  // Slide TTL on every open job for this session (not only the list page).
-  const touchedOpen = touchOpenJobsForSession(session.id);
   // Newest page for Library recovery UI; histogram uses full-session counts.
   const listed = listJobsForSession(session.id, SESSION_JOBS_LIST_LIMIT);
   const jobs = listed.map((j) => toPublicJob(j, session.id));
@@ -144,8 +141,7 @@ export async function GET() {
     jobTimeoutMs: jobTimeoutMs(),
     timedOutThisSweep: timedOut.filter((j) => j.sessionId === session.id)
       .length,
-    /** How many open jobs had updatedAt slid this poll. */
-    touchedOpen,
+    touchedOpen: 0,
     /** Newest-first page size for `jobs` (histogram may count more). */
     listLimit: SESSION_JOBS_LIST_LIMIT,
     listed: jobs.length,
@@ -155,7 +151,7 @@ export async function GET() {
     byStatus,
     open: full.open,
     note:
-      "In-process ledger for soft-launch recovery. Not multi-node durable. Use POST /api/generate for work. Queued/running jobs past jobTimeoutMs fail with TIMEOUT. GET touches all open jobs; byStatus/open/total are full-session.",
+      "In-process ledger for soft-launch recovery. Not multi-node durable. Use POST /api/generate for work. Queued/running jobs fail at fixed deadlineAt; GET is read-only. byStatus/open/total are full-session.",
     compatibility: {
       syncGenerate: "/api/generate",
       jobStatus: "/api/generations/[id]",

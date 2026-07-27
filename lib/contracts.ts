@@ -33,6 +33,10 @@ export type GenerateRequestBody = {
    * User Retry must mint a new key. Soft-launch process-memory only.
    */
   idempotencyKey?: string;
+  /** Exact queued retry child created by POST /api/generations/{parent}/retry. */
+  retryJobId?: string;
+  /** One-time bearer paired with retryJobId; never inferred from effect/prompt. */
+  retryToken?: string;
 };
 
 export type GenerateSuccess = {
@@ -99,6 +103,10 @@ export type GenerateErrorBody = {
     | "CONTENT_POLICY"
     | "RATE_LIMITED"
     | "JOB_IN_FLIGHT"
+    | "RETRY_TOKEN_INVALID"
+    | "RETRY_JOB_NOT_READY"
+    | "RETRY_SPEC_MISMATCH"
+    | "IDEMPOTENCY_CONFLICT"
     | "RIGHTS_REQUIRED"
     | "UNSAFE_URL"
     /**

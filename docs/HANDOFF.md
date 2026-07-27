@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [claude] R1b exact retry + fixed generation deadline
+- Video retry now forks only from an exact terminal parent job ID and returns a new child ID plus a one-time bearer; Create claims that exact child and never guesses by effect, prompt or list order.
+- The bearer is hashed server-side, handed through session storage, removed after hydration and consumed once; a 20-way concurrent claim regression has exactly one winner.
+- Every video job receives an immutable `deadlineAt`; GET/list polling is read-only, while trusted worker heartbeat is separate and cannot move the deadline.
+- Provider output is settled/delivered only while the exact attempt remains `running`; cancel, timeout, failure, queued or missing state withholds the late output and marks settlement unconfirmed.
+- Scope is video generation only. Image/Seller Pack retry parity and durable settlement reconciliation remain open; no production Supabase migration was applied.
+
 ### 2026-07-27 — [claude] seller-first Create three-step path
 - First run is now `upload owned toy photo → choose Listing/Unboxing/Social Hook/Starter Pack → review exact quote and generate`.
 - Model shelf, workflow shelf, activation checklist, full recipe catalog, prompt, model, duration, seed and fidelity guidance no longer obstruct first activation; advanced controls remain available collapsed.
@@ -24,7 +31,7 @@ Newest first. One block per meaningful landing.
 - Only the transaction winner receives `providerAuthorized=true`; the provider guard rejects replay observers, missing reservations and insufficient balance before any paid call.
 - Migration preflight aborts on duplicate personal accounts or duplicate generation keys; SQL was **not** applied to Supabase and still requires a reviewed non-production integration run.
 - A provider success followed by an ambiguous capture failure now withholds output and reports settlement pending; it never claims `10 used` or a refund.
-- R1b remains open for retry tokens, fixed deadlines and reconciliation of ambiguous provider/capture outcomes.
+- R1b/R1c remained open at this point: retry/deadline mechanics plus reconciliation of ambiguous provider/capture outcomes.
 
 ### 2026-07-27 — [claude] R0 anonymous provider-cost gate
 - Anonymous and Free Create requests now return official cached demos at 0 credits even when `FAL_KEY` exists.

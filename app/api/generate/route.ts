@@ -46,12 +46,16 @@ import {
   invokeReservedProvider,
   liveGenerationAccess,
 } from "@/lib/liveGenerationGate.mjs";
+import { providerCompletionDecision } from "@/lib/generationReliability.mjs";
 import {
   beginSyncGenerateJob,
+  claimRetryJobForGenerate,
   completeSyncGenerateJob,
   failSyncGenerateJob,
   findJobByIdempotencyKey,
+  getJob,
   jobLedgerInFlightRetryAfterSec,
+  recordWorkerHeartbeat,
   recordSucceededGenerate,
   type GenerationJob,
 } from "@/lib/generationJobs";
@@ -162,6 +166,8 @@ export async function POST(req: Request) {
     resolution: resPref,
     seed,
     ownsRights,
+    retryJobId,
+    retryToken,
   } = body;
 
   const preset = effect ? getPreset(effect) : undefined;
@@ -194,6 +200,25 @@ export async function POST(req: Request) {
   // Idempotent replay BEFORE image/asset resolve — network retries must not
   // re-upload multi-MB stills or fail on expired assetId after success.
   const idempotencyKey = normalizeIdempotencyKey(body.idempotencyKey);
+  const hasRetryHandoff = Boolean(retryJobId || retryToken);
+  if (
+    hasRetryHandoff &&
+    (typeof retryJobId !== "string" ||
+      retryJobId.length < 8 ||
+      typeof retryToken !== "string" ||
+      retryToken.length < 16 ||
+      !idempotencyKey)
+  ) {
+    return err(
+      {
+        error:
+          "Retry requires an exact child job id, its one-time token, and a new idempotency key",
+        code: "RETRY_TOKEN_INVALID",
+        session: publicSession(session),
+      },
+      400
+    );
+  }
   const ledgerIdempotencyKey =
     access.kind === "cached" && idempotencyKey
       ? `cached:${idempotencyKey}`.slice(0, 128)
@@ -353,6 +378,33 @@ export async function POST(req: Request) {
     // Cost gate: anonymous users and Free accounts always receive an official
     // cached clip, even when FAL_KEY exists. The upload is not processed.
     if (access.kind === "cached") {
+      let cachedRetryJobId: string | undefined;
+      if (hasRetryHandoff) {
+        const claimed = claimRetryJobForGenerate({
+          sessionId: session.id,
+          retryJobId: retryJobId!,
+          retryToken: retryToken!,
+          idempotencyKey: ledgerIdempotencyKey!,
+          effect: preset.slug,
+          model: "demo-cached",
+          watermark: plan.watermark,
+          provider: "demo-cached",
+          duration: secs,
+          aspectRatio: aspect,
+          resolution,
+        });
+        if (!claimed.ok) {
+          return err(
+            {
+              error: claimed.message,
+              code: claimed.code,
+              session: publicSession(session),
+            },
+            claimed.code === "RETRY_JOB_NOT_READY" ? 409 : 400
+          );
+        }
+        cachedRetryJobId = claimed.job.id;
+      }
       await new Promise((r) => setTimeout(r, 600));
       // Prefer on-disk clip; refuse unsafe paths even from internal catalog.
       let videoUrl = demoClipForEffect(preset.slug);
@@ -386,21 +438,37 @@ export async function POST(req: Request) {
         creditsOutcome: "0 cached",
       };
       try {
-        const job = recordSucceededGenerate({
-          sessionId: session.id,
-          effect: preset.slug,
-          videoUrl: payload.videoUrl,
-          demo: true,
-          watermark: plan.watermark,
-          model: payload.model,
-          duration: secs,
-          aspectRatio: aspect,
-          resolution,
-          costCredits: 0,
-          creditsOutcome: "0 cached",
-          provider: "demo-cached",
-          idempotencyKey: ledgerIdempotencyKey,
-        });
+        const job = cachedRetryJobId
+          ? completeSyncGenerateJob({
+              jobId: cachedRetryJobId,
+              sessionId: session.id,
+              effect: preset.slug,
+              videoUrl: payload.videoUrl,
+              demo: true,
+              watermark: plan.watermark,
+              model: payload.model,
+              duration: secs,
+              aspectRatio: aspect,
+              resolution,
+              costCredits: 0,
+              creditsOutcome: "0 cached",
+              provider: "demo-cached",
+            })
+          : recordSucceededGenerate({
+              sessionId: session.id,
+              effect: preset.slug,
+              videoUrl: payload.videoUrl,
+              demo: true,
+              watermark: plan.watermark,
+              model: payload.model,
+              duration: secs,
+              aspectRatio: aspect,
+              resolution,
+              costCredits: 0,
+              creditsOutcome: "0 cached",
+              provider: "demo-cached",
+              idempotencyKey: ledgerIdempotencyKey,
+            });
         payload.requestId = job.id;
         payload.jobId = job.id;
       } catch {
@@ -484,10 +552,39 @@ export async function POST(req: Request) {
       prefer: modelPref as ModelPreference,
     });
 
-    // Open process-memory `running` row so Library cancel/timeout/poll work
-    // during the long fal.subscribe (previously only terminal rows existed).
-    let liveJobId: string | undefined;
-    try {
+    // Open or explicitly claim the exact retry child before provider work.
+    // Effect/prompt/list-order matching is intentionally forbidden.
+    let liveJobId: string;
+    if (hasRetryHandoff) {
+      const claimed = claimRetryJobForGenerate({
+        sessionId: session.id,
+        retryJobId: retryJobId!,
+        retryToken: retryToken!,
+        idempotencyKey: ledgerIdempotencyKey!,
+        effect: preset.slug,
+        model,
+        watermark: plan.watermark,
+        provider: "bytedance-seedance",
+        duration: secs,
+        aspectRatio: aspect,
+        resolution,
+      });
+      if (!claimed.ok) {
+        const released = await releaseReservation("retry_claim_rejected");
+        const failBody: GenerateErrorBody = {
+          error: claimed.message,
+          code: claimed.code,
+          session: publicSession(session),
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true } : {}),
+        };
+        return err(
+          failBody,
+          claimed.code === "RETRY_JOB_NOT_READY" ? 409 : 400
+        );
+      }
+      liveJobId = claimed.job.id;
+    } else {
       liveJobId = beginSyncGenerateJob({
         sessionId: session.id,
         effect: preset.slug,
@@ -495,14 +592,10 @@ export async function POST(req: Request) {
         watermark: plan.watermark,
         provider: "bytedance-seedance",
         idempotencyKey: ledgerIdempotencyKey,
-        // Stamp ratio/duration at open so Library remake after fail/cancel
-        // still carries the attempted run (not only success completeSync).
         duration: secs,
         aspectRatio: aspect,
         resolution,
       }).id;
-    } catch {
-      liveJobId = undefined;
     }
 
     // G6 ops: prove post-debit refund without burning fal when not on production.
@@ -563,6 +656,21 @@ export async function POST(req: Request) {
       const file = new File([blob], "toy.png", {
         type: blob.type || "image/png",
       });
+      const uploadHeartbeat = recordWorkerHeartbeat(liveJobId);
+      if (!uploadHeartbeat || uploadHeartbeat.status !== "running") {
+        const released = await releaseReservation("deadline_before_upload");
+        const failBody: GenerateErrorBody = {
+          error: "Generation deadline expired before provider upload",
+          code: "TIMEOUT",
+          model,
+          jobId: liveJobId,
+          session: publicSession(session),
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true } : {}),
+        };
+        noteFailed(session.id, preset.slug, failBody, liveJobId);
+        return err(failBody, 504);
+      }
       const imageUrl = await invokeReservedProvider(
         reserved.reservation,
         () => fal.storage.upload(file)
@@ -580,6 +688,21 @@ export async function POST(req: Request) {
         input.seed = Math.floor(seed);
       }
 
+      const generationHeartbeat = recordWorkerHeartbeat(liveJobId);
+      if (!generationHeartbeat || generationHeartbeat.status !== "running") {
+        const released = await releaseReservation("deadline_before_generation");
+        const failBody: GenerateErrorBody = {
+          error: "Generation deadline expired before the model started",
+          code: "TIMEOUT",
+          model,
+          jobId: liveJobId,
+          session: publicSession(session),
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true } : {}),
+        };
+        noteFailed(session.id, preset.slug, failBody, liveJobId);
+        return err(failBody, 504);
+      }
       const result = await invokeReservedProvider(
         reserved.reservation,
         () =>
@@ -620,6 +743,23 @@ export async function POST(req: Request) {
         return err(failBody, 502);
       }
 
+      // fal may return after the fixed local deadline. Do not let a browser
+      // poll or late provider response reopen the attempt, and do not claim a
+      // refund/capture until R1c reconciliation inspects the durable job.
+      const deadlineState = getJob(liveJobId);
+      const completionDecision = providerCompletionDecision(deadlineState);
+      if (!completionDecision.allow) {
+        const failBody: GenerateErrorBody = {
+          error: completionDecision.message,
+          code: completionDecision.code,
+          model,
+          jobId: liveJobId,
+          session: publicSession(session),
+          refundUnconfirmed: true,
+        };
+        return err(failBody, completionDecision.httpStatus);
+      }
+
       const captured = await settleStrictLiveGeneration(
         reserved.reservation,
         result.requestId || liveJobId || reserved.reservation.reservationId
@@ -633,7 +773,7 @@ export async function POST(req: Request) {
         // Provider work exists, so releasing would create a free result; but
         // claiming "10 used" would also be false because the durable capture
         // did not commit. Withhold the output and leave the reservation for
-        // the R1b reconciliation worker. The same idempotency key remains
+        // the R1c reconciliation worker. The same idempotency key remains
         // blocked by the durable job.
         const failBody: GenerateErrorBody = {
           error:

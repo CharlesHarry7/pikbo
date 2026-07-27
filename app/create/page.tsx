@@ -63,6 +63,7 @@ export default async function CreatePage({
   searchParams: Promise<{
     effect?: string;
     model?: string;
+    resolution?: string;
     mode?: string;
     prompt?: string;
     source?: string;
@@ -76,6 +77,9 @@ export default async function CreatePage({
     job?: string;
     /** Character bible SKU carried from post-generate Next SKU */
     sku?: string;
+    /** Exact local retry handoff; paired one-time bearer. */
+    retryJobId?: string;
+    retryToken?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -176,6 +180,7 @@ export default async function CreatePage({
         <CreateStudio
           initialEffect={sp.effect}
           initialModel={sp.model}
+          initialResolution={sp.resolution}
           initialMode={sp.mode === "t2v" ? "t2v" : "i2v"}
           initialPrompt={sp.prompt}
           initialSource={sp.source}
@@ -185,6 +190,8 @@ export default async function CreatePage({
           initialSample={firstRunSample}
           initialJob={sp.job}
           initialSku={sp.sku}
+          initialRetryJobId={sp.retryJobId}
+          initialRetryToken={sp.retryToken}
         />
       </Suspense>
       {/* SSR landing copy + internal links for crawlers */}

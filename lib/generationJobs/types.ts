@@ -24,6 +24,14 @@ export type BakedWatermarkDerivative = {
   errorCode?: string;
 };
 
+export type GenerationAttemptSpec = {
+  effect: string;
+  model?: string;
+  duration?: number;
+  aspectRatio?: string;
+  resolution?: string;
+};
+
 export type GenerationJob = {
   id: string;
   sessionId: string;
@@ -51,12 +59,24 @@ export type GenerationJob = {
   idempotencyKey?: string;
   /** Prior job this was retried from (local adapter only). */
   parentJobId?: string;
+  /** Immutable server-side attempt settings copied into retry children. */
+  generationSpec: GenerationAttemptSpec;
+  /** Fixed at job creation. Reads and worker heartbeat never extend it. */
+  deadlineAt: string;
+  /** Trusted worker liveness only; never written by GET/poll routes. */
+  workerHeartbeatAt?: string;
+  /** One-time retry bearer digest. Never included in PublicGenerationJob. */
+  retryTokenHash?: string;
+  retryClaimedAt?: string;
   createdAt: string;
   updatedAt: string;
 };
 
 /** Public view — never exposes private storage paths. */
-export type PublicGenerationJob = Omit<GenerationJob, "sessionId"> & {
+export type PublicGenerationJob = Omit<
+  GenerationJob,
+  "sessionId" | "retryTokenHash"
+> & {
   /** True when this session owns the job. */
   owned: boolean;
 };
