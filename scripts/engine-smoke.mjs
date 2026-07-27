@@ -5137,3 +5137,11 @@ assert.match(
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node
+assert.match(
+  fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
+  /Sign-in not live yet|data-login-guest/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
+  /guest cookie|Supabase/
+);

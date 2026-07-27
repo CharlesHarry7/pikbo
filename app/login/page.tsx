@@ -26,8 +26,24 @@ export default function LoginPage() {
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
           Cross-device balance and cloud Library need a durable account. Soft
-          launch still works as a guest on this browser.
+          launch still works as a guest on this browser — Generate, Seller Pack,
+          and Free Mini do not require sign-in today.
         </p>
+        <ul className="mt-3 list-disc space-y-1 pl-5 text-[11px] leading-relaxed text-white/45">
+          <li>
+            <strong className="text-white/65">Live now:</strong> guest cookie on
+            this device (credits, history, softLive generate)
+          </li>
+          <li>
+            <strong className="text-white/65">Needs boss keys:</strong> Supabase
+            URL + anon (+ service role for wallets) so magic-link / Google light
+            up
+          </li>
+          <li>
+            <strong className="text-white/65">Also later:</strong> SQL migration
+            for multi-node durable credits (T5)
+          </li>
+        </ul>
 
         <div
           className={`mt-6 rounded-2xl border px-4 py-3 text-sm ${

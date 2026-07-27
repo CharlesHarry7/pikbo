@@ -30,7 +30,11 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
           className="flex flex-wrap items-center gap-2 pt-1"
           data-auth-guest-path="product-first"
         >
-          <a href="/create" className="btn btn-primary !px-3 !py-1.5 text-xs">
+          <a
+            href="/create?effect=360-spin-showcase&ratio=1%3A1&duration=5"
+            className="btn btn-primary !px-3 !py-1.5 text-xs"
+            data-login-guest="generate-remix"
+          >
             Generate
           </a>
           <a

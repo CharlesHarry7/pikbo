@@ -8,7 +8,21 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ## OPEN · 立即执行
 
-_(无 open 任务 — 队列已清空)_
+### WQ-2026-07-27-08 · 持续外链（能发就发）
+
+```yaml
+id: WQ-2026-07-27-08
+status: open
+priority: P0
+assignee: workbuddy
+why: 老板都做；优待期外链；无 EMAIL 仍跑 free 站
+command: |
+  git pull; GROWTH_CHROME_CHANNEL=chrome python3 scripts/growth-auto/run_growth.py --all
+  链主词 + blind-box + /guides/toy-unboxing-video-from-one-photo
+  push [workbuddy] growth: … (no sitemap expand)
+result: |
+  (WB 填)
+```
 
 ---
 

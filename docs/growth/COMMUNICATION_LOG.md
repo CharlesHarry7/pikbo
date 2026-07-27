@@ -1,11 +1,22 @@
-# 沟通记录（WorkBuddy × 老板）
+# 沟通记录（全 Agent × 老板）
 
-> 本文件记录所有与老板的沟通要点、决策结论和执行动作，供所有 agent 同步上下文。
-> 更新规则：每次有实质性沟通后追加，不覆盖历史记录。
+> 供 Grok / WorkBuddy / Claude / Codex 同步。追加不覆盖。  
+> 同步铁令：`docs/growth/AGENT_SYNC.md` — 未 push = 没发生。
 
 ---
 
 ## 2026-07-27 沟通记录
+
+### 10:20 — 都做 + 用户登录状态（Grok）
+- **老板：** 都做；用户登录做了么？
+- **生产核查：** `/api/health` → `auth.mode=disabled` · `authConfigured=false`
+  - **已做：** `/login` UI + Magic Link 代码在 main；游客 cookie 可生成
+  - **未开：** 生产无 Supabase 密钥 → 无法真登录；跨设备/云积分未 live
+  - **要开登录需老板：** Vercel 配 SUPABASE_URL + ANON_KEY（+ service role）+ SQL 迁移 + Auth 回调 URL
+- **继续：** 产品/CTR/外链队列并行；不假装登录已 live
+
+### 10:05 — GitHub 全量同步（Grok）
+- 老板要求所有工作与沟通进 GitHub；`AGENT_SYNC.md` 已落地
 
 ### 09:00 — 谷歌收录查询
 - **老板问**：谷歌收录了多少篇了？
