@@ -65,8 +65,10 @@ export async function GET() {
     /** Cached Lab + Studio demo path (no provider key; free, no credit burn) */
     demo: true,
     /**
-     * Soft-live: cookie generate + FAL. Multi-node durable job worker is NOT
-     * required for soft-launch Mode A (process-memory ledger is honest).
+     * Soft-live env ladder: FAL + session secret present.
+     * R0: live provider still requires auth + durable reserve (anonymous =
+     * cached demos only). Multi-node durable job worker is NOT required for
+     * Mode A process-memory ledger honesty.
      */
     softLive: fal && (sessionSecret || !production) && !durableGate,
     /**
@@ -160,7 +162,6 @@ export async function GET() {
       /** Ledger cancel (soft-launch; does not kill provider mid-flight). */
       cancelGenerate: "DELETE /api/generations",
       cancelImage: "DELETE /api/image or DELETE /api/image/[id]",
-      /** POST re-submit promotes matching queued ledger-retry forks. */
       /**
        * R1b: POST re-submit promotes a queued ledger-retry fork only when the
        * client sends explicit retryJobId (fork token). Never effect/prompt guess.
@@ -277,6 +278,8 @@ export async function GET() {
       notes: [
         "Soft public (Sunday): SESSION_SECRET + FAL_KEY only — Stripe is Coming soon",
         "Demo works without FAL_KEY (cached Lab clips, 0 credits)",
+        "R0: anonymous + Free always cached demos; live needs auth + durable reserve RPC",
+        "R1a: live reserve/capture/release uses pikbo_*_generation_v1 atomic RPCs (migration apply required)",
         "Paid later: durable entitlements + Stripe price IDs + webhook",
         "PIKBO_FORCE_GENERATE_FAIL is ops-only and hard-off in production",
         "See docs/LAUNCH.md",
