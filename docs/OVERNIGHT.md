@@ -154,7 +154,8 @@
 113. [x] countJobsForSession full HEAD + download RATE/BALANCE fail codes
 114. [x] GET generations full byStatus + touch all open + Library list honesty
 115. [x] beginSync stamps aspect/duration for fail/cancel remake carry
-116. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+116. [x] Login/mobile guest Generate remix + DELETE cancel refundUnconfirmed
+117. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -168,8 +169,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- beginSyncGenerateJob stamps aspect/duration at open — fail/cancel remake keeps ratio.
-- Downloads cancel body refundUnconfirmed; Create provenance “when confirmed”.
+- Login + mobile Generate guest CTAs use createRemixHref (not bare /create).
+- DELETE cancel (gen list/id + image) echoes refundUnconfirmed for clients.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 

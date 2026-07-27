@@ -4,11 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
-### 2026-07-27 — [grok] Login + mobile bar guest Generate remix
+### 2026-07-27 — [grok] Login/mobile remix + DELETE cancel refundUnconfirmed
 - /login guest Continue → Generate + LoginForm disabled CTA use
   createRemixHref(360-spin) (not bare /create / partial query).
 - MobileGenerateBar sticky Generate → same remix contract.
-- Smoke: data-login-guest / data-mobile-bar generate-remix.
+- DELETE cancel (generations list/id + image) echoes refundUnconfirmed when
+  ledger stamps refund unconfirmed (downloads HEAD parity).
+- Smoke: data-login-guest / data-mobile-bar + cancel refundUnconfirmed.
 
 ### 2026-07-27 — [grok] Login honesty: prod auth disabled; guest softLive
 - Production: auth.mode=disabled (no Supabase). Guest cookie generate works.
