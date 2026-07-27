@@ -6,13 +6,13 @@ import { HomeViralWall } from "@/components/HomeViralWall";
 import { HomeBrowseCta } from "@/components/HomeBrowseCta";
 import { LandingToolPanel } from "@/components/LandingToolPanel";
 import { HomeSeoBody } from "@/components/HomeSeoBody";
+import { HomeTrustFooter } from "@/components/HomeTrustFooter";
 import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
 import { JsonLd } from "@/components/JsonLd";
 import { site } from "@/lib/site";
 import {
   organizationJsonLd,
   softwareApplicationJsonLd,
-  videoObjectJsonLd,
   websiteJsonLd,
 } from "@/lib/jsonLd";
 
@@ -24,13 +24,6 @@ import {
 export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
   description: site.description,
-  keywords: [
-    "Pikbo",
-    "designer toy AI video",
-    "toy photo to video",
-    "photo into short video toys",
-    "figure video from photo",
-  ],
   alternates: { canonical: "/" },
   openGraph: {
     title: site.titleDefault,
@@ -40,10 +33,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${site.url}/opengraph-image`,
-        width: 1200,
-        height: 630,
-        alt: site.titleDefault,
+        url: site.socialImages.openGraph,
+        width: site.socialImages.width,
+        height: site.socialImages.height,
+        alt: site.socialImages.alt,
       },
     ],
   },
@@ -51,7 +44,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: site.titleDefault,
     description: site.description,
-    images: [`${site.url}/opengraph-image`],
+    images: [site.socialImages.twitter],
   },
 };
 
@@ -61,7 +54,6 @@ export default function Home() {
     .map((item) => item.demo)
     .filter((demo): demo is NonNullable<typeof demo> => Boolean(demo));
   const labDemos = demos.length ? demos : DEMO_VIDEOS.slice(0, 8);
-  const videoLd = labDemos.slice(0, 6).map(videoObjectJsonLd);
   const heroClips =
     showcase.length > 0 ? showcase.slice(0, 6) : [];
   const lcpPoster =
@@ -82,7 +74,6 @@ export default function Home() {
             url: site.url,
             description: site.description,
           }),
-          ...videoLd,
         ]}
       />
 
@@ -106,15 +97,14 @@ export default function Home() {
       >
         <div className="mx-auto max-w-5xl">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
-            Your turn · 轮到你了
+            Your turn
           </p>
           <h2 className="font-display mt-2 text-3xl font-black uppercase tracking-tight text-white sm:text-5xl">
-            轮到你的潮玩了
+            Put your toy in motion
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/55 sm:text-[15px]">
             Upload a photo you own — preview a cached Lab recipe first; Live
-            eligibility and the exact quote appear before submission. 上传自有潮玩照片即可预览流程。
-            {" "}
+            eligibility and the exact quote appear before submission.{" "}
             <a
               href={site.rankToolPath}
               className="font-semibold text-[#c8ff3d]/90 hover:underline"
@@ -135,6 +125,7 @@ export default function Home() {
 
       {/* 4 · SEO body — below the product experience */}
       <HomeSeoBody />
+      <HomeTrustFooter />
     </>
   );
 }

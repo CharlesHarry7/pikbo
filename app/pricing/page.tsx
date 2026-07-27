@@ -31,9 +31,25 @@ export const metadata: Metadata = {
   description: `Compare finite-credit ${site.name} plans for turning owned toy photos into listing, launch, and social videos. Live billing remains closed during validation.`,
   alternates: { canonical: "/pricing" },
   openGraph: {
-    title: `Pricing · ${site.name}`,
+    title: `Pikbo Pricing for Toy Sellers and Collectors`,
     description: `Finite Free / Creator / Shop credits for toy listing and social clips. Live billing stays off during validation.`,
     url: `${site.url}/pricing`,
+    siteName: site.name,
+    type: "website",
+    images: [
+      {
+        url: site.socialImages.openGraph,
+        width: site.socialImages.width,
+        height: site.socialImages.height,
+        alt: "Pikbo pricing for finite toy-video launch workflows",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Pikbo Pricing for Toy Sellers and Collectors`,
+    description: `Finite Free / Creator / Shop credits for toy listing and social clips. Live billing stays off during validation.`,
+    images: [site.socialImages.twitter],
   },
 };
 

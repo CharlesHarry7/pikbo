@@ -16,13 +16,6 @@ export const metadata: Metadata = {
     template: `%s | ${site.name}`,
   },
   description: site.description,
-  keywords: [
-    "Pikbo",
-    "designer toy AI video",
-    "toy photo to video",
-    "figure video from photo",
-    "photo into short video toys",
-  ],
   openGraph: {
     title: site.titleDefault,
     description: site.description,
@@ -31,10 +24,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: site.titleDefault,
+        url: site.socialImages.openGraph,
+        width: site.socialImages.width,
+        height: site.socialImages.height,
+        alt: site.socialImages.alt,
       },
     ],
   },
@@ -42,7 +35,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: site.titleDefault,
     description: site.description,
-    images: ["/opengraph-image"],
+    images: [site.socialImages.twitter],
   },
   robots: {
     index: true,

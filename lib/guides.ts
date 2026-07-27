@@ -10,6 +10,18 @@ export type GuideSection = {
   paragraphs: string[];
 };
 
+export type GuideChecklistRow = {
+  check: string;
+  use: string;
+  avoid: string;
+};
+
+export type GuideSource = {
+  label: string;
+  url: string;
+  note: string;
+};
+
 export type Guide = {
   slug: string;
   emoji: string;
@@ -23,6 +35,11 @@ export type Guide = {
   faq: { q: string; a: string }[];
   relatedEffects: string[]; // preset slugs
   keywords: string[];
+  author?: string;
+  datePublished?: string;
+  dateModified?: string;
+  checklist?: GuideChecklistRow[];
+  sources?: GuideSource[];
 };
 
 export const GUIDES: Guide[] = [
@@ -84,10 +101,13 @@ export const GUIDES: Guide[] = [
     dek: "Five quick photo habits that make every generated clip look sharper.",
     seoTitle: "How to Photograph Toys for AI Video | Pikbo",
     seoDescription:
-      "Simple photo tips — lighting, background, angle, focus — that get you cleaner, more convincing AI video clips of your figures and collectibles.",
-    readMins: 4,
+      "Five practical toy-photo checks for cleaner AI video: even light, a simple background, sharp focus, honest color, and useful packaging references.",
+    readMins: 6,
+    author: "Pikbo Editorial",
+    datePublished: "2026-07-22T10:15:47Z",
+    dateModified: "2026-07-27T16:37:46Z",
     intro:
-      "AI video is only as good as the photo you feed it. Spend two minutes getting the shot right and every effect — spin, dance, unboxing — comes out cleaner. These five habits make the biggest difference.",
+      "AI video starts with the evidence in your source photo. A clean input cannot guarantee a perfect generated clip, but it gives the model clearer product edges, color, packaging, and scale to reference. These five checks combine marketplace image requirements with the same product-truth review Pikbo applies to cached Lab prototypes.",
     sections: [
       {
         h2: "1. Light it evenly",
@@ -106,7 +126,7 @@ export const GUIDES: Guide[] = [
       {
         h2: "3. Fill the frame, stay in focus",
         paragraphs: [
-          "Get close enough that the figure fills most of the frame, and tap to focus so the whole piece is sharp. Detail in equals detail out.",
+          "Get close enough that the figure fills most of the frame, and tap to focus so the whole piece is sharp. Google Merchant Center recommends framing the product at roughly 75–90% of the image; that range is also a practical starting point for keeping a toy readable without cutting off accessories.",
           "Avoid extreme angles for showcase effects — a straight, eye-level front view rotates and animates most convincingly.",
         ],
       },
@@ -115,6 +135,57 @@ export const GUIDES: Guide[] = [
         paragraphs: [
           "If you want a blind box reveal, include a photo of the box or packaging. The effect animates the reveal around your real product art.",
         ],
+      },
+      {
+        h2: "5. Keep color honest and run one small test",
+        paragraphs: [
+          "Avoid heavy filters, aggressive sharpening, fake depth blur, or color presets that change the paint you are trying to sell. Keep one untouched source file so you can compare the generated frame with the physical toy.",
+          "Run one short draft before preparing a full launch set. Check the silhouette, face, paint splits, accessories, packaging text, and logos. If a commercially important detail drifts, reshoot that detail more clearly or use the original photo instead of presenting the generated angle as product proof.",
+        ],
+      },
+    ],
+    checklist: [
+      {
+        check: "Light",
+        use: "Soft, even daylight or a diffused lamp",
+        avoid: "Blown highlights and deep single-source shadows",
+      },
+      {
+        check: "Background",
+        use: "White, grey, or another simple surface",
+        avoid: "Busy shelves, patterns, and objects crossing the silhouette",
+      },
+      {
+        check: "Framing",
+        use: "Full toy visible and roughly 75–90% of the frame",
+        avoid: "Tiny subjects, cropped accessories, and extreme angles",
+      },
+      {
+        check: "Focus and color",
+        use: "Lock focus/exposure on the toy and keep true color",
+        avoid: "Blur, beauty filters, artificial paint changes, and heavy HDR",
+      },
+      {
+        check: "References",
+        use: "Separate front, packaging, logo, and detail photos when relevant",
+        avoid: "Asking one obstructed image to prove unseen product details",
+      },
+    ],
+    sources: [
+      {
+        label: "Google Merchant Center image guidelines",
+        url: "https://support.google.com/merchants/answer/6324350?hl=en",
+        note: "Accurate product imagery, high resolution, clear framing, and simple backgrounds.",
+      },
+      {
+        label: "Etsy listing image requirements and best practices",
+        url: "https://help.etsy.com/hc/en-us/articles/115015663347-Requirements-and-Best-Practices-for-Images-in-Your-Etsy-Shop",
+        note: "Marketplace-oriented guidance for clear, consistently framed listing photos.",
+      },
+      {
+        label: "Apple: lock camera focus and exposure",
+        url: "https://support.apple.com/guide/iphone/use-the-camera-control-iph0c397b154/ios",
+        note: "Official instructions for holding focus and exposure on the subject.",
       },
     ],
     faq: [

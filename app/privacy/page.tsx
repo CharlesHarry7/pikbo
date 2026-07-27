@@ -5,6 +5,20 @@ export const metadata: Metadata = {
   title: "Privacy Policy",
   description: `How ${site.name} handles photos, generations, and billing data.`,
   alternates: { canonical: "/privacy" },
+  openGraph: {
+    title: `Privacy Policy | ${site.name}`,
+    description: `How ${site.name} handles photos, generations, analytics, and billing data.`,
+    url: `${site.url}/privacy`,
+    siteName: site.name,
+    type: "website",
+    images: [site.socialImages.openGraph],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Privacy Policy | ${site.name}`,
+    description: `How ${site.name} handles photos, generations, analytics, and billing data.`,
+    images: [site.socialImages.twitter],
+  },
 };
 
 export default function PrivacyPage() {
@@ -19,7 +33,10 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold text-[var(--fg)]">What we collect</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Photos you upload to generate clips (processed to create your video).</li>
+            <li>
+              Photos submitted through an eligible Live generation path. Cached
+              prototype previews do not process your upload.
+            </li>
             <li>Session / credit balance stored in a browser cookie.</li>
             <li>Billing metadata if you subscribe (via Stripe; we do not store full card numbers).</li>
             <li>Basic technical logs (errors, request timing) to keep the service running.</li>
@@ -29,9 +46,11 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold text-[var(--fg)]">How we use uploads</h2>
           <p className="mt-2">
-            Uploaded photos are sent to our video generation provider solely to produce
-            your clip. Do not upload images of people or products you do not have rights to use.
-            Prefer photos of toys you own.
+            If an eligible Live submission is accepted, its photo is sent to our
+            video generation provider solely to produce that clip. Cached Lab
+            prototypes never send your photo to the provider. Do not upload
+            images of people or products you do not have rights to use. Prefer
+            photos of toys you own.
           </p>
         </section>
 
@@ -66,7 +85,13 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold text-[var(--fg)]">Contact</h2>
           <p className="mt-2">
-            Questions: privacy@{site.domain.replace(/^www\./, "")}
+            Questions:{" "}
+            <a
+              href={`mailto:${site.contact.privacyEmail}`}
+              className="underline hover:text-[var(--mint)]"
+            >
+              {site.contact.privacyEmail}
+            </a>
           </p>
         </section>
       </div>

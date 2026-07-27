@@ -1,0 +1,21 @@
+# Pikbo
+
+> Pikbo is a designer-toy AI video suite for sellers, independent toy brands, and collectors. It turns an owned toy photo into short launch-video drafts for listings, reveals, and social posts.
+
+Pikbo labels cached Lab prototypes honestly. Cached previews do not process a visitor upload. Live generation, billing, durable credits, and protected delivery remain gated until their production checks pass. Generated angles and product details must be compared with the physical toy before commercial publishing.
+
+## Canonical pages
+
+- [Pikbo home](https://pikbo.ai/)
+- [AI toy video generator](https://pikbo.ai/tools/ai-toy-video-generator)
+- [Blind-box reveal video maker](https://pikbo.ai/tools/blind-box-reveal-video-maker)
+- [How to photograph toys for AI video](https://pikbo.ai/guides/how-to-photograph-toys-for-ai-video)
+- [Pricing](https://pikbo.ai/pricing)
+- [Privacy policy](https://pikbo.ai/privacy)
+- [Terms of service](https://pikbo.ai/terms)
+
+## Usage notes
+
+- Only upload photos, packaging, logos, and characters you own or are authorized to use.
+- Cached Pikbo Lab media is prototype evidence, not visitor-generated UGC.
+- Pikbo does not guarantee sales, reach, rankings, exact unseen details, or unlimited generation.

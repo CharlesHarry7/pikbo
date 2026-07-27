@@ -1134,7 +1134,11 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "app/tools/[slug]/page.tsx"), "utf8"),
-  /data-tools-friction=["']no-signup["']|No sign-up\. No card/
+  /data-tools-friction=["']cached-preview["']/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "app/tools/[slug]/page.tsx"), "utf8"),
+  /No sign-up\. No card\. One photo → one video\. Free\./
 );
 const toolsPage = fs.readFileSync(
   join(root, "app/tools/[slug]/page.tsx"),

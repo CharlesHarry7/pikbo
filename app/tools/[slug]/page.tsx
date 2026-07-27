@@ -16,7 +16,11 @@ import { robotsForToolSlug } from "@/lib/seoIndex";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
 import { LandingSeoMesh } from "@/components/LandingSeoMesh";
 import { JsonLd } from "@/components/JsonLd";
-import { softwareApplicationJsonLd } from "@/lib/jsonLd";
+import {
+  softwareApplicationJsonLd,
+  videoObjectJsonLd,
+} from "@/lib/jsonLd";
+import { DEMO_VIDEOS } from "@/lib/demoVideos";
 
 /** 哥飞：排名主战场 slug — On Page 火力集中 */
 const PRIMARY_RANK_SLUG = "ai-toy-video-generator";
@@ -33,12 +37,9 @@ export async function generateMetadata({
   const { slug } = await params;
   const t = getTool(slug);
   if (!t) return {};
-  // app/opengraph-image.png → public route /opengraph-image (Next file convention)
-  const ogImage = `${site.url}/opengraph-image`;
   return {
     title: { absolute: t.seoTitle },
     description: t.seoDescription,
-    keywords: t.keywords,
     alternates: { canonical: `/tools/${t.slug}` },
     robots: robotsForToolSlug(t.slug),
     openGraph: {
@@ -47,14 +48,20 @@ export async function generateMetadata({
       url: `${site.url}/tools/${t.slug}`,
       siteName: site.name,
       type: "website",
-      // 哥飞 P2: social preview image (absolute)
-      images: [{ url: ogImage, width: 1200, height: 630, alt: t.h1 }],
+      images: [
+        {
+          url: site.socialImages.openGraph,
+          width: site.socialImages.width,
+          height: site.socialImages.height,
+          alt: t.h1,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: t.seoTitle,
       description: t.seoDescription,
-      images: [ogImage],
+      images: [site.socialImages.twitter],
     },
   };
 }
@@ -74,6 +81,10 @@ export default async function ToolPage({
     .filter((p) => p !== undefined);
 
   const allFaq = [...t.faq, ...COMMON_FAQ];
+  const isPrimaryRank = t.slug === PRIMARY_RANK_SLUG;
+  const primaryDemo = isPrimaryRank
+    ? DEMO_VIDEOS.find((demo) => demo.preset === t.primaryEffect)
+    : undefined;
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -84,7 +95,6 @@ export default async function ToolPage({
     })),
   };
 
-  const isPrimaryRank = t.slug === PRIMARY_RANK_SLUG;
   // HowTo only when the three-step block is actually rendered with the tool
   const showHowTo = Boolean(primary);
   const jsonLdBlocks: object[] = [
@@ -103,6 +113,11 @@ export default async function ToolPage({
       })
     );
   }
+  if (primaryDemo) {
+    jsonLdBlocks.push(
+      videoObjectJsonLd(primaryDemo, `/tools/${t.slug}`)
+    );
+  }
 
   return (
     <>
@@ -117,9 +132,10 @@ export default async function ToolPage({
           {isPrimaryRank ? (
             <p
               className="mt-4 max-w-2xl text-sm font-semibold tracking-wide text-[#c8ff3d]/95 sm:text-base"
-              data-tools-friction="no-signup"
+              data-tools-friction="cached-preview"
             >
-              No sign-up. No card. One photo → one video. Free.
+              Cached prototype · 0 credits · no card · your upload is not
+              processed. Live is eligibility-gated.
             </p>
           ) : null}
           <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl">
@@ -137,6 +153,13 @@ export default async function ToolPage({
           <SuiteDoorLinks effectSlug={primary?.slug} className="mt-5" />
         </div>
       </section>
+
+      {primaryDemo ? (
+        <LandingResults
+          effectSlug={primaryDemo.preset}
+          title="Watch a cached AI toy video prototype"
+        />
+      ) : null}
 
       {primary ? (
         <>
@@ -211,18 +234,36 @@ export default async function ToolPage({
               </Link>
               .
             </p>
+            <nav
+              aria-label="Prepare and compare AI toy video"
+              className="flex flex-wrap gap-x-4 gap-y-2 text-sm"
+            >
+              <Link
+                href="/guides/how-to-photograph-toys-for-ai-video"
+                className="text-[var(--mint)] hover:underline"
+              >
+                Prepare a clean toy photo
+              </Link>
+              <Link
+                href="/tools/blind-box-reveal-video-maker"
+                className="text-[var(--mint)] hover:underline"
+              >
+                Make a blind-box reveal
+              </Link>
+              <Link
+                href="/pricing"
+                className="text-[var(--mint)] hover:underline"
+              >
+                Review plan limits
+              </Link>
+            </nav>
           </div>
         ) : null}
       </section>
 
-      <LandingResults
-        effectSlug={primary?.slug}
-        title={
-          t.slug === PRIMARY_RANK_SLUG
-            ? "AI toy video generator example clips"
-            : "Example clips"
-        }
-      />
+      {!primaryDemo ? (
+        <LandingResults effectSlug={primary?.slug} title="Example clips" />
+      ) : null}
 
       <section className="container-x py-8">
         <h2 className="text-2xl font-bold">

@@ -6,7 +6,7 @@ import { site } from "@/lib/site";
  * - Private / auth / device surfaces: disallow
  * - Preview/Lab pages (image, cinema, community, models, flow, batch):
  *   ALLOW crawl so noindex meta can be read — never dual-block with robots.txt
- * - Sitemap remains the 9-URL cold-start allowlist
+ * - Sitemap remains the seven-URL cold-start allowlist
  */
 export default function robots(): MetadataRoute.Robots {
   return {

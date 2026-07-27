@@ -38,7 +38,6 @@ export async function generateMetadata({
   return {
     title: { absolute: uc.seoTitle },
     description: uc.seoDescription,
-    keywords: uc.keywords,
     alternates: { canonical: `/for/${uc.slug}` },
     robots: robotsForForSlug(uc.slug),
     openGraph: {

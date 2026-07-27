@@ -9,7 +9,7 @@
     "description": "Pikbo is an AI video suite for designer toys, blind boxes, and figures. Upload one owned product photo, pick a recipe (360 spin, unbox, float), generate a short clip for listings and social. Free Mini trial - no card. Soft launch: Seedance Mini, honest limits, no fake multi-model zoo.",
     "categories": ["AI Video", "Image to Video", "Generative AI", "E-commerce"],
     "pricing": "Free trial / freemium",
-    "twitter": "@pikbo_ai",
+    "twitter": "",
     "email_env": "PIKBO_GROWTH_EMAIL"
   },
   "anchor_texts": [

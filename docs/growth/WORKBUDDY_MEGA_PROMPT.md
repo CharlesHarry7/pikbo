@@ -136,7 +136,7 @@ Pikbo is an AI video suite for designer toys, blind boxes, and figures. Upload o
 Categories（按表单选项尽量贴近）: AI Video, Image to Video, Generative AI, E-commerce, Productivity  
 Pricing: Free trial / freemium  
 Email: 环境变量 `PIKBO_GROWTH_EMAIL`（没有则留空或跳过需邮箱的站）  
-Twitter/X: @pikbo_ai（有则填）
+Twitter/X: 仅在官方账号已创建且公开 URL 验证为 200 后填写；当前留空
 
 锚文本轮换（70% 品牌 / 30% 词）：
 1. Pikbo  

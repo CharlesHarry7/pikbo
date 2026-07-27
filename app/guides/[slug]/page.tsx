@@ -32,6 +32,22 @@ export async function generateMetadata({
       description: g.seoDescription,
       url: `${site.url}/guides/${g.slug}`,
       type: "article",
+      ...(g.datePublished ? { publishedTime: g.datePublished } : {}),
+      ...(g.dateModified ? { modifiedTime: g.dateModified } : {}),
+      images: [
+        {
+          url: site.socialImages.openGraph,
+          width: site.socialImages.width,
+          height: site.socialImages.height,
+          alt: g.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: g.seoTitle,
+      description: g.seoDescription,
+      images: [site.socialImages.twitter],
     },
   };
 }
@@ -54,9 +70,20 @@ export default async function GuidePage({
     "@type": "Article",
     headline: g.title,
     description: g.seoDescription,
-    author: { "@type": "Organization", name: site.name },
-    publisher: { "@type": "Organization", name: site.name },
+    image: site.socialImages.openGraph,
+    author: {
+      "@type": "Organization",
+      name: g.author ?? site.name,
+      url: `${site.url}/about`,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: site.name,
+      url: site.url,
+    },
     mainEntityOfPage: `${site.url}/guides/${g.slug}`,
+    ...(g.datePublished ? { datePublished: g.datePublished } : {}),
+    ...(g.dateModified ? { dateModified: g.dateModified } : {}),
   };
   const faqLd = {
     "@context": "https://schema.org",
@@ -92,6 +119,36 @@ export default async function GuidePage({
           </span>
           <h1 className="mt-4 text-4xl font-bold leading-tight">{g.title}</h1>
           <p className="mt-3 text-lg text-[var(--fg-muted)]">{g.dek}</p>
+          {g.author || g.datePublished || g.dateModified ? (
+            <p className="mt-3 text-xs leading-relaxed text-[var(--fg-dim)]">
+              {g.author ? (
+                <>
+                  By{" "}
+                  <Link href="/about" className="underline hover:text-[var(--mint)]">
+                    {g.author}
+                  </Link>
+                </>
+              ) : null}
+              {g.datePublished ? (
+                <>
+                  {" "}
+                  · Published{" "}
+                  <time dateTime={g.datePublished}>
+                    {g.datePublished.slice(0, 10)}
+                  </time>
+                </>
+              ) : null}
+              {g.dateModified ? (
+                <>
+                  {" "}
+                  · Reviewed{" "}
+                  <time dateTime={g.dateModified}>
+                    {g.dateModified.slice(0, 10)}
+                  </time>
+                </>
+              ) : null}
+            </p>
+          ) : null}
           <SuiteDoorLinks
             effectSlug={g.relatedEffects[0]}
             className="mt-5"
@@ -111,6 +168,86 @@ export default async function GuidePage({
               </div>
             </section>
           ))}
+
+          {g.checklist?.length ? (
+            <section className="mt-10">
+              <h2 className="text-xl font-bold">Toy-photo preflight checklist</h2>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
+                Use this before the first draft. It is a product-truth checklist,
+                not a promise that generation will preserve every unseen detail.
+              </p>
+              <div className="mt-4 overflow-x-auto rounded-xl border border-[var(--border)]">
+                <table className="w-full min-w-[620px] text-left text-sm">
+                  <thead className="bg-white/[0.04] text-[var(--fg)]">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Check</th>
+                      <th className="px-4 py-3 font-semibold">Use</th>
+                      <th className="px-4 py-3 font-semibold">Avoid</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border)] text-[var(--fg-muted)]">
+                    {g.checklist.map((row) => (
+                      <tr key={row.check}>
+                        <th className="px-4 py-3 font-semibold text-[var(--fg)]">
+                          {row.check}
+                        </th>
+                        <td className="px-4 py-3">{row.use}</td>
+                        <td className="px-4 py-3">{row.avoid}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ) : null}
+
+          {g.sources?.length ? (
+            <section className="mt-10">
+              <h2 className="text-xl font-bold">Sources and review method</h2>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
+                Pikbo combines these published marketplace and camera guidelines
+                with a manual comparison of the source photo, cached prototype,
+                and commercially important toy details.
+              </p>
+              <ul className="mt-4 space-y-3 text-sm text-[var(--fg-muted)]">
+                {g.sources.map((source) => (
+                  <li key={source.url}>
+                    <a
+                      href={source.url}
+                      className="font-semibold text-[var(--mint)] hover:underline"
+                    >
+                      {source.label}
+                    </a>
+                    <span> — {source.note}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-5 text-sm leading-relaxed text-[var(--fg-muted)]">
+                When the photo passes this check, preview it with the{" "}
+                <Link
+                  href="/tools/ai-toy-video-generator"
+                  className="font-semibold text-[var(--mint)] hover:underline"
+                >
+                  AI toy video generator
+                </Link>
+                , try a focused{" "}
+                <Link
+                  href="/tools/blind-box-reveal-video-maker"
+                  className="font-semibold text-[var(--mint)] hover:underline"
+                >
+                  blind-box reveal workflow
+                </Link>
+                , or review{" "}
+                <Link
+                  href="/pricing"
+                  className="font-semibold text-[var(--mint)] hover:underline"
+                >
+                  current plan limits
+                </Link>
+                .
+              </p>
+            </section>
+          ) : null}
 
           {/* FAQ */}
           <section className="mt-10">

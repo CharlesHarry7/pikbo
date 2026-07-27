@@ -37,7 +37,6 @@ export async function generateMetadata({
   return {
     title: { absolute: preset.seoTitle },
     description: preset.seoDescription,
-    keywords: preset.keywords,
     alternates: { canonical: `/effects/${preset.slug}` },
     robots: robotsForRecipe(preset.slug),
     openGraph: {

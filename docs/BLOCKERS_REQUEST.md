@@ -30,6 +30,8 @@
   - `SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
   - `SUPABASE_SERVICE_ROLE_KEY`
   - `NEXT_PUBLIC_PAYMENTS_ENABLED=0`
+  - `NEXT_PUBLIC_GA_MEASUREMENT_ID=G-…` after the owner creates or selects the
+    Pikbo GA4 web data stream (public measurement ID only; never invent one)
 - **Then:** Deploy; run `BASE_URL=https://….vercel.app npm run link-check` + health.
 - **Done when:** Preview URL + green health `ready.softLive` (or honest demo) recorded in HANDOFF.
 
