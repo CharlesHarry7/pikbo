@@ -4,6 +4,18 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [gpt] outbound knowledge base → Pikbo execution gates
+- Paths: `docs/outbound/README.md`, `PIKBO_TASK_MAP.csv`,
+  `WEEKLY_REVIEW_TEMPLATE.md`, `.github/PULL_REQUEST_TEMPLATE.md`.
+- Why good: maps the generic 16-week outbound plan onto Pikbo's current
+  product-polish/private-Beta stage instead of restarting completed work.
+- Reuse / pitfalls: GitHub owns code and task truth; Feishu should own
+  interviews, decisions and restricted evidence. Do not duplicate the STATUS
+  board in Feishu or treat provisional Beta thresholds as market facts.
+- Depends on: Feishu publish/backlink is still pending because this environment
+  has no available Lark write client. Public DNS, Stripe live and paid spend
+  remain outside this delivery.
+
 ### 2026-07-27 — [grok] Cinema compose + /generate alias remix
 - Cinema Render → createRemixHref(effect)+prompt+sku (ratio/duration/channel);
   data-cinema-compose=remix. Not bare /create?effect&prompt.
