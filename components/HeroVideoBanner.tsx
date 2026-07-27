@@ -66,7 +66,7 @@ export function HeroVideoBanner() {
             <span className="text-[var(--mint)]">Listing & viral clips.</span>
           </h1>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/70 sm:text-base">
-            Official cached Pikbo example — not your upload. Open this recipe with
+            Cached Lab prototype Pikbo example — not your upload. Open this recipe with
             an owned-toy photo; live provider results can vary.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">

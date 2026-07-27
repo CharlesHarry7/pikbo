@@ -106,7 +106,7 @@ const en: Dict = {
 
   "home.lab.title": "Lab showcase",
   "home.lab.sub":
-    "Official cached demos — one clip per recipe. More effects in the catalog.",
+    "Cached Lab prototype demos — one clip per recipe. More effects in the catalog.",
   "badge.cachedDemo": "Cached demo",
   "badge.free": "Free",
   "badge.paid": "Paid",
@@ -175,7 +175,7 @@ const en: Dict = {
   "home.wall.eyebrow": "Toy video wall",
   "home.wall.h2a": "Watch toys",
   "home.wall.h2b": "move first",
-  "home.wall.sub": "Muted autoplay · official Lab · Remake with your figure",
+  "home.wall.sub": "Muted autoplay · PIKBO Lab prototype · Remake with your figure",
   "home.wall.mutedNote": "muted autoplay · leave tab pauses",
   "home.wall.allRecipes": "All recipes →",
   "home.wall.remake": "Remake",
@@ -222,9 +222,9 @@ const en: Dict = {
   "create.clipLands": "Your clip lands here",
   "create.clipDidntLand": "Clip didn't land",
   "create.hitGenerate": "Hit the green Generate button — one primary action.",
-  "create.noPhotoCached": "No photo? One-tap official Lab sample (cached · free).",
+  "create.noPhotoCached": "No photo? One-tap PIKBO Lab prototype sample (cached · free).",
   "create.noPhotoLive":
-    "No photo? One-tap official Lab sample (live Mini · 10 credits).",
+    "No photo? One-tap PIKBO Lab prototype sample (live Mini · 10 credits).",
   "create.labSampleFree": "▶ Lab sample · free",
   "create.labSampleMini": "▶ Lab sample · Mini trial",
   "create.builtFor": "Built for TikTok · Etsy · Whatnot · shelf flexes",
@@ -270,7 +270,7 @@ const en: Dict = {
   "create.genPaid": "Generate · {n} credits",
   "create.needsCredits": "Needs {n} credits",
   "create.cancelRequest": "Cancel request",
-  "create.noPhotoSample": "No photo? Try an official Lab sample",
+  "create.noPhotoSample": "No photo? Try a PIKBO Lab prototype sample",
   "create.oneTapCached": "▶  One tap · free cached sample",
   "create.oneTapMini": "▶  One tap · Mini sample (10 credits)",
   "create.pickRecipe": "Pick another recipe",
@@ -307,7 +307,7 @@ const en: Dict = {
   "job.shelf": "Display Glow",
   "job.shelf.blurb": "Clean shelf / case hold for collectors and PDP",
   "job.seller": "Starter Pack · 3 clips",
-  "job.seller.blurb": "Listing + unboxing + social hook · 30 credits live",
+  "job.seller.blurb": "Listing + unboxing + social hook · quote shown before run",
 
   "brief.title": "Toy fidelity guidance",
   "brief.disclaimer":

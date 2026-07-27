@@ -6,7 +6,6 @@ import { track } from "@/lib/analytics";
 import { createRemixHref } from "@/lib/remixIntent";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { useI18n } from "@/components/LanguageProvider";
-import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /**
  * HF Viral Presets pattern — dense horizontal rail of unique Lab clips.
@@ -75,19 +74,10 @@ export function HomeViralPresetRail() {
                   </span>
                   <span
                     className="rounded-full border border-white/10 bg-black/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur-sm"
-                    title="Official Lab cached demo · not live customer output"
+                    title="Cached Lab prototype · provider evidence pending"
                   >
-                    Official · cached
+                    Lab · cached prototype
                   </span>
-                  {provisionalLabQualityLabel(d.preset) ? (
-                    <span
-                      className="rounded-full border border-amber-200/25 bg-black/55 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur-sm"
-                      title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-                      data-proof-quality="provisional-lab"
-                    >
-                      Lab ≥4
-                    </span>
-                  ) : null}
                 </div>
                 <span className="absolute right-2 top-2 rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[8px] font-black text-black opacity-0 shadow transition group-hover:opacity-100">
                   {t("home.remake")}

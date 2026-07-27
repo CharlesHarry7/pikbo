@@ -90,7 +90,7 @@ const APP_DETAIL_FAQ = [
   },
   {
     q: "Is the poster my final video?",
-    a: "No. Posters are official Lab style demos only. Your upload is never those stills. Review live output before listing or social posts.",
+    a: "No. Posters are PIKBO Lab prototype style demos only. Your upload is never those stills. Review live output before listing or social posts.",
   },
   {
     q: "Can Free Mini raw files be downloaded?",
@@ -207,7 +207,7 @@ export default async function AppDetailPage({ params }: Props) {
                 <span className="font-semibold text-[var(--mint)]">
                   Lab proof ·{" "}
                 </span>
-                Official cached demo ({demo.character}) — not your upload
+                Cached Lab prototype demo ({demo.character}) — not your upload
               </li>
             ) : null}
           </ul>

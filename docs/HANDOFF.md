@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [claude] R4 showcase evidence truth at runtime
+- The canonical Showcase registry now uses `cached_prototype` and `referencePoster`; it does not claim posters are provider inputs or expose invented 4/5 scores/reviewer notes.
+- Home retains eight distinct cached videos for watch time, but every proof surface labels them `PIKBO Lab · cached prototype`; concepts remain static Recipe art.
+- Inside Project discloses missing provider task ID, rights record and formal QA. Community/Explore no longer imply verified cases, customers, or a live public publish pipeline.
+- Create and Seller Pack fail closed to 0-credit cached previews unless signed-in + durable credits + explicit live mode + enough balance are all present.
+- PASS: `showcase-evidence-smoke`, `product-proof-smoke`, `engine-smoke`, typecheck, lint (0 errors / 2 pre-existing warnings), webpack build (193 routes).
+
 ### 2026-07-27 — [claude] seller-first Create three-step path
 - First run is now `upload owned toy photo → choose Listing/Unboxing/Social Hook/Starter Pack → review exact quote and generate`.
 - Model shelf, workflow shelf, activation checklist, full recipe catalog, prompt, model, duration, seed and fidelity guidance no longer obstruct first activation; advanced controls remain available collapsed.

@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
-import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /**
  * Flow matrix card — Lab media with shared AutoPlay budget
  * (mobile ≤1 concurrent · preload none · Link owns focus).
  * Never autoPlay all cards at once.
  *
- * HF Flow density: Official · cached + provisional Lab ≥4 when recipe is proof-grade;
+ * HF Flow density with clearly labeled cached Lab prototypes;
  * hover CTA is Remake (product path), not a fake multi-model door.
  */
 export function FlowMediaCard({
@@ -32,13 +31,12 @@ export function FlowMediaCard({
   poster: string;
   webm?: string;
   mp4: string;
-  /** When set and exact Lab demo, show Official · cached + optional Lab ≥4 */
+  /** Registered recipe slug for this cached Lab prototype. */
   recipeSlug?: string;
   /** True when poster/mp4 is the registered DEMO for this recipe (not concept fill) */
   exactDemo?: boolean;
 }) {
-  const labQuality =
-    exactDemo && recipeSlug ? provisionalLabQualityLabel(recipeSlug) : null;
+  void recipeSlug;
   const ctaLabel = isPreview ? "Preview path →" : "Remake →";
 
   return (
@@ -72,18 +70,9 @@ export function FlowMediaCard({
           {exactDemo ? (
             <span
               className="rounded-full border border-white/10 bg-black/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur-sm"
-              title="Official Lab cached demo · not live customer output"
+              title="Cached Lab prototype · provider evidence pending"
             >
-              Official · cached
-            </span>
-          ) : null}
-          {labQuality ? (
-            <span
-              className="rounded-full border border-amber-200/25 bg-black/55 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur-sm"
-              title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-              data-proof-quality="provisional-lab"
-            >
-              Lab ≥4
+              Lab · cached prototype
             </span>
           ) : null}
         </div>

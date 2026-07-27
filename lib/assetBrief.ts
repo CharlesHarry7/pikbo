@@ -21,7 +21,7 @@ export type AssetBriefInput = {
   effect: string;
   jobId?: JobIntentId | null;
   identity: ToyIdentity;
-  /** Official Lab sample — brief is illustrative only */
+  /** PIKBO Lab prototype sample — brief is illustrative only */
   labSample?: boolean;
   /** Dynamic bullet language (EN default; ZH for 简体中文) */
   locale?: BriefLocale;
@@ -202,7 +202,7 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
       id: "lab",
       text: zh
         ? "官方实验室样片 —— 适合试配方；实时 Mini 用的是样片，不是客户 SKU。"
-        : "Official Lab still — good for feeling a recipe; live Mini uses this sample, not a customer SKU.",
+        : "PIKBO Lab reference still — useful for previewing a recipe; it is not a customer SKU or verified provider input.",
       tone: "tip",
     });
   } else {

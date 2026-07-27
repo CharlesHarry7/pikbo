@@ -1,18 +1,14 @@
 import Link from "next/link";
 import type { Preset } from "@/lib/presets";
 import { recipeHasUniqueProof } from "@/lib/seoIndex";
-import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /**
  * SEO / related-recipe emoji card.
- * Honesty: Lab-proof recipes get Official · cached (+ Lab ≥4 when registry
- * quality passes); concept recipes stay Concept (not customer UGC).
+ * Honesty: recipes with media are cached Lab prototypes; recipes without
+ * unique media stay static Concept cards.
  */
 export function PresetCard({ preset }: { preset: Preset }) {
   const hasProof = recipeHasUniqueProof(preset.slug);
-  const labQuality = hasProof
-    ? provisionalLabQualityLabel(preset.slug)
-    : null;
 
   return (
     <Link
@@ -30,9 +26,9 @@ export function PresetCard({ preset }: { preset: Preset }) {
           {hasProof ? (
             <span
               className="rounded-full border border-white/10 bg-black/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur-sm"
-              title="Official Lab cached demo · not live customer output"
+              title="Cached Lab prototype · provider evidence pending"
             >
-              Official · cached
+              Lab · cached prototype
             </span>
           ) : (
             <span
@@ -42,15 +38,6 @@ export function PresetCard({ preset }: { preset: Preset }) {
               Concept
             </span>
           )}
-          {labQuality ? (
-            <span
-              className="rounded-full border border-amber-200/25 bg-black/55 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur-sm"
-              title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-              data-proof-quality="provisional-lab"
-            >
-              Lab ≥4
-            </span>
-          ) : null}
         </div>
       </div>
       <div className="p-4">

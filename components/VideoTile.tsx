@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import type { FeedItem } from "@/lib/videoFeed";
-import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 function aspectClass(ratio: FeedItem["ratio"], compact?: boolean) {
   if (compact) {
@@ -21,7 +20,7 @@ function aspectClass(ratio: FeedItem["ratio"], compact?: boolean) {
 /**
  * Autoplay-on-visible video card — shared AutoPlayVideo budget
  * (mobile ≤1 concurrent · non-hero preload none · Link owns focus).
- * Official Lab items get honesty chips (cached + provisional Lab ≥4).
+ * Cached Lab prototypes are labeled; concepts stay static.
  */
 export function VideoTile({
   item,
@@ -35,12 +34,11 @@ export function VideoTile({
     (item.kind === "demo" || item.kind === "preset"
       ? item.demo?.preset
       : undefined);
-  const isOfficial =
+  const isCachedPrototype =
     Boolean(item.demo) &&
-    (Boolean(item.badge && /official|cached/i.test(item.badge)) ||
+    (Boolean(item.badge && /prototype|cached/i.test(item.badge)) ||
       item.kind === "demo");
   const isConcept = !item.demo;
-  const labQuality = isOfficial ? provisionalLabQualityLabel(recipe) : null;
 
   return (
     <Link
@@ -83,21 +81,12 @@ export function VideoTile({
             <span className="rounded-full border border-white/10 bg-black/55 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/80 backdrop-blur">
               {item.badge}
             </span>
-          ) : isOfficial ? (
+          ) : isCachedPrototype ? (
             <span
               className="rounded-full border border-white/10 bg-black/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur"
-              title="Official Lab cached demo · not live customer output"
+              title="Cached Lab prototype · provider evidence pending"
             >
-              Official · cached
-            </span>
-          ) : null}
-          {labQuality ? (
-            <span
-              className="rounded-full border border-amber-200/25 bg-black/55 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur"
-              title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-              data-proof-quality="provisional-lab"
-            >
-              Lab ≥4
+              Lab · cached prototype
             </span>
           ) : null}
         </div>

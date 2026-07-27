@@ -418,7 +418,7 @@ export const GUIDES: Guide[] = [
       {
         h2: "Honest Free Mini vs unlimited claims",
         paragraphs: [
-          "Free Mini is intentionally small: Seedance Mini, about 5s · 480p · on-player mark, limited live path. Lab demos are official cached samples and never process your upload.",
+          "Free Mini is intentionally small: Seedance Mini, about 5s · 480p · on-player mark, limited live path. Lab demos are cached Lab prototype samples and never process your upload.",
           "Failed live jobs restore credits when the server can confirm failure. TIMEOUT/cancel can remain unconfirmed — that is honest ledger policy, not a silent debit.",
         ],
       },
@@ -468,7 +468,7 @@ export const GUIDES: Guide[] = [
         h2: "When to use Seller Starter Pack vs single recipe",
         paragraphs: [
           "Use Seller Starter Pack when one SKU needs storefront + social the same day. Use a single recipe (spin only, reveal only) when you are testing Free Mini or iterating one channel.",
-          "Open /create?mode=seller-pack. Optional ?try=1 loads an official Lab still for layout learning — it must not auto-fire three live debits.",
+          "Open /create?mode=seller-pack. Optional ?try=1 loads a PIKBO Lab prototype still for layout learning — it must not auto-fire three live debits.",
         ],
       },
       {

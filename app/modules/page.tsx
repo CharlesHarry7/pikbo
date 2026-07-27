@@ -13,7 +13,6 @@ import {
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 import { createRemixHref } from "@/lib/remixIntent";
-import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 const MODULES_PATH_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
@@ -34,7 +33,7 @@ const MODULES_FAQ = [
   },
   {
     q: "Are Lab posters my final video?",
-    a: "No. Posters and Lab samples are official style demos only. Your upload is never those stills. Cached Lab demos cost 0 credits; live Mini uses your Free trial or paid credits.",
+    a: "No. Posters and Lab samples are cached prototypes with provider evidence pending. Your upload is never those stills. Cached previews cost 0 credits; a verified live path uses plan credits.",
   },
   {
     q: "What does Free Mini cover on Modules?",
@@ -62,8 +61,6 @@ function ModuleCard({
 }) {
   const isLive = capability === "live";
   const exactLab = Boolean(poster && w.effect);
-  const labQuality =
-    exactLab && w.effect ? provisionalLabQualityLabel(w.effect) : null;
   return (
     <Link
       href={w.href}
@@ -99,18 +96,9 @@ function ModuleCard({
             {exactLab && isLive ? (
               <span
                 className="rounded-full border border-white/10 bg-black/65 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur"
-                title="Official Lab cached poster · not live customer output"
+                title="Cached Lab prototype · provider evidence pending"
               >
-                Official · cached
-              </span>
-            ) : null}
-            {labQuality ? (
-              <span
-                className="rounded-full border border-amber-200/25 bg-black/55 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur"
-                title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-                data-proof-quality="provisional-lab"
-              >
-                Lab ≥4
+                Lab · cached prototype
               </span>
             ) : null}
             {w.badge && (

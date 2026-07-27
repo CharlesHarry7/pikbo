@@ -139,7 +139,7 @@ export function buildDirectorPlan(input: DirectorPlanInput): DirectorPlan {
     rows.push({
       id: "source",
       label: "Source",
-      value: "Official Lab still · not a customer SKU",
+      value: "PIKBO Lab prototype still · not a customer SKU",
       tone: "warn",
     });
   }
@@ -318,7 +318,7 @@ export function buildSellerPackDirectorPlan(
     rows.push({
       id: "source",
       label: "Source",
-      value: "Official Lab still · not a customer SKU",
+      value: "PIKBO Lab prototype still · not a customer SKU",
       tone: "warn",
     });
   }

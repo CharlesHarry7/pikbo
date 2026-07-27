@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import type { CommunityProject } from "@/lib/videoFeed";
-import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /**
  * PIKBO Lab recipe card:
@@ -31,16 +30,6 @@ export function ProjectCard({ project }: { project: CommunityProject }) {
           <span className="rounded-full border border-white/10 bg-black/55 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/85 backdrop-blur">
             {project.visibility}
           </span>
-          {project.visibility === "Official example" &&
-          provisionalLabQualityLabel(project.demo.preset) ? (
-            <span
-              className="rounded-full border border-amber-200/25 bg-black/55 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur"
-              title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-              data-proof-quality="provisional-lab"
-            >
-              Lab ≥4
-            </span>
-          ) : null}
         </div>
         <div className="absolute inset-x-0 bottom-0 p-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">

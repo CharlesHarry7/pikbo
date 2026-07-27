@@ -8,7 +8,7 @@ export const PROVENANCE = {
   liveGeneration: "Live generation",
   onPlayerMark: "On-player mark",
   localLibrary: "Local Library",
-  officialExample: "Official example",
+  labPrototype: "PIKBO Lab cached prototype",
 } as const;
 
 export type ProvenanceLabel =

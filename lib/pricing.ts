@@ -1,6 +1,6 @@
 // Credits model. Align with docs/UNIT_ECONOMICS.md (2026-07-23).
 // Every paid credit must stay above marginal Seedance cost. Anonymous and Free
-// remain cached-official-only until auth, atomic durable credits, and T6 ship.
+// remain cached-prototype-only until auth, atomic durable credits, and T6 ship.
 // Never offer true "unlimited" on expensive models.
 
 export type PlanId = "free" | "creator" | "shop";
@@ -38,9 +38,9 @@ export const PLANS: Plan[] = [
     priceMonthly: 0,
     credits: 10,
     blurb:
-      "Explore official cached toy demos at no cost. Live Free generation stays closed until protected delivery is ready.",
+      "Explore cached Lab prototype toy demos at no cost. Live Free generation stays closed until protected delivery is ready.",
     perks: [
-      "Official cached demos · 0 credits",
+      "Cached Lab prototype demos · 0 credits",
       "Upload and configure locally before sign-in",
       "All toy effect presets",
       "No paid-model call from anonymous or Free sessions",

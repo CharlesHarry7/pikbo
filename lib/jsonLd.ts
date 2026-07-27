@@ -114,7 +114,7 @@ export function videoObjectJsonLd(demo: DemoVideo) {
     "@context": "https://schema.org",
     "@type": "VideoObject",
     name: demo.title,
-    description: `${demo.result} Official Pikbo Lab sample (cached demo — not a visitor upload).`,
+    description: `${demo.result} PIKBO Lab cached prototype (not a visitor upload; provider task evidence pending).`,
     thumbnailUrl: `${site.url}${demo.poster}`,
     contentUrl: `${site.url}${demo.mp4}`,
     uploadDate: demo.publishedAt,

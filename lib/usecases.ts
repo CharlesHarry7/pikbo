@@ -310,7 +310,7 @@ export const USE_CASES: UseCase[] = [
       },
       {
         q: "Do Lab demos use my photo?",
-        a: "No. Homepage and Lab samples are cached official clips. Your photo is only used when you run Generate with a live provider key.",
+        a: "No. Homepage and Lab samples are cached prototypes. Your photo is only used after an eligible signed-in account explicitly submits a live generation.",
       },
     ],
   },

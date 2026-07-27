@@ -11,7 +11,6 @@ import {
 } from "@/lib/videoFeed";
 import { getPreset } from "@/lib/presets";
 import {
-  passesHomeProofQuality,
   showcaseProjectAsDemo,
   showcaseProjectHref,
   showcaseRecipeHref,
@@ -85,7 +84,7 @@ export function HfExploreHome({
         href: createRemixHref(d.preset, d.id),
         projectHref: `/projects/${d.id}`,
         detailHref: `/effects/${d.preset}`,
-        badge: "Official example · cached",
+        badge: "PIKBO Lab · cached prototype",
         ratio: d.ratio as FeedItem["ratio"],
         demo: d,
         kind: "demo" as const,
@@ -103,7 +102,7 @@ export function HfExploreHome({
   if (!item) {
     return (
       <div className="min-h-screen bg-black px-4 py-20 text-center text-white">
-        <p className="text-white/50">No official examples yet.</p>
+        <p className="text-white/50">No cached Lab prototypes yet.</p>
         <Link
           href={createRemixHref("360-spin-showcase")}
           className="mt-4 inline-block text-[#c8ff3d]"
@@ -148,7 +147,7 @@ export function HfExploreHome({
             {t("home.feelFirst")}
           </p>
           <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#c8ff3d]/30 bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#c8ff3d] shadow-[0_0_24px_rgba(200,255,61,0.15)] backdrop-blur">
-            {item.badge ?? "Official example"}
+            {item.badge ?? "PIKBO Lab · cached prototype"}
           </span>
           {toolFirstLayout ? (
             <p className="font-display mt-3 max-w-xl text-2xl font-black uppercase leading-[1.02] tracking-tight text-white/90 sm:text-4xl">
@@ -251,8 +250,8 @@ export function HfExploreHome({
             {t("home.beforeAfter")}
           </h2>
           <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/50">
-            Same official Lab example: one still in, one cached clip out — not a
-            customer post.
+            Reference poster beside a cached Lab prototype. The repository does
+            not prove that the poster was the provider input.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             <div className="overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-white/10 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.9)]">
@@ -266,11 +265,11 @@ export function HfExploreHome({
                   className="absolute inset-0 h-full w-full object-cover"
                 />
                 <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/70 backdrop-blur">
-                  Before
+                  Reference
                 </span>
               </div>
               <p className="p-3.5 text-xs font-bold uppercase tracking-wide text-white/55">
-                Input · still photo
+                Reference poster · not verified input
               </p>
             </div>
             <div className="overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-[#c8ff3d]/25 shadow-[0_24px_60px_-24px_rgba(200,255,61,0.2)]">
@@ -280,11 +279,11 @@ export function HfExploreHome({
                   className="absolute inset-0 h-full w-full object-cover"
                 />
                 <span className="absolute left-3 top-3 rounded-full bg-[#c8ff3d] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black shadow-[0_0_16px_rgba(200,255,61,0.4)]">
-                  After
+                  Preview
                 </span>
               </div>
               <p className="p-3.5 text-xs font-bold uppercase tracking-wide text-[#c8ff3d]">
-                Output · official cached example
+                Cached prototype · evidence pending
               </p>
             </div>
           </div>
@@ -312,14 +311,8 @@ export function HfExploreHome({
               <dd className="inline">Cached Lab · not live</dd>
             </div>
             <div>
-              <dt className="inline text-white/35">Quality · </dt>
-              <dd
-                className="inline"
-                title="Provisional Lab self-check · not external human QA"
-                data-proof-quality="provisional-lab"
-              >
-                Lab ≥4 · provisional
-              </dd>
+              <dt className="inline text-white/35">Evidence · </dt>
+              <dd className="inline">Provider task ID and formal QA pending</dd>
             </div>
           </dl>
           <div className="mt-7 flex flex-wrap gap-2">
@@ -385,17 +378,8 @@ export function HfExploreHome({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                     <div className="absolute left-2 top-2 flex max-w-[92%] flex-wrap gap-1">
                       <span className="rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#c8ff3d] ring-1 ring-white/10">
-                        Official example · cached
+                        PIKBO Lab · cached prototype
                       </span>
-                      {passesHomeProofQuality(project.qualityScores) ? (
-                        <span
-                          className="rounded-full border border-amber-200/25 bg-black/70 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-100/90 ring-1 ring-white/10"
-                          title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-                          data-proof-quality="provisional-lab"
-                        >
-                          Lab ≥4
-                        </span>
-                      ) : null}
                     </div>
                     <p className="absolute inset-x-0 bottom-12 p-2 text-[11px] font-bold uppercase leading-tight tracking-wide sm:text-xs">
                       {project.title}

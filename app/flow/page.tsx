@@ -102,7 +102,7 @@ export default function FlowPage() {
     {
       id: "core-lab",
       title: "PIKBO Lab",
-      blurb: "Official examples — open project, then replace the toy.",
+      blurb: "Cached prototypes — open project, then replace the toy.",
       href: "/community",
       badge: "Lab",
       tier: "core",

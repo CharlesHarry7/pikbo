@@ -63,7 +63,7 @@ export default function AboutPage() {
           <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-white/55">
             <li>Guaranteed sales, rankings, or viral reach</li>
             <li>Live models that are not actually wired (those stay Soon)</li>
-            <li>Customer UGC we do not have — Lab examples are official cached demos</li>
+            <li>Customer UGC we do not have — Lab examples are cached Lab prototype demos</li>
             <li>Franchise IP cloning from packaging you do not control</li>
           </ul>
         </section>

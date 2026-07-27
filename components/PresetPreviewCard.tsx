@@ -5,13 +5,11 @@ import type { Preset } from "@/lib/presets";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { createRemixHref } from "@/lib/remixIntent";
-import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /** Exact Lab clips and static concept art are labeled separately. */
 export function PresetPreviewCard({ preset }: { preset: Preset }) {
   const demo = DEMO_VIDEOS.find((d) => d.preset === preset.slug);
   const exact = Boolean(demo);
-  const labQuality = exact ? provisionalLabQualityLabel(preset.slug) : null;
 
   return (
     <Link
@@ -51,18 +49,9 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
           {exact ? (
             <span
               className="rounded-full border border-white/10 bg-black/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur-sm"
-              title="Official Lab cached demo · not live customer output"
+              title="Cached Lab prototype · provider evidence pending"
             >
-              Official · cached
-            </span>
-          ) : null}
-          {labQuality ? (
-            <span
-              className="rounded-full border border-amber-200/25 bg-black/55 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur-sm"
-              title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-              data-proof-quality="provisional-lab"
-            >
-              Lab ≥4
+              Lab · cached prototype
             </span>
           ) : null}
         </div>
@@ -73,7 +62,7 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
               : "border border-white/15 bg-black/60 text-white/70"
           }`}
         >
-          {exact ? "Lab proof" : "Concept"}
+          {exact ? "Prototype" : "Concept"}
         </span>
         <div className="absolute inset-x-0 bottom-0 p-3">
           <p className="text-[13px] font-bold leading-snug text-white">

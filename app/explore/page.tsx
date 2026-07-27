@@ -15,18 +15,18 @@ import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 const EXPLORE_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
-  title: "Explore Official AI Toy Video Projects",
+  title: "Explore PIKBO Lab Toy Video Prototypes",
   description:
-    "Open PIKBO Lab toy-video projects, inspect the owned input and cached output, then reuse the exact recipe with a toy photo you own.",
+    "Open PIKBO Lab toy-video prototypes, inspect the reference poster and cached output, then reuse the recipe with a toy photo you own.",
   alternates: { canonical: "/explore" },
   // Cold-start 2026-07-27: dropped from 13-URL sitemap (long-tail tools win crawl
   // budget). Stay crawlable + follow for deep links; noindex so Lab wall does
   // not compete with rank landings.
   robots: CONCEPT_ROBOTS,
   openGraph: {
-    title: `Explore official toy video projects | ${site.name}`,
+    title: `Explore cached toy video prototypes | ${site.name}`,
     description:
-      "Traceable Lab projects with owned input, cached output, and recipe remix into Generate.",
+      "Evidence-pending Lab prototypes with a reference poster, cached output, and recipe remix into Generate.",
     url: `${site.url}/explore`,
   },
 };
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 const EXPLORE_FAQ = [
   {
     q: "Are Explore projects customer uploads?",
-    a: "No. Every card is an official PIKBO Lab example with an owned input still, a distinct cached output, and a registered recipe. Not community UGC.",
+    a: "No. Every card is a PIKBO Lab cached prototype with a reference poster, a distinct cached output, and a registered recipe. It is not community UGC, and the poster is not claimed as the provider input.",
   },
   {
     q: "What does Remix do?",
@@ -62,9 +62,9 @@ export default async function ExplorePage({
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Pikbo Lab official toy video projects",
+    name: "Pikbo Lab cached toy video prototypes",
     description:
-      "Traceable official examples — owned input still, distinct output, registered recipe.",
+      "Cached prototypes — reference poster, distinct output, registered recipe, and no verified input-output claim.",
     numberOfItems: projects.length,
     itemListElement: projects.map((p, i) => ({
       "@type": "ListItem",
@@ -102,14 +102,14 @@ export default async function ExplorePage({
         <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]">
-              PIKBO Lab · traceable proof
+              PIKBO Lab · evidence pending
             </p>
             <h1 className="font-display mt-1 text-2xl font-black uppercase tracking-tight sm:text-3xl">
               Open the project, not just the clip
             </h1>
             <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/45 sm:text-sm">
-              Every card has an owned input still, a distinct output file, a
-              registered recipe, and an honest cached/live record.
+              Every card has a reference poster, a distinct cached output, and
+              a registered recipe. Provider task evidence is still pending.
             </p>
           </div>
           <div
@@ -228,7 +228,7 @@ export default async function ExplorePage({
         <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
           <h2 className="text-sm font-bold text-white">Explore FAQ</h2>
           <p className="mt-1 text-xs text-white/40">
-            Official Lab only · Remix · cached vs live credits
+            PIKBO Lab prototype only · Remix · cached vs live credits
           </p>
           <dl className="mt-4 space-y-4">
             {EXPLORE_FAQ.map((f) => (

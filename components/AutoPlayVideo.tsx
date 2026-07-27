@@ -211,7 +211,7 @@ export function AutoPlayVideo({
     label ||
     (focusable && desktopPlayMode === "interaction"
       ? "Focus to preview video"
-      : "Official Pikbo Lab demo video");
+      : "PIKBO Lab cached prototype video");
 
   function togglePlayback() {
     const video = ref.current;

@@ -84,8 +84,8 @@ intentionally blank because no row currently has the complete proof chain.
 ### Repository evidence checked
 
 - `lib/demoVideos.ts` supplies media paths and dates.
-- `lib/showcaseProjects.ts` supplies descriptive model labels and static
-  provisional 4/5 scores.
+- Before R4, `lib/showcaseProjects.ts` supplied descriptive model labels and
+  static provisional 4/5 scores. R4 removed those unsupported scores.
 - git history shows the first six prototype assets and a later six-file
   Seedance Mini batch.
 - `docs/evidence/G6_LAUNCH_LOG.md` contains two live generation request IDs for
@@ -95,18 +95,18 @@ intentionally blank because no row currently has the complete proof chain.
 
 Result: **0 official, 12 prototype, 0 rejected** as of this audit.
 
-## Engineering follow-up
+## Runtime alignment
 
-The current runtime registry still assigns all 12 rows
-`provenance: "official_cached"` and static provisional 4/5 scores. The owning
-engineering task must:
+R4 now aligns the product with this ledger:
 
-1. remove numeric scores from all 12 rows until evidence is complete;
-2. render prototype rows as static Recipe art with no autoplay;
-3. prevent prototype rows from satisfying the homepage Official-proof gate;
-4. add evidence fields or generate the runtime registry from a validated
-   evidence source;
-5. promote rows individually only after an internal reviewer signs the complete
-   record.
+1. all 12 rows use `provenance: "cached_prototype"`;
+2. numeric scores and reviewer notes are absent until evidence is complete;
+3. the poster field is `referencePoster`, not a claimed provider input;
+4. the homepage may retain eight distinct cached clips for preview, each
+   explicitly labeled as a PIKBO Lab cached prototype;
+5. recipes without their own cached media remain static Concept Recipe art;
+6. promotion to a verified case still requires the complete evidence record
+   and named reviewer defined above.
 
-This audit deliberately does not modify business/UI code.
+`npm run showcase-evidence-smoke` prevents unsupported scores, verified-case
+labels, reused homepage media, and live-entitlement UI drift from returning.

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import type { CommunityProject } from "@/lib/videoFeed";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
-import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
 /**
  * HF “Explore the inside of every project” — tall portrait cards.
@@ -22,8 +21,8 @@ export function HomeProjectsExplore({
             Explore the inside of every project
           </h2>
           <p className="mt-1 max-w-xl text-sm text-white/45">
-            Official cached examples — open the project for input/output, or
-            remake the recipe with a toy photo you own
+            Cached Lab prototypes — open the evidence status, or reuse the
+            recipe with a toy photo you own
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
@@ -37,7 +36,7 @@ export function HomeProjectsExplore({
             href="/community"
             className="text-xs font-semibold text-[var(--mint)] hover:underline"
           >
-            Official examples
+            Lab prototypes
           </Link>
         </div>
       </div>
@@ -79,16 +78,6 @@ export function HomeProjectsExplore({
               <span className="rounded-full border border-white/15 bg-black/45 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/90 backdrop-blur">
                 {p.visibility}
               </span>
-              {p.visibility === "Official example" &&
-              provisionalLabQualityLabel(p.demo.preset) ? (
-                <span
-                  className="rounded-full border border-amber-200/25 bg-black/50 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-100/90 backdrop-blur"
-                  title="Provisional Lab self-check · all scores ≥4/5 · not external human QA"
-                  data-proof-quality="provisional-lab"
-                >
-                  Lab ≥4
-                </span>
-              ) : null}
             </div>
             <div className="absolute inset-x-0 bottom-0 z-[2] p-3">
               <div className="mb-2 flex items-center gap-2">

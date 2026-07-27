@@ -127,7 +127,7 @@ export function PricingHeroCopy({
           </Link>
         </div>
         <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-[var(--fg-dim)]">
-          <span>✓ Cached official examples use no credits</span>
+          <span>✓ Cached prototypes use no credits</span>
           <span>✓ Failed live jobs return their credit charge</span>
           <span>✓ Commercial use starts on paid plans</span>
           <span>✓ Live billing stays off until you greenlight Mode A</span>
