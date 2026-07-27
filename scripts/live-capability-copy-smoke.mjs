@@ -94,7 +94,11 @@ function walkHtml(directory) {
   return output;
 }
 
-const renderedFiles = walkHtml(path.join(root, ".next", "server", "app"));
+// Rendered output is intentionally opt-in: a stale .next directory must never
+// make the source-only pre-build contract fail.
+const renderedFiles = requireRendered
+  ? walkHtml(path.join(root, ".next", "server", "app"))
+  : [];
 if (requireRendered) {
   assert(renderedFiles.length > 0, "no built route HTML found; run next build first");
 }

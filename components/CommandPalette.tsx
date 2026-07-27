@@ -9,7 +9,6 @@ import {
   createWorkbenchHref,
 } from "@/lib/jobIntents";
 import { PRESETS } from "@/lib/presets";
-import { createRemixHref } from "@/lib/remixIntent";
 
 const CMD_GENERATE_HREF = createWorkbenchHref();
 const CMD_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
