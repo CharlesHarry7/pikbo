@@ -5372,6 +5372,28 @@ for (const [rel, re] of residualGenerateDoors) {
     `${rel} primary Generate door must use createRemixHref remix marker`
   );
 }
+// Cinema director board compose → Generate carries remix + prompt (not bare effect=)
+const cinemaComposeSrc = fs.readFileSync(
+  join(root, "app/cinema/page.tsx"),
+  "utf8"
+);
+assert.match(cinemaComposeSrc, /data-cinema-compose=["']remix["']/);
+assert.match(cinemaComposeSrc, /createRemixHref\(effect/);
+assert.match(cinemaComposeSrc, /prompt=\$\{encodeURIComponent/);
+assert.doesNotMatch(
+  cinemaComposeSrc,
+  /new URLSearchParams\(\{\s*effect,\s*prompt:\s*composed/
+);
+// Bare /generate alias → listing-spin remix when no query (not bare /create)
+const generateAliasSrc = fs.readFileSync(
+  join(root, "app/generate/page.tsx"),
+  "utf8"
+);
+assert.match(generateAliasSrc, /createRemixHref\(["']360-spin-showcase["']\)/);
+assert.doesNotMatch(
+  generateAliasSrc,
+  /redirect\(s \? `\/create\?\$\{s\}` : ["']\/create["']\)/
+);
 
 
 // Job intent remix: registries use createJobRemixHref (effect+ratio+job), not bare job=

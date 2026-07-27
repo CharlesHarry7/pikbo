@@ -94,13 +94,16 @@ export default function CinemaPage() {
     [shot, lens, move, look]
   );
 
+  /**
+   * Compose → Generate handoff: full remix contract (effect+ratio+duration+channel)
+   * plus director prompt + optional device-local SKU. Never bare /create?effect only.
+   */
   const href = useMemo(() => {
-    const q = new URLSearchParams({
-      effect,
-      prompt: composed,
-    });
-    if (toySku) q.set("sku", toySku);
-    return `/create?${q.toString()}`;
+    const base = createRemixHref(effect, undefined, toySku || null);
+    const prompt = composed.trim().slice(0, 1500);
+    if (!prompt) return base;
+    const joiner = base.includes("?") ? "&" : "?";
+    return `${base}${joiner}prompt=${encodeURIComponent(prompt)}`;
   }, [effect, composed, toySku]);
   const board = DEMO_VIDEOS.slice(0, 3);
   const activeBoard = board[boardShot] ?? board[0];
@@ -329,6 +332,7 @@ export default function CinemaPage() {
               <Link
                 href={href}
                 className="flex w-full items-center justify-center rounded-full bg-[var(--mint)] py-3.5 text-sm font-black text-black shadow-[0_0_32px_rgba(200,255,61,0.28)]"
+                data-cinema-compose="remix"
               >
                 Render in Generate →
               </Link>
@@ -348,6 +352,7 @@ export default function CinemaPage() {
         <Link
           href={href}
           className="btn btn-primary flex w-full items-center justify-center py-3.5 text-[15px] font-black"
+          data-cinema-compose="remix"
         >
           Render in Generate →
         </Link>

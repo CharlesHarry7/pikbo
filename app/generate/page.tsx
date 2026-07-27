@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
+import { createRemixHref } from "@/lib/remixIntent";
 
-/** Alias used by big AI video apps */
+/**
+ * Alias used by big AI video apps.
+ * Bare /generate → listing-spin remix (ratio/duration/channel), not bare /create.
+ * Query strings pass through to /create (deep links keep intent).
+ */
 export default async function GenerateAliasPage({
   searchParams,
 }: {
@@ -13,5 +18,8 @@ export default async function GenerateAliasPage({
     else if (Array.isArray(v) && v[0]) q.set(k, v[0]);
   }
   const s = q.toString();
-  redirect(s ? `/create?${s}` : "/create");
+  if (s) {
+    redirect(`/create?${s}`);
+  }
+  redirect(createRemixHref("360-spin-showcase"));
 }

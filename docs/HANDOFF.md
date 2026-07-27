@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Cinema compose + /generate alias remix
+- Cinema Render → createRemixHref(effect)+prompt+sku (ratio/duration/channel);
+  data-cinema-compose=remix. Not bare /create?effect&prompt.
+- Bare /generate → createRemixHref(360-spin); query strings still pass through.
+- Smoke: cinema compose + generate alias locks.
+
 ### 2026-07-27 — [grok] Promote queued ledger-retry forks on re-POST
 - `beginImageJob`: promote newest same-prompt `queued` fork (or sole queued)
   instead of orphan TIMEOUT; rebinds client idempotency key.
