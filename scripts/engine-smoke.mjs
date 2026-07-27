@@ -183,12 +183,24 @@ const pe = fs.readFileSync(join(root, "lib/providerError.ts"), "utf8");
 assert.match(pe, /export function isValidImageDataUrl/);
 assert.match(pe, /export function classifyProviderError/);
 
-// Demo path must not charge before FAL_KEY gate (honesty vs pricing)
+// Recovery R0: cached access is decided before any durable reserve/provider call.
 const genRoute = fs.readFileSync(join(root, "app/api/generate/route.ts"), "utf8");
-const demoIdx = genRoute.indexOf("if (!process.env.FAL_KEY)");
-const deductIdx = genRoute.indexOf("deductCredits(session");
-assert.ok(demoIdx > 0 && deductIdx > demoIdx, "demo path must run before credit deduct");
-assert.match(genRoute, /Cached demos stay free|free cached Lab/i);
+const accessIdx = genRoute.indexOf("liveGenerationAccess({");
+const demoIdx = genRoute.indexOf('if (access.kind === "cached")');
+const reserveIdx = genRoute.indexOf("reserveStrictLiveGeneration({");
+const providerIdx = genRoute.indexOf("invokeReservedProvider(");
+assert.ok(
+  accessIdx > 0 &&
+    demoIdx > accessIdx &&
+    reserveIdx > demoIdx &&
+    providerIdx > reserveIdx,
+  "cached gate + durable reserve must precede provider invocation"
+);
+assert.doesNotMatch(
+  genRoute,
+  /shadowReserveForGenerate|deductCredits\(session/
+);
+assert.match(genRoute, /official[\s-]+cached|cached clip/i);
 assert.match(genRoute, /isSafeDeliverableUrl/);
 // Live unsafe videoUrl must surface UNSAFE_URL (not MODEL_EMPTY) for client honesty.
 assert.match(
@@ -574,7 +586,7 @@ assert.match(topup, /production/);
 // G6 forced fail must be non-production only
 assert.match(genRoute, /PIKBO_FORCE_GENERATE_FAIL/);
 assert.match(genRoute, /VERCEL_ENV !== "production"/);
-assert.match(genRoute, /creditsRefunded:\s*true/);
+assert.match(genRoute, /creditsRefunded:\s*released/);
 
 const pbFull = fs.readFileSync(join(root, "lib/promptBuild.ts"), "utf8");
 assert.match(pbFull, /TOY_IDENTITY_LOCK/);
@@ -616,7 +628,7 @@ assert.match(softlive, /optional until Stripe/);
 
 // Soft-launch refund honesty + primary nav (first principles)
 assert.match(contracts, /creditsRefunded/);
-assert.match(genRoute, /creditsRefunded:\s*true/);
+assert.match(genRoute, /creditsRefunded:\s*released/);
 assert.match(gen, /creditsRefunded/);
 assert.match(gen, /10 credits restored/);
 const appShell = fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8");
@@ -1331,16 +1343,8 @@ assert.match(
   /local-memory|listJobsForSession/
 );
 assert.match(
-  fs.readFileSync(join(root, "lib/durableCredits/shadow.ts"), "utf8"),
-  /shadowReserveForGuest/
-);
-assert.match(
-  fs.readFileSync(join(root, "lib/durableCredits/shadow.ts"), "utf8"),
-  /shadowReserveForGenerate|shadowReserveForAuthUser/
-);
-assert.match(
   genRoute,
-  /shadowReserveForGenerate|shadowReserveForGuest|shadowSettle|shadowRelease/
+  /reserveStrictLiveGeneration|invokeReservedProvider/
 );
 assert.match(genRoute, /getAuthUserFromRequest/);
 

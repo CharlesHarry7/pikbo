@@ -13,7 +13,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | ID | Task | Owner | Status | Branch | Notes |
 |---|---|---|---|---|---|
 | R2a | Proof wall truth + mobile video budget + Starter Pack naming | Claude | review | agent/claude/product-proof-mobile | Home uses 8-item Showcase whitelist; concepts are static; autoplay 1 mobile / 2 desktop; three-output name frozen |
-| R0 | Disable anonymous live generation; cached demo only until authenticated durable reserve | Claude | todo | agent/claude/recovery-cost-gate | P0 provider-spend protection; audit 2026-07-27 |
+| R0 | Disable anonymous live generation; cached demo only until authenticated durable reserve | Claude | review | agent/claude/recovery-cost-gate | Anonymous/Free cached-only even with FAL_KEY; strict Supabase reserve + provider guard; zero-call regression passes. R1 atomic RPC remains separate |
 | R1 | Atomic Supabase credit reservation + explicit retry token + fixed deadline | Claude | todo | agent/claude/recovery-ledger | Must fail closed before provider call |
 | R2 | Toy Launch Pack primary funnel + event contract | GPT / Claude | doing | agent/gpt/recovery-dispatch | GPT freezes contract; Claude implements |
 | R3 | Real integration tests + CI fail on critical path | Grok / Claude | todo | agent/grok/recovery-qa | Grok QA; Claude supplies injectable boundaries |

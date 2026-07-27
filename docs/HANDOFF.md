@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [claude] R0 anonymous provider-cost gate
+- Anonymous and Free Create requests now return official cached demos at 0 credits even when `FAL_KEY` exists.
+- Live calls require verified Supabase auth, a non-Free durable account and a committed Supabase reservation; no Cookie/local-file fallback.
+- Both FAL upload and subscribe are guarded by the reservation boundary; regression proves anonymous/Free/reserve-failure = 0 provider calls.
+- Checks: recovery-cost-gate + engine-smoke PASS; TypeScript PASS; ESLint 0 errors (2 pre-existing unused-import warnings).
+- R1 remains open: replace the current non-atomic Supabase adapter with one transaction/RPC before enabling live beta.
+
 ### 2026-07-27 — [claude] product proof + mobile playback convergence
 - Non-mechanical logic: `lib/videoFeed.ts`, `app/page.tsx`, `VideoTile`, `PresetPreviewCard`, `AutoPlayVideo`, `HomeViralWall`, `HomeCinemaHero`, and `HfExploreHome`.
 - Home now reads the same eight-item Showcase whitelist for hero and wall; the legacy viral helper is capped to that registry.

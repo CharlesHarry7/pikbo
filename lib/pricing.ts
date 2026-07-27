@@ -1,5 +1,6 @@
 // Credits model. Align with docs/UNIT_ECONOMICS.md (2026-07-23).
-// Every paid credit must stay above marginal Seedance cost; free is a tiny trial.
+// Every paid credit must stay above marginal Seedance cost. Anonymous and Free
+// remain cached-official-only until auth, atomic durable credits, and T6 ship.
 // Never offer true "unlimited" on expensive models.
 
 export type PlanId = "free" | "creator" | "shop";
@@ -27,7 +28,8 @@ export const CREDITS_PER_VIDEO = 10;
 
 /**
  * Launch allowances (honest vs fal cost, not "fake 50 clips").
- * Free ≈ 1 trial · Creator ≈ 5 clips · Shop ≈ 15 clips at 10 credits each.
+ * Free credits are held for a future invited beta; Creator ≈ 5 clips ·
+ * Shop ≈ 15 clips at 10 credits each.
  */
 export const PLANS: Plan[] = [
   {
@@ -35,14 +37,15 @@ export const PLANS: Plan[] = [
     name: "Free",
     priceMonthly: 0,
     credits: 10,
-    blurb: "One Seedance Mini 480p live trial with an on-player mark. Cached demos stay free.",
+    blurb:
+      "Explore official cached toy demos at no cost. Live Free generation stays closed until protected delivery is ready.",
     perks: [
-      "10 credits (~1 live trial job / month)",
-      "Seedance Mini · 480p · on-player mark",
+      "Official cached demos · 0 credits",
+      "Upload and configure locally before sign-in",
       "All toy effect presets",
-      "Unlimited cached demo playback",
+      "No paid-model call from anonymous or Free sessions",
     ],
-    cta: "Start free trial",
+    cta: "Explore cached demos",
     watermark: true,
     resolution: "480p",
     commercial: false,

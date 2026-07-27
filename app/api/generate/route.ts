@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { fal } from "@fal-ai/client";
 import { getPreset } from "@/lib/presets";
 import { getPlan } from "@/lib/pricing";
-import { checkCredits, deductCredits, refundCredits } from "@/lib/credits";
 import {
   clampDuration,
   modelForTier,
@@ -37,12 +36,16 @@ import type {
   GenerateSuccess,
 } from "@/lib/contracts";
 import {
-  shadowRelease,
-  shadowReserveForGenerate,
-  shadowSettle,
-  type ShadowReservation,
-} from "@/lib/durableCredits/shadow";
+  releaseStrictLiveGeneration,
+  reserveStrictLiveGeneration,
+  settleStrictLiveGeneration,
+  type StrictLiveReservation,
+} from "@/lib/durableCredits/liveReservation";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
+import {
+  invokeReservedProvider,
+  liveGenerationAccess,
+} from "@/lib/liveGenerationGate.mjs";
 import {
   beginSyncGenerateJob,
   completeSyncGenerateJob,
@@ -109,7 +112,6 @@ function successFromJob(
     costCredits:
       typeof job.costCredits === "number" ? job.costCredits : demo ? 0 : 10,
     creditsOutcome: outcome,
-    ...(demo ? { demoReason: "no_provider_key" as const } : {}),
     ...(replay ? { idempotentReplay: true } : {}),
   };
 }
@@ -179,12 +181,28 @@ export async function POST(req: Request) {
   }
 
   let session = await ensureSession();
+  const authUser = await getAuthUserFromRequest(req);
+  const access = liveGenerationAccess({
+    providerConfigured: Boolean(process.env.FAL_KEY),
+    authenticated: Boolean(authUser),
+    planId: session.plan,
+    // T6 is deliberately blocked. Free live cannot reopen until a verified
+    // server-owned derivative is available.
+    freeDeliveryReady: false,
+  });
 
   // Idempotent replay BEFORE image/asset resolve — network retries must not
   // re-upload multi-MB stills or fail on expired assetId after success.
   const idempotencyKey = normalizeIdempotencyKey(body.idempotencyKey);
-  if (idempotencyKey) {
-    const prior = findJobByIdempotencyKey(session.id, idempotencyKey);
+  const ledgerIdempotencyKey =
+    access.kind === "cached" && idempotencyKey
+      ? `cached:${idempotencyKey}`.slice(0, 128)
+      : idempotencyKey;
+  if (ledgerIdempotencyKey) {
+    const prior = findJobByIdempotencyKey(
+      session.id,
+      ledgerIdempotencyKey
+    );
     if (prior) {
       if (
         prior.status === "succeeded" &&
@@ -332,8 +350,9 @@ export async function POST(req: Request) {
     // Always keep preset template as base — freeform-only used to wipe toy prompts.
     const prompt = buildGeneratePrompt(preset.promptTemplate, extra);
 
-    // --- Demo path (no provider): free cached Lab clips — matches pricing honesty ---
-    if (!process.env.FAL_KEY) {
+    // Cost gate: anonymous users and Free accounts always receive an official
+    // cached clip, even when FAL_KEY exists. The upload is not processed.
+    if (access.kind === "cached") {
       await new Promise((r) => setTimeout(r, 600));
       // Prefer on-disk clip; refuse unsafe paths even from internal catalog.
       let videoUrl = demoClipForEffect(preset.slug);
@@ -354,7 +373,7 @@ export async function POST(req: Request) {
       const payload: GenerateSuccess = {
         videoUrl,
         demo: true,
-        demoReason: "no_provider_key",
+        demoReason: access.reason,
         watermark: plan.watermark,
         model: "demo-cached",
         duration: secs,
@@ -380,7 +399,7 @@ export async function POST(req: Request) {
           costCredits: 0,
           creditsOutcome: "0 cached",
           provider: "demo-cached",
-          idempotencyKey,
+          idempotencyKey: ledgerIdempotencyKey,
         });
         payload.requestId = job.id;
         payload.jobId = job.id;
@@ -390,36 +409,79 @@ export async function POST(req: Request) {
       return NextResponse.json(payload);
     }
 
-    // --- Live path: charge credits only when a real provider call will run ---
-    const check = checkCredits(session);
-    if (!check.ok) {
+    // Live is fail-closed: verified Supabase user + committed Supabase reserve.
+    // Cookie credits and local files are never live-spend authority.
+    if (!authUser) {
       return err(
         {
-          error:
-            session.plan === "free"
-              ? "Free trial used up — upgrade on Pricing, or wait for monthly refresh"
-              : "Not enough credits",
-          code: "INSUFFICIENT_CREDITS",
-          need: check.need,
-          have: check.have,
+          error: "Sign in before requesting live generation",
+          code: "AUTH_REQUIRED",
           session: publicSession(session),
         },
-        402
+        401
       );
     }
-
-    session = deductCredits(session, check.cost);
-    await saveSession(session);
-    // Optional durable shadow ledger — prefer signed-in Supabase user.
-    // Cookie remains authoritative until REQUIRE_DURABLE_CREDITS=1.
-    const authUser = await getAuthUserFromRequest(req);
-    let shadow: ShadowReservation | null = await shadowReserveForGenerate({
-      authUserId: authUser?.id,
-      guestSessionId: session.id,
+    if (!idempotencyKey) {
+      return err(
+        {
+          error: "Live generation requires a stable idempotency key",
+          code: "RESERVATION_FAILED",
+          session: publicSession(session),
+        },
+        400
+      );
+    }
+    const reserved = await reserveStrictLiveGeneration({
+      userId: authUser.id,
+      idempotencyKey,
     });
+    if (!reserved.ok) {
+      const status =
+        reserved.code === "INSUFFICIENT_CREDITS"
+          ? 402
+          : reserved.code === "LIVE_ACCESS_REQUIRED"
+            ? 403
+            : 503;
+      return err(
+        {
+          error: reserved.error,
+          code: reserved.code,
+          need: reserved.need,
+          have: reserved.have,
+          session: publicSession(session),
+        },
+        status
+      );
+    }
+    let liveReservation: StrictLiveReservation | null = reserved.reservation;
+    session = {
+      ...session,
+      plan: liveReservation.planId,
+      credits: reserved.availableCredits,
+    };
+    await saveSession(session);
+    const releaseReservation = async (
+      reason: string,
+      jobId?: string
+    ): Promise<boolean> => {
+      if (!liveReservation) return false;
+      const released = await releaseStrictLiveGeneration(
+        liveReservation,
+        reason,
+        jobId
+      );
+      if (!released.ok) return false;
+      session = {
+        ...session,
+        credits: released.data.wallet.availableCredits,
+      };
+      await saveSession(session);
+      liveReservation = null;
+      return true;
+    };
 
     const model = modelForTier({
-      freeTier,
+      freeTier: false,
       prefer: modelPref as ModelPreference,
     });
 
@@ -433,7 +495,7 @@ export async function POST(req: Request) {
         model,
         watermark: plan.watermark,
         provider: "bytedance-seedance",
-        idempotencyKey,
+        idempotencyKey: ledgerIdempotencyKey,
         // Stamp ratio/duration at open so Library remake after fail/cancel
         // still carries the attempted run (not only success completeSync).
         duration: secs,
@@ -451,17 +513,17 @@ export async function POST(req: Request) {
       process.env.NODE_ENV !== "production" &&
       process.env.VERCEL_ENV !== "production";
     if (forceFail) {
-      session = refundCredits(session, check.cost);
-      await saveSession(session);
-      await shadowRelease(shadow, "force_fail");
-      shadow = null;
+      const released = await releaseReservation("force_fail", liveJobId);
       const failBody: GenerateErrorBody = {
         error:
-          "Forced generate failure (PIKBO_FORCE_GENERATE_FAIL) — credits restored",
+          released
+            ? "Forced generate failure (PIKBO_FORCE_GENERATE_FAIL) — credits restored"
+            : "Forced generate failure — reservation release needs review",
         code: "GENERATION_FAILED",
         model,
         session: publicSession(session),
-        creditsRefunded: true,
+        creditsRefunded: released,
+        ...(!released ? { refundUnconfirmed: true } : {}),
       };
       noteFailed(session.id, preset.slug, failBody, liveJobId);
       return err(failBody, 500);
@@ -474,29 +536,27 @@ export async function POST(req: Request) {
       try {
         blob = await (await fetch(image)).blob();
       } catch {
-        session = refundCredits(session, check.cost);
-        await saveSession(session);
-        await shadowRelease(shadow, "invalid_image");
+        const released = await releaseReservation("invalid_image", liveJobId);
         const failBody: GenerateErrorBody = {
           error: "Could not read image data",
           code: "INVALID_REQUEST",
           model,
           session: publicSession(session),
-          creditsRefunded: true,
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true } : {}),
         };
         noteFailed(session.id, preset.slug, failBody, liveJobId);
         return err(failBody, 400);
       }
       if (!blob || blob.size < 32) {
-        session = refundCredits(session, check.cost);
-        await saveSession(session);
-        await shadowRelease(shadow, "empty_image");
+        const released = await releaseReservation("empty_image", liveJobId);
         const failBody: GenerateErrorBody = {
           error: "Image data empty or too small",
           code: "INVALID_REQUEST",
           model,
           session: publicSession(session),
-          creditsRefunded: true,
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true } : {}),
         };
         noteFailed(session.id, preset.slug, failBody, liveJobId);
         return err(failBody, 400);
@@ -504,7 +564,10 @@ export async function POST(req: Request) {
       const file = new File([blob], "toy.png", {
         type: blob.type || "image/png",
       });
-      const imageUrl = await fal.storage.upload(file);
+      const imageUrl = await invokeReservedProvider(
+        reserved.reservation,
+        () => fal.storage.upload(file)
+      );
 
       const input: Record<string, unknown> = {
         prompt,
@@ -518,23 +581,26 @@ export async function POST(req: Request) {
         input.seed = Math.floor(seed);
       }
 
-      const result = await fal.subscribe(model, {
-        input,
-        logs: false,
-      });
+      const result = await invokeReservedProvider(
+        reserved.reservation,
+        () =>
+          fal.subscribe(model, {
+            input,
+            logs: false,
+          })
+      );
 
       const data = result.data as { video?: { url?: string } };
       const videoUrl = data?.video?.url;
       if (!videoUrl) {
-        session = refundCredits(session, check.cost);
-        await saveSession(session);
-        await shadowRelease(shadow, "model_empty");
+        const released = await releaseReservation("model_empty", liveJobId);
         const failBody: GenerateErrorBody = {
           error: "Model returned no video",
           code: "MODEL_EMPTY",
           model,
           session: publicSession(session),
-          creditsRefunded: true,
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true } : {}),
         };
         noteFailed(session.id, preset.slug, failBody, liveJobId);
         return err(failBody, 502);
@@ -542,21 +608,32 @@ export async function POST(req: Request) {
       // Refuse non-http(s) / non-relative deliverables (open-redirect / injection).
       // Code must be UNSAFE_URL (image + client + downloads parity — not MODEL_EMPTY).
       if (!isSafeDeliverableUrl(videoUrl)) {
-        session = refundCredits(session, check.cost);
-        await saveSession(session);
-        await shadowRelease(shadow, "unsafe_url");
+        const released = await releaseReservation("unsafe_url", liveJobId);
         const failBody: GenerateErrorBody = {
           error: "Model returned an unsafe video URL — credits restored",
           code: "UNSAFE_URL",
           model,
           session: publicSession(session),
-          creditsRefunded: true,
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true } : {}),
         };
         noteFailed(session.id, preset.slug, failBody, liveJobId);
         return err(failBody, 502);
       }
 
-      await shadowSettle(shadow, result.requestId);
+      const captured = await settleStrictLiveGeneration(
+        reserved.reservation,
+        result.requestId || liveJobId || reserved.reservation.reservationId
+      );
+      if (!captured.ok) {
+        console.error(
+          "[live-reservation] capture failed",
+          captured.code,
+          captured.error
+        );
+      } else {
+        liveReservation = null;
+      }
       let ledgerJobId = liveJobId;
       try {
         const job = completeSyncGenerateJob({
@@ -570,7 +647,7 @@ export async function POST(req: Request) {
           duration: secs,
           aspectRatio: aspect,
           resolution,
-          costCredits: check.cost,
+          costCredits: reserved.reservation.credits,
           creditsOutcome: "10 used",
           requestId: result.requestId || liveJobId,
           provider: "bytedance-seedance",
@@ -601,15 +678,13 @@ export async function POST(req: Request) {
         provider: "bytedance-seedance",
         // Wave B — echo server-validated recipe + live settlement
         effect: preset.slug,
-        costCredits: check.cost,
+        costCredits: reserved.reservation.credits,
         creditsOutcome: "10 used",
       };
       return NextResponse.json(payload);
     } catch (e) {
       console.error("generate error:", model, e);
-      session = refundCredits(session, check.cost);
-      await saveSession(session);
-      await shadowRelease(shadow, "provider_error");
+      const released = await releaseReservation("provider_error", liveJobId);
       const raw =
         e && typeof e === "object" && "body" in e
           ? JSON.stringify((e as { body?: unknown }).body)
@@ -626,7 +701,8 @@ export async function POST(req: Request) {
         code: http.code,
         model,
         session: publicSession(session),
-        creditsRefunded: true,
+        creditsRefunded: released,
+        ...(!released ? { refundUnconfirmed: true } : {}),
         ...(http.retryAfterSec != null
           ? { retryAfterSec: http.retryAfterSec }
           : {}),
