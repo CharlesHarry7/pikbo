@@ -55,7 +55,6 @@ import { track } from "@/lib/analytics";
 import { JobIntentBar } from "@/components/JobIntentBar";
 import { AssetBriefPanel } from "@/components/AssetBriefPanel";
 import { DirectorPlanPanel } from "@/components/DirectorPlanPanel";
-import { WorkflowShelf } from "@/components/WorkflowShelf";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import {
   buildAssetBrief,
@@ -63,11 +62,7 @@ import {
   type ImageProbe,
 } from "@/lib/assetBrief";
 import { buildDirectorPlan } from "@/lib/directorPlan";
-import {
-  ActivationChecklist,
-  markActivationJob,
-  markActivationShared,
-} from "@/components/ActivationChecklist";
+import { markActivationJob, markActivationShared } from "@/components/ActivationChecklist";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import {
   GenerateWaitMobileStrip,
@@ -76,7 +71,6 @@ import {
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { useI18n } from "@/components/LanguageProvider";
 import { getJobIntent, JOB_INTENTS, type JobIntentId } from "@/lib/jobIntents";
-import type { Workflow } from "@/lib/workflows";
 import {
   composeExtraWithIdentity,
   hydrateToyIdentityFromQuery,
@@ -213,7 +207,7 @@ export function CreateStudio({
   const [imageProbe, setImageProbe] = useState<ImageProbe | null>(null);
   /** True when still is official Lab sample (not customer SKU) */
   const [labStill, setLabStill] = useState(false);
-  const [briefCollapsed, setBriefCollapsed] = useState(false);
+  const [briefCollapsed, setBriefCollapsed] = useState(true);
   /** Phase C-lite: claimed angles + secondary still (client preview only). */
   const [fidelityAngles, setFidelityAngles] = useState<string[]>([]);
   const [secondaryStill, setSecondaryStill] = useState<string | null>(null);
@@ -295,6 +289,8 @@ export function CreateStudio({
     useState<RequestCreditState>(null);
   /** In-flight generate abort — cancel marks refund unconfirmed if network cut mid-debit. */
   const generateAbortRef = useRef<AbortController | null>(null);
+  /** Avoid duplicate quote-view events while React rerenders the same quote. */
+  const quoteEventRef = useRef("");
   const toast = useToast();
 
   useEffect(() => {
@@ -339,6 +335,12 @@ export function CreateStudio({
     setEffect(slug);
     const p = PRESETS.find((x) => x.slug === slug);
     if (!p) return;
+    track({
+      event: "recipe_selected",
+      path: "/create",
+      recipe: slug,
+      demo: demoMode,
+    });
     // Free trial: always 5s (unit economics)
     const free = session?.plan === "free" || session?.watermark;
     setDuration(!free && p.duration === 10 ? 10 : 5);
@@ -509,7 +511,7 @@ export function CreateStudio({
       setAssetId(null);
       setImageProbe(null);
       setLabStill(Boolean(opts?.labSample));
-      setBriefCollapsed(false);
+      setBriefCollapsed(true);
       setFidelityAngles([]);
       setSecondaryStill(null);
       briefAutoAppliedRef.current = false;
@@ -519,6 +521,15 @@ export function CreateStudio({
         path: "/create",
         recipe: effect,
         meta: { bytes: dataUrl.length, lab: Boolean(opts?.labSample) },
+      });
+      track({
+        event: "asset_upload_complete",
+        path: "/create",
+        recipe: effect,
+        demo: Boolean(opts?.labSample),
+        meta: {
+          source: opts?.labSample ? "official_lab" : "owned_upload",
+        },
       });
       // Geometry for Asset Brief (rule-based, not vision).
       void probeImageSize(dataUrl).then((meta) => {
@@ -1204,6 +1215,10 @@ export function CreateStudio({
 
   const [showAllRecipes, setShowAllRecipes] = useState(false);
   const [jobIntentId, setJobIntentId] = useState<JobIntentId | null>(null);
+  const activeSellingTask =
+    jobIntentId ??
+    JOB_INTENTS.find((job) => !job.href && job.effect === effect)?.id ??
+    null;
   const featuredPresets = useMemo(() => {
     // Phase F: eight launch recipes first (HOME_PROOF + seller staples).
     const heroes = [
@@ -1229,7 +1244,17 @@ export function CreateStudio({
 
   function applyJobIntent(id: JobIntentId) {
     const job = getJobIntent(id);
-    if (!job || job.href) return;
+    if (!job) return;
+    if (job.href) {
+      track({
+        event: "recipe_selected",
+        path: "/create",
+        recipe: "seller-starter-pack",
+        demo: demoMode,
+        meta: { job: id, outputs: 3, credits: demoMode ? 0 : 30 },
+      });
+      return;
+    }
     setJobIntentId(id);
     selectEffect(job.effect);
     setAspectRatio(job.aspectRatio);
@@ -1382,36 +1407,25 @@ export function CreateStudio({
     jobIntentId,
   ]);
 
-  /** Yiha/lego mini-app pick: prefill Create without full remount when possible */
-  function applyWorkflow(w: Workflow) {
-    if (w.href.includes("mode=seller-pack")) {
-      window.location.href = w.href;
-      return;
-    }
-    if (w.jobId) {
-      const job = getJobIntent(w.jobId);
-      if (job?.href) {
-        window.location.href = job.href;
-        return;
-      }
-      if (job) {
-        applyJobIntent(job.id);
-        return;
-      }
-    }
-    if (w.effect) {
-      selectEffect(w.effect);
-      if (w.aspectRatio) setAspectRatio(w.aspectRatio);
-      markActivationJob();
-      track({
-        event: "recipe_use",
-        path: "/create",
-        recipe: w.effect,
-        meta: { workflow: w.id },
-      });
-      toast(`${w.label} · recipe ready`);
-    }
-  }
+  useEffect(() => {
+    if (!image) return;
+    const credits = demoMode ? 0 : CREDITS_PER_VIDEO;
+    const signature = `${effect}:${credits}:${effectiveDuration}:${aspectRatio}`;
+    if (quoteEventRef.current === signature) return;
+    quoteEventRef.current = signature;
+    track({
+      event: "generation_quote_view",
+      path: "/create",
+      recipe: effect,
+      demo: demoMode,
+      meta: {
+        outputs: 1,
+        credits,
+        duration_seconds: effectiveDuration,
+        aspect_ratio: aspectRatio,
+      },
+    });
+  }, [image, effect, demoMode, effectiveDuration, aspectRatio]);
 
   return (
     <div className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0">
@@ -1419,63 +1433,6 @@ export function CreateStudio({
       <div className="hidden lg:block">
         <GenerateSuiteChrome compact />
       </div>
-      {/* HF-style model/mode strip — hide on 390px so first-run stays upload→recipe→generate */}
-      <div className="hidden border-b border-white/10 bg-[#050506] px-3 py-1.5 sm:block sm:px-4">
-        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-1.5 text-[11px]">
-          <span className="mr-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">
-            Video
-          </span>
-          <button
-            type="button"
-            className="rounded-full border border-[#c8ff3d]/50 bg-[#c8ff3d]/15 px-3 py-1 font-black text-[#c8ff3d] shadow-[0_0_16px_rgba(200,255,61,0.15)]"
-          >
-            Seedance · live
-          </button>
-          <span className="rounded-full border border-white/10 px-2.5 py-1 text-white/30">
-            Kling · Soon
-          </span>
-          <span className="rounded-full border border-white/10 px-2.5 py-1 text-white/30">
-            Veo · Soon
-          </span>
-          <span className="rounded-full border border-white/10 px-2.5 py-1 text-white/30">
-            Sora · Soon
-          </span>
-          <span className="mx-1 hidden h-4 w-px bg-white/10 sm:inline" />
-          <Link
-            href="/image"
-            className="rounded-full border border-white/10 px-2.5 py-1 text-white/40 hover:border-white/25 hover:text-white/70"
-          >
-            Image · optional
-          </Link>
-          <Link
-            href="/create?mode=seller-pack"
-            className="ml-auto rounded-full border border-white/10 px-2.5 py-1 font-semibold text-[#c8ff3d]/90 hover:border-[#c8ff3d]/40"
-          >
-            Seller Starter Pack · 3 clips →
-          </Link>
-          <Link
-            href="/flow"
-            className="rounded-full border border-white/10 px-2.5 py-1 text-white/40 hover:border-white/25 hover:text-white/70"
-            title="Preview media wall — not a live Seedance job"
-          >
-            Flow · Preview
-          </Link>
-        </div>
-      </div>
-      {/* Activation + workflow shelf: desktop density; goals on all viewports (CD Phase A) */}
-      <div className="hidden lg:block">
-        <ActivationChecklist
-          hasImage={Boolean(image)}
-          hasGenerated={status === "done" || versions.length > 0}
-        />
-        <WorkflowShelf
-          compact
-          activeId={jobIntentId}
-          onPick={applyWorkflow}
-        />
-      </div>
-      {/* Creative Director: commercial goal before model/recipe density */}
-      <JobIntentBar activeId={jobIntentId} onPick={applyJobIntent} />
       {/* ── Mode banner: demo vs live (W5) · tighter on phone ── */}
       <div
         role="status"
@@ -1654,9 +1611,9 @@ export function CreateStudio({
       </div>
 
       {/* HF Generate: narrow recipe rail · controls · dominant result stage */}
-      <div className="grid flex-1 lg:min-h-0 lg:grid-cols-[220px_minmax(280px,0.8fr)_minmax(0,1.4fr)] xl:grid-cols-[240px_minmax(300px,0.75fr)_minmax(0,1.5fr)]">
-        {/* ── Recipe rail (desktop) — HF Viral Presets density ── */}
-        <aside className="hidden max-h-[calc(100vh-7rem)] overflow-y-auto border-r border-white/[0.07] bg-[#050506] p-2.5 lg:block">
+      <div className="grid flex-1 lg:min-h-0 lg:grid-cols-[minmax(320px,0.85fr)_minmax(0,1.4fr)]">
+        {/* Full recipe catalog is retained for future use but hidden from first run. */}
+        <aside className="hidden">
           <p className="mb-0.5 px-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]/90">
             Toy recipes
           </p>
@@ -1857,97 +1814,10 @@ export function CreateStudio({
                 onChange={onFile}
               />
             </label>
-            {/* CD Phase B: Asset Brief + character bible draft after photo lands */}
-            {image && assetBrief.ready ? (
-              <AssetBriefPanel
-                className="mt-3"
-                brief={assetBrief}
-                identity={toyIdentity}
-                onIdentityPatch={updateToyIdentity}
-                onPickRecipe={(slug) => {
-                  selectEffect(slug);
-                  track({
-                    event: "recipe_use",
-                    path: "/create",
-                    recipe: slug,
-                    meta: { source: "asset_brief" },
-                  });
-                }}
-                fidelityAngles={fidelityAngles}
-                onToggleAngle={(angle) => {
-                  setFidelityAngles((prev) =>
-                    prev.includes(angle)
-                      ? prev.filter((a) => a !== angle)
-                      : [...prev, angle].slice(0, 6)
-                  );
-                }}
-                secondaryStill={secondaryStill}
-                onSecondaryStill={setSecondaryStill}
-                collapsed={briefCollapsed}
-                onToggle={() => setBriefCollapsed((v) => !v)}
-              />
-            ) : null}
-            {/* Lab samples live after recipe (Phase F first-run order). */}
           </div>
 
-          {/* Step 2 — Recipe (mobile chips; desktop uses rail) */}
-          <div className="lg:hidden" data-first-run-step="recipe">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--fg-muted)]">
-              <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black">
-                2
-              </span>
-              Choose recipe
-            </p>
-            <input
-              value={presetFilter}
-              onChange={(e) => setPresetFilter(e.target.value)}
-              placeholder="Search spin, unbox…"
-              className="mb-2 w-full rounded-lg border border-[var(--border)] bg-[var(--bg-soft)] px-2.5 py-2 text-xs outline-none focus:border-[var(--brand)]"
-            />
-            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {(showAllRecipes
-                ? featuredPresets
-                : featuredPresets.slice(0, 8)
-              ).map((p) => (
-                <button
-                  key={p.slug}
-                  type="button"
-                  onClick={() => selectEffect(p.slug)}
-                  className={`min-w-[122px] shrink-0 rounded-xl border px-2.5 py-2.5 text-left transition duration-200 ${
-                    effect === p.slug
-                      ? "border-[var(--mint)] bg-[var(--mint)]/12 ring-1 ring-[var(--mint)]/45 shadow-[0_0_24px_rgba(200,255,61,0.12)]"
-                      : "border-white/10 bg-black/35 hover:border-white/25 hover:bg-black/50"
-                  }`}
-                >
-                  <span className="text-base">{p.emoji}</span>
-                  <span className="mt-1 block text-[11px] font-bold leading-tight text-white/95">
-                    {viralName(p.slug, p.name)}
-                  </span>
-                  <span className="mt-0.5 block text-[9px] text-[var(--fg-dim)]">
-                    {p.aspectRatio}
-                    {effect === p.slug ? " · active" : ""}
-                  </span>
-                </button>
-              ))}
-            </div>
-            {!presetFilter.trim() && (
-              <button
-                type="button"
-                onClick={() => setShowAllRecipes((v) => !v)}
-                className="mt-2 w-full rounded-lg border border-[var(--border)] px-2 py-1.5 text-[11px] font-semibold text-[var(--fg-muted)] hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
-              >
-                {showAllRecipes
-                  ? t("create.launchOnly")
-                  : t("create.moreRecipes")}
-              </button>
-            )}
-            <Link
-              href="/create?mode=seller-pack"
-              className="mt-2 inline-flex text-[11px] font-semibold text-[var(--mint)] hover:underline"
-            >
-              {t("create.sellerPackLink")}
-            </Link>
-          </div>
+          {/* Step 2 — choose a sales outcome; model and full catalog stay Advanced. */}
+          <JobIntentBar activeId={activeSellingTask} onPick={applyJobIntent} />
 
           {/* Collapsed Lab path — after recipe so first-run stays upload→recipe→generate */}
           {!image && (
@@ -2025,36 +1895,6 @@ export function CreateStudio({
                 {effectiveDuration}s · {isFree ? "480p" : resolution}
               </span>
             </div>
-            <div className="mt-3">
-              <p className="mb-1.5 text-[10px] font-semibold text-white/40">
-                {t("create.aspectChannel")}
-              </p>
-              <div className="flex gap-2">
-                {(
-                  [
-                    { id: "9:16" as const, label: "9:16", hint: "TikTok" },
-                    { id: "1:1" as const, label: "1:1", hint: "Etsy" },
-                    { id: "16:9" as const, label: "16:9", hint: "Wide" },
-                  ] as const
-                ).map((a) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    onClick={() => setAspectRatio(a.id)}
-                    className={`flex-1 rounded-lg border py-2 text-[11px] font-semibold transition ${
-                      aspectRatio === a.id
-                        ? "border-[var(--mint)] bg-[var(--mint)]/15 text-[var(--mint)] shadow-[0_0_16px_rgba(200,255,61,0.12)]"
-                        : "border-white/10 text-white/55 hover:border-white/25"
-                    }`}
-                  >
-                    <span className="block">{a.label}</span>
-                    <span className="mt-0.5 block text-[9px] font-medium opacity-70">
-                      {a.hint}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Advanced — models, duration, seed, prompt (collapsed by default) */}
@@ -2078,6 +1918,84 @@ export function CreateStudio({
                 id="create-advanced-options"
                 className="space-y-3 border-t border-[var(--border)] p-3"
               >
+                <div>
+                  <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
+                    Format / channel
+                  </p>
+                  <div className="mt-1.5 flex gap-2">
+                    {(
+                      [
+                        { id: "9:16" as const, label: "9:16", hint: "TikTok" },
+                        { id: "1:1" as const, label: "1:1", hint: "Listing" },
+                        { id: "16:9" as const, label: "16:9", hint: "Wide" },
+                      ] as const
+                    ).map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => setAspectRatio(a.id)}
+                        className={`flex-1 rounded-lg border py-2 text-[11px] font-semibold transition ${
+                          aspectRatio === a.id
+                            ? "border-[var(--mint)] bg-[var(--mint)]/15 text-[var(--mint)]"
+                            : "border-white/10 text-white/55 hover:border-white/25"
+                        }`}
+                      >
+                        <span className="block">{a.label}</span>
+                        <span className="mt-0.5 block text-[9px] font-medium opacity-70">
+                          {a.hint}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
+                    Full recipe catalog
+                  </p>
+                  <input
+                    value={presetFilter}
+                    onChange={(e) => setPresetFilter(e.target.value)}
+                    placeholder="Search spin, unbox, dance…"
+                    className="mt-1.5 w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2.5 py-2 text-xs outline-none focus:border-[var(--brand)]"
+                  />
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {(showAllRecipes
+                      ? featuredPresets
+                      : featuredPresets.slice(0, 8)
+                    ).map((p) => (
+                      <button
+                        key={p.slug}
+                        type="button"
+                        onClick={() => selectEffect(p.slug)}
+                        className={`min-w-0 rounded-xl border px-2.5 py-2 text-left transition ${
+                          effect === p.slug
+                            ? "border-[var(--mint)] bg-[var(--mint)]/12 text-[var(--mint)]"
+                            : "border-white/10 bg-black/35 text-white/70 hover:border-white/25"
+                        }`}
+                      >
+                        <span className="block text-[11px] font-bold leading-tight">
+                          {p.emoji} {viralName(p.slug, p.name)}
+                        </span>
+                        <span className="mt-0.5 block text-[9px] opacity-65">
+                          {p.aspectRatio} · {p.duration}s
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  {!presetFilter.trim() ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllRecipes((v) => !v)}
+                      className="mt-2 w-full rounded-lg border border-[var(--border)] px-2 py-1.5 text-[11px] font-semibold text-[var(--fg-muted)] hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
+                    >
+                      {showAllRecipes
+                        ? t("create.launchOnly")
+                        : t("create.moreRecipes")}
+                    </button>
+                  ) : null}
+                </div>
+
                 <div>
                   <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
                     Duration
@@ -2257,74 +2175,77 @@ export function CreateStudio({
                   </div>
                 </div>
 
-                {/* Toy Identity — advanced only (not first-run upload step) */}
-                <div className="rounded-xl border border-[var(--mint)]/15 bg-gradient-to-br from-[var(--mint)]/[0.06] to-black/30 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]/90">
-                        {t("create.toyIdentity")}
-                      </p>
-                      <p className="mt-0.5 text-[10px] leading-snug text-white/40">
-                        {t("create.toyIdentity.hint")}
-                      </p>
-                    </div>
-                    {(toyIdentity.sku || toyIdentity.preserve) && (
-                      <span className="shrink-0 rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/10 px-1.5 py-0.5 text-[9px] font-bold text-[var(--mint)]">
-                        {t("create.active")}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                    <label className="block">
-                      <span className="text-[10px] font-semibold text-[var(--fg-dim)]">
-                        {t("create.sku")}
-                      </span>
-                      <input
-                        value={toyIdentity.sku}
-                        onChange={(e) =>
-                          updateToyIdentity({ sku: e.target.value })
-                        }
-                        placeholder="e.g. Scout pink #3"
-                        maxLength={48}
-                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 text-xs outline-none transition focus:border-[var(--mint)] focus:ring-1 focus:ring-[var(--mint)]/30"
-                      />
-                    </label>
-                    <label className="block">
-                      <span className="text-[10px] font-semibold text-[var(--fg-dim)]">
-                        {t("create.preserve")}
-                      </span>
-                      <input
-                        value={toyIdentity.preserve}
-                        onChange={(e) =>
-                          updateToyIdentity({ preserve: e.target.value })
-                        }
-                        placeholder="paint lines, logo, sculpt"
-                        maxLength={120}
-                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 text-xs outline-none transition focus:border-[var(--mint)] focus:ring-1 focus:ring-[var(--mint)]/30"
-                      />
-                    </label>
-                  </div>
-                </div>
+                {image && assetBrief.ready ? (
+                  <AssetBriefPanel
+                    brief={assetBrief}
+                    identity={toyIdentity}
+                    onIdentityPatch={updateToyIdentity}
+                    onPickRecipe={(slug) => {
+                      selectEffect(slug);
+                      track({
+                        event: "recipe_use",
+                        path: "/create",
+                        recipe: slug,
+                        meta: { source: "asset_brief" },
+                      });
+                    }}
+                    fidelityAngles={fidelityAngles}
+                    onToggleAngle={(angle) => {
+                      setFidelityAngles((prev) =>
+                        prev.includes(angle)
+                          ? prev.filter((a) => a !== angle)
+                          : [...prev, angle].slice(0, 6)
+                      );
+                    }}
+                    secondaryStill={secondaryStill}
+                    onSecondaryStill={setSecondaryStill}
+                    collapsed={briefCollapsed}
+                    onToggle={() => setBriefCollapsed((v) => !v)}
+                  />
+                ) : null}
+
+                {image ? <DirectorPlanPanel plan={directorPlan} /> : null}
               </div>
             )}
           </div>
 
-          {/* CD Phase B2 Director Plan — confirm cost/fidelity before generate */}
-          <div data-first-run-step="plan">
-            <p className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-[var(--fg-dim)] lg:hidden">
+          {/* Step 3 — exact quote, rights confirmation, one Generate action. */}
+          <div
+            data-first-run-step="quote"
+            className="rounded-xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-3"
+          >
+            <p className="text-xs font-bold uppercase tracking-wide text-[var(--fg-muted)]">
               <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black">
                 3
               </span>
-              Director Plan
+              Review and generate
             </p>
             {image ? (
-              <DirectorPlanPanel plan={directorPlan} />
-            ) : (
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] p-3 text-xs text-[var(--fg-muted)]">
-                {t("create.beforeGen")} — upload a photo to see cost and
-                recipe plan.
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-white">
+                    {preset.emoji} {viralName(preset.slug, preset.name)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-white/50">
+                    {aspectRatio} · {effectiveDuration}s ·{" "}
+                    {isFree ? "480p" : resolution}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full border border-[var(--mint)]/30 bg-black/35 px-2.5 py-1 text-[11px] font-black text-[var(--mint)]">
+                  {demoMode ? "0 credits" : `${CREDITS_PER_VIDEO} credits`}
+                </span>
               </div>
+            ) : (
+              <p className="mt-2 text-xs text-[var(--fg-muted)]">
+                Upload one owned front photo to unlock the exact quote.
+              </p>
             )}
+            {image && demoMode ? (
+              <p className="mt-2 rounded-lg border border-white/10 bg-black/25 px-2.5 py-2 text-[10px] leading-snug text-white/55">
+                Cached official example · your uploaded photo is not sent to a
+                model or used in this preview.
+              </p>
+            ) : null}
             {trialDone && isFree && !demoMode ? (
               <p className="mt-2 text-[11px] text-[var(--fg-dim)]">
                 Cached Lab samples stay free ·{" "}
@@ -3046,65 +2967,19 @@ export function CreateStudio({
             {CREDITS_PER_VIDEO} credits
           </p>
         ) : null}
-        {image && !ownsRights ? (
-          <label className="mb-2 flex cursor-pointer items-start gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2 text-[10px] leading-snug text-[var(--fg-muted)]">
-            <input
-              type="checkbox"
-              checked={ownsRights}
-              onChange={(e) => setOwnsRights(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--mint)]"
-            />
-            <span>
-              I own this photo and may animate this toy.{" "}
-              <span
-                role="link"
-                tabIndex={0}
-                className="cursor-pointer text-[var(--mint)] underline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  document
-                    .getElementById("create-ownership")
-                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    document
-                      .getElementById("create-ownership")
-                      ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  }
-                }}
-              >
-                Full terms
-              </span>
-            </span>
-          </label>
-        ) : null}
         {!image ? (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                document
-                  .getElementById("create-photo-step")
-                  ?.scrollIntoView({ behavior: "smooth", block: "center" })
-              }
-              className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
-              data-first-run-action="upload"
-            >
-              Upload owned toy photo
-            </button>
-            <button
-              type="button"
-              disabled={sampleLoading || busy}
-              onClick={() => void loadSampleToy("scout", true)}
-              className="btn btn-ghost shrink-0 px-3 py-3 text-xs"
-              title="Official Lab sample · 0 credits cached demo"
-            >
-              Try free · Lab
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() =>
+              document
+                .getElementById("create-photo-step")
+                ?.scrollIntoView({ behavior: "smooth", block: "center" })
+            }
+            className="btn btn-primary w-full py-3 text-sm"
+            data-first-run-action="upload"
+          >
+            Upload owned toy photo
+          </button>
         ) : busy ? (
           <GenerateWaitMobileStrip
             elapsed={elapsed}
@@ -3112,33 +2987,25 @@ export function CreateStudio({
             onCancel={cancelInFlightGenerate}
           />
         ) : status === "done" && videoUrl ? (
-          <div className="flex gap-2">
-            <Link
-              href="/library"
-              className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
-            >
-              Library
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                if (!ownsRights) {
-                  document
-                    .getElementById("create-ownership")
-                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  return;
-                }
-                void generate();
+          <button
+            type="button"
+            onClick={() => {
+              if (!ownsRights) {
                 document
-                  .getElementById("create-result")
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              disabled={!ownsRights}
-              className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm disabled:opacity-50"
-            >
-              Generate again
-            </button>
-          </div>
+                  .getElementById("create-ownership")
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+              }
+              void generate();
+              document
+                .getElementById("create-result")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            disabled={!ownsRights}
+            className="btn btn-primary w-full py-3 text-sm disabled:opacity-50"
+          >
+            Generate again
+          </button>
         ) : (
           <button
             type="button"
