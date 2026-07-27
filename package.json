@@ -15,6 +15,7 @@
     "product-proof-smoke": "node scripts/product-proof-smoke.mjs",
     "recovery-cost-gate": "node scripts/recovery-cost-gate.mjs",
     "recovery-qa": "node scripts/recovery-qa.mjs",
+    "recovery-ledger": "node scripts/recovery-ledger.mjs",
     "softlive-checklist": "bash scripts/softlive-checklist.sh",
     "typecheck": "tsc --noEmit",
     "check:conflicts": "git grep -nE \"^(<<<<<<<|>>>>>>>|=======)\" -- app lib components && exit 1 || exit 0",

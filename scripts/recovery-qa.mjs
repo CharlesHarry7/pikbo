@@ -63,12 +63,34 @@ await assert.rejects(
   /LIVE_PROVIDER_REQUIRES_DURABLE_RESERVATION/
 );
 await assert.rejects(
-  invokeReservedProvider({ reservationId: "short", status: "reserved" }, provider),
+  invokeReservedProvider(
+    {
+      reservationId: "short",
+      status: "reserved",
+      providerAuthorized: true,
+    },
+    provider
+  ),
   /LIVE_PROVIDER_REQUIRES_DURABLE_RESERVATION/
 );
 await assert.rejects(
   invokeReservedProvider(
-    { reservationId: "reservation-settled-1", status: "settled" },
+    {
+      reservationId: "reservation-settled-1",
+      status: "settled",
+      providerAuthorized: true,
+    },
+    provider
+  ),
+  /LIVE_PROVIDER_REQUIRES_DURABLE_RESERVATION/
+);
+await assert.rejects(
+  invokeReservedProvider(
+    {
+      reservationId: "reservation-replay-1",
+      status: "reserved",
+      providerAuthorized: false,
+    },
     provider
   ),
   /LIVE_PROVIDER_REQUIRES_DURABLE_RESERVATION/
@@ -90,6 +112,7 @@ const result = await invokeReservedProvider(
   {
     reservationId: "reservation-test-1",
     status: "reserved",
+    providerAuthorized: true,
   },
   provider
 );
@@ -395,7 +418,9 @@ const strictLive = readFileSync(
 );
 assert.match(strictLive, /DURABLE_CREDITS_UNAVAILABLE/);
 assert.match(strictLive, /LIVE_ACCESS_REQUIRED/);
-assert.match(strictLive, /planId === "free"/);
+assert.match(strictLive, /supabaseReserveGenerationAtomic/);
+assert.match(strictLive, /providerAuthorized/);
+assert.match(strictLive, /JOB_IN_FLIGHT/);
 assert.doesNotMatch(
   strictLive,
   /shadowReserve|localStore|file.*wallet/i,

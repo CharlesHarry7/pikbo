@@ -499,11 +499,14 @@ export async function POST(req: Request) {
     const reserved = await reserveStrictLiveGeneration({
       userId: authUser.id,
       idempotencyKey: `image:${idempotencyKey}`,
+      effectSlug: "flux-toy-still",
     });
     if (!reserved.ok) {
       const status =
         reserved.code === "INSUFFICIENT_CREDITS"
           ? 402
+          : reserved.code === "JOB_IN_FLIGHT"
+            ? 409
           : reserved.code === "LIVE_ACCESS_REQUIRED"
             ? 403
             : 503;
@@ -525,20 +528,16 @@ export async function POST(req: Request) {
       credits: reserved.availableCredits,
     };
     await saveSession(session);
-    const releaseReservation = async (
-      reason: string,
-      jobId?: string
-    ): Promise<boolean> => {
+    const releaseReservation = async (reason: string): Promise<boolean> => {
       if (!liveReservation) return false;
       const released = await releaseStrictLiveGeneration(
         liveReservation,
-        reason,
-        jobId
+        reason
       );
       if (!released.ok) return false;
       session = {
         ...session,
-        credits: released.data.wallet.availableCredits,
+        credits: released.data.availableCredits,
       };
       await saveSession(session);
       liveReservation = null;
@@ -551,7 +550,7 @@ export async function POST(req: Request) {
       process.env.NODE_ENV !== "production" &&
       process.env.VERCEL_ENV !== "production";
     if (forceFail) {
-      const released = await releaseReservation("force_fail", liveJobId);
+      const released = await releaseReservation("force_fail");
       const failBody = {
         error:
           "Forced image failure (PIKBO_FORCE_GENERATE_FAIL) — credits restored",
@@ -607,7 +606,7 @@ export async function POST(req: Request) {
       };
       const imageUrl = data.images?.[0]?.url || data.image?.url;
       if (!imageUrl) {
-        const released = await releaseReservation("model_empty", liveJobId);
+        const released = await releaseReservation("model_empty");
         const failBody = {
           error: "No image returned",
           code: "MODEL_EMPTY" as const,
@@ -634,7 +633,7 @@ export async function POST(req: Request) {
       }
       // Parity with /api/generate — refuse non-http(s) open-redirect / injection URLs.
       if (!isSafeDeliverableUrl(imageUrl)) {
-        const released = await releaseReservation("unsafe_url", liveJobId);
+        const released = await releaseReservation("unsafe_url");
         const failBody = {
           error: "Model returned an unsafe image URL — credits restored",
           code: "UNSAFE_URL" as const,
@@ -675,9 +674,19 @@ export async function POST(req: Request) {
           captured.code,
           captured.error
         );
-      } else {
-        liveReservation = null;
+        return NextResponse.json(
+          {
+            error:
+              "The still was generated, but credits could not be finalized. The output is withheld while the durable reservation is reconciled; do not retry with the same idempotency key.",
+            code: "DURABLE_CREDITS_UNAVAILABLE",
+            model: IMAGE_MODEL,
+            jobId: reserved.reservation.jobId,
+            session: publicSession(session),
+          },
+          { status: 503 }
+        );
       }
+      liveReservation = null;
 
       let jobId = liveJobId;
       let requestId = providerRequestId || liveJobId;
@@ -715,7 +724,7 @@ export async function POST(req: Request) {
       });
     } catch (err) {
       console.error("image gen error:", err);
-      const released = await releaseReservation("provider_error", liveJobId);
+      const released = await releaseReservation("provider_error");
       const raw =
         err && typeof err === "object" && "body" in err
           ? JSON.stringify((err as { body?: unknown }).body)

@@ -12,6 +12,13 @@ Newest first. One block per meaningful landing.
 - Boss: re-copy `docs/ci/github-actions-ci.yml` → `.github/workflows/ci.yml` (OAuth lacks workflow scope).
 - Checks: recovery-qa + engine-smoke + typecheck PASS.
 
+### 2026-07-27 — [claude] R1a atomic durable generation ledger (source only)
+- Added one-transaction Supabase RPCs for reserve + job binding + ledger debit, capture and release; the wallet and entitlement rows are locked and duplicate user/idempotency requests are idempotent.
+- Only the transaction winner receives `providerAuthorized=true`; the provider guard rejects replay observers, missing reservations and insufficient balance before any paid call.
+- Migration preflight aborts on duplicate personal accounts or duplicate generation keys; SQL was **not** applied to Supabase and still requires a reviewed non-production integration run.
+- A provider success followed by an ambiguous capture failure now withholds output and reports settlement pending; it never claims `10 used` or a refund.
+- R1b remains open for retry tokens, fixed deadlines and reconciliation of ambiguous provider/capture outcomes.
+
 ### 2026-07-27 — [claude] R0 anonymous provider-cost gate
 - Anonymous and Free Create requests now return official cached demos at 0 credits even when `FAL_KEY` exists.
 - Live calls require verified Supabase auth, a non-Free durable account and a committed Supabase reservation; no Cookie/local-file fallback.
