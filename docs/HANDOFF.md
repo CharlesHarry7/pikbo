@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Job + Lab-sample remix contract
+- `createJobRemixHref` / `createLabSampleTryHref` / `createWorkbenchHref` in
+  lib/jobIntents.ts — effect+ratio+duration+channel (+ job= or try/sample).
+- Registries: workflows · catalog APPS · deliveryPack next/variant · CommandPalette
+  jobs · GenerateSuiteChrome Generate · Flow core-i2v · Pricing Animate.
+- FreeTrialCta · FailPanel Lab sample · Library session Lab sample use try remix.
+- softLaunch PRIMARY/MOBILE nav still bare /create (suite entry). Smoke locked.
+
 ### 2026-07-27 — [grok] Residual product Generate doors → createRemixHref
 - Page chrome + suite shelves (Library/Profile/Settings/Explore/Effects/Tools/
   Community/Apps/Guides/Modules/Flow/Models/Batch/Cinema/Status) +

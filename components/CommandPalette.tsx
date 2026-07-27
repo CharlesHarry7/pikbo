@@ -3,10 +3,16 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  createJobRemixHref,
+  createLabSampleTryHref,
+  createWorkbenchHref,
+} from "@/lib/jobIntents";
 import { PRESETS } from "@/lib/presets";
 import { createRemixHref } from "@/lib/remixIntent";
 
-const CMD_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const CMD_GENERATE_HREF = createWorkbenchHref();
+const CMD_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
 /**
  * Critical path first (GSC P0).
@@ -25,14 +31,17 @@ const LINKS = [
   },
   { href: "/for/photo-to-video-for-toys", label: "For photo → video toys" },
   { href: "/for/etsy-listing-videos", label: "For Etsy sellers" },
-  { href: "/create?mode=seller-pack", label: "Seller Pack · 3 clips" },
+  { href: createJobRemixHref("seller-pack"), label: "Seller Pack · 3 clips" },
   { href: "/modules", label: "Modules · job blocks" },
-  { href: "/create?job=etsy-listing", label: "Job · Etsy listing spin" },
-  { href: "/create?job=tiktok-hook", label: "Job · TikTok hook" },
-  { href: "/create?job=blind-box-drop", label: "Job · Blind-box drop" },
+  { href: createJobRemixHref("etsy-listing"), label: "Job · Etsy listing spin" },
+  { href: createJobRemixHref("tiktok-hook"), label: "Job · TikTok hook" },
+  {
+    href: createJobRemixHref("blind-box-drop"),
+    label: "Job · Blind-box drop",
+  },
   { href: "/library", label: "Library · device assets (Local)" },
   {
-    href: "/create?try=1&sample=scout",
+    href: CMD_LAB_SAMPLE_HREF,
     label: "Lab sample · 0 credits (cached)",
   },
   { href: "/flow", label: "Flow · Preview" },

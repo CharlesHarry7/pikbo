@@ -6,12 +6,13 @@ import { listLiveWorkflows, listPreviewWorkflows } from "@/lib/workflows";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { FlowMediaCard } from "@/components/FlowMediaCard";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
 
 /** Flow Generate doors — listing spin remix (ratio/duration/channel). */
-const FLOW_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const FLOW_GENERATE_HREF = createWorkbenchHref();
 
 export const metadata: Metadata = {
   title: "Flow · Creation matrix",
@@ -66,7 +67,7 @@ export default function FlowPage() {
       title: "Photo → Clip",
       blurb: "Main Generate workbench — one owned toy photo to short video.",
       // Workbench door (not forced Lab sample). Free trial CTA is in the header.
-      href: "/create",
+      href: FLOW_GENERATE_HREF,
       badge: "Core",
       tier: "core",
       demoId: "scout-spin",

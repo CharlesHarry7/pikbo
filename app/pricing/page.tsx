@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PLANS, CREDITS_PER_VIDEO, clipsFromCredits } from "@/lib/pricing";
 import { site } from "@/lib/site";
+import { createRemixHref } from "@/lib/remixIntent";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { PricingUsageEstimator } from "@/components/PricingUsageEstimator";
 import { PricingPlanCards } from "@/components/PricingPlanCards";
@@ -18,6 +19,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
+/** Pricing bottom Animate CTA — listing spin remix; source tags the door. */
+const PRICING_ANIMATE_HREF = createRemixHref(
+  "360-spin-showcase",
+  "pricing-bottom"
+);
 
 export const metadata: Metadata = {
   title: "Pricing for Toy Sellers and Collectors",
@@ -231,7 +238,12 @@ export default async function PricingPage({
               data-pricing-path="product-first"
             >
               <Button asChild>
-                <Link href="/create?source=pricing-bottom">Animate one SKU</Link>
+                <Link
+                  href={PRICING_ANIMATE_HREF}
+                  data-pricing-animate="remix"
+                >
+                  Animate one SKU
+                </Link>
               </Button>
               <Button asChild variant="secondary">
                 <Link href="/create?mode=seller-pack">Seller Pack</Link>

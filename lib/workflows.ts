@@ -7,6 +7,11 @@
  * Legal parity: structure/IA only. No competitor copy or media.
  */
 
+import {
+  createJobRemixHref,
+  createWorkbenchHref,
+} from "@/lib/jobIntents";
+
 export type WorkflowId =
   | "photo-to-clip"
   | "listing-spin"
@@ -46,7 +51,7 @@ export const WORKFLOWS: Workflow[] = [
     emoji: "🌀",
     label: "Listing Spin",
     blurb: "1:1 packshot turntable for Etsy & shop galleries",
-    href: "/create?job=etsy-listing",
+    href: createJobRemixHref("etsy-listing"),
     jobId: "etsy-listing",
     effect: "360-spin-showcase",
     aspectRatio: "1:1",
@@ -60,7 +65,7 @@ export const WORKFLOWS: Workflow[] = [
     emoji: "⚡",
     label: "TikTok Hook",
     blurb: "9:16 flash motion for the first 1–2 seconds",
-    href: "/create?job=tiktok-hook",
+    href: createJobRemixHref("tiktok-hook"),
     jobId: "tiktok-hook",
     effect: "paparazzi-flash",
     aspectRatio: "9:16",
@@ -74,7 +79,7 @@ export const WORKFLOWS: Workflow[] = [
     emoji: "📦",
     label: "Blind-box Drop",
     blurb: "Unbox beat for restocks and drop-day posts",
-    href: "/create?job=blind-box-drop",
+    href: createJobRemixHref("blind-box-drop"),
     jobId: "blind-box-drop",
     effect: "blind-box-unboxing",
     aspectRatio: "9:16",
@@ -88,7 +93,7 @@ export const WORKFLOWS: Workflow[] = [
     emoji: "✨",
     label: "Shelf Glam",
     blurb: "Clean studio hold for collectors and PDP",
-    href: "/create?job=shelf-display",
+    href: createJobRemixHref("shelf-display"),
     jobId: "shelf-display",
     effect: "display-case-glam",
     aspectRatio: "9:16",
@@ -102,7 +107,7 @@ export const WORKFLOWS: Workflow[] = [
     emoji: "🛍️",
     label: "Seller Pack",
     blurb: "Listing + reveal + social from one photo",
-    href: "/create?mode=seller-pack",
+    href: createJobRemixHref("seller-pack"),
     jobId: "seller-pack",
     effect: "360-spin-showcase",
     aspectRatio: "1:1",
@@ -116,7 +121,7 @@ export const WORKFLOWS: Workflow[] = [
     emoji: "🎬",
     label: "Photo → Clip",
     blurb: "Full workbench — pick any recipe yourself",
-    href: "/create",
+    href: createWorkbenchHref(),
     channel: "studio",
     live: true,
     badge: "Open",

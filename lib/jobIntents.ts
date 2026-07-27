@@ -6,6 +6,8 @@
  * Etsy/TikTok seller workflows, empty-state primary CTA research.
  */
 
+import { createRemixHref } from "@/lib/remixIntent";
+
 export type JobIntentId =
   | "etsy-listing"
   | "tiktok-hook"
@@ -72,4 +74,43 @@ export const JOB_INTENTS: JobIntent[] = [
 
 export function getJobIntent(id: string): JobIntent | undefined {
   return JOB_INTENTS.find((j) => j.id === id);
+}
+
+/**
+ * Outcome-first Create deep link: remix contract (effect/ratio/duration/channel)
+ * plus `job=` so CreateStudio can still highlight the commercial intent chip.
+ * Seller Pack keeps mode=seller-pack.
+ */
+export function createJobRemixHref(jobId: JobIntentId | string): string {
+  const intent = getJobIntent(jobId);
+  if (!intent) {
+    return createRemixHref("360-spin-showcase");
+  }
+  if (intent.href) return intent.href;
+  const base = createRemixHref(intent.effect, undefined, null, {
+    ratio: intent.aspectRatio,
+    channel: intent.channel,
+  });
+  const joiner = base.includes("?") ? "&" : "?";
+  return `${base}${joiner}job=${encodeURIComponent(intent.id)}`;
+}
+
+/** Lab sample first-run path — remix + try/sample flags CreateStudio hydrates. */
+export function createLabSampleTryHref(sampleId = "scout"): string {
+  const source =
+    sampleId === "scout"
+      ? "scout-spin"
+      : sampleId === "orbit"
+        ? "orbit-cgi"
+        : sampleId === "moon"
+          ? "moon-reveal"
+          : undefined;
+  const base = createRemixHref("360-spin-showcase", source);
+  const joiner = base.includes("?") ? "&" : "?";
+  return `${base}${joiner}try=1&sample=${encodeURIComponent(sampleId)}`;
+}
+
+/** Workbench Generate door with listing-spin remix (not bare /create). */
+export function createWorkbenchHref(): string {
+  return createRemixHref("360-spin-showcase");
 }

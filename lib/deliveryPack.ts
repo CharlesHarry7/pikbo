@@ -6,7 +6,11 @@
  * Just: after generate, what job remains for THIS clip.
  */
 
-import type { JobIntentId } from "@/lib/jobIntents";
+import {
+  createJobRemixHref,
+  createWorkbenchHref,
+  type JobIntentId,
+} from "@/lib/jobIntents";
 
 export type DeliveryItem = {
   id: string;
@@ -90,7 +94,7 @@ export function deliveryItemsForJob(
       items.push({
         id: "next",
         label: "Same photo → TikTok hook or Seller Pack",
-        href: "/create?job=tiktok-hook",
+        href: createJobRemixHref("tiktok-hook"),
       });
       break;
     case "tiktok-hook":
@@ -101,7 +105,7 @@ export function deliveryItemsForJob(
       items.push({
         id: "next",
         label: "Same photo → listing spin for the shop",
-        href: "/create?job=etsy-listing",
+        href: createJobRemixHref("etsy-listing"),
       });
       break;
     case "blind-box-drop":
@@ -112,7 +116,7 @@ export function deliveryItemsForJob(
       items.push({
         id: "next",
         label: "Same photo → shelf glam for PDP",
-        href: "/create?job=shelf-display",
+        href: createJobRemixHref("shelf-display"),
       });
       break;
     case "shelf-display":
@@ -202,7 +206,7 @@ export function sellerPackPostItems(opts?: {
     {
       id: "variant",
       label: "Single Generate for one more variant",
-      href: "/create",
+      href: createWorkbenchHref(),
     }
   );
   return items;

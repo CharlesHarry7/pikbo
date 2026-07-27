@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
+import { createLabSampleTryHref } from "@/lib/jobIntents";
 import {
   fetchMe,
   freeTrialExhausted,
@@ -10,6 +11,9 @@ import {
   type MeResponse,
 } from "@/lib/meClient";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
+
+/** Free Mini / Lab sample try path — remix + try=1&sample=scout. */
+const FREE_TRIAL_TRY_HREF = createLabSampleTryHref("scout");
 
 type Variant = "primary" | "ghost" | "mint";
 
@@ -81,10 +85,10 @@ export function FreeTrialCta({
     trialDone && !demo
       ? "/pricing"
       : demo
-        ? "/create?try=1&sample=scout"
+        ? FREE_TRIAL_TRY_HREF
         : onHome
           ? "/#home-tool"
-          : "/create?try=1&sample=scout";
+          : FREE_TRIAL_TRY_HREF;
   const label =
     trialDone && !demo
       ? labelPlans ?? "Compare plans"

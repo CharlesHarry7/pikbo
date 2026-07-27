@@ -157,7 +157,8 @@
 116. [x] Login/mobile guest Generate remix + DELETE cancel refundUnconfirmed
 117. [x] Header/Profile/Library Generate remix + Library cancel unconfirmed toast
 118. [x] Residual suite Generate doors → createRemixHref (Explore/Community/Apps/Flow/…)
-119. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+119. [x] createJobRemixHref registries + FreeTrial Lab sample remix try path
+120. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -171,8 +172,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Residual product-shell Generate doors use createRemixHref(360-spin), not bare /create.
-- Library/Profile/Settings/Explore/Community/Apps/Flow/Effects/Batch/Models/Tools locked.
+- createJobRemixHref: workflows/catalog/delivery/cmd job doors carry effect+ratio+channel+job.
+- FreeTrial + FailPanel + Library Lab sample use createLabSampleTryHref (remix + try/sample).
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 

@@ -2,6 +2,11 @@
  * Suite catalog (big-app structure) with Pikbo toy-native copy (own style).
  */
 
+import {
+  createJobRemixHref,
+  createWorkbenchHref,
+} from "@/lib/jobIntents";
+
 export type CatalogModel = {
   id: string;
   name: string;
@@ -131,7 +136,7 @@ export const APPS: CatalogApp[] = [
     name: "Photo → Clip",
     emoji: "🎬",
     blurb: "One toy photo in, scroll-stopping video out.",
-    href: "/create",
+    href: createWorkbenchHref(),
     category: "video",
     live: true,
   },
@@ -166,7 +171,7 @@ export const APPS: CatalogApp[] = [
     name: "360° Spin",
     emoji: "🌀",
     blurb: "Turntable showcase for listings.",
-    href: "/create?job=etsy-listing",
+    href: createJobRemixHref("etsy-listing"),
     category: "video",
     live: true,
   },
@@ -175,7 +180,7 @@ export const APPS: CatalogApp[] = [
     name: "Blind-box reveal",
     emoji: "📦",
     blurb: "The open-box beat collectors stop for.",
-    href: "/create?job=blind-box-drop",
+    href: createJobRemixHref("blind-box-drop"),
     category: "video",
     live: true,
   },
@@ -184,7 +189,7 @@ export const APPS: CatalogApp[] = [
     name: "TikTok Hook",
     emoji: "⚡",
     blurb: "9:16 flash motion for the first scroll-stop second.",
-    href: "/create?job=tiktok-hook",
+    href: createJobRemixHref("tiktok-hook"),
     category: "video",
     live: true,
   },
@@ -193,7 +198,7 @@ export const APPS: CatalogApp[] = [
     name: "Seller Pack",
     emoji: "🛍️",
     blurb: "Listing + reveal + social from one photo.",
-    href: "/create?mode=seller-pack",
+    href: createJobRemixHref("seller-pack"),
     category: "studio",
     live: true,
   },
@@ -202,7 +207,7 @@ export const APPS: CatalogApp[] = [
     name: "Shelf Glam",
     emoji: "✨",
     blurb: "Display-case hold for collectors and PDP.",
-    href: "/create?job=shelf-display",
+    href: createJobRemixHref("shelf-display"),
     category: "video",
     live: true,
   },

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/LanguageProvider";
 
@@ -13,7 +14,7 @@ import { useI18n } from "@/components/LanguageProvider";
 const MODE_DEFS = [
   {
     id: "generate" as const,
-    href: "/create",
+    href: createWorkbenchHref(),
     labelKey: "suite.mode.generate",
     blurbKey: "suite.mode.generate.blurb",
     preview: false,

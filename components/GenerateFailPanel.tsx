@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/LanguageProvider";
+import { createLabSampleTryHref } from "@/lib/jobIntents";
+
+const FAIL_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
 export type FailCreditHint =
   | null
@@ -145,8 +148,9 @@ export function GenerateFailPanel({
         ) : null}
         {showLabSample ? (
           <Link
-            href="/create?try=1&sample=scout"
+            href={FAIL_LAB_SAMPLE_HREF}
             className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-white/75 transition hover:border-white/30 hover:text-white"
+            data-fail-lab-sample="remix"
           >
             {t("fail.labSample")}
           </Link>

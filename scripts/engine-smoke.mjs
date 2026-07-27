@@ -3962,7 +3962,8 @@ const freeTrialCtaSrc = fs.readFileSync(
 );
 assert.match(freeTrialCtaSrc, /freeTrialExhausted/);
 assert.match(freeTrialCtaSrc, /\/pricing/);
-assert.match(freeTrialCtaSrc, /sample=scout/);
+// Lab sample try path carries remix contract (createLabSampleTryHref)
+assert.match(freeTrialCtaSrc, /createLabSampleTryHref|sample=scout/);
 const appsPageSrc = fs.readFileSync(join(root, "app/apps/page.tsx"), "utf8");
 assert.match(appsPageSrc, /APPS_FAQ|Apps FAQ/);
 assert.match(appsPageSrc, /FAQPage/);
@@ -4507,8 +4508,11 @@ const flowPageSrc = fs.readFileSync(join(root, "app/flow/page.tsx"), "utf8");
 assert.match(flowPageSrc, /core-cinema|Cinema board/);
 assert.match(flowPageSrc, /core-library|Library · Assets/);
 assert.match(flowPageSrc, /Core product path|Seller Pack/);
-// Photo→Clip workbench is /create (header FreeTrialCta owns sample path)
-assert.match(flowPageSrc, /id:\s*["']core-i2v["'][\s\S]*?href:\s*["']\/create["']/);
+// Photo→Clip workbench uses remix workbench href (FreeTrialCta owns sample path)
+assert.match(
+  flowPageSrc,
+  /id:\s*["']core-i2v["'][\s\S]*?href:\s*(FLOW_GENERATE_HREF|createWorkbenchHref|createRemixHref)/
+);
 
 // T8 Seller Pack recovery: a browser hint carries only identifiers/config;
 // current `/api/generations` rows own result + settlement truth after refresh.
@@ -5246,6 +5250,34 @@ for (const [rel, re] of residualGenerateDoors) {
   );
 }
 
+
+// Job intent remix: registries use createJobRemixHref (effect+ratio+job), not bare job=
+assert.match(jobIntentsSrc, /export function createJobRemixHref/);
+assert.match(jobIntentsSrc, /export function createLabSampleTryHref/);
+assert.match(jobIntentsSrc, /export function createWorkbenchHref/);
+assert.match(jobIntentsSrc, /job=\$\{|job=\$\{encodeURIComponent/);
+assert.match(workflowsSrc, /createJobRemixHref|createWorkbenchHref/);
+assert.doesNotMatch(workflowsSrc, /href:\s*["']\/create\?job=/);
+assert.doesNotMatch(workflowsSrc, /href:\s*["']\/create["']/);
+const appsCatalogSrc = fs.readFileSync(join(root, "lib/catalog.ts"), "utf8");
+assert.match(appsCatalogSrc, /createJobRemixHref|createWorkbenchHref/);
+assert.doesNotMatch(appsCatalogSrc, /href:\s*["']\/create\?job=/);
+assert.match(
+  fs.readFileSync(join(root, "lib/deliveryPack.ts"), "utf8"),
+  /createJobRemixHref|createWorkbenchHref/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/GenerateSuiteChrome.tsx"), "utf8"),
+  /createWorkbenchHref/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/GenerateFailPanel.tsx"), "utf8"),
+  /createLabSampleTryHref|data-fail-lab-sample=["']remix["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/pricing/page.tsx"), "utf8"),
+  /data-pricing-animate=["']remix["']/
+);
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

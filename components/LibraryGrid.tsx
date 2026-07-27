@@ -14,7 +14,10 @@ import {
   removeHistoryItem,
   type HistoryItem,
 } from "@/lib/history";
+import { createLabSampleTryHref } from "@/lib/jobIntents";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
+
+const LIBRARY_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 import {
   freeLiveDownloadBlockReason,
   interpretDownloadHead,
@@ -335,7 +338,7 @@ function SessionJobsPanel({
                 j.errorCode === "REQUEST_CANCELED" ||
                 j.status === "canceled") ? (
                 <Link
-                  href="/create?try=1&sample=scout"
+                  href={LIBRARY_LAB_SAMPLE_HREF}
                   className="text-white/55 hover:text-white hover:underline"
                   title="Lab sample · 0 credits if live is blocked"
                   data-session-lab="sample"
