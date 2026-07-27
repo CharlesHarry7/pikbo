@@ -70,7 +70,14 @@ type SessionJobsMeta = {
   jobTimeoutMs: number | null;
   timedOutThisSweep: number;
   mode: string | null;
+  /** Server newest-first page size (GET listLimit). */
+  listLimit: number | null;
+  /** How many job rows were returned this poll. */
+  listed: number;
 };
+
+/** Match server SESSION_JOBS_LIST_LIMIT — do not silently drop to 12. */
+const SESSION_JOBS_UI_LIMIT = 50;
 
 const EMPTY_BY_STATUS: SessionByStatus = {
   queued: 0,
@@ -115,16 +122,27 @@ function SessionJobsPanel({
   onDownload: (job: SessionJob) => void;
 }) {
   if (jobs.length === 0) return null;
-  const { byStatus, open, jobTimeoutMs, timedOutThisSweep } = meta;
+  const { byStatus, open, jobTimeoutMs, timedOutThisSweep, listed, listLimit } =
+    meta;
   const timeoutMin =
     typeof jobTimeoutMs === "number" && jobTimeoutMs > 0
       ? Math.round(jobTimeoutMs / 60000)
       : null;
+  const histogramTotal =
+    byStatus.queued +
+    byStatus.running +
+    byStatus.succeeded +
+    byStatus.failed +
+    byStatus.canceled;
+  const pageCap = listLimit ?? SESSION_JOBS_UI_LIMIT;
+  const truncated = histogramTotal > listed && listed > 0;
 
   return (
     <section
       className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4"
       data-library-panel="session-jobs"
+      data-session-list-limit={pageCap}
+      data-session-listed={listed}
     >
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
@@ -133,6 +151,12 @@ function SessionJobsPanel({
             {open > 0 ? (
               <span className="ml-1.5 font-bold text-[var(--mint)]">
                 · {open} open
+              </span>
+            ) : null}
+            {listed > 0 ? (
+              <span className="ml-1.5 font-semibold text-white/45">
+                · showing {listed}
+                {histogramTotal > listed ? ` of ${histogramTotal}` : ""}
               </span>
             ) : null}
             {meta.mode ? (
@@ -161,6 +185,13 @@ function SessionJobsPanel({
               <span className="text-[var(--fg-dim)]">
                 {" "}
                 Open jobs time out after ~{timeoutMin}m without poll.
+              </span>
+            ) : null}
+            {truncated ? (
+              <span className="text-amber-100/75">
+                {" "}
+                Newest {pageCap} rows listed — histogram counts the full session
+                ledger on this instance.
               </span>
             ) : null}
           </p>
@@ -360,6 +391,8 @@ export function LibraryGrid() {
     jobTimeoutMs: null,
     timedOutThisSweep: 0,
     mode: null,
+    listLimit: SESSION_JOBS_UI_LIMIT,
+    listed: 0,
   });
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [forkingId, setForkingId] = useState<string | null>(null);
@@ -373,9 +406,17 @@ export function LibraryGrid() {
     jobTimeoutMs?: number;
     timedOutThisSweep?: number;
     mode?: string;
+    listLimit?: number;
+    listed?: number;
   }) {
     if (!body?.ok || !Array.isArray(body.jobs)) return;
-    setSessionJobs(body.jobs.slice(0, 12));
+    // Honor server page (≤ SESSION_JOBS_UI_LIMIT) — do not silently drop to 12.
+    const page =
+      typeof body.listLimit === "number" && body.listLimit > 0
+        ? Math.min(body.listLimit, SESSION_JOBS_UI_LIMIT)
+        : SESSION_JOBS_UI_LIMIT;
+    const jobs = body.jobs.slice(0, page);
+    setSessionJobs(jobs);
     const bs = body.byStatus ?? {};
     const byStatus: SessionByStatus = {
       queued: Number(bs.queued) || 0,
@@ -398,6 +439,11 @@ export function LibraryGrid() {
           ? body.timedOutThisSweep
           : 0,
       mode: typeof body.mode === "string" ? body.mode : null,
+      listLimit: page,
+      listed:
+        typeof body.listed === "number" && body.listed >= 0
+          ? Math.min(body.listed, jobs.length)
+          : jobs.length,
     });
   }
 

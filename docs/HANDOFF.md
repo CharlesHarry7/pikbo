@@ -4,6 +4,16 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] GET generations full-session byStatus + touch all open
+- `touchOpenJobsForSession`: Library poll slides TTL on **every** open job
+  (not only the newest list page) — prevents false TIMEOUT on unlisted rows.
+- GET `byStatus` / `open` / `total` from full-session `countJobsForSession`
+  (queued/running split); list page still newest-N via `listLimit`/`listed`.
+- Library session panel: honor server page (≤50), show “N of total” when
+  truncated; drop silent `slice(0, 12)`.
+- Modules Photo→Clip: `createRemixHref(360-spin)` remix contract.
+- Smoke: touchOpenJobsForSession + no body.jobs.slice(0,12).
+
 ### 2026-07-27 — [grok] Full-session job HEAD counts + rate/balance download codes
 - `countJobsForSession`: HEAD `/api/generations` no longer slices newest-30
   (under-counted failed/canceled). Image listImageJobCountsForSession parity.

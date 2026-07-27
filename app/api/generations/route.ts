@@ -7,7 +7,7 @@ import {
   jobTimeoutMs,
   listJobsForSession,
   sweepTimedOutJobs,
-  touchJob,
+  touchOpenJobsForSession,
   toPublicJob,
 } from "@/lib/generationJobs";
 
@@ -118,30 +118,20 @@ export async function DELETE(req: Request) {
 export async function GET() {
   const session = await ensureSession();
   const timedOut = sweepTimedOutJobs();
-  // Newest page for Library recovery UI; HEAD uses full-session counts.
+  // Slide TTL on every open job for this session (not only the list page).
+  const touchedOpen = touchOpenJobsForSession(session.id);
+  // Newest page for Library recovery UI; histogram uses full-session counts.
   const listed = listJobsForSession(session.id, SESSION_JOBS_LIST_LIMIT);
-  // Library polls this list (not always /[id]) — slide TTL on every open job.
-  let touchedOpen = 0;
-  const raw = listed.map((j) => {
-    if (j.status !== "queued" && j.status !== "running") return j;
-    const next = touchJob(j.id);
-    if (next) {
-      touchedOpen += 1;
-      return next;
-    }
-    return j;
-  });
-  const jobs = raw.map((j) => toPublicJob(j, session.id));
+  const jobs = listed.map((j) => toPublicJob(j, session.id));
+  // Full-session histogram (HEAD parity) — not only the newest list page.
+  const full = countJobsForSession(session.id);
   const byStatus = {
-    queued: 0,
-    running: 0,
-    succeeded: 0,
-    failed: 0,
-    canceled: 0,
+    queued: full.queued,
+    running: full.running,
+    succeeded: full.succeeded,
+    failed: full.failed,
+    canceled: full.canceled,
   };
-  for (const j of raw) {
-    byStatus[j.status] = (byStatus[j.status] ?? 0) + 1;
-  }
   return NextResponse.json({
     ok: true,
     mode: "local-memory",
@@ -152,11 +142,16 @@ export async function GET() {
       .length,
     /** How many open jobs had updatedAt slid this poll. */
     touchedOpen,
-    /** Session-scoped histogram (Library recovery UI). */
+    /** Newest-first page size for `jobs` (histogram may count more). */
+    listLimit: SESSION_JOBS_LIST_LIMIT,
+    listed: jobs.length,
+    /** Full session job count (jobs[] may be a newest page only). */
+    total: full.total,
+    /** Full session-scoped histogram (Library recovery UI) — HEAD parity. */
     byStatus,
-    open: byStatus.queued + byStatus.running,
+    open: full.open,
     note:
-      "In-process ledger for soft-launch recovery. Not multi-node durable. Use POST /api/generate for work. Queued/running jobs past jobTimeoutMs fail with TIMEOUT. List + detail GET touch open jobs.",
+      "In-process ledger for soft-launch recovery. Not multi-node durable. Use POST /api/generate for work. Queued/running jobs past jobTimeoutMs fail with TIMEOUT. GET touches all open jobs; byStatus/open/total are full-session.",
     compatibility: {
       syncGenerate: "/api/generate",
       jobStatus: "/api/generations/[id]",

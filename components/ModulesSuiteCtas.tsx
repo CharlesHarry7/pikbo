@@ -9,7 +9,11 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
+import { createRemixHref } from "@/lib/remixIntent";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
+
+/** Default listing spin when opening Generate from Modules (remix contract). */
+const MODULES_PHOTO_CLIP_EFFECT = "360-spin-showcase";
 
 /**
  * Modules sticky header CTAs — freeTrial honesty (Phase F).
@@ -75,9 +79,10 @@ export function ModulesSuiteCtas() {
         {primaryLabel}
       </Link>
       <Link
-        href="/create"
+        href={createRemixHref(MODULES_PHOTO_CLIP_EFFECT)}
         className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"
         title="One owned toy photo → short listing or social clip"
+        data-modules-path="photo-clip"
       >
         Photo → Clip
       </Link>

@@ -5004,5 +5004,48 @@ assert.match(
   /PROVIDER_BALANCE/
 );
 
+// GET /api/generations: full-session byStatus + touch all open (not list page only)
+assert.match(
+  fs.readFileSync(join(root, "lib/generationJobs/store.ts"), "utf8"),
+  /export function touchOpenJobsForSession/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/generationJobs/index.ts"), "utf8"),
+  /touchOpenJobsForSession/
+);
+const genJobsGet = fs.readFileSync(
+  join(root, "app/api/generations/route.ts"),
+  "utf8"
+);
+assert.match(genJobsGet, /touchOpenJobsForSession\(session\.id\)/);
+assert.match(genJobsGet, /full\.queued|counts\.queued/);
+assert.match(genJobsGet, /total:\s*full\.total|total:\s*counts\.total/);
+assert.match(genJobsGet, /listLimit:\s*SESSION_JOBS_LIST_LIMIT/);
+assert.doesNotMatch(
+  genJobsGet,
+  /export async function GET[\s\S]{0,800}for \(const j of raw\)/
+);
+// Library session panel: honor server page size (not silent slice 12)
+const librarySessionList = fs.readFileSync(
+  join(root, "components/LibraryGrid.tsx"),
+  "utf8"
+);
+assert.match(librarySessionList, /SESSION_JOBS_UI_LIMIT\s*=\s*50/);
+assert.match(librarySessionList, /data-session-list-limit/);
+assert.match(librarySessionList, /showing \{listed\}|showing \$\{listed\}/);
+assert.doesNotMatch(
+  librarySessionList,
+  /setSessionJobs\(body\.jobs\.slice\(0,\s*12\)\)/
+);
+// Modules Photo→Clip uses remix contract (ratio/duration/channel)
+assert.match(
+  fs.readFileSync(join(root, "components/ModulesSuiteCtas.tsx"), "utf8"),
+  /createRemixHref\(MODULES_PHOTO_CLIP_EFFECT\)|createRemixHref\(["']360-spin/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/ModulesSuiteCtas.tsx"), "utf8"),
+  /data-modules-path=["']photo-clip["']/
+);
+
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

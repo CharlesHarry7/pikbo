@@ -377,33 +377,61 @@ export function listJobsForSession(
 }
 
 /**
- * Full session histogram for HEAD probes (Profile / Settings / Library).
- * Unlike listJobsForSession, this is not capped — a 30-row slice under-counted
+ * Full session histogram for HEAD/GET probes (Profile / Settings / Library).
+ * Unlike listJobsForSession, this is not capped — a page slice under-counted
  * failed/canceled and could hide open jobs older than the newest page.
  * Image listImageJobCountsForSession parity.
  */
 export function countJobsForSession(sessionId: string): {
   total: number;
   open: number;
+  queued: number;
+  running: number;
   succeeded: number;
   failed: number;
   canceled: number;
 } {
   sweepTimedOutJobs();
   let total = 0;
-  let open = 0;
+  let queued = 0;
+  let running = 0;
   let succeeded = 0;
   let failed = 0;
   let canceled = 0;
   for (const j of jobs.values()) {
     if (j.sessionId !== sessionId) continue;
     total += 1;
-    if (j.status === "queued" || j.status === "running") open += 1;
+    if (j.status === "queued") queued += 1;
+    else if (j.status === "running") running += 1;
     else if (j.status === "succeeded") succeeded += 1;
     else if (j.status === "failed") failed += 1;
     else if (j.status === "canceled") canceled += 1;
   }
-  return { total, open, succeeded, failed, canceled };
+  return {
+    total,
+    open: queued + running,
+    queued,
+    running,
+    succeeded,
+    failed,
+    canceled,
+  };
+}
+
+/**
+ * Slide TTL on every open job for this session (Library poll honesty).
+ * Must not be limited to the newest list page — older open children would
+ * false-TIMEOUT while only the first page is touched.
+ */
+export function touchOpenJobsForSession(sessionId: string): number {
+  sweepTimedOutJobs();
+  let n = 0;
+  for (const j of jobs.values()) {
+    if (j.sessionId !== sessionId) continue;
+    if (j.status !== "queued" && j.status !== "running") continue;
+    if (touchJob(j.id)) n += 1;
+  }
+  return n;
 }
 
 export function updateJob(
