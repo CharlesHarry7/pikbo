@@ -3,7 +3,6 @@ import { ensureSession } from "@/lib/session";
 import {
   cancelImageJob,
   getImageJob,
-  touchImageJob,
   toPublicImageJob,
 } from "@/lib/imageJobs";
 
@@ -13,17 +12,14 @@ type Props = { params: Promise<{ id: string }> };
 
 /**
  * Single still poll — parity with GET /api/generations/[id].
- * Sweeps TIMEOUT, touches running TTL, returns session-gated public job.
+ * R1b: read-only — never extends fixed deadlineAt.
  * includeDataUrl: owned demo stills can recover data: bodies (list omits them).
  */
 export async function GET(_req: Request, { params }: Props) {
   const { id } = await params;
   const session = await ensureSession();
-  let job = getImageJob(id);
-  if (job && job.sessionId === session.id) {
-    const touched = touchImageJob(job.id);
-    if (touched) job = touched;
-  }
+  // Read-only poll: getImageJob may sweep TIMEOUT but does not slide deadline.
+  const job = getImageJob(id);
   if (!job || job.sessionId !== session.id) {
     return NextResponse.json(
       {
@@ -41,8 +37,9 @@ export async function GET(_req: Request, { params }: Props) {
     mode: "local-memory",
     durable: false,
     job: toPublicImageJob(job, session.id, { includeDataUrl: true }),
-    /** True when this GET extended the open still timeout window. */
-    touched: job.status === "running" || job.status === "queued",
+    /** R1b: polls never extend deadlineAt. */
+    touched: false,
+    note: "Read-only poll — fixed deadlineAt; worker heartbeat is separate.",
   });
 }
 
