@@ -107,6 +107,16 @@ export default function ImageStudioPage() {
       } catch {
         /* private mode */
       }
+      // Library / deep-link recovery: ?prompt=&aspect=&job=
+      try {
+        const sp = new URLSearchParams(window.location.search);
+        const p = sp.get("prompt")?.trim();
+        const a = sp.get("aspect")?.trim();
+        if (p && p.length >= 4) setPrompt(p.slice(0, 2000));
+        if (a && ["1:1", "3:4", "16:9", "9:16"].includes(a)) setAspect(a);
+      } catch {
+        /* SSR / private */
+      }
     }, 0);
     let cancelled = false;
     void fetchMe().then((m) => {
@@ -144,6 +154,50 @@ export default function ImageStudioPage() {
     const poll = window.setInterval(() => {
       if (!cancelled) void loadSessionStills();
     }, 5000);
+
+    // Library Open still: ?job= loads single-job GET (includeDataUrl demos).
+    try {
+      const jobId = new URLSearchParams(window.location.search)
+        .get("job")
+        ?.trim();
+      if (jobId) {
+        void fetch(`/api/image/${encodeURIComponent(jobId)}`, {
+          method: "GET",
+          cache: "no-store",
+        })
+          .then((res) => (res.ok ? res.json() : null))
+          .then(
+            (data: {
+              job?: SessionStillJob & {
+                demo?: boolean;
+                creditsOutcome?: string;
+                demoReason?: string;
+              };
+            } | null) => {
+              if (cancelled || !data?.job) return;
+              const j = data.job;
+              if (j.status === "succeeded" && j.imageUrl) {
+                setImageUrl(j.imageUrl);
+                setDemo(Boolean(j.demo));
+                if (typeof j.demoReason === "string") setDemoReason(j.demoReason);
+                setLastSettlement(
+                  j.creditsOutcome === "0 cached" ||
+                    j.creditsOutcome === "10 used"
+                    ? j.creditsOutcome
+                    : null
+                );
+                if (j.prompt) setPrompt(j.prompt.slice(0, 2000));
+                if (j.aspect && ["1:1", "3:4", "16:9", "9:16"].includes(j.aspect)) {
+                  setAspect(j.aspect);
+                }
+              }
+            }
+          )
+          .catch(() => undefined);
+      }
+    } catch {
+      /* ignore */
+    }
 
     return () => {
       cancelled = true;

@@ -97,11 +97,252 @@ function isCancellableSessionJob(status: string): boolean {
   return status === "queued" || status === "running";
 }
 
+function isCancellableStillJob(status: string): boolean {
+  return status === "running";
+}
+
 function statusTone(status: string): string {
   if (status === "succeeded") return "text-[var(--mint)]";
   if (status === "failed" || status === "canceled") return "text-amber-200";
   if (status === "running" || status === "queued") return "text-[var(--brand-2)]";
   return "text-[var(--fg-dim)]";
+}
+
+/** Library → Still studio handoff (prompt/aspect/job for recovery). */
+function createStillStudioHref(opts?: {
+  prompt?: string;
+  aspect?: string;
+  jobId?: string;
+}): string {
+  const sp = new URLSearchParams();
+  const p = opts?.prompt?.trim();
+  if (p && p.length >= 4) sp.set("prompt", p.slice(0, 500));
+  const a = opts?.aspect?.trim();
+  if (a) sp.set("aspect", a.slice(0, 16));
+  const job = opts?.jobId?.trim();
+  if (job) sp.set("job", job.slice(0, 128));
+  const q = sp.toString();
+  return q ? `/image?${q}` : "/image";
+}
+
+type SessionStillJob = {
+  id: string;
+  status: string;
+  prompt?: string;
+  aspect?: string;
+  hasImage?: boolean;
+  imageUrl?: string;
+  demo?: boolean;
+  creditsOutcome?: string;
+  errorCode?: string;
+  error?: string;
+  requestId?: string;
+};
+
+type SessionStillMeta = {
+  open: number;
+  total: number;
+  succeeded: number;
+  failed: number;
+  canceled: number;
+  running: number;
+  jobTimeoutMs: number | null;
+  listLimit: number | null;
+  listed: number;
+  mode: string | null;
+};
+
+const EMPTY_STILL_META: SessionStillMeta = {
+  open: 0,
+  total: 0,
+  succeeded: 0,
+  failed: 0,
+  canceled: 0,
+  running: 0,
+  jobTimeoutMs: null,
+  listLimit: SESSION_JOBS_UI_LIMIT,
+  listed: 0,
+  mode: null,
+};
+
+/**
+ * Process-memory Flux still ledger (GET /api/image) — Library recovery parity
+ * with video SessionJobsPanel. Not multi-node durable.
+ */
+function SessionStillJobsPanel({
+  jobs,
+  meta,
+  cancellingId,
+  onCancel,
+  onRefresh,
+}: {
+  jobs: SessionStillJob[];
+  meta: SessionStillMeta;
+  cancellingId: string | null;
+  onCancel: (id: string) => void;
+  onRefresh: () => void;
+}) {
+  if (jobs.length === 0 && meta.total === 0) return null;
+  const timeoutSec =
+    typeof meta.jobTimeoutMs === "number" && meta.jobTimeoutMs > 0
+      ? Math.round(meta.jobTimeoutMs / 1000)
+      : null;
+  const histogramTotal =
+    meta.running + meta.succeeded + meta.failed + meta.canceled;
+
+  return (
+    <section
+      className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+      data-library-panel="session-stills"
+      data-session-stills-listed={meta.listed}
+    >
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-wider text-[var(--fg-dim)]">
+            Session stills · Flux process-memory
+            {meta.open > 0 ? (
+              <span className="ml-1.5 font-bold text-[var(--mint)]">
+                · {meta.open} open
+              </span>
+            ) : null}
+            {meta.listed > 0 ? (
+              <span className="ml-1.5 font-semibold text-white/45">
+                · showing {meta.listed}
+                {histogramTotal > meta.listed ? ` of ${histogramTotal}` : ""}
+              </span>
+            ) : null}
+            <span className="ml-1.5 font-semibold text-white/40">
+              · {meta.mode || "local-memory"} · not durable cloud
+            </span>
+          </p>
+          <p className="mt-1 text-xs text-[var(--fg-muted)]">
+            Optional packaging stills from{" "}
+            <Link href="/image" className="text-[var(--mint)] hover:underline">
+              Still studio
+            </Link>
+            . Cancel is ledger-only — in-flight Flux may still finish. TIMEOUT /
+            cancel stay refund unconfirmed until balance confirms.
+            {timeoutSec ? (
+              <span className="text-[var(--fg-dim)]">
+                {" "}
+                Open stills time out after ~{timeoutSec}s without poll.
+              </span>
+            ) : null}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={onRefresh}
+            className="text-[11px] font-semibold text-[var(--fg-muted)] hover:text-white"
+          >
+            Refresh
+          </button>
+          <Link
+            href="/image"
+            className="text-[11px] font-semibold text-[var(--mint)] hover:underline"
+            data-session-open-still="studio"
+          >
+            Open Still studio →
+          </Link>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
+        {(
+          [
+            ["running", meta.running],
+            ["succeeded", meta.succeeded],
+            ["failed", meta.failed],
+            ["canceled", meta.canceled],
+          ] as const
+        ).map(([label, n]) =>
+          n > 0 ? (
+            <span
+              key={label}
+              className={`rounded-full border border-white/10 bg-black/35 px-2 py-0.5 font-semibold tabular-nums ${statusTone(label)}`}
+            >
+              {label} {n}
+            </span>
+          ) : null
+        )}
+      </div>
+      {jobs.length > 0 ? (
+        <ul className="mt-3 space-y-2">
+          {jobs.map((j) => (
+            <li
+              key={j.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs"
+              data-library-still-job={j.status}
+            >
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-[var(--fg)]">
+                  {(j.prompt || j.id).slice(0, 56)}{" "}
+                  <span className={`font-normal ${statusTone(j.status)}`}>
+                    · {j.status}
+                    {j.errorCode ? ` · ${j.errorCode}` : ""}
+                    {j.creditsOutcome ? ` · ${j.creditsOutcome}` : ""}
+                  </span>
+                </p>
+                <p className="mt-0.5 truncate text-[10px] text-[var(--fg-dim)]">
+                  {j.demo ? "Cached demo · 0 credits" : "Live Flux"}
+                  {j.aspect ? ` · ${j.aspect}` : ""}
+                  {j.creditsOutcome === "refund unconfirmed" ||
+                  j.status === "canceled" ||
+                  j.errorCode === "TIMEOUT" ||
+                  j.errorCode === "CANCELED" ||
+                  j.errorCode === "PROVIDER_NETWORK" ||
+                  j.errorCode === "PROVIDER_TIMEOUT"
+                    ? " · refund unconfirmed"
+                    : ""}
+                </p>
+                {j.error ? (
+                  <p className="mt-0.5 truncate text-[10px] text-amber-100/80">
+                    {j.error}
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-2">
+                {j.status === "succeeded" && (j.imageUrl || j.hasImage) ? (
+                  <Link
+                    href={createStillStudioHref({ jobId: j.id })}
+                    className="text-[var(--mint)] hover:underline"
+                    data-library-still-open="job"
+                  >
+                    Open
+                  </Link>
+                ) : null}
+                {j.status === "failed" || j.status === "canceled" ? (
+                  <Link
+                    href={createStillStudioHref({
+                      prompt: j.prompt,
+                      aspect: j.aspect,
+                    })}
+                    className="text-[var(--mint)] hover:underline"
+                    data-library-still-retry="prompt"
+                    title="Opens Still studio with this prompt — Generate mints a new key"
+                  >
+                    Retry still
+                  </Link>
+                ) : null}
+                {isCancellableStillJob(j.status) ? (
+                  <button
+                    type="button"
+                    disabled={cancellingId === j.id}
+                    onClick={() => onCancel(j.id)}
+                    className="text-amber-100/80 hover:text-amber-50 disabled:opacity-50"
+                    data-library-still-cancel="ledger"
+                    title="Marks still ledger canceled — does not kill Flux mid-flight"
+                  >
+                    {cancellingId === j.id ? "Canceling…" : "Cancel ledger"}
+                  </button>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
 }
 
 /** Phase D: process-memory ledger — must show even when device history is empty. */
@@ -401,7 +642,14 @@ export function LibraryGrid() {
     listLimit: SESSION_JOBS_UI_LIMIT,
     listed: 0,
   });
+  /** Process-memory Flux stills (GET /api/image) — video ledger parity. */
+  const [sessionStills, setSessionStills] = useState<SessionStillJob[]>([]);
+  const [sessionStillMeta, setSessionStillMeta] =
+    useState<SessionStillMeta>(EMPTY_STILL_META);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancellingStillId, setCancellingStillId] = useState<string | null>(
+    null
+  );
   const [forkingId, setForkingId] = useState<string | null>(null);
   const toast = useToast();
 
@@ -472,6 +720,67 @@ export function LibraryGrid() {
     }
   }
 
+  function applyImageJobsBody(body: {
+    ok?: boolean;
+    jobs?: SessionStillJob[];
+    byStatus?: {
+      running?: number;
+      succeeded?: number;
+      failed?: number;
+      canceled?: number;
+    };
+    open?: number;
+    total?: number;
+    jobTimeoutMs?: number;
+    mode?: string;
+    listLimit?: number;
+    listed?: number;
+  }) {
+    if (!body?.ok || !Array.isArray(body.jobs)) return;
+    const page =
+      typeof body.listLimit === "number" && body.listLimit > 0
+        ? Math.min(body.listLimit, SESSION_JOBS_UI_LIMIT)
+        : SESSION_JOBS_UI_LIMIT;
+    const jobs = body.jobs.slice(0, page);
+    setSessionStills(jobs);
+    const bs = body.byStatus ?? {};
+    const running = Number(bs.running) || 0;
+    const succeeded = Number(bs.succeeded) || 0;
+    const failed = Number(bs.failed) || 0;
+    const canceled = Number(bs.canceled) || 0;
+    const openFromServer =
+      typeof body.open === "number" ? body.open : running;
+    setSessionStillMeta({
+      open: openFromServer,
+      total:
+        typeof body.total === "number"
+          ? body.total
+          : running + succeeded + failed + canceled,
+      running,
+      succeeded,
+      failed,
+      canceled,
+      jobTimeoutMs:
+        typeof body.jobTimeoutMs === "number" ? body.jobTimeoutMs : null,
+      mode: typeof body.mode === "string" ? body.mode : null,
+      listLimit: page,
+      listed:
+        typeof body.listed === "number" && body.listed >= 0
+          ? Math.min(body.listed, jobs.length)
+          : jobs.length,
+    });
+  }
+
+  async function refreshSessionStills() {
+    try {
+      const r = await fetch("/api/image", { cache: "no-store" });
+      const body = (await r.json()) as Parameters<typeof applyImageJobsBody>[0];
+      applyImageJobsBody(body);
+    } catch {
+      /* ignore */
+    }
+  }
+
   // Phase D: process-memory job ledger for this browser session (refresh recovery).
   useEffect(() => {
     let cancelled = false;
@@ -481,6 +790,13 @@ export function LibraryGrid() {
         .then((body: Parameters<typeof applyGenerationsBody>[0]) => {
           if (cancelled) return;
           applyGenerationsBody(body);
+        })
+        .catch(() => undefined);
+      void fetch("/api/image", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((body: Parameters<typeof applyImageJobsBody>[0]) => {
+          if (cancelled) return;
+          applyImageJobsBody(body);
         })
         .catch(() => undefined);
     }, 0);
@@ -506,6 +822,23 @@ export function LibraryGrid() {
     }, 8000);
     return () => window.clearInterval(t);
   }, [sessionJobs, sessionMeta.open]);
+
+  // Poll open stills (GET touches running TTL — same honesty as generations).
+  useEffect(() => {
+    const open =
+      sessionStillMeta.open > 0 ||
+      sessionStills.some((j) => isCancellableStillJob(j.status));
+    if (!open) return;
+    const t = window.setInterval(() => {
+      void fetch("/api/image", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((body: Parameters<typeof applyImageJobsBody>[0]) => {
+          applyImageJobsBody(body);
+        })
+        .catch(() => undefined);
+    }, 8000);
+    return () => window.clearInterval(t);
+  }, [sessionStills, sessionStillMeta.open]);
 
 
   async function downloadSessionJob(job: SessionJob) {
@@ -611,6 +944,44 @@ export function LibraryGrid() {
       toast("Network error canceling job");
     } finally {
       setCancellingId(null);
+    }
+  }
+
+  async function cancelSessionStill(id: string) {
+    setCancellingStillId(id);
+    try {
+      const res = await fetch(`/api/image/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        cache: "no-store",
+      });
+      const body = (await res.json()) as {
+        ok?: boolean;
+        message?: string;
+        note?: string;
+        code?: string;
+        creditsOutcome?: string;
+        refundUnconfirmed?: boolean;
+      };
+      if (!res.ok || !body.ok) {
+        toast(body.message || body.code || "Could not cancel still");
+      } else if (
+        body.refundUnconfirmed === true ||
+        body.creditsOutcome === "refund unconfirmed"
+      ) {
+        toast(
+          "Still ledger canceled · refund unconfirmed until balance settles (Flux may still complete)"
+        );
+      } else {
+        toast(
+          body.note ||
+            "Still ledger canceled · in-flight Flux may still complete"
+        );
+      }
+      await refreshSessionStills();
+    } catch {
+      toast("Network error canceling still");
+    } finally {
+      setCancellingStillId(null);
     }
   }
 
@@ -932,18 +1303,25 @@ export function LibraryGrid() {
           onRefresh={() => void refreshSessionJobs()}
           onDownload={(job) => void downloadSessionJob(job)}
         />
+        <SessionStillJobsPanel
+          jobs={sessionStills}
+          meta={sessionStillMeta}
+          cancellingId={cancellingStillId}
+          onCancel={(id) => void cancelSessionStill(id)}
+          onRefresh={() => void refreshSessionStills()}
+        />
         <div className="media-stage grid place-items-center py-16 text-center sm:py-20">
           <div className="relative z-[2] flex flex-col items-center px-4">
             <span className="grid h-14 w-14 place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] text-2xl text-[var(--mint)]">
               ▢
             </span>
             <p className="mt-4 font-display text-base font-bold uppercase tracking-tight text-white sm:text-lg">
-              {sessionJobs.length > 0
+              {sessionJobs.length > 0 || sessionStills.length > 0
                 ? "No clips saved on this device yet"
                 : "Your first listing clip starts on Create"}
             </p>
             <p className="mt-2 max-w-sm text-xs leading-relaxed text-[var(--fg-muted)]">
-              {sessionJobs.length > 0 ? (
+              {sessionJobs.length > 0 || sessionStills.length > 0 ? (
                 <>
                   Session jobs above are this server process only. Successful
                   generates also save under{" "}
@@ -1029,6 +1407,13 @@ export function LibraryGrid() {
         onForkRetry={(id) => void forkSessionRetry(id)}
         onRefresh={() => void refreshSessionJobs()}
         onDownload={(job) => void downloadSessionJob(job)}
+      />
+      <SessionStillJobsPanel
+        jobs={sessionStills}
+        meta={sessionStillMeta}
+        cancellingId={cancellingStillId}
+        onCancel={(id) => void cancelSessionStill(id)}
+        onRefresh={() => void refreshSessionStills()}
       />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

@@ -161,7 +161,8 @@
 120. [x] Residual Lab sample try → createLabSampleTryHref
 121. [x] GET /api/image session still ledger (list+touch+public) · Image recovery UI
 122. [x] GET/DELETE /api/image/[id] single still poll+touch · includeDataUrl · ledger cancel/retry UI
-123. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+123. [x] Library session stills panel (GET /api/image) · cancel · Open/Retry → /image?prompt&job
+124. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -175,8 +176,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- GET/DELETE /api/image/[id]: touch running TTL · includeDataUrl for demo recovery.
-- Image ledger strip: Cancel running · Retry failed/canceled · Open via single-job GET.
+- Library SessionStillJobsPanel: poll/cancel Flux stills · refund unconfirmed honesty.
+- /image hydrates ?prompt=&aspect=&job= from Library Open/Retry handoff.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 

@@ -1496,6 +1496,19 @@ assert.match(libraryFirstRun, /data-library-state="empty"/);
 assert.match(libraryFirstRun, /data-library-state="filled"/);
 assert.match(libraryFirstRun, /data-library-label="device-local"/);
 assert.match(libraryFirstRun, /data-library-panel="session-jobs"/);
+// Library still session recovery (GET /api/image parity with video ledger)
+assert.match(libraryFirstRun, /data-library-panel=["']session-stills["']/);
+assert.match(libraryFirstRun, /createStillStudioHref|data-library-still-retry/);
+assert.match(libraryFirstRun, /\/api\/image\/\$\{|\/api\/image\/\`|\/api\/image\//);
+assert.match(libraryFirstRun, /cancelSessionStill|data-library-still-cancel/);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /URLSearchParams|searchParams[\s\S]{0,80}prompt|get\(["']prompt["']\)/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /get\(["']job["']\)|jobId/
+);
 assert.match(libraryFirstRun, /Saved on this device/);
 assert.match(libraryFirstRun, /not durable cloud|not multi-device cloud/);
 assert.match(

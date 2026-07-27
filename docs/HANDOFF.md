@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Library session stills recovery
+- LibraryGrid SessionStillJobsPanel: GET /api/image list+poll (touch open TTL),
+  DELETE /api/image/[id] cancel with refund-unconfirmed toast.
+- Open → `/image?job=` · Retry → `/image?prompt=&aspect=` (createStillStudioHref).
+- /image hydrates query prompt/aspect/job via single-job GET includeDataUrl.
+- Smoke: data-library-panel=session-stills + cancel/retry locks.
+
 ### 2026-07-27 — [grok] GET/DELETE /api/image/[id] still poll parity
 - `getImageJob` · `touchImageJob` · `toPublicImageJob({ includeDataUrl })` for
   single-job recovery (list still omits multi-KB data: bodies).
