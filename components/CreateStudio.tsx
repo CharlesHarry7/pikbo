@@ -2704,7 +2704,7 @@ export function CreateStudio({
                 <p className="mx-auto mt-2 max-w-md text-center text-[11px] leading-relaxed text-[var(--fg-dim)]">
                   {demo
                     ? `${PROVENANCE.cachedDemo} — does not animate your upload.`
-                    : `${PROVENANCE.liveGeneration} — each run creates a separate version. Returned provider failures restore credits; ambiguous network results are marked unconfirmed.`}
+                    : `${PROVENANCE.liveGeneration} — each run creates a separate version. Provider failures restore credits when confirmed; TIMEOUT / network / cancel stay refund unconfirmed.`}
                 </p>
                 <div className="mt-4 flex flex-col items-center gap-2">
                   {downloadAllowed &&

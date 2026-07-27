@@ -5094,5 +5094,46 @@ assert.match(
   /data-modules-path=["']photo-clip["']/
 );
 
+// beginSync stamps aspect/duration at open — fail/cancel remake keeps ratio
+const beginSyncSrc = fs.readFileSync(
+  join(root, "lib/generationJobs/store.ts"),
+  "utf8"
+);
+assert.match(
+  beginSyncSrc,
+  /export function beginSyncGenerateJob[\s\S]{0,500}aspectRatio/
+);
+assert.match(
+  beginSyncSrc,
+  /export function beginSyncGenerateJob[\s\S]{0,600}duration/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/generate/route.ts"), "utf8"),
+  /beginSyncGenerateJob\([\s\S]{0,500}aspectRatio:\s*aspect/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/generate/route.ts"), "utf8"),
+  /beginSyncGenerateJob\([\s\S]{0,500}duration:\s*secs/
+);
+// Suite doors default Generate uses remix contract (not bare /create)
+assert.match(
+  fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
+  /createRemixHref\(effectSlug \|\| ["']360-spin-showcase["']\)|createRemixHref\(effectSlug/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
+  /generateHref = effectSlug[\s\S]{0,40}:\s*["']\/create["']/
+);
+// Create provenance: restore when confirmed (not bare restore)
+assert.match(
+  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
+  /restore credits when confirmed|when confirmed/
+);
+// Cancel download body echoes refundUnconfirmed (fail path parity)
+assert.match(
+  fs.readFileSync(join(root, "app/api/downloads/[id]/route.ts"), "utf8"),
+  /code:\s*["']CANCELED["'][\s\S]{0,500}refundUnconfirmed/
+);
+
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

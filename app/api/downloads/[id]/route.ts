@@ -75,6 +75,11 @@ function gateDownload(
             "Job was canceled — no deliverable. Check balance if a live debit is unconfirmed.",
           status: job.status,
           creditsOutcome: job.creditsOutcome,
+          // Cancel always stamps refund unconfirmed on the ledger (fail parity).
+          ...(job.creditsOutcome === "refund unconfirmed" ||
+          job.creditsRefunded !== true
+            ? { refundUnconfirmed: true }
+            : {}),
         },
       };
     }

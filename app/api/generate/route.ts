@@ -434,6 +434,11 @@ export async function POST(req: Request) {
         watermark: plan.watermark,
         provider: "bytedance-seedance",
         idempotencyKey,
+        // Stamp ratio/duration at open so Library remake after fail/cancel
+        // still carries the attempted run (not only success completeSync).
+        duration: secs,
+        aspectRatio: aspect,
+        resolution,
       }).id;
     } catch {
       liveJobId = undefined;

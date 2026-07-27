@@ -483,6 +483,10 @@ export function beginSyncGenerateJob(input: {
   watermark?: boolean;
   provider?: string;
   idempotencyKey?: string;
+  /** Stamp request params at open so fail/cancel remake still carries ratio. */
+  duration?: number;
+  aspectRatio?: string;
+  resolution?: string;
 }): GenerationJob {
   const job = createJob({
     sessionId: input.sessionId,
@@ -503,6 +507,10 @@ export function beginSyncGenerateJob(input: {
       provider: input.provider,
       demo: false,
       downloadAllowed: false,
+      // Keep remixOptsFromRecord honest on mid-flight fail/cancel (complete may overwrite).
+      duration: input.duration,
+      aspectRatio: input.aspectRatio,
+      resolution: input.resolution,
     }) ?? job
   );
 }

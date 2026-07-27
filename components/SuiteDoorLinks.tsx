@@ -15,9 +15,8 @@ export function SuiteDoorLinks({
   effectSlug?: string;
   className?: string;
 }) {
-  const generateHref = effectSlug
-    ? createRemixHref(effectSlug)
-    : "/create";
+  // Default listing spin when no recipe — remix contract (ratio/duration/channel).
+  const generateHref = createRemixHref(effectSlug || "360-spin-showcase");
 
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>

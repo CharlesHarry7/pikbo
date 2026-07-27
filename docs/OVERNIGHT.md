@@ -153,7 +153,8 @@
 112. [x] Profile still-image jobs HEAD probe (Flux ledger honesty)
 113. [x] countJobsForSession full HEAD + download RATE/BALANCE fail codes
 114. [x] GET generations full byStatus + touch all open + Library list honesty
-115. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+115. [x] beginSync stamps aspect/duration for fail/cancel remake carry
+116. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -167,8 +168,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- GET /api/generations: full-session byStatus + touchOpenJobsForSession (no false TIMEOUT).
-- Library shows “N of total” when list page < histogram; no silent slice(0,12).
+- beginSyncGenerateJob stamps aspect/duration at open — fail/cancel remake keeps ratio.
+- Downloads cancel body refundUnconfirmed; Create provenance “when confirmed”.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 
