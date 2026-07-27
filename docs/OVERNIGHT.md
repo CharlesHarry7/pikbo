@@ -167,7 +167,8 @@
 126. [x] Image R0 cost gate parity + recovery-qa (R0–R3) + CI critical-path fail-closed
 127. [x] R1b-lite: fixed job deadline (createdAt) + explicit retryJobId promote (no effect/prompt guess)
 128. [x] Health/Seller Pack honesty post-R0 · createUi carries retryToken · image fork parity
-129. 下一拍：R1b durable reconciliation worker · Mode A Vercel/SQL (boss) · T6 bake
+129. [x] Image R1b parity: claimRetryImageJob + deadlineAt + read-only GET + late Flux withhold
+130. 下一拍：R1c durable reconciliation worker · Mode A Vercel/SQL (boss) · T6 bake
 
 ### 老板醒来验收
 
@@ -181,9 +182,9 @@
 
 ## Grok 本拍状态（3 行）
 
-- R1b-lite: process-memory TIMEOUT fixed from createdAt (touch no longer extends); promote only with explicit `retryJobId`.
-- Library retry → createUi/imageUi carries fork token; health + Seller Pack no longer claim cookie live authority.
-- Next: durable capture reconciliation worker · SQL migration apply (boss) · T6 bake still blocked.
+- Image R1b parity with video: exact parent id, one-time retryToken claim, fixed deadlineAt, late Flux withheld.
+- GET still list/poll read-only; Library sessionStorage bearer handoff; recovery-retry-deadline + engine-smoke PASS.
+- Next: R1c durable recon worker · SQL apply (boss) · T6 bake; live CI workflow re-copy still blocked.
 
 
 
