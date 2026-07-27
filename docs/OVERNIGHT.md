@@ -165,7 +165,9 @@
 124. [x] forkRetryImageJob + POST /api/image/[id]/retry · queued status · Library ledger-fork
 125. [x] Promote queued ledger-retry forks on beginImageJob / beginSyncGenerateJob
 126. [x] Image R0 cost gate parity + recovery-qa (R0–R3) + CI critical-path fail-closed
-127. 下一拍：R1 atomic Supabase RPC (Claude) · Mode A Vercel/SQL (boss) · T6 bake when worker
+127. [x] R1b-lite: fixed job deadline (createdAt) + explicit retryJobId promote (no effect/prompt guess)
+128. [x] Health/Seller Pack honesty post-R0 · createUi carries retryToken · image fork parity
+129. 下一拍：R1b durable reconciliation worker · Mode A Vercel/SQL (boss) · T6 bake
 
 ### 老板醒来验收
 
@@ -179,9 +181,9 @@
 
 ## Grok 本拍状态（3 行）
 
-- R0 image parity: `/api/image` cached for anonymous/Free; live Flux needs durable reserve + invokeReservedProvider (no Cookie debit).
-- R3: `recovery-qa` suite + CI critical-path fail-closed (docs/ci + .github); engine-smoke/typecheck PASS.
-- Next: R1 atomic RPC (Claude) · Mode A Vercel/SQL (boss) · T6 bake still blocked.
+- R1b-lite: process-memory TIMEOUT fixed from createdAt (touch no longer extends); promote only with explicit `retryJobId`.
+- Library retry → createUi/imageUi carries fork token; health + Seller Pack no longer claim cookie live authority.
+- Next: durable capture reconciliation worker · SQL migration apply (boss) · T6 bake still blocked.
 
 
 
