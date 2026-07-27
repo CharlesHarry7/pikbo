@@ -12,6 +12,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 
 | ID | Task | Owner | Status | Branch | Notes |
 |---|---|---|---|---|---|
+| R0H | Fail-closed public health truth for Soft Live | WorkBuddy | review | agent/workbuddy/health-truth | `ready.softLive` is true only when auth, reviewed Supabase atomic reservation, provider, and server-owned deliverable are all configured; otherwise health reports validation/cached-only and advertises 0 free live clips |
 | R2a | Proof wall truth + mobile video budget + Starter Pack naming | Claude | review | agent/claude/product-proof-mobile | Home uses 8-item Showcase whitelist; concepts are static; autoplay 1 mobile / 2 desktop; three-output name frozen |
 | R0 | Disable anonymous live generation; cached demo only until authenticated durable reserve | Claude | review | agent/claude/recovery-cost-gate | Anonymous/Free cached-only even with FAL_KEY; strict Supabase reserve + provider guard; zero-call regression passes. R1 atomic RPC remains separate |
 | R1a | Atomic Supabase reserve/capture/release RPC + job binding | Claude | review | agent/claude/recovery-ledger | Source migration + strict RPC adapter ready; not applied to Supabase. Non-production DB integration required before deployment |

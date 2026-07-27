@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [workbuddy] fail-closed Soft Live health truth
+- `/api/health` now requires auth, Supabase atomic reservation, provider, and a server-owned deliverable before `ready.softLive=true`.
+- Any missing prerequisite reports `validation` or `cached-only`; the public health contract exposes zero free live clips and `cached-demo-only`.
+- A provider/session secret alone can no longer make health advertise live generation.
+- `health-truth-contract` exhaustively verifies all 16 prerequisite combinations and runs inside `engine-smoke`.
+- Scope is health/read-only contracts only; no generate, image, session, credits, Stripe, Supabase, Vercel, or production mutation.
+- PASS: bash syntax, engine smoke, typecheck, lint (0 errors / 2 pre-existing warnings), and Webpack production build (193 routes).
+
 ### 2026-07-27 — [claude] seller-first Create three-step path
 - First run is now `upload owned toy photo → choose Listing/Unboxing/Social Hook/Starter Pack → review exact quote and generate`.
 - Model shelf, workflow shelf, activation checklist, full recipe catalog, prompt, model, duration, seed and fidelity guidance no longer obstruct first activation; advanced controls remain available collapsed.

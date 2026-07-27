@@ -141,6 +141,20 @@ if "canceled" in ibs:
 require_soft = os.environ.get("REQUIRE_SOFT_LIVE") == "1"
 if ready.get("demo") is not True:
     raise SystemExit("health.ready.demo missing — demo path must always be ready")
+live_parts = (
+    ready.get("auth") is True,
+    ready.get("durableAtomicReservation") is True,
+    ready.get("provider") is True,
+    ready.get("serverOwnedDeliverable") is True,
+)
+if ready.get("softLive") is True and not all(live_parts):
+    raise SystemExit("health.ready.softLive true without all four prerequisites")
+if ready.get("softLive") is not True:
+    if mode not in ("validation", "cached-only"):
+        raise SystemExit("non-live health mode must be validation or cached-only")
+    acceptance = h.get("acceptance") or {}
+    if acceptance.get("softLive") is not False:
+        raise SystemExit("non-live acceptance must explicitly set softLive=false")
 if require_soft:
     if not h.get("ok") or h.get("degraded"):
         raise SystemExit("health degraded (REQUIRE_SOFT_LIVE=1)")
@@ -201,6 +215,11 @@ if bft:
     )
     if bft.get("ledgerCancelRefund") not in (None, "unconfirmed"):
         raise SystemExit("FAIL health freeTrial.ledgerCancelRefund must be unconfirmed when set")
+    if ready.get("softLive") is not True:
+        if bft.get("available") is not False or bft.get("clipsPerPeriod") != 0:
+            raise SystemExit("FAIL non-live health must not advertise a free live clip")
+        if bft.get("scope") != "cached-demo-only":
+            raise SystemExit("FAIL non-live health must use cached-demo-only scope")
     if bft.get("scope") == "video-create-only":
         print(f"stillsOnFree={bft.get('stillsOnFree')}")
 demos=h.get("demos") or {}

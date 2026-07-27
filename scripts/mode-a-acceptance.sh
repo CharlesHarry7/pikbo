@@ -89,13 +89,28 @@ elif True:
 billing=h.get("billing") or {}
 bft=billing.get("freeTrial") or {}
 if bft:
+    soft_live=ready.get("softLive") is True
     print(
         f"billing.freeTrial clips={bft.get('clipsPerPeriod')} "
         f"model={bft.get('modelClass')} refunds={bft.get('failedLiveRefunds')} "
         f"scope={bft.get('scope')} stillsOnFree={bft.get('stillsOnFree')}"
     )
-    if bft.get("failedLiveRefunds") is not True:
-        sys.exit("FAIL health.billing.freeTrial.failedLiveRefunds must be true")
+    if bft.get("available") is not soft_live:
+        sys.exit("FAIL freeTrial.available must match ready.softLive")
+    if soft_live:
+        if bft.get("clipsPerPeriod") != 1:
+            sys.exit("FAIL ready Soft Live must expose exactly one free clip")
+        if bft.get("failedLiveRefunds") is not True:
+            sys.exit("FAIL ready Soft Live must expose confirmed-failure restores")
+        if bft.get("scope") != "video-create-only":
+            sys.exit("FAIL ready Soft Live scope must be video-create-only")
+    else:
+        if bft.get("clipsPerPeriod") != 0:
+            sys.exit("FAIL non-live health must not advertise a free live clip")
+        if bft.get("failedLiveRefunds") is not False:
+            sys.exit("FAIL non-live health must not advertise live refunds")
+        if bft.get("scope") != "cached-demo-only":
+            sys.exit("FAIL non-live health scope must be cached-demo-only")
     if bft.get("failedLiveRefundPolicy") not in (None, "when_confirmed"):
         sys.exit("FAIL freeTrial.failedLiveRefundPolicy must be when_confirmed when set")
     if bft.get("ledgerTimeoutRefund") not in (None, "unconfirmed"):
@@ -106,8 +121,8 @@ if bft:
         print("cancel refund policy=unconfirmed")
     if bft.get("failedLiveRefundPolicy") == "when_confirmed":
         print("refund policy=when_confirmed · TIMEOUT unconfirmed")
-    if bft.get("scope") not in (None, "video-create-only"):
-        sys.exit("FAIL health.billing.freeTrial.scope must be video-create-only")
+    if bft.get("scope") not in ("video-create-only", "cached-demo-only"):
+        sys.exit("FAIL health.billing.freeTrial.scope is invalid")
     if bft.get("scope") == "video-create-only" and bft.get("stillsOnFree") not in (
         None,
         "demo-only",
