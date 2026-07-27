@@ -3246,6 +3246,18 @@ assert.match(genJobsStore, /applyProviderWebhookEvent/);
 assert.match(genJobsStore, /findJobByRequestOrId/);
 assert.match(genJobsStore, /webhookEvents/);
 assert.match(genJobsStore, /UNSAFE_URL|isSafeDeliverableUrl/);
+// R1b/R1c: late/orphan live webhook success withholds — never free "10 used"
+assert.match(genJobsStore, /providerCompletionDecision/);
+assert.match(genJobsStore, /WITHHELD_ORPHAN|Late provider success withheld/);
+assert.match(genJobsStore, /withheld:\s*true/);
+assert.match(
+  fs.readFileSync(join(root, "app/api/webhooks/video-provider/route.ts"), "utf8"),
+  /withheld:\s*result\.withheld|result\.withheld === true/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/durableCredits/sellerPack.ts"), "utf8"),
+  /cookie is not live-spend authority|not live-spend authority/
+);
 // Webhook must not map UNSAFE_URL to 500 — client/ops need 422.
 assert.match(
   fs.readFileSync(join(root, "app/api/webhooks/video-provider/route.ts"), "utf8"),
