@@ -1,7 +1,7 @@
 # Responsive core-loop regression
 
-Date: 2026-07-28  
-Branch: `agent/claude/mobile-proof-regression`  
+Date: 2026-07-28
+Branch: `agent/claude/mobile-proof-regression`
 Target: local Next.js app with public Live closed
 
 ## Path exercised
