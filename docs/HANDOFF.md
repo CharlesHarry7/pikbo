@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] AppShell/Footer/Pricing residual Generate remix
+- AppShell desktop + mobile top Generate CTAs → createRemixHref(360-spin)
+  (data-appshell-cta); PRIMARY/MOBILE nav suite entry still bare /create.
+- Pricing Full studio → remix + source pricing-*; Footer Product Generate remix.
+- Community remake / apps detail / HomeFeatureCarousel fallbacks; browse/cinema
+  prefetch use remix URL. Smoke: shell/footer/pricing residual locks.
+
 ### 2026-07-27 — [grok] GET /api/image session still ledger
 - `listImageJobsForSession` · `touchOpenImageJobsForSession` · `toPublicImageJob`
   (safe http only; data: demos → hasImage, no multi-KB list JSON).

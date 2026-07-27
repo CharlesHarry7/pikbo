@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { createRemixHref } from "@/lib/remixIntent";
 
 export type PricingCopyVariant = "outcome" | "cost-control";
 
@@ -84,7 +85,13 @@ export function PricingHeroCopy({
             className="!px-6 !py-3 text-sm font-black"
           />
           <Button asChild size="lg" variant="secondary">
-            <Link href={`/create?source=pricing-${variant}`}>
+            <Link
+              href={createRemixHref(
+                "360-spin-showcase",
+                `pricing-${variant}`
+              )}
+              data-pricing-studio="generate-remix"
+            >
               Full studio
             </Link>
           </Button>

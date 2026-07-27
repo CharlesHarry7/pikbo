@@ -5,6 +5,10 @@ import { Logo } from "@/components/Logo";
 import { CATEGORIES } from "@/lib/presets";
 import { USE_CASES } from "@/lib/usecases";
 import { TOY_TYPES } from "@/lib/toytypes";
+import { createRemixHref } from "@/lib/remixIntent";
+
+/** Product nav Generate — listing-spin remix (ratio/duration/channel). */
+const FOOTER_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export function Footer() {
   return (
@@ -78,7 +82,7 @@ export function Footer() {
             </h4>
             <ul className="space-y-2 text-sm text-white/50">
               {[
-                ["/create", "Generate"],
+                [FOOTER_GENERATE_HREF, "Generate"],
                 ["/effects", "Effects"],
                 ["/pricing", "Pricing"],
                 ["/explore", "Explore Lab"],

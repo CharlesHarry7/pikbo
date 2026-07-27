@@ -233,7 +233,7 @@ export default async function CommunityPage() {
                       href={
                         p.effectSlug
                           ? createRemixHref(p.effectSlug)
-                          : "/create"
+                          : createRemixHref("360-spin-showcase")
                       }
                       className="text-[11px] font-bold text-[var(--mint)]"
                     >

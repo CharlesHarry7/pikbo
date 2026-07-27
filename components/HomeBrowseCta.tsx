@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/LanguageProvider";
+import { createRemixHref } from "@/lib/remixIntent";
 
 /**
  * Sticky generate CTA while browsing the video wall.
@@ -17,10 +18,10 @@ export function HomeBrowseCta() {
     const create = document.getElementById("home-create");
     if (!wall) return;
 
-    // Prefetch full Create for faster jump
+    // Prefetch listing-spin remix Create for faster jump
     const prefetch = document.createElement("link");
     prefetch.rel = "prefetch";
-    prefetch.href = "/create";
+    prefetch.href = createRemixHref("360-spin-showcase");
     prefetch.as = "document";
     document.head.appendChild(prefetch);
 

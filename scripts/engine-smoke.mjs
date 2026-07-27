@@ -5218,6 +5218,32 @@ assert.match(
   fs.readFileSync(join(root, "components/Header.tsx"), "utf8"),
   /createRemixHref|data-header-cta=["']generate-remix["']/
 );
+// Live AppShell Generate CTAs (desktop header + mobile top) use remix, not bare /create
+assert.match(
+  fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
+  /SHELL_GENERATE_HREF|data-appshell-cta=["']generate-remix["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
+  /createRemixHref\(["']360-spin-showcase["']\)/
+);
+// Pricing Full studio + Footer Product Generate carry remix contract
+assert.match(
+  fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
+  /createRemixHref|data-pricing-studio=["']generate-remix["']/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
+  /href=\{`\/create\?source=pricing-/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
+  /FOOTER_GENERATE_HREF|createRemixHref\(["']360-spin-showcase["']\)/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
+  /\[["']\/create["'],\s*["']Generate["']\]/
+);
 assert.match(
   fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
   /LIBRARY_GENERATE_HREF|data-library-empty=["']generate-remix["']/

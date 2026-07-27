@@ -42,7 +42,8 @@ export function HomeCinemaHero({
     }
     const link = document.createElement("link");
     link.rel = "prefetch";
-    link.href = "/create";
+    // Prefetch listing-spin remix (same contract as shell Generate CTAs)
+    link.href = createRemixHref("360-spin-showcase");
     link.as = "document";
     document.head.appendChild(link);
     return () => {

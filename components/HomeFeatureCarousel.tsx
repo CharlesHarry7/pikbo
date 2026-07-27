@@ -102,7 +102,8 @@ function promoHref(promo: Promo, demoId?: string): string {
   if (promo.recipeSlug) {
     return createRemixHref(promo.recipeSlug, demoId);
   }
-  return "/create";
+  // Fallback Generate door — same listing-spin remix contract as shell CTAs
+  return createRemixHref("360-spin-showcase");
 }
 
 /** HF top: large full-bleed video cards, almost no chrome */
