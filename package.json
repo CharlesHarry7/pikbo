@@ -13,6 +13,7 @@
     "g6-api-smoke": "node scripts/g6-api-smoke.mjs",
     "engine-smoke": "node scripts/engine-smoke.mjs",
     "product-proof-smoke": "node scripts/product-proof-smoke.mjs",
+    "mobile-proof-regression": "node scripts/mobile-proof-regression.mjs",
     "showcase-evidence-smoke": "node scripts/showcase-evidence-smoke.mjs",
     "showcase-promotion-gate": "node scripts/showcase-promotion-gate.mjs",
     "live-copy-smoke": "node scripts/live-capability-copy-smoke.mjs",

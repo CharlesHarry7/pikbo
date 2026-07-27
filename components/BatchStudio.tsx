@@ -1432,7 +1432,7 @@ export function BatchStudio({
                 ))}
               </ul>
             </div>
-            <SellerPackSteps step={sellerStep} />
+            <SellerPackSteps step={sellerStep} demoMode={demoMode} />
             <p
               data-seller-pack-recovery="device-local"
               className="rounded-lg border border-amber-300/20 bg-amber-300/[0.04] px-3 py-2 text-[10px] leading-relaxed text-amber-100/85"
