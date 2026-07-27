@@ -10,11 +10,11 @@ Newest first. One block per meaningful landing.
 - Seller Pack shadow error: cookie is not live-spend authority (generate cost gate).
 - PASS: engine-smoke + recovery-qa + recovery-reconciliation + typecheck.
 
-### 2026-07-28 — [grok] Seller Pack Free Mini full-pack hard-block
+### 2026-07-28 — [grok] Seller Pack Free Mini gate + webhook orphan withhold
 - `sellerPackLiveStartAllowed`: live 3-child start fails closed when balance < 30 (`FREE_MINI_FULL_PACK`); cached demos still 0 credits.
-- BatchStudio `runBatch` preflight + removed “cookie generate remains authoritative”; shadow short honesty points at durable reserve gate.
-- Shortfall UI: single-child Generate doors `data-seller-pack-free-mini=single-child` (PRD §6 choose-one path).
-- engine-smoke pure policy + source locks. PASS: engine-smoke + typecheck.
+- BatchStudio `runBatch` preflight; cookie no longer claimed live authority; Free Mini single-child Generate doors.
+- Provider webhook: orphan/late live success withheld (no free `10 used` media); response `withheld` flag; Seller Pack `DURABLE_OFF` copy honest.
+- PASS: engine-smoke + typecheck.
 
 ### 2026-07-28 — [grok] Phase H five-page SEO cold-start budget
 - Marketing index allowlist = 5 (`/`, primary tool, blind-box tool, photography guide, `/pricing`) per WorkBuddy `SEO_INDEXABLE_10_RELEASE.md`.
