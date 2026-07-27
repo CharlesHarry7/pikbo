@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ensureSession, publicSession } from "@/lib/session";
 import {
   cancelJob,
+  countJobsForSession,
   createJob,
   jobTimeoutMs,
   listJobsForSession,
@@ -12,34 +13,28 @@ import {
 
 export const runtime = "nodejs";
 
+/** Soft-launch Library recovery page size (newest first). */
+const SESSION_JOBS_LIST_LIMIT = 50;
+
 /**
  * Cheap open-job probe for Library / ops — counts only (no job bodies).
  * Sweeps timeouts so HEAD stays honest about mid-flight work.
+ * Counts the full session ledger (not the list page size) — image HEAD parity.
  */
 export async function HEAD() {
   const session = await ensureSession();
-  sweepTimedOutJobs();
-  const listed = listJobsForSession(session.id, 30);
-  let open = 0;
-  let succeeded = 0;
-  let failed = 0;
-  let canceled = 0;
-  for (const j of listed) {
-    if (j.status === "queued" || j.status === "running") open += 1;
-    else if (j.status === "succeeded") succeeded += 1;
-    else if (j.status === "failed") failed += 1;
-    else if (j.status === "canceled") canceled += 1;
-  }
+  const counts = countJobsForSession(session.id);
   return new NextResponse(null, {
     status: 200,
     headers: {
       "Cache-Control": "no-store",
-      "X-Pikbo-Jobs": String(listed.length),
-      "X-Pikbo-Jobs-Open": String(open),
-      "X-Pikbo-Jobs-Succeeded": String(succeeded),
-      "X-Pikbo-Jobs-Failed": String(failed),
-      "X-Pikbo-Jobs-Canceled": String(canceled),
+      "X-Pikbo-Jobs": String(counts.total),
+      "X-Pikbo-Jobs-Open": String(counts.open),
+      "X-Pikbo-Jobs-Succeeded": String(counts.succeeded),
+      "X-Pikbo-Jobs-Failed": String(counts.failed),
+      "X-Pikbo-Jobs-Canceled": String(counts.canceled),
       "X-Pikbo-Job-Timeout-Ms": String(jobTimeoutMs()),
+      "X-Pikbo-Jobs-List-Limit": String(SESSION_JOBS_LIST_LIMIT),
     },
   });
 }
@@ -123,7 +118,8 @@ export async function DELETE(req: Request) {
 export async function GET() {
   const session = await ensureSession();
   const timedOut = sweepTimedOutJobs();
-  const listed = listJobsForSession(session.id, 30);
+  // Newest page for Library recovery UI; HEAD uses full-session counts.
+  const listed = listJobsForSession(session.id, SESSION_JOBS_LIST_LIMIT);
   // Library polls this list (not always /[id]) — slide TTL on every open job.
   let touchedOpen = 0;
   const raw = listed.map((j) => {

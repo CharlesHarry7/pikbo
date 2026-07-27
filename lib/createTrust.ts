@@ -340,6 +340,20 @@ export function classifyDownloadHead(opts: {
         "Provider returned empty media — no file. Check balance if debit is unconfirmed.",
     };
   }
+  if (code === "PROVIDER_RATE_LIMIT" || code === "RATE_LIMITED") {
+    return {
+      kind: "block",
+      message:
+        "Rate limited mid-job — no file yet. Wait and Retry; check balance if debit is unconfirmed.",
+    };
+  }
+  if (code === "PROVIDER_BALANCE") {
+    return {
+      kind: "block",
+      message:
+        "Upstream provider balance empty — no file. Credits restore when the debit was confirmed.",
+    };
+  }
   if (status === 422 || code === "UNSAFE_URL") {
     return {
       kind: "block",

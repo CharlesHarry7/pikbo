@@ -151,7 +151,8 @@
 110. [x] fail ledger failedLedgerCreditsOutcome + Library unconfirmed code sweep
 111. [x] Download HEAD fail codes before 409 “not ready” + webhook fail ledger
 112. [x] Profile still-image jobs HEAD probe (Flux ledger honesty)
-113. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+113. [x] countJobsForSession full HEAD + download RATE/BALANCE fail codes
+114. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -165,8 +166,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Download HEAD: fail codes before 409 “not ready”; Profile image jobs HEAD probe.
-- Webhook fail ledger + downloads credits outcome honesty.
+- Session jobs HEAD uses full-ledger countJobsForSession (was capped at 30).
+- Download HEAD: PROVIDER_RATE_LIMIT / PROVIDER_BALANCE no longer “not ready”.
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 

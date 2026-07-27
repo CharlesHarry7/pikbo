@@ -4874,6 +4874,12 @@ function classifyDownloadHeadPure(opts) {
   if (code === "MODEL_EMPTY") {
     return { kind: "block", message: "empty" };
   }
+  if (code === "PROVIDER_RATE_LIMIT" || code === "RATE_LIMITED") {
+    return { kind: "block", message: "rate" };
+  }
+  if (code === "PROVIDER_BALANCE") {
+    return { kind: "block", message: "balance" };
+  }
   if (status === 422 || code === "UNSAFE_URL") {
     return { kind: "block", message: "unsafe" };
   }
@@ -4899,6 +4905,15 @@ assert.equal(
   "empty"
 );
 assert.equal(
+  classifyDownloadHeadPure({ status: 409, code: "PROVIDER_RATE_LIMIT" })
+    .message,
+  "rate"
+);
+assert.equal(
+  classifyDownloadHeadPure({ status: 409, code: "PROVIDER_BALANCE" }).message,
+  "balance"
+);
+assert.equal(
   classifyDownloadHeadPure({ status: 409, code: "NOT_READY" }).message,
   "not-ready"
 );
@@ -4922,6 +4937,71 @@ assert.match(
 assert.match(
   fs.readFileSync(join(root, "lib/generationJobs/store.ts"), "utf8"),
   /applyProviderWebhookEvent[\s\S]{0,2500}failedLedgerCreditsOutcome|failedLedgerCreditsOutcome[\s\S]{0,400}webhook/
+);
+
+// Session jobs HEAD: full-ledger counts (not list page slice of 30)
+assert.match(
+  fs.readFileSync(join(root, "lib/generationJobs/store.ts"), "utf8"),
+  /export function countJobsForSession/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/generationJobs/index.ts"), "utf8"),
+  /countJobsForSession/
+);
+const genJobsRouteHead = fs.readFileSync(
+  join(root, "app/api/generations/route.ts"),
+  "utf8"
+);
+assert.match(genJobsRouteHead, /countJobsForSession/);
+assert.match(genJobsRouteHead, /X-Pikbo-Jobs-List-Limit/);
+assert.match(genJobsRouteHead, /SESSION_JOBS_LIST_LIMIT\s*=\s*50/);
+assert.doesNotMatch(
+  genJobsRouteHead,
+  /export async function HEAD[\s\S]{0,400}listJobsForSession\(session\.id,\s*30\)/
+);
+// Pure full-session count (list slice must not under-count failed)
+function countJobsForSessionPure(jobs, sessionId) {
+  let total = 0;
+  let open = 0;
+  let failed = 0;
+  for (const j of jobs) {
+    if (j.sessionId !== sessionId) continue;
+    total += 1;
+    if (j.status === "queued" || j.status === "running") open += 1;
+    else if (j.status === "failed") failed += 1;
+  }
+  return { total, open, failed };
+}
+{
+  const jobs = [];
+  for (let i = 0; i < 40; i++) {
+    jobs.push({
+      sessionId: "s1",
+      status: i < 5 ? "failed" : "succeeded",
+      createdAt: `2026-07-27T00:${String(i).padStart(2, "0")}:00.000Z`,
+    });
+  }
+  const full = countJobsForSessionPure(jobs, "s1");
+  assert.equal(full.total, 40);
+  assert.equal(full.failed, 5);
+  // Newest-30 slice would miss older fails if they sorted out of page
+  const sliced = jobs
+    .slice()
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 30);
+  const pageFails = sliced.filter((j) => j.status === "failed").length;
+  assert.ok(
+    full.failed >= pageFails,
+    "full session fail count must cover list page"
+  );
+}
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /PROVIDER_RATE_LIMIT|RATE_LIMITED/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
+  /PROVIDER_BALANCE/
 );
 
 console.log("engine-smoke: PASS");

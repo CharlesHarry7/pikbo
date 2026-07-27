@@ -9,6 +9,7 @@ export {
   getJob,
   touchJob,
   listJobsForSession,
+  countJobsForSession,
   updateJob,
   beginSyncGenerateJob,
   completeSyncGenerateJob,

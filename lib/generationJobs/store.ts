@@ -376,6 +376,36 @@ export function listJobsForSession(
     .slice(0, limit);
 }
 
+/**
+ * Full session histogram for HEAD probes (Profile / Settings / Library).
+ * Unlike listJobsForSession, this is not capped — a 30-row slice under-counted
+ * failed/canceled and could hide open jobs older than the newest page.
+ * Image listImageJobCountsForSession parity.
+ */
+export function countJobsForSession(sessionId: string): {
+  total: number;
+  open: number;
+  succeeded: number;
+  failed: number;
+  canceled: number;
+} {
+  sweepTimedOutJobs();
+  let total = 0;
+  let open = 0;
+  let succeeded = 0;
+  let failed = 0;
+  let canceled = 0;
+  for (const j of jobs.values()) {
+    if (j.sessionId !== sessionId) continue;
+    total += 1;
+    if (j.status === "queued" || j.status === "running") open += 1;
+    else if (j.status === "succeeded") succeeded += 1;
+    else if (j.status === "failed") failed += 1;
+    else if (j.status === "canceled") canceled += 1;
+  }
+  return { total, open, succeeded, failed, canceled };
+}
+
 export function updateJob(
   id: string,
   patch: Partial<
