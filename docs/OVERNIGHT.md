@@ -170,7 +170,8 @@
 129. [x] Image R1b parity: claimRetryImageJob + deadlineAt + read-only GET + late Flux withhold
 130. [x] Image R1c parity: recordProviderSucceededWithheld + release enqueue on live Flux
 131. [x] Webhook R1b/R1c: late/orphan success withheld · Seller Pack no cookie-authority lie
-132. 下一拍：R1c/R1a SQL non-prod rehearsal (boss) · Mode A Vercel · T6 bake
+132. [x] Process-memory R1c fallback journal + downloads WITHHELD honesty + health localJournal
+133. 下一拍：R1c/R1a SQL non-prod rehearsal (boss) · Mode A Vercel · T6 bake
 
 ### 老板醒来验收
 
@@ -184,8 +185,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Webhook: orphan/late live success withheld (no free "10 used"); only running-before-deadline may complete.
-- Seller Pack shadow error no longer claims cookie debit; engine-smoke locks withhold + pack honesty.
+- R1c process-memory journal dual-writes withhold facts when Supabase recon is off (never stores outputRef).
+- Downloads honest WITHHELD_ORPHAN/late codes; health.recoveryLedger.localJournal + jobs.withheld probe.
 - Next: R1c/R1a SQL non-prod apply (boss) · Mode A Vercel · T6 bake · CI workflow re-copy.
 
 
