@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] AGENT_SYNC iron rule: all work must hit GitHub main
+- `docs/growth/AGENT_SYNC.md`: pull → read log/STATE/COMMUNICATION/HANDOFF → work → push
+- COMMUNICATION_LOG multi-agent; PLAYBOOK + AGENT_BUS linked
+- Audit: main clean vs origin; growth runs + plans on remote; stashes = non-official WIP
+
 ### 2026-07-27 — [grok] 30d GeFei plan + unboxing-bridge guide (not toddler list)
 - PLAN_30D_GEFEI_CROSSCHECK: correct product identity; Grok vs WB split.
 - Guide toy-unboxing-video-from-one-photo bridges SERP probes without shopping-list intent.

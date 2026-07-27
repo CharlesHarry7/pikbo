@@ -22,14 +22,18 @@ REPO:
 1) git fetch origin && git checkout main && git pull --ff-only origin main
 2) git log origin/main --oneline -40
 3) 必读：
+   - docs/growth/AGENT_SYNC.md           （同步铁令：未 push = 没发生）
+   - docs/growth/COMMUNICATION_LOG.md    （老板决策）
    - docs/PRODUCT_NORTH_STAR.md          （潮玩版 HF 北极星）
    - docs/MULTI_AGENT_PLAYBOOK.md        （Grok/Claude/Codex/WorkBuddy 车道）
    - docs/growth/AGENT_BUS.md
    - docs/growth/AGENT_STATE.md
    - docs/HANDOFF.md（前 50 行）
+   - docs/growth/WORK_QUEUE.md
    - docs/ops/SITE_WATCH.md              （上次谷歌/产品/X 观察）
    - 最新 docs/growth/runs/*-report.md（若有）
 4) 从 git log 推断 Claude/Codex/WorkBuddy 刚推了什么——禁止问老板「别人怎样了」
+5) 收工必须 commit + push；有老板沟通则 append COMMUNICATION_LOG
 
 ════════════════════════════════════
 ## 1. 双轨职责（你要同时抓）

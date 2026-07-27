@@ -1,11 +1,21 @@
-# 沟通记录（WorkBuddy × 老板）
+# 沟通记录（全 Agent × 老板）
 
-> 本文件记录所有与老板的沟通要点、决策结论和执行动作，供所有 agent 同步上下文。
-> 更新规则：每次有实质性沟通后追加，不覆盖历史记录。
+> 本文件记录与老板的沟通要点、决策结论和执行动作，供 **Grok / WorkBuddy / Claude / Codex** 同步上下文。  
+> 更新规则：每次有实质性沟通后 **append**，不覆盖历史。  
+> **同步铁令：** `docs/growth/AGENT_SYNC.md` — 未 push 到 GitHub = 没发生。
 
 ---
 
 ## 2026-07-27 沟通记录
+
+### 10:05 — GitHub 全量同步确认（Grok）
+- **老板问**：这几天工作是否都同步了 GitHub？没有则同步；以后 agent 调用都要知道做了什么。
+- **Grok 核查**：
+  - `main` 与 `origin/main` 对齐（tip 含 WB COMMUNICATION_LOG + 工程 30d 计划等）
+  - 工作区无未提交改动；增长 `docs/growth/runs/*` 与关键 docs 已在 origin
+  - 本地 `git stash` 仅旧分支 WIP，**不算**正式交付、不并入 main
+- **Grok 动作**：新增 `docs/growth/AGENT_SYNC.md`；强化 PLAYBOOK/AGENT_BUS 开工必读；本条写入沟通日志。
+- **铁令重申**：任何 agent 收工必须 `commit + push main`；沟通要点 append 本文件。
 
 ### 09:00 — 谷歌收录查询
 - **老板问**：谷歌收录了多少篇了？

@@ -41,30 +41,36 @@
 
 ---
 
-## 3. 同步协议（所有人）
+## 3. 同步协议（所有人）— **铁令**
+
+**完整细则：** `docs/growth/AGENT_SYNC.md`（开工必读）
 
 ```bash
 git fetch origin && git pull --ff-only origin main
 git log origin/main --oneline -40   # 这就是别人实时做了什么
+# 再读：AGENT_STATE · COMMUNICATION_LOG · HANDOFF · WORK_QUEUE · SITE_WATCH
 ```
 
 收工：
 
 ```bash
-# 可扫 commit
+# 可扫 commit；有老板沟通则 append COMMUNICATION_LOG.md
 git commit -m "[grok|claude|codex|workbuddy] <一句话>"
 git pull --rebase origin main && git push origin HEAD:main
+# 确认：git status 干净且 main == origin/main
 ```
 
 | 广播位置 | 谁写 |
 |----------|------|
 | `git log` commit message | 所有人 |
 | `docs/HANDOFF.md` prepend | 有产品/工程交付的 agent |
+| `docs/growth/COMMUNICATION_LOG.md` | **有老板决策/问答时全员 append** |
 | `docs/ops/SITE_WATCH.md` | **Grok 主写**；Claude/Codex 可补「产品体感」段 |
 | `docs/growth/AGENT_STATE.md` | WorkBuddy 主写；Grok 可注工程 tip |
 | `docs/growth/runs/*-report.md` | WorkBuddy |
+| `docs/growth/AGENT_SYNC.md` | 同步铁令（只改协议时） |
 
-未 push = 对方不可见 = 等于没发生。禁止「请老板告诉某某」。
+未 push = 对方不可见 = 等于没发生。禁止「请老板告诉某某」。禁止只写本地 memory 不写仓库。
 
 ---
 

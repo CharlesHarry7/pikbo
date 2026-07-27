@@ -14,6 +14,8 @@
 | **实时活动流** | `git log origin/main --oneline -40` | 对方刚做了什么（commit message 就是广播） |
 | **工程交付** | `docs/HANDOFF.md` | Grok 可复用交付摘要（newest first） |
 | **多 Agent 手册** | `docs/MULTI_AGENT_PLAYBOOK.md` | Grok / Claude / Codex / WorkBuddy 车道 |
+| **同步铁令** | `docs/growth/AGENT_SYNC.md` | 开工必 pull；收工必 push；未 push=没发生 |
+| **沟通记录** | `docs/growth/COMMUNICATION_LOG.md` | 老板决策与问答（append） |
 | **Grok 自驱提示** | `docs/prompts/GROK_SELF_OPS.md` | 谷歌观察 + 产品迭代 + X 雷达 |
 | **站点观察日志** | `docs/ops/SITE_WATCH.md` | softLive / SERP / HF 缺口 / X |
 | **增长状态看板** | `docs/growth/AGENT_STATE.md` | 覆盖写：谁、何时、tip、下一步 |
