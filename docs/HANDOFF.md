@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Login honesty: prod auth disabled; guest softLive
+- Production: auth.mode=disabled (no Supabase). Guest cookie generate works.
+- /login explains live-now vs needs-keys; guest Generate remix CTA.
+- Boss to enable: Vercel SUPABASE_* + T5 SQL + Auth callback URLs.
+
 ### 2026-07-27 — [grok] beginSync aspect stamp for fail/cancel remake
 - `beginSyncGenerateJob` stores duration/aspectRatio/resolution at open so
   Library remake/retry after fail/cancel still carries the attempted run.
