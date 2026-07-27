@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Image still R1b parity + CI recovery smokes
+- `forkRetryImageJob` / `claimRetryImageJob`: exact parent/child id, one-time bearer (hashed), fixed `deadlineAt`; no prompt promote.
+- Retry route returns real `retryToken` (not job id); Library stores `pikbo_retry_token:{id}`; Still studio one-shot claim.
+- `docs/ci`: `recovery-retry-deadline` + `showcase-evidence-smoke` after ledger.
+- Boss re-copy `docs/ci/github-actions-ci.yml` → `.github/workflows/ci.yml`.
+- Checks: recovery-retry-deadline + recovery-qa + engine-smoke + typecheck PASS.
+
 ### 2026-07-27 — [claude] R4 showcase evidence truth at runtime
 - The canonical Showcase registry now uses `cached_prototype` and `referencePoster`; it does not claim posters are provider inputs or expose invented 4/5 scores/reviewer notes.
 - Home retains eight distinct cached videos for watch time, but every proof surface labels them `PIKBO Lab · cached prototype`; concepts remain static Recipe art.

@@ -296,8 +296,10 @@ export async function postImage(
     prompt: string;
     aspect?: string;
     idempotencyKey?: string;
-    /** R1b process-memory fork token from POST /api/image/[id]/retry */
+    /** R1b exact process-memory fork job id */
     retryJobId?: string;
+    /** R1b one-time bearer from POST /api/image/[id]/retry (sessionStorage) */
+    retryToken?: string;
   },
   init?: { signal?: AbortSignal }
 ): Promise<ImageResult> {
@@ -352,6 +354,7 @@ export async function postImageWithRetry(
     aspect?: string;
     idempotencyKey?: string;
     retryJobId?: string;
+    retryToken?: string;
   },
   opts?: { maxRetries?: number; signal?: AbortSignal }
 ): Promise<ImageResult> {

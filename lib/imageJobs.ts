@@ -1,6 +1,7 @@
 /**
  * Process-memory still-job ledger (soft-launch).
  * Mirrors generate idempotency: one client key + session → no double Flux debit.
+ * R1b parity with video: exact parent id, one-time retry bearer, fixed deadlineAt.
  * Not multi-node durable — Vercel multi-instance needs Redis/Supabase later.
  */
 
@@ -8,6 +9,14 @@ import {
   failedLedgerCreditsOutcome,
   isSafeDeliverableUrl,
 } from "@/lib/createTrust";
+import {
+  deadlineExpired,
+  deadlineRemainingMs,
+  fixedDeadlineAt,
+  mintRetryToken,
+  retryTokenDigest,
+  retryTokenMatches,
+} from "@/lib/generationReliability.mjs";
 
 export type ImageJobStatus =
   | "queued"
@@ -44,6 +53,13 @@ export type ImageJob = {
   requestId?: string;
   /** Parent still id when this row is a process-memory ledger retry fork. */
   parentJobId?: string;
+  /** Fixed at open. Reads/heartbeat never extend (R1b). */
+  deadlineAt: string;
+  /** Trusted worker liveness only; never written by GET/poll. */
+  workerHeartbeatAt?: string;
+  /** One-time retry bearer digest. Never in PublicImageJob. */
+  retryTokenHash?: string;
+  retryClaimedAt?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -77,6 +93,7 @@ export type PublicImageJob = {
   errorCode?: string;
   requestId?: string;
   parentJobId?: string;
+  deadlineAt?: string;
   createdAt: string;
   updatedAt: string;
   owned: boolean;
@@ -131,23 +148,25 @@ function trimStore() {
 }
 
 /**
- * Crash / hard-kill recovery: open still jobs past timeout become failed TIMEOUT.
- * Same key then replays as fail (mint a new key to retry) — never infinite JOB_IN_FLIGHT.
+ * Crash / hard-kill recovery: open still jobs past fixed deadline become TIMEOUT.
+ * R1b: deadlineAt is immutable; GET poll must not extend it.
  */
 export function sweepTimedOutImageJobs(opts?: {
   nowMs?: number;
   timeoutMs?: number;
 }): ImageJob[] {
   const now = opts?.nowMs ?? Date.now();
-  const limit = opts?.timeoutMs ?? imageJobTimeoutMs();
   const timedOut: ImageJob[] = [];
   for (const job of jobs.values()) {
     // Open = queued (ledger retry fork) or running (Flux in flight).
     if (job.status !== "running" && job.status !== "queued") continue;
-    // R1b: fixed deadline from createdAt — touch/poll must not extend TIMEOUT.
-    const stamp = job.createdAt;
-    const age = now - Date.parse(stamp);
-    if (!Number.isFinite(age) || age < limit) continue;
+    const deadlineAt =
+      job.deadlineAt ||
+      fixedDeadlineAt(
+        Date.parse(job.createdAt),
+        opts?.timeoutMs ?? imageJobTimeoutMs()
+      );
+    if (!deadlineExpired(deadlineAt, now)) continue;
     const next: ImageJob = {
       ...job,
       status: "failed",
@@ -198,25 +217,24 @@ export function findImageJobByIdempotencyKey(
  */
 export function imageJobInFlightRetryAfterSec(job: ImageJob): number {
   if (job.status !== "running" && job.status !== "queued") return 1;
-  // R1b: fixed deadline from createdAt (touch/poll does not extend).
-  const stamp = job.createdAt;
-  const age = Date.now() - Date.parse(stamp);
-  if (!Number.isFinite(age)) return 1;
-  const remainingMs = imageJobTimeoutMs() - age;
+  const remainingMs = deadlineRemainingMs(
+    job.deadlineAt ||
+      fixedDeadlineAt(Date.parse(job.createdAt), imageJobTimeoutMs())
+  );
   if (remainingMs <= 0) return 1;
   return Math.max(1, Math.ceil(remainingMs / 1000));
 }
 
 /**
  * Soft-launch local still retry: fork a queued child from a failed|canceled parent.
- * Does not re-call Flux — client re-submits POST /api/image with the same prompt.
- * Parity with generationJobs.forkRetryJob (video ledger).
+ * Exact parent ledger id only + one-time bearer (video R1b parity).
+ * Does not re-call Flux — client re-submits POST /api/image with claim.
  */
 export function forkRetryImageJob(input: {
   sessionId: string;
   parentId: string;
 }):
-  | { ok: true; job: ImageJob; parent: ImageJob }
+  | { ok: true; job: ImageJob; parent: ImageJob; retryToken: string }
   | {
       ok: false;
       code: "NOT_FOUND" | "NOT_OWNED" | "JOB_IN_FLIGHT" | "NOT_RETRYABLE";
@@ -224,7 +242,8 @@ export function forkRetryImageJob(input: {
     } {
   trimStore();
   sweepTimedOutImageJobs();
-  const parent = findImageJobByRequestOrId(input.sessionId, input.parentId);
+  // Exact immutable ledger job id only — never requestId / prompt guess.
+  const parent = jobs.get(input.parentId);
   if (!parent) {
     return {
       ok: false,
@@ -262,7 +281,21 @@ export function forkRetryImageJob(input: {
       message: `Parent status “${parent.status}” is not retryable on this ledger`,
     };
   }
+  const existingChild = [...jobs.values()].find(
+    (j) =>
+      j.sessionId === input.sessionId &&
+      j.parentJobId === parent.id &&
+      (j.status === "queued" || j.status === "running")
+  );
+  if (existingChild) {
+    return {
+      ok: false,
+      code: "JOB_IN_FLIGHT",
+      message: `Retry child ${existingChild.id} is already ${existingChild.status}`,
+    };
+  }
   const t = nowIso();
+  const retryToken = mintRetryToken();
   const job: ImageJob = {
     id: newId(),
     sessionId: input.sessionId,
@@ -270,7 +303,9 @@ export function forkRetryImageJob(input: {
     prompt: parent.prompt,
     aspect: parent.aspect,
     parentJobId: parent.id,
-    idempotencyKey: `retry:${parent.id}:${Math.floor(Date.now() / 5000)}`,
+    idempotencyKey: `retry:${parent.id}:${retryTokenDigest(retryToken).slice(0, 24)}`,
+    retryTokenHash: retryTokenDigest(retryToken),
+    deadlineAt: fixedDeadlineAt(Date.now(), imageJobTimeoutMs()),
     createdAt: t,
     updatedAt: t,
   };
@@ -278,21 +313,136 @@ export function forkRetryImageJob(input: {
   if (job.idempotencyKey) {
     byIdempotency.set(`${input.sessionId}:${job.idempotencyKey}`, job.id);
   }
-  return { ok: true, job, parent };
+  return { ok: true, job, parent, retryToken };
 }
 
 /**
- * Open a running still for POST /api/image.
- * R1b: only promote a ledger-retry fork when the client presents the explicit
- * fork job id (`retryJobId`). Never guess by prompt alone (wrong still risk).
+ * Claim a queued still retry fork with exact job id + one-time bearer.
+ * Never promotes by prompt/list order.
+ */
+export function claimRetryImageJob(input: {
+  sessionId: string;
+  retryJobId: string;
+  retryToken: string;
+  prompt: string;
+  aspect?: string;
+  idempotencyKey?: string;
+}):
+  | { ok: true; job: ImageJob }
+  | {
+      ok: false;
+      code:
+        | "RETRY_TOKEN_INVALID"
+        | "RETRY_JOB_NOT_READY"
+        | "RETRY_SPEC_MISMATCH"
+        | "IDEMPOTENCY_CONFLICT";
+      message: string;
+    } {
+  trimStore();
+  sweepTimedOutImageJobs();
+  const child = jobs.get(input.retryJobId);
+  if (
+    !child ||
+    child.sessionId !== input.sessionId ||
+    !child.parentJobId ||
+    !retryTokenMatches(child.retryTokenHash, input.retryToken)
+  ) {
+    return {
+      ok: false,
+      code: "RETRY_TOKEN_INVALID",
+      message: "Retry still or one-time token is invalid for this session",
+    };
+  }
+  if (child.status !== "queued" || child.retryClaimedAt) {
+    return {
+      ok: false,
+      code: "RETRY_JOB_NOT_READY",
+      message: `Retry child is ${child.status}; mint a retry from the selected terminal still`,
+    };
+  }
+  const prompt = input.prompt.slice(0, 2000);
+  if (child.prompt && child.prompt !== prompt) {
+    return {
+      ok: false,
+      code: "RETRY_SPEC_MISMATCH",
+      message: "Retry prompt does not match the selected parent still",
+    };
+  }
+  if (
+    child.aspect &&
+    input.aspect &&
+    child.aspect !== input.aspect
+  ) {
+    return {
+      ok: false,
+      code: "RETRY_SPEC_MISMATCH",
+      message: "Retry aspect does not match the selected parent still",
+    };
+  }
+  if (input.idempotencyKey) {
+    const bound = byIdempotency.get(
+      `${input.sessionId}:${input.idempotencyKey}`
+    );
+    if (bound && bound !== child.id) {
+      return {
+        ok: false,
+        code: "IDEMPOTENCY_CONFLICT",
+        message: "Idempotency key is already bound to another still attempt",
+      };
+    }
+  }
+  if (child.idempotencyKey) {
+    byIdempotency.delete(`${input.sessionId}:${child.idempotencyKey}`);
+  }
+  if (input.idempotencyKey) {
+    byIdempotency.set(`${input.sessionId}:${input.idempotencyKey}`, child.id);
+  }
+  const t = nowIso();
+  const claimed: ImageJob = {
+    ...child,
+    status: "running",
+    prompt,
+    aspect: input.aspect ?? child.aspect,
+    idempotencyKey: input.idempotencyKey,
+    workerHeartbeatAt: t,
+    retryTokenHash: undefined,
+    retryClaimedAt: t,
+    error: undefined,
+    errorCode: undefined,
+    imageUrl: undefined,
+    creditsOutcome: undefined,
+    creditsRefunded: undefined,
+    demo: undefined,
+    demoReason: undefined,
+    updatedAt: t,
+  };
+  jobs.set(child.id, claimed);
+  return { ok: true, job: claimed };
+}
+
+/**
+ * Trusted worker liveness for mid-Flux stills. Never moves deadlineAt.
+ */
+export function recordImageWorkerHeartbeat(id: string): ImageJob | null {
+  trimStore();
+  sweepTimedOutImageJobs();
+  const job = jobs.get(id);
+  if (!job) return null;
+  if (job.status !== "queued" && job.status !== "running") return job;
+  const next = { ...job, workerHeartbeatAt: nowIso(), updatedAt: nowIso() };
+  jobs.set(job.id, next);
+  return next;
+}
+
+/**
+ * Open a running still for POST /api/image (new attempt, not a retry claim).
+ * Retry forks must use claimRetryImageJob with job id + one-time bearer.
  */
 export function beginImageJob(input: {
   sessionId: string;
   prompt: string;
   aspect?: string;
   idempotencyKey?: string;
-  /** Explicit fork token from POST /api/image/[id]/retry */
-  retryJobId?: string;
 }): ImageJob {
   trimStore();
   sweepTimedOutImageJobs();
@@ -313,6 +463,7 @@ export function beginImageJob(input: {
             status: "running",
             prompt,
             aspect: input.aspect ?? existing.aspect,
+            workerHeartbeatAt: t,
             updatedAt: t,
           };
           jobs.set(existing.id, next);
@@ -323,50 +474,6 @@ export function beginImageJob(input: {
     }
   }
 
-  const retryToken = (input.retryJobId || "").trim();
-  const promote =
-    retryToken.length >= 8
-      ? (() => {
-          const fork = jobs.get(retryToken);
-          if (
-            !fork ||
-            fork.sessionId !== input.sessionId ||
-            fork.status !== "queued" ||
-            !fork.parentJobId
-          ) {
-            return undefined;
-          }
-          return fork;
-        })()
-      : undefined;
-
-  if (promote) {
-    if (promote.idempotencyKey) {
-      byIdempotency.delete(`${input.sessionId}:${promote.idempotencyKey}`);
-    }
-    const next: ImageJob = {
-      ...promote,
-      status: "running",
-      prompt,
-      aspect: input.aspect ?? promote.aspect,
-      idempotencyKey: input.idempotencyKey,
-      // Clear prior cancel/fail noise if any leaked onto the fork.
-      error: undefined,
-      errorCode: undefined,
-      imageUrl: undefined,
-      creditsOutcome: undefined,
-      creditsRefunded: undefined,
-      demo: undefined,
-      demoReason: undefined,
-      updatedAt: t,
-    };
-    jobs.set(promote.id, next);
-    if (input.idempotencyKey) {
-      byIdempotency.set(`${input.sessionId}:${input.idempotencyKey}`, promote.id);
-    }
-    return next;
-  }
-
   const job: ImageJob = {
     id: newId(),
     sessionId: input.sessionId,
@@ -374,6 +481,8 @@ export function beginImageJob(input: {
     prompt,
     aspect: input.aspect,
     idempotencyKey: input.idempotencyKey,
+    deadlineAt: fixedDeadlineAt(Date.now(), imageJobTimeoutMs()),
+    workerHeartbeatAt: t,
     createdAt: t,
     updatedAt: t,
   };
@@ -575,6 +684,7 @@ export function completeImageJob(input: {
     creditsOutcome: input.creditsOutcome,
     requestId: input.requestId || id,
     idempotencyKey: input.idempotencyKey,
+    deadlineAt: fixedDeadlineAt(Date.parse(t), imageJobTimeoutMs()),
     createdAt: t,
     updatedAt: t,
   };
@@ -647,6 +757,7 @@ export function failImageJob(input: {
     creditsRefunded: input.creditsRefunded,
     creditsOutcome,
     idempotencyKey: input.idempotencyKey,
+    deadlineAt: fixedDeadlineAt(Date.parse(t), imageJobTimeoutMs()),
     createdAt: t,
     updatedAt: t,
   };
@@ -751,8 +862,8 @@ export function listImageJobsForSession(
 }
 
 /**
- * Slide TTL on every open still for this session (GET poll honesty).
- * Prevents false TIMEOUT while Image studio polls mid-Flux.
+ * @deprecated R1b: GET poll is read-only. Kept for ops probes that still call
+ * it; does **not** extend deadlineAt (only last-seen updatedAt).
  */
 export function touchOpenImageJobsForSession(sessionId: string): number {
   trimStore();
@@ -762,6 +873,7 @@ export function touchOpenImageJobsForSession(sessionId: string): number {
   for (const j of jobs.values()) {
     if (j.sessionId !== sessionId) continue;
     if (j.status !== "running" && j.status !== "queued") continue;
+    // Last-seen only — deadlineAt stays fixed.
     jobs.set(j.id, { ...j, updatedAt: t });
     n += 1;
   }
@@ -816,6 +928,7 @@ export function toPublicImageJob(
     errorCode: job.errorCode,
     requestId: job.requestId || job.id,
     ...(job.parentJobId ? { parentJobId: job.parentJobId } : {}),
+    deadlineAt: job.deadlineAt,
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
     owned: true,

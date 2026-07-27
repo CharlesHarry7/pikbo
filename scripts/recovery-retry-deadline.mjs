@@ -113,6 +113,54 @@ assert.equal(claims.filter(Boolean).length, 1);
 assert.equal(grant.claims, 1);
 assert.equal(await claim(`${retryToken}wrong`), false);
 
+// ─── Image still R1b parity (exact parent, one-time bearer, fixed deadline) ───
+
+const imageJobs = readFileSync(join(root, "lib/imageJobs.ts"), "utf8");
+const imageRetryRoute = readFileSync(
+  join(root, "app/api/image/[id]/retry/route.ts"),
+  "utf8"
+);
+const imageRoute = readFileSync(join(root, "app/api/image/route.ts"), "utf8");
+const imageClient = readFileSync(join(root, "lib/imageClient.ts"), "utf8");
+const imagePage = readFileSync(join(root, "app/image/page.tsx"), "utf8");
+
+assert.match(imageJobs, /export function claimRetryImageJob/);
+assert.match(imageJobs, /export function forkRetryImageJob/);
+assert.match(imageJobs, /const parent = jobs\.get\(input\.parentId\)/);
+assert.match(imageJobs, /const child = jobs\.get\(input\.retryJobId\)/);
+assert.match(
+  imageJobs,
+  /retryTokenMatches\(child\.retryTokenHash, input\.retryToken\)/
+);
+assert.match(imageJobs, /retryTokenHash:\s*undefined/);
+assert.match(imageJobs, /deadlineAt:\s*fixedDeadlineAt/);
+assert.doesNotMatch(
+  imageJobs,
+  /retryJobId\?: string[\s\S]{0,80}beginImageJob/,
+  "beginImageJob must not promote via bare retryJobId — use claimRetryImageJob"
+);
+assert.match(imageRetryRoute, /retryToken/);
+assert.match(imageRetryRoute, /next:[\s\S]{0,200}retryJobId[\s\S]{0,80}retryToken/);
+assert.doesNotMatch(
+  imageRetryRoute,
+  /retryToken:\s*job\.id/,
+  "retry route must return the one-time bearer, not the job id"
+);
+assert.match(imageRoute, /claimRetryImageJob/);
+assert.match(imageRoute, /RETRY_TOKEN_INVALID/);
+assert.match(imageClient, /retryToken\?:/);
+assert.match(imagePage, /pikbo_retry_token:/);
+assert.match(imagePage, /retryToken:\s*ledgerRetry\.retryToken/);
+
+const library = readFileSync(
+  join(root, "components/LibraryGrid.tsx"),
+  "utf8"
+);
+assert.match(
+  library,
+  /forkSessionStillRetry[\s\S]{0,4000}pikbo_retry_token:/
+);
+
 console.log(
-  "recovery-retry-deadline: PASS (exact retry token winner=1/20; polling cannot extend fixed deadline)"
+  "recovery-retry-deadline: PASS (exact retry token winner=1/20; polling cannot extend fixed deadline; image still R1b parity)"
 );

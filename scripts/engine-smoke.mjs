@@ -965,6 +965,8 @@ const ciYml = fs.readFileSync(
 assert.match(ciYml, /engine-smoke/);
 assert.match(ciYml, /recovery-qa|recovery-cost-gate/);
 assert.match(ciYml, /recovery-ledger/);
+assert.match(ciYml, /recovery-retry-deadline/);
+assert.match(ciYml, /showcase-evidence-smoke/);
 assert.match(ciYml, /typecheck/);
 assert.match(ciYml, /npm run build/);
 assert.match(ciYml, /npm run critical-path/);
@@ -1768,12 +1770,11 @@ assert.match(
 const imageJobsSrc = fs.readFileSync(join(root, "lib/imageJobs.ts"), "utf8");
 assert.match(imageJobsSrc, /export function findImageJobByIdempotencyKey/);
 assert.match(imageJobsSrc, /export function beginImageJob/);
-// R1b stills: promote only with explicit retryJobId fork token (never prompt guess)
-assert.match(imageJobsSrc, /retryJobId/);
-assert.match(
-  imageJobsSrc,
-  /beginImageJob[\s\S]{0,2500}retryJobId[\s\S]{0,900}parentJobId|Never guess by prompt/
-);
+// R1b stills: exact child + one-time bearer claim (never prompt promote)
+assert.match(imageJobsSrc, /export function claimRetryImageJob/);
+assert.match(imageJobsSrc, /retryTokenMatches\(child\.retryTokenHash/);
+assert.match(imageJobsSrc, /const parent = jobs\.get\(input\.parentId\)/);
+assert.match(imageJobsSrc, /deadlineAt:\s*fixedDeadlineAt/);
 assert.match(imageJobsSrc, /export function completeImageJob/);
 assert.match(imageJobsSrc, /export function failImageJob/);
 assert.match(imageJobsSrc, /export function imageJobsProbe/);
@@ -1785,12 +1786,15 @@ assert.match(imageJobsSrc, /TIMEOUT|refund unconfirmed/);
 // Still ledger list parity with GET /api/generations
 assert.match(imageJobsSrc, /export function listImageJobsForSession/);
 assert.match(imageJobsSrc, /export function touchOpenImageJobsForSession/);
+assert.match(imageJobsSrc, /export function claimRetryImageJob/);
+assert.match(imageJobsSrc, /export function recordImageWorkerHeartbeat/);
 assert.match(imageJobsSrc, /export function toPublicImageJob/);
 assert.match(imageJobsSrc, /export function getImageJob/);
 assert.match(imageJobsSrc, /export function touchImageJob/);
 assert.match(imageJobsSrc, /export function forkRetryImageJob/);
 assert.match(imageJobsSrc, /status:\s*["']queued["']/);
 assert.match(imageJobsSrc, /parentJobId/);
+assert.match(imageJobsSrc, /deadlineAt/);
 assert.match(imageJobsSrc, /includeDataUrl/);
 assert.match(imageJobsSrc, /IMAGE_JOBS_LIST_LIMIT/);
 assert.match(imageJobsSrc, /hasImage|isSafeDeliverableUrl/);
@@ -1801,7 +1805,12 @@ assert.match(imageRoute, /requestId/);
 assert.match(imageRoute, /export async function HEAD/);
 assert.match(imageRoute, /export async function GET/);
 assert.match(imageRoute, /listImageJobsForSession|toPublicImageJob/);
-assert.match(imageRoute, /touchOpenImageJobsForSession/);
+// R1b: GET is read-only — must not slide deadline via touchOpen
+assert.doesNotMatch(
+  imageRoute,
+  /touchOpenImageJobsForSession\(session\.id\)/
+);
+assert.match(imageRoute, /claimRetryImageJob|providerCompletionDecision/);
 assert.match(imageRoute, /X-Pikbo-Image-Jobs-Open/);
 assert.match(imageRoute, /X-Pikbo-Image-Jobs-List-Limit/);
 assert.match(imageRoute, /imageJobInFlightRetryAfterSec/);
@@ -1815,7 +1824,9 @@ const imageByIdRoute = fs.readFileSync(
 );
 assert.match(imageByIdRoute, /export async function GET/);
 assert.match(imageByIdRoute, /export async function DELETE/);
-assert.match(imageByIdRoute, /getImageJob|touchImageJob/);
+assert.match(imageByIdRoute, /getImageJob/);
+assert.doesNotMatch(imageByIdRoute, /touchImageJob\(/);
+assert.match(imageByIdRoute, /Read-only poll|read-only|touched:\s*false/i);
 assert.match(imageByIdRoute, /includeDataUrl:\s*true/);
 assert.match(imageByIdRoute, /refundUnconfirmed:\s*true/);
 // Still ledger retry fork (generations/[id]/retry parity)

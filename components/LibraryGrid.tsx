@@ -108,11 +108,13 @@ function statusTone(status: string): string {
   return "text-[var(--fg-dim)]";
 }
 
-/** Library → Still studio handoff (prompt/aspect/job for recovery). */
+/** Library → Still studio handoff (prompt/aspect/job/retry for recovery). */
 function createStillStudioHref(opts?: {
   prompt?: string;
   aspect?: string;
   jobId?: string;
+  /** R1b exact retry child id (bearer lives in sessionStorage). */
+  retryJobId?: string;
 }): string {
   const sp = new URLSearchParams();
   const p = opts?.prompt?.trim();
@@ -121,6 +123,8 @@ function createStillStudioHref(opts?: {
   if (a) sp.set("aspect", a.slice(0, 16));
   const job = opts?.jobId?.trim();
   if (job) sp.set("job", job.slice(0, 128));
+  const retry = opts?.retryJobId?.trim();
+  if (retry && retry.length >= 8) sp.set("retryJobId", retry.slice(0, 128));
   const q = sp.toString();
   return q ? `/image?${q}` : "/image";
 }
@@ -1030,7 +1034,13 @@ export function LibraryGrid() {
         ok?: boolean;
         message?: string;
         code?: string;
-        next?: { imageUi?: string; prompt?: string; aspect?: string };
+        next?: {
+          imageUi?: string;
+          prompt?: string;
+          aspect?: string;
+          retryJobId?: string;
+          retryToken?: string;
+        };
       };
       if (!res.ok || !body.ok) {
         const code = body.code || "";
@@ -1055,17 +1065,36 @@ export function LibraryGrid() {
       );
       await refreshSessionStills();
       const parent = sessionStills.find((j) => j.id === id);
-      // Prefer prompt/aspect handoff so Still studio can re-POST Flux immediately.
-      const imageUi = createStillStudioHref({
-        prompt:
-          typeof body.next?.prompt === "string"
-            ? body.next.prompt
-            : parent?.prompt,
-        aspect:
-          typeof body.next?.aspect === "string"
-            ? body.next.aspect
-            : parent?.aspect,
-      });
+      if (
+        typeof body.next?.retryJobId === "string" &&
+        typeof body.next?.retryToken === "string"
+      ) {
+        try {
+          sessionStorage.setItem(
+            `pikbo_retry_token:${body.next.retryJobId}`,
+            body.next.retryToken
+          );
+        } catch {
+          toast("Retry token could not be stored — choose Ledger retry again");
+          return;
+        }
+      }
+      // Prefer server imageUi; fall back to prompt/aspect + exact child id.
+      const imageUi =
+        typeof body.next?.imageUi === "string" &&
+        body.next.imageUi.startsWith("/image")
+          ? body.next.imageUi
+          : createStillStudioHref({
+              prompt:
+                typeof body.next?.prompt === "string"
+                  ? body.next.prompt
+                  : parent?.prompt,
+              aspect:
+                typeof body.next?.aspect === "string"
+                  ? body.next.aspect
+                  : parent?.aspect,
+              retryJobId: body.next?.retryJobId,
+            });
       window.location.href = imageUi;
     } catch {
       toast("Network error forking still retry");

@@ -458,6 +458,8 @@ const ciYml = readFileSync(join(root, "docs/ci/github-actions-ci.yml"), "utf8");
 assert.match(ciYml, /engine-smoke/);
 assert.match(ciYml, /recovery-qa|recovery-cost-gate/);
 assert.match(ciYml, /recovery-ledger/);
+assert.match(ciYml, /recovery-retry-deadline/);
+assert.match(ciYml, /showcase-evidence-smoke/);
 assert.match(ciYml, /npm run typecheck/);
 assert.match(ciYml, /npm run build/);
 assert.match(ciYml, /npm run link-check/);

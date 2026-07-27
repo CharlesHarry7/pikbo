@@ -9,7 +9,7 @@ type Props = { params: Promise<{ id: string }> };
 /**
  * Phase D local still retry handoff — parity with POST /api/generations/[id]/retry.
  * Forks a queued child for tracking; does not re-call Flux.
- * Client re-submits POST /api/image with the parent prompt (new idempotency key).
+ * Client re-submits POST /api/image with exact child id + one-time bearer.
  */
 export async function POST(_req: Request, { params }: Props) {
   const { id } = await params;
@@ -38,13 +38,12 @@ export async function POST(_req: Request, { params }: Props) {
       { status }
     );
   }
-  const { job, parent } = result;
+  const { job, parent, retryToken } = result;
   const sp = new URLSearchParams();
   if (parent.prompt?.trim()) sp.set("prompt", parent.prompt.trim().slice(0, 500));
   if (parent.aspect?.trim()) sp.set("aspect", parent.aspect.trim().slice(0, 16));
-  // R1b: explicit fork token — client must pass retryJobId on re-POST.
+  // R1b: exact child id in URL; one-time bearer lives in sessionStorage (not query).
   sp.set("retryJobId", job.id);
-  // Always start with /image; query carries prompt/aspect when present.
   const imageUi = sp.toString() ? `/image?${sp.toString()}` : "/image";
   return NextResponse.json(
     {
@@ -52,18 +51,20 @@ export async function POST(_req: Request, { params }: Props) {
       mode: "local-memory",
       durable: false,
       message:
-        "Still retry forked in process memory. Re-submit POST /api/image with the same prompt and retryJobId — this does not re-run Flux by itself.",
+        "Still retry child queued. Re-submit POST /api/image with this exact child id and one-time token; prompt-only re-posts cannot claim it.",
       parent: toPublicImageJob(parent, session.id, { includeDataUrl: true }),
       job: toPublicImageJob(job, session.id),
-      retryToken: job.id,
       next: {
         image: "/api/image",
         status: `/api/image/${job.id}`,
         retryJobId: job.id,
+        retryToken,
         // Literal "/image" kept for smoke/docs; query form used for handoff.
         imageUi: imageUi.startsWith("/image") ? imageUi : "/image",
+        prompt: parent.prompt,
+        aspect: parent.aspect,
       },
-      note: "Mint a new idempotency key on Generate still — parent key stays terminal. Pass retryJobId to promote this fork.",
+      note: "Mint a new idempotency key on Generate still — parent key stays terminal. Pass retryJobId + retryToken once.",
     },
     { status: 202 }
   );

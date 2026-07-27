@@ -29,20 +29,23 @@ import {
 import {
   beginImageJob,
   cancelImageJob,
+  claimRetryImageJob,
   completeImageJob,
   failImageJob,
   findImageJobByIdempotencyKey,
+  getImageJob,
   IMAGE_JOBS_LIST_LIMIT,
   imageJobInFlightRetryAfterSec,
   imageJobTimeoutMs,
   listImageJobCountsForSession,
   listImageJobsForSession,
   normalizeImageIdempotencyKey,
+  recordImageWorkerHeartbeat,
   sweepTimedOutImageJobs,
-  touchOpenImageJobsForSession,
   toPublicImageJob,
   type ImageJob,
 } from "@/lib/imageJobs";
+import { providerCompletionDecision } from "@/lib/generationReliability.mjs";
 
 type ImageDemoReason =
   | "no_provider_key"
@@ -79,7 +82,7 @@ export async function HEAD() {
 /**
  * Phase D still ledger list — parity with GET /api/generations.
  * Newest page for Image recovery UI; byStatus/open/total are full-session.
- * Touches open jobs so poll does not false-TIMEOUT mid-Flux.
+ * R1b: GET is read-only — never extends fixed deadlineAt.
  * Never dumps multi-KB data: URLs into the list JSON.
  */
 export async function GET() {
@@ -87,7 +90,6 @@ export async function GET() {
   const timedOut = sweepTimedOutImageJobs().filter(
     (j) => j.sessionId === session.id
   ).length;
-  const touchedOpen = touchOpenImageJobsForSession(session.id);
   const listed = listImageJobsForSession(session.id, IMAGE_JOBS_LIST_LIMIT);
   const jobs = listed.map((j) => toPublicImageJob(j, session.id));
   const full = listImageJobCountsForSession(session.id);
@@ -105,14 +107,15 @@ export async function GET() {
     durable: false,
     jobTimeoutMs: imageJobTimeoutMs(),
     timedOutThisSweep: timedOut,
-    touchedOpen,
+    /** R1b: polls never extend deadlineAt. */
+    touchedOpen: 0,
     listLimit: IMAGE_JOBS_LIST_LIMIT,
     listed: jobs.length,
     total: full.total,
     byStatus,
     open: full.open,
     note:
-      "In-process still ledger for soft-launch recovery. Not multi-node durable. Use POST /api/image for work. Open (queued|running) jobs past jobTimeoutMs fail with TIMEOUT. GET touches all open stills; byStatus/open/total are full-session. data: demo URLs omitted from list (hasImage flag only).",
+      "In-process still ledger for soft-launch recovery. Not multi-node durable. Use POST /api/image for work. Open (queued|running) jobs past fixed deadlineAt fail with TIMEOUT. GET is read-only; byStatus/open/total are full-session. data: demo URLs omitted from list (hasImage flag only).",
     compatibility: {
       syncImage: "/api/image",
       jobStatus: "/api/image/[id]",
@@ -256,6 +259,7 @@ export async function POST(req: Request) {
     aspect?: string;
     idempotencyKey?: string;
     retryJobId?: string;
+    retryToken?: string;
   };
   try {
     body = await req.json();
@@ -271,6 +275,11 @@ export async function POST(req: Request) {
     typeof body.retryJobId === "string" && body.retryJobId.trim().length >= 8
       ? body.retryJobId.trim().slice(0, 128)
       : undefined;
+  const retryToken =
+    typeof body.retryToken === "string" && body.retryToken.trim().length >= 16
+      ? body.retryToken.trim().slice(0, 200)
+      : undefined;
+  const hasRetryHandoff = Boolean(retryJobId || retryToken);
   if (!prompt || prompt.length < 4) {
     return NextResponse.json(
       { error: "Prompt required", code: "INVALID_REQUEST" },
@@ -410,13 +419,53 @@ export async function POST(req: Request) {
   let liveJobId: string | undefined;
   try {
     try {
-      liveJobId = beginImageJob({
-        sessionId: session.id,
-        prompt,
-        aspect: aspectEcho,
-        idempotencyKey: ledgerIdempotencyKey,
-        retryJobId,
-      }).id;
+      if (hasRetryHandoff) {
+        if (!retryJobId || !retryToken) {
+          return NextResponse.json(
+            {
+              error:
+                "Still ledger retry requires both retryJobId and one-time retryToken",
+              code: "RETRY_TOKEN_INVALID",
+              session: publicSession(session),
+            },
+            { status: 400 }
+          );
+        }
+        const claimed = claimRetryImageJob({
+          sessionId: session.id,
+          retryJobId,
+          retryToken,
+          prompt,
+          aspect: aspectEcho,
+          idempotencyKey: ledgerIdempotencyKey,
+        });
+        if (!claimed.ok) {
+          const status =
+            claimed.code === "RETRY_SPEC_MISMATCH"
+              ? 422
+              : claimed.code === "IDEMPOTENCY_CONFLICT"
+                ? 409
+                : claimed.code === "RETRY_JOB_NOT_READY"
+                  ? 409
+                  : 403;
+          return NextResponse.json(
+            {
+              error: claimed.message,
+              code: claimed.code,
+              session: publicSession(session),
+            },
+            { status }
+          );
+        }
+        liveJobId = claimed.job.id;
+      } else {
+        liveJobId = beginImageJob({
+          sessionId: session.id,
+          prompt,
+          aspect: aspectEcho,
+          idempotencyKey: ledgerIdempotencyKey,
+        }).id;
+      }
     } catch {
       liveJobId = undefined;
     }
@@ -597,6 +646,7 @@ export async function POST(req: Request) {
         "16:9": "landscape_16_9",
       };
 
+      if (liveJobId) recordImageWorkerHeartbeat(liveJobId);
       const result = await invokeReservedProvider(
         reserved.reservation,
         () =>
@@ -609,6 +659,7 @@ export async function POST(req: Request) {
             logs: false,
           })
       );
+      if (liveJobId) recordImageWorkerHeartbeat(liveJobId);
 
       const data = result.data as {
         images?: Array<{ url?: string }>;
@@ -667,6 +718,25 @@ export async function POST(req: Request) {
           /* best-effort */
         }
         return NextResponse.json(failBody, { status: 502 });
+      }
+
+      // Late Flux after cancel/timeout: withhold output (R1b video parity).
+      if (liveJobId) {
+        const deadlineState = getImageJob(liveJobId);
+        const completionDecision = providerCompletionDecision(deadlineState);
+        if (!completionDecision.allow) {
+          return NextResponse.json(
+            {
+              error: completionDecision.message,
+              code: completionDecision.code,
+              model: IMAGE_MODEL,
+              jobId: liveJobId,
+              session: publicSession(session),
+              refundUnconfirmed: true,
+            },
+            { status: completionDecision.httpStatus }
+          );
+        }
       }
 
       const providerRequestId =
