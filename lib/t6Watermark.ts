@@ -24,9 +24,9 @@ export type T6Report = {
     ffprobeHint: boolean;
     workerUrlConfigured: boolean;
     serverOwnedWorkerReady: boolean;
-    /** Hard false until /api/t6-derivatives exists. */
+    /** Controlled derivative route source exists; readiness still gates it. */
     derivativeServingImplemented: boolean;
-    /** Hard false until owned object storage adapter exists. */
+    /** True only when the owned storage adapter is configured. */
     storageAdapterImplemented: boolean;
   };
 };

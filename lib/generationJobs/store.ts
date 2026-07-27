@@ -1009,6 +1009,26 @@ export function findJobByRequestOrId(
 }
 
 /**
+ * Server-only controlled-delivery lookup. It never returns a job solely from
+ * an object hash: the current signed session and exact attached owned object
+ * must both match.
+ */
+export function findJobByOwnedDerivative(
+  sessionId: string,
+  objectKey: string
+): GenerationJob | null {
+  for (const job of jobs.values()) {
+    if (
+      job.sessionId === sessionId &&
+      job.bakedDerivative?.objectKey === objectKey
+    ) {
+      return job;
+    }
+  }
+  return null;
+}
+
+/**
  * Idempotent provider webhook apply (Phase D + R1b/R1c honesty).
  * Soft-launch generate still settles inline; this path is for async completions
  * and duplicate webhook retries without double-writing terminal state.

@@ -9,8 +9,13 @@
  */
 
 import { createHash } from "node:crypto";
+import {
+  T6_OWNED_STORAGE_ADAPTER_IMPLEMENTED,
+  t6OwnedStorageConfigured,
+} from "./t6OwnedStorageConfig.mjs";
 
 export const SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED = false;
+export const T6_DERIVATIVE_SERVING_IMPLEMENTED = true;
 export const T6_MAX_SOURCE_BYTES = 50 * 1024 * 1024;
 export const T6_SOURCE_TIMEOUT_MS = 30_000;
 
@@ -25,6 +30,15 @@ export type ServerOwnedT6Input = Readonly<{
   idempotencyKey: string;
 }>;
 
+export type T6MediaProbe = Readonly<{
+  formatName: string;
+  durationSeconds: number;
+  width: number;
+  height: number;
+  videoCodec: string;
+  bakedMarkSignal: boolean;
+}>;
+
 export type T6DerivativeMetadata = Readonly<{
   status: T6DerivativeStatus;
   idempotencyKey: string;
@@ -33,8 +47,9 @@ export type T6DerivativeMetadata = Readonly<{
   contentType?: "video/mp4";
   sourceChecksum?: string;
   outputChecksum?: string;
-  /** ffprobe / runner proof, never treated as customer-visible source metadata. */
-  probe?: { formatName: string; bakedMarkSignal: boolean };
+  /** ffprobe proof, never treated as customer-visible source metadata. */
+  sourceProbe?: T6MediaProbe;
+  probe?: T6MediaProbe;
   errorCode?: string;
 }>;
 
@@ -51,10 +66,9 @@ export type T6WorkerReadiness = Readonly<{
 export function t6WorkerReadiness(): T6WorkerReadiness {
   const envRequested = process.env.PIKBO_T6_BAKED_WATERMARK_WORKER === "1";
   const implemented = SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED;
-  // No /api/t6-derivatives route or owned-object storage adapter exists yet.
-  // A metadata row must never be mistaken for a serveable file.
-  const derivativeServingImplemented = false;
-  const storageAdapterImplemented = false;
+  const derivativeServingImplemented = T6_DERIVATIVE_SERVING_IMPLEMENTED;
+  const storageAdapterImplemented =
+    T6_OWNED_STORAGE_ADAPTER_IMPLEMENTED && t6OwnedStorageConfigured();
   return {
     envRequested,
     implemented,
@@ -66,7 +80,7 @@ export function t6WorkerReadiness(): T6WorkerReadiness {
       derivativeServingImplemented &&
       storageAdapterImplemented,
     reason:
-      "T6 baked derivatives are hard-disabled until the persisted server worker, owned serving/storage adapter, and database-backed ffmpeg proof are complete",
+      "T6 baked derivatives remain disabled until the persisted worker is rehearsed with ffmpeg/ffprobe and explicitly enabled; source storage and controlled serving alone never unlock delivery",
   };
 }
 
@@ -125,6 +139,7 @@ export function isVerifiedT6DerivativeForJob(input: {
     | "contentType"
     | "sourceChecksum"
     | "outputChecksum"
+    | "sourceProbe"
     | "probe"
   >;
 }): boolean {
@@ -146,6 +161,9 @@ export function isVerifiedT6DerivativeForJob(input: {
     Boolean(derivative.sourceChecksum) &&
     Boolean(derivative.outputChecksum) &&
     derivative.sourceChecksum !== derivative.outputChecksum &&
+    validMediaProbe(derivative.sourceProbe, false) &&
+    validMediaProbe(derivative.probe, true) &&
+    mediaShapeMatches(derivative.sourceProbe!, derivative.probe!) &&
     derivative.probe?.bakedMarkSignal === true
   );
 }
@@ -160,6 +178,24 @@ export function canServeVerifiedT6Derivative(input: {
     t6DeliveryReadiness().effective &&
     isVerifiedT6DerivativeForJob(input)
   );
+}
+
+/**
+ * Customer-visible delivery truth. T6 never makes a credit/refund decision and
+ * never returns the raw provider reference.
+ */
+export function t6DerivativePublicTruth(input: {
+  jobId: string;
+  providerRequestId?: string;
+  derivative?: Parameters<typeof isVerifiedT6DerivativeForJob>[0]["derivative"];
+}) {
+  const deliverable = canServeVerifiedT6Derivative(input);
+  return {
+    deliverable,
+    withheld: !deliverable,
+    refundConfirmed: false,
+    providerOutputRef: null,
+  } as const;
 }
 
 function isNonPublicIpv4(hostname: string): boolean {
@@ -314,14 +350,57 @@ export function t6FfmpegArgs(input: {
     "comment=PIKBO baked watermark",
     "-movflags",
     "+faststart",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "fast",
+    "-crf",
+    "23",
+    "-pix_fmt",
+    "yuv420p",
     "-c:a",
-    "copy",
+    "aac",
+    "-b:a",
+    "128k",
     input.outputPath,
   ];
 }
 
 export function sha256(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
+}
+
+function validMediaProbe(
+  probe: T6MediaProbe | undefined,
+  requireMark: boolean
+): boolean {
+  return Boolean(
+    probe &&
+      /mp4|mov/i.test(probe.formatName) &&
+      Number.isFinite(probe.durationSeconds) &&
+      probe.durationSeconds > 0 &&
+      Number.isInteger(probe.width) &&
+      probe.width >= 16 &&
+      probe.width <= 8192 &&
+      Number.isInteger(probe.height) &&
+      probe.height >= 16 &&
+      probe.height <= 8192 &&
+      probe.videoCodec &&
+      (!requireMark || probe.bakedMarkSignal === true)
+  );
+}
+
+function mediaShapeMatches(
+  source: T6MediaProbe,
+  output: T6MediaProbe
+): boolean {
+  const durationTolerance = Math.max(0.25, source.durationSeconds * 0.03);
+  return (
+    source.width === output.width &&
+    source.height === output.height &&
+    Math.abs(source.durationSeconds - output.durationSeconds) <=
+      durationTolerance
+  );
 }
 
 /**
@@ -332,17 +411,38 @@ export function sha256(bytes: Uint8Array): string {
 export function verifyT6Derivative(input: {
   source: Uint8Array;
   output: Uint8Array;
-  probe: { formatName: string; bakedMarkSignal: boolean };
-}): { ok: true; sourceChecksum: string; outputChecksum: string } | { ok: false; code: string } {
+  sourceProbe: T6MediaProbe;
+  probe: T6MediaProbe;
+}):
+  | {
+      ok: true;
+      sourceChecksum: string;
+      outputChecksum: string;
+      sourceProbe: T6MediaProbe;
+      probe: T6MediaProbe;
+    }
+  | { ok: false; code: string } {
   const sourceChecksum = sha256(input.source);
   const outputChecksum = sha256(input.output);
   if (!input.output.byteLength || sourceChecksum === outputChecksum) {
     return { ok: false, code: "DERIVATIVE_UNVERIFIED" };
   }
-  if (!/mp4|mov/i.test(input.probe.formatName) || !input.probe.bakedMarkSignal) {
+  if (!validMediaProbe(input.sourceProbe, false)) {
+    return { ok: false, code: "SOURCE_PROBE_FAILED" };
+  }
+  if (!validMediaProbe(input.probe, true)) {
     return { ok: false, code: "WATERMARK_PROBE_FAILED" };
   }
-  return { ok: true, sourceChecksum, outputChecksum };
+  if (!mediaShapeMatches(input.sourceProbe, input.probe)) {
+    return { ok: false, code: "MEDIA_SHAPE_MISMATCH" };
+  }
+  return {
+    ok: true,
+    sourceChecksum,
+    outputChecksum,
+    sourceProbe: input.sourceProbe,
+    probe: input.probe,
+  };
 }
 
 /**
@@ -360,10 +460,10 @@ export type T6InjectedRunner = {
     resolvedAddresses: readonly string[];
   }>;
   runFfmpeg: (input: { args: string[]; source: Uint8Array }) => Promise<Uint8Array>;
-  probeMp4: (output: Uint8Array) => Promise<{
-    formatName: string;
-    bakedMarkSignal: boolean;
-  }>;
+  probeMp4: (
+    bytes: Uint8Array,
+    kind: "source" | "derivative"
+  ) => Promise<T6MediaProbe>;
   writeOwnedDerivative: (input: {
     objectKey: string;
     contentType: "video/mp4";
@@ -407,6 +507,7 @@ export async function runT6PipelineWithInjectedRunner(input: {
     });
     if (!sourceCheck.ok) return { ...base, status: "failed", errorCode: sourceCheck.code };
 
+    const sourceProbe = await input.runner.probeMp4(source.bytes, "source");
     const output = await input.runner.runFfmpeg({
       args: t6FfmpegArgs({
         sourcePath: "server-owned-source.mp4",
@@ -414,8 +515,13 @@ export async function runT6PipelineWithInjectedRunner(input: {
       }),
       source: source.bytes,
     });
-    const probe = await input.runner.probeMp4(output);
-    const verification = verifyT6Derivative({ source: source.bytes, output, probe });
+    const probe = await input.runner.probeMp4(output, "derivative");
+    const verification = verifyT6Derivative({
+      source: source.bytes,
+      output,
+      sourceProbe,
+      probe,
+    });
     if (!verification.ok) return { ...base, status: "failed", errorCode: verification.code };
     const written = await input.runner.writeOwnedDerivative({
       objectKey: base.objectKey,
@@ -472,7 +578,15 @@ export function transitionT6Derivative(
   current: T6DerivativeMetadata | undefined,
   next: T6DerivativeStatus,
   base: Pick<T6DerivativeMetadata, "idempotencyKey" | "objectKey">,
-  verified?: Pick<T6DerivativeMetadata, "contentType" | "sourceChecksum" | "outputChecksum" | "probe" | "deliveryPath">
+  verified?: Pick<
+    T6DerivativeMetadata,
+    | "contentType"
+    | "sourceChecksum"
+    | "outputChecksum"
+    | "sourceProbe"
+    | "probe"
+    | "deliveryPath"
+  >
 ): T6DerivativeMetadata {
   if (
     current &&
@@ -484,7 +598,15 @@ export function transitionT6Derivative(
   if (current?.status === "succeeded") return current;
   if (current?.status === "failed") return current;
   if (next === "succeeded") {
-    if (!verified?.contentType || !verified.deliveryPath || !verified.sourceChecksum || !verified.outputChecksum || !verified.probe?.bakedMarkSignal) {
+    if (
+      !verified?.contentType ||
+      !verified.deliveryPath ||
+      !verified.sourceChecksum ||
+      !verified.outputChecksum ||
+      !validMediaProbe(verified.sourceProbe, false) ||
+      !validMediaProbe(verified.probe, true) ||
+      !mediaShapeMatches(verified.sourceProbe!, verified.probe!)
+    ) {
       return { ...base, status: "failed", errorCode: "DERIVATIVE_UNVERIFIED" };
     }
     return { ...base, status: "succeeded", ...verified };

@@ -46,10 +46,16 @@ function runner(overrides = {}) {
       assert.ok(args.includes("comment=PIKBO baked watermark"));
       return Buffer.concat([Buffer.from("fixture:mp4:PIKBO_BAKED_MARK:"), input]);
     },
-    async probeMp4(output) {
+    async probeMp4(output, kind) {
       return {
         formatName: "mov,mp4,m4a,3gp,3g2,mj2",
-        bakedMarkSignal: output.includes(Buffer.from("PIKBO_BAKED_MARK")),
+        durationSeconds: 5,
+        width: 720,
+        height: 1280,
+        videoCodec: "h264",
+        bakedMarkSignal:
+          kind === "derivative" &&
+          output.includes(Buffer.from("PIKBO_BAKED_MARK")),
       };
     },
     async writeOwnedDerivative({ objectKey: key }) {
@@ -65,6 +71,7 @@ assert.equal(succeeded.objectKey, objectKey);
 assert.equal(succeeded.deliveryPath, ownedDeliveryPath);
 assert.notEqual(succeeded.sourceChecksum, succeeded.outputChecksum, "derivative differs from source");
 assert.equal(succeeded.probe?.bakedMarkSignal, true, "runner probe observes baked mark signal");
+assert.equal(succeeded.sourceProbe?.bakedMarkSignal, false);
 assert.equal(
   isVerifiedT6DerivativeForJob({
     jobId: job.jobId,
@@ -157,6 +164,46 @@ assert.equal(
   false,
   "delivery gate rejects equal source/output checksums"
 );
+
+const durationMismatch = await runT6PipelineWithInjectedRunner({
+  job,
+  runner: runner({
+    async probeMp4(output, kind) {
+      return {
+        formatName: "mov,mp4,m4a,3gp,3g2,mj2",
+        durationSeconds: kind === "source" ? 5 : 8,
+        width: 720,
+        height: 1280,
+        videoCodec: "h264",
+        bakedMarkSignal:
+          kind === "derivative" &&
+          output.includes(Buffer.from("PIKBO_BAKED_MARK")),
+      };
+    },
+  }),
+});
+assert.equal(durationMismatch.status, "failed");
+assert.equal(durationMismatch.errorCode, "MEDIA_SHAPE_MISMATCH");
+
+const resolutionMismatch = await runT6PipelineWithInjectedRunner({
+  job,
+  runner: runner({
+    async probeMp4(output, kind) {
+      return {
+        formatName: "mov,mp4,m4a,3gp,3g2,mj2",
+        durationSeconds: 5,
+        width: kind === "source" ? 720 : 1080,
+        height: kind === "source" ? 1280 : 1920,
+        videoCodec: "h264",
+        bakedMarkSignal:
+          kind === "derivative" &&
+          output.includes(Buffer.from("PIKBO_BAKED_MARK")),
+      };
+    },
+  }),
+});
+assert.equal(resolutionMismatch.status, "failed");
+assert.equal(resolutionMismatch.errorCode, "MEDIA_SHAPE_MISMATCH");
 
 const badSource = await runT6PipelineWithInjectedRunner({
   job,

@@ -24,6 +24,7 @@ export {
   forkRetryJob,
   cancelJob,
   findJobByRequestOrId,
+  findJobByOwnedDerivative,
   applyProviderWebhookEvent,
   sweepTimedOutJobs,
   jobTimeoutMs,

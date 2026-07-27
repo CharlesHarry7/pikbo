@@ -66,6 +66,9 @@ jobs:
       - name: Recovery reconciliation (R1c lease + settlement replay)
         run: npm run recovery-reconciliation
 
+      - name: T6 owned derivative proof
+        run: npm run t6-deliverable-proof
+
       - name: Public capability copy source contract
         run: npm run live-copy-smoke
 
