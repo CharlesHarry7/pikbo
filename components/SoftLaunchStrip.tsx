@@ -46,8 +46,8 @@ export function SoftLaunchStrip() {
     : trialDone
       ? "Free Mini trial used · Lab demos still free · compare finite plans"
       : freeLive
-        ? `Free Mini · ${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · failed jobs refund`
-        : "Free Mini · photo → short video · no card · live often 1–3 min · failed jobs refund";
+        ? `Free Mini · ${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · refunds when confirmed`
+        : "Free Mini · photo → short video · no card · live often 1–3 min · refunds when confirmed";
 
   // Homepage: keep convert on-page (#home-tool). Elsewhere: studio sample path.
   const primaryHref = trialDone

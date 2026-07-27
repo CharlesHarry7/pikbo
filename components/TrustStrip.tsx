@@ -11,7 +11,9 @@ export function TrustStrip() {
         <span className="hidden h-3 w-px bg-white/15 sm:block" />
         <span>Cached demos clearly labeled</span>
         <span className="hidden h-3 w-px bg-white/15 sm:block" />
-        <span>Free Mini · 5s · 480p · on-player mark · failed jobs refund</span>
+        <span>
+          Free Mini · 5s · 480p · on-player mark · refunds when confirmed
+        </span>
         <span className="hidden h-3 w-px bg-white/15 sm:block" />
         <span>
           Made for{" "}

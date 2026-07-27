@@ -346,7 +346,7 @@ const en: Dict = {
 
   "delivery.title": "Delivery · next steps",
   "delivery.footer":
-    "Ticks stay on this device only · not cloud-synced · failed jobs refund",
+    "Ticks stay on this device only · not cloud-synced · refunds when confirmed",
   "delivery.complete": "Pack checklist complete · ready to ship this SKU",
   "delivery.reset": "Reset ticks",
 

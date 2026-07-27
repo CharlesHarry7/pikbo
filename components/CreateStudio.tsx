@@ -1529,7 +1529,10 @@ export function CreateStudio({
                       : ""}
                   <span className="hidden sm:inline">
                     {" "}
-                    · <b className="text-[var(--fg)]">failed jobs refund</b>
+                    ·{" "}
+                    <b className="text-[var(--fg)]">
+                      refunds when confirmed
+                    </b>
                   </span>
                 </>
               )}

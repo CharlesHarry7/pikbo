@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Refund copy: when confirmed (not bare refund)
+- SoftLaunchStrip · TrustStrip · CreateStudio credit strip · i18n delivery:
+  "refunds when confirmed" (matches freeTrial.failedLiveRefundPolicy).
+- Drops bare "failed jobs refund" overclaim (TIMEOUT/cancel stay unconfirmed).
+- Smoke: doesNotMatch bare refund on SoftLaunch/Trust/Create.
+
 ### 2026-07-27 — [grok] Profile still-image jobs probe (Phase C)
 - ProfilePanel HEAD `/api/image` alongside video `/api/generations` (Settings
   parity): open/total/failed/canceled process-memory Flux stills.

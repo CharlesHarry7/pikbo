@@ -3488,6 +3488,25 @@ assert.match(
   fs.readFileSync(join(root, "components/SoftLaunchStrip.tsx"), "utf8"),
   /freeTrialExhausted|Trial used|clipsLeft/
 );
+// Refund honesty: never bare "failed jobs refund" (TIMEOUT/cancel stay unconfirmed)
+assert.match(
+  fs.readFileSync(join(root, "components/SoftLaunchStrip.tsx"), "utf8"),
+  /refunds when confirmed/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/SoftLaunchStrip.tsx"), "utf8"),
+  /failed jobs refund(?! when)/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/TrustStrip.tsx"), "utf8"),
+  /refunds when confirmed/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/TrustStrip.tsx"), "utf8"),
+  /failed jobs refund(?! when)/
+);
+assert.match(createStudio, /refunds when confirmed/);
+assert.doesNotMatch(createStudio, /failed jobs refund(?! when)/);
 // Batch / Seller Pack + effect landings share freeTrial honesty (Phase F)
 const batchSkuSrc = fs.readFileSync(
   join(root, "components/BatchStudio.tsx"),
