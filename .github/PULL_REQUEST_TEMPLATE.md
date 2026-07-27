@@ -28,8 +28,10 @@
 ## Checklist
 
 - [ ] I pulled the latest `main` and checked active ownership.
+- [ ] This agent has no other active task/branch/PR.
 - [ ] `docs/STATUS.md` reflects the task state.
 - [ ] A reusable delivery is summarized at the top of `docs/HANDOFF.md`.
 - [ ] Claims distinguish demo, live, provisional and externally verified evidence.
 - [ ] No secret, personal data or customer-owned asset is committed.
 - [ ] Public DNS, Stripe live, paid spend or irreversible actions have explicit approval.
+- [ ] I did not request GSC indexing, change production data/credits/billing, or deploy publicly without a separate explicit owner GO.

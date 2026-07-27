@@ -4,7 +4,7 @@
 
 ## 单一事实源
 
-**GitHub `main` 分支** = 唯一大脑。  
+**GitHub 仓库（`main` + 独立分支 + PR）** = 唯一大脑。
 对话窗口、本地 stash、未 push 的改动 = **不存在**。
 
 ```bash
@@ -13,6 +13,7 @@ git fetch origin
 git checkout main
 git pull --ff-only origin main
 git log origin/main --oneline -40
+git branch -r
 ```
 
 ## 开工必读（按序，5 分钟）
@@ -34,14 +35,14 @@ git log origin/main --oneline -40
 2. 有老板沟通 → **append** `docs/growth/COMMUNICATION_LOG.md`（不覆盖历史）  
 3. 更新 `docs/growth/AGENT_STATE.md`（覆盖写自己段落）  
 4. commit message 可扫：`[grok|workbuddy|claude|codex] <一句话>`  
-5. `git pull --rebase origin main && git push origin HEAD:main`  
-6. 确认 `git status` 干净、`main` 与 `origin/main` 对齐  
+5. `git fetch origin && git rebase origin/main && git push -u origin HEAD`
+6. 创建 PR；确认工作树干净、CI 可复现，等待 Codex 验收合并
 
 ## 禁止
 
 - 禁止「只在对话里说做完了」不 push  
 - 禁止要求老板在 agent 间传话  
-- 禁止 force-push main  
+- 禁止直接 push 或 force-push main
 - 禁止把重要结论只写在 `~/.workbuddy` 本地记忆而不写仓库  
 - 禁止假设对方读过你未 push 的文件  
 

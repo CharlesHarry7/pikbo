@@ -4,8 +4,7 @@
 > Supabase、Vercel 或部署权限。认证配置已转交恢复波次工程 owner。本文件只
 > 保留历史，不得复制执行。
 
-**老板用法：** 复制下方 fenced **全文** → 丢给 WorkBuddy。  
-老板不配密钥、不点 Vercel；你用 Chrome / 环境变量自己搞定。搞不定就 **诚实写 blocked**，再继续外链，禁止空转问老板。
+**仅历史存档：不得复制下方 fenced 块给 WorkBuddy。**
 
 ---
 
@@ -23,7 +22,7 @@
 - 权威说明：docs/BLOCKERS_REQUEST.md §2 · lib/authConfig.ts
 
 REPO:
-- https://github.com/guochao950518-wq/pikbo.git
+- https://github.com/CharlesHarry7/pikbo.git
 - 可能 redirect: https://github.com/CharlesHarry7/pikbo.git
 
 启动：

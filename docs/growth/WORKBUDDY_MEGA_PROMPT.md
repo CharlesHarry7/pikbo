@@ -3,8 +3,7 @@
 > **历史提示词，禁止直接执行（2026-07-27）：** 其中的生产、密钥、部署、
 > 数据库、业务代码和直接 main 权限已全部撤销。只读任务见 `WORK_QUEUE.md`。
 
-**老板用法：** 把下方 fenced 代码块 **从「你是」到最后一行完整复制**，一次性粘贴给 WorkBuddy。  
-不要删减章节。不要让它「先总结再问你」。
+**仅历史存档：不得复制下方 fenced 块给 WorkBuddy。**
 
 仓库权威副本路径：`docs/growth/WORKBUDDY_MEGA_PROMPT.md`  
 同步文件：`WORK_QUEUE.md` · `AGENT_BUS.md` · `AGENT_STATE.md` · `directories.json` · skill `pikbo-growth-auto`
@@ -56,7 +55,7 @@ Generate：https://pikbo.ai/create
 哥飞冷启动 14 天逻辑：外链 / GSC 优先；**不开 Stripe 装成熟**。
 
 GitHub 仓库（remote 可能 redirect，用 git remote -v 自检）：
-- https://github.com/guochao950518-wq/pikbo.git
+- https://github.com/CharlesHarry7/pikbo.git
 - 可能是 https://github.com/CharlesHarry7/pikbo.git
 
 多 Agent 分工（只认 GitHub，不认老板传话）：

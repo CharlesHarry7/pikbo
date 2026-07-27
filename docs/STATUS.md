@@ -12,6 +12,10 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 
 | ID | Task | Owner | Status | Branch | Notes |
 |---|---|---|---|---|---|
+| CTRL-3A | Canonical repo, one-task/branch/PR control plane and safe handoffs | Codex | **doing** | agent/gpt/three-agent-control-plane | Canonical repo corrected; full-branch fetch enabled locally; heartbeat runs hourly with 09:00/21:00 summaries; no public/paid/production authority |
+| GROK-GROWTH | Global-English SERP, seller intent, content-gap and attainable-link evidence | Grok | **doing** | agent/grok/pikbo-growth-evidence | Deliver sourced report + opportunity table; no invented volume, page generation, directory submission or direct-main push |
+| WB-SEO-BASELINE | AITDK/GSC/browser baseline with URL, timestamp and before/after evidence | WorkBuddy | **doing** | agent/workbuddy/seo-baseline-2026-07-28 | Read-only; no indexing request, code change, secrets, database, deploy or direct-main push |
+| SELLER-GOLD | Seller Pack cached golden path + failure/retry/partial-success regression | Codex | **todo** | agent/gpt/seller-pack-cached-golden-path | Start only after CTRL-3A is merged; one image, fixed three cached demos, zero provider calls |
 | R0H | Fail-closed public health truth for Soft Live | WorkBuddy | review | agent/workbuddy/health-truth | `ready.softLive` is true only when auth, reviewed Supabase atomic reservation, provider, and server-owned deliverable are all configured; otherwise health reports validation/cached-only and advertises 0 free live clips |
 | R2a | Proof wall truth + mobile video budget + Starter Pack naming | Claude | review | agent/claude/product-proof-mobile | Home uses 8-item Showcase whitelist; concepts are static; autoplay 1 mobile / 2 desktop; three-output name frozen |
 | R0 | Disable anonymous live generation; cached demo only until authenticated durable reserve | Claude | review | agent/claude/recovery-cost-gate | Anonymous/Free cached-only even with FAL_KEY; strict Supabase reserve + provider guard; zero-call regression passes. R1 atomic RPC remains separate |
@@ -30,7 +34,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | SUITE | 潮玩版 HF Generate + Yiha Modules 产品壳 | Grok | **review** | main | `/create` `/modules` suite chrome; softLaunch PRIMARY/MOBILE nav freeze; suite doors sitewide |
 | G1 | Nav whitelist / kill empty doors | Grok | **review** | agent/grok/seo-gsc-p0 | GSC P0: PRIMARY = Explore·Create·Effects·Pricing; Preview/Lab in More |
 | SEO-GSC | GSC VideoObject + crawl/noindex contract | Grok | **review** | main | Five-page marketing sitemap + legal (WorkBuddy budget); long-tail noindex; seo-cold-start-smoke in docs/ci; **boss: GSC after deploy still NO-GO** |
-| SEO-AITDK | Google-first metadata, trust, content and AITDK remediation | GPT/Codex | **review** | agent/gpt/aitdk-google-seo | Implementation and local acceptance green: correct social cards, seven-URL sitemap, long-tail noindex, one primary-tool video, trust contacts, guide evidence, English default and llms.txt. Public deploy/GSC/AITDK rescan remain GO-gated; GA4 ID still required |
+| SEO-AITDK | Google-first metadata, trust, content and AITDK remediation | GPT/Codex | **done** | main @ `c914eac` · PR #31 | 3/3 GitHub checks green; correct social cards, seven-URL sitemap, long-tail noindex, one primary-tool video, trust contacts, guide evidence, English default and llms.txt. Public deploy/GSC/AITDK rescan remain GO-gated; GA4 ID still required |
 | G2 | ≤8 hero presets, unique demos | Grok | **review** | main + agent/gpt/world-class-prd | Reassigned for proof audit; exact eight proof slugs are frozen |
 | G3 | Official demos copy (no fake UGC) | Codex | **done** | main @ `32c634c` | Official example / cached / concept language merged |
 | G4 | Zero 404 on linked URLs | Claude | **done** | main @ `5d25fb3` | Redirect aliases and link-check passed |
@@ -100,7 +104,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | D2 | Effects / for / toys pSEO axes | mixed | `lib/presets|usecases|toytypes` |
 | D3 | Create studio + fal generate API | mixed | `app/create`, `app/api/generate` |
 | D4 | Guest credits + paywall + pricing page | Grok | session cookie + `/pricing` |
-| D5 | Repo published | Grok | https://github.com/guochao950518-wq/pikbo |
+| D5 | Repo published | Grok | https://github.com/CharlesHarry7/pikbo |
 | D6 | Stripe webhooks + confirm + legal pages | Grok | this branch |
 | D7 | Toy-first homepage demo theatre | GPT | `agent/gpt/homepage-demos` |
 | D8 | Model shelf + demo-aware PresetsWall | GPT | `agent/gpt/home-visuals` |

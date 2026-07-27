@@ -6,7 +6,7 @@ Grok 已完成：**G6 PASS**（3 live + 退款）· CI 绿 · soft-live 代码�
 ## 5 步上线（Mode A 预览，先不绑 pikbo.ai）
 
 1. 打开 https://vercel.com → GitHub 登录  
-2. **Add New Project** → 选 `guochao950518-wq/pikbo` → Deploy  
+2. **Add New Project** → 选 `CharlesHarry7/pikbo` → Deploy
 3. Project → Settings → Environment Variables，加入（与本机 `.env.local` 相同）：
    - `SESSION_SECRET`
    - `FAL_KEY`

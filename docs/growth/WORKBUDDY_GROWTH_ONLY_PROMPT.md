@@ -3,7 +3,7 @@
 > **历史提示词，泛目录提交已暂停（2026-07-27）：** 当前只执行
 > `WORK_QUEUE.md` 的原始 GSC/AITDK/哥飞证据收集和公开 listing 核验。
 
-**老板用法：** 复制下方 fenced **全文**丢给 WorkBuddy。  
+**仅历史存档：不得复制下方 fenced 块给 WorkBuddy。**
 策略来自 SEO 复核：生产 sitemap **13 条已正确**；主战场是外链与收录，**禁止**把全站 /tools /for /effects 塞进 sitemap。
 
 ---
@@ -23,7 +23,7 @@
 6) 未 push = 没发生；必须 commit + push 到 GitHub main
 
 仓库：
-- https://github.com/guochao950518-wq/pikbo.git
+- https://github.com/CharlesHarry7/pikbo.git
 - 可能 redirect: https://github.com/CharlesHarry7/pikbo.git
 
 ════════════════════════════════════

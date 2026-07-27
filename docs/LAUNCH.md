@@ -21,7 +21,7 @@
 
 | # | 项 |
 |---|-----|
-| 1 | Vercel Import `guochao950518-wq/pikbo` → Deploy |
+| 1 | Vercel Import `CharlesHarry7/pikbo` → Deploy |
 | 2 | Env **Production**：`SESSION_SECRET` + `FAL_KEY` |
 | 3 | **不要**加 `STRIPE_*`、**不要**加 `NEXT_PUBLIC_PAYMENTS_ENABLED`、**不要**加 `ALLOW_DEV_UPGRADE` |
 | 4 | 域名 pikbo.ai / www 绑到 Vercel（阶段 2） |
@@ -56,7 +56,7 @@
 1. 打开 https://vercel.com/signup  
 2. **Continue with GitHub**  
 3. 授权后 **Add New → Project**  
-4. 选仓库 **`guochao950518-wq/pikbo`** → **Import**  
+4. 选仓库 **`CharlesHarry7/pikbo`** → **Import**
 5. 不要改构建命令，直接 **Deploy**  
 6. 等绿勾，点开 `https://xxx.vercel.app`  
 7. 确认能看见 Pikbo 首页、能进 Create

@@ -42,7 +42,7 @@ cd /Users/x/claude/pikbo && npm run dev
 
 按 **`docs/LAUNCH.md`**：
 
-1. Vercel Import `guochao950518-wq/pikbo`  
+1. Vercel Import `CharlesHarry7/pikbo`
 2. Env：`SESSION_SECRET` + `FAL_KEY`（+ 可选 Stripe）  
 3. Deploy → 加域名 pikbo.ai  
 
