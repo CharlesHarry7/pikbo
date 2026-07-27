@@ -33,7 +33,7 @@ const PRODUCTS: {
   },
   {
     href: "/create?mode=seller-pack",
-    title: "Seller Pack",
+    title: "Seller Starter Pack",
     blurb: "3 videos · one photo",
     tag: "Shop",
     hot: true,

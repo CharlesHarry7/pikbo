@@ -26,7 +26,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
         <p className="text-sm font-semibold text-white">Sign-in not live yet</p>
         <p className="text-xs leading-relaxed text-white/55">
           Supabase Auth keys are not configured on this deployment. Your guest
-          cookie still works for Generate, Modules, Seller Pack, and this-device
+          cookie still works for Generate, Modules, Seller Starter Pack, and this-device
           Library.
         </p>
         <div
@@ -44,7 +44,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
             href="/create?mode=seller-pack"
             className="btn btn-ghost !px-3 !py-1.5 text-xs"
           >
-            Seller Pack
+            Seller Starter Pack
           </a>
           <a href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Library

@@ -170,7 +170,7 @@ export function GenerateAfterPath({
         title="Listing spin + box reveal + social hook"
         data-after-seller-pack="1"
       >
-        Seller Pack
+        Seller Starter Pack
       </Link>
       <Link
         href={nextSkuHref}

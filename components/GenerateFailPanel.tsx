@@ -177,7 +177,7 @@ export function GenerateFailPanel({
           data-fail-path="seller-pack"
           title="Listing spin + box reveal + social hook"
         >
-          Seller Pack
+          Seller Starter Pack
         </Link>
         <Link
           href="/library"

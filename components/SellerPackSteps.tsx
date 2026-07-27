@@ -27,7 +27,7 @@ export function SellerPackSteps({
       {/* Phase F 390px: one-row path, same semantics as Create first-run */}
       <ol
         className="flex items-center gap-1 border-b border-[var(--border)] pb-2 text-[10px] font-bold uppercase tracking-wide sm:hidden"
-        aria-label="Seller Pack steps"
+        aria-label="Seller Starter Pack steps"
         data-seller-pack-steps="compact"
       >
         {items.map((it, i) => (

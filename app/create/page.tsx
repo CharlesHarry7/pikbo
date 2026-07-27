@@ -26,9 +26,9 @@ export async function generateMetadata({
   // Keep crawlable + follow for deep links; stay out of the 9-URL index budget.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return {
-      title: { absolute: `Seller Pack · Launch Pack | ${site.name}` },
+      title: { absolute: `Seller Starter Pack · 3 clips / 30 credits | ${site.name}` },
       description:
-        "Creative Director default: one owned toy photo → listing 360°, box reveal, and social hook. Three commercial formats. Lab demos free; live jobs charge per child.",
+        "Seller Starter Pack: one owned toy photo → listing 360°, box reveal, and social hook. Three clips cost 30 live credits. The 12-clip Launch Pack is coming later.",
       alternates: { canonical: "/create?mode=seller-pack" },
       robots: CONCEPT_ROBOTS,
     };
@@ -45,7 +45,7 @@ export async function generateMetadata({
   return {
     title: "Generate · Toy Creative Director",
     description:
-      "Pikbo Generate — designer-toy Creative Director. Upload a photo you own, pick a commercial goal (listing, reveal, hook, or Seller Pack), and export a short clip. Free Mini: 5s · 480p · on-player mark.",
+      "Pikbo Generate — upload an owned toy photo, pick a commercial goal, or create a Seller Starter Pack with three clips for 30 credits. Free Mini: 5s · 480p · on-player mark.",
     alternates: { canonical: "/create" },
     robots: CONCEPT_ROBOTS,
     openGraph: {
@@ -91,7 +91,7 @@ export default async function CreatePage({
         <Suspense
           fallback={
             <div className="border-b border-white/10 px-4 py-3 text-sm text-white/40">
-              Generate · Seller Pack
+              Generate · Seller Starter Pack
             </div>
           }
         >
@@ -99,7 +99,7 @@ export default async function CreatePage({
         </Suspense>
         <div className="px-4 py-8 sm:px-8">
           <div className="mx-auto max-w-6xl">
-            <span className="chip">Seller Pack · Launch Pack</span>
+            <span className="chip">Seller Starter Pack — 3 clips / 30 credits</span>
             <h1 className="mt-3 font-display text-3xl font-black uppercase tracking-tight">
               One photo → three commercial clips
             </h1>
@@ -110,6 +110,9 @@ export default async function CreatePage({
               drop day. Own photos only. Lab demos free and labeled. Live
               charges per successful child; failures restore credits when
               confirmed.
+            </p>
+            <p className="mt-2 text-xs font-semibold text-white/45">
+              Launch Pack — 12 clips / 120 credits · coming later
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <FreeTrialCta

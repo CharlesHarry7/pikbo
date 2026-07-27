@@ -36,10 +36,11 @@ export function VideoTile({
       ? item.demo?.preset
       : undefined);
   const isOfficial =
-    Boolean(item.badge && /official|cached/i.test(item.badge)) ||
-    item.kind === "demo";
-  const labQuality =
-    isOfficial || recipe ? provisionalLabQualityLabel(recipe) : null;
+    Boolean(item.demo) &&
+    (Boolean(item.badge && /official|cached/i.test(item.badge)) ||
+      item.kind === "demo");
+  const isConcept = !item.demo;
+  const labQuality = isOfficial ? provisionalLabQualityLabel(recipe) : null;
 
   return (
     <Link
@@ -48,14 +49,33 @@ export function VideoTile({
       aria-label={`Open ${item.title}`}
     >
       <div className={`relative ${aspectClass(item.ratio, compact)}`}>
-        <AutoPlayVideo
-          poster={item.demo.poster}
-          webm={item.demo.webm}
-          mp4={item.demo.mp4}
-          focusable={false}
-          desktopPlayMode="interaction"
-          className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out will-change-transform group-hover:scale-[1.05]"
-        />
+        {item.demo ? (
+          <AutoPlayVideo
+            poster={item.demo.poster}
+            webm={item.demo.webm}
+            mp4={item.demo.mp4}
+            focusable={false}
+            desktopPlayMode="interaction"
+            className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out will-change-transform group-hover:scale-[1.05]"
+          />
+        ) : (
+          <div
+            className="absolute inset-0 grid place-items-center overflow-hidden"
+            style={{
+              background:
+                item.conceptArt?.gradient ??
+                "linear-gradient(145deg, #16181d, #090a0d)",
+            }}
+            data-concept-recipe-art={recipe ?? item.id}
+          >
+            <span
+              aria-hidden
+              className="text-5xl drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] transition duration-300 group-hover:scale-105"
+            >
+              {item.conceptArt?.emoji ?? "✦"}
+            </span>
+          </div>
+        )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-95" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c8ff3d]/45 to-transparent opacity-0 transition group-hover:opacity-100" />
         <div className="absolute left-2 top-2 flex max-w-[80%] flex-wrap gap-0.5">
@@ -81,9 +101,11 @@ export function VideoTile({
             </span>
           ) : null}
         </div>
-        <span className="absolute right-2 top-2 rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[8px] font-black text-black opacity-0 shadow transition group-hover:opacity-100">
-          Remake
-        </span>
+        {!isConcept ? (
+          <span className="absolute right-2 top-2 rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[8px] font-black text-black opacity-0 shadow transition group-hover:opacity-100">
+            Remake
+          </span>
+        ) : null}
         <div
           className={`absolute inset-x-0 bottom-0 ${compact ? "p-2.5" : "p-3 sm:p-4"}`}
         >
@@ -99,11 +121,11 @@ export function VideoTile({
           </h3>
           {compact ? (
             <p className="mt-1 text-[9px] font-bold uppercase tracking-wide text-[#c8ff3d] opacity-0 transition group-hover:opacity-100">
-              Your photo →
+              {isConcept ? "View recipe notes →" : "Your photo →"}
             </p>
           ) : (
             <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--mint)]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)] ring-1 ring-[var(--mint)]/30 transition group-hover:bg-[var(--mint)] group-hover:text-black">
-              Remix with my toy
+              {isConcept ? "View concept recipe" : "Remix with my toy"}
               <span aria-hidden>→</span>
             </p>
           )}

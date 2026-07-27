@@ -54,7 +54,7 @@ const en: Dict = {
   "cta.viewAll": "View all →",
   "cta.allEffects": "All effects →",
   "cta.openGenerate": "Open Generate",
-  "cta.sellerPack": "Seller Pack",
+  "cta.sellerPack": "Seller Starter Pack",
   "lang.change": "Change language",
 
   "suite.title": "AI toy video suite",
@@ -68,7 +68,7 @@ const en: Dict = {
   "suite.flow.blurb": "Preview media wall",
   "suite.modules": "Modules",
   "suite.modules.blurb": "Video jobs · hook · unbox",
-  "suite.seller": "Seller Pack",
+  "suite.seller": "Seller Starter Pack",
   "suite.seller.blurb": "3 videos · one photo",
   "suite.recipes": "Recipes",
   "suite.recipes.blurb": "Viral video presets",
@@ -87,7 +87,7 @@ const en: Dict = {
   "suite.mode.generate.blurb": "Main product",
   "suite.mode.modules": "Modules",
   "suite.mode.modules.blurb": "Video jobs",
-  "suite.mode.seller": "Seller Pack",
+  "suite.mode.seller": "Seller Starter Pack",
   "suite.mode.seller.blurb": "3 videos",
   "suite.mode.recipes": "Recipes",
   "suite.mode.recipes.blurb": "Video presets",
@@ -237,7 +237,7 @@ const en: Dict = {
   "create.advanced": "Advanced",
   "create.advancedHint": "Duration · model · prompt",
   "create.advancedHide": "Hide",
-  "create.sellerPackLink": "Need a full Launch Pack? Seller Pack · 3 clips →",
+  "create.sellerPackLink": "Seller Starter Pack · 3 clips / 30 credits →",
   "create.moreRecipes": "More recipes · full catalog",
   "create.launchOnly": "Show launch recipes only",
   "create.toyIdentity": "Toy identity · optional bible",
@@ -248,7 +248,7 @@ const en: Dict = {
   "create.active": "Active",
   "create.nextJob": "Same photo · next commercial job",
   "create.nextJob.hint":
-    "Keep this still — listing spin, box reveal, social hook, or full Seller Pack. No re-upload.",
+    "Keep this still — listing spin, box reveal, social hook, or the Seller Starter Pack. No re-upload.",
   "create.download": "Download · keep it",
   "create.copyLink": "Copy link",
   "create.copied": "Copied!",
@@ -260,7 +260,7 @@ const en: Dict = {
   "create.ready": "Clip ready · commercial path",
   "create.labReady": "Lab preview ready",
   "create.ready.sub":
-    "Download for listing/social, open Seller Pack for three formats, or run the next job on this still.",
+    "Download for listing/social, open Seller Starter Pack for three formats, or run the next job on this still.",
   "create.labReady.sub":
     "Labeled Lab demo — style only. Live mode uses your photo.",
   "create.addPhotoFirst": "Add a toy photo first",
@@ -294,7 +294,7 @@ const en: Dict = {
 
   "onboard.title": "Creative Director · one photo of your toy",
   "onboard.sub":
-    "— pick a commercial goal · free Mini 5s · 480p when live · Seller Pack = Launch Pack",
+    "— pick a commercial goal · free Mini 5s · 480p when live · Seller Starter Pack = 3 clips / 30 credits",
   "onboard.dismiss": "Dismiss",
 
   "job.what": "Commercial goal · one tap",
@@ -306,7 +306,7 @@ const en: Dict = {
   "job.blindbox.blurb": "Unbox beat for restocks and drop day",
   "job.shelf": "Display Glow",
   "job.shelf.blurb": "Clean shelf / case hold for collectors and PDP",
-  "job.seller": "Seller Pack · Launch",
+  "job.seller": "Seller Starter Pack · 3 clips",
   "job.seller.blurb": "Default path: listing + reveal + hook",
 
   "brief.title": "Creative Director · Asset Brief",
@@ -316,7 +316,7 @@ const en: Dict = {
   "brief.collapse": "Collapse",
   "brief.collapsedHint": "brief ready · expand to edit bible",
   "brief.tryRecipes": "Suggested recipes",
-  "brief.sellerPack": "Seller Pack · Launch",
+  "brief.sellerPack": "Seller Starter Pack · 3 clips",
   "brief.sellerPack.sub": "3 commercial clips",
   "brief.bible": "Character bible · draft",
   "brief.bible.hint":
@@ -723,7 +723,7 @@ const ja: Dict = {
   "cta.viewAll": "すべて見る →",
   "cta.allEffects": "すべての効果 →",
   "cta.openGenerate": "生成を開く",
-  "cta.sellerPack": "Seller Pack",
+  "cta.sellerPack": "Seller Starter Pack",
   "lang.change": "言語を変更",
   "suite.title": "トイ創作スイート",
   "suite.sub": "生成ワークベンチ + ジョブモジュール — モデル動物園ではない",
@@ -735,7 +735,7 @@ const ja: Dict = {
   "suite.flow.blurb": "メディア行列 · ワンタップ",
   "suite.modules": "モジュール",
   "suite.modules.blurb": "出品 · フック · 開封",
-  "suite.seller": "Seller Pack",
+  "suite.seller": "Seller Starter Pack",
   "suite.seller.blurb": "写真1枚 · 3クリップ",
   "suite.recipes": "レシピ",
   "suite.recipes.blurb": "プリセット壁",
@@ -787,7 +787,7 @@ const es: Dict = {
   "cta.viewAll": "Ver todo →",
   "cta.allEffects": "Todos los efectos →",
   "cta.openGenerate": "Abrir Generate",
-  "cta.sellerPack": "Seller Pack",
+  "cta.sellerPack": "Seller Starter Pack",
   "lang.change": "Cambiar idioma",
   "suite.title": "Suite creativa de juguetes",
   "suite.sub":
@@ -800,7 +800,7 @@ const es: Dict = {
   "suite.flow.blurb": "Matriz media · un toque",
   "suite.modules": "Módulos",
   "suite.modules.blurb": "Listing · hook · unbox",
-  "suite.seller": "Seller Pack",
+  "suite.seller": "Seller Starter Pack",
   "suite.seller.blurb": "3 clips · una foto",
   "suite.recipes": "Recetas",
   "suite.recipes.blurb": "Muro de presets",

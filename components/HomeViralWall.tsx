@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { FeedItem } from "@/lib/videoFeed";
+import {
+  hasFeedVideo,
+  type FeedItem,
+  type FeedVideoItem,
+} from "@/lib/videoFeed";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
 import { useI18n } from "@/components/LanguageProvider";
@@ -70,19 +74,23 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
   const { t } = useI18n();
   const [filter, setFilter] = useState<ToyWallFilterId>("all");
   const [expanded, setExpanded] = useState(false);
+  const proofItems: FeedVideoItem[] = useMemo(
+    () => items.filter(hasFeedVideo).slice(0, 8),
+    [items]
+  );
 
   const counts = useMemo(() => {
-    const m: Record<string, number> = { all: items.length };
+    const m: Record<string, number> = { all: proofItems.length };
     for (const f of TOY_WALL_FILTERS) {
       if (f.id === "all") continue;
-      m[f.id] = items.filter((i) => matchesToyFilter(i, f.id)).length;
+      m[f.id] = proofItems.filter((i) => matchesToyFilter(i, f.id)).length;
     }
     return m;
-  }, [items]);
+  }, [proofItems]);
 
   const wall = useMemo(
-    () => items.filter((i) => matchesToyFilter(i, filter)),
-    [filter, items]
+    () => proofItems.filter((i) => matchesToyFilter(i, filter)),
+    [filter, proofItems]
   );
 
   /** Large premiere strip (only on "all" — more cinema energy before dense grid) */
@@ -115,7 +123,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3 px-2">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
-              {t("home.wall.eyebrow")} · {items.length}
+              {t("home.wall.eyebrow")} · {proofItems.length}
             </p>
             <h2 className="font-display mt-1 text-3xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-5xl">
               {t("home.wall.h2a")}

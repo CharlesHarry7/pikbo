@@ -74,7 +74,7 @@ export default function ModelsPage() {
             href="/create?mode=seller-pack"
             className="btn btn-ghost text-sm"
           >
-            Seller Pack
+            Seller Starter Pack
           </Link>
           <Link
             href="/flow"

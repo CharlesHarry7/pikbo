@@ -31,7 +31,10 @@ const LINKS = [
   },
   { href: "/for/photo-to-video-for-toys", label: "For photo → video toys" },
   { href: "/for/etsy-listing-videos", label: "For Etsy sellers" },
-  { href: createJobRemixHref("seller-pack"), label: "Seller Pack · 3 clips" },
+  {
+    href: createJobRemixHref("seller-pack"),
+    label: "Seller Starter Pack · 3 clips / 30 credits",
+  },
   { href: "/modules", label: "Modules · job blocks" },
   { href: createJobRemixHref("etsy-listing"), label: "Job · Etsy listing spin" },
   { href: createJobRemixHref("tiktok-hook"), label: "Job · TikTok hook" },
@@ -130,7 +133,7 @@ export function CommandPalette() {
         <ul className="max-h-72 overflow-y-auto py-2">
           {items.length === 0 ? (
             <li className="px-4 py-6 text-center text-xs text-white/40">
-              No match — try Flow, Seller Pack, or a recipe name
+              No match — try Flow, Seller Starter Pack, or a recipe name
             </li>
           ) : null}
           {items.map((item) => (

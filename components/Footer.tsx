@@ -20,7 +20,7 @@ export function Footer() {
 
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/45">
               {site.tagline} Video-first studio for toys you own — Generate,
-              Modules, Seller Pack.
+              Modules, Seller Starter Pack.
             </p>
             <div
               className="mt-4 flex flex-wrap items-center gap-2"
@@ -36,7 +36,7 @@ export function Footer() {
                 href="/create?mode=seller-pack"
                 className="btn btn-ghost !px-3 !py-1.5 text-xs"
               >
-                Seller Pack
+                Seller Starter Pack
               </Link>
               <Link href="/modules" className="btn btn-ghost !px-3 !py-1.5 text-xs">
                 Modules
@@ -87,11 +87,14 @@ export function Footer() {
                 ["/pricing", "Pricing"],
                 ["/explore", "Explore Lab"],
                 ["/tools/ai-toy-video-generator", "AI toy video generator"],
-                ["/create?mode=seller-pack", "Seller Pack"],
+                ["/create?mode=seller-pack", "Seller Starter Pack"],
                 ["/modules", "Modules"],
                 ["/library", "Assets · Local"],
                 ["/about", "About"],
-                ["/guides/seller-pack-workflow-listing-reveal-hook", "Seller Pack guide"],
+                [
+                  "/guides/seller-pack-workflow-listing-reveal-hook",
+                  "Seller Starter Pack guide",
+                ],
                 ["/flow", "Flow · Preview"],
                 ["/community", "Lab · noindex"],
                 ["/privacy", "Privacy"],

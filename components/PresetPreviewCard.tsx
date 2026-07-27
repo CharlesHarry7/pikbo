@@ -1,39 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
 import type { Preset } from "@/lib/presets";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { createRemixHref } from "@/lib/remixIntent";
 import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
 
-/** Exact Lab examples and shared concept backdrops are labeled separately. */
+/** Exact Lab clips and static concept art are labeled separately. */
 export function PresetPreviewCard({ preset }: { preset: Preset }) {
-  const { demo, exact } = useMemo(() => {
-    const exact = DEMO_VIDEOS.find((d) => d.preset === preset.slug);
-    if (exact) return { demo: exact, exact: true };
-    const idx = Math.abs(
-      preset.slug.split("").reduce((a, c) => a + c.charCodeAt(0), 0)
-    );
-    return { demo: DEMO_VIDEOS[idx % DEMO_VIDEOS.length], exact: false };
-  }, [preset.slug]);
+  const demo = DEMO_VIDEOS.find((d) => d.preset === preset.slug);
+  const exact = Boolean(demo);
   const labQuality = exact ? provisionalLabQualityLabel(preset.slug) : null;
 
   return (
     <Link
-      href={createRemixHref(preset.slug, exact ? demo.id : undefined)}
+      href={
+        demo
+          ? createRemixHref(preset.slug, demo.id)
+          : `/effects/${preset.slug}`
+      }
       className="video-tile group block overflow-hidden transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(0,0,0,0.45)]"
     >
       <div className="relative aspect-[3/4]">
-        <AutoPlayVideo
-          poster={demo.poster}
-          webm={demo.webm}
-          mp4={demo.mp4}
-          focusable={false}
-          desktopPlayMode="interaction"
-          className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out will-change-transform group-hover:scale-[1.06]"
-        />
+        {demo ? (
+          <AutoPlayVideo
+            poster={demo.poster}
+            webm={demo.webm}
+            mp4={demo.mp4}
+            focusable={false}
+            desktopPlayMode="interaction"
+            className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out will-change-transform group-hover:scale-[1.06]"
+          />
+        ) : (
+          <div
+            className="absolute inset-0 grid place-items-center"
+            style={{ background: preset.gradient }}
+            data-concept-recipe-art={preset.slug}
+          >
+            <span
+              aria-hidden
+              className="text-6xl drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] transition duration-300 group-hover:scale-105"
+            >
+              {preset.emoji}
+            </span>
+          </div>
+        )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-95 transition duration-300 group-hover:opacity-100" />
         <div className="absolute left-2 top-2 flex max-w-[70%] flex-wrap gap-0.5">
           {exact ? (
@@ -71,7 +83,7 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
             {preset.tagline}
           </p>
           <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[var(--mint)]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)] ring-1 ring-[var(--mint)]/25 opacity-90 transition duration-300 group-hover:bg-[var(--mint)] group-hover:text-black group-hover:opacity-100">
-            Remake →
+            {exact ? "Remake →" : "View recipe notes →"}
           </p>
         </div>
       </div>

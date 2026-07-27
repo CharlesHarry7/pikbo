@@ -96,7 +96,7 @@ export function ModulesSuiteCtas() {
         className="rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/10 px-4 py-2 text-xs font-bold text-[var(--mint)]"
         title="Listing + reveal + hook from one photo"
       >
-        Seller Pack
+        Seller Starter Pack
       </Link>
       <Link
         href="/library"

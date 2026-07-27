@@ -21,7 +21,7 @@ const FAQ = [
   },
   {
     q: "Is the homepage tool the same as /create?",
-    a: "Yes. The upload → generate block on this page is a real generate path, not a teaser. /create is the full studio when you want more recipes, Seller Pack, or library tools.",
+    a: "Yes. The upload → generate block on this page is a real generate path, not a teaser. /create is the full studio when you want more recipes, Seller Starter Pack, or library tools.",
   },
   {
     q: "Do Lab demos use my photo?",
@@ -234,7 +234,7 @@ export function HomeSeoBody() {
           <p className="mt-3">
             Stripe checkout stays off until search traffic is stable—soft launch
             prioritizes usable trials and crawlable tool pages over premature
-            paywalls. When you need more recipes or Seller Pack formats, open{" "}
+            paywalls. When you need more recipes or Seller Starter Pack formats, open{" "}
             <Link
               href={SEO_BODY_GENERATE_HREF}
               className="text-[var(--mint)] hover:underline"
@@ -247,7 +247,7 @@ export function HomeSeoBody() {
               href="/create?mode=seller-pack"
               className="text-[var(--mint)] hover:underline"
             >
-              Seller Pack
+              Seller Starter Pack
             </Link>
             .
           </p>

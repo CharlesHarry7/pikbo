@@ -4,7 +4,11 @@ import { createRemixHref } from "@/lib/remixIntent";
 import Link from "next/link";
 import { useState } from "react";
 import type { DemoVideo } from "@/lib/demoVideos";
-import type { FeedItem } from "@/lib/videoFeed";
+import {
+  hasFeedVideo,
+  type FeedItem,
+  type FeedVideoItem,
+} from "@/lib/videoFeed";
 import { getPreset } from "@/lib/presets";
 import {
   passesHomeProofQuality,
@@ -71,8 +75,9 @@ export function HfExploreHome({
   toolFirstLayout?: boolean;
 }) {
   const { t } = useI18n();
-  const showcase: FeedItem[] = feed.length
-    ? feed
+  const proofFeed = feed.filter(hasFeedVideo);
+  const showcase: FeedVideoItem[] = proofFeed.length
+    ? proofFeed
     : demos.slice(0, 8).map((d) => ({
         id: d.id,
         title: d.title,
@@ -87,8 +92,9 @@ export function HfExploreHome({
         recipeSlug: d.preset,
       }));
 
-  const wallItems =
-    viralWall && viralWall.length > 0 ? viralWall : showcase;
+  const wallItems = viralWall?.filter(hasFeedVideo).length
+    ? viralWall.filter(hasFeedVideo)
+    : showcase;
 
   const [active, setActive] = useState(0);
   const item = showcase[active] ?? showcase[0];
@@ -448,7 +454,11 @@ export function HfExploreHome({
               <p className="text-[11px] text-white/40">Mini 5s · Sample ready</p>
             </div>
             {[
-              { href: "/create?mode=seller-pack", label: "Seller Pack", sub: "3 videos" },
+              {
+                href: "/create?mode=seller-pack",
+                label: "Seller Starter Pack",
+                sub: "3 clips · 30 credits",
+              },
               { href: "/modules", label: "Modules", sub: "Video jobs" },
               { href: "/effects", label: "Video presets", sub: "Viral recipes" },
               { href: "/library", label: "Library", sub: "This device" },
@@ -468,12 +478,12 @@ export function HfExploreHome({
         </div>
       </section>
 
-      {/* Lower: Seller Pack = Creative Director default Launch Pack */}
+      {/* Lower: three-output Seller Starter Pack; 12-output Launch Pack is later. */}
       <section className="px-3 pb-6 sm:px-5">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent p-5 sm:flex-row sm:items-center sm:p-6">
           <div>
             <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
-              Creative Director · Seller Pack
+              Seller Starter Pack — 3 clips / 30 credits
             </p>
             <h3 className="mt-1 font-display text-lg font-bold uppercase tracking-tight sm:text-xl">
               One photo → three commercial clips
@@ -488,7 +498,7 @@ export function HfExploreHome({
             href="/create?mode=seller-pack"
             className="inline-flex shrink-0 items-center rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-sm font-bold text-[#c8ff3d] transition hover:bg-[#c8ff3d]/10"
           >
-            Open Launch Pack →
+            Open Seller Starter Pack →
           </Link>
         </div>
       </section>

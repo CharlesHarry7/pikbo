@@ -151,7 +151,7 @@ export default async function GuidePage({
                 href="/create?mode=seller-pack"
                 className="btn border border-white/40 bg-transparent px-5 py-2.5 font-semibold text-white hover:bg-white/10"
               >
-                Seller Pack
+                Seller Starter Pack
               </Link>
             </div>
           </div>

@@ -20,7 +20,7 @@ const TOOLS: ToolChip[] = [
   { href: "/modules", label: "Modules", sub: "Job blocks", emoji: "▦", hot: true },
   {
     href: "/create?mode=seller-pack",
-    label: "Seller Pack",
+    label: "Seller Starter Pack",
     sub: "3 clips",
     emoji: "🛍️",
     hot: true,

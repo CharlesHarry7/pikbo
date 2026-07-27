@@ -195,7 +195,7 @@ export const APPS: CatalogApp[] = [
   },
   {
     id: "seller-pack",
-    name: "Seller Pack",
+    name: "Seller Starter Pack",
     emoji: "🛍️",
     blurb: "Listing + reveal + social from one photo.",
     href: createJobRemixHref("seller-pack"),

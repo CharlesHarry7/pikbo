@@ -19,13 +19,13 @@ function posterForEffect(effect?: string): string | null {
 export const metadata: Metadata = {
   title: "Apps & Workflows · Toy video mini-apps",
   description:
-    "Pikbo toy-native workflows — listing spin, TikTok hook, blind-box drop, Seller Pack. Same Create engine, job-first mini-apps (Yiha/lego-style shelf, legal IA only).",
+    "Pikbo toy-native workflows — listing spin, TikTok hook, blind-box drop, Seller Starter Pack. Same Create engine, job-first mini-apps (Yiha/lego-style shelf, legal IA only).",
   alternates: { canonical: "/apps" },
   robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Apps & Workflows | ${site.name}`,
     description:
-      "Live toy-native mini-apps — listing, social, drop, Seller Pack. Same Generate engine.",
+      "Live toy-native mini-apps — listing, social, drop, Seller Starter Pack. Same Generate engine.",
     url: `${site.url}/apps`,
   },
 };
@@ -41,7 +41,7 @@ const CATS = [
 const APPS_FAQ = [
   {
     q: "What are Pikbo Apps?",
-    a: "Live mini-apps that open Generate with a prefilled toy-video recipe (listing spin, social hook, unbox, Seller Pack). Same Seedance engine as Create — not a multi-model zoo.",
+    a: "Live mini-apps that open Generate with a prefilled toy-video recipe (listing spin, social hook, unbox, Seller Starter Pack). Same Seedance engine as Create — not a multi-model zoo.",
   },
   {
     q: "What does SOON mean?",
@@ -154,7 +154,7 @@ export default function AppsPage() {
             href="/create?mode=seller-pack"
             className="btn btn-ghost text-sm"
           >
-            Seller Pack
+            Seller Starter Pack
           </Link>
           <Link href="/effects" className="btn btn-ghost text-sm">
             Recipe wall

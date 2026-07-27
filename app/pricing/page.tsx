@@ -246,7 +246,7 @@ export default async function PricingPage({
                 </Link>
               </Button>
               <Button asChild variant="secondary">
-                <Link href="/create?mode=seller-pack">Seller Pack</Link>
+                <Link href="/create?mode=seller-pack">Seller Starter Pack</Link>
               </Button>
               <Button asChild variant="secondary">
                 <Link href="/modules">Toy Modules</Link>

@@ -488,7 +488,7 @@ export function ProfilePanel() {
           href="/create?mode=seller-pack"
           className="btn btn-ghost px-3 py-1.5 text-xs"
         >
-          Seller Pack
+          Seller Starter Pack
         </Link>
         <Link href="/modules" className="btn btn-ghost px-3 py-1.5 text-xs">
           Modules
@@ -528,7 +528,7 @@ export function ProfilePanel() {
             href="/create?mode=seller-pack"
             className="btn btn-ghost w-full text-sm"
           >
-            Seller Pack
+            Seller Starter Pack
           </Link>
           <Link href="/modules" className="btn btn-ghost w-full text-sm">
             Modules

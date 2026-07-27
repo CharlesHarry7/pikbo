@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import type { FeedItem } from "@/lib/videoFeed";
+import {
+  hasFeedVideo,
+  type FeedItem,
+  type FeedVideoItem,
+} from "@/lib/videoFeed";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
 import { useI18n } from "@/components/LanguageProvider";
@@ -20,7 +24,7 @@ export function HomeCinemaHero({
   items: FeedItem[];
 }) {
   const { t } = useI18n();
-  const clips = items.filter((i) => i?.demo).slice(0, 6);
+  const clips: FeedVideoItem[] = items.filter(hasFeedVideo).slice(0, 6);
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -64,16 +68,16 @@ export function HomeCinemaHero({
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <a
             href="#home-create"
-            className="rounded-full bg-[#c8ff3d] px-8 py-3.5 text-sm font-black text-black"
+            className="w-full rounded-full bg-[#c8ff3d] px-8 py-3.5 text-center text-sm font-black text-black sm:w-auto"
           >
             {t("home.cinema.ctaPrimary")}
           </a>
           <Link
             href="/create?mode=seller-pack"
-            className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-6 py-3.5 text-sm font-bold text-[#c8ff3d]"
+            className="w-full rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-6 py-3.5 text-center text-sm font-bold text-[#c8ff3d] sm:w-auto"
             data-cinema-cta="seller-pack"
           >
-            Seller Pack
+            Seller Starter Pack · 3 clips
           </Link>
           <a
             href="#toy-wall"
@@ -111,6 +115,7 @@ export function HomeCinemaHero({
                 lazySources={i !== active}
                 focusable={false}
                 label={c.title}
+                showControls={i === active}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -127,7 +132,7 @@ export function HomeCinemaHero({
         <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-black/55 via-transparent to-black/20" />
       </div>
 
-      <div className="relative z-[3] mx-auto flex min-h-[min(92svh,920px)] max-w-6xl flex-col justify-end px-4 pb-10 pt-24 sm:px-6 sm:pb-14 md:pb-16">
+      <div className="pointer-events-none relative z-[3] mx-auto flex min-h-[min(92svh,920px)] max-w-6xl flex-col justify-end px-4 pb-10 pt-24 sm:px-6 sm:pb-14 md:pb-16">
         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#c8ff3d]/90">
           {t("home.cinema.eyebrow")}
         </p>
@@ -157,20 +162,20 @@ export function HomeCinemaHero({
           ) : null}
         </div>
 
-        <div className="mt-7 flex flex-wrap items-center gap-3">
+        <div className="pointer-events-auto mt-7 flex flex-wrap items-center gap-3">
           <a
             href="#home-create"
-            className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-8 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)] transition hover:brightness-110"
+            className="inline-flex w-full items-center justify-center rounded-full bg-[#c8ff3d] px-8 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)] transition hover:brightness-110 sm:w-auto"
           >
             {t("home.cinema.ctaPrimary")}
           </a>
           <Link
             href="/create?mode=seller-pack"
             prefetch
-            className="inline-flex items-center justify-center rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-3.5 text-sm font-bold text-[#c8ff3d] backdrop-blur-md transition hover:border-[#c8ff3d] hover:bg-[#c8ff3d]/15"
+            className="inline-flex w-full items-center justify-center rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-3.5 text-sm font-bold text-[#c8ff3d] backdrop-blur-md transition hover:border-[#c8ff3d] hover:bg-[#c8ff3d]/15 sm:w-auto"
             data-cinema-cta="seller-pack"
           >
-            Seller Pack
+            Seller Starter Pack · 3 clips
           </Link>
           <a
             href="#toy-wall"
@@ -202,7 +207,7 @@ export function HomeCinemaHero({
 
         {clips.length > 1 ? (
           <div
-            className="mt-6 flex flex-wrap items-center gap-2"
+            className="pointer-events-auto mt-6 flex flex-wrap items-center gap-2"
             role="tablist"
             aria-label="Hero clips"
           >
@@ -229,7 +234,7 @@ export function HomeCinemaHero({
 
         <a
           href="#toy-wall"
-          className="mt-8 inline-flex w-fit items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/40 transition hover:text-white/70"
+          className="pointer-events-auto mt-8 inline-flex w-fit items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/40 transition hover:text-white/70"
         >
           {t("home.cinema.scroll")}
           <span aria-hidden className="animate-bounce">

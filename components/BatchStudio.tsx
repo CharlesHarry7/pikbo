@@ -393,7 +393,9 @@ export function BatchStudio({
       }
       setRunProjectId(saved.projectId);
       setSelected([...SELLER_PACK_SLUGS]);
-      setSellerPackRecoveryNote("Checking this device/server session for the active Seller Pack…");
+      setSellerPackRecoveryNote(
+        "Checking this device/server session for the active Seller Starter Pack…"
+      );
       void fetch("/api/generations", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error("Generation job list unavailable");
@@ -703,7 +705,7 @@ export function BatchStudio({
         fallbackResolution: effectiveResolution,
         projectId,
         projectName: sellerPackActive
-          ? "Seller Pack · 3 outputs"
+          ? "Seller Starter Pack · 3 clips / 30 credits"
           : "Custom batch",
         inputImage:
           image && image.length <= 300_000 ? image : undefined,
@@ -840,7 +842,7 @@ export function BatchStudio({
         }
         if (outcome.stopQueue || abortCtrl.signal.aborted) {
           if (!abortCtrl.signal.aborted) {
-            setError(outcome.job.error ?? "Seller Pack paused");
+            setError(outcome.job.error ?? "Seller Starter Pack paused");
             setFailRetryAfterSec(
               typeof outcome.retryAfterSec === "number"
                 ? outcome.retryAfterSec
@@ -1271,17 +1273,17 @@ export function BatchStudio({
     liveQuoteCovered;
 
   const primaryBatchLabel = running
-    ? `${sellerPackActive ? "Seller Pack" : "Batch"} running… ${doneCount}/${jobs.length}`
+    ? `${sellerPackActive ? "Seller Starter Pack" : "Batch"} running… ${doneCount}/${jobs.length}`
     : !image
       ? "Upload owned toy photo"
       : !ownsRights
         ? "Confirm ownership to continue"
         : demoMode
-          ? `${sellerPackActive ? "Preview Seller Pack" : "Run batch"} · ${selected.length} · cached free`
+          ? `${sellerPackActive ? "Preview Seller Starter Pack" : "Run batch"} · ${selected.length} · cached free`
           : trialDone && isFree && !liveQuoteCovered
             ? "Free Mini trial used · open single Generate or plans"
             : sellerPackActive
-              ? `Run Seller Pack · ${sellerPackQuoteLabel(packQuote)}`
+              ? `Run Seller Starter Pack · ${sellerPackQuoteLabel(packQuote)}`
               : `Run batch · ${batchQuoteLabel(packQuote)}`;
 
   const creditStrip = (
@@ -1357,7 +1359,7 @@ export function BatchStudio({
           <div className="space-y-3">
             <div className="rounded-2xl border border-[var(--mint)]/35 bg-gradient-to-br from-[var(--mint)]/[0.1] to-black/40 px-3.5 py-3 text-xs text-[var(--fg-muted)] shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
               <p className="font-bold text-[var(--mint)]">
-                Creative Director · Seller Pack Launch
+                Seller Starter Pack — 3 clips / 30 credits
               </p>
               <p className="mt-1 leading-relaxed text-white/55">
                 Upload product photo → confirm pack cost → three commercial
@@ -1411,7 +1413,7 @@ export function BatchStudio({
                 href="/create?mode=seller-pack"
                 className="font-semibold text-[var(--mint)] hover:underline"
               >
-                Seller Pack
+                Seller Starter Pack
               </Link>
               .
             </p>
@@ -1608,7 +1610,7 @@ export function BatchStudio({
                       : "border-[var(--border)] text-[var(--mint)] hover:border-[var(--mint)]"
                   }`}
                 >
-                  Seller Pack · 3
+                  Seller Starter Pack · 3 clips
                 </button>
                 <button
                   type="button"
@@ -1727,7 +1729,7 @@ export function BatchStudio({
               effectLabel={
                 jobs.find((j) => j.status === "running")?.name ||
                 (sellerPackActive
-                  ? `Seller Pack · ${doneCount}/${jobs.length || 3}`
+                  ? `Seller Starter Pack · ${doneCount}/${jobs.length || 3}`
                   : `Batch · ${doneCount}/${jobs.length || selected.length}`)
               }
               onCancel={cancelInFlightPack}
@@ -1757,7 +1759,7 @@ export function BatchStudio({
           <div className="rounded-xl border border-amber-300/25 bg-amber-300/[0.06] p-3 text-xs text-amber-100">
             <p className="font-bold">
               {trialDone && isFree
-                ? "Free Mini trial used · full Seller Pack needs paid credits"
+                ? "Free Mini trial used · Seller Starter Pack needs 30 live credits"
                 : `Full live pack needs ${cost} credits; this session has ${me?.credits ?? 0}.`}
             </p>
             <p className="mt-1 text-[11px] text-white/50">
@@ -1823,7 +1825,7 @@ export function BatchStudio({
                 : undefined
             }
             retryLabel={
-              sellerPackActive ? "Retry Seller Pack" : "Retry batch"
+              sellerPackActive ? "Retry Seller Starter Pack" : "Retry batch"
             }
             showLabSample={!image}
             showModules={false}
@@ -1852,7 +1854,7 @@ export function BatchStudio({
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-semibold">
-              {sellerPackActive ? "Seller Pack queue" : "Queue"}
+              {sellerPackActive ? "Seller Starter Pack queue" : "Queue"}
             </h2>
             {jobs.length > 0 ? (
               <p className="mt-0.5 text-[10px] text-[var(--fg-dim)]">
@@ -1910,7 +1912,7 @@ export function BatchStudio({
                   href="/create?mode=seller-pack"
                   className="rounded-full border border-white/15 px-3 py-1.5 text-[11px] font-bold text-white/70"
                 >
-                  Seller Pack · 3 outputs
+                  Seller Starter Pack — 3 clips / 30 credits
                 </Link>
               ) : (
                 <Link
@@ -2141,7 +2143,7 @@ export function BatchStudio({
         {image ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
             {sellerPackActive
-              ? `Seller Pack · 3 outputs · ${sellerPackQuoteLabel(packQuote)}`
+              ? `Seller Starter Pack · ${sellerPackQuoteLabel(packQuote)}`
               : `Batch · ${selected.length} recipes · ${batchQuoteLabel(packQuote)}`}
             {doneCount > 0 ? ` · ${doneCount} ready` : ""}
             {failedRetryCount > 0 ? ` · ${failedRetryCount} failed kept` : ""}

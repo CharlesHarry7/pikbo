@@ -63,7 +63,7 @@ export const JOB_INTENTS: JobIntent[] = [
   },
   {
     id: "seller-pack",
-    label: "Seller Pack · Launch",
+    label: "Seller Starter Pack · 3 clips",
     blurb: "Default commercial path: listing + reveal + hook",
     effect: "360-spin-showcase",
     aspectRatio: "1:1",

@@ -1367,7 +1367,7 @@ export function LibraryGrid() {
           className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm"
           data-library-action="seller-pack"
         >
-          Seller Pack
+          Seller Starter Pack
         </Link>
       </div>
     </div>
@@ -1447,7 +1447,7 @@ export function LibraryGrid() {
                 href="/create?mode=seller-pack"
                 className="btn btn-ghost text-sm"
               >
-                Seller Pack · 3 outputs
+                Seller Starter Pack · 3 clips / 30 credits
               </Link>
               <FreeTrialCta
                 path="/library"
@@ -1672,7 +1672,7 @@ export function LibraryGrid() {
                   }
                   className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70 hover:border-white/30"
                 >
-                  Seller Pack
+                  Seller Starter Pack
                 </Link>
                 <Link
                   href="/modules"

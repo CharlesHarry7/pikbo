@@ -18,13 +18,13 @@ const EFFECTS_GENERATE_HREF = createRemixHref("360-spin-showcase");
 export const metadata: Metadata = {
   title: "Toy video presets · Recipes",
   description:
-    "Every Pikbo effect as a playable video — spin, unbox, dance, cinematic scenes for designer toys. Remake in Generate.",
+    "Verified Pikbo effects use their own cached clip. Unverified toy-video recipes stay static concepts until proof exists.",
   alternates: { canonical: "/effects" },
   robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Toy video presets · Recipes | ${site.name}`,
     description:
-      "Playable Lab recipes for designer toys — spin, unbox, dance, shelf. Remix in Generate.",
+      "Verified Lab clips and clearly labeled static concept recipes for designer toys.",
     url: `${site.url}/effects`,
   },
 };
@@ -103,13 +103,13 @@ export default function EffectsHub() {
         <GenerateSuiteChrome compact />
       </Suspense>
 
-      <div className="sticky top-0 z-20 border-b border-white/[0.07] bg-black/85 px-4 py-3.5 backdrop-blur-xl sm:px-6">
+      <div className="sticky top-0 z-20 overflow-hidden border-b border-white/[0.07] bg-black/85 px-4 py-3.5 backdrop-blur-xl sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
+          <div className="min-w-0 max-w-full">
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
               Viral presets · {PRESETS.length} · {proofPresets.length} with Lab video
             </p>
-            <h1 className="font-display text-xl font-black uppercase tracking-tight sm:text-2xl">
+            <h1 className="font-display break-words text-lg font-black uppercase tracking-tight sm:text-2xl">
               Big-budget motion · remake as video
             </h1>
             <p className="mt-0.5 text-[11px] text-white/45">
@@ -123,7 +123,7 @@ export default function EffectsHub() {
               </Link>
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex max-w-full flex-wrap items-center gap-2">
             <FreeTrialCta
               path="/effects"
               variant="mint"
@@ -141,7 +141,7 @@ export default function EffectsHub() {
               href="/create?mode=seller-pack"
               className="btn btn-ghost !px-3 !py-2 text-xs"
             >
-              Seller Pack
+              Seller Starter Pack
             </Link>
             <Link
               href="/modules"

@@ -509,7 +509,7 @@ export default function ImageStudioPage() {
               </Link>{" "}
               (stills stay labeled demo · 0 credits). Paid plans: Flux via fal (
               {CREDITS_PER_VIDEO} credits live). Hand a safe URL into Generate,
-              Modules, or Seller Pack.
+              Modules, or Seller Starter Pack.
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
@@ -677,7 +677,7 @@ export default function ImageStudioPage() {
                   data-image-handoff="seller-pack"
                   onClick={() => stashPendingStill(imageUrl)}
                 >
-                  Seller Pack · 3 clips →
+                  Seller Starter Pack · 3 clips / 30 credits →
                 </Link>
                 <Link
                   href="/modules"

@@ -29,11 +29,23 @@ export type FeedItem = {
   projectHref?: string;
   badge?: string;
   ratio: "9:16" | "1:1" | "16:9" | "video";
-  demo: DemoVideo;
+  /** Present only when this exact recipe has its own registered media proof. */
+  demo?: DemoVideo;
+  /** Static-only art for an unverified concept recipe. Never a borrowed clip. */
+  conceptArt?: {
+    gradient: string;
+    emoji: string;
+  };
   kind: "demo" | "preset" | "app" | "model";
   category?: CategoryId;
   recipeSlug?: string;
 };
+
+export type FeedVideoItem = FeedItem & { demo: DemoVideo };
+
+export function hasFeedVideo(item: FeedItem): item is FeedVideoItem {
+  return Boolean(item.demo?.mp4 && item.demo.poster);
+}
 
 export type CommunityProject = {
   id: string;
@@ -61,47 +73,8 @@ export const HOME_SHOWCASE_LIMIT = HOME_PROOF_LIMIT;
  * HF Viral Presets–density wall for home: every unique Lab demo + every
  * showcase project card. Uses only owned footage (no shared-loop fakes).
  */
-export function buildViralPresetsWallFeed(): FeedItem[] {
-  const fromDemos: FeedItem[] = DEMO_VIDEOS.map((demo) => {
-    const preset = PRESETS.find((p) => p.slug === demo.preset);
-    return {
-      id: `viral-demo-${demo.id}`,
-      title: viralName(demo.preset, demo.title),
-      subtitle: demo.eyebrow,
-      href: createHref(demo.preset, demo.id),
-      detailHref: `/effects/${demo.preset}`,
-      badge: HOME_PROOF_BADGE,
-      ratio: demo.ratio,
-      demo,
-      kind: "demo" as const,
-      category: preset?.category,
-      recipeSlug: demo.preset,
-    };
-  });
-  const seenPresets = new Set(fromDemos.map((f) => f.recipeSlug));
-  const fromProjects: FeedItem[] = listShowcaseProjects()
-    .filter((p) => !seenPresets.has(p.recipeSlug))
-    .map((project) => {
-      const preset = PRESETS.find((p) => p.slug === project.recipeSlug);
-      return {
-        id: `viral-proj-${project.slug}`,
-        title: viralName(project.recipeSlug, project.title),
-        subtitle: project.character,
-        href: showcaseRecipeHref(project),
-        detailHref: `/effects/${project.recipeSlug}`,
-        projectHref: showcaseProjectHref(project),
-        badge: HOME_PROOF_BADGE,
-        ratio:
-          project.aspectRatio === "1:1" || project.aspectRatio === "16:9"
-            ? project.aspectRatio
-            : "9:16",
-        demo: showcaseProjectAsDemo(project),
-        kind: "demo" as const,
-        category: preset?.category,
-        recipeSlug: project.recipeSlug,
-      } satisfies FeedItem;
-    });
-  return [...fromDemos, ...fromProjects];
+export function buildViralPresetsWallFeed(): FeedVideoItem[] {
+  return buildHomeShowcaseFeed();
 }
 
 /**
@@ -110,7 +83,7 @@ export function buildViralPresetsWallFeed(): FeedItem[] {
  */
 export function buildHomeShowcaseFeed(
   limit = HOME_SHOWCASE_LIMIT
-): FeedItem[] {
+): FeedVideoItem[] {
   return listHomeShowcaseProjects()
     .slice(0, limit)
     .map((project) => {
@@ -131,7 +104,7 @@ export function buildHomeShowcaseFeed(
         kind: "demo",
         category: preset?.category,
         recipeSlug: project.recipeSlug,
-      } satisfies FeedItem;
+      } satisfies FeedVideoItem;
     });
 }
 
@@ -140,7 +113,7 @@ export function buildHomeShowcaseFeed(
  * Concept recipes without their own footage live on `/effects`, not a
  * shared-loop density wall that looks like a full product catalog.
  */
-export function buildVideoFeed(): FeedItem[] {
+export function buildVideoFeed(): FeedVideoItem[] {
   return listShowcaseProjects().map((project) => {
     const preset = PRESETS.find((p) => p.slug === project.recipeSlug);
     return {
@@ -159,7 +132,7 @@ export function buildVideoFeed(): FeedItem[] {
       kind: "demo",
       category: preset?.category,
       recipeSlug: project.recipeSlug,
-    } satisfies FeedItem;
+    } satisfies FeedVideoItem;
   });
 }
 
@@ -169,7 +142,7 @@ export function conceptRecipeCount(): number {
   return PRESETS.filter((p) => !withFootage.has(p.slug)).length;
 }
 
-export function featuredStrip(): FeedItem[] {
+export function featuredStrip(): FeedVideoItem[] {
   return listShowcaseProjects().map((project) => ({
     id: `feat-${project.slug}`,
     title: viralName(project.recipeSlug, project.title),
@@ -260,16 +233,15 @@ export function suiteRail(): FeedItem[] {
 }
 
 export function feedByCategory(cat: CategoryId): FeedItem[] {
-  return PRESETS.filter((p) => p.category === cat).map((p, i) => {
+  return PRESETS.filter((p) => p.category === cat).map((p) => {
     const mapped = DEMO_VIDEOS.find((d) => d.preset === p.slug);
-    const demo = mapped ?? demoForIndex(i + cat.length);
     return {
       id: `cat-${cat}-${p.slug}`,
       title: viralName(p.slug, p.name),
-      subtitle: mapped
-        ? p.tagline
-        : `Concept recipe · shared Lab loop · ${p.tagline}`,
-      href: createHref(p.slug),
+      subtitle: mapped ? p.tagline : `Concept recipe · ${p.tagline}`,
+      // Concepts open their recipe notes. They do not imply that borrowed
+      // footage can be remixed into the advertised result.
+      href: mapped ? createHref(p.slug, mapped.id) : `/effects/${p.slug}`,
       detailHref: `/effects/${p.slug}`,
       badge: mapped ? "Official example" : "Concept",
       ratio:
@@ -278,8 +250,16 @@ export function feedByCategory(cat: CategoryId): FeedItem[] {
           : p.aspectRatio === "16:9"
             ? "16:9"
             : "9:16",
-      demo,
+      demo: mapped,
+      conceptArt: mapped
+        ? undefined
+        : {
+            gradient: p.gradient,
+            emoji: p.emoji,
+          },
       kind: "preset" as const,
+      category: p.category,
+      recipeSlug: p.slug,
     };
   });
 }

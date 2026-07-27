@@ -61,10 +61,10 @@ const PROMOS: Promo[] = [
   },
   {
     id: "batch",
-    title: "Seller Pack · 3 clips",
+    title: "Seller Starter Pack · 3 clips",
     blurb: "Spin · unbox · social hook",
     suiteHref: "/create?mode=seller-pack",
-    cta: "Open Seller Pack",
+    cta: "Open Seller Starter Pack",
     badge: "Shop · 3 formats",
     demoIndex: 5,
     sellerPack: true,

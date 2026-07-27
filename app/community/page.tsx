@@ -132,7 +132,7 @@ export default async function CommunityPage() {
               href="/create?mode=seller-pack"
               className="btn btn-ghost !px-3 !py-2 text-xs"
             >
-              Seller Pack
+              Seller Starter Pack
             </Link>
             <Link
               href="/modules"

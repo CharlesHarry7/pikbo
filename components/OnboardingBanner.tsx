@@ -55,7 +55,7 @@ export function OnboardingBanner() {
             onClick={dismiss}
             className="btn btn-ghost px-3 py-1.5 text-xs"
           >
-            Seller Pack
+            Seller Starter Pack
           </Link>
           <Link
             href="/modules"

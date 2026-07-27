@@ -72,7 +72,7 @@ export function SeedanceCampaign() {
               href="/create?mode=seller-pack"
               className="rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:border-white/35"
             >
-              Seller Pack
+              Seller Starter Pack
             </Link>
             <Link
               href="/flow"

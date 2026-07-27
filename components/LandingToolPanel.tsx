@@ -717,7 +717,7 @@ export function LandingToolPanel({
               data-landing-studio="seller-pack"
               title="Listing spin + box reveal + social hook"
             >
-              Seller Pack
+              Seller Starter Pack
             </Link>
             {" · "}
             <Link

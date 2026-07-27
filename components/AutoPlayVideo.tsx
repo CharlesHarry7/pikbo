@@ -1,12 +1,32 @@
 "use client";
 
+import { Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 const playing = new Set<HTMLVideoElement>();
 let visibilityHooked = false;
+let resizeHooked = false;
+
+function playbackBudget() {
+  if (typeof window === "undefined") return 2;
+  if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+    return 0;
+  }
+  return window.matchMedia("(max-width: 768px)").matches ? 1 : 2;
+}
+
+function enforcePlaybackBudget() {
+  const budget = playbackBudget();
+  while (playing.size > budget) {
+    const oldest = playing.values().next().value;
+    if (!oldest) break;
+    oldest.pause();
+    playing.delete(oldest);
+  }
+}
 
 /** Pause every claimed clip when the tab is hidden (battery / background). */
-function ensureVisibilityHook() {
+function ensurePlaybackHooks() {
   if (visibilityHooked || typeof document === "undefined") return;
   visibilityHooked = true;
   document.addEventListener("visibilitychange", () => {
@@ -16,32 +36,25 @@ function ensureVisibilityHook() {
       }
       return;
     }
+    enforcePlaybackBudget();
     // Resume only still-registered clips (viewport logic re-claims on scroll)
     for (const v of [...playing]) {
-      v.muted = true;
       void v.play().catch(() => undefined);
     }
   });
-}
-
-/** Desktop wall can hold a few muted clips; mobile stays tight for battery. */
-function playbackBudget(wallDense?: boolean) {
-  if (typeof window === "undefined") return 2;
-  if (typeof document !== "undefined" && document.visibilityState === "hidden") {
-    return 0;
+  if (!resizeHooked && typeof window !== "undefined") {
+    resizeHooked = true;
+    window.addEventListener("resize", enforcePlaybackBudget, { passive: true });
   }
-  const mobile = window.matchMedia("(max-width: 768px)").matches;
-  if (wallDense) return mobile ? 2 : 4;
-  return mobile ? 1 : 2;
 }
 
-function claim(v: HTMLVideoElement, wallDense?: boolean) {
-  ensureVisibilityHook();
+function claim(v: HTMLVideoElement) {
+  ensurePlaybackHooks();
   if (typeof document !== "undefined" && document.visibilityState === "hidden") {
     return;
   }
   if (playing.has(v)) return;
-  const budget = playbackBudget(wallDense);
+  const budget = playbackBudget();
   if (budget <= 0) return;
   while (playing.size >= budget) {
     const oldest = playing.values().next().value;
@@ -50,7 +63,6 @@ function claim(v: HTMLVideoElement, wallDense?: boolean) {
     playing.delete(oldest);
   }
   playing.add(v);
-  v.muted = true;
   void v.play().catch(() => undefined);
 }
 
@@ -82,6 +94,8 @@ export function AutoPlayVideo({
    * Only meaningful with desktopPlayMode="viewport".
    */
   wallDense = false,
+  /** Visible controls for hero / featured players. Dense cards keep Link focus. */
+  showControls = false,
 }: {
   poster: string;
   webm?: string;
@@ -94,9 +108,12 @@ export function AutoPlayVideo({
   label?: string;
   lazySources?: boolean;
   wallDense?: boolean;
+  showControls?: boolean;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [sourcesOn, setSourcesOn] = useState(!lazySources || Boolean(eager));
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const wantPlay = useRef(false);
 
   useEffect(() => {
@@ -108,7 +125,7 @@ export function AutoPlayVideo({
     if (desktopPlayMode === "interaction" && !eager) {
       if (sourcesOn && wantPlay.current) {
         if (v.preload === "none") v.preload = "metadata";
-        claim(v, wallDense);
+        claim(v);
       }
       return () => {
         release(v);
@@ -117,7 +134,7 @@ export function AutoPlayVideo({
 
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
     if (eager && sourcesOn && (isMobile || desktopPlayMode === "viewport")) {
-      claim(v, wallDense);
+      claim(v);
     }
 
     const io = new IntersectionObserver(
@@ -133,7 +150,7 @@ export function AutoPlayVideo({
             return;
           }
           if (v.preload === "none") v.preload = "metadata";
-          claim(v, wallDense);
+          claim(v);
         } else if (!e.isIntersecting) {
           release(v);
         }
@@ -165,7 +182,7 @@ export function AutoPlayVideo({
         : false;
     if (visible || eager) {
       if (v.preload === "none") v.preload = "metadata";
-      claim(v, wallDense);
+      claim(v);
     }
   }, [sourcesOn, desktopPlayMode, eager, wallDense, mp4]);
 
@@ -179,7 +196,7 @@ export function AutoPlayVideo({
     const video = ref.current;
     if (!video) return;
     if (video.preload === "none") video.preload = "metadata";
-    claim(video, wallDense);
+    claim(video);
   }
 
   function pauseFromInteraction() {
@@ -196,30 +213,78 @@ export function AutoPlayVideo({
       ? "Focus to preview video"
       : "Official Pikbo Lab demo video");
 
+  function togglePlayback() {
+    const video = ref.current;
+    if (!video) return;
+    if (video.paused) {
+      if (!sourcesOn) setSourcesOn(true);
+      wantPlay.current = true;
+      claim(video);
+    } else {
+      wantPlay.current = false;
+      release(video);
+    }
+  }
+
+  function toggleMuted() {
+    const video = ref.current;
+    if (!video) return;
+    video.muted = !video.muted;
+    setIsMuted(video.muted);
+  }
+
   return (
-    <video
-      ref={ref}
-      className={className}
-      style={style}
-      poster={poster}
-      width={720}
-      height={1280}
-      muted
-      loop
-      playsInline
-      preload={eager || (wallDense && sourcesOn) ? "metadata" : "none"}
-      tabIndex={
-        focusable && desktopPlayMode === "interaction" ? 0 : undefined
-      }
-      aria-label={aria}
-      onMouseEnter={playFromInteraction}
-      onMouseLeave={pauseFromInteraction}
-      onFocus={playFromInteraction}
-      onBlur={pauseFromInteraction}
-      onTouchStart={playFromInteraction}
-    >
-      {sourcesOn && webm ? <source src={webm} type="video/webm" /> : null}
-      {sourcesOn ? <source src={mp4} type="video/mp4" /> : null}
-    </video>
+    <>
+      <video
+        ref={ref}
+        className={className}
+        style={style}
+        poster={poster}
+        width={720}
+        height={1280}
+        muted
+        loop
+        playsInline
+        preload={eager || (wallDense && sourcesOn) ? "metadata" : "none"}
+        tabIndex={
+          focusable && desktopPlayMode === "interaction" ? 0 : undefined
+        }
+        aria-label={aria}
+        onMouseEnter={playFromInteraction}
+        onMouseLeave={pauseFromInteraction}
+        onFocus={playFromInteraction}
+        onBlur={pauseFromInteraction}
+        onTouchStart={playFromInteraction}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
+      >
+        {sourcesOn && webm ? <source src={webm} type="video/webm" /> : null}
+        {sourcesOn ? <source src={mp4} type="video/mp4" /> : null}
+      </video>
+      {showControls ? (
+        <div
+          className="absolute right-4 top-16 z-20 flex items-center gap-2"
+          data-video-controls="visible"
+        >
+          <button
+            type="button"
+            onClick={togglePlayback}
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition hover:border-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+            aria-label={isPlaying ? "Pause example video" : "Play example video"}
+          >
+            {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+          </button>
+          <button
+            type="button"
+            onClick={toggleMuted}
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition hover:border-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+            aria-label={isMuted ? "Unmute example video" : "Mute example video"}
+          >
+            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+        </div>
+      ) : null}
+    </>
   );
 }

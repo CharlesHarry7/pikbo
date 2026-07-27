@@ -223,7 +223,7 @@ export type SellerPackDirectorPlanInput = {
 };
 
 /**
- * Director Plan for Seller Pack (Launch Pack) — 3 children, total quote.
+ * Director Plan for Seller Starter Pack — 3 children, total quote.
  */
 export function buildSellerPackDirectorPlan(
   input: SellerPackDirectorPlanInput
@@ -243,7 +243,7 @@ export function buildSellerPackDirectorPlan(
   }
   if (!input.demoMode && input.trialDone && input.isFree) {
     blockers.push(
-      "Free Mini covers one 10-cr job — full Launch Pack needs more credits"
+      "Free Mini covers one 10-credit job — Seller Starter Pack needs 30 live credits"
     );
   }
   if (
@@ -260,7 +260,7 @@ export function buildSellerPackDirectorPlan(
   rows.push({
     id: "goal",
     label: "Goal",
-    value: "Seller Pack · Launch (listing + reveal + hook)",
+    value: "Seller Starter Pack (listing + reveal + hook)",
     tone: "ok",
   });
 
@@ -342,7 +342,7 @@ export function buildSellerPackDirectorPlan(
     ? "Lab pack preview"
     : input.isFree
       ? "Live Mini · pack quote"
-      : "Live Seller Pack";
+      : "Live Seller Starter Pack";
 
   const ready = input.hasImage;
   const canGenerate =
@@ -352,7 +352,7 @@ export function buildSellerPackDirectorPlan(
 
   return {
     ready,
-    title: "Director Plan · Launch Pack",
+    title: "Director Plan · Seller Starter Pack",
     modeLabel,
     costLabel,
     rows,
@@ -361,4 +361,3 @@ export function buildSellerPackDirectorPlan(
     creditsPerClip: quote.creditsPerChild,
   };
 }
-

@@ -34,5 +34,5 @@ export const site = {
   /** Rank battlefield URL for internal links */
   rankToolPath: "/tools/ai-toy-video-generator" as const,
   twitter: "@pikbo_ai",
-  suiteLine: "Toy Launch Pack · Seedance live",
+  suiteLine: "Seller Starter Pack · 3 clips / 30 credits",
 } as const;

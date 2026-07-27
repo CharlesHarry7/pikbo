@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
-import {
-  buildHomeShowcaseFeed,
-  buildViralPresetsWallFeed,
-} from "@/lib/videoFeed";
+import { buildHomeShowcaseFeed } from "@/lib/videoFeed";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
 import { HomeViralWall } from "@/components/HomeViralWall";
@@ -60,17 +57,15 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const showcase = buildHomeShowcaseFeed();
-  const viralWall = buildViralPresetsWallFeed();
-  const demos = showcase.map((item) => item.demo);
+  const demos = showcase
+    .map((item) => item.demo)
+    .filter((demo): demo is NonNullable<typeof demo> => Boolean(demo));
   const labDemos = demos.length ? demos : DEMO_VIDEOS.slice(0, 8);
   const videoLd = labDemos.slice(0, 6).map(videoObjectJsonLd);
   const heroClips =
-    showcase.length > 0
-      ? showcase.slice(0, 6)
-      : viralWall.slice(0, 6);
+    showcase.length > 0 ? showcase.slice(0, 6) : [];
   const lcpPoster =
     heroClips[0]?.demo?.poster ||
-    viralWall[0]?.demo?.poster ||
     labDemos[0]?.poster ||
     DEMO_VIDEOS[0]?.poster ||
     "/demos/orbit-still.webp";
@@ -95,7 +90,7 @@ export default function Home() {
       <HomeCinemaHero items={heroClips} />
 
       {/* 2 · Dense toy video wall — browse & remake (no strip between cinema→wall) */}
-      <HomeViralWall items={viralWall.length ? viralWall : showcase} />
+      <HomeViralWall items={showcase} />
 
       {/* Sticky convert while browsing wall (hides at #home-create) */}
       <HomeBrowseCta />

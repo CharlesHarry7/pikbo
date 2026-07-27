@@ -3484,7 +3484,10 @@ assert.match(pkgJson, /mode-a-acceptance/);
 
 const jobIntentsSrc = fs.readFileSync(join(root, "lib/jobIntents.ts"), "utf8");
 assert.match(jobIntentsSrc, /JOB_INTENTS/);
-assert.match(jobIntentsSrc, /Listing · 360|Seller Pack · Launch|Social Hook/);
+assert.match(
+  jobIntentsSrc,
+  /Listing · 360|Seller Starter Pack · 3 clips|Social Hook/
+);
 assert.match(
   fs.readFileSync(join(root, "components/JobIntentBar.tsx"), "utf8"),
   /job\.what|Sales mode|Creative Director/
@@ -3492,7 +3495,7 @@ assert.match(
 assert.match(createStudio, /JobIntentBar|ActivationChecklist/);
 assert.match(
   fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
-  /job\.seller["']:\s*["']Seller Pack · Launch/
+  /job\.seller["']:\s*["']Seller Starter Pack · 3 clips/
 );
 
 // CD Phase B — rule-based Asset Brief + character bible draft (not cloud vision)
@@ -3523,8 +3526,11 @@ assert.match(
 );
 assert.match(createStudio, /DirectorPlanPanel|buildDirectorPlan|briefAutoAppliedRef/);
 assert.match(createStudio, /asset_brief_auto/);
-// CD Phase B3 — Seller Pack Launch Plan (3× quote before run)
-assert.match(directorPlanSrc, /buildSellerPackDirectorPlan|Launch Pack|SELLER_PACK_PLAN_CHILDREN/);
+// CD Phase B3 — Seller Starter Pack plan (3× quote before run)
+assert.match(
+  directorPlanSrc,
+  /buildSellerPackDirectorPlan|Seller Starter Pack|SELLER_PACK_PLAN_CHILDREN/
+);
 const batchStudioSrc = fs.readFileSync(
   join(root, "components/BatchStudio.tsx"),
   "utf8"
@@ -3566,7 +3572,19 @@ assert.match(
 assert.match(homePageSrc, /HomeCinemaHero items=|SoftLaunchStrip|HomeBrowseCta/);
 assert.match(
   fs.readFileSync(join(root, "components/AutoPlayVideo.tsx"), "utf8"),
-  /wallDense|playbackBudget/
+  /wallDense|playbackBudget|data-video-controls/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/AutoPlayVideo.tsx"), "utf8"),
+  /max-width: 768px.*\? 1 : 2/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "lib/videoFeed.ts"), "utf8"),
+  /const demo = mapped \?\? demoForIndex/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/VideoTile.tsx"), "utf8"),
+  /data-concept-recipe-art|View recipe notes/
 );
 assert.match(
   fs.readFileSync(join(root, "components/HomeBrowseCta.tsx"), "utf8"),

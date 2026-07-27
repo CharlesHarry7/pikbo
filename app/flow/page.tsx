@@ -92,7 +92,7 @@ export default function FlowPage() {
     },
     {
       id: "core-pack",
-      title: "Seller Pack",
+      title: "Seller Starter Pack",
       blurb: "HF Product-studio subset: listing + reveal + social from one photo.",
       href: "/create?mode=seller-pack",
       badge: "Shop",
@@ -298,7 +298,7 @@ export default function FlowPage() {
             href="/create?mode=seller-pack"
             className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
           >
-            Seller Pack
+            Seller Starter Pack
           </Link>
           <span aria-hidden className="text-white/25">
             →

@@ -105,7 +105,7 @@ export const WORKFLOWS: Workflow[] = [
   {
     id: "seller-pack",
     emoji: "🛍️",
-    label: "Seller Pack",
+    label: "Seller Starter Pack",
     blurb: "Listing + reveal + social from one photo",
     href: createJobRemixHref("seller-pack"),
     jobId: "seller-pack",

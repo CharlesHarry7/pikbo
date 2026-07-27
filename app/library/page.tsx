@@ -58,7 +58,7 @@ export default function LibraryPage() {
               href="/create?mode=seller-pack"
               className="btn btn-ghost text-sm"
             >
-              Seller Pack
+              Seller Starter Pack
             </Link>
             <FreeTrialCta path="/library" variant="ghost" />
             <Link href="/community" className="btn btn-ghost text-sm">

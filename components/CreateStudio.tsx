@@ -1451,7 +1451,7 @@ export function CreateStudio({
             href="/create?mode=seller-pack"
             className="ml-auto rounded-full border border-white/10 px-2.5 py-1 font-semibold text-[#c8ff3d]/90 hover:border-[#c8ff3d]/40"
           >
-            Seller Pack →
+            Seller Starter Pack · 3 clips →
           </Link>
           <Link
             href="/flow"
@@ -1751,7 +1751,9 @@ export function CreateStudio({
             href="/create?mode=seller-pack"
             className="mt-3 block rounded-xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] px-3 py-2.5 text-[11px] leading-snug text-[var(--fg-muted)] transition hover:border-[var(--mint)]/50"
           >
-            <span className="font-bold text-[var(--mint)]">Seller Pack · 3 outputs</span>
+            <span className="font-bold text-[var(--mint)]">
+              Seller Starter Pack — 3 clips / 30 credits
+            </span>
             <span className="mt-0.5 block text-[10px] text-[var(--fg-dim)]">
               Listing spin + reveal + social hook from one photo
             </span>

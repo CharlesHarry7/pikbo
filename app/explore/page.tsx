@@ -128,7 +128,7 @@ export default async function ExplorePage({
               href="/create?mode=seller-pack"
               className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/80 transition hover:border-white/30"
             >
-              Seller Pack
+              Seller Starter Pack
             </Link>
             <Link
               href="/modules"
@@ -219,7 +219,7 @@ export default async function ExplorePage({
             href="/create?mode=seller-pack"
             className="shrink-0 rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-xs font-black text-[#c8ff3d]"
           >
-            Open Seller Pack →
+            Open Seller Starter Pack →
           </Link>
         </div>
       </section>

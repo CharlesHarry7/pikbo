@@ -24,7 +24,7 @@ const STEPS = [
   {
     n: "4",
     t: "Library · post or list",
-    d: "Clips save on this device Library. QA paint before you publish. Seller Pack for 3 formats.",
+    d: "Clips save on this device Library. QA paint before you publish. Seller Starter Pack creates 3 clips for 30 credits.",
   },
 ];
 

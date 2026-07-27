@@ -301,7 +301,7 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
     id: "pack",
     text: zh
       ? "商用默认：卖家三件套（上新包）= 上架旋转 + 开箱揭晓 + 社媒钩子，同一静图。"
-      : "Commercial default: Seller Pack (Launch Pack) = listing spin + box reveal + social hook from this still.",
+      : "Commercial default: Seller Starter Pack — listing spin + box reveal + social hook, 3 clips / 30 live credits.",
     tone: "ok",
   });
 

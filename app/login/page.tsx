@@ -30,7 +30,7 @@ export default function LoginPage() {
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
           Cross-device balance and cloud Library need a durable account. Soft
-          launch still works as a guest on this browser — Generate, Seller Pack,
+          launch still works as a guest on this browser — Generate, Seller Starter Pack,
           and Free Mini do not require sign-in today.
         </p>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-[11px] leading-relaxed text-white/45">
@@ -79,7 +79,7 @@ export default function LoginPage() {
             href="/create?mode=seller-pack"
             className="text-[var(--mint)] hover:underline"
           >
-            Seller Pack
+            Seller Starter Pack
           </Link>
           <Link href="/library" className="text-[var(--mint)] hover:underline">
             Library

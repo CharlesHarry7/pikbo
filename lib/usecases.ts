@@ -465,7 +465,7 @@ export const USE_CASES: UseCase[] = [
     faq: [
       {
         q: "Can a small toy brand batch SKUs?",
-        a: "Yes — one photo per SKU through Generate or Seller Pack when enabled. Free Mini is intentionally limited; paid plans unlock more credits when billing is live.",
+        a: "Yes — one photo per SKU through Generate or Seller Starter Pack when enabled. Free Mini is intentionally limited; paid plans unlock more credits when billing is live.",
       },
       {
         q: "Do you guarantee sales lift?",

@@ -46,7 +46,7 @@ export default function AboutPage() {
             <li>Toy identity: paint, sculpt, and packaging stay the reference</li>
             <li>
               Commercial jobs: 360 listing spin, blind-box reveal, social hook,
-              Seller Pack
+              Seller Starter Pack
             </li>
             <li>
               Rights: live jobs require confirming you own the photo / rights
@@ -87,7 +87,7 @@ export default function AboutPage() {
               href="/create?mode=seller-pack"
               className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-white/55"
             >
-              Seller Pack
+              Seller Starter Pack
             </Link>
             <Link
               href="/guides/designer-toy-ai-video-vs-generic-tools"

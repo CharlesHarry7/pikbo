@@ -109,7 +109,7 @@ export default function ToolsIndexPage() {
             href="/create?mode=seller-pack"
             className="btn btn-ghost text-sm"
           >
-            Seller Pack
+            Seller Starter Pack
           </Link>
           <Link
             href="/flow"
@@ -161,7 +161,7 @@ export default function ToolsIndexPage() {
             href="/create?mode=seller-pack"
             className="btn btn-ghost text-sm"
           >
-            Seller Pack
+            Seller Starter Pack
           </Link>
           <Link href="/effects" className="btn btn-ghost text-sm">
             All presets

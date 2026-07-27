@@ -54,7 +54,7 @@ export function MobileGenerateBar() {
           href="/create?mode=seller-pack"
           className="pointer-events-auto rounded-full border border-[var(--mint)]/40 bg-black/70 px-4 py-2.5 text-xs font-semibold text-[var(--mint)] backdrop-blur"
         >
-          Seller Pack
+          Seller Starter Pack
         </Link>
       ) : (
         <Link

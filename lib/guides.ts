@@ -405,7 +405,7 @@ export const GUIDES: Guide[] = [
         h2: "Vertical recipes beat prompt chaos",
         paragraphs: [
           "Pikbo ships toy-native recipes: 360° spin for galleries, box reveal for pulls, floating hero for drop teasers, display glam for shelf posts. Each recipe maps to a job intent instead of a blank prompt box.",
-          "Seller Pack bundles listing + reveal + social from one owned photo when you need three commercial formats. Partial failure keeps successful children — do not re-run the whole pack blindly.",
+          "Seller Starter Pack bundles listing + reveal + social from one owned photo when you need three commercial formats. Partial failure keeps successful children — do not re-run the whole pack blindly.",
         ],
       },
       {
@@ -425,7 +425,7 @@ export const GUIDES: Guide[] = [
       {
         h2: "Recommended path this week",
         paragraphs: [
-          "1) Clean packshot → 2) Open /tools/ai-toy-video-generator or Seller Pack → 3) Generate once → 4) QC edges, paint splits, logos → 5) Post or list. For 360-only, use the figure 360 tool page. For pull energy, use blind box AI video generator.",
+          "1) Clean packshot → 2) Open /tools/ai-toy-video-generator or Seller Starter Pack → 3) Generate once → 4) QC edges, paint splits, logos → 5) Post or list. For 360-only, use the figure 360 tool page. For pull energy, use blind box AI video generator.",
           "External links and GSC matter more than another thin tool URL. Keep the cold-start index lean; deepen guides and real demos instead of cloning near-duplicate pages.",
         ],
       },
@@ -455,19 +455,19 @@ export const GUIDES: Guide[] = [
   {
     slug: "seller-pack-workflow-listing-reveal-hook",
     emoji: "📦",
-    title: "Seller Pack Workflow: Listing + Reveal + Hook From One Photo",
+    title: "Seller Starter Pack Workflow: Listing + Reveal + Hook From One Photo",
     dek: "A practical commercial loop for Etsy, TikTok, and drop day — without three separate shoots.",
-    seoTitle: "Seller Pack Workflow: Listing Reveal Hook | Pikbo",
+    seoTitle: "Seller Starter Pack Workflow: Listing Reveal Hook | Pikbo",
     seoDescription:
-      "Run Pikbo Seller Pack: one owned toy photo → listing spin, box reveal, social hook. QC checklist, credit honesty, and next-SKU tips for sellers.",
+      "Run Pikbo Seller Starter Pack: one owned toy photo → listing spin, box reveal, social hook. QC checklist, credit honesty, and next-SKU tips for sellers.",
     readMins: 5,
     intro:
-      "Seller Pack is the Creative Director default for commercial toy media: three formats from one still. This workflow guide is for sellers who need listing motion, unbox energy, and a vertical hook without booking a studio.",
+      "Seller Starter Pack is the commercial default: three clips from one still for 30 live credits. This workflow guide is for sellers who need listing motion, unbox energy, and a vertical hook without booking a studio.",
     sections: [
       {
-        h2: "When to use Seller Pack vs single recipe",
+        h2: "When to use Seller Starter Pack vs single recipe",
         paragraphs: [
-          "Use Seller Pack when one SKU needs storefront + social the same day. Use a single recipe (spin only, reveal only) when you are testing Free Mini or iterating one channel.",
+          "Use Seller Starter Pack when one SKU needs storefront + social the same day. Use a single recipe (spin only, reveal only) when you are testing Free Mini or iterating one channel.",
           "Open /create?mode=seller-pack. Optional ?try=1 loads an official Lab still for layout learning — it must not auto-fire three live debits.",
         ],
       },
@@ -495,8 +495,8 @@ export const GUIDES: Guide[] = [
     ],
     faq: [
       {
-        q: "How many credits is Seller Pack?",
-        a: "Live children charge per successful path; Lab demos are free cached samples. See the on-page Launch Plan quote before you run.",
+        q: "How many credits is Seller Starter Pack?",
+        a: "The three live children cost 30 credits total. Lab demos are free cached samples. The 12-clip Launch Pack is coming later.",
       },
       {
         q: "Can I publish all three to every channel?",

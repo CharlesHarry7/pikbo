@@ -25,7 +25,7 @@ export async function generateMetadata({
   if (sp.pack === "seller") {
     // Legacy entry — still resolve metadata before redirect to Create Seller Pack.
     return {
-      title: "Seller Pack · 3 outputs",
+      title: "Seller Starter Pack · 3 clips / 30 credits",
       description:
         "One owned toy photo → listing spin, blind-box reveal, and social hook. Marketplace seller workflow on Pikbo.",
       // Not a rank landing — canonical lives on /create?mode=seller-pack (also noindex).
@@ -91,7 +91,7 @@ export default async function SupercomputerPage({
                 href="/create?mode=seller-pack"
                 className="btn btn-primary text-sm"
               >
-                Seller Pack · 3
+                Seller Starter Pack · 3 clips
               </Link>
               <FreeTrialCta
                 path="/supercomputer"
@@ -127,7 +127,7 @@ export default async function SupercomputerPage({
             href="/create?mode=seller-pack"
             className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
           >
-            Seller Pack
+            Seller Starter Pack
           </Link>
           <span aria-hidden className="text-white/25">
             →

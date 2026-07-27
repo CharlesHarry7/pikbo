@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [claude] product proof + mobile playback convergence
+- Non-mechanical logic: `lib/videoFeed.ts`, `app/page.tsx`, `VideoTile`, `PresetPreviewCard`, `AutoPlayVideo`, `HomeViralWall`, `HomeCinemaHero`, and `HfExploreHome`.
+- Home now reads the same eight-item Showcase whitelist for hero and wall; the legacy viral helper is capped to that registry.
+- Concept recipes use static Recipe art, open their notes, never borrow/autoplay another effect clip, and do not claim Remake.
+- Global playback budget is one mobile / two desktop; featured video exposes pause/mute and reduced-motion remains poster-first.
+- Remaining touched product files are mechanical `Seller Starter Pack` naming only; 12-clip Launch Pack appears only as `coming later`.
+- PASS: product-proof smoke, engine-smoke, lint (0 errors / 2 pre-existing warnings), typecheck, webpack production build (193 routes).
+
 ### 2026-07-27 — [gpt] recovery audit and restored role split
 - Audited production, generation accounting, product funnel and WorkBuddy growth claims.
 - P0: public FAL is live while auth/durable credits are disabled; anonymous live must close.

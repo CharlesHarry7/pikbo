@@ -53,7 +53,7 @@ export default function ProfilePage() {
             href="/create?mode=seller-pack"
             className="btn btn-ghost !px-3 !py-1.5 text-xs"
           >
-            Seller Pack
+            Seller Starter Pack
           </Link>
           <Link href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Library
