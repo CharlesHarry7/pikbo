@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Header/Library/Profile Generate remix + cancel toast
+- Header Create a clip · Library sticky/empty/session Open Create · Profile
+  Generate → createRemixHref(360-spin).
+- Library cancel toast uses DELETE refundUnconfirmed (never invent restore).
+- Smoke: data-header-cta / library-empty / profile-generate + cancel toast.
+
 ### 2026-07-27 — [grok] Login/mobile remix + DELETE cancel refundUnconfirmed
 - /login guest Continue → Generate + LoginForm disabled CTA use
   createRemixHref(360-spin) (not bare /create / partial query).

@@ -5185,6 +5185,23 @@ assert.match(
   fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
   /guest cookie|Supabase/
 );
+// Header primary CTA + Library/Profile Generate doors use remix contract
+assert.match(
+  fs.readFileSync(join(root, "components/Header.tsx"), "utf8"),
+  /createRemixHref|data-header-cta=["']generate-remix["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /LIBRARY_GENERATE_HREF|data-library-empty=["']generate-remix["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /refundUnconfirmed|refund unconfirmed until balance/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/ProfilePanel.tsx"), "utf8"),
+  /PROFILE_GENERATE_HREF|data-profile-generate=["']remix["']/
+);
 
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

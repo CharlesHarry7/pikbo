@@ -10,8 +10,11 @@ import {
   type MeResponse,
 } from "@/lib/meClient";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
+import { createRemixHref } from "@/lib/remixIntent";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
+
+const PROFILE_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 type DurableClaim = {
   signedIn: boolean;
@@ -463,7 +466,11 @@ export function ProfilePanel() {
       </div>
 
       <div className="flex flex-wrap gap-2" data-profile-path="product-first">
-        <Link href="/create" className="btn btn-primary px-3 py-1.5 text-xs">
+        <Link
+          href={PROFILE_GENERATE_HREF}
+          className="btn btn-primary px-3 py-1.5 text-xs"
+          data-profile-generate="remix"
+        >
           Generate
         </Link>
         <Link href="/library" className="btn btn-ghost px-3 py-1.5 text-xs">
@@ -498,7 +505,11 @@ export function ProfilePanel() {
       </p>
 
       <div className="flex flex-col gap-2">
-        <Link href="/create" className="btn btn-primary w-full text-sm">
+        <Link
+          href={PROFILE_GENERATE_HREF}
+          className="btn btn-primary w-full text-sm"
+          data-profile-generate="remix"
+        >
           Open Generate
         </Link>
         <div

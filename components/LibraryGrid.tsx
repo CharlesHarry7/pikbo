@@ -79,6 +79,9 @@ type SessionJobsMeta = {
 /** Match server SESSION_JOBS_LIST_LIMIT — do not silently drop to 12. */
 const SESSION_JOBS_UI_LIMIT = 50;
 
+/** Library sticky / empty Generate door — listing spin remix contract. */
+const LIBRARY_GENERATE_HREF = createRemixHref("360-spin-showcase");
+
 const EMPTY_BY_STATUS: SessionByStatus = {
   queued: 0,
   running: 0,
@@ -205,8 +208,9 @@ function SessionJobsPanel({
             Refresh
           </button>
           <Link
-            href="/create"
+            href={LIBRARY_GENERATE_HREF}
             className="text-[11px] font-semibold text-[var(--mint)] hover:underline"
+            data-session-open-create="generate-remix"
           >
             Open Create →
           </Link>
@@ -580,9 +584,19 @@ export function LibraryGrid() {
         message?: string;
         note?: string;
         code?: string;
+        creditsOutcome?: string;
+        refundUnconfirmed?: boolean;
       };
       if (!res.ok || !body.ok) {
         toast(body.message || body.code || "Could not cancel job");
+      } else if (
+        body.refundUnconfirmed === true ||
+        body.creditsOutcome === "refund unconfirmed"
+      ) {
+        // Server DELETE echoes unconfirmed — never invent "10 restored".
+        toast(
+          "Ledger canceled · refund unconfirmed until balance settles (in-flight provider may still complete)"
+        );
       } else {
         toast(
           body.note ||
@@ -880,7 +894,7 @@ export function LibraryGrid() {
       </p>
       <div className="flex gap-2">
         <Link
-          href="/create"
+          href={LIBRARY_GENERATE_HREF}
           className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
           data-library-action="generate"
         >
@@ -951,7 +965,11 @@ export function LibraryGrid() {
               )}
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              <Link href="/create" className="btn btn-primary text-sm">
+              <Link
+                href={LIBRARY_GENERATE_HREF}
+                className="btn btn-primary text-sm"
+                data-library-empty="generate-remix"
+              >
                 Generate · upload toy photo
               </Link>
               <Link

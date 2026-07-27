@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
 import { CreditsBadge } from "@/components/CreditsBadge";
+import { createRemixHref } from "@/lib/remixIntent";
+
+/** Primary header CTA — listing spin remix (ratio/duration/channel). */
+const HEADER_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export function Header() {
   return (
@@ -30,7 +34,11 @@ export function Header() {
 
         <div className="flex items-center gap-3">
           <CreditsBadge />
-          <Link href="/create" className="btn btn-primary text-sm">
+          <Link
+            href={HEADER_GENERATE_HREF}
+            className="btn btn-primary text-sm"
+            data-header-cta="generate-remix"
+          >
             Create a clip
           </Link>
         </div>
