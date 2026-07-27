@@ -24,6 +24,7 @@
     "recovery-retry-deadline": "node scripts/recovery-retry-deadline.mjs",
     "recovery-reconciliation": "node scripts/recovery-reconciliation.mjs",
     "seller-pack-golden-path": "node scripts/seller-pack-cached-smoke.mjs",
+    "seller-pack-api-golden": "node scripts/seller-pack-api-golden.mjs",
     "softlive-checklist": "bash scripts/softlive-checklist.sh",
     "typecheck": "tsc --noEmit",
     "check:conflicts": "git grep -nE \"^(<<<<<<<|>>>>>>>|=======)\" -- app lib components && exit 1 || exit 0",

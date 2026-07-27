@@ -1886,3 +1886,23 @@ Newest first. One block per meaningful landing.
 - `scripts/growth-auto/push_via_api.py` is dry-run by default, never handles a
   token, refuses dirty trees and permits pushes only to `agent/grok/*`; safety
   tests cover main and branch-prefix rejection.
+
+### 2026-07-28 — [gpt] Seller Pack cached golden path hardening
+- Paths: `lib/sellerPackContract.ts`, `lib/sellerPackRecovery.ts`,
+  `components/BatchStudio.tsx`, `scripts/seller-pack-cached-smoke.mjs`,
+  `scripts/seller-pack-api-golden.mjs`, `scripts/engine-smoke.mjs`.
+- Why good: the fixed three-child pack, recovery list and retry policy now share
+  one contract. The smoke executes the real TypeScript modules instead of a
+  mirrored test implementation, retains two successful child videos when the
+  middle child fails, and permits retry only for failed/refunded/not-started
+  children.
+- Running-server evidence: one bundled Pikbo Lab still is posted through all
+  three fixed API children; the test requires cached-only health, provider
+  unavailable, three successful demo-cached jobs and unchanged credits.
+- Browser evidence: the Seller Starter Pack surface shows three cached
+  prototypes, fixed 1:1/9:16/9:16 outputs and “3 clips cached free (0 credits)”.
+  Local interactive hydration could not be exercised through the isolated
+  browser origin, so no browser-policy bypass was attempted; API and module
+  smokes provide the interaction/settlement regression.
+- Safety: no provider key, paid call, database, Stripe, deployment, DNS or public
+  indexing action. T5/T6 and public Mode A/B readiness remain fail-closed.

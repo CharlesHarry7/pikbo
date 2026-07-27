@@ -85,6 +85,7 @@ import {
 import {
   SELLER_PACK_ITEMS,
   SELLER_PACK_SLUGS,
+  isSellerPackRetryableStatus,
   isExactSellerPackSelection,
 } from "@/lib/sellerPackContract";
 import { track } from "@/lib/analytics";
@@ -161,11 +162,8 @@ function toRecoveredJob(child: ReturnType<typeof reconcileSellerPackRecovery>["c
  * Never retry succeeded / running mid-flight (server forkRetry parity).
  */
 function retryEligible(job: Job): boolean {
-  if (job.status === "not_started") return true;
-  if (job.status === "refunded") return true;
   // failed covers TIMEOUT · cancel-as-failed · provider fails (any creditState)
-  if (job.status === "failed") return true;
-  return false;
+  return isSellerPackRetryableStatus(job.status);
 }
 
 /**
