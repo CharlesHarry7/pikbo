@@ -1584,12 +1584,9 @@ assert.match(
 // R1b fixed deadline: TIMEOUT uses createdAt, not last touch
 assert.match(
   genJobsStore,
-  /Fixed deadline from open stamp|fixed from \*\*createdAt\*\*|createdAt only|Fixed deadline from createdAt|from \*\*createdAt\*\*/
+  /Fixed deadline from open stamp|from \*\*createdAt\*\*|fixed from createdAt|R1b: remaining time is from/
 );
-assert.match(
-  genJobsStore,
-  /sweepTimedOutJobs[\s\S]{0,400}job\.createdAt/
-);
+assert.match(genJobsStore, /const stamp = job\.createdAt/);
 assert.doesNotMatch(
   genJobsStore,
   /Prefer updatedAt so re-touched running jobs get a full window/
@@ -1980,6 +1977,9 @@ assert.match(
 assert.match(healthRoute, /imageJobs|imageIdempotency/);
 assert.match(healthRoute, /imageRetry|POST \/api\/image\/\[id\]\/retry/);
 assert.match(healthRoute, /ledgerRetryPromote/);
+assert.match(healthRoute, /explicit-retryJobId-only/);
+assert.match(healthRoute, /fixed-from-createdAt|jobDeadline/);
+assert.match(healthRoute, /R0: anonymous|durable reserve/);
 assert.match(createStudio, /useCallback[\s\S]*adoptImage|adoptImage = useCallback/);
 // Flow + home viral: shared AutoPlay (no multi-autoPlay)
 assert.match(
@@ -3127,6 +3127,9 @@ const spReserve = fs.readFileSync(
 );
 assert.match(spReserve, /reserveSellerPackShadow/);
 assert.match(spReserve, /SELLER_PACK_QUOTE_CREDITS|quoteCredits/);
+// R0/R1 honesty: cookie is not live-spend authority after cost gate
+assert.doesNotMatch(spReserve, /cookie-generate-still-authoritative/);
+assert.match(spReserve, /generate-route-cost-gate|durable-shadow-audit-plus-generate-gate/);
 assert.match(
   fs.readFileSync(join(root, "app/api/seller-pack/settle/route.ts"), "utf8"),
   /settleSellerPackChild/
