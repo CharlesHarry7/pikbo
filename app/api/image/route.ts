@@ -97,7 +97,8 @@ export async function GET() {
       "In-process still ledger for soft-launch recovery. Not multi-node durable. Use POST /api/image for work. Running jobs past jobTimeoutMs fail with TIMEOUT. GET touches all open stills; byStatus/open/total are full-session. data: demo URLs omitted from list (hasImage flag only).",
     compatibility: {
       syncImage: "/api/image",
-      cancel: "DELETE /api/image",
+      jobStatus: "/api/image/[id]",
+      cancel: "DELETE /api/image or DELETE /api/image/[id]",
       counts: "HEAD /api/image",
     },
     session: publicSession(session),
@@ -116,6 +117,7 @@ export async function DELETE(req: Request) {
   let body: {
     jobId?: string;
     requestId?: string;
+    id?: string;
     idempotencyKey?: string;
   } = {};
   try {
@@ -126,9 +128,11 @@ export async function DELETE(req: Request) {
   } catch {
     /* query-only cancel is fine */
   }
+  // generations DELETE parity: jobId | requestId | id (body or query)
   const jobId =
     (typeof body.jobId === "string" && body.jobId.trim()) ||
     (typeof body.requestId === "string" && body.requestId.trim()) ||
+    (typeof body.id === "string" && body.id.trim()) ||
     url.searchParams.get("jobId")?.trim() ||
     url.searchParams.get("requestId")?.trim() ||
     url.searchParams.get("id")?.trim() ||

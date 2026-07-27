@@ -1738,6 +1738,9 @@ assert.match(imageJobsSrc, /TIMEOUT|refund unconfirmed/);
 assert.match(imageJobsSrc, /export function listImageJobsForSession/);
 assert.match(imageJobsSrc, /export function touchOpenImageJobsForSession/);
 assert.match(imageJobsSrc, /export function toPublicImageJob/);
+assert.match(imageJobsSrc, /export function getImageJob/);
+assert.match(imageJobsSrc, /export function touchImageJob/);
+assert.match(imageJobsSrc, /includeDataUrl/);
 assert.match(imageJobsSrc, /IMAGE_JOBS_LIST_LIMIT/);
 assert.match(imageJobsSrc, /hasImage|isSafeDeliverableUrl/);
 assert.match(imageRoute, /findImageJobByIdempotencyKey/);
@@ -1751,9 +1754,24 @@ assert.match(imageRoute, /touchOpenImageJobsForSession/);
 assert.match(imageRoute, /X-Pikbo-Image-Jobs-Open/);
 assert.match(imageRoute, /X-Pikbo-Image-Jobs-List-Limit/);
 assert.match(imageRoute, /imageJobInFlightRetryAfterSec/);
+assert.match(imageRoute, /jobStatus:\s*["']\/api\/image\/\[id\]["']/);
+// Single still poll + cancel by path (generations/[id] parity)
+const imageByIdRoute = fs.readFileSync(
+  join(root, "app/api/image/[id]/route.ts"),
+  "utf8"
+);
+assert.match(imageByIdRoute, /export async function GET/);
+assert.match(imageByIdRoute, /export async function DELETE/);
+assert.match(imageByIdRoute, /getImageJob|touchImageJob/);
+assert.match(imageByIdRoute, /includeDataUrl:\s*true/);
+assert.match(imageByIdRoute, /refundUnconfirmed:\s*true/);
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /data-image-session-ledger=["']process-memory["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /data-image-session-cancel|data-image-session-retry|openSessionStill/
 );
 // Pure image timeout sweep (crash mid-Flux must not leave infinite JOB_IN_FLIGHT)
 function sweepTimedOutImageJobsPure(jobs, now, timeoutMs) {

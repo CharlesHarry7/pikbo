@@ -135,12 +135,14 @@ export async function GET() {
       stills: "optional-support" as const,
       generatePath: "/api/generate",
       imagePath: "/api/image",
+      /** Single still poll + touch (parity GET /api/generations/[id]). */
+      imageJobStatus: "/api/image/[id]",
       /** Generate + image both accept client-minted session-scoped keys. */
       idempotency: "client-key-session-scoped",
       imageIdempotency: "client-key-session-scoped",
       /** Ledger cancel (soft-launch; does not kill provider mid-flight). */
       cancelGenerate: "DELETE /api/generations",
-      cancelImage: "DELETE /api/image",
+      cancelImage: "DELETE /api/image or DELETE /api/image/[id]",
       downloadGate: "/api/downloads/{jobId|requestId}",
     },
     /** Honesty contract: cached demos free; live jobs charge flat credits */

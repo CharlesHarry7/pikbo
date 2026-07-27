@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] GET/DELETE /api/image/[id] still poll parity
+- `getImageJob` · `touchImageJob` · `toPublicImageJob({ includeDataUrl })` for
+  single-job recovery (list still omits multi-KB data: bodies).
+- GET/DELETE `/api/image/[id]` mirrors generations/[id]; list DELETE accepts body.id.
+- Image studio ledger: Open (list URL or single-job GET), Cancel running,
+  Retry terminal with prompt/aspect overrides (no setState race).
+- Smoke: imageByIdRoute + session cancel/retry locks.
+
 ### 2026-07-27 — [grok] AppShell/Footer/Pricing residual Generate remix
 - AppShell desktop + mobile top Generate CTAs → createRemixHref(360-spin)
   (data-appshell-cta); PRIMARY/MOBILE nav suite entry still bare /create.

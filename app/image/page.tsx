@@ -37,6 +37,7 @@ type SessionStillJob = {
   creditsOutcome?: string;
   errorCode?: string;
   error?: string;
+  demoReason?: string;
 };
 
 /** Handoff stills into Create — http(s) or same-origin path only. */
@@ -153,6 +154,101 @@ export default function ImageStudioPage() {
     };
   }, []);
 
+  /** Ledger cancel for a running still (DELETE /api/image/[id]) — refund unconfirmed. */
+  async function cancelSessionStill(jobId: string) {
+    try {
+      const res = await fetch(`/api/image/${encodeURIComponent(jobId)}`, {
+        method: "DELETE",
+        cache: "no-store",
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        refundUnconfirmed?: boolean;
+        creditsOutcome?: string;
+        message?: string;
+      };
+      if (data.refundUnconfirmed === true || data.creditsOutcome === "refund unconfirmed") {
+        setFailCreditState("refund unconfirmed");
+      }
+      if (!res.ok) {
+        setError(
+          typeof data.message === "string"
+            ? data.message
+            : "Could not cancel still ledger row"
+        );
+      } else {
+        setError(
+          "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"
+        );
+      }
+    } catch {
+      setError("Cancel failed · check network · refund unconfirmed");
+      setFailCreditState("refund unconfirmed");
+    }
+    // Refresh process-memory strip
+    try {
+      const res = await fetch("/api/image", { method: "GET", cache: "no-store" });
+      if (res.ok) {
+        const data = (await res.json()) as {
+          jobs?: SessionStillJob[];
+          open?: number;
+          total?: number;
+          byStatus?: { failed?: number; canceled?: number };
+        };
+        const jobs = Array.isArray(data.jobs) ? data.jobs : [];
+        setSessionStillJobs(jobs.slice(0, 8));
+        setSessionStillMeta({
+          open: typeof data.open === "number" ? data.open : 0,
+          total: typeof data.total === "number" ? data.total : jobs.length,
+          failed: data.byStatus?.failed ?? 0,
+          canceled: data.byStatus?.canceled ?? 0,
+        });
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /** Open single still via GET /api/image/[id] (data: demos included; list omits bodies). */
+  async function openSessionStill(jobId: string) {
+    try {
+      const res = await fetch(`/api/image/${encodeURIComponent(jobId)}`, {
+        method: "GET",
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        job?: SessionStillJob & { demo?: boolean; creditsOutcome?: string };
+      };
+      const j = data.job;
+      if (!j || j.status !== "succeeded") return;
+      if (j.imageUrl) {
+        setImageUrl(j.imageUrl);
+        setDemo(Boolean(j.demo));
+        setLastSettlement(
+          j.creditsOutcome === "0 cached" || j.creditsOutcome === "10 used"
+            ? j.creditsOutcome
+            : null
+        );
+        setError(null);
+      }
+    } catch {
+      /* offline */
+    }
+  }
+
+  /** Retry terminal still: re-fill prompt/aspect and re-POST with a new key. */
+  function retrySessionStill(j: SessionStillJob) {
+    const nextPrompt = j.prompt?.trim() || prompt;
+    const nextAspect = j.aspect?.trim() || aspect;
+    if (j.prompt) setPrompt(j.prompt);
+    if (j.aspect) setAspect(j.aspect);
+    setError(null);
+    setFailCreditState(null);
+    setFailRetryAfterSec(null);
+    // Pass overrides — setState is async; do not wait a tick that may still see old prompt.
+    void generate({ prompt: nextPrompt, aspect: nextAspect });
+  }
+
   function cancelInFlight() {
     const ctrl = abortRef.current;
     if (!ctrl) return;
@@ -165,8 +261,9 @@ export default function ImageStudioPage() {
     );
   }
 
-  async function generate() {
-    const trimmed = prompt.trim();
+  async function generate(opts?: { prompt?: string; aspect?: string }) {
+    const trimmed = (opts?.prompt ?? prompt).trim();
+    const aspectUse = (opts?.aspect ?? aspect).trim() || aspect;
     if (trimmed.length < 4) {
       setError("Write a short prompt (at least 4 characters).");
       return;
@@ -182,7 +279,7 @@ export default function ImageStudioPage() {
     setFailCreditState(null);
     try {
       const result = await postImageWithRetry(
-        { prompt: trimmed, aspect, idempotencyKey },
+        { prompt: trimmed, aspect: aspectUse, idempotencyKey },
         { signal: abortCtrl.signal }
       );
       if (!result.ok) {
@@ -576,22 +673,50 @@ export default function ImageStudioPage() {
                     {j.errorCode ? (
                       <span className="text-amber-200/80">{j.errorCode}</span>
                     ) : null}
-                    {j.status === "succeeded" && j.imageUrl ? (
+                    {j.status === "succeeded" && (j.imageUrl || j.hasImage) ? (
                       <button
                         type="button"
                         className="text-[var(--mint)] hover:underline"
+                        data-image-session-open={j.id}
                         onClick={() => {
-                          setImageUrl(j.imageUrl || null);
-                          setDemo(Boolean(j.demo));
-                          setLastSettlement(
-                            j.creditsOutcome === "0 cached" ||
-                              j.creditsOutcome === "10 used"
-                              ? j.creditsOutcome
-                              : null
-                          );
+                          if (j.imageUrl) {
+                            setImageUrl(j.imageUrl);
+                            setDemo(Boolean(j.demo));
+                            setLastSettlement(
+                              j.creditsOutcome === "0 cached" ||
+                                j.creditsOutcome === "10 used"
+                                ? j.creditsOutcome
+                                : null
+                            );
+                          } else {
+                            // List omitted data: body — fetch single job for recovery.
+                            void openSessionStill(j.id);
+                          }
                         }}
                       >
                         Open
+                      </button>
+                    ) : null}
+                    {j.status === "running" ? (
+                      <button
+                        type="button"
+                        className="text-amber-100/90 hover:underline"
+                        data-image-session-cancel={j.id}
+                        title="Ledger cancel only — Flux may still finish server-side"
+                        onClick={() => void cancelSessionStill(j.id)}
+                      >
+                        Cancel
+                      </button>
+                    ) : null}
+                    {j.status === "failed" || j.status === "canceled" ? (
+                      <button
+                        type="button"
+                        className="text-[var(--mint)] hover:underline"
+                        data-image-session-retry={j.id}
+                        disabled={busy}
+                        onClick={() => retrySessionStill(j)}
+                      >
+                        Retry
                       </button>
                     ) : null}
                   </li>

@@ -235,6 +235,37 @@ export function findImageJobByRequestOrId(
 }
 
 /**
+ * Resolve still job by local id or provider requestId (any session).
+ * Caller must gate on sessionId — parity with getJob for video ledger.
+ */
+export function getImageJob(idOrRequestId: string): ImageJob | null {
+  trimStore();
+  sweepTimedOutImageJobs();
+  const key = idOrRequestId.trim();
+  if (!key) return null;
+  const byId = jobs.get(key);
+  if (byId) return byId;
+  for (const j of jobs.values()) {
+    if (j.requestId === key || j.id === key) return j;
+  }
+  return null;
+}
+
+/**
+ * Slide updatedAt on a running still while a client polls GET /api/image/[id].
+ * Prevents false TIMEOUT mid-Flux when PIKBO_IMAGE_JOB_TIMEOUT_MS is short.
+ * Terminal jobs are returned unchanged (generations touchJob parity).
+ */
+export function touchImageJob(idOrRequestId: string): ImageJob | null {
+  const job = getImageJob(idOrRequestId);
+  if (!job) return null;
+  if (job.status !== "running") return job;
+  const next: ImageJob = { ...job, updatedAt: nowIso() };
+  jobs.set(job.id, next);
+  return next;
+}
+
+/**
  * Mark a running still job canceled (ledger only — does not kill Flux mid-flight).
  * Provider complete still wins after cancel (parity with generate completeSync).
  */
@@ -556,11 +587,13 @@ export function touchOpenImageJobsForSession(sessionId: string): number {
 
 /**
  * Public still job for GET /api/image — session-gated, URL-safe.
- * data: demo stills are marked hasImage without echoing multi-KB bodies.
+ * List responses omit multi-KB data: bodies (hasImage only).
+ * Single-job GET may pass includeDataUrl for session recovery of demo stills.
  */
 export function toPublicImageJob(
   job: ImageJob,
-  sessionId: string
+  sessionId: string,
+  opts?: { includeDataUrl?: boolean }
 ): PublicImageJob {
   if (job.sessionId !== sessionId) {
     return {
@@ -576,8 +609,11 @@ export function toPublicImageJob(
   const raw = job.imageUrl;
   const isData = Boolean(raw && raw.startsWith("data:image/"));
   const safeHttp = Boolean(raw && isSafeDeliverableUrl(raw));
-  const publicUrl =
-    job.status === "succeeded" && safeHttp && !isData ? raw : undefined;
+  let publicUrl: string | undefined;
+  if (job.status === "succeeded" && raw) {
+    if (safeHttp && !isData) publicUrl = raw;
+    else if (opts?.includeDataUrl && isData) publicUrl = raw;
+  }
   return {
     id: job.id,
     status: job.status,
