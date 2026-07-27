@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Soft-live env checklist (boss wake / ops). Presence only — never prints secret values.
-# Soft launch (Sunday, no Stripe): only SESSION_SECRET + FAL_KEY are required.
+# Soft-live readiness checklist (boss wake / ops). Presence only — never prints secret values.
+# Environment presence is necessary but not sufficient: health is authoritative.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -34,12 +34,13 @@ check_opt() {
 }
 
 echo "== Pikbo soft-live checklist =="
-echo "Soft launch needs SESSION_SECRET + FAL_KEY only. Stripe is Coming soon."
+echo "Live needs auth + Supabase atomic reserve + provider + server-owned deliverable."
 echo
-check_req "SESSION_SECRET|CREDITS_SECRET" "$([[ -n "${SESSION_SECRET:-}${CREDITS_SECRET:-}" ]] && echo 1 || echo 0)"
+check_req "Supabase public auth config" "$([[ -n "${SUPABASE_URL:-}${NEXT_PUBLIC_SUPABASE_URL:-}" && -n "${SUPABASE_ANON_KEY:-}${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" ]] && echo 1 || echo 0)"
+check_req "Supabase atomic reserve (service role + reviewed R1 flag)" "$([[ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" && "${REQUIRE_DURABLE_CREDITS:-0}" == "1" && "${PIKBO_R1_ATOMIC_RESERVATION_READY:-0}" == "1" ]] && echo 1 || echo 0)"
 check_req "FAL_KEY (live generate)" "$([[ -n "${FAL_KEY:-}" ]] && echo 1 || echo 0)"
-check_opt "SUPABASE_URL (auth + durable)" "$([[ -n "${SUPABASE_URL:-}${NEXT_PUBLIC_SUPABASE_URL:-}" ]] && echo 1 || echo 0)"
-check_opt "SUPABASE_SERVICE_ROLE_KEY" "$([[ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" ]] && echo 1 || echo 0)"
+check_req "T6 server-owned worker request (health still verifies implementation)" "$([[ "${PIKBO_T6_BAKED_WATERMARK_WORKER:-0}" == "1" ]] && echo 1 || echo 0)"
+check_opt "SESSION_SECRET|CREDITS_SECRET" "$([[ -n "${SESSION_SECRET:-}${CREDITS_SECRET:-}" ]] && echo 1 || echo 0)"
 check_opt "STRIPE_SECRET_KEY (test only for Phase I)" "$([[ -n "${STRIPE_SECRET_KEY:-}" ]] && echo 1 || echo 0)"
 check_opt "STRIPE_WEBHOOK_SECRET" "$([[ -n "${STRIPE_WEBHOOK_SECRET:-}" ]] && echo 1 || echo 0)"
 check_opt "STRIPE_PRICE_CREATOR" "$([[ -n "${STRIPE_PRICE_CREATOR:-}" ]] && echo 1 || echo 0)"
@@ -49,10 +50,10 @@ check_opt "VIDEO_PROVIDER_WEBHOOK_SECRET (prod async webhooks)" "$([[ -n "${VIDE
 if [[ "${STRIPE_SECRET_KEY:-}" == sk_live_* ]]; then
   echo "WARN STRIPE_SECRET_KEY looks like sk_live — blocked without PAYMENTS_LIVE=1"
 fi
-if [[ "${PIKBO_T6_FILE_BAKE:-}" == "1" ]]; then
-  echo "OK   PIKBO_T6_FILE_BAKE=1 (operator asserts file watermark bake)"
+if [[ "${PIKBO_T6_BAKED_WATERMARK_WORKER:-}" == "1" ]]; then
+  echo "note T6 worker requested; this does not prove a serveable baked derivative"
 else
-  echo "skip T6 file bake  (Free raw download stays blocked — correct for Mode A)"
+  echo "skip T6 worker request (Free raw download stays blocked — correct)"
 fi
 
 if [[ -n "${1:-}" ]]; then
@@ -98,7 +99,12 @@ if billing:
         "cancelRefund=", billing.get("ledgerCancelRefund"),
     )
 cl=h.get("softLiveChecklist") or {}
-print("checklist fal=", cl.get("FAL_KEY"), "sessionSecret=", cl.get("SESSION_SECRET"))
+print(
+    "checklist auth=", cl.get("AUTH_CONFIGURED"),
+    "atomic=", cl.get("DURABLE_ATOMIC_RESERVATION_CONFIGURED"),
+    "provider=", cl.get("PROVIDER_CONFIGURED"),
+    "deliverable=", cl.get("SERVER_OWNED_DELIVERABLE_CONFIGURED"),
+)
 print("entitlements writable=", (h.get("entitlements") or {}).get("writable"))
 ready = h.get("ready") or {}
 demos=h.get("demos") or {}
@@ -107,7 +113,7 @@ if demos.get("ok") is False:
 if ready.get("softLive"):
     print("softLive ready= true")
 elif ready.get("demo"):
-    print("softLive ready= false (demo-cached only — set FAL_KEY + SESSION_SECRET for live)")
+    print("softLive ready= false (validation/cached only — complete all four live requirements)")
 PY
     fi
   else
@@ -118,6 +124,6 @@ fi
 
 echo
 echo "Summary: soft-live required $req_ok ok / $req_bad miss · paid-optional $opt_ok present / $opt_miss skip"
-echo "See docs/LAUNCH.md — Sunday soft: SESSION_SECRET + FAL_KEY only."
+echo "Health /api/health is authoritative; provider/session secrets alone never enable live."
 # Non-zero only if remote probe failed; local env misses are informational.
 exit 0

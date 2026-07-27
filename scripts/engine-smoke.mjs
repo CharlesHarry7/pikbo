@@ -9,6 +9,7 @@ import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import "./health-truth-contract.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 

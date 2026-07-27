@@ -5,7 +5,6 @@ import {
   durableServerOwnedJobsStatus,
   probeDurableCreditsStore,
 } from "@/lib/durableCredits";
-import { generateMode } from "@/lib/requestMeta";
 import { probeSupabase } from "@/lib/supabase/server";
 import { publicAuthStatus } from "@/lib/authConfig";
 import { t6Report } from "@/lib/t6Watermark";
@@ -19,6 +18,39 @@ import { imageJobsProbe } from "@/lib/imageJobs";
 // NextResponse used for GET + HEAD
 
 export const runtime = "nodejs";
+
+type HealthTruthInput = {
+  authConfigured: boolean;
+  durableAtomicReservationConfigured: boolean;
+  providerConfigured: boolean;
+  serverOwnedDeliverableConfigured: boolean;
+};
+
+/**
+ * Public live-readiness contract. Every prerequisite is mandatory; environment
+ * presence or a provider key alone must never advertise live generation.
+ */
+function evaluateHealthTruth(input: HealthTruthInput) {
+  const missing: Array<keyof HealthTruthInput> = [];
+  if (!input.authConfigured) missing.push("authConfigured");
+  if (!input.durableAtomicReservationConfigured) {
+    missing.push("durableAtomicReservationConfigured");
+  }
+  if (!input.providerConfigured) missing.push("providerConfigured");
+  if (!input.serverOwnedDeliverableConfigured) {
+    missing.push("serverOwnedDeliverableConfigured");
+  }
+  const softLive = missing.length === 0;
+  return {
+    softLive,
+    mode: softLive
+      ? ("live-generate" as const)
+      : input.providerConfigured
+        ? ("validation" as const)
+        : ("cached-only" as const),
+    missing,
+  };
+}
 
 /** Uptime probes that only need a 200 without JSON body. */
 export async function HEAD() {
@@ -54,23 +86,46 @@ export async function GET() {
   }
   const supabase = await probeSupabase();
   const authPublic = publicAuthStatus();
-  const mode = generateMode();
   const payments = paymentsReadiness();
   const durableGate =
     process.env.REQUIRE_DURABLE_CREDITS === "1" && !durableCredits.writable;
   const durableServerOwnedJobs = durableServerOwnedJobsStatus();
+  const t6 = t6Report();
 
-  /** Demo / soft-live / paid ladders — honest gates for ops */
+  const authConfigured =
+    authPublic.configured && supabase.configured && supabase.reachable;
+  const durableAtomicReservationConfigured =
+    process.env.REQUIRE_DURABLE_CREDITS === "1" &&
+    process.env.PIKBO_R1_ATOMIC_RESERVATION_READY === "1" &&
+    durableCredits.backend === "supabase" &&
+    durableCredits.configured &&
+    durableCredits.writable &&
+    durableCredits.schemaReady === true &&
+    supabase.hasServiceRole;
+  const serverOwnedDeliverableConfigured =
+    t6.status === "ready" &&
+    t6.fileBake === true &&
+    t6.freeLiveRawDownload === "allowed" &&
+    t6.tooling.serverOwnedWorkerReady &&
+    t6.tooling.derivativeServingImplemented &&
+    t6.tooling.storageAdapterImplemented;
+  const truth = evaluateHealthTruth({
+    authConfigured,
+    durableAtomicReservationConfigured,
+    providerConfigured: fal,
+    serverOwnedDeliverableConfigured,
+  });
+
+  /** Cached / validation / live ladders — honest gates for ops */
   const ready = {
     /** Cached Lab + Studio demo path (no provider key; free, no credit burn) */
     demo: true,
-    /**
-     * Soft-live env ladder: FAL + session secret present.
-     * R0: live provider still requires auth + durable reserve (anonymous =
-     * cached demos only). Multi-node durable job worker is NOT required for
-     * Mode A process-memory ledger honesty.
-     */
-    softLive: fal && (sessionSecret || !production) && !durableGate,
+    mode: truth.mode,
+    softLive: truth.softLive,
+    provider: fal,
+    auth: authConfigured,
+    durableAtomicReservation: durableAtomicReservationConfigured,
+    serverOwnedDeliverable: serverOwnedDeliverableConfigured,
     /**
      * Real charges — needs durable entitlements (PRELAUNCH R1).
      * File store unwritable ⇒ paid stays false even if Stripe env is set.
@@ -78,7 +133,7 @@ export async function GET() {
      * Multi-node paid requires server-owned generation jobs (still hard-false).
      */
     paid:
-      fal &&
+      truth.softLive &&
       sessionSecret &&
       stripe &&
       stripeWebhook &&
@@ -86,11 +141,8 @@ export async function GET() {
       durableCredits.writable &&
       payments.readyForTestCheckout &&
       durableServerOwnedJobs.effective,
-    /** T5 local adapter or Supabase — not live Stripe; multi-node needs jobs */
-    durableCredits:
-      durableCredits.writable &&
-      durableCredits.configured &&
-      (!production || durableServerOwnedJobs.effective),
+    /** Only the Supabase atomic reservation path is live-spend authority. */
+    durableCredits: durableAtomicReservationConfigured,
   };
 
   return NextResponse.json({
@@ -101,12 +153,15 @@ export async function GET() {
      * Ops scripts default to accepting ready.demo; REQUIRE_SOFT_LIVE=1 for live.
      */
     acceptance: {
+      mode: truth.mode,
       demoCached: ready.demo === true,
+      validation: truth.mode === "validation",
       softLive: ready.softLive === true,
       paid: ready.paid === true,
+      missingLiveRequirements: truth.missing,
     },
     /** T6 file watermark bake — blocked until operator proves pipeline */
-    t6: t6Report(),
+    t6,
     /** Phase D local job timeout (ms) for queued/running sweep */
     jobTimeoutMs: jobTimeoutMs(),
     /** Phase I payments readiness (never echoes secrets) */
@@ -142,7 +197,7 @@ export async function GET() {
     stripe,
     stripeWebhook,
     sessionSecret,
-    mode,
+    mode: truth.mode,
     /**
      * Product orientation — ops + Mode A honesty.
      * Primary sell is AI video; stills are optional support (not a stills shop).
@@ -174,21 +229,22 @@ export async function GET() {
     /** Honesty contract: cached demos free; live jobs charge flat credits */
     billing: {
       cachedDemoCredits: 0,
-      liveJobCredits: "flat CREDITS_PER_VIDEO",
+      liveJobCredits: ready.softLive ? "flat CREDITS_PER_VIDEO" : null,
       /** Product-level free trial caps (session-specific state lives on /api/me). */
       freeTrial: {
-        planCredits: 10,
-        clipsPerPeriod: 1,
-        liveJobCredits: 10,
-        modelClass: "seedance-mini",
-        durationSec: 5,
-        resolution: "480p",
-        onPlayerMark: true,
+        available: ready.softLive,
+        planCredits: ready.softLive ? 10 : 0,
+        clipsPerPeriod: ready.softLive ? 1 : 0,
+        liveJobCredits: ready.softLive ? 10 : null,
+        modelClass: ready.softLive ? "seedance-mini" : null,
+        durationSec: ready.softLive ? 5 : null,
+        resolution: ready.softLive ? "480p" : null,
+        onPlayerMark: ready.softLive,
         /**
          * Recoverable provider/validation fails restore the debit when the
          * server confirms. Keep boolean true for Mode A ops gates.
          */
-        failedLiveRefunds: true,
+        failedLiveRefunds: ready.softLive,
         /** Ops honesty — not every fail is a confirmed restore. */
         failedLiveRefundPolicy: "when_confirmed" as const,
         /** Process kill / ledger TIMEOUT → refund unconfirmed (check balance). */
@@ -196,8 +252,11 @@ export async function GET() {
         /** Soft-launch cancel never invents restore. */
         ledgerCancelRefund: "unconfirmed" as const,
         /** Free 10 credits = Create video Mini only — not Flux stills. */
-        scope: "video-create-only",
+        scope: ready.softLive ? "video-create-only" : "cached-demo-only",
         stillsOnFree: "demo-only",
+        reason: ready.softLive
+          ? "All live prerequisites are configured"
+          : "Free live is closed; cached Pikbo Lab prototypes only",
       },
     },
     rateLimit: {
@@ -258,28 +317,45 @@ export async function GET() {
       entitlementsWritable: entitlements.writable,
       durableCreditsWritable: durableCredits.writable,
       requireDurableCredits: process.env.REQUIRE_DURABLE_CREDITS === "1",
+      atomicReservationOperatorReady:
+        process.env.PIKBO_R1_ATOMIC_RESERVATION_READY === "1",
       supabaseConfigured: supabase.configured,
       supabaseServiceRole: supabase.hasServiceRole,
+      authConfigured,
+      durableAtomicReservationConfigured,
+      serverOwnedDeliverableConfigured,
     },
-    /** Soft-live env checklist (presence only — never echo secrets) */
+    /** Live-readiness checklist (presence only — never echo secrets) */
     softLiveChecklist: {
       SESSION_SECRET: sessionSecret,
       FAL_KEY: fal,
       STRIPE_SECRET_KEY: stripe,
       STRIPE_WEBHOOK_SECRET: stripeWebhook,
       entitlementsWritable: entitlements.writable,
-      /** Soft launch (no Stripe) only needs the required pair. */
-      requiredForSoftLive: ["SESSION_SECRET", "FAL_KEY"],
+      AUTH_CONFIGURED: authConfigured,
+      DURABLE_ATOMIC_RESERVATION_CONFIGURED:
+        durableAtomicReservationConfigured,
+      PROVIDER_CONFIGURED: fal,
+      SERVER_OWNED_DELIVERABLE_CONFIGURED:
+        serverOwnedDeliverableConfigured,
+      requiredForSoftLive: [
+        "AUTH_CONFIGURED",
+        "DURABLE_ATOMIC_RESERVATION_CONFIGURED",
+        "PROVIDER_CONFIGURED",
+        "SERVER_OWNED_DELIVERABLE_CONFIGURED",
+      ],
       optionalUntilPaid: [
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
         "entitlementsWritable",
       ],
       notes: [
-        "Soft public (Sunday): SESSION_SECRET + FAL_KEY only — Stripe is Coming soon",
         "Demo works without FAL_KEY (cached Lab clips, 0 credits)",
         "R0: anonymous + Free always cached demos; live needs auth + durable reserve RPC",
         "R1a: live reserve/capture/release uses pikbo_*_generation_v1 atomic RPCs (migration apply required)",
+        "Provider and session secrets alone never make Soft Live ready",
+        "Set PIKBO_R1_ATOMIC_RESERVATION_READY only after the reviewed RPC migration passes non-production integration",
+        "Live requires configured auth, Supabase atomic reservation, provider, and server-owned delivery",
         "Paid later: durable entitlements + Stripe price IDs + webhook",
         "PIKBO_FORCE_GENERATE_FAIL is ops-only and hard-off in production",
         "See docs/LAUNCH.md",

@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [workbuddy] fail-closed Soft Live health truth
+- `/api/health` now requires auth, Supabase atomic reservation, provider, and a server-owned deliverable before `ready.softLive=true`.
+- Any missing prerequisite reports `validation` or `cached-only`; the public health contract exposes zero free live clips and `cached-demo-only`.
+- A provider/session secret alone can no longer make health advertise live generation.
+- `health-truth-contract` exhaustively verifies all 16 prerequisite combinations and runs inside `engine-smoke`.
+- Scope is health/read-only contracts only; no generate, image, session, credits, Stripe, Supabase, Vercel, or production mutation.
+- PASS: bash syntax, engine smoke, typecheck, lint (0 errors / 2 pre-existing warnings), and Webpack production build (193 routes).
+
 ### 2026-07-27 — [grok] R1b explicit retryJobId + fixed deadline
 - Process-memory promote only with client `retryJobId` fork token (generate/image/Create remix); never effect/prompt guess.
 - TIMEOUT deadline fixed from `createdAt`; `touchJob` / poll cannot extend.
