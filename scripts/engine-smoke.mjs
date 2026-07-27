@@ -4955,6 +4955,27 @@ const genJobsRouteHead = fs.readFileSync(
 assert.match(genJobsRouteHead, /countJobsForSession/);
 assert.match(genJobsRouteHead, /X-Pikbo-Jobs-List-Limit/);
 assert.match(genJobsRouteHead, /SESSION_JOBS_LIST_LIMIT\s*=\s*50/);
+// GET list: full-session byStatus (countJobsForSession) + listLimit/listed
+assert.match(genJobsRouteHead, /listLimit:\s*SESSION_JOBS_LIST_LIMIT|listLimit,/);
+assert.match(genJobsRouteHead, /countJobsForSession/);
+assert.match(genJobsRouteHead, /touchOpenJobsForSession/);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /SESSION_JOBS_UI_LIMIT\s*=\s*50/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /body\.jobs\.slice\(0,\s*12\)/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /data-session-list-limit|data-session-listed/
+);
+// Modules Photo → Clip carries remix contract (not bare /create)
+assert.match(
+  fs.readFileSync(join(root, "components/ModulesSuiteCtas.tsx"), "utf8"),
+  /createRemixHref|data-modules-path=["']photo-clip["']/
+);
 assert.doesNotMatch(
   genJobsRouteHead,
   /export async function HEAD[\s\S]{0,400}listJobsForSession\(session\.id,\s*30\)/
