@@ -95,3 +95,15 @@
 1. **PIKBO_GROWTH_EMAIL** 未设置 — 阻塞 11 个 login-required 目录提交
 2. **Stripe 支付** 未启用 — 无法变现（但铁令禁止开 Stripe）
 3. **GA4/Clarity 埋点** — 哥飞建议装好数据基建，但涉及改业务代码，需老板批准
+
+---
+
+### 11:40 — 老板：登录让 WorkBuddy 做
+- **老板指令**：`让workbuddy去做`（生产用户登录 / Supabase auth-enable）
+- **现状**：代码 `/login` 已上；生产 `auth.mode=disabled`、`configured=false`（Vercel 无 Supabase 密钥）
+- **派工**：
+  - `WORK_QUEUE` **WQ-2026-07-27-09** `status: open` P0 → WorkBuddy
+  - 全文：`docs/growth/WORKBUDDY_AUTH_ENABLE_PROMPT.md`
+- **成功标志**：commit `[workbuddy] auth-enable: PASS` + https://pikbo.ai/login 可填邮箱发 magic link
+- **失败诚实**：`blocked_secret:supabase_vercel` 写 AUTH-ENABLE report，然后继续外链 `--all`，禁止空转问老板
+- **Grok 不配密钥**；WB 用 Chrome 登录态或自身 env 配 Supabase+Vercel+T5 SQL+redeploy

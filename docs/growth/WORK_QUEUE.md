@@ -8,7 +8,7 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ## OPEN · 立即执行
 
-### WQ-2026-07-27-09 · 打开生产用户登录（Supabase + Vercel）
+### WQ-2026-07-27-09 · 打开生产用户登录（Supabase + Vercel）【老板 11:40 再确认 · 立即做】
 
 ```yaml
 id: WQ-2026-07-27-09
@@ -16,8 +16,9 @@ status: open
 priority: P0
 assignee: workbuddy
 prompt: docs/growth/WORKBUDDY_AUTH_ENABLE_PROMPT.md
+boss_confirm: "2026-07-27 让workbuddy去做登录"
 why: |
-  老板：让 WorkBuddy 做登录。代码已有 /login；生产 auth.disabled 缺密钥。
+  老板二次确认：让 WorkBuddy 做登录。代码已有 /login；生产 auth.disabled 缺密钥。
   WB 用浏览器/env 配 Supabase+Vercel+SQL+redeploy；blocked 则写报告并继续外链。
 command: |
   严格按 WORKBUDDY_AUTH_ENABLE_PROMPT 全文
