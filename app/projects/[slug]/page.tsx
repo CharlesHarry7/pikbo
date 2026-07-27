@@ -12,6 +12,10 @@ import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { ProjectOpenBeacon } from "@/components/ProjectOpenBeacon";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import {
+  isPromotedShowcaseProvenance,
+  showcaseEvidenceChecklist,
+} from "@/lib/showcaseEvidence";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -48,7 +52,13 @@ export default async function ShowcaseProjectPage({ params }: Props) {
   if (!project) notFound();
 
   const preset = getPreset(project.recipeSlug);
-  const provenance = showcaseProvenanceLabel(project.provenance);
+  const provenance = showcaseProvenanceLabel(project);
+  const evidenceChecklist = showcaseEvidenceChecklist(project.evidence);
+  const evidenceComplete = evidenceChecklist.every((item) => item.complete);
+  const promoted = isPromotedShowcaseProvenance(project.provenance);
+  const verifiedSource = promoted
+    ? project.evidence!.source.inputAssetPath
+    : project.referencePoster;
 
   return (
     <main className="min-h-screen bg-black px-4 py-8 text-white sm:px-8 sm:py-12">
@@ -128,17 +138,23 @@ export default async function ShowcaseProjectPage({ params }: Props) {
         </header>
 
         <section
-          aria-label="Reference poster and cached prototype"
+          aria-label={
+            promoted
+              ? "Verified source input and generated output"
+              : "Reference poster and cached prototype"
+          }
           className="grid gap-3 lg:grid-cols-2"
         >
           <article className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] shadow-[0_20px_50px_-30px_rgba(0,0,0,0.9)]">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-white/40">
-                  Reference poster
+                  {promoted ? "Source input" : "Reference poster"}
                 </p>
                 <h2 className="text-sm font-bold">
-                  Not a verified provider input
+                  {promoted
+                    ? "Matched to the evidence record"
+                    : "Not a verified provider input"}
                 </h2>
               </div>
               <span className="text-[10px] text-white/35">
@@ -148,8 +164,12 @@ export default async function ShowcaseProjectPage({ params }: Props) {
             <div className="media-stage m-3 grid min-h-[320px] place-items-center p-3 sm:min-h-[480px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={project.referencePoster}
-                alt={`Reference poster for ${project.title}`}
+                src={verifiedSource}
+                alt={
+                  promoted
+                    ? `Verified source input for ${project.title}`
+                    : `Reference poster for ${project.title}`
+                }
                 className="relative z-[2] max-h-[64vh] w-full rounded-xl object-contain"
               />
             </div>
@@ -159,7 +179,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
-                  Cached prototype
+                  {promoted ? "Verified output" : "Cached prototype"}
                 </p>
                 <h2 className="text-sm font-bold">{provenance}</h2>
               </div>
@@ -248,29 +268,75 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               </div>
             </dl>
             <p className="mt-5 border-t border-white/10 pt-4 text-[11px] leading-relaxed text-white/40">
-              Evidence record: {project.sourceRecord}. The repository does not
-              link this poster and clip through a provider task ID, so this page
-              does not claim an input-to-output transformation or formal QA.
-              Cached playback costs 0 credits and did not process your current
-              upload. When live generation is enabled for an eligible account,
-              the current configured quote is {CREDITS_PER_VIDEO} credits.
+              {promoted ? (
+                <>
+                  Evidence record complete. The registered source, provider run,
+                  output assets, and named review all match this project.
+                </>
+              ) : (
+                <>
+                  Evidence record: {project.sourceRecord}. The repository does
+                  not link this poster and clip through a provider task ID, so
+                  this page does not claim an input-to-output transformation or
+                  formal QA. Cached playback costs 0 credits and did not process
+                  your current upload. When live generation is enabled for an
+                  eligible account, the current configured quote is{" "}
+                  {CREDITS_PER_VIDEO} credits.
+                </>
+              )}
             </p>
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
-              Evidence status
-            </p>
-            <div className="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-4">
-              <p className="text-sm font-bold text-amber-100">
-                Prototype · formal evidence pending
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
+                Evidence checklist
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-white/45">
-                No provider task ID, distinct verified input, rights record, or
-                signed QA is stored for this cached clip. Pikbo therefore shows
-                no numeric score and makes no verified customer-case claim.
-              </p>
+              <span
+                className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wide ${
+                  promoted && evidenceComplete
+                    ? "border-[#c8ff3d]/35 bg-[#c8ff3d]/10 text-[#c8ff3d]"
+                    : "border-white/10 bg-white/[0.04] text-white/45"
+                }`}
+              >
+                {promoted && evidenceComplete
+                  ? "Verified"
+                  : evidenceComplete
+                    ? "Ready for promotion"
+                    : "Promotion locked"}
+              </span>
             </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {evidenceChecklist.map((item) => (
+                <div
+                  key={item.id}
+                  className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 text-[10px] font-semibold ${
+                    item.complete
+                      ? "border-[#c8ff3d]/25 bg-[#c8ff3d]/[0.06] text-white/75"
+                      : "border-white/[0.07] bg-black/20 text-white/35"
+                  }`}
+                >
+                  <span
+                    aria-hidden
+                    className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] ${
+                      item.complete
+                        ? "bg-[#c8ff3d] text-black"
+                        : "border border-white/15 text-transparent"
+                    }`}
+                  >
+                    ✓
+                  </span>
+                  {item.label}
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-[10px] leading-relaxed text-white/35">
+              {promoted && evidenceComplete
+                ? "Rights, provider run, source, output, and named review records are complete."
+                : evidenceComplete
+                  ? "Evidence is complete, but this project remains a prototype until provenance is explicitly promoted."
+                : "This cached prototype stays unscored and unverified until every record is attached."}
+            </p>
 
             <div className="mt-6 grid gap-2" data-project-footer="product-first">
               <Link

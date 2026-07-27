@@ -2968,8 +2968,9 @@ const projectPage = fs.readFileSync(
   join(root, "app/projects/[slug]/page.tsx"),
   "utf8"
 );
-assert.match(projectPage, /No provider task ID/);
-assert.match(projectPage, /formal evidence pending/);
+assert.match(projectPage, /provider task ID/);
+assert.match(projectPage, /showcaseEvidenceChecklist/);
+assert.match(projectPage, /Promotion locked/);
 assert.doesNotMatch(projectPage, /reviewerNotes|\b[0-5](?:\.\d+)?\s*\/\s*5\b/);
 const loginForm = fs.readFileSync(
   join(root, "components/LoginForm.tsx"),

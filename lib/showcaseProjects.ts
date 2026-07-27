@@ -16,9 +16,15 @@ import {
 } from "@/lib/softLaunch";
 import { createRemixHref } from "@/lib/remixIntent";
 import { viralName } from "@/lib/viralNames";
+import {
+  assertShowcasePromotionGate,
+  evidenceGatedProvenanceLabel,
+  type ShowcaseEvidence,
+} from "@/lib/showcaseEvidence";
 
 export type ShowcaseProvenance =
   | "cached_prototype"
+  | "official_verified"
   | "live_generated"
   | "concept";
 
@@ -40,6 +46,8 @@ export type ShowcaseProject = {
   poster: string;
   recipeSlug: string;
   provenance: ShowcaseProvenance;
+  /** Required in full before provenance may become official_verified/live_generated. */
+  evidence?: ShowcaseEvidence;
   model: string;
   aspectRatio: string;
   durationSeconds: number;
@@ -273,6 +281,7 @@ function assertRegistryIntegrity(list: ShowcaseProject[]) {
   const slugs = new Set<string>();
   const outputs = new Set<string>();
   for (const project of list) {
+    assertShowcasePromotionGate(project);
     if (slugs.has(project.slug)) {
       throw new Error(`Duplicate ShowcaseProject slug: ${project.slug}`);
     }
@@ -368,11 +377,17 @@ export function showcaseProjectAsDemo(
 }
 
 export function showcaseProvenanceLabel(
-  provenance: ShowcaseProvenance
+  project: Pick<
+    ShowcaseProject,
+    | "slug"
+    | "provenance"
+    | "evidence"
+    | "referencePoster"
+    | "outputVideo"
+    | "poster"
+  >
 ): string {
-  if (provenance === "live_generated") return "Live generation";
-  if (provenance === "concept") return "Concept recipe";
-  return "PIKBO Lab · cached prototype";
+  return evidenceGatedProvenanceLabel(project);
 }
 
 /** Recipe still registered? Used by static smoke checks and project integrity. */

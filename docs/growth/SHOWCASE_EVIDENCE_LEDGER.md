@@ -11,36 +11,49 @@ scores must be checked against this ledger.
 
 ## Required schema
 
+Canonical implementation: `lib/showcaseEvidence.ts`. This document mirrors
+that type; code and build validation win if prose ever drifts.
+
 ```ts
 type ShowcaseEvidence = {
-  projectSlug: string;
-  recipeSlug: string;
-  inputAsset: {
-    path: string;
-    ownedOrLicensed: boolean;
-    rightsRecord: string;
-    distinctFromOutputPoster: boolean;
+  schemaVersion: 1;
+  rights: {
+    basis: "owned" | "licensed";
+    rightsRecordId: string;
+    holder: string;
   };
-  provider: string;
-  providerTaskId: string;
-  model: string;
-  parameters: Record<string, string | number | boolean>;
-  outputAsset: {
+  source: {
+    sourceRecordId: string;
+    inputAssetId: string;
+    inputAssetPath: string;
+    inputSha256: string;
+    distinctFromOutputPoster: true;
+  };
+  provider: {
+    name: string;
+    taskId: string;
+    requestId: string;
+    model: string;
+    parameters: Record<string, JSONValue>;
+  };
+  output: {
+    outputAssetId: string;
     videoPath: string;
     posterPath: string;
-    verifiedReadableAt: string;
+    outputSha256: string;
   };
-  reviewer: string;
-  reviewedAt: string;
-  scores: {
-    identity: number;
-    motion: number;
-    artifacts: number;
-    composition: number;
-    commercialUse: number;
+  review: {
+    reviewer: { id: string; displayName: string };
+    reviewedAt: string; // ISO 8601 with timezone
+    scores: {
+      identity: number;
+      motion: number;
+      artifacts: number;
+      composition: number;
+      commercialUse: number;
+    };
+    notes?: string;
   };
-  status: "official" | "prototype" | "rejected";
-  notes: string;
 };
 ```
 
@@ -60,6 +73,12 @@ An `official` example requires all fields above:
 If any required evidence is missing, the row is `prototype` and **has no
 numeric quality score**. A model label or an existing video file alone is not
 provider provenance.
+
+Promotion is fail-closed. `official_verified`, `live_generated`, and legacy
+`official`/`live` values all invoke `assertShowcasePromotionGate`; a missing or
+invalid field throws during registry import and therefore fails the production
+build. Cached prototypes and concepts may not expose legacy `qualityScores` or
+`reviewerNotes` fields.
 
 ## Audit of current 12 registered examples
 
@@ -110,3 +129,6 @@ R4 now aligns the product with this ledger:
 
 `npm run showcase-evidence-smoke` prevents unsupported scores, verified-case
 labels, reused homepage media, and live-entitlement UI drift from returning.
+`npm run showcase-promotion-gate` executes one complete official fixture plus
+invalid rights, source, provider, parameter, output, reviewer, timestamp, and
+score fixtures.

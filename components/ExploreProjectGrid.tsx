@@ -110,7 +110,7 @@ export function ExploreProjectGrid({
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c8ff3d]/40 to-transparent opacity-0 transition group-hover:opacity-100" />
                   <div className="absolute left-2 top-2 flex flex-wrap gap-1">
                     <span className="rounded-full border border-white/10 bg-black/65 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-[#c8ff3d] backdrop-blur">
-                      {showcaseProvenanceLabel(project.provenance)}
+                      {showcaseProvenanceLabel(project)}
                     </span>
                     <span
                       className="rounded-full border border-white/15 bg-black/65 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white/55 backdrop-blur"

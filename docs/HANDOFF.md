@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [claude] R4b verified showcase promotion gate
+- `lib/showcaseEvidence.ts` is the canonical evidence schema: rights/source records, distinct hashed input, provider task+request IDs, model parameters, hashed output, named reviewer/time, and five 4–5 pass dimensions.
+- Registry import and provenance labels call a fail-closed promotion gate; `official/live` without every evidence field now throws and fails the build.
+- Current 12 rows stay cached prototypes with no public score. Homepage retains the same eight distinct videos; no media or layout was redesigned.
+- Inside Project adds a compact evidence checklist and keeps the Recipe CTA prominent; prototypes remain visibly unscored and promotion-locked.
+- PASS: promotion gate (1 valid + 8 invalid fixtures), showcase evidence, product proof, engine smoke, typecheck, lint (0 errors / 2 pre-existing warnings), webpack production build.
+
 ### 2026-07-27 — [claude] R4 showcase evidence truth at runtime
 - The canonical Showcase registry now uses `cached_prototype` and `referencePoster`; it does not claim posters are provider inputs or expose invented 4/5 scores/reviewer notes.
 - Home retains eight distinct cached videos for watch time, but every proof surface labels them `PIKBO Lab · cached prototype`; concepts remain static Recipe art.

@@ -14,6 +14,7 @@ function assert(condition, message) {
 }
 
 const showcase = read("lib/showcaseProjects.ts");
+const evidenceGate = read("lib/showcaseEvidence.ts");
 const demos = read("lib/demoVideos.ts");
 const softLaunch = read("lib/softLaunch.ts");
 const projectPage = read("app/projects/[slug]/page.tsx");
@@ -53,9 +54,10 @@ assert(
 );
 assert(
   projectPage.includes("Not a verified provider input") &&
-    projectPage.includes("No provider task ID") &&
-    projectPage.includes("formal evidence pending"),
-  "Inside Project must disclose missing provider input, task ID, and formal QA"
+    projectPage.includes("provider task ID") &&
+    projectPage.includes("showcaseEvidenceChecklist") &&
+    projectPage.includes("Promotion locked"),
+  "Inside Project must disclose the missing input/task link and show the evidence gate"
 );
 
 const truthSurface = [
@@ -71,7 +73,6 @@ const truthSurface = [
 ].join("\n");
 
 for (const forbidden of [
-  /Official example/i,
   /Official · cached/i,
   /official_cached/,
   /Lab\s*≥\s*4/i,
@@ -83,6 +84,13 @@ for (const forbidden of [
 ]) {
   assert(!forbidden.test(truthSurface), `truth surface contains ${forbidden}`);
 }
+assert(
+  showcase.includes("assertShowcasePromotionGate(project)") &&
+    showcase.includes("evidenceGatedProvenanceLabel(project)") &&
+    evidenceGate.includes("assertShowcasePromotionGate(project)") &&
+    evidenceGate.includes('project.provenance === "official_verified"'),
+  "verified labels must remain behind the evidence promotion gate"
+);
 assert(
   !/\b[0-5](?:\.\d+)?\s*\/\s*5\b/.test(projectPage),
   "Inside Project must not show an unverified numeric score"
