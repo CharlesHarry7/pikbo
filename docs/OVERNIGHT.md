@@ -171,7 +171,8 @@
 130. [x] Image R1c parity: recordProviderSucceededWithheld + release enqueue on live Flux
 131. [x] Webhook R1b/R1c: late/orphan success withheld · Seller Pack no cookie-authority lie
 132. [x] Process-memory R1c fallback journal + downloads WITHHELD honesty + health localJournal
-133. 下一拍：R1c/R1a SQL non-prod rehearsal (boss) · Mode A Vercel · T6 bake
+133. [x] Seller Pack frozen contract + cached golden-path smoke (0 provider · Free Mini block)
+134. 下一拍：R1c/R1a SQL non-prod rehearsal (boss) · Mode A Vercel · T6 bake
 
 ### 老板醒来验收
 
@@ -185,8 +186,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- R1c process-memory journal dual-writes withhold facts when Supabase recon is off (never stores outputRef).
-- Downloads honest WITHHELD_ORPHAN/late codes; health.recoveryLedger.localJournal + jobs.withheld probe.
+- Seller Pack: `lib/sellerPackContract` freezes 3 PRD slugs; BatchStudio imports contract; cached golden smoke 0 provider.
+- `npm run seller-pack-cached-smoke` (+ golden-path alias) · Free Mini full-pack blocked · durable shadow no cookie-authority claim.
 - Next: R1c/R1a SQL non-prod apply (boss) · Mode A Vercel · T6 bake · CI workflow re-copy.
 
 
