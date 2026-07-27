@@ -92,6 +92,10 @@ export function HomeSeoBody() {
                   "/guides/designer-toy-ai-video-vs-generic-tools",
                   "Why toy-vertical",
                 ],
+                [
+                  "/guides/toy-unboxing-video-from-one-photo",
+                  "Unboxing video from one photo",
+                ],
               ] as const
             ).map(([href, label]) => (
               <Link

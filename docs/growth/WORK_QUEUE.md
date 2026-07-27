@@ -8,6 +8,26 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ## OPEN · 立即执行
 
+### WQ-2026-07-27-07 · 30 天计划第 1 周外链 + GSC 查询截图
+
+```yaml
+id: WQ-2026-07-27-07
+status: open
+priority: P0
+assignee: workbuddy
+prompt: docs/growth/WORKBUDDY_30D_WEEK1_PROMPT.md
+why: |
+  优待期 0 点击 + 外链不足。执行 PLAN_30D week1：外链能发就发 + GSC 查询报告截图。
+  链：主词 tools / blind-box / guides/toy-unboxing-video-from-one-photo
+  禁止 toddlers 导购页、禁止扩 sitemap
+command: |
+  git pull; GROWTH_CHROME_CHANNEL=chrome python3 scripts/growth-auto/run_growth.py --all
+  GSC 截图 query/page 0-click 展现 → docs/growth/runs/GSC-QUERY-<ts>.md
+  commit [workbuddy] week1 links+GSC (no sitemap expand)
+result: |
+  (WB 填)
+```
+
 ### WQ-2026-07-27-06 · 教老板看 GSC 收录
 
 ```yaml

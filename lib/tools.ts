@@ -389,7 +389,8 @@ export const TOOLS: Tool[] = [
     label: "Unboxing hook",
     h1: "Generate a Toy Unboxing Hook for Reels and Shorts",
     // CTR 优化 2026-07-27: 加入 Free Mini Trial 驱动点击（该页有 GSC 展现但 0 点击）
-    seoTitle: "Toy Unboxing Hook Generator — Free Mini Trial | Pikbo",
+    seoTitle:
+      "Toy Unboxing Hook Video From One Photo — Free Mini | Pikbo",
     seoDescription:
       "Make a scroll-stopping toy unboxing hook from one photo. Vertical reveal openers for Reels, Shorts, and TikTok. Free Mini trial — no card needed.",
     intro:
