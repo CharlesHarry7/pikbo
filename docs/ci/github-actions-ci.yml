@@ -51,6 +51,9 @@ jobs:
       - name: SEO cold-start five-page budget
         run: npm run seo-cold-start-smoke
 
+      - name: Seller Pack cached golden path
+        run: npm run seller-pack-cached-smoke
+
       - name: Recovery reconciliation (R1c lease + settlement replay)
         run: npm run recovery-reconciliation
 

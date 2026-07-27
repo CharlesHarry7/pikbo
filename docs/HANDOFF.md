@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] Seller Pack cached golden-path smoke
+- `npm run seller-pack-cached-smoke`: fixed 3 children, 0-credit cached quote, Free Mini full-pack block, export-only successes, recovery never invents refunds, demo skips shadow reserve, R0 generate gate still owns live.
+- Wired into `docs/ci` + recovery-qa/engine-smoke CI locks.
+- Complements Codex SELLER-GOLD (cached path regression without provider spend).
+- PASS: seller-pack-cached-smoke + engine-smoke + typecheck.
+
 ### 2026-07-28 — [grok] local R1c withhold journal + mobile poster-first LCP
 - Process-memory `localReconciliationJournal` when Supabase R1c off: idempotent withhold facts, never stores `outputRef`, health counts only.
 - Phase G: mobile wall `preload=none`; featured wall not LCP-eager; hero keeps poster preload.

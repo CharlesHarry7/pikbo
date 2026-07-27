@@ -968,6 +968,7 @@ assert.match(ciYml, /recovery-ledger/);
 assert.match(ciYml, /recovery-retry-deadline/);
 assert.match(ciYml, /showcase-evidence-smoke/);
 assert.match(ciYml, /seo-cold-start-smoke/);
+assert.match(ciYml, /seller-pack-cached-smoke/);
 assert.match(ciYml, /typecheck/);
 assert.match(ciYml, /npm run build/);
 assert.match(ciYml, /npm run critical-path/);
@@ -4771,6 +4772,11 @@ assert.match(sellerPackRecoverySrc, /reconcileSellerPackRecovery/);
 assert.match(sellerPackRecoverySrc, /Job is no longer available in this device\/server session/);
 assert.match(sellerPackRecoverySrc, /360-spin-showcase/);
 assert.match(sellerPackRecoverySrc, /refund unconfirmed/);
+// Contract + recovery must stay in lockstep (golden smoke also asserts).
+assert.match(
+  fs.readFileSync(join(root, "lib/sellerPackContract.ts"), "utf8"),
+  /360-spin-showcase[\s\S]*blind-box-unboxing[\s\S]*paparazzi-flash/
+);
 assert.match(batchStudio, /data-seller-pack-recovery="device-local"/);
 assert.match(batchStudio, /retryEligible/);
 const recoveryCjs = require("typescript").transpileModule(sellerPackRecoverySrc, {
@@ -4779,9 +4785,37 @@ const recoveryCjs = require("typescript").transpileModule(sellerPackRecoverySrc,
     target: require("typescript").ScriptTarget.ES2022,
   },
 }).outputText;
+const contractSrc = fs.readFileSync(
+  join(root, "lib/sellerPackContract.ts"),
+  "utf8"
+);
+const contractCjs = require("typescript").transpileModule(contractSrc, {
+  compilerOptions: {
+    module: require("typescript").ModuleKind.CommonJS,
+    target: require("typescript").ScriptTarget.ES2022,
+  },
+}).outputText;
+const contractModule = { exports: {} };
+new Function("require", "exports", "module", contractCjs)(
+  (id) => {
+    // pricing is only used for LIVE total constant — inject flat 10.
+    if (id === "@/lib/pricing" || id.endsWith("/pricing")) {
+      return { CREDITS_PER_VIDEO: 10 };
+    }
+    throw new Error(`unexpected Seller Pack contract import: ${id}`);
+  },
+  contractModule.exports,
+  contractModule
+);
 const recoveryModule = { exports: {} };
 new Function("require", "exports", "module", recoveryCjs)(
   (id) => {
+    if (
+      id === "@/lib/sellerPackContract" ||
+      id.endsWith("/sellerPackContract")
+    ) {
+      return contractModule.exports;
+    }
     throw new Error(`unexpected Seller Pack recovery import: ${id}`);
   },
   recoveryModule.exports,
