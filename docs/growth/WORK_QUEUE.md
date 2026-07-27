@@ -8,6 +8,23 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ## OPEN · 立即执行
 
+### WQ-2026-07-27-06 · 教老板看 GSC 收录
+
+```yaml
+id: WQ-2026-07-27-06
+status: open
+priority: P0
+assignee: workbuddy
+prompt: docs/growth/WORKBUDDY_TEACH_GSC_PROMPT.md
+why: 老板问谷歌收录了多少、怎么看；需中文手把手教学 + 截图 + report
+command: |
+  严格按 WORKBUDDY_TEACH_GSC_PROMPT 执行课 0–6；写 GSC-TEACH report + push
+result: |
+  (WB 填 indexed 数字 + 截图路径)
+```
+
+---
+
 _(无 open 任务 — 队列已清空)_
 
 ---
