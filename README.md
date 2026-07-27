@@ -8,7 +8,11 @@ Turn **one photo** of a designer toy / figure / blind box you own into a short A
 Photo you own → recipe (spin / float / unbox) → short video
 ```
 
-Soft launch honesty: Free Mini is Seedance Mini (about 5s · 480p · on-player mark). Lab demos on the site are official cached examples, not customer UGC. Stripe checkout is off until search traffic is stable (哥飞养站).
+Recovery honesty: anonymous visitors are cached-demo-only until authenticated
+durable reservation and server-owned delivery are ready. Existing Lab media is
+not customer UGC; its proof status is being audited. Stripe remains off during
+recovery, but future payment validation depends on sellers producing publishable
+packs—not on an arbitrary search-traffic threshold.
 
 ## Try
 1. Open [pikbo.ai/create](https://pikbo.ai/create)  
@@ -76,7 +80,8 @@ Free live path: Seedance Mini · 5s · 480p · on-player mark. Cached demos and 
 3. **Auth + credits DB** (Supabase) — multi-device balance, history
 4. **Server-side video watermark** (ffmpeg) for free downloads
 5. **Verified live case studies** to replace cached Lab examples when fal renders are approved
-6. Vertical ads / affiliate (after free traffic is stable)
+6. Vertical seller acquisition after activation, repeat use, and unit economics
+   are measurable
 
 ## Multi-agent workflow (Grok · GPT · Claude)
 Single source of truth: **this GitHub repo**.

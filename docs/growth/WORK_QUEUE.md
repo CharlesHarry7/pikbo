@@ -1,49 +1,62 @@
 # WorkBuddy 工作队列（GitHub 派工 · 老板/Grok 可写 · WB 必须清空）
 
-**规则：** WorkBuddy 每次启动 **先 pull main**，再读本文件。  
-凡 `status: open` 的任务 **必须执行**，完成后改成 `status: done` 并写 `result`，**commit + push**。  
+**规则：** WorkBuddy 每次启动先同步 `main`，再读本文件。
+凡 `status: open` 的任务必须执行，完成后改成 `status: done` 并写
+`result`。WorkBuddy 不得读取生产密钥、改数据库/业务代码、操作
+Vercel/Supabase 或直接更新 `main`；需要落盘时提交到获准的
+`agent/grok/*` 分支等待审核。
 Grok **不能**远程启动你的进程——只能把任务写在这里；**你**要自己跑起来。
 
 ---
 
 ## OPEN · 立即执行
 
-### WQ-2026-07-27-09 · 打开生产用户登录（Supabase + Vercel）【老板 11:40 再确认 · 立即做】
+### WQ-2026-07-27-10 · 收集 GSC / AITDK / 哥飞原始证据
 
 ```yaml
-id: WQ-2026-07-27-09
+id: WQ-2026-07-27-10
 status: open
 priority: P0
 assignee: workbuddy
-prompt: docs/growth/WORKBUDDY_AUTH_ENABLE_PROMPT.md
-boss_confirm: "2026-07-27 让workbuddy去做登录"
 why: |
-  老板二次确认：让 WorkBuddy 做登录。代码已有 /login；生产 auth.disabled 缺密钥。
-  WB 用浏览器/env 配 Supabase+Vercel+SQL+redeploy；blocked 则写报告并继续外链。
-command: |
-  严格按 WORKBUDDY_AUTH_ENABLE_PROMPT 全文
+  当前只有约 6 次 GSC 展现；intitle 结果不能证明搜索量、竞争或排名。
+  收集原始数据，未知值保留 null，不写估算。
 deliverables:
-  - docs/growth/runs/AUTH-ENABLE-*-report.md
-  - AGENT_STATE + COMMUNICATION_LOG 摘要
-  - commit [workbuddy] auth-enable: PASS|BLOCKED
+  - query/page/date_range/country/device/source
+  - impressions/clicks/position 或 AITDK/哥飞 volume/KD 原始值
+  - screenshot/export path
+  - SERP intent notes
+do_not:
+  - 宣称 blue ocean、zero competition、already ranking
+  - 改 Title/H1、sitemap 或业务代码
+  - 打开生产配置或读取密钥
 result: |
   (WB 填)
 ```
 
 ---
 
-### WQ-2026-07-27-08 · 持续外链（能发就发）
+### WQ-2026-07-27-11 · 核验历史公开 listing 与 backlink
 
 ```yaml
-id: WQ-2026-07-27-08
+id: WQ-2026-07-27-11
 status: open
 priority: P0
 assignee: workbuddy
-why: 老板都做；优待期外链；无 EMAIL 仍跑 free 站
-command: |
-  git pull; GROWTH_CHROME_CHANNEL=chrome python3 scripts/growth-auto/run_growth.py --all
-  链主词 + blind-box + /guides/toy-unboxing-video-from-one-photo
-  push [workbuddy] growth: … (no sitemap expand)
+why: 历史报告记录了 submitted，但没有可审计 published / verified backlink URL
+inputs:
+  - docs/growth/DIRECTORY_LOG.md
+  - docs/growth/runs/*
+deliverables:
+  - public_listing_url
+  - checked_at
+  - publication_status: published | not_found | pending
+  - backlink_status: verified_backlink | no_crawlable_link | not_applicable
+  - screenshot or public URL evidence
+do_not:
+  - 提交新的泛 AI 目录
+  - 把 submitted/pending 计为 backlink
+  - 绕过登录、验证码或付费墙
 result: |
   (WB 填)
 ```
@@ -51,6 +64,32 @@ result: |
 ---
 
 ## DONE（最近）
+
+### WQ-2026-07-27-09 · 生产登录配置（撤销 WorkBuddy 权限）
+
+```yaml
+id: WQ-2026-07-27-09
+status: cancelled_reassigned
+priority: P0
+assignee: engineering
+reason: |
+  WorkBuddy 是只读增长执行，不得访问 Supabase/Vercel 密钥、运行 SQL、
+  修改生产配置或 redeploy。认证工作归恢复波次的工程 owner。
+result: no WorkBuddy production change authorized
+```
+
+### WQ-2026-07-27-08 · 泛 AI 目录持续提交（暂停）
+
+```yaml
+id: WQ-2026-07-27-08
+status: paused
+priority: P2
+assignee: workbuddy
+reason: |
+  重复运行产生了提交记录，但没有 verified backlink 证据。只在老板批准
+  潮玩/收藏品/电商卖家相关的限定清单后恢复。
+result: no new automated submissions
+```
 
 ### WQ-2026-07-27-06 · 教老板看 GSC 收录
 
@@ -65,9 +104,10 @@ command: |
   严格按 WORKBUDDY_TEACH_GSC_PROMPT 执行课 0–6；写 GSC-TEACH report + push
 result: |
   已完成。老板问"谷歌收录了多少篇了"，WB 用 Chrome CDP 查 GSC + site:pikbo.ai 搜索。
-  结果：sitemap 13/13 URL 全部 indexed；site 搜索约 48 个 pikbo.ai 页面已收录。
+  结果：13 个 sitemap URL 的逐条 URL Inspection 当时显示 indexed；
+  site:pikbo.ai 曾显示约 48 的近似结果数，但不是精确收录页数。
   老板追问"咋看的 我怎么不会呢"，WB 提供两种方法教学：
-  1) Google 搜 site:pikbo.ai（最快，看结果数）
+  1) Google 搜 site:pikbo.ai（仅作发现线索，结果数不精确）
   2) GSC → 覆盖范围 → 已编入索引（最准）
   沟通记录见 docs/growth/COMMUNICATION_LOG.md
 ```

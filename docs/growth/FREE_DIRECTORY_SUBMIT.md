@@ -1,6 +1,7 @@
 # 免费 AI 目录 / 曝光提交清单（哥飞 · 不付费）
 
-**节奏：** 每天 3–5 个 · **每周 ≤20** · 分散提交 · 记录状态  
+> **2026-07-27 paused:** 泛 AI 目录自动提交暂停。本文保留为历史候选清单，
+> 不再作为数量 KPI。WorkBuddy 当前只核验已有提交是否有公开 listing URL。
 **统一资料：**
 
 | 字段 | 值 |
@@ -40,11 +41,19 @@
 
 > URL 可能变更；提交时以站内入口为准。**要信用卡就停。**
 
-## 提交记录表（复制用）
+## 证据记录表（复制用）
 
 ```
-日期 | 站名 | URL | 状态(已提交/待审/跳过付费) | 备注
+日期 | 站名 | submission_status | public_listing_url | backlink_status | 复查时间 | 证据
 ```
+
+允许的状态：
+
+- submission_status: `submitted` / `pending`
+- publication_status: `published`
+- backlink_status: `verified_backlink`
+
+没有公开 URL 时不得填写 `published` 或 `verified_backlink`。
 
 ## 工程侧
 

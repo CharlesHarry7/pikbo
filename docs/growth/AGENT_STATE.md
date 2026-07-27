@@ -1,28 +1,24 @@
 # Agent State（覆盖写 · 最后写入者生效 · 老板不传话）
 
 ```yaml
-updated_at: "2026-07-27T03:40:37Z"
+updated_at: "2026-07-27"
 writer: grok
-main_tip: "6ea0d2c"
-branch: "main"
+branch: "agent/grok/growth-truth"
 status: |
-  Boss: 让 WorkBuddy 去做登录开通（auth-enable）。
-  Prod baseline: auth.mode=disabled configured=false (no Supabase keys on Vercel).
-  Code ready: /login Magic Link + guest softLive remix path.
-  OPEN P0: WQ-2026-07-27-09 auth-enable (docs/growth/WORKBUDDY_AUTH_ENABLE_PROMPT.md)
-  Also open: WQ-08 continuous growth --all (no sitemap expand).
-  Last WB: Cycle 3 aihunter + aimarketing (8be5374). EMAIL/PH still blocked_secret.
-report: "docs/growth/WORKBUDDY_AUTH_ENABLE_PROMPT.md"
-preflight_pikbo_ai: 200
+  Recovery R4/R5 evidence boundary in progress.
+  Current search evidence: about 6 GSC impressions / 0 clicks; insufficient for
+  ranking, CTR or demand conclusions.
+  Current directory evidence: historical submitted forms; 0 published listings
+  with recorded public URL and 0 verified backlinks.
+  Current showcase audit: 0 official / 12 prototype because complete
+  input-rights + provider-task + output + named-review evidence is absent.
+report: "docs/growth/SHOWCASE_EVIDENCE_LEDGER.md"
 next_for_grok: |
-  Eng: product density / honesty residual; pull WB auth-enable report when pushed.
-  Do NOT re-assign boss secrets into chat; WB owns Vercel/Supabase chrome/env.
+  Review the R4/R5 evidence branch. Coordinate runtime removal of provisional
+  4/5 scores with the engineering owner; do not change business code here.
 next_for_workbuddy: |
-  P0 NOW: open production login.
-  1) git pull --ff-only origin main
-  2) 严格执行 docs/growth/WORKBUDDY_AUTH_ENABLE_PROMPT.md 全文
-  3) PASS if health auth.configured=true + /login shows email form
-  4) BLOCKED → AUTH-ENABLE report + continue run_growth.py --all
-  5) commit [workbuddy] auth-enable: PASS|BLOCKED … + push
-  cmd: see WORKBUDDY_AUTH_ENABLE_PROMPT + WORK_QUEUE WQ-09
+  Read docs/growth/WORK_QUEUE.md.
+  Execute only WQ-10 raw GSC/AITDK/哥飞 collection and WQ-11 public listing
+  verification. Generic directory submission and auth/deploy work are paused.
+  Do not read secrets, modify production, or push main.
 ```

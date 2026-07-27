@@ -2,7 +2,11 @@
 
 **日期：** 2026-07-26（Intent P0 更新）  
 **域：** https://pikbo.ai  
-**原则：** TDH 1–4 周冻结 · 一词一页 · 页页带工具 · 诚实 demo · **冷启动 sitemap = 9 URL（不是 94）**
+**原则：** 证据优先 · 避免意图重叠 · 页页带工具 · 诚实 demo ·
+**当前冷启动 sitemap = 13 URL**
+
+> 2026-07-27 修正：本文早期的 9-URL 状态已过期；“一词一页”不是机械
+> 扩页规则。没有真实需求、独立工具和案例证据时不新增索引页。
 
 **Canonical 映射：** `docs/growth/SEO_INTENT_P0_CANONICAL.md`
 
@@ -15,7 +19,7 @@
 | 1 | TDH 冻结 | ✅ | 首页 `lib/site.ts` + 主词页 tools Title/H1/canonical 冻结；Intent P0 **未改**主词 TDH |
 | 2 | 内页关键词覆盖 | ✅ | 一词一页；冲突别名 301；无独立样片页 noindex |
 | 3 | 结构化数据 | ✅ | FAQPage + SoftwareApplication 保留；HowTo 仅当真实三步 UI |
-| 4 | 技术 SEO | ✅ | **sitemap 真实 9 URL** · robots · canonical · SSG |
+| 4 | 技术 SEO | ✅ | **sitemap 真实 13 URL** · robots · canonical · SSG |
 | 5 | 速度 / CWV | ⚠️ 持续 | 墙视频 interaction 播放 + preload 节制；LCP 需 PSI 实测 |
 | 6 | 外链 / 初始信任 | ❌ 老板动作 | 代码无法代提 GSC/导航站 — 见下方清单 |
 | 7 | 内容与停留 | ✅ | 主词页首屏 collectible 句 + Photo→Recipe→Video draft 近工具 |
@@ -80,14 +84,15 @@
 |----|------|
 | SSR/SSG 意图页 | `generateStaticParams` on for/tools/effects/guides |
 | canonical | 首页 + 各意图页 `alternates.canonical`；别名 301 |
-| **sitemap.xml** | **固定 9 URL**（`COLD_START_INDEX_PATHS`）— **不是 94** |
+| **sitemap.xml** | **固定 13 URL**（`COLD_START_INDEX_PATHS`） |
 | robots / noindex | 非白名单意图页 `noindex,follow`；无私有样片不进索引 |
 | robots.txt | 挡 `/api` `/library` `/login` 等 |
 | 图片 alt / video label | LandingResults + AutoPlayVideo label |
 
-### Sitemap 九 URL 清单
+### Sitemap 13 URL
 
-`/` · `/tools/ai-toy-video-generator` · `/for/photo-to-video-for-toys` · `/for/etsy-listing-videos` · `/guides/how-to-photograph-toys-for-ai-video` · `/explore` · `/pricing` · `/privacy` · `/terms`
+以 `lib/seoIndex.ts` 的 13 个 allowlist 路径和线上 `sitemap.xml` 为准。不要
+根据历史文档手工推断或扩展。
 
 ---
 
@@ -168,4 +173,3 @@
 - 假 UGC / 假评分 Schema  
 - ItemList 条目数造假  
 - 因「还不够像 HF」停 SEO 内页  
-

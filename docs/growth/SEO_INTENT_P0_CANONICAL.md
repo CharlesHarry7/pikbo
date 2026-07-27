@@ -13,7 +13,7 @@
 | **Sitemap URL 数** | **9**（不是 94） |
 | 来源 | `lib/seoIndex.ts` → `COLD_START_INDEX_PATHS` → `app/sitemap.ts` |
 
-### 当前 13 个可索引 URL（2026-07-27 长尾蓝海扩容）
+### 当前 13 个可索引 URL（2026-07-27 观察集合）
 
 1. `/`
 2. `/tools/ai-toy-video-generator` ← **主词页**
