@@ -155,7 +155,8 @@
 114. [x] GET generations full byStatus + touch all open + Library list honesty
 115. [x] beginSync stamps aspect/duration for fail/cancel remake carry
 116. [x] Login/mobile guest Generate remix + DELETE cancel refundUnconfirmed
-117. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+117. [x] Header/Profile/Library Generate remix + Library cancel unconfirmed toast
+118. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -169,8 +170,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- Login + mobile Generate guest CTAs use createRemixHref (not bare /create).
-- DELETE cancel (gen list/id + image) echoes refundUnconfirmed for clients.
+- Header/Profile/Library primary Generate doors use createRemixHref(360-spin).
+- Library session cancel toasts server refundUnconfirmed (never invent restore).
 - Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
 
 
