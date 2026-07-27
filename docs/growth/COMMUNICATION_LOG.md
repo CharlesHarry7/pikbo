@@ -124,3 +124,14 @@
 - **成功标志**：commit `[workbuddy] auth-enable: PASS` + https://pikbo.ai/login 可填邮箱发 magic link
 - **失败诚实**：`blocked_secret:supabase_vercel` 写 AUTH-ENABLE report，然后继续外链 `--all`，禁止空转问老板
 - **Grok 不配密钥**；WB 用 Chrome 登录态或自身 env 配 Supabase+Vercel+T5 SQL+redeploy
+
+### 项目知识库连接到 GitHub
+
+- **老板指令**：把当前出海项目知识库与正在开发的 GitHub 项目连接，并给出落实方案。
+- **确认项目**：`CharlesHarry7/pikbo`。
+- **执行口径**：
+  1. 不把通用 16 周计划从头套用；Pikbo 已处于产品收口、私人 Beta 和商业验证阶段。
+  2. GitHub 继续作为代码、PR、CI、STATUS 和 HANDOFF 的唯一事实源。
+  3. 飞书用于访谈原文、业务决策、合规意见和 Gate 记录，研发状态不重复维护。
+  4. 在独立分支 `agent/gpt/outbound-kb-bridge` 交付项目 Gate、任务映射、周复盘模板和 PR 关联字段。
+- **阻塞**：当前运行环境没有可用的飞书写入客户端；先完成 GitHub 侧桥接，飞书空间创建和双向回链待连接恢复后执行。

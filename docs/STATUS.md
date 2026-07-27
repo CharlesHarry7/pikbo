@@ -19,6 +19,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | R3 | Real integration tests + CI fail on critical path | Grok / Claude | todo | agent/grok/recovery-qa | Grok QA; Claude supplies injectable boundaries |
 | R4 | Public-example evidence ledger and honest scoring | Grok | review | agent/grok/growth-truth | Ledger audits 0 official / 12 prototype; runtime score removal remains an engineering follow-up |
 | R5 | Growth claims cleanup and WorkBuddy permission boundary | GPT / Grok | review | agent/grok/growth-truth | Search/ranking/backlink claims corrected; generic directory automation and direct-main path disabled |
+| KB-BRIDGE | Connect outbound knowledge base to Pikbo execution gates | GPT | **review** | agent/gpt/outbound-kb-bridge | GitHub bridge, task map, 8-week gates and PR template ready; Feishu publish blocked on missing local write client |
 | GO | Public pikbo.ai Mode B | Grok | **blocked** | agent/grok/final-takeover | Grok owns readiness; boss still must explicitly approve public DNS and charging |
 | GROK-TAKEOVER | Complete every remaining no-cost product, engineering, QA and private-release task | Grok | doing | main | 2026-07-24: Flow path + Seller Pack WaitStage + HF smoke locks. Still blocked on boss Vercel/DNS, T5 SQL multi-node, T6 bake |
 | SUITE | 潮玩版 HF Generate + Yiha Modules 产品壳 | Grok | **review** | main | `/create` `/modules` suite chrome; softLaunch PRIMARY/MOBILE nav freeze; suite doors sitewide |
