@@ -5279,5 +5279,30 @@ assert.match(
   /data-pricing-animate=["']remix["']/
 );
 
+
+// Residual Lab sample try doors: createLabSampleTryHref (remix + try/sample)
+const residualLabSampleDoors = [
+  ["components/ModulesSuiteCtas.tsx", /createLabSampleTryHref|data-modules-lab-sample=["']remix["']/],
+  ["components/ModulesMobileCta.tsx", /createLabSampleTryHref|data-modules-mobile-lab=["']remix["']/],
+  ["components/SoftLaunchStrip.tsx", /createLabSampleTryHref|SOFT_LAUNCH_LAB_SAMPLE_HREF|lab-sample-remix/],
+  ["components/HomeFeatureCarousel.tsx", /createLabSampleTryHref|FEATURE_LAB_SAMPLE_HREF/],
+  ["components/FreeTrialCta.tsx", /createLabSampleTryHref/],
+  ["components/GenerateFailPanel.tsx", /createLabSampleTryHref/],
+  ["components/LibraryGrid.tsx", /createLabSampleTryHref|LIBRARY_LAB_SAMPLE_HREF/],
+  ["components/CommandPalette.tsx", /createLabSampleTryHref|CMD_LAB_SAMPLE_HREF/],
+];
+for (const [rel, re] of residualLabSampleDoors) {
+  assert.match(
+    fs.readFileSync(join(root, rel), "utf8"),
+    re,
+    `${rel} Lab sample try must use createLabSampleTryHref remix contract`
+  );
+  assert.doesNotMatch(
+    fs.readFileSync(join(root, rel), "utf8"),
+    /["']\/create\?try=1&sample=scout["']/,
+    `${rel} must not hardcode bare /create?try=1&sample=scout`
+  );
+}
+
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node

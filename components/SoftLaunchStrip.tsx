@@ -9,11 +9,14 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
+import { createLabSampleTryHref } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
 /** Default listing recipe when opening full studio from the soft-launch strip. */
 const SOFT_LAUNCH_GENERATE_EFFECT = "360-spin-showcase";
+/** Demo Lab sample — remix + try/sample (not bare /create?try=1). */
+const SOFT_LAUNCH_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
 /**
  * Soft-launch conversion strip (哥飞 P0): honest free trial + primary Generate CTA.
@@ -57,7 +60,7 @@ export function SoftLaunchStrip() {
   const primaryHref = trialDone
     ? "/pricing"
     : demo
-      ? "/create?try=1&sample=scout"
+      ? SOFT_LAUNCH_LAB_SAMPLE_HREF
       : "/#home-tool";
   const primaryLabel = trialDone
     ? "Compare plans"
@@ -94,6 +97,9 @@ export function SoftLaunchStrip() {
               })
             }
             className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[12px] font-black text-black shadow-[0_0_20px_rgba(200,255,61,0.25)]"
+            data-soft-launch-try={
+              trialDone ? "pricing" : demo ? "lab-sample-remix" : "home-tool"
+            }
           >
             {primaryLabel}
           </Link>

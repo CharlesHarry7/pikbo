@@ -10,7 +10,11 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
+import { createLabSampleTryHref } from "@/lib/jobIntents";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
+
+/** Lab sample try — remix + try/sample (not bare /create?try=1). */
+const MODULES_MOBILE_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
 /** Sticky mobile CTA on Modules wall — above AppShell tab nav */
 export function ModulesMobileCta() {
@@ -39,7 +43,7 @@ export function ModulesMobileCta() {
       : null;
 
   const primaryHref =
-    trialDone && !demo ? "/pricing" : "/create?try=1&sample=scout";
+    trialDone && !demo ? "/pricing" : MODULES_MOBILE_LAB_SAMPLE_HREF;
   const primaryLabel =
     trialDone && !demo
       ? "Plans"
@@ -71,6 +75,7 @@ export function ModulesMobileCta() {
             })
           }
           className="btn btn-primary min-w-0 flex-[1.4] py-3 text-sm font-black"
+          data-modules-mobile-lab="remix"
         >
           {primaryLabel}
         </Link>

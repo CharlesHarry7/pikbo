@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { createLabSampleTryHref } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
 import { provisionalLabQualityLabel } from "@/lib/showcaseProjects";
+
+/** Seedance Mini trial door — Lab sample remix + try/sample flags. */
+const FEATURE_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
 type Promo = {
   id: string;
@@ -26,7 +30,7 @@ const PROMOS: Promo[] = [
     id: "seedance",
     title: "Seedance Mini trial",
     blurb: "Cached preview · live: 5s / 480p",
-    suiteHref: "/create?try=1&sample=scout",
+    suiteHref: FEATURE_LAB_SAMPLE_HREF,
     cta: "Try Mini",
     badge: "Official example · cached",
     demoIndex: 0,

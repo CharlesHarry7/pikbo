@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Residual Lab sample try → createLabSampleTryHref
+- ModulesSuiteCtas · ModulesMobileCta · SoftLaunchStrip demo try ·
+  HomeFeatureCarousel Seedance Mini use createLabSampleTryHref(scout)
+  (remix + try/sample), not bare /create?try=1&sample=scout.
+- Smoke: residualLabSampleDoors locks across FreeTrial/Fail/Library/cmd too.
+
 ### 2026-07-27 — [grok] Job + Lab-sample remix contract
 - `createJobRemixHref` / `createLabSampleTryHref` / `createWorkbenchHref` in
   lib/jobIntents.ts — effect+ratio+duration+channel (+ job= or try/sample).

@@ -9,11 +9,14 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
+import { createLabSampleTryHref } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
 /** Default listing spin when opening Generate from Modules (remix contract). */
 const MODULES_PHOTO_CLIP_EFFECT = "360-spin-showcase";
+/** Lab sample try — remix + try/sample (not bare /create?try=1). */
+const MODULES_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
 /**
  * Modules sticky header CTAs — freeTrial honesty (Phase F).
@@ -43,7 +46,8 @@ export function ModulesSuiteCtas() {
       ? me.freeTrial.clipsLeft
       : null;
 
-  const primaryHref = trialDone && !demo ? "/pricing" : "/create?try=1&sample=scout";
+  const primaryHref =
+    trialDone && !demo ? "/pricing" : MODULES_LAB_SAMPLE_HREF;
   const primaryLabel =
     trialDone && !demo
       ? "Compare plans"
@@ -75,6 +79,7 @@ export function ModulesSuiteCtas() {
           })
         }
         className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
+        data-modules-lab-sample="remix"
       >
         {primaryLabel}
       </Link>
