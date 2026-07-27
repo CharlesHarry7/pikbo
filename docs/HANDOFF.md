@@ -6,10 +6,12 @@ Newest first. One block per meaningful landing.
 
 ### 2026-07-27 — [grok] Residual product Generate doors → createRemixHref
 - Page chrome + suite shelves (Library/Profile/Settings/Explore/Effects/Tools/
-  Community/Apps/Guides/Modules/Flow/Models/Batch/Cinema/Status) + home rail/
-  tool shelf/cmd palette/hero/Seedance/SEO mesh use createRemixHref(360-spin).
-- softLaunch PRIMARY/MOBILE nav stays bare /create (suite entry).
-- Smoke: residualGenerateDoors data-*-generate=remix locks.
+  Community/Apps/Guides/Modules/Flow/Models/Batch/Cinema/Status) +
+  HfProductRail Seedance card + Open Generate, HfExploreHome, Hero try-photo,
+  SeedanceCampaign, LandingSeoMesh, Image Create-video, BatchStudio Single
+  Generate → createRemixHref(360-spin) (ratio/duration/channel).
+- Zero bare href="/create" left in app/components tsx (seller-pack mode kept).
+- Smoke: residualGenerateDoors data-*-generate=remix + HfProductRail order.
 
 ### 2026-07-27 — [grok] Header/Library/Profile Generate remix + cancel toast
 - Header Create a clip · Library sticky/empty/session Open Create · Profile
