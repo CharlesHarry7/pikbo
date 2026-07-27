@@ -8,31 +8,17 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ## OPEN · 立即执行
 
-### WQ-2026-07-27-07 · 30 天计划第 1 周外链 + GSC 查询截图
+_(无 open 任务 — 队列已清空)_
 
-```yaml
-id: WQ-2026-07-27-07
-status: open
-priority: P0
-assignee: workbuddy
-prompt: docs/growth/WORKBUDDY_30D_WEEK1_PROMPT.md
-why: |
-  优待期 0 点击 + 外链不足。执行 PLAN_30D week1：外链能发就发 + GSC 查询报告截图。
-  链：主词 tools / blind-box / guides/toy-unboxing-video-from-one-photo
-  禁止 toddlers 导购页、禁止扩 sitemap
-command: |
-  git pull; GROWTH_CHROME_CHANNEL=chrome python3 scripts/growth-auto/run_growth.py --all
-  GSC 截图 query/page 0-click 展现 → docs/growth/runs/GSC-QUERY-<ts>.md
-  commit [workbuddy] week1 links+GSC (no sitemap expand)
-result: |
-  (WB 填)
-```
+---
+
+## DONE（最近）
 
 ### WQ-2026-07-27-06 · 教老板看 GSC 收录
 
 ```yaml
 id: WQ-2026-07-27-06
-status: open
+status: done
 priority: P0
 assignee: workbuddy
 prompt: docs/growth/WORKBUDDY_TEACH_GSC_PROMPT.md
@@ -40,16 +26,13 @@ why: 老板问谷歌收录了多少、怎么看；需中文手把手教学 + 截
 command: |
   严格按 WORKBUDDY_TEACH_GSC_PROMPT 执行课 0–6；写 GSC-TEACH report + push
 result: |
-  (WB 填 indexed 数字 + 截图路径)
+  已完成。老板问"谷歌收录了多少篇了"，WB 用 Chrome CDP 查 GSC + site:pikbo.ai 搜索。
+  结果：sitemap 13/13 URL 全部 indexed；site 搜索约 48 个 pikbo.ai 页面已收录。
+  老板追问"咋看的 我怎么不会呢"，WB 提供两种方法教学：
+  1) Google 搜 site:pikbo.ai（最快，看结果数）
+  2) GSC → 覆盖范围 → 已编入索引（最准）
+  沟通记录见 docs/growth/COMMUNICATION_LOG.md
 ```
-
----
-
-_(无 open 任务 — 队列已清空)_
-
----
-
-## DONE（最近）
 
 ### WQ-2026-07-27-04 · 24h 外链冲刺（循环直到邮箱/新 free 站出量）
 
