@@ -42,6 +42,8 @@ export async function POST(_req: Request, { params }: Props) {
   const sp = new URLSearchParams();
   if (parent.prompt?.trim()) sp.set("prompt", parent.prompt.trim().slice(0, 500));
   if (parent.aspect?.trim()) sp.set("aspect", parent.aspect.trim().slice(0, 16));
+  // R1b: explicit fork token — client must pass retryJobId on re-POST.
+  sp.set("retryJobId", job.id);
   // Always start with /image; query carries prompt/aspect when present.
   const imageUi = sp.toString() ? `/image?${sp.toString()}` : "/image";
   return NextResponse.json(
@@ -50,16 +52,18 @@ export async function POST(_req: Request, { params }: Props) {
       mode: "local-memory",
       durable: false,
       message:
-        "Still retry forked in process memory. Re-submit POST /api/image with the same prompt — this does not re-run Flux by itself.",
+        "Still retry forked in process memory. Re-submit POST /api/image with the same prompt and retryJobId — this does not re-run Flux by itself.",
       parent: toPublicImageJob(parent, session.id, { includeDataUrl: true }),
       job: toPublicImageJob(job, session.id),
+      retryToken: job.id,
       next: {
         image: "/api/image",
         status: `/api/image/${job.id}`,
+        retryJobId: job.id,
         // Literal "/image" kept for smoke/docs; query form used for handoff.
         imageUi: imageUi.startsWith("/image") ? imageUi : "/image",
       },
-      note: "Mint a new idempotency key on Generate still — parent key stays terminal.",
+      note: "Mint a new idempotency key on Generate still — parent key stays terminal. Pass retryJobId to promote this fork.",
     },
     { status: 202 }
   );

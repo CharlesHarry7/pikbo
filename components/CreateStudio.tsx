@@ -295,6 +295,13 @@ export function CreateStudio({
     useState<RequestCreditState>(null);
   /** In-flight generate abort — cancel marks refund unconfirmed if network cut mid-debit. */
   const generateAbortRef = useRef<AbortController | null>(null);
+  /** Consume once on next generate POST (ledger-retry fork promote). */
+  const retryJobIdRef = useRef<string | undefined>(
+    typeof initialRetryJobId === "string" &&
+      initialRetryJobId.trim().length >= 8
+      ? initialRetryJobId.trim().slice(0, 128)
+      : undefined
+  );
   /** Avoid duplicate quote-view events while React rerenders the same quote. */
   const quoteEventRef = useRef("");
   const toast = useToast();
@@ -712,6 +719,9 @@ export function CreateStudio({
     // Keep dual payload under rough Vercel body comfort (~3.5MB JSON).
     const dualImageOk =
       Boolean(fallbackStill) && (fallbackStill?.length ?? 0) < 3_500_000;
+    const ledgerRetryJobId = retryJobIdRef.current;
+    // One-shot: do not re-promote the same fork on user Retry/Variant.
+    retryJobIdRef.current = undefined;
     const result = await postGenerateWithRetry(
       {
         effect: fx,
@@ -731,6 +741,7 @@ export function CreateStudio({
           typeof requestSeed === "number" && Number.isFinite(requestSeed)
             ? requestSeed
             : undefined,
+        ...(ledgerRetryJobId ? { retryJobId: ledgerRetryJobId } : {}),
       },
       {
         maxRetries: 1,

@@ -15,8 +15,9 @@ export const runtime = "nodejs";
 
 /**
  * Phase C — Seller Pack shadow reserve (30 credits for 3 children).
- * Soft-launch still debits Cookie on each /api/generate child.
- * When durable is off, returns ok:false with DURABLE_OFF (batch continues on cookie).
+ * R0/R1 honesty: live /api/generate children require durable auth reserve;
+ * cookie is no longer live-spend authority. When durable is off, pack shadow
+ * is best-effort only — each child still hits generate cost gate (demo if free).
  */
 export async function POST(req: Request) {
   let body: { childCount?: number; idempotencyKey?: string } = {};
@@ -36,10 +37,11 @@ export async function POST(req: Request) {
       ok: false,
       code: "DURABLE_OFF",
       message:
-        "Durable shadow off — Seller Pack will debit cookie credits per child only.",
+        "Durable credits off — Seller Pack shadow not opened. Live children need signed-in durable reserve; anonymous/Free stay on labeled demos.",
       quoteCredits: SELLER_PACK_QUOTE_CREDITS,
       childCount: SELLER_PACK_CHILD_COUNT,
       childCredits: 10,
+      authority: "generate-route-cost-gate",
       session: publicSession(session),
     });
   }
@@ -79,7 +81,8 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     mode: "shadow",
-    authority: "cookie-generate-still-authoritative",
+    /** Live child spend is enforced by /api/generate durable reserve — not cookie. */
+    authority: "durable-shadow-audit-plus-generate-gate",
     pack: result.data,
     quoteCredits: result.data.quotedCredits,
     childCredits: result.data.childCredits,

@@ -161,7 +161,13 @@ export async function GET() {
       cancelGenerate: "DELETE /api/generations",
       cancelImage: "DELETE /api/image or DELETE /api/image/[id]",
       /** POST re-submit promotes matching queued ledger-retry forks. */
-      ledgerRetryPromote: "queued-fork-same-effect-or-prompt",
+      /**
+       * R1b: POST re-submit promotes a queued ledger-retry fork only when the
+       * client sends explicit retryJobId (fork token). Never effect/prompt guess.
+       */
+      ledgerRetryPromote: "explicit-retryJobId-only",
+      /** Process-memory open-job TIMEOUT is fixed from createdAt (touch does not extend). */
+      jobDeadline: "fixed-from-createdAt",
       downloadGate: "/api/downloads/{jobId|requestId}",
     },
     /** Honesty contract: cached demos free; live jobs charge flat credits */
