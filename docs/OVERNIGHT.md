@@ -164,7 +164,8 @@
 123. [x] Library session stills panel (GET /api/image) · cancel · Open/Retry → /image?prompt&job
 124. [x] forkRetryImageJob + POST /api/image/[id]/retry · queued status · Library ledger-fork
 125. [x] Promote queued ledger-retry forks on beginImageJob / beginSyncGenerateJob
-126. 下一拍：Mode A Vercel deploy (boss login) · SQL migration apply · T6 bake when worker
+126. [x] Image R0 cost gate parity + recovery-qa (R0–R3) + CI critical-path fail-closed
+127. 下一拍：R1 atomic Supabase RPC (Claude) · Mode A Vercel/SQL (boss) · T6 bake when worker
 
 ### 老板醒来验收
 
@@ -178,9 +179,9 @@
 
 ## Grok 本拍状态（3 行）
 
-- beginImageJob/beginSync promote matching queued ledger-retry forks (no TIMEOUT orphans).
-- Settings/Profile HEAD Image-Jobs-Queued honesty · health imageRetry + ledgerRetryPromote.
-- Mode A still needs boss Vercel login · SQL · real ffmpeg bake proof.
+- R0 image parity: `/api/image` cached for anonymous/Free; live Flux needs durable reserve + invokeReservedProvider (no Cookie debit).
+- R3: `recovery-qa` suite + CI critical-path fail-closed (docs/ci + .github); engine-smoke/typecheck PASS.
+- Next: R1 atomic RPC (Claude) · Mode A Vercel/SQL (boss) · T6 bake still blocked.
 
 
 
