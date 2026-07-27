@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] Full-session job HEAD counts + rate/balance download codes
+- `countJobsForSession`: HEAD `/api/generations` no longer slices newest-30
+  (under-counted failed/canceled). Image listImageJobCountsForSession parity.
+- GET list page bumped to 50; `X-Pikbo-Jobs-List-Limit` echo for clients.
+- `classifyDownloadHead`: PROVIDER_RATE_LIMIT / RATE_LIMITED / PROVIDER_BALANCE
+  honest block toasts (not generic 409 “not ready”).
+- Smoke: countJobsForSession + pure full vs page + rate/balance messages.
+
 ### 2026-07-27 — [grok] Refund copy: when confirmed (not bare refund)
 - SoftLaunchStrip · TrustStrip · CreateStudio credit strip · i18n delivery:
   "refunds when confirmed" (matches freeTrial.failedLiveRefundPolicy).
