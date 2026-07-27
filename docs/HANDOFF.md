@@ -4,6 +4,10 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-27 — [grok] /image studio ledger-fork Retry UI
+- Still strip Retry → POST /api/image/[id]/retry then re-POST Flux (new key).
+- Cancel covers queued forks; data-image-session-retry-mode=ledger-fork.
+
 ### 2026-07-27 — [grok] POST /api/image/[id]/retry still ledger fork
 - `forkRetryImageJob` + ImageJobStatus `queued` + parentJobId (generations parity).
 - POST `/api/image/[id]/retry` forks tracking child; client re-POSTs Flux.

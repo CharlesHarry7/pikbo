@@ -1808,10 +1808,22 @@ assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /data-image-session-cancel|data-image-session-retry|openSessionStill/
 );
-// Studio strip Retry uses generate overrides; Library uses ledger-fork POST.
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /data-image-session-retry-mode=["']ledger-fork["']|\/api\/image\/\$\{.*\}\/retry/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /status === ["']queued["']|data-image-session-queued/
+);
+// Studio strip + Library both ledger-fork POST /api/image/[id]/retry.
 assert.match(
   fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
   /data-library-still-retry=["']ledger-fork["']|\/api\/image\/.*\/retry/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /data-image-session-retry-mode=["']ledger-fork["']|\/api\/image\/.*\/retry/
 );
 // Pure image timeout sweep (crash mid-Flux must not leave infinite JOB_IN_FLIGHT)
 function sweepTimedOutImageJobsPure(jobs, now, timeoutMs) {

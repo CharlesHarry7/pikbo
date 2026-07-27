@@ -290,8 +290,12 @@ export default function ImageStudioPage() {
     }
   }
 
-  /** Retry terminal still: re-fill prompt/aspect and re-POST with a new key. */
-  function retrySessionStill(j: SessionStillJob) {
+  /**
+   * Retry terminal still: fork process-memory ledger child (POST /api/image/[id]/retry)
+   * then re-fill prompt/aspect and re-POST Flux with a new idempotency key.
+   * Fork is tracking only — does not re-run provider by itself.
+   */
+  async function retrySessionStill(j: SessionStillJob) {
     const nextPrompt = j.prompt?.trim() || prompt;
     const nextAspect = j.aspect?.trim() || aspect;
     if (j.prompt) setPrompt(j.prompt);
@@ -299,6 +303,63 @@ export default function ImageStudioPage() {
     setError(null);
     setFailCreditState(null);
     setFailRetryAfterSec(null);
+    try {
+      const res = await fetch(
+        `/api/image/${encodeURIComponent(j.id)}/retry`,
+        { method: "POST", cache: "no-store" }
+      );
+      const body = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        code?: string;
+        message?: string;
+        parent?: { prompt?: string; aspect?: string };
+      };
+      if (res.ok && body.ok) {
+        // Prefer server parent echo when present.
+        const p = body.parent?.prompt?.trim() || nextPrompt;
+        const a = body.parent?.aspect?.trim() || nextAspect;
+        if (p) setPrompt(p);
+        if (a) setAspect(a);
+        void generate({ prompt: p, aspect: a });
+        // Refresh process-memory strip so queued fork appears.
+        try {
+          const listRes = await fetch("/api/image", {
+            method: "GET",
+            cache: "no-store",
+          });
+          if (listRes.ok) {
+            const data = (await listRes.json()) as {
+              jobs?: SessionStillJob[];
+              open?: number;
+              total?: number;
+              byStatus?: { failed?: number; canceled?: number };
+            };
+            const jobs = Array.isArray(data.jobs) ? data.jobs : [];
+            setSessionStillJobs(jobs.slice(0, 8));
+            setSessionStillMeta({
+              open: typeof data.open === "number" ? data.open : 0,
+              total: typeof data.total === "number" ? data.total : jobs.length,
+              failed: data.byStatus?.failed ?? 0,
+              canceled: data.byStatus?.canceled ?? 0,
+            });
+          }
+        } catch {
+          /* ignore list refresh */
+        }
+        return;
+      }
+      // Fork failed (e.g. NOT_RETRYABLE) — still allow client re-POST of prompt.
+      if (body.code === "JOB_IN_FLIGHT") {
+        setError(
+          typeof body.message === "string"
+            ? body.message
+            : "Still job still open — wait or cancel before retry"
+        );
+        return;
+      }
+    } catch {
+      /* network — fall through to client re-POST */
+    }
     // Pass overrides — setState is async; do not wait a tick that may still see old prompt.
     void generate({ prompt: nextPrompt, aspect: nextAspect });
   }
@@ -751,24 +812,39 @@ export default function ImageStudioPage() {
                         Open
                       </button>
                     ) : null}
-                    {j.status === "running" ? (
+                    {j.status === "running" || j.status === "queued" ? (
                       <button
                         type="button"
                         className="text-amber-100/90 hover:underline"
                         data-image-session-cancel={j.id}
-                        title="Ledger cancel only — Flux may still finish server-side"
+                        title={
+                          j.status === "queued"
+                            ? "Cancel queued retry fork (ledger only)"
+                            : "Ledger cancel only — Flux may still finish server-side"
+                        }
                         onClick={() => void cancelSessionStill(j.id)}
                       >
                         Cancel
                       </button>
+                    ) : null}
+                    {j.status === "queued" ? (
+                      <span
+                        className="text-[10px] text-white/40"
+                        data-image-session-queued={j.id}
+                        title="Ledger retry fork — re-POST still in progress or pending"
+                      >
+                        Queued fork
+                      </span>
                     ) : null}
                     {j.status === "failed" || j.status === "canceled" ? (
                       <button
                         type="button"
                         className="text-[var(--mint)] hover:underline"
                         data-image-session-retry={j.id}
+                        data-image-session-retry-mode="ledger-fork"
                         disabled={busy}
-                        onClick={() => retrySessionStill(j)}
+                        title="Fork process-memory retry then re-POST /api/image (does not re-run Flux alone)"
+                        onClick={() => void retrySessionStill(j)}
                       >
                         Retry
                       </button>
