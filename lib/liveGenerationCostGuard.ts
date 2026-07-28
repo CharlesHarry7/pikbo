@@ -7,8 +7,9 @@
  * - Estimated / ceiling amounts are always labeled as such.
  * - Actual USD is never invented; only an explicit provider-reported figure
  *   may be stored as actual (this path currently has no actual source).
- * - Process-local spent map is a single-node fuse. Durable cumulative
- *   enforcement requires the unapplied migration source.
+ * - Process memory is never accepted as a cumulative spend authority.
+ * - Until the durable atomic migration is applied and wired, every positive
+ *   ceiling fails closed before a credit reservation or provider request.
  *
  * Keep this module free of path-alias imports so offline Node regressions can
  * load it with --experimental-strip-types (parity with privateLiveBeta.mjs).
@@ -19,11 +20,13 @@ export const SEEDANCE2_PRIVATE_LIVE_MODEL =
   "bytedance/seedance-2.0/image-to-video" as const;
 
 /**
- * Planning rates (USD / second) for Seedance 2.0 Standard image-to-video.
- * Source: docs/UNIT_ECONOMICS.md (2026-07-23 fal review). Labeled estimated.
+ * Conservative planning rate (USD / second) for Seedance 2.0 Standard
+ * image-to-video. The verified public quote is for 720p. Until a separate
+ * official 480p quote is recorded, 480p uses the same 720p upper bound rather
+ * than inventing a cheaper rate.
  */
 export const SEEDANCE2_STANDARD_ESTIMATED_USD_PER_SEC = {
-  "480p": 0.15,
+  "480p": 0.3034,
   "720p": 0.3034,
 } as const;
 
@@ -77,27 +80,13 @@ export type PaidCeilingAdmission =
       audit: Seedance2CostAudit;
     };
 
-/** Process-local cumulative spent USD (single node). */
-const spentUsdByScope = new Map<string, number>();
-/**
- * One logical attempt (user + idempotency key) may reserve estimated USD once.
- * Replays return the prior hold without increasing spentUsd.
- */
-const reservedByIdempotency = new Map<
-  string,
-  { estimatedJobUsd: number; remainingUsd: number }
->();
-
 export function paidCeilingScopeKey(userId: string): string {
   return `seedance2-paid-ceiling:${userId}`;
 }
 
-function paidCeilingIdempotencyKey(userId: string, idempotencyKey: string): string {
-  return `${userId}:${idempotencyKey}`;
-}
-
 export function getPaidCeilingSpentUsd(userId: string): number {
-  return spentUsdByScope.get(paidCeilingScopeKey(userId)) ?? 0;
+  void userId;
+  return 0;
 }
 
 /** Env parse: missing / invalid → 0 (fail closed). Never auto-recharges. */
@@ -194,9 +183,9 @@ export function buildSeedance2CostAudit(input: {
 }
 
 /**
- * Atomically admit one estimated job against the cumulative USD ceiling.
- * Defaults to zero ceiling → fail closed before any provider request.
- * Same userId + idempotencyKey authorizes at most one estimated hold.
+ * Admission facade used by the route while the durable cost migration remains
+ * source-only. A positive env value is not enough: a server restart or a
+ * second instance could bypass process memory, so this deliberately refuses.
  */
 export function tryReservePaidCeilingUsd(input: {
   userId: string;
@@ -212,14 +201,10 @@ export function tryReservePaidCeilingUsd(input: {
     resolution: input.resolution,
   });
   const ceilingUsd = Math.max(0, Number(input.ceilingUsd) || 0);
-  const key = paidCeilingScopeKey(input.userId);
-  const spentUsd = spentUsdByScope.get(key) ?? 0;
+  const spentUsd = 0;
   const remainingUsd = Math.max(0, ceilingUsd - spentUsd);
-  const idemKey =
-    typeof input.idempotencyKey === "string" &&
-    input.idempotencyKey.trim().length >= 8
-      ? paidCeilingIdempotencyKey(input.userId, input.idempotencyKey.trim())
-      : null;
+  void input.userId;
+  void input.idempotencyKey;
 
   const auditBase = (remainingAfter: number): Seedance2CostAudit =>
     buildSeedance2CostAudit({
@@ -259,22 +244,6 @@ export function tryReservePaidCeilingUsd(input: {
     };
   }
 
-  if (idemKey) {
-    const prior = reservedByIdempotency.get(idemKey);
-    if (prior) {
-      return {
-        ok: true,
-        ceilingUsd,
-        spentUsd,
-        remainingUsd: prior.remainingUsd,
-        estimatedJobUsd: prior.estimatedJobUsd,
-        reservedSpentUsd: spentUsd,
-        idempotent: true,
-        audit: auditBase(prior.remainingUsd),
-      };
-    }
-  }
-
   if (remainingUsd + 1e-9 < estimated.amountUsd) {
     return {
       ok: false,
@@ -289,55 +258,32 @@ export function tryReservePaidCeilingUsd(input: {
     };
   }
 
-  const nextSpent = Math.round((spentUsd + estimated.amountUsd) * 10000) / 10000;
-  spentUsdByScope.set(key, nextSpent);
-  const remainingAfter = Math.max(0, ceilingUsd - nextSpent);
-  if (idemKey) {
-    reservedByIdempotency.set(idemKey, {
-      estimatedJobUsd: estimated.amountUsd,
-      remainingUsd: remainingAfter,
-    });
-  }
   return {
-    ok: true,
+    ok: false,
+    code: "PAID_CEILING_UNAVAILABLE",
+    error:
+      "Durable atomic USD cost admission is not active — provider spend remains blocked even when an environment ceiling is set",
     ceilingUsd,
     spentUsd,
-    remainingUsd: remainingAfter,
+    remainingUsd,
     estimatedJobUsd: estimated.amountUsd,
-    reservedSpentUsd: nextSpent,
-    idempotent: false,
-    audit: auditBase(remainingAfter),
+    audit: auditBase(remainingUsd),
   };
 }
 
-/** Release a previously reserved estimated amount (pre-provider failure only). */
+/** No-op until the durable reservation RPC is wired. */
 export function releasePaidCeilingUsd(input: {
   userId: string;
   estimatedJobUsd: number;
   idempotencyKey?: string;
 }): { spentUsd: number } {
-  const key = paidCeilingScopeKey(input.userId);
-  const spent = spentUsdByScope.get(key) ?? 0;
-  const next = Math.max(
-    0,
-    Math.round((spent - Math.max(0, input.estimatedJobUsd)) * 10000) / 10000
-  );
-  spentUsdByScope.set(key, next);
-  if (
-    typeof input.idempotencyKey === "string" &&
-    input.idempotencyKey.trim().length >= 8
-  ) {
-    reservedByIdempotency.delete(
-      paidCeilingIdempotencyKey(input.userId, input.idempotencyKey.trim())
-    );
-  }
-  return { spentUsd: next };
+  void input;
+  return { spentUsd: 0 };
 }
 
-/** Test helper — clear process memory. */
+/** Compatibility test helper; there is intentionally no process spend store. */
 export function resetPaidCeilingStoreForTests(): void {
-  spentUsdByScope.clear();
-  reservedByIdempotency.clear();
+  // no-op
 }
 
 /**
