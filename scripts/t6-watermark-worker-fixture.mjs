@@ -280,22 +280,42 @@ for (const nonPublic of [
   "fe90::1",
   "fea0::1",
   "feb0::1",
+  "fec0::1",
+  "fed0::1",
+  "feff::1",
   "ff02::1",
   "fc00::1",
   "::ffff:127.0.0.1",
   "::ffff:7f00:1",
   "::ffff:0a00:1",
   "64:ff9b::7f00:1",
+  "64:ff9b:1::1",
+  "64:ff9b:1:ffff::1",
   "2001:db8::1",
 ]) {
   assert.equal(hasOnlyPublicResolvedAddresses([nonPublic]), false, `${nonPublic} must be blocked`);
+}
+for (const invalidAddress of [
+  "",
+  "not-an-ip",
+  "999.1.1.1",
+  "gggg::1",
+  "2606:4700::1111::1",
+]) {
+  assert.equal(
+    hasOnlyPublicResolvedAddresses([invalidAddress]),
+    false,
+    `${invalidAddress || "<empty>"} must fail closed`
+  );
 }
 for (const unsafeUrl of [
   "https://[fe90::1]/output.mp4",
   "https://[fea0::1]/output.mp4",
   "https://[feb0::1]/output.mp4",
+  "https://[fec0::1]/output.mp4",
   "https://[::ffff:7f00:1]/output.mp4",
   "https://[::ffff:0a00:1]/output.mp4",
+  "https://[64:ff9b:1::1]/output.mp4",
 ]) {
   assert.equal(
     isPublicProviderOutputUrl(unsafeUrl),

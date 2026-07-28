@@ -306,6 +306,8 @@ function isNonPublicIpv6(value: string): boolean {
     (a === 0x0100 && b === 0 && c === 0 && d === 0) ||
     // NAT64 well-known prefix can otherwise tunnel a private IPv4 target.
     (a === 0x0064 && b === 0xff9b && c === 0 && d === 0) ||
+    // Local-use NAT64 64:ff9b:1::/48.
+    (a === 0x0064 && b === 0xff9b && c === 0x0001) ||
     // 2001::/23 special-use, 2001:db8::/32 documentation and 6to4.
     (a === 0x2001 && b <= 0x01ff) ||
     (a === 0x2001 && b === 0x0db8) ||
@@ -315,13 +317,17 @@ function isNonPublicIpv6(value: string): boolean {
     // fc00::/7 unique-local, fe80::/10 link-local, ff00::/8 multicast.
     (a & 0xfe00) === 0xfc00 ||
     (a & 0xffc0) === 0xfe80 ||
+    // Deprecated fec0::/10 site-local remains non-public.
+    (a & 0xffc0) === 0xfec0 ||
     (a & 0xff00) === 0xff00
   );
 }
 
 function isNonPublicAddress(address: string): boolean {
   const normalized = address.replace(/^\[|\]$/g, "").toLowerCase();
-  return normalized.includes(":")
+  const kind = isIP(normalized);
+  if (kind === 0) return true;
+  return kind === 6
     ? isNonPublicIpv6(normalized)
     : isNonPublicIpv4(normalized);
 }
@@ -340,16 +346,15 @@ export function isPublicProviderOutputUrl(value: string): boolean {
   try {
     const url = new URL(value);
     const host = url.hostname.toLowerCase();
+    const unwrappedHost = host.replace(/^\[|\]$/g, "");
+    const hostIpKind = isIP(unwrappedHost);
     if (url.protocol !== "https:" || !host || url.username || url.password) return false;
-    if (host === "localhost" || host.endsWith(".localhost") || isNonPublicAddress(host)) {
+    if (
+      host === "localhost" ||
+      host.endsWith(".localhost") ||
+      (hostIpKind > 0 && isNonPublicAddress(unwrappedHost))
+    ) {
       return false;
-    }
-    // file:, data:, unix sockets and IPv6 loopback / link-local / ULA all fail.
-    if (host.includes(":")) {
-      const normalized = host.replace(/^\[|\]$/g, "");
-      if (isNonPublicIpv6(normalized)) {
-        return false;
-      }
     }
     return true;
   } catch {
