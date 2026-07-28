@@ -135,3 +135,17 @@
   3. 飞书用于访谈原文、业务决策、合规意见和 Gate 记录，研发状态不重复维护。
   4. 在独立分支 `agent/gpt/outbound-kb-bridge` 交付项目 Gate、任务映射、周复盘模板和 PR 关联字段。
 - **阻塞**：当前运行环境没有可用的飞书写入客户端；先完成 GitHub 侧桥接，飞书空间创建和双向回链待连接恢复后执行。
+
+---
+
+## 2026-07-28 WorkBuddy 外链历史证据合并完成
+
+- **DISPATCH 更新：** Codex 重写唯一活动队列。WorkBuddy 角色：外链历史证据合并（PR #41）。
+- **PR #41：** `agent/workbuddy/listing-verification-2026-07-28`
+  - 合并 PR #38（9 站 backlink 审计，已关闭未合并）和 PR #41（5 站 listing 核验）为单一事实记录。
+  - 9/9 站点：0 published，0 verified_backlink，8 not_found，1 site_error。
+  - 合并报告：`docs/evidence/WORKBUDDY_LISTING_VERIFICATION_2026-07-28.md`
+  - DIRECTORY_LOG 已更新为包含全部 9 站审计结果的合并版。
+  - WORK_QUEUE：WQ-2026-07-28-12 → done；WQ-2026-07-27-11 → done。
+- **PR #46 已关闭**（重复占用和跳级）。
+- **WorkBuddy 车道合规：** 仅修改证据/日志文件；未碰产品代码、数据库、部署或新提交。

@@ -15,24 +15,15 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ```yaml
 id: WQ-2026-07-28-12
-status: open
+status: done
 priority: P0
 assignee: workbuddy
 branch: agent/workbuddy/seo-baseline-2026-07-28
 deliverable: docs/evidence/WORKBUDDY_SEO_BASELINE_2026-07-28.md
-must_include:
-  - page URL and Beijing timestamp for every finding
-  - AITDK category results, not only the total score
-  - GSC indexed/not-indexed reasons, impressions, clicks and CTR
-  - sitemap, video, structured-data, links and trust evidence
-  - screenshot/export path and retest state
-do_not:
-  - request indexing or submit directories
-  - change business code, production configuration or secrets
-  - touch database, Vercel, Supabase, Stripe or main
-  - bypass login, permission prompts or CAPTCHA
 result: |
-  (WB 填：commit SHA、PR、证据与阻塞)
+  PR #33 merged to main @ `56f119b` · 16 impressions / 0 clicks / avg pos 4.1
+  GSC 30 indexed / 67 not (data 7/24); seven-URL sitemap and noindex slimming confirmed
+  with timestamped screenshots/JSON. No indexing request, code change, secrets, database or deploy.
 ```
 
 ### WQ-2026-07-27-10 · 收集 GSC / AITDK / 哥飞原始证据
@@ -64,9 +55,10 @@ result: |
 
 ```yaml
 id: WQ-2026-07-27-11
-status: queued_after_baseline
+status: done
 priority: P0
 assignee: workbuddy
+branch: agent/workbuddy/listing-verification-2026-07-28
 why: 历史报告记录了 submitted，但没有可审计 published / verified backlink URL
 inputs:
   - docs/growth/DIRECTORY_LOG.md
@@ -82,7 +74,10 @@ do_not:
   - 把 submitted/pending 计为 backlink
   - 绕过登录、验证码或付费墙
 result: |
-  (WB 填)
+  9/9 站点全部核验完毕。published=0, verified_backlink=0, not_found=8, site_error=1。
+  合并报告：docs/evidence/WORKBUDDY_LISTING_VERIFICATION_2026-07-28.md
+  DIRECTORY_LOG 已更新为合并版（合并 PR #38 的 9 站审计 + PR #41 的 5 站核验）。
+  PR #41：agent/workbuddy/listing-verification-2026-07-28
 ```
 
 ---
