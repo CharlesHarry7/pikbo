@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] SELLER-GOLD final verification
+- PR #39 is synchronized with `main@24949a0`; the cached listing/reveal/hook trio, partial-success retention, failed-child retry boundary and zero-provider/zero-credit contract are verified.
+- PASS: typecheck; lint (0 errors); 193-route build; engine, SEO, Seller Pack contract/API golden, recovery ledger/retry/reconciliation, link and fail-closed critical-path checks.
+- GitHub CI run #445 and the Vercel status check are green. No provider key, paid generation, database, Stripe, DNS, public deployment or GSC action was used.
+
+---
+
 ### 2026-07-28 — [grok] Residual R0 cookie-authority honesty (Profile / claim / Settings / badge)
 - ProfilePanel + Settings: cookie is **not** live-spend authority; live needs durable atomic reserve or labeled cached demos.
 - `/api/auth/claim`: migrates display balance only — no soft-launch generate-authority claim.
@@ -1923,5 +1930,18 @@ Newest first. One block per meaningful landing.
   Local interactive hydration could not be exercised through the isolated
   browser origin, so no browser-policy bypass was attempted; API and module
   smokes provide the interaction/settlement regression.
+- Final Codex verification after merging `main@4d9efa9`: `typecheck`,
+  `engine-smoke`, `seo-cold-start-smoke`, `seller-pack-cached-smoke`,
+  `recovery-qa`, `recovery-ledger`, `recovery-retry-deadline`,
+  `recovery-reconciliation`, the 193-route production build, running-server
+  `link-check`, `critical-path` and `seller-pack-api-golden` all pass. ESLint
+  reports 0 errors and one existing unused-variable warning in
+  `components/HomeViralWall.tsx`.
+- Review: PR #39. The functional Seller Pack files are already content-aligned
+  with latest `main`; this final PR records the reproducible verification and
+  board/handoff evidence without reopening production or billing gates.
+- Remote evidence: GitHub Actions run #442 is green for conflict markers,
+  engine smoke, lint, typecheck, build, production link-check and the
+  fail-closed critical path.
 - Safety: no provider key, paid call, database, Stripe, deployment, DNS or public
   indexing action. T5/T6 and public Mode A/B readiness remain fail-closed.
