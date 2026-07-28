@@ -8,6 +8,7 @@ import {
   createServerOwnedT6Input,
   canServeVerifiedT6Derivative,
   hasOnlyPublicResolvedAddresses,
+  isPublicProviderOutputUrl,
   isVerifiedT6DerivativeForJob,
   runT6PipelineWithInjectedRunner,
   t6DerivativeObjectKey,
@@ -264,16 +265,43 @@ assert.equal(badSource.status, "failed");
 assert.equal(badSource.errorCode, "SOURCE_CONTENT_TYPE");
 
 assert.equal(hasOnlyPublicResolvedAddresses(["8.8.8.8"]), true);
+assert.equal(
+  hasOnlyPublicResolvedAddresses(["2606:4700:4700::1111"]),
+  true,
+  "globally routed IPv6 remains allowed"
+);
 for (const nonPublic of [
   "203.0.113.8",
   "224.0.0.1",
   "240.0.0.1",
   "255.255.255.255",
   "::",
+  "fe80::1",
+  "fe90::1",
+  "fea0::1",
+  "feb0::1",
   "ff02::1",
   "fc00::1",
+  "::ffff:127.0.0.1",
+  "::ffff:7f00:1",
+  "::ffff:0a00:1",
+  "64:ff9b::7f00:1",
+  "2001:db8::1",
 ]) {
   assert.equal(hasOnlyPublicResolvedAddresses([nonPublic]), false, `${nonPublic} must be blocked`);
+}
+for (const unsafeUrl of [
+  "https://[fe90::1]/output.mp4",
+  "https://[fea0::1]/output.mp4",
+  "https://[feb0::1]/output.mp4",
+  "https://[::ffff:7f00:1]/output.mp4",
+  "https://[::ffff:0a00:1]/output.mp4",
+]) {
+  assert.equal(
+    isPublicProviderOutputUrl(unsafeUrl),
+    false,
+    `${unsafeUrl} must fail before any fetch`
+  );
 }
 
 console.log("t6-watermark-worker-fixture: PASS");

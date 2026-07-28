@@ -9,6 +9,7 @@
  */
 
 import { createHash } from "node:crypto";
+import { isIP } from "node:net";
 import {
   T6_OWNED_STORAGE_ADAPTER_IMPLEMENTED,
   t6OwnedStorageConfigured,
@@ -243,18 +244,78 @@ function isNonPublicIpv4(hostname: string): boolean {
   );
 }
 
+function parseIpv6Hextets(value: string): number[] | null {
+  const normalized = value
+    .replace(/^\[|\]$/g, "")
+    .toLowerCase();
+  if (!normalized || normalized.includes("%") || isIP(normalized) !== 6) {
+    return null;
+  }
+  let address = normalized;
+  const dottedTail = address.match(/(\d+\.\d+\.\d+\.\d+)$/)?.[1];
+  if (dottedTail) {
+    const octets = dottedTail.split(".").map(Number);
+    if (
+      octets.length !== 4 ||
+      octets.some(
+        (part) => !Number.isInteger(part) || part < 0 || part > 255
+      )
+    ) {
+      return null;
+    }
+    const high = ((octets[0] << 8) | octets[1]).toString(16);
+    const low = ((octets[2] << 8) | octets[3]).toString(16);
+    address = `${address.slice(0, -dottedTail.length)}${high}:${low}`;
+  }
+  const halves = address.split("::");
+  if (halves.length > 2) return null;
+  const left = halves[0] ? halves[0].split(":") : [];
+  const right = halves.length === 2 && halves[1]
+    ? halves[1].split(":")
+    : [];
+  const missing = 8 - left.length - right.length;
+  if (
+    (halves.length === 1 && missing !== 0) ||
+    (halves.length === 2 && missing < 1)
+  ) {
+    return null;
+  }
+  const words = [
+    ...left,
+    ...Array.from({ length: Math.max(0, missing) }, () => "0"),
+    ...right,
+  ];
+  if (
+    words.length !== 8 ||
+    words.some((word) => !/^[a-f0-9]{1,4}$/.test(word))
+  ) {
+    return null;
+  }
+  return words.map((word) => Number.parseInt(word, 16));
+}
+
 function isNonPublicIpv6(value: string): boolean {
-  const normalized = value.replace(/^\[|\]$/g, "").toLowerCase();
-  const mappedIpv4 = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-  if (mappedIpv4) return isNonPublicIpv4(mappedIpv4[1]);
+  const words = parseIpv6Hextets(value);
+  if (!words) return true;
+  const [a, b, c, d] = words;
   return (
-    normalized === "::" ||
-    normalized === "::1" ||
-    normalized.startsWith("fe80:") ||
-    normalized.startsWith("fc") ||
-    normalized.startsWith("fd") ||
-    normalized.startsWith("ff") ||
-    normalized.startsWith("2001:db8:")
+    // ::/8 includes unspecified, loopback, IPv4-compatible, translated and
+    // both dotted and hexadecimal IPv4-mapped forms.
+    a === 0 ||
+    // Discard-only 100::/64.
+    (a === 0x0100 && b === 0 && c === 0 && d === 0) ||
+    // NAT64 well-known prefix can otherwise tunnel a private IPv4 target.
+    (a === 0x0064 && b === 0xff9b && c === 0 && d === 0) ||
+    // 2001::/23 special-use, 2001:db8::/32 documentation and 6to4.
+    (a === 0x2001 && b <= 0x01ff) ||
+    (a === 0x2001 && b === 0x0db8) ||
+    a === 0x2002 ||
+    // 3fff::/20 documentation.
+    (a === 0x3fff && (b & 0xf000) === 0) ||
+    // fc00::/7 unique-local, fe80::/10 link-local, ff00::/8 multicast.
+    (a & 0xfe00) === 0xfc00 ||
+    (a & 0xffc0) === 0xfe80 ||
+    (a & 0xff00) === 0xff00
   );
 }
 

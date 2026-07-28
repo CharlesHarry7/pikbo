@@ -2,8 +2,9 @@
 
 Status: non-production source + real media proof; production remains blocked
 Production apply/deploy: prohibited until owner approval
-Proof: temporary npm-provided ffmpeg 6.0 and ffprobe 4.4 binaries were used
-against synthetic media only; they are not a production runtime installation
+Proof: ffmpeg/ffprobe are not installed globally on this system. Temporary,
+pinned npm-provided ffmpeg 6.0 and ffprobe 4.4 binaries were used against
+synthetic media only; they are not a production runtime installation.
 
 Required migration order in a disposable Supabase project:
 
