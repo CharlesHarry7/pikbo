@@ -6,6 +6,7 @@ import {
   getPersonalWallet,
 } from "@/lib/durableCredits";
 import {
+  reserveSellerPackAtomic,
   reserveSellerPackShadow,
   SELLER_PACK_CHILD_COUNT,
   SELLER_PACK_QUOTE_CREDITS,
@@ -14,13 +15,22 @@ import {
 export const runtime = "nodejs";
 
 /**
- * Phase C — Seller Pack shadow reserve (30 credits for 3 children).
- * R0/R1 honesty: live /api/generate children require durable auth reserve;
- * cookie is no longer live-spend authority. When durable is off, pack shadow
- * is best-effort only — each child still hits generate cost gate (demo if free).
+ * Seller Pack / Launch Pack reserve.
+ *
+ * Preferred (authenticated + clientPackKey): one atomic 30-credit reservation,
+ * one pack run, exactly three fixed child job IDs. Live children then authorize
+ * against the parent pack reservation via /api/generate (packRunId + packJobId)
+ * and never open a second R1a per-generation reserve.
+ *
+ * Legacy shadow reserve remains when atomic binding is unavailable; cookie is
+ * never live-spend authority (generate-route-cost-gate).
  */
 export async function POST(req: Request) {
-  let body: { childCount?: number; idempotencyKey?: string } = {};
+  let body: {
+    childCount?: number;
+    idempotencyKey?: string;
+    clientPackKey?: string;
+  } = {};
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -46,6 +56,61 @@ export async function POST(req: Request) {
     });
   }
 
+  const clientPackKey =
+    typeof body.clientPackKey === "string"
+      ? body.clientPackKey.trim().slice(0, 128)
+      : typeof body.idempotencyKey === "string"
+        ? body.idempotencyKey.trim().slice(0, 128)
+        : "";
+
+  // Atomic path: authenticated owner + stable client pack key.
+  if (auth?.id && clientPackKey.length >= 8) {
+    const atomic = await reserveSellerPackAtomic({
+      ownerUserId: auth.id,
+      clientPackKey,
+    });
+    if (!atomic.ok) {
+      const status =
+        atomic.code === "INSUFFICIENT_CREDITS"
+          ? 402
+          : atomic.code === "IDEMPOTENCY_CONFLICT"
+            ? 409
+            : atomic.code === "LIVE_ACCESS_REQUIRED" ||
+                atomic.code === "AUTH_REQUIRED"
+              ? 403
+              : 400;
+      return NextResponse.json(
+        {
+          ok: false,
+          code: atomic.code,
+          error: atomic.error,
+          need: atomic.need,
+          have: atomic.have,
+          quoteCredits: SELLER_PACK_QUOTE_CREDITS,
+          session: publicSession(session),
+          durable: await getPersonalWallet(auth.id),
+        },
+        { status }
+      );
+    }
+    return NextResponse.json({
+      ok: true,
+      mode: "atomic",
+      authority: "durable-atomic-pack-plus-generate-gate",
+      pack: atomic.data,
+      packRunId: atomic.data.packRunId,
+      reservationId: atomic.data.reservationId,
+      jobs: atomic.data.jobs,
+      quoteCredits: atomic.data.quotedCredits,
+      childCredits: atomic.data.childCredits,
+      childCount: atomic.data.jobs.length,
+      idempotent: atomic.data.idempotent,
+      session: publicSession(session),
+      durable: await getPersonalWallet(auth.id),
+    });
+  }
+
+  // Legacy shadow path (name-stable for offline smokes + guest audit).
   const childCount =
     typeof body.childCount === "number" &&
     body.childCount >= 1 &&

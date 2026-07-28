@@ -8,6 +8,8 @@ import {
   normalizeAspect,
   resolutionForTier,
   seedanceDuration,
+  SELLER_PACK_LIVE_RESOLUTION,
+  sellerPackLiveModelEndpoint,
 } from "@/lib/models";
 import {
   costAuditForResponse,
@@ -50,7 +52,15 @@ import {
   releaseStrictLiveGeneration,
   reserveStrictLiveGeneration,
   settleStrictLiveGeneration,
+  type StrictLiveReservation,
 } from "@/lib/durableCredits/liveReservation";
+import {
+  authorizeSellerPackChildLive,
+  releaseSellerPackChildAtomic,
+  settleSellerPackChildAtomic,
+} from "@/lib/durableCredits/sellerPack";
+import { parseSellerPackChildRequest } from "@/lib/durableCredits/sellerPackAtomic";
+import { sellerPackItemBySlug } from "@/lib/sellerPackContract";
 import { createReservationLifecycle } from "@/lib/reservationLifecycle";
 import {
   recordConfirmedPreOutputFailure,
@@ -481,10 +491,51 @@ export async function POST(req: Request) {
     );
   }
 
+  // Seller Pack child binding (optional). When present, live spend uses the
+  // parent 30-credit pack reservation and never opens R1a per-generation reserve.
+  const packBinding = parseSellerPackChildRequest(body);
+  if (packBinding.kind === "invalid") {
+    endJob(session.id);
+    return err(
+      {
+        error: packBinding.error,
+        code: "INVALID_REQUEST",
+        session: publicSession(session),
+      },
+      400
+    );
+  }
+  const packChild =
+    packBinding.kind === "pack"
+      ? {
+          packRunId: packBinding.packRunId,
+          packJobId: packBinding.packJobId,
+        }
+      : null;
+  // Mutable pack context filled after authorize (for settle/release backends).
+  let activePackChild: {
+    packRunId: string;
+    packJobId: string;
+    userId: string;
+  } | null = null;
+
   // Reservation lifecycle: release ≤1, never release after settle/withhold.
   // finally → safetyNetRelease only while phase === reserved.
   const reservationLife = createReservationLifecycle({
     release: async (reservation, reason) => {
+      if (activePackChild) {
+        const released = await releaseSellerPackChildAtomic({
+          userId: activePackChild.userId,
+          packRunId: activePackChild.packRunId,
+          jobId: activePackChild.packJobId,
+          reason,
+        });
+        if (!released.ok) return { ok: false, error: released.error };
+        return {
+          ok: true,
+          availableCredits: released.data.availableCredits,
+        };
+      }
       const released = await releaseStrictLiveGeneration(reservation, reason);
       if (!released.ok) return { ok: false, error: released.error };
       return {
@@ -493,6 +544,19 @@ export async function POST(req: Request) {
       };
     },
     settle: async (reservation, providerRequestId) => {
+      if (activePackChild) {
+        const captured = await settleSellerPackChildAtomic({
+          userId: activePackChild.userId,
+          packRunId: activePackChild.packRunId,
+          jobId: activePackChild.packJobId,
+          providerRequestId,
+        });
+        if (!captured.ok) return { ok: false, error: captured.error };
+        return {
+          ok: true,
+          availableCredits: captured.data.availableCredits,
+        };
+      }
       const captured = await settleStrictLiveGeneration(
         reservation,
         providerRequestId
@@ -509,9 +573,31 @@ export async function POST(req: Request) {
   try {
     const plan = getPlan(session.plan);
     const freeTier = plan.watermark;
-    const secs = freeTier ? 5 : clampDuration(duration, preset.duration);
-    const aspect = normalizeAspect(aspectRatio, preset.aspectRatio);
-    const resolution = resolutionForTier(freeTier, resPref);
+    // Live Seller Pack children use the fixed 5s + aspect contract from the
+    // frozen pack item, not client-supplied duration/aspect overrides.
+    const packItem = packChild ? sellerPackItemBySlug(preset.slug) : undefined;
+    if (packChild && !packItem) {
+      return err(
+        {
+          error:
+            "Seller Pack children must use the frozen Launch Pack effect contract",
+          code: "INVALID_REQUEST",
+          session: publicSession(session),
+        },
+        400
+      );
+    }
+    const secs = packItem
+      ? packItem.durationSec
+      : freeTier
+        ? 5
+        : clampDuration(duration, preset.duration);
+    const aspect = packItem
+      ? packItem.aspectRatio
+      : normalizeAspect(aspectRatio, preset.aspectRatio);
+    const resolution = packChild
+      ? SELLER_PACK_LIVE_RESOLUTION
+      : resolutionForTier(freeTier, resPref);
 
     // Always keep preset template as base — freeform-only used to wipe toy prompts.
     const prompt = buildGeneratePrompt(preset.promptTemplate, extra);
@@ -656,11 +742,12 @@ export async function POST(req: Request) {
         400
       );
     }
-    // Private live admits only Seedance 2.0 full image-to-video. Mini/Fast
-    // client preference must never claim processedUpload for this path.
-    // Exact Seedance 2.0 full endpoint only (cost guard shares the same id).
-    const model = modelForPrivateLive(modelPref);
-    if (model !== privateLiveSeedanceModel(modelPref)) {
+    // A pack child is pinned to Seedance Fast 720p by the frozen contract.
+    // Standalone private live remains pinned to the full Seedance endpoint.
+    const model = packChild
+      ? sellerPackLiveModelEndpoint()
+      : modelForPrivateLive(modelPref);
+    if (!packChild && model !== privateLiveSeedanceModel(modelPref)) {
       return err(
         {
           error: "Private live model selection failed closed",
@@ -735,11 +822,75 @@ export async function POST(req: Request) {
         );
       }
     }
-    const reserved = await reserveStrictLiveGeneration({
-      userId: authUser.id,
-      idempotencyKey,
-      effectSlug: preset.slug,
-    });
+    // Pack children: authorize against the parent 30-credit reservation.
+    // Non-pack live: strict R1a per-generation reserve (unchanged).
+    let reserved:
+      | {
+          ok: true;
+          reservation: StrictLiveReservation;
+          availableCredits: number;
+        }
+      | {
+          ok: false;
+          code:
+            | "DURABLE_CREDITS_UNAVAILABLE"
+            | "LIVE_ACCESS_REQUIRED"
+            | "INSUFFICIENT_CREDITS"
+            | "JOB_IN_FLIGHT"
+            | "RESERVATION_FAILED"
+            | string;
+          error: string;
+          need?: number;
+          have?: number;
+        };
+
+    if (packChild) {
+      if (!packItem) {
+        return err(
+          {
+            error: "Seller Pack child contract mismatch",
+            code: "INVALID_REQUEST",
+            session: publicSession(session),
+          },
+          400
+        );
+      }
+      const packAuth = await authorizeSellerPackChildLive({
+        userId: authUser.id,
+        packRunId: packChild.packRunId,
+        jobId: packChild.packJobId,
+        effectSlug: packItem.slug,
+        durationSec: packItem.durationSec,
+        aspectRatio: packItem.aspectRatio,
+        attemptKey: idempotencyKey,
+      });
+      if (!packAuth.ok) {
+        reserved = {
+          ok: false,
+          code: packAuth.code,
+          error: packAuth.error,
+          need: packAuth.need,
+          have: packAuth.have,
+        };
+      } else {
+        activePackChild = {
+          packRunId: packChild.packRunId,
+          packJobId: packChild.packJobId,
+          userId: authUser.id,
+        };
+        reserved = {
+          ok: true,
+          reservation: packAuth.reservation,
+          availableCredits: packAuth.availableCredits,
+        };
+      }
+    } else {
+      reserved = await reserveStrictLiveGeneration({
+        userId: authUser.id,
+        idempotencyKey,
+        effectSlug: preset.slug,
+      });
+    }
     if (!reserved.ok) {
       releasePaidCeilingIfHeld();
       const status =
@@ -747,13 +898,33 @@ export async function POST(req: Request) {
           ? 402
           : reserved.code === "JOB_IN_FLIGHT"
             ? 409
-          : reserved.code === "LIVE_ACCESS_REQUIRED"
+          : reserved.code === "LIVE_ACCESS_REQUIRED" ||
+              reserved.code === "PACK_NOT_FOUND" ||
+              reserved.code === "JOB_BINDING_MISMATCH" ||
+              reserved.code === "CHILD_ALREADY_SUCCEEDED" ||
+              reserved.code === "CHILD_REQUIRES_RETRY" ||
+              reserved.code === "PACK_CHILD_CONTRACT_MISMATCH"
             ? 403
             : 503;
+      const code = (
+        reserved.code === "INSUFFICIENT_CREDITS" ||
+        reserved.code === "LIVE_ACCESS_REQUIRED" ||
+        reserved.code === "DURABLE_CREDITS_UNAVAILABLE" ||
+        reserved.code === "JOB_IN_FLIGHT" ||
+        reserved.code === "RESERVATION_FAILED"
+          ? reserved.code
+          : reserved.code === "PACK_NOT_FOUND" ||
+              reserved.code === "JOB_BINDING_MISMATCH" ||
+              reserved.code === "CHILD_ALREADY_SUCCEEDED" ||
+              reserved.code === "CHILD_REQUIRES_RETRY" ||
+              reserved.code === "PACK_CHILD_CONTRACT_MISMATCH"
+            ? "INVALID_REQUEST"
+            : "RESERVATION_FAILED"
+      ) as GenerateErrorBody["code"];
       return err(
         {
           error: reserved.error,
-          code: reserved.code,
+          code,
           need: reserved.need,
           have: reserved.have,
           session: publicSession(session),

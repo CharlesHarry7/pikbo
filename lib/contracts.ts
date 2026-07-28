@@ -37,6 +37,18 @@ export type GenerateRequestBody = {
   retryJobId?: string;
   /** One-time bearer paired with retryJobId; never inferred from effect/prompt. */
   retryToken?: string;
+  /**
+   * Server-owned Seller Pack run id from POST /api/seller-pack/reserve.
+   * When present with packJobId, live generate authorizes against the parent
+   * 30-credit pack reservation and never opens a second R1a reserve.
+   */
+  packRunId?: string;
+  /**
+   * Bound fixed child job id from the same pack reserve response.
+   * Client-supplied reservation IDs, credit amounts, or free-form job IDs
+   * are never trusted as spend authority.
+   */
+  packJobId?: string;
 };
 
 export type GenerateSuccess = {

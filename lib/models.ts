@@ -53,6 +53,12 @@ export function modelForPrivateLive(
 
 export type SeedanceResolution = "480p" | "720p";
 
+/** Live Seller Pack / Launch Pack is pinned to Seedance Fast 720p. */
+export const SELLER_PACK_LIVE_MODEL_PREFERENCE: ModelPreference =
+  "seedance-fast";
+export const SELLER_PACK_LIVE_RESOLUTION: SeedanceResolution = "720p";
+export const SELLER_PACK_LIVE_MODEL_ID = "seedance-fast" as const;
+
 export function resolutionForTier(
   freeTier: boolean,
   prefer?: SeedanceResolution | string | null
@@ -60,6 +66,11 @@ export function resolutionForTier(
   if (freeTier) return "480p";
   if (prefer === "480p" || prefer === "720p") return prefer;
   return "720p";
+}
+
+/** Server-enforced model endpoint for live Seller Pack children. */
+export function sellerPackLiveModelEndpoint(): string {
+  return process.env.FAL_MODEL_FAST || SEEDANCE_FAST;
 }
 
 /** fal text-to-image for Image Studio (cheap/fast default). */

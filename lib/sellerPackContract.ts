@@ -55,6 +55,32 @@ export const SELLER_PACK_SLUGS: readonly SellerPackSlug[] = SELLER_PACK_ITEMS.ma
   (i) => i.slug
 );
 
+/**
+ * Frozen fingerprint shared with
+ * supabase/migrations/20260729020000_atomic_seller_pack.sql
+ * (`pikbo_seller_pack_contract_fingerprint_v1`).
+ */
+export const SELLER_PACK_CONTRACT_FINGERPRINT_V1 = SELLER_PACK_ITEMS.map(
+  (item) =>
+    `${item.key}:${item.slug}:${item.aspectRatio}:${item.durationSec}`
+).join("|");
+
+export function sellerPackContractFingerprintV1(): string {
+  return SELLER_PACK_CONTRACT_FINGERPRINT_V1;
+}
+
+export function sellerPackItemByKey(
+  key: string
+): SellerPackItem | undefined {
+  return SELLER_PACK_ITEMS.find((item) => item.key === key);
+}
+
+export function sellerPackItemBySlug(
+  slug: string
+): SellerPackItem | undefined {
+  return SELLER_PACK_ITEMS.find((item) => item.slug === slug);
+}
+
 export type SellerPackChildOutcomeStatus =
   | "queued"
   | "running"
