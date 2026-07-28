@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] R0 capture safety merged; growth queue stopped
+- PR #47 merged at `a7fff1b`; GitHub Actions #466 passed the new behavioral R0 step plus the full fail-closed suite and production build.
+- PR #42 was closed as unsafe/stale and replaced; its branch remains recoverable but is not a task source.
+- PR #41 was closed without merging stale board ownership. Its useful fact remains: five checked directory submissions produced 0 published listings and 0 verified backlinks.
+- The next two product gates are mobile main-path truth and a real baked-watermark derivative; WorkBuddy remains idle until publishable product proof exists.
+- Vercel preview checks are currently rate-limited at the account level; local and GitHub production builds are green.
+
+---
+
 ### 2026-07-28 — [gpt] R0 capture-exception safety replacement
 - Replaced stale PR #42 with clean PR #47 from `main@e0ab4f0`; no old STATUS/HANDOFF rows were replayed.
 - A failed or throwing capture now becomes `withheld` before generic error handling, so valid provider output cannot be followed by a credit release.
