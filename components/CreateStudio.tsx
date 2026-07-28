@@ -25,6 +25,7 @@ import { useToast } from "@/components/Toast";
 import { PaywallCard } from "@/components/PaywallCard";
 import { emitSessionRefresh } from "@/lib/sessionEvents";
 import {
+  isIgnoredOwnedUploadResult,
   localLibraryNote,
   PROVENANCE,
   resultProvenanceLabel,
@@ -258,6 +259,8 @@ export function CreateStudio({
   const [status, setStatus] = useState<Status>("idle");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Cached fallback after an owned upload is a blocked outcome, not READY. */
+  const [lastUploadIgnored, setLastUploadIgnored] = useState(false);
   /** Server Retry-After for rate limit / inflight / provider network. */
   const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
     null
@@ -567,6 +570,17 @@ export function CreateStudio({
       setSecondaryStill(null);
       briefAutoAppliedRef.current = false;
       setError(null);
+      setLastUploadIgnored(false);
+      setStatus("idle");
+      setVideoUrl(null);
+      setDemo(false);
+      setUsedModel(null);
+      setResultDuration(null);
+      setResultAspect(null);
+      setResultResolution(null);
+      setVersions([]);
+      setActiveVersionId(null);
+      setLastRequestCreditState(null);
       track({
         event: "upload_ready",
         path: "/create",
@@ -742,6 +756,7 @@ export function CreateStudio({
       path: "/create",
     });
     setError(null);
+    setLastUploadIgnored(false);
     setLastRefunded(false);
     // Clear only the *request* settlement for a new attempt — version chips stay.
     setLastRequestCreditState(null);
@@ -904,6 +919,42 @@ export function CreateStudio({
     // Network-retry recovery: same idempotencyKey, no second debit/fal.
     if (data.idempotentReplay) {
       toast("Recovered prior clip · no second charge");
+    }
+    const ignoredOwnedUpload = isIgnoredOwnedUploadResult({
+      demo: Boolean(data.demo),
+      processedUpload: data.processedUpload,
+      uploadIgnored: data.uploadIgnored,
+      labSample: Boolean(opts?.labSampleId || labStill),
+    });
+    if (ignoredOwnedUpload) {
+      setVideoUrl(null);
+      setDemo(false);
+      setWatermark(true);
+      setUsedModel(null);
+      setResultDuration(null);
+      setResultAspect(null);
+      setResultResolution(null);
+      setVersions([]);
+      setActiveVersionId(null);
+      setLastRequestCreditState("0 cached");
+      setLastUploadIgnored(true);
+      setError(
+        "Your photo was not processed. Live generation is not enabled for this account yet, so Pikbo did not show an unrelated Lab clip as your result. No credits were used."
+      );
+      setStatus("error");
+      track({
+        event: "generate_result",
+        recipe: fx,
+        demo: true,
+        path: "/create",
+        meta: {
+          processedUpload: false,
+          uploadIgnored: true,
+        },
+      });
+      toast("Photo not processed · no credits used");
+      void refreshSession();
+      return;
     }
     const serverDuration =
       typeof data.duration === "number" ? data.duration : requestDuration;
@@ -2395,7 +2446,7 @@ export function CreateStudio({
               creditsRestored={lastRefunded}
               retryAfterSec={failRetryAfterSec}
               onRetry={
-                image && !busy
+                !lastUploadIgnored && image && !busy
                   ? () => {
                       setFailRetryAfterSec(null);
                       if (activeVersion) retryActiveVersion();
@@ -2408,7 +2459,8 @@ export function CreateStudio({
                   ? t("fail.retryVersion")
                   : t("fail.retryGenerate")
               }
-              showLabSample={!image}
+              showLabSample={lastUploadIgnored || !image}
+              showModules={!lastUploadIgnored}
             />
           )}
 

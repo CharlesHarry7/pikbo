@@ -22,6 +22,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T6-PRODUCTION | Apply reviewed SQL, shared object storage and scheduled worker rehearsal | External / unassigned | blocked | none | `SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED=false`; disposable DB rehearsal, shared storage and worker deployment are required before Free live download |
 | WB-WAIT | No growth work before publishable product proof | WorkBuddy | blocked | none | #41/#46 closed; wait for explicit new queue row |
 | P0-LIVE | Invited owner upload → real provider video (Issue #54 Grok Build) | Grok | **review** | `agent/grok/p0-private-live-generation` · Issue #54 | Private allowlist+budget; honesty fields; prereq evidence; no prod enable. Awaiting boss blockers + Codex review. |
+| P0-LIVE-UX | Owned upload never shows unrelated cached Lab clip as READY | Codex | **review** | `agent/gpt/p0-live-owned-toy-review` · Issue #54 | Stack on Grok PR #55; ignored upload is a visible 0-credit failure, unrelated media is cleared, explicit Lab preview remains available; engine/recovery/product/mobile/type/lint/193-route build pass. |
 
 Completion of an old row below does not authorize a new branch. Codex must add a row here first.
 
