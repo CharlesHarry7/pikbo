@@ -200,7 +200,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
             data-wall-featured="premiere"
             className="mb-2 grid grid-cols-2 gap-1 sm:mb-3 sm:gap-1.5 md:grid-cols-4"
           >
-            {featured.map((item, i) => (
+            {featured.map((item) => (
               <article
                 key={`feat-${item.id}`}
                 className="group relative aspect-[9/14] overflow-hidden rounded-lg bg-zinc-950 ring-1 ring-[#c8ff3d]/20 sm:aspect-[3/4] sm:rounded-xl"

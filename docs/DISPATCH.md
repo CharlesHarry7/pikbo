@@ -32,8 +32,8 @@
 5. 优先处理/验收 SELLER-GOLD 和 R2 相关验收标准。
 
 ### Grok —— `agent/grok/...`
-**当前唯一 claim：** `T5/R0` · `agent/grok/t5-auth-credits-smoke` · PR #40
-完成条件：匿名/Free 永远不能触发 provider 成本；cookie 不是 live-spend authority；reserve/capture/release、退款和幂等的无密钥测试全绿。非生产 Supabase SQL 演练继续等待老板授权，不得伪造通过。
+**当前唯一 claim：** `R0-SAFETY` · `agent/grok/t5-r0-refund-idempotent` · PR #42
+完成条件：补齐 generate/image reservation 泄漏的 finally 兜底，并用无密钥测试证明异常路径会释放 reservation、匿名/Free 不会触发 provider。PR #40 的 T5/R0 测试已由 Codex 经 PR #43 集成；不得重复重放旧分支。非生产 Supabase SQL 演练继续等待老板授权，不得伪造通过。
 
 1. 主攻工程可靠性：
    - T5 Auth & Credits（必须做完）
@@ -45,7 +45,7 @@
 
 ### WorkBuddy —— `agent/workbuddy/...`
 **当前唯一 claim：** `WB-LISTING-VFY` · `agent/workbuddy/listing-verification-2026-07-28` · PR #41
-只完成历史公开 listing 的只读核验和证据去重；不再提交目录。PR #41 结束后停止 SEO 扩张，等待 Codex 的 R2 预览，再按「首页 → 一张图 → 三素材 → Launch Pack」做只读浏览器验收。
+只完成历史公开 listing 的只读核验和证据去重；不再提交目录。PR #41 结束后停止 SEO 扩张，等待 Codex 的 R2 预览，再按「首页 → 一张图 → 三素材 → Launch Pack」做只读浏览器验收；不得与过时的 #36/#38 重复提交同一证据。
 
 1. 只读 SEO 证据收集（GSC、AITDK、真实浏览器）：
    - 输出带时间戳、截图、复测结果的 baseline / 差距报告。
