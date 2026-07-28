@@ -407,6 +407,15 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
       ok: false,
       status: 409,
       code: "GENERATION_FAILED",
+      creditsRefunded: false,
+    }),
+    false
+  );
+  assert.equal(
+    isAuthoritativeRecoveryResult({
+      ok: false,
+      status: 409,
+      code: "GENERATION_FAILED",
       creditsRefunded: true,
     }),
     true
@@ -477,6 +486,12 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
       code: "REQUEST_CANCELED",
       creditsRefunded: false,
     },
+    {
+      ok: false,
+      status: 409,
+      code: "GENERATION_FAILED",
+      creditsRefunded: false,
+    },
   ]) {
     const authoritativePrimary = deferred();
     const nonAuthoritativeRecovery = deferred();
@@ -502,6 +517,74 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     authoritativePrimary.resolve({ ok: true, status: 200 });
     assert.deepEqual(await guardedRace, { ok: true, status: 200 });
     assert.equal(primaryAborts, 0);
+    assert.equal(recoveryAborts, 0);
+  }
+
+  // GENERATION_FAILED without a confirmed refund is not durable terminal truth.
+  // Keep the still-healthy primary alive; a later primary success must win.
+  {
+    const healthyPrimary = deferred();
+    const failedNoRefund = deferred();
+    primaryAborts = 0;
+    recoveryAborts = 0;
+    const primaryWins = raceGenerateWithDurableRecovery({
+      primary: healthyPrimary.promise,
+      recovery: failedNoRefund.promise,
+      abortPrimary: () => {
+        primaryAborts += 1;
+      },
+      abortRecovery: () => {
+        recoveryAborts += 1;
+      },
+    });
+    failedNoRefund.resolve({
+      ok: false,
+      status: 409,
+      code: "GENERATION_FAILED",
+      creditsRefunded: false,
+    });
+    await Promise.resolve();
+    assert.equal(
+      primaryAborts,
+      0,
+      "GENERATION_FAILED without creditsRefunded must not abort the live POST"
+    );
+    healthyPrimary.resolve({ ok: true, status: 200 });
+    assert.deepEqual(await primaryWins, { ok: true, status: 200 });
+    assert.equal(primaryAborts, 0);
+    assert.equal(recoveryAborts, 0);
+  }
+
+  // Durable terminal failure with confirmed refund is authoritative: recovery
+  // wins and aborts the open primary exactly once (no second cancel).
+  {
+    const openPrimary = deferred();
+    const failedRefunded = deferred();
+    primaryAborts = 0;
+    recoveryAborts = 0;
+    const recoveryWins = raceGenerateWithDurableRecovery({
+      primary: openPrimary.promise,
+      recovery: failedRefunded.promise,
+      abortPrimary: () => {
+        primaryAborts += 1;
+      },
+      abortRecovery: () => {
+        recoveryAborts += 1;
+      },
+    });
+    const terminalFail = {
+      ok: false,
+      status: 409,
+      code: "GENERATION_FAILED",
+      creditsRefunded: true,
+    };
+    failedRefunded.resolve(terminalFail);
+    assert.deepEqual(await recoveryWins, terminalFail);
+    assert.equal(
+      primaryAborts,
+      1,
+      "authoritative GENERATION_FAILED with refund must abortPrimary exactly once"
+    );
     assert.equal(recoveryAborts, 0);
   }
 
