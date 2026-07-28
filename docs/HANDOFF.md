@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] SELLER-GOLD final verification
+- PR #39 is synchronized with `main@24949a0`; the cached listing/reveal/hook trio, partial-success retention, failed-child retry boundary and zero-provider/zero-credit contract are verified.
+- PASS: typecheck; lint (0 errors); 193-route build; engine, SEO, Seller Pack contract/API golden, recovery ledger/retry/reconciliation, link and fail-closed critical-path checks.
+- GitHub CI run #445 and the Vercel status check are green. No provider key, paid generation, database, Stripe, DNS, public deployment or GSC action was used.
+
+---
+
 ### 2026-07-28 — [grok] Residual R0 cookie-authority honesty (Profile / claim / Settings / badge)
 - ProfilePanel + Settings: cookie is **not** live-spend authority; live needs durable atomic reserve or labeled cached demos.
 - `/api/auth/claim`: migrates display balance only — no soft-launch generate-authority claim.
