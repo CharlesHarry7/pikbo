@@ -7,7 +7,8 @@ Newest first. One block per meaningful landing.
 ### 2026-07-28 — [gpt] immersive toy Recipe home V1
 - Home now opens on a full-bleed toy-video hero, then the frozen `HOME_PROOF_SLUGS` wall with eight distinct cached demos. Card body opens the auditable Inside Project page; the explicit `Use this recipe` action deep-links to Create.
 - Primary navigation is Explore, Recipes, Create, Library and Pricing, with one emphasized Generate CTA plus reachable credits, language, account and secondary links. Launch Pack remains the later commercial upgrade.
-- The existing homepage SEO/trust surface and analytics events remain intact. Browser QA and the full CI suite are required before merge; no API, Supabase, Stripe, credits or production configuration changed.
+- Merged through PR #50 at `c19014d`. The existing homepage SEO/trust surface and analytics events remain intact; browser QA passed at 390/768/1440 with zero horizontal overflow and one mobile video playing, GitHub CI #476 passed, and the production build generated 193 routes.
+- Vercel preview was externally rate-limited (`upgradeToPro=build-rate-limit`); no API, Supabase, Stripe, credits or production configuration changed.
 
 ---
 

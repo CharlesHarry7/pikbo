@@ -14,7 +14,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 
 | ID | Outcome | Owner | Status | PR / branch | Reviewer gate |
 |---|---|---|---|---|---|
-| HOME-V1 | Immersive 8-demo toy Recipe home → upload in ≤2 clicks | Codex | review | PR #50 · `agent/gpt/higgsfield-toy-v1-home` | 390×844 + 1440px screenshots; lint, typecheck, engine and Launch Pack smokes, build; private preview required before merge |
+| HOME-V1 | Immersive 8-demo toy Recipe home → auditable project → Create in ≤2 clicks | Codex | done | main via PR #50 | GitHub CI #476 green; 390/768/1440 browser proof, 8 distinct cached demos, Project/Recipe analytics, SEO/trust and 193-route build passed |
 | CTRL-RESET | Close stale PRs, close R2 and enforce one active task per agent | Codex | done | main via PR #45 | Isolated worktrees and the one-task queue are now mandatory |
 | R0-NET | Unexpected-exit reservation safety without double release/refund | Codex / Grok | done | main via PR #47 | GitHub CI #466 green; capture throw/failure withheld, 0 release calls, behavior test in real CI |
 | MOBILE-PROOF | Mobile Home → Project → Create truth and playback regression | Codex | done | main via PR #49 | GitHub CI #470 green; 390/768/1440 proof path, truth copy and mobile single-play verified |
