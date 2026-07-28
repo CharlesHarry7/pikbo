@@ -4,12 +4,18 @@ import { getPreset } from "@/lib/presets";
 import { getPlan } from "@/lib/pricing";
 import {
   clampDuration,
-  modelForTier,
+  modelForPrivateLive,
   normalizeAspect,
   resolutionForTier,
   seedanceDuration,
-  type ModelPreference,
 } from "@/lib/models";
+import {
+  costAuditForResponse,
+  defaultPaidCeilingUsdFromEnv,
+  privateLiveSeedanceModel,
+  releasePaidCeilingUsd,
+  tryReservePaidCeilingUsd,
+} from "@/lib/liveGenerationCostGuard";
 import {
   ensureSession,
   publicCachedSession,
@@ -650,6 +656,60 @@ export async function POST(req: Request) {
         400
       );
     }
+    // Private live admits only Seedance 2.0 full image-to-video. Mini/Fast
+    // client preference must never claim processedUpload for this path.
+    // Exact Seedance 2.0 full endpoint only (cost guard shares the same id).
+    const model = modelForPrivateLive(modelPref);
+    if (model !== privateLiveSeedanceModel(modelPref)) {
+      return err(
+        {
+          error: "Private live model selection failed closed",
+          code: "INVALID_REQUEST",
+          model,
+          session: publicSession(session),
+        },
+        500
+      );
+    }
+    // USD paid ceiling defaults to zero and fails closed before durable
+    // reserve and before any provider call. Estimated is labeled; actual is
+    // never invented from the planning rate.
+    const paidCeilingUsd = defaultPaidCeilingUsdFromEnv();
+    const costAdmission = tryReservePaidCeilingUsd({
+      userId: authUser.id,
+      ceilingUsd: paidCeilingUsd,
+      durationSec: secs,
+      resolution,
+      modelId: model,
+      idempotencyKey,
+    });
+    if (!costAdmission.ok) {
+      const code =
+        costAdmission.code === "PAID_CEILING_EXHAUSTED"
+          ? ("PAID_CEILING_EXHAUSTED" as const)
+          : costAdmission.code === "PAID_CEILING_UNAVAILABLE"
+            ? ("PAID_CEILING_UNAVAILABLE" as const)
+            : ("PAID_CEILING_ZERO" as const);
+      return err(
+        {
+          error: costAdmission.error,
+          code,
+          model,
+          session: publicSession(session),
+        },
+        403
+      );
+    }
+    let paidCeilingHeld = !costAdmission.idempotent;
+    const releasePaidCeilingIfHeld = () => {
+      if (!paidCeilingHeld) return;
+      releasePaidCeilingUsd({
+        userId: authUser.id,
+        estimatedJobUsd: costAdmission.estimatedJobUsd,
+        idempotencyKey,
+      });
+      paidCeilingHeld = false;
+    };
     // Private Free live: consume one process-local admission slot after access
     // is live and before durable reserve/provider work. Durable wallet +
     // reservation remains the real cross-instance spend authority.
@@ -663,6 +723,7 @@ export async function POST(req: Request) {
         privateLive.budgetMax
       );
       if (!consume.ok) {
+        releasePaidCeilingIfHeld();
         return err(
           {
             error:
@@ -680,6 +741,7 @@ export async function POST(req: Request) {
       effectSlug: preset.slug,
     });
     if (!reserved.ok) {
+      releasePaidCeilingIfHeld();
       const status =
         reserved.code === "INSUFFICIENT_CREDITS"
           ? 402
@@ -705,7 +767,19 @@ export async function POST(req: Request) {
       plan: reserved.reservation.planId,
       credits: reserved.availableCredits,
     };
+    const preProviderReleaseReasons = new Set([
+      "retry_claim_rejected",
+      "force_fail",
+      "invalid_image",
+      "empty_image",
+      "deadline_before_upload",
+      "deadline_before_generation",
+      "unexpected_exit_safety_net",
+    ]);
     const releaseReservation = async (reason: string): Promise<boolean> => {
+      if (preProviderReleaseReasons.has(reason)) {
+        releasePaidCeilingIfHeld();
+      }
       const target = reservationLife.get() ?? reserved.reservation;
       const released = await reservationLife.release(reason);
       if (released.skipped) {
@@ -713,15 +787,7 @@ export async function POST(req: Request) {
         return false;
       }
       if (!released.ok) {
-        const confirmedPreOutput = new Set([
-          "retry_claim_rejected",
-          "force_fail",
-          "invalid_image",
-          "empty_image",
-          "deadline_before_upload",
-          "deadline_before_generation",
-          "unexpected_exit_safety_net",
-        ]).has(reason);
+        const confirmedPreOutput = preProviderReleaseReasons.has(reason);
         const recorded = confirmedPreOutput
           ? await recordConfirmedPreOutputFailure(target, {
               eventId: reconciliationEventId(
@@ -761,10 +827,6 @@ export async function POST(req: Request) {
     };
     await saveSession(session);
 
-    const model = modelForTier({
-      freeTier: false,
-      prefer: modelPref as ModelPreference,
-    });
     // Private Preview results are copied into authenticated, server-owned
     // storage. They are not public Free/T6 deliverables and never use a raw
     // provider URL as the customer result.
@@ -1087,6 +1149,8 @@ export async function POST(req: Request) {
       } catch {
         /* best-effort */
       }
+      // Provider work completed — keep the estimated USD hold (do not invent actual).
+      paidCeilingHeld = false;
       const payload: GenerateSuccess = {
         // Private Preview returns only the short-lived URL for Pikbo-owned
         // storage. The raw provider URL never crosses the response boundary.
@@ -1110,6 +1174,7 @@ export async function POST(req: Request) {
         creditsOutcome: "10 used",
         processedUpload: true,
         privateResult: true,
+        costAudit: costAuditForResponse(costAdmission.audit),
       };
       return NextResponse.json(payload);
     } catch (e) {

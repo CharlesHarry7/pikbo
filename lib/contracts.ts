@@ -91,6 +91,29 @@ export type GenerateSuccess = {
   uploadIgnoredReason?: string;
   /** True only for an authenticated Preview result saved in Pikbo-owned storage. */
   privateResult?: boolean;
+  /**
+   * Honest USD cost audit for private Seedance 2.0 live jobs.
+   * estimated/ceiling are planning labels; actual is null unless provider-reported.
+   */
+  costAudit?: {
+    modelId: string;
+    estimatedUsd: {
+      amountUsd: number;
+      kind: "estimated";
+      label: "estimated";
+    };
+    ceilingRemainingUsd: {
+      amountUsd: number;
+      kind: "ceiling";
+      label: "ceiling";
+    };
+    actualUsd: {
+      amountUsd: number;
+      kind: "actual";
+      label: "actual";
+    } | null;
+    note: string;
+  };
 };
 
 export type GenerateErrorBody = {
@@ -99,6 +122,9 @@ export type GenerateErrorBody = {
     | "INSUFFICIENT_CREDITS"
     | "AUTH_REQUIRED"
     | "LIVE_ACCESS_REQUIRED"
+    | "PAID_CEILING_ZERO"
+    | "PAID_CEILING_EXHAUSTED"
+    | "PAID_CEILING_UNAVAILABLE"
     | "DURABLE_CREDITS_UNAVAILABLE"
     | "RESERVATION_FAILED"
     | "DELIVERY_PIPELINE_UNAVAILABLE"
