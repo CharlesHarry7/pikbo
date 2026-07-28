@@ -15,24 +15,15 @@ Grok **不能**远程启动你的进程——只能把任务写在这里；**你
 
 ```yaml
 id: WQ-2026-07-28-12
-status: open
+status: done
 priority: P0
 assignee: workbuddy
 branch: agent/workbuddy/seo-baseline-2026-07-28
 deliverable: docs/evidence/WORKBUDDY_SEO_BASELINE_2026-07-28.md
-must_include:
-  - page URL and Beijing timestamp for every finding
-  - AITDK category results, not only the total score
-  - GSC indexed/not-indexed reasons, impressions, clicks and CTR
-  - sitemap, video, structured-data, links and trust evidence
-  - screenshot/export path and retest state
-do_not:
-  - request indexing or submit directories
-  - change business code, production configuration or secrets
-  - touch database, Vercel, Supabase, Stripe or main
-  - bypass login, permission prompts or CAPTCHA
 result: |
-  (WB 填：commit SHA、PR、证据与阻塞)
+  Done — PR #33 merged (SHA 56f119b). 16 impressions / 0 clicks / avg pos 4.1;
+  GSC 30 indexed / 67 not (data 7/24); seven-URL sitemap confirmed.
+  STATUS.md WB-SEO-BASELINE = done. WORK_QUEUE was stale; updated 2026-07-28.
 ```
 
 ### WQ-2026-07-27-10 · 收集 GSC / AITDK / 哥飞原始证据
@@ -64,25 +55,17 @@ result: |
 
 ```yaml
 id: WQ-2026-07-27-11
-status: queued_after_baseline
+status: done
 priority: P0
 assignee: workbuddy
-why: 历史报告记录了 submitted，但没有可审计 published / verified backlink URL
-inputs:
-  - docs/growth/DIRECTORY_LOG.md
-  - docs/growth/runs/*
-deliverables:
-  - public_listing_url
-  - checked_at
-  - publication_status: published | not_found | pending
-  - backlink_status: verified_backlink | no_crawlable_link | not_applicable
-  - screenshot or public URL evidence
-do_not:
-  - 提交新的泛 AI 目录
-  - 把 submitted/pending 计为 backlink
-  - 绕过登录、验证码或付费墙
 result: |
-  (WB 填)
+  2026-07-28 backlink audit complete (agent/workbuddy/backlink-audit).
+  9 submissions verified: 0 published / 0 verified_backlink / 1 site_error.
+  Root cause: PIKBO_GROWTH_EMAIL unset, niche mismatch, Tally forms not ingested.
+  Report: docs/growth/runs/BACKLINK-AUDIT-20260728-report.md
+  DIRECTORY_LOG updated with per-site audit results.
+  Recommendation: pause generic AI directory auto-submit; resume only with
+  boss-approved toy/collectible/ecommerce-seller directory list + PIKBO_GROWTH_EMAIL.
 ```
 
 ---

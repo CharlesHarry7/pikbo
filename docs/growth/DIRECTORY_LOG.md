@@ -30,15 +30,22 @@
 
 ---
 
-## 待核验提交列表
+## 2026-07-28 backlink 审计（WorkBuddy）
 
-1. aitoolsdirectory.com  
-2. appsandwebsites.com  
-3. aisuperhub.io  
-4. library.phygital.plus  
-5. infrabase.ai  
+核验全部 9 处历史提交，结果：**0/9 published，0/9 verified_backlink**。
 
-**核验要求：** 找到站内公开 Pikbo listing URL 后将状态改为
-`published`；页面含可抓取 Pikbo 链接且复查成功后才改为
-`verified_backlink`。未来有 Analytics 时，referral session 另行记录，不与
-backlink 混为一项。
+| # | 站 | 审计结果 | 公开 listing | backlink |
+|---|-----|---------|:---:|:---:|
+| 1 | aitoolsdirectory.com | 搜索无结果 | ✗ | ✗ |
+| 2 | appsandwebsites.com | "No posts found" | ✗ | ✗ |
+| 3 | aisuperhub.io | 首页无 listing | ✗ | ✗ |
+| 4 | library.phygital.plus | 空页面 | ✗ | ✗ |
+| 5 | infrabase.ai | 品类不匹配，无 listing | ✗ | ✗ |
+| 6 | insidr.ai | /ai-tools/pikbo/ → 404 | ✗ | ✗ |
+| 7 | freeaio.com | 搜索零命中 | ✗ | ✗ |
+| 8 | ai-hunter.io | WordPress 致命错误，站点宕机 | ✗ | ✗ |
+| 9 | aimarketing.directory | Tally 表单提交，目录无 listing | ✗ | ✗ |
+
+**审计报告：** `docs/growth/runs/BACKLINK-AUDIT-20260728-report.md`
+**根因：** PIKBO_GROWTH_EMAIL 未设置导致表单信息不完整；泛 AI 目录与潮玩品类不匹配。
+**决策：** 暂停泛 AI 目录提交（WQ-2026-07-27-08 paused）。恢复需老板批准限定潮玩目录 + PIKBO_GROWTH_EMAIL 配置。
