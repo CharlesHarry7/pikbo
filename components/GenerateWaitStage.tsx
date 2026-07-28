@@ -86,6 +86,7 @@ export function GenerateWaitStage({
   image,
   effectLabel,
   onCancel,
+  recoveryChecking = false,
   compact = false,
   className = "",
 }: {
@@ -95,6 +96,8 @@ export function GenerateWaitStage({
   image?: string | null;
   effectLabel?: string | null;
   onCancel?: () => void;
+  /** The original POST is slow; read the same owner-only durable task. */
+  recoveryChecking?: boolean;
   compact?: boolean;
   className?: string;
 }) {
@@ -151,7 +154,7 @@ export function GenerateWaitStage({
           compact ? "text-sm" : "text-base sm:text-lg"
         }`}
       >
-        {phase.title}
+        {recoveryChecking ? "Tracking private task" : phase.title}
       </p>
       {effectLabel ? (
         <p className="relative mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--mint)]/90">
@@ -163,7 +166,9 @@ export function GenerateWaitStage({
           compact ? "text-[11px]" : "text-xs sm:text-[13px]"
         }`}
       >
-        {phase.detail}
+        {recoveryChecking
+          ? "Same private task · no second provider call or charge"
+          : phase.detail}
       </p>
 
       {/* Step rail — HF job stages */}
@@ -219,7 +224,12 @@ export function GenerateWaitStage({
         ) : null}
       </p>
 
-      {!demoMode && elapsed >= 90 ? (
+      {!demoMode && recoveryChecking ? (
+        <p className="relative mt-2 max-w-xs rounded-lg border border-[var(--mint)]/25 bg-[var(--mint)]/[0.07] px-3 py-1.5 text-[10px] leading-snug text-white/80">
+          Pikbo is following the same durable attempt. If the first response
+          stays open after saving, the owner result will recover here.
+        </p>
+      ) : !demoMode && elapsed >= 90 ? (
         <p className="relative mt-2 max-w-xs rounded-lg border border-amber-400/25 bg-amber-400/[0.07] px-3 py-1.5 text-[10px] leading-snug text-amber-100/90">
           Still working past 90s is normal for Mini. Don&apos;t close or refresh
           — cancel only if you must leave.

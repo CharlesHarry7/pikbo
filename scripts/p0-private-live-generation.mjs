@@ -10,6 +10,7 @@
  * 6. Failed live does not invent READY success (error path)
  * 7. Private process-local admission fuse exhausts
  * 8. Generate route wires privateLive + honesty fields
+ * 9. A slow POST recovers the same owner-only durable task without a new call
  *
  * Run: npm run p0-private-live-generation
  */
@@ -325,6 +326,50 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(downloads, /signedPrivateResultUrl/);
 }
 
+// ─── 12. Slow-response recovery is read-only, owner-only, and idempotent ──
+
+{
+  const results = read("lib/privateGenerationResults.ts");
+  assert.match(
+    results,
+    /getPrivateGenerationRecovery[\s\S]*created_by[\s\S]*idempotency_key/
+  );
+  assert.match(
+    results,
+    /status === "succeeded"[\s\S]*resultFromRow[\s\S]*state: "succeeded"/
+  );
+
+  const recoveryRoute = read("app/api/generations/recover/route.ts");
+  assert.match(recoveryRoute, /getAuthUserFromRequest/);
+  assert.match(recoveryRoute, /getPrivateGenerationRecovery/);
+  assert.match(recoveryRoute, /signedPrivateResultUrl/);
+  assert.match(recoveryRoute, /idempotentReplay:\s*true/);
+  assert.match(recoveryRoute, /processedUpload:\s*true/);
+  assert.match(recoveryRoute, /privateResult:\s*true/);
+  assert.match(recoveryRoute, /Cache-Control.*no-store/);
+  assert.doesNotMatch(
+    recoveryRoute,
+    /reserveStrictLiveGeneration|invokeReservedProvider|fal\.subscribe|providerOutputUrl/
+  );
+
+  const client = read("lib/generateClient.ts");
+  assert.match(client, /pollDurableGenerateRecovery/);
+  assert.match(client, /\/api\/generations\/recover\?idempotencyKey=/);
+  assert.match(client, /Promise\.race/);
+  assert.match(
+    client,
+    /recoveryController\.abort\(\)[\s\S]*primaryController\.abort\(\)/
+  );
+  assert.match(
+    client,
+    /no second generation was started|no second provider job/
+  );
+
+  const create = read("components/CreateStudio.tsx");
+  assert.match(create, /recoveringSavedResult/);
+  assert.match(create, /does not start another generation or charge again/);
+}
+
 console.log(
-  "p0-private-live-generation: PASS (R0 · owned upload provider input · private Supabase object before capture · owner download · no raw provider URL · refund honesty)"
+  "p0-private-live-generation: PASS (R0 · owned upload provider input · private Supabase object before capture · owner download · no raw provider URL · refund honesty · durable slow-response recovery)"
 );

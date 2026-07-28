@@ -281,6 +281,7 @@ export function CreateStudio({
   const [resultResolution, setResultResolution] = useState<string | null>(null);
   const [presetFilter, setPresetFilter] = useState("");
   const [elapsed, setElapsed] = useState(0);
+  const [recoveringSavedResult, setRecoveringSavedResult] = useState(false);
   const [copied, setCopied] = useState(false);
   // PRD soft-launch §3/§5: user must confirm rights before submitting.
   const [ownsRights, setOwnsRights] = useState(false);
@@ -332,6 +333,7 @@ export function CreateStudio({
     if (!ctrl) return;
     ctrl.abort();
     generateAbortRef.current = null;
+    setRecoveringSavedResult(false);
     // Immediate Wave B settlement until the aborted POST resolves (also refundUnconfirmed).
     setLastRequestCreditState("refund unconfirmed");
     toast(
@@ -766,6 +768,7 @@ export function CreateStudio({
     setLastRequestCreditState(null);
     setShowPaywall(false);
     setElapsed(0);
+    setRecoveringSavedResult(false);
     setStatus("generating");
     // Abort any prior in-flight POST before starting a new one.
     generateAbortRef.current?.abort();
@@ -811,8 +814,12 @@ export function CreateStudio({
         maxRetries: 1,
         fallbackImage: useAsset ? fallbackStill : undefined,
         signal: abortCtrl.signal,
+        onRecoveryState: (state) => {
+          setRecoveringSavedResult(state !== "recovered");
+        },
       }
     );
+    setRecoveringSavedResult(false);
     // Keep the bearer when the server rejected work before the child claim
     // (upload/rate/reserve preflight), or when transport failed. Clear it after
     // success, an explicit retry rejection, or any provider-stage response.
@@ -2518,6 +2525,7 @@ export function CreateStudio({
                 image={image}
                 effectLabel={viralName(preset.slug, preset.name)}
                 onCancel={cancelInFlightGenerate}
+                recoveryChecking={recoveringSavedResult}
               />
             )}
             {(status === "done" || status === "error") && videoUrl && (
@@ -2990,10 +2998,15 @@ export function CreateStudio({
               <div className="flex flex-col items-center p-10 text-center">
                 <div className="h-12 w-12 animate-spin rounded-full border-2 border-[var(--mint)] border-t-transparent" />
                 <p className="mt-5 font-display text-lg font-bold uppercase tracking-tight text-white">
-                  Making your clip… {elapsed}s
+                  {recoveringSavedResult
+                    ? "Tracking your private task"
+                    : "Making your clip…"}{" "}
+                  {elapsed}s
                 </p>
                 <p className="mt-2 max-w-xs text-xs text-[var(--fg-muted)]">
-                  Live jobs take a bit. Cached demos come back faster.
+                  {recoveringSavedResult
+                    ? "Pikbo is reading the same durable task. This does not start another generation or charge again."
+                    : "Live jobs take a bit. Cached demos come back faster."}
                 </p>
                 <button
                   type="button"
