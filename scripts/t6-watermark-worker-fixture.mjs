@@ -8,6 +8,7 @@ import {
   createServerOwnedT6Input,
   canServeVerifiedT6Derivative,
   hasOnlyPublicResolvedAddresses,
+  isPublicProviderOutputUrl,
   isVerifiedT6DerivativeForJob,
   runT6PipelineWithInjectedRunner,
   t6DerivativeObjectKey,
@@ -30,6 +31,19 @@ const objectKey = t6DerivativeObjectKey(job);
 const ownedDeliveryPath = t6OwnedDeliveryPath(objectKey);
 assert.ok(ownedDeliveryPath);
 
+const pixelProof = {
+  algorithm: "decoded-roi-diff-v1",
+  watermarkDetected: true,
+  sampledFrames: 4,
+  sampledPixels: 92160,
+  region: { x: 480, y: 1184, width: 240, height: 96 },
+  overlayMeanDelta: 24,
+  controlMeanDelta: 1,
+  overlayChangedRatio: 0.2,
+  controlChangedRatio: 0.01,
+  overlayPeakDelta: 255,
+};
+
 function runner(overrides = {}) {
   return {
     async fetchServerOwnedOutput() {
@@ -46,11 +60,20 @@ function runner(overrides = {}) {
       assert.ok(args.includes("comment=PIKBO baked watermark"));
       return Buffer.concat([Buffer.from("fixture:mp4:PIKBO_BAKED_MARK:"), input]);
     },
-    async probeMp4(output) {
+    async probeMp4(output, kind) {
       return {
         formatName: "mov,mp4,m4a,3gp,3g2,mj2",
-        bakedMarkSignal: output.includes(Buffer.from("PIKBO_BAKED_MARK")),
+        durationSeconds: 5,
+        width: 720,
+        height: 1280,
+        videoCodec: "h264",
+        bakedMarkSignal:
+          kind === "derivative" &&
+          output.includes(Buffer.from("PIKBO_BAKED_MARK")),
       };
+    },
+    async proveWatermarkPixels() {
+      return pixelProof;
     },
     async writeOwnedDerivative({ objectKey: key }) {
       return { deliveryPath: t6OwnedDeliveryPath(key) };
@@ -65,6 +88,12 @@ assert.equal(succeeded.objectKey, objectKey);
 assert.equal(succeeded.deliveryPath, ownedDeliveryPath);
 assert.notEqual(succeeded.sourceChecksum, succeeded.outputChecksum, "derivative differs from source");
 assert.equal(succeeded.probe?.bakedMarkSignal, true, "runner probe observes baked mark signal");
+assert.equal(succeeded.sourceProbe?.bakedMarkSignal, false);
+assert.equal(
+  succeeded.pixelProof?.watermarkDetected,
+  true,
+  "decoded-pixel comparison observes the baked mark region"
+);
 assert.equal(
   isVerifiedT6DerivativeForJob({
     jobId: job.jobId,
@@ -158,6 +187,66 @@ assert.equal(
   "delivery gate rejects equal source/output checksums"
 );
 
+const missingPixelMark = await runT6PipelineWithInjectedRunner({
+  job,
+  runner: runner({
+    async proveWatermarkPixels() {
+      return {
+        ...pixelProof,
+        watermarkDetected: false,
+        overlayMeanDelta: 1,
+        overlayChangedRatio: 0.001,
+      };
+    },
+  }),
+});
+assert.equal(missingPixelMark.status, "failed");
+assert.equal(
+  missingPixelMark.errorCode,
+  "WATERMARK_PIXEL_PROOF_FAILED",
+  "metadata without a decoded pixel delta never unlocks delivery"
+);
+
+const durationMismatch = await runT6PipelineWithInjectedRunner({
+  job,
+  runner: runner({
+    async probeMp4(output, kind) {
+      return {
+        formatName: "mov,mp4,m4a,3gp,3g2,mj2",
+        durationSeconds: kind === "source" ? 5 : 8,
+        width: 720,
+        height: 1280,
+        videoCodec: "h264",
+        bakedMarkSignal:
+          kind === "derivative" &&
+          output.includes(Buffer.from("PIKBO_BAKED_MARK")),
+      };
+    },
+  }),
+});
+assert.equal(durationMismatch.status, "failed");
+assert.equal(durationMismatch.errorCode, "MEDIA_SHAPE_MISMATCH");
+
+const resolutionMismatch = await runT6PipelineWithInjectedRunner({
+  job,
+  runner: runner({
+    async probeMp4(output, kind) {
+      return {
+        formatName: "mov,mp4,m4a,3gp,3g2,mj2",
+        durationSeconds: 5,
+        width: kind === "source" ? 720 : 1080,
+        height: kind === "source" ? 1280 : 1920,
+        videoCodec: "h264",
+        bakedMarkSignal:
+          kind === "derivative" &&
+          output.includes(Buffer.from("PIKBO_BAKED_MARK")),
+      };
+    },
+  }),
+});
+assert.equal(resolutionMismatch.status, "failed");
+assert.equal(resolutionMismatch.errorCode, "MEDIA_SHAPE_MISMATCH");
+
 const badSource = await runT6PipelineWithInjectedRunner({
   job,
   runner: runner({
@@ -176,16 +265,63 @@ assert.equal(badSource.status, "failed");
 assert.equal(badSource.errorCode, "SOURCE_CONTENT_TYPE");
 
 assert.equal(hasOnlyPublicResolvedAddresses(["8.8.8.8"]), true);
+assert.equal(
+  hasOnlyPublicResolvedAddresses(["2606:4700:4700::1111"]),
+  true,
+  "globally routed IPv6 remains allowed"
+);
 for (const nonPublic of [
   "203.0.113.8",
   "224.0.0.1",
   "240.0.0.1",
   "255.255.255.255",
   "::",
+  "fe80::1",
+  "fe90::1",
+  "fea0::1",
+  "feb0::1",
+  "fec0::1",
+  "fed0::1",
+  "feff::1",
   "ff02::1",
   "fc00::1",
+  "::ffff:127.0.0.1",
+  "::ffff:7f00:1",
+  "::ffff:0a00:1",
+  "64:ff9b::7f00:1",
+  "64:ff9b:1::1",
+  "64:ff9b:1:ffff::1",
+  "2001:db8::1",
 ]) {
   assert.equal(hasOnlyPublicResolvedAddresses([nonPublic]), false, `${nonPublic} must be blocked`);
+}
+for (const invalidAddress of [
+  "",
+  "not-an-ip",
+  "999.1.1.1",
+  "gggg::1",
+  "2606:4700::1111::1",
+]) {
+  assert.equal(
+    hasOnlyPublicResolvedAddresses([invalidAddress]),
+    false,
+    `${invalidAddress || "<empty>"} must fail closed`
+  );
+}
+for (const unsafeUrl of [
+  "https://[fe90::1]/output.mp4",
+  "https://[fea0::1]/output.mp4",
+  "https://[feb0::1]/output.mp4",
+  "https://[fec0::1]/output.mp4",
+  "https://[::ffff:7f00:1]/output.mp4",
+  "https://[::ffff:0a00:1]/output.mp4",
+  "https://[64:ff9b:1::1]/output.mp4",
+]) {
+  assert.equal(
+    isPublicProviderOutputUrl(unsafeUrl),
+    false,
+    `${unsafeUrl} must fail before any fetch`
+  );
 }
 
 console.log("t6-watermark-worker-fixture: PASS");

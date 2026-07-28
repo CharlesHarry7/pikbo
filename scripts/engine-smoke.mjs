@@ -3423,7 +3423,9 @@ assert.match(t6, /playerOverlayIsNotFileWatermark/);
 assert.doesNotMatch(t6, /PIKBO_T6_FILE_BAKE\s*===\s*["']1["']/);
 assert.match(t6, /t6WorkerReadiness|serverOwnedWorkerReady|blocked/);
 assert.match(t6, /bake_on_download|worker_configured/);
-assert.match(t6, /t6AllowsFreeDownloadAttempt|workerUrlConfigured/);
+assert.match(t6, /t6AllowsFreeDownloadAttempt|workerRequested/);
+assert.match(t6, /PIKBO_T6_BAKED_WATERMARK_WORKER/);
+assert.doesNotMatch(t6, /PIKBO_WATERMARK_WORKER_URL/);
 assert.match(t6Worker, /SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED = false/);
 assert.match(t6Worker, /createServerOwnedT6Input|ServerOwnedT6Input/);
 assert.match(t6Worker, /isPublicProviderOutputUrl/);
@@ -3445,15 +3447,26 @@ assert.match(downloadRouteSrc, /providerRequestId:\s*job\.requestId/);
 assert.match(t6Worker, /SERVER_WORKER_DISABLED/);
 assert.match(
   t6Worker,
-  /derivativeServingImplemented = false|storageAdapterImplemented = false/
+  /T6_DERIVATIVE_SERVING_IMPLEMENTED|T6_OWNED_STORAGE_ADAPTER_IMPLEMENTED/
 );
 assert.match(t6, /derivativeServingImplemented|storageAdapterImplemented/);
 assert.equal(
   fs.existsSync(join(root, "app/api/t6-derivatives")),
-  false,
-  "T6 must stay blocked until an owned derivative serving route is implemented"
+  true,
+  "T6 controlled derivative serving route source must exist"
 );
 assert.doesNotMatch(t6Worker, /fetch\(input\.providerOutputUrl/);
+const t6DerivativeRoute = fs.readFileSync(
+  join(root, "app/api/t6-derivatives/[hash]/route.ts"),
+  "utf8"
+);
+assert.match(t6DerivativeRoute, /readT6OwnedDerivative/);
+assert.match(t6DerivativeRoute, /getAuthUserFromRequest/);
+assert.match(t6DerivativeRoute, /canServeVerifiedT6Derivative/);
+assert.doesNotMatch(
+  t6DerivativeRoute,
+  /providerOutputUrl|videoUrl|NextResponse\.redirect/
+);
 const t6Fixture = join(root, "scripts/t6-watermark-worker-fixture.mjs");
 assert.match(
   fs.readFileSync(t6Fixture, "utf8"),
@@ -3462,6 +3475,12 @@ assert.match(
 execFileSync(process.execPath, ["--experimental-strip-types", t6Fixture], {
   stdio: "pipe",
 });
+const t6DeliverableProof = join(root, "scripts/t6-deliverable-proof.mjs");
+execFileSync(
+  process.execPath,
+  ["--experimental-strip-types", t6DeliverableProof],
+  { stdio: "pipe" }
+);
 assert.match(health, /t6Report|t6:/);
 assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),

@@ -22,11 +22,12 @@ export type T6Report = {
   tooling: {
     ffmpegHint: boolean;
     ffprobeHint: boolean;
-    workerUrlConfigured: boolean;
+    /** Operator request only; never equivalent to worker readiness. */
+    workerRequested: boolean;
     serverOwnedWorkerReady: boolean;
-    /** Hard false until /api/t6-derivatives exists. */
+    /** Controlled derivative route source exists; readiness still gates it. */
     derivativeServingImplemented: boolean;
-    /** Hard false until owned object storage adapter exists. */
+    /** True only when the owned storage adapter is configured. */
     storageAdapterImplemented: boolean;
   };
 };
@@ -43,9 +44,8 @@ export function t6ToolingProbe(): T6Report["tooling"] {
     ffprobeHint: process.env.PIKBO_FFPROBE_PATH
       ? process.env.PIKBO_FFPROBE_PATH.length > 0
       : false,
-    workerUrlConfigured: Boolean(
-      (process.env.PIKBO_WATERMARK_WORKER_URL || "").startsWith("http")
-    ),
+    workerRequested:
+      process.env.PIKBO_T6_BAKED_WATERMARK_WORKER === "1",
     serverOwnedWorkerReady: false,
     derivativeServingImplemented: false,
     storageAdapterImplemented: false,

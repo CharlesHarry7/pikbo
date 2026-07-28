@@ -18,7 +18,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | CTRL-RESET | Close stale PRs, close R2 and enforce one active task per agent | Codex | done | main via PR #45 | Isolated worktrees and the one-task queue are now mandatory |
 | R0-NET | Unexpected-exit reservation safety without double release/refund | Codex / Grok | done | main via PR #47 | GitHub CI #466 green; capture throw/failure withheld, 0 release calls, behavior test in real CI |
 | MOBILE-PROOF | Mobile Home → Project → Create truth and playback regression | Codex | done | main via PR #49 | GitHub CI #470 green; 390/768/1440 proof path, truth copy and mobile single-play verified |
-| T6-DERIVATIVE | Baked free watermark and controlled derivative download | Grok | doing | `agent/grok/t6-deliverable-proof` | Rebase latest main; real ffmpeg/ffprobe non-prod proof; raw file inaccessible |
+| T6-DERIVATIVE | Baked free watermark and controlled derivative download | Grok | review | `agent/grok/t6-deliverable-proof` | Real ffmpeg 6.0/ffprobe 4.4 non-prod pixel proof recorded; raw route remains fail-closed; production migration/shared storage/worker enablement still blocked |
 | WB-WAIT | No growth work before publishable product proof | WorkBuddy | blocked | none | #41/#46 closed; wait for explicit new queue row |
 
 Completion of an old row below does not authorize a new branch. Codex must add a row here first.
