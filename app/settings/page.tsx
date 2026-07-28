@@ -295,9 +295,19 @@ export default function SettingsPage() {
             <span className="font-semibold">{session?.planName ?? "—"}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--fg-muted)]">Credits (cookie)</span>
+            <span className="text-[var(--fg-muted)]">
+              Display credits (not live authority)
+            </span>
             <span className="font-semibold text-[var(--mint)]">
               {session?.credits ?? "—"}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[var(--fg-muted)]">Live spend authority</span>
+            <span className="text-right text-xs font-semibold text-[var(--fg-dim)]">
+              {session?.cookieIsLiveSpendAuthority === true
+                ? "cookie (legacy — unexpected)"
+                : "durable reserve or cached demo (R0)"}
             </span>
           </div>
           <div className="flex justify-between">
@@ -314,16 +324,24 @@ export default function SettingsPage() {
                   : !isFreePlan
                     ? "paid path · not Free trial"
                     : trialDone
-                      ? "exhausted · demos still free"
-                      : freeLive
-                        ? `~${clipsLeft} left · ${freeLive.resolution} ${freeLive.durationSec}s`
-                        : `~${clipsLeft} live left`}
+                      ? "display exhausted · demos still free"
+                      : freeLive && freeLive.liveEnabled === false
+                        ? `product caps ${freeLive.resolution} ${freeLive.durationSec}s · live blocked until T6`
+                        : freeLive
+                          ? `~${clipsLeft} left · ${freeLive.resolution} ${freeLive.durationSec}s when Live enabled`
+                          : `~${clipsLeft} display · live via durable reserve only`}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--fg-muted)]">Live clips left (est.)</span>
+            <span className="text-[var(--fg-muted)]">
+              Live clips left (est. when Live on)
+            </span>
             <span className="font-semibold">
-              {clipsLeft !== null ? clipsLeft : "—"}
+              {demoMode || (isFreePlan && freeLive?.liveEnabled === false)
+                ? "0 · Lab demos free"
+                : clipsLeft !== null
+                  ? clipsLeft
+                  : "—"}
             </span>
           </div>
           <div className="flex justify-between gap-4">

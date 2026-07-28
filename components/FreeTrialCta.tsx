@@ -73,6 +73,10 @@ export function FreeTrialCta({
     typeof me?.freeTrial?.clipsLeft === "number"
       ? me.freeTrial.clipsLeft
       : null;
+  /** R0/T6: do not advertise live Free Mini clips while liveEnabled is false. */
+  const freeLiveOpen = Boolean(
+    me?.freeTrial?.freeLive && me.freeTrial.freeLive.liveEnabled !== false
+  );
 
   // On homepage analytics paths, prefer on-page tool (哥飞: tool not jump-only).
   const onHome =
@@ -81,29 +85,41 @@ export function FreeTrialCta({
     path.includes("home") ||
     path.includes("product-rail") ||
     path.includes("seedance");
+  // Prefer Lab sample when Free live is blocked (honest soft-launch).
   const href =
-    trialDone && !demo
+    trialDone && !demo && freeLiveOpen
       ? "/pricing"
-      : demo
+      : trialDone && !demo
         ? FREE_TRIAL_TRY_HREF
-        : onHome
-          ? "/#home-tool"
-          : FREE_TRIAL_TRY_HREF;
+        : demo || !freeLiveOpen
+          ? FREE_TRIAL_TRY_HREF
+          : onHome
+            ? "/#home-tool"
+            : FREE_TRIAL_TRY_HREF;
   const label =
-    trialDone && !demo
+    trialDone && !demo && freeLiveOpen
       ? labelPlans ?? "Compare plans"
-      : demo
+      : demo || !freeLiveOpen
         ? labelDemo ?? "Try Lab sample"
         : labelTry ?? "Try free";
 
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
-      {!hideClipsChip && clipsLeft !== null && !demo && !trialDone ? (
+      {!hideClipsChip &&
+      clipsLeft !== null &&
+      !demo &&
+      !trialDone &&
+      freeLiveOpen ? (
         <span className="hidden text-[10px] text-white/40 sm:inline">
           ~{clipsLeft} Free Mini left
         </span>
       ) : null}
-      {!hideClipsChip && trialDone && !demo ? (
+      {!hideClipsChip && !demo && !freeLiveOpen ? (
+        <span className="hidden text-[10px] text-white/40 sm:inline">
+          Cached Lab free
+        </span>
+      ) : null}
+      {!hideClipsChip && trialDone && !demo && freeLiveOpen ? (
         <span className="hidden text-[10px] font-semibold text-amber-200/90 sm:inline">
           Free Mini used
         </span>

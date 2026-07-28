@@ -58,6 +58,37 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
   const signed = Boolean(session.signedIn && session.durable);
   const trialDone = freeTrialExhausted(session);
   const freeLive = session.freeTrial?.freeLive;
+  /** R0/T6: Free live Mini is product intent only until liveEnabled. */
+  const freeLiveOpen = Boolean(freeLive && freeLive.liveEnabled !== false);
+  const cookieIsLive = session.cookieIsLiveSpendAuthority === true;
+
+  const compactTitle = demo
+    ? `${credits} credits · demo-cached free (upload not processed)`
+    : trialDone
+      ? `Free Mini display balance ${credits} cr · cached demos still free · compare plans`
+      : signed
+        ? cookieIsLive
+          ? `${credits} durable audit · cookie live (legacy)`
+          : `${credits} durable wallet (audit) · live needs atomic reserve`
+        : freeLiveOpen
+          ? `${credits} cr · Free Mini ${freeLive!.resolution} ${freeLive!.durationSec}s when Live is enabled`
+          : freeLive
+            ? `${credits} cr · Free Mini product caps (${freeLive.resolution} ${freeLive.durationSec}s) · live blocked until T6 · cached demos free`
+            : `${credits} credits · cached demos free`;
+
+  const fullTitle = demo
+    ? `${session.planName} · demo-cached · live needs ${perJob} credits each when enabled`
+    : trialDone
+      ? `Free Mini display exhausted · cached demos still free · compare plans`
+      : signed
+        ? cookieIsLive
+          ? `Signed-in · durable shadow ${credits} cr · cookie still generate authority (legacy)`
+          : `Signed-in · durable audit ${credits} cr · live requires atomic reserve (cookie is not live-spend authority)`
+        : freeLiveOpen
+          ? `Free Mini · ${freeLive!.resolution} · ${freeLive!.durationSec}s · ~${clips} live when enabled · on-player mark`
+          : freeLive
+            ? `Free Mini product caps · ${freeLive.resolution} · ${freeLive.durationSec}s · live blocked until T6 · cached demos free`
+            : `${session.planName} · ${credits} credits · cached demos free`;
 
   if (compact) {
     return (
@@ -68,17 +99,7 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
             ? "border-amber-400/50 text-amber-300"
             : "border-white/10 text-[var(--mint)]"
         }`}
-        title={
-          demo
-            ? `${credits} credits · demo-cached free`
-            : trialDone
-              ? `Free Mini trial used · ${credits} cr left · upgrade or wait refresh`
-              : signed
-                ? `${credits} durable shadow · cookie still generates`
-                : freeLive
-                  ? `${credits} cr · Free Mini ${freeLive.resolution} ${freeLive.durationSec}s`
-                  : `${credits} credits`
-        }
+        title={compactTitle}
       >
         {credits}
       </Link>
@@ -93,17 +114,7 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
           ? "border-amber-400/45 bg-amber-400/10 text-[var(--fg)]"
           : "border-white/12 bg-white/[0.04] text-[var(--fg-muted)] hover:border-[var(--mint)]/35 hover:text-[var(--fg)]"
       }`}
-      title={
-        demo
-          ? `${session.planName} · demo-cached · live needs ${perJob} credits each`
-          : trialDone
-            ? `Free Mini trial exhausted · cached demos still free · compare plans`
-            : signed
-              ? `Signed-in · durable shadow ${credits} cr · ~${clips} live · cookie still authoritative for generate`
-              : freeLive
-                ? `Free Mini · ${freeLive.resolution} · ${freeLive.durationSec}s · ~${clips} live · on-player mark`
-                : `${session.planName} · ${credits} credits · ~${clips} live jobs`
-      }
+      title={fullTitle}
     >
       <span
         className={`font-bold tabular-nums ${
@@ -129,8 +140,12 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
         <span className="rounded-full bg-[var(--grad-soft)] px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-[var(--fg)]">
           {session.planName}
         </span>
-      ) : (
+      ) : freeLiveOpen ? (
         <span className="text-[10px] text-[var(--fg-dim)]">~{clips}</span>
+      ) : (
+        <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-[var(--fg-dim)]">
+          Lab
+        </span>
       )}
     </Link>
   );

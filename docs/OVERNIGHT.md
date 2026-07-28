@@ -173,7 +173,8 @@
 132. [x] Process-memory R1c fallback journal + downloads WITHHELD honesty + health localJournal
 133. [x] Seller Pack frozen contract + cached golden-path smoke (0 provider · Free Mini block)
 134. [x] /api/me R0 honesty: cookieIsLiveSpendAuthority=false · Free liveEnabled=false · CI api-golden
-135. 下一拍：R1c/R1a SQL non-prod rehearsal (boss) · Mode A Vercel · T6 bake
+135. [x] CreditsBadge/FreeTrialCta/Settings residual: no cookie live claim · Free live blocked-until-T6
+136. 下一拍：R1c/R1a SQL non-prod rehearsal (boss) · Mode A Vercel · T6 bake
 
 ### 老板醒来验收
 
@@ -187,8 +188,8 @@
 
 ## Grok 本拍状态（3 行）
 
-- /api/me no longer claims cookie live authority; freeLive.liveEnabled=false + freeLiveProvider blocked-until-t6.
-- docs/ci runs seller-pack-api-golden against prod server (no FAL); engine-smoke locks me honesty.
+- CreditsBadge + FreeTrialCta + Settings: no “cookie still generates / authoritative”; Free Mini live chips only when liveEnabled.
+- Soft-launch CTAs default to Lab sample while Free live is T6-blocked; engine-smoke locks residual R0 copy.
 - Next: R1c/R1a SQL non-prod apply (boss) · Mode A Vercel · T6 bake · live CI workflow re-copy.
 
 

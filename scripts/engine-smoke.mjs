@@ -454,6 +454,28 @@ assert.doesNotMatch(
 assert.match(meRouteSrc, /cookieIsLiveSpendAuthority:\s*false/);
 assert.match(meRouteSrc, /liveSpendAuthority|durable-reserve/);
 assert.match(meRouteSrc, /freeLiveProvider:\s*"blocked-until-t6"|liveEnabled:\s*false/);
+// Badge / FreeTrialCta / Settings must not re-claim cookie live authority
+const creditsBadgeR0 = fs.readFileSync(
+  join(root, "components/CreditsBadge.tsx"),
+  "utf8"
+);
+assert.doesNotMatch(
+  creditsBadgeR0,
+  /cookie still generates|cookie still authoritative for generate/
+);
+assert.match(
+  creditsBadgeR0,
+  /cookieIsLiveSpendAuthority|liveEnabled|atomic reserve|blocked until T6/
+);
+const freeTrialCtaR0 = fs.readFileSync(
+  join(root, "components/FreeTrialCta.tsx"),
+  "utf8"
+);
+assert.match(freeTrialCtaR0, /liveEnabled|Cached Lab free|Try Lab sample/);
+assert.match(
+  fs.readFileSync(join(root, "app/settings/page.tsx"), "utf8"),
+  /cookieIsLiveSpendAuthority|Display credits \(not live authority\)|blocked until T6/
+);
 // meClient preserves cancel refund policy across PublicSession merges
 assert.match(
   fs.readFileSync(join(root, "lib/meClient.ts"), "utf8"),

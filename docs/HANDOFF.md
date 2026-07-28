@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] CreditsBadge / FreeTrialCta / Settings residual R0 honesty
+- Removed “cookie still generates / authoritative for generate” from CreditsBadge tooltips.
+- Free Mini live chip only when `freeLive.liveEnabled !== false`; otherwise Lab/cached-only copy (blocked until T6).
+- FreeTrialCta defaults to Lab sample while Free live is closed; Settings shows display credits + live spend authority.
+- PASS: engine-smoke + seller-pack-cached-smoke + recovery-qa + typecheck.
+
 ### 2026-07-28 — [grok] Login R0 honesty + Create sticky demo credits + API golden CI
 - Login / LoginForm: guests = cached Lab only (0 credits · upload not processed); no “softLive generate” or cookie live-spend claim.
 - Create mobile sticky strip: `0 credits · cached prototype` in demoMode vs “when Live”; `data-create-sticky=mobile`.
