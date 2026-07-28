@@ -4,12 +4,33 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] PR #40 integration review + real CI gate
+- Merged Grok's T5/R0 pure-engine and source-lock tests without overwriting the newer Seller Pack handoff; the tests prove code-side fail-closed/refund/idempotency behavior only, not applied Supabase production readiness.
+- Synced the real `.github/workflows/ci.yml` to the reviewed template so recovery, T5/R0, showcase, SEO, Seller Pack and copy checks run on GitHub; removed the old `critical-path || true` false-green path.
+- Cleared the pre-existing `HomeViralWall` unused-index warning so strict ESLint is green.
+- PASS: T5/R0 smokes, recovery QA/ledger/retry/reconciliation, Seller Pack pure + API golden, engine/showcase/SEO/copy contracts, link/critical path, typecheck, strict lint and 193-route production build.
+- Remaining external truth: local env names are present, but Vercel env, applied T5/R1 SQL, Email Magic Link and callback behavior still require console/integration verification; no secret, database, provider spend, Stripe, DNS or public-release action was taken.
+
+---
+
 ### 2026-07-28 — [gpt] SELLER-GOLD final verification
 - PR #39 is synchronized with `main@24949a0`; the cached listing/reveal/hook trio, partial-success retention, failed-child retry boundary and zero-provider/zero-credit contract are verified.
 - PASS: typecheck; lint (0 errors); 193-route build; engine, SEO, Seller Pack contract/API golden, recovery ledger/retry/reconciliation, link and fail-closed critical-path checks.
 - GitHub CI run #445 and the Vercel status check are green. No provider key, paid generation, database, Stripe, DNS, public deployment or GSC action was used.
 
 ---
+### 2026-07-28 — [grok] T5+R0 critical-path: refund, idempotency, auth fail-closed
+- `npm run t5-r0-critical-path`: R0 pure gate; generate/image source order (access→reserve→fal); release+refundUnconfirmed honesty; engine release restores balance; settle idempotent; magic-link `NOT_CONFIGURED`; CI template fail-closed.
+- Boss blockers explicit in `docs/BLOCKERS_REQUEST.md` § T5 A–E (keys, SQL, Auth URL, email, workflow scope).
+- PASS: t5-r0-critical-path · t5-auth-credits-smoke · recovery-qa.
+- Evidence: `docs/evidence/T5_R0_CRITICAL_PATH_2026-07-28.md`.
+
+### 2026-07-28 — [grok] T5 pure engine + auth fail-closed smoke (Codex DISPATCH)
+- Branch `agent/grok/t5-auth-credits-smoke`: `npm run t5-auth-credits-smoke` (strip-types import of `lib/durableCredits/engine.ts`).
+- Covers reserve/settle/release/idempotent settle, guest migrate once, discard cookie when durable non-empty, expire stale, authConfig disabled default, T5+R1 SQL present, liveReservation no session debit.
+- Wired into `docs/ci/github-actions-ci.yml` (live workflow still needs boss `workflow` scope).
+- Evidence: `docs/evidence/T5_AUTH_CREDITS_SMOKE_2026-07-28.md`.
+- PASS: t5-auth-credits-smoke · recovery-qa · engine-smoke.
 
 ### 2026-07-28 — [grok] Residual R0 cookie-authority honesty (Profile / claim / Settings / badge)
 - ProfilePanel + Settings: cookie is **not** live-spend authority; live needs durable atomic reserve or labeled cached demos.

@@ -23,6 +23,8 @@
     "recovery-ledger": "node scripts/recovery-ledger.mjs",
     "recovery-retry-deadline": "node scripts/recovery-retry-deadline.mjs",
     "recovery-reconciliation": "node scripts/recovery-reconciliation.mjs",
+    "t5-auth-credits-smoke": "node --experimental-strip-types scripts/t5-auth-credits-smoke.mjs",
+    "t5-r0-critical-path": "node --experimental-strip-types scripts/t5-r0-critical-path.mjs",
     "seller-pack-golden-path": "node scripts/seller-pack-cached-smoke.mjs",
     "seller-pack-api-golden": "node scripts/seller-pack-api-golden.mjs",
     "softlive-checklist": "bash scripts/softlive-checklist.sh",

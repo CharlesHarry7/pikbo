@@ -42,6 +42,12 @@ jobs:
       - name: Recovery ledger (R1a atomic reserve/capture fixture)
         run: npm run recovery-ledger
 
+      - name: T5 auth + durable credits pure engine
+        run: npm run t5-auth-credits-smoke
+
+      - name: T5 + R0 critical path (refund · idempotency · auth fail-closed)
+        run: npm run t5-r0-critical-path
+
       - name: Recovery retry + deadline (R1b video + image)
         run: npm run recovery-retry-deadline
 
