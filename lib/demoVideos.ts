@@ -25,7 +25,13 @@ export type DemoVideo = {
  * publishedAt notes:
  * - First six: homepage demo theatre commit 2026-07-22T19:57:06+08:00
  * - Mini lab six: Seedance Mini lab batch commit 2026-07-23T03:11:03+08:00
+ *
+ * Homepage Visual V2 posters (public/demos/posters/*) are frames extracted from
+ * each matching MP4 — never shared stills renamed across recipes.
  */
+/** Cinematic full-subject hero; not the first wall card (Orbit close-up). */
+export const HOME_HERO_DEMO_ID = "scout-story" as const;
+
 export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "orbit-cgi",
@@ -35,7 +41,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "A cached product-hero prototype for recipe preview.",
     preset: "floating-hero",
     ratio: "9:16",
-    poster: "/demos/orbit-still.webp",
+    poster: "/demos/posters/orbit-cgi.webp",
     mp4: "/demos/orbit-hyper-cgi.mp4",
     webm: "/demos/orbit-hyper-cgi.webm",
     accent: "#b8a3ff",
@@ -49,7 +55,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "A punchy reveal loop for Reels, Shorts, and listings.",
     preset: "blind-box-unboxing",
     ratio: "9:16",
-    poster: "/demos/moon-float.webp",
+    poster: "/demos/posters/moon-reveal.webp",
     mp4: "/demos/moon-box-reveal.mp4",
     webm: "/demos/moon-box-reveal.webm",
     accent: "#83f3d2",
@@ -63,7 +69,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Turn a shelf character into a tiny cinematic moment.",
     preset: "miniature-scene",
     ratio: "16:9",
-    poster: "/demos/scout-still.webp",
+    poster: "/demos/posters/scout-story.webp",
     mp4: "/demos/scout-story-mode.mp4",
     webm: "/demos/scout-story-mode.webm",
     accent: "#ffd36a",
@@ -77,7 +83,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Front-load the motion and make the first second count.",
     preset: "paparazzi-flash",
     ratio: "9:16",
-    poster: "/demos/beatbot-still.webp",
+    poster: "/demos/posters/beatbot-hook.webp",
     mp4: "/demos/beatbot-viral-hook.mp4",
     webm: "/demos/beatbot-viral-hook.webm",
     accent: "#ff6ea8",
@@ -91,7 +97,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Show the silhouette and finish without filming a turntable.",
     preset: "360-spin-showcase",
     ratio: "1:1",
-    poster: "/demos/scout-still.webp",
+    poster: "/demos/posters/scout-spin.webp",
     mp4: "/demos/scout-packshot-spin.mp4",
     webm: "/demos/scout-packshot-spin.webm",
     accent: "#ff9f6e",
@@ -105,7 +111,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Reuse one toy photo across a second sales-ready format.",
     preset: "mystery-box-reveal",
     ratio: "9:16",
-    poster: "/demos/beatbot-still.webp",
+    poster: "/demos/posters/beatbot-unboxed.webp",
     mp4: "/demos/beatbot-unboxed.mp4",
     webm: "/demos/beatbot-unboxed.webm",
     accent: "#74e4ff",
@@ -120,7 +126,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Dance loop for social posts.",
     preset: "make-figure-dance",
     ratio: "9:16",
-    poster: "/demos/orbit-still.webp",
+    poster: "/demos/posters/orbit-dance.webp",
     mp4: "/demos/orbit-dance.mp4",
     webm: "/demos/orbit-dance.mp4",
     accent: "#c8ff3d",
@@ -134,7 +140,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Boutique shelf glow.",
     preset: "display-case-glam",
     ratio: "9:16",
-    poster: "/demos/moon-float.webp",
+    poster: "/demos/posters/moon-glow.webp",
     mp4: "/demos/moon-glow.mp4",
     webm: "/demos/moon-glow.mp4",
     accent: "#b8a3ff",

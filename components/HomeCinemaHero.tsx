@@ -3,15 +3,27 @@
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
+import { HOME_HERO_DEMO_ID } from "@/lib/demoVideos";
 import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
 
+function pickHomeHeroItem(items: FeedItem[]) {
+  // Prefer a full-subject cinematic clip over the first wall card (Orbit close-up).
+  return (
+    items.find(
+      (candidate) =>
+        hasFeedVideo(candidate) && candidate.demo.id === HOME_HERO_DEMO_ID
+    ) ?? items.find(hasFeedVideo)
+  );
+}
+
 export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
-  const item = items.find(hasFeedVideo);
-  const recipeSlug = item?.recipeSlug ?? "floating-hero";
+  const item = pickHomeHeroItem(items);
+  const recipeSlug = item?.recipeSlug ?? "miniature-scene";
 
   return (
     <section
       data-home-hero="toy-cinema"
+      data-home-hero-demo={item?.demo?.id ?? HOME_HERO_DEMO_ID}
       className="relative isolate min-h-[calc(100svh-3rem)] overflow-hidden bg-[#050506] lg:min-h-[calc(100svh-3.5rem)]"
       aria-labelledby="home-hero-title"
     >
