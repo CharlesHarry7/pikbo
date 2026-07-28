@@ -19,6 +19,24 @@
 
 ---
 
+## 2026-07-28 WorkBuddy R0H Review 完成
+
+- **决策：** R0H health-truth 合约验证通过，R0H 从 `review` → `done`。
+- **验证结果：**
+  - health-truth-contract: 32/32 前置条件组合��过（5 项必须全 true 才 softLive=true）
+  - engine-smoke: PASS（含 health-truth-contract）
+  - typecheck (tsc --noEmit): PASS
+  - lint: 0 errors, 1 pre-existing warning
+  - build (next build): PASS — 193 routes
+- **执行动作：**
+  - 创建分支 `agent/workbuddy/r0h-review-verified`
+  - 更新 STATUS.md（R0H → done）、HANDOFF.md（追加验证证据）
+  - PR #36: https://github.com/CharlesHarry7/pikbo/pull/36
+  - SHA: 10dff50（含 STATUS 更新 + HANDOFF 追加）
+- **核心结论：** `/api/health` 的 `ready.softLive` 仅在 auth、Supabase atomic reservation、durable reconciliation、provider、server-owned deliverable 五项全部满足时才为 true。provider/session secrets 单独存在绝不会让 health 宣称 live generation。
+
+---
+
 ## 2026-07-27 沟通记录
 
 ### 09:00 — 谷歌收录查询
