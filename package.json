@@ -39,7 +39,8 @@
     "preflight-launch": "bash scripts/preflight-launch.sh",
     "mode-a-acceptance": "bash scripts/mode-a-acceptance.sh",
     "indexnow": "node scripts/indexnow-submit.mjs",
-    "r0-safety-net": "node --experimental-strip-types scripts/r0-safety-net.mjs"
+    "r0-safety-net": "node --experimental-strip-types scripts/r0-safety-net.mjs",
+    "p0-private-live-generation": "node --experimental-strip-types scripts/p0-private-live-generation.mjs"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.1",

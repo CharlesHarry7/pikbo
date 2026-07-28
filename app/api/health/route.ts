@@ -351,6 +351,32 @@ export async function GET() {
       durableReconciliationConfigured,
       serverOwnedDeliverableConfigured,
     },
+    /**
+     * Issue #54 private-beta live path (presence only — never allowlist emails).
+     * Invited owner live still needs auth + durable reserve + provider.
+     */
+    privateLiveBeta: (() => {
+      const enabled = process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1";
+      const allowlistConfigured = Boolean(
+        (process.env.PIKBO_PRIVATE_LIVE_ALLOWLIST || "").trim()
+      );
+      const budgetMax = Math.max(
+        0,
+        Math.floor(Number(process.env.PIKBO_PRIVATE_LIVE_BUDGET_MAX || "0"))
+      );
+      return {
+        enabled,
+        allowlistConfigured,
+        budgetMaxConfigured: budgetMax > 0,
+        budgetMax: budgetMax > 0 ? budgetMax : 0,
+        // Not ready until boss enables + allowlists + budget; runtime still needs auth/durable.
+        notes: [
+          "Set PIKBO_PRIVATE_LIVE_ENABLED=1 + ALLOWLIST + BUDGET_MAX for invited owner live",
+          "Does not enable anonymous provider spend",
+          "Free live download still requires server-owned T6 derivative when watermarked",
+        ],
+      };
+    })(),
     /** Live-readiness checklist (presence only — never echo secrets) */
     softLiveChecklist: {
       SESSION_SECRET: sessionSecret,

@@ -62,7 +62,9 @@ export type GenerateSuccess = {
   demoReason?:
     | "no_provider_key"
     | "anonymous_cached_only"
-    | "free_live_delivery_blocked";
+    | "free_live_delivery_blocked"
+    | "private_live_budget_exhausted"
+    | "private_live_not_invited";
   /**
    * Wave B — server-validated recipe slug actually used for this job.
    * Client must only label "server returned" when this field is present.
@@ -77,6 +79,14 @@ export type GenerateSuccess = {
    * (no second debit / no second fal call).
    */
   idempotentReplay?: boolean;
+  /**
+   * Honesty: whether the uploaded still was sent to the provider.
+   * false + demo:true means Lab cache — not a successful processing of the upload.
+   */
+  processedUpload?: boolean;
+  /** Present when a client upload was ignored because access stayed cached. */
+  uploadIgnored?: boolean;
+  uploadIgnoredReason?: string;
 };
 
 export type GenerateErrorBody = {

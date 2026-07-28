@@ -51,6 +51,18 @@ import {
   invokeReservedProvider,
   liveGenerationAccess,
 } from "@/lib/liveGenerationGate.mjs";
+import {
+  cachedUploadHonesty,
+  freeDeliveryReadyForAccess,
+  isPrivateLiveInvite,
+  parsePrivateLiveAllowlist,
+  privateLiveBudget,
+} from "@/lib/privateLiveBeta.mjs";
+import {
+  getPrivateLiveSpent,
+  tryConsumePrivateLiveBudget,
+} from "@/lib/privateLiveBudgetStore";
+import { t6DeliveryReadiness } from "@/lib/t6Worker";
 import { providerCompletionDecision } from "@/lib/generationReliability.mjs";
 import {
   beginSyncGenerateJob,
@@ -160,6 +172,39 @@ function noteFailed(
   }
 }
 
+function resolvePrivateLiveAccess(authUser: { id: string; email: string | null } | null) {
+  const enabled = process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1";
+  const allowlist = parsePrivateLiveAllowlist(
+    process.env.PIKBO_PRIVATE_LIVE_ALLOWLIST || ""
+  );
+  const budgetMax = Math.max(
+    0,
+    Math.floor(Number(process.env.PIKBO_PRIVATE_LIVE_BUDGET_MAX || "0"))
+  );
+  const invite = isPrivateLiveInvite({
+    enabled,
+    allowlist,
+    email: authUser?.email,
+    userId: authUser?.id,
+  });
+  const spent = authUser ? getPrivateLiveSpent(authUser.id) : 0;
+  const budget = privateLiveBudget({ spent, max: budgetMax });
+  const t6FreeLiveDeliveryReady = t6DeliveryReadiness().effective === true;
+  const freeDeliveryReady = freeDeliveryReadyForAccess({
+    t6FreeLiveDeliveryReady,
+    privateInvite: invite.invited === true,
+    privateBudgetOk: budget.ok,
+  });
+  return {
+    enabled,
+    invite,
+    budget,
+    budgetMax,
+    freeDeliveryReady,
+    t6FreeLiveDeliveryReady,
+  };
+}
+
 export async function POST(req: Request) {
   let body: GenerateRequestBody;
   try {
@@ -201,13 +246,15 @@ export async function POST(req: Request) {
 
   let session = await ensureSession();
   const authUser = await getAuthUserFromRequest(req);
+  const privateLive = resolvePrivateLiveAccess(authUser);
   const access = liveGenerationAccess({
     providerConfigured: Boolean(process.env.FAL_KEY),
     authenticated: Boolean(authUser),
     planId: session.plan,
-    // T6 is deliberately blocked. Free live cannot reopen until a verified
-    // server-owned derivative is available.
-    freeDeliveryReady: false,
+    // Public Free stays blocked until T6 free delivery is ready.
+    // Invited private-beta owners may open Free live only with remaining budget
+    // (still fail-closed without durable reserve + provider).
+    freeDeliveryReady: privateLive.freeDeliveryReady,
   });
 
   // Idempotent replay BEFORE image/asset resolve — network retries must not
@@ -460,6 +507,15 @@ export async function POST(req: Request) {
           502
         );
       }
+      const hadUpload = Boolean(
+        (typeof imageField === "string" && imageField.length > 32) ||
+          (typeof assetId === "string" && assetId.length > 4)
+      );
+      const honesty = cachedUploadHonesty({
+        accessKind: "cached",
+        hadUpload,
+        reason: access.reason,
+      });
       const payload: GenerateSuccess = {
         videoUrl,
         demo: true,
@@ -474,6 +530,13 @@ export async function POST(req: Request) {
         effect: preset.slug,
         costCredits: 0,
         creditsOutcome: "0 cached",
+        processedUpload: honesty.processedUpload === true,
+        ...(honesty.uploadIgnored
+          ? {
+              uploadIgnored: true,
+              uploadIgnoredReason: honesty.uploadIgnoredReason,
+            }
+          : {}),
       };
       try {
         const job = cachedRetryJobId
@@ -536,6 +599,29 @@ export async function POST(req: Request) {
         },
         400
       );
+    }
+    // Private Free live: consume one hard-cap slot only after access is live
+    // and before durable reserve / provider spend (fail closed if exhausted).
+    if (
+      session.plan === "free" &&
+      privateLive.invite.invited &&
+      !privateLive.t6FreeLiveDeliveryReady
+    ) {
+      const consume = tryConsumePrivateLiveBudget(
+        authUser.id,
+        privateLive.budgetMax
+      );
+      if (!consume.ok) {
+        return err(
+          {
+            error:
+              "Private live generation budget exhausted for this account — wait for a higher cap or T6 free delivery",
+            code: "LIVE_ACCESS_REQUIRED",
+            session: publicSession(session),
+          },
+          403
+        );
+      }
     }
     const reserved = await reserveStrictLiveGeneration({
       userId: authUser.id,
@@ -940,6 +1026,7 @@ export async function POST(req: Request) {
         effect: preset.slug,
         costCredits: reserved.reservation.credits,
         creditsOutcome: "10 used",
+        processedUpload: true,
       };
       return NextResponse.json(payload);
     } catch (e) {
