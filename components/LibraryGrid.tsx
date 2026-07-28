@@ -9,6 +9,7 @@ import {
   historyDownloadBlockReason,
   historyItemDownloadAllowed,
   importHistoryJson,
+  LIBRARY_HISTORY_CHANGED_EVENT,
   loadHistory,
   privateDownloadHeaders,
   remoteClipMayExpire,
@@ -749,11 +750,22 @@ export function LibraryGrid() {
   }
 
   useEffect(() => {
+    const refreshDeviceHistory = () => setItems(loadHistory());
     const t = window.setTimeout(() => {
-      setItems(loadHistory());
+      refreshDeviceHistory();
       setReady(true);
     }, 0);
-    return () => window.clearTimeout(t);
+    window.addEventListener(
+      LIBRARY_HISTORY_CHANGED_EVENT,
+      refreshDeviceHistory
+    );
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener(
+        LIBRARY_HISTORY_CHANGED_EVENT,
+        refreshDeviceHistory
+      );
+    };
   }, []);
 
   async function refreshSessionJobs() {

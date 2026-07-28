@@ -124,3 +124,46 @@ roughly 200 seconds; it was not eliminated.
 All checks passed locally with the bundled workspace Node runtime. No provider
 call, environment-variable change, Supabase mutation, Stripe action, DNS
 change, merge, or production deployment was performed during this closure.
+
+## 2026-07-28 non-destructive long-wait acceptance — PR #56
+
+Grok Build produced isolated commit `55cf25a` on
+`agent/grok/p0-recovery-audit`. Codex reviewed and integrated it on top of the
+latest deduplicated recovery tests.
+
+### Acceptance contract
+
+- `Open Library · keep generating` is hidden for Live work until 90 seconds,
+  unless durable recovery has already reported `awaiting_primary`.
+- Detach uses `router.push("/library")` and does not abort primary/recovery,
+  cancel the ledger, or start a second generate.
+- Ordinary React unmount is non-destructive. Only the explicit
+  `Cancel generation` button aborts the caller signal; `cancelForUser` then
+  aborts primary/recovery and performs the best-effort ledger cancel.
+- `onInconclusiveRecovery` reports state only. An observer exception is caught
+  and the eventual original primary response still wins.
+- Background success writes a controlled Library item and never stores an
+  uploaded Base64 still over 8 KB. A same-tab event refreshes an already-open
+  Library; a page refresh independently lists Supabase results through
+  authenticated `userId` ownership and `/api/downloads/{jobId}`.
+
+### Codex review corrections
+
+- Removed the unnecessary recovery-policy re-export from `generateClient`.
+- Removed a duplicate desktop spinner/cancel panel and kept the shared
+  `GenerateWaitStage`.
+- Preserved the latest single non-authoritative `GENERATION_FAILED` case and
+  the single refunded-failure exact-abort case.
+- Added executable coverage for observer exceptions, explicit cancel wiring,
+  same-tab Library notification and owner-only durable listing.
+
+### Verification
+
+PASS: TypeScript, ESLint, `p0-private-live-generation`, `recovery-qa`,
+`recovery-ledger`, `recovery-retry-deadline`, `recovery-reconciliation`,
+`r0-safety-net`, `engine-smoke`, `mobile-proof-regression`, and Next 16.2.11
+Webpack build with 194/194 generated routes.
+
+No paid/provider call, environment mutation, database write, Stripe/DNS action,
+production deploy or merge occurred. Preview private-live remains closed by the
+existing acceptance gate (`enabled=false`, `budgetMax=0`).
