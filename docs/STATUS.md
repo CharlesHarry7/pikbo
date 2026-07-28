@@ -15,8 +15,10 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | ID | Outcome | Owner | Status | PR / branch | Reviewer gate |
 |---|---|---|---|---|---|
 | CTRL-RESET | Close stale PRs, close R2 and enforce one active task per agent | Codex | done | main via PR #45 | Isolated worktrees and the one-task queue are now mandatory |
-| R0-NET | Unexpected-exit reservation safety without double release/refund | Codex / Grok | review | PR #47 | Clean replacement for #42; capture throw/failure withheld, 0 release calls, behavior test in real CI |
-| WB-LINK-TRUTH | Consolidated historical listing/backlink evidence | WorkBuddy | review | PR #41 | Evidence only; no R0H/code ownership or new submissions; duplicate SEO/link PR #46 is closed |
+| R0-NET | Unexpected-exit reservation safety without double release/refund | Codex / Grok | done | main via PR #47 | GitHub CI #466 green; capture throw/failure withheld, 0 release calls, behavior test in real CI |
+| MOBILE-PROOF | Mobile Home → Project → Create truth and playback regression | Codex | review | `agent/claude/mobile-proof-regression` | Rebase latest main; verify 390/768/1440 and no cached/live copy regression |
+| T6-DERIVATIVE | Baked free watermark and controlled derivative download | Grok | doing | `agent/grok/t6-deliverable-proof` | Rebase latest main; real ffmpeg/ffprobe non-prod proof; raw file inaccessible |
+| WB-WAIT | No growth work before publishable product proof | WorkBuddy | blocked | none | #41/#46 closed; wait for explicit new queue row |
 
 Completion of an old row below does not authorize a new branch. Codex must add a row here first.
 
@@ -32,7 +34,7 @@ Completion of an old row below does not authorize a new branch. Codex must add a
 | SELLER-GOLD | Seller Pack cached golden path + failure/retry/partial-success regression | Codex / Grok | **done** | agent/gpt/seller-pack-cached-golden-path · PR #39 | Synced to `main@24949a0`; contract/recovery/API golden tests, typecheck, lint (0 errors), 193-route build, link-check and fail-closed critical path pass. GitHub CI run #445 and Vercel check green; no paid/public/production action |
 | R0H | Fail-closed public health truth for Soft Live | WorkBuddy | review | agent/workbuddy/health-truth | `ready.softLive` is true only when auth, reviewed Supabase atomic reservation, provider, and server-owned deliverable are all configured; otherwise health reports validation/cached-only and advertises 0 free live clips |
 | R2a | Proof wall truth + mobile video budget + Starter Pack naming | Claude | review | agent/claude/product-proof-mobile | Home uses 8-item Showcase whitelist; concepts are static; autoplay 1 mobile / 2 desktop; three-output name frozen |
-| R0 | Disable anonymous live generation; cached demo only until authenticated durable reserve | Claude / Grok / Codex | **review** | main via PR #43; residual PR #47 | Anonymous never reaches the provider. PR #47 closes the capture-exception refund path and runs its behavior test in real CI. Live multi-node still needs verified Vercel env and applied T5/R1 SQL. |
+| R0 | Disable anonymous live generation; cached demo only until authenticated durable reserve | Claude / Grok / Codex | **done** | main via PR #43 + #47 | Anonymous never reaches the provider; capture exceptions withhold output and never release provider spend. GitHub CI #466 passed. Live multi-node still needs verified Vercel env and applied T5/R1 SQL before activation. |
 | R1a | Atomic Supabase reserve/capture/release RPC + job binding | Claude | review | agent/claude/recovery-ledger | Source migration + strict RPC adapter ready; not applied to Supabase. Non-production DB integration required before deployment |
 | R1b | Exact retry token + fixed deadline + worker/read separation | Claude / Grok | review | main | Video + image stills: exact parent→child + one-time bearer; fixed deadlineAt; CI recovery-retry-deadline; durable reconciliation still R1c |
 | R1c | Durable settlement reconciliation worker | Claude / Grok | review | main | Generate + image enqueue withheld/release paths; source queue+lease+finish RPC. Non-prod SQL rehearsal still required |
