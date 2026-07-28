@@ -4974,7 +4974,7 @@ assert.doesNotMatch(
 );
 assert.match(
   fs.readFileSync(join(root, "components/HeroUpload.tsx"), "utf8"),
-  /createRemixHref/
+  /mode=seller-pack&source=home-launch-pack/
 );
 // Community: never promote session gate / Lab demos to absolute UGC
 const communityPublish = fs.readFileSync(
@@ -5598,14 +5598,14 @@ assert.match(
   fs.readFileSync(join(root, "components/Header.tsx"), "utf8"),
   /createRemixHref|data-header-cta=["']generate-remix["']/
 );
-// Live AppShell Generate CTAs (desktop header + mobile top) use remix, not bare /create
+// AppShell conversion CTAs (desktop header + mobile top) use the fixed Launch Pack.
 assert.match(
   fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
-  /SHELL_GENERATE_HREF|data-appshell-cta=["']generate-remix["']/
+  /SHELL_GENERATE_HREF|data-appshell-cta=["']launch-pack["']/
 );
 assert.match(
   fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
-  /createRemixHref\(["']360-spin-showcase["']\)/
+  /SHELL_GENERATE_HREF = ["']\/create\?mode=seller-pack["']/
 );
 // Pricing Full studio + Footer Product Generate carry remix contract
 assert.match(

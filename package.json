@@ -18,6 +18,7 @@
     "live-copy-smoke": "node scripts/live-capability-copy-smoke.mjs",
     "seo-cold-start-smoke": "node scripts/seo-cold-start-smoke.mjs",
     "seller-pack-cached-smoke": "node scripts/seller-pack-cached-smoke.mjs",
+    "launch-pack-main-path-smoke": "node scripts/launch-pack-main-path-smoke.mjs",
     "recovery-cost-gate": "node scripts/recovery-cost-gate.mjs",
     "recovery-qa": "node scripts/recovery-qa.mjs",
     "recovery-ledger": "node scripts/recovery-ledger.mjs",

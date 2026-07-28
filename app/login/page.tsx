@@ -88,7 +88,7 @@ export default function LoginPage() {
           <Link href="/modules" className="text-[var(--fg-muted)] hover:text-white">
             Modules
           </Link>
-          <Link href="/#home-tool" className="text-[var(--fg-muted)] hover:text-white">
+          <Link href="/#home-create" className="text-[var(--fg-muted)] hover:text-white">
             Home tool
           </Link>
           <FreeTrialCta

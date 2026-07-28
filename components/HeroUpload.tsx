@@ -2,21 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createRemixHref } from "@/lib/remixIntent";
+import { track } from "@/lib/analytics";
 
-const PRESETS_QUICK = [
-  { slug: "360-spin-showcase", label: "360°" },
-  { slug: "blind-box-unboxing", label: "Unbox" },
-  { slug: "floating-hero", label: "Float" },
-] as const;
-
-/** Compact drop zone for video-home conversion */
+/** Homepage handoff into the fixed three-output Launch Pack path. */
 export function HeroUpload() {
   const router = useRouter();
   const [hover, setHover] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [effect, setEffect] = useState<string>(PRESETS_QUICK[0].slug);
 
   function goWithFile(file: File | undefined | null) {
     if (!file || !file.type.startsWith("image/")) {
@@ -38,8 +31,12 @@ export function HeroUpload() {
         setBusy(false);
         return;
       }
-      // Remix contract: effect + ratio/duration/channel — still via session.
-      router.push(createRemixHref(effect));
+      track({
+        event: "upload_ready",
+        path: "/",
+        meta: { destination: "launch-pack", outputs: 3 },
+      });
+      router.push("/create?mode=seller-pack&source=home-launch-pack");
     };
     reader.onerror = () => {
       setErr("Could not read file.");
@@ -49,24 +46,20 @@ export function HeroUpload() {
   }
 
   return (
-    <div>
-      <div className="mb-2 flex flex-wrap gap-1.5">
-        {PRESETS_QUICK.map((p) => (
-          <button
-            key={p.slug}
-            type="button"
-            onClick={() => setEffect(p.slug)}
-            className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-              effect === p.slug
-                ? "border-[var(--mint)] text-[var(--mint)]"
-                : "border-[var(--border)] text-[var(--fg-dim)] hover:text-[var(--fg)]"
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
+    <div data-home-launch-pack="fixed-three">
+      <div className="mb-3 grid grid-cols-3 gap-2 text-[10px] font-bold uppercase tracking-wide text-white/65">
+        <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-2 text-center">
+          Listing · 1:1
+        </span>
+        <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-2 text-center">
+          Reveal · 9:16
+        </span>
+        <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-2 text-center">
+          Hook · 9:16
+        </span>
       </div>
       <label
+        data-launch-pack-primary-action="1"
         onDragOver={(e) => {
           e.preventDefault();
           setHover(true);
@@ -84,10 +77,10 @@ export function HeroUpload() {
         }`}
       >
         <p className="text-sm font-semibold">
-          {busy ? "Opening Generate…" : "Drop a toy photo → start"}
+          {busy ? "Opening Launch Pack…" : "Upload one toy photo → build 3 assets"}
         </p>
         <p className="mt-1 text-[11px] text-[var(--fg-dim)]">
-          Jumps into Generate with look preselected
+          Next: confirm ownership, then generate · no recipe hunting
         </p>
         <input
           type="file"

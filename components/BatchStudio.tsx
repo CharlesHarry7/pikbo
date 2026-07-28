@@ -377,7 +377,7 @@ export function BatchStudio({
       setRunProjectId(saved.projectId);
       setSelected([...SELLER_PACK_SLUGS]);
       setSellerPackRecoveryNote(
-        "Checking this device/server session for the active Seller Starter Pack…"
+        "Checking this device/server session for the active Launch Pack…"
       );
       void fetch("/api/generations", { cache: "no-store" })
       .then(async (response) => {
@@ -704,7 +704,7 @@ export function BatchStudio({
         fallbackResolution: effectiveResolution,
         projectId,
         projectName: sellerPackActive
-          ? "Seller Starter Pack · 3 clips / 30 credits"
+          ? "Launch Pack · 3 clips / 30 credits"
           : "Custom batch",
         inputImage:
           image && image.length <= 300_000 ? image : undefined,
@@ -864,7 +864,7 @@ export function BatchStudio({
         }
         if (outcome.stopQueue || abortCtrl.signal.aborted) {
           if (!abortCtrl.signal.aborted) {
-            setError(outcome.job.error ?? "Seller Starter Pack paused");
+            setError(outcome.job.error ?? "Launch Pack paused");
             setFailRetryAfterSec(
               typeof outcome.retryAfterSec === "number"
                 ? outcome.retryAfterSec
@@ -1129,7 +1129,7 @@ export function BatchStudio({
     const csv = sellerPackCsv(exportItems);
     if (!csv) return;
     downloadText(
-      `pikbo-seller-pack-${Date.now()}.csv`,
+      `pikbo-launch-pack-${Date.now()}.csv`,
       csv,
       "text/csv;charset=utf-8"
     );
@@ -1138,7 +1138,7 @@ export function BatchStudio({
   function exportAvailableManifest() {
     const manifest = sellerPackManifest(exportItems);
     downloadText(
-      `pikbo-seller-pack-manifest-${Date.now()}.json`,
+      `pikbo-launch-pack-manifest-${Date.now()}.json`,
       JSON.stringify(manifest, null, 2),
       "application/json"
     );
@@ -1318,17 +1318,17 @@ export function BatchStudio({
     liveQuoteCovered;
 
   const primaryBatchLabel = running
-    ? `${sellerPackActive ? "Seller Starter Pack" : "Batch"} running… ${doneCount}/${jobs.length}`
+    ? `${sellerPackActive ? "Launch Pack" : "Batch"} running… ${doneCount}/${jobs.length}`
     : !image
       ? "Upload owned toy photo"
       : !ownsRights
         ? "Confirm ownership to continue"
         : demoMode
-          ? `${sellerPackActive ? "Preview Seller Starter Pack" : "Run batch"} · ${selected.length} · cached free`
+          ? `${sellerPackActive ? "Preview Launch Pack" : "Run batch"} · ${selected.length} · cached free`
           : trialDone && isFree && !liveQuoteCovered
             ? "Free Mini trial used · open single Generate or plans"
             : sellerPackActive
-              ? `Run Seller Starter Pack · ${sellerPackQuoteLabel(packQuote)}`
+              ? `Generate Launch Pack · ${sellerPackQuoteLabel(packQuote)}`
               : `Run batch · ${batchQuoteLabel(packQuote)}`;
 
   const creditStrip = (
@@ -1405,8 +1405,8 @@ export function BatchStudio({
             <div className="rounded-2xl border border-[var(--mint)]/35 bg-gradient-to-br from-[var(--mint)]/[0.1] to-black/40 px-3.5 py-3 text-xs text-[var(--fg-muted)] shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
               <p className="font-bold text-[var(--mint)]">
                 {demoMode
-                  ? "Seller Starter Pack — 3 cached prototype previews"
-                  : "Seller Starter Pack — 3 live clips / 30 credits"}
+                  ? "Launch Pack — 3 cached prototype previews"
+                  : "Launch Pack — 3 live clips / 30 credits"}
               </p>
               <p className="mt-1 leading-relaxed text-white/55">
                 {demoMode
@@ -1460,7 +1460,7 @@ export function BatchStudio({
                 href="/create?mode=seller-pack"
                 className="font-semibold text-[var(--mint)] hover:underline"
               >
-                Seller Starter Pack
+                Launch Pack
               </Link>
               .
             </p>
@@ -1657,7 +1657,7 @@ export function BatchStudio({
                       : "border-[var(--border)] text-[var(--mint)] hover:border-[var(--mint)]"
                   }`}
                 >
-                  Seller Starter Pack · 3 clips
+                  Launch Pack · 3 clips
                 </button>
                 <button
                   type="button"
@@ -1751,21 +1751,24 @@ export function BatchStudio({
           )}
         </div>
 
-        <label
-          id="batch-ownership"
-          className="flex cursor-pointer items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2 text-[11px] leading-snug text-[var(--fg-muted)]"
-        >
-          <input
-            type="checkbox"
-            checked={ownsRights}
-            onChange={(e) => setOwnsRights(e.target.checked)}
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[var(--mint)]"
-          />
-          <span>
-            I own this photo and have the right to animate and publish this toy
-            for every preset in the batch.
-          </span>
-        </label>
+        {image ? (
+          <label
+            id="batch-ownership"
+            data-launch-pack-primary-action="2"
+            className="hidden cursor-pointer items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2 text-[11px] leading-snug text-[var(--fg-muted)] lg:flex"
+          >
+            <input
+              type="checkbox"
+              checked={ownsRights}
+              onChange={(e) => setOwnsRights(e.target.checked)}
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[var(--mint)]"
+            />
+            <span>
+              I own this photo and have the right to animate and publish this
+              toy for every preset in the batch.
+            </span>
+          </label>
+        ) : null}
 
         {running ? (
           <>
@@ -1776,7 +1779,7 @@ export function BatchStudio({
               effectLabel={
                 jobs.find((j) => j.status === "running")?.name ||
                 (sellerPackActive
-                  ? `Seller Starter Pack · ${doneCount}/${jobs.length || 3}`
+                  ? `Launch Pack · ${doneCount}/${jobs.length || 3}`
                   : `Batch · ${doneCount}/${jobs.length || selected.length}`)
               }
               onCancel={cancelInFlightPack}
@@ -1798,6 +1801,7 @@ export function BatchStudio({
             disabled={!canRun}
             onClick={() => void runBatch()}
             className="btn btn-primary hidden w-full disabled:opacity-50 lg:flex"
+            data-launch-pack-primary-action={image ? "3" : "1"}
           >
             {primaryBatchLabel}
           </button>
@@ -1806,7 +1810,7 @@ export function BatchStudio({
           <div className="rounded-xl border border-amber-300/25 bg-amber-300/[0.06] p-3 text-xs text-amber-100">
             <p className="font-bold">
               {trialDone && isFree
-                ? "Free Mini trial used · Seller Starter Pack needs 30 live credits"
+                ? "Free Mini trial used · Launch Pack needs 30 live credits"
                 : `Full live pack needs ${cost} credits; this session has ${me?.credits ?? 0}.`}
             </p>
             <p className="mt-1 text-[11px] text-white/50">
@@ -1875,7 +1879,7 @@ export function BatchStudio({
                 : undefined
             }
             retryLabel={
-              sellerPackActive ? "Retry Seller Starter Pack" : "Retry batch"
+              sellerPackActive ? "Retry Launch Pack" : "Retry batch"
             }
             showLabSample={!image}
             showModules={false}
@@ -1904,7 +1908,7 @@ export function BatchStudio({
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-semibold">
-              {sellerPackActive ? "Seller Starter Pack queue" : "Queue"}
+              {sellerPackActive ? "Launch Pack queue" : "Queue"}
             </h2>
             {jobs.length > 0 ? (
               <p className="mt-0.5 text-[10px] text-[var(--fg-dim)]">
@@ -1941,7 +1945,7 @@ export function BatchStudio({
           <div className="rounded-xl border border-dashed border-white/12 bg-black/25 px-4 py-8 text-center">
             <p className="text-sm font-semibold text-[var(--fg)]">
               {sellerPackActive
-                ? "Your pack queue is empty"
+                ? "Your Launch Pack queue is empty"
                 : "No batch jobs yet"}
             </p>
             <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-[var(--fg-dim)]">
@@ -1963,8 +1967,8 @@ export function BatchStudio({
                   className="rounded-full border border-white/15 px-3 py-1.5 text-[11px] font-bold text-white/70"
                 >
                   {demoMode
-                    ? "Seller Starter Pack — 3 cached previews / 0 credits"
-                    : "Seller Starter Pack — 3 live clips / 30 credits"}
+                    ? "Launch Pack — 3 cached previews / 0 credits"
+                    : "Launch Pack — 3 live clips / 30 credits"}
                 </Link>
               ) : (
                 <Link
@@ -1981,7 +1985,9 @@ export function BatchStudio({
         {jobs.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-black/30 px-3 py-2">
             <p className="text-[11px] text-[var(--fg-muted)]">
-              Export only succeeded downloadable clips
+              {demoMode
+                ? "Lab previews only — not made from your upload"
+                : "Launch Pack includes only succeeded downloadable clips"}
               {canExportPack
                 ? ` · ${availableDownloads.length} available`
                 : " · none ready yet"}
@@ -1992,10 +1998,11 @@ export function BatchStudio({
               onClick={() => void downloadAvailableClips()}
               className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"
               title="Saves each available clip sequentially. Failed siblings and Free raw live files are omitted."
+              data-launch-pack-export="downloadable-only"
             >
               {exportBusy
                 ? "Saving clips…"
-                : `Download available${
+                : `${demoMode ? "Download Lab previews" : "Export Launch Pack"}${
                     availableDownloads.length
                       ? ` · ${availableDownloads.length}`
                       : ""
@@ -2195,14 +2202,17 @@ export function BatchStudio({
         {image ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
             {sellerPackActive
-              ? `Seller Starter Pack · ${sellerPackQuoteLabel(packQuote)}`
+              ? `Launch Pack · ${sellerPackQuoteLabel(packQuote)}`
               : `Batch · ${selected.length} recipes · ${batchQuoteLabel(packQuote)}`}
             {doneCount > 0 ? ` · ${doneCount} ready` : ""}
             {failedRetryCount > 0 ? ` · ${failedRetryCount} failed kept` : ""}
           </p>
         ) : null}
         {image && !ownsRights ? (
-          <label className="mb-2 flex cursor-pointer items-start gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2 text-[10px] leading-snug text-[var(--fg-muted)]">
+          <label
+            className="mb-2 flex cursor-pointer items-start gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2 text-[10px] leading-snug text-[var(--fg-muted)]"
+            data-launch-pack-primary-action="2"
+          >
             <input
               type="checkbox"
               checked={ownsRights}
@@ -2297,6 +2307,7 @@ export function BatchStudio({
             }}
             className="btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
             data-seller-pack-action="generate"
+            data-launch-pack-primary-action={image ? "3" : "1"}
           >
             {primaryBatchLabel}
           </button>
