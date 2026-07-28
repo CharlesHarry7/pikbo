@@ -5,7 +5,7 @@
  * 1. Private live selects exactly bytedance/seedance-2.0/image-to-video
  * 2. Mini/Fast/cached cannot claim processedUpload on the private path
  * 3. Paid USD ceiling defaults to zero and fail-closes before provider
- * 4. One idempotency key → one estimated ceiling hold (no double spend)
+ * 4. A positive env ceiling still fails closed until durable atomic admission
  * 5. Estimated/ceiling labeled; actual never invented
  * 6. Timeout / cancel / confirmed failure / refund-unconfirmed / late success
  *    after terminal cancel|timeout / duplicate provider completion each have
@@ -61,7 +61,6 @@ const {
   parsePaidCeilingUsd,
   privateLiveSeedanceModel,
   tryReservePaidCeilingUsd,
-  releasePaidCeilingUsd,
   resetPaidCeilingStoreForTests,
   isPrivateLiveSeedanceModel,
 } = await import(costGuardUrl);
@@ -143,66 +142,33 @@ const storeSrc = read("lib/generationJobs/store.ts");
   assert.match(blocked.audit.note, /never invent/i);
 }
 
-// ─── 4. One idempotency key → one estimated hold ──────────────────────────
+// ─── 4. Process memory never authorizes paid provider work ─────────────────
 
 {
   resetPaidCeilingStoreForTests();
   const userId = "11111111-1111-4111-8111-111111111111";
-  const first = tryReservePaidCeilingUsd({
+  const blockedPositive = tryReservePaidCeilingUsd({
     userId,
-    ceilingUsd: 20,
+    ceilingUsd: 3,
     durationSec: 5,
     resolution: "720p",
     idempotencyKey: "idem-once-abc",
   });
-  assert.equal(first.ok, true);
-  assert.equal(first.idempotent, false);
-  assert.ok(first.estimatedJobUsd > 0);
-  const spentAfterFirst = first.reservedSpentUsd;
+  assert.equal(blockedPositive.ok, false);
+  assert.equal(blockedPositive.code, "PAID_CEILING_UNAVAILABLE");
+  assert.match(blockedPositive.error, /durable atomic/i);
+  assert.ok(blockedPositive.estimatedJobUsd > 0);
 
   const replay = tryReservePaidCeilingUsd({
     userId,
-    ceilingUsd: 20,
+    ceilingUsd: 3,
     durationSec: 5,
     resolution: "720p",
     idempotencyKey: "idem-once-abc",
   });
-  assert.equal(replay.ok, true);
-  assert.equal(replay.idempotent, true);
-  assert.equal(replay.estimatedJobUsd, first.estimatedJobUsd);
-  assert.equal(
-    replay.reservedSpentUsd,
-    spentAfterFirst,
-    "replay must not increase cumulative spent"
-  );
-
-  const other = tryReservePaidCeilingUsd({
-    userId,
-    ceilingUsd: 20,
-    durationSec: 5,
-    resolution: "720p",
-    idempotencyKey: "idem-once-def",
-  });
-  assert.equal(other.ok, true);
-  assert.equal(other.idempotent, false);
-  assert.ok(other.reservedSpentUsd > spentAfterFirst);
-
-  // Pre-provider release restores headroom and clears idempotency hold.
-  const released = releasePaidCeilingUsd({
-    userId,
-    estimatedJobUsd: other.estimatedJobUsd,
-    idempotencyKey: "idem-once-def",
-  });
-  assert.ok(released.spentUsd < other.reservedSpentUsd);
-  const again = tryReservePaidCeilingUsd({
-    userId,
-    ceilingUsd: 20,
-    durationSec: 5,
-    resolution: "720p",
-    idempotencyKey: "idem-once-def",
-  });
-  assert.equal(again.ok, true);
-  assert.equal(again.idempotent, false);
+  assert.equal(replay.ok, false);
+  assert.equal(replay.code, "PAID_CEILING_UNAVAILABLE");
+  assert.equal(replay.estimatedJobUsd, blockedPositive.estimatedJobUsd);
 }
 
 // ─── 5. Honest cost audit labels ──────────────────────────────────────────
@@ -215,6 +181,15 @@ const storeSrc = read("lib/generationJobs/store.ts");
   assert.equal(estimated.kind, "estimated");
   assert.equal(estimated.label, "estimated");
   assert.ok(estimated.amountUsd > 1 && estimated.amountUsd < 3);
+  const conservative480 = estimateSeedance2JobUsd({
+    durationSec: 5,
+    resolution: "480p",
+  });
+  assert.equal(
+    conservative480.amountUsd,
+    estimated.amountUsd,
+    "480p must use the verified 720p upper bound until an official 480p quote is recorded"
+  );
 
   const audit = buildSeedance2CostAudit({
     durationSec: 5,
@@ -602,31 +577,24 @@ const storeSrc = read("lib/generationJobs/store.ts");
   assert.match(pure, /providerOutputHostAllowed/);
 }
 
-// ─── 14. Exhausted ceiling after partial spend ────────────────────────────
+// ─── 14. Estimated cost cannot turn process memory into authority ─────────
 
 {
   resetPaidCeilingStoreForTests();
   const userId = "user-exhaust";
-  const a = tryReservePaidCeilingUsd({
+  const blocked = tryReservePaidCeilingUsd({
     userId,
     ceilingUsd: 1.6,
     durationSec: 5,
     resolution: "720p",
     idempotencyKey: "idem-ex-1",
   });
-  // 5s * 0.3034 ≈ 1.517 — first should pass if ceiling 1.6
-  assert.equal(a.ok, true);
-  const b = tryReservePaidCeilingUsd({
-    userId,
-    ceilingUsd: 1.6,
-    durationSec: 5,
-    resolution: "720p",
-    idempotencyKey: "idem-ex-2",
-  });
-  assert.equal(b.ok, false);
-  assert.equal(b.code, "PAID_CEILING_EXHAUSTED");
+  // 5s * 0.3034 ≈ 1.517 fits numerically, but must still be refused until
+  // the durable atomic cost RPC is applied and wired.
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.code, "PAID_CEILING_UNAVAILABLE");
 }
 
 console.log(
-  "seedance2-private-delivery-regression: PASS (exact Seedance 2.0 model · zero default paid ceiling · one idempotent USD hold · labeled cost audit · terminal late-result withhold · private owner storage · route+migration source locks)"
+  "seedance2-private-delivery-regression: PASS (exact Seedance 2.0 model · zero default paid ceiling · positive process-only ceiling refused · conservative labeled cost audit · terminal late-result withhold · private owner storage · route+migration source locks)"
 );
