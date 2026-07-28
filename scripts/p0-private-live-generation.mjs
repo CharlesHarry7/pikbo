@@ -8,7 +8,7 @@
  * 4. Live success is demo:false + processedUpload true
  * 5. Free watermark path never returns raw provider URL
  * 6. Failed live does not invent READY success (error path)
- * 7. Private budget hard-cap exhausts
+ * 7. Private process-local admission fuse exhausts
  * 8. Generate route wires privateLive + honesty fields
  *
  * Run: npm run p0-private-live-generation

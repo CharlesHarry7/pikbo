@@ -4,8 +4,20 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] Issue #54 owned-upload result truth
+- Branch `agent/gpt/p0-live-owned-toy-review` stacks on Grok PR #55.
+- An owned upload that falls back to cached mode is now a visible 0-credit
+  failure: no unrelated Lab video, no `READY`, no version/history pollution.
+- Replacing a still clears stale result state; explicit Lab samples remain
+  previewable through their separate path.
+- Review correction: `PIKBO_PRIVATE_LIVE_BUDGET_MAX` is a process-local
+  admission fuse, not a cross-instance production budget. Durable
+  wallet/reservation remains the spend authority.
+- PASS: P0 contract, engine smoke, R0 safety, recovery QA, product proof,
+  mobile source regression, typecheck, lint, and 193-route production build.
+
 ### 2026-07-28 — [grok] Issue #54 P0 private live generation path (no prod enable)
-- Branch `agent/grok/p0-private-live-generation`: private-beta allowlist + hard budget; Free delivery ready only for invite/budget or T6.
+- Branch `agent/grok/p0-private-live-generation`: private-beta allowlist + process-local admission fuse; Free delivery ready only for invite/fuse or T6.
 - Cached generate with upload: `processedUpload:false` + `uploadIgnored` honesty.
 - Live success: `demo:false` + `processedUpload:true`; Free watermark uses `/api/downloads/*`.
 - Health `privateLiveBeta` presence flags; evidence `docs/evidence/P0_PRIVATE_LIVE_PREREQS_2026-07-28.md`.

@@ -10,6 +10,7 @@ import { pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import "./health-truth-contract.mjs";
+import "./p0-private-live-generation.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -676,12 +677,74 @@ assert.match(provenance, /Cached demo/);
 assert.match(provenance, /Live generation/);
 assert.match(provenance, /On-player mark/);
 assert.match(provenance, /Local Library/);
+assert.match(provenance, /isIgnoredOwnedUploadResult/);
 const createStudio = fs.readFileSync(
   join(root, "components/CreateStudio.tsx"),
   "utf8"
 );
 assert.match(createStudio, /resultProvenanceLabel/);
 assert.match(createStudio, /PROVENANCE\.onPlayerMark|onPlayerMark/);
+assert.match(createStudio, /ignoredOwnedUpload/);
+assert.match(createStudio, /Your photo was not processed/);
+assert.match(createStudio, /showLabSample=\{lastUploadIgnored \|\| !image\}/);
+const ignoredUploadGateAt = createStudio.indexOf(
+  "const ignoredOwnedUpload = isIgnoredOwnedUploadResult"
+);
+const acceptedResultAt = createStudio.indexOf("setVideoUrl(data.videoUrl)");
+assert.ok(
+  ignoredUploadGateAt > 0 && acceptedResultAt > ignoredUploadGateAt,
+  "owned-upload honesty gate must run before any cached URL becomes READY"
+);
+const provenanceCjs = require("typescript").transpileModule(provenance, {
+  compilerOptions: {
+    module: require("typescript").ModuleKind.CommonJS,
+    target: require("typescript").ScriptTarget.ES2022,
+  },
+}).outputText;
+const provenanceFixtureModule = { exports: {} };
+new Function("require", "exports", "module", provenanceCjs)(
+  require,
+  provenanceFixtureModule.exports,
+  provenanceFixtureModule
+);
+const provenanceFixture = provenanceFixtureModule.exports;
+assert.equal(
+  provenanceFixture.isIgnoredOwnedUploadResult({
+    demo: true,
+    processedUpload: false,
+    uploadIgnored: true,
+    labSample: false,
+  }),
+  true
+);
+assert.equal(
+  provenanceFixture.isIgnoredOwnedUploadResult({
+    demo: true,
+    labSample: false,
+  }),
+  true,
+  "legacy cached payloads must also fail closed for an owned upload"
+);
+assert.equal(
+  provenanceFixture.isIgnoredOwnedUploadResult({
+    demo: true,
+    processedUpload: false,
+    uploadIgnored: true,
+    labSample: true,
+  }),
+  false,
+  "explicit Lab samples remain previewable"
+);
+assert.equal(
+  provenanceFixture.isIgnoredOwnedUploadResult({
+    demo: false,
+    processedUpload: true,
+    uploadIgnored: false,
+    labSample: false,
+  }),
+  false,
+  "confirmed live upload remains a successful result"
+);
 const landing = fs.readFileSync(
   join(root, "components/LandingToolPanel.tsx"),
   "utf8"

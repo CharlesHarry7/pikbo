@@ -600,8 +600,9 @@ export async function POST(req: Request) {
         400
       );
     }
-    // Private Free live: consume one hard-cap slot only after access is live
-    // and before durable reserve / provider spend (fail closed if exhausted).
+    // Private Free live: consume one process-local admission slot after access
+    // is live and before durable reserve/provider work. Durable wallet +
+    // reservation remains the real cross-instance spend authority.
     if (
       session.plan === "free" &&
       privateLive.invite.invited &&

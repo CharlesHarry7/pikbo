@@ -1,8 +1,8 @@
 # P0 private live prerequisites — Grok Build (Issue #54)
 
-**Agent:** Grok · Branch `agent/grok/p0-private-live-generation`  
-**Base:** main `50db8e3`  
-**Date:** 2026-07-28  
+**Agent:** Grok · Branch `agent/grok/p0-private-live-generation`
+**Base:** main `50db8e3`
+**Date:** 2026-07-28
 **Sanitized prod health sample:** `https://pikbo.ai/api/health` (no secrets)
 
 ## Exact missing runtime prerequisites (production snapshot)
@@ -45,14 +45,17 @@ Env (see `.env.example`):
 
 - `PIKBO_PRIVATE_LIVE_ENABLED=1`
 - `PIKBO_PRIVATE_LIVE_ALLOWLIST=<owner email or user id>`
-- `PIKBO_PRIVATE_LIVE_BUDGET_MAX=<hard cap, e.g. 3>`
+- `PIKBO_PRIVATE_LIVE_BUDGET_MAX=<per-process admission fuse, e.g. 3>`
 
 Behavior:
 
 - Anonymous still never live (R0)
 - Invited Free user + remaining budget → `freeDeliveryReady` true for access gate
 - Live still requires durable reserve + provider (no cookie spend)
-- Hard process-memory budget consume before reserve
+- Process-local admission fuse consumes before reserve
+- Durable wallet/reservation remains the cross-instance spend authority; the
+  process-local fuse resets with an instance and must not be described as the
+  production budget cap
 - Free watermark responses still use `/api/downloads/...` (no raw provider URL)
 
 Health exposes `privateLiveBeta` presence flags only (never the allowlist).
