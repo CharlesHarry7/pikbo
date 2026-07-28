@@ -48,6 +48,9 @@ jobs:
       - name: T5 + R0 critical path (refund · idempotency · auth fail-closed)
         run: npm run t5-r0-critical-path
 
+      - name: R0 reservation safety-net (behavioral)
+        run: npm run r0-safety-net
+
       - name: Recovery retry + deadline (R1b video + image)
         run: npm run recovery-retry-deadline
 

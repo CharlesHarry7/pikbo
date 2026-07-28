@@ -19,8 +19,8 @@ import {
   releaseStrictLiveGeneration,
   reserveStrictLiveGeneration,
   settleStrictLiveGeneration,
-  type StrictLiveReservation,
 } from "@/lib/durableCredits/liveReservation";
+import { createReservationLifecycle } from "@/lib/reservationLifecycle";
 import {
   recordConfirmedPreOutputFailure,
   recordProviderSucceededWithheld,
@@ -433,6 +433,29 @@ export async function POST(req: Request) {
   }
 
   let liveJobId: string | undefined;
+  // Reservation lifecycle: release ≤1; never release after settle/withhold.
+  const reservationLife = createReservationLifecycle({
+    release: async (reservation, reason) => {
+      const released = await releaseStrictLiveGeneration(reservation, reason);
+      if (!released.ok) return { ok: false, error: released.error };
+      return {
+        ok: true,
+        availableCredits: released.data.availableCredits,
+      };
+    },
+    settle: async (reservation, providerRequestId) => {
+      const captured = await settleStrictLiveGeneration(
+        reservation,
+        providerRequestId
+      );
+      if (!captured.ok) return { ok: false, error: captured.error };
+      return {
+        ok: true,
+        availableCredits: captured.data.availableCredits,
+      };
+    },
+  });
+  let runSafetyNetRelease: (() => Promise<void>) | null = null;
   try {
     try {
       if (hasRetryHandoff) {
@@ -596,22 +619,22 @@ export async function POST(req: Request) {
         { status }
       );
     }
-    let liveReservation: StrictLiveReservation | null = reserved.reservation;
+    reservationLife.assign(reserved.reservation);
     session = {
       ...session,
-      plan: liveReservation.planId,
+      plan: reserved.reservation.planId,
       credits: reserved.availableCredits,
     };
-    await saveSession(session);
     const releaseReservation = async (reason: string): Promise<boolean> => {
-      if (!liveReservation) return false;
-      const target = liveReservation;
-      const released = await releaseStrictLiveGeneration(target, reason);
+      const target = reservationLife.get() ?? reserved.reservation;
+      const released = await reservationLife.release(reason);
+      if (released.skipped) return false;
       if (!released.ok) {
         // R1c parity with generate: enqueue release_pending or settlement_unknown.
         const confirmedPreOutput = new Set([
           "force_fail",
           "retry_claim_rejected",
+          "unexpected_exit_safety_net",
         ]).has(reason);
         const recorded = confirmedPreOutput
           ? await recordConfirmedPreOutputFailure(target, {
@@ -638,14 +661,19 @@ export async function POST(req: Request) {
         }
         return false;
       }
-      session = {
-        ...session,
-        credits: released.data.availableCredits,
-      };
-      await saveSession(session);
-      liveReservation = null;
+      if (typeof released.availableCredits === "number") {
+        session = {
+          ...session,
+          credits: released.availableCredits,
+        };
+        await saveSession(session);
+      }
       return true;
     };
+    runSafetyNetRelease = async () => {
+      await releaseReservation("unexpected_exit_safety_net");
+    };
+    await saveSession(session);
 
     // Match generate: non-prod forced fail for refund path tests (never production).
     const forceFail =
@@ -774,6 +802,9 @@ export async function POST(req: Request) {
         const deadlineState = getImageJob(liveJobId);
         const completionDecision = providerCompletionDecision(deadlineState);
         if (!completionDecision.allow) {
+          // Provider output already exists. Close the release path before any
+          // reconciliation I/O, because that I/O may itself throw.
+          reservationLife.markWithheld(completionDecision.code);
           const recorded = await recordProviderSucceededWithheld(
             reserved.reservation,
             {
@@ -807,16 +838,13 @@ export async function POST(req: Request) {
         }
       }
 
-      const captured = await settleStrictLiveGeneration(
-        reserved.reservation,
+      const captured = await reservationLife.settle(
         providerRequestId || liveJobId || reserved.reservation.reservationId
       );
       if (!captured.ok) {
-        console.error(
-          "[live-reservation] image capture failed",
-          captured.code,
-          captured.error
-        );
+        console.error("[live-reservation] image capture failed");
+        // settle() already moves failed/thrown capture to withheld.
+        reservationLife.markWithheld("capture_failed");
         const recorded = await recordProviderSucceededWithheld(
           reserved.reservation,
           {
@@ -836,8 +864,6 @@ export async function POST(req: Request) {
             recorded.code
           );
         }
-        // Provider still exists — never release for a free still; R1c worker
-        // owns capture/release. Same idempotency key stays blocked.
         return NextResponse.json(
           {
             error:
@@ -850,7 +876,6 @@ export async function POST(req: Request) {
           { status: 503 }
         );
       }
-      liveReservation = null;
 
       let jobId = liveJobId;
       let requestId = providerRequestId || liveJobId;
@@ -935,6 +960,16 @@ export async function POST(req: Request) {
       );
     }
   } finally {
+    // Only while still reserved; never after settle/withhold; backend ≤1 call.
+    try {
+      if (runSafetyNetRelease) {
+        await runSafetyNetRelease();
+      } else {
+        await reservationLife.safetyNetRelease();
+      }
+    } catch {
+      /* best-effort — reconciliation worker will pick up */
+    }
     endJob(imgLockKey);
   }
 }
