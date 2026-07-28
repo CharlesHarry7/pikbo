@@ -35,6 +35,7 @@ import {
 } from "../lib/privateGenerationResultsPure.mjs";
 import {
   isAuthoritativeRecoveryResult,
+  planGenerateWaitLeave,
   raceGenerateWithDurableRecovery,
 } from "../lib/generateRecoveryPolicy.ts";
 
@@ -377,10 +378,49 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     /waitForPrimaryAfterRecovery|setTimeout\(\(\) => resolve\(null\), 15_000\)/,
     "a non-authoritative recovery timeout must not abort the original POST"
   );
+  assert.match(client, /awaiting_primary/);
+  assert.match(client, /onInconclusiveRecovery/);
+  assert.doesNotMatch(client, /applyGenerateWaitLeave/);
 
   const create = read("components/CreateStudio.tsx");
   assert.match(create, /recoveringSavedResult/);
-  assert.match(create, /does not start another generation or charge again/);
+  assert.match(create, /leaveWaitingKeepBackground/);
+  assert.match(create, /planGenerateWaitLeave\("detach"\)/);
+  assert.match(create, /router\.push\("\/library"\)/);
+  assert.match(create, /awaitingPrimaryAfterRecovery \|\| elapsed >= 90/);
+  assert.match(create, /stillForStore\.length <= 8_000/);
+  // Unmount / detach must not abort the original POST or cancel ledger.
+  assert.doesNotMatch(
+    create,
+    /return \(\) => \{\s*generateAbortRef\.current\?\.abort\(\)/,
+    "Create unmount must not abort in-flight generate (detach semantics)"
+  );
+  // Detach path drops the controller ref without aborting or DELETE generations.
+  {
+    const leaveFn = create.match(
+      /function leaveWaitingKeepBackground\(\) \{[\s\S]*?\n  \}/
+    )?.[0];
+    assert.ok(leaveFn, "leaveWaitingKeepBackground must exist");
+    assert.match(leaveFn, /planGenerateWaitLeave\("detach"\)/);
+    assert.match(leaveFn, /generateAbortRef\.current = null/);
+    assert.match(leaveFn, /router\.push\("\/library"\)/);
+    assert.doesNotMatch(leaveFn, /cancelGenerateLedger/);
+    assert.doesNotMatch(leaveFn, /\.abort\s*\(/);
+  }
+  assert.match(
+    create,
+    /does not start another generation or charge again|no second generation or charge/
+  );
+
+  const waitStage = read("components/GenerateWaitStage.tsx");
+  assert.match(waitStage, /data-generate-leave="detach"/);
+  assert.match(waitStage, /data-generate-leave="cancel"/);
+  assert.match(waitStage, /onLeaveToLibrary/);
+  assert.match(
+    waitStage,
+    /awaitingPrimary \|\| elapsed >= 90/,
+    "Open Library only after awaiting_primary or 90s"
+  );
 }
 
 // ─── 13. Recovery read failures never cancel a still-live primary ─────────
@@ -566,6 +606,102 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   );
 }
 
+// ─── 14. Detach leave + inconclusive recovery keep primary authoritative ──
+
+{
+  // Pure plan: detach never aborts, cancels ledger, or starts a second generate.
+  const detach = planGenerateWaitLeave("detach");
+  assert.equal(detach.abortPrimary, false);
+  assert.equal(detach.abortRecovery, false);
+  assert.equal(detach.cancelLedger, false);
+  assert.equal(detach.startNewGenerate, false);
+
+  const cancel = planGenerateWaitLeave("cancel");
+  assert.equal(cancel.abortPrimary, true);
+  assert.equal(cancel.abortRecovery, true);
+  assert.equal(cancel.cancelLedger, true);
+  assert.equal(cancel.startNewGenerate, false);
+
+  // Behavioral: non-authoritative recovery finishes first; primary stays open
+  // until it settles later. Detach plan is applied while primary is pending —
+  // no abort, no ledger cancel, no second generate path.
+  const deferred = () => {
+    let resolve;
+    const promise = new Promise((done) => {
+      resolve = done;
+    });
+    return { promise, resolve };
+  };
+
+  const latePrimary = deferred();
+  const earlyRecovery = deferred();
+  const inconclusiveObserved = deferred();
+  let primaryAborts = 0;
+  let recoveryAborts = 0;
+  let inconclusive = 0;
+  let ledgerCancels = 0;
+  let secondGenerate = 0;
+
+  const race = raceGenerateWithDurableRecovery({
+    primary: latePrimary.promise,
+    recovery: earlyRecovery.promise,
+    abortPrimary: () => {
+      primaryAborts += 1;
+    },
+    abortRecovery: () => {
+      recoveryAborts += 1;
+    },
+    onInconclusiveRecovery: () => {
+      inconclusive += 1;
+      inconclusiveObserved.resolve(true);
+    },
+  });
+
+  earlyRecovery.resolve({
+    ok: false,
+    status: 0,
+    code: "NETWORK_ERROR",
+  });
+  // Wait for the race callback itself — no microtask counting, no wall clock.
+  await inconclusiveObserved.promise;
+  assert.equal(inconclusive, 1);
+  assert.equal(primaryAborts, 0);
+  assert.equal(recoveryAborts, 0);
+
+  // Simulate CreateStudio leaveWaitingKeepBackground while primary is open.
+  const leave = planGenerateWaitLeave("detach");
+  if (leave.abortPrimary) primaryAborts += 1;
+  if (leave.abortRecovery) recoveryAborts += 1;
+  if (leave.cancelLedger) ledgerCancels += 1;
+  if (leave.startNewGenerate) secondGenerate += 1;
+  assert.equal(primaryAborts, 0);
+  assert.equal(recoveryAborts, 0);
+  assert.equal(ledgerCancels, 0);
+  assert.equal(secondGenerate, 0);
+
+  let settled = false;
+  void race.then(() => {
+    settled = true;
+  });
+  await Promise.resolve();
+  assert.equal(
+    settled,
+    false,
+    "after detach + inconclusive recovery, race still awaits original primary"
+  );
+
+  latePrimary.resolve({ ok: true, status: 200, source: "primary-late" });
+  assert.deepEqual(await race, {
+    ok: true,
+    status: 200,
+    source: "primary-late",
+  });
+  assert.equal(settled, true);
+  assert.equal(primaryAborts, 0);
+  assert.equal(ledgerCancels, 0);
+  assert.equal(secondGenerate, 0);
+}
+
 console.log(
-  "p0-private-live-generation: PASS (R0 · owned upload provider input · private Supabase object before capture · owner download · no raw provider URL · refund honesty · durable slow-response recovery · read-failure race safety)"
+  "p0-private-live-generation: PASS (R0 · owned upload provider input · private Supabase object before capture · owner download · no raw provider URL · refund honesty · durable slow-response recovery · read-failure race safety · non-destructive long-wait leave)"
 );

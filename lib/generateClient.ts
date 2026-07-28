@@ -13,6 +13,12 @@ import {
   isAuthoritativeRecoveryResult,
   raceGenerateWithDurableRecovery,
 } from "@/lib/generateRecoveryPolicy";
+
+export {
+  planGenerateWaitLeave,
+  type GenerateWaitLeaveMode,
+  type GenerateWaitLeavePlan,
+} from "@/lib/generateRecoveryPolicy";
 import type { HistoryItem } from "@/lib/history";
 import type { PublicSession } from "@/lib/session";
 
@@ -330,7 +336,12 @@ export async function postGenerate(
   }
 }
 
-export type GenerateRecoveryState = "checking" | "waiting" | "recovered";
+export type GenerateRecoveryState =
+  | "checking"
+  | "waiting"
+  | "recovered"
+  /** Recovery exhausted without durable authority; original POST still open. */
+  | "awaiting_primary";
 
 async function pollDurableGenerateRecovery(
   idempotencyKey: string,
@@ -503,6 +514,10 @@ async function postGenerateRecoverable(
       recovery,
       abortPrimary: () => primaryController.abort(),
       abortRecovery: () => recoveryController.abort(),
+      onInconclusiveRecovery: () => {
+        // Keep the original /api/generate alive. UI may detach without cancel.
+        opts?.onRecoveryState?.("awaiting_primary");
+      },
     });
   } finally {
     opts?.signal?.removeEventListener("abort", cancelForUser);
