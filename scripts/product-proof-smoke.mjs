@@ -63,11 +63,10 @@ assert(
   "featured video must expose controls and respect reduced motion"
 );
 assert(
-  create.includes(
-    "Seller Starter Pack — 3 recipes · quote shown before Live"
-  ) &&
-    create.includes("Launch Pack — 12 recipes · pricing coming later"),
-  "three-clip Starter Pack and future 12-clip Launch Pack must be distinct"
+  create.includes("Launch Pack — 3 assets · quote shown before Live") &&
+    create.includes("One photo → your Launch Pack") &&
+    !create.includes("Launch Pack — 12 recipes"),
+  "the primary Launch Pack must stay the fixed three-asset seller path"
 );
 
 console.log(

@@ -41,7 +41,7 @@ export default function StatusPage() {
         >
           Generate →
         </Link>
-        <Link href="/#home-tool" className="text-[var(--mint)] hover:underline">
+        <Link href="/#home-create" className="text-[var(--mint)] hover:underline">
           Home tool
         </Link>
         <Link href="/library" className="text-[var(--mint)] hover:underline">

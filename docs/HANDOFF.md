@@ -6,10 +6,20 @@ Newest first. One block per meaningful landing.
 
 ### 2026-07-28 — [gpt] single active queue reset
 - Closed 11 stale, duplicate or superseded PRs; their branches remain recoverable, but they are no longer task sources.
-- Remote now has exactly two active delivery PRs: #42 for Grok's reservation safety and #41 for WorkBuddy's read-only backlink evidence.
-- Blocked #42 from merge until exactly-once, post-settlement and concurrency behavior tests replace source-regex-only confidence.
+- R2 PR #44 is merged at `47688e6`; GitHub CI #456 and Vercel are green, and the one-photo Launch Pack path is recorded done.
+- Remote now has exactly two non-Codex delivery PRs: #42 for Grok's reservation safety and #41 for WorkBuddy's read-only backlink evidence. WorkBuddy's duplicate #46 was closed without deleting its branch.
+- Blocked #42 from merge because a thrown capture can escape into the generic catch and release after provider success. Required proof: capture throw → withheld → 0 release backend calls, plus the test in real CI.
 - Restricted #41 to one consolidated 9-site truth report; no R0H/code ownership, production action or new directory submissions.
 - `DISPATCH` and `STATUS` now contain one authoritative queue; old rows are history unless Codex explicitly promotes one.
+
+---
+
+### 2026-07-28 — [gpt] R2 one-photo Launch Pack main path
+- Homepage upload now hands one owned-toy still straight to `/create?mode=seller-pack`; the fixed outputs remain Listing 1:1, Reveal 9:16 and Social Hook 9:16. Header, soft-launch, command, login, status and footer doors no longer point at the dead `#home-tool` anchor.
+- The first run is ordered as three primary actions: upload → rights confirmation → generate. Direct 390px entry shows only Upload before a still exists; after upload it shows one mobile ownership control, then Generate. Browser QA found 0 horizontal overflow.
+- The result action is now an honest Launch Pack export: Lab runs say “Download Lab previews”; Live runs say “Export Launch Pack”; failed, unsafe and Free raw files are omitted. Browser cached run produced three playable Lab videos with 0 credits/provider.
+- PASS: `launch-pack-main-path-smoke`, product-proof, typecheck, lint (0 errors), 193-route production build, engine, SELLER-GOLD, R0 cost gate, recovery ledger/retry/reconciliation, SEO cold start, link-check, critical-path and running-server Seller Pack API golden.
+- Safety: no provider key, paid generation, Supabase mutation, Stripe, DNS, production deploy or GSC action.
 
 ---
 

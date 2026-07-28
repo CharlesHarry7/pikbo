@@ -26,9 +26,9 @@ export async function generateMetadata({
   // Keep crawlable + follow for deep links; stay out of the 9-URL index budget.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return {
-      title: { absolute: `Seller Starter Pack · 3 toy-video recipes | ${site.name}` },
+      title: { absolute: `Launch Pack · 3 toy-video assets | ${site.name}` },
       description:
-        "Seller Starter Pack: one owned toy photo → listing 360°, box reveal, and social hook. Cached previews cost 0 credits; eligible Live accounts see the exact three-job quote before submission.",
+        "Pikbo Launch Pack: one owned toy photo → listing 360°, box reveal, and social hook. Cached previews cost 0 credits; eligible Live accounts see the exact three-job quote before submission.",
       alternates: { canonical: "/create?mode=seller-pack" },
       robots: CONCEPT_ROBOTS,
     };
@@ -95,7 +95,7 @@ export default async function CreatePage({
         <Suspense
           fallback={
             <div className="border-b border-white/10 px-4 py-3 text-sm text-white/40">
-              Generate · Seller Starter Pack
+              Generate · Launch Pack
             </div>
           }
         >
@@ -104,10 +104,10 @@ export default async function CreatePage({
         <div className="px-4 py-8 sm:px-8">
           <div className="mx-auto max-w-6xl">
             <span className="chip">
-              Seller Starter Pack — 3 recipes · quote shown before Live
+              Launch Pack — 3 assets · quote shown before Live
             </span>
             <h1 className="mt-3 font-display text-3xl font-black uppercase tracking-tight">
-              One photo → three commercial clips
+              One photo → your Launch Pack
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
               Creative Director default path: Listing 360° Spin (1:1), Box
@@ -118,7 +118,8 @@ export default async function CreatePage({
               confirmed.
             </p>
             <p className="mt-2 text-xs font-semibold text-white/45">
-              Launch Pack — 12 recipes · pricing coming later
+              Export includes only succeeded, downloadable clips. Failed,
+              unsafe, or Free raw files stay out.
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <FreeTrialCta

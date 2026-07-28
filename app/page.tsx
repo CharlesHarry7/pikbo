@@ -4,7 +4,7 @@ import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
 import { HomeViralWall } from "@/components/HomeViralWall";
 import { HomeBrowseCta } from "@/components/HomeBrowseCta";
-import { LandingToolPanel } from "@/components/LandingToolPanel";
+import { HeroUpload } from "@/components/HeroUpload";
 import { HomeSeoBody } from "@/components/HomeSeoBody";
 import { HomeTrustFooter } from "@/components/HomeTrustFooter";
 import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
@@ -100,11 +100,11 @@ export default function Home() {
             Your turn
           </p>
           <h2 className="font-display mt-2 text-3xl font-black uppercase tracking-tight text-white sm:text-5xl">
-            Put your toy in motion
+            One photo. Three seller formats.
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/55 sm:text-[15px]">
-            Upload a photo you own — preview a cached Lab recipe first; Live
-            eligibility and the exact quote appear before submission.{" "}
+            Upload once for a listing spin, reveal clip, and social hook. Confirm
+            ownership, review the exact mode and quote, then generate.{" "}
             <a
               href={site.rankToolPath}
               className="font-semibold text-[#c8ff3d]/90 hover:underline"
@@ -113,12 +113,7 @@ export default function Home() {
             </a>
           </p>
           <div className="mt-8">
-            <LandingToolPanel
-              effectSlug="360-spin-showcase"
-              effectName="360° Spin Showcase"
-              duration={5}
-              aspectRatio="1:1"
-            />
+            <HeroUpload />
           </div>
         </div>
       </section>

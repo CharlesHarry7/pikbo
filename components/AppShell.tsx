@@ -14,13 +14,12 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 import { MOBILE_NAV, PRIMARY_NAV } from "@/lib/softLaunch";
 import { trackPageView } from "@/lib/analytics";
-import { createRemixHref } from "@/lib/remixIntent";
 
 /**
  * Shell Generate CTA (desktop header + mobile top bar).
- * Listing-spin remix contract — not bare /create (PRIMARY/MOBILE suite entry stays bare).
+ * Main commercial path: one photo → fixed three-output Launch Pack.
  */
-const SHELL_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const SHELL_GENERATE_HREF = "/create?mode=seller-pack";
 
 /**
  * GSC P0: PRIMARY = Explore · Create · Effects · Pricing only.
@@ -210,9 +209,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           <CreditsBadge />
           {/* Pricing lives only in PRIMARY_NAV — no right-rail duplicate */}
           <Link
-            href={home ? "/#home-tool" : SHELL_GENERATE_HREF}
+            href={home ? "/#home-create" : SHELL_GENERATE_HREF}
             className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[13px] font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.25)] transition-transform hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(200,255,61,0.4)]"
-            data-appshell-cta="generate-remix"
+            data-appshell-cta="launch-pack"
           >
             {t("cta.generate")}
           </Link>
@@ -235,9 +234,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <LanguageSwitcher compact />
             <CreditsBadge compact />
             <Link
-              href={home ? "/#home-tool" : SHELL_GENERATE_HREF}
+              href={home ? "/#home-create" : SHELL_GENERATE_HREF}
               className="rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[11px] font-black text-black"
-              data-appshell-cta="generate-remix"
+              data-appshell-cta="launch-pack"
             >
               {t("cta.generate")}
             </Link>

@@ -56,12 +56,12 @@ export function SoftLaunchStrip() {
         ? `Free Mini · ${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · refunds when confirmed`
         : "Live access is not confirmed · continue with cached Lab prototypes";
 
-  // Homepage: keep convert on-page (#home-tool). Elsewhere: studio sample path.
+  // Homepage: keep conversion on the single Launch Pack upload path.
   const primaryHref = trialDone
     ? "/pricing"
     : demo
       ? SOFT_LAUNCH_LAB_SAMPLE_HREF
-      : "/#home-tool";
+      : "/#home-create";
   const primaryLabel = trialDone
     ? "Compare plans"
     : demo
@@ -102,7 +102,7 @@ export function SoftLaunchStrip() {
             }
             className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[12px] font-black text-black shadow-[0_0_20px_rgba(200,255,61,0.25)]"
             data-soft-launch-try={
-              trialDone ? "pricing" : demo ? "lab-sample-remix" : "home-tool"
+              trialDone ? "pricing" : demo ? "lab-sample-remix" : "home-launch-pack"
             }
           >
             {primaryLabel}

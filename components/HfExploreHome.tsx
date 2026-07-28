@@ -167,12 +167,12 @@ export function HfExploreHome({
             {t("home.hero.sub")}
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <a
-              href="#home-tool"
+            <Link
+              href="/#home-create"
               className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
             >
               Use tool on this page
-            </a>
+            </Link>
             <Link
               href={item.href}
               onClick={() =>
