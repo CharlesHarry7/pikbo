@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] R2 one-photo Launch Pack main path
+- Homepage upload now hands one owned-toy still straight to `/create?mode=seller-pack`; the fixed outputs remain Listing 1:1, Reveal 9:16 and Social Hook 9:16. Header, soft-launch, command, login, status and footer doors no longer point at the dead `#home-tool` anchor.
+- The first run is ordered as three primary actions: upload → rights confirmation → generate. Direct 390px entry shows only Upload before a still exists; after upload it shows one mobile ownership control, then Generate. Browser QA found 0 horizontal overflow.
+- The result action is now an honest Launch Pack export: Lab runs say “Download Lab previews”; Live runs say “Export Launch Pack”; failed, unsafe and Free raw files are omitted. Browser cached run produced three playable Lab videos with 0 credits/provider.
+- PASS: `launch-pack-main-path-smoke`, product-proof, typecheck, lint (0 errors), 193-route production build, engine, SELLER-GOLD, R0 cost gate, recovery ledger/retry/reconciliation, SEO cold start, link-check, critical-path and running-server Seller Pack API golden.
+- Safety: no provider key, paid generation, Supabase mutation, Stripe, DNS, production deploy or GSC action.
+
+---
+
 ### 2026-07-28 — [gpt] PR #40 integration review + real CI gate
 - Merged Grok's T5/R0 pure-engine and source-lock tests without overwriting the newer Seller Pack handoff; the tests prove code-side fail-closed/refund/idempotency behavior only, not applied Supabase production readiness.
 - Synced the real `.github/workflows/ci.yml` to the reviewed template so recovery, T5/R0, showcase, SEO, Seller Pack and copy checks run on GitHub; removed the old `critical-path || true` false-green path.

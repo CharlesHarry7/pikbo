@@ -13,15 +13,15 @@ const SEO_BODY_GENERATE_HREF = createRemixHref("360-spin-showcase");
 const FAQ = [
   {
     q: "What does Pikbo do on this homepage?",
-    a: "Pikbo turns a still photo of a designer toy, figure, or blind-box collectible into a short motion clip. Use the tool above on this page, or open the dedicated rank page when you need the full keyword-focused guide.",
+    a: "Pikbo turns one owned photo of a designer toy, figure, or blind-box collectible into a fixed Launch Pack: listing spin, reveal clip, and social hook.",
   },
   {
     q: "Can I turn a photo into short video without filming?",
-    a: "Yes. Upload a clear product photo you own and pick a recipe such as 360° spin or floating hero. Public validation shows a cached prototype first; eligible Live accounts receive an exact quote before submission.",
+    a: "Yes. Upload a clear product photo you own. The homepage sends it to the fixed three-format Launch Pack; cached validation stays free and eligible Live accounts receive an exact quote before submission.",
   },
   {
     q: "Is the homepage tool the same as /create?",
-    a: "Yes. The upload → generate block on this page is a real generate path, not a teaser. /create is the full studio when you want more recipes, Seller Starter Pack, or library tools.",
+    a: "Yes. The homepage upload hands the same photo to /create in Launch Pack mode. Confirm ownership, review the mode and quote, then generate the fixed three formats.",
   },
   {
     q: "Do Lab demos use my photo?",
@@ -74,9 +74,9 @@ export function HomeSeoBody() {
             >
               AI toy video generator tool page
             </Link>
-            . This homepage embeds the same photo-to-video control for people who
-            arrive by brand: upload, confirm rights, choose a recipe, and review
-            the exact mode and quote. Lab wall demos stay labeled cached
+            . This homepage gives brand visitors one path: upload, confirm rights,
+            generate the fixed listing/reveal/hook trio, then export the succeeded
+            downloadable results. Lab wall demos stay labeled cached
             prototypes—not fake customer UGC.
           </p>
           <nav
@@ -132,8 +132,8 @@ export function HomeSeoBody() {
               — plain background, full figure, sharp focus.
             </li>
             <li>
-              <strong className="text-white/90">Use the tool above</strong>—or
-              open{" "}
+              <strong className="text-white/90">Use the upload above</strong> for
+              the three-format Launch Pack—or open{" "}
               <Link
                 href={SEO_BODY_GENERATE_HREF}
                 className="text-[var(--mint)] hover:underline"
@@ -232,8 +232,15 @@ export function HomeSeoBody() {
           <p className="mt-3">
             Stripe checkout stays off until durable accounts, protected delivery,
             and billing validation pass. Soft launch prioritizes an honest product
-            path over premature charging. When you need more recipes or Seller
-            Starter Pack formats, open{" "}
+            path over premature charging. The default seller path is the
+            three-format{" "}
+            <Link
+              href="/create?mode=seller-pack"
+              className="text-[var(--mint)] hover:underline"
+            >
+              Launch Pack
+            </Link>
+            ; open{" "}
             <Link
               href={SEO_BODY_GENERATE_HREF}
               className="text-[var(--mint)] hover:underline"
@@ -241,14 +248,7 @@ export function HomeSeoBody() {
             >
               Generate
             </Link>{" "}
-            or{" "}
-            <Link
-              href="/create?mode=seller-pack"
-              className="text-[var(--mint)] hover:underline"
-            >
-              Seller Starter Pack
-            </Link>
-            .
+            for a single additional recipe.
           </p>
         </div>
 

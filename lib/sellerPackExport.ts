@@ -142,7 +142,7 @@ export function sellerPackManifest(items: SellerPackExportItem[]): {
     downloads,
     items: available,
     note:
-      "Only succeeded, downloadable clips are listed. Failed siblings and Free raw URLs are omitted. Use downloads[] for multi-file save; no server ZIP until object storage.",
+      "Launch Pack lists only succeeded, downloadable clips. Failed siblings and Free raw URLs are omitted. Use downloads[] for multi-file save; no server ZIP until object storage.",
   };
 }
 
