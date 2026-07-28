@@ -442,7 +442,8 @@ function SessionJobsPanel({
             {meta.mode ? (
               <span className="ml-1.5 font-semibold text-white/40">
                 · {meta.mode}
-                {meta.mode.includes("local") || meta.mode.includes("memory")
+                {!hasDurablePrivate &&
+                (meta.mode.includes("local") || meta.mode.includes("memory"))
                   ? " · not durable cloud"
                   : ""}
               </span>
