@@ -10,6 +10,7 @@ import {
   historyItemDownloadAllowed,
   importHistoryJson,
   loadHistory,
+  privateDownloadHeaders,
   remoteClipMayExpire,
   removeHistoryItem,
   type HistoryItem,
@@ -400,6 +401,7 @@ function SessionJobsPanel({
   if (jobs.length === 0) return null;
   const { byStatus, open, jobTimeoutMs, timedOutThisSweep, listed, listLimit } =
     meta;
+  const hasDurablePrivate = meta.mode?.includes("supabase-private") === true;
   const timeoutMin =
     typeof jobTimeoutMs === "number" && jobTimeoutMs > 0
       ? Math.round(jobTimeoutMs / 60000)
@@ -423,7 +425,9 @@ function SessionJobsPanel({
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <p className="text-[10px] font-black uppercase tracking-wider text-[var(--fg-dim)]">
-            Session jobs · this server process
+            {hasDurablePrivate
+              ? "Private results · account + session"
+              : "Session jobs · this server process"}
             {open > 0 ? (
               <span className="ml-1.5 font-bold text-[var(--mint)]">
                 · {open} open
@@ -449,14 +453,25 @@ function SessionJobsPanel({
             )}
           </p>
           <p className="mt-1 text-xs text-[var(--fg-muted)]">
-            Local ledger from Generate (not multi-node cloud). Device Library
-            below is{" "}
-            <span className="font-semibold text-[var(--mint)]">
-              Saved on this device
-            </span>{" "}
-            only — empty until a clip is saved here. Cancel marks the ledger
-            only; in-flight fal may still finish. TIMEOUT rows show refund
-            unconfirmed (check balance) — not a confirmed restore.
+            {hasDurablePrivate ? (
+              <>
+                Private completed clips persist in your account and download
+                through a fresh owner-only link. Open session jobs remain tied
+                to this server process.
+              </>
+            ) : (
+              <>
+                Local ledger from Generate (not multi-node cloud). Device
+                Library below is{" "}
+                <span className="font-semibold text-[var(--mint)]">
+                  Saved on this device
+                </span>{" "}
+                only — empty until a clip is saved here.
+              </>
+            )}{" "}
+            Cancel marks the ledger only; in-flight fal may still finish.
+            TIMEOUT rows show refund unconfirmed (check balance) — not a
+            confirmed restore.
             {timeoutMin ? (
               <span className="text-[var(--fg-dim)]">
                 {" "}
@@ -742,7 +757,11 @@ export function LibraryGrid() {
 
   async function refreshSessionJobs() {
     try {
-      const r = await fetch("/api/generations");
+      const headers = await privateDownloadHeaders();
+      const r = await fetch("/api/generations", {
+        headers,
+        cache: "no-store",
+      });
       const body = (await r.json()) as Parameters<typeof applyGenerationsBody>[0];
       applyGenerationsBody(body);
     } catch {
@@ -818,7 +837,10 @@ export function LibraryGrid() {
   useEffect(() => {
     let cancelled = false;
     const t = window.setTimeout(() => {
-      void fetch("/api/generations")
+      void privateDownloadHeaders()
+        .then((headers) =>
+          fetch("/api/generations", { headers, cache: "no-store" })
+        )
         .then((r) => r.json())
         .then((body: Parameters<typeof applyGenerationsBody>[0]) => {
           if (cancelled) return;
@@ -846,7 +868,10 @@ export function LibraryGrid() {
       sessionJobs.some((j) => isCancellableSessionJob(j.status));
     if (!open) return;
     const t = window.setInterval(() => {
-      void fetch("/api/generations")
+      void privateDownloadHeaders()
+        .then((headers) =>
+          fetch("/api/generations", { headers, cache: "no-store" })
+        )
         .then((r) => r.json())
         .then((body: Parameters<typeof applyGenerationsBody>[0]) => {
           applyGenerationsBody(body);
@@ -893,7 +918,8 @@ export function LibraryGrid() {
     }
     const gateUrl = `/api/downloads/${encodeURIComponent(id)}`;
     try {
-      const head = await fetch(gateUrl, { method: "HEAD" });
+      const headers = await privateDownloadHeaders();
+      const head = await fetch(gateUrl, { method: "HEAD", headers });
       const decision = interpretDownloadHead({
         status: head.status,
         code: head.headers.get("X-Pikbo-Download-Code"),
@@ -1428,6 +1454,14 @@ export function LibraryGrid() {
         <LibraryStorageBanner
           deviceCount={0}
           sessionOpen={sessionMeta.open}
+          privateCount={
+            sessionJobs.filter(
+              (job) =>
+                job.status === "succeeded" &&
+                !job.demo &&
+                job.videoUrl?.startsWith("/api/downloads/")
+            ).length
+          }
         />
         <SessionJobsPanel
           jobs={sessionJobs}
@@ -1461,8 +1495,9 @@ export function LibraryGrid() {
             <p className="mt-2 max-w-sm text-xs leading-relaxed text-[var(--fg-muted)]">
               {sessionJobs.length > 0 || sessionStills.length > 0 ? (
                 <>
-                  Session jobs above are this server process only. Successful
-                  generates also save under{" "}
+                  {sessionMeta.mode?.includes("supabase-private")
+                    ? "Private results above persist in your account. Device-only clips also save under "
+                    : "Session jobs above are this server process only. Successful generates also save under "}
                   <span className="font-semibold text-[var(--mint)]">
                     {PROVENANCE.localLibrary}
                   </span>{" "}
@@ -1535,6 +1570,14 @@ export function LibraryGrid() {
       <LibraryStorageBanner
         deviceCount={items.length}
         sessionOpen={sessionMeta.open}
+        privateCount={
+          sessionJobs.filter(
+            (job) =>
+              job.status === "succeeded" &&
+              !job.demo &&
+              job.videoUrl?.startsWith("/api/downloads/")
+          ).length
+        }
       />
       <SessionJobsPanel
         jobs={sessionJobs}

@@ -27,6 +27,7 @@ export type PrivateGenerationResult = {
   duration: number;
   aspectRatio: string;
   resolution: string;
+  createdAt: string;
 };
 
 type SaveInput = {
@@ -83,6 +84,10 @@ function resultFromRow(row: Record<string, unknown>): PrivateGenerationResult | 
       typeof row.aspect_ratio === "string" ? row.aspect_ratio : "1:1",
     resolution:
       typeof row.resolution === "string" ? row.resolution : "480p",
+    createdAt:
+      typeof row.created_at === "string"
+        ? row.created_at
+        : new Date(0).toISOString(),
   };
 }
 
@@ -100,6 +105,7 @@ const RESULT_COLUMNS = [
   "duration_seconds",
   "aspect_ratio",
   "resolution",
+  "created_at",
 ].join(",");
 
 export async function getPrivateGenerationResult(input: {
@@ -134,6 +140,33 @@ export async function getPrivateGenerationResultByIdempotency(input: {
     .maybeSingle();
   if (error || !data) return null;
   return resultFromRow(data as unknown as Record<string, unknown>);
+}
+
+/**
+ * Owner-only durable Library rows. Object keys and provider URLs stay
+ * server-side; callers expose only the controlled /api/downloads/{jobId} gate.
+ */
+export async function listPrivateGenerationResults(input: {
+  userId: string;
+  limit?: number;
+}): Promise<PrivateGenerationResult[]> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return [];
+  const limit = Math.min(50, Math.max(1, Math.floor(input.limit ?? 50)));
+  const { data, error } = await admin
+    .from("generation_jobs")
+    .select(RESULT_COLUMNS)
+    .eq("created_by", input.userId)
+    .eq("status", "succeeded")
+    .not("output_object_key", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error || !Array.isArray(data)) return [];
+  return data
+    .map((row) =>
+      resultFromRow(row as unknown as Record<string, unknown>)
+    )
+    .filter((row): row is PrivateGenerationResult => Boolean(row));
 }
 
 export async function signedPrivateResultUrl(
@@ -355,6 +388,7 @@ export async function savePrivateGenerationResult(
       duration: input.duration,
       aspectRatio: input.aspectRatio,
       resolution: input.resolution,
+      createdAt: new Date().toISOString(),
     },
     signedUrl,
   };

@@ -5574,6 +5574,11 @@ const genJobsGet = fs.readFileSync(
   join(root, "app/api/generations/route.ts"),
   "utf8"
 );
+assert.match(genJobsGet, /listPrivateGenerationResults/);
+assert.match(genJobsGet, /getAuthUserFromRequest/);
+assert.match(genJobsGet, /supabase-private\+process-memory/);
+assert.match(genJobsGet, /\/api\/downloads\/\$\{encodeURIComponent\(result\.jobId\)\}/);
+assert.doesNotMatch(genJobsGet, /output_object_key|providerOutputUrl/);
 assert.doesNotMatch(genJobsGet, /touchOpenJobsForSession\(session\.id\)/);
 assert.match(genJobsGet, /touchedOpen:\s*0|GET is read-only/);
 assert.match(genJobsGet, /full\.queued|counts\.queued/);
@@ -5588,6 +5593,8 @@ const librarySessionList = fs.readFileSync(
   join(root, "components/LibraryGrid.tsx"),
   "utf8"
 );
+assert.match(librarySessionList, /privateDownloadHeaders/);
+assert.match(librarySessionList, /Private results · account \+ session/);
 assert.match(librarySessionList, /SESSION_JOBS_UI_LIMIT\s*=\s*50/);
 assert.match(librarySessionList, /data-session-list-limit/);
 assert.match(librarySessionList, /showing \{listed\}|showing \$\{listed\}/);
