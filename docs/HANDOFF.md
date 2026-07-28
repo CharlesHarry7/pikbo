@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] T5+R0 critical-path: refund, idempotency, auth fail-closed
+- `npm run t5-r0-critical-path`: R0 pure gate; generate/image source order (access→reserve→fal); release+refundUnconfirmed honesty; engine release restores balance; settle idempotent; magic-link `NOT_CONFIGURED`; CI template fail-closed.
+- Boss blockers explicit in `docs/BLOCKERS_REQUEST.md` § T5 A–E (keys, SQL, Auth URL, email, workflow scope).
+- PASS: t5-r0-critical-path · t5-auth-credits-smoke · recovery-qa.
+- Evidence: `docs/evidence/T5_R0_CRITICAL_PATH_2026-07-28.md`.
+
 ### 2026-07-28 — [grok] T5 pure engine + auth fail-closed smoke (Codex DISPATCH)
 - Branch `agent/grok/t5-auth-credits-smoke`: `npm run t5-auth-credits-smoke` (strip-types import of `lib/durableCredits/engine.ts`).
 - Covers reserve/settle/release/idempotent settle, guest migrate once, discard cookie when durable non-empty, expire stale, authConfig disabled default, T5+R1 SQL present, liveReservation no session debit.
