@@ -12,9 +12,11 @@ import { isBrowserSupabaseReady } from "@/lib/supabase/browser";
 export function LibraryStorageBanner({
   deviceCount,
   sessionOpen,
+  privateCount = 0,
 }: {
   deviceCount: number;
   sessionOpen: number;
+  privateCount?: number;
 }) {
   const [me, setMe] = useState<MeResponse | null>(null);
 
@@ -27,7 +29,8 @@ export function LibraryStorageBanner({
     return () => window.clearTimeout(t);
   }, []);
 
-  const signedIn = Boolean(me?.signedIn && me?.auth?.id);
+  const signedIn =
+    privateCount > 0 || Boolean(me?.signedIn && me?.auth?.id);
   const authReady = isBrowserSupabaseReady() || Boolean(me?.authConfigured);
   const email = me?.auth?.email;
 
@@ -70,8 +73,9 @@ export function LibraryStorageBanner({
                 {email || "Signed in"}
               </p>
               <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-                Identity ready · clip cloud sync still device-local until
-                durable assets ship
+                {privateCount > 0
+                  ? `${privateCount} private clip${privateCount === 1 ? "" : "s"} · owner-only cloud download`
+                  : "Identity ready · device Library items stay local until generated privately"}
               </p>
             </>
           ) : (
@@ -96,7 +100,7 @@ export function LibraryStorageBanner({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-black/30 px-4 py-2">
         <p className="text-[10px] text-white/40">
-          HF Assets pattern · honest storage labels · no fake multi-device claim
+          Private generations persist by account · device imports stay local
         </p>
         <Link
           href="/community"

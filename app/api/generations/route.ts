@@ -9,6 +9,8 @@ import {
   sweepTimedOutJobs,
   toPublicJob,
 } from "@/lib/generationJobs";
+import { listPrivateGenerationResults } from "@/lib/privateGenerationResults";
+import { getAuthUserFromRequest } from "@/lib/supabase/user";
 
 export const runtime = "nodejs";
 
@@ -118,26 +120,77 @@ export async function DELETE(req: Request) {
  * GET also sweeps queued/running jobs past their fixed deadline. Polling is
  * read-only and never extends deadlineAt or worker liveness.
  */
-export async function GET() {
+export async function GET(req: Request) {
   const session = await ensureSession();
+  const authUser = await getAuthUserFromRequest(req);
   const timedOut = sweepTimedOutJobs();
-  // Newest page for Library recovery UI; histogram uses full-session counts.
-  const listed = listJobsForSession(session.id, SESSION_JOBS_LIST_LIMIT);
-  const jobs = listed.map((j) => toPublicJob(j, session.id));
+  const privateResults = authUser
+    ? await listPrivateGenerationResults({
+        userId: authUser.id,
+        limit: SESSION_JOBS_LIST_LIMIT,
+      })
+    : [];
+  const privateJobs = privateResults.map((result) => ({
+    id: result.jobId,
+    status: "succeeded",
+    effect: result.effect,
+    demo: false,
+    watermark: false,
+    downloadAllowed: true,
+    // Never return a storage object key or signed URL in a Library listing.
+    videoUrl: `/api/downloads/${encodeURIComponent(result.jobId)}`,
+    creditsOutcome: "10 used",
+    requestId: result.jobId,
+    model: result.model,
+    duration: result.duration,
+    aspectRatio: result.aspectRatio,
+    resolution: result.resolution,
+    createdAt: result.createdAt,
+    updatedAt: result.createdAt,
+    owned: true,
+  }));
+  const privateIds = new Set(privateJobs.map((job) => job.id));
+  // The local store is capped at 200 rows. Read all of it so a current-process
+  // mirror of a durable result can be de-duplicated before counts and listing.
+  const localJobs = listJobsForSession(session.id, 200).map((job) =>
+    toPublicJob(job, session.id)
+  );
+  const mirroredPrivateIds = new Set(
+    localJobs
+      .flatMap((job) => [job.id, job.requestId])
+      .filter((id): id is string => Boolean(id && privateIds.has(id)))
+  );
+  const allLocalJobs = localJobs.filter(
+    (job) =>
+      !privateIds.has(job.id) &&
+      !(job.requestId && privateIds.has(job.requestId))
+  );
+  const jobs = [...privateJobs, ...allLocalJobs]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, SESSION_JOBS_LIST_LIMIT);
   // Full-session histogram (HEAD parity) — not only the newest list page.
   const full = countJobsForSession(session.id);
+  const durableSucceeded = privateJobs.filter(
+    (job) => !mirroredPrivateIds.has(job.id)
+  ).length;
   const byStatus = {
     queued: full.queued,
     running: full.running,
-    succeeded: full.succeeded,
+    succeeded: full.succeeded + durableSucceeded,
     failed: full.failed,
     canceled: full.canceled,
   };
   return NextResponse.json({
     ok: true,
-    mode: "local-memory",
-    adapter: "process-memory",
-    durable: false,
+    mode:
+      privateJobs.length > 0
+        ? "supabase-private+process-memory"
+        : "local-memory",
+    adapter:
+      privateJobs.length > 0
+        ? "supabase-private+process-memory"
+        : "process-memory",
+    durable: privateJobs.length > 0,
     jobTimeoutMs: jobTimeoutMs(),
     timedOutThisSweep: timedOut.filter((j) => j.sessionId === session.id)
       .length,
@@ -146,12 +199,14 @@ export async function GET() {
     listLimit: SESSION_JOBS_LIST_LIMIT,
     listed: jobs.length,
     /** Full session job count (jobs[] may be a newest page only). */
-    total: full.total,
+    total: full.total + durableSucceeded,
     /** Full session-scoped histogram (Library recovery UI) — HEAD parity. */
     byStatus,
     open: full.open,
     note:
-      "In-process ledger for soft-launch recovery. Not multi-node durable. Use POST /api/generate for work. Queued/running jobs fail at fixed deadlineAt; GET is read-only. byStatus/open/total are full-session.",
+      privateJobs.length > 0
+        ? "Owner-gated Supabase private results plus the current process ledger. Private results survive refresh and cross-device sign-in; open local jobs remain process-scoped."
+        : "In-process ledger for soft-launch recovery. Not multi-node durable. Use POST /api/generate for work. Queued/running jobs fail at fixed deadlineAt; GET is read-only. byStatus/open/total are full-session.",
     compatibility: {
       syncGenerate: "/api/generate",
       jobStatus: "/api/generations/[id]",
