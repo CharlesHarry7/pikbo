@@ -1923,5 +1923,12 @@ Newest first. One block per meaningful landing.
   Local interactive hydration could not be exercised through the isolated
   browser origin, so no browser-policy bypass was attempted; API and module
   smokes provide the interaction/settlement regression.
+- Final Codex verification after merging `main@4d9efa9`: `typecheck`,
+  `engine-smoke`, `seo-cold-start-smoke`, `seller-pack-cached-smoke`,
+  `recovery-qa`, `recovery-ledger`, `recovery-retry-deadline`,
+  `recovery-reconciliation`, the 193-route production build, running-server
+  `link-check`, `critical-path` and `seller-pack-api-golden` all pass. ESLint
+  reports 0 errors and one existing unused-variable warning in
+  `components/HomeViralWall.tsx`.
 - Safety: no provider key, paid call, database, Stripe, deployment, DNS or public
   indexing action. T5/T6 and public Mode A/B readiness remain fail-closed.
