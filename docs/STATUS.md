@@ -23,7 +23,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | R1b | Exact retry token + fixed deadline + worker/read separation | Claude / Grok | review | main | Video + image stills: exact parent→child + one-time bearer; fixed deadlineAt; CI recovery-retry-deadline; durable reconciliation still R1c |
 | R1c | Durable settlement reconciliation worker | Claude / Grok | review | main | Generate + image enqueue withheld/release paths; source queue+lease+finish RPC. Non-prod SQL rehearsal still required |
 | R2 | Seller-first Create funnel + Starter Pack event contract | GPT / Claude | review | main | First run is upload → selling task → exact quote/generate; advanced model/catalog controls collapsed; single-clip analytics separated from 3-clip Pack analytics |
-| R3 | Real integration tests + CI fail on critical path | Grok / Claude | review | main | recovery-qa + recovery-ledger in docs/ci; critical-path fail-closed; capture-ambiguity client honesty; boss re-copy workflow |
+| R3 | Real integration tests + CI fail on critical path | Grok | **review** | agent/grok/r3-ci-fail-closed | Canonical template `docs/ci/github-actions-ci.yml` is fail-closed (recovery suite + critical-path **without** `|| true`). Local PASS 2026-07-28: recovery-qa/ledger/retry/recon · seller-pack-cached-smoke · seo-cold-start · engine-smoke · typecheck. **Live** `.github/workflows/ci.yml` apply **blocked**: OAuth token lacks `workflow` scope (push rejected). Boss: re-auth with workflow scope and copy template → live workflow, or push this branch after granting scope. Evidence: `docs/evidence/R3_CI_FAIL_CLOSED_2026-07-28.md`. |
 | R4 | Public-example evidence ledger and honest scoring | Grok / Claude | review | agent/claude/showcase-evidence-runtime | Runtime now matches ledger: 0 verified cases / 12 cached prototypes; no numeric scores; posters are references; homepage keeps 8 distinct labeled previews; live UI fails closed without explicit durable entitlement |
 | R4b | Verified showcase promotion evidence gate | Claude | review | agent/claude/showcase-promotion-gate | Canonical evidence schema + fail-closed registry/label gate + 1 valid/8 invalid fixtures; current 12 prototypes and 8-video homepage remain unchanged |
 | R4c | Public Live capability copy matrix + five-page contract | Claude | review | agent/claude/live-copy-matrix | Home/Create/Pricing plus Apps/Modules/Flow/Cinema and core SEO content fail public copy closed; source + 164 rendered-route contract passes |
@@ -116,7 +116,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 
 | Path / area | Locked by | Until |
 |---|---|---|
-| — | — | — |
+| `.github/workflows/ci.yml` | Grok · R3 (apply blocked on workflow OAuth) | until boss grants `workflow` scope |
 
 When you start: add a row. When you merge: clear it.
 

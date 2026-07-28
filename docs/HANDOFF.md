@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] R3 live CI fail-closed (critical-path no `|| true`)
+- Branch `agent/grok/r3-ci-fail-closed`: copy `docs/ci/github-actions-ci.yml` → live `.github/workflows/ci.yml`.
+- Adds recovery-qa/ledger/retry/recon, seller-pack, showcase, seo-cold-start, live-copy; **critical-path fails the job**.
+- Evidence: `docs/evidence/R3_CI_FAIL_CLOSED_2026-07-28.md`.
+- Local PASS: recovery-qa · recovery-ledger · recovery-retry-deadline · recovery-reconciliation · seller-pack-cached-smoke · seo-cold-start-smoke · engine-smoke · typecheck.
+
 ### 2026-07-28 — [grok] Residual R0 cookie-authority honesty (Profile / claim / Settings / badge)
 - ProfilePanel + Settings: cookie is **not** live-spend authority; live needs durable atomic reserve or labeled cached demos.
 - `/api/auth/claim`: migrates display balance only — no soft-launch generate-authority claim.
