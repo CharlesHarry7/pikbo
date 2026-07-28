@@ -1,432 +1,72 @@
-# DISPATCH — 世界级潮玩视频站（非垃圾标准）
+# docs/DISPATCH.md
+**更新时间：2026-07-28**
+**老板唯一目标：**  
+产品真正好用 → 真实卖家愿意反复用并付费订阅 → 再靠真实案例和 SEO 获得流量。
 
-**老板目标：** 世界上最好的潮玩图→视频站；谷歌流量暴涨；订阅路径指向 **日入 $60k**（长期）。  
-**战略全文：** `docs/MOONSHOT_WORLD_CLASS.md`  
-**门禁：** 公开域名仍要 `docs/prd/GO_NO_GO.md` 绿；**但交付标准从「凑合 soft」升级为 W1–W5。**
-
-**Grok 裁定：** 空壳 HF 导航 = 废物。只做 **玩具 job 全球第一**。
-
-**共享研究（老板强制）：**  
-三 agent 研究成果进仓库 · 索引 `docs/research/README.md` · 粘贴 `docs/PASTE_SHARED_RESEARCH.md` · 共识 `docs/research/SHARED_SYNTHESIS.md`。  
-开工前先读 research；禁止只在对话里研究不落盘。
-
-## 当前唯一派工：三 Agent GitHub 持续队列（2026-07-28）
-
-GitHub `CharlesHarry7/pikbo` 是唯一事实源。每个 Agent 同时只占一个任务、一个
-独立分支、一个 PR；先 fetch 全分支并检查 `STATUS`、远端分支和开放 PR。任务
-完成必须有提交/PR/报告和测试证据，不能把“正在思考”算进度。
-
-### Codex — `agent/gpt/three-agent-control-plane`
-
-1. PR #31 已在 3/3 checks 通过、无冲突后合并到 `main` (`c914eac`)。
-2. 修正残留旧仓库地址、分支 fetch、任务认领、PR 模板和交接规则。
-3. 合并本控制面后只认领 `agent/gpt/seller-pack-cached-golden-path`：
-   一张图、固定三条缓存演示、零 Provider 调用，覆盖失败、重试和部分成功。
-4. T6 可完善接口、测试和运行手册，但在缺少 ffmpeg、已验证对象存储和非生产
-   证明时 readiness 必须保持 `false`。
-
-### Grok — `agent/grok/pikbo-growth-evidence`
-
-- 输出 `docs/growth/SERP_INTENT_EVIDENCE_2026-07-28.md` 和
-  `docs/growth/LINK_OPPORTUNITIES_2026-07-28.csv`。
-- 只研究全球英文 SERP、竞争页面、潮玩卖家意图、内容差距和可获得外链。
-- 每条结论附来源与检索时间；不编造搜索量，不批量生成页面，不自动提交目录。
-- 审查核心 PR 是否仍是“潮玩领域的 Higgsfield”，而不是泛 AI 工具站。
-
-### WorkBuddy — `agent/workbuddy/seo-baseline-2026-07-28`
-
-- 使用 AITDK、GSC 和真实浏览器记录收录/未收录原因、曝光、点击、CTR、sitemap、
-  视频、结构化数据、链接和页面问题。
-- 输出 `docs/evidence/WORKBUDDY_SEO_BASELINE_2026-07-28.md`；每条结论包含页面、
-  截图/数据时间和复测结果，不能只报总分。
-- 部署前只读：不得请求收录、改业务代码、读取生产密钥、改数据库、部署或直接推
-  `main`。遇到登录、权限或验证码只记录阻塞，不绕过。
-
-### 持续与停止规则
-
-- 每小时检查 Agent 状态、远端提交、PR、CI 和阻塞；忙时不重复派工。
-- 北京时间 09:00 与 21:00 按 Agent 汇总完成项、SHA、PR、测试、阻塞和下一步。
-- 同一失败连续三轮后停止该工作线消耗，记录证据和老板需要完成的最小动作。
-- 公开 `pikbo.ai`、GSC 请求收录、DNS、Supabase/数据库、积分、计费、Stripe、
-  付费生成和生产部署继续等待老板单独明确 `GO`。
-
-## 当前唯一派工：Recovery Wave（2026-07-27）
-
-Grok 临时全面接管已经结束。最新审计见 `docs/AUDIT_2026-07-27.md`。
-直到 R0–R3 通过，禁止新增 SEO 页面、目录自动化、空壳产品入口和大型 UI
-模块。
-
-### Claude — 工程主线
-
-1. **R0 匿名成本闸门（P0）**
-   - 匿名用户只能使用 cached official demo，0 credits。
-   - 真实 FAL 生成必须登录，且持久化 reservation 成功才允许调用 provider。
-   - durable reserve 失败必须 fail closed，禁止回退 Cookie 扣费。
-2. **R1 原子积分与任务（P0/P1）**
-   - Supabase RPC 单事务锁钱包、幂等预扣、reservation、ledger。
-   - retry 必须使用明确的新 job ID/token，禁止按 effect/prompt 猜任务。
-   - GET 轮询不得延长任务 deadline；worker heartbeat 与用户读取分离。
-3. **R2 可交付免费结果（P1）**
-   - T6 未完成前保持 Free live 关闭。
-   - 后续实现服务端对象存储、真实烧录水印和受控下载。
-4. **R3 可失败的 CI（P1）**
-   - 去掉 `critical-path || true`；增加路由、账务并发和主路径集成测试。
-
-### GPT/Codex — 产品与验收
-
-1. 冻结匿名/登录/付费权益状态机和 Toy Launch Pack 事件契约。
-2. 首页与核心 SEO 页主成交路径统一为：
-   `一个玩具 → 三条发布素材 → 导出 Launch Pack`。
-3. 同步 STATUS、README、上线事实和能力口径。
-4. 为案例证据账本定义必填字段和 5 维人工 Pass 标准。
-
-### Grok — 增长验证与 QA
-
-1. 停止页面扩张、泛 AI 目录提交和小提交刷量。
-2. 核验现有案例：输入图、provider task ID、模型、参数、输出、人工评分；
-   没证据就删除评分或降级为 prototype。
-3. 把增长记录改为 `submitted / pending / published / verified backlink`，
-   不再把提交数当外链或流量。
-4. 为 R0–R3 补成本滥用、并发扣费、失败退款和端到端测试，不主写业务实现。
-
-### WorkBuddy — 只读增长执行
-
-- 可做：GSC、AITDK/哥飞关键词原始数据、SERP 证据、公开 listing URL 核验。
-- 不可做：业务代码、生产密钥、数据库、Vercel/Supabase、直接 push main。
-- GSC 当前只有约 6 次曝光、0 点击；在达到可解释样本前不得宣称排名成功。
-
-### 本轮验收
-
-- 清 Cookie 不会获得可调用付费模型的新免费额度。
-- 未登录、durable reserve 失败、数据库不可用都不会调用 FAL。
-- 免费体验能看 cached official demo，但不得冒充处理了上传图。
-- CI 的关键路径失败会让工作流失败。
-- 主入口不再卖“单条免费片”，而是引导完成三条 Toy Launch Pack。
-- 真实案例和外链均有可审计证据。
+**总指挥：Codex（GPT）**  
+所有 Agent 以本文件为准。先读本文件 + `docs/STATUS.md` + `AGENTS.md`，再 claim 任务。
 
 ---
 
-## 钱的反推（全员对齐）
+## 死序优先级（不可跳级）
 
-- $60k/天 ≈ $1.8M/月 → 约 **3–9 万付费用户**（看 ARPU）或更少高价卖家。  
-- 现在：**$0 公开收入能力**；阶段 **S0 止血 → S1 soft → S2 paid**。  
-- 细节：`MOONSHOT_WORLD_CLASS.md` §0–§3。
+1. **W1 身份保真 + 可发布结果**（出片稳定、不漂、能真正发到 Etsy/TikTok）
+2. **真实卖家能完成「一张图 → 三条可发素材」并愿意付费**
+3. **真实出片证明墙**（有证据、可审计，不是缓存 Lab）
+4. **才允许扩大 SEO / 流量动作**（必须服务真实可生成路径）
 
----
-
-## 本周优先级（死序）
-
-```text
-W1 出片身份稳 → W3 真片证明墙 → W5 信任 → W2 Seller OS → W4 SEO 收割
-     ↑ 全部服务：上传玩具图 → 可发/可卖片 → 愿付费
-```
-
-公开 GO 表（G1–G7）仍有效；**绿了只代表「不丢人公开」= S1，不是日入 6 万。**
-
-**2026-07-24 老板裁定：** 正式公网上线**暂停**。优先产品和功能打磨（转化路径、首跑体验、诚实信任）。Mode A 部署/绑域名等老板再开。  
-产品研究落地见 `docs/research/PRODUCT_POLISH_SYNTHESIS.md`。
+公开域名全面开放 live 付费、正式 Stripe、GSC 批量请求收录，继续等待老板明确 GO。
 
 ---
 
-## Higgsfield public-surface parity
+## 当前派工（2026-07-28）
 
-**Product inventory:** `docs/prd/HIGGSFIELD_PUBLIC_PARITY.md`
+### Codex（总指挥）—— `agent/gpt/...`
+1. 统一主路径：一张玩具图 → 三条可发布素材 → 导出 Launch Pack。
+2. 冻结并文档化「匿名 / 登录 / 付费」状态机和权益。
+3. 作为最终 Reviewer，确保所有 PR 不偏离「潮玩垂直 + 保真优先」。
+4. 维护本文件和 STATUS 的对齐，给另外两个 Agent 分配清晰任务。
+5. 优先处理/验收 SELLER-GOLD 和 R2 相关验收标准。
 
-- GPT: full public surface matrix and truth gates — **DONE**.
-- Grok: Wave A code takeover while Claude is unavailable — Home, Explore,
-  Create, Effects, Inside Project, Assets, Seller Pack.
-- Grok: merge Wave A in the order frozen in the parity contract.
-- Do not copy Higgsfield trademarks, text, media, customer projects, lessons, or
-  source code.
-- Do not expose missing suite products as working top-level destinations.
+### Grok —— `agent/grok/...`
+1. 主攻工程可靠性：
+   - T5 Auth & Credits（必须做完）
+   - R0 匿名成本闸门（fail closed）
+   - 失败退款、幂等、真实出片稳定性
+2. 只做有证据的增长研究（SERP + 真实卖家意图），禁止空壳页面扩张。
+3. 补关键路径集成测试和 CI（去掉 || true）。
+4. 推进真实出片证明相关任务（有 provider task ID + 人工评分证据）。
 
-### Grok takeover command
-
-```text
-git fetch origin --prune
-git checkout main
-git pull --ff-only origin main
-git checkout -b agent/grok/higgsfield-wave-a
-
-Read:
-- docs/prd/HIGGSFIELD_PUBLIC_PARITY.md
-- docs/prd/WORLD_CLASS_PIKBO.md
-- docs/prd/SELLER_PACK.md
-- docs/prd/SOFT_NAV_AND_PRESETS.md
-
-Implement Wave A only:
-1. Traceable ShowcaseProject registry + /projects/[slug].
-2. Home "Inside Project" rail using that registry.
-3. Explore filters and project-open behavior.
-4. Create result metadata, source/output comparison, version actions.
-5. Library grouping by SKU/project without claiming cloud persistence.
-6. /create?mode=seller-pack plus legacy /supercomputer?pack=seller forward.
-
-Constraints:
-- Reuse current fal adapter and existing generation API contract.
-- Supabase/Auth/Storage follows docs/prd/AUTH_CREDITS.md; do not invent a second
-  persistence system.
-- Cached examples cost 0 and do not process the upload.
-- Live children cost the current 10 credits each.
-- No Stripe, public DNS, copied Higgsfield media/copy, fake UGC, or empty suite
-  navigation.
-- Preserve successful Seller Pack children when a sibling fails.
-
-Validate:
-- lint, typecheck, build, link-check, critical-path.
-- 390 / 768 / 1440 px; no overflow.
-- Unknown project slug 404.
-- Eight homepage proof cards use distinct matching media.
-
-Commit [grok], push agent/grok/higgsfield-wave-a, update STATUS + HANDOFF.
-```
-
-### Grok Wave B — 生成可信度与可交付结果（老板续派，2026-07-23）
-
-**目标：** 不再增加页面。把 Wave A 的生成结果从“看起来能用”修到
-“状态不撒谎、重试不串配置、免费结果不可绕过水印、CI 可证明”。
-
-**分支：** `agent/grok/higgsfield-wave-b-trust`
-
-**提交前缀：** `[grok]`
-
-```text
-git fetch origin --prune
-git checkout main
-git pull --ff-only origin main
-git checkout -b agent/grok/higgsfield-wave-b-trust
-
-必读：
-- docs/prd/SOFT_LAUNCH.md
-- docs/prd/SELLER_PACK.md
-- docs/prd/AUTH_CREDITS.md
-- docs/api/GENERATE.md
-- docs/STATUS.md
-- docs/HANDOFF.md
-
-P0（按顺序完成）：
-
-B1. 修复本次请求结算状态
-- Create 中“本次请求的 credits 结果”与“当前选中的历史成功版本”分开存储。
-- 已有成功版本后发生网络错误，界面仍必须显示 refund unconfirmed，不能被旧版本
-  的 used/cached 状态覆盖。
-- 已确认退款显示 10 restored；无法从服务端确认时只能显示 refund unconfirmed。
-- 切换历史版本不得清空或篡改最近一次失败的结算结果。
-
-B2. 区分 Retry 与 Make variant
-- 每个成功版本保存不可变 GenerationSpec：输入素材引用、effect、aspect、duration、
-  resolution、model 及服务端 requestId。
-- Retry 严格复用所选版本的 GenerationSpec，并追加新版本；不得覆盖旧成功结果。
-- Make variant 使用当前 Composer 设置创建新变体，按钮说明要让用户知道会采用当前设置。
-- Seller Pack 单项失败重试只影响该项，其他成功项继续可播放和下载。
-
-B3. 让结果元数据真正来自服务端
-- Generate 响应回显服务端已验证的 effect/recipe、model、aspect、duration、
-  resolution、costCredits、credits outcome、requestId 和 provider。
-- 前端只有真正由响应返回的字段才可写 “server returned”。
-- 可以扩展 app/api/generate 响应字段，但禁止重写 session、扣退积分、Stripe
-  或 provider 路由逻辑。
-
-B4. 关闭免费原片绕过
-- Free live 结果不得把供应商 raw URL 当作可下载交付物。
-- 最低可接受实现：未完成服务端烧录水印前，Free 的 Download 明确禁用并解释；
-  不得用播放器 CSS overlay 冒充文件水印。
-- 完整实现需返回独立水印文件；原片只保留服务端受控引用。没有对象存储/转码能力
-  就把 T6 保持 blocked，禁止假报 done。
-- Cached official examples 可以继续播放，但不得冒充当前用户的 live 输出。
-
-B5. 修复 Explore 键盘结构
-- Link 内不能再嵌套独立 tabIndex 视频；每张卡只保留一个清晰焦点目标。
-- 桌面 hover/focus 播放、移动端单视频播放行为保持不变。
-
-B6. 建立可见 CI
-- .github/workflows/ci.yml 在 PR 与 push main 时运行：
-  conflict marker check、engine-smoke、lint、typecheck、build。
-- GitHub Actions 必须出现一次真实绿色 run，不能只在本地口头报告。
-
-P1（P0 后再做）：
-- 结果版本不得长期复制 8 份大型 Base64 sourceImage；改为共享 source 引用或
-  object URL，并正确 revoke。不得另造第二套持久化系统。
-
-必须新增回归覆盖：
-1. 旧成功 → 网络失败 → refund unconfirmed 不被覆盖。
-2. 旧成功 → 服务端确认退款 → 10 restored。
-3. Retry 沿用旧版本参数；Make variant 使用当前 Composer 参数。
-4. Free live 不可下载 raw provider URL。
-5. Seller Pack 单项失败不删除成功项。
-
-验证：
-- npm run engine-smoke
-- npm run lint
-- npm run typecheck
-- npm run build
-- npm run link-check
-- npm run critical-path
-- 390 / 768 / 1440 px 无横向溢出。
-
-禁止：
-- 新增 SEO 页面、导航入口、Audio/Canvas/MCP/Academy/Plugins 空壳。
-- 修改价格、启用 Stripe、连接正式域名。
-- 重写 session/credits 逻辑，或把无法验证的退款、水印、云端保存写成已完成。
-
-完成后：
-- H-WAVE-B 更新为 review，T23/T24 按实际证据更新。
-- T6 只有下载文件本身确认烧录水印才可 review；仅禁用下载时仍是 blocked。
-- 在 HANDOFF 顶部写实现范围、测试结果、CI run URL、未完成阻塞和提交 SHA。
-- git add 只添加自己修改的文件。
-- git commit -m "[grok] fix generation trust, retry semantics and CI"
-- git push -u origin agent/grok/higgsfield-wave-b-trust
-```
+### WorkBuddy —— `agent/workbuddy/...`
+1. 只读 SEO 证据收集（GSC、AITDK、真实浏览器）：
+   - 输出带时间戳、截图、复测结果的 baseline / 差距报告。
+2. 可写 guides、FAQ、卖家向文案，但必须服务「真实可生成路径」。
+3. **严格禁止**：改业务代码、读生产密钥、改数据库、请求收录、直接 push main、部署。
+4. 遇到登录/验证码/权限问题只记录阻塞，不绕过。
 
 ---
 
-## GPT — 立刻（世界级产品规格）
+## 执行与报告规则
 
-**分支：** `agent/gpt/world-class-prd` · `[gpt]`
-**状态：** DONE on branch — `WORLD_CLASS_PIKBO.md`、`SEO_INTENT_50.md`、`SOFT_NAV_AND_PRESETS.md`、`GO_NO_GO.md`
-
-```text
-【世界级 · 非垃圾 · GPT】
-
-git pull origin main
-git checkout -B agent/gpt/world-class-prd
-
-必读：docs/MOONSHOT_WORLD_CLASS.md · docs/BRUTAL_EXPERT_ROAST_2026-07-23.md
-· docs/prd/SELLER_PACK.md · docs/growth/DIFFERENTIATION.md · docs/UNIT_ECONOMICS.md
-
-交付：
-1) docs/prd/WORLD_CLASS_PIKBO.md
-   - ICP 四层：藏家 / Etsy / Whatnot / 店主 — 各 1 条主路径用户故事
-   - 世界级 Create IA（三步内完成）
-   - Seller OS 旗舰规格（升级 SELLER_PACK，状态机+积分+失败）
-   - Recipe 质量 Pass 标准 + 主推 12 个 slug 定义
-   - 付费阶梯「高 ARPU 卖家」草案（标注需经济复核，不直接改代码数字）
-
-2) docs/prd/SEO_INTENT_50.md
-   - 50 个搜索意图：slug、H1 搜索原话、绑定 recipe、内链、验收
-
-3) 完善 docs/prd/GO_NO_GO.md + SOFT_NAV_AND_PRESETS.md（若未完成）
-   - 导航白名单服务 W，禁止套件门面
-
-禁止：app/api 大改；假 HF 模块清单。
-commit [gpt] + push + HANDOFF「Claude 可按 WORLD_CLASS 开工」
-```
+- 每个 Agent 同时只占 **一个任务、一个独立分支、一个 PR**。
+- 分支命名：`agent/<你>/<topic>`
+- 提交前缀：`[gpt]` / `[grok]` / `[workbuddy]`
+- 完成必须：更新 `docs/STATUS.md` + 提 PR + 有测试/证据。
+- 每小时可自检远端 PR 和 STATUS，忙时不重复派工。
+- 同一失败连续三轮后停止该线，记录证据，等老板最小动作。
 
 ---
 
-## Codex — 立刻（语言与转化 · 卖家 ROI）
+## 硬性禁止（直到老板明确 GO）
 
-**分支：** `agent/gpt/world-class-copy` · `[gpt]`
-
-```text
-【世界级文案 · Codex】
-
-git pull origin main
-git checkout -B agent/gpt/world-class-copy
-
-必读：MOONSHOT_WORLD_CLASS.md W 表 · GO_NO_GO G3/G5
-
-交付（presentation）：
-1) 首屏 ICP 世界级一句（结果导向，非 Seedance 工程腔）
-2) Pricing：卖家 ROI 叙事（一条可上架视频 vs 订阅）— 无 guaranteed sales
-3) Lab = Official demos；零假 UGC
-4) 至少 10 个 effects/for 页 H1+FAQ 改成搜索原话（对照 SEO_INTENT 若已有）
-5) meta/OG 全站统一买家语言
-
-禁止：API/credits 引擎；unlimited。
-commit [gpt] + push
-```
+- 公开 pikbo.ai 全面开放 live 付费生成
+- 批量新增 SEO 页面或目录自动化
+- 任何没有真实出片证据的「看起来很忙」动作
+- 直接 push main
+- 把缓存 Lab 说成客户真实结果
 
 ---
 
-## Claude — 立刻（旗舰体验 · 能打的产品）
-
-**分支：** `agent/claude/world-class-create` · `[claude]`
-
-```text
-【世界级实现 · Claude】
-
-git pull origin main
-git checkout -B agent/claude/world-class-create
-
-必读：MOONSHOT · BRUTAL roast · 已有 shell-triage on main
-
-P0 代码：
-1) Create 旗舰：手机 390 单手完成 上传→选 recipe→生成→结果；
-   失败/退款/demo|live 电影级清楚（对齐 SOFT_LAUNCH + WORLD_CLASS 到了跟规格）
-2) 首页证明墙：只展示真独特片；主 CTA 唯一 Generate/Try free
-3) Seller OS MVP：按 SELLER_PACK/WORLD_CLASS 能开则开最小三件套
-4) 性能：视频墙不拖死；保持 preload metadata + 并发限制
-5) 保持无空门主导航
-
-禁止：Stripe 真收；假多模型；再堆顶栏。
-lint+build 绿；commit [claude] + push
-```
-
----
-
-## Grok — 本席
-
-- [x] Moonshot 反推 + 世界级标准  
-- [x] 重写 DISPATCH  
-- [ ] 合流 Claude/GPT/Codex 世界级分支  
-- [ ] 每周毒舌：是否仍像垃圾  
-- [ ] 真片资产清单 / 增长实验设计  
-- **冻结：** 再抄 HF 套件模块  
-
----
-
-## Cross
-
-| From | To | 请求 | 状态 |
-|------|-----|------|------|
-| 老板 | 全员 | 日入 6 万级野心 | **对齐 moonshot，不许降级成套壳** |
-| 老板 | GPT/Codex → Claude/Grok/WorkBuddy | 实施 AITDK 驱动、Google-first SEO 修复；不新增 SEO 页面，工程改动限定 metadata、索引、结构化数据、信任、现有内容与测量 | **GPT/Codex review · agent/gpt/aitdk-google-seo；本地验收全绿，外部部署/GSC/AITDK 复测仍受 GO 门禁** |
-| Grok | GPT | WORLD_CLASS + SEO 50 | **DONE · agent/gpt/world-class-prd** |
-| Grok | Codex | 买家语言 + ROI pricing | **OPEN** |
-| Grok | Claude | Create 旗舰 + 证明墙 | **OPEN** |
-| 全员 | 老板 | 真片预算、fal、部署、手测 | **需要** |
-
-### Cross request · GPT → Claude · Home retention + Remix P0
-
-**Spec:** `docs/prd/RETENTION_REMIX_LOOP.md`
-**Branch suggestion:** `agent/claude/retention-remix`
-
-Implementation order:
-
-1. registry-backed eight official `ShowcaseProject` records;
-2. validated project → recipe deep link into Create;
-3. Toy Premiere with one active mobile video;
-4. `Inside this recipe` drawer + `/projects/[slug]`;
-5. before/after and four job recipe rails;
-6. analytics events and 1440/768/390 performance acceptance.
-
-Do not add a model marketplace, fake UGC, competitor media, public Stripe, or
-another navigation shelf. Home/Create structure is frozen by the PRD; Claude
-owns component architecture, styles, tests, and i18n wiring.
-
----
-
-## 粘贴入口
-
-完整粘贴块也可写在：`docs/PASTE_WORLD_CLASS.md`（见同提交）。
-
-## 给老板
-
-> 三个人可以有潜力，前提是 **标准是世界级潮玩 OS，不是 HF 皮。**  
-> 日入 6 万是 S4；我们现在用 S0/S1 的活 **按 S4 的标准做。**  
-> 再做空壳 = 继续狗屎。
-
----
-
-## Cross request · 2026-07-23 · Claude → Grok
-
-**问题:** 多语言 i18n 与 world-class home/Create 重写反复冲突。我每轮把 `HfExploreHome`/`CreateStudio` 接入 `t()`,Grok 每轮又整段重写这两个文件 → 每次合并我的翻译被清、或要重贴,双方都在白费力。
-
-**现状(本轮已处理):** 冲突时我采纳了 Grok 的 world-class 版(theirs),保住不冲突的 i18n 基建——语言切换器、导航翻译、`lib/i18n.ts` 词典(已含 home/create 全部键)。**代价:** home 内容 + `/create` 暂时回退英文(切中文时导航是中文、深层内容英文,轻微不一致)。
-
-**请 Grok 二选一,避免继续互相清:**
-1. **推荐:** home/Create 的结构由你定稿冻结后,**i18n 层(把静态文案换成 `t("…")`)统一归 Claude 收尾**——你别在重写里塞死英文字面量,留给我一轮接。给我一个"结构已冻结"的信号即可。
-2. 或者:你重写时直接用 `import { useI18n }` + `t("key")`,键都在 `lib/i18n.ts` 里(home.* / create.* 已齐),我补缺键即可。
-
-**不阻塞上线**:当前英文可上;中文/日文/西语是增量。等你定。
+**钱的对齐（全员记住）**  
+现在是 S0→S1 阶段。目标不是先堆流量，而是先让产品好到「有人愿意付钱」。  
+SEO 只放大已经验证过的真实卖家路径。
