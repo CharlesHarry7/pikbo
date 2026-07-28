@@ -109,7 +109,9 @@ export function LandingToolPanel({
     session?.plan === "free" ||
     session?.watermark === true ||
     session?.freeTrial?.isFreePlan === true;
-  const demoMode = isDemoMode(session);
+  // Fail closed while /api/me is loading or unavailable. Public landing tools
+  // must never flash a paid-provider promise before capability is known.
+  const demoMode = !session || isDemoMode(session);
   const freeLive = session?.freeTrial?.freeLive;
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
@@ -440,7 +442,7 @@ export function LandingToolPanel({
   }
 
   const busy = status === "generating";
-  // Pace progress for ~3 min live Mini, not ~30s false completion
+  // Pace progress for a provider job, not a false ~30s completion promise.
   const progress = busy
     ? Math.min(95, 8 + elapsed * 0.5)
     : status === "done"
@@ -465,12 +467,16 @@ export function LandingToolPanel({
                   : "text-[var(--fg-dim)]"
               }`}
             >
-              {trialDone && isFree && !demoMode
+              {demoMode
+                ? `Cached Lab preview · ${effectName}`
+                : trialDone && isFree
                 ? `Free Mini used · ${effectName}`
                 : `Try free Mini · ${effectName}`}
             </p>
             <p className="mt-0.5 text-sm text-[var(--fg-muted)]">
-              {trialDone && isFree && !demoMode ? (
+              {demoMode ? (
+                "0 credits · your upload is not processed in this preview."
+              ) : trialDone && isFree ? (
                 <>
                   Lab demos still free ·{" "}
                   <Link
@@ -600,21 +606,25 @@ export function LandingToolPanel({
             <span className="rounded-md border border-[var(--border)] px-2 py-1">
               {demoMode ? "0 cached" : `${CREDITS_PER_VIDEO} credits`}
             </span>
-            {isFree && (
+            {demoMode ? (
+              <span className="rounded-md border border-[var(--border)] px-2 py-1">
+                Upload not processed
+              </span>
+            ) : isFree ? (
               <span
                 className={`rounded-md border px-2 py-1 ${
-                  trialDone && !demoMode
+                  trialDone
                     ? "border-amber-300/30 text-amber-100"
                     : "border-[var(--border)]"
                 }`}
               >
-                {trialDone && !demoMode
+                {trialDone
                   ? "Free Mini trial used"
                   : freeLive
                     ? `Mini · ${freeLive.resolution} · on-player mark`
                     : "Mini · 480p · on-player mark"}
               </span>
-            )}
+            ) : null}
           </div>
 
           <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2 text-[11px] leading-snug text-[var(--fg-muted)]">
@@ -949,8 +959,9 @@ export function LandingToolPanel({
                   Your clip lands here
                 </p>
                 <p className="mt-1.5 text-[11px] leading-relaxed text-white/40">
-                  Upload a toy photo → Generate. Live Mini often 1–3 min — keep
-                  this tab open. Lab samples never use your upload.
+                  {demoMode
+                    ? "Choose a sample or upload a toy photo to preview this cached recipe. The cached preview never uses your upload."
+                    : "Upload a toy photo → Generate. The live quote and job status appear before submission; keep this tab open while it runs."}
                 </p>
                 <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-white/30">
                   {effectName} · {duration}s · {aspectRatio}

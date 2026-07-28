@@ -172,6 +172,7 @@ export default async function CreatePage({
             "Upload a designer-toy photo you own, pick a commercial goal, and preview a cached recipe. Eligible Live access and the exact quote are checked before submission.",
         })}
       />
+      <h1 className="sr-only">Generate toy video from one owned photo</h1>
       {/* V2 tool core — remix deep link: effect/source/ratio/duration/channel */}
       <Suspense
         fallback={
