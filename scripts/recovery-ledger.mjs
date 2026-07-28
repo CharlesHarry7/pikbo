@@ -11,6 +11,13 @@ const migration = readFileSync(
   ),
   "utf8"
 );
+const privateGenerationMigration = readFileSync(
+  join(
+    root,
+    "supabase/migrations/20260728233000_p0_private_generation_results.sql"
+  ),
+  "utf8"
+);
 const store = readFileSync(
   join(root, "lib/durableCredits/supabaseStore.ts"),
   "utf8"
@@ -32,8 +39,14 @@ assert.match(
 );
 assert.match(
   migration,
-  /pikbo_reserve_generation_v1[\s\S]*for update of a, w[\s\S]*plan_id = 'free'[\s\S]*live_generation_allowed[\s\S]*update public\.credit_wallets[\s\S]*insert into public\.credit_reservations[\s\S]*insert into public\.generation_jobs[\s\S]*insert into public\.credit_ledger/i
+  /pikbo_reserve_generation_v1[\s\S]*for update of a, w[\s\S]*live_generation_allowed[\s\S]*update public\.credit_wallets[\s\S]*insert into public\.credit_reservations[\s\S]*insert into public\.generation_jobs[\s\S]*insert into public\.credit_ledger/i
 );
+assert.doesNotMatch(migration, /plan_id\s*=\s*'free'/i);
+assert.match(
+  privateGenerationMigration,
+  /create or replace function public\.pikbo_reserve_generation_v1[\s\S]*for update of a, w[\s\S]*live_generation_allowed[\s\S]*update public\.credit_wallets[\s\S]*insert into public\.credit_reservations[\s\S]*insert into public\.generation_jobs[\s\S]*insert into public\.credit_ledger/i
+);
+assert.doesNotMatch(privateGenerationMigration, /plan_id\s*=\s*'free'/i);
 assert.match(
   migration,
   /pikbo_capture_generation_v1[\s\S]*for update[\s\S]*status = 'settled'[\s\S]*kind,[\s\S]*'settle'/i
