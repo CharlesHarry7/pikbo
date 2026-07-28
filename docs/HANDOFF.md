@@ -2095,19 +2095,19 @@ Newest first. One block per meaningful landing.
   `canceled` remains refund-unconfirmed and cannot claim “10 restored”.
 - Polling: transient missing/unavailable reads continue through the bounded
   provider window, so a later durable success can still recover a disconnected
-  response. If durable recovery remains inconclusive, the original POST gets a
-  final 15-second grace before the client returns an honest unresolved state.
-- Executable regression: `p0-private-live-generation` races an early recovery
-  network failure against a later successful primary and proves the primary is
-  not aborted; it separately proves saved durable success may abort the stale
-  response.
+  response. If durable recovery remains inconclusive, it cannot end the race:
+  the original POST stays authoritative until it settles or the user explicitly
+  cancels it. There is no elapsed-time fallback that aborts a healthy POST.
+- Executable regression: `p0-private-live-generation` races `not_found`,
+  database-unavailable, auth, transport, and refund-unconfirmed canceled
+  recovery results against a later successful primary. Each case proves the
+  primary is not aborted; a separate case proves saved durable success may
+  abort the stale response.
 - Verification: `typecheck`, `lint`, `p0-private-live-generation`,
   `recovery-qa`, `recovery-ledger`, `recovery-retry-deadline`,
   `recovery-reconciliation`, `r0-safety-net`, `engine-smoke` and
-  `mobile-proof-regression` pass. Next 16.2.11 Webpack production build passes
-  all 194 routes. The bundled ChatGPT Node binary cannot load local native
-  modules because macOS Team IDs differ, so build verification used the local
-  Cursor Node runtime; this is an execution-environment constraint, not a
-  product source workaround.
+  TypeScript/ESLint pass with the bundled workspace Node runtime. Next 16.2.11
+  Webpack production build passes all 194 routes, including
+  `/api/generations/recover`.
 - External state remains unchanged: no provider call, database mutation,
   deployment, DNS, billing or indexing action was performed.

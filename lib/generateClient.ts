@@ -503,20 +503,6 @@ async function postGenerateRecoverable(
       recovery,
       abortPrimary: () => primaryController.abort(),
       abortRecovery: () => recoveryController.abort(),
-      waitForPrimaryAfterRecovery: async (recoveryResult, primaryResult) => {
-        let timeoutId: ReturnType<typeof setTimeout> | undefined;
-        const timeout = new Promise<null>((resolve) => {
-          timeoutId = setTimeout(() => resolve(null), 15_000);
-        });
-        const result = await Promise.race([
-          primaryResult,
-          timeout,
-        ]);
-        if (timeoutId) clearTimeout(timeoutId);
-        if (result) return result;
-        primaryController.abort();
-        return recoveryResult;
-      },
     });
   } finally {
     opts?.signal?.removeEventListener("abort", cancelForUser);

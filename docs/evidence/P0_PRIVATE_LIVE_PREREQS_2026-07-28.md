@@ -79,3 +79,48 @@ Do **not** paste secrets into GitHub or chat.
 | 7 | Deploy private preview and approve owner login test | End-to-end acceptance |
 
 **Not requested:** Stripe live · public paid generation · DNS · uncapped spend · anonymous live.
+
+## 2026-07-28 recovery-race closure — PR #56
+
+This follow-up closes the remaining slow-response race without making a paid
+provider request or changing Preview/production state.
+
+### Root cause
+
+The first recovery implementation correctly ignored an early batch of four
+failed/404 reads, but it still let the bounded recovery poll settle as
+non-authoritative. A later 15-second fallback then aborted the still-healthy
+original `/api/generate` request. The failure moved from roughly 27 seconds to
+roughly 200 seconds; it was not eliminated.
+
+### Enforced rule
+
+- Only a saved owner-only private result, or a durable `failed` state with a
+  confirmed release transaction, may win recovery and abort the stale primary
+  response.
+- `not_found`, database unavailable, auth failure, transport failure, and
+  `canceled` without confirmed refund never cancel or replace the primary.
+- When recovery is non-authoritative, the original POST stays authoritative
+  until it settles or the user explicitly cancels.
+- Recovery reuses the same idempotency key and is GET-only; it cannot reserve
+  credits, create another provider job, or debit a second time.
+
+### Executable evidence
+
+- `npm run p0-private-live-generation` covers all five non-authoritative
+  recovery outcomes above and proves zero primary aborts before the eventual
+  primary success. It separately proves a saved durable result can win safely.
+- `npm run typecheck`
+- `npm run lint`
+- `npm run recovery-qa`
+- `npm run recovery-ledger`
+- `npm run recovery-retry-deadline`
+- `npm run recovery-reconciliation`
+- `npm run r0-safety-net`
+- `npm run engine-smoke`
+- `next build --webpack`: 194/194 routes generated, including
+  `/api/generations/recover`.
+
+All checks passed locally with the bundled workspace Node runtime. No provider
+call, environment-variable change, Supabase mutation, Stripe action, DNS
+change, merge, or production deployment was performed during this closure.
