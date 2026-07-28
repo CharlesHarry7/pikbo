@@ -77,6 +77,11 @@ import {
   type GenerationJob,
 } from "@/lib/generationJobs";
 import { getLocalAsset } from "@/lib/localAssets";
+import {
+  getPrivateGenerationResultByIdempotency,
+  savePrivateGenerationResult,
+  signedPrivateResultUrl,
+} from "@/lib/privateGenerationResults";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -260,6 +265,43 @@ export async function POST(req: Request) {
   // Idempotent replay BEFORE image/asset resolve — network retries must not
   // re-upload multi-MB stills or fail on expired assetId after success.
   const idempotencyKey = normalizeIdempotencyKey(body.idempotencyKey);
+  if (authUser && idempotencyKey) {
+    const durablePrior = await getPrivateGenerationResultByIdempotency({
+      userId: authUser.id,
+      idempotencyKey,
+    });
+    if (durablePrior) {
+      const signedUrl = await signedPrivateResultUrl(durablePrior.objectKey);
+      if (signedUrl) {
+        // The private Free allowance is one clip. Do not downgrade a paid
+        // cookie on cross-device replay; its durable wallet remains authority.
+        if (session.plan === "free" && session.credits !== 0) {
+          session = { ...session, credits: 0 };
+          await saveSession(session);
+        }
+        return NextResponse.json<GenerateSuccess>({
+          videoUrl: signedUrl,
+          demo: false,
+          watermark: false,
+          model: durablePrior.model,
+          duration: durablePrior.duration,
+          aspectRatio: durablePrior.aspectRatio,
+          resolution: durablePrior.resolution,
+          session: publicSession(session),
+          requestId: durablePrior.jobId,
+          jobId: durablePrior.jobId,
+          providerRequestId: durablePrior.providerRequestId,
+          provider: "bytedance-seedance",
+          effect: durablePrior.effect,
+          costCredits: 10,
+          creditsOutcome: "10 used",
+          idempotentReplay: true,
+          processedUpload: true,
+          privateResult: true,
+        });
+      }
+    }
+  }
   const hasRetryHandoff = Boolean(retryJobId || retryToken);
   if (
     hasRetryHandoff &&
@@ -715,6 +757,10 @@ export async function POST(req: Request) {
       freeTier: false,
       prefer: modelPref as ModelPreference,
     });
+    // Private Preview results are copied into authenticated, server-owned
+    // storage. They are not public Free/T6 deliverables and never use a raw
+    // provider URL as the customer result.
+    const privateResultWatermark = false;
 
     // Open or explicitly claim the exact retry child before provider work.
     // Effect/prompt/list-order matching is intentionally forbidden.
@@ -727,7 +773,7 @@ export async function POST(req: Request) {
         idempotencyKey: ledgerIdempotencyKey!,
         effect: preset.slug,
         model,
-        watermark: plan.watermark,
+        watermark: privateResultWatermark,
         provider: "bytedance-seedance",
         duration: secs,
         aspectRatio: aspect,
@@ -753,7 +799,7 @@ export async function POST(req: Request) {
         sessionId: session.id,
         effect: preset.slug,
         model,
-        watermark: plan.watermark,
+        watermark: privateResultWatermark,
         provider: "bytedance-seedance",
         idempotencyKey: ledgerIdempotencyKey,
         duration: secs,
@@ -907,6 +953,38 @@ export async function POST(req: Request) {
         return err(failBody, 502);
       }
 
+      const providerRequestId =
+        result.requestId ||
+        reserved.reservation.jobId ||
+        liveJobId;
+      const saved = await savePrivateGenerationResult({
+        jobId: reserved.reservation.jobId,
+        userId: authUser.id,
+        providerRequestId,
+        providerOutputUrl: videoUrl,
+        effect: preset.slug,
+        model,
+        duration: secs,
+        aspectRatio: aspect,
+        resolution,
+      });
+      if (!saved.ok) {
+        const released = await releaseReservation("delivery_save_failed");
+        const failBody: GenerateErrorBody = {
+          error: released
+            ? `The model finished, but Pikbo could not save the private result (${saved.code}). No credits were used.`
+            : `The model finished, but Pikbo could not save the private result (${saved.code}). Credit release needs review.`,
+          code: "DELIVERY_PIPELINE_UNAVAILABLE",
+          model,
+          jobId: reserved.reservation.jobId,
+          session: publicSession(session),
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true } : {}),
+        };
+        noteFailed(session.id, preset.slug, failBody, liveJobId);
+        return err(failBody, 502);
+      }
+
       // fal may return after the fixed local deadline. Do not let a browser
       // poll or late provider response reopen the attempt, and do not claim a
       // refund/capture until R1c reconciliation inspects the durable job.
@@ -923,7 +1001,7 @@ export async function POST(req: Request) {
               "provider_succeeded",
               reserved.reservation.jobId
             ),
-            providerRequestId: result.requestId || liveJobId,
+            providerRequestId,
             outputRef: videoUrl,
             reason: completionDecision.code,
           }
@@ -946,7 +1024,7 @@ export async function POST(req: Request) {
       }
 
       const captured = await reservationLife.settle(
-        result.requestId || liveJobId || reserved.reservation.reservationId
+        providerRequestId
       );
       if (!captured.ok) {
         console.error("[live-reservation] capture failed");
@@ -960,7 +1038,7 @@ export async function POST(req: Request) {
               "provider_succeeded",
               reserved.reservation.jobId
             ),
-            providerRequestId: result.requestId || liveJobId,
+            providerRequestId,
             outputRef: videoUrl,
             reason: "capture_failed",
           }
@@ -981,53 +1059,49 @@ export async function POST(req: Request) {
         };
         return err(failBody, 503);
       }
-      let ledgerJobId = liveJobId;
       try {
-        const job = completeSyncGenerateJob({
+        completeSyncGenerateJob({
           jobId: liveJobId,
           sessionId: session.id,
           effect: preset.slug,
-          videoUrl,
+          videoUrl: saved.signedUrl,
           demo: false,
-          watermark: plan.watermark,
+          watermark: privateResultWatermark,
           model,
           duration: secs,
           aspectRatio: aspect,
           resolution,
           costCredits: reserved.reservation.credits,
           creditsOutcome: "10 used",
-          requestId: result.requestId || liveJobId,
+          requestId: reserved.reservation.jobId,
           provider: "bytedance-seedance",
         });
-        ledgerJobId = job.id;
       } catch {
         /* best-effort */
       }
       const payload: GenerateSuccess = {
-        // Never expose the raw Free provider URL. Paid/raw keeps provider URL;
-        // Free delivery waits for a verified T6 derivative via /api/downloads.
-        videoUrl: customerFacingGenerateVideoUrl({
-          demo: false,
-          watermark: plan.watermark,
-          jobId: ledgerJobId || result.requestId || "unavailable",
-          videoUrl,
-        }),
+        // Private Preview returns only the short-lived URL for Pikbo-owned
+        // storage. The raw provider URL never crosses the response boundary.
+        videoUrl: saved.signedUrl,
         demo: false,
-        watermark: plan.watermark,
+        watermark: privateResultWatermark,
         model,
         duration: secs,
         aspectRatio: aspect,
         resolution,
         session: publicSession(session),
-        // Prefer provider requestId; fall back to local ledger id for poll/cancel.
-        requestId: result.requestId || ledgerJobId,
-        jobId: ledgerJobId,
+        // Public request/job identity is the durable Supabase job. Provider
+        // evidence remains a separate field and is never a delivery URL.
+        requestId: reserved.reservation.jobId,
+        jobId: reserved.reservation.jobId,
+        providerRequestId,
         provider: "bytedance-seedance",
         // Wave B — echo server-validated recipe + live settlement
         effect: preset.slug,
         costCredits: reserved.reservation.credits,
         creditsOutcome: "10 used",
         processedUpload: true,
+        privateResult: true,
       };
       return NextResponse.json(payload);
     } catch (e) {

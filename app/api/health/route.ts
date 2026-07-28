@@ -17,6 +17,7 @@ import { communityUgcConfigured } from "@/lib/communityPosts";
 import { imageJobsProbe } from "@/lib/imageJobs";
 import { probeDurableReconciliationSchema } from "@/lib/durableCredits/reconciliation";
 import { localReconciliationProbe } from "@/lib/durableCredits/localReconciliationJournal";
+import { privateResultsProbe } from "@/lib/privateGenerationResults";
 // NextResponse used for GET + HEAD
 
 export const runtime = "nodejs";
@@ -80,6 +81,7 @@ export async function GET() {
   const entitlements = await probeEntitlementsStore();
   const durableCredits = await probeDurableCreditsStore();
   const durableReconciliation = await probeDurableReconciliationSchema();
+  const privateResults = await privateResultsProbe();
   // Best-effort local reservation TTL sweep (no-op on Supabase backend)
   let reservationSweep = {
     expired: 0,
@@ -157,6 +159,16 @@ export async function GET() {
     /** Only the Supabase atomic reservation path is live-spend authority. */
     durableCredits:
       durableAtomicReservationConfigured && durableReconciliationConfigured,
+    /** Owner-only Preview path; independent from public Free/T6 readiness. */
+    privatePreview:
+      authConfigured &&
+      durableAtomicReservationConfigured &&
+      durableReconciliationConfigured &&
+      fal &&
+      privateResults.bucketReady &&
+      process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1" &&
+      Boolean((process.env.PIKBO_PRIVATE_LIVE_ALLOWLIST || "").trim()) &&
+      Number(process.env.PIKBO_PRIVATE_LIVE_BUDGET_MAX || "0") > 0,
   };
 
   return NextResponse.json({
@@ -320,6 +332,7 @@ export async function GET() {
     ready,
     entitlements,
     durableCredits,
+    privateResults,
     auth: {
       mode: authPublic.mode,
       configured: authPublic.configured,
@@ -373,7 +386,7 @@ export async function GET() {
         notes: [
           "Set PIKBO_PRIVATE_LIVE_ENABLED=1 + ALLOWLIST + BUDGET_MAX for invited owner live",
           "Does not enable anonymous provider spend",
-          "Free live download still requires server-owned T6 derivative when watermarked",
+          "Private Preview results use owner-gated Pikbo storage; public Free/T6 remains closed",
         ],
       };
     })(),

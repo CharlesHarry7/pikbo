@@ -811,7 +811,7 @@ export type AtomicGenerationReservation = {
   status: "reserved";
   idempotencyKey: string;
   expiresAt: string;
-  planId: Exclude<PlanId, "free">;
+  planId: PlanId;
   availableCredits: number;
   reservedCredits: number;
   idempotent: boolean;
@@ -918,7 +918,7 @@ export async function supabaseReserveGenerationAtomic(input: {
     payload.status !== "reserved" ||
     typeof payload.idempotent !== "boolean" ||
     typeof payload.providerAuthorized !== "boolean" ||
-    (planId !== "creator" && planId !== "shop") ||
+    (planId !== "free" && planId !== "creator" && planId !== "shop") ||
     amount == null ||
     availableCredits == null ||
     reservedCredits == null ||
