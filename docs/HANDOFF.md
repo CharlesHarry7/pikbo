@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] R0 capture-exception safety replacement
+- Replaced stale PR #42 with clean PR #47 from `main@e0ab4f0`; no old STATUS/HANDOFF rows were replayed.
+- A failed or throwing capture now becomes `withheld` before generic error handling, so valid provider output cannot be followed by a credit release.
+- Failed release attempts are `release_pending`, and the `finally` path uses the route reconciliation helper rather than silently discarding failure truth.
+- PASS locally: 20-way release race, video/image capture-throw adapters, T5/R0 and recovery suites, typecheck, strict lint, and the 193-route production build.
+- The connected GitHub App added `r0-safety-net` to the real workflow after direct OAuth correctly rejected workflow-file mutation; merge still waits for GitHub CI.
+
+---
+
 ### 2026-07-28 — [gpt] single active queue reset
 - Closed 11 stale, duplicate or superseded PRs; their branches remain recoverable, but they are no longer task sources.
 - R2 PR #44 is merged at `47688e6`; GitHub CI #456 and Vercel are green, and the one-photo Launch Pack path is recorded done.

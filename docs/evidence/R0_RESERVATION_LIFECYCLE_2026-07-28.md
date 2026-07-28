@@ -2,6 +2,7 @@
 
 **Branch:** `agent/gpt/r0-capture-safety-review`
 **Base:** main `e0ab4f0` (#45)
+**PR:** https://github.com/CharlesHarry7/pikbo/pull/47
 
 ## Guarantees (behavioral tests in `npm run r0-safety-net`)
 
