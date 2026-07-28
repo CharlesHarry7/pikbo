@@ -61,6 +61,219 @@ set public = false,
 -- No browser-role storage policy is created for this bucket. The service role
 -- creates short-lived signed URLs only after Bearer owner verification.
 
+-- Forward migration: an already-rehearsed Preview may have applied R1a while
+-- that function rejected every Free account. Replacing the old migration file
+-- is insufficient because applied migrations are not replayed.
+create or replace function public.pikbo_reserve_generation_v1(
+  p_user_id uuid,
+  p_idempotency_key text,
+  p_effect_slug text,
+  p_quoted_credits integer
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_account public.accounts%rowtype;
+  v_wallet public.credit_wallets%rowtype;
+  v_existing_job public.generation_jobs%rowtype;
+  v_existing_reservation public.credit_reservations%rowtype;
+  v_reservation public.credit_reservations%rowtype;
+  v_job public.generation_jobs%rowtype;
+  v_reservation_key text;
+begin
+  if p_user_id is null then
+    return jsonb_build_object('ok', false, 'code', 'AUTH_REQUIRED');
+  end if;
+  if p_idempotency_key is null
+     or length(btrim(p_idempotency_key)) < 8
+     or length(p_idempotency_key) > 128 then
+    return jsonb_build_object('ok', false, 'code', 'INVALID_IDEMPOTENCY_KEY');
+  end if;
+  if p_effect_slug is null or length(btrim(p_effect_slug)) = 0 then
+    return jsonb_build_object('ok', false, 'code', 'INVALID_EFFECT');
+  end if;
+  if p_quoted_credits is null or p_quoted_credits <= 0 then
+    return jsonb_build_object('ok', false, 'code', 'INVALID_AMOUNT');
+  end if;
+
+  select a, w
+    into v_account, v_wallet
+    from public.accounts a
+    join public.credit_wallets w on w.account_id = a.id
+   where a.owner_user_id = p_user_id
+     and a.kind = 'personal'
+   for update of a, w;
+
+  if not found then
+    return jsonb_build_object('ok', false, 'code', 'DURABLE_WALLET_NOT_FOUND');
+  end if;
+  -- Public routing still blocks Free. This atomic layer authorizes only an
+  -- account explicitly flipped by the owner in the non-production project.
+  if v_account.status <> 'active'
+     or not v_account.live_generation_allowed then
+    return jsonb_build_object('ok', false, 'code', 'LIVE_ACCESS_REQUIRED');
+  end if;
+
+  select *
+    into v_existing_job
+    from public.generation_jobs
+   where created_by = p_user_id
+     and idempotency_key = p_idempotency_key;
+
+  if found then
+    select *
+      into v_existing_reservation
+      from public.credit_reservations
+     where id = v_existing_job.reservation_id;
+    if not found then
+      return jsonb_build_object('ok', false, 'code', 'JOB_BINDING_MISMATCH');
+    end if;
+    if v_existing_job.effect_slug <> p_effect_slug
+       or v_existing_job.quoted_credits <> p_quoted_credits then
+      return jsonb_build_object('ok', false, 'code', 'IDEMPOTENCY_CONFLICT');
+    end if;
+    if v_existing_reservation.status <> 'reserved' then
+      return jsonb_build_object(
+        'ok', false,
+        'code', 'RESERVATION_NOT_ACTIVE',
+        'reservationStatus', v_existing_reservation.status::text,
+        'jobId', v_existing_job.id
+      );
+    end if;
+    return jsonb_build_object(
+      'ok', true,
+      'idempotent', true,
+      'providerAuthorized', false,
+      'reservationId', v_existing_reservation.id,
+      'jobId', v_existing_job.id,
+      'userId', p_user_id,
+      'accountId', v_account.id,
+      'amount', v_existing_reservation.quoted_credits,
+      'status', 'reserved',
+      'idempotencyKey', p_idempotency_key,
+      'expiresAt', v_existing_reservation.expires_at,
+      'planId', v_account.plan_id::text,
+      'availableCredits', v_wallet.available_credits,
+      'reservedCredits', v_wallet.reserved_credits
+    );
+  end if;
+
+  if v_wallet.available_credits < p_quoted_credits then
+    return jsonb_build_object(
+      'ok', false,
+      'code', 'INSUFFICIENT_CREDITS',
+      'need', p_quoted_credits,
+      'have', v_wallet.available_credits
+    );
+  end if;
+
+  update public.credit_wallets
+     set available_credits = available_credits - p_quoted_credits,
+         reserved_credits = reserved_credits + p_quoted_credits,
+         version = version + 1,
+         updated_at = now()
+   where account_id = v_account.id
+   returning * into v_wallet;
+
+  v_reservation_key :=
+    'live:' || p_user_id::text || ':' || btrim(p_idempotency_key);
+
+  insert into public.credit_reservations (
+    account_id,
+    purpose,
+    quoted_credits,
+    settled_credits,
+    released_credits,
+    status,
+    idempotency_key,
+    expires_at,
+    created_by
+  ) values (
+    v_account.id,
+    'generation',
+    p_quoted_credits,
+    0,
+    0,
+    'reserved',
+    v_reservation_key,
+    now() + interval '30 minutes',
+    p_user_id
+  )
+  returning * into v_reservation;
+
+  insert into public.generation_jobs (
+    account_id,
+    created_by,
+    effect_slug,
+    status,
+    quoted_credits,
+    settled_credits,
+    reservation_id,
+    demo,
+    idempotency_key,
+    started_at
+  ) values (
+    v_account.id,
+    p_user_id,
+    p_effect_slug,
+    'running',
+    p_quoted_credits,
+    0,
+    v_reservation.id,
+    false,
+    btrim(p_idempotency_key),
+    now()
+  )
+  returning * into v_job;
+
+  insert into public.credit_ledger (
+    account_id,
+    kind,
+    delta_available,
+    delta_reserved,
+    available_after,
+    reserved_after,
+    reservation_id,
+    source_type,
+    source_id,
+    idempotency_key,
+    metadata
+  ) values (
+    v_account.id,
+    'reserve',
+    -p_quoted_credits,
+    p_quoted_credits,
+    v_wallet.available_credits,
+    v_wallet.reserved_credits,
+    v_reservation.id,
+    'generation_job',
+    v_job.id::text,
+    'ledger:reserve:' || v_reservation_key,
+    jsonb_build_object('effectSlug', p_effect_slug, 'userId', p_user_id)
+  );
+
+  return jsonb_build_object(
+    'ok', true,
+    'idempotent', false,
+    'providerAuthorized', true,
+    'reservationId', v_reservation.id,
+    'jobId', v_job.id,
+    'userId', p_user_id,
+    'accountId', v_account.id,
+    'amount', p_quoted_credits,
+    'status', 'reserved',
+    'idempotencyKey', p_idempotency_key,
+    'expiresAt', v_reservation.expires_at,
+    'planId', v_account.plan_id::text,
+    'availableCredits', v_wallet.available_credits,
+    'reservedCredits', v_wallet.reserved_credits
+  );
+end;
+$$;
+
 create or replace function public.pikbo_attach_private_generation_output_v1(
   p_user_id uuid,
   p_job_id uuid,
@@ -153,4 +366,12 @@ revoke all on function public.pikbo_attach_private_generation_output_v1(
 
 grant execute on function public.pikbo_attach_private_generation_output_v1(
   uuid, uuid, text, text, text, bigint, text, text, integer, text, text
+) to service_role;
+
+revoke all on function public.pikbo_reserve_generation_v1(
+  uuid, text, text, integer
+) from public, anon, authenticated;
+
+grant execute on function public.pikbo_reserve_generation_v1(
+  uuid, text, text, integer
 ) to service_role;
