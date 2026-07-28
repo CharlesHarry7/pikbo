@@ -378,6 +378,11 @@ export async function POST(req: Request) {
     );
   }
 
+  // Safety net: if a truly unexpected error (crash, signal, etc.) leaks a
+  // committed durable reservation, the finally block attempts a last-resort
+  // release. Normal paths already call releaseReservation() explicitly.
+  let liveReservation: StrictLiveReservation | null = null;
+
   try {
     const plan = getPlan(session.plan);
     const freeTier = plan.watermark;
@@ -537,7 +542,7 @@ export async function POST(req: Request) {
         status
       );
     }
-    let liveReservation: StrictLiveReservation | null = reserved.reservation;
+    liveReservation = reserved.reservation;
     session = {
       ...session,
       plan: liveReservation.planId,
@@ -952,6 +957,18 @@ export async function POST(req: Request) {
       );
     }
   } finally {
+    // Defense-in-depth: if a truly unexpected error leaked a committed
+    // reservation, attempt a last-resort release so credits are not lost.
+    if (liveReservation) {
+      try {
+        await releaseStrictLiveGeneration(
+          liveReservation,
+          "unexpected_exit_safety_net"
+        );
+      } catch {
+        /* best-effort — reconciliation worker will pick up */
+      }
+    }
     endJob(session.id);
   }
 }
