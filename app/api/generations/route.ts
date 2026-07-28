@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ensureSession, publicSession } from "@/lib/session";
+import { ensureSession, publicCachedSession } from "@/lib/session";
 import {
   cancelJob,
   countJobsForSession,
@@ -157,7 +157,7 @@ export async function GET() {
       jobStatus: "/api/generations/[id]",
       download: "/api/downloads/[id]",
     },
-    session: publicSession(session),
+    session: publicCachedSession(session),
     jobs,
   });
 }
