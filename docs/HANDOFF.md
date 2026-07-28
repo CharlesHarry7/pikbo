@@ -2111,3 +2111,33 @@ Newest first. One block per meaningful landing.
   `/api/generations/recover`.
 - External state remains unchanged: no provider call, database mutation,
   deployment, DNS, billing or indexing action was performed.
+
+### 2026-07-28 — [gpt/grok] P0 non-destructive long-wait handoff
+
+- Source: Grok Build commit `55cf25a` was created in the isolated
+  `agent/grok/p0-recovery-audit` worktree and integrated into Draft PR #56 by
+  Codex. Grok did not push, deploy, call the provider or modify external state.
+- User behavior: after 90 seconds, or when durable recovery reports
+  `awaiting_primary`, Create offers `Open Library · keep generating`. It uses a
+  Next client transition and does not abort the primary/recovery request,
+  cancel the ledger or start another generate. `Cancel generation` remains the
+  explicit AbortSignal path that aborts both reads and requests ledger cancel.
+- Authority: `onInconclusiveRecovery` only reports UI state. Its callback is
+  exception-isolated, so even a broken observer cannot replace the original
+  POST or alter the durable race rule.
+- Library: a detached/unmounted success writes only controlled result metadata
+  to device history and drops Base64 stills over 8 KB. A same-tab history event
+  updates an already-open Library; refresh/cross-device recovery continues
+  through the authenticated `/api/generations` owner query and controlled
+  `/api/downloads/{jobId}` path.
+- Codex review removed an unnecessary re-export, removed the duplicate desktop
+  waiting panel, retained the deduplicated refunded/unconfirmed failure tests,
+  and added observer-exception, explicit-cancel, same-tab Library and owner-only
+  listing assertions.
+- Verification: TypeScript, ESLint, `p0-private-live-generation`,
+  `recovery-qa`, `recovery-ledger`, `recovery-retry-deadline`,
+  `recovery-reconciliation`, `r0-safety-net`, `engine-smoke` and
+  `mobile-proof-regression` pass. Next 16.2.11 Webpack build generates all
+  194/194 routes.
+- Safety: no real generation, environment-variable change, Supabase mutation,
+  Stripe/DNS action, production deployment or merge was performed.

@@ -109,6 +109,10 @@ export async function raceGenerateWithDurableRecovery<
   // Only an explicit caller abort or authoritative durable terminal state may
   // end it. Waiting longer is safer than converting a healthy provider job
   // into an ambiguous cancel/refund state.
-  input.onInconclusiveRecovery?.(first.result);
+  try {
+    input.onInconclusiveRecovery?.(first.result);
+  } catch {
+    // Observability must never change which request is authoritative.
+  }
   return input.primary;
 }

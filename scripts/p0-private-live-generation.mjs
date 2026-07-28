@@ -329,6 +329,14 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(downloads, /getAuthUserFromRequest/);
   assert.match(downloads, /getPrivateGenerationResult/);
   assert.match(downloads, /signedPrivateResultUrl/);
+  const generations = read("app/api/generations/route.ts");
+  assert.match(generations, /getAuthUserFromRequest/);
+  assert.match(
+    generations,
+    /listPrivateGenerationResults\(\{\s*userId: authUser\.id/
+  );
+  assert.match(generations, /\/api\/downloads\/\$\{encodeURIComponent\(result\.jobId\)\}/);
+  assert.doesNotMatch(generations, /output_object_key|providerOutputUrl/);
 }
 
 // ─── 12. Slow-response recovery is read-only, owner-only, and idempotent ──
@@ -387,7 +395,6 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(create, /leaveWaitingKeepBackground/);
   assert.match(create, /planGenerateWaitLeave\("detach"\)/);
   assert.match(create, /router\.push\("\/library"\)/);
-  assert.match(create, /awaitingPrimaryAfterRecovery \|\| elapsed >= 90/);
   assert.match(create, /stillForStore\.length <= 8_000/);
   // Unmount / detach must not abort the original POST or cancel ledger.
   assert.doesNotMatch(
@@ -407,12 +414,27 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     assert.doesNotMatch(leaveFn, /cancelGenerateLedger/);
     assert.doesNotMatch(leaveFn, /\.abort\s*\(/);
   }
-  assert.match(
-    create,
-    /does not start another generation or charge again|no second generation or charge/
-  );
-
+  {
+    const cancelFn = create.match(
+      /function cancelInFlightGenerate\(\) \{[\s\S]*?\n  \}/
+    )?.[0];
+    assert.ok(cancelFn, "explicit cancel handler must exist");
+    assert.match(cancelFn, /ctrl\.abort\(\)/);
+  }
+  {
+    const cancelForUser = client.match(
+      /const cancelForUser = \(\) => \{[\s\S]*?\n  \};/
+    )?.[0];
+    assert.ok(cancelForUser, "outer abort must map to the explicit cancel path");
+    assert.match(cancelForUser, /primaryController\.abort\(\)/);
+    assert.match(cancelForUser, /recoveryController\.abort\(\)/);
+    assert.match(cancelForUser, /cancelGenerateLedger/);
+  }
   const waitStage = read("components/GenerateWaitStage.tsx");
+  assert.match(
+    `${create}\n${waitStage}`,
+    /does not start another generation or charge again|no second (?:generation|provider call) or charge/
+  );
   assert.match(waitStage, /data-generate-leave="detach"/);
   assert.match(waitStage, /data-generate-leave="cancel"/);
   assert.match(waitStage, /onLeaveToLibrary/);
@@ -421,6 +443,13 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     /awaitingPrimary \|\| elapsed >= 90/,
     "Open Library only after awaiting_primary or 90s"
   );
+
+  const history = read("lib/history.ts");
+  const library = read("components/LibraryGrid.tsx");
+  assert.match(history, /LIBRARY_HISTORY_CHANGED_EVENT/);
+  assert.match(history, /dispatchEvent\(new Event\(LIBRARY_HISTORY_CHANGED_EVENT\)\)/);
+  assert.match(library, /addEventListener\(\s*LIBRARY_HISTORY_CHANGED_EVENT/);
+  assert.match(library, /removeEventListener\(\s*LIBRARY_HISTORY_CHANGED_EVENT/);
 }
 
 // ─── 13. Recovery read failures never cancel a still-live primary ─────────
@@ -700,6 +729,38 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.equal(primaryAborts, 0);
   assert.equal(ledgerCancels, 0);
   assert.equal(secondGenerate, 0);
+
+  // A UI observer is reporting only. Even if it throws, it cannot replace the
+  // original POST or change the race authority.
+  const observerPrimary = deferred();
+  const observerRecovery = deferred();
+  const observerObserved = deferred();
+  let observerAborts = 0;
+  let observerCalls = 0;
+  const observerSafeRace = raceGenerateWithDurableRecovery({
+    primary: observerPrimary.promise,
+    recovery: observerRecovery.promise,
+    abortPrimary: () => {
+      observerAborts += 1;
+    },
+    abortRecovery: () => undefined,
+    onInconclusiveRecovery: () => {
+      observerCalls += 1;
+      observerObserved.resolve(true);
+      throw new Error("UI observer failure");
+    },
+  });
+  observerRecovery.resolve({
+    ok: false,
+    status: 0,
+    code: "NETWORK_ERROR",
+  });
+  await observerObserved.promise;
+  assert.equal(observerCalls, 1);
+  assert.equal(observerAborts, 0);
+  observerPrimary.resolve({ ok: true, status: 200 });
+  assert.deepEqual(await observerSafeRace, { ok: true, status: 200 });
+  assert.equal(observerAborts, 0);
 }
 
 console.log(

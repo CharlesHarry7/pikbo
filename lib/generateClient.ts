@@ -13,12 +13,6 @@ import {
   isAuthoritativeRecoveryResult,
   raceGenerateWithDurableRecovery,
 } from "@/lib/generateRecoveryPolicy";
-
-export {
-  planGenerateWaitLeave,
-  type GenerateWaitLeaveMode,
-  type GenerateWaitLeavePlan,
-} from "@/lib/generateRecoveryPolicy";
 import type { HistoryItem } from "@/lib/history";
 import type { PublicSession } from "@/lib/session";
 

@@ -6,9 +6,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadFavorites, toggleFavorite } from "@/lib/favorites";
 import {
   historyFieldsFromSuccess,
-  planGenerateWaitLeave,
   postGenerateWithRetry,
 } from "@/lib/generateClient";
+import { planGenerateWaitLeave } from "@/lib/generateRecoveryPolicy";
 import {
   downloadVideoFile,
   privateDownloadHeaders,
@@ -3095,44 +3095,6 @@ export function CreateStudio({
                     ? `${PROVENANCE.cachedDemo} only — not from your upload · not cloud-backed`
                     : localLibraryNote()}
                 </p>
-              </div>
-            )}
-            {status === "generating" && !videoUrl && (
-              <div className="flex flex-col items-center p-10 text-center">
-                <div className="h-12 w-12 animate-spin rounded-full border-2 border-[var(--mint)] border-t-transparent" />
-                <p className="mt-5 font-display text-lg font-bold uppercase tracking-tight text-white">
-                  {awaitingPrimaryAfterRecovery
-                    ? "Waiting on original render"
-                    : recoveringSavedResult
-                      ? "Tracking your private task"
-                      : "Making your clip…"}{" "}
-                  {elapsed}s
-                </p>
-                <p className="mt-2 max-w-xs text-xs text-[var(--fg-muted)]">
-                  {awaitingPrimaryAfterRecovery
-                    ? "Recovery has no final answer yet. The first request is still running — no second generation or charge."
-                    : recoveringSavedResult
-                      ? "Pikbo is reading the same durable task. This does not start another generation or charge again."
-                      : "Live jobs take a bit. Cached demos come back faster."}
-                </p>
-                {(awaitingPrimaryAfterRecovery || elapsed >= 90) && (
-                  <button
-                    type="button"
-                    onClick={leaveWaitingKeepBackground}
-                    data-generate-leave="detach"
-                    className="mt-4 rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-4 py-1.5 text-[11px] font-bold text-[var(--mint)]"
-                  >
-                    Open Library · keep generating
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={cancelInFlightGenerate}
-                  data-generate-leave="cancel"
-                  className="mt-2 rounded-full border border-white/20 px-4 py-1.5 text-[11px] font-bold text-white/75"
-                >
-                  Cancel generation
-                </button>
               </div>
             )}
             {status === "error" && !videoUrl && (

@@ -60,6 +60,8 @@ export function historyProvenance(item: Pick<HistoryItem, "demo">): string {
 
 const KEY = "pikbo_library_v1";
 const MAX = 48;
+/** Same-tab signal used when a detached Create request finishes in background. */
+export const LIBRARY_HISTORY_CHANGED_EVENT = "pikbo:library-history-changed";
 /** Cap device Library still previews — never store multi-MB Base64 uploads. */
 const MAX_INPUT_IMAGE_CHARS = 8_000;
 
@@ -181,6 +183,9 @@ export function pushHistory(
   };
   const list = [next, ...loadHistory()].slice(0, MAX);
   saveHistory(list);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(LIBRARY_HISTORY_CHANGED_EVENT));
+  }
   return list;
 }
 
