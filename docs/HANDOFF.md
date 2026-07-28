@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] immersive toy Recipe home V1
+- Home now opens on a full-bleed toy-video hero, then the frozen `HOME_PROOF_SLUGS` wall with eight distinct cached demos. Card body opens the auditable Inside Project page; the explicit `Use this recipe` action deep-links to Create.
+- Primary navigation is Explore, Recipes, Create, Library and Pricing, with one emphasized Generate CTA plus reachable credits, language, account and secondary links. Launch Pack remains the later commercial upgrade.
+- The existing homepage SEO/trust surface and analytics events remain intact. Browser QA and the full CI suite are required before merge; no API, Supabase, Stripe, credits or production configuration changed.
+
+---
+
 ### 2026-07-28 — [claude] responsive proof-loop regression
 - Restored the intended proof funnel: all eight Home proof cards open their registered Inside Project page; the secondary Remake control still opens Create.
 - Public landing tools fail closed while `/api/me` is unknown/cached: `0 credits`, upload not processed, and no transient Free/Live promise. Seller Pack steps use the same `demoMode` truth instead of a static `30 live` label.

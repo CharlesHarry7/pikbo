@@ -16,12 +16,22 @@ const zh = source("lib/i18n.ts");
 assert.match(
   wall,
   /href=\{item\.projectHref \|\| item\.href\}/,
-  "home proof cards must open Inside Project when project evidence exists"
+  "home Recipe cards must open the registered Inside Project proof"
 );
 assert.match(
   wall,
-  /event: item\.projectHref \? "project_open" : "recipe_use"/,
-  "home proof-card analytics must distinguish project inspection from recipe use"
+  /href=\{item\.href\}[\s\S]*Use this recipe/,
+  "home Recipe cards must expose a separate one-click Remix contract"
+);
+assert.match(
+  wall,
+  /event:\s*item\.projectHref \? "project_open" : "recipe_use"[\s\S]*source:\s*"home_recipe_card"/,
+  "home Recipe proof clicks must preserve project or fallback conversion analytics"
+);
+assert.match(
+  wall,
+  /event:\s*"recipe_use"[\s\S]*source:\s*"home_recipe_remake"/,
+  "home Recipe CTA clicks must preserve remix conversion analytics"
 );
 
 assert.match(

@@ -6,7 +6,7 @@ const root = process.cwd();
 const read = (file) => readFileSync(join(root, file), "utf8");
 
 const home = read("app/page.tsx");
-const heroUpload = read("components/HeroUpload.tsx");
+const homeWall = read("components/HomeViralWall.tsx");
 const create = read("app/create/page.tsx");
 const batch = read("components/BatchStudio.tsx");
 const steps = read("components/SellerPackSteps.tsx");
@@ -14,17 +14,16 @@ const contract = read("lib/sellerPackContract.ts");
 const packExport = read("lib/sellerPackExport.ts");
 const shell = read("components/AppShell.tsx");
 
-// Homepage has one conversion path: upload once, then continue the fixed trio.
-assert.match(home, /import \{ HeroUpload \}/);
-assert.match(home, /<HeroUpload \/>/);
-assert.doesNotMatch(home, /<LandingToolPanel/);
-assert.match(heroUpload, /data-home-launch-pack="fixed-three"/);
-assert.match(heroUpload, /pikbo_pending_still/);
-assert.match(heroUpload, /mode=seller-pack&source=home-launch-pack/);
-assert.doesNotMatch(heroUpload, /PRESETS_QUICK|createRemixHref/);
-assert.match(shell, /SHELL_GENERATE_HREF = "\/create\?mode=seller-pack"/);
+// Homepage V1 leads with Recipe remix; Launch Pack remains a later upgrade.
+assert.match(home, /data-home-upgrade="launch-pack"/);
+assert.match(home, /href="\/create\?mode=seller-pack"/);
+assert.match(homeWall, /Use this recipe/);
+assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
+assert.match(homeWall, /href=\{item\.href\}/);
+assert.match(homeWall, /event:\s*"recipe_use"/);
+assert.doesNotMatch(shell, /create\?mode=seller-pack/);
 assert.doesNotMatch(
-  [home, heroUpload, shell, read("components/SoftLaunchStrip.tsx")].join("\n"),
+  [home, homeWall, shell].join("\n"),
   /#home-tool/
 );
 
@@ -41,8 +40,7 @@ assert.match(create, /Launch Pack — 3 assets · quote shown before Live/);
 assert.match(create, /One photo → your Launch Pack/);
 assert.doesNotMatch(create, /Launch Pack — 12 recipes/);
 
-// From the homepage to submission: upload, rights confirmation, generate.
-assert.match(heroUpload, /data-launch-pack-primary-action="1"/);
+// Launch Pack submission still keeps the existing rights and generate actions.
 assert.match(batch, /data-launch-pack-primary-action="2"/);
 assert.match(
   batch,
@@ -59,5 +57,5 @@ assert.match(packExport, /i\.downloadable/);
 assert.match(packExport, /Failed siblings and Free raw URLs are omitted/);
 
 console.log(
-  "launch-pack-main-path-smoke: PASS (home upload → fixed trio → downloadable-only export; 3 primary actions)"
+  "launch-pack-main-path-smoke: PASS (home upgrade → fixed trio → downloadable-only export)"
 );

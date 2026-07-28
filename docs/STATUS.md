@@ -1,6 +1,6 @@
 # Pikbo board — claim before you code
 
-**Last human intent:** World-class toy video OS; path to $60k/day. See docs/MOONSHOT_WORLD_CLASS.md + docs/DISPATCH.md. Public still GO-gated.
+**Last human intent:** Build the designer-toy vertical Higgsfield: immersive Recipe browsing and one-click Remix first; Launch Pack is the later commercial upgrade. Public production remains GO-gated.
 
 Update this file in the same PR/commit as your work start/finish.
 
@@ -14,9 +14,10 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 
 | ID | Outcome | Owner | Status | PR / branch | Reviewer gate |
 |---|---|---|---|---|---|
+| HOME-V1 | Immersive 8-demo toy Recipe home → upload in ≤2 clicks | Codex | review | PR #50 · `agent/gpt/higgsfield-toy-v1-home` | 390×844 + 1440px screenshots; lint, typecheck, engine and Launch Pack smokes, build; private preview required before merge |
 | CTRL-RESET | Close stale PRs, close R2 and enforce one active task per agent | Codex | done | main via PR #45 | Isolated worktrees and the one-task queue are now mandatory |
 | R0-NET | Unexpected-exit reservation safety without double release/refund | Codex / Grok | done | main via PR #47 | GitHub CI #466 green; capture throw/failure withheld, 0 release calls, behavior test in real CI |
-| MOBILE-PROOF | Mobile Home → Project → Create truth and playback regression | Codex | review | `agent/claude/mobile-proof-regression` | Rebase latest main; verify 390/768/1440 and no cached/live copy regression |
+| MOBILE-PROOF | Mobile Home → Project → Create truth and playback regression | Codex | done | main via PR #49 | GitHub CI #470 green; 390/768/1440 proof path, truth copy and mobile single-play verified |
 | T6-DERIVATIVE | Baked free watermark and controlled derivative download | Grok | doing | `agent/grok/t6-deliverable-proof` | Rebase latest main; real ffmpeg/ffprobe non-prod proof; raw file inaccessible |
 | WB-WAIT | No growth work before publishable product proof | WorkBuddy | blocked | none | #41/#46 closed; wait for explicit new queue row |
 

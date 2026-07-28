@@ -6,28 +6,24 @@
  * Preview/Lab doors live under More (crawlable + noindex, not robots.txt block).
  */
 
-/**
- * Desktop primary — core product path only (Explore · Create · Effects · Pricing).
- */
+/** Primary product path for the toy-Recipe browsing loop. */
 export const PRIMARY_NAV = [
   { href: "/", label: "Explore" },
+  { href: "/effects", label: "Recipes" },
   { href: "/create", label: "Create" },
-  { href: "/effects", label: "Effects" },
+  { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
 ] as const;
 
 export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
 
-/**
- * Mobile bottom bar — core loop without Preview doors.
- * Home · Effects · Generate(center) · Library · Profile
- */
+/** Mobile mirrors the same five product doors; secondary routes stay hidden. */
 export const MOBILE_NAV = [
-  { href: "/", label: "Home" },
-  { href: "/effects", label: "Effects" },
-  { href: "/create", label: "Generate", primary: true as const },
+  { href: "/", label: "Explore" },
+  { href: "/effects", label: "Recipes" },
+  { href: "/create", label: "Create" },
   { href: "/library", label: "Library" },
-  { href: "/profile", label: "Profile" },
+  { href: "/pricing", label: "Pricing" },
 ] as const;
 
 export const MOBILE_NAV_HREFS = MOBILE_NAV.map((item) => item.href);
