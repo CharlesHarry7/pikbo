@@ -94,7 +94,7 @@ function fakeReservation(id = "res-test-001") {
   assert.equal(settleCalls, 1);
 }
 
-// ─── 3. Concurrent release → one backend call ─────────────────────────────
+// ─── 3. 20-way concurrent release/finally → one backend call ──────────────
 
 {
   let calls = 0;
@@ -113,19 +113,21 @@ function fakeReservation(id = "res-test-001") {
     },
   });
   lc.assign(fakeReservation("concurrent"));
-  const p1 = lc.release("a");
-  const p2 = lc.release("b");
-  const p3 = lc.safetyNetRelease();
+  const releases = Array.from({ length: 20 }, (_, index) =>
+    index === 19
+      ? lc.safetyNetRelease()
+      : lc.release(`duplicate_failure_${index}`)
+  );
   // Let microtasks schedule
   await Promise.resolve();
   assert.equal(calls, 1, "only one backend in flight");
   resolveBackend();
-  const [r1, r2, r3] = await Promise.all([p1, p2, p3]);
-  assert.equal(r1.skipped, false);
-  // siblings await same in-flight promise (not skipped:false thrice with 3 calls)
+  const results = await Promise.all(releases);
+  assert.equal(results[0].skipped, false);
+  // Siblings share the same in-flight result; the backend still ran once.
   assert.equal(calls, 1);
   assert.equal(lc.releaseBackendCalls(), 1);
-  assert.ok(r1.ok && r2.ok && r3.ok);
+  assert.ok(results.every((result) => result.ok));
 }
 
 // ─── 4. Exception in release still terminal (no second call) ──────────────
@@ -144,7 +146,7 @@ function fakeReservation(id = "res-test-001") {
   lc.assign(fakeReservation("throw"));
   const a = await lc.release("provider_error");
   assert.equal(a.ok, false);
-  assert.equal(lc.phase(), "released");
+  assert.equal(lc.phase(), "release_pending");
   const b = await lc.safetyNetRelease();
   assert.equal(b.skipped, true);
   assert.equal(calls, 1);
@@ -218,7 +220,7 @@ function fakeReservation(id = "res-test-001") {
   lc.assign(fakeReservation("withhold"));
   const s = await lc.settle("prov-x");
   assert.equal(s.ok, false);
-  assert.equal(lc.phase(), "reserved"); // still reserved after failed settle
+  assert.equal(lc.phase(), "withheld");
   lc.markWithheld("capture_failed");
   assert.equal(lc.phase(), "withheld");
   const r = await lc.safetyNetRelease();
@@ -226,7 +228,39 @@ function fakeReservation(id = "res-test-001") {
   assert.equal(calls, 0, "withheld must not release");
 }
 
-// ─── 8. Failed release backend marks released (no double) ─────────────────
+// ─── 8. Capture throw is withheld for both route adapters ─────────────────
+
+for (const routeName of ["generate", "image"]) {
+  let releaseCalls = 0;
+  let settleCalls = 0;
+  const lc = createReservationLifecycle({
+    async release() {
+      releaseCalls += 1;
+      return { ok: true };
+    },
+    async settle() {
+      settleCalls += 1;
+      throw new Error(`${routeName} capture RPC unavailable`);
+    },
+  });
+  lc.assign(fakeReservation(`capture-throw-${routeName}`));
+  const captured = await lc.settle(`provider-${routeName}`);
+  assert.equal(captured.ok, false);
+  assert.equal(captured.skipped, false);
+  assert.equal(lc.phase(), "withheld");
+  const explicit = await lc.release("provider_error");
+  const safety = await lc.safetyNetRelease();
+  assert.equal(explicit.skipped, true);
+  assert.equal(safety.skipped, true);
+  assert.equal(settleCalls, 1);
+  assert.equal(
+    releaseCalls,
+    0,
+    `${routeName}: capture ambiguity must never release provider spend`
+  );
+}
+
+// ─── 9. Failed release backend remains reconciliation-pending ─────────────
 
 {
   let calls = 0;
@@ -242,12 +276,12 @@ function fakeReservation(id = "res-test-001") {
   lc.assign(fakeReservation("fail-rel"));
   const a = await lc.release("provider_error");
   assert.equal(a.ok, false);
-  assert.equal(lc.phase(), "released");
+  assert.equal(lc.phase(), "release_pending");
   await lc.safetyNetRelease();
   assert.equal(calls, 1);
 }
 
-// ─── 9. Minimal route wiring (not the primary proof) ──────────────────────
+// ─── 10. Minimal route wiring (not the primary proof) ─────────────────────
 
 const gen = readFileSync(join(root, "app/api/generate/route.ts"), "utf8");
 const img = readFileSync(join(root, "app/api/image/route.ts"), "utf8");
@@ -259,5 +293,5 @@ assert.match(gen, /markWithheld/);
 assert.match(img, /markWithheld/);
 
 console.log(
-  "r0-safety-net: PASS (release≤1 · settle-blocks-release · concurrent · exception · timeout race · finally · withheld · fail-release terminal · route wire)"
+  "r0-safety-net: PASS (release≤1 · settle-blocks-release · 20-way concurrent · capture-throw withheld x2 · timeout race · finally · release-pending truth · route wire)"
 );

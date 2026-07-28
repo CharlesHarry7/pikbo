@@ -455,6 +455,7 @@ export async function POST(req: Request) {
       };
     },
   });
+  let runSafetyNetRelease: (() => Promise<void>) | null = null;
   try {
     try {
       if (hasRetryHandoff) {
@@ -624,7 +625,6 @@ export async function POST(req: Request) {
       plan: reserved.reservation.planId,
       credits: reserved.availableCredits,
     };
-    await saveSession(session);
     const releaseReservation = async (reason: string): Promise<boolean> => {
       const target = reservationLife.get() ?? reserved.reservation;
       const released = await reservationLife.release(reason);
@@ -670,6 +670,10 @@ export async function POST(req: Request) {
       }
       return true;
     };
+    runSafetyNetRelease = async () => {
+      await releaseReservation("unexpected_exit_safety_net");
+    };
+    await saveSession(session);
 
     // Match generate: non-prod forced fail for refund path tests (never production).
     const forceFail =
@@ -798,6 +802,9 @@ export async function POST(req: Request) {
         const deadlineState = getImageJob(liveJobId);
         const completionDecision = providerCompletionDecision(deadlineState);
         if (!completionDecision.allow) {
+          // Provider output already exists. Close the release path before any
+          // reconciliation I/O, because that I/O may itself throw.
+          reservationLife.markWithheld(completionDecision.code);
           const recorded = await recordProviderSucceededWithheld(
             reserved.reservation,
             {
@@ -817,7 +824,6 @@ export async function POST(req: Request) {
               recorded.code
             );
           }
-          reservationLife.markWithheld(completionDecision.code);
           return NextResponse.json(
             {
               error: completionDecision.message,
@@ -837,6 +843,8 @@ export async function POST(req: Request) {
       );
       if (!captured.ok) {
         console.error("[live-reservation] image capture failed");
+        // settle() already moves failed/thrown capture to withheld.
+        reservationLife.markWithheld("capture_failed");
         const recorded = await recordProviderSucceededWithheld(
           reserved.reservation,
           {
@@ -856,9 +864,6 @@ export async function POST(req: Request) {
             recorded.code
           );
         }
-        // Provider still exists — never release for a free still; R1c worker
-        // owns capture/release. Same idempotency key stays blocked.
-        reservationLife.markWithheld("capture_failed");
         return NextResponse.json(
           {
             error:
@@ -957,7 +962,11 @@ export async function POST(req: Request) {
   } finally {
     // Only while still reserved; never after settle/withhold; backend ≤1 call.
     try {
-      await reservationLife.safetyNetRelease();
+      if (runSafetyNetRelease) {
+        await runSafetyNetRelease();
+      } else {
+        await reservationLife.safetyNetRelease();
+      }
     } catch {
       /* best-effort — reconciliation worker will pick up */
     }

@@ -15,6 +15,7 @@ export type ReservationPhase =
   | "none"
   | "reserved"
   | "released"
+  | "release_pending"
   | "settled"
   | "withheld";
 
@@ -49,7 +50,8 @@ export type ReservationLifecycle = {
   }>;
   /**
    * Settle once while reserved. On success phase becomes `settled`.
-   * On failure phase stays `reserved` so a later release may still run.
+   * A rejected/failed capture is ambiguous after provider output exists, so it
+   * becomes `withheld` and can never fall through to a release.
    */
   settle: (providerRequestId: string) => Promise<{
     ok: boolean;
@@ -105,7 +107,12 @@ export function createReservationLifecycle(backends: {
       if (phase === "settled" || phase === "withheld") {
         return { ok: true, skipped: true, reason: `skip_${phase}` };
       }
-      if (phase === "released" || phase === "none" || !current) {
+      if (
+        phase === "released" ||
+        phase === "release_pending" ||
+        phase === "none" ||
+        !current
+      ) {
         return { ok: true, skipped: true, reason: "already_cleared" };
       }
       if (inFlightRelease) {
@@ -117,8 +124,10 @@ export function createReservationLifecycle(backends: {
         releaseCalls += 1;
         try {
           const result = await backends.release(target, reason);
-          // Terminal after first attempt so finally cannot double-call backend.
-          phase = "released";
+          // Terminal for this request so finally cannot double-call backend.
+          // A failed RPC remains reconciliation-pending rather than pretending
+          // that credits were restored.
+          phase = result.ok ? "released" : "release_pending";
           current = null;
           if (result.ok) {
             return {
@@ -130,7 +139,7 @@ export function createReservationLifecycle(backends: {
           }
           return { ok: false, skipped: false, reason };
         } catch {
-          phase = "released";
+          phase = "release_pending";
           current = null;
           return { ok: false, skipped: false, reason };
         } finally {
@@ -150,18 +159,23 @@ export function createReservationLifecycle(backends: {
       }
       settleCalls += 1;
       const target = current;
-      const result = await backends.settle(target, providerRequestId);
-      if (result.ok) {
-        phase = "settled";
-        current = null;
-        return {
-          ok: true,
-          skipped: false,
-          availableCredits: result.availableCredits,
-        };
+      try {
+        const result = await backends.settle(target, providerRequestId);
+        if (result.ok) {
+          phase = "settled";
+          current = null;
+          return {
+            ok: true,
+            skipped: false,
+            availableCredits: result.availableCredits,
+          };
+        }
+      } catch {
+        // Capture outcome is unknown after provider output. Never turn it into a
+        // refund in a generic route catch.
       }
-      // Stay reserved so explicit release paths can still run if product allows;
-      // capture-fail routes should call markWithheld instead.
+      phase = "withheld";
+      current = null;
       return { ok: false, skipped: false };
     },
     markWithheld(reason) {

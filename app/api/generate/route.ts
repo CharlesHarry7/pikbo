@@ -401,6 +401,7 @@ export async function POST(req: Request) {
       };
     },
   });
+  let runSafetyNetRelease: (() => Promise<void>) | null = null;
 
   try {
     const plan = getPlan(session.plan);
@@ -567,15 +568,12 @@ export async function POST(req: Request) {
       plan: reserved.reservation.planId,
       credits: reserved.availableCredits,
     };
-    await saveSession(session);
     const releaseReservation = async (reason: string): Promise<boolean> => {
       const target = reservationLife.get() ?? reserved.reservation;
       const released = await reservationLife.release(reason);
       if (released.skipped) {
         // Already settled / released / withheld — do not re-hit backend.
-        return released.ok && released.reason !== "skip_settled" && released.reason !== "skip_withheld"
-          ? false
-          : false;
+        return false;
       }
       if (!released.ok) {
         const confirmedPreOutput = new Set([
@@ -621,6 +619,10 @@ export async function POST(req: Request) {
       }
       return true;
     };
+    runSafetyNetRelease = async () => {
+      await releaseReservation("unexpected_exit_safety_net");
+    };
+    await saveSession(session);
 
     const model = modelForTier({
       freeTier: false,
@@ -824,6 +826,9 @@ export async function POST(req: Request) {
       const deadlineState = getJob(liveJobId);
       const completionDecision = providerCompletionDecision(deadlineState);
       if (!completionDecision.allow) {
+        // Provider output already exists. Close the release path before any
+        // reconciliation I/O, because that I/O may itself throw.
+        reservationLife.markWithheld(completionDecision.code);
         const recorded = await recordProviderSucceededWithheld(
           reserved.reservation,
           {
@@ -842,8 +847,6 @@ export async function POST(req: Request) {
             recorded.code
           );
         }
-        // Late/cancel/timeout: never release in finally (would free a paid clip).
-        reservationLife.markWithheld(completionDecision.code);
         const failBody: GenerateErrorBody = {
           error: completionDecision.message,
           code: completionDecision.code,
@@ -860,6 +863,9 @@ export async function POST(req: Request) {
       );
       if (!captured.ok) {
         console.error("[live-reservation] capture failed");
+        // settle() already moves failed/thrown capture to withheld. Keep this
+        // explicit for route readability and future lifecycle implementations.
+        reservationLife.markWithheld("capture_failed");
         const recorded = await recordProviderSucceededWithheld(
           reserved.reservation,
           {
@@ -878,8 +884,6 @@ export async function POST(req: Request) {
             recorded.code
           );
         }
-        // Provider work exists — never release (free clip). Withhold for R1c.
-        reservationLife.markWithheld("capture_failed");
         const failBody: GenerateErrorBody = {
           error:
             "The video was generated, but credits could not be finalized. The output is withheld while the durable reservation is reconciled; do not retry with the same idempotency key.",
@@ -976,7 +980,11 @@ export async function POST(req: Request) {
     // Defense-in-depth: only while still reserved (never after settle/withhold).
     // release backend is invoked at most once (lifecycle guard).
     try {
-      await reservationLife.safetyNetRelease();
+      if (runSafetyNetRelease) {
+        await runSafetyNetRelease();
+      } else {
+        await reservationLife.safetyNetRelease();
+      }
     } catch {
       /* best-effort — reconciliation worker will pick up */
     }
