@@ -56,6 +56,16 @@ export async function GET(req: Request) {
       { status: 404, headers: NO_STORE_HEADERS }
     );
   }
+  if (recovery.state === "unavailable") {
+    return NextResponse.json<GenerateErrorBody>(
+      {
+        error:
+          "Pikbo could not read the saved generation state yet. The original generation was not canceled.",
+        code: "DELIVERY_PIPELINE_UNAVAILABLE",
+      },
+      { status: 503, headers: NO_STORE_HEADERS }
+    );
+  }
   if (recovery.state === "pending") {
     return NextResponse.json(
       {
@@ -69,6 +79,19 @@ export async function GET(req: Request) {
   }
   const session = await ensureSession();
   if (recovery.state === "failed") {
+    if (!recovery.creditsRefunded) {
+      return NextResponse.json<GenerateErrorBody>(
+        {
+          error:
+            "This generation is canceled, but its credit settlement is not confirmed yet. Check balance before retrying.",
+          code: "REQUEST_CANCELED",
+          jobId: recovery.jobId,
+          session: publicSession(session),
+          refundUnconfirmed: true,
+        },
+        { status: 409, headers: NO_STORE_HEADERS }
+      );
+    }
     return NextResponse.json<GenerateErrorBody>(
       {
         error:
@@ -76,7 +99,7 @@ export async function GET(req: Request) {
         code: "GENERATION_FAILED",
         jobId: recovery.jobId,
         session: publicSession(session),
-        creditsRefunded: true,
+        creditsRefunded: recovery.creditsRefunded,
       },
       { status: 409, headers: NO_STORE_HEADERS }
     );

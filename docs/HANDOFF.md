@@ -2078,3 +2078,36 @@ Newest first. One block per meaningful landing.
   commit is ready, but this sandbox cannot resolve GitHub and the connected
   GitHub write was canceled, so PR #56 and its Vercel Preview still point to
   the preceding remote head until the commit can be pushed.
+
+### 2026-07-28 — [gpt] P0 recovery-race correctness intervention
+
+- Audit result: the recovery direction was right, but the first implementation
+  let four missing/error reads finish the recovery promise early. That losing
+  read then aborted an otherwise healthy `/api/generate` request after roughly
+  27 seconds, even though the provider window is about three minutes.
+- Fix: `lib/generateRecoveryPolicy.ts` now makes the race decision explicit.
+  Recovery may beat the original POST only for a safe saved result or a durable
+  `failed` row whose release transaction confirms the refund. A not-found,
+  unavailable, auth, transport or refund-unconfirmed result never cancels the
+  live POST.
+- Durable truth: Supabase/admin/query failure is now `unavailable`, not a false
+  `not_found`. Current durable `failed` means released in the atomic RPC;
+  `canceled` remains refund-unconfirmed and cannot claim “10 restored”.
+- Polling: transient missing/unavailable reads continue through the bounded
+  provider window, so a later durable success can still recover a disconnected
+  response. If durable recovery remains inconclusive, the original POST gets a
+  final 15-second grace before the client returns an honest unresolved state.
+- Executable regression: `p0-private-live-generation` races an early recovery
+  network failure against a later successful primary and proves the primary is
+  not aborted; it separately proves saved durable success may abort the stale
+  response.
+- Verification: `typecheck`, `lint`, `p0-private-live-generation`,
+  `recovery-qa`, `recovery-ledger`, `recovery-retry-deadline`,
+  `recovery-reconciliation`, `r0-safety-net`, `engine-smoke` and
+  `mobile-proof-regression` pass. Next 16.2.11 Webpack production build passes
+  all 194 routes. The bundled ChatGPT Node binary cannot load local native
+  modules because macOS Team IDs differ, so build verification used the local
+  Cursor Node runtime; this is an execution-environment constraint, not a
+  product source workaround.
+- External state remains unchanged: no provider call, database mutation,
+  deployment, DNS, billing or indexing action was performed.

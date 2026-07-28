@@ -9,6 +9,10 @@ import type {
   GenerateSuccess,
 } from "@/lib/contracts";
 import { isSafeDeliverableUrl } from "@/lib/createTrust";
+import {
+  isAuthoritativeRecoveryResult,
+  raceGenerateWithDurableRecovery,
+} from "@/lib/generateRecoveryPolicy";
 import type { HistoryItem } from "@/lib/history";
 import type { PublicSession } from "@/lib/session";
 
@@ -345,8 +349,16 @@ async function pollDurableGenerateRecovery(
     startAfterMs + pollEveryMs,
     opts?.maxWaitMs ?? 185_000
   );
-  let notFoundReads = 0;
-  let networkFailures = 0;
+  let unresolved: GenerateResult = {
+    ok: false,
+    status: 0,
+    code: "NETWORK_ERROR",
+    error:
+      "The render is still unresolved. Refresh Library before retrying so a completed private result is not generated twice.",
+    refundUnconfirmed: true,
+    fatal: false,
+    paywall: false,
+  };
 
   try {
     await sleep(startAfterMs, opts?.signal);
@@ -368,33 +380,44 @@ async function pollDurableGenerateRecovery(
         };
         if (res.status === 200) {
           const recovered = interpretGenerateResponse(res.status, raw);
-          if (recovered.ok) opts?.onState?.("recovered");
-          return recovered;
+          if (isAuthoritativeRecoveryResult(recovered)) {
+            if (recovered.ok) opts?.onState?.("recovered");
+            return recovered;
+          }
+          unresolved = recovered;
         }
         if (res.status === 202 && raw.recoveryState === "pending") {
-          notFoundReads = 0;
-          networkFailures = 0;
           opts?.onState?.("waiting");
         } else if (res.status === 404 && raw.recoveryState === "not_found") {
-          notFoundReads += 1;
-          // If the POST never reached Pikbo, do not make the user stare at an
-          // empty poll for the full provider window.
-          if (notFoundReads >= 4) {
-            return {
-              ok: false,
-              status: 0,
-              code: "NETWORK_ERROR",
-              error:
-                "Pikbo could not find this submitted attempt. Check your connection and try again; no second generation was started.",
-              refundUnconfirmed: true,
-              fatal: false,
-              paywall: false,
-            };
-          }
+          unresolved = {
+            ok: false,
+            status: 0,
+            code: "NETWORK_ERROR",
+            error:
+              "Pikbo could not find this submitted attempt. Check your connection and Library before retrying; no second generation was started.",
+            refundUnconfirmed: true,
+            fatal: false,
+            paywall: false,
+          };
         } else if (res.status === 409 || res.status === 400 || res.status === 401) {
-          return interpretGenerateResponse(res.status, raw);
+          const recovered = interpretGenerateResponse(res.status, raw);
+          if (isAuthoritativeRecoveryResult(recovered)) return recovered;
+          unresolved = recovered;
+          // Invalid/expired auth will not improve through repeated reads. Stop
+          // polling, but keep the recovery promise open for the provider window
+          // so this read failure cannot cancel a still-live original request.
+          break;
         } else {
-          networkFailures += 1;
+          unresolved = {
+            ok: false,
+            status: 0,
+            code: "NETWORK_ERROR",
+            error:
+              "Pikbo lost contact while checking the saved result. Refresh Library before starting another generation.",
+            refundUnconfirmed: true,
+            fatal: false,
+            paywall: false,
+          };
         }
       } catch (error) {
         const aborted =
@@ -403,10 +426,7 @@ async function pollDurableGenerateRecovery(
             error instanceof DOMException &&
             error.name === "AbortError");
         if (aborted) throw error;
-        networkFailures += 1;
-      }
-      if (networkFailures >= 4) {
-        return {
+        unresolved = {
           ok: false,
           status: 0,
           code: "NETWORK_ERROR",
@@ -417,8 +437,12 @@ async function pollDurableGenerateRecovery(
           paywall: false,
         };
       }
+      // Keep checking after transient misses. They cannot win the race, but a
+      // later durable success should still recover a disconnected POST.
       await sleep(pollEveryMs, opts?.signal);
     }
+    const remainingMs = maxWaitMs - (Date.now() - startedAt);
+    if (remainingMs > 0) await sleep(remainingMs, opts?.signal);
   } catch (error) {
     const aborted =
       (error instanceof Error && error.name === "AbortError") ||
@@ -438,16 +462,7 @@ async function pollDurableGenerateRecovery(
       };
     }
   }
-  return {
-    ok: false,
-    status: 0,
-    code: "NETWORK_ERROR",
-    error:
-      "The render is still unresolved. Refresh Library before retrying so a completed private result is not generated twice.",
-    refundUnconfirmed: true,
-    fatal: false,
-    paywall: false,
-  };
+  return unresolved;
 }
 
 /**
@@ -482,23 +497,30 @@ async function postGenerateRecoverable(
     signal: recoveryController.signal,
     onState: opts?.onRecoveryState,
   });
-  const first = await Promise.race([
-    primary.then((result) => ({ source: "primary" as const, result })),
-    recovery.then((result) => ({ source: "recovery" as const, result })),
-  ]);
-  if (
-    first.source === "primary" &&
-    !first.result.ok &&
-    first.result.code === "NETWORK_ERROR"
-  ) {
-    const recovered = await recovery;
+  try {
+    return await raceGenerateWithDurableRecovery({
+      primary,
+      recovery,
+      abortPrimary: () => primaryController.abort(),
+      abortRecovery: () => recoveryController.abort(),
+      waitForPrimaryAfterRecovery: async (recoveryResult, primaryResult) => {
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+        const timeout = new Promise<null>((resolve) => {
+          timeoutId = setTimeout(() => resolve(null), 15_000);
+        });
+        const result = await Promise.race([
+          primaryResult,
+          timeout,
+        ]);
+        if (timeoutId) clearTimeout(timeoutId);
+        if (result) return result;
+        primaryController.abort();
+        return recoveryResult;
+      },
+    });
+  } finally {
     opts?.signal?.removeEventListener("abort", cancelForUser);
-    return recovered;
   }
-  if (first.source === "primary") recoveryController.abort();
-  else primaryController.abort();
-  opts?.signal?.removeEventListener("abort", cancelForUser);
-  return first.result;
 }
 
 /** Map a success payload into library history fields. */

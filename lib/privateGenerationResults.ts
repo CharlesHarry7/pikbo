@@ -35,6 +35,9 @@ export type PrivateGenerationRecovery =
       state: "not_found";
     }
   | {
+      state: "unavailable";
+    }
+  | {
       state: "pending";
       jobId: string;
       status: "queued" | "running" | "unknown";
@@ -43,6 +46,7 @@ export type PrivateGenerationRecovery =
       state: "failed";
       jobId: string;
       status: "failed" | "canceled";
+      creditsRefunded: boolean;
       errorCode?: string;
     }
   | {
@@ -172,19 +176,20 @@ export async function getPrivateGenerationRecovery(input: {
   userId: string;
 }): Promise<PrivateGenerationRecovery> {
   const admin = getSupabaseAdmin();
-  if (!admin) return { state: "not_found" };
+  if (!admin) return { state: "unavailable" };
   const { data, error } = await admin
     .from("generation_jobs")
     .select(`${RESULT_COLUMNS},error_code`)
     .eq("created_by", input.userId)
     .eq("idempotency_key", input.idempotencyKey)
     .maybeSingle();
-  if (error || !data) return { state: "not_found" };
+  if (error) return { state: "unavailable" };
+  if (!data) return { state: "not_found" };
 
   const row = data as unknown as Record<string, unknown>;
   const jobId = typeof row.id === "string" ? row.id : "";
   const status = typeof row.status === "string" ? row.status : "unknown";
-  if (!jobId) return { state: "not_found" };
+  if (!jobId) return { state: "unavailable" };
 
   if (status === "succeeded") {
     const result = resultFromRow(row);
@@ -199,6 +204,10 @@ export async function getPrivateGenerationRecovery(input: {
       state: "failed",
       jobId,
       status,
+      // The current durable release RPC writes `failed` in the same
+      // transaction that releases the reservation. `canceled` has no such
+      // settlement guarantee and must remain refund-unconfirmed.
+      creditsRefunded: status === "failed",
       ...(typeof row.error_code === "string" && row.error_code
         ? { errorCode: row.error_code }
         : {}),

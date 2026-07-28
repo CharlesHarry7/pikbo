@@ -33,6 +33,10 @@ import {
   privateResultObjectKey,
   providerOutputHostAllowed,
 } from "../lib/privateGenerationResultsPure.mjs";
+import {
+  isAuthoritativeRecoveryResult,
+  raceGenerateWithDurableRecovery,
+} from "../lib/generateRecoveryPolicy.ts";
 
 const root = process.cwd();
 const read = (rel) => readFileSync(join(root, rel), "utf8");
@@ -338,6 +342,8 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     results,
     /status === "succeeded"[\s\S]*resultFromRow[\s\S]*state: "succeeded"/
   );
+  assert.match(results, /if \(error\) return \{ state: "unavailable" \}/);
+  assert.match(results, /creditsRefunded: status === "failed"/);
 
   const recoveryRoute = read("app/api/generations/recover/route.ts");
   assert.match(recoveryRoute, /getAuthUserFromRequest/);
@@ -347,6 +353,7 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(recoveryRoute, /processedUpload:\s*true/);
   assert.match(recoveryRoute, /privateResult:\s*true/);
   assert.match(recoveryRoute, /Cache-Control.*no-store/);
+  assert.match(recoveryRoute, /if \(!recovery\.creditsRefunded\)/);
   assert.doesNotMatch(
     recoveryRoute,
     /reserveStrictLiveGeneration|invokeReservedProvider|fal\.subscribe|providerOutputUrl/
@@ -355,10 +362,11 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   const client = read("lib/generateClient.ts");
   assert.match(client, /pollDurableGenerateRecovery/);
   assert.match(client, /\/api\/generations\/recover\?idempotencyKey=/);
-  assert.match(client, /Promise\.race/);
-  assert.match(
+  assert.match(client, /raceGenerateWithDurableRecovery/);
+  assert.doesNotMatch(
     client,
-    /recoveryController\.abort\(\)[\s\S]*primaryController\.abort\(\)/
+    /notFoundReads\s*>=|networkFailures\s*>=/,
+    "transient recovery misses must not end later durable polling"
   );
   assert.match(
     client,
@@ -370,6 +378,97 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(create, /does not start another generation or charge again/);
 }
 
+// ─── 13. Recovery read failures never cancel a still-live primary ─────────
+
+{
+  assert.equal(
+    isAuthoritativeRecoveryResult({
+      ok: false,
+      status: 0,
+      code: "NETWORK_ERROR",
+    }),
+    false
+  );
+  assert.equal(
+    isAuthoritativeRecoveryResult({
+      ok: false,
+      status: 503,
+      code: "DELIVERY_PIPELINE_UNAVAILABLE",
+    }),
+    false
+  );
+  assert.equal(
+    isAuthoritativeRecoveryResult({
+      ok: false,
+      status: 409,
+      code: "GENERATION_FAILED",
+      creditsRefunded: true,
+    }),
+    true
+  );
+
+  const deferred = () => {
+    let resolve;
+    const promise = new Promise((done) => {
+      resolve = done;
+    });
+    return { promise, resolve };
+  };
+
+  const livePrimary = deferred();
+  const unavailableRecovery = deferred();
+  let primaryAborts = 0;
+  let recoveryAborts = 0;
+  const raced = raceGenerateWithDurableRecovery({
+    primary: livePrimary.promise,
+    recovery: unavailableRecovery.promise,
+    abortPrimary: () => {
+      primaryAborts += 1;
+    },
+    abortRecovery: () => {
+      recoveryAborts += 1;
+    },
+    waitForPrimaryAfterRecovery: async (_recoveryResult, primary) => primary,
+  });
+  unavailableRecovery.resolve({
+    ok: false,
+    status: 0,
+    code: "NETWORK_ERROR",
+  });
+  await Promise.resolve();
+  assert.equal(
+    primaryAborts,
+    0,
+    "a recovery transport/read failure must not abort the live POST"
+  );
+  livePrimary.resolve({ ok: true, status: 200 });
+  assert.deepEqual(await raced, { ok: true, status: 200 });
+  assert.equal(primaryAborts, 0);
+  assert.equal(recoveryAborts, 0);
+
+  const slowPrimary = deferred();
+  const savedRecovery = deferred();
+  primaryAborts = 0;
+  const recovered = raceGenerateWithDurableRecovery({
+    primary: slowPrimary.promise,
+    recovery: savedRecovery.promise,
+    abortPrimary: () => {
+      primaryAborts += 1;
+    },
+    abortRecovery: () => {
+      recoveryAborts += 1;
+    },
+    waitForPrimaryAfterRecovery: async (recoveryResult) => recoveryResult,
+  });
+  savedRecovery.resolve({ ok: true, status: 200 });
+  assert.deepEqual(await recovered, { ok: true, status: 200 });
+  assert.equal(
+    primaryAborts,
+    1,
+    "only authoritative durable success may abort the still-open response"
+  );
+}
+
 console.log(
-  "p0-private-live-generation: PASS (R0 · owned upload provider input · private Supabase object before capture · owner download · no raw provider URL · refund honesty · durable slow-response recovery)"
+  "p0-private-live-generation: PASS (R0 · owned upload provider input · private Supabase object before capture · owner download · no raw provider URL · refund honesty · durable slow-response recovery · read-failure race safety)"
 );
