@@ -307,8 +307,10 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   );
   assert.match(migration, /pikbo-private-results/);
   assert.match(migration, /pikbo_attach_private_generation_output_v1/);
+  assert.match(migration, /pikbo_reserve_generation_v1/);
   assert.match(migration, /output_object_key/);
   assert.match(migration, /set public = false/);
+  assert.doesNotMatch(migration, /v_account\.plan_id\s*=\s*'free'/);
   const atomic = read(
     "supabase/migrations/20260727213000_r1_atomic_generation_credits.sql"
   );
