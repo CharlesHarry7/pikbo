@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { buildHomeShowcaseFeed } from "@/lib/videoFeed";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
+import { HomeTrustFooter } from "@/components/HomeTrustFooter";
 import { HomeViralWall } from "@/components/HomeViralWall";
 import { JsonLd } from "@/components/JsonLd";
 import { site } from "@/lib/site";
@@ -96,6 +97,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <HomeTrustFooter />
     </>
   );
 }
