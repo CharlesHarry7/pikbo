@@ -51,6 +51,9 @@ jobs:
       - name: R0 reservation safety-net (behavioral)
         run: npm run r0-safety-net
 
+      - name: P0 private live generation contract
+        run: npm run p0-private-live-generation
+
       - name: Recovery retry + deadline (R1b video + image)
         run: npm run recovery-retry-deadline
 

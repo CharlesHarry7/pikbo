@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] Issue #54 P0 private live generation path (no prod enable)
+- Branch `agent/grok/p0-private-live-generation`: private-beta allowlist + hard budget; Free delivery ready only for invite/budget or T6.
+- Cached generate with upload: `processedUpload:false` + `uploadIgnored` honesty.
+- Live success: `demo:false` + `processedUpload:true`; Free watermark uses `/api/downloads/*`.
+- Health `privateLiveBeta` presence flags; evidence `docs/evidence/P0_PRIVATE_LIVE_PREREQS_2026-07-28.md`.
+- Smoke: `npm run p0-private-live-generation`. Boss blockers consolidated (no secrets).
+
 ### 2026-07-28 — [grok]/[gpt] T6 non-production derivative proof merged
 - PR #51 merged at `80a17c9`; GitHub CI #481 passed the recovery, credit, T6, strict lint, typecheck, rendered-contract, link and 193-route production-build gates.
 - A synthetic H.264 640×360 source was baked with a visible PIKBO mark using real ffmpeg 6.0 and verified with ffprobe plus four decoded frames. Source/output SHA differ; watermark ROI mean delta is `6.011892` versus control `0`; metadata-only proof fails with `WATERMARK_PIXEL_PROOF_FAILED`.
