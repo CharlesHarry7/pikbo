@@ -35,7 +35,8 @@
     "g6-refund-leg": "node scripts/g6-refund-leg.mjs",
     "preflight-launch": "bash scripts/preflight-launch.sh",
     "mode-a-acceptance": "bash scripts/mode-a-acceptance.sh",
-    "indexnow": "node scripts/indexnow-submit.mjs"
+    "indexnow": "node scripts/indexnow-submit.mjs",
+    "r0-safety-net": "node scripts/r0-safety-net.mjs"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.1",

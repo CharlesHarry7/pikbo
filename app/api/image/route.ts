@@ -433,6 +433,8 @@ export async function POST(req: Request) {
   }
 
   let liveJobId: string | undefined;
+  // Safety net: release leaked durable reservation on unexpected exit.
+  let imageLiveReservation: StrictLiveReservation | null = null;
   try {
     try {
       if (hasRetryHandoff) {
@@ -596,16 +598,16 @@ export async function POST(req: Request) {
         { status }
       );
     }
-    let liveReservation: StrictLiveReservation | null = reserved.reservation;
+    imageLiveReservation = reserved.reservation;
     session = {
       ...session,
-      plan: liveReservation.planId,
+      plan: imageLiveReservation.planId,
       credits: reserved.availableCredits,
     };
     await saveSession(session);
     const releaseReservation = async (reason: string): Promise<boolean> => {
-      if (!liveReservation) return false;
-      const target = liveReservation;
+      if (!imageLiveReservation) return false;
+      const target = imageLiveReservation;
       const released = await releaseStrictLiveGeneration(target, reason);
       if (!released.ok) {
         // R1c parity with generate: enqueue release_pending or settlement_unknown.
@@ -643,7 +645,7 @@ export async function POST(req: Request) {
         credits: released.data.availableCredits,
       };
       await saveSession(session);
-      liveReservation = null;
+      imageLiveReservation = null;
       return true;
     };
 
@@ -850,7 +852,7 @@ export async function POST(req: Request) {
           { status: 503 }
         );
       }
-      liveReservation = null;
+      imageLiveReservation = null;
 
       let jobId = liveJobId;
       let requestId = providerRequestId || liveJobId;
@@ -935,6 +937,18 @@ export async function POST(req: Request) {
       );
     }
   } finally {
+    // Defense-in-depth: if a truly unexpected error leaked a committed
+    // reservation, attempt a last-resort release so credits are not lost.
+    if (imageLiveReservation) {
+      try {
+        await releaseStrictLiveGeneration(
+          imageLiveReservation,
+          "unexpected_exit_safety_net"
+        );
+      } catch {
+        /* best-effort — reconciliation worker will pick up */
+      }
+    }
     endJob(imgLockKey);
   }
 }
