@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { track } from "@/lib/analytics";
 import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
 import { getPreset } from "@/lib/presets";
 
@@ -46,6 +49,15 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               prefetch
               aria-label={`Use the ${recipeName} recipe`}
               data-recipe-card={recipeSlug}
+              onClick={() =>
+                track({
+                  event: "recipe_use",
+                  path: "/",
+                  recipe: recipeSlug,
+                  demo: true,
+                  meta: { source: "home_recipe_wall" },
+                })
+              }
               className="group relative isolate aspect-[4/5] min-w-0 overflow-hidden rounded-[1rem] border border-white/[0.1] bg-[#111114] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d] sm:rounded-[1.25rem]"
             >
               <AutoPlayVideo

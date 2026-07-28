@@ -23,6 +23,11 @@ assert.match(
   /data-recipe-card=\{recipeSlug\}[\s\S]*Use this recipe/,
   "home Recipe cards must expose the one-click Remix contract"
 );
+assert.match(
+  wall,
+  /event:\s*"recipe_use"[\s\S]*source:\s*"home_recipe_wall"/,
+  "home Recipe card clicks must preserve conversion analytics"
+);
 
 assert.match(
   landing,

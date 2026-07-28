@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { track } from "@/lib/analytics";
 import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
 
 export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
@@ -62,6 +65,15 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
               href={`/create?effect=${recipeSlug}`}
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/28 bg-black/36 px-7 text-sm font-bold text-white backdrop-blur transition hover:border-white/55 hover:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
               data-hero-recipe={recipeSlug}
+              onClick={() =>
+                track({
+                  event: "recipe_use",
+                  path: "/",
+                  recipe: recipeSlug,
+                  demo: true,
+                  meta: { source: "home_hero" },
+                })
+              }
             >
               Create with your toy
             </Link>
