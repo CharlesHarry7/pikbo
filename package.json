@@ -41,7 +41,8 @@
     "indexnow": "node scripts/indexnow-submit.mjs",
     "r0-safety-net": "node --experimental-strip-types scripts/r0-safety-net.mjs",
     "p0-private-live-generation": "node --experimental-strip-types scripts/p0-private-live-generation.mjs",
-    "auth-magic-link-regression": "node --experimental-strip-types scripts/auth-magic-link-regression.mjs"
+    "auth-magic-link-regression": "node --experimental-strip-types scripts/auth-magic-link-regression.mjs",
+    "profile-account-ux-regression": "node scripts/profile-account-ux-regression.mjs"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.1",

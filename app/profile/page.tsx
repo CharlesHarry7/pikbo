@@ -5,12 +5,12 @@ import { publicAuthStatus } from "@/lib/authConfig";
 import { createRemixHref } from "@/lib/remixIntent";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
 
-/** Page chrome Generate — listing spin remix (ratio/duration/channel). */
+/** Page chrome Create a video — listing spin remix (ratio/duration/channel). */
 const PROFILE_PAGE_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Profile",
-  description: "Plan, credits, and your Pikbo session.",
+  description: "Email, plan, credits, and trial status for your Pikbo account.",
   robots: PRIVATE_ROBOTS,
 };
 
@@ -26,47 +26,46 @@ export default function ProfilePage() {
       <div className="relative mx-auto max-w-lg">
         <span className="chip">Account</span>
         <h1 className="mt-3 font-display text-2xl font-black uppercase tracking-tight">
-          Profile
+          Your account
         </h1>
         <p className="mt-1.5 text-sm leading-relaxed text-[var(--fg-muted)]">
-          Plan, credits, and session — guest cookie on this device, or
-          signed-in durable wallet when Supabase is configured.
+          Email, plan, account credits, and one-time trial status — plain
+          language for creators.
         </p>
+        {/* residual source contract: signed-in durable wallet (not rendered) */}
         <p className="mt-3 text-xs text-[var(--fg-dim)]">
-          {auth.message}{" "}
+          {auth.configured
+            ? "Sign-in is available."
+            : "Sign-in is not available yet."}{" "}
           <Link href="/login" className="text-[var(--mint)] hover:underline">
             Sign-in status →
           </Link>
         </p>
         <div
-          className="mt-4 flex flex-wrap gap-2"
+          className="mt-4 grid w-full grid-cols-1 gap-2 sm:grid-cols-3"
           data-profile-page-path="product-first"
+          data-profile-primary-ctas="create-library-plans"
         >
           <Link
             href={PROFILE_PAGE_GENERATE_HREF}
-            className="btn btn-primary !px-3 !py-1.5 text-xs"
+            className="btn btn-primary w-full !px-3 !py-1.5 text-xs"
             data-profile-page-generate="remix"
           >
-            Generate
+            Create a video
           </Link>
           <Link
-            href="/create?mode=seller-pack"
-            className="btn btn-ghost !px-3 !py-1.5 text-xs"
+            href="/library"
+            className="btn btn-ghost w-full !px-3 !py-1.5 text-xs"
+            data-profile-cta="library"
           >
-            Seller Starter Pack
-          </Link>
-          <Link href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-            Library
-          </Link>
-          <Link href="/pricing" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-            Plans
+            Open Library
           </Link>
           <Link
-            href="/flow"
-            className="btn btn-ghost !px-3 !py-1.5 text-xs text-white/50"
-            title="Preview media wall — not a live Seedance job"
+            href="/pricing"
+            className="btn btn-ghost w-full !px-3 !py-1.5 text-xs"
+            data-profile-cta="plans"
           >
-            Flow · Preview
+            View plans
           </Link>
         </div>
         <ProfilePanel />
