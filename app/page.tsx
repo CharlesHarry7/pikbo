@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { buildHomeShowcaseFeed } from "@/lib/videoFeed";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
-import { HomeTrustFooter } from "@/components/HomeTrustFooter";
 import { HomeViralWall } from "@/components/HomeViralWall";
+import { HomeSeoBody } from "@/components/HomeSeoBody";
+import { HomeTrustFooter } from "@/components/HomeTrustFooter";
 import { JsonLd } from "@/components/JsonLd";
 import { site } from "@/lib/site";
 import {
@@ -97,6 +98,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <HomeSeoBody />
       <HomeTrustFooter />
     </>
   );

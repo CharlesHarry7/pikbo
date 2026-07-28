@@ -5,9 +5,9 @@ Newest first. One block per meaningful landing.
 ---
 
 ### 2026-07-28 — [gpt] immersive toy Recipe home V1
-- Home now opens on a full-bleed toy-video hero, then the frozen `HOME_PROOF_SLUGS` wall with eight distinct cached demos; every card links directly to `/create?effect=<slug>` and exposes the upload step in one navigation.
-- Primary navigation is only Explore, Recipes, Create, Library and Pricing. Existing routes remain intact; Launch Pack stays below the Recipe wall as the later upgrade.
-- Browser QA: 390×844 and 1440×900 both have zero horizontal overflow, eight Recipe cards and no console errors. No API, Supabase, Stripe, credits, SEO route or production configuration changed.
+- Home now opens on a full-bleed toy-video hero, then the frozen `HOME_PROOF_SLUGS` wall with eight distinct cached demos. Card body opens the auditable Inside Project page; the explicit `Use this recipe` action deep-links to Create.
+- Primary navigation is Explore, Recipes, Create, Library and Pricing, with one emphasized Generate CTA plus reachable credits, language, account and secondary links. Launch Pack remains the later commercial upgrade.
+- The existing homepage SEO/trust surface and analytics events remain intact. Browser QA and the full CI suite are required before merge; no API, Supabase, Stripe, credits or production configuration changed.
 
 ---
 

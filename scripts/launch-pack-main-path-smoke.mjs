@@ -18,7 +18,9 @@ const shell = read("components/AppShell.tsx");
 assert.match(home, /data-home-upgrade="launch-pack"/);
 assert.match(home, /href="\/create\?mode=seller-pack"/);
 assert.match(homeWall, /Use this recipe/);
-assert.match(homeWall, /create\?effect=\$\{recipeSlug\}/);
+assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
+assert.match(homeWall, /href=\{item\.href\}/);
+assert.match(homeWall, /event:\s*"recipe_use"/);
 assert.doesNotMatch(shell, /create\?mode=seller-pack/);
 assert.doesNotMatch(
   [home, homeWall, shell].join("\n"),

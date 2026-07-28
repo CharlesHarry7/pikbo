@@ -705,7 +705,9 @@ assert.match(gen, /creditsRefunded/);
 assert.match(gen, /10 credits restored/);
 const appShell = fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8");
 assert.match(appShell, /PRIMARY_NAV\.map/);
-assert.doesNotMatch(appShell, /const MORE|MoreMenu/);
+assert.match(appShell, /const MORE|MoreMenu/);
+assert.match(appShell, /CreditsBadge|LanguageSwitcher/);
+assert.match(appShell, /data-appshell-cta=["']generate["']/);
 const historySrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historySrc, /historyProvenance|provenance/);
 assert.match(historySrc, /sourceProject/);
@@ -3772,7 +3774,9 @@ assert.match(
   homeWallSrc,
   /data-home-wall|data-recipe-card|wallDense|Use this recipe|Cached demo/
 );
-assert.match(homeWallSrc, /create\?effect=\$\{recipeSlug\}/);
+assert.match(homeWallSrc, /href=\{item\.projectHref \|\| item\.href\}/);
+assert.match(homeWallSrc, /href=\{item\.href\}/);
+assert.match(homeWallSrc, /project_open|recipe_use/);
 assert.match(homePageSrc, /HomeCinemaHero items=|data-home-upgrade="launch-pack"/);
 assert.doesNotMatch(
   [homePageSrc, homeHeroSrc, homeWallSrc, appShell].join("\n"),
@@ -3998,7 +4002,8 @@ const appShellSrc = fs.readFileSync(
   "utf8"
 );
 assert.match(appShellSrc, /PRIMARY_NAV/);
-assert.doesNotMatch(appShellSrc, /MoreMenu|CreditsBadge|LanguageSwitcher/);
+assert.match(appShellSrc, /MoreMenu|CreditsBadge|LanguageSwitcher/);
+assert.match(appShellSrc, /data-appshell-cta=["']generate["']/);
 // GA4 adapter is env-gated no-op when unset (reuse analyticsSrc declared above)
 assert.match(analyticsSrc, /NEXT_PUBLIC_GA_MEASUREMENT_ID/);
 assert.match(analyticsSrc, /landing_view|generate_start|export_click/);

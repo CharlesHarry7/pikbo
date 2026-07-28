@@ -15,18 +15,23 @@ const zh = source("lib/i18n.ts");
 
 assert.match(
   wall,
-  /href=\{`\/create\?effect=\$\{recipeSlug\}`\}/,
-  "home Recipe cards must open Create with the selected effect"
+  /href=\{item\.projectHref \|\| item\.href\}/,
+  "home Recipe cards must open the registered Inside Project proof"
 );
 assert.match(
   wall,
-  /data-recipe-card=\{recipeSlug\}[\s\S]*Use this recipe/,
-  "home Recipe cards must expose the one-click Remix contract"
+  /href=\{item\.href\}[\s\S]*Use this recipe/,
+  "home Recipe cards must expose a separate one-click Remix contract"
 );
 assert.match(
   wall,
-  /event:\s*"recipe_use"[\s\S]*source:\s*"home_recipe_wall"/,
-  "home Recipe card clicks must preserve conversion analytics"
+  /event:\s*item\.projectHref \? "project_open" : "recipe_use"[\s\S]*source:\s*"home_recipe_card"/,
+  "home Recipe proof clicks must preserve project or fallback conversion analytics"
+);
+assert.match(
+  wall,
+  /event:\s*"recipe_use"[\s\S]*source:\s*"home_recipe_remake"/,
+  "home Recipe CTA clicks must preserve remix conversion analytics"
 );
 
 assert.match(
