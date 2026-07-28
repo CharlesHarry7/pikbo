@@ -11,6 +11,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import "./health-truth-contract.mjs";
 import "./p0-private-live-generation.mjs";
+import "./auth-magic-link-regression.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
