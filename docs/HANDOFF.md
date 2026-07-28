@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] T5 pure engine + auth fail-closed smoke (Codex DISPATCH)
+- Branch `agent/grok/t5-auth-credits-smoke`: `npm run t5-auth-credits-smoke` (strip-types import of `lib/durableCredits/engine.ts`).
+- Covers reserve/settle/release/idempotent settle, guest migrate once, discard cookie when durable non-empty, expire stale, authConfig disabled default, T5+R1 SQL present, liveReservation no session debit.
+- Wired into `docs/ci/github-actions-ci.yml` (live workflow still needs boss `workflow` scope).
+- Evidence: `docs/evidence/T5_AUTH_CREDITS_SMOKE_2026-07-28.md`.
+- PASS: t5-auth-credits-smoke · recovery-qa · engine-smoke.
+
 ### 2026-07-28 — [grok] Residual R0 cookie-authority honesty (Profile / claim / Settings / badge)
 - ProfilePanel + Settings: cookie is **not** live-spend authority; live needs durable atomic reserve or labeled cached demos.
 - `/api/auth/claim`: migrates display balance only — no soft-launch generate-authority claim.

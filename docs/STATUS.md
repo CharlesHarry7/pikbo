@@ -30,7 +30,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | R5 | Growth claims cleanup and WorkBuddy permission boundary | GPT / Grok | review | agent/grok/growth-truth | Search/ranking/backlink claims corrected; generic directory automation and direct-main path disabled |
 | KB-BRIDGE | Connect outbound knowledge base to Pikbo execution gates | GPT | **review** | agent/gpt/outbound-kb-bridge | GitHub bridge, task map, 8-week gates and PR template ready; Feishu publish blocked on missing local write client |
 | GO | Public pikbo.ai Mode B | Grok | **blocked** | agent/grok/final-takeover | Grok owns readiness; boss still must explicitly approve public DNS and charging |
-| GROK-TAKEOVER | Complete every remaining no-cost product, engineering, QA and private-release task | Grok | doing | main | 2026-07-24: Flow path + Seller Pack WaitStage + HF smoke locks. Still blocked on boss Vercel/DNS, T5 SQL multi-node, T6 bake |
+| GROK-TAKEOVER | Complete every remaining no-cost product, engineering, QA and private-release task | Grok | doing | agent/grok/t5-auth-credits-smoke | Active slice: T5 smoke/evidence. Still blocked: boss Vercel/DNS, T5 SQL multi-node, T6 bake, CI workflow scope |
 | SUITE | 潮玩版 HF Generate + Yiha Modules 产品壳 | Grok | **review** | main | `/create` `/modules` suite chrome; softLaunch PRIMARY/MOBILE nav freeze; suite doors sitewide |
 | G1 | Nav whitelist / kill empty doors | Grok | **review** | agent/grok/seo-gsc-p0 | GSC P0: PRIMARY = Explore·Create·Effects·Pricing; Preview/Lab in More |
 | SEO-GSC | GSC VideoObject + crawl/noindex contract | Grok | **review** | main | Five-page marketing sitemap + legal (WorkBuddy budget); long-tail noindex; seo-cold-start-smoke in docs/ci; **boss: GSC after deploy still NO-GO** |
@@ -53,7 +53,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T2 | Real fal sample clips / homepage demos | GPT | done | agent/gpt/homepage-demos | 6 original encoded demos; cached/no FAL cost; verified fal renders can replace assets later |
 | T3 | Keyword + preset expansion (long-tail SEO) | Claude | done | agent/claude/seo-keywords | +use-cases + toy-types |
 | T4 | Stripe webhook (renew/cancel plan) | Grok | done | agent/grok/ship-billing-launch | webhook + confirm + entitlements |
-| T5 | Supabase auth + durable credits | Grok | doing | agent/grok/final-takeover | SQL migration + pure engine + local adapter + smoke tests landed; Supabase Auth UI/wire blocked on keys (see BLOCKERS_REQUEST) |
+| T5 | Supabase auth + durable credits | Grok | **review** | agent/grok/t5-auth-credits-smoke | `npm run t5-auth-credits-smoke` PASS: pure engine reserve/settle/release/migrate/expire + auth disabled source-lock + T5/R1 migrations + liveReservation no cookie debit. CI template wires smoke. Multi-node SQL/keys still boss (BLOCKERS). Evidence: docs/evidence/T5_AUTH_CREDITS_SMOKE_2026-07-28.md |
 | T-PHASE-D | Local async job ledger + controlled download API | Grok | review | main | process-memory generations + /api/downloads gate; durable queue still Supabase |
 | T6 | Server-side free watermark (ffmpeg) | Grok | **blocked** | agent/grok/t6-watermark-worker-v1 | Fail-closed skeleton on main; Free raw blocked until owned derivative + ffmpeg proof |
 | T7 | Private Vercel RC + later domain pikbo.ai | Grok | blocked | agent/grok/final-takeover | Prepare private preview; Vercel login and public DNS require boss authorization |
@@ -91,7 +91,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T28 | Pricing conversion copy A/B | GPT | done | agent/gpt/pricing-mobile | Outcome default; `?copy=cost` cost-control variant; C1–C5 aligns active 1 / 5 / 15 contract |
 | T29 | Homepage first-screen 390px acceptance + polish | GPT | done | agent/gpt/pricing-mobile | No x-overflow; primary CTA visible; duplicate home floating CTA removed; accessible demo controls |
 | T30 | Pricing UI matches active credit contract | GPT | done | agent/gpt/pricing-truth-main | Free 1 / Creator ~5 / Shop ~15; billing gate and future model-aware weights remain explicit |
-| T5 | Supabase auth + durable credits | Grok | doing | agent/grok/final-takeover | Schema+engine landed; Supabase keys in BLOCKERS_REQUEST; **blocks serious Stripe** |
+| T5 | Supabase auth + durable credits | Grok | **review** | agent/grok/t5-auth-credits-smoke | See primary T5 row + evidence. |
 | T6 | Server-side free watermark (ffmpeg) | Grok | **blocked** | agent/grok/t6-watermark-worker-v1 | Fail-closed skeleton on main; Free raw blocked until owned derivative + ffmpeg proof |
 
 ---
@@ -116,7 +116,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 
 | Path / area | Locked by | Until |
 |---|---|---|
-| — | — | — |
+| `lib/durableCredits/**` + T5 smoke | Grok · T5 | PR `agent/grok/t5-auth-credits-smoke` |
 
 When you start: add a row. When you merge: clear it.
 
