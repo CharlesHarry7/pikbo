@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [workbuddy] R0H review verified — health-truth fail-closed contract
+- Branch `agent/workbuddy/r0h-review-verified`; PR #36 · SHA `24c9829`.
+- `health-truth-contract`: 32/32 prerequisite combinations passed (all 5 gates must be true for `ready.softLive=true`).
+- engine-smoke PASS (includes health-truth-contract); typecheck PASS; lint 0 errors (1 pre-existing warning); build PASS (193 routes, Next.js 16.2.11 Turbopack).
+- R0H moved from `review` → `done` in STATUS.
+- Core guarantee: `/api/health` never advertises live generation unless auth, Supabase atomic reservation, durable reconciliation, provider, and server-owned deliverable are all configured. Provider/session secrets alone can never make health claim softLive.
+
 ### 2026-07-28 — [grok] Residual R0 cookie-authority honesty (Profile / claim / Settings / badge)
 - ProfilePanel + Settings: cookie is **not** live-spend authority; live needs durable atomic reserve or labeled cached demos.
 - `/api/auth/claim`: migrates display balance only — no soft-launch generate-authority claim.
