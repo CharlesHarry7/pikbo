@@ -10,7 +10,12 @@ import {
   seedanceDuration,
   type ModelPreference,
 } from "@/lib/models";
-import { ensureSession, publicSession, saveSession } from "@/lib/session";
+import {
+  ensureSession,
+  publicCachedSession,
+  publicSession,
+  saveSession,
+} from "@/lib/session";
 import { demoClipForEffect } from "@/lib/demoClips";
 import {
   endJob,
@@ -138,7 +143,7 @@ function successFromJob(
     duration: typeof job.duration === "number" ? job.duration : 5,
     aspectRatio: job.aspectRatio || "1:1",
     resolution: job.resolution || "480p",
-    session: publicSession(session),
+    session: demo ? publicCachedSession(session) : publicSession(session),
     requestId: job.requestId || job.id,
     jobId: job.id,
     provider: job.provider,
@@ -316,7 +321,7 @@ export async function POST(req: Request) {
         error:
           "Retry requires an exact child job id, its one-time token, and a new idempotency key",
         code: "RETRY_TOKEN_INVALID",
-        session: publicSession(session),
+        session: publicCachedSession(session),
       },
       400
     );
@@ -567,7 +572,7 @@ export async function POST(req: Request) {
         duration: secs,
         aspectRatio: aspect,
         resolution,
-        session: publicSession(session),
+        session: publicCachedSession(session),
         // Wave B — echo server-validated recipe + free settlement
         effect: preset.slug,
         costCredits: 0,

@@ -180,6 +180,19 @@ export function publicSession(session: UserSession): PublicSession {
   };
 }
 
+/**
+ * Public session projection for cached-only surfaces.
+ * The guest cookie may preserve one-time trial usage, but it is never
+ * spendable account credit and must not reappear in cached API responses.
+ */
+export function publicCachedSession(session: UserSession): PublicSession {
+  return {
+    ...publicSession(session),
+    credits: 0,
+    clipsLeft: 0,
+  };
+}
+
 export async function getOrCreateSession(): Promise<UserSession> {
   const jar = await cookies();
   const existing = decodeSession(jar.get(SESSION_COOKIE)?.value);
