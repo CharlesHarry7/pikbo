@@ -36,7 +36,7 @@ assert.match(
 
 assert.match(
   landing,
-  /const demoMode = !session \|\| isDemoMode\(session\)/,
+  /const demoMode = !canLiveGenerate\(session\)/,
   "landing tools must fail closed while capability is unknown"
 );
 assert.match(
