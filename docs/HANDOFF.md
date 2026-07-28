@@ -4,6 +4,13 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] Residual R0 cookie-authority honesty (Profile / claim / Settings / badge)
+- ProfilePanel + Settings: cookie is **not** live-spend authority; live needs durable atomic reserve or labeled cached demos.
+- `/api/auth/claim`: migrates display balance only — no soft-launch generate-authority claim.
+- CreditsBadge: unexpected cookie live-spend path labeled R0 expects false; no “cookie still generate authority”.
+- engine-smoke doesNotMatch old dishonest phrases; match not-live-spend / cookie display only.
+- PASS: typecheck + engine-smoke @ `bf2d120`.
+
 ### 2026-07-28 — [grok] CreditsBadge / FreeTrialCta / Settings residual R0 honesty
 - Removed “cookie still generates / authoritative for generate” from CreditsBadge tooltips.
 - Free Mini live chip only when `freeLive.liveEnabled !== false`; otherwise Lab/cached-only copy (blocked until T6).
