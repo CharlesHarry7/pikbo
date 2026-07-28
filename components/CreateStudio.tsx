@@ -15,9 +15,10 @@ import {
   pushHistory,
 } from "@/lib/history";
 import {
+  canLiveGenerate,
   fetchMe,
   freeTrialExhausted,
-  isDemoMode,
+  generationDisplayCredits,
   mergeMeSession,
   type MeResponse,
 } from "@/lib/meClient";
@@ -714,18 +715,13 @@ export function CreateStudio({
     loadFile(e.dataTransfer.files?.[0]);
   }
 
-  const creditsLeft = session?.credits ?? null;
-  const liveEntitled =
-    session?.signedIn === true &&
-    session?.durableCreditsActive === true &&
-    session?.mode === "live-generate" &&
-    creditsLeft !== null &&
-    creditsLeft >= CREDITS_PER_VIDEO;
+  const creditsLeft = session ? generationDisplayCredits(session) : null;
+  const liveEntitled = canLiveGenerate(session);
   const canAfford = liveEntitled;
   const isFree = session?.plan === "free" || session?.watermark;
   // Fail closed: anonymous, non-durable, unknown, and zero-credit sessions
   // may only use the cached prototype path.
-  const demoMode = isDemoMode(session) || !liveEntitled;
+  const demoMode = !liveEntitled;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
   const clipsLeft =
@@ -1750,7 +1746,7 @@ export function CreateStudio({
             {session && (
               <span>
                 <span className="font-semibold text-[var(--mint)]">
-                  {session.credits}
+                  {creditsLeft ?? 0}
                 </span>{" "}
                 · {session.planName}
                 {isFree && !demoMode ? (

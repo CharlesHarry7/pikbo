@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
+  canLiveGenerate,
   displayCredits,
   fetchMe,
   freeTrialExhausted,
@@ -59,17 +60,20 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
   const trialDone = freeTrialExhausted(session);
   const freeLive = session.freeTrial?.freeLive;
   /** R0/T6: Free live Mini is product intent only until liveEnabled. */
-  const freeLiveOpen = Boolean(freeLive && freeLive.liveEnabled !== false);
-  const cookieIsLive = session.cookieIsLiveSpendAuthority === true;
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(session) &&
+      freeLive &&
+      freeLive.liveEnabled !== false
+  );
 
   const compactTitle = demo
-    ? `${credits} credits · demo-cached free (upload not processed)`
+    ? signed
+      ? `${credits} account credits · live generation unavailable · cached previews free`
+      : "0 credits · cached previews free (upload not processed)"
     : trialDone
       ? `Free Mini display balance ${credits} cr · cached demos still free · compare plans`
       : signed
-        ? cookieIsLive
-          ? `${credits} durable audit · unexpected cookie live-spend claim (R0 expects false)`
-          : `${credits} durable wallet (audit) · live needs atomic reserve`
+        ? `${credits} account credits · live generation available`
         : freeLiveOpen
           ? `${credits} cr · Free Mini ${freeLive!.resolution} ${freeLive!.durationSec}s when Live is enabled`
           : freeLive
@@ -77,13 +81,13 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
             : `${credits} credits · cached demos free`;
 
   const fullTitle = demo
-    ? `${session.planName} · demo-cached · live needs ${perJob} credits each when enabled`
+    ? signed
+      ? `${session.planName} · ${credits} account credits · live generation unavailable · cached previews free`
+      : `${session.planName} · cached previews · 0 credits`
     : trialDone
       ? `Free Mini display exhausted · cached demos still free · compare plans`
       : signed
-        ? cookieIsLive
-          ? `Signed-in · durable shadow ${credits} cr · unexpected cookie live-spend claim (R0 expects false)`
-          : `Signed-in · durable audit ${credits} cr · live requires atomic reserve (cookie is not live-spend authority)`
+        ? `Signed in · ${credits} account credits · live generation available`
         : freeLiveOpen
           ? `Free Mini · ${freeLive!.resolution} · ${freeLive!.durationSec}s · ~${clips} live when enabled · on-player mark`
           : freeLive

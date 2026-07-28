@@ -59,6 +59,10 @@ export type MeResponse = PublicSession & {
   signedIn?: boolean;
   authConfigured?: boolean;
   durableCreditsActive?: boolean;
+  /** Same global prerequisite result exposed by /api/health.ready.softLive. */
+  softLiveReady?: boolean;
+  /** Server-authored account capability; cookie credits never make this true. */
+  canLiveGenerate?: boolean;
   auth?: { id: string; email: string | null } | null;
   durable?: MeDurableWallet | null;
 };
@@ -81,7 +85,14 @@ function liveJobCost(me: Pick<MeResponse, "freeTrial" | "liveJobCredits" | "cred
  */
 export function rehydrateFreeTrial(me: MeResponse): MeResponse {
   const need = liveJobCost(me);
-  const credits = typeof me.credits === "number" ? Math.max(0, me.credits) : 0;
+  const sessionCredits =
+    typeof me.credits === "number" ? Math.max(0, me.credits) : 0;
+  const credits =
+    me.canLiveGenerate === true
+      ? me.signedIn && typeof me.durable?.availableCredits === "number"
+        ? Math.max(0, me.durable.availableCredits)
+        : sessionCredits
+      : 0;
   const clipsLeft = Math.floor(credits / need);
 
   // Preserve refund-policy honesty from /api/me across PublicSession merges.
@@ -127,8 +138,17 @@ export function rehydrateFreeTrial(me: MeResponse): MeResponse {
         durationSec: 5,
         resolution: "480p",
         onPlayerMark: true,
+        liveEnabled:
+          me.canLiveGenerate === true &&
+          me.freeTrial?.freeLive?.liveEnabled !== false,
       },
-      exhausted: credits < need,
+      // Trial usage is separate from live availability. Cookie/session balance
+      // can record whether the one-time eligibility was used, but cannot grant
+      // provider access or appear as account credits.
+      exhausted:
+        typeof me.freeTrial?.exhausted === "boolean"
+          ? me.freeTrial.exhausted
+          : sessionCredits < need,
       stillsOnFree: "demo-only",
       // Keep /api/me refund honesty after generate success merges PublicSession only.
       ...refundPolicy,
@@ -153,6 +173,17 @@ export function mergeMeSession(
   const merged = (
     prev ? { ...prev, ...patch } : { ...(patch as MeResponse) }
   ) as MeResponse;
+  if (
+    prev?.canLiveGenerate === true &&
+    (prev.plan === "free" || prev.freeTrial?.isFreePlan === true) &&
+    typeof patch.credits === "number" &&
+    prev.freeTrial
+  ) {
+    merged.freeTrial = {
+      ...prev.freeTrial,
+      exhausted: patch.credits < liveJobCost(merged),
+    };
+  }
   return rehydrateFreeTrial(merged);
 }
 
@@ -167,6 +198,9 @@ export function freeTrialExhausted(me: MeResponse | null | undefined): boolean {
   const isFree = me.plan === "free" || me.freeTrial?.isFreePlan === true;
   if (!isFree) return false;
   const need = liveJobCost(me);
+  if (typeof me.freeTrial?.exhausted === "boolean") {
+    return me.freeTrial.exhausted;
+  }
   if (typeof me.credits === "number") {
     return me.credits < need;
   }
@@ -175,10 +209,16 @@ export function freeTrialExhausted(me: MeResponse | null | undefined): boolean {
 
 export function isDemoMode(me: MeResponse | null | undefined): boolean {
   if (!me) return false;
-  return me.mode === "demo-cached";
+  return me.canLiveGenerate !== true;
 }
 
-/** Prefer durable available when signed-in shadow wallet exists (display only). */
+export function canLiveGenerate(
+  me: MeResponse | null | undefined
+): boolean {
+  return me?.canLiveGenerate === true;
+}
+
+/** Account balance for signed-in users; anonymous cookie credits never display. */
 export function displayCredits(me: MeResponse | null | undefined): number {
   if (!me) return 0;
   if (
@@ -188,7 +228,14 @@ export function displayCredits(me: MeResponse | null | undefined): number {
   ) {
     return me.durable.availableCredits;
   }
-  return me.credits;
+  return me.canLiveGenerate === true ? me.credits : 0;
+}
+
+/** Price-bearing tool UI shows zero whenever it is serving cached prototypes. */
+export function generationDisplayCredits(
+  me: MeResponse | null | undefined
+): number {
+  return canLiveGenerate(me) ? displayCredits(me) : 0;
 }
 
 async function authHeaders(): Promise<HeadersInit> {
