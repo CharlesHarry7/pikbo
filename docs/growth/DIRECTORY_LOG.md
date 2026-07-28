@@ -8,7 +8,7 @@
 - `verified_backlink`：公开 listing 含可抓取的 Pikbo 链接并已复查。
 
 提交不等于发布，发布不一定等于 backlink。2026-07-27 起暂停泛 AI
-目录自动提交��优先核验历史公开 URL。
+目录自动提交，优先核验历史公开 URL。
 
 **统一资料：** Pikbo · https://pikbo.ai · Free trial / Freemium · guochao950518@gmail.com  
 
