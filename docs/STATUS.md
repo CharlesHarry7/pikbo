@@ -8,6 +8,20 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 
 ---
 
+## Authoritative active queue
+
+只有本表代表当前可执行工作；下面的大表保留历史上下文，不构成自动派工。
+
+| ID | Outcome | Owner | Status | PR / branch | Reviewer gate |
+|---|---|---|---|---|---|
+| CTRL-RESET | Close stale PRs, close R2 and enforce one active task per agent | Codex | review | PR #45 · `agent/gpt/active-queue-reset` | R2 PR #44 merged at `47688e6`; #46 closed as duplicate; #42 and #41 are the only non-Codex delivery PRs |
+| R0-NET | Unexpected-exit reservation safety without double release/refund | Grok | doing | PR #42 | Changes requested: a thrown capture must withhold with 0 release calls; fix malformed STATUS row and run the behavioral test in real CI |
+| WB-LINK-TRUTH | Consolidated historical listing/backlink evidence | WorkBuddy | review | PR #41 | Evidence only; no R0H/code ownership or new submissions; duplicate SEO/link PR #46 is closed |
+
+Completion of an old row below does not authorize a new branch. Codex must add a row here first.
+
+---
+
 ## Now — LAUNCH GATE (public = NO-GO)
 
 | ID | Task | Owner | Status | Branch | Notes |
@@ -18,12 +32,12 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | SELLER-GOLD | Seller Pack cached golden path + failure/retry/partial-success regression | Codex / Grok | **done** | agent/gpt/seller-pack-cached-golden-path · PR #39 | Synced to `main@24949a0`; contract/recovery/API golden tests, typecheck, lint (0 errors), 193-route build, link-check and fail-closed critical path pass. GitHub CI run #445 and Vercel check green; no paid/public/production action |
 | R0H | Fail-closed public health truth for Soft Live | WorkBuddy | review | agent/workbuddy/health-truth | `ready.softLive` is true only when auth, reviewed Supabase atomic reservation, provider, and server-owned deliverable are all configured; otherwise health reports validation/cached-only and advertises 0 free live clips |
 | R2a | Proof wall truth + mobile video budget + Starter Pack naming | Claude | review | agent/claude/product-proof-mobile | Home uses 8-item Showcase whitelist; concepts are static; autoplay 1 mobile / 2 desktop; three-output name frozen |
-| R0 | Disable anonymous live generation; cached demo only until authenticated durable reserve | Claude / Grok / Codex | **review** | main via PR #43; residual PR #42 | Route fail-closed plus `t5-r0-critical-path` source locks and pure gate pass; anonymous never reaches the provider. Grok's single active claim is the reservation-leak safety-net review. Live multi-node still needs verified Vercel env and applied T5/R1 SQL. |
+| R0 | Disable anonymous live generation; cached demo only until authenticated durable reserve | Claude / Grok / Codex | **review** | main via PR #43; residual PR #42 | Anonymous never reaches the provider. PR #42 is blocked until capture exceptions withhold rather than release and the behavioral test runs in real CI. Live multi-node still needs verified Vercel env and applied T5/R1 SQL. |
 | R1a | Atomic Supabase reserve/capture/release RPC + job binding | Claude | review | agent/claude/recovery-ledger | Source migration + strict RPC adapter ready; not applied to Supabase. Non-production DB integration required before deployment |
 | R1b | Exact retry token + fixed deadline + worker/read separation | Claude / Grok | review | main | Video + image stills: exact parent→child + one-time bearer; fixed deadlineAt; CI recovery-retry-deadline; durable reconciliation still R1c |
 | R1c | Durable settlement reconciliation worker | Claude / Grok | review | main | Generate + image enqueue withheld/release paths; source queue+lease+finish RPC. Non-prod SQL rehearsal still required |
-| R2 | One owned-toy photo → three publishable assets → export Launch Pack | Codex | **review** | agent/gpt/launch-pack-main-path | Homepage upload now hands the still directly to the fixed listing/reveal/hook trio; stale `#home-tool` doors are removed; direct/mobile order is upload → rights → generate; export includes only succeeded/downloadable files. 390px QA: 0 overflow; cached browser run: 3 videos, 0 provider, 0 credits. Typecheck, lint (0 errors), 193-route build, R0/recovery/engine/Launch Pack smokes, link-check and critical-path pass |
-| R3 | Real integration tests + CI fail on critical path | Grok / Claude / Codex | review | main via PR #40 | Real workflow now mirrors the reviewed recovery/T5/Seller Pack/copy suite and no longer permits `critical-path || true`; GitHub Actions run still must finish green. |
+| R2 | One owned-toy photo → three publishable assets → export Launch Pack | Codex | **done** | main @ `47688e6` · PR #44 | Homepage upload enters the fixed listing/reveal/hook trio; upload → rights → generate is at most 3 primary actions; export is downloadable-only. 390px QA: 0 overflow; cached browser: 3 videos, 0 provider, 0 credits. GitHub CI #456 and Vercel green; build, link, API golden, R0/recovery/engine smokes pass |
+| R3 | Real integration tests + CI fail on critical path | Grok / Claude / Codex | done | main via PR #43 | Real workflow mirrors the recovery/T5/Seller Pack/copy suite, no longer permits `critical-path || true`, and all 21 PR checks plus Vercel passed. |
 | R4 | Public-example evidence ledger and honest scoring | Grok / Claude | review | agent/claude/showcase-evidence-runtime | Runtime now matches ledger: 0 verified cases / 12 cached prototypes; no numeric scores; posters are references; homepage keeps 8 distinct labeled previews; live UI fails closed without explicit durable entitlement |
 | R4b | Verified showcase promotion evidence gate | Claude | review | agent/claude/showcase-promotion-gate | Canonical evidence schema + fail-closed registry/label gate + 1 valid/8 invalid fixtures; current 12 prototypes and 8-video homepage remain unchanged |
 | R4c | Public Live capability copy matrix + five-page contract | Claude | review | agent/claude/live-copy-matrix | Home/Create/Pricing plus Apps/Modules/Flow/Cinema and core SEO content fail public copy closed; source + 164 rendered-route contract passes |
@@ -53,7 +67,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T2 | Real fal sample clips / homepage demos | GPT | done | agent/gpt/homepage-demos | 6 original encoded demos; cached/no FAL cost; verified fal renders can replace assets later |
 | T3 | Keyword + preset expansion (long-tail SEO) | Claude | done | agent/claude/seo-keywords | +use-cases + toy-types |
 | T4 | Stripe webhook (renew/cancel plan) | Grok | done | agent/grok/ship-billing-launch | webhook + confirm + entitlements |
-| T5 | Supabase auth + durable credits | Grok / Codex | **review** | main via PR #40 | Code-side smokes pass: R0 gate, refund/idempotency source locks and magic-link fail-closed. **Not production proof:** verify Vercel env, apply/rehearse T5+R1 SQL, and test Email callback (BLOCKERS T5 A–D). |
+| T5 | Supabase auth + durable credits | Grok / Codex | **review** | main via PR #43 | Code-side smokes pass: R0 gate, refund/idempotency source locks and magic-link fail-closed. **Not production proof:** verify Vercel env, apply/rehearse T5+R1 SQL, and test Email callback (BLOCKERS T5 A–D). |
 | T-PHASE-D | Local async job ledger + controlled download API | Grok | review | main | process-memory generations + /api/downloads gate; durable queue still Supabase |
 | T6 | Server-side free watermark (ffmpeg) | Grok | **blocked** | agent/grok/t6-watermark-worker-v1 | Fail-closed skeleton on main; Free raw blocked until owned derivative + ffmpeg proof |
 | T7 | Private Vercel RC + later domain pikbo.ai | Grok | blocked | agent/grok/final-takeover | Prepare private preview; Vercel login and public DNS require boss authorization |
@@ -83,7 +97,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T8 | Batch generate for Shop plan | Grok | review | agent/grok/t8-campaign-recovery | Current-device/session Seller Pack recovery reconciles existing generation jobs; no cloud/durable claim. T5 worker remains blocked |
 | T9 | Effect preset expansion (studio + SEO landing) | Claude | done | agent/claude/seo-presets | +3 effects |
 | T11 | Guides: informational long-tail content | Claude | done | agent/claude/guides | 3 how-to/tips/ideas articles at /guides; Article+FAQ JSON-LD; cross-linked to effects |
-| T23 | CI build + conflict-marker gate | Grok / Codex | review | main via PR #40 | Real `.github/workflows/ci.yml` synchronized to the reviewed template; recovery/T5/Seller Pack/copy/link/critical checks are fail-closed. Await GitHub Actions green evidence. |
+| T23 | CI build + conflict-marker gate | Grok / Codex | done | main via PR #43 | Real `.github/workflows/ci.yml` is synchronized; recovery/T5/Seller Pack/copy/link/critical checks are fail-closed and all 21 PR checks passed. |
 | T24 | Generate honesty: demo vs live + regen/refund copy | Grok | review | main | Wave B: lastRequestCreditState, Retry/Variant, Free download gate, server costCredits/effect echo |
 | T25 | Homepage truth labels + overclaim sweep | GPT | done | agent/gpt/claude-copy-audit | PR #6; cached/shared previews and provider-gated paths labeled |
 | T26 | Unit economics doc + free-tier recommendation | GPT | done | agent/gpt/convert-truth | Superseded by C1–C5: implemented Free Mini 5s trial; current 1 / 5 / 15 allowances |
@@ -91,7 +105,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T28 | Pricing conversion copy A/B | GPT | done | agent/gpt/pricing-mobile | Outcome default; `?copy=cost` cost-control variant; C1–C5 aligns active 1 / 5 / 15 contract |
 | T29 | Homepage first-screen 390px acceptance + polish | GPT | done | agent/gpt/pricing-mobile | No x-overflow; primary CTA visible; duplicate home floating CTA removed; accessible demo controls |
 | T30 | Pricing UI matches active credit contract | GPT | done | agent/gpt/pricing-truth-main | Free 1 / Creator ~5 / Shop ~15; billing gate and future model-aware weights remain explicit |
-| T5 | Supabase auth + durable credits | Grok / Codex | **review** | main via PR #40 | See primary T5 row + evidence; production multi-node integration remains external-gated. |
+| T5 | Supabase auth + durable credits | Grok / Codex | **review** | main via PR #43 | See primary T5 row + evidence; production multi-node integration remains external-gated. |
 | T6 | Server-side free watermark (ffmpeg) | Grok | **blocked** | agent/grok/t6-watermark-worker-v1 | Fail-closed skeleton on main; Free raw blocked until owned derivative + ffmpeg proof |
 
 ---

@@ -28,6 +28,28 @@ If another agent pushed something good → **merge/rebase onto it before you edi
 
 ---
 
+## 0.5 Worktree isolation is mandatory
+
+Agents must not share one mutable checkout. A `git checkout` in a shared directory can silently replace another agent's branch and uncommitted work.
+
+Create or attach a dedicated worktree before editing:
+
+```bash
+# New task
+git fetch origin --prune
+git worktree add ../pikbo-worktrees/<task> -b agent/<name>/<task> origin/main
+
+# Existing branch
+git worktree add ../pikbo-worktrees/<task> agent/<name>/<task>
+```
+
+- One active agent = one worktree = one branch = one PR.
+- Never switch branches inside another agent's worktree.
+- The canonical checkout may be used for read-only inspection; implementation happens in the task worktree.
+- If a branch is already checked out elsewhere, use that existing worktree instead of forcing or detaching it.
+
+---
+
 ## 1. Branch rules
 
 | Role | Branch pattern | Example |
