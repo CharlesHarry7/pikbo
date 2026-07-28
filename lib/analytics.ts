@@ -18,7 +18,11 @@ export type AnalyticsEvent =
   | "pack_start"
   | "generate_start"
   | "generate_result"
-  | "export_click";
+  | "export_click"
+  /** US$49 Launch Pack commercial intent — never include contact/image/notes. */
+  | "launch_pack_offer_view"
+  | "launch_pack_brief_start"
+  | "launch_pack_brief_ready";
 
 export type AnalyticsPayload = {
   event: AnalyticsEvent;
@@ -29,7 +33,7 @@ export type AnalyticsPayload = {
 };
 
 const SENSITIVE_META_KEYS =
-  /url|image|photo|prompt|email|token|cookie|auth|key|secret|password|src|blob|base64/i;
+  /url|image|photo|prompt|email|token|cookie|auth|key|secret|password|src|blob|base64|contact|note|notes|filename|fileName|bytes|message|phone|wechat|telegram/i;
 
 function endpoint(): string | null {
   const url = process.env.NEXT_PUBLIC_ANALYTICS_URL?.trim();

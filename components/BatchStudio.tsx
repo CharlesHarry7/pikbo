@@ -1413,6 +1413,18 @@ export function BatchStudio({
                   ? "Preview three formats at 0 credits. Cached prototypes do not process your upload."
                   : "Eligible live account. Review the 30-credit quote, then submit three independent jobs."}
               </p>
+              <p
+                className="mt-2 rounded-lg border border-amber-300/20 bg-amber-300/[0.05] px-2.5 py-1.5 text-[10px] leading-relaxed text-amber-50/90"
+                data-launch-pack-commercial-note="us49-payment-closed"
+              >
+                Planned service offer:{" "}
+                <span className="font-bold text-[var(--mint)]">US$49 one-time</span>{" "}
+                for one authorized toy SKU (Product showcase · Reveal · Social
+                Hook · 24h target · 1 revision).{" "}
+                <span className="font-semibold">Payment is not open yet</span> —
+                this Generate path is not a checkout. Prepare the order brief
+                above for manual review.
+              </p>
               {/* Y5 + CD B3: full Director Plan when still ready; strip before photo */}
               {sellerDirectorPlan?.ready ? (
                 <div className="mt-2" data-seller-pack-plan="director">
@@ -1796,15 +1808,25 @@ export function BatchStudio({
             </button>
           </>
         ) : (
-          <button
-            type="button"
-            disabled={!canRun}
-            onClick={() => void runBatch()}
-            className="btn btn-primary hidden w-full disabled:opacity-50 lg:flex"
-            data-launch-pack-primary-action={image ? "3" : "1"}
-          >
-            {primaryBatchLabel}
-          </button>
+          <div className="hidden space-y-1.5 lg:block">
+            <button
+              type="button"
+              disabled={!canRun}
+              onClick={() => void runBatch()}
+              className="btn btn-primary w-full disabled:opacity-50"
+              data-launch-pack-primary-action={image ? "3" : "1"}
+            >
+              {primaryBatchLabel}
+            </button>
+            {sellerPackActive ? (
+              <p
+                className="text-[10px] font-semibold leading-snug text-amber-100/85"
+                data-launch-pack-payment-beside-generate="not-open"
+              >
+                Payment is not open yet · Generate is not a US$49 checkout
+              </p>
+            ) : null}
+          </div>
         )}
         {!liveQuoteCovered && sellerPackActive ? (
           <div className="rounded-xl border border-amber-300/25 bg-amber-300/[0.06] p-3 text-xs text-amber-100">
@@ -2293,24 +2315,34 @@ export function BatchStudio({
             )}
           </div>
         ) : (
-          <button
-            type="button"
-            disabled={!canRun}
-            onClick={() => {
-              if (!ownsRights) {
-                document
-                  .getElementById("batch-ownership")
-                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                return;
-              }
-              if (canRun) void runBatch();
-            }}
-            className="btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
-            data-seller-pack-action="generate"
-            data-launch-pack-primary-action={image ? "3" : "1"}
-          >
-            {primaryBatchLabel}
-          </button>
+          <div className="space-y-1">
+            <button
+              type="button"
+              disabled={!canRun}
+              onClick={() => {
+                if (!ownsRights) {
+                  document
+                    .getElementById("batch-ownership")
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  return;
+                }
+                if (canRun) void runBatch();
+              }}
+              className="btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
+              data-seller-pack-action="generate"
+              data-launch-pack-primary-action={image ? "3" : "1"}
+            >
+              {primaryBatchLabel}
+            </button>
+            {sellerPackActive ? (
+              <p
+                className="text-center text-[10px] font-semibold text-amber-100/85"
+                data-launch-pack-payment-beside-generate="not-open-mobile"
+              >
+                Payment is not open yet · not a US$49 checkout
+              </p>
+            ) : null}
+          </div>
         )}
       </div>
     </div>

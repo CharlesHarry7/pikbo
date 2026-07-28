@@ -24,7 +24,11 @@ export function SellerPackSteps({
         ? "3 cached prototype previews · 0 credits"
         : "3 live clips · 10 credits each (30 total)",
     },
-    { n: 3 as const, label: "Deliver", blurb: "Export Launch Pack · post" },
+    {
+      n: 3 as const,
+      label: "Deliver",
+      blurb: "Export Launch Pack · post · US$49 service payment not open",
+    },
   ];
 
   return (

@@ -7,6 +7,7 @@ import { BatchStudio } from "@/components/BatchStudio";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { JsonLd } from "@/components/JsonLd";
+import { LaunchPackOrderIntent } from "@/components/LaunchPackOrderIntent";
 import { getPreset } from "@/lib/presets";
 import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
@@ -101,7 +102,7 @@ export default async function CreatePage({
         >
           <GenerateSuiteChrome />
         </Suspense>
-        <div className="px-4 py-8 sm:px-8">
+        <div className="overflow-x-hidden px-4 py-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] sm:px-8 lg:pb-8">
           <div className="mx-auto max-w-6xl">
             <span className="chip">
               Launch Pack — 3 assets · quote shown before Live
@@ -117,9 +118,20 @@ export default async function CreatePage({
               charges per successful child; failures restore credits when
               confirmed.
             </p>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/70">
+              Commercial offer:{" "}
+              <b className="text-[var(--mint)]">US$49 one-time</b> Launch Pack
+              for one authorized toy SKU — Product showcase, Reveal or
+              unboxing-style draft, and Social Hook. Includes a 24-hour
+              delivery target and one revision.{" "}
+              <span className="font-semibold text-amber-100/90">
+                Payment is not open yet.
+              </span>
+            </p>
             <p className="mt-2 text-xs font-semibold text-white/45">
               Export includes only succeeded, downloadable clips. Failed,
-              unsafe, or Free raw files stay out.
+              unsafe, or Free raw files stay out. Cached Lab previews are not
+              your SKU.
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <FreeTrialCta
@@ -128,6 +140,13 @@ export default async function CreatePage({
                 labelTry="Try free video first"
                 className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
               />
+              <a
+                href="#launch-pack-order-intent"
+                className="rounded-full border border-[var(--mint)]/40 px-4 py-2 text-xs font-bold text-[var(--mint)]"
+                data-launch-pack-offer-anchor="order-intent"
+              >
+                US$49 order brief
+              </a>
               <Link
                 href={CREATE_SINGLE_RECIPE_HREF}
                 className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"
@@ -147,6 +166,9 @@ export default async function CreatePage({
               >
                 Etsy use case
               </Link>
+            </div>
+            <div id="launch-pack-order-intent">
+              <LaunchPackOrderIntent />
             </div>
             <div className="mt-6">
               {/* AfterPath ?sku= / ?try=1 hydrate bible + Lab still (no auto 3× run) */}
