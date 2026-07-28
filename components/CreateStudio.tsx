@@ -3048,12 +3048,17 @@ export function CreateStudio({
       </div>
 
       {/* ── Sticky mobile primary CTA — above AppShell tab nav ── */}
-      <div className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden">
+      <div
+        className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+        data-create-sticky="mobile"
+      >
         {image ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
             {preset.emoji} {viralName(preset.slug, preset.name)} · {aspectRatio}
             {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
-            {CREDITS_PER_VIDEO} credits
+            {demoMode
+              ? "0 credits · cached prototype"
+              : `${CREDITS_PER_VIDEO} credits when Live`}
           </p>
         ) : null}
         {!image ? (
