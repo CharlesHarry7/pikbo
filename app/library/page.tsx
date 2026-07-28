@@ -11,7 +11,7 @@ const LIBRARY_PAGE_GENERATE_HREF = createRemixHref("360-spin-showcase");
 export const metadata: Metadata = {
   title: "Library · Assets",
   description:
-    "Your toy video assets — device clips, session jobs, optional Community publish. Not multi-device cloud until durable assets ship.",
+    "Your toy video assets — private account results, device clips, session jobs, and optional Community publish.",
   robots: PRIVATE_ROBOTS,
 };
 
@@ -42,8 +42,8 @@ export default function LibraryPage() {
               <span className="font-semibold text-[var(--mint)]">
                 Saved on this device
               </span>{" "}
-              plus a process-memory session ledger — never multi-device cloud
-              until durable assets ship.
+              plus owner-only private generations that persist with your
+              account. Device imports and open session jobs remain local.
             </p>
           </div>
           <div className="hidden flex-wrap items-center gap-2 sm:flex">
