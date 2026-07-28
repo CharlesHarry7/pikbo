@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadFavorites, toggleFavorite } from "@/lib/favorites";
 import {
   historyFieldsFromSuccess,
+  planGenerateWaitLeave,
   postGenerateWithRetry,
 } from "@/lib/generateClient";
 import {
@@ -187,6 +189,7 @@ export function CreateStudio({
   initialRetryToken?: string;
 }) {
   const { t, locale } = useI18n();
+  const router = useRouter();
   const retryHandoffRef = useRef<{
     retryJobId: string;
     retryToken: string;
@@ -282,6 +285,9 @@ export function CreateStudio({
   const [presetFilter, setPresetFilter] = useState("");
   const [elapsed, setElapsed] = useState(0);
   const [recoveringSavedResult, setRecoveringSavedResult] = useState(false);
+  /** Durable recovery exhausted without authority; original POST still open. */
+  const [awaitingPrimaryAfterRecovery, setAwaitingPrimaryAfterRecovery] =
+    useState(false);
   const [copied, setCopied] = useState(false);
   // PRD soft-launch §3/§5: user must confirm rights before submitting.
   const [ownsRights, setOwnsRights] = useState(false);
@@ -317,13 +323,22 @@ export function CreateStudio({
     useState<RequestCreditState>(null);
   /** In-flight generate abort — cancel marks refund unconfirmed if network cut mid-debit. */
   const generateAbortRef = useRef<AbortController | null>(null);
+  /**
+   * When true, UI stopped waiting but the original /api/generate must keep
+   * running (no abort, no ledger cancel, no second provider call).
+   */
+  const detachedWaitRef = useRef(false);
+  const generateMountedRef = useRef(true);
   /** Avoid duplicate quote-view events while React rerenders the same quote. */
   const quoteEventRef = useRef("");
   const toast = useToast();
 
   useEffect(() => {
+    generateMountedRef.current = true;
     return () => {
-      generateAbortRef.current?.abort();
+      // Non-destructive leave: drop UI ownership only. Explicit Cancel is the
+      // sole path that aborts primary + best-effort cancels the ledger.
+      generateMountedRef.current = false;
       generateAbortRef.current = null;
     };
   }, []);
@@ -331,14 +346,44 @@ export function CreateStudio({
   function cancelInFlightGenerate() {
     const ctrl = generateAbortRef.current;
     if (!ctrl) return;
+    // Explicit cancel only — abort signal triggers ledger cancel in generateClient.
+    // Detach (leaveWaitingKeepBackground) never calls abort().
     ctrl.abort();
     generateAbortRef.current = null;
+    detachedWaitRef.current = false;
     setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
     // Immediate Wave B settlement until the aborted POST resolves (also refundUnconfirmed).
     setLastRequestCreditState("refund unconfirmed");
     toast(
       "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"
     );
+  }
+
+  /**
+   * Stop waiting on Create without aborting the original generate or canceling
+   * the ledger. User can open Library while the same private task finishes.
+   */
+  function leaveWaitingKeepBackground() {
+    const plan = planGenerateWaitLeave("detach");
+    if (plan.abortPrimary || plan.cancelLedger || plan.startNewGenerate) {
+      // Defensive: detach plan must never harm the in-flight job.
+      return;
+    }
+    // Drop the AbortController ref without abort() so cleanup cannot cancel.
+    generateAbortRef.current = null;
+    detachedWaitRef.current = true;
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
+    setElapsed(0);
+    setStatus("idle");
+    toast(
+      "Still generating in the background · open Library when ready — no cancel sent"
+    );
+    // Soft client navigation keeps the original fetch alive in this document.
+    // Hard reload would drop the browser request without canceling the ledger,
+    // but would also lose the chance to pushHistory when primary settles.
+    router.push("/library");
   }
 
   const preset = useMemo(
@@ -769,8 +814,10 @@ export function CreateStudio({
     setShowPaywall(false);
     setElapsed(0);
     setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
+    detachedWaitRef.current = false;
     setStatus("generating");
-    // Abort any prior in-flight POST before starting a new one.
+    // Abort any prior in-flight POST before starting a new one (explicit replace).
     generateAbortRef.current?.abort();
     const abortCtrl = new AbortController();
     generateAbortRef.current = abortCtrl;
@@ -815,11 +862,14 @@ export function CreateStudio({
         fallbackImage: useAsset ? fallbackStill : undefined,
         signal: abortCtrl.signal,
         onRecoveryState: (state) => {
-          setRecoveringSavedResult(state !== "recovered");
+          if (detachedWaitRef.current || !generateMountedRef.current) return;
+          setRecoveringSavedResult(
+            state === "checking" || state === "waiting"
+          );
+          setAwaitingPrimaryAfterRecovery(state === "awaiting_primary");
         },
       }
     );
-    setRecoveringSavedResult(false);
     // Keep the bearer when the server rejected work before the child claim
     // (upload/rate/reserve preflight), or when transport failed. Clear it after
     // success, an explicit retry rejection, or any provider-stage response.
@@ -846,6 +896,57 @@ export function CreateStudio({
     if (generateAbortRef.current === abortCtrl) {
       generateAbortRef.current = null;
     }
+
+    // Detached wait / unmounted Create: never abort, cancel, or setState.
+    // On success still persist to device Library (Base64 length-capped).
+    if (detachedWaitRef.current || !generateMountedRef.current) {
+      if (result.ok) {
+        const data = result.data;
+        const serverEffect =
+          typeof data.effect === "string" && data.effect ? data.effect : fx;
+        const usedPreset =
+          PRESETS.find((p) => p.slug === serverEffect) ?? preset;
+        const stillForStore =
+          (img && isValidImageDataUrl(img) ? img : null) ||
+          (image && isValidImageDataUrl(image) ? image : null) ||
+          "";
+        pushHistory(
+          historyFieldsFromSuccess(data, {
+            effect: serverEffect,
+            effectName: usedPreset.name,
+            fallbackDuration: requestDuration,
+            fallbackAspect: requestAspect,
+            fallbackResolution: requestRes,
+            sourceProject: opts?.labSampleId
+              ? `lab-sample-${opts.labSampleId}`
+              : remix.intent?.sourceProjectSlug,
+            channel: remix.intent?.channel,
+            projectId: localProjectId(
+              stillForStore || fx,
+              opts?.labSampleId
+                ? `lab-sample-${opts.labSampleId}`
+                : remix.intent?.sourceProjectSlug
+            ),
+            projectName: opts?.labSampleId
+              ? `PIKBO Lab sample · ${opts.labSampleId}`
+              : remix.intent?.sourceProjectSlug
+                ? `Remix · ${remix.intent.sourceProjectSlug}`
+                : identityProjectName(toyIdentity) || "Owned toy project",
+            inputImage:
+              stillForStore &&
+              (stillForStore.startsWith("/") || stillForStore.length <= 8_000)
+                ? stillForStore
+                : undefined,
+            sku: toyIdentity.sku || undefined,
+          })
+        );
+      }
+      detachedWaitRef.current = false;
+      return;
+    }
+
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
 
     // Dead assetId after process restart/TTL — clear and re-register for next POST.
     if (
@@ -2525,7 +2626,9 @@ export function CreateStudio({
                 image={image}
                 effectLabel={viralName(preset.slug, preset.name)}
                 onCancel={cancelInFlightGenerate}
+                onLeaveToLibrary={leaveWaitingKeepBackground}
                 recoveryChecking={recoveringSavedResult}
+                awaitingPrimary={awaitingPrimaryAfterRecovery}
               />
             )}
             {(status === "done" || status === "error") && videoUrl && (
@@ -2998,22 +3101,37 @@ export function CreateStudio({
               <div className="flex flex-col items-center p-10 text-center">
                 <div className="h-12 w-12 animate-spin rounded-full border-2 border-[var(--mint)] border-t-transparent" />
                 <p className="mt-5 font-display text-lg font-bold uppercase tracking-tight text-white">
-                  {recoveringSavedResult
-                    ? "Tracking your private task"
-                    : "Making your clip…"}{" "}
+                  {awaitingPrimaryAfterRecovery
+                    ? "Waiting on original render"
+                    : recoveringSavedResult
+                      ? "Tracking your private task"
+                      : "Making your clip…"}{" "}
                   {elapsed}s
                 </p>
                 <p className="mt-2 max-w-xs text-xs text-[var(--fg-muted)]">
-                  {recoveringSavedResult
-                    ? "Pikbo is reading the same durable task. This does not start another generation or charge again."
-                    : "Live jobs take a bit. Cached demos come back faster."}
+                  {awaitingPrimaryAfterRecovery
+                    ? "Recovery has no final answer yet. The first request is still running — no second generation or charge."
+                    : recoveringSavedResult
+                      ? "Pikbo is reading the same durable task. This does not start another generation or charge again."
+                      : "Live jobs take a bit. Cached demos come back faster."}
                 </p>
+                {(awaitingPrimaryAfterRecovery || elapsed >= 90) && (
+                  <button
+                    type="button"
+                    onClick={leaveWaitingKeepBackground}
+                    data-generate-leave="detach"
+                    className="mt-4 rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-4 py-1.5 text-[11px] font-bold text-[var(--mint)]"
+                  >
+                    Open Library · keep generating
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={cancelInFlightGenerate}
-                  className="mt-4 rounded-full border border-white/20 px-4 py-1.5 text-[11px] font-bold text-white/75"
+                  data-generate-leave="cancel"
+                  className="mt-2 rounded-full border border-white/20 px-4 py-1.5 text-[11px] font-bold text-white/75"
                 >
-                  Cancel request
+                  Cancel generation
                 </button>
               </div>
             )}
@@ -3151,6 +3269,8 @@ export function CreateStudio({
             elapsed={elapsed}
             demoMode={demoMode}
             onCancel={cancelInFlightGenerate}
+            onLeaveToLibrary={leaveWaitingKeepBackground}
+            awaitingPrimary={awaitingPrimaryAfterRecovery}
           />
         ) : status === "done" && videoUrl ? (
           <button
