@@ -29,8 +29,8 @@ export type DemoVideo = {
  * Homepage Visual V2 posters (public/demos/posters/*) are frames extracted from
  * each matching MP4 — never shared stills renamed across recipes.
  */
-/** Cinematic full-subject hero; not the first wall card (Orbit close-up). */
-export const HOME_HERO_DEMO_ID = "scout-story" as const;
+/** Premium landscape hero; not the first wall card (Orbit close-up). */
+export const HOME_HERO_DEMO_ID = "beatbot-unboxed" as const;
 
 export const DEMO_VIDEOS: DemoVideo[] = [
   {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { buildHomeShowcaseFeed, hasFeedVideo } from "@/lib/videoFeed";
 import { DEMO_VIDEOS, HOME_HERO_DEMO_ID } from "@/lib/demoVideos";
@@ -46,21 +47,21 @@ const LAUNCH_PACK_PROOF = [
   {
     key: "listing-spin",
     step: "01",
-    label: "Listing spin",
+    label: "Listing-style preview",
     channel: "Marketplace",
     demoId: "scout-spin",
   },
   {
     key: "box-reveal",
     step: "02",
-    label: "Box reveal",
+    label: "Reveal-format preview",
     channel: "Drop / unbox",
     demoId: "moon-reveal",
   },
   {
     key: "social-hook",
     step: "03",
-    label: "Social hook",
+    label: "Social-hook preview",
     channel: "Reels / Shorts",
     demoId: "beatbot-hook",
   },
@@ -76,7 +77,7 @@ export default function Home() {
   const lcpPoster =
     heroItem?.demo.poster ??
     DEMO_VIDEOS.find((d) => d.id === HOME_HERO_DEMO_ID)?.poster ??
-    "/demos/posters/scout-story.webp";
+    "/demos/posters/beatbot-unboxed.webp";
 
   const launchPackAssets = LAUNCH_PACK_PROOF.map((slot) => {
     const demo = DEMO_VIDEOS.find((entry) => entry.id === slot.demoId);
@@ -132,33 +133,31 @@ export default function Home() {
           {launchPackAssets.length === 3 ? (
             <div
               className="mx-auto mt-10 max-w-4xl"
-              data-launch-pack-proof="cached-trio"
-              aria-label="Launch Pack visual proof: one toy workflow to three cached demo assets"
+              data-launch-pack-proof="cached-format-trio"
+              aria-label="Three cached Launch Pack format previews from different Pikbo Lab toys"
             >
               <p className="mb-4 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-white/42">
-                One toy photo → three launch assets
+                Three cached format previews
                 <span className="mx-2 text-white/20" aria-hidden>
                   ·
                 </span>
-                Cached prototypes
+                Different Pikbo Lab toys
               </p>
-              <ol className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-3 min-[420px]:gap-2 sm:gap-3">
-                {launchPackAssets.map((asset, index) => (
+              <ol className="grid grid-cols-3 gap-2 sm:gap-3">
+                {launchPackAssets.map((asset) => (
                   <li
                     key={asset.key}
                     className="relative min-w-0"
                     data-launch-pack-asset={asset.key}
                   >
                     <article className="overflow-hidden rounded-[1.1rem] border border-white/[0.1] bg-[#111114]">
-                      <div className="relative aspect-[4/5] min-[420px]:aspect-[3/4] overflow-hidden bg-black">
-                        {/* eslint-disable-next-line @next/next/no-img-element -- static public poster, no optimizer needed */}
-                        <img
+                      <div className="relative aspect-[3/4] overflow-hidden bg-black">
+                        <Image
                           src={asset.poster}
-                          alt={`${asset.label} — ${asset.character} cached prototype frame`}
-                          width={720}
-                          height={900}
+                          alt={`${asset.label} — ${asset.character} cached format preview`}
+                          fill
+                          sizes="(max-width: 639px) 30vw, 260px"
                           loading="lazy"
-                          decoding="async"
                           className="h-full w-full object-cover object-center"
                         />
                         <div
@@ -172,32 +171,24 @@ export default function Home() {
                           {asset.step}
                         </span>
                         <div className="absolute inset-x-0 bottom-0 p-3 sm:p-3.5">
-                          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#c8ff3d]/
+                          <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-[#c8ff3d] sm:text-[10px] sm:tracking-[0.14em]">
                             {asset.channel}
                           </p>
-                          <p className="mt-1 text-sm font-black leading-tight text-white sm:text-base">
+                          <p className="mt-1 text-[11px] font-black leading-tight text-white sm:text-base">
                             {asset.label}
                           </p>
-                          <p className="mt-0.5 truncate text-[11px] text-white/50">
+                          <p className="mt-0.5 hidden truncate text-[11px] text-white/50 sm:block">
                             {asset.character} · {asset.title}
                           </p>
                         </div>
                       </div>
                     </article>
-                    {index < launchPackAssets.length - 1 ? (
-                      <span
-                        className="pointer-events-none absolute -right-1.5 top-1/2 z-10 hidden -translate-y-1/2 text-sm font-black text-[#c8ff3d]/min-[420px]:block"
-                        aria-hidden
-                      >
-                        →
-                      </span>
-                    ) : null}
                   </li>
                 ))}
               </ol>
               <p className="mt-3 text-center text-[11px] leading-relaxed text-white/38 sm:text-xs">
-                Honest product proof from Pikbo Lab cached demos — not customer
-                uploads, not live generation.
+                These are three format examples from different cached Pikbo Lab
+                toys — not one customer Launch Pack and not live generation.
               </p>
             </div>
           ) : null}
