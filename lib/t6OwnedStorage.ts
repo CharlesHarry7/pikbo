@@ -50,6 +50,11 @@ export function t6OwnedObjectKeyFromHash(hash: string): string | null {
   return /^[a-f0-9]{64}$/.test(hash) ? `t6-baked/${hash}.mp4` : null;
 }
 
+export function t6OwnedObjectKeyFromRouteParam(value: string): string | null {
+  const hash = value.endsWith(".mp4") ? value.slice(0, -4) : value;
+  return t6OwnedObjectKeyFromHash(hash);
+}
+
 function objectPath(root: string, objectKey: string): string | null {
   if (!OBJECT_KEY_PATTERN.test(objectKey)) return null;
   const candidate = resolve(root, objectKey);

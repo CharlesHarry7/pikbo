@@ -341,6 +341,57 @@ begin
           is distinct from 'boolean'
        or coalesce((p_output_probe ->> 'bakedMarkSignal')::boolean, false)
           is not true
+       or jsonb_typeof(p_output_probe -> 'pixelProof')
+          is distinct from 'object'
+       or coalesce(
+            p_output_probe -> 'pixelProof' ->> 'algorithm',
+            ''
+          ) <> 'decoded-roi-diff-v1'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'watermarkDetected'
+          ) is distinct from 'boolean'
+       or coalesce(
+            (
+              p_output_probe -> 'pixelProof' ->> 'watermarkDetected'
+            )::boolean,
+            false
+          ) is not true
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'sampledFrames'
+          ) is distinct from 'number'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'sampledPixels'
+          ) is distinct from 'number'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'overlayMeanDelta'
+          ) is distinct from 'number'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'controlMeanDelta'
+          ) is distinct from 'number'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'overlayChangedRatio'
+          ) is distinct from 'number'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'controlChangedRatio'
+          ) is distinct from 'number'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'overlayPeakDelta'
+          ) is distinct from 'number'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'region'
+          ) is distinct from 'object'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'region' -> 'x'
+          ) is distinct from 'number'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'region' -> 'y'
+          ) is distinct from 'number'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'region' -> 'width'
+          ) is distinct from 'number'
+       or jsonb_typeof(
+            p_output_probe -> 'pixelProof' -> 'region' -> 'height'
+          ) is distinct from 'number'
        or coalesce(p_source_probe ->> 'formatName', '') !~* '(mp4|mov)'
        or coalesce(p_output_probe ->> 'formatName', '') !~* '(mp4|mov)'
        or coalesce(p_source_probe ->> 'videoCodec', '') = ''
@@ -363,7 +414,38 @@ begin
        or (p_source_probe ->> 'height')::integer
           <> (p_output_probe ->> 'height')::integer
        or abs(v_source_duration - v_output_duration)
-          > greatest(0.25, v_source_duration * 0.03) then
+          > greatest(0.25, v_source_duration * 0.03)
+       or (p_output_probe -> 'pixelProof' ->> 'sampledFrames')::integer
+          not between 1 and 12
+       or (p_output_probe -> 'pixelProof' ->> 'sampledPixels')::integer
+          < 1024
+       or (p_output_probe -> 'pixelProof' ->> 'overlayMeanDelta')::numeric
+          < 3
+       or (
+            p_output_probe -> 'pixelProof' ->> 'overlayChangedRatio'
+          )::numeric < 0.01
+       or (p_output_probe -> 'pixelProof' ->> 'overlayPeakDelta')::numeric
+          < 12
+       or (p_output_probe -> 'pixelProof' ->> 'overlayMeanDelta')::numeric
+          < (
+              p_output_probe -> 'pixelProof' ->> 'controlMeanDelta'
+            )::numeric + 1.5
+       or (
+            p_output_probe -> 'pixelProof' ->> 'overlayChangedRatio'
+          )::numeric
+          < (
+              p_output_probe -> 'pixelProof' ->> 'controlChangedRatio'
+            )::numeric + 0.005
+       or (p_output_probe -> 'pixelProof' -> 'region' ->> 'x')::integer
+          < 0
+       or (p_output_probe -> 'pixelProof' -> 'region' ->> 'y')::integer
+          < 0
+       or (
+            p_output_probe -> 'pixelProof' -> 'region' ->> 'width'
+          )::integer < 1
+       or (
+            p_output_probe -> 'pixelProof' -> 'region' ->> 'height'
+          )::integer < 1 then
       return jsonb_build_object(
         'ok', false,
         'code', 'DERIVATIVE_MEDIA_MISMATCH'

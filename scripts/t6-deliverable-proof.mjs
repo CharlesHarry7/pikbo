@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import {
   readT6OwnedDerivative,
+  t6OwnedObjectKeyFromRouteParam,
   writeT6OwnedDerivative,
 } from "../lib/t6OwnedStorage.ts";
 import { parseT6FfprobeJson } from "../lib/t6Probe.mjs";
@@ -20,6 +21,11 @@ process.env.PIKBO_T6_OWNED_STORAGE_DIR = root;
 
 try {
   const objectKey = `t6-baked/${"a".repeat(64)}.mp4`;
+  assert.equal(
+    t6OwnedObjectKeyFromRouteParam(`${"a".repeat(64)}.mp4`),
+    objectKey,
+    "controlled .mp4 delivery path must resolve to the owned object"
+  );
   const derivative = Buffer.from(
     "fixture-owned-watermarked-mp4-PIKBO-baked-watermark"
   );
@@ -166,6 +172,8 @@ try {
   assert.match(migration, /pikbo_claim_t6_derivative_v1/);
   assert.match(migration, /pikbo_finish_t6_derivative_v1/);
   assert.match(migration, /FREE_WATERMARK_JOB_REQUIRED/);
+  assert.match(migration, /decoded-roi-diff-v1/);
+  assert.match(migration, /watermarkDetected/);
   assert.match(migration, /revoke all[\s\S]*anon, authenticated/i);
   assert.match(migration, /'refundConfirmed', false/);
   assert.doesNotMatch(route, /sourceRef/);

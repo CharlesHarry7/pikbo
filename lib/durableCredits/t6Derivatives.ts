@@ -223,7 +223,12 @@ export async function finishDurableT6Derivative(input: {
       p_source_checksum: success ? input.result.sourceChecksum : null,
       p_output_checksum: success ? input.result.outputChecksum : null,
       p_source_probe: success ? input.result.sourceProbe : null,
-      p_output_probe: success ? input.result.probe : null,
+      p_output_probe: success
+        ? {
+            ...input.result.probe,
+            pixelProof: input.result.pixelProof,
+          }
+        : null,
       p_delivery_path: success ? input.result.deliveryPath : null,
       p_error_code: success
         ? null

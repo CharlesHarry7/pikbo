@@ -3,7 +3,7 @@
  * Soft-launch still runs sync /api/generate; jobs are recorded for poll/recovery.
  */
 
-import type { T6MediaProbe } from "@/lib/t6Worker";
+import type { T6MediaProbe, T6PixelProof } from "@/lib/t6Worker";
 
 export type GenerationJobStatus =
   | "queued"
@@ -24,6 +24,7 @@ export type BakedWatermarkDerivative = {
   outputChecksum?: string;
   sourceProbe?: T6MediaProbe;
   probe?: T6MediaProbe;
+  pixelProof?: T6PixelProof;
   errorCode?: string;
 };
 

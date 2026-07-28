@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-07-28T05:30:21.348Z",
+  "mode": "synthetic-non-production",
+  "realFfmpeg": true,
+  "realFfprobe": true,
+  "spawnShell": false,
+  "providerUrlUsed": false,
+  "providerUrlPubliclyExposed": false,
+  "ffmpegVersion": "ffmpeg version 6.0 Copyright (c) 2000-2023 the FFmpeg developers",
+  "ffprobeVersion": "ffprobe version 4.4-tessus  https://evermeet.cx/ffmpeg/  Copyright (c) 2007-2021 the FFmpeg developers",
+  "source": {
+    "bytes": 22375,
+    "sha256": "c099e2d1b3659d9ec9f5b3722a031648c695e0d30f406e5eab34b7f806961092",
+    "probe": {
+      "formatName": "mov,mp4,m4a,3gp,3g2,mj2",
+      "durationSeconds": 2,
+      "width": 640,
+      "height": 360,
+      "videoCodec": "h264",
+      "bakedMarkSignal": false
+    },
+    "frameSha256": "10b8299d3dbde7b0ac78d508d225fc14c61a6485ce28396c3cac962b0f71d032"
+  },
+  "derivative": {
+    "bytes": 34872,
+    "sha256": "6371b8708a98977a4239541584afa1ae4fbf5579f1f3c901bf6b53625e3f3b80",
+    "probe": {
+      "formatName": "mov,mp4,m4a,3gp,3g2,mj2",
+      "durationSeconds": 2.021,
+      "width": 640,
+      "height": 360,
+      "videoCodec": "h264",
+      "bakedMarkSignal": true
+    },
+    "pixelProof": {
+      "algorithm": "decoded-roi-diff-v1",
+      "watermarkDetected": true,
+      "sampledFrames": 4,
+      "sampledPixels": 92160,
+      "region": {
+        "x": 400,
+        "y": 264,
+        "width": 240,
+        "height": 96
+      },
+      "overlayMeanDelta": 6.011892,
+      "controlMeanDelta": 0,
+      "overlayChangedRatio": 0.048568,
+      "controlChangedRatio": 0,
+      "overlayPeakDelta": 165
+    },
+    "frameSha256": "09276b37094cdd45c2167f70585e16ffa98c997f035b15bb81cc879d072cfef6"
+  },
+  "negativeGate": {
+    "ok": false,
+    "code": "WATERMARK_PIXEL_PROOF_FAILED"
+  }
+}

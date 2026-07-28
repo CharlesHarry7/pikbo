@@ -22,9 +22,15 @@ import {
   t6OwnedDeliveryPath,
   type ServerOwnedT6Input,
   type T6InjectedRunner,
+  type T6PixelProof,
 } from "@/lib/t6Worker";
 import { writeT6OwnedDerivative } from "@/lib/t6OwnedStorage";
 import { parseT6FfprobeJson } from "@/lib/t6Probe.mjs";
+import {
+  buildT6PixelProof,
+  t6PixelDiffArgs,
+  t6PixelRegions,
+} from "@/lib/t6PixelProof.mjs";
 
 const PROCESS_TIMEOUT_MS = 120_000;
 const STDERR_LIMIT = 16_384;
@@ -108,6 +114,27 @@ async function withTempFile<T>(
   try {
     await writeFile(path, bytes, { mode: 0o600 });
     return await operation(path, directory);
+  } finally {
+    await rm(directory, { recursive: true, force: true }).catch(
+      () => undefined
+    );
+  }
+}
+
+async function withTempPair<T>(
+  source: Uint8Array,
+  output: Uint8Array,
+  operation: (sourcePath: string, outputPath: string) => Promise<T>
+): Promise<T> {
+  const directory = await mkdtemp(join(tmpdir(), "pikbo-t6-pixel-"));
+  const sourcePath = join(directory, "source.mp4");
+  const outputPath = join(directory, "derivative.mp4");
+  try {
+    await Promise.all([
+      writeFile(sourcePath, source, { mode: 0o600 }),
+      writeFile(outputPath, output, { mode: 0o600 }),
+    ]);
+    return await operation(sourcePath, outputPath);
   } finally {
     await rm(directory, { recursive: true, force: true }).catch(
       () => undefined
@@ -256,6 +283,61 @@ export function createT6FfmpegFilesystemRunner(): T6InjectedRunner {
         if (!probe) throw new Error("FFPROBE_INVALID");
         return probe;
       });
+    },
+    async proveWatermarkPixels({
+      source,
+      output,
+      sourceProbe,
+      outputProbe,
+    }) {
+      if (
+        sourceProbe.width !== outputProbe.width ||
+        sourceProbe.height !== outputProbe.height
+      ) {
+        throw new Error("PIXEL_PROOF_MEDIA_SHAPE_MISMATCH");
+      }
+      const regions = t6PixelRegions(sourceProbe.width, sourceProbe.height);
+      if (!regions) throw new Error("PIXEL_PROOF_REGION_INVALID");
+      return withTempPair(
+        source,
+        output,
+        async (sourcePath, outputPath) => {
+          const [overlay, control] = await Promise.all([
+            runProcess({
+              command: ffmpeg,
+              args: t6PixelDiffArgs({
+                sourcePath,
+                outputPath,
+                region: regions.overlay,
+                sampleFrames: 4,
+              }),
+            }),
+            runProcess({
+              command: ffmpeg,
+              args: t6PixelDiffArgs({
+                sourcePath,
+                outputPath,
+                region: regions.control,
+                sampleFrames: 4,
+              }),
+            }),
+          ]);
+          const pixelsPerFrame =
+            regions.overlay.width * regions.overlay.height;
+          const sampledFrames = Math.min(
+            Math.floor(overlay.stdout.byteLength / pixelsPerFrame),
+            Math.floor(control.stdout.byteLength / pixelsPerFrame)
+          );
+          const proof = buildT6PixelProof({
+            overlayBytes: overlay.stdout,
+            controlBytes: control.stdout,
+            region: regions.overlay,
+            sampledFrames,
+          });
+          if (!proof) throw new Error("PIXEL_PROOF_INVALID");
+          return proof as T6PixelProof;
+        }
+      );
     },
     async writeOwnedDerivative({ objectKey, contentType, bytes }) {
       const result = await writeT6OwnedDerivative({

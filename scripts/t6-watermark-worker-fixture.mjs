@@ -30,6 +30,19 @@ const objectKey = t6DerivativeObjectKey(job);
 const ownedDeliveryPath = t6OwnedDeliveryPath(objectKey);
 assert.ok(ownedDeliveryPath);
 
+const pixelProof = {
+  algorithm: "decoded-roi-diff-v1",
+  watermarkDetected: true,
+  sampledFrames: 4,
+  sampledPixels: 92160,
+  region: { x: 480, y: 1184, width: 240, height: 96 },
+  overlayMeanDelta: 24,
+  controlMeanDelta: 1,
+  overlayChangedRatio: 0.2,
+  controlChangedRatio: 0.01,
+  overlayPeakDelta: 255,
+};
+
 function runner(overrides = {}) {
   return {
     async fetchServerOwnedOutput() {
@@ -58,6 +71,9 @@ function runner(overrides = {}) {
           output.includes(Buffer.from("PIKBO_BAKED_MARK")),
       };
     },
+    async proveWatermarkPixels() {
+      return pixelProof;
+    },
     async writeOwnedDerivative({ objectKey: key }) {
       return { deliveryPath: t6OwnedDeliveryPath(key) };
     },
@@ -72,6 +88,11 @@ assert.equal(succeeded.deliveryPath, ownedDeliveryPath);
 assert.notEqual(succeeded.sourceChecksum, succeeded.outputChecksum, "derivative differs from source");
 assert.equal(succeeded.probe?.bakedMarkSignal, true, "runner probe observes baked mark signal");
 assert.equal(succeeded.sourceProbe?.bakedMarkSignal, false);
+assert.equal(
+  succeeded.pixelProof?.watermarkDetected,
+  true,
+  "decoded-pixel comparison observes the baked mark region"
+);
 assert.equal(
   isVerifiedT6DerivativeForJob({
     jobId: job.jobId,
@@ -163,6 +184,26 @@ assert.equal(
   }),
   false,
   "delivery gate rejects equal source/output checksums"
+);
+
+const missingPixelMark = await runT6PipelineWithInjectedRunner({
+  job,
+  runner: runner({
+    async proveWatermarkPixels() {
+      return {
+        ...pixelProof,
+        watermarkDetected: false,
+        overlayMeanDelta: 1,
+        overlayChangedRatio: 0.001,
+      };
+    },
+  }),
+});
+assert.equal(missingPixelMark.status, "failed");
+assert.equal(
+  missingPixelMark.errorCode,
+  "WATERMARK_PIXEL_PROOF_FAILED",
+  "metadata without a decoded pixel delta never unlocks delivery"
 );
 
 const durationMismatch = await runT6PipelineWithInjectedRunner({

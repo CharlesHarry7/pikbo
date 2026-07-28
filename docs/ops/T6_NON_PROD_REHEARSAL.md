@@ -1,8 +1,9 @@
 # T6 server-owned derivative rehearsal
 
-Status: source implementation; production remains blocked
+Status: non-production source + real media proof; production remains blocked
 Production apply/deploy: prohibited until owner approval
-Current machine: ffmpeg/ffprobe were not installed during this source review
+Proof: temporary npm-provided ffmpeg 6.0 and ffprobe 4.4 binaries were used
+against synthetic media only; they are not a production runtime installation
 
 Required migration order in a disposable Supabase project:
 
@@ -21,7 +22,8 @@ only when the exact job-bound derivative passes every check below.
   rejects redirects/private addresses, caps bytes/time, and invokes binaries
   without a shell.
 - `lib/t6Worker.ts` compares source/output SHA-256, ffprobe container, codec,
-  duration and resolution, and requires the baked watermark metadata signal.
+  duration and resolution. It also requires a decoded source/output luma
+  difference in the expected watermark region; MP4 metadata alone cannot pass.
 - `lib/t6OwnedStorage.ts` atomically publishes only verified MP4 bytes beneath
   a deterministic `t6-baked/<sha>.mp4` key. Concurrent conflicting bytes fail.
 - `/api/t6-derivatives/[hash]` requires an authenticated user, the matching
@@ -45,6 +47,7 @@ only when the exact job-bound derivative passes every check below.
 
    ```bash
    npm run t6-deliverable-proof
+   npm run t6-real-ffmpeg-proof
    npm run typecheck
    npm run lint
    npm run build
@@ -73,7 +76,9 @@ only when the exact job-bound derivative passes every check below.
 - Source/output hashes differ and the stored bytes match the recorded output
   hash.
 - ffprobe confirms MP4, a video codec, positive duration, unchanged dimensions,
-  duration within 3% or 250ms, and the baked mark signal.
+  duration within 3% or 250ms, and the baked mark metadata signal.
+- Decoded-pixel proof shows the bottom-right watermark region changed
+  materially more than the control region. Metadata-only evidence fails.
 - The raw provider URL is service-private and never returned or redirected.
 - Free download returns only owned bytes through the authenticated controlled
   route.

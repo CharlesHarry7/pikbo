@@ -3,7 +3,7 @@ import { ensureSession } from "@/lib/session";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 import { findJobByOwnedDerivative } from "@/lib/generationJobs";
 import {
-  t6OwnedObjectKeyFromHash,
+  t6OwnedObjectKeyFromRouteParam,
   readT6OwnedDerivative,
 } from "@/lib/t6OwnedStorage";
 import { canServeVerifiedT6Derivative } from "@/lib/t6Worker";
@@ -13,7 +13,7 @@ export const runtime = "nodejs";
 type Props = { params: Promise<{ hash: string }> };
 
 async function authorizedOwnedObject(req: Request, hash: string) {
-  const objectKey = t6OwnedObjectKeyFromHash(hash);
+  const objectKey = t6OwnedObjectKeyFromRouteParam(hash);
   if (!objectKey) {
     return { ok: false as const, status: 404, code: "NOT_FOUND" };
   }
