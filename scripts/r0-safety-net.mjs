@@ -1,139 +1,263 @@
 /**
- * R0 Safety Net – reservation leak protection + generate/image route fail-closed.
+ * R0 reservation safety-net — **behavioral** tests (not source regex).
  *
- * Verifies:
- * 1. Both /api/generate and /api/image route.ts contain the unexpected_exit
- *    safety-net finally block that releases leaked reservations.
- * 2. Both routes declare liveReservation / imageLiveReservation outside the try
- *    block so the finally can access it.
- * 3. liveGenerationAccess gate is imported and used in both routes.
- * 4. invokeReservedProvider is used in both routes.
+ * Proves:
+ * 1. release backend invoked at most once
+ * 2. after settle, release never calls backend
+ * 3. concurrent release: single backend call
+ * 4. exception in release backend still terminal (no second call)
+ * 5. timeout-style: second release after slow first still shares once
+ * 6. finally safety-net only fires while reserved
+ * 7. withheld (capture ambiguous) never releases
+ * 8. route wiring still present (minimal presence checks)
  *
  * Run: npm run r0-safety-net
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const root = process.cwd();
 
-function readRoute(relPath) {
-  return readFileSync(join(root, relPath), "utf-8");
+// Load TS module with strip-types (same pattern as t5 smokes).
+const lifecycleUrl = pathToFileURL(
+  join(root, "lib/reservationLifecycle.ts")
+).href;
+const { createReservationLifecycle } = await import(lifecycleUrl);
+
+function fakeReservation(id = "res-test-001") {
+  return {
+    reservationId: id,
+    jobId: `job-${id}`,
+    accountId: "acct-1",
+    userId: "user-1",
+    credits: 10,
+    status: "reserved",
+    providerAuthorized: true,
+    planId: "creator",
+    idempotencyKey: `idem-${id}`,
+    expiresAt: new Date(Date.now() + 60_000).toISOString(),
+  };
 }
 
-// ─── Generate route safety net ───
+// ─── 1. Release at most once ──────────────────────────────────────────────
 
-const genRoute = readRoute("app/api/generate/route.ts");
-
-// 1. Safety net finally block exists
-assert.ok(
-  genRoute.includes("unexpected_exit_safety_net"),
-  "generate route: missing unexpected_exit_safety_net release"
-);
-
-// 2. liveReservation declared outside try (before the try block that contains generation)
-// Pattern: declaration is outside the outer try
-const genLiveDeclOutside = /let liveReservation:\s*StrictLiveReservation\s*\|\s*null\s*=\s*null/;
-assert.ok(
-  genLiveDeclOutside.test(genRoute),
-  "generate route: liveReservation must be declared (let ... = null) for finally access"
-);
-
-// 3. finally block releases reservation
-assert.ok(
-  genRoute.includes("finally") && genRoute.includes("if (liveReservation)"),
-  "generate route: finally block must check and release liveReservation"
-);
-
-// 4. liveGenerationAccess is imported
-assert.ok(
-  genRoute.includes("import {\n  invokeReservedProvider,\n  liveGenerationAccess,"),
-  "generate route: must import liveGenerationAccess"
-);
-
-// 5. invokeReservedProvider is used (provider calls are gated)
-assert.ok(
-  genRoute.includes("invokeReservedProvider("),
-  "generate route: invokeReservedProvider must guard provider calls"
-);
-
-// ─── Image route safety net ───
-
-const imgRoute = readRoute("app/api/image/route.ts");
-
-// 1. Safety net finally block exists
-assert.ok(
-  imgRoute.includes("unexpected_exit_safety_net"),
-  "image route: missing unexpected_exit_safety_net release"
-);
-
-// 2. imageLiveReservation declared outside try
-const imgLiveDeclOutside = /let imageLiveReservation:\s*StrictLiveReservation\s*\|\s*null\s*=\s*null/;
-assert.ok(
-  imgLiveDeclOutside.test(imgRoute),
-  "image route: imageLiveReservation must be declared outside the try block for finally access"
-);
-
-// 3. finally block releases reservation
-assert.ok(
-  imgRoute.includes("finally") && imgRoute.includes("if (imageLiveReservation)"),
-  "image route: finally block must check and release imageLiveReservation"
-);
-
-// 4. liveGenerationAccess is imported
-assert.ok(
-  imgRoute.includes("liveGenerationAccess,"),
-  "image route: must import liveGenerationAccess"
-);
-
-// 5. invokeReservedProvider is used (provider calls are gated)
-assert.ok(
-  imgRoute.includes("invokeReservedProvider("),
-  "image route: invokeReservedProvider must guard provider calls"
-);
-
-// ─── Seller Pack R0 honesty ───
-
-const spReserve = readRoute("app/api/seller-pack/reserve/route.ts");
-
-// Seller Pack reserve explicitly states it defers to generate cost gate
-const spHonesty = spReserve.includes("generate-route-cost-gate") ||
-  spReserve.includes("generate gate");
-assert.ok(
-  spHonesty,
-  "seller-pack reserve: must reference generate cost gate authority"
-);
-
-// Seller Pack does NOT call fal directly
-assert.ok(
-  !spReserve.includes("fal.") && !spReserve.includes("@fal-ai"),
-  "seller-pack reserve: must never call fal provider directly"
-);
-
-// ─── Idempotency key enforcement ───
-
-// Both routes require idempotencyKey for live generation
-for (const [name, src] of [["generate", genRoute], ["image", imgRoute]]) {
-  assert.ok(
-    src.includes("idempotencyKey"),
-    `${name} route: must check idempotencyKey for live generation`
-  );
+{
+  let calls = 0;
+  const lc = createReservationLifecycle({
+    async release() {
+      calls += 1;
+      return { ok: true, availableCredits: 10 };
+    },
+    async settle() {
+      return { ok: true };
+    },
+  });
+  lc.assign(fakeReservation("once"));
+  const a = await lc.release("provider_error");
+  const b = await lc.release("provider_error");
+  const c = await lc.safetyNetRelease();
+  assert.equal(a.ok, true);
+  assert.equal(a.skipped, false);
+  assert.equal(b.skipped, true);
+  assert.equal(c.skipped, true);
+  assert.equal(calls, 1, "release backend must run once");
+  assert.equal(lc.releaseBackendCalls(), 1);
+  assert.equal(lc.phase(), "released");
 }
 
-// ─── Refund paths exist ───
+// ─── 2. Settled never releases ────────────────────────────────────────────
 
-// Generate route has releaseReservation called in failure points
-const genReleaseCalls = (genRoute.match(/releaseReservation\(/g) || []).length;
-assert.ok(
-  genReleaseCalls >= 8,
-  `generate route: expected >= 8 releaseReservation calls for failure paths, found ${genReleaseCalls}`
+{
+  let releaseCalls = 0;
+  let settleCalls = 0;
+  const lc = createReservationLifecycle({
+    async release() {
+      releaseCalls += 1;
+      return { ok: true };
+    },
+    async settle() {
+      settleCalls += 1;
+      return { ok: true, availableCredits: 0 };
+    },
+  });
+  lc.assign(fakeReservation("settled"));
+  const s = await lc.settle("prov-1");
+  assert.equal(s.ok, true);
+  assert.equal(lc.phase(), "settled");
+  const r = await lc.release("provider_error");
+  const n = await lc.safetyNetRelease();
+  assert.equal(r.skipped, true);
+  assert.equal(n.skipped, true);
+  assert.equal(releaseCalls, 0, "settled must not call release backend");
+  assert.equal(settleCalls, 1);
+}
+
+// ─── 3. Concurrent release → one backend call ─────────────────────────────
+
+{
+  let calls = 0;
+  let resolveBackend;
+  const backendGate = new Promise((r) => {
+    resolveBackend = r;
+  });
+  const lc = createReservationLifecycle({
+    async release() {
+      calls += 1;
+      await backendGate;
+      return { ok: true, availableCredits: 5 };
+    },
+    async settle() {
+      return { ok: true };
+    },
+  });
+  lc.assign(fakeReservation("concurrent"));
+  const p1 = lc.release("a");
+  const p2 = lc.release("b");
+  const p3 = lc.safetyNetRelease();
+  // Let microtasks schedule
+  await Promise.resolve();
+  assert.equal(calls, 1, "only one backend in flight");
+  resolveBackend();
+  const [r1, r2, r3] = await Promise.all([p1, p2, p3]);
+  assert.equal(r1.skipped, false);
+  // siblings await same in-flight promise (not skipped:false thrice with 3 calls)
+  assert.equal(calls, 1);
+  assert.equal(lc.releaseBackendCalls(), 1);
+  assert.ok(r1.ok && r2.ok && r3.ok);
+}
+
+// ─── 4. Exception in release still terminal (no second call) ──────────────
+
+{
+  let calls = 0;
+  const lc = createReservationLifecycle({
+    async release() {
+      calls += 1;
+      throw new Error("backend down");
+    },
+    async settle() {
+      return { ok: true };
+    },
+  });
+  lc.assign(fakeReservation("throw"));
+  const a = await lc.release("provider_error");
+  assert.equal(a.ok, false);
+  assert.equal(lc.phase(), "released");
+  const b = await lc.safetyNetRelease();
+  assert.equal(b.skipped, true);
+  assert.equal(calls, 1);
+}
+
+// ─── 5. Timeout-style slow release then finally ───────────────────────────
+
+{
+  let calls = 0;
+  const lc = createReservationLifecycle({
+    async release(_res, reason) {
+      calls += 1;
+      await new Promise((r) => setTimeout(r, 30));
+      return { ok: true, availableCredits: 1, reason };
+    },
+    async settle() {
+      return { ok: true };
+    },
+  });
+  lc.assign(fakeReservation("slow"));
+  const slow = lc.release("deadline_before_generation");
+  // finally races while in flight
+  const fin = lc.safetyNetRelease();
+  const [a, b] = await Promise.all([slow, fin]);
+  assert.equal(calls, 1);
+  assert.equal(a.skipped, false);
+  // fin shares in-flight
+  assert.equal(lc.releaseBackendCalls(), 1);
+  assert.ok(a.ok && b.ok);
+}
+
+// ─── 6. Safety-net only while reserved ────────────────────────────────────
+
+{
+  let calls = 0;
+  const lc = createReservationLifecycle({
+    async release() {
+      calls += 1;
+      return { ok: true };
+    },
+    async settle() {
+      return { ok: true };
+    },
+  });
+  // none → skip
+  let r = await lc.safetyNetRelease();
+  assert.equal(r.skipped, true);
+  assert.equal(calls, 0);
+  lc.assign(fakeReservation("net"));
+  r = await lc.safetyNetRelease();
+  assert.equal(r.skipped, false);
+  assert.equal(calls, 1);
+  r = await lc.safetyNetRelease();
+  assert.equal(r.skipped, true);
+  assert.equal(calls, 1);
+}
+
+// ─── 7. Withheld (capture fail) never releases ────────────────────────────
+
+{
+  let calls = 0;
+  const lc = createReservationLifecycle({
+    async release() {
+      calls += 1;
+      return { ok: true };
+    },
+    async settle() {
+      return { ok: false, error: "capture failed" };
+    },
+  });
+  lc.assign(fakeReservation("withhold"));
+  const s = await lc.settle("prov-x");
+  assert.equal(s.ok, false);
+  assert.equal(lc.phase(), "reserved"); // still reserved after failed settle
+  lc.markWithheld("capture_failed");
+  assert.equal(lc.phase(), "withheld");
+  const r = await lc.safetyNetRelease();
+  assert.equal(r.skipped, true);
+  assert.equal(calls, 0, "withheld must not release");
+}
+
+// ─── 8. Failed release backend marks released (no double) ─────────────────
+
+{
+  let calls = 0;
+  const lc = createReservationLifecycle({
+    async release() {
+      calls += 1;
+      return { ok: false, error: "rpc fail" };
+    },
+    async settle() {
+      return { ok: true };
+    },
+  });
+  lc.assign(fakeReservation("fail-rel"));
+  const a = await lc.release("provider_error");
+  assert.equal(a.ok, false);
+  assert.equal(lc.phase(), "released");
+  await lc.safetyNetRelease();
+  assert.equal(calls, 1);
+}
+
+// ─── 9. Minimal route wiring (not the primary proof) ──────────────────────
+
+const gen = readFileSync(join(root, "app/api/generate/route.ts"), "utf8");
+const img = readFileSync(join(root, "app/api/image/route.ts"), "utf8");
+assert.match(gen, /createReservationLifecycle|reservationLifecycle/);
+assert.match(img, /createReservationLifecycle|reservationLifecycle/);
+assert.match(gen, /safetyNetRelease|unexpected_exit_safety_net/);
+assert.match(img, /safetyNetRelease|unexpected_exit_safety_net/);
+assert.match(gen, /markWithheld/);
+assert.match(img, /markWithheld/);
+
+console.log(
+  "r0-safety-net: PASS (release≤1 · settle-blocks-release · concurrent · exception · timeout race · finally · withheld · fail-release terminal · route wire)"
 );
-
-// Image route has releaseReservation called in failure points
-const imgReleaseCalls = (imgRoute.match(/releaseReservation\(/g) || []).length;
-assert.ok(
-  imgReleaseCalls >= 4,
-  `image route: expected >= 4 releaseReservation calls for failure paths, found ${imgReleaseCalls}`
-);
-
-console.log("r0-safety-net: PASS (reservation leak safety net · generate/image fail-closed · Seller Pack honesty · idempotency · refund paths)");

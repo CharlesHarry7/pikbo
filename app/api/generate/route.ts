@@ -39,8 +39,8 @@ import {
   releaseStrictLiveGeneration,
   reserveStrictLiveGeneration,
   settleStrictLiveGeneration,
-  type StrictLiveReservation,
 } from "@/lib/durableCredits/liveReservation";
+import { createReservationLifecycle } from "@/lib/reservationLifecycle";
 import {
   recordConfirmedPreOutputFailure,
   recordProviderSucceededWithheld,
@@ -378,10 +378,29 @@ export async function POST(req: Request) {
     );
   }
 
-  // Safety net: if a truly unexpected error (crash, signal, etc.) leaks a
-  // committed durable reservation, the finally block attempts a last-resort
-  // release. Normal paths already call releaseReservation() explicitly.
-  let liveReservation: StrictLiveReservation | null = null;
+  // Reservation lifecycle: release ≤1, never release after settle/withhold.
+  // finally → safetyNetRelease only while phase === reserved.
+  const reservationLife = createReservationLifecycle({
+    release: async (reservation, reason) => {
+      const released = await releaseStrictLiveGeneration(reservation, reason);
+      if (!released.ok) return { ok: false, error: released.error };
+      return {
+        ok: true,
+        availableCredits: released.data.availableCredits,
+      };
+    },
+    settle: async (reservation, providerRequestId) => {
+      const captured = await settleStrictLiveGeneration(
+        reservation,
+        providerRequestId
+      );
+      if (!captured.ok) return { ok: false, error: captured.error };
+      return {
+        ok: true,
+        availableCredits: captured.data.availableCredits,
+      };
+    },
+  });
 
   try {
     const plan = getPlan(session.plan);
@@ -542,20 +561,22 @@ export async function POST(req: Request) {
         status
       );
     }
-    liveReservation = reserved.reservation;
+    reservationLife.assign(reserved.reservation);
     session = {
       ...session,
-      plan: liveReservation.planId,
+      plan: reserved.reservation.planId,
       credits: reserved.availableCredits,
     };
     await saveSession(session);
     const releaseReservation = async (reason: string): Promise<boolean> => {
-      if (!liveReservation) return false;
-      const target = liveReservation;
-      const released = await releaseStrictLiveGeneration(
-        target,
-        reason
-      );
+      const target = reservationLife.get() ?? reserved.reservation;
+      const released = await reservationLife.release(reason);
+      if (released.skipped) {
+        // Already settled / released / withheld — do not re-hit backend.
+        return released.ok && released.reason !== "skip_settled" && released.reason !== "skip_withheld"
+          ? false
+          : false;
+      }
       if (!released.ok) {
         const confirmedPreOutput = new Set([
           "retry_claim_rejected",
@@ -564,6 +585,7 @@ export async function POST(req: Request) {
           "empty_image",
           "deadline_before_upload",
           "deadline_before_generation",
+          "unexpected_exit_safety_net",
         ]).has(reason);
         const recorded = confirmedPreOutput
           ? await recordConfirmedPreOutputFailure(target, {
@@ -590,12 +612,13 @@ export async function POST(req: Request) {
         }
         return false;
       }
-      session = {
-        ...session,
-        credits: released.data.availableCredits,
-      };
-      await saveSession(session);
-      liveReservation = null;
+      if (typeof released.availableCredits === "number") {
+        session = {
+          ...session,
+          credits: released.availableCredits,
+        };
+        await saveSession(session);
+      }
       return true;
     };
 
@@ -819,6 +842,8 @@ export async function POST(req: Request) {
             recorded.code
           );
         }
+        // Late/cancel/timeout: never release in finally (would free a paid clip).
+        reservationLife.markWithheld(completionDecision.code);
         const failBody: GenerateErrorBody = {
           error: completionDecision.message,
           code: completionDecision.code,
@@ -830,16 +855,11 @@ export async function POST(req: Request) {
         return err(failBody, completionDecision.httpStatus);
       }
 
-      const captured = await settleStrictLiveGeneration(
-        reserved.reservation,
+      const captured = await reservationLife.settle(
         result.requestId || liveJobId || reserved.reservation.reservationId
       );
       if (!captured.ok) {
-        console.error(
-          "[live-reservation] capture failed",
-          captured.code,
-          captured.error
-        );
+        console.error("[live-reservation] capture failed");
         const recorded = await recordProviderSucceededWithheld(
           reserved.reservation,
           {
@@ -858,11 +878,8 @@ export async function POST(req: Request) {
             recorded.code
           );
         }
-        // Provider work exists, so releasing would create a free result; but
-        // claiming "10 used" would also be false because the durable capture
-        // did not commit. Withhold the output and leave the reservation for
-        // the R1c reconciliation worker. The same idempotency key remains
-        // blocked by the durable job.
+        // Provider work exists — never release (free clip). Withhold for R1c.
+        reservationLife.markWithheld("capture_failed");
         const failBody: GenerateErrorBody = {
           error:
             "The video was generated, but credits could not be finalized. The output is withheld while the durable reservation is reconciled; do not retry with the same idempotency key.",
@@ -873,7 +890,6 @@ export async function POST(req: Request) {
         };
         return err(failBody, 503);
       }
-      liveReservation = null;
       let ledgerJobId = liveJobId;
       try {
         const job = completeSyncGenerateJob({
@@ -957,17 +973,12 @@ export async function POST(req: Request) {
       );
     }
   } finally {
-    // Defense-in-depth: if a truly unexpected error leaked a committed
-    // reservation, attempt a last-resort release so credits are not lost.
-    if (liveReservation) {
-      try {
-        await releaseStrictLiveGeneration(
-          liveReservation,
-          "unexpected_exit_safety_net"
-        );
-      } catch {
-        /* best-effort — reconciliation worker will pick up */
-      }
+    // Defense-in-depth: only while still reserved (never after settle/withhold).
+    // release backend is invoked at most once (lifecycle guard).
+    try {
+      await reservationLife.safetyNetRelease();
+    } catch {
+      /* best-effort — reconciliation worker will pick up */
     }
     endJob(session.id);
   }
