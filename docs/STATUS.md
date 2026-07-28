@@ -1,6 +1,6 @@
 # Pikbo board — claim before you code
 
-**Last human intent:** World-class toy video OS; path to $60k/day. See docs/MOONSHOT_WORLD_CLASS.md + docs/DISPATCH.md. Public still GO-gated.
+**Last human intent:** Build the designer-toy vertical Higgsfield: immersive Recipe browsing and one-click Remix first; Launch Pack is the later commercial upgrade. Public production remains GO-gated.
 
 Update this file in the same PR/commit as your work start/finish.
 
@@ -14,6 +14,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 
 | ID | Outcome | Owner | Status | PR / branch | Reviewer gate |
 |---|---|---|---|---|---|
+| HOME-V1 | Immersive 8-demo toy Recipe home → upload in ≤2 clicks | Codex | doing | `agent/gpt/higgsfield-toy-v1-home` | 390×844 + 1440px screenshots; lint, typecheck, engine and Launch Pack smokes, build; private preview + Draft PR |
 | CTRL-RESET | Close stale PRs, close R2 and enforce one active task per agent | Codex | done | main via PR #45 | Isolated worktrees and the one-task queue are now mandatory |
 | R0-NET | Unexpected-exit reservation safety without double release/refund | Codex / Grok | review | PR #47 | Clean replacement for #42; capture throw/failure withheld, 0 release calls, behavior test in real CI |
 | WB-LINK-TRUTH | Consolidated historical listing/backlink evidence | WorkBuddy | review | PR #41 | Evidence only; no R0H/code ownership or new submissions; duplicate SEO/link PR #46 is closed |

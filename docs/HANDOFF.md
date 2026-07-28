@@ -4,6 +4,11 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] immersive toy Recipe home V1
+- Home now opens on a full-bleed toy-video hero, then the frozen `HOME_PROOF_SLUGS` wall with eight distinct cached demos; every card links directly to `/create?effect=<slug>` and exposes the upload step in one navigation.
+- Primary navigation is only Explore, Recipes, Create, Library and Pricing. Existing routes remain intact; Launch Pack stays below the Recipe wall as the later upgrade.
+- Browser QA: 390×844 and 1440×900 both have zero horizontal overflow, eight Recipe cards and no console errors. No API, Supabase, Stripe, credits, SEO route or production configuration changed.
+
 ### 2026-07-28 — [gpt] R0 capture-exception safety replacement
 - Replaced stale PR #42 with clean PR #47 from `main@e0ab4f0`; no old STATUS/HANDOFF rows were replayed.
 - A failed or throwing capture now becomes `withheld` before generic error handling, so valid provider output cannot be followed by a credit release.

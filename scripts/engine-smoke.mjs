@@ -704,9 +704,8 @@ assert.match(genRoute, /creditsRefunded:\s*released/);
 assert.match(gen, /creditsRefunded/);
 assert.match(gen, /10 credits restored/);
 const appShell = fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8");
-assert.match(appShell, /const PRIMARY/);
-assert.match(appShell, /const MORE/);
-assert.match(appShell, /MoreMenu|More/);
+assert.match(appShell, /PRIMARY_NAV\.map/);
+assert.doesNotMatch(appShell, /const MORE|MoreMenu/);
 const historySrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historySrc, /historyProvenance|provenance/);
 assert.match(historySrc, /sourceProject/);
@@ -2301,11 +2300,11 @@ assert.match(guidesSrc24, /toy-unboxing-video-from-one-photo/);
 
 assert.match(
   fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /data-cinema-cta=["']seller-pack["']/
+  /data-hero-recipe=\{recipeSlug\}/
 );
 assert.match(
-  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /createRemixHref/
+  fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
+  /data-home-upgrade=["']launch-pack["'][\s\S]*\/create\?mode=seller-pack/
 );
 
 assert.match(
@@ -3753,22 +3752,32 @@ assert.match(deliveryPackSrc, /Sales fidelity|includeQc/);
 assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 
 
-// Homepage cinema → wall → create (video-first)
+// Homepage V1: immersive cinema → eight distinct Recipe cards → Launch Pack.
 const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero|HomeViralWall|home-create/);
-assert.match(
-  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /home\.cinema\.ctaPrimary|data-home-hero|setInterval|items|prefetch/
+const homeHeroSrc = fs.readFileSync(
+  join(root, "components/HomeCinemaHero.tsx"),
+  "utf8"
 );
 assert.match(
-  fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
-  /home\.cinema\.ctaPrimary|home\.wall\.remake|home\.browseCta/
+  homeHeroSrc,
+  /Bring your toy to life\.|Turn one designer-toy photo into cinematic videos, stories and/
+);
+assert.match(homeHeroSrc, /data-home-hero|create\?effect=\$\{recipeSlug\}/);
+const homeWallSrc = fs.readFileSync(
+  join(root, "components/HomeViralWall.tsx"),
+  "utf8"
 );
 assert.match(
-  fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /TOY_WALL_FILTERS|生成同款|360°展示|data-home-wall|sticky|wallDense|viewport-dense|Premiere|data-wall-featured/
+  homeWallSrc,
+  /data-home-wall|data-recipe-card|wallDense|Use this recipe|Cached demo/
 );
-assert.match(homePageSrc, /HomeCinemaHero items=|SoftLaunchStrip|HomeBrowseCta/);
+assert.match(homeWallSrc, /create\?effect=\$\{recipeSlug\}/);
+assert.match(homePageSrc, /HomeCinemaHero items=|data-home-upgrade="launch-pack"/);
+assert.doesNotMatch(
+  [homePageSrc, homeHeroSrc, homeWallSrc, appShell].join("\n"),
+  /Supabase|cached ledger|state machine|internal status|credits ledger/i
+);
 assert.match(
   fs.readFileSync(join(root, "components/AutoPlayVideo.tsx"), "utf8"),
   /wallDense|playbackBudget|data-video-controls/
@@ -3784,10 +3793,6 @@ assert.doesNotMatch(
 assert.match(
   fs.readFileSync(join(root, "components/VideoTile.tsx"), "utf8"),
   /data-concept-recipe-art|View recipe notes/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/HomeBrowseCta.tsx"), "utf8"),
-  /data-home-browse-cta|home\.browseCta|#home-create|4\.75rem|prefetch/
 );
 assert.match(
   fs.readFileSync(join(root, "components/AutoPlayVideo.tsx"), "utf8"),
@@ -3939,12 +3944,29 @@ assert.match(historySrcLib, /sku\?:/);
 assert.match(library, /i\.sku|sku/);
 
 
-// Suite honesty: PRIMARY_NAV = Explore · Create · Effects · Pricing (GSC P0)
+// Home V1: PRIMARY_NAV = Explore · Recipes · Create · Library · Pricing.
 const softLaunchSrc = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
 assert.match(softLaunchSrc, /PRIMARY_NAV/);
 assert.match(softLaunchSrc, /href:\s*["']\/create["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/effects["']/);
+assert.match(softLaunchSrc, /href:\s*["']\/library["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
+{
+  const primaryBlock =
+    softLaunchSrc.match(
+      /PRIMARY_NAV\s*=\s*\[[\s\S]*?\]\s*as const/
+    )?.[0] || "";
+  const labels = [...primaryBlock.matchAll(/label:\s*"([^"]+)"/g)].map(
+    (match) => match[1]
+  );
+  assert.deepEqual(labels, [
+    "Explore",
+    "Recipes",
+    "Create",
+    "Library",
+    "Pricing",
+  ]);
+}
 // Cold-start: /create is a tool, not a rank landing — noindex,follow
 const createPageMeta = fs.readFileSync(
   join(root, "app/create/page.tsx"),
@@ -3976,9 +3998,7 @@ const appShellSrc = fs.readFileSync(
   "utf8"
 );
 assert.match(appShellSrc, /PRIMARY_NAV/);
-// More menu holds Preview/Lab tags for suite doors
-assert.match(appShellSrc, /tag:\s*["']Preview["']/);
-assert.match(appShellSrc, /tag:\s*["']Lab["']/);
+assert.doesNotMatch(appShellSrc, /MoreMenu|CreditsBadge|LanguageSwitcher/);
 // GA4 adapter is env-gated no-op when unset (reuse analyticsSrc declared above)
 assert.match(analyticsSrc, /NEXT_PUBLIC_GA_MEASUREMENT_ID/);
 assert.match(analyticsSrc, /landing_view|generate_start|export_click/);
@@ -4129,7 +4149,7 @@ function resolveGenerateStillPure(input) {
   assert.equal(fresh.assetId, "asset_cur");
 }
 
-// Mobile bottom nav: HF parity Home · Community · Generate · Library · Profile
+// Mobile mirrors Explore · Recipes · Create · Library · Pricing.
 assert.match(softLaunchSrc, /MOBILE_NAV/);
 assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/create["']/);
 assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/effects["']/);
@@ -4138,8 +4158,13 @@ assert.doesNotMatch(
   /MOBILE_NAV[\s\S]*href:\s*["']\/community["']/
 );
 assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/library["']/);
+assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/pricing["']/);
+assert.doesNotMatch(
+  softLaunchSrc,
+  /MOBILE_NAV[\s\S]*href:\s*["']\/profile["']/
+);
 assert.match(appShellSrc, /MOBILE_NAV/);
-assert.match(appShellSrc, /nav\.lab|nav\.modules|nav\.create|nav\.presets/);
+assert.match(appShellSrc, /item\.label/);
 assert.match(
   fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8"),
   /\/modules/
@@ -5598,14 +5623,14 @@ assert.match(
   fs.readFileSync(join(root, "components/Header.tsx"), "utf8"),
   /createRemixHref|data-header-cta=["']generate-remix["']/
 );
-// AppShell conversion CTAs (desktop header + mobile top) use the fixed Launch Pack.
+// AppShell keeps Create in the primary loop; Launch Pack is a later home upgrade.
 assert.match(
   fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
-  /SHELL_GENERATE_HREF|data-appshell-cta=["']launch-pack["']/
+  /href=["']\/create["']/
 );
-assert.match(
+assert.doesNotMatch(
   fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
-  /SHELL_GENERATE_HREF = ["']\/create\?mode=seller-pack["']/
+  /create\?mode=seller-pack/
 );
 // Pricing Full studio + Footer Product Generate carry remix contract
 assert.match(

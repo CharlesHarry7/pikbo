@@ -1,236 +1,77 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import {
-  hasFeedVideo,
-  type FeedItem,
-  type FeedVideoItem,
-} from "@/lib/videoFeed";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
-import { track } from "@/lib/analytics";
-import { useI18n } from "@/components/LanguageProvider";
-import { createRemixHref } from "@/lib/remixIntent";
+import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
 
-/**
- * Homepage first fold — video cinema (HF-style).
- * Multi-clip rotate for dwell; minimal copy; dual CTAs.
- */
-export function HomeCinemaHero({
-  items,
-}: {
-  /** Prefer 3–6 Lab showcase clips for rotation */
-  items: FeedItem[];
-}) {
-  const { t } = useI18n();
-  const clips: FeedVideoItem[] = items.filter(hasFeedVideo).slice(0, 6);
-  const [active, setActive] = useState(0);
-
-  useEffect(() => {
-    if (clips.length < 2) return;
-    if (typeof window === "undefined") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = window.setInterval(() => {
-      setActive((i) => (i + 1) % clips.length);
-    }, 7000);
-    return () => window.clearInterval(id);
-  }, [clips.length]);
-
-  // Prefetch generate surfaces for faster convert
-  useEffect(() => {
-    try {
-      void import("next/router").catch(() => undefined);
-    } catch {
-      /* App Router — use link prefetch only */
-    }
-    const link = document.createElement("link");
-    link.rel = "prefetch";
-    // Prefetch listing-spin remix (same contract as shell Generate CTAs)
-    link.href = createRemixHref("360-spin-showcase");
-    link.as = "document";
-    document.head.appendChild(link);
-    return () => {
-      link.remove();
-    };
-  }, []);
-
-  const item = clips[active] ?? clips[0];
-
-  if (!item?.demo) {
-    return (
-      <section className="flex min-h-[70svh] flex-col items-center justify-center bg-black px-4 text-center">
-        <h1 className="font-display text-4xl font-black uppercase tracking-tight text-white sm:text-6xl">
-          {t("home.cinema.h1a")}
-          <br />
-          {t("home.cinema.h1b")}
-        </h1>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <a
-            href="#home-create"
-            className="w-full rounded-full bg-[#c8ff3d] px-8 py-3.5 text-center text-sm font-black text-black sm:w-auto"
-          >
-            {t("home.cinema.ctaPrimary")}
-          </a>
-          <Link
-            href="/create?mode=seller-pack"
-            className="w-full rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-6 py-3.5 text-center text-sm font-bold text-[#c8ff3d] sm:w-auto"
-            data-cinema-cta="seller-pack"
-          >
-            Seller Starter Pack · 3 clips
-          </Link>
-          <a
-            href="#toy-wall"
-            className="rounded-full border border-white/25 px-6 py-3.5 text-sm font-bold text-white"
-          >
-            {t("home.cinema.ctaSecondary")}
-          </a>
-        </div>
-      </section>
-    );
-  }
+export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
+  const item = items.find(hasFeedVideo);
+  const recipeSlug = item?.recipeSlug ?? "floating-hero";
 
   return (
     <section
-      data-home-hero="cinema"
-      className="relative min-h-[min(92svh,920px)] overflow-hidden bg-black"
-      aria-label="Cinema hero"
+      data-home-hero="toy-cinema"
+      className="relative isolate min-h-[calc(100svh-3rem)] overflow-hidden bg-[#050506] lg:min-h-[calc(100svh-3.5rem)]"
+      aria-labelledby="home-hero-title"
     >
-      <div className="absolute inset-0">
-        {clips.map((c, i) => (
-          <div
-            key={c.id}
-            className={`absolute inset-0 transition-opacity duration-700 ${
-              i === active ? "z-[1] opacity-100" : "z-0 opacity-0"
-            }`}
-            aria-hidden={i !== active}
+      {item?.demo ? (
+        <div className="absolute inset-0">
+          <AutoPlayVideo
+            poster={item.demo.poster}
+            webm={item.demo.webm}
+            mp4={item.demo.mp4}
+            eager
+            showControls
+            focusable={false}
+            label={`${item.title} cached demo`}
+            className="h-full w-full object-cover object-center"
+          />
+        </div>
+      ) : null}
+
+      <div
+        className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.54)_48%,rgba(0,0,0,0.16)_78%),linear-gradient(0deg,rgba(0,0,0,0.72)_0%,transparent_46%,rgba(0,0,0,0.18)_100%)]"
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:64px_64px]"
+        aria-hidden
+      />
+
+      <div className="relative z-10 flex min-h-[calc(100svh-3rem)] max-w-7xl items-end px-5 pb-10 pt-24 sm:px-8 sm:pb-16 lg:min-h-[calc(100svh-3.5rem)] lg:px-12 lg:pb-20">
+        <div className="max-w-4xl">
+          <span className="inline-flex rounded-full border border-white/20 bg-black/45 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/76 backdrop-blur">
+            Cached demo
+          </span>
+          <h1
+            id="home-hero-title"
+            className="mt-5 max-w-4xl font-display text-[clamp(3rem,9vw,8.5rem)] font-black leading-[0.86] tracking-[-0.065em] text-white"
           >
-            {i === active || Math.abs(i - active) <= 1 ? (
-              <AutoPlayVideo
-                poster={c.demo.poster}
-                webm={c.demo.webm}
-                mp4={c.demo.mp4}
-                eager={i === active}
-                desktopPlayMode="viewport"
-                lazySources={i !== active}
-                focusable={false}
-                label={c.title}
-                showControls={i === active}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={c.demo.poster}
-                alt=""
-                className="h-full w-full object-cover"
-              />
-            )}
+            Bring your toy to life.
+          </h1>
+          <p className="mt-5 max-w-2xl text-base font-medium leading-relaxed text-white/72 sm:text-lg lg:text-xl">
+            Turn one designer-toy photo into cinematic videos, stories and
+            launch content.
+          </p>
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <a
+              href="#toy-wall"
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#c8ff3d] px-7 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-[#d5ff6b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Explore recipes
+            </a>
+            <Link
+              href={`/create?effect=${recipeSlug}`}
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/28 bg-black/36 px-7 text-sm font-bold text-white backdrop-blur transition hover:border-white/55 hover:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+              data-hero-recipe={recipeSlug}
+            >
+              Create with your toy
+            </Link>
           </div>
-        ))}
-        <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black via-black/40 to-black/20" />
-        <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-black/55 via-transparent to-black/20" />
+        </div>
       </div>
 
-      <div className="pointer-events-none relative z-[3] mx-auto flex min-h-[min(92svh,920px)] max-w-6xl flex-col justify-end px-4 pb-10 pt-24 sm:px-6 sm:pb-14 md:pb-16">
-        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#c8ff3d]/90">
-          {t("home.cinema.eyebrow")}
-        </p>
-        <h1 className="font-display mt-3 max-w-2xl text-4xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-6xl md:text-7xl">
-          {t("home.cinema.h1a")}
-          <br />
-          {t("home.cinema.h1b")}
-        </h1>
-        <p className="mt-3 max-w-md text-sm font-medium text-white/70 sm:text-base">
-          {item.title}
-          <span className="text-white/40"> · {t("home.cinema.lab")}</span>
-        </p>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          {item.badge ? (
-            <span className="rounded-full border border-white/15 bg-black/40 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/75">
-              {item.badge}
-            </span>
-          ) : null}
-        </div>
-
-        <div className="pointer-events-auto mt-7 flex flex-wrap items-center gap-3">
-          <a
-            href="#home-create"
-            className="inline-flex w-full items-center justify-center rounded-full bg-[#c8ff3d] px-8 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)] transition hover:brightness-110 sm:w-auto"
-          >
-            {t("home.cinema.ctaPrimary")}
-          </a>
-          <Link
-            href="/create?mode=seller-pack"
-            prefetch
-            className="inline-flex w-full items-center justify-center rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-3.5 text-sm font-bold text-[#c8ff3d] backdrop-blur-md transition hover:border-[#c8ff3d] hover:bg-[#c8ff3d]/15 sm:w-auto"
-            data-cinema-cta="seller-pack"
-          >
-            Seller Starter Pack · 3 clips
-          </Link>
-          <a
-            href="#toy-wall"
-            className="inline-flex items-center justify-center rounded-full border border-white/25 bg-black/45 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-white/50"
-          >
-            {t("home.cinema.ctaSecondary")}
-          </a>
-          <Link
-            href={
-              item.recipeSlug
-                ? createRemixHref(item.recipeSlug)
-                : item.href
-            }
-            prefetch
-            onClick={() =>
-              track({
-                event: "recipe_use",
-                path: "/",
-                recipe: item.recipeSlug,
-                meta: { source: "hero_remake" },
-              })
-            }
-            className="text-xs font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline sm:text-sm"
-            data-cinema-cta="remake"
-          >
-            {t("home.cinema.remake")}
-          </Link>
-        </div>
-
-        {clips.length > 1 ? (
-          <div
-            className="pointer-events-auto mt-6 flex flex-wrap items-center gap-2"
-            role="tablist"
-            aria-label="Hero clips"
-          >
-            {clips.map((c, i) => (
-              <button
-                key={c.id}
-                type="button"
-                role="tab"
-                aria-selected={i === active}
-                onClick={() => setActive(i)}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === active
-                    ? "w-8 bg-[#c8ff3d]"
-                    : "w-3 bg-white/30 hover:bg-white/50"
-                }`}
-                title={c.title}
-              />
-            ))}
-            <span className="ml-1 text-[10px] font-semibold uppercase tracking-wide text-white/35">
-              {active + 1}/{clips.length}
-            </span>
-          </div>
-        ) : null}
-
-        <a
-          href="#toy-wall"
-          className="pointer-events-auto mt-8 inline-flex w-fit items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/40 transition hover:text-white/70"
-        >
-          {t("home.cinema.scroll")}
-          <span aria-hidden className="animate-bounce">
-            ↓
-          </span>
-        </a>
+      <div className="absolute bottom-6 right-5 z-10 hidden text-right text-[10px] font-bold uppercase tracking-[0.16em] text-white/44 sm:block">
+        <p>{item?.title ?? "Toy Recipe"}</p>
+        <p className="mt-1 text-white/28">{item?.subtitle ?? "Pikbo Lab"}</p>
       </div>
     </section>
   );
