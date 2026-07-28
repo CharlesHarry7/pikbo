@@ -372,6 +372,11 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     client,
     /no second generation was started|no second provider job/
   );
+  assert.doesNotMatch(
+    client,
+    /waitForPrimaryAfterRecovery|setTimeout\(\(\) => resolve\(null\), 15_000\)/,
+    "a non-authoritative recovery timeout must not abort the original POST"
+  );
 
   const create = read("components/CreateStudio.tsx");
   assert.match(create, /recoveringSavedResult/);
@@ -428,7 +433,6 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     abortRecovery: () => {
       recoveryAborts += 1;
     },
-    waitForPrimaryAfterRecovery: async (_recoveryResult, primary) => primary,
   });
   unavailableRecovery.resolve({
     ok: false,
@@ -446,6 +450,61 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.equal(primaryAborts, 0);
   assert.equal(recoveryAborts, 0);
 
+  for (const recoveryMiss of [
+    {
+      ok: false,
+      status: 0,
+      code: "NETWORK_ERROR",
+    },
+    {
+      ok: false,
+      status: 404,
+      code: "NETWORK_ERROR",
+    },
+    {
+      ok: false,
+      status: 503,
+      code: "DELIVERY_PIPELINE_UNAVAILABLE",
+    },
+    {
+      ok: false,
+      status: 401,
+      code: "AUTH_REQUIRED",
+    },
+    {
+      ok: false,
+      status: 409,
+      code: "REQUEST_CANCELED",
+      creditsRefunded: false,
+    },
+  ]) {
+    const authoritativePrimary = deferred();
+    const nonAuthoritativeRecovery = deferred();
+    primaryAborts = 0;
+    recoveryAborts = 0;
+    const guardedRace = raceGenerateWithDurableRecovery({
+      primary: authoritativePrimary.promise,
+      recovery: nonAuthoritativeRecovery.promise,
+      abortPrimary: () => {
+        primaryAborts += 1;
+      },
+      abortRecovery: () => {
+        recoveryAborts += 1;
+      },
+    });
+    nonAuthoritativeRecovery.resolve(recoveryMiss);
+    await Promise.resolve();
+    assert.equal(
+      primaryAborts,
+      0,
+      `${recoveryMiss.status}/${recoveryMiss.code} must not abort the live POST`
+    );
+    authoritativePrimary.resolve({ ok: true, status: 200 });
+    assert.deepEqual(await guardedRace, { ok: true, status: 200 });
+    assert.equal(primaryAborts, 0);
+    assert.equal(recoveryAborts, 0);
+  }
+
   const slowPrimary = deferred();
   const savedRecovery = deferred();
   primaryAborts = 0;
@@ -458,7 +517,6 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     abortRecovery: () => {
       recoveryAborts += 1;
     },
-    waitForPrimaryAfterRecovery: async (recoveryResult) => recoveryResult,
   });
   savedRecovery.resolve({ ok: true, status: 200 });
   assert.deepEqual(await recovered, { ok: true, status: 200 });

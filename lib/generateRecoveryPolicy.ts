@@ -35,10 +35,6 @@ export async function raceGenerateWithDurableRecovery<
   recovery: Promise<T>;
   abortPrimary: () => void;
   abortRecovery: () => void;
-  waitForPrimaryAfterRecovery: (
-    recoveryResult: T,
-    primary: Promise<T>
-  ) => Promise<T>;
 }): Promise<T> {
   const first = await Promise.race([
     input.primary.then((result) => ({
@@ -67,6 +63,8 @@ export async function raceGenerateWithDurableRecovery<
   }
 
   // A missing/unavailable recovery read says nothing about the live POST.
-  // Give the original response the remaining window and never abort it here.
-  return input.waitForPrimaryAfterRecovery(first.result, input.primary);
+  // Only an explicit caller abort or authoritative durable terminal state may
+  // end it. Waiting longer is safer than converting a healthy provider job
+  // into an ambiguous cancel/refund state.
+  return input.primary;
 }
