@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { CREDITS_PER_VIDEO, getPlan } from "@/lib/pricing";
-import { generateMode } from "@/lib/requestMeta";
 import { ensureSession, publicSession } from "@/lib/session";
 import {
   durableCreditsActive,
@@ -8,6 +7,8 @@ import {
 } from "@/lib/durableCredits";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { evaluateAccountLiveCapability } from "@/lib/liveCapability";
+import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
 
 export const runtime = "nodejs";
 
@@ -17,20 +18,15 @@ export const runtime = "nodejs";
  */
 export async function HEAD() {
   const session = await ensureSession();
-  const mode = generateMode();
-  const clipsLeft = Math.floor(session.credits / CREDITS_PER_VIDEO);
   return new NextResponse(null, {
     status: 200,
     headers: {
       "Cache-Control": "no-store",
       "X-Pikbo-Plan": session.plan,
-      "X-Pikbo-Credits": String(session.credits),
-      "X-Pikbo-Clips-Left": String(clipsLeft),
-      "X-Pikbo-Mode": mode,
-      "X-Pikbo-Free-Trial-Exhausted":
-        session.plan === "free" && session.credits < CREDITS_PER_VIDEO
-          ? "1"
-          : "0",
+      "X-Pikbo-Credits": "0",
+      "X-Pikbo-Clips-Left": "0",
+      "X-Pikbo-Mode": "demo-cached",
+      "X-Pikbo-Can-Live-Generate": "0",
     },
   });
 }
@@ -43,12 +39,18 @@ export async function HEAD() {
  */
 export async function GET(req: Request) {
   const session = await ensureSession();
-  const mode = generateMode();
   const plan = getPlan(session.plan);
-  const clipsLeft = Math.floor(session.credits / CREDITS_PER_VIDEO);
+  const [user, liveReadiness] = await Promise.all([
+    getAuthUserFromRequest(req),
+    probeSoftLiveReadiness(),
+  ]);
+  const softLiveReady = liveReadiness.truth.softLive;
   const base = {
     ...publicSession(session),
-    mode,
+    // Root credits are account/display credits. Anonymous cookie allowance is
+    // represented only by freeTrial.exhausted and never looks spendable.
+    credits: 0,
+    mode: "demo-cached" as const,
     /** Cached demos never charge; live jobs use flat CREDITS_PER_VIDEO */
     cachedDemoFree: true,
     liveJobCredits: CREDITS_PER_VIDEO,
@@ -67,8 +69,10 @@ export async function GET(req: Request) {
     freeTrial: {
       planId: session.plan,
       isFreePlan: session.plan === "free",
-      credits: session.credits,
-      clipsLeft,
+      // Cookie credits are not provider authority. Account capability below
+      // replaces these only when a signed-in durable wallet may generate.
+      credits: 0,
+      clipsLeft: 0,
       liveJobCredits: CREDITS_PER_VIDEO,
       watermark: plan.watermark,
       cachedDemoFree: true,
@@ -91,7 +95,9 @@ export async function GET(req: Request) {
               liveEnabled: false as const,
             }
           : null,
-      exhausted: session.plan === "free" && session.credits < CREDITS_PER_VIDEO,
+      // Eligibility usage is separate from current live availability.
+      exhausted:
+        session.plan === "free" && session.credits < CREDITS_PER_VIDEO,
       /**
        * Free Mini trial is video Create only — /api/image returns labeled demo
        * (0 credits) so stills never burn the 10-credit trial.
@@ -103,12 +109,13 @@ export async function GET(req: Request) {
     },
     authConfigured: isSupabaseConfigured(),
     durableCreditsActive: durableCreditsActive(),
+    softLiveReady,
   };
 
-  const user = await getAuthUserFromRequest(req);
   if (!user) {
     return NextResponse.json({
       ...base,
+      canLiveGenerate: false,
       signedIn: false,
       auth: null,
       durable: null,
@@ -127,9 +134,46 @@ export async function GET(req: Request) {
   } catch {
     durable = null;
   }
+  // /api/generate currently keeps Free provider delivery closed until the
+  // protected server-owned derivative is verified. Keep account UI identical.
+  const freeDeliveryReady = false;
+  const capability = evaluateAccountLiveCapability({
+    softLiveReady,
+    signedIn: true,
+    durableCreditsActive: base.durableCreditsActive,
+    planId: durable?.planId ?? session.plan,
+    availableCredits: durable?.availableCredits ?? null,
+    liveJobCredits: CREDITS_PER_VIDEO,
+    freeDeliveryReady,
+  });
+  const liveCredits = capability.canLiveGenerate
+    ? Math.max(0, durable?.availableCredits ?? 0)
+    : 0;
 
   return NextResponse.json({
     ...base,
+    credits: Math.max(0, durable?.availableCredits ?? 0),
+    mode: capability.canLiveGenerate
+      ? ("live-generate" as const)
+      : ("demo-cached" as const),
+    canLiveGenerate: capability.canLiveGenerate,
+    freeTrial: {
+      ...base.freeTrial,
+      credits: liveCredits,
+      clipsLeft: Math.floor(liveCredits / CREDITS_PER_VIDEO),
+      freeLive:
+        session.plan === "free"
+          ? {
+              modelClass: "seedance-mini" as const,
+              durationSec: 5,
+              resolution: "480p" as const,
+              onPlayerMark: true,
+              liveEnabled: capability.canLiveGenerate,
+            }
+          : null,
+      exhausted:
+        base.freeTrial.exhausted,
+    },
     signedIn: true,
     auth: {
       id: user.id,

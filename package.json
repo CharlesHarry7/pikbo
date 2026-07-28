@@ -14,6 +14,7 @@
     "engine-smoke": "node scripts/engine-smoke.mjs",
     "product-proof-smoke": "node scripts/product-proof-smoke.mjs",
     "mobile-proof-regression": "node scripts/mobile-proof-regression.mjs",
+    "capability-matrix": "node --experimental-strip-types scripts/capability-matrix-regression.mjs",
     "showcase-evidence-smoke": "node scripts/showcase-evidence-smoke.mjs",
     "showcase-promotion-gate": "node scripts/showcase-promotion-gate.mjs",
     "live-copy-smoke": "node scripts/live-capability-copy-smoke.mjs",

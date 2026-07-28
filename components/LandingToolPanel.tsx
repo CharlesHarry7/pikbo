@@ -8,9 +8,10 @@ import {
 } from "@/lib/generateClient";
 import { downloadVideoFile, pushHistory } from "@/lib/history";
 import {
+  canLiveGenerate,
   fetchMe,
   freeTrialExhausted,
-  isDemoMode,
+  generationDisplayCredits,
   mergeMeSession,
   type MeResponse,
 } from "@/lib/meClient";
@@ -111,7 +112,8 @@ export function LandingToolPanel({
     session?.freeTrial?.isFreePlan === true;
   // Fail closed while /api/me is loading or unavailable. Public landing tools
   // must never flash a paid-provider promise before capability is known.
-  const demoMode = !session || isDemoMode(session);
+  const demoMode = !canLiveGenerate(session);
+  const liveCredits = generationDisplayCredits(session);
   const freeLive = session?.freeTrial?.freeLive;
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
@@ -494,7 +496,7 @@ export function LandingToolPanel({
           {session && (
             <div className="text-right text-xs">
               <p className="font-semibold text-[var(--mint)]">
-                {session.credits} credits
+                {liveCredits} credits
               </p>
               <p
                 className={
@@ -507,7 +509,7 @@ export function LandingToolPanel({
                     ? `trial used · ${session.planName}`
                     : clipsLeft !== null
                       ? `~${clipsLeft} live left · ${session.planName}`
-                      : `≈ ${Math.floor(session.credits / CREDITS_PER_VIDEO)}-job · ${session.planName}`}
+                      : `≈ ${Math.floor(liveCredits / CREDITS_PER_VIDEO)}-job · ${session.planName}`}
               </p>
             </div>
           )}
