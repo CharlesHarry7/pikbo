@@ -109,7 +109,6 @@ begin
     return jsonb_build_object('ok', false, 'code', 'DURABLE_WALLET_NOT_FOUND');
   end if;
   if v_account.status <> 'active'
-     or v_account.plan_id = 'free'
      or not v_account.live_generation_allowed then
     return jsonb_build_object('ok', false, 'code', 'LIVE_ACCESS_REQUIRED');
   end if;

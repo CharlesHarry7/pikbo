@@ -22,7 +22,7 @@ export type StrictLiveReservation = {
   credits: number;
   status: "reserved";
   providerAuthorized: true;
-  planId: Exclude<PlanId, "free">;
+  planId: PlanId;
   idempotencyKey: string;
   expiresAt: string;
 };

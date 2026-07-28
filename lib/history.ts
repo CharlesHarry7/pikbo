@@ -198,6 +198,21 @@ export function clearHistory(): void {
   }
 }
 
+/** Bearer headers for owner-gated private result metadata/download routes. */
+export async function privateDownloadHeaders(): Promise<Record<string, string>> {
+  if (typeof window === "undefined") return {};
+  try {
+    const { getSupabaseBrowser } = await import("@/lib/supabase/browser");
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return {};
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+}
+
 /**
  * Merge exported library JSON into local history (dedupe by id / videoUrl).
  * Returns new list length, or -1 on parse failure.
@@ -263,9 +278,13 @@ export async function downloadVideoFile(
   // Track HEAD allow so CORS/network on the redirect target can still open the
   // gate tab (browser follows 302 to video) without dumping error JSON.
   let gateHeadAllowed = false;
+  const authHeaders = isGate ? await privateDownloadHeaders() : {};
   if (isGate) {
     try {
-      const head = await fetch(url, { method: "HEAD" });
+      const head = await fetch(url, {
+        method: "HEAD",
+        headers: authHeaders,
+      });
       const gate = classifyDownloadHead({
         status: head.status,
         code: head.headers.get("X-Pikbo-Download-Code") || "",
@@ -287,7 +306,11 @@ export async function downloadVideoFile(
   const timer = window.setTimeout(() => ctrl.abort(), 45_000);
   try {
     // Relative /demos/... works same-origin; absolute fal needs CORS.
-    const res = await fetch(url, { mode: "cors", signal: ctrl.signal });
+    const res = await fetch(url, {
+      mode: "cors",
+      signal: ctrl.signal,
+      headers: authHeaders,
+    });
     // Hard HTTP fail on gate = JSON error body — never open as a tab.
     if (!res.ok) {
       if (isGate) return "blocked";

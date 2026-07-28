@@ -52,6 +52,8 @@ export type GenerateSuccess = {
   session: PublicSession;
   /** present on live fal jobs (provider id); may equal jobId on demo */
   requestId?: string;
+  /** Upstream request evidence. Never use this value as a download address. */
+  providerRequestId?: string;
   /**
    * Process-memory ledger id (Phase D). Prefer for cancel/poll/download when
    * distinct from provider requestId.
@@ -87,6 +89,8 @@ export type GenerateSuccess = {
   /** Present when a client upload was ignored because access stayed cached. */
   uploadIgnored?: boolean;
   uploadIgnoredReason?: string;
+  /** True only for an authenticated Preview result saved in Pikbo-owned storage. */
+  privateResult?: boolean;
 };
 
 export type GenerateErrorBody = {

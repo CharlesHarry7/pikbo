@@ -28,6 +28,10 @@ import {
   parsePrivateLiveAllowlist,
   privateLiveBudget,
 } from "../lib/privateLiveBeta.mjs";
+import {
+  privateResultObjectKey,
+  providerOutputHostAllowed,
+} from "../lib/privateGenerationResultsPure.mjs";
 
 const root = process.cwd();
 const read = (rel) => readFileSync(join(root, rel), "utf8");
@@ -253,6 +257,13 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(gen, /uploadIgnored/);
   assert.match(gen, /image_url:\s*imageUrl/);
   assert.match(gen, /customerFacingGenerateVideoUrl/);
+  assert.match(gen, /savePrivateGenerationResult/);
+  assert.match(gen, /saved\.signedUrl/);
+  assert.ok(
+    gen.indexOf("savePrivateGenerationResult({") <
+      gen.indexOf("reservationLife.settle("),
+    "private object must be saved before credit capture"
+  );
   assert.match(gen, /demo:\s*false/);
   assert.doesNotMatch(
     gen,
@@ -260,8 +271,58 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   );
   const health = read("app/api/health/route.ts");
   assert.match(health, /privateLiveBeta/);
+  assert.match(health, /privateResults/);
+}
+
+// ─── 11. Private owned-object + owner download contract ───────────────────
+
+{
+  const userId = "11111111-1111-4111-8111-111111111111";
+  const jobId = "22222222-2222-4222-8222-222222222222";
+  assert.equal(
+    privateResultObjectKey({ userId, jobId }),
+    `private-results/${userId}/${jobId}.mp4`
+  );
+  assert.equal(
+    providerOutputHostAllowed(
+      "https://v3b.fal.media/files/private/result.mp4",
+      ["fal.media"]
+    ),
+    true
+  );
+  assert.equal(
+    providerOutputHostAllowed(
+      "https://attacker.example/result.mp4",
+      ["fal.media"]
+    ),
+    false
+  );
+  assert.equal(
+    providerOutputHostAllowed("http://fal.media/result.mp4", ["fal.media"]),
+    false
+  );
+
+  const migration = read(
+    "supabase/migrations/20260728233000_p0_private_generation_results.sql"
+  );
+  assert.match(migration, /pikbo-private-results/);
+  assert.match(migration, /pikbo_attach_private_generation_output_v1/);
+  assert.match(migration, /output_object_key/);
+  assert.match(migration, /set public = false/);
+  const atomic = read(
+    "supabase/migrations/20260727213000_r1_atomic_generation_credits.sql"
+  );
+  assert.doesNotMatch(
+    atomic,
+    /v_account\.plan_id\s*=\s*'free'/,
+    "explicit live_generation_allowed is the private Preview entitlement"
+  );
+  const downloads = read("app/api/downloads/[id]/route.ts");
+  assert.match(downloads, /getAuthUserFromRequest/);
+  assert.match(downloads, /getPrivateGenerationResult/);
+  assert.match(downloads, /signedPrivateResultUrl/);
 }
 
 console.log(
-  "p0-private-live-generation: PASS (R0 · private invite/budget · upload honesty · provider input = upload · no Free raw URL · fail honesty · prereq checklist · route wire)"
+  "p0-private-live-generation: PASS (R0 · owned upload provider input · private Supabase object before capture · owner download · no raw provider URL · refund honesty)"
 );

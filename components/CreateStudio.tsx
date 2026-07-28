@@ -7,7 +7,11 @@ import {
   historyFieldsFromSuccess,
   postGenerateWithRetry,
 } from "@/lib/generateClient";
-import { downloadVideoFile, pushHistory } from "@/lib/history";
+import {
+  downloadVideoFile,
+  privateDownloadHeaders,
+  pushHistory,
+} from "@/lib/history";
 import {
   fetchMe,
   freeTrialExhausted,
@@ -1207,7 +1211,10 @@ export function CreateStudio({
     if (requestId) {
       const gateUrl = `/api/downloads/${encodeURIComponent(requestId)}`;
       try {
-        const head = await fetch(gateUrl, { method: "HEAD" });
+        const head = await fetch(gateUrl, {
+          method: "HEAD",
+          headers: await privateDownloadHeaders(),
+        });
         const decision = classifyDownloadHead({
           status: head.status,
           code: head.headers.get("X-Pikbo-Download-Code") || "",
