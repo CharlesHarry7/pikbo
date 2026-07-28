@@ -321,7 +321,10 @@ export async function POST(req: Request) {
         error:
           "Retry requires an exact child job id, its one-time token, and a new idempotency key",
         code: "RETRY_TOKEN_INVALID",
-        session: publicCachedSession(session),
+        session:
+          access.kind === "cached"
+            ? publicCachedSession(session)
+            : publicSession(session),
       },
       400
     );
