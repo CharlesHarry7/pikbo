@@ -279,7 +279,7 @@ export async function cancelGenerateLedger(opts: {
 
 export async function postGenerate(
   body: GenerateRequestBody,
-  init?: { signal?: AbortSignal }
+  init?: { signal?: AbortSignal; cancelLedgerOnAbort?: boolean }
 ): Promise<GenerateResult> {
   try {
     const headers = await generateAuthHeaders();
@@ -302,7 +302,11 @@ export async function postGenerate(
       (typeof DOMException !== "undefined" &&
         e instanceof DOMException &&
         e.name === "AbortError");
-    if (aborted && body.idempotencyKey) {
+    if (
+      aborted &&
+      body.idempotencyKey &&
+      init?.cancelLedgerOnAbort !== false
+    ) {
       void cancelGenerateLedger({ idempotencyKey: body.idempotencyKey });
     }
     return {
@@ -320,6 +324,181 @@ export async function postGenerate(
       paywall: false,
     };
   }
+}
+
+export type GenerateRecoveryState = "checking" | "waiting" | "recovered";
+
+async function pollDurableGenerateRecovery(
+  idempotencyKey: string,
+  opts?: {
+    signal?: AbortSignal;
+    onState?: (state: GenerateRecoveryState) => void;
+    startAfterMs?: number;
+    pollEveryMs?: number;
+    maxWaitMs?: number;
+  }
+): Promise<GenerateResult> {
+  const startedAt = Date.now();
+  const startAfterMs = Math.max(0, opts?.startAfterMs ?? 12_000);
+  const pollEveryMs = Math.max(250, opts?.pollEveryMs ?? 5_000);
+  const maxWaitMs = Math.max(
+    startAfterMs + pollEveryMs,
+    opts?.maxWaitMs ?? 185_000
+  );
+  let notFoundReads = 0;
+  let networkFailures = 0;
+
+  try {
+    await sleep(startAfterMs, opts?.signal);
+    opts?.onState?.("checking");
+    while (Date.now() - startedAt < maxWaitMs) {
+      try {
+        const headers = await generateAuthHeaders();
+        const res = await fetch(
+          `/api/generations/recover?idempotencyKey=${encodeURIComponent(idempotencyKey)}`,
+          {
+            method: "GET",
+            headers,
+            cache: "no-store",
+            signal: opts?.signal,
+          }
+        );
+        const raw = (await res.json().catch(() => ({}))) as {
+          recoveryState?: string;
+        };
+        if (res.status === 200) {
+          const recovered = interpretGenerateResponse(res.status, raw);
+          if (recovered.ok) opts?.onState?.("recovered");
+          return recovered;
+        }
+        if (res.status === 202 && raw.recoveryState === "pending") {
+          notFoundReads = 0;
+          networkFailures = 0;
+          opts?.onState?.("waiting");
+        } else if (res.status === 404 && raw.recoveryState === "not_found") {
+          notFoundReads += 1;
+          // If the POST never reached Pikbo, do not make the user stare at an
+          // empty poll for the full provider window.
+          if (notFoundReads >= 4) {
+            return {
+              ok: false,
+              status: 0,
+              code: "NETWORK_ERROR",
+              error:
+                "Pikbo could not find this submitted attempt. Check your connection and try again; no second generation was started.",
+              refundUnconfirmed: true,
+              fatal: false,
+              paywall: false,
+            };
+          }
+        } else if (res.status === 409 || res.status === 400 || res.status === 401) {
+          return interpretGenerateResponse(res.status, raw);
+        } else {
+          networkFailures += 1;
+        }
+      } catch (error) {
+        const aborted =
+          (error instanceof Error && error.name === "AbortError") ||
+          (typeof DOMException !== "undefined" &&
+            error instanceof DOMException &&
+            error.name === "AbortError");
+        if (aborted) throw error;
+        networkFailures += 1;
+      }
+      if (networkFailures >= 4) {
+        return {
+          ok: false,
+          status: 0,
+          code: "NETWORK_ERROR",
+          error:
+            "Pikbo lost contact while checking the saved result. Refresh Library before starting another generation.",
+          refundUnconfirmed: true,
+          fatal: false,
+          paywall: false,
+        };
+      }
+      await sleep(pollEveryMs, opts?.signal);
+    }
+  } catch (error) {
+    const aborted =
+      (error instanceof Error && error.name === "AbortError") ||
+      (typeof DOMException !== "undefined" &&
+        error instanceof DOMException &&
+        error.name === "AbortError");
+    if (aborted) {
+      return {
+        ok: false,
+        status: 0,
+        code: "REQUEST_CANCELED",
+        error:
+          "Request canceled — if credits were debited, check balance or retry (refund unconfirmed until server confirms)",
+        refundUnconfirmed: true,
+        fatal: false,
+        paywall: false,
+      };
+    }
+  }
+  return {
+    ok: false,
+    status: 0,
+    code: "NETWORK_ERROR",
+    error:
+      "The render is still unresolved. Refresh Library before retrying so a completed private result is not generated twice.",
+    refundUnconfirmed: true,
+    fatal: false,
+    paywall: false,
+  };
+}
+
+/**
+ * Race the normal response against owner-only durable truth. A recovery read
+ * never calls /api/generate, so a slow or disconnected response cannot create
+ * a second provider job or a second debit.
+ */
+async function postGenerateRecoverable(
+  body: GenerateRequestBody,
+  opts?: {
+    signal?: AbortSignal;
+    onRecoveryState?: (state: GenerateRecoveryState) => void;
+  }
+): Promise<GenerateResult> {
+  const primaryController = new AbortController();
+  const recoveryController = new AbortController();
+  const cancelForUser = () => {
+    primaryController.abort();
+    recoveryController.abort();
+    void cancelGenerateLedger({ idempotencyKey: body.idempotencyKey });
+  };
+  if (opts?.signal?.aborted) cancelForUser();
+  else opts?.signal?.addEventListener("abort", cancelForUser, { once: true });
+
+  const primary = postGenerate(body, {
+    signal: primaryController.signal,
+    // The shared controller also aborts the losing fetch after a durable
+    // recovery. Only an explicit caller abort may cancel the ledger.
+    cancelLedgerOnAbort: false,
+  });
+  const recovery = pollDurableGenerateRecovery(body.idempotencyKey!, {
+    signal: recoveryController.signal,
+    onState: opts?.onRecoveryState,
+  });
+  const first = await Promise.race([
+    primary.then((result) => ({ source: "primary" as const, result })),
+    recovery.then((result) => ({ source: "recovery" as const, result })),
+  ]);
+  if (
+    first.source === "primary" &&
+    !first.result.ok &&
+    first.result.code === "NETWORK_ERROR"
+  ) {
+    const recovered = await recovery;
+    opts?.signal?.removeEventListener("abort", cancelForUser);
+    return recovered;
+  }
+  if (first.source === "primary") recoveryController.abort();
+  else primaryController.abort();
+  opts?.signal?.removeEventListener("abort", cancelForUser);
+  return first.result;
 }
 
 /** Map a success payload into library history fields. */
@@ -553,6 +732,7 @@ export function mintGenerateIdempotencyKey(): string {
  * - one ASSET_NOT_FOUND recovery: drop expired assetId and re-POST inline still
  *   (Phase D local assets TTL ~15m / process restart — Seller Pack mid-queue)
  * - stable idempotencyKey for the whole attempt (network retry = no double debit)
+ * - owner-only durable polling if the POST stays open after the private result saved
  * - never auto-retry TIMEOUT (ledger kill) — client must mint a new key
  */
 export async function postGenerateWithRetry(
@@ -560,6 +740,7 @@ export async function postGenerateWithRetry(
   opts?: {
     maxRetries?: number;
     signal?: AbortSignal;
+    onRecoveryState?: (state: GenerateRecoveryState) => void;
     /**
      * Local data URL for the still. Used only when the server returns
      * ASSET_NOT_FOUND for body.assetId (never re-debits on the failed attempt).
@@ -575,7 +756,10 @@ export async function postGenerateWithRetry(
       : mintGenerateIdempotencyKey();
   const keyed: GenerateRequestBody = { ...body, idempotencyKey };
   let attempt = 0;
-  let result = await postGenerate(keyed, { signal: opts?.signal });
+  let result = await postGenerateRecoverable(keyed, {
+    signal: opts?.signal,
+    onRecoveryState: opts?.onRecoveryState,
+  });
   while (
     !result.ok &&
     attempt < maxRetries &&
@@ -618,7 +802,10 @@ export async function postGenerateWithRetry(
       }
       throw e;
     }
-    result = await postGenerate(keyed, { signal: opts?.signal });
+    result = await postGenerateRecoverable(keyed, {
+      signal: opts?.signal,
+      onRecoveryState: opts?.onRecoveryState,
+    });
   }
 
   // Asset registry miss: re-post with inline still once (no second rate-limit loop).
@@ -632,9 +819,12 @@ export async function postGenerateWithRetry(
     fallback.startsWith("data:image") &&
     fallback.length >= 32
   ) {
-    const recovered = await postGenerate(
+    const recovered = await postGenerateRecoverable(
       { ...keyed, assetId: undefined, image: fallback },
-      { signal: opts?.signal }
+      {
+        signal: opts?.signal,
+        onRecoveryState: opts?.onRecoveryState,
+      }
     );
     if (recovered.ok) {
       return { ...recovered, recoveredFromAssetMiss: true };

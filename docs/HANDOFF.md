@@ -2048,3 +2048,33 @@ Newest first. One block per meaningful landing.
   fail-closed critical path.
 - Safety: no provider key, paid call, database, Stripe, deployment, DNS or public
   indexing action. T5/T6 and public Mode A/B readiness remain fail-closed.
+
+### 2026-07-28 — [gpt] P0 durable slow-response recovery
+
+- Outcome: an authenticated private generation no longer depends on the
+  original `/api/generate` response closing. After 12 seconds the Create client
+  follows the same durable idempotency key through the owner-only
+  `/api/generations/recover` route and can return the already-saved result.
+- Safety: recovery is GET-only and filters by `created_by` plus
+  `idempotency_key`; it never reserves credits, calls Seedance, exposes an
+  object key/raw provider URL, or creates a second job. Explicit user cancel is
+  still the only recovery-race path that requests a ledger cancel.
+- User truth: the wait surface says Pikbo is tracking the same private task and
+  that no second provider call or charge is made. Durable failed jobs return a
+  clear failure with confirmed released credits; incomplete or withheld output
+  stays unavailable.
+- Paths: `app/api/generations/recover/route.ts`,
+  `lib/privateGenerationResults.ts`, `lib/generateClient.ts`,
+  `components/CreateStudio.tsx`, `components/GenerateWaitStage.tsx`,
+  `scripts/p0-private-live-generation.mjs`.
+- Verification: P0 private-live, engine, recovery QA/ledger/retry/reconciliation,
+  R0 safety-net, product proof, mobile regression, TypeScript and ESLint all
+  pass. Next 16.2.11 webpack production build passes with 194 routes, including
+  dynamic `/api/generations/recover`. Turbopack and local HTTP startup cannot
+  bind their helper/server ports in this sandbox, so runtime browser proof
+  remains for Vercel Preview/WorkBuddy.
+- External state: no paid provider call, Supabase mutation, Stripe, DNS, public
+  deployment, indexing request or social publishing was performed. The local
+  commit is ready, but this sandbox cannot resolve GitHub and the connected
+  GitHub write was canceled, so PR #56 and its Vercel Preview still point to
+  the preceding remote head until the commit can be pushed.

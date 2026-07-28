@@ -30,6 +30,26 @@ export type PrivateGenerationResult = {
   createdAt: string;
 };
 
+export type PrivateGenerationRecovery =
+  | {
+      state: "not_found";
+    }
+  | {
+      state: "pending";
+      jobId: string;
+      status: "queued" | "running" | "unknown";
+    }
+  | {
+      state: "failed";
+      jobId: string;
+      status: "failed" | "canceled";
+      errorCode?: string;
+    }
+  | {
+      state: "succeeded";
+      result: PrivateGenerationResult;
+    };
+
 type SaveInput = {
   jobId: string;
   userId: string;
@@ -140,6 +160,56 @@ export async function getPrivateGenerationResultByIdempotency(input: {
     .maybeSingle();
   if (error || !data) return null;
   return resultFromRow(data as unknown as Record<string, unknown>);
+}
+
+/**
+ * Owner-scoped durable truth for recovering a live render when the original
+ * browser POST disconnects or never closes. This is read-only and can never
+ * reserve credits or invoke the provider.
+ */
+export async function getPrivateGenerationRecovery(input: {
+  idempotencyKey: string;
+  userId: string;
+}): Promise<PrivateGenerationRecovery> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return { state: "not_found" };
+  const { data, error } = await admin
+    .from("generation_jobs")
+    .select(`${RESULT_COLUMNS},error_code`)
+    .eq("created_by", input.userId)
+    .eq("idempotency_key", input.idempotencyKey)
+    .maybeSingle();
+  if (error || !data) return { state: "not_found" };
+
+  const row = data as unknown as Record<string, unknown>;
+  const jobId = typeof row.id === "string" ? row.id : "";
+  const status = typeof row.status === "string" ? row.status : "unknown";
+  if (!jobId) return { state: "not_found" };
+
+  if (status === "succeeded") {
+    const result = resultFromRow(row);
+    // A succeeded credit row without its owned output is not deliverable.
+    // Keep polling/reconciliation fail-closed instead of exposing a raw URL.
+    return result
+      ? { state: "succeeded", result }
+      : { state: "pending", jobId, status: "unknown" };
+  }
+  if (status === "failed" || status === "canceled") {
+    return {
+      state: "failed",
+      jobId,
+      status,
+      ...(typeof row.error_code === "string" && row.error_code
+        ? { errorCode: row.error_code }
+        : {}),
+    };
+  }
+  return {
+    state: "pending",
+    jobId,
+    status:
+      status === "queued" || status === "running" ? status : "unknown",
+  };
 }
 
 /**
