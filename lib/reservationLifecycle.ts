@@ -48,13 +48,14 @@ export type ReservationLifecycle = {
     availableCredits?: number;
   }>;
   /**
-   * Settle once while reserved. On success phase becomes `settled`.
-   * On failure phase stays `reserved` so a later release may still run.
+   * Settle once while reserved. On success → `settled`.
+   * On capture fail or throw → auto-`withheld` (never release).
    */
   settle: (providerRequestId: string) => Promise<{
     ok: boolean;
     skipped: boolean;
     availableCredits?: number;
+    error?: string;
   }>;
   /**
    * Mark as withheld (capture ambiguous). Safety-net must not release.
@@ -145,28 +146,47 @@ export function createReservationLifecycle(backends: {
       if (phase === "settled") {
         return { ok: true, skipped: true };
       }
+      if (phase === "withheld") {
+        return { ok: false, skipped: true };
+      }
       if (phase !== "reserved" || !current) {
         return { ok: false, skipped: true };
       }
       settleCalls += 1;
       const target = current;
-      const result = await backends.settle(target, providerRequestId);
-      if (result.ok) {
-        phase = "settled";
+      try {
+        const result = await backends.settle(target, providerRequestId);
+        if (result.ok) {
+          phase = "settled";
+          current = null;
+          return {
+            ok: true,
+            skipped: false,
+            availableCredits: result.availableCredits,
+          };
+        }
+        // Capture returned failure: auto-withhold so finally cannot release
+        // a paid provider output (free clip). Routes still record recon.
+        phase = "withheld";
+        current = null;
+        return { ok: false, skipped: false };
+      } catch (err) {
+        // Capture RPC threw: same as fail — withhold, never release.
+        phase = "withheld";
         current = null;
         return {
-          ok: true,
+          ok: false,
           skipped: false,
-          availableCredits: result.availableCredits,
+          error:
+            err instanceof Error
+              ? err.message
+              : "capture threw",
         };
       }
-      // Stay reserved so explicit release paths can still run if product allows;
-      // capture-fail routes should call markWithheld instead.
-      return { ok: false, skipped: false };
     },
     markWithheld(reason) {
       void reason;
-      if (phase === "reserved") {
+      if (phase === "reserved" || phase === "withheld") {
         phase = "withheld";
         // Keep reservation id off the hot pointer so finally cannot release.
         current = null;

@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] PR#42 capture-throw withhold (Codex R0-NET gate)
+- `reservationLifecycle.settle`: capture **throw or ok:false** → phase `withheld` automatically (finally/safety-net cannot release).
+- Behavioral proof in `npm run r0-safety-net` §7b: thrown capture → release backend calls = 0.
+- STATUS Authoritative active queue R0-NET → review; no malformed row.
+- CI template runs `r0-safety-net` (live workflow file needs workflow scope if not already synced).
+
 ### 2026-07-28 — [gpt] single active queue reset
 - Closed 11 stale, duplicate or superseded PRs; their branches remain recoverable, but they are no longer task sources.
 - R2 PR #44 is merged at `47688e6`; GitHub CI #456 and Vercel are green, and the one-photo Launch Pack path is recorded done.

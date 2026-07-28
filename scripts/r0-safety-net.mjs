@@ -202,7 +202,7 @@ function fakeReservation(id = "res-test-001") {
   assert.equal(calls, 1);
 }
 
-// ─── 7. Withheld (capture fail) never releases ────────────────────────────
+// ─── 7. Capture fail auto-withholds (0 release) ───────────────────────────
 
 {
   let calls = 0;
@@ -218,12 +218,37 @@ function fakeReservation(id = "res-test-001") {
   lc.assign(fakeReservation("withhold"));
   const s = await lc.settle("prov-x");
   assert.equal(s.ok, false);
-  assert.equal(lc.phase(), "reserved"); // still reserved after failed settle
-  lc.markWithheld("capture_failed");
-  assert.equal(lc.phase(), "withheld");
+  assert.equal(lc.phase(), "withheld", "failed capture auto-withholds");
   const r = await lc.safetyNetRelease();
   assert.equal(r.skipped, true);
   assert.equal(calls, 0, "withheld must not release");
+}
+
+// ─── 7b. Capture RPC throw auto-withholds (0 release) — Codex gate ────────
+
+{
+  let releaseCalls = 0;
+  const lc = createReservationLifecycle({
+    async release() {
+      releaseCalls += 1;
+      return { ok: true };
+    },
+    async settle() {
+      throw new Error("capture RPC exploded");
+    },
+  });
+  lc.assign(fakeReservation("throw-capture"));
+  const s = await lc.settle("prov-throw");
+  assert.equal(s.ok, false);
+  assert.match(s.error || "", /exploded|capture/);
+  assert.equal(lc.phase(), "withheld", "thrown capture must withhold");
+  // Simulate route outer catch + finally both calling release/safety-net
+  const a = await lc.release("provider_error");
+  const b = await lc.safetyNetRelease();
+  assert.equal(a.skipped, true);
+  assert.equal(b.skipped, true);
+  assert.equal(releaseCalls, 0, "thrown capture: release backend calls must be 0");
+  assert.equal(lc.releaseBackendCalls(), 0);
 }
 
 // ─── 8. Failed release backend marks released (no double) ─────────────────
@@ -259,5 +284,5 @@ assert.match(gen, /markWithheld/);
 assert.match(img, /markWithheld/);
 
 console.log(
-  "r0-safety-net: PASS (release≤1 · settle-blocks-release · concurrent · exception · timeout race · finally · withheld · fail-release terminal · route wire)"
+  "r0-safety-net: PASS (release≤1 · settle-blocks-release · capture-throw withhold · concurrent · exception · timeout · finally · withheld · route wire)"
 );
