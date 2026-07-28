@@ -167,9 +167,6 @@ export default async function CreatePage({
                 Etsy use case
               </Link>
             </div>
-            <div id="launch-pack-order-intent">
-              <LaunchPackOrderIntent />
-            </div>
             <div className="mt-6">
               {/* AfterPath ?sku= / ?try=1 hydrate bible + Lab still (no auto 3× run) */}
               <BatchStudio
@@ -177,6 +174,9 @@ export default async function CreatePage({
                 initialSku={sp.sku}
                 initialSample={firstRunSample}
               />
+            </div>
+            <div id="launch-pack-order-intent">
+              <LaunchPackOrderIntent />
             </div>
           </div>
         </div>

@@ -118,7 +118,13 @@ assert.match(intentUi, /data-launch-pack-export="download-brief"/);
 assert.match(intentUi, /data-launch-pack-next-step="intake-unconfigured"/);
 assert.match(intentUi, /Payment is not open yet/);
 assert.match(intentUi, /no owner intake endpoint is configured/i);
-assert.match(intentUi, /createObjectURL/);
+assert.match(intentUi, /selected once in the Create studio above/i);
+assert.doesNotMatch(intentUi, /type="file"|readAsDataURL|launch-pack-order-image/);
+assert.equal(
+  (batch.match(/id="seller-pack-photo-input"/g) || []).length,
+  1,
+  "Launch Pack must have one owned-photo picker, in Create studio"
+);
 assert.doesNotMatch(intentUi, /localStorage/);
 assert.doesNotMatch(intentUi, /sessionStorage/);
 // Honest closed-payment copy may mention Stripe; forbid real checkout wiring.

@@ -22,8 +22,6 @@ import {
   type LaunchPackStyleId,
 } from "@/lib/launchPackOrderIntent";
 
-const MAX_IMAGE_BYTES = 8_000_000;
-
 export function LaunchPackOrderIntent() {
   const [contactMethod, setContactMethod] = useState("");
   const [intendedChannel, setIntendedChannel] = useState<
@@ -34,19 +32,14 @@ export function LaunchPackOrderIntent() {
   );
   const [deliveryNotes, setDeliveryNotes] = useState("");
   const [materialRightsConfirmed, setMaterialRightsConfirmed] = useState(false);
-  const [localImageName, setLocalImageName] = useState<string | null>(null);
-  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
-  const [imageError, setImageError] = useState<string | null>(null);
+  const [orderImageConfirmed, setOrderImageConfirmed] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  /** Hold File in memory only — never browser storage or analytics. */
-  const localFileRef = useRef<File | null>(null);
   const briefStartedRef = useRef(false);
   const readyTrackedRef = useRef(false);
 
   const payment = launchPackPaymentDisclosure();
-  const hasLocalImage = Boolean(localImageName);
+  const hasLocalImage = orderImageConfirmed;
 
   const evaluation = useMemo(
     () =>
@@ -78,12 +71,6 @@ export function LaunchPackOrderIntent() {
   }, []);
 
   useEffect(() => {
-    return () => {
-      if (localPreviewUrl) URL.revokeObjectURL(localPreviewUrl);
-    };
-  }, [localPreviewUrl]);
-
-  useEffect(() => {
     if (evaluation.complete) {
       if (!readyTrackedRef.current) {
         readyTrackedRef.current = true;
@@ -110,34 +97,6 @@ export function LaunchPackOrderIntent() {
     });
   }, []);
 
-  function clearLocalImage() {
-    if (localPreviewUrl) URL.revokeObjectURL(localPreviewUrl);
-    localFileRef.current = null;
-    setLocalPreviewUrl(null);
-    setLocalImageName(null);
-    setImageError(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-
-  function loadLocalImage(file: File | undefined | null) {
-    markBriefStart();
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setImageError("Choose a local toy image (JPEG, PNG, WebP, or GIF).");
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setImageError("Image is too large (max ~8 MB). It stays on this device.");
-      return;
-    }
-    if (localPreviewUrl) URL.revokeObjectURL(localPreviewUrl);
-    localFileRef.current = file;
-    // Object URL only for in-session preview — never uploaded or analytics-sent.
-    setLocalPreviewUrl(URL.createObjectURL(file));
-    setLocalImageName(file.name.slice(0, 120));
-    setImageError(null);
-  }
-
   function exportText() {
     return formatLaunchPackBriefForExport({
       contactMethod,
@@ -146,7 +105,6 @@ export function LaunchPackOrderIntent() {
       deliveryNotes,
       materialRightsConfirmed,
       hasLocalImage,
-      localImageName,
       evaluatedAt: new Date().toISOString(),
     });
   }
@@ -317,66 +275,25 @@ export function LaunchPackOrderIntent() {
           />
         </label>
 
-        <div className="min-w-0" data-launch-pack-field="localImage">
-          <span className="text-[11px] font-semibold text-white/70">
-            One local toy image{" "}
-            <span className="font-normal text-white/40">
-              (preview only · not uploaded)
-            </span>
+        <label
+          className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-white/12 bg-black/35 px-3 py-2.5 text-[12px] leading-snug text-white/75"
+          data-launch-pack-field="localImage"
+        >
+          <input
+            type="checkbox"
+            checked={orderImageConfirmed}
+            onChange={(e) => {
+              markBriefStart();
+              setOrderImageConfirmed(e.target.checked);
+            }}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--mint)]"
+          />
+          <span>
+            Use the owned toy photo selected once in the Create studio above as
+            this order&apos;s source image. This brief never uploads or copies
+            the image a second time.
           </span>
-          <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-stretch">
-            <label
-              htmlFor="launch-pack-order-image"
-              className="flex min-h-[7.5rem] min-w-0 flex-1 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-white/20 bg-black/40 px-3 py-3 text-center transition hover:border-[var(--mint)]/45"
-            >
-              {localPreviewUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={localPreviewUrl}
-                  alt="Local toy preview for order brief"
-                  className="max-h-36 w-full object-contain"
-                />
-              ) : (
-                <span className="text-xs text-white/45">
-                  Tap to choose one owned-toy photo from this device
-                </span>
-              )}
-              <input
-                ref={fileInputRef}
-                id="launch-pack-order-image"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => loadLocalImage(e.target.files?.[0])}
-              />
-            </label>
-            <div className="flex shrink-0 flex-row gap-2 sm:w-36 sm:flex-col">
-              <button
-                type="button"
-                className="flex-1 rounded-lg border border-white/15 px-2 py-2 text-[11px] font-semibold text-white/75 hover:border-white/30"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                Choose image
-              </button>
-              <button
-                type="button"
-                className="flex-1 rounded-lg border border-white/10 px-2 py-2 text-[11px] font-semibold text-white/45 hover:border-white/25 disabled:opacity-40"
-                disabled={!localImageName}
-                onClick={clearLocalImage}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-          {localImageName ? (
-            <p className="mt-1 break-all text-[10px] text-white/40">
-              Selected on this device only · bytes stay in memory
-            </p>
-          ) : null}
-          {imageError ? (
-            <p className="mt-1 text-[11px] text-amber-200">{imageError}</p>
-          ) : null}
-        </div>
+        </label>
 
         <label
           className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-white/12 bg-black/35 px-3 py-2.5 text-[12px] leading-snug text-white/75"
