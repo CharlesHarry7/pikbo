@@ -38,6 +38,19 @@ export function modelForTier(opts: {
   return process.env.FAL_MODEL || SEEDANCE_FULL;
 }
 
+/**
+ * Authenticated private-live path (Issue #54 Seedance 2.0 delivery).
+ * Always the full image-to-video endpoint — never Mini, Fast, or a free-tier
+ * env override. Client model preference is ignored so processedUpload=true
+ * cannot be claimed for a cheaper/unrelated model.
+ */
+export function modelForPrivateLive(
+  _prefer?: ModelPreference | string | null
+): typeof SEEDANCE_FULL {
+  void _prefer;
+  return SEEDANCE_FULL;
+}
+
 export type SeedanceResolution = "480p" | "720p";
 
 export function resolutionForTier(
