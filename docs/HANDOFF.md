@@ -4,6 +4,12 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] Login R0 honesty + Create sticky demo credits + API golden CI
+- Login / LoginForm: guests = cached Lab only (0 credits · upload not processed); no “softLive generate” or cookie live-spend claim.
+- Create mobile sticky strip: `0 credits · cached prototype` in demoMode vs “when Live”; `data-create-sticky=mobile`.
+- CI server step runs `seller-pack-api-golden` (no FAL_KEY) after critical-path.
+- PASS: engine-smoke + seller-pack-cached-smoke + typecheck.
+
 ### 2026-07-28 — [workbuddy] Read-only SEO baseline (AITDK + GSC + real browser)
 - Branch `agent/workbuddy/seo-baseline-2026-07-28`; report `docs/evidence/WORKBUDDY_SEO_BASELINE_2026-07-28.md` + timestamped artifacts (PNG screenshots + raw-text JSON) in `docs/evidence/workbuddy-seo-baseline-2026-07-28/`.
 - GSC property correction: only URL-prefix `https://pikbo.ai/` is accessible; `sc-domain:pikbo.ai` returns no-permission. 3-month web: **16 impressions / 0 clicks / avg pos 4.1** — only 2 queries (`pikbo` ×3, one bot-like boolean string ×9); sample too small for any ranking claim, per dispatch.

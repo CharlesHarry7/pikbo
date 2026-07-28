@@ -37,8 +37,9 @@ export async function HEAD() {
 
 /**
  * Session + generate mode for Studio honesty.
- * Optional Bearer token enriches response with Supabase auth + durable wallet
- * (shadow ledger). Cookie credits remain the soft-launch generate authority.
+ * Optional Bearer token enriches with Supabase auth + durable wallet.
+ * R0: cookie is never live-spend authority — live requires auth + durable
+ * reserve; anonymous/Free stay on labeled cached demos.
  */
 export async function GET(req: Request) {
   const session = await ensureSession();
@@ -52,8 +53,16 @@ export async function GET(req: Request) {
     cachedDemoFree: true,
     liveJobCredits: CREDITS_PER_VIDEO,
     /**
-     * Soft-launch free trial honesty (Free plan = 1 Mini live job / period).
-     * Server-enforced on /api/generate: free → Mini 480p 5s + watermark.
+     * R0 spend authority — never cookie for provider calls.
+     * cached-only: anonymous / Free / no durable path
+     * durable-reserve: paid signed-in path after R1a SQL apply
+     */
+    liveSpendAuthority: "durable-reserve-or-cached-demo" as const,
+    cookieIsLiveSpendAuthority: false as const,
+    /**
+     * Soft-launch free trial honesty.
+     * Free plan: labeled cached demos + Mini product caps (live Free blocked
+     * until T6 delivery + durable access). Cookie balance is display-only.
      */
     freeTrial: {
       planId: session.plan,
@@ -63,6 +72,8 @@ export async function GET(req: Request) {
       liveJobCredits: CREDITS_PER_VIDEO,
       watermark: plan.watermark,
       cachedDemoFree: true,
+      /** Free live generation is blocked until protected delivery (T6). */
+      freeLiveProvider: "blocked-until-t6" as const,
       /** Confirmed provider/validation fails restore debit; TIMEOUT stays unconfirmed. */
       failedLiveRefunds: true as const,
       failedLiveRefundPolicy: "when_confirmed" as const,
@@ -76,13 +87,15 @@ export async function GET(req: Request) {
               durationSec: 5,
               resolution: "480p" as const,
               onPlayerMark: true,
+              /** Product intent only — R0/T6 keep Free live closed today. */
+              liveEnabled: false as const,
             }
           : null,
       exhausted: session.plan === "free" && session.credits < CREDITS_PER_VIDEO,
       /**
        * Free Mini trial is video Create only — /api/image returns labeled demo
        * (0 credits) so stills never burn the 10-credit trial.
-       * Omitted on paid plans (live Flux stills allowed).
+       * Omitted on paid plans (live Flux stills allowed when durable is ready).
        */
       ...(session.plan === "free"
         ? { stillsOnFree: "demo-only" as const }
@@ -129,8 +142,12 @@ export async function GET(req: Request) {
           reservedCredits: durable.reservedCredits,
           planId: durable.planId,
           backend: durable.backend ?? "local-file",
-          /** Display hint — cookie still debit authority for soft-launch live jobs */
-          authority: "shadow" as const,
+          /**
+           * Shadow/audit wallet only until R1a atomic reserve is applied.
+           * Live provider path still requires reserveStrictLiveGeneration.
+           */
+          authority: "durable-wallet-audit" as const,
+          liveSpendRequires: "atomic-reserve" as const,
         }
       : null,
   });

@@ -12,7 +12,9 @@ export type MeDurableWallet = {
   reservedCredits: number;
   planId: string;
   backend?: "supabase" | "local-file";
-  authority?: "shadow" | "authoritative";
+  /** R0: never "cookie" — audit wallet only until atomic reserve. */
+  authority?: "shadow" | "authoritative" | "durable-wallet-audit";
+  liveSpendRequires?: "atomic-reserve";
 };
 
 /** Soft-launch free trial honesty from GET /api/me */
@@ -24,6 +26,7 @@ export type MeFreeTrial = {
   liveJobCredits: number;
   watermark: boolean;
   cachedDemoFree: boolean;
+  freeLiveProvider?: "blocked-until-t6";
   /** Confirmed fails restore debit (boolean for ops gates). */
   failedLiveRefunds?: boolean;
   /** Ops honesty — not every fail is a confirmed restore. */
@@ -37,6 +40,8 @@ export type MeFreeTrial = {
     durationSec: 5;
     resolution: "480p";
     onPlayerMark: true;
+    /** Product intent — false while Free live stays R0/T6-blocked. */
+    liveEnabled?: boolean;
   } | null;
   exhausted: boolean;
   /** Free plan stills never debit — live Flux requires paid plan. */
@@ -47,6 +52,9 @@ export type MeResponse = PublicSession & {
   mode?: GenerateMode | string;
   cachedDemoFree?: boolean;
   liveJobCredits?: number;
+  /** R0: cookie is never live-spend authority. */
+  liveSpendAuthority?: "durable-reserve-or-cached-demo";
+  cookieIsLiveSpendAuthority?: boolean;
   freeTrial?: MeFreeTrial;
   signedIn?: boolean;
   authConfigured?: boolean;
@@ -65,10 +73,11 @@ function liveJobCost(me: Pick<MeResponse, "freeTrial" | "liveJobCredits" | "cred
 }
 
 /**
- * Recompute freeTrial from authoritative cookie credits/plan.
+ * Recompute freeTrial display fields from session credits/plan.
  * Generate / image responses only return PublicSession — without this,
  * freeTrial.exhausted and clipsLeft lag after a live debit and the badge
  * can still claim "trial left" when credits are 0.
+ * Cookie balance is display-only (R0: not live-spend authority).
  */
 export function rehydrateFreeTrial(me: MeResponse): MeResponse {
   const need = liveJobCost(me);
@@ -149,8 +158,9 @@ export function mergeMeSession(
 
 /**
  * True when Free plan has fewer than one live job of credits left.
- * Prefer live cookie credits over freeTrial.exhausted — generate success
+ * Prefer live session credits over freeTrial.exhausted — generate success
  * merges PublicSession only and used to leave exhausted stuck at false.
+ * Display balance only; live still requires durable reserve when enabled.
  */
 export function freeTrialExhausted(me: MeResponse | null | undefined): boolean {
   if (!me) return false;

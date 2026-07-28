@@ -105,6 +105,8 @@ jobs:
           # R3: critical-path fails the job. Demo-cached is the default gate
           # (ready.demo); soft-live only when REQUIRE_SOFT_LIVE=1.
           npm run critical-path
+          # Seller Pack running-server cached trio (no FAL_KEY in CI).
+          PIKBO_BASE="http://127.0.0.1:3456" npm run seller-pack-api-golden
         env:
           NEXT_TELEMETRY_DISABLED: "1"
           PORT: "3456"

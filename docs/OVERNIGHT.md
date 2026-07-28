@@ -172,7 +172,8 @@
 131. [x] Webhook R1b/R1c: late/orphan success withheld · Seller Pack no cookie-authority lie
 132. [x] Process-memory R1c fallback journal + downloads WITHHELD honesty + health localJournal
 133. [x] Seller Pack frozen contract + cached golden-path smoke (0 provider · Free Mini block)
-134. 下一拍：R1c/R1a SQL non-prod rehearsal (boss) · Mode A Vercel · T6 bake
+134. [x] /api/me R0 honesty: cookieIsLiveSpendAuthority=false · Free liveEnabled=false · CI api-golden
+135. 下一拍：R1c/R1a SQL non-prod rehearsal (boss) · Mode A Vercel · T6 bake
 
 ### 老板醒来验收
 
@@ -186,9 +187,9 @@
 
 ## Grok 本拍状态（3 行）
 
-- Seller Pack: `lib/sellerPackContract` freezes 3 PRD slugs; BatchStudio imports contract; cached golden smoke 0 provider.
-- `npm run seller-pack-cached-smoke` (+ golden-path alias) · Free Mini full-pack blocked · durable shadow no cookie-authority claim.
-- Next: R1c/R1a SQL non-prod apply (boss) · Mode A Vercel · T6 bake · CI workflow re-copy.
+- /api/me no longer claims cookie live authority; freeLive.liveEnabled=false + freeLiveProvider blocked-until-t6.
+- docs/ci runs seller-pack-api-golden against prod server (no FAL); engine-smoke locks me honesty.
+- Next: R1c/R1a SQL non-prod apply (boss) · Mode A Vercel · T6 bake · live CI workflow re-copy.
 
 
 

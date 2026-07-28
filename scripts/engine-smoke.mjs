@@ -441,7 +441,19 @@ assert.match(meClient, /export async function fetchMe/);
 assert.match(meClient, /cachedDemoFree/);
 assert.match(meClient, /export function mergeMeSession/);
 assert.match(meClient, /export function rehydrateFreeTrial/);
-assert.match(meClient, /Prefer live cookie credits|authoritative cookie credits/);
+assert.match(
+  meClient,
+  /Prefer live session credits|Prefer live cookie credits|display-only|not live-spend/
+);
+// R0: /api/me must not claim cookie is live generate authority
+const meRouteSrc = fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8");
+assert.doesNotMatch(
+  meRouteSrc,
+  /Cookie credits remain the soft-launch generate authority|cookie still debit authority for soft-launch live/
+);
+assert.match(meRouteSrc, /cookieIsLiveSpendAuthority:\s*false/);
+assert.match(meRouteSrc, /liveSpendAuthority|durable-reserve/);
+assert.match(meRouteSrc, /freeLiveProvider:\s*"blocked-until-t6"|liveEnabled:\s*false/);
 // meClient preserves cancel refund policy across PublicSession merges
 assert.match(
   fs.readFileSync(join(root, "lib/meClient.ts"), "utf8"),
@@ -969,6 +981,7 @@ assert.match(ciYml, /recovery-retry-deadline/);
 assert.match(ciYml, /showcase-evidence-smoke/);
 assert.match(ciYml, /seo-cold-start-smoke/);
 assert.match(ciYml, /seller-pack-cached-smoke/);
+assert.match(ciYml, /seller-pack-api-golden/);
 assert.match(ciYml, /typecheck/);
 assert.match(ciYml, /npm run build/);
 assert.match(ciYml, /npm run critical-path/);
@@ -5499,7 +5512,27 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
-  /guest cookie|Supabase/
+  /guest cookie|Supabase|cached Lab|not live-spend|Live generate/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
+  /upload not processed|cached demos only|not live provider spend/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
+  /softLive generate/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
+  /not live-spend authority|cached Lab prototypes/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
+  /data-create-sticky=["']mobile["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
+  /0 credits · cached prototype|credits when Live/
 );
 // Header primary CTA + Library/Profile Generate doors use remix contract
 assert.match(
