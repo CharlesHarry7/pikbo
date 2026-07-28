@@ -8,16 +8,21 @@
  */
 export function SellerPackSteps({
   step,
+  demoMode,
 }: {
   /** 1 upload · 2 run · 3 deliver */
   step: 1 | 2 | 3;
+  /** Public sessions fail closed to cached prototypes. */
+  demoMode: boolean;
 }) {
   const items = [
     { n: 1 as const, label: "Upload", blurb: "One owned toy photo" },
     {
       n: 2 as const,
       label: "Generate pack",
-      blurb: "3 clips · 10 credits each (30 live)",
+      blurb: demoMode
+        ? "3 cached prototype previews · 0 credits"
+        : "3 live clips · 10 credits each (30 total)",
     },
     { n: 3 as const, label: "Deliver", blurb: "Export Launch Pack · post" },
   ];

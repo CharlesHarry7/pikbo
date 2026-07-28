@@ -206,18 +206,25 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                 className="group relative aspect-[9/14] overflow-hidden rounded-lg bg-zinc-950 ring-1 ring-[#c8ff3d]/20 sm:aspect-[3/4] sm:rounded-xl"
               >
                 <Link
-                  href={item.href}
+                  href={item.projectHref || item.href}
                   prefetch
                   className="absolute inset-0"
                   onClick={() =>
                     track({
-                      event: "recipe_use",
+                      event: item.projectHref ? "project_open" : "recipe_use",
                       path: "/",
                       recipe: item.recipeSlug,
-                      meta: { source: "toy_wall_featured" },
+                      meta: {
+                        source: "toy_wall_featured",
+                        project: item.projectHref || null,
+                      },
                     })
                   }
-                  aria-label={`${item.title} · ${t("home.wall.remake")}`}
+                  aria-label={`${item.title} · ${
+                    item.projectHref
+                      ? t("home.insideProject")
+                      : t("home.wall.remake")
+                  }`}
                 >
                   <AutoPlayVideo
                     poster={item.demo.poster}
@@ -247,7 +254,9 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                       {item.title}
                     </p>
                     <span className="mt-1.5 inline-flex rounded-full bg-[#c8ff3d] px-2.5 py-1 text-[10px] font-black text-black">
-                      {t("home.wall.remake")}
+                      {item.projectHref
+                        ? `${t("home.insideProject")} →`
+                        : t("home.wall.remake")}
                     </span>
                   </div>
                 </Link>
@@ -263,18 +272,25 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               className="group relative aspect-[3/4] overflow-hidden rounded-md bg-zinc-950 ring-1 ring-white/[0.06] transition duration-300 hover:-translate-y-1 hover:z-[1] hover:ring-[#c8ff3d]/45 hover:shadow-[0_0_0_1px_rgba(200,255,61,0.25),0_16px_48px_rgba(0,0,0,0.6)] sm:rounded-lg sm:aspect-[9/14]"
             >
               <Link
-                href={item.href}
+                href={item.projectHref || item.href}
                 prefetch
                 className="absolute inset-0 z-0"
                 onClick={() =>
                   track({
-                    event: "recipe_use",
+                    event: item.projectHref ? "project_open" : "recipe_use",
                     path: "/",
                     recipe: item.recipeSlug,
-                    meta: { source: "toy_wall_card" },
+                    meta: {
+                      source: "toy_wall_card",
+                      project: item.projectHref || null,
+                    },
                   })
                 }
-                aria-label={`${item.title} · ${t("home.wall.remake")}`}
+                aria-label={`${item.title} · ${
+                  item.projectHref
+                    ? t("home.insideProject")
+                    : t("home.wall.remake")
+                }`}
               >
                 <AutoPlayVideo
                   poster={item.demo.poster}

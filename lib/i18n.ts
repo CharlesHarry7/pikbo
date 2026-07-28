@@ -640,7 +640,7 @@ const zh: Dict = {
   "job.shelf": "陈列光感",
   "job.shelf.blurb": "干净晒柜 / 展柜 · 藏家与详情页",
   "job.seller": "卖家入门包 · 3 条",
-  "job.seller.blurb": "上架 + 开箱 + 社媒钩子 · 实时生成 30 积分",
+  "job.seller.blurb": "上架 + 开箱 + 社媒钩子 · 提交前显示准确报价",
 
   "brief.title": "玩具保真提示",
   "brief.disclaimer": "基于照片画幅 + 产品规则 · 非云端识图",
