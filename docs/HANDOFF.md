@@ -4,6 +4,25 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok] Residual R0 cookie-authority honesty (Profile / claim / Settings / badge)
+- ProfilePanel + Settings: cookie is **not** live-spend authority; live needs durable atomic reserve or labeled cached demos.
+- `/api/auth/claim`: migrates display balance only — no soft-launch generate-authority claim.
+- CreditsBadge: unexpected cookie live-spend path labeled R0 expects false; no “cookie still generate authority”.
+- engine-smoke doesNotMatch old dishonest phrases; match not-live-spend / cookie display only.
+- PASS: typecheck + engine-smoke @ `bf2d120`.
+
+### 2026-07-28 — [grok] CreditsBadge / FreeTrialCta / Settings residual R0 honesty
+- Removed “cookie still generates / authoritative for generate” from CreditsBadge tooltips.
+- Free Mini live chip only when `freeLive.liveEnabled !== false`; otherwise Lab/cached-only copy (blocked until T6).
+- FreeTrialCta defaults to Lab sample while Free live is closed; Settings shows display credits + live spend authority.
+- PASS: engine-smoke + seller-pack-cached-smoke + recovery-qa + typecheck.
+
+### 2026-07-28 — [grok] Login R0 honesty + Create sticky demo credits + API golden CI
+- Login / LoginForm: guests = cached Lab only (0 credits · upload not processed); no “softLive generate” or cookie live-spend claim.
+- Create mobile sticky strip: `0 credits · cached prototype` in demoMode vs “when Live”; `data-create-sticky=mobile`.
+- CI server step runs `seller-pack-api-golden` (no FAL_KEY) after critical-path.
+- PASS: engine-smoke + seller-pack-cached-smoke + typecheck.
+
 ### 2026-07-28 — [workbuddy] Read-only SEO baseline (AITDK + GSC + real browser)
 - Branch `agent/workbuddy/seo-baseline-2026-07-28`; report `docs/evidence/WORKBUDDY_SEO_BASELINE_2026-07-28.md` + timestamped artifacts (PNG screenshots + raw-text JSON) in `docs/evidence/workbuddy-seo-baseline-2026-07-28/`.
 - GSC property correction: only URL-prefix `https://pikbo.ai/` is accessible; `sc-domain:pikbo.ai` returns no-permission. 3-month web: **16 impressions / 0 clicks / avg pos 4.1** — only 2 queries (`pikbo` ×3, one bot-like boolean string ×9); sample too small for any ranking claim, per dispatch.

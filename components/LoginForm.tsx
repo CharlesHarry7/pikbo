@@ -25,9 +25,11 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
       <div className="mt-6 space-y-3 rounded-2xl border border-dashed border-white/15 bg-black/40 p-5">
         <p className="text-sm font-semibold text-white">Sign-in not live yet</p>
         <p className="text-xs leading-relaxed text-white/55">
-          Supabase Auth keys are not configured on this deployment. Your guest
-          cookie still works for Generate, Modules, Seller Starter Pack, and this-device
-          Library.
+          Supabase Auth keys are not configured on this deployment. Guests can
+          still open Generate, Modules, Seller Starter Pack, and this-device
+          Library for labeled cached Lab prototypes (0 credits · upload not
+          processed). Live provider jobs stay closed without sign-in + durable
+          reserve.
         </p>
         <div
           className="flex flex-wrap items-center gap-2 pt-1"
@@ -59,8 +61,8 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
           />
         </div>
         <p className="text-[10px] leading-relaxed text-white/40">
-          Guest cookie is still generate authority · durable wallet needs
-          Supabase keys (shadow until Mode B).
+          Guest cookie is not live-spend authority · durable wallet needs
+          Supabase keys (T5). Cached demos remain free until Live is enabled.
         </p>
       </div>
     );

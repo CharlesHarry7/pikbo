@@ -462,6 +462,7 @@ assert.match(ciYml, /recovery-retry-deadline/);
 assert.match(ciYml, /showcase-evidence-smoke/);
 assert.match(ciYml, /seo-cold-start-smoke/);
 assert.match(ciYml, /seller-pack-cached-smoke/);
+assert.match(ciYml, /seller-pack-api-golden/);
 assert.match(ciYml, /npm run typecheck/);
 assert.match(ciYml, /npm run build/);
 assert.match(ciYml, /npm run link-check/);

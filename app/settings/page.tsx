@@ -216,8 +216,9 @@ export default function SettingsPage() {
         <h1 className="mt-3 text-2xl font-bold">Settings</h1>
         <p className="mt-1 text-sm text-[var(--fg-muted)]">
           Device data & session. Signed-in durable wallets use local file or
-          Supabase Postgres when the T5 migration is applied. Soft-launch live
-          Generate still debits the guest cookie.
+          Supabase Postgres when the T5 migration is applied. Cookie is not
+          live-spend authority (R0) — live needs durable reserve or labeled
+          cached demos.
         </p>
         <div
           className="mt-4 flex flex-wrap items-center gap-2"
@@ -271,7 +272,7 @@ export default function SettingsPage() {
           <div className="flex justify-between gap-4">
             <span className="text-[var(--fg-muted)]">Credits authority</span>
             <span className="text-right text-xs font-semibold leading-snug">
-              cookie generate
+              cookie display only · not live-spend
               {session?.signedIn
                 ? ` · durable ${durableBackend || "pending"} (${durableAuth || "shadow"})`
                 : ""}
@@ -295,9 +296,19 @@ export default function SettingsPage() {
             <span className="font-semibold">{session?.planName ?? "—"}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--fg-muted)]">Credits (cookie)</span>
+            <span className="text-[var(--fg-muted)]">
+              Display credits (not live authority)
+            </span>
             <span className="font-semibold text-[var(--mint)]">
               {session?.credits ?? "—"}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[var(--fg-muted)]">Live spend authority</span>
+            <span className="text-right text-xs font-semibold text-[var(--fg-dim)]">
+              {session?.cookieIsLiveSpendAuthority === true
+                ? "cookie (legacy — unexpected)"
+                : "durable reserve or cached demo (R0)"}
             </span>
           </div>
           <div className="flex justify-between">
@@ -314,16 +325,24 @@ export default function SettingsPage() {
                   : !isFreePlan
                     ? "paid path · not Free trial"
                     : trialDone
-                      ? "exhausted · demos still free"
-                      : freeLive
-                        ? `~${clipsLeft} left · ${freeLive.resolution} ${freeLive.durationSec}s`
-                        : `~${clipsLeft} live left`}
+                      ? "display exhausted · demos still free"
+                      : freeLive && freeLive.liveEnabled === false
+                        ? `product caps ${freeLive.resolution} ${freeLive.durationSec}s · live blocked until T6`
+                        : freeLive
+                          ? `~${clipsLeft} left · ${freeLive.resolution} ${freeLive.durationSec}s when Live enabled`
+                          : `~${clipsLeft} display · live via durable reserve only`}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--fg-muted)]">Live clips left (est.)</span>
+            <span className="text-[var(--fg-muted)]">
+              Live clips left (est. when Live on)
+            </span>
             <span className="font-semibold">
-              {clipsLeft !== null ? clipsLeft : "—"}
+              {demoMode || (isFreePlan && freeLive?.liveEnabled === false)
+                ? "0 · Lab demos free"
+                : clipsLeft !== null
+                  ? clipsLeft
+                  : "—"}
             </span>
           </div>
           <div className="flex justify-between gap-4">
