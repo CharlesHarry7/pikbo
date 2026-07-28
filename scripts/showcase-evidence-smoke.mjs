@@ -101,11 +101,9 @@ assert(
   "concept recipes must stay static and must not borrow cached videos"
 );
 assert(
-  createStudio.includes("session?.signedIn === true") &&
-    createStudio.includes("session?.durableCreditsActive === true") &&
-    createStudio.includes('session?.mode === "live-generate"') &&
-    createStudio.includes("const demoMode = isDemoMode(session) || !liveEntitled"),
-  "Create must fail closed to cached preview without explicit live entitlement"
+  createStudio.includes("const liveEntitled = canLiveGenerate(session)") &&
+    createStudio.includes("const demoMode = !liveEntitled"),
+  "Create must use the shared account capability and fail closed to cached preview"
 );
 assert(
   batchStudio.includes("me?.signedIn === true") &&
