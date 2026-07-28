@@ -1933,5 +1933,8 @@ Newest first. One block per meaningful landing.
 - Review: PR #39. The functional Seller Pack files are already content-aligned
   with latest `main`; this final PR records the reproducible verification and
   board/handoff evidence without reopening production or billing gates.
+- Remote evidence: GitHub Actions run #442 is green for conflict markers,
+  engine smoke, lint, typecheck, build, production link-check and the
+  fail-closed critical path.
 - Safety: no provider key, paid call, database, Stripe, deployment, DNS or public
   indexing action. T5/T6 and public Mode A/B readiness remain fail-closed.
