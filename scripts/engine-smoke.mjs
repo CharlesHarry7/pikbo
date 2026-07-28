@@ -313,7 +313,8 @@ assert.match(
 );
 
 const me = fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8");
-assert.match(me, /generateMode/);
+assert.match(me, /probeSoftLiveReadiness/);
+assert.match(me, /canLiveGenerate/);
 assert.match(me, /cachedDemoFree/);
 assert.match(me, /getAuthUserFromRequest|signedIn/);
 assert.match(me, /getPersonalWallet|durable/);
@@ -500,11 +501,11 @@ assert.doesNotMatch(
 );
 assert.match(
   creditsBadgeR0,
-  /not live-spend authority|R0 expects false/
+  /canLiveGenerate\(session\)/
 );
 assert.match(
   creditsBadgeR0,
-  /cookieIsLiveSpendAuthority|liveEnabled|atomic reserve|blocked until T6/
+  /canLiveGenerate|liveEnabled|cached previews/
 );
 const freeTrialCtaR0 = fs.readFileSync(
   join(root, "components/FreeTrialCta.tsx"),
@@ -3545,7 +3546,11 @@ execFileSync(
   ["--experimental-strip-types", t6DeliverableProof],
   { stdio: "pipe" }
 );
-assert.match(health, /t6Report|t6:/);
+assert.match(health, /probeSoftLiveReadiness/);
+assert.match(
+  fs.readFileSync(join(root, "lib/liveReadinessServer.ts"), "utf8"),
+  /t6Report/
+);
 assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
   /bakedDerivativeVerified|server-owned baked derivative/

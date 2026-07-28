@@ -1,0 +1,99 @@
+import { publicAuthStatus } from "@/lib/authConfig";
+import {
+  probeDurableCreditsStore,
+} from "@/lib/durableCredits";
+import { probeDurableReconciliationSchema } from "@/lib/durableCredits/reconciliation";
+import {
+  evaluateHealthTruth,
+  type HealthTruthInput,
+} from "@/lib/liveCapability";
+import { probeSupabase } from "@/lib/supabase/server";
+import { t6Report } from "@/lib/t6Watermark";
+
+/**
+ * Shared server probe used by /api/health and /api/me. Keeping these facts in
+ * one place prevents account CTAs from claiming live access while health is
+ * fail-closed.
+ */
+async function computeSoftLiveReadiness() {
+  const [durableCredits, durableReconciliation, supabase] = await Promise.all([
+    probeDurableCreditsStore(),
+    probeDurableReconciliationSchema(),
+    probeSupabase(),
+  ]);
+  const authPublic = publicAuthStatus();
+  const t6 = t6Report();
+
+  const authConfigured =
+    authPublic.configured && supabase.configured && supabase.reachable;
+  const durableAtomicReservationConfigured =
+    process.env.REQUIRE_DURABLE_CREDITS === "1" &&
+    process.env.PIKBO_R1_ATOMIC_RESERVATION_READY === "1" &&
+    durableCredits.backend === "supabase" &&
+    durableCredits.configured &&
+    durableCredits.writable &&
+    durableCredits.schemaReady === true &&
+    supabase.hasServiceRole;
+  const durableReconciliationConfigured =
+    process.env.PIKBO_R1_RECONCILIATION_READY === "1" &&
+    durableReconciliation.configured &&
+    durableReconciliation.schemaReady;
+  const serverOwnedDeliverableConfigured =
+    t6.status === "ready" &&
+    t6.fileBake === true &&
+    t6.freeLiveRawDownload === "allowed" &&
+    t6.tooling.serverOwnedWorkerReady &&
+    t6.tooling.derivativeServingImplemented &&
+    t6.tooling.storageAdapterImplemented;
+  const input: HealthTruthInput = {
+    authConfigured,
+    durableAtomicReservationConfigured,
+    durableReconciliationConfigured,
+    providerConfigured: Boolean(process.env.FAL_KEY),
+    serverOwnedDeliverableConfigured,
+  };
+
+  return {
+    truth: evaluateHealthTruth(input),
+    input,
+    authPublic,
+    durableCredits,
+    durableReconciliation,
+    supabase,
+    t6,
+  };
+}
+
+type SoftLiveReadiness = Awaited<
+  ReturnType<typeof computeSoftLiveReadiness>
+>;
+
+const READINESS_TTL_MS = 15_000;
+let readinessCache:
+  | { expiresAt: number; value: SoftLiveReadiness }
+  | null = null;
+let readinessProbe: Promise<SoftLiveReadiness> | null = null;
+
+/**
+ * UI calls /api/me frequently. Share a short-lived result with /api/health so
+ * correctness does not add several Supabase schema probes to every render.
+ */
+export async function probeSoftLiveReadiness(): Promise<SoftLiveReadiness> {
+  const now = Date.now();
+  if (readinessCache && readinessCache.expiresAt > now) {
+    return readinessCache.value;
+  }
+  if (readinessProbe) return readinessProbe;
+
+  readinessProbe = computeSoftLiveReadiness();
+  try {
+    const value = await readinessProbe;
+    readinessCache = {
+      expiresAt: Date.now() + READINESS_TTL_MS,
+      value,
+    };
+    return value;
+  } finally {
+    readinessProbe = null;
+  }
+}
