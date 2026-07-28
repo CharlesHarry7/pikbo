@@ -18,6 +18,22 @@ export const runtime = "nodejs";
 const SESSION_JOBS_LIST_LIMIT = 50;
 
 /**
+ * Library listings never expose a provider URL or Supabase signed object URL.
+ * The download route re-checks either durable owner identity (UUID) or the
+ * current process session before issuing a deliverable.
+ */
+function controlledLocalJob(job: ReturnType<typeof toPublicJob>) {
+  if (job.demo || !job.videoUrl) return job;
+  const downloadId = (job.requestId || job.id || "").trim();
+  return {
+    ...job,
+    videoUrl: downloadId
+      ? `/api/downloads/${encodeURIComponent(downloadId)}`
+      : undefined,
+  };
+}
+
+/**
  * Cheap open-job probe for Library / ops — counts only (no job bodies).
  * Sweeps timeouts so HEAD stays honest about mid-flight work.
  * Counts the full session ledger (not the list page size) — image HEAD parity.
@@ -153,7 +169,7 @@ export async function GET(req: Request) {
   // The local store is capped at 200 rows. Read all of it so a current-process
   // mirror of a durable result can be de-duplicated before counts and listing.
   const localJobs = listJobsForSession(session.id, 200).map((job) =>
-    toPublicJob(job, session.id)
+    controlledLocalJob(toPublicJob(job, session.id))
   );
   const mirroredPrivateIds = new Set(
     localJobs

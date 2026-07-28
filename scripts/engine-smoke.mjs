@@ -5578,6 +5578,11 @@ assert.match(genJobsGet, /listPrivateGenerationResults/);
 assert.match(genJobsGet, /getAuthUserFromRequest/);
 assert.match(genJobsGet, /supabase-private\+process-memory/);
 assert.match(genJobsGet, /\/api\/downloads\/\$\{encodeURIComponent\(result\.jobId\)\}/);
+assert.match(genJobsGet, /function controlledLocalJob/);
+assert.match(
+  genJobsGet,
+  /controlledLocalJob\(toPublicJob\(job,\s*session\.id\)\)/
+);
 assert.doesNotMatch(genJobsGet, /output_object_key|providerOutputUrl/);
 assert.doesNotMatch(genJobsGet, /touchOpenJobsForSession\(session\.id\)/);
 assert.match(genJobsGet, /touchedOpen:\s*0|GET is read-only/);
