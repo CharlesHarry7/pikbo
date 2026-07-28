@@ -206,3 +206,7 @@ git fetch origin --prune && git checkout main && git pull --ff-only
 Commit prefix: `[grok]` / `[gpt]` / `[claude]`.
 Branches: `agent/<name>/<topic>`.
 Never force-push `main`. Never commit secrets.
+
+Every active agent must edit in its own Git worktree. Do not switch branches in
+the shared canonical checkout while another agent may be running. See
+`COLLAB.md` § “Worktree isolation is mandatory”.

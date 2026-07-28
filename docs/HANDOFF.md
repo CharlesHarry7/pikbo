@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] single active queue reset
+- Closed 11 stale, duplicate or superseded PRs; their branches remain recoverable, but they are no longer task sources.
+- Remote now has exactly two active delivery PRs: #42 for Grok's reservation safety and #41 for WorkBuddy's read-only backlink evidence.
+- Blocked #42 from merge until exactly-once, post-settlement and concurrency behavior tests replace source-regex-only confidence.
+- Restricted #41 to one consolidated 9-site truth report; no R0H/code ownership, production action or new directory submissions.
+- `DISPATCH` and `STATUS` now contain one authoritative queue; old rows are history unless Codex explicitly promotes one.
+
+---
+
 ### 2026-07-28 — [gpt] PR #40 integration review + real CI gate
 - Merged Grok's T5/R0 pure-engine and source-lock tests without overwriting the newer Seller Pack handoff; the tests prove code-side fail-closed/refund/idempotency behavior only, not applied Supabase production readiness.
 - Synced the real `.github/workflows/ci.yml` to the reviewed template so recovery, T5/R0, showcase, SEO, Seller Pack and copy checks run on GitHub; removed the old `critical-path || true` false-green path.
