@@ -240,6 +240,7 @@ alter table public.credit_wallets enable row level security;
 alter table public.credit_ledger enable row level security;
 alter table public.credit_reservations enable row level security;
 alter table public.subscription_records enable row level security;
+alter table public.stripe_events enable row level security;
 alter table public.generation_jobs enable row level security;
 alter table public.seller_pack_runs enable row level security;
 alter table public.consumed_guest_sessions enable row level security;
