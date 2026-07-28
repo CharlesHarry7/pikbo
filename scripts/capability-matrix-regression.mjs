@@ -82,6 +82,9 @@ assert.equal(
 const read = (path) => readFileSync(join(process.cwd(), path), "utf8");
 const meRoute = read("app/api/me/route.ts");
 const meClient = read("lib/meClient.ts");
+const session = read("lib/session.ts");
+const generateRoute = read("app/api/generate/route.ts");
+const generationsRoute = read("app/api/generations/route.ts");
 const landing = read("components/LandingToolPanel.tsx");
 const create = read("components/CreateStudio.tsx");
 const badge = read("components/CreditsBadge.tsx");
@@ -95,6 +98,19 @@ assert.match(meRoute, /"X-Pikbo-Credits":\s*"0"/);
 assert.match(meRoute, /"X-Pikbo-Can-Live-Generate":\s*"0"/);
 assert.match(meClient, /me\.canLiveGenerate === true/);
 assert.match(meClient, /liveEnabled:[\s\S]{0,120}me\.canLiveGenerate === true/);
+assert.match(
+  session,
+  /function publicCachedSession[\s\S]*credits:\s*0,[\s\S]*clipsLeft:\s*0/
+);
+assert.match(
+  generateRoute,
+  /session:\s*demo\s*\?\s*publicCachedSession\(session\)\s*:\s*publicSession\(session\)/
+);
+assert.match(
+  generateRoute,
+  /const payload:\s*GenerateSuccess[\s\S]{0,400}demo:\s*true,[\s\S]{0,400}session:\s*publicCachedSession\(session\)/
+);
+assert.match(generationsRoute, /session:\s*publicCachedSession\(session\)/);
 assert.match(landing, /const demoMode = !canLiveGenerate\(session\)/);
 assert.match(landing, /generationDisplayCredits\(session\)/);
 assert.doesNotMatch(landing, /\{session\.credits\} credits/);
