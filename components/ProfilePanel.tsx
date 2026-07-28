@@ -240,7 +240,7 @@ export function ProfilePanel() {
 
   const perJob = session?.liveJobCredits ?? CREDITS_PER_VIDEO;
   const demo = isDemoMode(session);
-  // Prefer /api/me durable (Bearer) then claim wallet — cookie is generate authority.
+  // Prefer /api/me durable (Bearer) then claim wallet — cookie is not live-spend authority (R0).
   const durableBackend =
     session?.durable?.backend ?? auth.backend ?? null;
   const durableAvailable =
@@ -267,9 +267,9 @@ export function ProfilePanel() {
     session?.freeTrial?.isFreePlan === true || session?.plan === "free";
 
   const durableLine = !auth.signedIn
-    ? "Guest cookie · this device only"
+    ? "Guest cookie · this device only · not live-spend authority"
     : durableBackend === "supabase"
-      ? "Supabase account · durable wallet (Postgres) · live generate still cookie-authoritative until Mode B"
+      ? "Supabase account · durable wallet (Postgres) · live needs atomic reserve (cookie is not live-spend authority)"
       : durableBackend === "local-file"
         ? "Supabase account · durable wallet is single-node file ledger (shadow) — apply T5 SQL for multi-node"
         : "Supabase account · durable wallet pending claim/probe";
@@ -308,16 +308,17 @@ export function ProfilePanel() {
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-[var(--fg-muted)]">
           <span className="font-semibold text-white/80">Credits authority</span>
           {" · "}
-          Soft-launch live Generate debits the{" "}
-          <span className="font-semibold text-white/75">guest cookie</span>{" "}
-          ({session?.credits ?? "—"} cr). Durable wallet
+          Cookie is{" "}
+          <span className="font-semibold text-white/75">not live-spend authority</span>{" "}
+          (R0). Display cookie balance {session?.credits ?? "—"} cr · live needs
+          durable atomic reserve or labeled cached demos. Durable wallet
           {durableBackend ? ` (${durableBackend}` : ""}
           {session?.durable?.authority
             ? ` · ${session.durable.authority}`
             : durableBackend
               ? " · shadow"
               : ""}
-          {durableBackend ? ")" : ""} is for cross-device display
+          {durableBackend ? ")" : ""} is for cross-device audit
           {durableReserved !== null && durableReserved > 0
             ? ` · ${durableReserved} reserved`
             : ""}
@@ -503,8 +504,8 @@ export function ProfilePanel() {
       <p className="text-xs text-[var(--fg-muted)]">
         {auth.signedIn
           ? durableBackend === "supabase"
-            ? "Postgres durable wallet is visible here. Soft-launch Generate still settles the cookie until Mode B flips authority."
-            : "Generate still debits the guest cookie this soft-launch cycle. Durable file ledger is shadow-only (single node) until T5 SQL + multi-node store."
+            ? "Postgres durable wallet is visible here. Live spend requires atomic reserve — cookie is not live-spend authority (R0)."
+            : "Cookie is not live-spend authority (R0). Durable file ledger is shadow-only (single node) until T5 SQL + multi-node store; live still needs durable reserve or labeled cached demos."
           : demo
             ? "Server is in demo-cached mode — labeled Lab clips cost 0 credits. Configure FAL_KEY for live Seedance Mini."
             : freeLive

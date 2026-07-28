@@ -454,6 +454,39 @@ assert.doesNotMatch(
 assert.match(meRouteSrc, /cookieIsLiveSpendAuthority:\s*false/);
 assert.match(meRouteSrc, /liveSpendAuthority|durable-reserve/);
 assert.match(meRouteSrc, /freeLiveProvider:\s*"blocked-until-t6"|liveEnabled:\s*false/);
+// R0 residual: Profile / claim / Settings / badge must not re-assert cookie generate authority
+const profileR0Src = fs.readFileSync(
+  join(root, "components/ProfilePanel.tsx"),
+  "utf8"
+);
+assert.doesNotMatch(
+  profileR0Src,
+  /cookie is generate authority|cookie-authoritative|settles the cookie|debits the guest cookie|still cookie-authoritative/
+);
+assert.match(
+  profileR0Src,
+  /not live-spend authority|cookie is not live-spend/
+);
+const claimR0Src = fs.readFileSync(
+  join(root, "app/api/auth/claim/route.ts"),
+  "utf8"
+);
+assert.doesNotMatch(
+  claimR0Src,
+  /soft-launch generate authority|Cookie session remains the soft-launch/
+);
+assert.match(claimR0Src, /never live-spend authority|not live-spend authority/);
+const settingsR0Src = fs.readFileSync(
+  join(root, "app/settings/page.tsx"),
+  "utf8"
+);
+assert.doesNotMatch(settingsR0Src, /still debits the guest cookie/);
+// Old dishonest authority cell: bare "cookie generate" (not "cookie display only")
+assert.doesNotMatch(settingsR0Src, /cookie generate(?!\s*only)/);
+assert.match(
+  settingsR0Src,
+  /not live-spend|cookie display only/
+);
 // Badge / FreeTrialCta / Settings must not re-claim cookie live authority
 const creditsBadgeR0 = fs.readFileSync(
   join(root, "components/CreditsBadge.tsx"),
@@ -461,7 +494,11 @@ const creditsBadgeR0 = fs.readFileSync(
 );
 assert.doesNotMatch(
   creditsBadgeR0,
-  /cookie still generates|cookie still authoritative for generate/
+  /cookie still generate authority|cookie still generates|cookie still authoritative for generate/
+);
+assert.match(
+  creditsBadgeR0,
+  /not live-spend authority|R0 expects false/
 );
 assert.match(
   creditsBadgeR0,
@@ -4441,7 +4478,7 @@ const profilePanelSrc = fs.readFileSync(
   join(root, "components/ProfilePanel.tsx"),
   "utf8"
 );
-assert.match(profilePanelSrc, /Credits authority|cookie-authoritative|shadow/);
+assert.match(profilePanelSrc, /Credits authority|not live-spend authority|shadow/);
 assert.match(profilePanelSrc, /X-Pikbo-Jobs-Open|\/api\/generations/);
 // Profile: still image jobs HEAD probe (Settings parity — process-memory Flux)
 assert.match(profilePanelSrc, /X-Pikbo-Image-Jobs|\/api\/image/);
@@ -4475,7 +4512,7 @@ const settingsPageSrc = fs.readFileSync(
   join(root, "app/settings/page.tsx"),
   "utf8"
 );
-assert.match(settingsPageSrc, /Credits authority|cookie generate/);
+assert.match(settingsPageSrc, /Credits authority|cookie display only|not live-spend/);
 assert.match(settingsPageSrc, /X-Pikbo-Jobs-Open|\/api\/generations/);
 assert.match(settingsPageSrc, /health\.t6|freeLiveRawDownload|t6DownloadLabel/);
 assert.match(settingsPageSrc, /FreeTrialCta/);

@@ -68,7 +68,7 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
       ? `Free Mini display balance ${credits} cr · cached demos still free · compare plans`
       : signed
         ? cookieIsLive
-          ? `${credits} durable audit · cookie live (legacy)`
+          ? `${credits} durable audit · unexpected cookie live-spend claim (R0 expects false)`
           : `${credits} durable wallet (audit) · live needs atomic reserve`
         : freeLiveOpen
           ? `${credits} cr · Free Mini ${freeLive!.resolution} ${freeLive!.durationSec}s when Live is enabled`
@@ -82,7 +82,7 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
       ? `Free Mini display exhausted · cached demos still free · compare plans`
       : signed
         ? cookieIsLive
-          ? `Signed-in · durable shadow ${credits} cr · cookie still generate authority (legacy)`
+          ? `Signed-in · durable shadow ${credits} cr · unexpected cookie live-spend claim (R0 expects false)`
           : `Signed-in · durable audit ${credits} cr · live requires atomic reserve (cookie is not live-spend authority)`
         : freeLiveOpen
           ? `Free Mini · ${freeLive!.resolution} · ${freeLive!.durationSec}s · ~${clips} live when enabled · on-player mark`

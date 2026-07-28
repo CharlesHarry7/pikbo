@@ -20,8 +20,9 @@ export const runtime = "nodejs";
  * After magic-link sign-in: ensure durable Free account and one-time migrate
  * remaining guest Cookie credits (capped at 10, never paid plan).
  *
- * Cookie session remains the soft-launch generate authority until generate
- * switches to durable wallets; this claim is idempotent and audited.
+ * R0: cookie is never live-spend authority. Live generate requires durable
+ * atomic reserve (or labeled cached demos for guests/Free). This claim only
+ * migrates display balance into the durable wallet; it is idempotent and audited.
  *
  * Authorization: Bearer <supabase access_token>
  */

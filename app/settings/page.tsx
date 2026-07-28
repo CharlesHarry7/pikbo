@@ -216,8 +216,9 @@ export default function SettingsPage() {
         <h1 className="mt-3 text-2xl font-bold">Settings</h1>
         <p className="mt-1 text-sm text-[var(--fg-muted)]">
           Device data & session. Signed-in durable wallets use local file or
-          Supabase Postgres when the T5 migration is applied. Soft-launch live
-          Generate still debits the guest cookie.
+          Supabase Postgres when the T5 migration is applied. Cookie is not
+          live-spend authority (R0) — live needs durable reserve or labeled
+          cached demos.
         </p>
         <div
           className="mt-4 flex flex-wrap items-center gap-2"
@@ -271,7 +272,7 @@ export default function SettingsPage() {
           <div className="flex justify-between gap-4">
             <span className="text-[var(--fg-muted)]">Credits authority</span>
             <span className="text-right text-xs font-semibold leading-snug">
-              cookie generate
+              cookie display only · not live-spend
               {session?.signedIn
                 ? ` · durable ${durableBackend || "pending"} (${durableAuth || "shadow"})`
                 : ""}
