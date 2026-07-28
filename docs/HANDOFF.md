@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [grok]/[gpt] T6 non-production derivative proof merged
+- PR #51 merged at `80a17c9`; GitHub CI #481 passed the recovery, credit, T6, strict lint, typecheck, rendered-contract, link and 193-route production-build gates.
+- A synthetic H.264 640×360 source was baked with a visible PIKBO mark using real ffmpeg 6.0 and verified with ffprobe plus four decoded frames. Source/output SHA differ; watermark ROI mean delta is `6.011892` versus control `0`; metadata-only proof fails with `WATERMARK_PIXEL_PROOF_FAILED`.
+- Provider-source fetch is HTTPS allowlisted, DNS-pinned, redirect/size/time bounded and fail-closed for private, reserved, mapped, NAT64 and invalid IP forms. Raw provider URLs never become the customer delivery path.
+- This merge is source and evidence only. `SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED=false`; the Supabase migration is unapplied, storage is single-node rehearsal-only, and no scheduled production worker exists. Free live download remains blocked.
+- Vercel preview remains externally rate-limited (`upgradeToPro=build-rate-limit`); it is not a code-test failure.
+
+---
+
 ### 2026-07-28 — [gpt] immersive toy Recipe home V1
 - Home now opens on a full-bleed toy-video hero, then the frozen `HOME_PROOF_SLUGS` wall with eight distinct cached demos. Card body opens the auditable Inside Project page; the explicit `Use this recipe` action deep-links to Create.
 - Primary navigation is Explore, Recipes, Create, Library and Pricing, with one emphasized Generate CTA plus reachable credits, language, account and secondary links. Launch Pack remains the later commercial upgrade.

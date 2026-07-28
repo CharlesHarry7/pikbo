@@ -18,7 +18,8 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | CTRL-RESET | Close stale PRs, close R2 and enforce one active task per agent | Codex | done | main via PR #45 | Isolated worktrees and the one-task queue are now mandatory |
 | R0-NET | Unexpected-exit reservation safety without double release/refund | Codex / Grok | done | main via PR #47 | GitHub CI #466 green; capture throw/failure withheld, 0 release calls, behavior test in real CI |
 | MOBILE-PROOF | Mobile Home → Project → Create truth and playback regression | Codex | done | main via PR #49 | GitHub CI #470 green; 390/768/1440 proof path, truth copy and mobile single-play verified |
-| T6-DERIVATIVE | Baked free watermark and controlled derivative download | Grok | review | `agent/grok/t6-deliverable-proof` | Real ffmpeg 6.0/ffprobe 4.4 non-prod pixel proof recorded; raw route remains fail-closed; production migration/shared storage/worker enablement still blocked |
+| T6-PROOF | Non-prod baked watermark proof + fail-closed controlled delivery source | Grok / Codex | done | main via PR #51 | GitHub CI #481 green; real ffmpeg/ffprobe decoded-pixel proof, SSRF/IPv6 gates, 20-way owned-write fixture and 193-route build passed |
+| T6-PRODUCTION | Apply reviewed SQL, shared object storage and scheduled worker rehearsal | External / unassigned | blocked | none | `SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED=false`; disposable DB rehearsal, shared storage and worker deployment are required before Free live download |
 | WB-WAIT | No growth work before publishable product proof | WorkBuddy | blocked | none | #41/#46 closed; wait for explicit new queue row |
 
 Completion of an old row below does not authorize a new branch. Codex must add a row here first.
