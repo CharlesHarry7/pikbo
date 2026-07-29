@@ -22,6 +22,11 @@ export type DemoVideo = {
  * Original Pikbo prototype footage. These are cached product demos, so homepage
  * playback never invokes fal.ai and demo mode remains useful without FAL_KEY.
  *
+ * Posters/input stills were re-art-directed 2026-07-29 (Wave A frontend
+ * polish): each character's still is now a premium studio product photo of
+ * the same PIKBO Lab character (/demos/inputs/<character>.webp, original Lab
+ * key visuals). Cached output videos are unchanged. See docs/ASSETS.md.
+ *
  * publishedAt notes:
  * - First six: homepage demo theatre commit 2026-07-22T19:57:06+08:00
  * - Mini lab six: Seedance Mini lab batch commit 2026-07-23T03:11:03+08:00
@@ -35,7 +40,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "A cached product-hero prototype for recipe preview.",
     preset: "floating-hero",
     ratio: "9:16",
-    poster: "/demos/orbit-still.webp",
+    poster: "/demos/inputs/orbit.webp",
     mp4: "/demos/orbit-hyper-cgi.mp4",
     webm: "/demos/orbit-hyper-cgi.webm",
     accent: "#b8a3ff",
@@ -49,7 +54,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "A punchy reveal loop for Reels, Shorts, and listings.",
     preset: "blind-box-unboxing",
     ratio: "9:16",
-    poster: "/demos/moon-float.webp",
+    poster: "/demos/inputs/moon.webp",
     mp4: "/demos/moon-box-reveal.mp4",
     webm: "/demos/moon-box-reveal.webm",
     accent: "#83f3d2",
@@ -63,7 +68,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Turn a shelf character into a tiny cinematic moment.",
     preset: "miniature-scene",
     ratio: "16:9",
-    poster: "/demos/scout-still.webp",
+    poster: "/demos/inputs/scout.webp",
     mp4: "/demos/scout-story-mode.mp4",
     webm: "/demos/scout-story-mode.webm",
     accent: "#ffd36a",
@@ -77,7 +82,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Front-load the motion and make the first second count.",
     preset: "paparazzi-flash",
     ratio: "9:16",
-    poster: "/demos/beatbot-still.webp",
+    poster: "/demos/inputs/beatbot.webp",
     mp4: "/demos/beatbot-viral-hook.mp4",
     webm: "/demos/beatbot-viral-hook.webm",
     accent: "#ff6ea8",
@@ -91,7 +96,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Show the silhouette and finish without filming a turntable.",
     preset: "360-spin-showcase",
     ratio: "1:1",
-    poster: "/demos/scout-still.webp",
+    poster: "/demos/inputs/scout.webp",
     mp4: "/demos/scout-packshot-spin.mp4",
     webm: "/demos/scout-packshot-spin.webm",
     accent: "#ff9f6e",
@@ -105,7 +110,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Reuse one toy photo across a second sales-ready format.",
     preset: "mystery-box-reveal",
     ratio: "9:16",
-    poster: "/demos/beatbot-still.webp",
+    poster: "/demos/inputs/beatbot.webp",
     mp4: "/demos/beatbot-unboxed.mp4",
     webm: "/demos/beatbot-unboxed.webm",
     accent: "#74e4ff",
@@ -120,7 +125,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Dance loop for social posts.",
     preset: "make-figure-dance",
     ratio: "9:16",
-    poster: "/demos/orbit-still.webp",
+    poster: "/demos/inputs/orbit.webp",
     mp4: "/demos/orbit-dance.mp4",
     webm: "/demos/orbit-dance.mp4",
     accent: "#c8ff3d",
@@ -134,7 +139,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Boutique shelf glow.",
     preset: "display-case-glam",
     ratio: "9:16",
-    poster: "/demos/moon-float.webp",
+    poster: "/demos/inputs/moon.webp",
     mp4: "/demos/moon-glow.mp4",
     webm: "/demos/moon-glow.mp4",
     accent: "#b8a3ff",
@@ -148,7 +153,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "A cached walk-cycle prototype for recipe preview.",
     preset: "make-figure-walk",
     ratio: "9:16",
-    poster: "/demos/scout-still.webp",
+    poster: "/demos/inputs/scout.webp",
     mp4: "/demos/scout-walk.mp4",
     webm: "/demos/scout-walk.mp4",
     accent: "#ffd36a",
@@ -162,7 +167,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Neon cyber backdrop.",
     preset: "neon-city-night",
     ratio: "9:16",
-    poster: "/demos/beatbot-still.webp",
+    poster: "/demos/inputs/beatbot.webp",
     mp4: "/demos/beatbot-neon.mp4",
     webm: "/demos/beatbot-neon.mp4",
     accent: "#74e4ff",
@@ -176,7 +181,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Energy aura around figure.",
     preset: "power-aura",
     ratio: "9:16",
-    poster: "/demos/orbit-still.webp",
+    poster: "/demos/inputs/orbit.webp",
     mp4: "/demos/orbit-aura.mp4",
     webm: "/demos/orbit-aura.mp4",
     accent: "#ff6ea8",
@@ -190,7 +195,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     result: "Smoke burst entrance.",
     preset: "smoke-burst-entrance",
     ratio: "9:16",
-    poster: "/demos/moon-float.webp",
+    poster: "/demos/inputs/moon.webp",
     mp4: "/demos/moon-smoke.mp4",
     webm: "/demos/moon-smoke.mp4",
     accent: "#83f3d2",

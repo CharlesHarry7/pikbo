@@ -9,12 +9,14 @@ import {
   MEDIA_PROVENANCE_LABELS,
   mediaProvenanceForRecipe,
 } from "@/lib/mediaProvenance";
+import { getRecipeArt } from "@/lib/recipeArt";
 
 /** Exact Lab clips and static concept art are labeled separately. */
 export function PresetPreviewCard({ preset }: { preset: Preset }) {
   const demo = DEMO_VIDEOS.find((d) => d.preset === preset.slug);
   const exact = Boolean(demo);
   const mediaProvenance = mediaProvenanceForRecipe(preset.slug);
+  const conceptCover = demo ? null : getRecipeArt(preset.slug);
 
   return (
     <Link
@@ -42,12 +44,23 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
             style={{ background: preset.gradient }}
             data-concept-recipe-art={preset.slug}
           >
-            <span
-              aria-hidden
-              className="text-6xl drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] transition duration-300 group-hover:scale-105"
-            >
-              {preset.emoji}
-            </span>
+            {conceptCover ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={conceptCover.src}
+                alt={conceptCover.alt}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]"
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="text-6xl drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] transition duration-300 group-hover:scale-105"
+              >
+                {preset.emoji}
+              </span>
+            )}
           </div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-95 transition duration-300 group-hover:opacity-100" />

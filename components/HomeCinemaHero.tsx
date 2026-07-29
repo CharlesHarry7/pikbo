@@ -6,6 +6,17 @@ import { track } from "@/lib/analytics";
 import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
 import { WAVE_A_DESTINATIONS } from "@/lib/softLaunch";
 
+/**
+ * Brand premiere media — original PIKBO Lab key visual + 5s campaign loop
+ * (docs/ASSETS.md). It is an official Lab brand film cached in-repo, not a
+ * provider render and not tied to one recipe's proof record.
+ */
+const HERO_MEDIA = {
+  poster: "/demos/hero/hero-key.webp",
+  mp4: "/demos/hero/hero-loop.mp4",
+  label: "PIKBO Lab designer-toy premiere · cached brand film",
+} as const;
+
 export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
   const item = items.find(hasFeedVideo);
   const recipeSlug = item?.recipeSlug ?? "floating-hero";
@@ -17,20 +28,17 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
       className="relative isolate min-h-[calc(100svh-3rem)] overflow-hidden bg-[#050506] lg:min-h-[calc(100svh-3.5rem)]"
       aria-labelledby="home-hero-title"
     >
-      {item?.demo ? (
-        <div className="absolute inset-0">
-          <AutoPlayVideo
-            poster={item.demo.poster}
-            webm={item.demo.webm}
-            mp4={item.demo.mp4}
-            eager
-            showControls
-            focusable={false}
-            label={`${item.title} cached demo`}
-            className="h-full w-full object-cover object-center"
-          />
-        </div>
-      ) : null}
+      <div className="absolute inset-0">
+        <AutoPlayVideo
+          poster={HERO_MEDIA.poster}
+          mp4={HERO_MEDIA.mp4}
+          eager
+          showControls
+          focusable={false}
+          label={HERO_MEDIA.label}
+          className="h-full w-full object-cover object-center"
+        />
+      </div>
 
       <div
         className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.54)_48%,rgba(0,0,0,0.16)_78%),linear-gradient(0deg,rgba(0,0,0,0.72)_0%,transparent_46%,rgba(0,0,0,0.18)_100%)]"
@@ -86,8 +94,8 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
       </div>
 
       <div className="absolute bottom-6 right-5 z-10 hidden text-right text-[10px] font-bold uppercase tracking-[0.16em] text-white/44 sm:block">
-        <p>{item?.title ?? "Toy Recipe"}</p>
-        <p className="mt-1 text-white/28">{item?.subtitle ?? "Pikbo Lab"}</p>
+        <p>PIKBO Lab premiere</p>
+        <p className="mt-1 text-white/28">Original key visual · cached</p>
       </div>
     </section>
   );

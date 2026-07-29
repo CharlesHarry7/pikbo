@@ -1,5 +1,6 @@
 import { DEMO_VIDEOS, type DemoVideo } from "@/lib/demoVideos";
 import { PRESETS, CATEGORIES, type CategoryId } from "@/lib/presets";
+import { getRecipeArt } from "@/lib/recipeArt";
 import { APPS } from "@/lib/catalog";
 import { MODELS } from "@/lib/catalog";
 import { viralName } from "@/lib/viralNames";
@@ -40,6 +41,9 @@ export type FeedItem = {
   conceptArt?: {
     gradient: string;
     emoji: string;
+    /** Original Lab key visual (/demos/recipes/<slug>.webp); gradient+emoji fallback. */
+    src?: string;
+    alt?: string;
   };
   kind: "demo" | "preset" | "app" | "model";
   category?: CategoryId;
@@ -266,6 +270,8 @@ export function feedByCategory(cat: CategoryId): FeedItem[] {
         : {
             gradient: p.gradient,
             emoji: p.emoji,
+            src: getRecipeArt(p.slug)?.src,
+            alt: getRecipeArt(p.slug)?.alt,
           },
       kind: "preset" as const,
       category: p.category,

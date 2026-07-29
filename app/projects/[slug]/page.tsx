@@ -167,8 +167,14 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               ? "Verified source input and generated output"
               : "Reference poster and cached prototype"
           }
-          className="grid gap-3 lg:grid-cols-2"
+          className="relative grid gap-3 lg:grid-cols-2"
         >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-1/2 z-10 hidden h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#c8ff3d]/40 bg-black text-lg font-black text-[#c8ff3d] shadow-[0_0_30px_-6px_rgba(200,255,61,0.5)] lg:flex"
+          >
+            →
+          </div>
           <article className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] shadow-[0_20px_50px_-30px_rgba(0,0,0,0.9)]">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div>

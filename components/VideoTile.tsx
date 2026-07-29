@@ -68,12 +68,23 @@ export function VideoTile({
             }}
             data-concept-recipe-art={recipe ?? item.id}
           >
-            <span
-              aria-hidden
-              className="text-5xl drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] transition duration-300 group-hover:scale-105"
-            >
-              {item.conceptArt?.emoji ?? "✦"}
-            </span>
+            {item.conceptArt?.src ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={item.conceptArt.src}
+                alt={item.conceptArt.alt ?? ""}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="text-5xl drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] transition duration-300 group-hover:scale-105"
+              >
+                {item.conceptArt?.emoji ?? "✦"}
+              </span>
+            )}
           </div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-95" />

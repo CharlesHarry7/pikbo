@@ -6,25 +6,25 @@ export const SAMPLE_TOYS = [
   {
     id: "orbit",
     label: "Orbit float",
-    path: "/demos/orbit-still.webp",
+    path: "/demos/inputs/orbit.webp",
     effect: "floating-hero",
   },
   {
     id: "moon",
     label: "Moon box",
-    path: "/demos/moon-float.webp",
+    path: "/demos/inputs/moon.webp",
     effect: "blind-box-unboxing",
   },
   {
     id: "scout",
     label: "Scout pack",
-    path: "/demos/scout-still.webp",
+    path: "/demos/inputs/scout.webp",
     effect: "360-spin-showcase",
   },
   {
     id: "beatbot",
     label: "Beatbot",
-    path: "/demos/beatbot-still.webp",
+    path: "/demos/inputs/beatbot.webp",
     effect: "paparazzi-flash",
   },
 ] as const;

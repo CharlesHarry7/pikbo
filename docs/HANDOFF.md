@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-29 — [k3] Wave A frontend polish: premium art direction + original asset redo
+- Branch: `agent/k3/wave-a-frontend-polish` on top of `agent/gpt/higgsfield-wave-a` @ `3041ccf5` (human-directed task).
+- 32 new original Lab key visuals: hero key visual + 5 s brand loop, 4 character input stills (same Lab characters, premium studio re-shoot), 27 distinct recipe covers (unique toy/scene/palette per recipe). WebP ≤250 KB (hero ≤500 KB), generator watermark strip cropped. Registry: `docs/ASSETS.md` + `lib/recipeArt.ts`.
+- Home hero is now the brand film (single Create CTA preserved); recipe-wall cards use per-recipe covers as posters while the registered cached clip remains the playable proof; concept recipes on `/effects` render their own static cover (`conceptArt.src`), never borrowed loops; seller value banner is a campaign band; project page gains an input→output contrast marker.
+- No API, pricing, credit, provider, or persistence contracts touched; cached/live/concept honesty language and all smoke-gate contracts preserved.
+
+
+
 ### 2026-07-28 — [grok]/[gpt] T6 non-production derivative proof merged
 - PR #51 merged at `80a17c9`; GitHub CI #481 passed the recovery, credit, T6, strict lint, typecheck, rendered-contract, link and 193-route production-build gates.
 - A synthetic H.264 640×360 source was baked with a visible PIKBO mark using real ffmpeg 6.0 and verified with ffprobe plus four decoded frames. Source/output SHA differ; watermark ROI mean delta is `6.011892` versus control `0`; metadata-only proof fails with `WATERMARK_PIXEL_PROOF_FAILED`.

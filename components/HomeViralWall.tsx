@@ -5,6 +5,7 @@ import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
 import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
 import { getPreset } from "@/lib/presets";
+import { getRecipeArt } from "@/lib/recipeArt";
 import { WAVE_A_DESTINATIONS } from "@/lib/softLaunch";
 
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
@@ -43,6 +44,10 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
           const recipeSlug = item.recipeSlug ?? item.demo.preset;
           const recipeName =
             getPreset(recipeSlug)?.name || item.demo.title || item.title;
+          // Magazine-cover identity: each recipe gets its own original Lab
+          // key visual as the card face; the registered cached clip still
+          // plays on interaction/viewport as the media proof.
+          const cover = getRecipeArt(recipeSlug);
 
           return (
             <article
@@ -70,7 +75,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                 }
               >
                 <AutoPlayVideo
-                  poster={item.demo.poster}
+                  poster={cover?.src ?? item.demo.poster}
                   webm={item.demo.webm}
                   mp4={item.demo.mp4}
                   lazySources
