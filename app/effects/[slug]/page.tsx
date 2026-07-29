@@ -189,8 +189,9 @@ export default async function EffectPage({
             {preset.intro}
           </p>
           <p className="mt-3 text-xs text-[var(--fg-dim)]">
-            Free: one Seedance Mini live trial · 5s · 480p · on-player mark.
-            Without provider access, the tool returns a labeled cached demo.
+            Public preview: cached prototype · 0 credits · upload not
+            processed. Invited validation: private Fast 720p · 5 seconds ·
+            exact credit reservation.
           </p>
         </div>
       </section>

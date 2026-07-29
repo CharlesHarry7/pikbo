@@ -11,6 +11,16 @@ export type DemoVideo = {
   webm: string;
   accent: string;
   /**
+   * Honest case facts shown on the three high-intent launch pages. Historical
+   * cached assets do not acquire provider provenance or timing retroactively.
+   */
+  evidence?: {
+    inputStatus: string;
+    intendedUse: string;
+    renderTime: string;
+    limitation: string;
+  };
+  /**
    * First public publish time (ISO 8601 DateTime with timezone).
    * Source: git first-commit author date of the asset / registry batch.
    * Used as VideoObject.uploadDate — never invent a single fake global date.
@@ -53,6 +63,15 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/moon-box-reveal.mp4",
     webm: "/demos/moon-box-reveal.webm",
     accent: "#83f3d2",
+    evidence: {
+      inputStatus:
+        "The visible Moon reference still and cached clip are paired in Pikbo’s repository; the original provider task ID was not retained.",
+      intendedUse: "Vertical blind-box reveal or restock-hook draft.",
+      renderTime:
+        "Not recorded for this historical prototype; excluded from the ≤8 minute validation metric.",
+      limitation:
+        "Packaging, small paint details, logos, and inferred motion must be checked against the physical product.",
+    },
     publishedAt: "2026-07-22T11:57:06Z",
   },
   {
@@ -95,6 +114,15 @@ export const DEMO_VIDEOS: DemoVideo[] = [
     mp4: "/demos/scout-packshot-spin.mp4",
     webm: "/demos/scout-packshot-spin.webm",
     accent: "#ff9f6e",
+    evidence: {
+      inputStatus:
+        "The visible Scout reference still and cached clip are paired in Pikbo’s repository; the original provider task ID was not retained.",
+      intendedUse: "Square marketplace listing-spin draft.",
+      renderTime:
+        "Not recorded for this historical prototype; excluded from the ≤8 minute validation metric.",
+      limitation:
+        "Back and side angles are inferred. Check sculpt, paint, logos, and packaging before publishing a listing.",
+    },
     publishedAt: "2026-07-22T11:57:06Z",
   },
   {

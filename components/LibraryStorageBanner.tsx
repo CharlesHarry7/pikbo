@@ -5,16 +5,15 @@ import { useEffect, useState } from "react";
 import { fetchMe, type MeResponse } from "@/lib/meClient";
 import { isBrowserSupabaseReady } from "@/lib/supabase/browser";
 
-/**
- * HF Library honesty strip — cloud feel without lying about multi-device sync.
- * Layers: device clips · session jobs · optional signed-in identity.
- */
+/** Distinguish private account results from device-only imports. */
 export function LibraryStorageBanner({
   deviceCount,
   sessionOpen,
+  privateCount = 0,
 }: {
   deviceCount: number;
   sessionOpen: number;
+  privateCount?: number;
 }) {
   const [me, setMe] = useState<MeResponse | null>(null);
 
@@ -27,7 +26,8 @@ export function LibraryStorageBanner({
     return () => window.clearTimeout(t);
   }, []);
 
-  const signedIn = Boolean(me?.signedIn && me?.auth?.id);
+  const signedIn =
+    privateCount > 0 || Boolean(me?.signedIn && me?.auth?.id);
   const authReady = isBrowserSupabaseReady() || Boolean(me?.authConfigured);
   const email = me?.auth?.email;
 
@@ -42,13 +42,12 @@ export function LibraryStorageBanner({
             {deviceCount}
           </p>
           <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-            Saved on this device · export JSON to move browsers · not
-            multi-device cloud
+            Saved only in this browser · export JSON to move it
           </p>
         </div>
         <div className="border-b border-white/10 p-4 sm:border-b-0 sm:border-r">
           <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/50">
-            Session jobs
+            In progress
           </p>
           <p className="mt-1 text-lg font-black tabular-nums text-white">
             {sessionOpen}
@@ -57,7 +56,7 @@ export function LibraryStorageBanner({
             </span>
           </p>
           <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-            This server process ledger · not multi-node cloud
+            Jobs started in this browser session
           </p>
         </div>
         <div className="p-4">
@@ -70,8 +69,9 @@ export function LibraryStorageBanner({
                 {email || "Signed in"}
               </p>
               <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-                Identity ready · clip cloud sync still device-local until
-                durable assets ship
+                {privateCount > 0
+                  ? `${privateCount} private clip${privateCount === 1 ? "" : "s"} · owner-only cloud download`
+                  : "Signed in · private generations will persist here"}
               </p>
             </>
           ) : (
@@ -79,7 +79,7 @@ export function LibraryStorageBanner({
               <p className="mt-1 text-sm font-bold text-white/80">Guest</p>
               <p className="mt-0.5 text-[11px] leading-snug text-white/45">
                 {authReady
-                  ? "Sign in to publish live clips to Community"
+                  ? "Sign in to save private generations to your account"
                   : "Auth not configured · Library stays on-device"}
               </p>
               {authReady ? (
@@ -94,16 +94,10 @@ export function LibraryStorageBanner({
           )}
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-black/30 px-4 py-2">
+      <div className="border-t border-white/10 bg-black/30 px-4 py-2">
         <p className="text-[10px] text-white/40">
-          HF Assets pattern · honest storage labels · no fake multi-device claim
+          Private generations persist by account · device imports stay local
         </p>
-        <Link
-          href="/community"
-          className="text-[10px] font-bold text-[var(--mint)] hover:underline"
-        >
-          Community wall →
-        </Link>
       </div>
     </section>
   );

@@ -14,6 +14,7 @@
     "engine-smoke": "node scripts/engine-smoke.mjs",
     "product-proof-smoke": "node scripts/product-proof-smoke.mjs",
     "mobile-proof-regression": "node scripts/mobile-proof-regression.mjs",
+    "capability-matrix": "node --experimental-strip-types scripts/capability-matrix-regression.mjs",
     "showcase-evidence-smoke": "node scripts/showcase-evidence-smoke.mjs",
     "showcase-promotion-gate": "node scripts/showcase-promotion-gate.mjs",
     "live-copy-smoke": "node scripts/live-capability-copy-smoke.mjs",
@@ -39,7 +40,13 @@
     "preflight-launch": "bash scripts/preflight-launch.sh",
     "mode-a-acceptance": "bash scripts/mode-a-acceptance.sh",
     "indexnow": "node scripts/indexnow-submit.mjs",
-    "r0-safety-net": "node --experimental-strip-types scripts/r0-safety-net.mjs"
+    "r0-safety-net": "node --experimental-strip-types scripts/r0-safety-net.mjs",
+    "p0-private-live-generation": "node --experimental-strip-types scripts/p0-private-live-generation.mjs",
+    "seller-pack-atomic-regression": "node --experimental-strip-types scripts/seller-pack-atomic-live-regression.mjs",
+    "provider-budget-regression": "node --experimental-strip-types scripts/provider-budget-private-settlement-regression.mjs",
+    "auth-magic-link-regression": "node --experimental-strip-types scripts/auth-magic-link-regression.mjs",
+    "stripe-billing-regression": "node --experimental-strip-types scripts/stripe-billing-regression.mjs",
+    "privacy-analytics-regression": "node --experimental-strip-types scripts/privacy-analytics-regression.mjs"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.1",

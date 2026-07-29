@@ -1,5 +1,11 @@
 # pikbo.ai 上线作战手册（老板点这里）
 
+> **本手册的旧 Creator/Shop、Production FAL 和直接开 Stripe 步骤已经停用。**
+> 当前唯一执行合同见
+> [`CURRENT_LAUNCH_CONTRACT.md`](./CURRENT_LAUNCH_CONTRACT.md)：生产保持
+> validation / paid 关闭，只在私有 Preview 和非生产数据库完成真实 Pack、
+> 质量、隐私、账本与 10 人目标用户门槛后再放行。
+
 预计总时间：30～60 分钟（等 DNS 可能更久）。
 
 ---

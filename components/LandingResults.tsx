@@ -74,31 +74,40 @@ export function LandingResults({
             key={d.id}
             className="group overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition hover:border-[var(--mint)]/35"
           >
-            <div className="relative aspect-video bg-black/50">
-              {/* Poster as real img for alt + LCP-friendly first tile */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={d.poster}
-                alt={`${d.title} — cached Pikbo Lab prototype poster of ${d.character} (${d.eyebrow})`}
-                className="sr-only"
-                width={640}
-                height={360}
-                loading={i === 0 ? "eager" : "lazy"}
-                decoding="async"
-              />
-              <video
-                poster={d.poster}
-                className="h-full w-full object-cover"
-                muted
-                loop
-                playsInline
-                preload={i === 0 ? "metadata" : "none"}
-                controls
-                aria-label={`${d.title}. Cached Lab prototype — not a visitor upload.`}
-              >
-                <source src={d.webm} type="video/webm" />
-                <source src={d.mp4} type="video/mp4" />
-              </video>
+            <div className="relative grid aspect-video grid-cols-2 gap-px bg-white/10">
+              <div className="relative overflow-hidden bg-black/60">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={d.poster}
+                  alt={`${d.title} reference still of ${d.character}`}
+                  className="h-full w-full object-cover"
+                  width={640}
+                  height={640}
+                  loading={i === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                />
+                <span className="absolute bottom-2 left-2 rounded-full bg-black/75 px-2 py-1 text-[8px] font-bold uppercase tracking-wide text-white/80">
+                  Reference still
+                </span>
+              </div>
+              <div className="relative overflow-hidden bg-black/60">
+                <video
+                  poster={d.poster}
+                  className="h-full w-full object-cover"
+                  muted
+                  loop
+                  playsInline
+                  preload={i === 0 ? "metadata" : "none"}
+                  controls
+                  aria-label={`${d.title}. Cached Lab output — not a visitor upload.`}
+                >
+                  <source src={d.webm} type="video/webm" />
+                  <source src={d.mp4} type="video/mp4" />
+                </video>
+                <span className="pointer-events-none absolute bottom-2 left-2 rounded-full bg-black/75 px-2 py-1 text-[8px] font-bold uppercase tracking-wide text-white/80">
+                  Cached output
+                </span>
+              </div>
               <div className="pointer-events-none absolute left-2 top-2 flex max-w-[90%] flex-wrap gap-0.5">
                 <span
                   className="rounded-full border border-white/10 bg-black/60 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/80 backdrop-blur-sm"
@@ -116,6 +125,34 @@ export function LandingResults({
               <p className="mt-1 text-xs leading-relaxed text-white/50">
                 {d.result}
               </p>
+              {d.evidence ? (
+                <dl className="mt-3 space-y-2 border-t border-white/10 pt-3 text-[10px] leading-relaxed text-white/50">
+                  <div>
+                    <dt className="font-bold uppercase tracking-wide text-white/75">
+                      Input / output record
+                    </dt>
+                    <dd>{d.evidence.inputStatus}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-bold uppercase tracking-wide text-white/75">
+                      Intended use
+                    </dt>
+                    <dd>{d.evidence.intendedUse}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-bold uppercase tracking-wide text-white/75">
+                      Recorded time
+                    </dt>
+                    <dd>{d.evidence.renderTime}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-bold uppercase tracking-wide text-white/75">
+                      Limitation
+                    </dt>
+                    <dd>{d.evidence.limitation}</dd>
+                  </div>
+                </dl>
+              ) : null}
               <Link
                 href={createRemixHref(d.preset, d.id)}
                 className="mt-2.5 inline-flex text-[11px] font-bold text-[var(--mint)] opacity-90 hover:underline group-hover:opacity-100"

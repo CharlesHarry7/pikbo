@@ -10,6 +10,8 @@ import { pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import "./health-truth-contract.mjs";
+import "./p0-private-live-generation.mjs";
+import "./auth-magic-link-regression.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -311,7 +313,8 @@ assert.match(
 );
 
 const me = fs.readFileSync(join(root, "app/api/me/route.ts"), "utf8");
-assert.match(me, /generateMode/);
+assert.match(me, /probeSoftLiveReadiness/);
+assert.match(me, /canLiveGenerate/);
 assert.match(me, /cachedDemoFree/);
 assert.match(me, /getAuthUserFromRequest|signedIn/);
 assert.match(me, /getPersonalWallet|durable/);
@@ -348,10 +351,11 @@ assert.match(hist, /downloadGate|downloadAllowed/);
 assert.match(hist, /"unsafe"|return "unsafe"/);
 assert.match(gen, /creditsOutcome === "0 cached"|creditsOutcome === "10 used"/);
 
-assert.match(ent, /lastInvoiceId/);
 const wh = fs.readFileSync(join(root, "app/api/webhooks/stripe/route.ts"), "utf8");
-assert.match(wh, /lastInvoiceId/);
-assert.match(wh, /double-fill|redeliver/i);
+assert.match(ent, /STRIPE_BILLING_FIXTURE_MODE/);
+assert.match(wh, /applyStripeBillingEvent/);
+assert.match(wh, /verifyStripeSignature/);
+assert.match(wh, /grantedCredits/);
 
 const batch = fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8");
 assert.match(batch, /effectiveModel/);
@@ -498,11 +502,11 @@ assert.doesNotMatch(
 );
 assert.match(
   creditsBadgeR0,
-  /not live-spend authority|R0 expects false/
+  /canLiveGenerate\(session\)/
 );
 assert.match(
   creditsBadgeR0,
-  /cookieIsLiveSpendAuthority|liveEnabled|atomic reserve|blocked until T6/
+  /canLiveGenerate|liveEnabled|cached previews/
 );
 const freeTrialCtaR0 = fs.readFileSync(
   join(root, "components/FreeTrialCta.tsx"),
@@ -646,8 +650,10 @@ const confirm = fs.readFileSync(
   join(root, "app/api/checkout/confirm/route.ts"),
   "utf8"
 );
-assert.match(confirm, /lastCheckoutSessionId/);
-assert.match(confirm, /idempotent/);
+assert.match(confirm, /paidCheckoutIsValid/);
+assert.match(confirm, /billingMetadataMatches/);
+assert.match(confirm, /WEBHOOK_PENDING/);
+assert.doesNotMatch(confirm, /upsertEntitlement|setPlan|saveSession/);
 
 // G7: dev topup never open on production hosts
 const topup = fs.readFileSync(join(root, "app/api/dev/topup/route.ts"), "utf8");
@@ -676,12 +682,74 @@ assert.match(provenance, /Cached demo/);
 assert.match(provenance, /Live generation/);
 assert.match(provenance, /On-player mark/);
 assert.match(provenance, /Local Library/);
+assert.match(provenance, /isIgnoredOwnedUploadResult/);
 const createStudio = fs.readFileSync(
   join(root, "components/CreateStudio.tsx"),
   "utf8"
 );
 assert.match(createStudio, /resultProvenanceLabel/);
 assert.match(createStudio, /PROVENANCE\.onPlayerMark|onPlayerMark/);
+assert.match(createStudio, /ignoredOwnedUpload/);
+assert.match(createStudio, /Your photo was not processed/);
+assert.match(createStudio, /showLabSample=\{lastUploadIgnored \|\| !image\}/);
+const ignoredUploadGateAt = createStudio.indexOf(
+  "const ignoredOwnedUpload = isIgnoredOwnedUploadResult"
+);
+const acceptedResultAt = createStudio.indexOf("setVideoUrl(data.videoUrl)");
+assert.ok(
+  ignoredUploadGateAt > 0 && acceptedResultAt > ignoredUploadGateAt,
+  "owned-upload honesty gate must run before any cached URL becomes READY"
+);
+const provenanceCjs = require("typescript").transpileModule(provenance, {
+  compilerOptions: {
+    module: require("typescript").ModuleKind.CommonJS,
+    target: require("typescript").ScriptTarget.ES2022,
+  },
+}).outputText;
+const provenanceFixtureModule = { exports: {} };
+new Function("require", "exports", "module", provenanceCjs)(
+  require,
+  provenanceFixtureModule.exports,
+  provenanceFixtureModule
+);
+const provenanceFixture = provenanceFixtureModule.exports;
+assert.equal(
+  provenanceFixture.isIgnoredOwnedUploadResult({
+    demo: true,
+    processedUpload: false,
+    uploadIgnored: true,
+    labSample: false,
+  }),
+  true
+);
+assert.equal(
+  provenanceFixture.isIgnoredOwnedUploadResult({
+    demo: true,
+    labSample: false,
+  }),
+  true,
+  "legacy cached payloads must also fail closed for an owned upload"
+);
+assert.equal(
+  provenanceFixture.isIgnoredOwnedUploadResult({
+    demo: true,
+    processedUpload: false,
+    uploadIgnored: true,
+    labSample: true,
+  }),
+  false,
+  "explicit Lab samples remain previewable"
+);
+assert.equal(
+  provenanceFixture.isIgnoredOwnedUploadResult({
+    demo: false,
+    processedUpload: true,
+    uploadIgnored: false,
+    labSample: false,
+  }),
+  false,
+  "confirmed live upload remains a successful result"
+);
 const landing = fs.readFileSync(
   join(root, "components/LandingToolPanel.tsx"),
   "utf8"
@@ -1614,11 +1682,11 @@ assert.match(
   fs.readFileSync(join(root, "app/api/image/[id]/retry/route.ts"), "utf8"),
   /forkRetryImageJob/
 );
-assert.match(libraryFirstRun, /Saved on this device/);
+assert.match(libraryFirstRun, /saved on this device/i);
 assert.match(libraryFirstRun, /not durable cloud|not multi-device cloud/);
 assert.match(
   fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /Saved on this device/
+  /saved on this device/i
 );
 assert.match(
   fs.readFileSync(
@@ -1787,10 +1855,13 @@ assert.match(imagePage, /refund unconfirmed|Request canceled/);
 assert.match(imagePage, /GenerateSuiteChrome|canHandOffStill|stashPendingStill/);
 // FreeTrial honesty after still job (PublicSession merge must rehydrate)
 assert.match(imagePage, /mergeMeSession/);
-assert.match(
-  fs.readFileSync(join(root, "components/GenerateSuiteChrome.tsx"), "utf8"),
-  /id:\s*["']image["']|href:\s*["']\/image["']/
+const suiteChrome = fs.readFileSync(
+  join(root, "components/GenerateSuiteChrome.tsx"),
+  "utf8"
 );
+assert.match(suiteChrome, /href:\s*["']\/create\?mode=seller-pack["']/);
+assert.match(suiteChrome, /href:\s*["']\/effects["']/);
+assert.match(suiteChrome, /href:\s*["']\/library["']/);
 assert.match(
   fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8"),
   /ItemList|itemListElement/
@@ -2313,10 +2384,14 @@ assert.match(
   fs.readFileSync(join(root, "app/about/page.tsx"), "utf8"),
   /Designer-toy AI video|CONCEPT_ROBOTS/
 );
-assert.match(
-  fs.readFileSync(join(root, "components/HomeSeoBody.tsx"), "utf8"),
-  /data-home-seo-mesh=["']long-tail["']/
+const homeSeoBody = fs.readFileSync(
+  join(root, "components/HomeSeoBody.tsx"),
+  "utf8"
 );
+assert.match(homeSeoBody, /\/tools\/ai-toy-video-generator/);
+assert.match(homeSeoBody, /\/tools\/figure-360-product-video/);
+assert.match(homeSeoBody, /\/tools\/blind-box-reveal-video-maker/);
+assert.doesNotMatch(homeSeoBody, /data-home-seo-mesh=["']long-tail["']/);
 
 // GSC P0: Preview pages must NOT be dual-blocked by robots.txt (need crawl for noindex)
 const robotsSrc = fs.readFileSync(join(root, "app/robots.ts"), "utf8");
@@ -2364,7 +2439,7 @@ assert.match(demoVideosSrc, /publishedAt:\s*string/);
   const unique = new Set(pubs.map((x) => x.replace(/^publishedAt:\s*/, "")));
   assert.ok(unique.size >= 1);
 }
-// AppShell: no duplicate Pricing in right rail; GA4 page_view on pathname
+// AppShell: no duplicate Pricing in right rail; privacy-gated Create visit
 {
   const shell = fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8");
   assert.match(shell, /trackPageView/);
@@ -2388,11 +2463,12 @@ assert.match(
   fs.readFileSync(join(root, "app/terms/page.tsx"), "utf8"),
   /canonical:\s*["']\/terms["']/
 );
-// Analytics page_view helper
+// Analytics route helper emits only the approved Create funnel visit.
 {
   const a = fs.readFileSync(join(root, "lib/analytics.ts"), "utf8");
   assert.match(a, /trackPageView/);
-  assert.match(a, /page_view/);
+  assert.match(a, /create_view/);
+  assert.match(a, /safeSurface\(payload\.path\) === "create"/);
   assert.match(a, /send_page_view:\s*false/);
 }
 const appsMeta = fs.readFileSync(join(root, "app/apps/page.tsx"), "utf8");
@@ -3167,16 +3243,17 @@ assert.match(
   /putLocalAsset/
 );
 
-// Phase C — Seller Pack shadow reserve 30 / settle-release 10 per child
+// Phase C — one atomic Seller Pack reserve 30 / server-only terminal state
 const sellerPackLib = fs.readFileSync(
   join(root, "lib/durableCredits/sellerPack.ts"),
   "utf8"
 );
-assert.match(sellerPackLib, /SELLER_PACK_QUOTE_CREDITS|sellerPackQuoteCredits/);
-assert.match(sellerPackLib, /reserveSellerPackShadow/);
-assert.match(sellerPackLib, /settleSellerPackChild/);
-assert.match(sellerPackLib, /releaseSellerPackChild/);
-assert.match(sellerPackLib, /purpose:\s*"seller_pack"|seller_pack/);
+assert.match(sellerPackLib, /SELLER_PACK_QUOTE_CREDITS/);
+assert.match(sellerPackLib, /reserveSellerPackAtomic/);
+assert.match(sellerPackLib, /authorizeSellerPackChildLive/);
+assert.match(sellerPackLib, /settleSellerPackChildAtomic/);
+assert.match(sellerPackLib, /releaseSellerPackChildAtomic/);
+assert.doesNotMatch(sellerPackLib, /reserveSellerPackShadow/);
 function sellerPackQuoteCredits(childCount = 3, per = 10) {
   return childCount * per;
 }
@@ -3186,11 +3263,12 @@ const spReserve = fs.readFileSync(
   join(root, "app/api/seller-pack/reserve/route.ts"),
   "utf8"
 );
-assert.match(spReserve, /reserveSellerPackShadow/);
+assert.match(spReserve, /reserveSellerPackAtomic/);
+assert.match(spReserve, /AUTH_REQUIRED/);
 assert.match(spReserve, /SELLER_PACK_QUOTE_CREDITS|quoteCredits/);
-// R0/R1 honesty: cookie is not live-spend authority after cost gate
+// R0/R1 honesty: guest/shadow/cookie is not live-spend authority.
 assert.doesNotMatch(spReserve, /cookie-generate-still-authoritative/);
-assert.match(spReserve, /generate-route-cost-gate|durable-shadow-audit-plus-generate-gate/);
+assert.match(spReserve, /server-owned-atomic-pack/);
 
 // Phase F Seller Pack Free Mini cannot start full 30-credit live pack
 {
@@ -3231,19 +3309,25 @@ assert.match(spReserve, /generate-route-cost-gate|durable-shadow-audit-plus-gene
   assert.equal(sellerPackLiveStartAllowed({ demo: false, balance: 20, childCount: 2 }).ok, true);
 }
 
-assert.match(
-  fs.readFileSync(join(root, "app/api/seller-pack/settle/route.ts"), "utf8"),
-  /settleSellerPackChild/
+assert.equal(
+  fs.existsSync(join(root, "app/api/seller-pack/settle/route.ts")),
+  false
 );
-assert.match(
-  fs.readFileSync(join(root, "app/api/seller-pack/release/route.ts"), "utf8"),
-  /releaseSellerPackChild/
+assert.equal(
+  fs.existsSync(join(root, "app/api/seller-pack/release/route.ts")),
+  false
 );
-assert.match(batchStudio, /reserveSellerPackShadowClient/);
-assert.match(batchStudio, /settleSellerPackChildClient/);
-assert.match(batchStudio, /releaseSellerPackChildClient/);
-assert.match(batchStudio, /packReservationId/);
-assert.match(gen, /reserveSellerPackShadowClient/);
+assert.match(batchStudio, /reserveSellerPackClient/);
+assert.match(batchStudio, /packRunId[\s\S]*packJobId/);
+assert.doesNotMatch(batchStudio, /settleSellerPackChildClient/);
+assert.doesNotMatch(batchStudio, /releaseSellerPackChildClient/);
+assert.match(
+  fs.readFileSync(
+    join(root, "app/api/internal/seller-pack/reconcile/route.ts"),
+    "utf8"
+  ),
+  /PIKBO_INTERNAL_WORKER_SECRET[\s\S]*expireAtomicSellerPackQueuedChildren/
+);
 
 // Round B Y5 — pure Seller Pack quote + BatchStudio strip
 const spQuoteSrc = fs.readFileSync(
@@ -3345,7 +3429,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "lib/durableCredits/sellerPack.ts"), "utf8"),
-  /cookie is not live-spend authority|not live-spend authority/
+  /parallel shadow ledger|never opens a second/
 );
 // Webhook must not map UNSAFE_URL to 500 — client/ops need 422.
 assert.match(
@@ -3481,7 +3565,11 @@ execFileSync(
   ["--experimental-strip-types", t6DeliverableProof],
   { stdio: "pipe" }
 );
-assert.match(health, /t6Report|t6:/);
+assert.match(health, /probeSoftLiveReadiness/);
+assert.match(
+  fs.readFileSync(join(root, "lib/liveReadinessServer.ts"), "utf8"),
+  /t6Report/
+);
 assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
   /bakedDerivativeVerified|server-owned baked derivative/
@@ -3583,8 +3671,8 @@ assert.match(
   fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
   /PRIVATE_ROBOTS/
 );
-assert.match(library, /this server process/);
-assert.match(library, /Cancel ledger|method:\s*[\"']DELETE[\"']/);
+assert.match(library, /In-progress jobs above are temporary/);
+assert.match(library, /Cancel request|method:\s*[\"']DELETE[\"']/);
 // Failure next-actions live on shared GenerateFailPanel (Create/Batch/Landing/Image)
 const failPanel = fs.readFileSync(
   join(root, "components/GenerateFailPanel.tsx"),
@@ -3650,9 +3738,12 @@ assert.match(
   /PRIVATE_ROBOTS|index:\s*false/
 );
 
-// Phase H analytics funnel + private ops robots
+// Phase H privacy-converged analytics funnel + private ops robots
 const analyticsSrc = fs.readFileSync(join(root, "lib/analytics.ts"), "utf8");
-assert.match(analyticsSrc, /export_click|project_open|upload_ready/);
+assert.match(
+  analyticsSrc,
+  /create_view[\s\S]*asset_upload_complete[\s\S]*generation_start[\s\S]*generation_success[\s\S]*download[\s\S]*regenerate_7d/
+);
 assert.match(analyticsSrc, /NEXT_PUBLIC_ANALYTICS_URL|sendBeacon/);
 assert.match(createStudio, /upload_ready|export_click/);
 assert.match(library, /export_click/);
@@ -3997,14 +4088,28 @@ const createPageMeta = fs.readFileSync(
 );
 assert.match(createPageMeta, /CONCEPT_ROBOTS/);
 assert.match(createPageMeta, /robots:\s*CONCEPT_ROBOTS/);
-// Cmd-K + Footer: Preview doors labeled (not PRIMARY peers)
-assert.match(
-  fs.readFileSync(join(root, "components/CommandPalette.tsx"), "utf8"),
-  /Cinema · Preview|Still studio · Preview/
+// Cmd-K + Footer stay focused on the shipped loop; empty suite shells are hidden.
+const commandPaletteSrc = fs.readFileSync(
+  join(root, "components/CommandPalette.tsx"),
+  "utf8"
 );
-assert.match(
-  fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
-  /Flow · Preview|Assets · Local/
+assert.match(commandPaletteSrc, /Pricing · Founding Studio/);
+assert.match(commandPaletteSrc, /AI toy video generator/);
+assert.match(commandPaletteSrc, /Blind-box reveal video/);
+assert.match(commandPaletteSrc, /Library · private results/);
+assert.doesNotMatch(
+  commandPaletteSrc,
+  /Cinema · Preview|Flow · Preview|Community|Supercomputer|Modules/
+);
+const footerCoreSrc = fs.readFileSync(
+  join(root, "components/Footer.tsx"),
+  "utf8"
+);
+assert.match(footerCoreSrc, /Launch Pack/);
+assert.match(footerCoreSrc, /AI toy video generator/);
+assert.doesNotMatch(
+  footerCoreSrc,
+  /Flow · Preview|Community|Supercomputer|Modules/
 );
 // Preview doors must not sit in PRIMARY_NAV
 {
@@ -4025,8 +4130,9 @@ assert.match(appShellSrc, /MoreMenu|CreditsBadge|LanguageSwitcher/);
 assert.match(appShellSrc, /data-appshell-cta=["']generate["']/);
 // GA4 adapter is env-gated no-op when unset (reuse analyticsSrc declared above)
 assert.match(analyticsSrc, /NEXT_PUBLIC_GA_MEASUREMENT_ID/);
-assert.match(analyticsSrc, /landing_view|generate_start|export_click/);
-assert.match(analyticsSrc, /SENSITIVE_META|sanitizeMeta/i);
+assert.match(analyticsSrc, /PRIVACY_FUNNEL_EVENTS/);
+assert.match(analyticsSrc, /DOWNLOAD_VIA_ALLOWLIST|toPrivacyEnvelope/);
+assert.doesNotMatch(analyticsSrc, /function sanitizeMeta/);
 // Modules remains a real product surface (not necessarily primary-nav peer)
 assert.match(
   fs.readFileSync(join(root, "app/modules/page.tsx"), "utf8"),
@@ -4056,7 +4162,8 @@ assert.match(
   /\/apps/
 );
 
-// Suite IA consistency: Modules doors + G4 inventory
+// Hidden preview routes remain internally testable, but primary product chrome
+// and pricing stay focused on Generate → Launch Pack → Library.
 const linkCheckSrc = fs.readFileSync(
   join(root, "scripts/link-check.sh"),
   "utf8"
@@ -4066,7 +4173,7 @@ assert.match(linkCheckSrc, /\/apps/);
 assert.match(linkCheckSrc, /\/status/);
 assert.match(linkCheckSrc, /job=etsy-listing/);
 const footerSrc = fs.readFileSync(join(root, "components/Footer.tsx"), "utf8");
-assert.match(footerSrc, /\/modules/);
+assert.doesNotMatch(footerSrc, /\/modules/);
 assert.match(footerSrc, /seller-pack|Seller Pack/);
 assert.doesNotMatch(sitemapSrc, /\/modules/);
 assert.match(
@@ -4075,11 +4182,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "app/pricing/page.tsx"), "utf8"),
-  /\/modules/
-);
-assert.match(
-  fs.readFileSync(join(root, "app/community/page.tsx"), "utf8"),
-  /\/modules/
+  /Founding Studio/
 );
 
 // Retry must freeze version still — never ambient composer asset after re-upload
@@ -4213,15 +4316,18 @@ assert.doesNotMatch(
   /titleDefault:\s*["']AI Toy Video Generator from One Photo/
 );
 assert.match(siteSrc, /rankToolPath|\/tools\/ai-toy-video-generator/);
-// Product path before Preview doors in MODE_DEFS (suiteChromeSrc declared above)
+// Suite chrome exposes only the four shipped product surfaces.
 const genIdx = suiteChromeSrc.indexOf('id: "generate"');
 const sellerIdx = suiteChromeSrc.indexOf('id: "seller"');
-const flowIdx = suiteChromeSrc.indexOf('id: "flow"');
-const imageIdx = suiteChromeSrc.indexOf('id: "image"');
+const recipesIdx = suiteChromeSrc.indexOf('id: "recipes"');
+const libraryIdx = suiteChromeSrc.indexOf('id: "library"');
 assert.ok(genIdx > 0 && sellerIdx > genIdx, "seller pack after generate");
-assert.ok(flowIdx > sellerIdx, "flow preview after product modes");
-assert.ok(imageIdx > flowIdx, "stills preview last among suite doors");
-assert.match(suiteChromeSrc, /preview:\s*true/);
+assert.ok(recipesIdx > sellerIdx, "recipes after seller pack");
+assert.ok(libraryIdx > recipesIdx, "library after recipes");
+assert.doesNotMatch(
+  suiteChromeSrc,
+  /id:\s*"flow"|id:\s*"image"|id:\s*"cinema"|id:\s*"modules"/
+);
 assert.match(suiteChromeSrc, /suite\.preview/);
 // Home suite rail + landing doors: product first, Flow tagged Preview
 const suiteEntrySrc = fs.readFileSync(
@@ -4377,7 +4483,8 @@ assert.match(communityPublishSrc, /watermark/);
 assert.match(communityPublishSrc, /Free raw · no publish|T6/);
 assert.match(communityPublishSrc, /RATE_LIMITED/);
 assert.match(communityPublishSrc, /isSafeDeliverableUrl/);
-assert.match(library, /watermark=\{Boolean\(item\.watermark\)\}|watermark=\{/);
+assert.match(library, /watermark:\s*Boolean\(item\.watermark\)/);
+assert.match(library, /item\.watermark && !item\.demo/);
 // Tools + Effects hubs: freeTrial-honest CTAs + Phase H FAQ (not thin shelves)
 const toolsIndexSrc = fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8");
 assert.match(toolsIndexSrc, /FreeTrialCta/);
@@ -4882,24 +4989,25 @@ assert.match(
   /id:\s*["']core-i2v["'][\s\S]*?href:\s*(FLOW_GENERATE_HREF|createWorkbenchHref|createRemixHref)/
 );
 
-// T8 Seller Pack recovery: a browser hint carries only identifiers/config;
-// current `/api/generations` rows own result + settlement truth after refresh.
+// T8 Seller Pack recovery: browser keeps only packRunId + three packJobIds;
+// owner-scoped status owns result + settlement truth after refresh.
 const sellerPackRecoverySrc = fs.readFileSync(
   join(root, "lib/sellerPackRecovery.ts"),
   "utf8"
 );
 assert.match(sellerPackRecoverySrc, /SELLER_PACK_RECOVERY_KEY/);
 assert.match(sellerPackRecoverySrc, /reconcileSellerPackRecovery/);
-assert.match(sellerPackRecoverySrc, /Job is no longer available in this device\/server session/);
+assert.match(sellerPackRecoverySrc, /owner-scoped pack job/i);
 assert.match(sellerPackRecoverySrc, /SELLER_PACK_ITEMS/);
-assert.doesNotMatch(sellerPackRecoverySrc, /const FIXED_CHILDREN = \[\s*\{/);
-assert.match(sellerPackRecoverySrc, /refund unconfirmed/);
+assert.match(sellerPackRecoverySrc, /packRunId/);
+assert.match(sellerPackRecoverySrc, /packJobId/);
+assert.match(sellerPackRecoverySrc, /resultUrl/);
 // Contract + recovery must stay in lockstep (golden smoke also asserts).
 assert.match(
   fs.readFileSync(join(root, "lib/sellerPackContract.ts"), "utf8"),
   /360-spin-showcase[\s\S]*blind-box-unboxing[\s\S]*paparazzi-flash/
 );
-assert.match(batchStudio, /data-seller-pack-recovery="device-local"/);
+assert.match(batchStudio, /data-seller-pack-recovery="durable-pointer"/);
 assert.match(batchStudio, /retryEligible/);
 const recoveryCjs = require("typescript").transpileModule(sellerPackRecoverySrc, {
   compilerOptions: {
@@ -4945,13 +5053,14 @@ new Function("require", "exports", "module", recoveryCjs)(
 );
 const recovery = recoveryModule.exports;
 const activePack = recovery.parseSellerPackRecovery({
-  version: 1,
+  version: 2,
   projectId: "seller-pack-fixture",
+  packRunId: "pack-run-fixture-0001",
   savedAt: "2026-07-26T00:00:00.000Z",
   children: [
-    { slug: "360-spin-showcase", name: "Listing Spin", aspectRatio: "1:1", requestId: "spin", statusHint: "running", retryCount: 0 },
-    { slug: "blind-box-unboxing", name: "Blind-box Reveal", aspectRatio: "9:16", requestId: "reveal", statusHint: "failed", retryCount: 0 },
-    { slug: "paparazzi-flash", name: "Social Flash", aspectRatio: "9:16", requestId: "social", statusHint: "failed", retryCount: 0 },
+    { packJobId: "pack-job-spin-0001", childKey: "listing_spin", slug: "360-spin-showcase", name: "Listing Spin", aspectRatio: "1:1", statusHint: "running", retryCount: 0 },
+    { packJobId: "pack-job-reveal-002", childKey: "blind_box_reveal", slug: "blind-box-unboxing", name: "Blind-box Reveal", aspectRatio: "9:16", statusHint: "failed", retryCount: 0 },
+    { packJobId: "pack-job-social-003", childKey: "social_flash", slug: "paparazzi-flash", name: "Social Flash", aspectRatio: "9:16", statusHint: "running", retryCount: 0 },
   ],
 });
 assert.ok(activePack, "only the exact fixed three Seller Pack children may hydrate");
@@ -4971,21 +5080,21 @@ assert.equal(
   "sessionStorage rejects an incorrect fixed-child aspect ratio"
 );
 const refreshedPack = recovery.reconcileSellerPackRecovery(activePack, [
-  { id: "spin", effect: "360-spin-showcase", status: "succeeded", videoUrl: "/demos/spin.mp4", creditsOutcome: "10 used" },
-  { id: "reveal", effect: "blind-box-unboxing", status: "failed", creditsOutcome: "10 restored" },
-  { id: "social", effect: "paparazzi-flash", status: "failed", creditsOutcome: "refund unconfirmed" },
+  { jobId: "pack-job-spin-0001", childKey: "listing_spin", effectSlug: "360-spin-showcase", aspectRatio: "1:1", status: "succeeded", quotedCredits: 10, settledCredits: 10, hasPrivateResult: true, resultUrl: "https://private.example/spin", modelId: "seedance-fast", resolution: "720p", durationSec: 5 },
+  { jobId: "pack-job-reveal-002", childKey: "blind_box_reveal", effectSlug: "blind-box-unboxing", aspectRatio: "9:16", status: "failed", quotedCredits: 10, settledCredits: 0, errorCode: "provider_error" },
+  { jobId: "pack-job-social-003", childKey: "social_flash", effectSlug: "paparazzi-flash", aspectRatio: "9:16", status: "running", quotedCredits: 10, settledCredits: 0 },
 ]);
 assert.deepEqual(
   refreshedPack.children.map((child) => [child.slug, child.status, child.creditState]),
   [
     ["360-spin-showcase", "succeeded", "10 used"],
     ["blind-box-unboxing", "refunded", "10 restored"],
-    ["paparazzi-flash", "failed", "refund unconfirmed"],
+    ["paparazzi-flash", "running", undefined],
   ],
   "refresh restores server-known partial success/failure/refund state"
 );
 const retryOnlyConfirmed = refreshedPack.children
-  .filter((child) => child.status === "refunded" || (child.status === "failed" && child.creditState !== "refund unconfirmed"))
+  .filter((child) => child.status === "refunded")
   .map((child) => child.slug);
 assert.deepEqual(retryOnlyConfirmed, ["blind-box-unboxing"], "retry excludes succeeded siblings and refund-unconfirmed children");
 const gonePack = recovery.reconcileSellerPackRecovery(activePack, []);
@@ -5511,6 +5620,16 @@ const genJobsGet = fs.readFileSync(
   join(root, "app/api/generations/route.ts"),
   "utf8"
 );
+assert.match(genJobsGet, /listPrivateGenerationResults/);
+assert.match(genJobsGet, /getAuthUserFromRequest/);
+assert.match(genJobsGet, /supabase-private\+process-memory/);
+assert.match(genJobsGet, /\/api\/downloads\/\$\{encodeURIComponent\(result\.jobId\)\}/);
+assert.match(genJobsGet, /function controlledLocalJob/);
+assert.match(
+  genJobsGet,
+  /controlledLocalJob\(toPublicJob\(job,\s*session\.id\)\)/
+);
+assert.doesNotMatch(genJobsGet, /output_object_key|providerOutputUrl/);
 assert.doesNotMatch(genJobsGet, /touchOpenJobsForSession\(session\.id\)/);
 assert.match(genJobsGet, /touchedOpen:\s*0|GET is read-only/);
 assert.match(genJobsGet, /full\.queued|counts\.queued/);
@@ -5524,6 +5643,15 @@ assert.doesNotMatch(
 const librarySessionList = fs.readFileSync(
   join(root, "components/LibraryGrid.tsx"),
   "utf8"
+);
+assert.match(librarySessionList, /privateDownloadHeaders/);
+assert.match(
+  librarySessionList,
+  /hasDurablePrivate\s*\?\s*"Private results"\s*:\s*"Current session"/
+);
+assert.match(
+  librarySessionList,
+  /Completed clips persist in your account and download through a\s+fresh owner-only link/
 );
 assert.match(librarySessionList, /SESSION_JOBS_UI_LIMIT\s*=\s*50/);
 assert.match(librarySessionList, /data-session-list-limit/);

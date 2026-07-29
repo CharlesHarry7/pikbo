@@ -22,40 +22,30 @@ const LINKS = [
   { href: "/#home-create", label: "Home · Launch Pack upload" },
   { href: CMD_GENERATE_HREF, label: "Generate · Toy Studio" },
   { href: "/effects", label: "Effects · toy presets" },
-  { href: "/pricing", label: "Pricing · Free Mini / plans" },
+  { href: "/pricing", label: "Pricing · Founding Studio" },
   { href: "/explore", label: "Explore Lab projects" },
   {
     href: "/tools/ai-toy-video-generator",
     label: "AI toy video generator · rank page",
   },
-  { href: "/for/photo-to-video-for-toys", label: "For photo → video toys" },
-  { href: "/for/etsy-listing-videos", label: "For Etsy sellers" },
+  {
+    href: "/tools/figure-360-product-video",
+    label: "360 toy listing video",
+  },
+  {
+    href: "/tools/blind-box-reveal-video-maker",
+    label: "Blind-box reveal video",
+  },
   {
     href: createJobRemixHref("seller-pack"),
     label: "Seller Starter Pack · 3 clips / 30 credits",
   },
-  { href: "/modules", label: "Modules · job blocks" },
-  { href: createJobRemixHref("etsy-listing"), label: "Job · Etsy listing spin" },
-  { href: createJobRemixHref("tiktok-hook"), label: "Job · TikTok hook" },
-  {
-    href: createJobRemixHref("blind-box-drop"),
-    label: "Job · Blind-box drop",
-  },
-  { href: "/library", label: "Library · device assets (Local)" },
+  { href: "/library", label: "Library · private results" },
   {
     href: CMD_LAB_SAMPLE_HREF,
     label: "Lab sample · 0 credits (cached)",
   },
-  { href: "/flow", label: "Flow · Preview" },
-  { href: "/image", label: "Still studio · Preview" },
-  { href: "/cinema", label: "Cinema · Preview" },
-  { href: "/supercomputer", label: "Batch agent · Preview" },
-  { href: "/models", label: "Models · Preview (honest)" },
-  { href: "/community", label: "PIKBO Lab · noindex" },
-  { href: "/apps", label: "Apps catalog · noindex" },
-  { href: "/profile", label: "Profile · Local" },
-  { href: "/settings", label: "Settings · Local · T6 / jobs" },
-  { href: "/status", label: "System status · Local" },
+  { href: "/profile", label: "Profile" },
   { href: "/login", label: "Sign in" },
 ];
 
@@ -116,7 +106,7 @@ export function CommandPalette() {
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Generate · Flow · Modules · recipe… (⌘K)"
+            placeholder="Generate · Launch Pack · recipe… (⌘K)"
             className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/35"
             onKeyDown={(e) => {
               if (e.key === "Enter" && items[0]) {

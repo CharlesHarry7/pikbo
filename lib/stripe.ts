@@ -4,14 +4,14 @@ import { getPlan, type PlanId } from "@/lib/pricing";
 export function stripeConfigured(): boolean {
   return Boolean(
     process.env.STRIPE_SECRET_KEY &&
-      (process.env.STRIPE_PRICE_CREATOR || process.env.STRIPE_PRICE_SHOP)
+      process.env.STRIPE_PRICE_FOUNDING_STUDIO
   );
 }
 
 /**
  * Phase I — payment readiness (presence only; never echoes secrets).
- * Soft launch keeps public pay off. Live secret keys stay blocked unless
- * PAYMENTS_LIVE=1 (separate boss approval).
+ * Soft launch keeps public pay off. Live secret keys require explicit launch
+ * approval plus the separately implemented/rehearsed refund-dispute guard.
  */
 export type PaymentsReadiness = {
   /** UI may show buy buttons */
@@ -21,8 +21,9 @@ export type PaymentsReadiness = {
   secretPresent: boolean;
   secretMode: "missing" | "test" | "live" | "unknown";
   webhookSecretPresent: boolean;
-  priceCreatorPresent: boolean;
-  priceShopPresent: boolean;
+  billingRpcOperatorReady: boolean;
+  priceFoundingStudioPresent: boolean;
+  refundDisputeGuardReady: boolean;
   liveKeysBlocked: boolean;
   readyForTestCheckout: boolean;
   notes: string[];
@@ -44,38 +45,70 @@ export function stripeSecretMode(
   return "unknown";
 }
 
+/**
+ * Live Checkout remains hard-closed until refund/dispute credit revocation is
+ * implemented and rehearsed. Test Checkout does not need this production gate.
+ */
+export function stripeLiveCheckoutAllowed(): boolean {
+  return (
+    process.env.PAYMENTS_LIVE === "1" &&
+    process.env.STRIPE_REFUND_DISPUTE_GUARD_READY === "1"
+  );
+}
+
 export function paymentsReadiness(): PaymentsReadiness {
   const clientEnabled = paymentsClientEnabled();
   const secretPresent = Boolean(process.env.STRIPE_SECRET_KEY);
   const secretMode = stripeSecretMode();
   const webhookSecretPresent = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
-  const priceCreatorPresent = Boolean(process.env.STRIPE_PRICE_CREATOR);
-  const priceShopPresent = Boolean(process.env.STRIPE_PRICE_SHOP);
-  const liveAllowed = process.env.PAYMENTS_LIVE === "1";
+  const billingRpcOperatorReady =
+    process.env.STRIPE_BILLING_RPC_READY === "1";
+  const priceFoundingStudioPresent = Boolean(
+    process.env.STRIPE_PRICE_FOUNDING_STUDIO
+  );
+  const refundDisputeGuardReady =
+    process.env.STRIPE_REFUND_DISPUTE_GUARD_READY === "1";
+  const liveAllowed = stripeLiveCheckoutAllowed();
   const liveKeysBlocked = secretMode === "live" && !liveAllowed;
   const notes: string[] = [];
   if (!clientEnabled) {
     notes.push("NEXT_PUBLIC_PAYMENTS_ENABLED is not 1 — Coming soon UI");
   }
   if (liveKeysBlocked) {
-    notes.push("sk_live blocked without PAYMENTS_LIVE=1");
+    notes.push(
+      "sk_live Checkout blocked until PAYMENTS_LIVE=1 and refund/dispute guard is rehearsed"
+    );
+  }
+  if (!refundDisputeGuardReady) {
+    notes.push(
+      "refund/dispute credit handling is not ready — live Checkout remains closed"
+    );
   }
   if (secretMode === "test") {
     notes.push("test secret present — private preview only");
   }
   if (!webhookSecretPresent) {
-    notes.push("webhook secret missing — renewals not durable");
+    notes.push("webhook secret missing — Checkout stays closed");
+  }
+  if (!billingRpcOperatorReady) {
+    notes.push(
+      "STRIPE_BILLING_RPC_READY is not 1 — transactional billing stays closed"
+    );
   }
   const readyForTestCheckout =
     clientEnabled &&
     secretMode === "test" &&
     !liveKeysBlocked &&
-    (priceCreatorPresent || priceShopPresent);
+    webhookSecretPresent &&
+    billingRpcOperatorReady &&
+    priceFoundingStudioPresent;
   const serverCheckoutAllowed =
     clientEnabled &&
-    secretPresent &&
+    (secretMode === "test" || (secretMode === "live" && liveAllowed)) &&
     !liveKeysBlocked &&
-    (priceCreatorPresent || priceShopPresent);
+    webhookSecretPresent &&
+    billingRpcOperatorReady &&
+    priceFoundingStudioPresent;
 
   return {
     clientEnabled,
@@ -83,8 +116,9 @@ export function paymentsReadiness(): PaymentsReadiness {
     secretPresent,
     secretMode,
     webhookSecretPresent,
-    priceCreatorPresent,
-    priceShopPresent,
+    billingRpcOperatorReady,
+    priceFoundingStudioPresent,
+    refundDisputeGuardReady,
     liveKeysBlocked,
     readyForTestCheckout,
     notes,
@@ -95,9 +129,39 @@ export function planFromPriceId(
   priceId: string | undefined | null
 ): PlanId | null {
   if (!priceId) return null;
-  if (priceId === process.env.STRIPE_PRICE_CREATOR) return "creator";
-  if (priceId === process.env.STRIPE_PRICE_SHOP) return "shop";
+  if (priceId === process.env.STRIPE_PRICE_FOUNDING_STUDIO) {
+    return "founding_studio";
+  }
   return null;
+}
+
+/**
+ * Checkout return URLs come only from an operator-controlled canonical URL.
+ * Request Origin/Host are never trusted for a payment redirect.
+ */
+export function trustedCheckoutOrigin(
+  configuredUrl: string | undefined,
+  fallbackUrl: string
+): string {
+  const candidates = [configuredUrl, fallbackUrl].filter(
+    (candidate): candidate is string => Boolean(candidate?.trim())
+  );
+  for (const candidate of candidates) {
+    try {
+      const parsed = new URL(candidate);
+      const localHttp =
+        process.env.NODE_ENV !== "production" &&
+        parsed.protocol === "http:" &&
+        (parsed.hostname === "localhost" ||
+          parsed.hostname === "127.0.0.1" ||
+          parsed.hostname === "::1");
+      if (parsed.protocol !== "https:" && !localHttp) continue;
+      return parsed.origin;
+    } catch {
+      // Try the next operator-controlled candidate.
+    }
+  }
+  throw new Error("TRUSTED_CHECKOUT_ORIGIN_INVALID");
 }
 
 export async function stripeGet(
@@ -124,15 +188,17 @@ export function verifyStripeSignature(
   secret: string
 ): boolean {
   if (!signatureHeader || !secret) return false;
-  const parts = Object.fromEntries(
-    signatureHeader.split(",").map((p) => {
-      const [k, v] = p.split("=");
-      return [k, v];
-    })
-  );
-  const timestamp = parts.t;
-  const v1 = parts.v1;
-  if (!timestamp || !v1) return false;
+  let timestamp = "";
+  const signatures: string[] = [];
+  for (const part of signatureHeader.split(",")) {
+    const separator = part.indexOf("=");
+    if (separator <= 0) continue;
+    const key = part.slice(0, separator).trim();
+    const value = part.slice(separator + 1).trim();
+    if (key === "t" && !timestamp) timestamp = value;
+    if (key === "v1" && value) signatures.push(value);
+  }
+  if (!timestamp || signatures.length === 0) return false;
 
   const ts = Number(timestamp);
   if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > 300) {
@@ -141,13 +207,21 @@ export function verifyStripeSignature(
 
   const signed = `${timestamp}.${rawBody}`;
   const expected = createHmac("sha256", secret).update(signed).digest("hex");
-  try {
-    const a = Buffer.from(expected);
-    const b = Buffer.from(v1);
-    return a.length === b.length && timingSafeEqual(a, b);
-  } catch {
-    return false;
+  const expectedBuffer = Buffer.from(expected, "utf8");
+  for (const signature of signatures) {
+    try {
+      const candidate = Buffer.from(signature, "utf8");
+      if (
+        expectedBuffer.length === candidate.length &&
+        timingSafeEqual(expectedBuffer, candidate)
+      ) {
+        return true;
+      }
+    } catch {
+      // Keep checking rotated v1 signatures.
+    }
   }
+  return false;
 }
 
 export function creditsForPlan(planId: PlanId): number {

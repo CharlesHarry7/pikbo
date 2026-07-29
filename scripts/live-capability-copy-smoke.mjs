@@ -61,14 +61,16 @@ assert(
   "site metadata must lead with the cached validation path"
 );
 assert(
-  read("components/HomeSeoBody.tsx").includes("Live remains gated"),
-  "home SEO body must state that Live remains gated"
+  /Invited\s+private-beta accounts can create private 5-second 720p results/.test(
+    read("components/HomeSeoBody.tsx")
+  ),
+  "home SEO body must scope real generation to invited private-beta accounts"
 );
 assert(
   read("components/PricingHeroCopy.tsx").includes(
-    "when Live is enabled"
+    "Subscriptions open after the private beta proves quality, recovery, and sustainable cost."
   ),
-  "pricing must qualify allowance estimates"
+  "pricing must keep subscriptions closed until private-beta proof"
 );
 assert(
   read("app/create/page.tsx").includes(

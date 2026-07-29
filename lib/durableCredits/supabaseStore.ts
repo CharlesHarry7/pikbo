@@ -128,7 +128,10 @@ function mapAccount(row: AccountRow): DurableAccount {
     id: row.id,
     kind: row.kind === "shop" ? "shop" : "personal",
     ownerUserId: row.owner_user_id,
-    planId: (row.plan_id as PlanId) || "free",
+    planId:
+      row.plan_id === "founding_studio"
+        ? "founding_studio"
+        : "free",
     status:
       row.status === "restricted" || row.status === "closed"
         ? row.status
@@ -195,6 +198,28 @@ export async function supabaseGetPersonalWallet(userId: string): Promise<{
     reservedCredits: wallet.reservedCredits,
     planId: account.planId,
   };
+}
+
+/**
+ * Billing must never accept money for an account that the durable provider
+ * boundary would reject. Missing schema/rows/errors all fail closed.
+ */
+export async function supabasePaidDeliveryEligible(
+  accountId: string,
+  userId: string
+): Promise<boolean> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return false;
+  const { data, error } = await admin
+    .from("accounts")
+    .select("id")
+    .eq("id", accountId)
+    .eq("owner_user_id", userId)
+    .eq("kind", "personal")
+    .eq("status", "active")
+    .eq("live_generation_allowed", true)
+    .maybeSingle();
+  return !error && Boolean(data?.id);
 }
 
 /**
@@ -811,7 +836,7 @@ export type AtomicGenerationReservation = {
   status: "reserved";
   idempotencyKey: string;
   expiresAt: string;
-  planId: Exclude<PlanId, "free">;
+  planId: PlanId;
   availableCredits: number;
   reservedCredits: number;
   idempotent: boolean;
@@ -918,7 +943,7 @@ export async function supabaseReserveGenerationAtomic(input: {
     payload.status !== "reserved" ||
     typeof payload.idempotent !== "boolean" ||
     typeof payload.providerAuthorized !== "boolean" ||
-    (planId !== "creator" && planId !== "shop") ||
+    (planId !== "free" && planId !== "founding_studio") ||
     amount == null ||
     availableCredits == null ||
     reservedCredits == null ||
@@ -1052,4 +1077,771 @@ export async function supabaseReleaseGenerationAtomic(input: {
   reason: string;
 }) {
   return settleGenerationAtomic("pikbo_release_generation_v1", input);
+}
+
+// ── Atomic Seller Pack (Launch Pack) RPCs ─────────────────────────────────
+// Service-role only. Source: 20260729020000_atomic_seller_pack.sql
+
+export type AtomicSellerPackJobPublic = {
+  jobId: string;
+  childKey: string;
+  effectSlug: string;
+  aspectRatio: string;
+  durationSec: number;
+  status: string;
+  quotedCredits: number;
+  settledCredits: number;
+  attemptKey: string | null;
+  errorCode?: string | null;
+  hasPrivateResult?: boolean;
+  modelId?: string | null;
+  resolution?: string | null;
+};
+
+export type AtomicSellerPackReserveResult = {
+  packRunId: string;
+  reservationId: string;
+  userId: string;
+  accountId: string;
+  quotedCredits: number;
+  settledCredits: number;
+  releasedCredits: number;
+  status: string;
+  contractFingerprint: string;
+  clientPackKey: string;
+  planId: PlanId;
+  availableCredits: number;
+  reservedCredits: number;
+  idempotent: boolean;
+  jobs: AtomicSellerPackJobPublic[];
+};
+
+export type AtomicSellerPackChildAuthorization = {
+  packRunId: string;
+  jobId: string;
+  reservationId: string;
+  childKey: string;
+  effectSlug: string;
+  aspectRatio: string;
+  durationSec: number;
+  credits: number;
+  status: string;
+  attemptKey: string;
+  userId: string;
+  accountId: string;
+  planId: PlanId;
+  availableCredits: number;
+  reservedCredits: number;
+  expiresAt: string;
+  idempotent: boolean;
+  providerAuthorized: boolean;
+};
+
+export type AtomicSellerPackStatusResult = {
+  packRunId: string;
+  status: string;
+  quotedCredits: number;
+  settledCredits: number;
+  releasedCredits: number;
+  reservationId: string;
+  contractFingerprint: string | null;
+  clientPackKey: string | null;
+  mode: string;
+  createdAt: string;
+  completedAt: string | null;
+  availableCredits: number;
+  reservedCredits: number;
+  jobs: AtomicSellerPackJobPublic[];
+};
+
+function stringField(
+  value: Record<string, unknown>,
+  key: string
+): string | null {
+  const v = value[key];
+  return typeof v === "string" ? v : null;
+}
+
+function mapPackJobs(raw: unknown): AtomicSellerPackJobPublic[] | null {
+  if (!Array.isArray(raw)) return null;
+  const jobs: AtomicSellerPackJobPublic[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") return null;
+    const row = item as Record<string, unknown>;
+    const jobId = stringField(row, "jobId");
+    const childKey = stringField(row, "childKey");
+    const effectSlug = stringField(row, "effectSlug");
+    const aspectRatio = stringField(row, "aspectRatio");
+    const status = stringField(row, "status");
+    const durationSec = numberField(row, "durationSec");
+    const quotedCredits = numberField(row, "quotedCredits");
+    const settledCredits = numberField(row, "settledCredits");
+    if (
+      !jobId ||
+      !childKey ||
+      !effectSlug ||
+      !aspectRatio ||
+      !status ||
+      durationSec == null ||
+      quotedCredits == null ||
+      settledCredits == null
+    ) {
+      return null;
+    }
+    jobs.push({
+      jobId,
+      childKey,
+      effectSlug,
+      aspectRatio,
+      durationSec,
+      status,
+      quotedCredits,
+      settledCredits,
+      attemptKey:
+        row.attemptKey == null
+          ? null
+          : typeof row.attemptKey === "string"
+            ? row.attemptKey
+            : null,
+      errorCode:
+        row.errorCode == null
+          ? null
+          : typeof row.errorCode === "string"
+            ? row.errorCode
+            : null,
+      hasPrivateResult:
+        typeof row.hasPrivateResult === "boolean"
+          ? row.hasPrivateResult
+          : undefined,
+      modelId:
+        row.modelId == null
+          ? null
+          : typeof row.modelId === "string"
+            ? row.modelId
+            : null,
+      resolution:
+        row.resolution == null
+          ? null
+          : typeof row.resolution === "string"
+            ? row.resolution
+            : null,
+    });
+  }
+  return jobs;
+}
+
+function planIdField(value: unknown): PlanId | null {
+  return value === "free" || value === "founding_studio"
+    ? value
+    : null;
+}
+
+export async function supabaseReserveSellerPackAtomic(input: {
+  userId: string;
+  clientPackKey: string;
+}): Promise<
+  | { ok: true; data: AtomicSellerPackReserveResult }
+  | AtomicRpcFailure
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: "Supabase service role unavailable",
+    };
+  }
+  const { data, error } = await admin.rpc("pikbo_reserve_seller_pack_v1", {
+    p_user_id: input.userId,
+    p_client_pack_key: input.clientPackKey,
+  });
+  if (error) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: error.message.slice(0, 160),
+    };
+  }
+  const payload = rpcPayload(data);
+  if (!payload || payload.ok !== true) {
+    return rpcFailure(payload, "Atomic seller pack reserve failed");
+  }
+  const jobs = mapPackJobs(payload.jobs);
+  const planId = planIdField(payload.planId);
+  const quotedCredits = numberField(payload, "quotedCredits");
+  const settledCredits = numberField(payload, "settledCredits");
+  const releasedCredits = numberField(payload, "releasedCredits");
+  const availableCredits = numberField(payload, "availableCredits");
+  const reservedCredits = numberField(payload, "reservedCredits");
+  if (
+    typeof payload.packRunId !== "string" ||
+    typeof payload.reservationId !== "string" ||
+    typeof payload.userId !== "string" ||
+    typeof payload.accountId !== "string" ||
+    typeof payload.status !== "string" ||
+    typeof payload.contractFingerprint !== "string" ||
+    typeof payload.clientPackKey !== "string" ||
+    typeof payload.idempotent !== "boolean" ||
+    !jobs ||
+    jobs.length !== 3 ||
+    !planId ||
+    quotedCredits !== 30 ||
+    settledCredits == null ||
+    releasedCredits == null ||
+    availableCredits == null ||
+    reservedCredits == null ||
+    payload.userId !== input.userId
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Atomic seller pack reserve returned an invalid payload",
+    };
+  }
+  return {
+    ok: true,
+    data: {
+      packRunId: payload.packRunId,
+      reservationId: payload.reservationId,
+      userId: payload.userId,
+      accountId: payload.accountId,
+      quotedCredits,
+      settledCredits,
+      releasedCredits,
+      status: payload.status,
+      contractFingerprint: payload.contractFingerprint,
+      clientPackKey: payload.clientPackKey,
+      planId,
+      availableCredits,
+      reservedCredits,
+      idempotent: payload.idempotent === true,
+      jobs,
+    },
+  };
+}
+
+export async function supabaseAuthorizeSellerPackChildAtomic(input: {
+  userId: string;
+  packRunId: string;
+  jobId: string;
+  effectSlug: string;
+  durationSec: number;
+  aspectRatio: string;
+  attemptKey: string;
+}): Promise<
+  | { ok: true; data: AtomicSellerPackChildAuthorization }
+  | AtomicRpcFailure
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: "Supabase service role unavailable",
+    };
+  }
+  const { data, error } = await admin.rpc(
+    "pikbo_authorize_seller_pack_child_v1",
+    {
+      p_user_id: input.userId,
+      p_pack_run_id: input.packRunId,
+      p_job_id: input.jobId,
+      p_effect_slug: input.effectSlug,
+      p_duration_sec: input.durationSec,
+      p_aspect_ratio: input.aspectRatio,
+      p_attempt_key: input.attemptKey,
+    }
+  );
+  if (error) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: error.message.slice(0, 160),
+    };
+  }
+  const payload = rpcPayload(data);
+  if (!payload || payload.ok !== true) {
+    return rpcFailure(payload, "Atomic seller pack child authorize failed");
+  }
+  const planId = planIdField(payload.planId);
+  const credits = numberField(payload, "credits");
+  const durationSec = numberField(payload, "durationSec");
+  const availableCredits = numberField(payload, "availableCredits");
+  const reservedCredits = numberField(payload, "reservedCredits");
+  if (
+    typeof payload.packRunId !== "string" ||
+    typeof payload.jobId !== "string" ||
+    typeof payload.reservationId !== "string" ||
+    typeof payload.childKey !== "string" ||
+    typeof payload.effectSlug !== "string" ||
+    typeof payload.aspectRatio !== "string" ||
+    typeof payload.status !== "string" ||
+    typeof payload.attemptKey !== "string" ||
+    typeof payload.userId !== "string" ||
+    typeof payload.accountId !== "string" ||
+    typeof payload.expiresAt !== "string" ||
+    typeof payload.idempotent !== "boolean" ||
+    typeof payload.providerAuthorized !== "boolean" ||
+    !planId ||
+    credits !== 10 ||
+    durationSec == null ||
+    availableCredits == null ||
+    reservedCredits == null ||
+    payload.packRunId !== input.packRunId ||
+    payload.jobId !== input.jobId ||
+    payload.userId !== input.userId ||
+    payload.effectSlug !== input.effectSlug
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Atomic seller pack authorize returned an invalid payload",
+    };
+  }
+  return {
+    ok: true,
+    data: {
+      packRunId: payload.packRunId,
+      jobId: payload.jobId,
+      reservationId: payload.reservationId,
+      childKey: payload.childKey,
+      effectSlug: payload.effectSlug,
+      aspectRatio: payload.aspectRatio,
+      durationSec,
+      credits,
+      status: payload.status,
+      attemptKey: payload.attemptKey,
+      userId: payload.userId,
+      accountId: payload.accountId,
+      planId,
+      availableCredits,
+      reservedCredits,
+      expiresAt: payload.expiresAt,
+      idempotent: payload.idempotent === true,
+      providerAuthorized: payload.providerAuthorized === true,
+    },
+  };
+}
+
+export async function supabaseSettleSellerPackChildAtomic(input: {
+  userId: string;
+  packRunId: string;
+  jobId: string;
+  attemptKey: string;
+  providerRequestId?: string;
+}): Promise<
+  | {
+      ok: true;
+      data: {
+        packRunId: string;
+        jobId: string;
+        reservationId: string;
+        settledCredits: number;
+        availableCredits: number;
+        reservedCredits: number;
+        packSettledCredits: number;
+        packReleasedCredits: number;
+        idempotent: boolean;
+      };
+    }
+  | AtomicRpcFailure
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: "Supabase service role unavailable",
+    };
+  }
+  const { data, error } = await admin.rpc("pikbo_settle_seller_pack_child_v2", {
+    p_user_id: input.userId,
+    p_pack_run_id: input.packRunId,
+    p_job_id: input.jobId,
+    p_attempt_key: input.attemptKey,
+    p_provider_request_id: input.providerRequestId || null,
+  });
+  if (error) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: error.message.slice(0, 160),
+    };
+  }
+  const payload = rpcPayload(data);
+  if (!payload || payload.ok !== true) {
+    return rpcFailure(payload, "Atomic seller pack child settle failed");
+  }
+  const settledCredits = numberField(payload, "settledCredits");
+  const availableCredits = numberField(payload, "availableCredits");
+  const reservedCredits = numberField(payload, "reservedCredits");
+  const packSettledCredits = numberField(payload, "packSettledCredits");
+  const packReleasedCredits = numberField(payload, "packReleasedCredits");
+  if (
+    typeof payload.packRunId !== "string" ||
+    typeof payload.jobId !== "string" ||
+    typeof payload.reservationId !== "string" ||
+    typeof payload.idempotent !== "boolean" ||
+    payload.status !== "captured" ||
+    settledCredits !== 10 ||
+    availableCredits == null ||
+    reservedCredits == null ||
+    packSettledCredits == null ||
+    packReleasedCredits == null ||
+    payload.packRunId !== input.packRunId ||
+    payload.jobId !== input.jobId
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Atomic seller pack settle returned an invalid payload",
+    };
+  }
+  return {
+    ok: true,
+    data: {
+      packRunId: payload.packRunId,
+      jobId: payload.jobId,
+      reservationId: payload.reservationId,
+      settledCredits,
+      availableCredits,
+      reservedCredits,
+      packSettledCredits,
+      packReleasedCredits,
+      idempotent: payload.idempotent === true,
+    },
+  };
+}
+
+export async function supabaseReleaseSellerPackChildAtomic(input: {
+  userId: string;
+  packRunId: string;
+  jobId: string;
+  attemptKey: string;
+  reason: string;
+}): Promise<
+  | {
+      ok: true;
+      data: {
+        packRunId: string;
+        jobId: string;
+        reservationId: string;
+        releasedCredits: number;
+        availableCredits: number;
+        reservedCredits: number;
+        packSettledCredits: number;
+        packReleasedCredits: number;
+        creditsRefunded: true;
+        idempotent: boolean;
+      };
+    }
+  | AtomicRpcFailure
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: "Supabase service role unavailable",
+    };
+  }
+  const { data, error } = await admin.rpc("pikbo_release_seller_pack_child_v2", {
+    p_user_id: input.userId,
+    p_pack_run_id: input.packRunId,
+    p_job_id: input.jobId,
+    p_attempt_key: input.attemptKey,
+    p_reason: input.reason || "child_failed",
+  });
+  if (error) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: error.message.slice(0, 160),
+    };
+  }
+  const payload = rpcPayload(data);
+  if (!payload || payload.ok !== true) {
+    return rpcFailure(payload, "Atomic seller pack child release failed");
+  }
+  const releasedCredits = numberField(payload, "releasedCredits");
+  const availableCredits = numberField(payload, "availableCredits");
+  const reservedCredits = numberField(payload, "reservedCredits");
+  const packSettledCredits = numberField(payload, "packSettledCredits");
+  const packReleasedCredits = numberField(payload, "packReleasedCredits");
+  if (
+    typeof payload.packRunId !== "string" ||
+    typeof payload.jobId !== "string" ||
+    typeof payload.reservationId !== "string" ||
+    typeof payload.idempotent !== "boolean" ||
+    payload.status !== "released" ||
+    payload.creditsRefunded !== true ||
+    releasedCredits !== 10 ||
+    availableCredits == null ||
+    reservedCredits == null ||
+    packSettledCredits == null ||
+    packReleasedCredits == null ||
+    payload.packRunId !== input.packRunId ||
+    payload.jobId !== input.jobId
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Atomic seller pack release returned an invalid payload",
+    };
+  }
+  return {
+    ok: true,
+    data: {
+      packRunId: payload.packRunId,
+      jobId: payload.jobId,
+      reservationId: payload.reservationId,
+      releasedCredits,
+      availableCredits,
+      reservedCredits,
+      packSettledCredits,
+      packReleasedCredits,
+      creditsRefunded: true,
+      idempotent: payload.idempotent === true,
+    },
+  };
+}
+
+export async function supabaseRetrySellerPackChildAtomic(input: {
+  userId: string;
+  packRunId: string;
+  jobId: string;
+  attemptKey: string;
+}): Promise<
+  | {
+      ok: true;
+      data: {
+        packRunId: string;
+        jobId: string;
+        reservationId: string;
+        childKey: string;
+        status: string;
+        attemptKey: string;
+        availableCredits: number;
+        reservedCredits: number;
+        packSettledCredits: number;
+        packReleasedCredits: number;
+        idempotent: boolean;
+      };
+    }
+  | AtomicRpcFailure
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: "Supabase service role unavailable",
+    };
+  }
+  const { data, error } = await admin.rpc("pikbo_retry_seller_pack_child_v1", {
+    p_user_id: input.userId,
+    p_pack_run_id: input.packRunId,
+    p_job_id: input.jobId,
+    p_attempt_key: input.attemptKey,
+  });
+  if (error) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: error.message.slice(0, 160),
+    };
+  }
+  const payload = rpcPayload(data);
+  if (!payload || payload.ok !== true) {
+    return rpcFailure(payload, "Atomic seller pack child retry failed");
+  }
+  const availableCredits = numberField(payload, "availableCredits");
+  const reservedCredits = numberField(payload, "reservedCredits");
+  const packSettledCredits = numberField(payload, "packSettledCredits");
+  const packReleasedCredits = numberField(payload, "packReleasedCredits");
+  if (
+    typeof payload.packRunId !== "string" ||
+    typeof payload.jobId !== "string" ||
+    typeof payload.reservationId !== "string" ||
+    typeof payload.childKey !== "string" ||
+    typeof payload.status !== "string" ||
+    typeof payload.attemptKey !== "string" ||
+    typeof payload.idempotent !== "boolean" ||
+    availableCredits == null ||
+    reservedCredits == null ||
+    packSettledCredits == null ||
+    packReleasedCredits == null ||
+    payload.packRunId !== input.packRunId ||
+    payload.jobId !== input.jobId
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Atomic seller pack retry returned an invalid payload",
+    };
+  }
+  return {
+    ok: true,
+    data: {
+      packRunId: payload.packRunId,
+      jobId: payload.jobId,
+      reservationId: payload.reservationId,
+      childKey: payload.childKey,
+      status: payload.status,
+      attemptKey: payload.attemptKey,
+      availableCredits,
+      reservedCredits,
+      packSettledCredits,
+      packReleasedCredits,
+      idempotent: payload.idempotent === true,
+    },
+  };
+}
+
+export async function supabaseGetSellerPackStatusAtomic(input: {
+  userId: string;
+  packRunId: string;
+}): Promise<
+  | { ok: true; data: AtomicSellerPackStatusResult }
+  | AtomicRpcFailure
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: "Supabase service role unavailable",
+    };
+  }
+  const { data, error } = await admin.rpc("pikbo_get_seller_pack_status_v1", {
+    p_user_id: input.userId,
+    p_pack_run_id: input.packRunId,
+  });
+  if (error) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: error.message.slice(0, 160),
+    };
+  }
+  const payload = rpcPayload(data);
+  if (!payload || payload.ok !== true) {
+    return rpcFailure(payload, "Atomic seller pack status failed");
+  }
+  const jobs = mapPackJobs(payload.jobs);
+  const quotedCredits = numberField(payload, "quotedCredits");
+  const settledCredits = numberField(payload, "settledCredits");
+  const releasedCredits = numberField(payload, "releasedCredits");
+  const availableCredits = numberField(payload, "availableCredits");
+  const reservedCredits = numberField(payload, "reservedCredits");
+  if (
+    typeof payload.packRunId !== "string" ||
+    typeof payload.status !== "string" ||
+    typeof payload.reservationId !== "string" ||
+    typeof payload.mode !== "string" ||
+    !jobs ||
+    quotedCredits == null ||
+    settledCredits == null ||
+    releasedCredits == null ||
+    availableCredits == null ||
+    reservedCredits == null ||
+    payload.packRunId !== input.packRunId
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Atomic seller pack status returned an invalid payload",
+    };
+  }
+  return {
+    ok: true,
+    data: {
+      packRunId: payload.packRunId,
+      status: payload.status,
+      quotedCredits,
+      settledCredits,
+      releasedCredits,
+      reservationId: payload.reservationId,
+      contractFingerprint:
+        typeof payload.contractFingerprint === "string"
+          ? payload.contractFingerprint
+          : null,
+      clientPackKey:
+        typeof payload.clientPackKey === "string"
+          ? payload.clientPackKey
+          : null,
+      mode: payload.mode,
+      createdAt:
+        typeof payload.createdAt === "string" ? payload.createdAt : "",
+      completedAt:
+        payload.completedAt == null
+          ? null
+          : typeof payload.completedAt === "string"
+            ? payload.completedAt
+            : null,
+      availableCredits,
+      reservedCredits,
+      jobs,
+    },
+  };
+}
+
+/** Service-role worker cleanup. It releases only expired queued pack children. */
+export async function supabaseExpireQueuedSellerPackChildren(input?: {
+  limit?: number;
+}): Promise<
+  | {
+      ok: true;
+      data: { releasedJobs: number; releasedCredits: number };
+    }
+  | AtomicRpcFailure
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: "Supabase service role unavailable",
+    };
+  }
+  const limit = Math.min(
+    200,
+    Math.max(1, Math.floor(Number(input?.limit) || 50))
+  );
+  const { data, error } = await admin.rpc(
+    "pikbo_expire_seller_pack_queued_v1",
+    { p_limit: limit }
+  );
+  if (error) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: error.message.slice(0, 160),
+    };
+  }
+  const payload = rpcPayload(data);
+  const releasedJobs = payload
+    ? numberField(payload, "releasedJobs")
+    : null;
+  const releasedCredits = payload
+    ? numberField(payload, "releasedCredits")
+    : null;
+  if (
+    !payload ||
+    payload.ok !== true ||
+    releasedJobs == null ||
+    releasedCredits == null ||
+    releasedJobs < 0 ||
+    releasedCredits !== releasedJobs * 10
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Seller Pack expiry worker returned an invalid payload",
+    };
+  }
+  return {
+    ok: true,
+    data: { releasedJobs, releasedCredits },
+  };
 }

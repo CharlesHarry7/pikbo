@@ -56,7 +56,7 @@ assert.deepEqual(
   liveGenerationAccess({
     providerConfigured: true,
     authenticated: true,
-    planId: "creator",
+    planId: "founding_studio",
     freeDeliveryReady: false,
   }),
   { kind: "live" }
@@ -104,6 +104,13 @@ const falIdx = gen.indexOf("fal.config({");
 assert.ok(accessIdx > 0, "generate uses liveGenerationAccess");
 assert.ok(reserveIdx > accessIdx, "access before reserve");
 assert.ok(falIdx > reserveIdx, "fal.config only after reserve path");
+assert.match(gen, /supabaseGetPersonalWallet\(authUser\.id\)/);
+assert.match(gen, /planId:\s*accessPlanId/);
+assert.doesNotMatch(
+  gen,
+  /liveGenerationAccess\(\{[\s\S]{0,240}planId:\s*session\.plan/,
+  "browser cookie plan must not authorize a provider call"
+);
 
 // Cached path never charges
 assert.match(gen, /access\.kind === "cached"/);
@@ -138,6 +145,10 @@ assert.match(gen, /successFromJob\(prior/);
 
 const img = read("app/api/image/route.ts");
 assert.match(img, /liveGenerationAccess\(/);
+assert.match(
+  img,
+  /Founding Studio sells one fixed video Launch Pack[\s\S]{0,360}planId:\s*"free"/
+);
 assert.match(img, /anonymous_cached_only|free_trial_video_only|cached/);
 assert.match(img, /invokeReservedProvider\(/);
 assert.doesNotMatch(img, /deductCredits\(\s*session/);
@@ -172,7 +183,7 @@ state = createPersonalAccount(state, {
   userId: "u-crit",
   accountId: "a-crit",
   initialAvailable: 0,
-  planId: "creator",
+  planId: "founding_studio",
 }).state;
 state = grantCredits(state, {
   accountId: "a-crit",

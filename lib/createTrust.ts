@@ -426,8 +426,8 @@ export function interpretDownloadHead(input: {
 
 /**
  * Customer-facing video URL for generate success / idempotent replay.
- * Free live never echoes the provider raw URL — only a controlled downloads
- * path that re-checks T6 ownership. Demos and paid raw keep their URL.
+ * Live never echoes a provider raw URL — every plan uses a controlled,
+ * owner-scoped download path. Only immutable on-site demos keep their URL.
  */
 export function customerFacingGenerateVideoUrl(opts: {
   demo: boolean;
@@ -436,7 +436,7 @@ export function customerFacingGenerateVideoUrl(opts: {
   /** Server-held provider or demo URL (never trust client). */
   videoUrl: string;
 }): string {
-  if (opts.demo || !opts.watermark) return opts.videoUrl;
+  if (opts.demo) return opts.videoUrl;
   const id = (opts.jobId || "").trim();
   if (!id) return `/api/downloads/unavailable`;
   return `/api/downloads/${encodeURIComponent(id)}`;

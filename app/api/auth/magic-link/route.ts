@@ -4,6 +4,10 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { site } from "@/lib/site";
 import { takeToken } from "@/lib/rateLimit";
 import { clientIp } from "@/lib/requestMeta";
+import {
+  authCallbackUrl,
+  resolveTrustedAuthOrigin,
+} from "@/lib/authRedirect";
 
 export const runtime = "nodejs";
 
@@ -83,18 +87,26 @@ export async function POST(req: Request) {
     );
   }
 
-  const origin =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    process.env.SITE_URL?.replace(/\/$/, "") ||
-    (process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL.replace(/\/$/, "")}`
-      : null) ||
-    "http://localhost:3000";
+  const origin = resolveTrustedAuthOrigin(req);
+  if (!origin) {
+    console.warn("[auth/magic-link]", {
+      event: "untrusted_origin",
+    });
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "UNTRUSTED_ORIGIN",
+        error: "Sign-in must be started from an approved Pikbo address.",
+      },
+      { status: 403 }
+    );
+  }
+  const emailRedirectTo = authCallbackUrl(origin);
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo,
       shouldCreateUser: true,
     },
   });
@@ -116,9 +128,15 @@ export async function POST(req: Request) {
     );
   }
 
-  // Honest generic success — do not imply the address is registered/unregistered.
+  console.info("[auth/magic-link]", {
+    event: "otp_request_accepted",
+    callbackOrigin: origin,
+  });
+
+  // Generic account-existence response; accepted does not prove delivery.
   return NextResponse.json({
     ok: true,
-    message: `If the address is valid, a magic link is on the way. Check spam too. (${site.name})`,
+    callbackOrigin: origin,
+    message: `If the address is valid, ${site.name} accepted the request. You are not signed in yet — open the email on this device and click the sign-in link. Check spam too.`,
   });
 }

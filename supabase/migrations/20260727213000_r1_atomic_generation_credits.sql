@@ -97,19 +97,27 @@ begin
 
   -- Serializes all wallet changes for this account. The account lock prevents
   -- entitlement/plan changes from racing this reservation.
-  select a, w
-    into v_account, v_wallet
-    from public.accounts a
-    join public.credit_wallets w on w.account_id = a.id
-   where a.owner_user_id = p_user_id
-     and a.kind = 'personal'
-   for update of a, w;
+  select *
+    into v_account
+    from public.accounts
+   where owner_user_id = p_user_id
+     and kind = 'personal'
+   for update;
+
+  if not found then
+    return jsonb_build_object('ok', false, 'code', 'DURABLE_WALLET_NOT_FOUND');
+  end if;
+
+  select *
+    into v_wallet
+    from public.credit_wallets
+   where account_id = v_account.id
+   for update;
 
   if not found then
     return jsonb_build_object('ok', false, 'code', 'DURABLE_WALLET_NOT_FOUND');
   end if;
   if v_account.status <> 'active'
-     or v_account.plan_id = 'free'
      or not v_account.live_generation_allowed then
     return jsonb_build_object('ok', false, 'code', 'LIVE_ACCESS_REQUIRED');
   end if;

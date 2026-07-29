@@ -50,7 +50,7 @@ assert.equal(providerCalls, 0, "Free live must stay closed while T6 is blocked")
 const noProvider = liveGenerationAccess({
   providerConfigured: false,
   authenticated: true,
-  planId: "creator",
+  planId: "founding_studio",
   freeDeliveryReady: false,
 });
 assert.deepEqual(noProvider, {
@@ -104,7 +104,7 @@ assert.equal(
 const live = liveGenerationAccess({
   providerConfigured: true,
   authenticated: true,
-  planId: "creator",
+  planId: "founding_studio",
   freeDeliveryReady: false,
 });
 assert.deepEqual(live, { kind: "live" });

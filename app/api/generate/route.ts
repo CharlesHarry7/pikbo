@@ -1,16 +1,32 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { fal } from "@fal-ai/client";
 import { getPreset } from "@/lib/presets";
 import { getPlan } from "@/lib/pricing";
 import {
   clampDuration,
-  modelForTier,
+  modelForPrivateLive,
   normalizeAspect,
   resolutionForTier,
   seedanceDuration,
-  type ModelPreference,
+  SELLER_PACK_LIVE_RESOLUTION,
+  sellerPackLiveModelEndpoint,
 } from "@/lib/models";
-import { ensureSession, publicSession, saveSession } from "@/lib/session";
+import {
+  costAuditForResponse,
+  privateLiveSeedanceModel,
+} from "@/lib/liveGenerationCostGuard";
+import {
+  commitDurableProviderSpend,
+  releaseDurableProviderSpend,
+  reserveDurableProviderSpend,
+} from "@/lib/durableProviderBudget";
+import {
+  ensureSession,
+  publicCachedSession,
+  publicSession,
+  saveSession,
+} from "@/lib/session";
 import { demoClipForEffect } from "@/lib/demoClips";
 import {
   endJob,
@@ -39,7 +55,17 @@ import {
   releaseStrictLiveGeneration,
   reserveStrictLiveGeneration,
   settleStrictLiveGeneration,
+  type StrictLiveReservation,
 } from "@/lib/durableCredits/liveReservation";
+import {
+  authorizeSellerPackChildLive,
+  releaseSellerPackChildAtomic,
+  settleSellerPackChildAtomic,
+} from "@/lib/durableCredits/sellerPack";
+import { supabaseGetPersonalWallet } from "@/lib/durableCredits/supabaseStore";
+import { parseSellerPackChildRequest } from "@/lib/durableCredits/sellerPackAtomic";
+import { recordSellerPackReconciliation } from "@/lib/durableCredits/sellerPackReconciliation";
+import { sellerPackItemBySlug } from "@/lib/sellerPackContract";
 import { createReservationLifecycle } from "@/lib/reservationLifecycle";
 import {
   recordConfirmedPreOutputFailure,
@@ -51,6 +77,18 @@ import {
   invokeReservedProvider,
   liveGenerationAccess,
 } from "@/lib/liveGenerationGate.mjs";
+import {
+  cachedUploadHonesty,
+  freeDeliveryReadyForAccess,
+  isPrivateLiveInvite,
+  parsePrivateLiveAllowlist,
+  privateLiveBudget,
+} from "@/lib/privateLiveBeta.mjs";
+import {
+  getPrivateLiveSpent,
+  tryConsumePrivateLiveBudget,
+} from "@/lib/privateLiveBudgetStore";
+import { t6DeliveryReadiness } from "@/lib/t6Worker";
 import { providerCompletionDecision } from "@/lib/generationReliability.mjs";
 import {
   beginSyncGenerateJob,
@@ -65,6 +103,11 @@ import {
   type GenerationJob,
 } from "@/lib/generationJobs";
 import { getLocalAsset } from "@/lib/localAssets";
+import {
+  getPrivateGenerationResultByIdempotency,
+  savePrivateGenerationResult,
+  signedPrivateResultUrl,
+} from "@/lib/privateGenerationResults";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -91,6 +134,24 @@ function reconciliationEventId(
   suffix?: string
 ): string {
   return `recon:${kind}:${jobId}${suffix ? `:${suffix}` : ""}`.slice(0, 160);
+}
+
+function packReconciliationEventId(
+  kind: "provider_succeeded" | "release_pending" | "settlement_unknown",
+  jobId: string,
+  attemptKey: string,
+  suffix?: string
+): string {
+  const attemptHash = createHash("sha256")
+    .update(attemptKey)
+    .digest("hex")
+    .slice(0, 24);
+  const suffixHash = suffix
+    ? createHash("sha256").update(suffix).digest("hex").slice(0, 16)
+    : "";
+  return `pack-recon:${kind}:${jobId}:${attemptHash}${
+    suffixHash ? `:${suffixHash}` : ""
+  }`;
 }
 
 function successFromJob(
@@ -121,7 +182,7 @@ function successFromJob(
     duration: typeof job.duration === "number" ? job.duration : 5,
     aspectRatio: job.aspectRatio || "1:1",
     resolution: job.resolution || "480p",
-    session: publicSession(session),
+    session: demo ? publicCachedSession(session) : publicSession(session),
     requestId: job.requestId || job.id,
     jobId: job.id,
     provider: job.provider,
@@ -158,6 +219,39 @@ function noteFailed(
   } catch {
     /* job ledger is best-effort */
   }
+}
+
+function resolvePrivateLiveAccess(authUser: { id: string; email: string | null } | null) {
+  const enabled = process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1";
+  const allowlist = parsePrivateLiveAllowlist(
+    process.env.PIKBO_PRIVATE_LIVE_ALLOWLIST || ""
+  );
+  const budgetMax = Math.max(
+    0,
+    Math.floor(Number(process.env.PIKBO_PRIVATE_LIVE_BUDGET_MAX || "0"))
+  );
+  const invite = isPrivateLiveInvite({
+    enabled,
+    allowlist,
+    email: authUser?.email,
+    userId: authUser?.id,
+  });
+  const spent = authUser ? getPrivateLiveSpent(authUser.id) : 0;
+  const budget = privateLiveBudget({ spent, max: budgetMax });
+  const t6FreeLiveDeliveryReady = t6DeliveryReadiness().effective === true;
+  const freeDeliveryReady = freeDeliveryReadyForAccess({
+    t6FreeLiveDeliveryReady,
+    privateInvite: invite.invited === true,
+    privateBudgetOk: budget.ok,
+  });
+  return {
+    enabled,
+    invite,
+    budget,
+    budgetMax,
+    freeDeliveryReady,
+    t6FreeLiveDeliveryReady,
+  };
 }
 
 export async function POST(req: Request) {
@@ -201,18 +295,67 @@ export async function POST(req: Request) {
 
   let session = await ensureSession();
   const authUser = await getAuthUserFromRequest(req);
+  // Paid authority comes from the authenticated durable account, never from
+  // the signed browser cookie. Missing/legacy/unknown account plans downgrade
+  // to Free here and are checked again inside the transactional reserve RPC.
+  const durableWallet = authUser
+    ? await supabaseGetPersonalWallet(authUser.id)
+    : null;
+  const accessPlanId =
+    authUser && durableWallet?.planId === "founding_studio"
+      ? "founding_studio"
+      : "free";
+  const privateLive = resolvePrivateLiveAccess(authUser);
   const access = liveGenerationAccess({
     providerConfigured: Boolean(process.env.FAL_KEY),
     authenticated: Boolean(authUser),
-    planId: session.plan,
-    // T6 is deliberately blocked. Free live cannot reopen until a verified
-    // server-owned derivative is available.
-    freeDeliveryReady: false,
+    planId: accessPlanId,
+    // Public Free stays blocked until T6 free delivery is ready.
+    // Invited private-beta owners may open Free live only with remaining budget
+    // (still fail-closed without durable reserve + provider).
+    freeDeliveryReady: privateLive.freeDeliveryReady,
   });
 
   // Idempotent replay BEFORE image/asset resolve — network retries must not
   // re-upload multi-MB stills or fail on expired assetId after success.
   const idempotencyKey = normalizeIdempotencyKey(body.idempotencyKey);
+  if (authUser && idempotencyKey) {
+    const durablePrior = await getPrivateGenerationResultByIdempotency({
+      userId: authUser.id,
+      idempotencyKey,
+    });
+    if (durablePrior) {
+      const signedUrl = await signedPrivateResultUrl(durablePrior.objectKey);
+      if (signedUrl) {
+        // The private Free allowance is one clip. Do not downgrade a paid
+        // cookie on cross-device replay; its durable wallet remains authority.
+        if (session.plan === "free" && session.credits !== 0) {
+          session = { ...session, credits: 0 };
+          await saveSession(session);
+        }
+        return NextResponse.json<GenerateSuccess>({
+          videoUrl: signedUrl,
+          demo: false,
+          watermark: false,
+          model: durablePrior.model,
+          duration: durablePrior.duration,
+          aspectRatio: durablePrior.aspectRatio,
+          resolution: durablePrior.resolution,
+          session: publicSession(session),
+          requestId: durablePrior.jobId,
+          jobId: durablePrior.jobId,
+          providerRequestId: durablePrior.providerRequestId,
+          provider: "bytedance-seedance",
+          effect: durablePrior.effect,
+          costCredits: 10,
+          creditsOutcome: "10 used",
+          idempotentReplay: true,
+          processedUpload: true,
+          privateResult: true,
+        });
+      }
+    }
+  }
   const hasRetryHandoff = Boolean(retryJobId || retryToken);
   if (
     hasRetryHandoff &&
@@ -227,7 +370,10 @@ export async function POST(req: Request) {
         error:
           "Retry requires an exact child job id, its one-time token, and a new idempotency key",
         code: "RETRY_TOKEN_INVALID",
-        session: publicSession(session),
+        session:
+          access.kind === "cached"
+            ? publicCachedSession(session)
+            : publicSession(session),
       },
       400
     );
@@ -378,10 +524,53 @@ export async function POST(req: Request) {
     );
   }
 
+  // Seller Pack child binding (optional). When present, live spend uses the
+  // parent 30-credit pack reservation and never opens R1a per-generation reserve.
+  const packBinding = parseSellerPackChildRequest(body);
+  if (packBinding.kind === "invalid") {
+    endJob(session.id);
+    return err(
+      {
+        error: packBinding.error,
+        code: "INVALID_REQUEST",
+        session: publicSession(session),
+      },
+      400
+    );
+  }
+  const packChild =
+    packBinding.kind === "pack"
+      ? {
+          packRunId: packBinding.packRunId,
+          packJobId: packBinding.packJobId,
+        }
+      : null;
+  // Mutable pack context filled after authorize (for settle/release backends).
+  let activePackChild: {
+    packRunId: string;
+    packJobId: string;
+    userId: string;
+    attemptKey: string;
+  } | null = null;
+
   // Reservation lifecycle: release ≤1, never release after settle/withhold.
   // finally → safetyNetRelease only while phase === reserved.
   const reservationLife = createReservationLifecycle({
     release: async (reservation, reason) => {
+      if (activePackChild) {
+        const released = await releaseSellerPackChildAtomic({
+          userId: activePackChild.userId,
+          packRunId: activePackChild.packRunId,
+          jobId: activePackChild.packJobId,
+          attemptKey: activePackChild.attemptKey,
+          reason,
+        });
+        if (!released.ok) return { ok: false, error: released.error };
+        return {
+          ok: true,
+          availableCredits: released.data.availableCredits,
+        };
+      }
       const released = await releaseStrictLiveGeneration(reservation, reason);
       if (!released.ok) return { ok: false, error: released.error };
       return {
@@ -390,6 +579,20 @@ export async function POST(req: Request) {
       };
     },
     settle: async (reservation, providerRequestId) => {
+      if (activePackChild) {
+        const captured = await settleSellerPackChildAtomic({
+          userId: activePackChild.userId,
+          packRunId: activePackChild.packRunId,
+          jobId: activePackChild.packJobId,
+          attemptKey: activePackChild.attemptKey,
+          providerRequestId,
+        });
+        if (!captured.ok) return { ok: false, error: captured.error };
+        return {
+          ok: true,
+          availableCredits: captured.data.availableCredits,
+        };
+      }
       const captured = await settleStrictLiveGeneration(
         reservation,
         providerRequestId
@@ -404,11 +607,38 @@ export async function POST(req: Request) {
   let runSafetyNetRelease: (() => Promise<void>) | null = null;
 
   try {
-    const plan = getPlan(session.plan);
+    const plan = getPlan(accessPlanId);
     const freeTier = plan.watermark;
-    const secs = freeTier ? 5 : clampDuration(duration, preset.duration);
-    const aspect = normalizeAspect(aspectRatio, preset.aspectRatio);
-    const resolution = resolutionForTier(freeTier, resPref);
+    // Live Seller Pack children use the fixed 5s + aspect contract from the
+    // frozen pack item, not client-supplied duration/aspect overrides.
+    const packItem = packChild ? sellerPackItemBySlug(preset.slug) : undefined;
+    if (packChild && !packItem) {
+      return err(
+        {
+          error:
+            "Seller Pack children must use the frozen Launch Pack effect contract",
+          code: "INVALID_REQUEST",
+          session: publicSession(session),
+        },
+        400
+      );
+    }
+    // Launch validation exposes one real cost envelope only: 5 seconds.
+    // A broader duration selector may remain visible for cached prototypes,
+    // but no private provider request can turn it into an unpriced 10s call.
+    const secs = access.kind === "live"
+      ? 5
+      : packItem
+        ? packItem.durationSec
+        : freeTier
+          ? 5
+          : clampDuration(duration, preset.duration);
+    const aspect = packItem
+      ? packItem.aspectRatio
+      : normalizeAspect(aspectRatio, preset.aspectRatio);
+    const resolution = packChild
+      ? SELLER_PACK_LIVE_RESOLUTION
+      : resolutionForTier(freeTier, resPref);
 
     // Always keep preset template as base — freeform-only used to wipe toy prompts.
     const prompt = buildGeneratePrompt(preset.promptTemplate, extra);
@@ -460,6 +690,15 @@ export async function POST(req: Request) {
           502
         );
       }
+      const hadUpload = Boolean(
+        (typeof imageField === "string" && imageField.length > 32) ||
+          (typeof assetId === "string" && assetId.length > 4)
+      );
+      const honesty = cachedUploadHonesty({
+        accessKind: "cached",
+        hadUpload,
+        reason: access.reason,
+      });
       const payload: GenerateSuccess = {
         videoUrl,
         demo: true,
@@ -469,11 +708,18 @@ export async function POST(req: Request) {
         duration: secs,
         aspectRatio: aspect,
         resolution,
-        session: publicSession(session),
+        session: publicCachedSession(session),
         // Wave B — echo server-validated recipe + free settlement
         effect: preset.slug,
         costCredits: 0,
         creditsOutcome: "0 cached",
+        processedUpload: honesty.processedUpload === true,
+        ...(honesty.uploadIgnored
+          ? {
+              uploadIgnored: true,
+              uploadIgnoredReason: honesty.uploadIgnoredReason,
+            }
+          : {}),
       };
       try {
         const job = cachedRetryJobId
@@ -537,24 +783,211 @@ export async function POST(req: Request) {
         400
       );
     }
-    const reserved = await reserveStrictLiveGeneration({
+    // Founding Studio is a fixed three-video product, not a generic credit
+    // bucket. Keep arbitrary single clips on the explicitly invited Free P0
+    // validation path so paid credits cannot be redirected into unpriced work.
+    if (accessPlanId === "founding_studio" && !packChild) {
+      return err(
+        {
+          error:
+            "Founding Studio generation starts from the fixed three-video Launch Pack",
+          code: "LIVE_ACCESS_REQUIRED",
+          session: publicSession(session),
+        },
+        403
+      );
+    }
+    // P0 single clips and P1 pack children use the same pinned Fast endpoint.
+    const model = packChild
+      ? sellerPackLiveModelEndpoint()
+      : modelForPrivateLive(modelPref);
+    if (!packChild && model !== privateLiveSeedanceModel(modelPref)) {
+      return err(
+        {
+          error: "Private live model selection failed closed",
+          code: "INVALID_REQUEST",
+          model,
+          session: publicSession(session),
+        },
+        500
+      );
+    }
+    // Non-production provider validation uses a database-atomic cumulative
+    // budget capped at US$20. Production and unconfigured environments fail
+    // before credits or provider work. Estimates stay explicitly labeled.
+    const costAdmission = await reserveDurableProviderSpend({
       userId: authUser.id,
       idempotencyKey,
-      effectSlug: preset.slug,
+      durationSec: secs,
+      resolution,
+      modelId: model,
     });
+    if (!costAdmission.ok) {
+      const code =
+        costAdmission.code === "PAID_CEILING_EXHAUSTED"
+          ? ("PAID_CEILING_EXHAUSTED" as const)
+          : costAdmission.code === "JOB_IN_FLIGHT"
+            ? ("JOB_IN_FLIGHT" as const)
+          : costAdmission.code === "PAID_CEILING_UNAVAILABLE"
+            ? ("PAID_CEILING_UNAVAILABLE" as const)
+            : ("PAID_CEILING_ZERO" as const);
+      return err(
+        {
+          error: costAdmission.error,
+          code,
+          model,
+          session: publicSession(session),
+        },
+        code === "JOB_IN_FLIGHT" ? 409 : 403
+      );
+    }
+    const providerSpendReservation = costAdmission.reservation;
+    let providerSpendHeld = true;
+    const releaseProviderSpendIfHeld = async () => {
+      if (!providerSpendHeld) return true;
+      const released = await releaseDurableProviderSpend(
+        providerSpendReservation
+      );
+      if (released) providerSpendHeld = false;
+      return released;
+    };
+    const commitProviderSpendIfHeld = async () => {
+      if (!providerSpendHeld) return true;
+      const committed = await commitDurableProviderSpend(
+        providerSpendReservation
+      );
+      if (committed) providerSpendHeld = false;
+      return committed;
+    };
+    // Private Free live: consume one process-local admission slot after access
+    // is live and before durable reserve/provider work. Durable wallet +
+    // reservation remains the real cross-instance spend authority.
+    if (
+      accessPlanId === "free" &&
+      privateLive.invite.invited &&
+      !privateLive.t6FreeLiveDeliveryReady
+    ) {
+      const consume = tryConsumePrivateLiveBudget(
+        authUser.id,
+        privateLive.budgetMax
+      );
+      if (!consume.ok) {
+        await releaseProviderSpendIfHeld();
+        return err(
+          {
+            error:
+              "Private live generation budget exhausted for this account — wait for a higher cap or T6 free delivery",
+            code: "LIVE_ACCESS_REQUIRED",
+            session: publicSession(session),
+          },
+          403
+        );
+      }
+    }
+    // Pack children: authorize against the parent 30-credit reservation.
+    // Non-pack live: strict R1a per-generation reserve (unchanged).
+    let reserved:
+      | {
+          ok: true;
+          reservation: StrictLiveReservation;
+          availableCredits: number;
+        }
+      | {
+          ok: false;
+          code:
+            | "DURABLE_CREDITS_UNAVAILABLE"
+            | "LIVE_ACCESS_REQUIRED"
+            | "INSUFFICIENT_CREDITS"
+            | "JOB_IN_FLIGHT"
+            | "RESERVATION_FAILED"
+            | string;
+          error: string;
+          need?: number;
+          have?: number;
+        };
+
+    if (packChild) {
+      if (!packItem) {
+        return err(
+          {
+            error: "Seller Pack child contract mismatch",
+            code: "INVALID_REQUEST",
+            session: publicSession(session),
+          },
+          400
+        );
+      }
+      const packAuth = await authorizeSellerPackChildLive({
+        userId: authUser.id,
+        packRunId: packChild.packRunId,
+        jobId: packChild.packJobId,
+        effectSlug: packItem.slug,
+        durationSec: packItem.durationSec,
+        aspectRatio: packItem.aspectRatio,
+        attemptKey: idempotencyKey,
+      });
+      if (!packAuth.ok) {
+        reserved = {
+          ok: false,
+          code: packAuth.code,
+          error: packAuth.error,
+          need: packAuth.need,
+          have: packAuth.have,
+        };
+      } else {
+        activePackChild = {
+          packRunId: packChild.packRunId,
+          packJobId: packChild.packJobId,
+          userId: authUser.id,
+          attemptKey: packAuth.attemptKey,
+        };
+        reserved = {
+          ok: true,
+          reservation: packAuth.reservation,
+          availableCredits: packAuth.availableCredits,
+        };
+      }
+    } else {
+      reserved = await reserveStrictLiveGeneration({
+        userId: authUser.id,
+        idempotencyKey,
+        effectSlug: preset.slug,
+      });
+    }
     if (!reserved.ok) {
+      await releaseProviderSpendIfHeld();
       const status =
         reserved.code === "INSUFFICIENT_CREDITS"
           ? 402
           : reserved.code === "JOB_IN_FLIGHT"
             ? 409
-          : reserved.code === "LIVE_ACCESS_REQUIRED"
+          : reserved.code === "LIVE_ACCESS_REQUIRED" ||
+              reserved.code === "PACK_NOT_FOUND" ||
+              reserved.code === "JOB_BINDING_MISMATCH" ||
+              reserved.code === "CHILD_ALREADY_SUCCEEDED" ||
+              reserved.code === "CHILD_REQUIRES_RETRY" ||
+              reserved.code === "PACK_CHILD_CONTRACT_MISMATCH"
             ? 403
             : 503;
+      const code = (
+        reserved.code === "INSUFFICIENT_CREDITS" ||
+        reserved.code === "LIVE_ACCESS_REQUIRED" ||
+        reserved.code === "DURABLE_CREDITS_UNAVAILABLE" ||
+        reserved.code === "JOB_IN_FLIGHT" ||
+        reserved.code === "RESERVATION_FAILED"
+          ? reserved.code
+          : reserved.code === "PACK_NOT_FOUND" ||
+              reserved.code === "JOB_BINDING_MISMATCH" ||
+              reserved.code === "CHILD_ALREADY_SUCCEEDED" ||
+              reserved.code === "CHILD_REQUIRES_RETRY" ||
+              reserved.code === "PACK_CHILD_CONTRACT_MISMATCH"
+            ? "INVALID_REQUEST"
+            : "RESERVATION_FAILED"
+      ) as GenerateErrorBody["code"];
       return err(
         {
           error: reserved.error,
-          code: reserved.code,
+          code,
           need: reserved.need,
           have: reserved.have,
           session: publicSession(session),
@@ -568,7 +1001,19 @@ export async function POST(req: Request) {
       plan: reserved.reservation.planId,
       credits: reserved.availableCredits,
     };
+    const preProviderReleaseReasons = new Set([
+      "retry_claim_rejected",
+      "force_fail",
+      "invalid_image",
+      "empty_image",
+      "deadline_before_upload",
+      "deadline_before_generation",
+      "unexpected_exit_safety_net",
+    ]);
     const releaseReservation = async (reason: string): Promise<boolean> => {
+      if (preProviderReleaseReasons.has(reason)) {
+        await releaseProviderSpendIfHeld();
+      }
       const target = reservationLife.get() ?? reserved.reservation;
       const released = await reservationLife.release(reason);
       if (released.skipped) {
@@ -576,32 +1021,39 @@ export async function POST(req: Request) {
         return false;
       }
       if (!released.ok) {
-        const confirmedPreOutput = new Set([
-          "retry_claim_rejected",
-          "force_fail",
-          "invalid_image",
-          "empty_image",
-          "deadline_before_upload",
-          "deadline_before_generation",
-          "unexpected_exit_safety_net",
-        ]).has(reason);
-        const recorded = confirmedPreOutput
-          ? await recordConfirmedPreOutputFailure(target, {
-              eventId: reconciliationEventId(
-                "release_pending",
-                target.jobId,
-                reason
-              ),
+        const confirmedPreOutput = preProviderReleaseReasons.has(reason);
+        const eventKind = confirmedPreOutput
+          ? "release_pending"
+          : "settlement_unknown";
+        const eventId = activePackChild
+          ? packReconciliationEventId(
+              eventKind,
+              target.jobId,
+              activePackChild.attemptKey,
+              reason
+            )
+          : reconciliationEventId(eventKind, target.jobId, reason);
+        const recorded = activePackChild
+          ? await recordSellerPackReconciliation({
+              userId: activePackChild.userId,
+              packRunId: activePackChild.packRunId,
+              jobId: activePackChild.packJobId,
+              attemptKey: activePackChild.attemptKey,
+              eventId,
+              eventType: confirmedPreOutput
+                ? "confirmed_pre_output_failure"
+                : "settlement_unknown",
               reason,
             })
-          : await recordSettlementUnknown(target, {
-              eventId: reconciliationEventId(
-                "settlement_unknown",
-                target.jobId,
-                reason
-              ),
-              reason,
-            });
+          : confirmedPreOutput
+            ? await recordConfirmedPreOutputFailure(target, {
+                eventId,
+                reason,
+              })
+            : await recordSettlementUnknown(target, {
+                eventId,
+                reason,
+              });
         if (!recorded.ok) {
           console.error(
             "[live-reconciliation] release enqueue failed",
@@ -624,10 +1076,10 @@ export async function POST(req: Request) {
     };
     await saveSession(session);
 
-    const model = modelForTier({
-      freeTier: false,
-      prefer: modelPref as ModelPreference,
-    });
+    // Private Preview results are copied into authenticated, server-owned
+    // storage. They are not public Free/T6 deliverables and never use a raw
+    // provider URL as the customer result.
+    const privateResultWatermark = false;
 
     // Open or explicitly claim the exact retry child before provider work.
     // Effect/prompt/list-order matching is intentionally forbidden.
@@ -640,7 +1092,7 @@ export async function POST(req: Request) {
         idempotencyKey: ledgerIdempotencyKey!,
         effect: preset.slug,
         model,
-        watermark: plan.watermark,
+        watermark: privateResultWatermark,
         provider: "bytedance-seedance",
         duration: secs,
         aspectRatio: aspect,
@@ -666,7 +1118,7 @@ export async function POST(req: Request) {
         sessionId: session.id,
         effect: preset.slug,
         model,
-        watermark: plan.watermark,
+        watermark: privateResultWatermark,
         provider: "bytedance-seedance",
         idempotencyKey: ledgerIdempotencyKey,
         duration: secs,
@@ -698,6 +1150,7 @@ export async function POST(req: Request) {
       return err(failBody, 500);
     }
 
+    let providerRequestStarted = false;
     try {
       fal.config({ credentials: process.env.FAL_KEY });
 
@@ -780,6 +1233,7 @@ export async function POST(req: Request) {
         noteFailed(session.id, preset.slug, failBody, liveJobId);
         return err(failBody, 504);
       }
+      providerRequestStarted = true;
       const result = await invokeReservedProvider(
         reserved.reservation,
         () =>
@@ -788,6 +1242,13 @@ export async function POST(req: Request) {
             logs: false,
           })
       );
+      // Once the model request was sent, conservatively count the labeled
+      // estimate against the validation ceiling even if delivery later fails.
+      // A failed transition leaves the amount reserved, which still enforces
+      // the hard cap and can be reconciled without inventing actual USD.
+      if (!(await commitProviderSpendIfHeld())) {
+        console.error("[provider-budget] commit pending");
+      }
 
       const data = result.data as { video?: { url?: string } };
       const videoUrl = data?.video?.url;
@@ -820,6 +1281,108 @@ export async function POST(req: Request) {
         return err(failBody, 502);
       }
 
+      const providerRequestId =
+        typeof result.requestId === "string" && result.requestId.trim()
+          ? result.requestId.trim().slice(0, 256)
+          : null;
+      if (!providerRequestId) {
+        const released = await releaseReservation(
+          "provider_request_id_missing"
+        );
+        const failBody: GenerateErrorBody = {
+          error: released
+            ? "The provider returned a video without an auditable request ID. No credits were used."
+            : "The provider returned a video without an auditable request ID. Credit release needs review.",
+          code: "DELIVERY_PIPELINE_UNAVAILABLE",
+          model,
+          jobId: reserved.reservation.jobId,
+          session: publicSession(session),
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true } : {}),
+        };
+        noteFailed(session.id, preset.slug, failBody, liveJobId);
+        return err(failBody, 502);
+      }
+      const saved = await savePrivateGenerationResult({
+        jobId: reserved.reservation.jobId,
+        userId: authUser.id,
+        attemptKey: activePackChild?.attemptKey ?? null,
+        providerRequestId,
+        providerOutputUrl: videoUrl,
+        effect: preset.slug,
+        model,
+        duration: secs,
+        aspectRatio: aspect,
+        resolution,
+      });
+      if (!saved.ok) {
+        if (saved.settlementUncertain) {
+          // The attach transaction may have committed even though its response
+          // was lost. Deleting/refunding here could produce a free private
+          // output or poison a deterministic retry. Withhold and let the
+          // Worker discover the exact current Pack attempt (or R1c review it).
+          reservationLife.markWithheld("private_attach_uncertain");
+          const uncertainEventId = activePackChild
+            ? packReconciliationEventId(
+                "settlement_unknown",
+                reserved.reservation.jobId,
+                activePackChild.attemptKey,
+                saved.code
+              )
+            : reconciliationEventId(
+                "settlement_unknown",
+                reserved.reservation.jobId,
+                saved.code
+              );
+          const recorded = activePackChild
+            ? await recordSellerPackReconciliation({
+                userId: activePackChild.userId,
+                packRunId: activePackChild.packRunId,
+                jobId: activePackChild.packJobId,
+                attemptKey: activePackChild.attemptKey,
+                eventId: uncertainEventId,
+                eventType: "settlement_unknown",
+                providerRequestId,
+                reason: saved.code,
+              })
+            : await recordSettlementUnknown(reserved.reservation, {
+                eventId: uncertainEventId,
+                reason: saved.code,
+              });
+          if (!recorded.ok) {
+            console.error(
+              "[live-reconciliation] private attach enqueue failed",
+              recorded.code
+            );
+          }
+          const failBody: GenerateErrorBody = {
+            error:
+              "The model finished, but private delivery confirmation was interrupted. Credits and output are withheld while reconciliation verifies the durable result.",
+            code: "DURABLE_CREDITS_UNAVAILABLE",
+            model,
+            jobId: reserved.reservation.jobId,
+            session: publicSession(session),
+            refundUnconfirmed: true,
+          };
+          noteFailed(session.id, preset.slug, failBody, liveJobId);
+          return err(failBody, 503);
+        }
+        const released = await releaseReservation("delivery_save_failed");
+        const failBody: GenerateErrorBody = {
+          error: released
+            ? `The model finished, but Pikbo could not save the private result (${saved.code}). No credits were used.`
+            : `The model finished, but Pikbo could not save the private result (${saved.code}). Credit release needs review.`,
+          code: "DELIVERY_PIPELINE_UNAVAILABLE",
+          model,
+          jobId: reserved.reservation.jobId,
+          session: publicSession(session),
+          creditsRefunded: released,
+          ...(!released ? { refundUnconfirmed: true } : {}),
+        };
+        noteFailed(session.id, preset.slug, failBody, liveJobId);
+        return err(failBody, 502);
+      }
+
       // fal may return after the fixed local deadline. Do not let a browser
       // poll or late provider response reopen the attempt, and do not claim a
       // refund/capture until R1c reconciliation inspects the durable job.
@@ -829,18 +1392,36 @@ export async function POST(req: Request) {
         // Provider output already exists. Close the release path before any
         // reconciliation I/O, because that I/O may itself throw.
         reservationLife.markWithheld(completionDecision.code);
-        const recorded = await recordProviderSucceededWithheld(
-          reserved.reservation,
-          {
-            eventId: reconciliationEventId(
+        const lateEventId = activePackChild
+          ? packReconciliationEventId(
+              "provider_succeeded",
+              reserved.reservation.jobId,
+              activePackChild.attemptKey
+            )
+          : reconciliationEventId(
               "provider_succeeded",
               reserved.reservation.jobId
-            ),
-            providerRequestId: result.requestId || liveJobId,
-            outputRef: videoUrl,
-            reason: completionDecision.code,
-          }
-        );
+            );
+        const recorded = activePackChild
+          ? await recordSellerPackReconciliation({
+              userId: activePackChild.userId,
+              packRunId: activePackChild.packRunId,
+              jobId: activePackChild.packJobId,
+              attemptKey: activePackChild.attemptKey,
+              eventId: lateEventId,
+              eventType: "provider_succeeded",
+              providerRequestId,
+              reason: completionDecision.code,
+            })
+          : await recordProviderSucceededWithheld(
+              reserved.reservation,
+              {
+                eventId: lateEventId,
+                providerRequestId,
+                outputRef: videoUrl,
+                reason: completionDecision.code,
+              }
+            );
         if (!recorded.ok) {
           console.error(
             "[live-reconciliation] late output enqueue failed",
@@ -859,25 +1440,43 @@ export async function POST(req: Request) {
       }
 
       const captured = await reservationLife.settle(
-        result.requestId || liveJobId || reserved.reservation.reservationId
+        providerRequestId
       );
       if (!captured.ok) {
         console.error("[live-reservation] capture failed");
         // settle() already moves failed/thrown capture to withheld. Keep this
         // explicit for route readability and future lifecycle implementations.
         reservationLife.markWithheld("capture_failed");
-        const recorded = await recordProviderSucceededWithheld(
-          reserved.reservation,
-          {
-            eventId: reconciliationEventId(
+        const captureEventId = activePackChild
+          ? packReconciliationEventId(
+              "provider_succeeded",
+              reserved.reservation.jobId,
+              activePackChild.attemptKey
+            )
+          : reconciliationEventId(
               "provider_succeeded",
               reserved.reservation.jobId
-            ),
-            providerRequestId: result.requestId || liveJobId,
-            outputRef: videoUrl,
-            reason: "capture_failed",
-          }
-        );
+            );
+        const recorded = activePackChild
+          ? await recordSellerPackReconciliation({
+              userId: activePackChild.userId,
+              packRunId: activePackChild.packRunId,
+              jobId: activePackChild.packJobId,
+              attemptKey: activePackChild.attemptKey,
+              eventId: captureEventId,
+              eventType: "provider_succeeded",
+              providerRequestId,
+              reason: "capture_failed",
+            })
+          : await recordProviderSucceededWithheld(
+              reserved.reservation,
+              {
+                eventId: captureEventId,
+                providerRequestId,
+                outputRef: videoUrl,
+                reason: "capture_failed",
+              }
+            );
         if (!recorded.ok) {
           console.error(
             "[live-reconciliation] capture enqueue failed",
@@ -894,56 +1493,78 @@ export async function POST(req: Request) {
         };
         return err(failBody, 503);
       }
-      let ledgerJobId = liveJobId;
+      const privateDeliveryUrl =
+        saved.signedUrl ||
+        (await signedPrivateResultUrl(saved.result.objectKey));
+      if (!privateDeliveryUrl) {
+        // The private object and settlement are already durable. Never refund
+        // or invoke the provider again because a short-lived URL could not be
+        // minted. Library/download recovery can sign the same object later.
+        const failBody: GenerateErrorBody = {
+          error:
+            "Your private video is saved and the generation is complete, but the download link is temporarily unavailable. Refresh Library to recover it; do not start a new generation.",
+          code: "DELIVERY_PIPELINE_UNAVAILABLE",
+          model,
+          jobId: reserved.reservation.jobId,
+          session: publicSession(session),
+        };
+        return err(failBody, 503);
+      }
       try {
-        const job = completeSyncGenerateJob({
+        completeSyncGenerateJob({
           jobId: liveJobId,
           sessionId: session.id,
           effect: preset.slug,
-          videoUrl,
+          videoUrl: privateDeliveryUrl,
           demo: false,
-          watermark: plan.watermark,
+          watermark: privateResultWatermark,
           model,
           duration: secs,
           aspectRatio: aspect,
           resolution,
           costCredits: reserved.reservation.credits,
           creditsOutcome: "10 used",
-          requestId: result.requestId || liveJobId,
+          requestId: reserved.reservation.jobId,
           provider: "bytedance-seedance",
         });
-        ledgerJobId = job.id;
       } catch {
         /* best-effort */
       }
       const payload: GenerateSuccess = {
-        // Never expose the raw Free provider URL. Paid/raw keeps provider URL;
-        // Free delivery waits for a verified T6 derivative via /api/downloads.
-        videoUrl: customerFacingGenerateVideoUrl({
-          demo: false,
-          watermark: plan.watermark,
-          jobId: ledgerJobId || result.requestId || "unavailable",
-          videoUrl,
-        }),
+        // Private Preview returns only the short-lived URL for Pikbo-owned
+        // storage. The raw provider URL never crosses the response boundary.
+        videoUrl: privateDeliveryUrl,
         demo: false,
-        watermark: plan.watermark,
+        watermark: privateResultWatermark,
         model,
         duration: secs,
         aspectRatio: aspect,
         resolution,
         session: publicSession(session),
-        // Prefer provider requestId; fall back to local ledger id for poll/cancel.
-        requestId: result.requestId || ledgerJobId,
-        jobId: ledgerJobId,
+        // Public request/job identity is the durable Supabase job. Provider
+        // evidence remains a separate field and is never a delivery URL.
+        requestId: reserved.reservation.jobId,
+        jobId: reserved.reservation.jobId,
+        providerRequestId,
         provider: "bytedance-seedance",
         // Wave B — echo server-validated recipe + live settlement
         effect: preset.slug,
         costCredits: reserved.reservation.credits,
         creditsOutcome: "10 used",
+        processedUpload: true,
+        privateResult: true,
+        costAudit: costAuditForResponse(providerSpendReservation.audit),
       };
       return NextResponse.json(payload);
     } catch (e) {
       console.error("generate error:", model, e);
+      if (providerRequestStarted) {
+        if (!(await commitProviderSpendIfHeld())) {
+          console.error("[provider-budget] failure commit pending");
+        }
+      } else {
+        await releaseProviderSpendIfHeld();
+      }
       const released = await releaseReservation("provider_error");
       const raw =
         e && typeof e === "object" && "body" in e

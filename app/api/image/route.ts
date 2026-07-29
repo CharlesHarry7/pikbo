@@ -311,10 +311,13 @@ export async function POST(req: Request) {
 
   let session = await ensureSession();
   const authUser = await getAuthUserFromRequest(req);
+  // Founding Studio sells one fixed video Launch Pack, not unmetered Flux
+  // stills. This route stays cached-only until it has a weighted entitlement
+  // and the same private-output settlement guarantees as video.
   const access = liveGenerationAccess({
     providerConfigured: Boolean(process.env.FAL_KEY),
     authenticated: Boolean(authUser),
-    planId: session.plan,
+    planId: "free",
     // T6 is deliberately blocked. Free live Flux cannot reopen until a
     // verified server-owned derivative path exists (same gate as video).
     freeDeliveryReady: false,
@@ -515,7 +518,7 @@ export async function POST(req: Request) {
       const sub =
         demoReason === "free_trial_video_only" ||
         demoReason === "free_live_delivery_blocked"
-          ? "Free trial is Create video · upgrade for Flux"
+          ? "Flux stills are outside the Launch Pack beta"
           : demoReason === "anonymous_cached_only"
             ? "sign in for paid Flux stills"
             : "set FAL_KEY for Flux";

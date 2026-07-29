@@ -1,7 +1,12 @@
 import { createHmac, randomUUID, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { getEntitlement } from "@/lib/entitlements";
-import { CREDITS_PER_VIDEO, getPlan, type PlanId } from "@/lib/pricing";
+import {
+  CREDITS_PER_VIDEO,
+  getPlan,
+  isPlanId,
+  type PlanId,
+} from "@/lib/pricing";
 
 export const SESSION_COOKIE = "pikbo_s";
 const MAX_AGE = 60 * 60 * 24 * 180; // 180 days
@@ -66,9 +71,34 @@ export function decodeSession(
   try {
     const data = JSON.parse(
       Buffer.from(payloadB64, "base64url").toString("utf8")
-    ) as UserSession;
-    if (!data.id || !data.plan || typeof data.credits !== "number") return null;
-    return data;
+    ) as Partial<UserSession> & { plan?: unknown };
+    if (
+      typeof data.id !== "string" ||
+      data.id.length < 8 ||
+      typeof data.credits !== "number" ||
+      !Number.isFinite(data.credits)
+    ) {
+      return null;
+    }
+    // Payments were never publicly live under Creator/Shop. Old or unknown
+    // signed cookies therefore have no paid authority and downgrade to Free.
+    const plan: PlanId = isPlanId(data.plan) ? data.plan : "free";
+    const credits =
+      plan === "free"
+        ? Math.min(
+            getPlan("free").credits,
+            Math.max(0, Math.floor(data.credits))
+          )
+        : Math.max(0, Math.floor(data.credits));
+    return {
+      id: data.id,
+      plan,
+      credits,
+      periodKey:
+        typeof data.periodKey === "string" && /^\d{4}-\d{2}$/.test(data.periodKey)
+          ? data.periodKey
+          : currentPeriodKey(),
+    };
   } catch {
     return null;
   }
@@ -177,6 +207,19 @@ export function publicSession(session: UserSession): PublicSession {
     planName: plan.name,
     clipsLeft: Math.floor(session.credits / CREDITS_PER_VIDEO),
     creditsPerVideo: CREDITS_PER_VIDEO,
+  };
+}
+
+/**
+ * Public session projection for cached-only surfaces.
+ * The guest cookie may preserve one-time trial usage, but it is never
+ * spendable account credit and must not reappear in cached API responses.
+ */
+export function publicCachedSession(session: UserSession): PublicSession {
+  return {
+    ...publicSession(session),
+    credits: 0,
+    clipsLeft: 0,
   };
 }
 

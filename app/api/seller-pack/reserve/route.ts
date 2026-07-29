@@ -6,7 +6,7 @@ import {
   getPersonalWallet,
 } from "@/lib/durableCredits";
 import {
-  reserveSellerPackShadow,
+  reserveSellerPackAtomic,
   SELLER_PACK_CHILD_COUNT,
   SELLER_PACK_QUOTE_CREDITS,
 } from "@/lib/durableCredits/sellerPack";
@@ -14,13 +14,12 @@ import {
 export const runtime = "nodejs";
 
 /**
- * Phase C — Seller Pack shadow reserve (30 credits for 3 children).
- * R0/R1 honesty: live /api/generate children require durable auth reserve;
- * cookie is no longer live-spend authority. When durable is off, pack shadow
- * is best-effort only — each child still hits generate cost gate (demo if free).
+ * Launch Pack reserve: authenticated owner + stable client key → one atomic
+ * 30-credit hold and exactly three fixed child ids. There is deliberately no
+ * guest/shadow fallback on this endpoint.
  */
 export async function POST(req: Request) {
-  let body: { childCount?: number; idempotencyKey?: string } = {};
+  let body: { clientPackKey?: string } = {};
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -29,50 +28,74 @@ export async function POST(req: Request) {
 
   const session = await ensureSession();
   const auth = await getAuthUserFromRequest(req);
-  const ownerUserId = auth?.id || session.id;
-  const kind = auth?.id ? "auth" : "guest";
-
-  if (!durableCreditsActive()) {
-    return NextResponse.json({
-      ok: false,
-      code: "DURABLE_OFF",
-      message:
-        "Durable credits off — Seller Pack shadow not opened. Live children need signed-in durable reserve; anonymous/Free stay on labeled demos.",
-      quoteCredits: SELLER_PACK_QUOTE_CREDITS,
-      childCount: SELLER_PACK_CHILD_COUNT,
-      childCredits: 10,
-      authority: "generate-route-cost-gate",
-      session: publicSession(session),
-    });
-  }
-
-  const childCount =
-    typeof body.childCount === "number" &&
-    body.childCount >= 1 &&
-    body.childCount <= 8
-      ? Math.floor(body.childCount)
-      : SELLER_PACK_CHILD_COUNT;
-
-  const result = await reserveSellerPackShadow({
-    ownerUserId,
-    kind,
-    childCount,
-    idempotencyKey:
-      typeof body.idempotencyKey === "string"
-        ? body.idempotencyKey.slice(0, 160)
-        : undefined,
-  });
-
-  if (!result.ok) {
-    const status = result.code === "INSUFFICIENT_CREDITS" ? 402 : 400;
+  if (!auth?.id) {
     return NextResponse.json(
       {
         ok: false,
-        code: result.code,
-        error: result.error,
-        quoteCredits: childCount * 10,
+        code: "AUTH_REQUIRED",
+        error: "Sign in before starting a live Launch Pack",
+        quoteCredits: SELLER_PACK_QUOTE_CREDITS,
         session: publicSession(session),
-        durable: auth?.id ? await getPersonalWallet(auth.id) : null,
+      },
+      { status: 401 }
+    );
+  }
+  if (!durableCreditsActive()) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "DURABLE_OFF",
+        error: "Durable credits are unavailable",
+        quoteCredits: SELLER_PACK_QUOTE_CREDITS,
+        session: publicSession(session),
+      },
+      { status: 503 }
+    );
+  }
+
+  const clientPackKey =
+    typeof body.clientPackKey === "string"
+      ? body.clientPackKey.trim().slice(0, 128)
+      : "";
+  if (clientPackKey.length < 8) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "INVALID_PACK_KEY",
+        error: "A stable clientPackKey is required",
+        quoteCredits: SELLER_PACK_QUOTE_CREDITS,
+        session: publicSession(session),
+      },
+      { status: 400 }
+    );
+  }
+
+  const atomic = await reserveSellerPackAtomic({
+    ownerUserId: auth.id,
+    clientPackKey,
+  });
+  if (!atomic.ok) {
+    const status =
+      atomic.code === "INSUFFICIENT_CREDITS"
+        ? 402
+        : atomic.code === "IDEMPOTENCY_CONFLICT"
+          ? 409
+          : atomic.code === "LIVE_ACCESS_REQUIRED"
+            ? 403
+            : atomic.code === "DURABLE_OFF" ||
+                atomic.code === "DURABLE_CREDITS_UNAVAILABLE"
+              ? 503
+              : 400;
+    return NextResponse.json(
+      {
+        ok: false,
+        code: atomic.code,
+        error: atomic.error,
+        need: atomic.need,
+        have: atomic.have,
+        quoteCredits: SELLER_PACK_QUOTE_CREDITS,
+        session: publicSession(session),
+        durable: await getPersonalWallet(auth.id),
       },
       { status }
     );
@@ -80,13 +103,16 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     ok: true,
-    mode: "shadow",
-    /** Live child spend is enforced by /api/generate durable reserve — not cookie. */
-    authority: "durable-shadow-audit-plus-generate-gate",
-    pack: result.data,
-    quoteCredits: result.data.quotedCredits,
-    childCredits: result.data.childCredits,
+    mode: "atomic",
+    authority: "server-owned-atomic-pack",
+    packRunId: atomic.data.packRunId,
+    reservationId: atomic.data.reservationId,
+    jobs: atomic.data.jobs,
+    quoteCredits: atomic.data.quotedCredits,
+    childCredits: atomic.data.childCredits,
+    childCount: SELLER_PACK_CHILD_COUNT,
+    idempotent: atomic.data.idempotent,
     session: publicSession(session),
-    durable: auth?.id ? await getPersonalWallet(auth.id) : null,
+    durable: await getPersonalWallet(auth.id),
   });
 }

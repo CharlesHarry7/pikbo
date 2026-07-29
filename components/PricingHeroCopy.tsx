@@ -29,9 +29,9 @@ const COPY: Record<
       </>
     ),
     description:
-      "Reuse the product photos you already have instead of setting up a new shoot for every listing or drop. Preview cached Lab prototypes now; eligible Live accounts receive an exact quote before submission.",
+      "Reuse the product photos you already have instead of setting up a new shoot for every listing or drop. Preview the three formats now; private-beta accounts see the full quote before generation.",
     primary: "Animate one SKU",
-    secondary: "See seller plans",
+    secondary: "See Founding Studio",
   },
   "cost-control": {
     badge: "Finite credits · visible limits",
@@ -44,7 +44,7 @@ const COPY: Record<
       </>
     ),
     description:
-      "Configured allowances are about 1 / 5 / 15 jobs at the current flat 10-credit model when Live is enabled. This is a planning estimate—not current availability, a sales guarantee, or an unlimited promise.",
+      "The Founding Studio candidate includes three Launch Packs per month: nine fixed 5-second 720p outputs. Subscriptions open after the private beta proves quality, recovery, and sustainable cost.",
     primary: "Build my first clip",
     secondary: "Compare allowances",
   },
@@ -110,27 +110,14 @@ export function PricingHeroCopy({
             href="/create?mode=seller-pack"
             className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
           >
-            Seller Starter Pack
-          </Link>
-          <Link
-            href="/modules"
-            className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
-          >
-            Modules
-          </Link>
-          <Link
-            href="/flow"
-            className="rounded-full border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[11px] font-semibold text-white/40 transition hover:border-white/20 hover:text-white/65"
-            title="Preview media wall — not a live Seedance job"
-          >
-            Flow · Preview
+            Launch Pack
           </Link>
         </div>
         <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-[var(--fg-dim)]">
-          <span>✓ Cached prototypes use no credits</span>
-          <span>✓ Failed live jobs return their credit charge</span>
-          <span>✓ Commercial use starts on paid plans</span>
-          <span>✓ Live billing stays off until you greenlight Mode A</span>
+          <span>✓ Preview examples use no credits</span>
+          <span>✓ Confirmed failed jobs restore their credit charge</span>
+          <span>✓ Commercial use is scoped to Founding Studio</span>
+          <span>✓ Founding Studio opens after private beta</span>
         </div>
       </div>
     </section>

@@ -4,6 +4,25 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-28 — [gpt] Issue #54 owned-upload result truth
+- Branch `agent/gpt/p0-live-owned-toy-review` stacks on Grok PR #55.
+- An owned upload that falls back to cached mode is now a visible 0-credit
+  failure: no unrelated Lab video, no `READY`, no version/history pollution.
+- Replacing a still clears stale result state; explicit Lab samples remain
+  previewable through their separate path.
+- Review correction: `PIKBO_PRIVATE_LIVE_BUDGET_MAX` is a process-local
+  admission fuse, not a cross-instance production budget. Durable
+  wallet/reservation remains the spend authority.
+- PASS: P0 contract, engine smoke, R0 safety, recovery QA, product proof,
+  mobile source regression, typecheck, lint, and 193-route production build.
+
+### 2026-07-28 — [grok] Issue #54 P0 private live generation path (no prod enable)
+- Branch `agent/grok/p0-private-live-generation`: private-beta allowlist + process-local admission fuse; Free delivery ready only for invite/fuse or T6.
+- Cached generate with upload: `processedUpload:false` + `uploadIgnored` honesty.
+- Live success: `demo:false` + `processedUpload:true`; Free watermark uses `/api/downloads/*`.
+- Health `privateLiveBeta` presence flags; evidence `docs/evidence/P0_PRIVATE_LIVE_PREREQS_2026-07-28.md`.
+- Smoke: `npm run p0-private-live-generation`. Boss blockers consolidated (no secrets).
+
 ### 2026-07-28 — [grok]/[gpt] T6 non-production derivative proof merged
 - PR #51 merged at `80a17c9`; GitHub CI #481 passed the recovery, credit, T6, strict lint, typecheck, rendered-contract, link and 193-route production-build gates.
 - A synthetic H.264 640×360 source was baked with a visible PIKBO mark using real ffmpeg 6.0 and verified with ffprobe plus four decoded frames. Source/output SHA differ; watermark ROI mean delta is `6.011892` versus control `0`; metadata-only proof fails with `WATERMARK_PIXEL_PROOF_FAILED`.
@@ -2029,3 +2048,96 @@ Newest first. One block per meaningful landing.
   fail-closed critical path.
 - Safety: no provider key, paid call, database, Stripe, deployment, DNS or public
   indexing action. T5/T6 and public Mode A/B readiness remain fail-closed.
+
+### 2026-07-28 — [gpt] P0 durable slow-response recovery
+
+- Outcome: an authenticated private generation no longer depends on the
+  original `/api/generate` response closing. After 12 seconds the Create client
+  follows the same durable idempotency key through the owner-only
+  `/api/generations/recover` route and can return the already-saved result.
+- Safety: recovery is GET-only and filters by `created_by` plus
+  `idempotency_key`; it never reserves credits, calls Seedance, exposes an
+  object key/raw provider URL, or creates a second job. Explicit user cancel is
+  still the only recovery-race path that requests a ledger cancel.
+- User truth: the wait surface says Pikbo is tracking the same private task and
+  that no second provider call or charge is made. Durable failed jobs return a
+  clear failure with confirmed released credits; incomplete or withheld output
+  stays unavailable.
+- Paths: `app/api/generations/recover/route.ts`,
+  `lib/privateGenerationResults.ts`, `lib/generateClient.ts`,
+  `components/CreateStudio.tsx`, `components/GenerateWaitStage.tsx`,
+  `scripts/p0-private-live-generation.mjs`.
+- Verification: P0 private-live, engine, recovery QA/ledger/retry/reconciliation,
+  R0 safety-net, product proof, mobile regression, TypeScript and ESLint all
+  pass. Next 16.2.11 webpack production build passes with 194 routes, including
+  dynamic `/api/generations/recover`. Turbopack and local HTTP startup cannot
+  bind their helper/server ports in this sandbox, so runtime browser proof
+  remains for Vercel Preview/WorkBuddy.
+- External state: no paid provider call, Supabase mutation, Stripe, DNS, public
+  deployment, indexing request or social publishing was performed. The local
+  commit is ready, but this sandbox cannot resolve GitHub and the connected
+  GitHub write was canceled, so PR #56 and its Vercel Preview still point to
+  the preceding remote head until the commit can be pushed.
+
+### 2026-07-28 — [gpt] P0 recovery-race correctness intervention
+
+- Audit result: the recovery direction was right, but the first implementation
+  let four missing/error reads finish the recovery promise early. That losing
+  read then aborted an otherwise healthy `/api/generate` request after roughly
+  27 seconds, even though the provider window is about three minutes.
+- Fix: `lib/generateRecoveryPolicy.ts` now makes the race decision explicit.
+  Recovery may beat the original POST only for a safe saved result or a durable
+  `failed` row whose release transaction confirms the refund. A not-found,
+  unavailable, auth, transport or refund-unconfirmed result never cancels the
+  live POST.
+- Durable truth: Supabase/admin/query failure is now `unavailable`, not a false
+  `not_found`. Current durable `failed` means released in the atomic RPC;
+  `canceled` remains refund-unconfirmed and cannot claim “10 restored”.
+- Polling: transient missing/unavailable reads continue through the bounded
+  provider window, so a later durable success can still recover a disconnected
+  response. If durable recovery remains inconclusive, it cannot end the race:
+  the original POST stays authoritative until it settles or the user explicitly
+  cancels it. There is no elapsed-time fallback that aborts a healthy POST.
+- Executable regression: `p0-private-live-generation` races `not_found`,
+  database-unavailable, auth, transport, and refund-unconfirmed canceled
+  recovery results against a later successful primary. Each case proves the
+  primary is not aborted; a separate case proves saved durable success may
+  abort the stale response.
+- Verification: `typecheck`, `lint`, `p0-private-live-generation`,
+  `recovery-qa`, `recovery-ledger`, `recovery-retry-deadline`,
+  `recovery-reconciliation`, `r0-safety-net`, `engine-smoke` and
+  TypeScript/ESLint pass with the bundled workspace Node runtime. Next 16.2.11
+  Webpack production build passes all 194 routes, including
+  `/api/generations/recover`.
+- External state remains unchanged: no provider call, database mutation,
+  deployment, DNS, billing or indexing action was performed.
+
+### 2026-07-28 — [gpt/grok] P0 non-destructive long-wait handoff
+
+- Source: Grok Build commit `55cf25a` was created in the isolated
+  `agent/grok/p0-recovery-audit` worktree and integrated into Draft PR #56 by
+  Codex. Grok did not push, deploy, call the provider or modify external state.
+- User behavior: after 90 seconds, or when durable recovery reports
+  `awaiting_primary`, Create offers `Open Library · keep generating`. It uses a
+  Next client transition and does not abort the primary/recovery request,
+  cancel the ledger or start another generate. `Cancel generation` remains the
+  explicit AbortSignal path that aborts both reads and requests ledger cancel.
+- Authority: `onInconclusiveRecovery` only reports UI state. Its callback is
+  exception-isolated, so even a broken observer cannot replace the original
+  POST or alter the durable race rule.
+- Library: a detached/unmounted success writes only controlled result metadata
+  to device history and drops Base64 stills over 8 KB. A same-tab history event
+  updates an already-open Library; refresh/cross-device recovery continues
+  through the authenticated `/api/generations` owner query and controlled
+  `/api/downloads/{jobId}` path.
+- Codex review removed an unnecessary re-export, removed the duplicate desktop
+  waiting panel, retained the deduplicated refunded/unconfirmed failure tests,
+  and added observer-exception, explicit-cancel, same-tab Library and owner-only
+  listing assertions.
+- Verification: TypeScript, ESLint, `p0-private-live-generation`,
+  `recovery-qa`, `recovery-ledger`, `recovery-retry-deadline`,
+  `recovery-reconciliation`, `r0-safety-net`, `engine-smoke` and
+  `mobile-proof-regression` pass. Next 16.2.11 Webpack build generates all
+  194/194 routes.
+- Safety: no real generation, environment-variable change, Supabase mutation,
+  Stripe/DNS action, production deployment or merge was performed.

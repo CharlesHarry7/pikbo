@@ -64,7 +64,7 @@ const PROMOS: Promo[] = [
     blurb: "Spin · unbox · social hook",
     suiteHref: "/create?mode=seller-pack",
     cta: "Open Seller Starter Pack",
-    badge: "Shop · 3 formats",
+    badge: "Launch Pack · 3 formats",
     demoIndex: 5,
     sellerPack: true,
   },

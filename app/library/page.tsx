@@ -11,14 +11,11 @@ const LIBRARY_PAGE_GENERATE_HREF = createRemixHref("360-spin-showcase");
 export const metadata: Metadata = {
   title: "Library · Assets",
   description:
-    "Your toy video assets — device clips, session jobs, optional Community publish. Not multi-device cloud until durable assets ship.",
+    "Your toy video assets — private account results and clips saved on this device.",
   robots: PRIVATE_ROBOTS,
 };
 
-/**
- * HF Library / Assets pattern — cloud-feel IA with honest local storage.
- * Group by project or SKU; publish live clips to Community when signed in.
- */
+/** Private account results plus clearly labeled device-only imports. */
 export default function LibraryPage() {
   return (
     <div className="relative px-4 py-10 sm:px-8">
@@ -36,14 +33,9 @@ export default function LibraryPage() {
               Your clips
             </h1>
             <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
-              Device asset shelf for designer toys: group by project or SKU ·
-              remake into Generate · publish live results to Community when
-              signed in. Storage is{" "}
-              <span className="font-semibold text-[var(--mint)]">
-                Saved on this device
-              </span>{" "}
-              plus a process-memory session ledger — never multi-device cloud
-              until durable assets ship.
+              Private generations persist with your signed-in account and open
+              through fresh owner-only links. Clips you import manually stay on
+              this device.
             </p>
           </div>
           <div className="hidden flex-wrap items-center gap-2 sm:flex">
@@ -58,12 +50,9 @@ export default function LibraryPage() {
               href="/create?mode=seller-pack"
               className="btn btn-ghost text-sm"
             >
-              Seller Starter Pack
+              Launch Pack
             </Link>
             <FreeTrialCta path="/library" variant="ghost" />
-            <Link href="/community" className="btn btn-ghost text-sm">
-              Community
-            </Link>
           </div>
         </div>
         <LibraryGrid />

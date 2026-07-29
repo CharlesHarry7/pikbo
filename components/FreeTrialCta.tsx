@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
 import { createLabSampleTryHref } from "@/lib/jobIntents";
 import {
+  canLiveGenerate,
   fetchMe,
   freeTrialExhausted,
   isDemoMode,
@@ -75,7 +76,9 @@ export function FreeTrialCta({
       : null;
   /** R0/T6: do not advertise live Free Mini clips while liveEnabled is false. */
   const freeLiveOpen = Boolean(
-    me?.freeTrial?.freeLive && me.freeTrial.freeLive.liveEnabled !== false
+    canLiveGenerate(me) &&
+      me?.freeTrial?.freeLive &&
+      me.freeTrial.freeLive.liveEnabled !== false
   );
 
   // On homepage analytics paths, prefer on-page tool (哥飞: tool not jump-only).

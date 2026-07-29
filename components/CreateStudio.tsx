@@ -1,17 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadFavorites, toggleFavorite } from "@/lib/favorites";
 import {
   historyFieldsFromSuccess,
   postGenerateWithRetry,
 } from "@/lib/generateClient";
-import { downloadVideoFile, pushHistory } from "@/lib/history";
+import { planGenerateWaitLeave } from "@/lib/generateRecoveryPolicy";
 import {
+  downloadVideoFile,
+  privateDownloadHeaders,
+  pushHistory,
+} from "@/lib/history";
+import {
+  canLiveGenerate,
   fetchMe,
   freeTrialExhausted,
-  isDemoMode,
+  generationDisplayCredits,
   mergeMeSession,
   type MeResponse,
 } from "@/lib/meClient";
@@ -21,10 +28,12 @@ import { PRESETS } from "@/lib/presets";
 import { viralName } from "@/lib/viralNames";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { site } from "@/lib/site";
+import { stripeBillingAuthHeaders } from "@/lib/stripeBillingClient";
 import { useToast } from "@/components/Toast";
 import { PaywallCard } from "@/components/PaywallCard";
 import { emitSessionRefresh } from "@/lib/sessionEvents";
 import {
+  isIgnoredOwnedUploadResult,
   localLibraryNote,
   PROVENANCE,
   resultProvenanceLabel,
@@ -182,6 +191,7 @@ export function CreateStudio({
   initialRetryToken?: string;
 }) {
   const { t, locale } = useI18n();
+  const router = useRouter();
   const retryHandoffRef = useRef<{
     retryJobId: string;
     retryToken: string;
@@ -258,6 +268,8 @@ export function CreateStudio({
   const [status, setStatus] = useState<Status>("idle");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Cached fallback after an owned upload is a blocked outcome, not READY. */
+  const [lastUploadIgnored, setLastUploadIgnored] = useState(false);
   /** Server Retry-After for rate limit / inflight / provider network. */
   const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
     null
@@ -274,6 +286,10 @@ export function CreateStudio({
   const [resultResolution, setResultResolution] = useState<string | null>(null);
   const [presetFilter, setPresetFilter] = useState("");
   const [elapsed, setElapsed] = useState(0);
+  const [recoveringSavedResult, setRecoveringSavedResult] = useState(false);
+  /** Durable recovery exhausted without authority; original POST still open. */
+  const [awaitingPrimaryAfterRecovery, setAwaitingPrimaryAfterRecovery] =
+    useState(false);
   const [copied, setCopied] = useState(false);
   // PRD soft-launch §3/§5: user must confirm rights before submitting.
   const [ownsRights, setOwnsRights] = useState(false);
@@ -309,13 +325,22 @@ export function CreateStudio({
     useState<RequestCreditState>(null);
   /** In-flight generate abort — cancel marks refund unconfirmed if network cut mid-debit. */
   const generateAbortRef = useRef<AbortController | null>(null);
+  /**
+   * When true, UI stopped waiting but the original /api/generate must keep
+   * running (no abort, no ledger cancel, no second provider call).
+   */
+  const detachedWaitRef = useRef(false);
+  const generateMountedRef = useRef(true);
   /** Avoid duplicate quote-view events while React rerenders the same quote. */
   const quoteEventRef = useRef("");
   const toast = useToast();
 
   useEffect(() => {
+    generateMountedRef.current = true;
     return () => {
-      generateAbortRef.current?.abort();
+      // Non-destructive leave: drop UI ownership only. Explicit Cancel is the
+      // sole path that aborts primary + best-effort cancels the ledger.
+      generateMountedRef.current = false;
       generateAbortRef.current = null;
     };
   }, []);
@@ -323,13 +348,44 @@ export function CreateStudio({
   function cancelInFlightGenerate() {
     const ctrl = generateAbortRef.current;
     if (!ctrl) return;
+    // Explicit cancel only — abort signal triggers ledger cancel in generateClient.
+    // Detach (leaveWaitingKeepBackground) never calls abort().
     ctrl.abort();
     generateAbortRef.current = null;
+    detachedWaitRef.current = false;
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
     // Immediate Wave B settlement until the aborted POST resolves (also refundUnconfirmed).
     setLastRequestCreditState("refund unconfirmed");
     toast(
       "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"
     );
+  }
+
+  /**
+   * Stop waiting on Create without aborting the original generate or canceling
+   * the ledger. User can open Library while the same private task finishes.
+   */
+  function leaveWaitingKeepBackground() {
+    const plan = planGenerateWaitLeave("detach");
+    if (plan.abortPrimary || plan.cancelLedger || plan.startNewGenerate) {
+      // Defensive: detach plan must never harm the in-flight job.
+      return;
+    }
+    // Drop the AbortController ref without abort() so cleanup cannot cancel.
+    generateAbortRef.current = null;
+    detachedWaitRef.current = true;
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
+    setElapsed(0);
+    setStatus("idle");
+    toast(
+      "Still generating in the background · open Library when ready — no cancel sent"
+    );
+    // Soft client navigation keeps the original fetch alive in this document.
+    // Hard reload would drop the browser request without canceling the ledger,
+    // but would also lose the chance to pushHistory when primary settles.
+    router.push("/library");
   }
 
   const preset = useMemo(
@@ -493,25 +549,34 @@ export function CreateStudio({
       const params = new URLSearchParams(window.location.search);
       const checkoutId = params.get("session_id");
       if (checkoutId?.startsWith("cs_")) {
+        let clearCheckoutParam = false;
         try {
+          const headers = await stripeBillingAuthHeaders();
           const res = await fetch("/api/checkout/confirm", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers,
             body: JSON.stringify({ session_id: checkoutId }),
           });
           const data = await res.json();
-          if (!cancelled && res.ok && data.session) {
-            setSession((prev) => mergeMeSession(prev, data.session));
-            setWatermark(data.session.watermark);
+          if (!cancelled && res.ok && data.ok === true) {
             setUpgradedBanner(true);
-            void refreshSession();
+            await refreshSession();
+            clearCheckoutParam = true;
+          } else if (!cancelled && data.pending === true) {
+            // Keep session_id for a manual refresh while the signed webhook
+            // commits; the browser return can never grant the plan itself.
+            await refreshSession();
+          } else if (res.status >= 400 && res.status < 500) {
+            clearCheckoutParam = true;
           }
         } catch {
           if (!cancelled) await refreshSession();
         }
-        const url = new URL(window.location.href);
-        url.searchParams.delete("session_id");
-        window.history.replaceState({}, "", url.pathname + url.search);
+        if (clearCheckoutParam) {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("session_id");
+          window.history.replaceState({}, "", url.pathname + url.search);
+        }
         return;
       }
       if (params.get("upgraded") === "1" && !cancelled) {
@@ -567,6 +632,17 @@ export function CreateStudio({
       setSecondaryStill(null);
       briefAutoAppliedRef.current = false;
       setError(null);
+      setLastUploadIgnored(false);
+      setStatus("idle");
+      setVideoUrl(null);
+      setDemo(false);
+      setUsedModel(null);
+      setResultDuration(null);
+      setResultAspect(null);
+      setResultResolution(null);
+      setVersions([]);
+      setActiveVersionId(null);
+      setLastRequestCreditState(null);
       track({
         event: "upload_ready",
         path: "/create",
@@ -649,18 +725,13 @@ export function CreateStudio({
     loadFile(e.dataTransfer.files?.[0]);
   }
 
-  const creditsLeft = session?.credits ?? null;
-  const liveEntitled =
-    session?.signedIn === true &&
-    session?.durableCreditsActive === true &&
-    session?.mode === "live-generate" &&
-    creditsLeft !== null &&
-    creditsLeft >= CREDITS_PER_VIDEO;
+  const creditsLeft = session ? generationDisplayCredits(session) : null;
+  const liveEntitled = canLiveGenerate(session);
   const canAfford = liveEntitled;
   const isFree = session?.plan === "free" || session?.watermark;
   // Fail closed: anonymous, non-durable, unknown, and zero-credit sessions
   // may only use the cached prototype path.
-  const demoMode = isDemoMode(session) || !liveEntitled;
+  const demoMode = !liveEntitled;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
   const clipsLeft =
@@ -742,13 +813,17 @@ export function CreateStudio({
       path: "/create",
     });
     setError(null);
+    setLastUploadIgnored(false);
     setLastRefunded(false);
     // Clear only the *request* settlement for a new attempt — version chips stay.
     setLastRequestCreditState(null);
     setShowPaywall(false);
     setElapsed(0);
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
+    detachedWaitRef.current = false;
     setStatus("generating");
-    // Abort any prior in-flight POST before starting a new one.
+    // Abort any prior in-flight POST before starting a new one (explicit replace).
     generateAbortRef.current?.abort();
     const abortCtrl = new AbortController();
     generateAbortRef.current = abortCtrl;
@@ -792,6 +867,13 @@ export function CreateStudio({
         maxRetries: 1,
         fallbackImage: useAsset ? fallbackStill : undefined,
         signal: abortCtrl.signal,
+        onRecoveryState: (state) => {
+          if (detachedWaitRef.current || !generateMountedRef.current) return;
+          setRecoveringSavedResult(
+            state === "checking" || state === "waiting"
+          );
+          setAwaitingPrimaryAfterRecovery(state === "awaiting_primary");
+        },
       }
     );
     // Keep the bearer when the server rejected work before the child claim
@@ -820,6 +902,57 @@ export function CreateStudio({
     if (generateAbortRef.current === abortCtrl) {
       generateAbortRef.current = null;
     }
+
+    // Detached wait / unmounted Create: never abort, cancel, or setState.
+    // On success still persist to device Library (Base64 length-capped).
+    if (detachedWaitRef.current || !generateMountedRef.current) {
+      if (result.ok) {
+        const data = result.data;
+        const serverEffect =
+          typeof data.effect === "string" && data.effect ? data.effect : fx;
+        const usedPreset =
+          PRESETS.find((p) => p.slug === serverEffect) ?? preset;
+        const stillForStore =
+          (img && isValidImageDataUrl(img) ? img : null) ||
+          (image && isValidImageDataUrl(image) ? image : null) ||
+          "";
+        pushHistory(
+          historyFieldsFromSuccess(data, {
+            effect: serverEffect,
+            effectName: usedPreset.name,
+            fallbackDuration: requestDuration,
+            fallbackAspect: requestAspect,
+            fallbackResolution: requestRes,
+            sourceProject: opts?.labSampleId
+              ? `lab-sample-${opts.labSampleId}`
+              : remix.intent?.sourceProjectSlug,
+            channel: remix.intent?.channel,
+            projectId: localProjectId(
+              stillForStore || fx,
+              opts?.labSampleId
+                ? `lab-sample-${opts.labSampleId}`
+                : remix.intent?.sourceProjectSlug
+            ),
+            projectName: opts?.labSampleId
+              ? `PIKBO Lab sample · ${opts.labSampleId}`
+              : remix.intent?.sourceProjectSlug
+                ? `Remix · ${remix.intent.sourceProjectSlug}`
+                : identityProjectName(toyIdentity) || "Owned toy project",
+            inputImage:
+              stillForStore &&
+              (stillForStore.startsWith("/") || stillForStore.length <= 8_000)
+                ? stillForStore
+                : undefined,
+            sku: toyIdentity.sku || undefined,
+          })
+        );
+      }
+      detachedWaitRef.current = false;
+      return;
+    }
+
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
 
     // Dead assetId after process restart/TTL — clear and re-register for next POST.
     if (
@@ -904,6 +1037,42 @@ export function CreateStudio({
     // Network-retry recovery: same idempotencyKey, no second debit/fal.
     if (data.idempotentReplay) {
       toast("Recovered prior clip · no second charge");
+    }
+    const ignoredOwnedUpload = isIgnoredOwnedUploadResult({
+      demo: Boolean(data.demo),
+      processedUpload: data.processedUpload,
+      uploadIgnored: data.uploadIgnored,
+      labSample: Boolean(opts?.labSampleId || labStill),
+    });
+    if (ignoredOwnedUpload) {
+      setVideoUrl(null);
+      setDemo(false);
+      setWatermark(true);
+      setUsedModel(null);
+      setResultDuration(null);
+      setResultAspect(null);
+      setResultResolution(null);
+      setVersions([]);
+      setActiveVersionId(null);
+      setLastRequestCreditState("0 cached");
+      setLastUploadIgnored(true);
+      setError(
+        "Your photo was not processed. Live generation is not enabled for this account yet, so Pikbo did not show an unrelated Lab clip as your result. No credits were used."
+      );
+      setStatus("error");
+      track({
+        event: "generate_result",
+        recipe: fx,
+        demo: true,
+        path: "/create",
+        meta: {
+          processedUpload: false,
+          uploadIgnored: true,
+        },
+      });
+      toast("Photo not processed · no credits used");
+      void refreshSession();
+      return;
     }
     const serverDuration =
       typeof data.duration === "number" ? data.duration : requestDuration;
@@ -1156,7 +1325,10 @@ export function CreateStudio({
     if (requestId) {
       const gateUrl = `/api/downloads/${encodeURIComponent(requestId)}`;
       try {
-        const head = await fetch(gateUrl, { method: "HEAD" });
+        const head = await fetch(gateUrl, {
+          method: "HEAD",
+          headers: await privateDownloadHeaders(),
+        });
         const decision = classifyDownloadHead({
           status: head.status,
           code: head.headers.get("X-Pikbo-Download-Code") || "",
@@ -1584,7 +1756,7 @@ export function CreateStudio({
             {session && (
               <span>
                 <span className="font-semibold text-[var(--mint)]">
-                  {session.credits}
+                  {creditsLeft ?? 0}
                 </span>{" "}
                 · {session.planName}
                 {isFree && !demoMode ? (
@@ -2395,7 +2567,7 @@ export function CreateStudio({
               creditsRestored={lastRefunded}
               retryAfterSec={failRetryAfterSec}
               onRetry={
-                image && !busy
+                !lastUploadIgnored && image && !busy
                   ? () => {
                       setFailRetryAfterSec(null);
                       if (activeVersion) retryActiveVersion();
@@ -2408,7 +2580,8 @@ export function CreateStudio({
                   ? t("fail.retryVersion")
                   : t("fail.retryGenerate")
               }
-              showLabSample={!image}
+              showLabSample={lastUploadIgnored || !image}
+              showModules={!lastUploadIgnored}
             />
           )}
 
@@ -2459,6 +2632,9 @@ export function CreateStudio({
                 image={image}
                 effectLabel={viralName(preset.slug, preset.name)}
                 onCancel={cancelInFlightGenerate}
+                onLeaveToLibrary={leaveWaitingKeepBackground}
+                recoveryChecking={recoveringSavedResult}
+                awaitingPrimary={awaitingPrimaryAfterRecovery}
               />
             )}
             {(status === "done" || status === "error") && videoUrl && (
@@ -2927,24 +3103,6 @@ export function CreateStudio({
                 </p>
               </div>
             )}
-            {status === "generating" && !videoUrl && (
-              <div className="flex flex-col items-center p-10 text-center">
-                <div className="h-12 w-12 animate-spin rounded-full border-2 border-[var(--mint)] border-t-transparent" />
-                <p className="mt-5 font-display text-lg font-bold uppercase tracking-tight text-white">
-                  Making your clip… {elapsed}s
-                </p>
-                <p className="mt-2 max-w-xs text-xs text-[var(--fg-muted)]">
-                  Live jobs take a bit. Cached demos come back faster.
-                </p>
-                <button
-                  type="button"
-                  onClick={cancelInFlightGenerate}
-                  className="mt-4 rounded-full border border-white/20 px-4 py-1.5 text-[11px] font-bold text-white/75"
-                >
-                  Cancel request
-                </button>
-              </div>
-            )}
             {status === "error" && !videoUrl && (
               <div className="relative z-[2] flex flex-col items-center p-8 text-center sm:p-10">
                 <span className="grid h-14 w-14 place-items-center rounded-2xl border border-[var(--brand)]/35 bg-[var(--brand)]/[0.08] text-[var(--brand)] sm:h-16 sm:w-16">
@@ -3079,6 +3237,8 @@ export function CreateStudio({
             elapsed={elapsed}
             demoMode={demoMode}
             onCancel={cancelInFlightGenerate}
+            onLeaveToLibrary={leaveWaitingKeepBackground}
+            awaitingPrimary={awaitingPrimaryAfterRecovery}
           />
         ) : status === "done" && videoUrl ? (
           <button

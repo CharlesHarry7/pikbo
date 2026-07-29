@@ -37,6 +37,18 @@ export type GenerateRequestBody = {
   retryJobId?: string;
   /** One-time bearer paired with retryJobId; never inferred from effect/prompt. */
   retryToken?: string;
+  /**
+   * Server-owned Seller Pack run id from POST /api/seller-pack/reserve.
+   * When present with packJobId, live generate authorizes against the parent
+   * 30-credit pack reservation and never opens a second R1a reserve.
+   */
+  packRunId?: string;
+  /**
+   * Bound fixed child job id from the same pack reserve response.
+   * Client-supplied reservation IDs, credit amounts, or free-form job IDs
+   * are never trusted as spend authority.
+   */
+  packJobId?: string;
 };
 
 export type GenerateSuccess = {
@@ -52,6 +64,8 @@ export type GenerateSuccess = {
   session: PublicSession;
   /** present on live fal jobs (provider id); may equal jobId on demo */
   requestId?: string;
+  /** Upstream request evidence. Never use this value as a download address. */
+  providerRequestId?: string;
   /**
    * Process-memory ledger id (Phase D). Prefer for cancel/poll/download when
    * distinct from provider requestId.
@@ -62,7 +76,9 @@ export type GenerateSuccess = {
   demoReason?:
     | "no_provider_key"
     | "anonymous_cached_only"
-    | "free_live_delivery_blocked";
+    | "free_live_delivery_blocked"
+    | "private_live_budget_exhausted"
+    | "private_live_not_invited";
   /**
    * Wave B — server-validated recipe slug actually used for this job.
    * Client must only label "server returned" when this field is present.
@@ -77,6 +93,39 @@ export type GenerateSuccess = {
    * (no second debit / no second fal call).
    */
   idempotentReplay?: boolean;
+  /**
+   * Honesty: whether the uploaded still was sent to the provider.
+   * false + demo:true means Lab cache — not a successful processing of the upload.
+   */
+  processedUpload?: boolean;
+  /** Present when a client upload was ignored because access stayed cached. */
+  uploadIgnored?: boolean;
+  uploadIgnoredReason?: string;
+  /** True only for an authenticated Preview result saved in Pikbo-owned storage. */
+  privateResult?: boolean;
+  /**
+   * Honest USD cost audit for private Seedance 2.0 live jobs.
+   * estimated/ceiling are planning labels; actual is null unless provider-reported.
+   */
+  costAudit?: {
+    modelId: string;
+    estimatedUsd: {
+      amountUsd: number;
+      kind: "estimated";
+      label: "estimated";
+    };
+    ceilingRemainingUsd: {
+      amountUsd: number;
+      kind: "ceiling";
+      label: "ceiling";
+    };
+    actualUsd: {
+      amountUsd: number;
+      kind: "actual";
+      label: "actual";
+    } | null;
+    note: string;
+  };
 };
 
 export type GenerateErrorBody = {
@@ -85,6 +134,9 @@ export type GenerateErrorBody = {
     | "INSUFFICIENT_CREDITS"
     | "AUTH_REQUIRED"
     | "LIVE_ACCESS_REQUIRED"
+    | "PAID_CEILING_ZERO"
+    | "PAID_CEILING_EXHAUSTED"
+    | "PAID_CEILING_UNAVAILABLE"
     | "DURABLE_CREDITS_UNAVAILABLE"
     | "RESERVATION_FAILED"
     | "DELIVERY_PIPELINE_UNAVAILABLE"

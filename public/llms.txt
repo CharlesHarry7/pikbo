@@ -8,8 +8,8 @@ Pikbo labels cached Lab prototypes honestly. Cached previews do not process a vi
 
 - [Pikbo home](https://pikbo.ai/)
 - [AI toy video generator](https://pikbo.ai/tools/ai-toy-video-generator)
+- [360 toy listing video](https://pikbo.ai/effects/360-spin-showcase)
 - [Blind-box reveal video maker](https://pikbo.ai/tools/blind-box-reveal-video-maker)
-- [How to photograph toys for AI video](https://pikbo.ai/guides/how-to-photograph-toys-for-ai-video)
 - [Pricing](https://pikbo.ai/pricing)
 - [Privacy policy](https://pikbo.ai/privacy)
 - [Terms of service](https://pikbo.ai/terms)

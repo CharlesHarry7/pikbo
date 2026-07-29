@@ -97,7 +97,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
       }
       setNote(
         data.message ||
-          "Check your email for a magic link. You can close this tab after clicking it."
+          "Request accepted. You are not signed in yet — open your email on this device and click the Pikbo sign-in link."
       );
     } catch {
       setErr("Network error — try again");
@@ -188,7 +188,12 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
       )}
 
       {note && (
-        <p className="text-xs leading-relaxed text-[var(--mint)]">{note}</p>
+        <p
+          className="text-xs leading-relaxed text-[var(--mint)]"
+          data-auth-awaiting-email="true"
+        >
+          {note}
+        </p>
       )}
       {err && (
         <p className="text-xs leading-relaxed text-amber-200" role="alert">

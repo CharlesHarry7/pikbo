@@ -21,9 +21,8 @@ const MORE = [
   { href: "/tools", label: "Tools", tag: null },
   { href: "/guides", label: "Guides", tag: null },
   { href: "/toys", label: "Toy types", tag: null },
-  { href: "/community", label: "Pikbo Lab", tag: "Lab" },
   { href: "/login", label: "Sign in", tag: null },
-  { href: "/profile", label: "Profile", tag: "Local" },
+  { href: "/profile", label: "Profile", tag: null },
 ] as const;
 
 function active(path: string, href: string) {

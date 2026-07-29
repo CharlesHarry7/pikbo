@@ -27,6 +27,14 @@
 - 外部阻塞只记录一次，由 Codex 统一处理；禁止换一种文档重复汇报。
 - #47 已合并，#41 已关闭。当前只补移动端主路径与免费水印交付安全；完成后进入真实卖家私有验收，不扩张 SEO。
 
+### 2026-07-29 owner override — current Codex implementation
+
+- 唯一任务：`REAL-LOOP`，分支 `agent/gpt/real-launch-loop`。
+- 顺序：先完成非生产私有单片闭环，再扩成固定 Listing Spin / Blind-box Reveal / Social Flash 三条 Launch Pack。
+- 只选择性复用 PR #56 的私有生成、私有结果和 Library 恢复；不合入旧 `$49` 意向表或无关视觉改动。
+- 生产继续 `validation` / `softLive=false` / `paid=false`，直到非生产 SQL、私有对象、Worker-only 结算、错账/越权测试和真实调用门槛全部通过。
+- Stripe 只补测试模式、幂等和订阅到账代码；没有真实质量与成本证据前不开放收费。
+
 ---
 
 ## 死序优先级（不可跳级）

@@ -7,8 +7,8 @@ import type { PlanId } from "@/lib/pricing";
  * Cookie sessions alone cannot be updated by Stripe webhooks (no browser).
  * This store is the source of truth for paid plan after checkout / renew / cancel.
  *
- * Default: JSON file under data/ (single-node / local / long-lived Node).
- * Production: set ENTITLEMENTS_PATH or later swap for Redis/Supabase.
+ * This legacy JSON store is now an explicit non-production fixture only.
+ * Real Stripe state is written transactionally to Supabase by stripeBilling.
  */
 
 export type Entitlement = {
@@ -29,6 +29,13 @@ export type Entitlement = {
 
 type Store = Record<string, Entitlement>;
 
+export function entitlementFixtureEnabled(): boolean {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    process.env.STRIPE_BILLING_FIXTURE_MODE === "1"
+  );
+}
+
 function storePath(): string {
   if (process.env.ENTITLEMENTS_PATH) return process.env.ENTITLEMENTS_PATH;
   // Statically scoped under ./data so bundlers don't NFT the whole project
@@ -40,6 +47,7 @@ function storePath(): string {
 }
 
 async function readStore(): Promise<Store> {
+  if (!entitlementFixtureEnabled()) return {};
   try {
     const raw = await fs.readFile(storePath(), "utf8");
     return JSON.parse(raw) as Store;
@@ -49,6 +57,11 @@ async function readStore(): Promise<Store> {
 }
 
 async function writeStore(store: Store): Promise<void> {
+  if (!entitlementFixtureEnabled()) {
+    throw new Error(
+      "LEGACY_ENTITLEMENT_STORE_DISABLED: use Supabase Stripe billing RPCs"
+    );
+  }
   const file = storePath();
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, JSON.stringify(store, null, 2), "utf8");
@@ -107,6 +120,15 @@ export async function probeEntitlementsStore(): Promise<{
   warning?: string;
 }> {
   const file = storePath();
+  if (!entitlementFixtureEnabled()) {
+    return {
+      writable: false,
+      path: file,
+      backend: "file",
+      warning:
+        "Legacy JSON entitlements are disabled. Real billing requires the Supabase Stripe billing migration; set STRIPE_BILLING_FIXTURE_MODE=1 only for an explicit local fixture.",
+    };
+  }
   try {
     await fs.mkdir(path.dirname(file), { recursive: true });
     const probe = `${file}.probe`;

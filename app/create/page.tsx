@@ -45,7 +45,7 @@ export async function generateMetadata({
   return {
     title: "Generate · Toy Creative Director",
     description:
-      "Pikbo Generate — upload an owned toy photo, pick a commercial goal, or configure a three-recipe Seller Starter Pack. Cached previews stay free; Live access and quotes are gated.",
+      "Pikbo Generate — upload an owned toy photo, pick a commercial goal, or configure a three-format Launch Pack. Cached previews stay free; Live access and quotes are gated.",
     alternates: { canonical: "/create" },
     robots: CONCEPT_ROBOTS,
     openGraph: {
@@ -104,22 +104,20 @@ export default async function CreatePage({
         <div className="px-4 py-8 sm:px-8">
           <div className="mx-auto max-w-6xl">
             <span className="chip">
-              Launch Pack — 3 assets · quote shown before Live
+              Launch Pack — 3 private videos · 30 credits
             </span>
             <h1 className="mt-3 font-display text-3xl font-black uppercase tracking-tight">
               One photo → your Launch Pack
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
-              Creative Director default path: Listing 360° Spin (1:1), Box
-              Reveal (9:16), Social Hook (9:16) — all{" "}
-              <b className="text-white/80">video</b>, built for Etsy / TikTok /
-              drop day. Own photos only. Lab demos free and labeled. Live
-              charges per successful child; failures restore credits when
-              confirmed.
+              Turn one product photo into a Listing Spin (1:1), Blind-box
+              Reveal (9:16), and Social Flash (9:16). Each 5-second clip is
+              designed for listings, launches, and short-form social. Use only
+              photos you own.
             </p>
             <p className="mt-2 text-xs font-semibold text-white/45">
-              Export includes only succeeded, downloadable clips. Failed,
-              unsafe, or Free raw files stay out.
+              Only completed private clips can be downloaded. A confirmed
+              failed format restores its own 10-credit charge.
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <FreeTrialCta
@@ -134,18 +132,6 @@ export default async function CreatePage({
                 data-create-single-recipe="remix"
               >
                 Single recipe
-              </Link>
-              <Link
-                href="/modules"
-                className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-white/55"
-              >
-                Modules
-              </Link>
-              <Link
-                href="/for/etsy-listing-videos"
-                className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-white/55"
-              >
-                Etsy use case
               </Link>
             </div>
             <div className="mt-6">

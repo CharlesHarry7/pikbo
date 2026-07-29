@@ -35,7 +35,7 @@ function fakeReservation(id = "res-test-001") {
     credits: 10,
     status: "reserved",
     providerAuthorized: true,
-    planId: "creator",
+    planId: "founding_studio",
     idempotencyKey: `idem-${id}`,
     expiresAt: new Date(Date.now() + 60_000).toISOString(),
   };

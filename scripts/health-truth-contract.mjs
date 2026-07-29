@@ -1,8 +1,8 @@
 /**
  * /api/health public-truth contract.
  *
- * Evaluates the exact pure function exported by route.ts without importing the
- * Route Handler or touching network, credentials, Supabase, Vercel, or provider.
+ * Evaluates the exact shared pure function without importing the Route Handler
+ * or touching network, credentials, Supabase, Vercel, or provider.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -12,6 +12,12 @@ import ts from "typescript";
 
 const routePath = join(process.cwd(), "app/api/health/route.ts");
 const route = readFileSync(routePath, "utf8");
+const capabilityPath = join(process.cwd(), "lib/liveCapability.ts");
+const capability = readFileSync(capabilityPath, "utf8");
+const serverReadiness = readFileSync(
+  join(process.cwd(), "lib/liveReadinessServer.ts"),
+  "utf8"
+);
 
 function extractFunction(source, name) {
   const start = source.indexOf(`function ${name}`);
@@ -27,7 +33,7 @@ function extractFunction(source, name) {
   throw new Error(`${name} body did not close`);
 }
 
-const functionSource = extractFunction(route, "evaluateHealthTruth");
+const functionSource = extractFunction(capability, "evaluateHealthTruth");
 const javascript = ts.transpileModule(functionSource, {
   compilerOptions: {
     target: ts.ScriptTarget.ES2022,
@@ -77,21 +83,25 @@ for (let mask = 0; mask < 32; mask += 1) {
 }
 
 assert.doesNotMatch(route, /import\s+\{\s*generateMode\s*\}/);
-assert.match(route, /durableCredits\.backend\s*===\s*"supabase"/);
-assert.match(route, /durableCredits\.schemaReady\s*===\s*true/);
-assert.match(route, /process\.env\.REQUIRE_DURABLE_CREDITS\s*===\s*"1"/);
+assert.match(route, /probeSoftLiveReadiness/);
+assert.match(serverReadiness, /durableCredits\.backend\s*===\s*"supabase"/);
+assert.match(serverReadiness, /durableCredits\.schemaReady\s*===\s*true/);
 assert.match(
-  route,
+  serverReadiness,
+  /process\.env\.REQUIRE_DURABLE_CREDITS\s*===\s*"1"/
+);
+assert.match(
+  serverReadiness,
   /process\.env\.PIKBO_R1_ATOMIC_RESERVATION_READY\s*===\s*"1"/
 );
 assert.match(
-  route,
+  serverReadiness,
   /process\.env\.PIKBO_R1_RECONCILIATION_READY\s*===\s*"1"/
 );
-assert.match(route, /probeDurableReconciliationSchema/);
-assert.match(route, /t6\.tooling\.serverOwnedWorkerReady/);
-assert.match(route, /t6\.tooling\.derivativeServingImplemented/);
-assert.match(route, /t6\.tooling\.storageAdapterImplemented/);
+assert.match(serverReadiness, /probeDurableReconciliationSchema/);
+assert.match(serverReadiness, /t6\.tooling\.serverOwnedWorkerReady/);
+assert.match(serverReadiness, /t6\.tooling\.derivativeServingImplemented/);
+assert.match(serverReadiness, /t6\.tooling\.storageAdapterImplemented/);
 assert.match(route, /clipsPerPeriod:\s*ready\.softLive\s*\?\s*1\s*:\s*0/);
 assert.match(
   route,

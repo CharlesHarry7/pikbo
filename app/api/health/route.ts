@@ -3,60 +3,21 @@ import { probeEntitlementsStore } from "@/lib/entitlements";
 import {
   durableExpireStaleReservations,
   durableServerOwnedJobsStatus,
-  probeDurableCreditsStore,
 } from "@/lib/durableCredits";
-import { probeSupabase } from "@/lib/supabase/server";
-import { publicAuthStatus } from "@/lib/authConfig";
-import { t6Report } from "@/lib/t6Watermark";
 import { generationJobsProbe, jobTimeoutMs } from "@/lib/generationJobs";
 import { paymentsReadiness } from "@/lib/stripe";
+import { probeStripeBillingStore } from "@/lib/stripeBilling";
 import { inflightJobCount, inflightTtlMs } from "@/lib/rateLimit";
 import { localAssetsProbe } from "@/lib/localAssets";
 import { probeDemoAssets } from "@/lib/demoClips";
 import { communityUgcConfigured } from "@/lib/communityPosts";
 import { imageJobsProbe } from "@/lib/imageJobs";
-import { probeDurableReconciliationSchema } from "@/lib/durableCredits/reconciliation";
 import { localReconciliationProbe } from "@/lib/durableCredits/localReconciliationJournal";
+import { privateResultsProbe } from "@/lib/privateGenerationResults";
+import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
 // NextResponse used for GET + HEAD
 
 export const runtime = "nodejs";
-
-type HealthTruthInput = {
-  authConfigured: boolean;
-  durableAtomicReservationConfigured: boolean;
-  durableReconciliationConfigured: boolean;
-  providerConfigured: boolean;
-  serverOwnedDeliverableConfigured: boolean;
-};
-
-/**
- * Public live-readiness contract. Every prerequisite is mandatory; environment
- * presence or a provider key alone must never advertise live generation.
- */
-function evaluateHealthTruth(input: HealthTruthInput) {
-  const missing: Array<keyof HealthTruthInput> = [];
-  if (!input.authConfigured) missing.push("authConfigured");
-  if (!input.durableAtomicReservationConfigured) {
-    missing.push("durableAtomicReservationConfigured");
-  }
-  if (!input.durableReconciliationConfigured) {
-    missing.push("durableReconciliationConfigured");
-  }
-  if (!input.providerConfigured) missing.push("providerConfigured");
-  if (!input.serverOwnedDeliverableConfigured) {
-    missing.push("serverOwnedDeliverableConfigured");
-  }
-  const softLive = missing.length === 0;
-  return {
-    softLive,
-    mode: softLive
-      ? ("live-generate" as const)
-      : input.providerConfigured
-        ? ("validation" as const)
-        : ("cached-only" as const),
-    missing,
-  };
-}
 
 /** Uptime probes that only need a 200 without JSON body. */
 export async function HEAD() {
@@ -78,8 +39,19 @@ export async function GET() {
   const degraded = production && !sessionSecret;
 
   const entitlements = await probeEntitlementsStore();
-  const durableCredits = await probeDurableCreditsStore();
-  const durableReconciliation = await probeDurableReconciliationSchema();
+  const [liveReadiness, privateResults, stripeBillingStore] = await Promise.all([
+    probeSoftLiveReadiness(),
+    privateResultsProbe(),
+    probeStripeBillingStore(),
+  ]);
+  const {
+    authPublic,
+    durableCredits,
+    durableReconciliation,
+    supabase,
+    t6,
+    truth,
+  } = liveReadiness;
   // Best-effort local reservation TTL sweep (no-op on Supabase backend)
   let reservationSweep = {
     expired: 0,
@@ -91,42 +63,16 @@ export async function GET() {
   } catch {
     /* never break health */
   }
-  const supabase = await probeSupabase();
-  const authPublic = publicAuthStatus();
   const payments = paymentsReadiness();
   const durableGate =
     process.env.REQUIRE_DURABLE_CREDITS === "1" && !durableCredits.writable;
   const durableServerOwnedJobs = durableServerOwnedJobsStatus();
-  const t6 = t6Report();
-
-  const authConfigured =
-    authPublic.configured && supabase.configured && supabase.reachable;
-  const durableAtomicReservationConfigured =
-    process.env.REQUIRE_DURABLE_CREDITS === "1" &&
-    process.env.PIKBO_R1_ATOMIC_RESERVATION_READY === "1" &&
-    durableCredits.backend === "supabase" &&
-    durableCredits.configured &&
-    durableCredits.writable &&
-    durableCredits.schemaReady === true &&
-    supabase.hasServiceRole;
-  const durableReconciliationConfigured =
-    process.env.PIKBO_R1_RECONCILIATION_READY === "1" &&
-    durableReconciliation.configured &&
-    durableReconciliation.schemaReady;
-  const serverOwnedDeliverableConfigured =
-    t6.status === "ready" &&
-    t6.fileBake === true &&
-    t6.freeLiveRawDownload === "allowed" &&
-    t6.tooling.serverOwnedWorkerReady &&
-    t6.tooling.derivativeServingImplemented &&
-    t6.tooling.storageAdapterImplemented;
-  const truth = evaluateHealthTruth({
+  const {
     authConfigured,
     durableAtomicReservationConfigured,
     durableReconciliationConfigured,
-    providerConfigured: fal,
     serverOwnedDeliverableConfigured,
-  });
+  } = liveReadiness.input;
 
   /** Cached / validation / live ladders — honest gates for ops */
   const ready = {
@@ -140,8 +86,8 @@ export async function GET() {
     durableReconciliation: durableReconciliationConfigured,
     serverOwnedDeliverable: serverOwnedDeliverableConfigured,
     /**
-     * Real charges — needs durable entitlements (PRELAUNCH R1).
-     * File store unwritable ⇒ paid stays false even if Stripe env is set.
+     * Real charges — needs the service-role-only Supabase billing RPC.
+     * Legacy JSON entitlements never satisfy this production gate.
      * Also requires Phase I test readiness (not live keys by accident).
      * Multi-node paid requires server-owned generation jobs (still hard-false).
      */
@@ -150,13 +96,25 @@ export async function GET() {
       sessionSecret &&
       stripe &&
       stripeWebhook &&
-      entitlements.writable &&
+      stripeBillingStore.backend === "supabase" &&
+      stripeBillingStore.schemaReady &&
+      stripeBillingStore.operatorReady &&
       durableCredits.writable &&
       payments.readyForTestCheckout &&
       durableServerOwnedJobs.effective,
     /** Only the Supabase atomic reservation path is live-spend authority. */
     durableCredits:
       durableAtomicReservationConfigured && durableReconciliationConfigured,
+    /** Owner-only Preview path; independent from public Free/T6 readiness. */
+    privatePreview:
+      authConfigured &&
+      durableAtomicReservationConfigured &&
+      durableReconciliationConfigured &&
+      fal &&
+      privateResults.bucketReady &&
+      process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1" &&
+      Boolean((process.env.PIKBO_PRIVATE_LIVE_ALLOWLIST || "").trim()) &&
+      Number(process.env.PIKBO_PRIVATE_LIVE_BUDGET_MAX || "0") > 0,
   };
 
   return NextResponse.json({
@@ -319,7 +277,9 @@ export async function GET() {
     },
     ready,
     entitlements,
+    stripeBillingStore,
     durableCredits,
+    privateResults,
     auth: {
       mode: authPublic.mode,
       configured: authPublic.configured,
@@ -338,6 +298,8 @@ export async function GET() {
       stripeWebhook,
       production,
       entitlementsWritable: entitlements.writable,
+      stripeBillingSchemaReady: stripeBillingStore.schemaReady,
+      stripeBillingOperatorReady: stripeBillingStore.operatorReady,
       durableCreditsWritable: durableCredits.writable,
       requireDurableCredits: process.env.REQUIRE_DURABLE_CREDITS === "1",
       atomicReservationOperatorReady:
@@ -351,6 +313,32 @@ export async function GET() {
       durableReconciliationConfigured,
       serverOwnedDeliverableConfigured,
     },
+    /**
+     * Issue #54 private-beta live path (presence only — never allowlist emails).
+     * Invited owner live still needs auth + durable reserve + provider.
+     */
+    privateLiveBeta: (() => {
+      const enabled = process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1";
+      const allowlistConfigured = Boolean(
+        (process.env.PIKBO_PRIVATE_LIVE_ALLOWLIST || "").trim()
+      );
+      const budgetMax = Math.max(
+        0,
+        Math.floor(Number(process.env.PIKBO_PRIVATE_LIVE_BUDGET_MAX || "0"))
+      );
+      return {
+        enabled,
+        allowlistConfigured,
+        budgetMaxConfigured: budgetMax > 0,
+        budgetMax: budgetMax > 0 ? budgetMax : 0,
+        // Not ready until boss enables + allowlists + budget; runtime still needs auth/durable.
+        notes: [
+          "Set PIKBO_PRIVATE_LIVE_ENABLED=1 + ALLOWLIST + BUDGET_MAX for invited owner live",
+          "Does not enable anonymous provider spend",
+          "Private Preview results use owner-gated Pikbo storage; public Free/T6 remains closed",
+        ],
+      };
+    })(),
     /** Live-readiness checklist (presence only — never echo secrets) */
     softLiveChecklist: {
       SESSION_SECRET: sessionSecret,
@@ -358,6 +346,8 @@ export async function GET() {
       STRIPE_SECRET_KEY: stripe,
       STRIPE_WEBHOOK_SECRET: stripeWebhook,
       entitlementsWritable: entitlements.writable,
+      STRIPE_BILLING_RPC_READY:
+        stripeBillingStore.schemaReady && stripeBillingStore.operatorReady,
       AUTH_CONFIGURED: authConfigured,
       DURABLE_ATOMIC_RESERVATION_CONFIGURED:
         durableAtomicReservationConfigured,
@@ -376,7 +366,7 @@ export async function GET() {
       optionalUntilPaid: [
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
-        "entitlementsWritable",
+        "STRIPE_BILLING_RPC_READY",
       ],
       notes: [
         "Demo works without FAL_KEY (cached Lab clips, 0 credits)",
@@ -387,7 +377,7 @@ export async function GET() {
         "Set PIKBO_R1_ATOMIC_RESERVATION_READY only after the reviewed RPC migration passes non-production integration",
         "Set PIKBO_R1_RECONCILIATION_READY only after the R1c migration and crash/race rehearsal pass in non-production",
         "Live requires configured auth, Supabase atomic reservation, durable reconciliation, provider, and server-owned delivery",
-        "Paid later: durable entitlements + Stripe price IDs + webhook",
+        "Paid later: rehearsed Supabase Stripe billing RPC + test Price IDs + signed webhook",
         "PIKBO_FORCE_GENERATE_FAIL is ops-only and hard-off in production",
         "See docs/LAUNCH.md",
       ],

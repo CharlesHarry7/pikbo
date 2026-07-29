@@ -43,8 +43,7 @@ check_req "T6 server-owned worker request (health still verifies implementation)
 check_opt "SESSION_SECRET|CREDITS_SECRET" "$([[ -n "${SESSION_SECRET:-}${CREDITS_SECRET:-}" ]] && echo 1 || echo 0)"
 check_opt "STRIPE_SECRET_KEY (test only for Phase I)" "$([[ -n "${STRIPE_SECRET_KEY:-}" ]] && echo 1 || echo 0)"
 check_opt "STRIPE_WEBHOOK_SECRET" "$([[ -n "${STRIPE_WEBHOOK_SECRET:-}" ]] && echo 1 || echo 0)"
-check_opt "STRIPE_PRICE_CREATOR" "$([[ -n "${STRIPE_PRICE_CREATOR:-}" ]] && echo 1 || echo 0)"
-check_opt "STRIPE_PRICE_SHOP" "$([[ -n "${STRIPE_PRICE_SHOP:-}" ]] && echo 1 || echo 0)"
+check_opt "STRIPE_PRICE_FOUNDING_STUDIO" "$([[ -n "${STRIPE_PRICE_FOUNDING_STUDIO:-}" ]] && echo 1 || echo 0)"
 check_opt "NEXT_PUBLIC_PAYMENTS_ENABLED (keep 0 for Mode A)" "$([[ "${NEXT_PUBLIC_PAYMENTS_ENABLED:-0}" == "1" ]] && echo 1 || echo 0)"
 check_opt "VIDEO_PROVIDER_WEBHOOK_SECRET (prod async webhooks)" "$([[ -n "${VIDEO_PROVIDER_WEBHOOK_SECRET:-}" ]] && echo 1 || echo 0)"
 if [[ "${STRIPE_SECRET_KEY:-}" == sk_live_* ]]; then
