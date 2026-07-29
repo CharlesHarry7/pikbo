@@ -257,6 +257,8 @@ export function ProfilePanel() {
       : session?.credits;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
+  const freeLiveModelLabel =
+    freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "Free Mini";
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
       ? session.freeTrial.clipsLeft
@@ -410,7 +412,7 @@ export function ProfilePanel() {
           ) : (
             <>
               <span className="font-semibold text-[var(--mint)]">
-                Free Mini
+                {freeLiveModelLabel}
                 {freeLive
                   ? ` · ${freeLive.resolution} · ${freeLive.durationSec}s`
                   : " · 480p · 5s"}
@@ -509,7 +511,7 @@ export function ProfilePanel() {
           : demo
             ? "Server is in demo-cached mode — labeled Lab clips cost 0 credits. Configure FAL_KEY for live Seedance Mini."
             : freeLive
-              ? `Free validation jobs use Seedance Mini at ${freeLive.resolution} ${freeLive.durationSec}s with an on-player mark. Founding Studio uses the fixed 5s Fast 720p Launch Pack path.`
+              ? `${freeLiveModelLabel} jobs use ${freeLive.resolution} ${freeLive.durationSec}s with an on-player mark. Founding Studio uses the fixed 5s Fast 720p Launch Pack path.`
               : "Free live delivery remains gated. Founding Studio uses the fixed 5s Fast 720p Launch Pack path."}
       </p>
 

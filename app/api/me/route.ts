@@ -13,6 +13,13 @@ import {
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { evaluateAccountLiveCapability } from "@/lib/liveCapability";
 import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
+import { liveGenerationAccess } from "@/lib/liveGenerationGate.mjs";
+import { resolvePrivateLiveAccess } from "@/lib/privateLiveAccessServer";
+import { providerValidationBudgetUsd } from "@/lib/durableProviderBudget";
+import {
+  SELLER_PACK_LIVE_MODEL_ID,
+  SELLER_PACK_LIVE_RESOLUTION,
+} from "@/lib/models";
 
 export const runtime = "nodejs";
 
@@ -177,17 +184,26 @@ export async function GET(req: Request) {
       // Account plan remains fail-closed; billing detail is optional display.
     }
   }
-  // /api/generate currently keeps Free provider delivery closed until the
-  // protected server-owned derivative is verified. Keep account UI identical.
-  const freeDeliveryReady = false;
+  const privateLive = resolvePrivateLiveAccess(user);
+  const routeAccess = liveGenerationAccess({
+    providerConfigured: Boolean(process.env.FAL_KEY),
+    authenticated: true,
+    planId: durablePlan.id,
+    freeDeliveryReady: privateLive.freeDeliveryReady,
+  });
+  // Match /api/generate's current paid-provider admission. Production remains
+  // cached while its validation budget is hard-closed; an invited Preview can
+  // advertise Live only when the same route gate can actually spend.
+  const liveRouteReady =
+    routeAccess.kind === "live" && providerValidationBudgetUsd() > 0;
   const capability = evaluateAccountLiveCapability({
-    softLiveReady,
+    liveRouteReady,
     signedIn: true,
     durableCreditsActive: base.durableCreditsActive,
-    planId: durable?.planId ?? session.plan,
+    planId: durablePlan.id,
     availableCredits: durable?.availableCredits ?? null,
     liveJobCredits: CREDITS_PER_VIDEO,
-    freeDeliveryReady,
+    freeDeliveryReady: privateLive.freeDeliveryReady,
   });
   const liveCredits = capability.canLiveGenerate
     ? Math.max(0, durable?.availableCredits ?? 0)
@@ -215,12 +231,19 @@ export async function GET(req: Request) {
       watermark: durablePlan.watermark,
       credits: liveCredits,
       clipsLeft: Math.floor(liveCredits / CREDITS_PER_VIDEO),
+      freeLiveProvider: capability.canLiveGenerate
+        ? ("private-preview" as const)
+        : ("blocked-until-t6" as const),
       freeLive:
         durablePlan.id === "free"
           ? {
-              modelClass: "seedance-mini" as const,
+              modelClass: capability.canLiveGenerate
+                ? SELLER_PACK_LIVE_MODEL_ID
+                : ("seedance-mini" as const),
               durationSec: 5,
-              resolution: "480p" as const,
+              resolution: capability.canLiveGenerate
+                ? SELLER_PACK_LIVE_RESOLUTION
+                : ("480p" as const),
               onPlayerMark: true,
               liveEnabled: capability.canLiveGenerate,
             }

@@ -59,7 +59,10 @@ new Function("require", "exports", "module", compiled)(
   loaded
 );
 
-const { providerValidationBudgetUsd } = loaded.exports;
+const {
+  providerValidationBudgetUsd,
+  providerValidationEnvironmentGate,
+} = loaded.exports;
 assert.equal(providerValidationBudgetUsd({}), 0);
 assert.equal(
   providerValidationBudgetUsd({
@@ -72,6 +75,16 @@ assert.equal(
 assert.equal(
   providerValidationBudgetUsd({
     PIKBO_PROVIDER_VALIDATION_MODE: "1",
+    PIKBO_PREVIEW_PROVIDER_VALIDATION_ENABLED: "1",
+    NODE_ENV: "production",
+    VERCEL_ENV: "preview",
+  }),
+  20
+);
+assert.equal(
+  providerValidationBudgetUsd({
+    PIKBO_PROVIDER_VALIDATION_MODE: "1",
+    PIKBO_PREVIEW_PROVIDER_VALIDATION_ENABLED: "1",
     NODE_ENV: "test",
     VERCEL_ENV: "production",
   }),
@@ -80,6 +93,15 @@ assert.equal(
 assert.equal(
   providerValidationBudgetUsd({
     PIKBO_PROVIDER_VALIDATION_MODE: "1",
+    NODE_ENV: "test",
+    VERCEL_ENV: "preview",
+  }),
+  0
+);
+assert.equal(
+  providerValidationBudgetUsd({
+    PIKBO_PROVIDER_VALIDATION_MODE: "1",
+    PIKBO_PREVIEW_PROVIDER_VALIDATION_ENABLED: "1",
     NODE_ENV: "test",
     VERCEL_ENV: "preview",
   }),
@@ -98,6 +120,55 @@ assert.equal(
     PIKBO_PROVIDER_VALIDATION_BUDGET_USD: "999",
   }),
   20
+);
+assert.deepEqual(
+  providerValidationEnvironmentGate({
+    NODE_ENV: "production",
+    VERCEL_ENV: "production",
+    PIKBO_PREVIEW_PROVIDER_VALIDATION_ENABLED: "1",
+  }),
+  {
+    environment: "vercel-production",
+    previewOverride: false,
+    environmentAllowed: false,
+    productionHardClosed: true,
+  }
+);
+assert.deepEqual(
+  providerValidationEnvironmentGate({
+    NODE_ENV: "test",
+    VERCEL_ENV: "preview",
+  }),
+  {
+    environment: "vercel-preview",
+    previewOverride: false,
+    environmentAllowed: false,
+    productionHardClosed: false,
+  }
+);
+assert.deepEqual(
+  providerValidationEnvironmentGate({
+    NODE_ENV: "production",
+    VERCEL_ENV: "preview",
+    PIKBO_PREVIEW_PROVIDER_VALIDATION_ENABLED: "1",
+  }),
+  {
+    environment: "vercel-preview",
+    previewOverride: true,
+    environmentAllowed: true,
+    productionHardClosed: false,
+  }
+);
+assert.deepEqual(
+  providerValidationEnvironmentGate({
+    NODE_ENV: "production",
+  }),
+  {
+    environment: "closed",
+    previewOverride: false,
+    environmentAllowed: false,
+    productionHardClosed: true,
+  }
 );
 
 const budgetMigration = read(
@@ -167,6 +238,28 @@ assert.doesNotMatch(
   /body\.(userId|accountId|reservationId|amount|expiredBefore)/,
   "worker input must not choose an owner, reservation, amount, or cutoff"
 );
+const health = read("app/api/health/route.ts");
+assert.match(health, /providerValidationBudgetUsd/);
+assert.match(health, /providerValidationEnvironmentGate/);
+assert.match(health, /productionHardClosed/);
+assert.match(health, /SELLER_PACK_LIVE_MODEL_ID/);
+assert.match(health, /SELLER_PACK_LIVE_RESOLUTION/);
+
+const models = read("lib/models.ts");
+assert.match(
+  models,
+  /SELLER_PACK_LIVE_RESOLUTION:\s*SeedanceResolution\s*=\s*"720p"/
+);
+assert.match(
+  models,
+  /SELLER_PACK_LIVE_MODEL_ID\s*=\s*"seedance-fast"/
+);
+const meRoute = read("app/api/me/route.ts");
+assert.match(meRoute, /capability\.canLiveGenerate[\s\S]*SELLER_PACK_LIVE_MODEL_ID/);
+assert.match(
+  meRoute,
+  /capability\.canLiveGenerate[\s\S]*SELLER_PACK_LIVE_RESOLUTION/
+);
 
 const settlementGuard = read(
   "supabase/migrations/20260729021000_private_settlement_guard.sql"
@@ -182,6 +275,17 @@ assert.match(generate, /reserveDurableProviderSpend/);
 assert.match(generate, /commitDurableProviderSpend/);
 assert.match(generate, /releaseDurableProviderSpend/);
 assert.match(generate, /providerRequestStarted = true/);
+assert.match(generate, /bindProviderSpendIntent\(serverAccess,\s*allowProviderSpend\)/);
+assert.ok(
+  generate.indexOf("bindProviderSpendIntent(serverAccess") <
+    generate.indexOf("reserveDurableProviderSpend({"),
+  "client cached intent must fence provider spend before any USD reservation"
+);
+assert.match(
+  generate,
+  /const resolution = access\.kind === "live"\s*\?\s*SELLER_PACK_LIVE_RESOLUTION/,
+  "every admitted private live validation must use the fixed 720p contract"
+);
 assert.ok(
   generate.indexOf("reserveDurableProviderSpend({") <
     generate.indexOf("reserveStrictLiveGeneration({"),
@@ -193,6 +297,17 @@ assert.ok(
   "private object must precede credit settlement"
 );
 assert.doesNotMatch(generate, /tryReservePaidCeilingUsd/);
+for (const clientPath of [
+  "components/CreateStudio.tsx",
+  "components/BatchStudio.tsx",
+  "components/LandingToolPanel.tsx",
+]) {
+  assert.match(
+    read(clientPath),
+    /allowProviderSpend:\s*!demoMode/,
+    `${clientPath} must bind the displayed mode to provider-spend consent`
+  );
+}
 
 console.log(
   "provider-budget-private-settlement-regression: PASS (preview-only project-global US$20 cap · idempotent transition/expiry · private-object capture guard)"

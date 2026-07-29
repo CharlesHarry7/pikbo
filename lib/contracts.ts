@@ -28,6 +28,12 @@ export type GenerateRequestBody = {
    */
   ownsRights?: boolean;
   /**
+   * Explicit client consent for this request to reserve credits and call the
+   * paid provider. Missing/false is cached-only; the server must never upgrade
+   * a UI that displayed "0 credits / upload not processed" into Live.
+   */
+  allowProviderSpend?: boolean;
+  /**
    * Client-minted key for one logical generate attempt (UUID).
    * Same key + session: success/fail replay without double-debit; running → JOB_IN_FLIGHT.
    * User Retry must mint a new key. Soft-launch process-memory only.
@@ -77,6 +83,8 @@ export type GenerateSuccess = {
     | "no_provider_key"
     | "anonymous_cached_only"
     | "free_live_delivery_blocked"
+    | "paid_plan_not_authorized"
+    | "client_provider_spend_not_authorized"
     | "private_live_budget_exhausted"
     | "private_live_not_invited";
   /**

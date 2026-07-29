@@ -115,6 +115,8 @@ export function LandingToolPanel({
   const demoMode = !canLiveGenerate(session);
   const liveCredits = generationDisplayCredits(session);
   const freeLive = session?.freeTrial?.freeLive;
+  const freeLiveModelLabel =
+    freeLive?.modelClass === "seedance-fast" ? "Fast" : "Mini";
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
       ? session.freeTrial.clipsLeft
@@ -315,7 +317,11 @@ export function LandingToolPanel({
     }
     // Server enforces live credits; demo-cached path is free when no provider.
     const freeTier = session?.plan === "free" || session?.watermark;
-    const resolution = freeTier ? "480p" : "720p";
+    const resolution = demoMode
+      ? freeTier
+        ? "480p"
+        : "720p"
+      : freeLive?.resolution ?? "720p";
     setError(null);
     setFailRetryAfterSec(null);
     setFailCreditState(null);
@@ -339,8 +345,10 @@ export function LandingToolPanel({
         assetId: useAsset && assetId ? assetId : undefined,
         duration,
         aspectRatio,
+        model: demoMode ? undefined : freeLive?.modelClass,
         resolution,
         ownsRights: true,
+        allowProviderSpend: !demoMode,
       },
       {
         maxRetries: 1,
@@ -623,7 +631,7 @@ export function LandingToolPanel({
                 {trialDone
                   ? "Free Mini trial used"
                   : freeLive
-                    ? `Mini · ${freeLive.resolution} · on-player mark`
+                    ? `${freeLiveModelLabel} · ${freeLive.resolution} · on-player mark`
                     : "Mini · 480p · on-player mark"}
               </span>
             ) : null}

@@ -35,6 +35,10 @@ import { registerLocalAsset } from "@/lib/clientAssets";
 import { pushHistory } from "@/lib/history";
 import { CATEGORIES, PRESETS, type CategoryId } from "@/lib/presets";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
+import {
+  SELLER_PACK_LIVE_MODEL_ID,
+  SELLER_PACK_LIVE_RESOLUTION,
+} from "@/lib/models";
 import { isValidImageDataUrl } from "@/lib/providerError";
 import { SAMPLE_TOYS, sampleToDataUrl } from "@/lib/samples";
 import {
@@ -510,10 +514,22 @@ export function BatchStudio({
       : typeof me?.credits === "number"
         ? Math.floor(me.credits / CREDITS_PER_VIDEO)
         : null;
-  /** Server free tier hard-locks 5s / 480p Mini; keep UI honest. */
-  const effectiveDuration = isFree ? 5 : duration;
-  const effectiveResolution = isFree ? "480p" : "720p";
-  const effectiveModel = isFree ? "seedance-mini" : "seedance-fast";
+  /** Any admitted private Live call uses the measured Fast 720p / 5s envelope. */
+  const effectiveDuration = demoMode ? (isFree ? 5 : duration) : 5;
+  const effectiveResolution = demoMode
+    ? isFree
+      ? "480p"
+      : "720p"
+    : SELLER_PACK_LIVE_RESOLUTION;
+  const effectiveModel = demoMode
+    ? isFree
+      ? "seedance-mini"
+      : "seedance-fast"
+    : SELLER_PACK_LIVE_MODEL_ID;
+  const liveContractLabel =
+    effectiveModel === SELLER_PACK_LIVE_MODEL_ID
+      ? `Invited Fast · ${effectiveResolution} · ${effectiveDuration}s`
+      : `Free Mini · ${effectiveResolution} · ${effectiveDuration}s`;
   const cost = demoMode ? 0 : selected.length * CREDITS_PER_VIDEO;
   /** Label only when the frozen trio is selected (PRD: custom batch loses Seller Pack name). */
   const sellerPackActive = isSellerPack || selectedMatchesSellerPack(selected);
@@ -646,6 +662,7 @@ export function BatchStudio({
         model: effectiveModel,
         resolution: effectiveResolution,
         ownsRights,
+        allowProviderSpend: !demoMode,
         ...(packExtra ? { extra: packExtra } : {}),
       },
       {
@@ -1427,9 +1444,7 @@ export function BatchStudio({
             >
               {trialDone
                 ? " · Free Mini trial used"
-                : freeLive
-                  ? ` · Free Mini · ${freeLive.resolution} ${freeLive.durationSec}s`
-                  : " · Free Mini"}
+                : ` · ${liveContractLabel}`}
               {clipsLeft !== null && !trialDone
                 ? ` · ~${clipsLeft} live left`
                 : ""}
@@ -1663,9 +1678,7 @@ export function BatchStudio({
                   <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
                     {trialDone
                       ? "Free Mini trial used · Lab demos still free"
-                      : freeLive
-                        ? `Free Mini · ${freeLive.resolution} · ${freeLive.durationSec}s fixed`
-                        : "Free · Mini · 480p · 5s fixed"}
+                      : `${liveContractLabel} fixed`}
                     {clipsLeft !== null && !trialDone
                       ? ` · ~${clipsLeft} live left`
                       : ""}
@@ -1953,9 +1966,7 @@ export function BatchStudio({
             : isFree
               ? trialDone
                 ? " (Free Mini trial used · Lab demos still free)"
-                : freeLive
-                  ? ` (Free Mini ${freeLive.resolution} ${freeLive.durationSec}s)`
-                  : " (Free Mini 480p 5s)"
+                : ` (${liveContractLabel})`
               : " (private 720p)"}
           . Finished clips land in{" "}
           <Link href="/library" className="text-[var(--brand)] hover:underline">

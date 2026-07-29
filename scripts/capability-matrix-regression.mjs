@@ -23,7 +23,7 @@ for (const key of Object.keys(allReady)) {
 }
 
 const liveAccount = {
-  softLiveReady: true,
+  liveRouteReady: true,
   signedIn: true,
   durableCreditsActive: true,
   planId: "founding_studio",
@@ -43,10 +43,10 @@ assert.equal(
 assert.equal(
   evaluateAccountLiveCapability({
     ...liveAccount,
-    softLiveReady: false,
+    liveRouteReady: false,
   }).canLiveGenerate,
   false,
-  "account UI must close when health softLive is false"
+  "account UI must close when the generate route is not admitted"
 );
 assert.equal(
   evaluateAccountLiveCapability({
@@ -86,7 +86,25 @@ assert.equal(
     freeDeliveryReady: true,
   }).canLiveGenerate,
   true,
-  "future Free live still requires explicit protected delivery readiness"
+  "invited private validation may use its explicit private delivery readiness"
+);
+assert.equal(
+  evaluateHealthTruth({
+    ...allReady,
+    serverOwnedDeliverableConfigured: false,
+  }).softLive,
+  false,
+  "public soft live remains closed without the server-owned derivative"
+);
+assert.equal(
+  evaluateAccountLiveCapability({
+    ...liveAccount,
+    planId: "free",
+    freeDeliveryReady: true,
+    liveRouteReady: true,
+  }).canLiveGenerate,
+  true,
+  "private invite and generate must agree on Live while public soft live is closed"
 );
 
 const read = (path) => readFileSync(join(process.cwd(), path), "utf8");
@@ -97,16 +115,27 @@ const generateRoute = read("app/api/generate/route.ts");
 const generationsRoute = read("app/api/generations/route.ts");
 const landing = read("components/LandingToolPanel.tsx");
 const create = read("components/CreateStudio.tsx");
+const directorPlan = read("lib/directorPlan.ts");
 const badge = read("components/CreditsBadge.tsx");
 const freeCta = read("components/FreeTrialCta.tsx");
 
 assert.match(meRoute, /probeSoftLiveReadiness/);
+assert.match(meRoute, /resolvePrivateLiveAccess/);
+assert.match(
+  meRoute,
+  /from\s+"@\/lib\/privateLiveAccessServer"/
+);
+assert.match(meRoute, /liveGenerationAccess/);
+assert.match(meRoute, /providerValidationBudgetUsd/);
+assert.match(meRoute, /routeAccess\.kind === "live"/);
+assert.match(meRoute, /"private-preview"/);
 assert.match(meRoute, /credits:\s*0,[\s\S]{0,120}mode:\s*"demo-cached"/);
 assert.match(meRoute, /canLiveGenerate:\s*false/);
 assert.match(meRoute, /canLiveGenerate:\s*capability\.canLiveGenerate/);
 assert.match(meRoute, /"X-Pikbo-Credits":\s*"0"/);
 assert.match(meRoute, /"X-Pikbo-Can-Live-Generate":\s*"0"/);
 assert.match(meClient, /me\.canLiveGenerate === true/);
+assert.match(meClient, /"private-preview"/);
 assert.match(meClient, /liveEnabled:[\s\S]{0,120}me\.canLiveGenerate === true/);
 assert.match(
   session,
@@ -116,6 +145,11 @@ assert.match(
   generateRoute,
   /session:\s*demo\s*\?\s*publicCachedSession\(session\)\s*:\s*publicSession\(session\)/
 );
+assert.match(generateRoute, /resolvePrivateLiveAccess/);
+assert.match(
+  generateRoute,
+  /from\s+"@\/lib\/privateLiveAccessServer"/
+);
 assert.match(
   generateRoute,
   /const payload:\s*GenerateSuccess[\s\S]{0,400}demo:\s*true,[\s\S]{0,400}session:\s*publicCachedSession\(session\)/
@@ -123,6 +157,9 @@ assert.match(
 assert.match(generationsRoute, /session:\s*publicCachedSession\(session\)/);
 assert.match(landing, /const demoMode = !canLiveGenerate\(session\)/);
 assert.match(landing, /generationDisplayCredits\(session\)/);
+assert.match(directorPlan, /input\.modelClass === "seedance-fast"/);
+assert.match(directorPlan, /Private Fast validation/);
+assert.match(create, /modelClass:\s*effectiveModel/);
 assert.doesNotMatch(landing, /\{session\.credits\} credits/);
 assert.match(create, /const liveEntitled = canLiveGenerate\(session\)/);
 assert.match(create, /generationDisplayCredits\(session\)/);

@@ -26,7 +26,7 @@ export type MeFreeTrial = {
   liveJobCredits: number;
   watermark: boolean;
   cachedDemoFree: boolean;
-  freeLiveProvider?: "blocked-until-t6";
+  freeLiveProvider?: "blocked-until-t6" | "private-preview";
   /** Confirmed fails restore debit (boolean for ops gates). */
   failedLiveRefunds?: boolean;
   /** Ops honesty — not every fail is a confirmed restore. */
@@ -36,9 +36,9 @@ export type MeFreeTrial = {
   /** Soft-launch cancel / abort ledger → never invent restore. */
   ledgerCancelRefund?: "unconfirmed";
   freeLive: {
-    modelClass: "seedance-mini";
+    modelClass: "seedance-mini" | "seedance-fast";
     durationSec: 5;
-    resolution: "480p";
+    resolution: "480p" | "720p";
     onPlayerMark: true;
     /** Product intent — false while Free live stays R0/T6-blocked. */
     liveEnabled?: boolean;
@@ -147,10 +147,20 @@ export function rehydrateFreeTrial(me: MeResponse): MeResponse {
       liveJobCredits: need,
       watermark: me.watermark ?? me.freeTrial?.watermark ?? true,
       cachedDemoFree: me.cachedDemoFree ?? me.freeTrial?.cachedDemoFree ?? true,
+      freeLiveProvider:
+        me.canLiveGenerate === true
+          ? me.freeTrial?.freeLiveProvider ?? "private-preview"
+          : "blocked-until-t6",
       freeLive: {
-        modelClass: "seedance-mini",
+        modelClass:
+          me.canLiveGenerate === true
+            ? me.freeTrial?.freeLive?.modelClass ?? "seedance-fast"
+            : "seedance-mini",
         durationSec: 5,
-        resolution: "480p",
+        resolution:
+          me.canLiveGenerate === true
+            ? me.freeTrial?.freeLive?.resolution ?? "720p"
+            : "480p",
         onPlayerMark: true,
         liveEnabled:
           me.canLiveGenerate === true &&

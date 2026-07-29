@@ -18,6 +18,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  bindProviderSpendIntent,
   liveGenerationAccess,
   invokeReservedProvider,
 } from "../lib/liveGenerationGate.mjs";
@@ -111,7 +112,46 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.equal(access.kind, "live");
 }
 
-// ─── 4. Allowlist + budget pure helpers ───────────────────────────────────
+// ─── 4. Cached UI intent can never be silently upgraded to paid Live ─────
+
+{
+  const serverLive = liveGenerationAccess({
+    providerConfigured: true,
+    authenticated: true,
+    planId: "free",
+    freeDeliveryReady: true,
+  });
+  const cachedIntent = bindProviderSpendIntent(serverLive, false);
+  assert.equal(cachedIntent.kind, "cached");
+  assert.equal(
+    cachedIntent.reason,
+    "client_provider_spend_not_authorized"
+  );
+  assert.equal(bindProviderSpendIntent(serverLive, undefined).kind, "cached");
+
+  let providerCalls = 0;
+  if (cachedIntent.kind === "live") {
+    await invokeReservedProvider(
+      {
+        reservationId: "reserve-intent-1",
+        status: "reserved",
+        providerAuthorized: true,
+      },
+      async () => {
+        providerCalls += 1;
+        return "unexpected";
+      }
+    );
+  }
+  assert.equal(
+    providerCalls,
+    0,
+    "cached client intent must invoke the paid provider zero times"
+  );
+  assert.equal(bindProviderSpendIntent(serverLive, true).kind, "live");
+}
+
+// ─── 5. Allowlist + budget pure helpers ───────────────────────────────────
 
 {
   const list = parsePrivateLiveAllowlist(" Owner@Pikbo.ai , user-uuid-1 ");

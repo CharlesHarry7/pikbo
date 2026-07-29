@@ -36,7 +36,8 @@ export function evaluateHealthTruth(input: HealthTruthInput) {
 }
 
 export type AccountLiveCapabilityInput = {
-  softLiveReady: boolean;
+  /** Same provider-admission decision used by /api/generate for this account. */
+  liveRouteReady: boolean;
   signedIn: boolean;
   durableCreditsActive: boolean;
   planId: string;
@@ -60,7 +61,7 @@ export function evaluateAccountLiveCapability(
     input.planId === "founding_studio" ||
     (input.planId === "free" && input.freeDeliveryReady);
   const canLiveGenerate =
-    input.softLiveReady &&
+    input.liveRouteReady &&
     input.signedIn &&
     input.durableCreditsActive &&
     enoughCredits &&

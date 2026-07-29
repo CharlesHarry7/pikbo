@@ -74,21 +74,17 @@ import {
 } from "@/lib/durableCredits/reconciliation";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 import {
+  bindProviderSpendIntent,
   invokeReservedProvider,
   liveGenerationAccess,
 } from "@/lib/liveGenerationGate.mjs";
 import {
   cachedUploadHonesty,
-  freeDeliveryReadyForAccess,
-  isPrivateLiveInvite,
-  parsePrivateLiveAllowlist,
-  privateLiveBudget,
 } from "@/lib/privateLiveBeta.mjs";
 import {
-  getPrivateLiveSpent,
   tryConsumePrivateLiveBudget,
 } from "@/lib/privateLiveBudgetStore";
-import { t6DeliveryReadiness } from "@/lib/t6Worker";
+import { resolvePrivateLiveAccess } from "@/lib/privateLiveAccessServer";
 import { providerCompletionDecision } from "@/lib/generationReliability.mjs";
 import {
   beginSyncGenerateJob,
@@ -221,39 +217,6 @@ function noteFailed(
   }
 }
 
-function resolvePrivateLiveAccess(authUser: { id: string; email: string | null } | null) {
-  const enabled = process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1";
-  const allowlist = parsePrivateLiveAllowlist(
-    process.env.PIKBO_PRIVATE_LIVE_ALLOWLIST || ""
-  );
-  const budgetMax = Math.max(
-    0,
-    Math.floor(Number(process.env.PIKBO_PRIVATE_LIVE_BUDGET_MAX || "0"))
-  );
-  const invite = isPrivateLiveInvite({
-    enabled,
-    allowlist,
-    email: authUser?.email,
-    userId: authUser?.id,
-  });
-  const spent = authUser ? getPrivateLiveSpent(authUser.id) : 0;
-  const budget = privateLiveBudget({ spent, max: budgetMax });
-  const t6FreeLiveDeliveryReady = t6DeliveryReadiness().effective === true;
-  const freeDeliveryReady = freeDeliveryReadyForAccess({
-    t6FreeLiveDeliveryReady,
-    privateInvite: invite.invited === true,
-    privateBudgetOk: budget.ok,
-  });
-  return {
-    enabled,
-    invite,
-    budget,
-    budgetMax,
-    freeDeliveryReady,
-    t6FreeLiveDeliveryReady,
-  };
-}
-
 export async function POST(req: Request) {
   let body: GenerateRequestBody;
   try {
@@ -273,6 +236,7 @@ export async function POST(req: Request) {
     resolution: resPref,
     seed,
     ownsRights,
+    allowProviderSpend,
     retryJobId,
     retryToken,
   } = body;
@@ -306,7 +270,7 @@ export async function POST(req: Request) {
       ? "founding_studio"
       : "free";
   const privateLive = resolvePrivateLiveAccess(authUser);
-  const access = liveGenerationAccess({
+  const serverAccess = liveGenerationAccess({
     providerConfigured: Boolean(process.env.FAL_KEY),
     authenticated: Boolean(authUser),
     planId: accessPlanId,
@@ -315,11 +279,15 @@ export async function POST(req: Request) {
     // (still fail-closed without durable reserve + provider).
     freeDeliveryReady: privateLive.freeDeliveryReady,
   });
+  // Request-intent fence: loading/failed capability probes display cached mode.
+  // That client state must never be silently upgraded into a credit debit and
+  // paid provider call just because the POST independently carries auth.
+  const access = bindProviderSpendIntent(serverAccess, allowProviderSpend);
 
   // Idempotent replay BEFORE image/asset resolve — network retries must not
   // re-upload multi-MB stills or fail on expired assetId after success.
   const idempotencyKey = normalizeIdempotencyKey(body.idempotencyKey);
-  if (authUser && idempotencyKey) {
+  if (authUser && idempotencyKey && access.kind === "live") {
     const durablePrior = await getPrivateGenerationResultByIdempotency({
       userId: authUser.id,
       idempotencyKey,
@@ -636,7 +604,7 @@ export async function POST(req: Request) {
     const aspect = packItem
       ? packItem.aspectRatio
       : normalizeAspect(aspectRatio, preset.aspectRatio);
-    const resolution = packChild
+    const resolution = access.kind === "live"
       ? SELLER_PACK_LIVE_RESOLUTION
       : resolutionForTier(freeTier, resPref);
 
