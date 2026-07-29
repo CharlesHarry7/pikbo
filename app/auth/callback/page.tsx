@@ -35,7 +35,7 @@ export default function AuthCallbackPage() {
         if (!cancelled) {
           setStatus("error");
           setDetail(
-            "Browser Supabase client not ready. Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set, then restart dev server."
+            "Sign-in is temporarily unavailable. Return to Sign in and try again."
           );
         }
         return;
@@ -67,8 +67,8 @@ export default function AuthCallbackPage() {
           if (!cancelled) {
             setDetail(
               n > 0
-                ? `Signed in · migrated ${n} guest credits. Redirecting…`
-                : "Signed in · durable Free account ready. Redirecting…"
+                ? "Signed in. Your previous balance is now in your account. Redirecting…"
+                : "Signed in. Your account is ready. Redirecting…"
             );
           }
         }

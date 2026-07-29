@@ -42,8 +42,7 @@ export function getAuthProviderStatus(): AuthProviderStatus {
       supabaseAnon,
       serviceRolePresent,
       mode: "supabase",
-      message:
-        "Sign-in is configured. Durable credits use Supabase when service role is present.",
+      message: "Email sign-in is available.",
     };
   }
 
@@ -56,7 +55,7 @@ export function getAuthProviderStatus(): AuthProviderStatus {
       serviceRolePresent,
       mode: "local-durable-only",
       message:
-        "Local durable credit ledger is on for dev. Cross-device sign-in needs Supabase keys.",
+        "Sign-in is temporarily unavailable. You can still try cached Lab previews.",
     };
   }
 
@@ -68,7 +67,7 @@ export function getAuthProviderStatus(): AuthProviderStatus {
     serviceRolePresent,
     mode: "disabled",
     message:
-      "Sign-in is not configured yet. Soft-launch uses a guest cookie on this device only.",
+      "Sign-in is temporarily unavailable. You can still try cached Lab previews.",
   };
 }
 

@@ -247,10 +247,6 @@ export function ProfilePanel() {
     session?.durable && typeof session.durable.availableCredits === "number"
       ? session.durable.availableCredits
       : auth.availableCredits;
-  const durableReserved =
-    session?.durable && typeof session.durable.reservedCredits === "number"
-      ? session.durable.reservedCredits
-      : auth.reservedCredits;
   const displayCredits =
     auth.signedIn && durableAvailable !== null
       ? durableAvailable
@@ -268,13 +264,11 @@ export function ProfilePanel() {
   const isFreePlan =
     session?.freeTrial?.isFreePlan === true || session?.plan === "free";
 
-  const durableLine = !auth.signedIn
-    ? "Guest cookie · this device only · not live-spend authority"
-    : durableBackend === "supabase"
-      ? "Supabase account · durable wallet (Postgres) · live needs atomic reserve (cookie is not live-spend authority)"
-      : durableBackend === "local-file"
-        ? "Supabase account · durable wallet is single-node file ledger (shadow) — apply T5 SQL for multi-node"
-        : "Supabase account · durable wallet pending claim/probe";
+  const accountLine = !auth.signedIn
+    ? "Guest mode · saved on this device"
+    : durableBackend
+      ? "Signed in · balance and completed private results available across devices"
+      : "Signed in · loading account details";
 
   return (
     <div className="card mt-8 space-y-4 p-6">
@@ -294,8 +288,8 @@ export function ProfilePanel() {
                 : "Guest studio"}
           </p>
           <p className="text-xs text-[var(--fg-dim)]">
-            {durableLine}
-            {demo ? " · demo-cached mode" : ""}
+            {accountLine}
+            {demo ? " · cached previews are free" : ""}
           </p>
         </div>
       </div>
@@ -306,50 +300,28 @@ export function ProfilePanel() {
         </p>
       ) : null}
 
-      {auth.signedIn ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-[var(--fg-muted)]">
-          <span className="font-semibold text-white/80">Credits authority</span>
-          {" · "}
-          Cookie is{" "}
-          <span className="font-semibold text-white/75">not live-spend authority</span>{" "}
-          (R0). Display cookie balance {session?.credits ?? "—"} cr · live needs
-          durable atomic reserve or labeled cached demos. Durable wallet
-          {durableBackend ? ` (${durableBackend}` : ""}
-          {session?.durable?.authority
-            ? ` · ${session.durable.authority}`
-            : durableBackend
-              ? " · shadow"
-              : ""}
-          {durableBackend ? ")" : ""} is for cross-device audit
-          {durableReserved !== null && durableReserved > 0
-            ? ` · ${durableReserved} reserved`
-            : ""}
-          . Not multi-node until T5 SQL is applied.
-        </div>
-      ) : null}
-
       {jobsProbe && (jobsProbe.open > 0 || jobsProbe.total > 0) ? (
         <div
           className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-[var(--fg-muted)]"
           data-profile-jobs="video"
         >
-          <span className="font-semibold text-white/80">Session video jobs</span>
+          <span className="font-semibold text-white/80">Video jobs</span>
           {" · "}
           {jobsProbe.open > 0
-            ? `${jobsProbe.open} open (queued/running) · `
+            ? `${jobsProbe.open} in progress · `
             : null}
-          {jobsProbe.total} in process-memory ledger this instance
+          {jobsProbe.total} total
           {(jobsProbe.failed ?? 0) > 0 || (jobsProbe.canceled ?? 0) > 0
-            ? ` · ${jobsProbe.failed ?? 0} failed · ${jobsProbe.canceled ?? 0} canceled`
+            ? ` · ${(jobsProbe.failed ?? 0) + (jobsProbe.canceled ?? 0)} need attention`
             : ""}{" "}
           —{" "}
           <Link
             href="/library"
             className="font-semibold text-[var(--mint)] underline-offset-2 hover:underline"
           >
-            Library recovery
+            Open Library
           </Link>
-          . Not multi-node cloud.
+          .
         </div>
       ) : null}
 
@@ -367,10 +339,10 @@ export function ProfilePanel() {
           {(imageJobsProbe.queued ?? 0) > 0
             ? `${imageJobsProbe.queued} queued · `
             : null}
-          {imageJobsProbe.total} Flux process-memory this instance
+          {imageJobsProbe.total} total
           {(imageJobsProbe.failed ?? 0) > 0 ||
           (imageJobsProbe.canceled ?? 0) > 0
-            ? ` · ${imageJobsProbe.failed ?? 0} failed · ${imageJobsProbe.canceled ?? 0} canceled`
+            ? ` · ${(imageJobsProbe.failed ?? 0) + (imageJobsProbe.canceled ?? 0)} need attention`
             : ""}{" "}
           —{" "}
           <Link
@@ -379,7 +351,7 @@ export function ProfilePanel() {
           >
             Image studio
           </Link>
-          . Separate from video ledger · not multi-node.
+          .
         </div>
       ) : null}
 
@@ -395,19 +367,17 @@ export function ProfilePanel() {
           {trialDone ? (
             <>
               <span className="font-semibold text-amber-100">
-                Free Mini trial used
+                This trial is used
               </span>
               {" · "}
-              cookie has fewer than {perJob} credits for another live job.
-              Cached Lab demos stay free (0 cr).{" "}
+              Cached Lab previews remain free.{" "}
               <Link
                 href="/pricing"
                 className="font-semibold text-[var(--mint)] underline-offset-2 hover:underline"
               >
                 Compare plans
               </Link>{" "}
-              when you want more live clips — Stripe live stays off until gates
-              pass.
+              for more real clips.
             </>
           ) : (
             <>
@@ -419,8 +389,8 @@ export function ProfilePanel() {
               </span>
               {" · "}
               ~{clipsLeft ?? "—"} live clip
-              {(clipsLeft ?? 0) === 1 ? "" : "s"} left this period · on-player
-              mark · raw download blocked until T6 bake.
+              {(clipsLeft ?? 0) === 1 ? "" : "s"} available · finished clips
+              are saved privately in Library.
             </>
           )}
         </div>
@@ -434,17 +404,13 @@ export function ProfilePanel() {
           className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] leading-relaxed text-[var(--fg-muted)]"
           data-profile-refund-policy="honesty"
         >
-          <span className="font-semibold text-white/80">Live fail refunds</span>
-          {" · "}
-          {session.freeTrial.failedLiveRefundPolicy === "when_confirmed" ||
-          session.freeTrial.failedLiveRefunds
-            ? "when confirmed"
-            : "—"}
+          <span className="font-semibold text-white/80">Interrupted jobs</span>
+          {" · check your balance before retrying"}
           {session.freeTrial.ledgerTimeoutRefund === "unconfirmed"
-            ? " · TIMEOUT unconfirmed"
+            ? " · timed-out jobs may still be processing"
             : ""}
           {session.freeTrial.ledgerCancelRefund === "unconfirmed"
-            ? " · cancel unconfirmed"
+            ? " · canceled jobs are reviewed before credits return"
             : ""}
         </div>
       ) : null}
@@ -455,7 +421,7 @@ export function ProfilePanel() {
             {displayCredits ?? "—"}
           </p>
           <p className="text-[10px] text-[var(--fg-dim)]">
-            {auth.signedIn ? "durable cr." : "credits"}
+            {auth.signedIn ? "account credits" : "credits"}
           </p>
         </div>
         <div className="rounded-xl bg-[var(--bg-soft)] py-3">
@@ -491,10 +457,7 @@ export function ProfilePanel() {
           href="/create?mode=seller-pack"
           className="btn btn-ghost px-3 py-1.5 text-xs"
         >
-          Seller Starter Pack
-        </Link>
-        <Link href="/modules" className="btn btn-ghost px-3 py-1.5 text-xs">
-          Modules
+          Launch Pack
         </Link>
         {!auth.signedIn ? (
           <Link href="/login" className="btn btn-ghost px-3 py-1.5 text-xs">
@@ -505,14 +468,12 @@ export function ProfilePanel() {
 
       <p className="text-xs text-[var(--fg-muted)]">
         {auth.signedIn
-          ? durableBackend === "supabase"
-            ? "Postgres durable wallet is visible here. Live spend requires atomic reserve — cookie is not live-spend authority (R0)."
-            : "Cookie is not live-spend authority (R0). Durable file ledger is shadow-only (single node) until T5 SQL + multi-node store; live still needs durable reserve or labeled cached demos."
+          ? "Your balance and completed private results are available across devices; local history stays in this browser."
           : demo
-            ? "Server is in demo-cached mode — labeled Lab clips cost 0 credits. Configure FAL_KEY for live Seedance Mini."
+            ? "Cached Lab previews cost 0 credits and do not process your upload."
             : freeLive
-              ? `${freeLiveModelLabel} jobs use ${freeLive.resolution} ${freeLive.durationSec}s with an on-player mark. Founding Studio uses the fixed 5s Fast 720p Launch Pack path.`
-              : "Free live delivery remains gated. Founding Studio uses the fixed 5s Fast 720p Launch Pack path."}
+              ? `${freeLiveModelLabel} creates private ${freeLive.resolution}, ${freeLive.durationSec}-second clips for eligible accounts.`
+              : "Sign in to see whether real generation is available for your account."}
       </p>
 
       <div className="flex flex-col gap-2">
@@ -531,25 +492,15 @@ export function ProfilePanel() {
             href="/create?mode=seller-pack"
             className="btn btn-ghost w-full text-sm"
           >
-            Seller Starter Pack
+            Launch Pack
           </Link>
-          <Link href="/modules" className="btn btn-ghost w-full text-sm">
-            Modules
-          </Link>
-          <Link href="/status" className="btn btn-ghost w-full text-sm">
-            System status
-          </Link>
-          <Link
-            href="/flow"
-            className="btn btn-ghost w-full text-sm text-white/50"
-            title="Preview media wall — not a live Seedance job"
-          >
-            Flow · Preview
+          <Link href="/library" className="btn btn-ghost w-full text-sm">
+            Library
           </Link>
         </div>
         {!auth.signedIn ? (
           <Link href="/login" className="btn btn-ghost w-full text-sm">
-            Sign in · cross-device later
+            Sign in
           </Link>
         ) : (
           <button

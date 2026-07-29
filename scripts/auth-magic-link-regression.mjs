@@ -160,7 +160,7 @@ assert.doesNotMatch(
 assert.match(callbackSource, /parseAuthCallbackUrl/);
 assert.match(callbackSource, /completeAuthCallback/);
 assert.match(callbackSource, /Request a new magic link/);
-assert.match(loginSource, /You are not signed in yet/);
+assert.match(loginSource, /Check your inbox for a Pikbo sign-in link/);
 
 console.log(
   "auth-magic-link-regression: PASS (trusted same-origin callback · invalid origin fail-closed · provider errors · missing-session honesty · successful exchange)"

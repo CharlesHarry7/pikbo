@@ -23,13 +23,13 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
   if (!auth.configured) {
     return (
       <div className="mt-6 space-y-3 rounded-2xl border border-dashed border-white/15 bg-black/40 p-5">
-        <p className="text-sm font-semibold text-white">Sign-in not live yet</p>
+        <p className="text-sm font-semibold text-white">
+          Sign-in is temporarily unavailable
+        </p>
         <p className="text-xs leading-relaxed text-white/55">
-          Supabase Auth keys are not configured on this deployment. Guests can
-          still open Generate, Modules, Seller Starter Pack, and this-device
-          Library for labeled cached Lab prototypes (0 credits · upload not
-          processed). Live provider jobs stay closed without sign-in + durable
-          reserve.
+          You can still try Generate, Launch Pack previews, and Library on this
+          device. Cached Lab previews cost 0 credits and do not process your
+          upload.
         </p>
         <div
           className="flex flex-wrap items-center gap-2 pt-1"
@@ -46,7 +46,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
             href="/create?mode=seller-pack"
             className="btn btn-ghost !px-3 !py-1.5 text-xs"
           >
-            Seller Starter Pack
+            Launch Pack
           </a>
           <a href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Library
@@ -61,8 +61,8 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
           />
         </div>
         <p className="text-[10px] leading-relaxed text-white/40">
-          Guest cookie is not live-spend authority · durable wallet needs
-          Supabase keys (T5). Cached demos remain free until Live is enabled.
+          Real generation and cross-device Library require sign-in. Please try
+          again later.
         </p>
       </div>
     );
@@ -92,12 +92,16 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
             : res.status === 429
               ? " · try again in a moment"
               : "";
-        setErr((data.error || "Could not send magic link") + wait);
+        setErr(
+          (res.status === 429
+            ? "Too many sign-in requests"
+            : "We couldn't send the sign-in link. Please try again.") + wait
+        );
         return;
       }
       setNote(
         data.message ||
-          "Request accepted. You are not signed in yet — open your email on this device and click the Pikbo sign-in link."
+          "Check your inbox for a Pikbo sign-in link. Open it in this browser; check spam if needed."
       );
     } catch {
       setErr("Network error — try again");
@@ -114,9 +118,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
     try {
       const supabase = getSupabaseBrowser();
       if (!supabase) {
-        setErr(
-          "Browser Supabase client not ready. Set NEXT_PUBLIC_SUPABASE_URL and ANON key."
-        );
+        setErr("Google sign-in is temporarily unavailable. Try email sign-in instead.");
         return;
       }
       const origin = window.location.origin;
@@ -128,11 +130,11 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
         },
       });
       if (error) {
-        setErr(error.message.slice(0, 160));
+        setErr("Google sign-in is temporarily unavailable. Try email sign-in instead.");
       }
       // Browser navigates to Google on success.
     } catch {
-      setErr("Could not start Google sign-in");
+      setErr("Google sign-in is temporarily unavailable. Try email sign-in instead.");
     } finally {
       setBusy(false);
     }
@@ -159,7 +161,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
           disabled={busy}
           className="btn btn-primary w-full py-2.5 text-sm disabled:opacity-50"
         >
-          {busy ? "Sending…" : "Email magic link"}
+          {busy ? "Sending…" : "Email me a sign-in link"}
         </button>
       </form>
 
@@ -181,9 +183,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
         </>
       ) : (
         <p className="text-[10px] leading-relaxed text-white/35">
-          Google sign-in is gated off until{" "}
-          <code className="text-white/50">SUPABASE_AUTH_GOOGLE=1</code> and
-          Google provider is enabled in Supabase.
+          Google sign-in isn&apos;t available. Use the email link above.
         </p>
       )}
 
@@ -201,9 +201,8 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
         </p>
       )}
       <p className="text-[10px] leading-relaxed text-white/40">
-        Keys are on this server. First sign-in may need Email provider enabled in
-        Supabase Authentication → Providers. Guest cookie still works without
-        signing in.
+        We&apos;ll email a secure sign-in link. Open it in the same browser
+        where you requested it.
       </p>
     </div>
   );

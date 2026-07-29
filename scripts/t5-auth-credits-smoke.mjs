@@ -219,7 +219,7 @@ assert.match(
   authConfigSrc,
   /mode: "disabled" \| "supabase" \| "local-durable-only"/
 );
-assert.match(authConfigSrc, /Sign-in is not configured yet/);
+assert.match(authConfigSrc, /Sign-in is temporarily unavailable/);
 assert.match(authConfigSrc, /configured = supabaseUrl && supabaseAnon/);
 
 // ─── Migration files present + T5 / R1 markers ────────────────────────────
