@@ -6,11 +6,11 @@
  * Preview/Lab doors live under More (crawlable + noindex, not robots.txt block).
  */
 
-/** Primary product path for the toy-Recipe browsing loop. */
+/** Primary product path: Pack first, Recipes second. */
 export const PRIMARY_NAV = [
-  { href: "/", label: "Explore" },
+  { href: "/", label: "Home" },
   { href: "/effects", label: "Recipes" },
-  { href: "/create", label: "Create" },
+  { href: "/create?mode=seller-pack", label: "Launch Pack" },
   { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
 ] as const;
@@ -19,9 +19,9 @@ export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
 
 /** Mobile mirrors the same five product doors; secondary routes stay hidden. */
 export const MOBILE_NAV = [
-  { href: "/", label: "Explore" },
+  { href: "/", label: "Home" },
   { href: "/effects", label: "Recipes" },
-  { href: "/create", label: "Create" },
+  { href: "/create?mode=seller-pack", label: "Pack" },
   { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
 ] as const;

@@ -1,20 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
 import { CreateStudio } from "@/components/CreateStudio";
 import { CreateSeoFooter } from "@/components/CreateSeoFooter";
 import { BatchStudio } from "@/components/BatchStudio";
-import { FreeTrialCta } from "@/components/FreeTrialCta";
-import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { getPreset } from "@/lib/presets";
-import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { softwareApplicationJsonLd } from "@/lib/jsonLd";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
-
-/** Seller Pack chrome → single recipe with remix contract. */
-const CREATE_SINGLE_RECIPE_HREF = createRemixHref("360-spin-showcase");
 
 export async function generateMetadata({
   searchParams,
@@ -91,50 +84,69 @@ export default async function CreatePage({
   // Wave A: Seller Pack is a Create mode, not a separate suite door.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return (
-      <div>
-        <Suspense
-          fallback={
-            <div className="border-b border-white/10 px-4 py-3 text-sm text-white/40">
-              Generate · Launch Pack
-            </div>
-          }
-        >
-          <GenerateSuiteChrome />
-        </Suspense>
-        <div className="px-4 py-8 sm:px-8">
-          <div className="mx-auto max-w-6xl">
-            <span className="chip">
-              Launch Pack — 3 private videos · 30 credits
-            </span>
-            <h1 className="mt-3 font-display text-3xl font-black uppercase tracking-tight">
-              One photo → your Launch Pack
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
-              Turn one product photo into a Listing Spin (1:1), Blind-box
-              Reveal (9:16), and Social Flash (9:16). Each 5-second clip is
-              designed for listings, launches, and short-form social. Use only
-              photos you own.
-            </p>
-            <p className="mt-2 text-xs font-semibold text-white/45">
-              Only completed private clips can be downloaded. A confirmed
-              failed format restores its own 10-credit charge.
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <FreeTrialCta
-                path="/create?mode=seller-pack"
-                variant="primary"
-                labelTry="Try free video first"
-                className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
+      <div className="min-h-screen bg-[#09090a]">
+        <div className="px-4 py-6 sm:px-8 sm:py-10">
+          <div className="mx-auto max-w-7xl">
+            <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#111113] p-5 sm:p-8 lg:p-10">
+              <div
+                className="pointer-events-none absolute right-[-4rem] top-[-5rem] h-64 w-64 rounded-full bg-[#c8ff3d]/10 blur-[80px]"
+                aria-hidden
               />
-              <Link
-                href={CREATE_SINGLE_RECIPE_HREF}
-                className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"
-                data-create-single-recipe="remix"
-              >
-                Single recipe
-              </Link>
-            </div>
-            <div className="mt-6">
+              <div className="relative grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
+                <div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-black">
+                      Private beta · invite only
+                    </span>
+                    <span className="rounded-full border border-white/12 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white/52">
+                      Launch Pack — 3 private videos · 30 credits
+                    </span>
+                  </div>
+                  <p className="mt-7 text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+                    One photo → your Launch Pack
+                  </p>
+                  <h1 className="mt-3 max-w-3xl font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-6xl">
+                    Build three product videos from one toy photo.
+                  </h1>
+                  <p className="mt-5 max-w-2xl text-sm leading-6 text-white/52">
+                    Use a clear photo you own. Pikbo fixes the format, duration,
+                    and delivery so you can focus on one SKU—not a maze of
+                    models and controls.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    ["01", "Listing Spin", "1:1 · 5 sec · 720p"],
+                    ["02", "Blind-box Reveal", "9:16 · 5 sec · 720p"],
+                    ["03", "Social Flash", "9:16 · 5 sec · 720p"],
+                  ].map(([n, name, spec]) => (
+                    <div
+                      key={name}
+                      className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.045] p-3 sm:p-4"
+                    >
+                      <span className="text-[9px] font-black text-[#c8ff3d]">
+                        {n}
+                      </span>
+                      <p className="mt-4 text-[11px] font-black leading-tight text-white sm:mt-5 sm:text-sm">
+                        {name}
+                      </p>
+                      <p className="mt-1 text-[8px] font-bold uppercase tracking-[0.08em] text-white/55 sm:text-[9px] sm:tracking-[0.1em]">
+                        {spec}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <p className="relative mt-7 border-t border-white/10 pt-5 text-xs font-semibold leading-5 text-white/62">
+                Only completed private clips can be downloaded. A confirmed
+                failed format restores its own 10-credit charge. Public
+                visitors see cached previews; their uploads are not processed.
+              </p>
+            </section>
+
+            <div className="mt-6" data-launch-pack-workbench>
               {/* AfterPath ?sku= / ?try=1 hydrate bible + Lab still (no auto 3× run) */}
               <BatchStudio
                 pack="seller"

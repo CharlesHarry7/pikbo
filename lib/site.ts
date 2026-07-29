@@ -20,7 +20,7 @@ export const site = {
    * Meta description — 哥飞 CTR 优化 2026-07-27: 加入搜索意图词 + 利益点驱动
    */
   description:
-    "Turn one owned toy photo into a short-video recipe for spins, reveals, and hero clips. Preview cached Pikbo Lab prototypes before gated generation.",
+    "Turn one owned designer-toy photo into a fixed listing, reveal, and social-video Pack. Preview cached Pikbo Lab prototypes; real private generation is invite-only.",
   /**
    * Document title (homepage default) — brand first.
    * 哥飞 P0: must NOT match tools rank-page title.
@@ -31,17 +31,17 @@ export const site = {
    * Homepage H1 — brand + scene, not the full primary keyword phrase.
    * Rank H1 stays on /tools/ai-toy-video-generator.
    */
-  homeH1: "Turn your toy photos into launch-ready videos",
+  homeH1: "One toy photo. Three product videos.",
   /** Primary rank keyword — tools page only; not homepage Title/H1 */
   keyword: "AI toy video generator",
   /** Rank battlefield URL for internal links */
   rankToolPath: "/tools/ai-toy-video-generator" as const,
   socialImages: {
-    openGraph: `${SITE_URL}/opengraph-image.png`,
-    twitter: `${SITE_URL}/twitter-image.png`,
+    openGraph: `${SITE_URL}/pikbo-launch-pack-og-v2.png`,
+    twitter: `${SITE_URL}/pikbo-launch-pack-og-v2.png`,
     width: 1731,
     height: 909,
-    alt: "Pikbo — turn an owned designer-toy photo into launch-ready video",
+    alt: "Pikbo — one designer-toy photo becomes three product-video formats",
   },
   contact: {
     privacyEmail: `privacy@${SITE_DOMAIN}`,

@@ -123,8 +123,7 @@ assert.match(seoIndex, /PREVIEW_ROBOTS/);
 assert.match(seoIndex, /CONCEPT_ROBOTS/);
 
 // Social cards: centralized, resolvable static metadata routes (no extensionless 404).
-assert.match(siteSrc, /opengraph-image\.png/);
-assert.match(siteSrc, /twitter-image\.png/);
+assert.match(siteSrc, /pikbo-launch-pack-og-v2\.png/);
 assert.match(siteSrc, /officialProfiles/);
 assert.doesNotMatch(siteSrc, /twitter:\s*["']@pikbo_ai/);
 assert.match(layoutSrc, /site\.socialImages\.openGraph/);
@@ -192,7 +191,7 @@ assert.match(guidePageSrc, /datePublished/);
 assert.match(guidePageSrc, /dateModified/);
 assert.match(guidePageSrc, /href="\/tools\/ai-toy-video-generator"/);
 assert.match(guidePageSrc, /href="\/tools\/blind-box-reveal-video-maker"/);
-assert.match(pricingHeroSrc, /Pikbo pricing for toy sellers/);
+assert.match(pricingHeroSrc, /Pricing built around finished toy videos/);
 
 // Trust/legal copy must distinguish 0-credit cached previews from gated Live jobs.
 assert.match(
