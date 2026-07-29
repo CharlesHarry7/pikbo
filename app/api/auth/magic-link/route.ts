@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       {
         ok: false,
         code: "NOT_CONFIGURED",
-        error: "Supabase is not configured on this server",
+        error: "Sign-in is temporarily unavailable. Please try again later.",
       },
       { status: 503 }
     );
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     email = typeof body.email === "string" ? body.email.trim() : "";
   } catch {
     return NextResponse.json(
-      { ok: false, code: "INVALID_REQUEST", error: "Expected JSON { email }" },
+      { ok: false, code: "INVALID_REQUEST", error: "Invalid request." },
       { status: 400 }
     );
   }
@@ -82,7 +82,11 @@ export async function POST(req: Request) {
   const supabase = getSupabaseAnonServer();
   if (!supabase) {
     return NextResponse.json(
-      { ok: false, code: "CLIENT_ERROR", error: "Could not init Supabase" },
+      {
+        ok: false,
+        code: "CLIENT_ERROR",
+        error: "Sign-in is temporarily unavailable. Please try again later.",
+      },
       { status: 500 }
     );
   }
@@ -96,7 +100,7 @@ export async function POST(req: Request) {
       {
         ok: false,
         code: "UNTRUSTED_ORIGIN",
-        error: "Sign-in must be started from an approved Pikbo address.",
+        error: "Start sign-in from Pikbo and try again.",
       },
       { status: 403 }
     );
@@ -119,10 +123,7 @@ export async function POST(req: Request) {
         ok: false,
         code: "SUPABASE_AUTH_ERROR",
         error:
-          error.message.includes("Error sending") ||
-          error.message.toLowerCase().includes("smtp")
-            ? "Could not send email. In Supabase Dashboard enable Email auth and check SMTP / rate limits."
-            : error.message.slice(0, 160),
+          "We couldn't send the sign-in email. Please try again in a few minutes.",
       },
       { status: 502 }
     );
@@ -137,6 +138,6 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     callbackOrigin: origin,
-    message: `If the address is valid, ${site.name} accepted the request. You are not signed in yet — open the email on this device and click the sign-in link. Check spam too.`,
+    message: `If the address can receive mail, check your inbox for a ${site.name} sign-in link. Open it on this device; check spam if needed.`,
   });
 }

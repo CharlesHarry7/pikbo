@@ -41,3 +41,8 @@ export function isIgnoredOwnedUploadResult(input: {
 export function localLibraryNote(): string {
   return `${PROVENANCE.localLibrary} · saved in this browser only (not cloud-synced)`;
 }
+
+/** Exact note for a server-confirmed, owner-scoped private result. */
+export function privateLibraryNote(): string {
+  return "Account Library · private owner-only result; local history is also kept in this browser";
+}
