@@ -29,24 +29,24 @@ export default function LoginPage() {
           Sign in
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
-          Cross-device balance and cloud Library need a durable account. Guests
-          can still open Generate and Seller Starter Pack on this browser for
-          labeled cached Lab prototypes (0 credits · upload not processed).
+          Sign in to keep your balance and completed private results available
+          across devices. This browser also keeps local history. You can still
+          try cached Lab previews as a guest; they cost 0 credits and do not
+          process your uploaded photo.
         </p>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-[11px] leading-relaxed text-white/45">
           <li>
-            <strong className="text-white/65">Guest now:</strong> this-device
-            cookie history + cached demos only — not live provider spend
+            <strong className="text-white/65">Guest preview:</strong> cached Lab
+            examples on this device.
           </li>
           <li>
-            <strong className="text-white/65">Live generate:</strong> requires
-            sign-in, durable credit reserve, and an eligible non-Free plan when
-            Live is enabled
+            <strong className="text-white/65">Real generation:</strong>{" "}
+            available only to eligible signed-in accounts; the credit cost is
+            shown before you start.
           </li>
           <li>
-            <strong className="text-white/65">Needs boss keys:</strong> Supabase
-            URL + anon (+ service role for wallets) so magic-link / Google light
-            up; T5 SQL for multi-node durable credits
+            <strong className="text-white/65">Private results:</strong> finished
+            clips stay in your Library with protected downloads.
           </li>
         </ul>
 
@@ -58,7 +58,7 @@ export default function LoginPage() {
           }`}
         >
           <p className="text-[10px] font-black uppercase tracking-wide text-[var(--fg-dim)]">
-            Status · {auth.mode}
+            Sign-in availability
           </p>
           <p className="mt-1 leading-relaxed">{auth.message}</p>
         </div>
@@ -80,7 +80,7 @@ export default function LoginPage() {
             href="/create?mode=seller-pack"
             className="text-[var(--mint)] hover:underline"
           >
-            Seller Starter Pack
+            Launch Pack
           </Link>
           <Link href="/library" className="text-[var(--mint)] hover:underline">
             Library

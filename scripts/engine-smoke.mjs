@@ -682,6 +682,7 @@ assert.match(provenance, /Cached demo/);
 assert.match(provenance, /Live generation/);
 assert.match(provenance, /On-player mark/);
 assert.match(provenance, /Local Library/);
+assert.match(provenance, /private owner-only result/);
 assert.match(provenance, /isIgnoredOwnedUploadResult/);
 const createStudio = fs.readFileSync(
   join(root, "components/CreateStudio.tsx"),
@@ -713,6 +714,10 @@ new Function("require", "exports", "module", provenanceCjs)(
   provenanceFixtureModule
 );
 const provenanceFixture = provenanceFixtureModule.exports;
+assert.match(
+  provenanceFixture.privateLibraryNote(),
+  /Account Library.*private owner-only result/
+);
 assert.equal(
   provenanceFixture.isIgnoredOwnedUploadResult({
     demo: true,
@@ -750,6 +755,9 @@ assert.equal(
   false,
   "confirmed live upload remains a successful result"
 );
+assert.match(createStudio, /data\.privateResult === true/);
+assert.match(createStudio, /Next generation quote/);
+assert.match(createStudio, /seedanceModelLabel/);
 const landing = fs.readFileSync(
   join(root, "components/LandingToolPanel.tsx"),
   "utf8"
@@ -2606,7 +2614,7 @@ const magicLink = fs.readFileSync(
 );
 assert.match(magicLink, /takeToken/);
 assert.match(magicLink, /RATE_LIMITED/);
-assert.match(magicLink, /If the address is valid/);
+assert.match(magicLink, /If the address can receive mail/);
 // Success body must not require leaking email field
 assert.doesNotMatch(
   magicLink.slice(magicLink.lastIndexOf("return NextResponse.json({\n    ok: true")),
@@ -3164,7 +3172,7 @@ const loginForm = fs.readFileSync(
   "utf8"
 );
 assert.match(loginForm, /signInWithOAuth|Continue with Google/);
-assert.match(loginForm, /SUPABASE_AUTH_GOOGLE/);
+assert.match(loginForm, /auth\.providers\.google/);
 assert.match(genJobIdRoute, /cancelJob/);
 // Generate abort cancel ledger (parity with image cancelImageLedger)
 // genJobsStore already loaded above; generations list route + generateClient
@@ -3761,7 +3769,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "app/profile/page.tsx"), "utf8"),
-  /signed-in durable|durable wallet/
+  /account, plan, balance, and saved work/
 );
 
 // Pricing FAQ JSON-LD + Explore evidence labels
@@ -4635,7 +4643,14 @@ const profilePanelSrc = fs.readFileSync(
   join(root, "components/ProfilePanel.tsx"),
   "utf8"
 );
-assert.match(profilePanelSrc, /Credits authority|not live-spend authority|shadow/);
+assert.match(
+  profilePanelSrc,
+  /balance and completed private results available across devices|loading account details/
+);
+assert.doesNotMatch(
+  profilePanelSrc,
+  /Credits authority|Not multi-node until T5 SQL|process-memory ledger/
+);
 assert.match(profilePanelSrc, /X-Pikbo-Jobs-Open|\/api\/generations/);
 // Profile: still image jobs HEAD probe (Settings parity — process-memory Flux)
 assert.match(profilePanelSrc, /X-Pikbo-Image-Jobs|\/api\/image/);
@@ -4644,7 +4659,7 @@ assert.match(profilePanelSrc, /data-profile-jobs=["']video["']/);
 assert.match(profilePanelSrc, /X-Pikbo-Image-Jobs-Canceled|Image-Jobs-Canceled/);
 assert.match(profilePanelSrc, /X-Pikbo-Image-Jobs-Queued/);
 assert.match(profilePanelSrc, /local-file|supabase/);
-assert.match(profilePanelSrc, /process-memory/);
+assert.match(profilePanelSrc, /Video jobs|Still image jobs/);
 const claimRouteSrc = fs.readFileSync(
   join(root, "app/api/auth/claim/route.ts"),
   "utf8"
@@ -4832,15 +4847,12 @@ assert.match(
   fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
   /data-footer-path=["']product-first["']/
 );
-// profilePanelSrc already loaded above (credits authority block)
+// profilePanelSrc already loaded above (account and job status)
 assert.match(profilePanelSrc, /data-profile-path=["']product-first["']/);
 assert.match(profilePanelSrc, /data-profile-suite=["']product-first["']/);
-assert.match(profilePanelSrc, /Flow · Preview/);
-assert.ok(
-  profilePanelSrc.indexOf("mode=seller-pack") <
-    profilePanelSrc.indexOf('href="/flow"'),
-  "Profile: Seller Pack before Flow"
-);
+assert.match(profilePanelSrc, /mode=seller-pack/);
+assert.match(profilePanelSrc, /href=["']\/library["']/);
+assert.doesNotMatch(profilePanelSrc, /Flow · Preview/);
 assert.match(
   fs.readFileSync(join(root, "app/profile/page.tsx"), "utf8"),
   /data-profile-page-path=["']product-first["']/
@@ -5745,15 +5757,15 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
-  /Sign-in not live yet|data-login-guest/
+  /Sign-in is temporarily unavailable|data-login-guest/
 );
 assert.match(
   fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
-  /guest cookie|Supabase|cached Lab|not live-spend|Live generate/
+  /Guest preview|cached Lab|Real generation|Private results/
 );
 assert.match(
   fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
-  /upload not processed|cached demos only|not live provider spend/
+  /do not\s+process your uploaded photo|credit cost is\s+shown before you start/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
@@ -5761,7 +5773,7 @@ assert.doesNotMatch(
 );
 assert.match(
   fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
-  /not live-spend authority|cached Lab prototypes/
+  /cross-device Library require sign-in|Cached Lab previews cost 0 credits/
 );
 assert.match(
   fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),

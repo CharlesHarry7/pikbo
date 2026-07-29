@@ -135,8 +135,8 @@ export async function POST(req: Request) {
       guestSession: publicSession(guest),
       note:
         migrated > 0
-          ? `Moved ${migrated} guest credits into your Free account (one-time).`
-          : "No guest credits migrated (already claimed, empty, or durable balance present).",
+          ? "Your previous balance was added to this account."
+          : null,
     },
     authority: {
       generate: "cookie-guest-until-durable-switch",

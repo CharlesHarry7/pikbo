@@ -15,6 +15,21 @@ export const SEEDANCE_FAST =
 export const SEEDANCE_FULL =
   "bytedance/seedance-2.0/image-to-video";
 
+/** Customer-facing label for either a Pikbo preference id or provider endpoint. */
+export function seedanceModelLabel(model?: string | null): string {
+  const normalized = model?.trim().toLowerCase() ?? "";
+  if (normalized.includes("seedance-2.0/fast") || normalized === "seedance-fast") {
+    return "Seedance Fast";
+  }
+  if (normalized.includes("seedance-2.0/mini") || normalized === "seedance-mini") {
+    return "Seedance Mini";
+  }
+  if (normalized.includes("seedance-2.0") || normalized === "seedance-2") {
+    return "Seedance 2.0";
+  }
+  return model?.trim() || "Seedance";
+}
+
 export type ModelPreference =
   | "seedance-2"
   | "seedance-fast"

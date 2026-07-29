@@ -10,7 +10,7 @@ const PROFILE_PAGE_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Profile",
-  description: "Plan, credits, and your Pikbo session.",
+  description: "Manage your Pikbo account, plan, balance, and saved work.",
   robots: PRIVATE_ROBOTS,
 };
 
@@ -29,13 +29,12 @@ export default function ProfilePage() {
           Profile
         </h1>
         <p className="mt-1.5 text-sm leading-relaxed text-[var(--fg-muted)]">
-          Plan, credits, and session — guest cookie on this device, or
-          signed-in durable wallet when Supabase is configured.
+          Manage your account, plan, balance, and saved work.
         </p>
         <p className="mt-3 text-xs text-[var(--fg-dim)]">
           {auth.message}{" "}
           <Link href="/login" className="text-[var(--mint)] hover:underline">
-            Sign-in status →
+            Sign-in options →
           </Link>
         </p>
         <div
@@ -53,20 +52,13 @@ export default function ProfilePage() {
             href="/create?mode=seller-pack"
             className="btn btn-ghost !px-3 !py-1.5 text-xs"
           >
-            Seller Starter Pack
+            Launch Pack
           </Link>
           <Link href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Library
           </Link>
           <Link href="/pricing" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Plans
-          </Link>
-          <Link
-            href="/flow"
-            className="btn btn-ghost !px-3 !py-1.5 text-xs text-white/50"
-            title="Preview media wall — not a live Seedance job"
-          >
-            Flow · Preview
           </Link>
         </div>
         <ProfilePanel />

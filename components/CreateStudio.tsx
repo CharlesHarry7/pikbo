@@ -35,9 +35,11 @@ import { emitSessionRefresh } from "@/lib/sessionEvents";
 import {
   isIgnoredOwnedUploadResult,
   localLibraryNote,
+  privateLibraryNote,
   PROVENANCE,
   resultProvenanceLabel,
 } from "@/lib/provenance";
+import { seedanceModelLabel } from "@/lib/models";
 import { parseRemixSearchParams } from "@/lib/remixIntent";
 import {
   buildGenerationSpec,
@@ -109,6 +111,8 @@ type ResultVersion = {
   sourceKey: string;
   requestId?: string;
   provider?: string;
+  /** Server-confirmed owner-scoped object in Pikbo private storage. */
+  privateResult: boolean;
   effect: string;
   effectName: string;
   /** Immutable inputs that produced this success (Retry must reuse). */
@@ -1163,6 +1167,7 @@ export function CreateStudio({
       requestId:
         typeof data.requestId === "string" ? data.requestId : undefined,
       provider: typeof data.provider === "string" ? data.provider : undefined,
+      privateResult: data.privateResult === true,
       effect: serverEffect,
       effectName: usedPreset.name,
       spec,
@@ -1308,6 +1313,17 @@ export function CreateStudio({
 
   const activeVersion =
     versions.find((v) => v.id === activeVersionId) ?? versions[0] ?? null;
+  const showingCompletedResult = Boolean(
+    activeVersion &&
+      videoUrl &&
+      (status === "done" || status === "error")
+  );
+  const bannerIsDemo = showingCompletedResult
+    ? Boolean(activeVersion?.demo)
+    : demoMode;
+  const activeResultModelLabel = seedanceModelLabel(
+    activeVersion?.model ?? usedModel
+  );
   /** Still tied to the active result version (honest A/B when switching Vn). */
   const compareStill =
     (activeVersion
@@ -1708,7 +1724,7 @@ export function CreateStudio({
       <div
         role="status"
         className={`border-b px-4 py-1.5 sm:py-2.5 ${
-          demoMode
+          bannerIsDemo
             ? "border-white/10 bg-white/[0.04]"
             : "border-[var(--mint)]/25 bg-[var(--mint)]/[0.08]"
         }`}
@@ -1717,19 +1733,44 @@ export function CreateStudio({
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide ${
-                demoMode
+                bannerIsDemo
                   ? "bg-white/10 text-white/80"
                   : "bg-[var(--mint)] text-black"
               }`}
             >
-              {demoMode
-                ? PROVENANCE.cachedDemo
-                : isFree
-                  ? "Private Fast validation"
-                  : PROVENANCE.liveGeneration}
+              {showingCompletedResult
+                ? activeVersion?.demo
+                  ? PROVENANCE.cachedDemo
+                  : activeVersion?.privateResult
+                    ? "Private result ready"
+                    : "Live result ready"
+                : demoMode
+                  ? PROVENANCE.cachedDemo
+                  : isFree
+                    ? "Private Fast validation"
+                    : PROVENANCE.liveGeneration}
             </span>
             <p className="text-[11px] leading-snug text-[var(--fg-muted)] sm:text-xs">
-              {demoMode ? (
+              {showingCompletedResult && activeVersion ? (
+                activeVersion.demo ? (
+                  <>
+                    Lab example · <b className="text-[var(--fg)]">not your photo</b>
+                    <span className="hidden sm:inline"> · 0 credits</span>
+                  </>
+                ) : (
+                  <>
+                    Your result · {activeResultModelLabel}{" "}
+                    {activeVersion.duration}s {activeVersion.resolution} ·{" "}
+                    {activeVersion.creditState}
+                    {activeVersion.privateResult ? (
+                      <span className="hidden sm:inline">
+                        {" "}
+                        · owner-only Library copy saved
+                      </span>
+                    ) : null}
+                  </>
+                )
+              ) : demoMode ? (
                 <>
                   Lab example · <b className="text-[var(--fg)]">not your photo</b>
                   <span className="hidden sm:inline"> · 0 credits</span>
@@ -2523,7 +2564,9 @@ export function CreateStudio({
               <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black">
                 3
               </span>
-              Review and generate
+              {showingCompletedResult
+                ? "Next generation quote"
+                : "Review and generate"}
             </p>
             {image ? (
               <div className="mt-2 flex items-start justify-between gap-3">
@@ -2664,7 +2707,9 @@ export function CreateStudio({
                 </span>
               ) : null}
               <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-semibold text-white/50">
-                {usedModel || MODELS.find((m) => m.id === modelId)?.label}
+                {seedanceModelLabel(
+                  usedModel || MODELS.find((m) => m.id === modelId)?.label
+                )}
               </span>
             </div>
           </div>
@@ -3048,14 +3093,11 @@ export function CreateStudio({
                   <div>
                     <dt className="text-[var(--fg-dim)]">Model</dt>
                     <dd className="font-semibold text-[var(--fg)]">
-                      {(
+                      {seedanceModelLabel(
                         usedModel ||
-                        MODELS.find((m) => m.id === modelId)?.label ||
-                        "—"
-                      )
-                        .toString()
-                        .split("/")
-                        .pop()}
+                          MODELS.find((m) => m.id === modelId)?.label ||
+                          null
+                      )}
                     </dd>
                   </div>
                   <div>
@@ -3143,7 +3185,9 @@ export function CreateStudio({
                 <p className="mt-1 text-center text-[10px] text-[var(--fg-dim)]">
                   {demo
                     ? `${PROVENANCE.cachedDemo} only — not from your upload · not cloud-backed`
-                    : localLibraryNote()}
+                    : activeVersion?.privateResult
+                      ? privateLibraryNote()
+                      : localLibraryNote()}
                 </p>
               </div>
             )}
