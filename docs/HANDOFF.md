@@ -9,6 +9,8 @@ Newest first. One block per meaningful landing.
 - Independent review rejected the four-character black-studio Hero. Direction A (rainy creator workbench) scored 30/30 for silhouette, emotion, scene, material, proof and originality. Candidate sheet, scores, Xiaohongshu composition research, assets, byte sizes and SHA-256 are committed under `docs/`.
 - Home now uses one original matte-ivory asymmetric character and a proof-led input → set → cached editorial output rail. The brand CTA enters generic Create and emits `landing_view`, never a borrowed Recipe slug or `recipe_use`.
 - The eight Home Recipe covers keep the same character/material/palette and are explicitly labelled editorial art. Registered Project proof has a separate door and keeps its original cached-video poster. K3's unverified Create/Project poster substitutions were reverted.
+- Implementation head `41157c3` passed Codex's complete local gate set and Chromium/Firefox/WebKit × 390/768/1440 matrix. GitHub Actions CI run #506 and the automatic Vercel preview commit status passed.
+- K3 then fetched an independent archive of exact remote head `41157c3` and reported `REVIEW PASSED`: 10/10 checklist items, 24/24 independent runtime checks, repository E2E 10 passed / 8 intentional skips, no defect and therefore no corrective commit. The durable review record is `docs/proof/wave-a-visual-v2/K3_FINAL_REVIEW.md`.
 - This is UI and local asset work only: no provider, paid model, credentials, database, Stripe, production config, user data, merge, main push, or deployment.
 
 ---
