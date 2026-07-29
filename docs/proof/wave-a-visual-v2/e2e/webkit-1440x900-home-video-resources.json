@@ -1,0 +1,16 @@
+[
+  {
+    "name": "http://127.0.0.1:3457/demos/visual-v2/hero-loop.mp4",
+    "initiatorType": "video",
+    "transferSize": 302,
+    "encodedBodySize": 2,
+    "durationMs": 5
+  },
+  {
+    "name": "http://127.0.0.1:3457/demos/visual-v2/hero-loop.mp4",
+    "initiatorType": "video",
+    "transferSize": 183875,
+    "encodedBodySize": 183575,
+    "durationMs": 5
+  }
+]

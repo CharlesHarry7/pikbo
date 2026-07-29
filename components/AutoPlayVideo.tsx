@@ -86,6 +86,7 @@ function prefersReducedMotion() {
  */
 export function AutoPlayVideo({
   poster,
+  mobilePoster,
   webm,
   mp4,
   className,
@@ -104,8 +105,15 @@ export function AutoPlayVideo({
   wallDense = false,
   /** Visible controls for hero / featured players. Dense cards keep Link focus. */
   showControls = false,
+  /**
+   * Keep mobile poster-only until the visitor explicitly presses Play.
+   * Desktop keeps the existing eager / viewport behavior.
+   */
+  mobilePlayback = "viewport",
 }: {
   poster: string;
+  /** Optional portrait poster used at <=768px without changing video sources. */
+  mobilePoster?: string;
   webm?: string;
   mp4: string;
   className?: string;
@@ -117,23 +125,43 @@ export function AutoPlayVideo({
   lazySources?: boolean;
   wallDense?: boolean;
   showControls?: boolean;
+  mobilePlayback?: "viewport" | "poster-only";
 }) {
   const ref = useRef<HTMLVideoElement>(null);
-  const [sourcesOn, setSourcesOn] = useState(!lazySources || Boolean(eager));
+  const [sourcesOn, setSourcesOn] = useState(
+    mobilePlayback === "poster-only"
+      ? false
+      : !lazySources || Boolean(eager)
+  );
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   /** SSR + first paint: assume mobile so wall cards stay poster-first. */
   const [isNarrow, setIsNarrow] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [manualPlaybackRequested, setManualPlaybackRequested] = useState(false);
   const wantPlay = useRef(false);
+  const mobilePosterOnly =
+    mobilePlayback === "poster-only" &&
+    isNarrow &&
+    !manualPlaybackRequested;
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
-    const sync = () => setIsNarrow(mq.matches);
+    const sync = () => {
+      const narrow = mq.matches;
+      setIsNarrow(narrow);
+      if (
+        mobilePlayback === "poster-only" &&
+        !narrow &&
+        (eager || !lazySources)
+      ) {
+        setSourcesOn(true);
+      }
+    };
     sync();
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
-  }, []);
+  }, [eager, lazySources, mobilePlayback]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -148,14 +176,22 @@ export function AutoPlayVideo({
 
   // Desktop wallDense may warm metadata; mobile never preloads non-hero clips.
   const allowMetadataPreload =
-    Boolean(eager) || (Boolean(wallDense) && sourcesOn && !isNarrow);
+    (!mobilePosterOnly && Boolean(eager)) ||
+    (Boolean(wallDense) && sourcesOn && !isNarrow);
 
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
     // Keep the synchronous media-query guard as well as reactive state. On the
     // first hydrated effect pass, state may still hold the SSR default.
-    if (reducedMotion || prefersReducedMotion()) {
+    if (
+      (reducedMotion || prefersReducedMotion()) &&
+      !wantPlay.current
+    ) {
+      release(v);
+      return;
+    }
+    if (mobilePosterOnly) {
       release(v);
       return;
     }
@@ -219,6 +255,7 @@ export function AutoPlayVideo({
     wallDense,
     allowMetadataPreload,
     reducedMotion,
+    mobilePosterOnly,
   ]);
 
   // After lazy sources flip on from viewport, try play immediately.
@@ -226,7 +263,13 @@ export function AutoPlayVideo({
     if (!sourcesOn || desktopPlayMode !== "viewport") return;
     const v = ref.current;
     if (!v) return;
-    if (reducedMotion || prefersReducedMotion()) return;
+    if (
+      (reducedMotion || prefersReducedMotion()) &&
+      !wantPlay.current
+    ) {
+      return;
+    }
+    if (mobilePosterOnly) return;
     // If already in view, claim after sources attach.
     const rect = v.getBoundingClientRect();
     const vh = window.innerHeight || 1;
@@ -246,6 +289,7 @@ export function AutoPlayVideo({
     mp4,
     allowMetadataPreload,
     reducedMotion,
+    mobilePosterOnly,
   ]);
 
   function playFromInteraction() {
@@ -288,8 +332,12 @@ export function AutoPlayVideo({
     const video = ref.current;
     if (!video) return;
     if (video.paused) {
-      if (!sourcesOn) setSourcesOn(true);
       wantPlay.current = true;
+      setManualPlaybackRequested(true);
+      if (!sourcesOn) {
+        setSourcesOn(true);
+        return;
+      }
       claim(video);
     } else {
       wantPlay.current = false;
@@ -310,7 +358,7 @@ export function AutoPlayVideo({
         ref={ref}
         className={className}
         style={style}
-        poster={poster}
+        poster={isNarrow && mobilePoster ? mobilePoster : poster}
         width={720}
         height={1280}
         muted
@@ -318,7 +366,10 @@ export function AutoPlayVideo({
         playsInline
         preload={allowMetadataPreload ? "metadata" : "none"}
         data-video-preload={allowMetadataPreload ? "metadata" : "none"}
-        data-video-mobile-poster-first={isNarrow && !eager ? "1" : "0"}
+        data-video-mobile-poster-first={
+          isNarrow && (mobilePlayback === "poster-only" || !eager) ? "1" : "0"
+        }
+        data-mobile-playback={mobilePlayback}
         data-reduced-motion={reducedMotion ? "1" : "0"}
         tabIndex={
           focusable && desktopPlayMode === "interaction" ? 0 : undefined

@@ -4,6 +4,15 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-29 — [gpt/k3] Wave A Home visual v2: one character, inspectable proof
+- Draft PR #78 is corrected from its locked remote head `7bdc280`; the older local K3 `55ce427` was not used.
+- Independent review rejected the four-character black-studio Hero. Direction A (rainy creator workbench) scored 30/30 for silhouette, emotion, scene, material, proof and originality. Candidate sheet, scores, Xiaohongshu composition research, assets, byte sizes and SHA-256 are committed under `docs/`.
+- Home now uses one original matte-ivory asymmetric character and a proof-led input → set → cached editorial output rail. The brand CTA enters generic Create and emits `landing_view`, never a borrowed Recipe slug or `recipe_use`.
+- The eight Home Recipe covers keep the same character/material/palette and are explicitly labelled editorial art. Registered Project proof has a separate door and keeps its original cached-video poster. K3's unverified Create/Project poster substitutions were reverted.
+- This is UI and local asset work only: no provider, paid model, credentials, database, Stripe, production config, user data, merge, main push, or deployment.
+
+---
+
 ### 2026-07-29 — [k3] Wave A frontend polish: premium art direction + original asset redo
 - Branch: `agent/k3/wave-a-frontend-polish` on top of `agent/gpt/higgsfield-wave-a` @ `3041ccf5` (human-directed task).
 - 32 new original Lab key visuals: hero key visual + 5 s brand loop, 4 character input stills (same Lab characters, premium studio re-shoot), 27 distinct recipe covers (unique toy/scene/palette per recipe). WebP ≤250 KB (hero ≤500 KB), generator watermark strip cropped. Registry: `docs/ASSETS.md` + `lib/recipeArt.ts`.

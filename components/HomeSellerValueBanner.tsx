@@ -13,7 +13,7 @@ export function HomeSellerValueBanner() {
         <div className="absolute inset-0" aria-hidden>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/demos/recipes/blind-box-unboxing.webp"
+            src="/demos/visual-v2/recipes/blind-box-unboxing.webp"
             alt=""
             loading="lazy"
             decoding="async"

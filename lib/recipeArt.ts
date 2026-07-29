@@ -1,12 +1,10 @@
 /**
  * Original recipe cover art (Wave A frontend polish, 2026-07-29).
  *
- * Every recipe owns a distinct editorial cover: a different original art-toy
- * subject, scene, composition, and palette per recipe. These are PIKBO Lab
- * key visuals generated for this registry — they illustrate the *recipe*,
- * they are not customer results and never stand in for a project's cached
- * output footage. Concept recipes (no cached footage) render these covers as
- * static cards instead of borrowing another recipe's video loop.
+ * The eight Home recipes use one original Pikbo character family so the wall
+ * reads as one visual system. The remaining Recipe index covers keep their
+ * broader editorial subjects. All covers illustrate the *recipe*: they are
+ * not customer results and never stand in for a project's cached footage.
  *
  * Files live locally at /demos/recipes/<slug>.webp (900×1200, ≤250 KB).
  * Full provenance table: docs/ASSETS.md.
@@ -24,59 +22,65 @@ export type RecipeArt = {
 };
 
 const ART_DIR = "/demos/recipes";
+const HOME_ART_DIR = "/demos/visual-v2/recipes";
 
 function art(slug: string, alt: string, subject: string, palette: string): RecipeArt {
   return { src: `${ART_DIR}/${slug}.webp`, alt, subject, palette };
 }
 
+function homeArt(
+  slug: string,
+  alt: string,
+  scene: string
+): RecipeArt {
+  return {
+    src: `${HOME_ART_DIR}/${slug}.webp`,
+    alt,
+    subject: `matte ivory asymmetric vinyl character · ${scene}`,
+    palette: "warm ivory / rain blue / walnut / restrained acid lime",
+  };
+}
+
 export const RECIPE_ART: Record<string, RecipeArt> = {
-  "floating-hero": art(
+  "floating-hero": homeArt(
     "floating-hero",
-    "Translucent aqua resin art toy levitating above a black pedestal with electric blue rim light",
-    "translucent aqua resin figure",
-    "electric blue / charcoal"
+    "Original matte ivory Pikbo character floating gently above a rainy wooden workbench",
+    "quiet floating workbench story"
   ),
-  "blind-box-unboxing": art(
+  "blind-box-unboxing": homeArt(
     "blind-box-unboxing",
-    "Matte cream blind box with lid lifting as a coral sofubi figure emerges, on hot pink seamless paper",
-    "coral sofubi + cream blind box",
-    "hot pink / cream"
+    "The same matte ivory Pikbo character peeking from a kraft blind box by a rain-lit window",
+    "kraft blind-box reveal"
   ),
-  "miniature-scene": art(
+  "miniature-scene": homeArt(
     "miniature-scene",
-    "Tiny khaki explorer vinyl toy in a handcrafted miniature cardboard city street with warm window lights",
-    "khaki explorer vinyl figure",
-    "warm tungsten / kraft"
+    "The same matte ivory Pikbo character walking through a handmade rainy paper street",
+    "miniature paper street"
   ),
-  "paparazzi-flash": art(
+  "paparazzi-flash": homeArt(
     "paparazzi-flash",
-    "Chrome-silver art toy on a dark red carpet surrounded by paparazzi flash bokeh",
-    "chrome-silver figure",
-    "silver / deep red / black"
+    "The same matte ivory Pikbo character caught in one restrained camera flash on a wooden desk",
+    "editorial camera-flash moment"
   ),
-  "360-spin-showcase": art(
+  "360-spin-showcase": homeArt(
     "360-spin-showcase",
-    "Gunmetal mecha model figure on a black turntable with acid lime edge lighting and rotation trail",
-    "gunmetal mecha kit",
-    "acid lime / gunmetal"
+    "The same matte ivory Pikbo character on a simple paper turntable beside the rainy window",
+    "paper turntable packshot"
   ),
-  "mystery-box-reveal": art(
+  "mystery-box-reveal": homeArt(
     "mystery-box-reveal",
-    "Glowing violet gift box bursting open with light rays and iridescent confetti, revealing a pearl-white resin figure",
-    "pearl-white resin figure + violet box",
-    "ultraviolet / pearl"
+    "The same matte ivory Pikbo character opening a small kraft parcel in soft window light",
+    "quiet mystery-parcel reveal"
   ),
-  "make-figure-dance": art(
+  "make-figure-dance": homeArt(
     "make-figure-dance",
-    "Magenta plush art toy monster mid-bounce with confetti frozen in the air under hot pink gel light",
-    "magenta plush monster",
-    "hot pink / charcoal"
+    "The same matte ivory Pikbo character making a playful step among paper scraps on the workbench",
+    "paper-confetti dance"
   ),
-  "display-case-glam": art(
+  "display-case-glam": homeArt(
     "display-case-glam",
-    "Jade-green resin grail art toy inside a lit glass museum display case with warm golden spotlights",
-    "jade resin grail",
-    "warm gold / jade"
+    "The same matte ivory Pikbo character displayed beneath a small glass cloche in warm side light",
+    "glass-cloche display"
   ),
   "collection-shelf-pan": art(
     "collection-shelf-pan",

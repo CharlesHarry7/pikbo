@@ -1,0 +1,122 @@
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 live-copy-smoke
+npm notice run node scripts/live-capability-copy-smoke.mjs --require-rendered
+live-capability copy smoke: PASS (18 source files, 166 rendered routes)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 link-check
+npm notice run bash scripts/link-check.sh http://127.0.0.1:3457
+Pikbo G4 link-check @ http://127.0.0.1:3457
+OK   / → 200
+OK   /create → 200
+OK   /modules → 200
+OK   /apps → 200
+OK   /effects → 200
+OK   /tools → 200
+OK   /library → 200
+OK   /pricing → 200
+OK   /community → 200
+OK   /explore → 200
+OK   /login → 200
+OK   /status → 200
+OK   /api/health → 200
+OK   /api/me → 200
+OK   /create?mode=seller-pack → 200
+OK   /create?job=etsy-listing → 200
+OK   /create?job=tiktok-hook → 200
+OK   /explore?cat=listing → 200
+OK   /explore?cat=unboxing → 200
+OK   /explore?cat=come-alive → 200
+OK   /explore?cat=social-hooks → 200
+OK   /explore?cat=story → 200
+OK   /projects/orbit-cgi → 200
+OK   /projects/moon-reveal → 200
+OK   /projects/not-a-registered-project → 404
+OK   /create?effect=360-spin-showcase&source=scout-spin&ratio=1:1&duration=5&channel=etsy → 200
+OK   /tools/ai-toy-video-generator → 200
+OK   /tools/toy-image-to-video-ai → 200
+OK   /tools/ai-product-video-generator-for-toys → 200
+OK   /tools/toy-unboxing-hook-generator → 200
+OK   /tools/toy-social-content-pack → 200
+OK   /for/etsy-listing-videos → 200
+OK   /for/tiktok-shop-product-videos → 200
+OK   /for/amazon-product-videos → 200
+OK   /for/instagram-reels-for-collectors → 200
+OK   /for/blind-box-brand-marketing → 200
+OK   /for/whatnot-live-selling → 200
+OK   /for/depop-shop-videos → 200
+OK   /for/etsy-sellers → 200
+OK   /for/etsy → 200
+OK   /for/tiktok-shop → 200
+OK   /for/tiktok → 200
+OK   /for/amazon → 200
+OK   /for/amazon-sellers → 200
+OK   /for/instagram → 200
+OK   /for/collectors → 200
+OK   /for/blind-box → 200
+OK   /for/whatnot → 200
+OK   /for/depop → 200
+OK   /privacy → 200
+OK   /terms → 200
+OK   /guides → 200
+OK   /models → 200
+OK   /cinema → 200
+OK   /image → 200
+OK   /supercomputer → 200
+OK   /flow → 200
+link-check: PASS
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 critical-path
+npm notice run bash scripts/critical-path.sh http://127.0.0.1:3457
+Pikbo critical path @ http://127.0.0.1:3457
+OK   / → 200
+OK   /create → 200
+OK   /effects → 200
+OK   /library → 200
+OK   /pricing → 200
+OK   /community → 200
+OK   /explore → 200
+OK   /projects/orbit-cgi → 200
+OK   /create?mode=seller-pack → 200
+OK   /for/etsy-listing-videos → 200
+OK   /login → 200
+OK   /status → 200
+OK   /modules → 200
+OK   /flow → 200
+OK   /apps → 200
+OK   /api/health → 200
+OK   /api/me → 200
+OK   /api/auth/status → 200
+OK   /api/generations → 200
+OK   /api/community/posts → 200
+OK   HEAD /api/health → 200
+OK   HEAD /api/me → 200 plan=free credits=10
+OK   HEAD /api/generations → 200 open=0 total=0 canceled=0
+OK   HEAD /api/image → 200 open=0 total=0 canceled=0
+OK   HEAD /api/community/posts → 200 ugc=0
+{"ok":true,"degraded":false,"acceptance":{"mode":"cached-only","demoCached":true,"validation":false,"softLive":false,"paid":false,"missingLiveRequirements":["authConfigured","durableAtomicReservationConfigured","durableReconciliationConfigured","providerConfigured","serverOwnedDeliverableConfigured"]},"t6":{"status":"blocked","fileBake":false,"playerOverlayIsNotFileWatermark":true,"freeLiveRawDownload":"blocked","reason":"No verified server-owned baked derivative exists. Free Mini live raw provider URLs must not be exposed or downloaded; player overlay is not a file watermark.","tooling":{"ffmpegHint":false,"ffprobeHint":false,"workerRequested":false,"serverOwnedWorkerReady":false,"derivativeServingImplemented":true,"storageAdapterImplemented":false}},"jobTimeoutMs":600000,"payments":{"clientEnabled":false,"serverCheckoutAllowed":false,"secretPresent":false,"secretMode":"missing","webhookSecretPresent":false,"priceCreatorPresent":false,"priceShopPresent":false,"liveKeysBlocked":false,"readyForTestCheckout":false,"notes":["NEXT_PUBLIC_PAYMENTS_ENABLED is not 1 — Coming soon UI","webhook secret missing — renewals not durable"]},"reservationSweep":{"expired":0,"releasedCredits":0,"backend":"local-file"},"durableServerOwnedJobs":{"envRequested":false,"implemented":false,"effective":false,"reason":"Hard-disabled until a durable generation_jobs worker settles provider completion"},"durableCreditsBackendNote":"local-file is single-node verification only; multi-node accounting needs Supabase RPCs + server-owned jobs","recoveryLedger":{"r1aAtomicRpcSource":true,"migration":"supabase/migrations/20260727213000_r1_atomic_generation_credits.sql","smoke":"npm run recovery-ledger","appliedRequiresBoss":true,"r1bRetryDeadlineSource":true,"r1cReconciliationSource":true,"r1cMigration":"supabase/migrations/20260727233000_r1c_generation_reconciliation.sql","r1cSmoke":"npm run recovery-reconciliation","r1cSchemaReady":false,"r1cEnabledByOperator":false,"localJournal":{"total":0,"byType":{"provider_succeeded_withheld":0,"confirmed_pre_output_failure":0,"settlement_unknown":0},"openWithheld":0,"note":"Process-memory R1c fallback only. Not multi-node durable. Never delivers media. Apply Supabase R1c migration for real settlement."},"note":"R1a/R1c are source-only until migration preflight + non-prod rehearsal; live beta stays fail-closed without both schemas. localJournal holds process-memory withhold facts when SQL is off."},"service":"pikbo","foundation":"L0-L3","time":"2026-07-29T08:51:28.343Z","fal":false,"stripe":false,"stripeWebhook":false,"sessionSecret":true,"mode":"cached-only","product":{"primary":"video","stills":"optional-support","generatePath":"/api/generate","imagePath":"/api/image","imageJobStatus":"/api/image/[id]","imageRetry":"POST /api/image/[id]/retry","idempotency":"client-key-session-scoped","imageIdempotency":"client-key-session-scoped","cancelGenerate":"DELETE /api/generations","cancelImage":"DELETE /api/image or DELETE /api/image/[id]","ledgerRetryPromote":"explicit-retryJobId-only","jobDeadline":"fixed-from-createdAt","downloadGate":"/api/downloads/{jobId|requestId}"},"billing":{"cachedDemoCredits":0,"liveJobCredits":null,"freeTrial":{"available":false,"planCredits":0,"clipsPerPeriod":0,"liveJobCredits":null,"modelClass":null,"durationSec":null,"resolution":null,"onPlayerMark":false,"failedLiveRefunds":false,"failedLiveRefundPolicy":"when_confirmed","ledgerTimeoutRefund":"unconfirmed","ledgerCancelRefund":"unconfirmed","scope":"cached-demo-only","stillsOnFree":"demo-only","reason":"Free live is closed; cached Pikbo Lab prototypes only"}},"rateLimit":{"summary":"session-8rpm + ip-24rpm + inflight-1","inflight":0,"inflightTtlMs":200000},"assets":{"mode":"local-memory","durable":false,"count":0,"reserved":0,"maxBytes":8000000,"ttlMs":900000,"note":"Process-memory stills; session-owned put; active get slides TTL. Not multi-node."},"demos":{"ok":true,"required":12,"present":12,"missing":[],"samples":{"required":4,"present":4,"missing":[]},"note":"Lab demos + sample stills present on disk"},"community":{"ugcConfigured":false,"note":"Real posts only when Supabase + migration applied; empty = Lab only"},"jobs":{"mode":"local-memory","durable":false,"count":0,"byStatus":{"queued":0,"running":0,"succeeded":0,"failed":0,"canceled":0},"open":0,"withheld":0,"webhookEvents":0,"jobTimeoutMs":600000,"timedOutThisProbe":0,"note":"Process-memory ledger; not multi-node durable"},"imageJobs":{"total":0,"byStatus":{"queued":0,"running":0,"succeeded":0,"failed":0,"canceled":0},"open":0,"jobTimeoutMs":90000,"timedOutThisProbe":0,"note":"Process-memory still ledger; idle"},"videoWebhook":{"secretConfigured":false,"requiresSecretInProduction":true},"ready":{"demo":true,"mode":"cached-only","softLive":false,"provider":false,"auth":false,"durableAtomicReservation":false,"durableReconciliation":false,"serverOwnedDeliverable":false,"paid":false,"durableCredits":false},"entitlements":{"writable":true,"path":"/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/data/entitlements.json","backend":"file"},"durableCredits":{"writable":true,"path":"/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/data/durable-credits.json","backend":"local-file","required":false,"configured":true,"schemaReady":false},"auth":{"mode":"disabled","configured":false,"providers":{"emailMagicLink":false,"google":false},"supabase":{"configured":false,"reachable":false,"hasServiceRole":false}},"checks":{"sessionSecret":true,"fal":false,"stripe":false,"stripeWebhook":false,"production":true,"entitlementsWritable":true,"durableCreditsWritable":true,"requireDurableCredits":false,"atomicReservationOperatorReady":false,"reconciliationOperatorReady":false,"supabaseConfigured":false,"supabaseServiceRole":false,"authConfigured":false,"durableAtomicReservationConfigured":false,"durableReconciliationConfigured":false,"serverOwnedDeliverableConfigured":false},"softLiveChecklist":{"SESSION_SECRET":true,"FAL_KEY":false,"STRIPE_SECRET_KEY":false,"STRIPE_WEBHOOK_SECRET":false,"entitlementsWritable":true,"AUTH_CONFIGURED":false,"DURABLE_ATOMIC_RESERVATION_CONFIGURED":false,"DURABLE_RECONCILIATION_CONFIGURED":false,"PROVIDER_CONFIGURED":false,"SERVER_OWNED_DELIVERABLE_CONFIGURED":false,"requiredForSoftLive":["AUTH_CONFIGURED","DURABLE_ATOMIC_RESERVATION_CONFIGURED","DURABLE_RECONCILIATION_CONFIGURED","PROVIDER_CONFIGURED","SERVER_OWNED_DELIVERABLE_CONFIGURED"],"optionalUntilPaid":["STRIPE_SECRET_KEY","STRIPE_WEBHOOK_SECRET","entitlementsWritable"],"notes":["Demo works without FAL_KEY (cached Lab clips, 0 credits)","R0: anonymous + Free always cached demos; live needs auth + durable reserve RPC","R1a: live reserve/capture/release uses pikbo_*_generation_v1 atomic RPCs (migration apply required)","R1c: ambiguous provider outcomes remain withheld until a leased reconciliation worker confirms capture or release","Provider and session secrets alone never make Soft Live ready","Set PIKBO_R1_ATOMIC_RESERVATION_READY only after the reviewed RPC migration passes non-production integration","Set PIKBO_R1_RECONCILIATION_READY only after the R1c migration and crash/race rehearsal pass in non-production","Live requires configured auth, Supabase atomic reservation, durable reconciliation, provider, and server-owned delivery","Paid later: durable entitlements + Stripe price IDs + webhook","PIKBO_FORCE_GENERATE_FAIL is ops-only and hard-off in production","See docs/LAUNCH.md"]},"devTopup":false,"forceGenerateFail":false,"video":{"free":"bytedance/seedance-2.0/mini/image-to-video","paid":"bytedance/seedance-2.0/image-to-video","fast":"bytedance/seedance-2.0/fast/image-to-video"},"image":"fal-ai/flux/schnell"}
+{"id":"aef8baff-f94f-4198-b53d-c21c3aa2476e","plan":"free","credits":10,"periodKey":"2026-07","watermark":true,"planName":"Free","clipsLeft":1,"creditsPerVideo":10,"mode":"demo-cached","cachedDemoFree":true,"liveJobCredits":10,"liveSpendAuthority":"durable-reserve-or-cached-demo","cookieIsLiveSpendAuthority":false,"freeTrial":{"planId":"free","isFreePlan":true,"credits":10,"clipsLeft":1,"liveJobCredits":10,"watermark":true,"cachedDemoFree":true,"freeLiveProvider":"blocked-until-t6","failedLiveRefunds":true,"failedLiveRefundPolicy":"when_confirmed","ledgerTimeoutRefund":"unconfirmed","ledgerCancelRefund":"unconfirmed","freeLive":{"modelClass":"seedance-mini","durationSec":5,"resolution":"480p","onPlayerMark":true,"liveEnabled":false},"exhausted":false,"stillsOnFree":"demo-only"},"authConfigured":false,"durableCreditsActive":false,"signedIn":false,"auth":null,"durable":null}
+{"auth":{"configured":false,"providers":{"emailMagicLink":false,"google":false},"mode":"disabled","message":"Sign-in is not configured yet. Soft-launch uses a guest cookie on this device only."},"supabase":{"configured":false,"reachable":false,"hasServiceRole":false},"durableCredits":{"backend":"local-file","writable":true,"configured":true}}
+{"ok":true,"mode":"local-memory","adapter":"process-memory","durable":false,"jobTimeoutMs":600000,"timedOutThisSweep":0,"touchedOpen":0,"listLimit":50,"listed":0,"total":0,"byStatus":{"queued":0,"running":0,"succeeded":0,"failed":0,"canceled":0},"open":0,"note":"In-process ledger for soft-launch recovery. Not multi-node durable. Use POST /api/generate for work. Queued/running jobs fail at fixed deadlineAt; GET is read-only. byStatus/open/total are full-session.","compatibility":{"syncGenerate":"/api/generate","jobStatus":"/api/generations/[id]","download":"/api/downloads/[id]"},"session":{"id":"cabe5838-6eb4-46f0-bd14-fd2c733573ce","plan":"free","credits":10,"periodKey":"2026-07","watermark":true,"planName":"Free","clipsLeft":1,"creditsPerVideo":10},"jobs":[]}
+{"ok":true,"configured":false,"ugc":true,"count":0,"posts":[],"labOnly":true,"note":"No real community posts yet — UI should show PIKBO Lab only, never fake UGC."}
+health mode=cached-only fal=False foundation=L0-L3 ready={'demo': True, 'mode': 'cached-only', 'softLive': False, 'provider': False, 'auth': False, 'durableAtomicReservation': False, 'durableReconciliation': False, 'serverOwnedDeliverable': False, 'paid': False, 'durableCredits': False}
+jobs.byStatus.canceled=0
+imageJobs.byStatus.canceled=0
+demo-cached gate PASS
+payments secretMode=missing clientEnabled=False
+t6 status=blocked freeLiveRawDownload=blocked
+recoveryLedger r1aSource=True appliedRequiresBoss=True r1bOpen=None smoke=npm run recovery-ledger
+me plan=free mode=demo-cached credits=10
+freeTrial exhausted=False clipsLeft=1 liveJobCredits=10
+freeLive seedance-mini 480p 5s
+me.refundPolicy=when_confirmed timeout=unconfirmed cancel=unconfirmed
+health.billing.freeTrial clips=0 refunds=False policy=when_confirmed timeout=unconfirmed cancel=unconfirmed scope=cached-demo-only
+demos ok=True present=12/12
+community ugcConfigured=False
+community posts count=0 labOnly=True configured=False
+auth keys=['auth', 'supabase', 'durableCredits']
+generations mode=local-memory jobs=0 open=0 touchedOpen=0
+critical-path: PASS
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 seller-pack-api-golden
+npm notice run node scripts/seller-pack-api-golden.mjs
+seller-pack-api-golden: PASS (1 Lab still · fixed 3 children · cached-only · 0 credits · provider unavailable)

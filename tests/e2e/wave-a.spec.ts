@@ -19,11 +19,39 @@ async function expectNoDocumentOverflow(page: Page) {
 
 async function saveScreenshot(page: Page, testInfo: TestInfo, surface: string) {
   await fs.mkdir(evidenceDir, { recursive: true });
-  const file = path.join(
-    evidenceDir,
-    `${testInfo.project.name}-${surface}.png`
+  await page.locator("video").evaluateAll((videos) =>
+    videos.forEach((video) => (video as HTMLVideoElement).pause())
   );
-  await page.screenshot({ path: file, fullPage: true });
+  const firstFile = path.join(
+    evidenceDir,
+    `${testInfo.project.name}-${surface}-first.png`
+  );
+  await page.screenshot({
+    path: firstFile,
+    animations: "disabled",
+  });
+
+  const viewportHeight = page.viewportSize()?.height || 900;
+  const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+  for (let y = 0; y < pageHeight; y += viewportHeight) {
+    await page.evaluate((nextY) => window.scrollTo(0, nextY), y);
+    await page.waitForTimeout(50);
+  }
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    document
+      .querySelectorAll("video")
+      .forEach((video) => (video as HTMLVideoElement).pause());
+  });
+  const fullFile = path.join(
+    evidenceDir,
+    `${testInfo.project.name}-${surface}-full.png`
+  );
+  await page.screenshot({
+    path: fullFile,
+    fullPage: true,
+    animations: "disabled",
+  });
 }
 
 async function saveResourceEvidence(page: Page, testInfo: TestInfo) {
@@ -86,6 +114,15 @@ test("Wave A closes Home → Project/Recipe → Create → Library safely", asyn
     page.getByRole("heading", { level: 1 }).first()
   ).toBeVisible();
   await expectNoDocumentOverflow(page);
+  const heroCreate = page.locator("[data-hero-action='create']");
+  await expect(heroCreate).toBeVisible();
+  if (page.viewportSize()!.width <= 768) {
+    const heroCreateBox = await heroCreate.boundingBox();
+    expect(heroCreateBox).not.toBeNull();
+    expect(heroCreateBox!.y + heroCreateBox!.height).toBeLessThanOrEqual(
+      page.viewportSize()!.height
+    );
+  }
 
   // Only the cinematic hero may attach an eager video source on first load.
   const videosWithAttachedSources = await page
@@ -101,6 +138,12 @@ test("Wave A closes Home → Project/Recipe → Create → Library safely", asyn
   );
 
   const viewport = page.viewportSize()!;
+  if (viewport.width <= 768) {
+    expect(
+      resources.some((entry) => /\/visual-v2\/hero-loop\.mp4(?:\?|$)/.test(entry.name)),
+      "mobile must not request the Hero loop before explicit Play"
+    ).toBe(false);
+  }
   const playing = await page.locator("video").evaluateAll((videos) =>
     videos.filter((video) => !(video as HTMLVideoElement).paused).length
   );
@@ -110,7 +153,7 @@ test("Wave A closes Home → Project/Recipe → Create → Library safely", asyn
   await expect
     .poll(() =>
       page
-        .locator("[data-home-hero='toy-cinema'] video")
+        .locator("[data-home-hero='proof-story'] video")
         .evaluate(
           (video) =>
             (video as HTMLVideoElement).paused ||

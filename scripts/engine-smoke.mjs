@@ -2307,10 +2307,15 @@ assert.match(guidesSrc24, /designer-toy-ai-video-vs-generic-tools/);
 assert.match(guidesSrc24, /seller-pack-workflow-listing-reveal-hook/);
 assert.match(guidesSrc24, /toy-unboxing-video-from-one-photo/);
 
-assert.match(
-  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /data-hero-recipe=\{recipeSlug\}/
-);
+{
+  const proofHero = fs.readFileSync(
+    join(root, "components/HomeCinemaHero.tsx"),
+    "utf8"
+  );
+  assert.match(proofHero, /data-hero-action="create"/);
+  assert.match(proofHero, /event:\s*"landing_view"/);
+  assert.doesNotMatch(proofHero, /data-hero-recipe|event:\s*"recipe_use"/);
+}
 const homeLaunchPackSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(
   homeLaunchPackSrc,
@@ -3079,14 +3084,16 @@ assert.match(
 assert.match(autoPlaySrc, /preload=\{allowMetadataPreload \? "metadata" : "none"\}/);
 assert.match(autoPlaySrc, /lazySources/);
 assert.match(autoPlaySrc, /playbackBudget/);
-assert.match(
-  fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /Hero owns LCP|lazySources/
-);
-assert.doesNotMatch(
-  fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /eager=\{i === 0\}/
-);
+{
+  const homeRecipeWall = fs.readFileSync(
+    join(root, "components/HomeViralWall.tsx"),
+    "utf8"
+  );
+  // Home covers are lazy static editorial art; cached video proof has its own
+  // Project door and therefore cannot steal the Hero's LCP/media budget.
+  assert.match(homeRecipeWall, /Editorial recipe art|<Image/);
+  assert.doesNotMatch(homeRecipeWall, /<AutoPlayVideo|eager=\{i === 0\}/);
+}
 const projectPage = fs.readFileSync(
   join(root, "app/projects/[slug]/page.tsx"),
   "utf8"
@@ -3785,7 +3792,7 @@ assert.match(deliveryPackSrc, /Sales fidelity|includeQc/);
 assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 
 
-// Homepage V1: immersive cinema → eight distinct Recipe cards → Launch Pack.
+// Homepage V2: proof-led brand story → eight editorial Recipe cards → Launch Pack.
 const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero|HomeViralWall|home-create/);
 const homeHeroSrc = fs.readFileSync(
@@ -3794,23 +3801,24 @@ const homeHeroSrc = fs.readFileSync(
 );
 assert.match(
   homeHeroSrc,
-  /Bring your toy to life\.|Turn one designer-toy photo into cinematic videos, stories and/
+  /One toy photo\. A world worth sharing\.|Input, set, and cached output proof/
 );
 assert.match(homeHeroSrc, /data-home-hero|data-hero-action="create"/);
-assert.match(homeHeroSrc, /const createHref = item\?\.href/);
+assert.match(homeHeroSrc, /event:\s*"landing_view"/);
+assert.doesNotMatch(homeHeroSrc, /recipe_use|data-hero-recipe/);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeViralWall.tsx"),
   "utf8"
 );
 assert.match(
   homeWallSrc,
-  /data-home-wall|data-recipe-card|wallDense|Use this recipe|Cached demo/
+  /data-home-wall|data-recipe-card|Editorial recipe art|Use this recipe|Cached proof/
 );
 assert.match(homeWallSrc, /href=\{item\.detailHref \|\|/);
 assert.match(homeWallSrc, /data-home-card-destination="recipe"/);
 assert.match(homeWallSrc, /href=\{item\.href\}/);
 assert.match(homeWallSrc, /recipe_open|recipe_use/);
-assert.match(homePageSrc, /HomeCinemaHero items=|data-home-upgrade="launch-pack"/);
+assert.match(homePageSrc, /<HomeCinemaHero \/>|data-home-upgrade="launch-pack"/);
 assert.doesNotMatch(
   [homePageSrc, homeHeroSrc, homeWallSrc, appShell].join("\n"),
   /Supabase|cached ledger|state machine|internal status|credits ledger/i

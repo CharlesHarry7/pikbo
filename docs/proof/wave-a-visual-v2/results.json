@@ -1,0 +1,1056 @@
+{
+  "config": {
+    "argv": [
+      "/Users/x/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/node_modules/.bin/playwright",
+      "test"
+    ],
+    "configFile": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/playwright.config.ts",
+    "rootDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "evidenceDir": "docs/proof/wave-a-visual-v2/e2e",
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/test-results/wave-a-visual-v2-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "evidenceDir": "docs/proof/wave-a-visual-v2/e2e",
+          "actualWorkers": 1
+        },
+        "id": "chromium-390x844",
+        "name": "chromium-390x844",
+        "testDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/test-results/wave-a-visual-v2-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "evidenceDir": "docs/proof/wave-a-visual-v2/e2e",
+          "actualWorkers": 1
+        },
+        "id": "chromium-768x1024",
+        "name": "chromium-768x1024",
+        "testDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/test-results/wave-a-visual-v2-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "evidenceDir": "docs/proof/wave-a-visual-v2/e2e",
+          "actualWorkers": 1
+        },
+        "id": "chromium-1440x900",
+        "name": "chromium-1440x900",
+        "testDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/test-results/wave-a-visual-v2-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "evidenceDir": "docs/proof/wave-a-visual-v2/e2e",
+          "actualWorkers": 1
+        },
+        "id": "firefox-390x844",
+        "name": "firefox-390x844",
+        "testDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/test-results/wave-a-visual-v2-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "evidenceDir": "docs/proof/wave-a-visual-v2/e2e",
+          "actualWorkers": 1
+        },
+        "id": "firefox-768x1024",
+        "name": "firefox-768x1024",
+        "testDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/test-results/wave-a-visual-v2-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "evidenceDir": "docs/proof/wave-a-visual-v2/e2e",
+          "actualWorkers": 1
+        },
+        "id": "firefox-1440x900",
+        "name": "firefox-1440x900",
+        "testDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/test-results/wave-a-visual-v2-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "evidenceDir": "docs/proof/wave-a-visual-v2/e2e",
+          "actualWorkers": 1
+        },
+        "id": "webkit-390x844",
+        "name": "webkit-390x844",
+        "testDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/test-results/wave-a-visual-v2-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "evidenceDir": "docs/proof/wave-a-visual-v2/e2e",
+          "actualWorkers": 1
+        },
+        "id": "webkit-768x1024",
+        "name": "webkit-768x1024",
+        "testDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/test-results/wave-a-visual-v2-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "evidenceDir": "docs/proof/wave-a-visual-v2/e2e",
+          "actualWorkers": 1
+        },
+        "id": "webkit-1440x900",
+        "name": "webkit-1440x900",
+        "testDir": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/wave-a-visual-v2-results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "outputFolder": "test-results/wave-a-visual-v2-report",
+          "open": "never"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "wave-a.spec.ts",
+      "file": "wave-a.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Wave A closes Home → Project/Recipe → Create → Library safely",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-390x844",
+              "projectName": "chromium-390x844",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7811,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:48:44.275Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "home-video-resources",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-637cb6e06d7424ee14da",
+          "file": "wave-a.spec.ts",
+          "line": 109,
+          "column": 5
+        },
+        {
+          "title": "Library groups device-local clips by Recipe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-390x844",
+              "projectName": "chromium-390x844",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 377,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:48:52.247Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-f1208f2bb2be1d0bfaa4",
+          "file": "wave-a.spec.ts",
+          "line": 252,
+          "column": 5
+        },
+        {
+          "title": "Wave A closes Home → Project/Recipe → Create → Library safely",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-768x1024",
+              "projectName": "chromium-768x1024",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7409,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:48:52.957Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "home-video-resources",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-96d99f21cfb99bc58592",
+          "file": "wave-a.spec.ts",
+          "line": 109,
+          "column": 5
+        },
+        {
+          "title": "Library groups device-local clips by Recipe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                  "location": {
+                    "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                    "line": 255,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "chromium-768x1024",
+              "projectName": "chromium-768x1024",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 194,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:00.510Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                      "location": {
+                        "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                        "line": 255,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-135188a725ab855d1ec1",
+          "file": "wave-a.spec.ts",
+          "line": 252,
+          "column": 5
+        },
+        {
+          "title": "Wave A closes Home → Project/Recipe → Create → Library safely",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-1440x900",
+              "projectName": "chromium-1440x900",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8660,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:01.038Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "home-video-resources",
+                      "contentType": "application/json",
+                      "body": "WwogIHsKICAgICJuYW1lIjogImh0dHA6Ly8xMjcuMC4wLjE6MzQ1Ny9kZW1vcy92aXN1YWwtdjIvaGVyby1sb29wLm1wNCIsCiAgICAiaW5pdGlhdG9yVHlwZSI6ICJ2aWRlbyIsCiAgICAidHJhbnNmZXJTaXplIjogMTgzODc1LAogICAgImVuY29kZWRCb2R5U2l6ZSI6IDE4MzU3NSwKICAgICJkdXJhdGlvbk1zIjogMgogIH0KXQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-faeeb79ea3f7a6008cf4",
+          "file": "wave-a.spec.ts",
+          "line": 109,
+          "column": 5
+        },
+        {
+          "title": "Library groups device-local clips by Recipe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                  "location": {
+                    "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                    "line": 255,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "chromium-1440x900",
+              "projectName": "chromium-1440x900",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 172,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:09.843Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                      "location": {
+                        "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                        "line": 255,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-bf728fd106ea3b55bbfb",
+          "file": "wave-a.spec.ts",
+          "line": 252,
+          "column": 5
+        },
+        {
+          "title": "Wave A closes Home → Project/Recipe → Create → Library safely",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-390x844",
+              "projectName": "firefox-390x844",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4776,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:10.328Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "home-video-resources",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-bc4ca0574edb8072a4ea",
+          "file": "wave-a.spec.ts",
+          "line": 109,
+          "column": 5
+        },
+        {
+          "title": "Library groups device-local clips by Recipe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                  "location": {
+                    "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                    "line": 255,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "firefox-390x844",
+              "projectName": "firefox-390x844",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 232,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:15.671Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                      "location": {
+                        "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                        "line": 255,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-a3c704323779762c25aa",
+          "file": "wave-a.spec.ts",
+          "line": 252,
+          "column": 5
+        },
+        {
+          "title": "Wave A closes Home → Project/Recipe → Create → Library safely",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-768x1024",
+              "projectName": "firefox-768x1024",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4957,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:16.376Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "home-video-resources",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-eab01e7b5f4ce26d394b",
+          "file": "wave-a.spec.ts",
+          "line": 109,
+          "column": 5
+        },
+        {
+          "title": "Library groups device-local clips by Recipe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                  "location": {
+                    "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                    "line": 255,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "firefox-768x1024",
+              "projectName": "firefox-768x1024",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 255,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:21.820Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                      "location": {
+                        "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                        "line": 255,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-ee167aceeae969f9c9b7",
+          "file": "wave-a.spec.ts",
+          "line": 252,
+          "column": 5
+        },
+        {
+          "title": "Wave A closes Home → Project/Recipe → Create → Library safely",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-1440x900",
+              "projectName": "firefox-1440x900",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6064,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:22.690Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "home-video-resources",
+                      "contentType": "application/json",
+                      "body": "WwogIHsKICAgICJuYW1lIjogImh0dHA6Ly8xMjcuMC4wLjE6MzQ1Ny9kZW1vcy92aXN1YWwtdjIvaGVyby1sb29wLm1wNCIsCiAgICAiaW5pdGlhdG9yVHlwZSI6ICJ2aWRlbyIsCiAgICAidHJhbnNmZXJTaXplIjogMTgzODc1LAogICAgImVuY29kZWRCb2R5U2l6ZSI6IDE4MzU3NSwKICAgICJkdXJhdGlvbk1zIjogMTUKICB9Cl0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-3fb38884ff15b6c8e834",
+          "file": "wave-a.spec.ts",
+          "line": 109,
+          "column": 5
+        },
+        {
+          "title": "Library groups device-local clips by Recipe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                  "location": {
+                    "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                    "line": 255,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "firefox-1440x900",
+              "projectName": "firefox-1440x900",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 291,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:29.249Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                      "location": {
+                        "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                        "line": 255,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-e92807641b1f96d819c8",
+          "file": "wave-a.spec.ts",
+          "line": 252,
+          "column": 5
+        },
+        {
+          "title": "Wave A closes Home → Project/Recipe → Create → Library safely",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "webkit-390x844",
+              "projectName": "webkit-390x844",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3553,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:30.085Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "home-video-resources",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-62ced7d074ac1ceaf569",
+          "file": "wave-a.spec.ts",
+          "line": 109,
+          "column": 5
+        },
+        {
+          "title": "Library groups device-local clips by Recipe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                  "location": {
+                    "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                    "line": 255,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "webkit-390x844",
+              "projectName": "webkit-390x844",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 287,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:33.915Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                      "location": {
+                        "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                        "line": 255,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-26ac56b2e1c2a2587968",
+          "file": "wave-a.spec.ts",
+          "line": 252,
+          "column": 5
+        },
+        {
+          "title": "Wave A closes Home → Project/Recipe → Create → Library safely",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "webkit-768x1024",
+              "projectName": "webkit-768x1024",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3784,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:34.546Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "home-video-resources",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-8e93dacaf806d32e7e20",
+          "file": "wave-a.spec.ts",
+          "line": 109,
+          "column": 5
+        },
+        {
+          "title": "Library groups device-local clips by Recipe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                  "location": {
+                    "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                    "line": 255,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "webkit-768x1024",
+              "projectName": "webkit-768x1024",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 339,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:38.565Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                      "location": {
+                        "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                        "line": 255,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-25e5220ee66facab2851",
+          "file": "wave-a.spec.ts",
+          "line": 252,
+          "column": 5
+        },
+        {
+          "title": "Wave A closes Home → Project/Recipe → Create → Library safely",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "webkit-1440x900",
+              "projectName": "webkit-1440x900",
+              "results": [
+                {
+                  "workerIndex": 8,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5002,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:39.257Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "home-video-resources",
+                      "contentType": "application/json",
+                      "body": "WwogIHsKICAgICJuYW1lIjogImh0dHA6Ly8xMjcuMC4wLjE6MzQ1Ny9kZW1vcy92aXN1YWwtdjIvaGVyby1sb29wLm1wNCIsCiAgICAiaW5pdGlhdG9yVHlwZSI6ICJ2aWRlbyIsCiAgICAidHJhbnNmZXJTaXplIjogMzAyLAogICAgImVuY29kZWRCb2R5U2l6ZSI6IDIsCiAgICAiZHVyYXRpb25NcyI6IDUKICB9LAogIHsKICAgICJuYW1lIjogImh0dHA6Ly8xMjcuMC4wLjE6MzQ1Ny9kZW1vcy92aXN1YWwtdjIvaGVyby1sb29wLm1wNCIsCiAgICAiaW5pdGlhdG9yVHlwZSI6ICJ2aWRlbyIsCiAgICAidHJhbnNmZXJTaXplIjogMTgzODc1LAogICAgImVuY29kZWRCb2R5U2l6ZSI6IDE4MzU3NSwKICAgICJkdXJhdGlvbk1zIjogNQogIH0KXQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-458209a1a86d815d544e",
+          "file": "wave-a.spec.ts",
+          "line": 109,
+          "column": 5
+        },
+        {
+          "title": "Library groups device-local clips by Recipe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                  "location": {
+                    "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                    "line": 255,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "webkit-1440x900",
+              "projectName": "webkit-1440x900",
+              "results": [
+                {
+                  "workerIndex": 8,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 375,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-29T08:49:44.498Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "One-browser stateful grouping contract; the closed loop runs on all nine projects.",
+                      "location": {
+                        "file": "/Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/tests/e2e/wave-a.spec.ts",
+                        "line": 255,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "fe8c09d4c5168f46218b-9cac4489fe563c890885",
+          "file": "wave-a.spec.ts",
+          "line": 252,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-07-29T08:48:44.047Z",
+    "duration": 60885.951,
+    "expected": 10,
+    "skipped": 8,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

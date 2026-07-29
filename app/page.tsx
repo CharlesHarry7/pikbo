@@ -50,11 +50,23 @@ export const metadata: Metadata = {
 export default function Home() {
   const showcase = buildHomeShowcaseFeed();
   const projects = communityProjects().slice(0, 8);
-  const lcpPoster = showcase[0]?.demo?.poster ?? "/demos/orbit-still.webp";
 
   return (
     <>
-      <link rel="preload" as="image" href={lcpPoster} fetchPriority="high" />
+      <link
+        rel="preload"
+        as="image"
+        href="/demos/visual-v2/hero-mobile.webp"
+        media="(max-width: 768px)"
+        fetchPriority="high"
+      />
+      <link
+        rel="preload"
+        as="image"
+        href="/demos/visual-v2/hero-desktop.webp"
+        media="(min-width: 769px)"
+        fetchPriority="high"
+      />
       <JsonLd
         data={[
           websiteJsonLd(),
@@ -67,7 +79,7 @@ export default function Home() {
         ]}
       />
 
-      <HomeCinemaHero items={showcase} />
+      <HomeCinemaHero />
       <HomeToolShelf />
       <HomeSellerValueBanner />
       <HomeViralWall items={showcase} />

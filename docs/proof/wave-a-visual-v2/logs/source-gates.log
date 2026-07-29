@@ -1,0 +1,89 @@
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 engine-smoke
+npm notice run node scripts/engine-smoke.mjs
+health truth contract: 32/32 prerequisite combinations passed
+engine-smoke: PASS
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 wave-a-contract-smoke
+npm notice run node scripts/wave-a-contract-smoke.mjs
+wave-a-contract-smoke: PASS (capabilities, links, filters, provenance, local Library, responsive safeguards, autoplay, 404)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 wave-a-visual-v2-smoke
+npm notice run node scripts/wave-a-visual-v2-smoke.mjs
+wave-a-visual-v2-smoke: PASS (8 unified Recipe covers; mobile 34326 B; desktop 65608 B)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 recovery-cost-gate
+npm notice run node scripts/recovery-cost-gate.mjs
+recovery-qa: PASS (R0 cost-gate · concurrent overspend · failed refund · no double settle/release · Seller Pack partial · CI critical-path fail-closed)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 recovery-qa
+npm notice run node scripts/recovery-qa.mjs
+recovery-qa: PASS (R0 cost-gate · concurrent overspend · failed refund · no double settle/release · Seller Pack partial · CI critical-path fail-closed)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 recovery-ledger
+npm notice run node scripts/recovery-ledger.mjs
+recovery-ledger: PASS (20-way idempotency, capture/release idempotency, insufficient=0 provider calls)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 recovery-retry-deadline
+npm notice run node scripts/recovery-retry-deadline.mjs
+recovery-retry-deadline: PASS (exact retry token winner=1/20; polling cannot extend fixed deadline; image still R1b parity)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 recovery-reconciliation
+npm notice run node scripts/recovery-reconciliation.mjs
+recovery-reconciliation: PASS (20-way lease winner=1; duplicate event; timeout capture; release/capture race; crash takeover)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 t5-auth-credits-smoke
+npm notice run node --experimental-strip-types scripts/t5-auth-credits-smoke.mjs
+t5-auth-credits-smoke: PASS (pure engine reserve/settle/release/migrate/expire · auth disabled default · T5/R1 migrations · live reservation source locks)
+(node:28173) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/lib/durableCredits/engine.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 t5-r0-critical-path
+npm notice run node --experimental-strip-types scripts/t5-r0-critical-path.mjs
+t5-r0-critical-path: PASS (R0 gate · generate/image source locks · refund honesty · engine release/settle idempotency · magic-link NOT_CONFIGURED · CI fail-closed template)
+(node:28194) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/lib/durableCredits/engine.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 r0-safety-net
+npm notice run node --experimental-strip-types scripts/r0-safety-net.mjs
+(node:28215) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/lib/reservationLifecycle.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/x/Documents/Codex/2026-07-29/codex-chatgpt-pro-chatgpt-pro-codex-3/work/pikbo-worktrees/k3-wave-a-visual-v2/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+r0-safety-net: PASS (release≤1 · settle-blocks-release · 20-way concurrent · capture-throw withheld x2 · timeout race · finally · release-pending truth · route wire)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 showcase-evidence-smoke
+npm notice run node scripts/showcase-evidence-smoke.mjs
+showcase-evidence smoke passed: 8 distinct cached previews, no numeric proof score, concepts static
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 showcase-promotion-gate
+npm notice run node scripts/showcase-promotion-gate.mjs
+showcase-promotion-gate: PASS (1 valid official, 8 invalid evidence fixtures + registry mismatch, prototypes unchanged)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 product-proof-smoke
+npm notice run node scripts/product-proof-smoke.mjs
+product-proof smoke passed: 8 proof recipes, static concepts, 1/2 autoplay budget
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 mobile-proof-regression
+npm notice run node scripts/mobile-proof-regression.mjs
+mobile proof regression: source contracts PASS
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 seo-cold-start-smoke
+npm notice run node scripts/seo-cold-start-smoke.mjs
+seo-cold-start-smoke: PASS (7 canonical URLs; Google-first metadata, trust, guide evidence and one primary-tool video)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 seller-pack-cached-smoke
+npm notice run node scripts/seller-pack-cached-smoke.mjs
+seller-pack-cached-smoke: PASS (contract trio · cached golden 0 provider · Free Mini block · partial export · recovery honesty · R0)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 launch-pack-main-path-smoke
+npm notice run node scripts/launch-pack-main-path-smoke.mjs
+launch-pack-main-path-smoke: PASS (home upgrade → fixed trio → downloadable-only export)
+npm warn cli npm v12.0.1 does not support Node.js v24.14.0. This version of npm supports the following node versions: `^22.22.2 || ^24.15.0 || >=26.0.0`. You can find the latest version at https://nodejs.org/.
+npm notice run pikbo@0.1.0 live-copy-smoke
+npm notice run node scripts/live-capability-copy-smoke.mjs
+live-capability copy smoke: PASS (18 source files, 0 rendered routes)

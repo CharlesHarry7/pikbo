@@ -13,6 +13,7 @@
     "g6-api-smoke": "node scripts/g6-api-smoke.mjs",
     "engine-smoke": "node scripts/engine-smoke.mjs",
     "wave-a-contract-smoke": "node scripts/wave-a-contract-smoke.mjs",
+    "wave-a-visual-v2-smoke": "node scripts/wave-a-visual-v2-smoke.mjs",
     "product-proof-smoke": "node scripts/product-proof-smoke.mjs",
     "mobile-proof-regression": "node scripts/mobile-proof-regression.mjs",
     "showcase-evidence-smoke": "node scripts/showcase-evidence-smoke.mjs",
