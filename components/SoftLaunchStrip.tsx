@@ -43,6 +43,8 @@ export function SoftLaunchStrip() {
   const demo = isDemoMode(me);
   const trialDone = freeTrialExhausted(me);
   const freeLive = me?.freeTrial?.freeLive;
+  const freeLiveModelLabel =
+    freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "Free Mini";
   const clipsLeft =
     typeof me?.freeTrial?.clipsLeft === "number"
       ? me.freeTrial.clipsLeft
@@ -53,7 +55,7 @@ export function SoftLaunchStrip() {
     : trialDone
       ? "Free Mini trial used · Lab demos still free · compare finite plans"
       : freeLive
-        ? `Free Mini · ${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · refunds when confirmed`
+        ? `${freeLiveModelLabel} · ${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · refunds when confirmed`
         : "Live access is not confirmed · continue with cached Lab prototypes";
 
   // Homepage: keep conversion on the single Launch Pack upload path.
@@ -66,7 +68,7 @@ export function SoftLaunchStrip() {
     ? "Compare plans"
     : demo
       ? "Preview cached Lab video"
-      : "Try free · Mini 5s";
+      : `Generate · ${freeLiveModelLabel} 5s`;
 
   return (
     <div className="border-b border-[#c8ff3d]/25 bg-gradient-to-r from-[#c8ff3d]/[0.12] via-black to-black px-3 py-2.5 sm:px-5">

@@ -21,6 +21,7 @@ export type DirectorPlanInput = {
   aspectRatio: "9:16" | "16:9" | "1:1";
   durationSec: number;
   resolution: string;
+  modelClass?: "seedance-mini" | "seedance-fast" | string;
   demoMode: boolean;
   isFree: boolean;
   trialDone: boolean;
@@ -58,6 +59,8 @@ export function buildDirectorPlan(input: DirectorPlanInput): DirectorPlan {
   const credits = CREDITS_PER_VIDEO;
   const rows: DirectorPlanRow[] = [];
   const blockers: string[] = [];
+  const freeModelLabel =
+    input.modelClass === "seedance-fast" ? "Fast" : "Mini";
 
   if (!input.hasImage) {
     blockers.push("Add a toy photo first");
@@ -102,7 +105,7 @@ export function buildDirectorPlan(input: DirectorPlanInput): DirectorPlan {
     value: input.demoMode
       ? "Lab demo · 0 credits · not your photo motion"
       : input.isFree
-        ? `Mini · ${input.durationSec}s · ${input.resolution} · ${input.aspectRatio} · on-player mark`
+        ? `${freeModelLabel} · ${input.durationSec}s · ${input.resolution} · ${input.aspectRatio} · on-player mark`
         : `${input.durationSec}s · ${input.resolution} · ${input.aspectRatio}`,
     tone: input.demoMode ? "muted" : "ok",
   });
@@ -162,7 +165,9 @@ export function buildDirectorPlan(input: DirectorPlanInput): DirectorPlan {
   const modeLabel = input.demoMode
     ? "Lab preview"
     : input.isFree
-      ? "Live Mini trial"
+      ? input.modelClass === "seedance-fast"
+        ? "Private Fast validation"
+        : "Live Mini trial"
       : "Live generation";
 
   const ready = input.hasImage;

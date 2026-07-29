@@ -28,10 +28,10 @@ function numberValue(value: unknown): number | null {
 export function providerValidationBudgetUsd(
   env: NodeJS.ProcessEnv = process.env
 ): number {
+  const gate = providerValidationEnvironmentGate(env);
   if (
     env.PIKBO_PROVIDER_VALIDATION_MODE !== "1" ||
-    env.NODE_ENV === "production" ||
-    env.VERCEL_ENV === "production"
+    !gate.environmentAllowed
   ) {
     return 0;
   }
@@ -42,6 +42,58 @@ export function providerValidationBudgetUsd(
     HARD_VALIDATION_CAP_USD,
     Math.floor(parsed * 100) / 100
   );
+}
+
+/**
+ * Deployment-only gate for the paid provider validation budget.
+ *
+ * Vercel Preview always needs its own explicit opt-in, even if NODE_ENV is
+ * accidentally overridden. Vercel Production and plain production runtimes
+ * remain hard-closed. Local development/test may opt in without pretending to
+ * be a Vercel Preview.
+ */
+export function providerValidationEnvironmentGate(
+  env: NodeJS.ProcessEnv = process.env
+): {
+  environment:
+    | "vercel-production"
+    | "vercel-preview"
+    | "local-nonproduction"
+    | "closed";
+  previewOverride: boolean;
+  environmentAllowed: boolean;
+  productionHardClosed: boolean;
+} {
+  const vercelEnvironment = env.VERCEL_ENV;
+  const isVercelProduction = vercelEnvironment === "production";
+  const isVercelPreview = vercelEnvironment === "preview";
+  const previewOverride =
+    isVercelPreview &&
+    env.PIKBO_PREVIEW_PROVIDER_VALIDATION_ENABLED === "1";
+  const localNonProduction =
+    (vercelEnvironment == null ||
+      vercelEnvironment === "" ||
+      vercelEnvironment === "development") &&
+    env.NODE_ENV !== "production";
+  const productionHardClosed =
+    isVercelProduction ||
+    (env.NODE_ENV === "production" && !isVercelPreview);
+  const environmentAllowed =
+    !productionHardClosed &&
+    (isVercelPreview ? previewOverride : localNonProduction);
+
+  return {
+    environment: isVercelProduction
+      ? "vercel-production"
+      : isVercelPreview
+        ? "vercel-preview"
+        : localNonProduction
+          ? "local-nonproduction"
+          : "closed",
+    previewOverride,
+    environmentAllowed,
+    productionHardClosed,
+  };
 }
 
 function modelAdmitted(modelId: string): boolean {

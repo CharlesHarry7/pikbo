@@ -15,6 +15,14 @@ import { imageJobsProbe } from "@/lib/imageJobs";
 import { localReconciliationProbe } from "@/lib/durableCredits/localReconciliationJournal";
 import { privateResultsProbe } from "@/lib/privateGenerationResults";
 import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
+import {
+  providerValidationBudgetUsd,
+  providerValidationEnvironmentGate,
+} from "@/lib/durableProviderBudget";
+import {
+  SELLER_PACK_LIVE_MODEL_ID,
+  SELLER_PACK_LIVE_RESOLUTION,
+} from "@/lib/models";
 // NextResponse used for GET + HEAD
 
 export const runtime = "nodejs";
@@ -217,9 +225,9 @@ export async function GET() {
         planCredits: ready.softLive ? 10 : 0,
         clipsPerPeriod: ready.softLive ? 1 : 0,
         liveJobCredits: ready.softLive ? 10 : null,
-        modelClass: ready.softLive ? "seedance-mini" : null,
+        modelClass: ready.softLive ? SELLER_PACK_LIVE_MODEL_ID : null,
         durationSec: ready.softLive ? 5 : null,
-        resolution: ready.softLive ? "480p" : null,
+        resolution: ready.softLive ? SELLER_PACK_LIVE_RESOLUTION : null,
         onPlayerMark: ready.softLive,
         /**
          * Recoverable provider/validation fails restore the debit when the
@@ -337,6 +345,23 @@ export async function GET() {
           "Does not enable anonymous provider spend",
           "Private Preview results use owner-gated Pikbo storage; public Free/T6 remains closed",
         ],
+      };
+    })(),
+    /** Non-production paid-provider admission (presence and ceiling only). */
+    providerValidation: (() => {
+      const deploymentGate = providerValidationEnvironmentGate();
+      const requested =
+        process.env.PIKBO_PROVIDER_VALIDATION_MODE === "1";
+      const ceilingUsd = providerValidationBudgetUsd();
+      return {
+        requested,
+        environment: deploymentGate.environment,
+        previewOverride: deploymentGate.previewOverride,
+        enabled: ceilingUsd > 0,
+        ceilingUsd,
+        productionHardClosed: deploymentGate.productionHardClosed,
+        note:
+          "The database project-wide budget remains authoritative; this field never exposes keys, users, or remaining spend.",
       };
     })(),
     /** Live-readiness checklist (presence only — never echo secrets) */

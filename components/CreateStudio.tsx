@@ -740,8 +740,23 @@ export function CreateStudio({
       : creditsLeft !== null
         ? Math.floor(creditsLeft / CREDITS_PER_VIDEO)
         : null;
-  // Free tier is hard-locked to 5s server-side; keep UI in sync without an effect.
-  const effectiveDuration = isFree ? 5 : duration;
+  // Private validation is one measured Fast 720p / 5s cost envelope. Cached
+  // Free remains the labeled Mini 480p prototype contract.
+  const effectiveDuration = liveEntitled
+    ? freeLive?.durationSec ?? 5
+    : isFree
+      ? 5
+      : duration;
+  const effectiveResolution = liveEntitled
+    ? freeLive?.resolution ?? "720p"
+    : isFree
+      ? "480p"
+      : resolution;
+  const effectiveModel = liveEntitled
+    ? freeLive?.modelClass ?? "seedance-fast"
+    : modelId;
+  const effectiveModelLabel =
+    effectiveModel === "seedance-fast" ? "Fast" : "Mini";
 
   async function generate(opts?: {
     imageOverride?: string;
@@ -781,9 +796,8 @@ export function CreateStudio({
       opts?.aspectOverride ??
       aspectRatio) as "9:16" | "16:9" | "1:1";
     const requestDuration = retry?.duration ?? effectiveDuration;
-    const requestModel = retry?.model ?? modelId;
-    const requestRes =
-      retry?.resolution ?? (isFree ? "480p" : resolution);
+    const requestModel = retry?.model ?? effectiveModel;
+    const requestRes = retry?.resolution ?? effectiveResolution;
     const requestSeed =
       retry && typeof retry.seed === "number"
         ? retry.seed
@@ -856,6 +870,7 @@ export function CreateStudio({
         model: requestModel,
         resolution: requestRes,
         ownsRights: true,
+        allowProviderSpend: !demoMode,
         retryJobId: retryHandoff?.retryJobId,
         retryToken: retryHandoff?.retryToken,
         seed:
@@ -1632,9 +1647,8 @@ export function CreateStudio({
       effectName: preset.name,
       aspectRatio,
       durationSec: effectiveDuration,
-      resolution: isFree
-        ? freeLive?.resolution || "480p"
-        : resolution,
+      resolution: effectiveResolution,
+      modelClass: effectiveModel,
       demoMode,
       isFree: Boolean(isFree),
       trialDone,
@@ -1651,9 +1665,9 @@ export function CreateStudio({
     preset.name,
     aspectRatio,
     effectiveDuration,
+    effectiveResolution,
+    effectiveModel,
     isFree,
-    freeLive?.resolution,
-    resolution,
     demoMode,
     trialDone,
     creditsLeft,
@@ -1711,7 +1725,7 @@ export function CreateStudio({
               {demoMode
                 ? PROVENANCE.cachedDemo
                 : isFree
-                  ? "Live Mini trial"
+                  ? "Private Fast validation"
                   : PROVENANCE.liveGeneration}
             </span>
             <p className="text-[11px] leading-snug text-[var(--fg-muted)] sm:text-xs">
@@ -1731,10 +1745,10 @@ export function CreateStudio({
                 <>
                   Your photo ·{" "}
                   {isFree && freeLive
-                    ? `Mini ${freeLive.durationSec}s ${freeLive.resolution}`
+                    ? `${effectiveModelLabel} ${freeLive.durationSec}s ${freeLive.resolution}`
                     : isFree
-                      ? "Mini 5s 480p"
-                      : `${effectiveDuration}s · ${resolution}`}{" "}
+                      ? `${effectiveModelLabel} 5s ${effectiveResolution}`
+                      : `${effectiveDuration}s · ${effectiveResolution}`}{" "}
                   · {CREDITS_PER_VIDEO} cr
                   {clipsLeft !== null
                     ? ` · ~${clipsLeft} live left`
@@ -2153,7 +2167,7 @@ export function CreateStudio({
                 </p>
               </div>
               <span className="shrink-0 rounded-full border border-[var(--mint)]/25 bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-[var(--mint)]">
-                {effectiveDuration}s · {isFree ? "480p" : resolution}
+                {effectiveDuration}s · {effectiveResolution}
               </span>
             </div>
           </div>
@@ -2289,7 +2303,9 @@ export function CreateStudio({
                   </div>
                   {isFree && (
                     <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
-                      Free trial locked to Mini · 5s · 480p · on-player mark
+                      {liveEntitled
+                        ? "Invited validation is fixed to Fast · 5s · 720p · private delivery"
+                        : "Free cached prototype · Mini · 5s · 480p · on-player mark"}
                     </p>
                   )}
                 </div>
@@ -2300,21 +2316,29 @@ export function CreateStudio({
                   </p>
                   <div className="mt-1.5 flex gap-2">
                     {(["480p", "720p"] as const).map((r) => {
-                      const locked = Boolean(isFree && r === "720p");
+                      const locked = liveEntitled
+                        ? r !== effectiveResolution
+                        : Boolean(isFree && r === "720p");
                       return (
                         <button
                           key={r}
                           type="button"
                           onClick={() => {
                             if (locked) {
-                              setShowPaywall(true);
-                              setError("720p is on paid plans.");
+                              if (liveEntitled) {
+                                setError(
+                                  "Invited validation is fixed to Fast 720p."
+                                );
+                              } else {
+                                setShowPaywall(true);
+                                setError("720p is on paid plans.");
+                              }
                               return;
                             }
                             setResolution(r);
                           }}
                           className={`flex-1 rounded-lg border py-2 text-sm font-semibold ${
-                            (isFree ? "480p" : resolution) === r
+                            effectiveResolution === r
                               ? "border-[var(--brand)] bg-[var(--grad-soft)]"
                               : "border-[var(--border)] text-[var(--fg-muted)]"
                           } ${locked ? "opacity-60" : ""}`}
@@ -2333,13 +2357,23 @@ export function CreateStudio({
                   </p>
                   <div className="mt-1.5 flex flex-wrap gap-2">
                     {MODELS.map((m) => {
-                      const lockedPaid = Boolean(isFree && !m.free);
-                      const active = modelId === m.id;
+                      const lockedForValidation =
+                        liveEntitled && m.id !== effectiveModel;
+                      const lockedPaid = Boolean(
+                        !liveEntitled && isFree && !m.free
+                      );
+                      const active = effectiveModel === m.id;
                       return (
                         <button
                           key={m.id}
                           type="button"
                           onClick={() => {
+                            if (lockedForValidation) {
+                              setError(
+                                "Invited validation is fixed to Seedance Fast."
+                              );
+                              return;
+                            }
                             if (lockedPaid) {
                               setShowPaywall(true);
                               setError(
@@ -2354,16 +2388,26 @@ export function CreateStudio({
                             active
                               ? "border-[var(--mint)] bg-[var(--mint)]/15 text-[var(--mint)]"
                               : "border-[var(--border)] text-[var(--fg-muted)]"
-                          } ${lockedPaid ? "opacity-60" : ""}`}
+                          } ${lockedPaid || lockedForValidation ? "opacity-60" : ""}`}
                         >
                           {m.label}
-                          {lockedPaid ? " · paid" : m.free ? " · free" : ""}
+                          {lockedForValidation
+                            ? " · fixed off"
+                            : lockedPaid
+                              ? " · paid"
+                              : liveEntitled && active
+                                ? " · fixed"
+                                : m.free
+                                  ? " · free"
+                                  : ""}
                         </button>
                       );
                     })}
                   </div>
                   <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
-                    Soft launch enforces Mini for free live jobs. No fake multi-model shelf.
+                    {liveEntitled
+                      ? "Private validation enforces one measured Fast 720p contract."
+                      : "Cached Free uses Mini 480p. No fake multi-model shelf."}
                   </p>
                 </div>
 
@@ -2489,7 +2533,7 @@ export function CreateStudio({
                   </p>
                   <p className="mt-0.5 text-[11px] text-white/50">
                     {aspectRatio} · {effectiveDuration}s ·{" "}
-                    {isFree ? "480p" : resolution}
+                    {effectiveResolution}
                   </p>
                 </div>
                 <span className="shrink-0 rounded-full border border-[var(--mint)]/30 bg-black/35 px-2.5 py-1 text-[11px] font-black text-[var(--mint)]">
@@ -3029,7 +3073,7 @@ export function CreateStudio({
                   <div>
                     <dt className="text-[var(--fg-dim)]">Resolution</dt>
                     <dd className="font-semibold text-[var(--fg)]">
-                      {resultResolution ?? (isFree ? "480p" : resolution)}
+                      {resultResolution ?? effectiveResolution}
                     </dd>
                   </div>
                   <div>
