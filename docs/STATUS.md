@@ -21,6 +21,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T6-PROOF | Non-prod baked watermark proof + fail-closed controlled delivery source | Grok / Codex | done | main via PR #51 | GitHub CI #481 green; real ffmpeg/ffprobe decoded-pixel proof, SSRF/IPv6 gates, 20-way owned-write fixture and 193-route build passed |
 | T6-PRODUCTION | Apply reviewed SQL, shared object storage and scheduled worker rehearsal | External / unassigned | blocked | none | `SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED=false`; disposable DB rehearsal, shared storage and worker deployment are required before Free live download |
 | WB-WAIT | No growth work before publishable product proof | WorkBuddy | blocked | none | #41/#46 closed; wait for explicit new queue row |
+| REAL-LOOP | Authenticated owned-toy upload → private Seedance result → durable Library/download, then fixed 3-output Launch Pack | Codex | doing | `agent/gpt/real-launch-loop` | Non-production P0/P1 implementation only; production remains validation until DB rehearsal, privacy/ledger gates and real-call evidence pass |
 
 Completion of an old row below does not authorize a new branch. Codex must add a row here first.
 
