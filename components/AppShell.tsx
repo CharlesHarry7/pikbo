@@ -14,21 +14,32 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
 import { ToastProvider } from "@/components/Toast";
 import { trackPageView } from "@/lib/analytics";
-import { MOBILE_NAV, PRIMARY_NAV } from "@/lib/softLaunch";
+import {
+  CAPABILITY_STATE_LABELS,
+  MOBILE_NAV,
+  PRIMARY_NAV,
+  WAVE_A_DESTINATIONS,
+} from "@/lib/softLaunch";
 import { cn } from "@/lib/utils";
 
 const MORE = [
-  { href: "/tools", label: "Tools", tag: null },
-  { href: "/guides", label: "Guides", tag: null },
-  { href: "/toys", label: "Toy types", tag: null },
-  { href: "/community", label: "Pikbo Lab", tag: "Lab" },
-  { href: "/login", label: "Sign in", tag: null },
-  { href: "/profile", label: "Profile", tag: "Local" },
+  { href: "/tools", label: "Tools", tag: null, state: null },
+  {
+    href: WAVE_A_DESTINATIONS.learn.href,
+    label: WAVE_A_DESTINATIONS.learn.label,
+    tag: null,
+    state: WAVE_A_DESTINATIONS.learn.state,
+  },
+  { href: "/toys", label: "Toy types", tag: null, state: null },
+  { href: "/community", label: "Pikbo Lab", tag: "Lab", state: null },
+  { href: "/login", label: "Sign in", tag: null, state: null },
+  { href: "/profile", label: "Profile", tag: "Local", state: null },
 ] as const;
 
 function active(path: string, href: string) {
-  if (href === "/") return path === "/";
-  return path === href || path.startsWith(`${href}/`);
+  const route = href.split("?")[0] || "/";
+  if (route === "/") return path === "/";
+  return path === route || path.startsWith(`${route}/`);
 }
 
 function MoreMenu({ path }: { path: string }) {
@@ -77,6 +88,12 @@ function MoreMenu({ path }: { path: string }) {
               role="menuitem"
               href={item.href}
               onClick={() => setOpen(false)}
+              data-capability-state={item.state ?? undefined}
+              title={
+                item.state
+                  ? `${item.label} · ${CAPABILITY_STATE_LABELS[item.state]}`
+                  : undefined
+              }
               className={cn(
                 "flex items-center justify-between gap-4 rounded-xl px-3 py-2 text-[13px] font-medium",
                 active(path, item.href)
@@ -129,7 +146,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <Link
           href="/"
           className="flex shrink-0 items-center"
-          aria-label="Pikbo Explore"
+          aria-label="Pikbo Home"
         >
           <Logo size={30} />
         </Link>
@@ -139,17 +156,24 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         >
           {PRIMARY_NAV.map((item) => (
             <Link
-              key={item.href}
+              key={item.id}
               href={item.href}
               aria-current={active(path, item.href) ? "page" : undefined}
+              data-capability-state={item.state}
+              title={`${item.label} · ${CAPABILITY_STATE_LABELS[item.state]}${item.note ? ` · ${item.note}` : ""}`}
               className={cn(
-                "relative whitespace-nowrap text-[13px] font-semibold transition-colors",
+                "relative inline-flex items-center gap-1 whitespace-nowrap text-[13px] font-semibold transition-colors",
                 active(path, item.href)
                   ? "text-white"
                   : "text-white/52 hover:text-white"
               )}
             >
               {item.label}
+              {item.state !== "live" ? (
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white/35">
+                  {CAPABILITY_STATE_LABELS[item.state]}
+                </span>
+              ) : null}
               {active(path, item.href) ? (
                 <span className="absolute -bottom-[18px] left-0 right-0 h-px bg-[#c8ff3d] shadow-[0_0_12px_#c8ff3d]" />
               ) : null}
@@ -161,9 +185,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           <LanguageSwitcher />
           <CreditsBadge />
           <Link
-            href="/create"
+            href={WAVE_A_DESTINATIONS.generate.href}
             className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[13px] font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.24)] transition hover:-translate-y-0.5 hover:bg-[#d5ff6b]"
             data-appshell-cta="generate"
+            data-capability-state={WAVE_A_DESTINATIONS.generate.state}
           >
             {t("cta.generate")}
           </Link>
@@ -171,16 +196,17 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       </header>
 
       <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-white/[0.08] bg-black/80 px-3 backdrop-blur-xl lg:hidden">
-        <Link href="/" aria-label="Pikbo Explore">
+        <Link href="/" aria-label="Pikbo Home">
           <Logo size={26} wordClassName="text-base" />
         </Link>
         <div className="flex items-center gap-1.5">
           <LanguageSwitcher compact />
           <CreditsBadge compact />
           <Link
-            href="/create"
+            href={WAVE_A_DESTINATIONS.generate.href}
             className="rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[11px] font-black text-black"
             data-appshell-cta="generate"
+            data-capability-state={WAVE_A_DESTINATIONS.generate.state}
           >
             {t("cta.generate")}
           </Link>
@@ -199,27 +225,42 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       >
         {MOBILE_NAV.map((item) => {
           const on = active(path, item.href);
+          const central = item.id === "generate";
           return (
             <Link
-              key={item.href}
+              key={item.id}
               href={item.href}
               aria-current={on ? "page" : undefined}
+              data-capability-state={item.state}
+              title={`${item.label} · ${CAPABILITY_STATE_LABELS[item.state]}${item.note ? ` · ${item.note}` : ""}`}
               className={cn(
-                "flex min-w-0 flex-col items-center justify-center px-0.5 py-3 text-[10px] font-semibold transition-colors",
-                item.href === "/create"
-                  ? "text-[#c8ff3d]"
+                "relative flex min-w-0 flex-col items-center justify-center px-0.5 text-[10px] font-semibold transition-colors",
+                central
+                  ? "-mt-3 py-1.5 text-[#c8ff3d]"
                   : on
-                    ? "text-[#c8ff3d]"
-                    : "text-white/42"
+                    ? "py-3 text-[#c8ff3d]"
+                    : "py-3 text-white/42"
               )}
             >
-              <span
-                className={cn(
-                  "mb-1 h-1 w-1 rounded-full",
-                  on ? "bg-[#c8ff3d]" : "bg-transparent"
-                )}
-                aria-hidden
-              />
+              {central ? (
+                <span
+                  aria-hidden
+                  className={cn(
+                    "mb-1 grid h-10 w-10 place-items-center rounded-full border-4 border-[#070708] bg-[#c8ff3d] text-lg font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.32)]",
+                    on ? "ring-2 ring-white/80" : ""
+                  )}
+                >
+                  +
+                </span>
+              ) : (
+                <span
+                  className={cn(
+                    "mb-1 h-1 w-1 rounded-full",
+                    on ? "bg-[#c8ff3d]" : "bg-transparent"
+                  )}
+                  aria-hidden
+                />
+              )}
               <span className="truncate">{item.label}</span>
             </Link>
           );

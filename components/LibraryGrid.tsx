@@ -34,8 +34,8 @@ import { PROVENANCE, resultProvenanceLabel } from "@/lib/provenance";
 import { track } from "@/lib/analytics";
 
 type KindFilter = "all" | "live" | "demo";
-/** Assets-like: project = upload/remix group · sku = Toy Identity SKU · flat. */
-type GroupMode = "flat" | "project" | "sku";
+/** Device-local organization: project, recipe, Toy Identity SKU, or flat. */
+type GroupMode = "flat" | "project" | "recipe" | "sku";
 
 type SessionJob = {
   id: string;
@@ -452,7 +452,7 @@ function SessionJobsPanel({
             Local ledger from Generate (not multi-node cloud). Device Library
             below is{" "}
             <span className="font-semibold text-[var(--mint)]">
-              Saved on this device
+              Local to this device
             </span>{" "}
             only — empty until a clip is saved here. Cancel marks the ledger
             only; in-flight fal may still finish. TIMEOUT rows show refund
@@ -1208,7 +1208,7 @@ export function LibraryGrid() {
     return list;
   }, [items, filter, sort, kind]);
 
-  /** Group by device-local project or SKU; never imply cloud sync. */
+  /** Group by device-local project, recipe, or SKU; never imply cloud sync. */
   const grouped = useMemo(() => {
     if (groupMode === "flat") {
       return [
@@ -1221,6 +1221,8 @@ export function LibraryGrid() {
       if (groupMode === "sku") {
         const sku = item.sku?.trim();
         key = sku ? `sku:${sku}` : "__no_sku__";
+      } else if (groupMode === "recipe") {
+        key = `recipe:${item.effect}`;
       } else {
         key =
           item.projectId?.trim() ||
@@ -1241,6 +1243,14 @@ export function LibraryGrid() {
               key === "__no_sku__"
                 ? "No SKU · set Name/SKU on Create"
                 : `SKU · ${key.replace(/^sku:/, "")}`,
+            input,
+            items: groupItems,
+          };
+        }
+        if (groupMode === "recipe") {
+          return {
+            key,
+            label: `Recipe · ${groupItems[0]?.effectName ?? key.replace(/^recipe:/, "")}`,
             input,
             items: groupItems,
           };
@@ -1398,8 +1408,8 @@ export function LibraryGrid() {
     >
       <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
         {items.length > 0
-          ? `${items.length} clip${items.length === 1 ? "" : "s"} · Saved on this device`
-          : "Saved on this device · not multi-device cloud"}
+          ? `${items.length} clip${items.length === 1 ? "" : "s"} · Local to this device`
+          : "Local to this device · not multi-device cloud"}
         {sessionMeta.open > 0 ? ` · ${sessionMeta.open} session open` : ""}
       </p>
       <div className="flex gap-2">
@@ -1468,7 +1478,7 @@ export function LibraryGrid() {
                   </span>{" "}
                   (
                   <span className="font-semibold text-white/80">
-                    Saved on this device
+                    Local to this device
                   </span>
                   ) when storage allows — not cloud-synced.
                 </>
@@ -1476,7 +1486,7 @@ export function LibraryGrid() {
                 <>
                   {PROVENANCE.localLibrary} ·{" "}
                   <span className="font-semibold text-[var(--mint)]">
-                    Saved on this device
+                    Local to this device
                   </span>
                   . One photo → recipe → generate. Cloud multi-device assets
                   wait on durable storage.
@@ -1529,7 +1539,7 @@ export function LibraryGrid() {
         className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/[0.08] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]"
         data-library-label="device-local"
       >
-        Saved on this device · {items.length} clip
+        Local to this device · {items.length} clip
         {items.length === 1 ? "" : "s"} · not multi-device cloud
       </p>
       <LibraryStorageBanner
@@ -1589,11 +1599,12 @@ export function LibraryGrid() {
             aria-label="Group library clips"
           >
             <option value="project">By project</option>
+            <option value="recipe">By recipe</option>
             <option value="sku">By SKU</option>
             <option value="flat">Flat list</option>
           </select>
           <span className="text-[10px] text-[var(--fg-dim)]">
-            {filtered.length} / {items.length} · Saved on this device
+            {filtered.length} / {items.length} · Local to this device
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -1669,7 +1680,9 @@ export function LibraryGrid() {
           key={group.key}
           className="mb-8 rounded-2xl border border-[var(--border)] bg-[var(--bg-soft)]/40 p-3 sm:p-4"
         >
-          {(groupMode === "project" || groupMode === "sku") && (
+          {(groupMode === "project" ||
+            groupMode === "recipe" ||
+            groupMode === "sku") && (
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 {group.input ? (
@@ -1681,7 +1694,11 @@ export function LibraryGrid() {
                   />
                 ) : (
                   <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-dashed border-[var(--border)] text-[10px] text-[var(--fg-dim)]">
-                    {groupMode === "sku" ? "SKU" : "input"}
+                    {groupMode === "sku"
+                      ? "SKU"
+                      : groupMode === "recipe"
+                        ? "recipe"
+                        : "input"}
                   </span>
                 )}
                 <div className="min-w-0">
@@ -1690,9 +1707,9 @@ export function LibraryGrid() {
                   </h2>
                   <p className="mt-0.5 text-[10px] text-[var(--fg-dim)]">
                     {group.items.length} version
-                    {group.items.length === 1 ? "" : "s"} · Saved on this
+                    {group.items.length === 1 ? "" : "s"} · Local to this
                     device
-                    {groupMode === "sku" ? " · Assets-style SKU group" : ""}
+                    {groupMode === "sku" ? " · Toy Identity SKU group" : ""}
                   </p>
                 </div>
               </div>

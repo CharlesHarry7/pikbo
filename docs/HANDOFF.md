@@ -2029,3 +2029,36 @@ Newest first. One block per meaningful landing.
   fail-closed critical path.
 - Safety: no provider key, paid call, database, Stripe, deployment, DNS or public
   indexing action. T5/T6 and public Mode A/B readiness remain fail-closed.
+
+### 2026-07-29 — [codex + ChatGPT Pro] Higgsfield-inspired designer-toy Wave A
+- Paths: shared Wave A capability registry and shell; Home product rail/value
+  banner/Project discovery; Explore filters; searchable Recipes; inspectable
+  Project evidence; validated RemixIntent; device-local Library grouping;
+  Playwright configuration and Wave A source/browser contracts.
+- Why good: closes Home → Explore → Project → Recipe → Create → Library while
+  retaining Pikbo branding, original copy/media, cached/concept/live truth, the
+  existing Showcase registry, and the generation/recovery API contracts.
+- External review: ChatGPT Pro supplied a complete replacement patch plus a
+  three-file addendum. Codex rejected the first patch because it could not
+  apply to the real baseline, then required corrections for the shell Create
+  target, media loading, Live copy, CI scope, ESLint, Library Recipe grouping,
+  and competitor-branded Library copy.
+- Independent verification: `npm ci`, conflict scan, ESLint, typecheck, all
+  requested recovery/T5/R0/showcase/product/mobile/SEO/Seller Pack/copy gates,
+  193-route production build, running-server link/critical/API/copy gates, and
+  Chromium/Firefox/WebKit at 390×844, 768×1024 and 1440×900 passed. The final
+  browser matrix records 10 passed and 8 intentional skips because the
+  stateful Library grouping check runs once in Chromium 390; the full loop
+  itself passed in all nine browser/viewport combinations.
+- Evidence: `docs/research/HIGGSFIELD_WAVE_A_2026-07-29.md` and
+  `docs/reports/HIGGSFIELD_WAVE_A_VALIDATION_2026-07-29.md`.
+- Reuse / pitfalls: Library remains local to this browser/device; cached mode
+  costs 0 credits and does not process the current upload; missing provider
+  evidence remains fail-closed. Do not relabel cached prototypes as Live or
+  verified production output.
+- Remaining risk: production `npm audit` reports three high-severity
+  PostCSS/sharp advisories inherited through the baseline Next.js dependency
+  graph. The suggested forced downgrade is breaking and was not applied.
+- State: local uncommitted worktree only. No commit, push, PR, deployment,
+  database migration, production configuration, paid/provider call, or real
+  user data operation was performed.

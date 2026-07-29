@@ -8,12 +8,22 @@ import {
   showcaseProjectHref,
   showcaseProvenanceLabel,
   showcaseRecipeHref,
-  type ShowcaseCategory,
   type ShowcaseProject,
 } from "@/lib/showcaseProjects";
+import {
+  filterShowcaseProjects,
+  type ExploreCategory,
+} from "@/lib/showcaseFilters";
 import { track } from "@/lib/analytics";
+import {
+  MEDIA_PROVENANCE_LABELS,
+  mediaProvenanceFromShowcase,
+} from "@/lib/mediaProvenance";
+import {
+  isPromotedShowcaseProvenance,
+  showcaseEvidenceChecklist,
+} from "@/lib/showcaseEvidence";
 
-type ExploreCategory = "all" | ShowcaseCategory;
 
 export function ExploreProjectGrid({
   projects,
@@ -29,10 +39,7 @@ export function ExploreProjectGrid({
   );
 
   const visible = useMemo(
-    () =>
-      category === "all"
-        ? projects
-        : projects.filter((project) => project.category === category),
+    () => filterShowcaseProjects(projects, category),
     [category, projects]
   );
 
@@ -67,11 +74,36 @@ export function ExploreProjectGrid({
 
       <section className="px-3 pb-16 sm:px-5" aria-live="polite">
         <div className="columns-2 gap-2 sm:columns-3 sm:gap-3 lg:columns-4 xl:columns-5">
-          {visible.map((project, index) => (
-            <article
-              key={project.slug}
-              className="group relative mb-2 break-inside-avoid overflow-hidden rounded-2xl border border-white/[0.08] bg-neutral-950 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-0.5 hover:border-[#c8ff3d]/35 hover:shadow-[0_20px_40px_-20px_rgba(200,255,61,0.12)] sm:mb-3"
-            >
+          {visible.map((project, index) => {
+            const mediaProvenance = mediaProvenanceFromShowcase(
+              project.provenance
+            );
+            const evidenceChecklist = showcaseEvidenceChecklist(
+              project.evidence
+            );
+            const evidenceComplete = evidenceChecklist.every(
+              (item) => item.complete
+            );
+            const providerRecorded = evidenceChecklist.some(
+              (item) => item.id === "provider" && item.complete
+            );
+            const verified =
+              isPromotedShowcaseProvenance(project.provenance) &&
+              evidenceComplete;
+            const providerLabel = providerRecorded
+              ? `Recorded · ${project.evidence!.provider.name} · ${project.evidence!.provider.model}`
+              : "Provider / model evidence unavailable";
+            const evidenceLabel = verified
+              ? "Evidence verified"
+              : evidenceComplete
+                ? "Evidence complete · promotion pending"
+                : "Evidence pending";
+            return (
+              <article
+                key={project.slug}
+                data-media-provenance={mediaProvenance}
+                className="group relative mb-2 break-inside-avoid overflow-hidden rounded-2xl border border-white/[0.08] bg-neutral-950 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-0.5 hover:border-[#c8ff3d]/35 hover:shadow-[0_20px_40px_-20px_rgba(200,255,61,0.12)] sm:mb-3"
+              >
               <Link
                 href={showcaseProjectHref(project)}
                 className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
@@ -110,13 +142,13 @@ export function ExploreProjectGrid({
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c8ff3d]/40 to-transparent opacity-0 transition group-hover:opacity-100" />
                   <div className="absolute left-2 top-2 flex flex-wrap gap-1">
                     <span className="rounded-full border border-white/10 bg-black/65 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-[#c8ff3d] backdrop-blur">
-                      {showcaseProvenanceLabel(project)}
+                      Media · {mediaProvenance}
                     </span>
                     <span
                       className="rounded-full border border-white/15 bg-black/65 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white/55 backdrop-blur"
-                      title="Provider task ID and formal QA are not recorded"
+                      title={`${MEDIA_PROVENANCE_LABELS[mediaProvenance]} · ${showcaseProvenanceLabel(project)}`}
                     >
-                      Evidence pending
+                      {evidenceLabel}
                     </span>
                   </div>
                   <div className="absolute inset-x-0 bottom-0 p-3">
@@ -137,7 +169,7 @@ export function ExploreProjectGrid({
               </Link>
               <div className="flex items-center justify-between gap-2 border-t border-white/10 bg-black/40 px-3 py-2">
                 <span className="truncate text-[10px] text-white/40">
-                  {project.model}
+                  {providerLabel}
                 </span>
                 <Link
                   href={showcaseRecipeHref(project)}
@@ -151,11 +183,12 @@ export function ExploreProjectGrid({
                     })
                   }
                 >
-                  Remake →
+                  Use recipe →
                 </Link>
               </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
 
         {visible.length === 0 ? (

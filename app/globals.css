@@ -75,6 +75,8 @@
 
 html {
   scroll-behavior: smooth;
+  max-width: 100%;
+  overflow-x: clip;
 }
 html[data-scroll-behavior="smooth"] {
   scroll-behavior: smooth;
@@ -97,7 +99,15 @@ body {
   color: var(--fg);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+img,
+video,
+svg,
+canvas {
+  max-width: 100%;
 }
 
 /* Editorial display headings — tight tracking for premium, Higgsfield-class feel */

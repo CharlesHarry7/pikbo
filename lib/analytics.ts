@@ -9,6 +9,7 @@
 export type AnalyticsEvent =
   | "landing_view"
   | "project_open"
+  | "recipe_open"
   | "recipe_use"
   | "upload_ready"
   | "asset_upload_complete"

@@ -36,6 +36,9 @@ jobs:
       - name: Engine smoke
         run: npm run engine-smoke
 
+      - name: Wave A product contract
+        run: npm run wave-a-contract-smoke
+
       - name: Recovery QA (R0–R3 cost · ledger · CI honesty)
         run: npm run recovery-qa
 
@@ -57,11 +60,23 @@ jobs:
       - name: Showcase evidence honesty
         run: npm run showcase-evidence-smoke
 
+      - name: Showcase promotion evidence gate
+        run: npm run showcase-promotion-gate
+
+      - name: Product proof registry + autoplay budget
+        run: npm run product-proof-smoke
+
+      - name: Mobile proof source regression
+        run: npm run mobile-proof-regression
+
       - name: SEO cold-start five-page budget
         run: npm run seo-cold-start-smoke
 
       - name: Seller Pack cached golden path
         run: npm run seller-pack-cached-smoke
+
+      - name: Launch Pack main-path contract
+        run: npm run launch-pack-main-path-smoke
 
       - name: Recovery reconciliation (R1c lease + settlement replay)
         run: npm run recovery-reconciliation

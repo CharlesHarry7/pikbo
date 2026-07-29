@@ -13,12 +13,18 @@ const steps = read("components/SellerPackSteps.tsx");
 const contract = read("lib/sellerPackContract.ts");
 const packExport = read("lib/sellerPackExport.ts");
 const shell = read("components/AppShell.tsx");
+const capabilities = read("lib/softLaunch.ts");
 
 // Homepage V1 leads with Recipe remix; Launch Pack remains a later upgrade.
 assert.match(home, /data-home-upgrade="launch-pack"/);
-assert.match(home, /href="\/create\?mode=seller-pack"/);
+assert.match(home, /href=\{WAVE_A_DESTINATIONS\.seller_pack\.href\}/);
+assert.match(
+  capabilities,
+  /seller_pack:\s*\{[\s\S]*?href:\s*"\/create\?mode=seller-pack"/
+);
 assert.match(homeWall, /Use this recipe/);
-assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
+assert.match(homeWall, /href=\{item\.detailHref \|\|/);
+assert.match(homeWall, /data-home-card-destination="recipe"/);
 assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
 assert.doesNotMatch(shell, /create\?mode=seller-pack/);

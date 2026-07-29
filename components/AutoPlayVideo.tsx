@@ -71,6 +71,13 @@ function release(v: HTMLVideoElement) {
   v.pause();
 }
 
+function prefersReducedMotion() {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 /**
  * Viewport / interaction video.
  * - interaction + lazySources: posters until hover/tap (default wall)
@@ -117,11 +124,23 @@ export function AutoPlayVideo({
   const [isMuted, setIsMuted] = useState(true);
   /** SSR + first paint: assume mobile so wall cards stay poster-first. */
   const [isNarrow, setIsNarrow] = useState(true);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const wantPlay = useRef(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
     const sync = () => setIsNarrow(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => {
+      setReducedMotion(mq.matches);
+      if (mq.matches && ref.current) release(ref.current);
+    };
     sync();
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
@@ -134,7 +153,12 @@ export function AutoPlayVideo({
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Keep the synchronous media-query guard as well as reactive state. On the
+    // first hydrated effect pass, state may still hold the SSR default.
+    if (reducedMotion || prefersReducedMotion()) {
+      release(v);
+      return;
+    }
 
     // Interaction-only: no viewport autoplay (hover/tap walls).
     if (desktopPlayMode === "interaction" && !eager) {
@@ -187,14 +211,22 @@ export function AutoPlayVideo({
       io.disconnect();
       release(v);
     };
-  }, [desktopPlayMode, eager, mp4, sourcesOn, wallDense, allowMetadataPreload]);
+  }, [
+    desktopPlayMode,
+    eager,
+    mp4,
+    sourcesOn,
+    wallDense,
+    allowMetadataPreload,
+    reducedMotion,
+  ]);
 
   // After lazy sources flip on from viewport, try play immediately.
   useEffect(() => {
     if (!sourcesOn || desktopPlayMode !== "viewport") return;
     const v = ref.current;
     if (!v) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (reducedMotion || prefersReducedMotion()) return;
     // If already in view, claim after sources attach.
     const rect = v.getBoundingClientRect();
     const vh = window.innerHeight || 1;
@@ -206,10 +238,24 @@ export function AutoPlayVideo({
       if (allowMetadataPreload && v.preload === "none") v.preload = "metadata";
       claim(v);
     }
-  }, [sourcesOn, desktopPlayMode, eager, wallDense, mp4, allowMetadataPreload]);
+  }, [
+    sourcesOn,
+    desktopPlayMode,
+    eager,
+    wallDense,
+    mp4,
+    allowMetadataPreload,
+    reducedMotion,
+  ]);
 
   function playFromInteraction() {
-    if (desktopPlayMode !== "interaction") return;
+    if (
+      desktopPlayMode !== "interaction" ||
+      reducedMotion ||
+      prefersReducedMotion()
+    ) {
+      return;
+    }
     wantPlay.current = true;
     if (!sourcesOn) {
       setSourcesOn(true);
@@ -273,6 +319,7 @@ export function AutoPlayVideo({
         preload={allowMetadataPreload ? "metadata" : "none"}
         data-video-preload={allowMetadataPreload ? "metadata" : "none"}
         data-video-mobile-poster-first={isNarrow && !eager ? "1" : "0"}
+        data-reduced-motion={reducedMotion ? "1" : "0"}
         tabIndex={
           focusable && desktopPlayMode === "interaction" ? 0 : undefined
         }

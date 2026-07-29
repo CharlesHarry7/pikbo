@@ -6,7 +6,7 @@ import { fetchMe, type MeResponse } from "@/lib/meClient";
 import { isBrowserSupabaseReady } from "@/lib/supabase/browser";
 
 /**
- * HF Library honesty strip — cloud feel without lying about multi-device sync.
+ * Pikbo Library honesty strip — organized without implying cloud sync.
  * Layers: device clips · session jobs · optional signed-in identity.
  */
 export function LibraryStorageBanner({
@@ -42,7 +42,7 @@ export function LibraryStorageBanner({
             {deviceCount}
           </p>
           <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-            Saved on this device · export JSON to move browsers · not
+            Local to this device · export JSON to move browsers · not
             multi-device cloud
           </p>
         </div>
@@ -96,7 +96,7 @@ export function LibraryStorageBanner({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-black/30 px-4 py-2">
         <p className="text-[10px] text-white/40">
-          HF Assets pattern · honest storage labels · no fake multi-device claim
+          Pikbo asset shelf · Local to this device · export JSON to move browsers
         </p>
         <Link
           href="/community"

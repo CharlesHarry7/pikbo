@@ -4,6 +4,11 @@ import { APPS } from "@/lib/catalog";
 import { MODELS } from "@/lib/catalog";
 import { viralName } from "@/lib/viralNames";
 import {
+  mediaProvenanceForRecipe,
+  mediaProvenanceFromShowcase,
+  type MediaProvenance,
+} from "@/lib/mediaProvenance";
+import {
   HOME_PROOF_BADGE,
   HOME_PROOF_LIMIT,
 } from "@/lib/softLaunch";
@@ -39,6 +44,8 @@ export type FeedItem = {
   kind: "demo" | "preset" | "app" | "model";
   category?: CategoryId;
   recipeSlug?: string;
+  /** Required on recipe media; absent only on non-recipe suite promos. */
+  mediaProvenance?: MediaProvenance;
 };
 
 export type FeedVideoItem = FeedItem & { demo: DemoVideo };
@@ -104,6 +111,7 @@ export function buildHomeShowcaseFeed(
         kind: "demo",
         category: preset?.category,
         recipeSlug: project.recipeSlug,
+        mediaProvenance: mediaProvenanceFromShowcase(project.provenance),
       } satisfies FeedVideoItem;
     });
 }
@@ -132,6 +140,7 @@ export function buildVideoFeed(): FeedVideoItem[] {
       kind: "demo",
       category: preset?.category,
       recipeSlug: project.recipeSlug,
+      mediaProvenance: mediaProvenanceFromShowcase(project.provenance),
     } satisfies FeedVideoItem;
   });
 }
@@ -158,6 +167,7 @@ export function featuredStrip(): FeedVideoItem[] {
     demo: showcaseProjectAsDemo(project),
     kind: "demo" as const,
     recipeSlug: project.recipeSlug,
+    mediaProvenance: mediaProvenanceFromShowcase(project.provenance),
   }));
 }
 
@@ -260,6 +270,7 @@ export function feedByCategory(cat: CategoryId): FeedItem[] {
       kind: "preset" as const,
       category: p.category,
       recipeSlug: p.slug,
+      mediaProvenance: mediaProvenanceForRecipe(p.slug),
     };
   });
 }

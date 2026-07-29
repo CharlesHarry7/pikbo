@@ -4,10 +4,12 @@ import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
 import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
+import { WAVE_A_DESTINATIONS } from "@/lib/softLaunch";
 
 export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
   const item = items.find(hasFeedVideo);
   const recipeSlug = item?.recipeSlug ?? "floating-hero";
+  const createHref = item?.href ?? WAVE_A_DESTINATIONS.generate.href;
 
   return (
     <section
@@ -54,17 +56,13 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
             Turn one designer-toy photo into cinematic videos, stories and
             launch content.
           </p>
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <a
-              href="#toy-wall"
-              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#c8ff3d] px-7 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-[#d5ff6b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            >
-              Explore recipes
-            </a>
+          <div className="mt-7 flex flex-wrap items-center gap-4">
             <Link
-              href={`/create?effect=${recipeSlug}`}
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/28 bg-black/36 px-7 text-sm font-bold text-white backdrop-blur transition hover:border-white/55 hover:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+              href={createHref}
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#c8ff3d] px-7 text-sm font-black text-black shadow-[0_0_34px_rgba(200,255,61,0.26)] transition hover:-translate-y-0.5 hover:bg-[#d5ff6b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               data-hero-recipe={recipeSlug}
+              data-hero-action="create"
+              data-capability-state={WAVE_A_DESTINATIONS.generate.state}
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -77,6 +75,12 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
             >
               Create with your toy
             </Link>
+            <a
+              href="#toy-wall"
+              className="text-sm font-bold text-white/60 underline-offset-4 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+            >
+              Browse recipes ↓
+            </a>
           </div>
         </div>
       </div>

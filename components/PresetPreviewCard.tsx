@@ -5,11 +5,16 @@ import type { Preset } from "@/lib/presets";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { createRemixHref } from "@/lib/remixIntent";
+import {
+  MEDIA_PROVENANCE_LABELS,
+  mediaProvenanceForRecipe,
+} from "@/lib/mediaProvenance";
 
 /** Exact Lab clips and static concept art are labeled separately. */
 export function PresetPreviewCard({ preset }: { preset: Preset }) {
   const demo = DEMO_VIDEOS.find((d) => d.preset === preset.slug);
   const exact = Boolean(demo);
+  const mediaProvenance = mediaProvenanceForRecipe(preset.slug);
 
   return (
     <Link
@@ -18,6 +23,7 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
           ? createRemixHref(preset.slug, demo.id)
           : `/effects/${preset.slug}`
       }
+      data-media-provenance={mediaProvenance}
       className="video-tile group block overflow-hidden transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(0,0,0,0.45)]"
     >
       <div className="relative aspect-[3/4]">
@@ -46,14 +52,12 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-95 transition duration-300 group-hover:opacity-100" />
         <div className="absolute left-2 top-2 flex max-w-[70%] flex-wrap gap-0.5">
-          {exact ? (
-            <span
-              className="rounded-full border border-white/10 bg-black/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur-sm"
-              title="Cached Lab prototype · provider evidence pending"
-            >
-              Lab · cached prototype
-            </span>
-          ) : null}
+          <span
+            className="rounded-full border border-white/10 bg-black/60 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur-sm"
+            title={MEDIA_PROVENANCE_LABELS[mediaProvenance]}
+          >
+            Media · {mediaProvenance}
+          </span>
         </div>
         <span
           className={`absolute right-2 top-2 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider transition duration-300 ${

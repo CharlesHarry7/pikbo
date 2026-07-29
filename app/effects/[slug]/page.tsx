@@ -16,6 +16,10 @@ import { site } from "@/lib/site";
 import { viralName } from "@/lib/viralNames";
 import { recipeHasUniqueProof, robotsForRecipe } from "@/lib/seoIndex";
 import {
+  MEDIA_PROVENANCE_LABELS,
+  mediaProvenanceForRecipe,
+} from "@/lib/mediaProvenance";
+import {
   listSellerJobWorkflows,
   workflowsForEffect,
 } from "@/lib/workflows";
@@ -55,6 +59,7 @@ export default async function EffectPage({
   const { slug } = await params;
   const preset = getPreset(slug);
   if (!preset) notFound();
+  const mediaProvenance = mediaProvenanceForRecipe(preset.slug);
 
   const related = PRESETS.filter(
     (p) => p.slug !== preset.slug && p.category === preset.category
@@ -174,11 +179,11 @@ export default async function EffectPage({
             </span>
             {!recipeHasUniqueProof(preset.slug) ? (
               <span className="rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[var(--fg-dim)]">
-                Concept · no unique Lab sample
+                Media · {mediaProvenance}
               </span>
             ) : (
               <span className="rounded-full border border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[var(--mint)]">
-                PIKBO Lab · cached prototype
+                Media · {mediaProvenance}
               </span>
             )}
           </div>
@@ -189,8 +194,10 @@ export default async function EffectPage({
             {preset.intro}
           </p>
           <p className="mt-3 text-xs text-[var(--fg-dim)]">
-            Free: one Seedance Mini live trial · 5s · 480p · on-player mark.
-            Without provider access, the tool returns a labeled cached demo.
+            {MEDIA_PROVENANCE_LABELS[mediaProvenance]}.{" "}
+            Cached previews cost 0 credits and do not process your current
+            upload. Live is offered only to eligible accounts, with a quote
+            shown before submission.
           </p>
         </div>
       </section>

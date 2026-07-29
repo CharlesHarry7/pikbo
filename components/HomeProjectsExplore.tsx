@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { CommunityProject } from "@/lib/videoFeed";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { WAVE_A_DESTINATIONS } from "@/lib/softLaunch";
 
 /**
  * HF “Explore the inside of every project” — tall portrait cards.
@@ -27,7 +28,8 @@ export function HomeProjectsExplore({
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
           <Link
-            href="/explore"
+            href={WAVE_A_DESTINATIONS.explore.href}
+            data-capability-state={WAVE_A_DESTINATIONS.explore.state}
             className="text-xs font-semibold text-white/55 hover:text-white hover:underline"
           >
             Explore grid
@@ -48,15 +50,16 @@ export function HomeProjectsExplore({
             className="group relative h-[380px] w-[min(62vw,210px)] shrink-0 snap-start overflow-hidden rounded-2xl bg-zinc-900 ring-1 ring-white/10 transition duration-300 hover:-translate-y-0.5 hover:ring-[var(--mint)]/35 sm:h-[420px] sm:w-[200px]"
           >
             <Link
-              href={p.remakeHref}
+              href={p.detailHref}
               className="absolute inset-0 z-0"
-              aria-label={`Remake ${p.title}`}
+              aria-label={`Open ${p.title} project evidence`}
+              data-home-project-destination="project"
             >
               <AutoPlayVideo
                 poster={p.demo.poster}
                 webm={p.demo.webm}
                 mp4={p.demo.mp4}
-                eager={i < 4}
+                lazySources
                 focusable={false}
                 desktopPlayMode="interaction"
                 className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
@@ -79,7 +82,7 @@ export function HomeProjectsExplore({
                 {p.visibility}
               </span>
             </div>
-            <div className="absolute inset-x-0 bottom-0 z-[2] p-3">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] p-3">
               <div className="mb-2 flex items-center gap-2">
                 <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--mint)] text-[9px] font-black text-black">
                   {p.author.initials}
@@ -97,16 +100,14 @@ export function HomeProjectsExplore({
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <Link
                   href={p.remakeHref}
-                  className="rounded-full bg-[var(--mint)]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)] ring-1 ring-[var(--mint)]/25 transition group-hover:bg-[var(--mint)] group-hover:text-black"
+                  data-home-project-destination="create"
+                  className="pointer-events-auto rounded-full bg-[var(--mint)]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)] ring-1 ring-[var(--mint)]/25 transition group-hover:bg-[var(--mint)] group-hover:text-black"
                 >
-                  Remake →
+                  Use recipe →
                 </Link>
-                <Link
-                  href={p.detailHref}
-                  className="rounded-full border border-white/15 bg-black/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/70 transition hover:border-white/30 hover:text-white"
-                >
-                  Inside
-                </Link>
+                <span className="rounded-full border border-white/15 bg-black/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/70">
+                  Inside project
+                </span>
               </div>
             </div>
           </article>

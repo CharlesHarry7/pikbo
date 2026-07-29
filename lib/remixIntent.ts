@@ -43,6 +43,28 @@ function channelForPreset(slug: string, aspect: "9:16" | "16:9" | "1:1"): RemixC
   return "reels";
 }
 
+function firstDemoForRecipe(recipeSlug: string) {
+  return DEMO_VIDEOS.find((demo) => demo.preset === recipeSlug);
+}
+
+function matchingDemoSource(recipeSlug: string, source?: string) {
+  if (!source) return firstDemoForRecipe(recipeSlug);
+  const requested = DEMO_VIDEOS.find((demo) => demo.id === source);
+  return requested?.preset === recipeSlug
+    ? requested
+    : firstDemoForRecipe(recipeSlug);
+}
+
+/** Project sources are valid only when registered and bound to this recipe. */
+export function isRegisteredRemixSourceForRecipe(
+  recipeSlug: string,
+  source: string | undefined
+): boolean {
+  if (!source) return false;
+  const demo = DEMO_VIDEOS.find((item) => item.id === source);
+  return Boolean(demo && demo.preset === recipeSlug);
+}
+
 /** Build RemixIntent from a registered recipe + optional demo project id. */
 export function remixIntentFromRecipe(
   recipeSlug: string,
@@ -55,10 +77,9 @@ export function remixIntentFromRecipe(
       ? preset.aspectRatio
       : "9:16";
   const duration: 5 | 10 = preset.duration === 10 ? 10 : 5;
+  const sourceDemo = matchingDemoSource(recipeSlug, sourceProjectSlug);
   const source =
-    sourceProjectSlug ||
-    DEMO_VIDEOS.find((d) => d.preset === recipeSlug)?.id ||
-    recipeSlug;
+    sourceDemo?.id || preset.slug;
   return {
     sourceProjectSlug: source,
     recipeSlug: preset.slug,
@@ -192,6 +213,8 @@ export type ParsedRemixQuery = {
   notices: string[];
   sourceLabel: string | null;
   sourcePoster: string | null;
+  /** Present only for a registered project source; concepts never fake one. */
+  sourceProjectHref: string | null;
 };
 
 export type RemixSearchParams = {
@@ -213,7 +236,13 @@ export function hasRemixSearchParams(sp: RemixSearchParams): boolean {
 export function parseRemixSearchParams(sp: RemixSearchParams): ParsedRemixQuery {
   const notices: string[] = [];
   if (!hasRemixSearchParams(sp)) {
-    return { intent: null, notices, sourceLabel: null, sourcePoster: null };
+    return {
+      intent: null,
+      notices,
+      sourceLabel: null,
+      sourcePoster: null,
+      sourceProjectHref: null,
+    };
   }
   const recipeSlug =
     sp.effect && PRESETS.some((p) => p.slug === sp.effect)
@@ -223,12 +252,30 @@ export function parseRemixSearchParams(sp: RemixSearchParams): ParsedRemixQuery 
     notices.push(`Unknown recipe “${sp.effect}” — showing a default.`);
   }
 
-  const base = remixIntentFromRecipe(
-    recipeSlug || PRESETS[0].slug,
-    sp.source
-  );
+  const resolvedRecipeSlug = recipeSlug || PRESETS[0].slug;
+  const requestedSource = sp.source
+    ? DEMO_VIDEOS.find((demo) => demo.id === sp.source)
+    : undefined;
+  if (sp.source && !requestedSource && sp.source !== resolvedRecipeSlug) {
+    notices.push("Unknown source project ignored.");
+  } else if (
+    requestedSource &&
+    requestedSource.preset !== resolvedRecipeSlug
+  ) {
+    notices.push(
+      "Source project does not match the selected recipe — using its registered sample."
+    );
+  }
+
+  const base = remixIntentFromRecipe(resolvedRecipeSlug, sp.source);
   if (!base) {
-    return { intent: null, notices, sourceLabel: null, sourcePoster: null };
+    return {
+      intent: null,
+      notices,
+      sourceLabel: null,
+      sourcePoster: null,
+      sourceProjectHref: null,
+    };
   }
 
   let aspectRatio = base.aspectRatio;
@@ -250,11 +297,13 @@ export function parseRemixSearchParams(sp: RemixSearchParams): ParsedRemixQuery 
     channel = sp.channel as RemixChannel;
   } else if (sp.channel) {
     notices.push("Invalid channel ignored.");
+  } else if (aspectRatio !== base.aspectRatio) {
+    channel = channelForPreset(base.recipeSlug, aspectRatio);
   }
 
-  const demo =
-    DEMO_VIDEOS.find((d) => d.id === sp.source) ||
-    DEMO_VIDEOS.find((d) => d.preset === base.recipeSlug);
+  const demo = DEMO_VIDEOS.find(
+    (item) => item.id === base.sourceProjectSlug && item.preset === base.recipeSlug
+  );
 
   const intent: RemixIntent = {
     ...base,
@@ -273,5 +322,6 @@ export function parseRemixSearchParams(sp: RemixSearchParams): ParsedRemixQuery 
         ? viralName(recipeSlug, recipeSlug)
         : null,
     sourcePoster: demo?.poster ?? null,
+    sourceProjectHref: demo ? `/projects/${demo.id}` : null,
   };
 }

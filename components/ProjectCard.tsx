@@ -13,9 +13,10 @@ export function ProjectCard({ project }: { project: CommunityProject }) {
   return (
     <article className="group overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-md)]">
       <Link
-        href={project.remakeHref}
+        href={project.detailHref}
         className="relative block aspect-[4/5] overflow-hidden bg-black sm:aspect-[3/4]"
-        aria-label={`Remix ${project.title}`}
+        aria-label={`Open ${project.title} project details`}
+        data-project-card-destination="project"
       >
         <AutoPlayVideo
           poster={project.demo.poster}
@@ -63,12 +64,14 @@ export function ProjectCard({ project }: { project: CommunityProject }) {
         <div className="flex shrink-0 gap-1.5">
           <Link
             href={project.detailHref}
+            data-project-card-destination="project"
             className="rounded-full border border-white/15 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white/80 hover:border-[var(--mint)]/50 hover:text-[var(--mint)]"
           >
             Inside
           </Link>
           <Link
             href={project.remakeHref}
+            data-project-card-destination="create"
             className="rounded-full bg-[var(--mint)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-black hover:brightness-110"
           >
             Remix

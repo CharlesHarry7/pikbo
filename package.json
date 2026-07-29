@@ -12,6 +12,7 @@
     "link-check": "bash scripts/link-check.sh",
     "g6-api-smoke": "node scripts/g6-api-smoke.mjs",
     "engine-smoke": "node scripts/engine-smoke.mjs",
+    "wave-a-contract-smoke": "node scripts/wave-a-contract-smoke.mjs",
     "product-proof-smoke": "node scripts/product-proof-smoke.mjs",
     "mobile-proof-regression": "node scripts/mobile-proof-regression.mjs",
     "showcase-evidence-smoke": "node scripts/showcase-evidence-smoke.mjs",
@@ -38,6 +39,7 @@
     "g6-refund-leg": "node scripts/g6-refund-leg.mjs",
     "preflight-launch": "bash scripts/preflight-launch.sh",
     "mode-a-acceptance": "bash scripts/mode-a-acceptance.sh",
+    "test:e2e": "playwright test",
     "indexnow": "node scripts/indexnow-submit.mjs",
     "r0-safety-net": "node --experimental-strip-types scripts/r0-safety-net.mjs"
   },
@@ -54,6 +56,7 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

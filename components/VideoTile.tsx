@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import type { FeedItem } from "@/lib/videoFeed";
+import { MEDIA_PROVENANCE_LABELS } from "@/lib/mediaProvenance";
 
 function aspectClass(ratio: FeedItem["ratio"], compact?: boolean) {
   if (compact) {
@@ -43,6 +44,7 @@ export function VideoTile({
   return (
     <Link
       href={item.href}
+      data-media-provenance={item.mediaProvenance}
       className="video-tile group block overflow-hidden rounded-xl border border-white/[0.08] bg-black shadow-[0_12px_32px_-14px_rgba(0,0,0,0.85)] transition duration-300 hover:-translate-y-0.5 hover:border-[var(--mint)]/45 hover:shadow-[0_20px_48px_-16px_rgba(200,255,61,0.12)]"
       aria-label={`Open ${item.title}`}
     >
@@ -77,7 +79,14 @@ export function VideoTile({
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-95" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c8ff3d]/45 to-transparent opacity-0 transition group-hover:opacity-100" />
         <div className="absolute left-2 top-2 flex max-w-[80%] flex-wrap gap-0.5">
-          {item.badge ? (
+          {item.mediaProvenance ? (
+            <span
+              className="rounded-full border border-white/10 bg-black/60 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur"
+              title={MEDIA_PROVENANCE_LABELS[item.mediaProvenance]}
+            >
+              Media · {item.mediaProvenance}
+            </span>
+          ) : item.badge ? (
             <span className="rounded-full border border-white/10 bg-black/55 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/80 backdrop-blur">
               {item.badge}
             </span>

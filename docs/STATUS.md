@@ -14,6 +14,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 
 | ID | Outcome | Owner | Status | PR / branch | Reviewer gate |
 |---|---|---|---|---|---|
+| WAVE-A-2026-07-29 | Designer-toy Home → Explore → Project → Recipe → Create → device-local Library loop | Codex + ChatGPT Pro | review | `agent/gpt/higgsfield-wave-a` (local, uncommitted) | Independent lint, typecheck, 193-route build, source/runtime gates and Chromium/Firefox/WebKit × 390/768/1440 E2E passed; no provider, paid, DB, commit, push, PR or deploy |
 | HOME-V1 | Immersive 8-demo toy Recipe home → auditable project → Create in ≤2 clicks | Codex | done | main via PR #50 | GitHub CI #476 green; 390/768/1440 browser proof, 8 distinct cached demos, Project/Recipe analytics, SEO/trust and 193-route build passed |
 | CTRL-RESET | Close stale PRs, close R2 and enforce one active task per agent | Codex | done | main via PR #45 | Isolated worktrees and the one-task queue are now mandatory |
 | R0-NET | Unexpected-exit reservation safety without double release/refund | Codex / Grok | done | main via PR #47 | GitHub CI #466 green; capture throw/failure withheld, 0 release calls, behavior test in real CI |

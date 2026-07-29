@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { PRESETS } from "@/lib/presets";
 import { allCategoryFeeds } from "@/lib/videoFeed";
-import { VideoTile } from "@/components/VideoTile";
+import { RecipeBrowser } from "@/components/RecipeBrowser";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { listCreateShelfWorkflows } from "@/lib/workflows";
 import { createRemixHref } from "@/lib/remixIntent";
@@ -18,13 +18,13 @@ const EFFECTS_GENERATE_HREF = createRemixHref("360-spin-showcase");
 export const metadata: Metadata = {
   title: "Toy video presets · Recipes",
   description:
-    "Verified Pikbo effects use their own cached clip. Unverified toy-video recipes stay static concepts until proof exists.",
+    "Proof-backed Pikbo recipes use their own cached clip. Unproven toy-video recipes stay static concepts until unique footage exists.",
   alternates: { canonical: "/effects" },
   robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Toy video presets · Recipes | ${site.name}`,
     description:
-      "Verified Lab clips and clearly labeled static concept recipes for designer toys.",
+      "Unique cached Lab clips and clearly labeled static concept recipes for designer toys.",
     url: `${site.url}/effects`,
   },
 };
@@ -48,6 +48,7 @@ const EFFECTS_FAQ = [
 /** HF viral-presets wall + suite chrome (toy vertical) */
 export default function EffectsHub() {
   const groups = allCategoryFeeds();
+  const recipeItems = groups.flatMap(({ items }) => items);
   const jobBlocks = listCreateShelfWorkflows().filter(
     (w) => w.id !== "photo-to-clip"
   );
@@ -113,7 +114,7 @@ export default function EffectsHub() {
               Big-budget motion · remake as video
             </h1>
             <p className="mt-0.5 text-[11px] text-white/45">
-              Pixel-parity with suite viral walls — tap any card to Generate video ·{" "}
+              High-density toy recipes — inspect the media truth, then create ·{" "}
               <Link
                 href={EFFECTS_GENERATE_HREF}
                 className="font-semibold text-[#c8ff3d] hover:underline"
@@ -170,42 +171,10 @@ export default function EffectsHub() {
               {w.emoji} {w.label}
             </Link>
           ))}
-          {groups.map(({ category }) => (
-            <a
-              key={category.id}
-              href={`#cat-${category.id}`}
-              className="shrink-0 rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
-            >
-              {category.label}
-            </a>
-          ))}
         </div>
       </div>
 
-      {groups.map(({ category, items }) => (
-        <section
-          key={category.id}
-          id={`cat-${category.id}`}
-          className="scroll-mt-40 border-b border-white/[0.06] px-3 py-8 sm:px-5"
-        >
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-2 px-1">
-            <div>
-              <h2 className="font-display text-base font-bold tracking-tight sm:text-lg">
-                {category.label}
-              </h2>
-              <p className="mt-0.5 text-xs text-white/40">{category.blurb}</p>
-            </div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30">
-              {items.length} looks
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
-            {items.map((item) => (
-              <VideoTile key={item.id} item={item} compact />
-            ))}
-          </div>
-        </section>
-      ))}
+      <RecipeBrowser items={recipeItems} />
 
       <section className="mx-auto max-w-7xl px-3 pb-10 pt-6 sm:px-5">
         <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">

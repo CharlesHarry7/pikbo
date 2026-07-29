@@ -6,6 +6,11 @@ function source(path) {
 }
 
 const wall = source("components/HomeViralWall.tsx");
+const projects = source("components/HomeProjectsExplore.tsx");
+const shell = source("components/AppShell.tsx");
+const libraryPage = source("app/library/page.tsx");
+const libraryGrid = source("components/LibraryGrid.tsx");
+const css = source("app/globals.css");
 const landing = source("components/LandingToolPanel.tsx");
 const sellerSteps = source("components/SellerPackSteps.tsx");
 const batch = source("components/BatchStudio.tsx");
@@ -15,23 +20,39 @@ const zh = source("lib/i18n.ts");
 
 assert.match(
   wall,
-  /href=\{item\.projectHref \|\| item\.href\}/,
-  "home Recipe cards must open the registered Inside Project proof"
+  /href=\{item\.detailHref \|\|/,
+  "home Recipe cards must open the reusable Recipe detail"
+);
+assert.ok(wall.includes("`/effects/${recipeSlug}`"));
+assert.match(
+  wall,
+  /data-home-card-destination="recipe"/,
+  "home Recipe cards must declare Recipe semantics"
 );
 assert.match(
   wall,
   /href=\{item\.href\}[\s\S]*Use this recipe/,
-  "home Recipe cards must expose a separate one-click Remix contract"
+  "home Recipe cards must expose a separate one-click Create contract"
 );
 assert.match(
   wall,
-  /event:\s*item\.projectHref \? "project_open" : "recipe_use"[\s\S]*source:\s*"home_recipe_card"/,
-  "home Recipe proof clicks must preserve project or fallback conversion analytics"
+  /event:\s*"recipe_open"[\s\S]*source:\s*"home_recipe_card"/,
+  "home Recipe detail clicks must preserve Recipe-open analytics"
 );
 assert.match(
   wall,
   /event:\s*"recipe_use"[\s\S]*source:\s*"home_recipe_remake"/,
   "home Recipe CTA clicks must preserve remix conversion analytics"
+);
+assert.match(
+  projects,
+  /href=\{p\.detailHref\}[\s\S]*data-home-project-destination="project"/,
+  "home Project cards must open input/output/evidence details"
+);
+assert.match(
+  projects,
+  /href=\{p\.remakeHref\}[\s\S]*data-home-project-destination="create"/,
+  "home Projects must keep a separate Create path"
 );
 
 assert.match(
@@ -76,5 +97,20 @@ assert.match(
   /matchMedia\("\(max-width: 768px\)"\)\.matches \? 1 : 2/,
   "autoplay budget must remain one mobile / two desktop"
 );
+assert.match(
+  video,
+  /prefers-reduced-motion: reduce[\s\S]*addEventListener\("change", sync\)/,
+  "reduced-motion changes must reactively stop autoplay"
+);
+assert.match(
+  video,
+  /function prefersReducedMotion\(\)[\s\S]*reducedMotion \|\| prefersReducedMotion\(\)/,
+  "first hydration pass must synchronously honor reduced motion"
+);
+assert.match(shell, /grid-cols-5/);
+assert.match(shell, /const central = item\.id === "generate"/);
+assert.match([libraryPage, libraryGrid].join("\n"), /Local to this device/);
+assert.match(css, /html\s*\{[\s\S]*overflow-x:\s*clip/);
+assert.match(css, /body\s*\{[\s\S]*overflow-x:\s*clip/);
 
 console.log("mobile proof regression: source contracts PASS");

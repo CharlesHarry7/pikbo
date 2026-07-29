@@ -766,6 +766,7 @@ assert.deepEqual(remixFixture.parseRemixSearchParams({}), {
   notices: [],
   sourceLabel: null,
   sourcePoster: null,
+  sourceProjectHref: null,
 });
 const validRemixFixture = remixFixture.parseRemixSearchParams({
   effect: "fixture-spin",
@@ -780,6 +781,7 @@ assert.equal(validRemixFixture.intent?.aspectRatio, "9:16");
 assert.equal(validRemixFixture.intent?.durationSeconds, 10);
 assert.equal(validRemixFixture.intent?.channel, "tiktok");
 assert.equal(validRemixFixture.sourcePoster, "/fixture-poster.jpg");
+assert.equal(validRemixFixture.sourceProjectHref, "/projects/fixture-source");
 const invalidRemixFixture = remixFixture.parseRemixSearchParams({
   effect: "not-a-recipe",
 });
@@ -885,7 +887,7 @@ for (const field of [
 assert.match(showcase, /assertRegistryIntegrity/);
 assert.match(showcase, /output reused under another title/);
 assert.match(libraryGrid, /By project|groupMode|sourceProject/);
-assert.match(libraryGrid, /Saved on this\s*device/);
+assert.match(libraryGrid, /Local to this\s*device/);
 
 const exploreGrid = fs.readFileSync(
   join(root, "components/ExploreProjectGrid.tsx"),
@@ -1035,12 +1037,17 @@ const ciYml = fs.readFileSync(
   "utf8"
 );
 assert.match(ciYml, /engine-smoke/);
+assert.match(ciYml, /wave-a-contract-smoke/);
 assert.match(ciYml, /recovery-qa|recovery-cost-gate/);
 assert.match(ciYml, /recovery-ledger/);
 assert.match(ciYml, /recovery-retry-deadline/);
 assert.match(ciYml, /showcase-evidence-smoke/);
+assert.match(ciYml, /showcase-promotion-gate/);
+assert.match(ciYml, /product-proof-smoke/);
+assert.match(ciYml, /mobile-proof-regression/);
 assert.match(ciYml, /seo-cold-start-smoke/);
 assert.match(ciYml, /seller-pack-cached-smoke/);
+assert.match(ciYml, /launch-pack-main-path-smoke/);
 assert.match(ciYml, /seller-pack-api-golden/);
 assert.match(ciYml, /typecheck/);
 assert.match(ciYml, /npm run build/);
@@ -1130,11 +1137,11 @@ for (const relative of [
 }
 assert.match(
   fs.readFileSync(join(root, "components/PresetPreviewCard.tsx"), "utf8"),
-  /Lab · cached prototype/
+  /Media · \{mediaProvenance\}/
 );
 assert.match(
   fs.readFileSync(join(root, "components/VideoTile.tsx"), "utf8"),
-  /Lab · cached prototype/
+  /Media · \{item\.mediaProvenance\}/
 );
 
 assert.match(softLaunch, /floating-hero/);
@@ -1577,11 +1584,11 @@ assert.match(
 // Library honesty: HF Assets IA + device-local labels (banner, not raw page string)
 assert.match(
   fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /LibraryStorageBanner|LibraryGrid|device-local|this browser|local storage|Saved on this device/i
+  /LibraryStorageBanner|LibraryGrid|device-local|this browser|local storage|Local to this device/i
 );
 assert.match(
   fs.readFileSync(join(root, "components/LibraryStorageBanner.tsx"), "utf8"),
-  /device-local|this browser|export JSON|no fake multi-device|Saved on this device/i
+  /device-local|this browser|export JSON|no fake multi-device|Local to this device/i
 );
 // Library Phase F first-run: sticky Generate/Seller Pack + device-local honesty
 const libraryFirstRun = fs.readFileSync(
@@ -1614,11 +1621,11 @@ assert.match(
   fs.readFileSync(join(root, "app/api/image/[id]/retry/route.ts"), "utf8"),
   /forkRetryImageJob/
 );
-assert.match(libraryFirstRun, /Saved on this device/);
+assert.match(libraryFirstRun, /Local to this device/);
 assert.match(libraryFirstRun, /not durable cloud|not multi-device cloud/);
 assert.match(
   fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /Saved on this device/
+  /Local to this device/
 );
 assert.match(
   fs.readFileSync(
@@ -2252,7 +2259,7 @@ const effectMeta = fs.readFileSync(
   "utf8"
 );
 assert.match(effectMeta, /robotsForRecipe/);
-assert.match(effectMeta, /Concept · no unique Lab sample/);
+assert.match(effectMeta, /Media · \{mediaProvenance\}/);
 const landingResults = fs.readFileSync(
   join(root, "components/LandingResults.tsx"),
   "utf8"
@@ -2304,9 +2311,14 @@ assert.match(
   fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
   /data-hero-recipe=\{recipeSlug\}/
 );
+const homeLaunchPackSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(
-  fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
-  /data-home-upgrade=["']launch-pack["'][\s\S]*\/create\?mode=seller-pack/
+  homeLaunchPackSrc,
+  /data-home-upgrade=["']launch-pack["'][\s\S]*WAVE_A_DESTINATIONS\.seller_pack\.href/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8"),
+  /seller_pack:\s*\{[\s\S]*?href:\s*["']\/create\?mode=seller-pack["']/
 );
 
 assert.match(
@@ -3784,7 +3796,8 @@ assert.match(
   homeHeroSrc,
   /Bring your toy to life\.|Turn one designer-toy photo into cinematic videos, stories and/
 );
-assert.match(homeHeroSrc, /data-home-hero|create\?effect=\$\{recipeSlug\}/);
+assert.match(homeHeroSrc, /data-home-hero|data-hero-action="create"/);
+assert.match(homeHeroSrc, /const createHref = item\?\.href/);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeViralWall.tsx"),
   "utf8"
@@ -3793,9 +3806,10 @@ assert.match(
   homeWallSrc,
   /data-home-wall|data-recipe-card|wallDense|Use this recipe|Cached demo/
 );
-assert.match(homeWallSrc, /href=\{item\.projectHref \|\| item\.href\}/);
+assert.match(homeWallSrc, /href=\{item\.detailHref \|\|/);
+assert.match(homeWallSrc, /data-home-card-destination="recipe"/);
 assert.match(homeWallSrc, /href=\{item\.href\}/);
-assert.match(homeWallSrc, /project_open|recipe_use/);
+assert.match(homeWallSrc, /recipe_open|recipe_use/);
 assert.match(homePageSrc, /HomeCinemaHero items=|data-home-upgrade="launch-pack"/);
 assert.doesNotMatch(
   [homePageSrc, homeHeroSrc, homeWallSrc, appShell].join("\n"),
@@ -3934,7 +3948,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/HomeProjectsExplore.tsx"), "utf8"),
-  /detailHref|Inside|Remake|desktopPlayMode/
+  /detailHref|Inside|Use recipe|desktopPlayMode/
 );
 const landingToolPanel = fs.readFileSync(
   join(root, "components/LandingToolPanel.tsx"),
@@ -3956,7 +3970,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/PresetPreviewCard.tsx"), "utf8"),
-  /Lab · cached prototype/
+  /Media · \{mediaProvenance\}/
 );
 assert.match(
   fs.readFileSync(join(root, "lib/workflows.ts"), "utf8"),
@@ -3967,27 +3981,26 @@ assert.match(historySrcLib, /sku\?:/);
 assert.match(library, /i\.sku|sku/);
 
 
-// Home V1: PRIMARY_NAV = Explore · Recipes · Create · Library · Pricing.
+// Wave A shell: one capability registry derives primary + mobile navigation.
 const softLaunchSrc = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
-assert.match(softLaunchSrc, /PRIMARY_NAV/);
-assert.match(softLaunchSrc, /href:\s*["']\/create["']/);
-assert.match(softLaunchSrc, /href:\s*["']\/effects["']/);
-assert.match(softLaunchSrc, /href:\s*["']\/library["']/);
-assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
+assert.match(softLaunchSrc, /export type CapabilityState/);
+assert.match(softLaunchSrc, /"live"[\s\S]*"validation"[\s\S]*"preview"[\s\S]*"coming_soon"/);
+assert.match(softLaunchSrc, /WAVE_A_DESTINATIONS/);
+assert.match(softLaunchSrc, /PRIMARY_NAV_IDS/);
+assert.match(softLaunchSrc, /HOME_ENTRY_IDS/);
+assert.match(softLaunchSrc, /PRIMARY_NAV = destinationList\(PRIMARY_NAV_IDS\)/);
+assert.match(softLaunchSrc, /MOBILE_NAV = destinationList\(PRIMARY_NAV_IDS\)/);
+assert.match(softLaunchSrc, /state:\s*"validation"/);
+assert.match(softLaunchSrc, /note:\s*"Local to this device"/);
 {
-  const primaryBlock =
-    softLaunchSrc.match(
-      /PRIMARY_NAV\s*=\s*\[[\s\S]*?\]\s*as const/
-    )?.[0] || "";
-  const labels = [...primaryBlock.matchAll(/label:\s*"([^"]+)"/g)].map(
-    (match) => match[1]
-  );
-  assert.deepEqual(labels, [
-    "Explore",
-    "Recipes",
-    "Create",
-    "Library",
-    "Pricing",
+  const primaryIds =
+    softLaunchSrc.match(/PRIMARY_NAV_IDS\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] || "";
+  assert.deepEqual([...primaryIds.matchAll(/"([^"]+)"/g)].map((match) => match[1]), [
+    "explore",
+    "recipes",
+    "generate",
+    "library",
+    "pricing",
   ]);
 }
 // Cold-start: /create is a tool, not a rank landing — noindex,follow
@@ -4006,15 +4019,11 @@ assert.match(
   fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
   /Flow · Preview|Assets · Local/
 );
-// Preview doors must not sit in PRIMARY_NAV
+// Preview suite doors remain outside the Wave A primary id list.
 {
-  const primaryBlock = softLaunchSrc.match(
-    /PRIMARY_NAV\s*=\s*\[[\s\S]*?\]\s*as const/
-  )?.[0] || "";
-  assert.ok(primaryBlock.includes('href: "/"'));
-  assert.doesNotMatch(primaryBlock, /href:\s*["']\/image["']/);
-  assert.doesNotMatch(primaryBlock, /href:\s*["']\/cinema["']/);
-  assert.doesNotMatch(primaryBlock, /href:\s*["']\/community["']/);
+  const primaryIds =
+    softLaunchSrc.match(/PRIMARY_NAV_IDS\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] || "";
+  assert.doesNotMatch(primaryIds, /image|cinema|community/);
 }
 const appShellSrc = fs.readFileSync(
   join(root, "components/AppShell.tsx"),
@@ -4173,21 +4182,11 @@ function resolveGenerateStillPure(input) {
   assert.equal(fresh.assetId, "asset_cur");
 }
 
-// Mobile mirrors Explore · Recipes · Create · Library · Pricing.
-assert.match(softLaunchSrc, /MOBILE_NAV/);
-assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/create["']/);
-assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/effects["']/);
-assert.doesNotMatch(
-  softLaunchSrc,
-  /MOBILE_NAV[\s\S]*href:\s*["']\/community["']/
-);
-assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/library["']/);
-assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/pricing["']/);
-assert.doesNotMatch(
-  softLaunchSrc,
-  /MOBILE_NAV[\s\S]*href:\s*["']\/profile["']/
-);
+// Mobile mirrors the same five registry ids with Create visually central.
+assert.match(softLaunchSrc, /MOBILE_NAV = destinationList\(PRIMARY_NAV_IDS\)/);
 assert.match(appShellSrc, /MOBILE_NAV/);
+assert.match(appShellSrc, /grid-cols-5/);
+assert.match(appShellSrc, /const central = item\.id === "generate"/);
 assert.match(appShellSrc, /item\.label/);
 assert.match(
   fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8"),
@@ -5647,14 +5646,15 @@ assert.match(
   fs.readFileSync(join(root, "components/Header.tsx"), "utf8"),
   /createRemixHref|data-header-cta=["']generate-remix["']/
 );
-// AppShell keeps Create in the primary loop; Launch Pack is a later home upgrade.
+// AppShell keeps Create in the primary loop through the shared Wave A registry;
+// Launch Pack remains a separate destination.
 assert.match(
   fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
-  /href=["']\/create["']/
+  /WAVE_A_DESTINATIONS\.generate\.href/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
-  /create\?mode=seller-pack/
+  /WAVE_A_DESTINATIONS\.seller_pack\.href/
 );
 // Pricing Full studio + Footer Product Generate carry remix contract
 assert.match(
@@ -5708,7 +5708,7 @@ const residualGenerateDoors = [
   ["components/LandingSeoMesh.tsx", /data-seo-mesh-generate=["']remix["']/],
   ["components/HeroVideoBanner.tsx", /data-hero-try-photo=["']remix["']/],
   ["components/BatchStudio.tsx", /data-batch-single-generate=["']remix["']/],
-  ["components/HomeToolShelf.tsx", /SHELF_GENERATE_HREF|createRemixHref\(["']360-spin-showcase["']\)/],
+  ["components/HomeToolShelf.tsx", /HOME_ENTRY_RAIL|WAVE_A_DESTINATIONS/],
   ["components/CommandPalette.tsx", /CMD_GENERATE_HREF|createRemixHref\(["']360-spin-showcase["']\)/],
 ];
 for (const [rel, re] of residualGenerateDoors) {

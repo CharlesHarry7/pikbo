@@ -16,6 +16,10 @@ import {
   isPromotedShowcaseProvenance,
   showcaseEvidenceChecklist,
 } from "@/lib/showcaseEvidence";
+import {
+  MEDIA_PROVENANCE_LABELS,
+  mediaProvenanceFromShowcase,
+} from "@/lib/mediaProvenance";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -32,9 +36,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       robots: { index: false, follow: false },
     };
   }
+  const evidenceComplete = showcaseEvidenceChecklist(project.evidence).every(
+    (item) => item.complete
+  );
+  const verified =
+    isPromotedShowcaseProvenance(project.provenance) && evidenceComplete;
   return {
     title: `${project.title} · Inside the project`,
-    description: `${project.result} Inspect the reference poster, cached prototype, recipe, and missing evidence record.`,
+    description: verified
+      ? `${project.result} Inspect the verified source, output, recipe, settings, and review evidence.`
+      : `${project.result} Inspect the reference poster, cached prototype, recipe, and missing evidence record.`,
     alternates: { canonical: `/projects/${project.slug}` },
     // Phase H cold-start: proof pages stay reachable but out of the 9-URL index budget.
     robots: CONCEPT_ROBOTS,
@@ -56,12 +67,25 @@ export default async function ShowcaseProjectPage({ params }: Props) {
   const evidenceChecklist = showcaseEvidenceChecklist(project.evidence);
   const evidenceComplete = evidenceChecklist.every((item) => item.complete);
   const promoted = isPromotedShowcaseProvenance(project.provenance);
-  const verifiedSource = promoted
+  const verified = promoted && evidenceComplete;
+  const mediaProvenance = mediaProvenanceFromShowcase(project.provenance);
+  const verifiedSource = verified
     ? project.evidence!.source.inputAssetPath
     : project.referencePoster;
+  const providerModel = verified
+    ? `${project.evidence!.provider.name} · ${project.evidence!.provider.model}`
+    : "Not verified · provider task evidence absent";
+  const reviewState = verified
+    ? `Reviewed by ${project.evidence!.review.reviewer.displayName}`
+    : evidenceComplete
+      ? "Evidence complete · promotion pending"
+      : "Unreviewed · evidence checklist incomplete";
 
   return (
-    <main className="min-h-screen bg-black px-4 py-8 text-white sm:px-8 sm:py-12">
+    <main
+      className="min-h-screen bg-black px-4 py-8 text-white sm:px-8 sm:py-12"
+      data-media-provenance={mediaProvenance}
+    >
       <ProjectOpenBeacon slug={project.slug} recipe={project.recipeSlug} />
       <div className="mx-auto max-w-7xl">
         <nav
@@ -87,7 +111,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
                 Inside project
               </span>
               <span className="rounded-full border border-white/15 bg-white/[0.05] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/70">
-                {provenance}
+                Media · {mediaProvenance}
               </span>
               <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-semibold text-white/45">
                 {project.aspectRatio} · {project.durationSeconds}s
@@ -139,7 +163,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
 
         <section
           aria-label={
-            promoted
+            verified
               ? "Verified source input and generated output"
               : "Reference poster and cached prototype"
           }
@@ -149,10 +173,10 @@ export default async function ShowcaseProjectPage({ params }: Props) {
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-white/40">
-                  {promoted ? "Source input" : "Reference poster"}
+                  {verified ? "Source input" : "Reference poster"}
                 </p>
                 <h2 className="text-sm font-bold">
-                  {promoted
+                  {verified
                     ? "Matched to the evidence record"
                     : "Not a verified provider input"}
                 </h2>
@@ -166,7 +190,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               <img
                 src={verifiedSource}
                 alt={
-                  promoted
+                  verified
                     ? `Verified source input for ${project.title}`
                     : `Reference poster for ${project.title}`
                 }
@@ -179,7 +203,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
-                  {promoted ? "Verified output" : "Cached prototype"}
+                  {verified ? "Verified output" : "Cached prototype"}
                 </p>
                 <h2 className="text-sm font-bold">{provenance}</h2>
               </div>
@@ -222,26 +246,51 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               </div>
               <div>
                 <dt className="text-[10px] uppercase tracking-wide text-white/35">
-                  Provenance
+                  Media provenance
                 </dt>
                 <dd className="mt-1 font-semibold text-[#c8ff3d]">
-                  {provenance}
+                  {mediaProvenance} · {MEDIA_PROVENANCE_LABELS[mediaProvenance]}
                 </dd>
               </div>
               <div>
                 <dt className="text-[10px] uppercase tracking-wide text-white/35">
-                  Model
+                  Provider / model
                 </dt>
-                <dd className="mt-1 font-semibold">{project.model}</dd>
+                <dd className="mt-1 font-semibold">{providerModel}</dd>
               </div>
               <div>
                 <dt className="text-[10px] uppercase tracking-wide text-white/35">
-                  Format
+                  Aspect
+                </dt>
+                <dd className="mt-1 font-semibold">{project.aspectRatio}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-wide text-white/35">
+                  Duration
                 </dt>
                 <dd className="mt-1 font-semibold">
-                  {project.aspectRatio} · {project.durationSeconds}s ·{" "}
-                  {project.resolution}
+                  {project.durationSeconds}s
                 </dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-wide text-white/35">
+                  Resolution
+                </dt>
+                <dd className="mt-1 font-semibold">{project.resolution}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-wide text-white/35">
+                  Audio
+                </dt>
+                <dd className="mt-1 font-semibold">
+                  Muted preview · audio provenance not recorded
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-[10px] uppercase tracking-wide text-white/35">
+                  Evidence / review state
+                </dt>
+                <dd className="mt-1 font-semibold">{reviewState}</dd>
               </div>
               <div className="sm:col-span-2">
                 <dt className="text-[10px] uppercase tracking-wide text-white/35">
@@ -268,7 +317,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               </div>
             </dl>
             <p className="mt-5 border-t border-white/10 pt-4 text-[11px] leading-relaxed text-white/40">
-              {promoted ? (
+              {verified ? (
                 <>
                   Evidence record complete. The registered source, provider run,
                   output assets, and named review all match this project.
@@ -294,12 +343,12 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               </p>
               <span
                 className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wide ${
-                  promoted && evidenceComplete
+                  verified && evidenceComplete
                     ? "border-[#c8ff3d]/35 bg-[#c8ff3d]/10 text-[#c8ff3d]"
                     : "border-white/10 bg-white/[0.04] text-white/45"
                 }`}
               >
-                {promoted && evidenceComplete
+                {verified && evidenceComplete
                   ? "Verified"
                   : evidenceComplete
                     ? "Ready for promotion"
@@ -331,7 +380,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               ))}
             </div>
             <p className="mt-3 text-[10px] leading-relaxed text-white/35">
-              {promoted && evidenceComplete
+              {verified && evidenceComplete
                 ? "Rights, provider run, source, output, and named review records are complete."
                 : evidenceComplete
                   ? "Evidence is complete, but this project remains a prototype until provenance is explicitly promoted."

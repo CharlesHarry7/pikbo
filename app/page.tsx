@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buildHomeShowcaseFeed } from "@/lib/videoFeed";
+import {
+  buildHomeShowcaseFeed,
+  communityProjects,
+} from "@/lib/videoFeed";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
+import { HomeToolShelf } from "@/components/HomeToolShelf";
+import { HomeSellerValueBanner } from "@/components/HomeSellerValueBanner";
 import { HomeViralWall } from "@/components/HomeViralWall";
+import { HomeProjectsExplore } from "@/components/HomeProjectsExplore";
 import { HomeSeoBody } from "@/components/HomeSeoBody";
 import { HomeTrustFooter } from "@/components/HomeTrustFooter";
 import { JsonLd } from "@/components/JsonLd";
@@ -12,6 +18,7 @@ import {
   softwareApplicationJsonLd,
   websiteJsonLd,
 } from "@/lib/jsonLd";
+import { WAVE_A_DESTINATIONS } from "@/lib/softLaunch";
 
 export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
@@ -42,6 +49,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const showcase = buildHomeShowcaseFeed();
+  const projects = communityProjects().slice(0, 8);
   const lcpPoster = showcase[0]?.demo?.poster ?? "/demos/orbit-still.webp";
 
   return (
@@ -60,7 +68,10 @@ export default function Home() {
       />
 
       <HomeCinemaHero items={showcase} />
+      <HomeToolShelf />
+      <HomeSellerValueBanner />
       <HomeViralWall items={showcase} />
+      <HomeProjectsExplore projects={projects} />
 
       <section
         id="home-create"
@@ -84,13 +95,15 @@ export default function Home() {
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
-              href="/create?mode=seller-pack"
+              href={WAVE_A_DESTINATIONS.seller_pack.href}
+              data-capability-state={WAVE_A_DESTINATIONS.seller_pack.state}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#c8ff3d] px-7 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-[#d5ff6b]"
             >
               Build a Launch Pack
             </Link>
             <Link
-              href="/pricing"
+              href={WAVE_A_DESTINATIONS.pricing.href}
+              data-capability-state={WAVE_A_DESTINATIONS.pricing.state}
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/18 px-7 text-sm font-bold text-white/72 transition hover:border-white/40 hover:text-white"
             >
               See pricing

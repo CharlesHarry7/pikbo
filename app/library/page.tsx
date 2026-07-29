@@ -40,7 +40,7 @@ export default function LibraryPage() {
               remake into Generate · publish live results to Community when
               signed in. Storage is{" "}
               <span className="font-semibold text-[var(--mint)]">
-                Saved on this device
+                Local to this device
               </span>{" "}
               plus a process-memory session ledger — never multi-device cloud
               until durable assets ship.

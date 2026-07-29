@@ -21,6 +21,7 @@ const projectPage = read("app/projects/[slug]/page.tsx");
 const videoTile = read("components/VideoTile.tsx");
 const presetPreview = read("components/PresetPreviewCard.tsx");
 const createStudio = read("components/CreateStudio.tsx");
+const mediaProvenance = read("lib/mediaProvenance.ts");
 const batchStudio = read("components/BatchStudio.tsx");
 
 const proofList =
@@ -74,7 +75,6 @@ const truthSurface = [
 
 for (const forbidden of [
   /Official · cached/i,
-  /official_cached/,
   /Lab\s*≥\s*4/i,
   /all scores\s*≥\s*4/i,
   /qualityScores/,
@@ -94,6 +94,16 @@ assert(
 assert(
   !/\b[0-5](?:\.\d+)?\s*\/\s*5\b/.test(projectPage),
   "Inside Project must not show an unverified numeric score"
+);
+assert(
+  mediaProvenance.includes('"official_cached"') &&
+    mediaProvenance.includes('"live_generated"') &&
+    mediaProvenance.includes('"concept"'),
+  "Recipe media provenance must use the three exact public states"
+);
+assert(
+  projectPage.includes("Not verified · provider task evidence absent"),
+  "Inside Project must not expose provider/model as verified without task evidence"
 );
 assert(
   videoTile.includes("data-concept-recipe-art") &&

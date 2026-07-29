@@ -2794,12 +2794,12 @@ export function CreateStudio({
                   >
                     {t("create.anotherRecipe")}
                   </Link>
-                  {remix.intent?.sourceProjectSlug ? (
+                  {remix.sourceProjectHref ? (
                     <Link
-                      href={`/projects/${encodeURIComponent(remix.intent.sourceProjectSlug)}`}
+                      href={remix.sourceProjectHref}
                       className="btn btn-ghost px-4 py-2 text-xs"
                     >
-                      Open source recipe
+                      Open source project
                     </Link>
                   ) : null}
                   <Link
