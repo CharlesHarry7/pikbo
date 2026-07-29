@@ -6,7 +6,8 @@
 
 **Worktree:** `agent/gpt/higgsfield-wave-a`
 
-**State:** local, uncommitted, not pushed or deployed
+**State:** committed and pushed to `agent/gpt/higgsfield-wave-a`; Draft PR #77,
+not merged or deployed
 
 ## Scope delivered
 
@@ -139,5 +140,6 @@ the assertions were corrected and the full matrix rerun.
   was used or claimed.
 - No production secrets were loaded. The local server correctly reported
   cached-only/degraded health and all Live requirements false.
-- No commit, push, pull request, deployment, migration, DNS change, public
-  indexing action or production feature enablement occurred.
+- The reviewed source is committed and pushed in Draft PR #77. No merge,
+  deployment, migration, DNS change, public indexing action or production
+  feature enablement occurred.
