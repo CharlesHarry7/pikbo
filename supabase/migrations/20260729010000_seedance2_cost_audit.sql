@@ -1,5 +1,8 @@
--- PIKBO Seedance 2.0 private-live USD cost audit + cumulative paid ceiling.
--- SOURCE ONLY. Do not apply in this task. No environment or production change.
+-- HISTORICAL PIKBO Seedance 2.0 private-live USD cost audit + paid ceiling.
+-- Superseded by the project-wide US$20 provider validation budget in
+-- 20260729022000_provider_validation_budget.sql. The follow-up
+-- 20260729023000_deprecate_seedance2_budget.sql removes all remaining
+-- headroom and disables this RPC without deleting historical audit rows.
 --
 -- Purpose:
 --   Durable, atomic admission against a cumulative USD ceiling for the exact

@@ -128,7 +128,10 @@ function mapAccount(row: AccountRow): DurableAccount {
     id: row.id,
     kind: row.kind === "shop" ? "shop" : "personal",
     ownerUserId: row.owner_user_id,
-    planId: (row.plan_id as PlanId) || "free",
+    planId:
+      row.plan_id === "founding_studio"
+        ? "founding_studio"
+        : "free",
     status:
       row.status === "restricted" || row.status === "closed"
         ? row.status
@@ -195,6 +198,28 @@ export async function supabaseGetPersonalWallet(userId: string): Promise<{
     reservedCredits: wallet.reservedCredits,
     planId: account.planId,
   };
+}
+
+/**
+ * Billing must never accept money for an account that the durable provider
+ * boundary would reject. Missing schema/rows/errors all fail closed.
+ */
+export async function supabasePaidDeliveryEligible(
+  accountId: string,
+  userId: string
+): Promise<boolean> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return false;
+  const { data, error } = await admin
+    .from("accounts")
+    .select("id")
+    .eq("id", accountId)
+    .eq("owner_user_id", userId)
+    .eq("kind", "personal")
+    .eq("status", "active")
+    .eq("live_generation_allowed", true)
+    .maybeSingle();
+  return !error && Boolean(data?.id);
 }
 
 /**
@@ -918,7 +943,7 @@ export async function supabaseReserveGenerationAtomic(input: {
     payload.status !== "reserved" ||
     typeof payload.idempotent !== "boolean" ||
     typeof payload.providerAuthorized !== "boolean" ||
-    (planId !== "free" && planId !== "creator" && planId !== "shop") ||
+    (planId !== "free" && planId !== "founding_studio") ||
     amount == null ||
     availableCredits == null ||
     reservedCredits == null ||
@@ -1206,7 +1231,7 @@ function mapPackJobs(raw: unknown): AtomicSellerPackJobPublic[] | null {
 }
 
 function planIdField(value: unknown): PlanId | null {
-  return value === "free" || value === "creator" || value === "shop"
+  return value === "free" || value === "founding_studio"
     ? value
     : null;
 }
@@ -1402,6 +1427,7 @@ export async function supabaseSettleSellerPackChildAtomic(input: {
   userId: string;
   packRunId: string;
   jobId: string;
+  attemptKey: string;
   providerRequestId?: string;
 }): Promise<
   | {
@@ -1428,10 +1454,11 @@ export async function supabaseSettleSellerPackChildAtomic(input: {
       error: "Supabase service role unavailable",
     };
   }
-  const { data, error } = await admin.rpc("pikbo_settle_seller_pack_child_v1", {
+  const { data, error } = await admin.rpc("pikbo_settle_seller_pack_child_v2", {
     p_user_id: input.userId,
     p_pack_run_id: input.packRunId,
     p_job_id: input.jobId,
+    p_attempt_key: input.attemptKey,
     p_provider_request_id: input.providerRequestId || null,
   });
   if (error) {
@@ -1490,6 +1517,7 @@ export async function supabaseReleaseSellerPackChildAtomic(input: {
   userId: string;
   packRunId: string;
   jobId: string;
+  attemptKey: string;
   reason: string;
 }): Promise<
   | {
@@ -1517,10 +1545,11 @@ export async function supabaseReleaseSellerPackChildAtomic(input: {
       error: "Supabase service role unavailable",
     };
   }
-  const { data, error } = await admin.rpc("pikbo_release_seller_pack_child_v1", {
+  const { data, error } = await admin.rpc("pikbo_release_seller_pack_child_v2", {
     p_user_id: input.userId,
     p_pack_run_id: input.packRunId,
     p_job_id: input.jobId,
+    p_attempt_key: input.attemptKey,
     p_reason: input.reason || "child_failed",
   });
   if (error) {
@@ -1754,5 +1783,65 @@ export async function supabaseGetSellerPackStatusAtomic(input: {
       reservedCredits,
       jobs,
     },
+  };
+}
+
+/** Service-role worker cleanup. It releases only expired queued pack children. */
+export async function supabaseExpireQueuedSellerPackChildren(input?: {
+  limit?: number;
+}): Promise<
+  | {
+      ok: true;
+      data: { releasedJobs: number; releasedCredits: number };
+    }
+  | AtomicRpcFailure
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: "Supabase service role unavailable",
+    };
+  }
+  const limit = Math.min(
+    200,
+    Math.max(1, Math.floor(Number(input?.limit) || 50))
+  );
+  const { data, error } = await admin.rpc(
+    "pikbo_expire_seller_pack_queued_v1",
+    { p_limit: limit }
+  );
+  if (error) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: error.message.slice(0, 160),
+    };
+  }
+  const payload = rpcPayload(data);
+  const releasedJobs = payload
+    ? numberField(payload, "releasedJobs")
+    : null;
+  const releasedCredits = payload
+    ? numberField(payload, "releasedCredits")
+    : null;
+  if (
+    !payload ||
+    payload.ok !== true ||
+    releasedJobs == null ||
+    releasedCredits == null ||
+    releasedJobs < 0 ||
+    releasedCredits !== releasedJobs * 10
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Seller Pack expiry worker returned an invalid payload",
+    };
+  }
+  return {
+    ok: true,
+    data: { releasedJobs, releasedCredits },
   };
 }

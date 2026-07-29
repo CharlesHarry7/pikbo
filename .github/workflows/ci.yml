@@ -48,6 +48,20 @@ jobs:
       - name: T5 + R0 critical path (refund · idempotency · auth fail-closed)
         run: npm run t5-r0-critical-path
 
+      - name: P0 private object settlement + provider budget
+        run: |
+          npm run p0-private-live-generation
+          npm run provider-budget-regression
+
+      - name: P1 atomic Launch Pack (30 once · three bound children)
+        run: npm run seller-pack-atomic-regression
+
+      - name: Stripe billing (paid binding · event ordering · credit idempotency)
+        run: npm run stripe-billing-regression
+
+      - name: Privacy analytics (six-event funnel · no sensitive payloads)
+        run: npm run privacy-analytics-regression
+
       - name: R0 reservation safety-net (behavioral)
         run: npm run r0-safety-net
 
@@ -62,6 +76,15 @@ jobs:
 
       - name: Seller Pack cached golden path
         run: npm run seller-pack-cached-smoke
+
+      - name: Launch Pack product and mobile contracts
+        run: |
+          npm run launch-pack-main-path-smoke
+          npm run product-proof-smoke
+          npm run mobile-proof-regression
+
+      - name: T6 owned watermark delivery proof
+        run: npm run t6-deliverable-proof
 
       - name: Recovery reconciliation (R1c lease + settlement replay)
         run: npm run recovery-reconciliation

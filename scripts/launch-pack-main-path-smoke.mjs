@@ -36,7 +36,7 @@ for (const slug of [
 ]) {
   assert.match(contract, new RegExp(`"${slug}"`));
 }
-assert.match(create, /Launch Pack — 3 assets · quote shown before Live/);
+assert.match(create, /Launch Pack — 3 private videos · 30 credits/);
 assert.match(create, /One photo → your Launch Pack/);
 assert.doesNotMatch(create, /Launch Pack — 12 recipes/);
 

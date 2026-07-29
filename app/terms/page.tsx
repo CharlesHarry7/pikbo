@@ -55,11 +55,11 @@ export default function TermsPage() {
             Cached prototype previews cost 0 credits, are labeled, and do not
             animate your upload. Live generation requires an eligible signed-in
             account, durable credits, protected delivery, explicit enablement,
-            and available provider capacity. Creator and Shop are presented as
-            monthly plans, but production billing remains gated until those
-            checks pass. When enabled, Stripe handles the subscription. Credits
-            never guarantee unlimited Live generation, and we may rate-limit to
-            protect the service.
+            and available provider capacity. Founding Studio is the only paid
+            monthly candidate, but production billing remains gated until the
+            delivery, cost, and billing checks pass. When enabled, Stripe
+            handles the subscription. Credits never guarantee unlimited Live
+            generation, and we may rate-limit to protect the service.
           </p>
         </section>
 

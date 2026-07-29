@@ -27,11 +27,15 @@ alter table public.generation_jobs
       and output_sha256 is null
     )
     or (
-      output_object_key ~
+      output_object_key is not null
+      and output_object_key ~
         ('^private-results/' || created_by::text ||
          '/[0-9a-f-]{36}\.mp4$')
+      and output_content_type is not null
       and output_content_type = 'video/mp4'
+      and output_byte_length is not null
       and output_byte_length between 32 and 67108864
+      and output_sha256 is not null
       and output_sha256 ~ '^[a-f0-9]{64}$'
     )
   );
@@ -312,6 +316,7 @@ begin
     'private-results/' || p_user_id::text || '/' || p_job_id::text || '.mp4';
   if p_object_key is distinct from v_expected_key
      or p_content_type is distinct from 'video/mp4'
+     or p_byte_length is null
      or p_byte_length not between 32 and 67108864
      or p_sha256 is null
      or p_sha256 !~ '^[a-f0-9]{64}$'

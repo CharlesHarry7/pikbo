@@ -1,5 +1,10 @@
 # PIKBO unit economics — current allowances and Seedance cost
 
+> **Superseded on 2026-07-29.** The current single-plan, fixed Fast 720p
+> contract and release gates are in
+> [`CURRENT_LAUNCH_CONTRACT.md`](./CURRENT_LAUNCH_CONTRACT.md). The
+> Free/Creator/Shop and public Mini analysis below is historical evidence only.
+
 **Reviewed:** 2026-07-23
 
 **Scope:** C3 / truth-sync

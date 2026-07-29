@@ -63,7 +63,7 @@ assert(
   "featured video must expose controls and respect reduced motion"
 );
 assert(
-  create.includes("Launch Pack — 3 assets · quote shown before Live") &&
+  create.includes("Launch Pack — 3 private videos · 30 credits") &&
     create.includes("One photo → your Launch Pack") &&
     !create.includes("Launch Pack — 12 recipes"),
   "the primary Launch Pack must stay the fixed three-asset seller path"

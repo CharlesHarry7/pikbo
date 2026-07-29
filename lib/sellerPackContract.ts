@@ -50,6 +50,41 @@ export const SELLER_PACK_ITEMS = [
 
 export type SellerPackItem = (typeof SELLER_PACK_ITEMS)[number];
 export type SellerPackSlug = SellerPackItem["slug"];
+export type SellerPackChildKey = SellerPackItem["key"];
+
+export const SELLER_PACK_SERVER_JOB_STATUSES = [
+  "queued",
+  "running",
+  "succeeded",
+  "failed",
+] as const;
+
+export type SellerPackServerJobStatus =
+  (typeof SELLER_PACK_SERVER_JOB_STATUSES)[number];
+
+/**
+ * Owner-scoped child shape returned by reserve/status.
+ *
+ * This is an untrusted network boundary in the browser. Keep it next to the
+ * frozen product contract so reserve, refresh recovery, and BatchStudio cannot
+ * drift into three different interpretations of "the fixed pack".
+ */
+export type ExactSellerPackServerJob = {
+  jobId: string;
+  childKey: SellerPackChildKey;
+  effectSlug: SellerPackSlug;
+  aspectRatio: SellerPackItem["aspectRatio"];
+  durationSec: 5;
+  status: SellerPackServerJobStatus;
+  quotedCredits: 10;
+  settledCredits: number;
+  attemptKey: string | null;
+  errorCode?: string | null;
+  hasPrivateResult?: boolean;
+  resultUrl?: string | null;
+  modelId?: string | null;
+  resolution?: string | null;
+};
 
 export const SELLER_PACK_SLUGS: readonly SellerPackSlug[] = SELLER_PACK_ITEMS.map(
   (i) => i.slug
@@ -79,6 +114,79 @@ export function sellerPackItemBySlug(
   slug: string
 ): SellerPackItem | undefined {
   return SELLER_PACK_ITEMS.find((item) => item.slug === slug);
+}
+
+function optionalStringOrNull(value: unknown): boolean {
+  return value == null || typeof value === "string";
+}
+
+/**
+ * Parse an untrusted reserve/status jobs payload.
+ *
+ * Acceptance is deliberately exact:
+ * - exactly three children in the frozen order;
+ * - exact key/effect/aspect/duration/quote for each position;
+ * - three non-empty, unique server job ids;
+ * - only server job states understood by the atomic state machine.
+ *
+ * Returning null is fail-closed. Callers must not reorder, infer, or repair a
+ * malformed response because doing so could bind a provider call to the wrong
+ * server-owned credit reservation.
+ */
+export function parseExactSellerPackServerJobs(
+  value: unknown
+): ExactSellerPackServerJob[] | null {
+  if (!Array.isArray(value) || value.length !== SELLER_PACK_CHILD_COUNT) {
+    return null;
+  }
+
+  const jobIds = new Set<string>();
+  const parsed: ExactSellerPackServerJob[] = [];
+
+  for (let index = 0; index < SELLER_PACK_ITEMS.length; index += 1) {
+    const raw = value[index];
+    const expected = SELLER_PACK_ITEMS[index];
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const job = raw as Record<string, unknown>;
+    if (
+      typeof job.jobId !== "string" ||
+      job.jobId.length < 8 ||
+      job.jobId.trim() !== job.jobId ||
+      jobIds.has(job.jobId) ||
+      job.childKey !== expected.key ||
+      job.effectSlug !== expected.slug ||
+      job.aspectRatio !== expected.aspectRatio ||
+      job.durationSec !== expected.durationSec ||
+      job.quotedCredits !== SELLER_PACK_CREDITS_PER_CHILD ||
+      !SELLER_PACK_SERVER_JOB_STATUSES.includes(
+        job.status as SellerPackServerJobStatus
+      ) ||
+      !Number.isInteger(job.settledCredits) ||
+      (job.settledCredits as number) < 0 ||
+      (job.settledCredits as number) > SELLER_PACK_CREDITS_PER_CHILD ||
+      !(
+        job.attemptKey == null ||
+        (typeof job.attemptKey === "string" &&
+          job.attemptKey.length >= 8 &&
+          job.attemptKey.trim() === job.attemptKey)
+      ) ||
+      !optionalStringOrNull(job.errorCode) ||
+      !optionalStringOrNull(job.resultUrl) ||
+      !optionalStringOrNull(job.modelId) ||
+      !optionalStringOrNull(job.resolution) ||
+      !(
+        job.hasPrivateResult == null ||
+        typeof job.hasPrivateResult === "boolean"
+      )
+    ) {
+      return null;
+    }
+
+    jobIds.add(job.jobId);
+    parsed.push(job as ExactSellerPackServerJob);
+  }
+
+  return jobIds.size === SELLER_PACK_CHILD_COUNT ? parsed : null;
 }
 
 export type SellerPackChildOutcomeStatus =

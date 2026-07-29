@@ -1,5 +1,11 @@
 # PIKBO Auth and Durable Credits — T5 data model draft
 
+> **Architecture history.** Durable auth, atomic reservations, Pack jobs,
+> private-result attachment, provider-budget authority, and Stripe billing RPC
+> now exist in source. The current product/plan boundary is
+> [`../CURRENT_LAUNCH_CONTRACT.md`](../CURRENT_LAUNCH_CONTRACT.md); legacy
+> Creator/Shop enum labels below are not valid paid authority.
+
 **Status:** Architecture/product draft — requires Claude engineering review
 **Owner:** GPT (data and business contract)
 **Implementation owner:** Claude

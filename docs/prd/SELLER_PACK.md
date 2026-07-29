@@ -1,5 +1,12 @@
 # PIKBO Seller Pack PRD
 
+> **Superseded implementation contract (2026-07-29):** the Pack is now one
+> database-atomic 30-credit reservation with exactly three private Fast
+> 720p/5-second children and server-only settlement/release. See
+> [`../CURRENT_LAUNCH_CONTRACT.md`](../CURRENT_LAUNCH_CONTRACT.md). Legacy
+> sequential browser settlement and Creator/Shop access rules below are
+> historical only.
+
 **Status:** Product contract v1 — ready for engineering review
 **Owner:** GPT (product specification)
 **Engineering owner:** Claude

@@ -6,67 +6,31 @@ import { createWorkbenchHref } from "@/lib/jobIntents";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/LanguageProvider";
 
-/**
- * HF Generate–style suite chrome for the toy vertical.
- * Product path first (Generate · Seller · Recipes · Modules · Library);
- * Preview doors last (Flow · Cinema · Stills) — no fake multi-model zoo.
- */
+/** Keep Create focused on the four shipped product surfaces. */
 const MODE_DEFS = [
   {
     id: "generate" as const,
     href: createWorkbenchHref(),
     labelKey: "suite.mode.generate",
     blurbKey: "suite.mode.generate.blurb",
-    preview: false,
   },
   {
     id: "seller" as const,
     href: "/create?mode=seller-pack",
     labelKey: "suite.mode.seller",
     blurbKey: "suite.mode.seller.blurb",
-    preview: false,
   },
   {
     id: "recipes" as const,
     href: "/effects",
     labelKey: "suite.mode.recipes",
     blurbKey: "suite.mode.recipes.blurb",
-    preview: false,
-  },
-  {
-    id: "modules" as const,
-    href: "/modules",
-    labelKey: "suite.mode.modules",
-    blurbKey: "suite.mode.modules.blurb",
-    preview: false,
   },
   {
     id: "library" as const,
     href: "/library",
     labelKey: "suite.mode.library",
     blurbKey: "suite.mode.library.blurb",
-    preview: false,
-  },
-  {
-    id: "flow" as const,
-    href: "/flow",
-    labelKey: "suite.mode.flow",
-    blurbKey: "suite.mode.flow.blurb",
-    preview: true,
-  },
-  {
-    id: "cinema" as const,
-    href: "/cinema",
-    labelKey: "suite.mode.cinema",
-    blurbKey: "suite.mode.cinema.blurb",
-    preview: true,
-  },
-  {
-    id: "image" as const,
-    href: "/image",
-    labelKey: "suite.mode.stills",
-    blurbKey: "suite.mode.stills.blurb",
-    preview: true,
   },
 ];
 
@@ -86,26 +50,14 @@ export function GenerateSuiteChrome({
     if (id === "generate") {
       return (path === "/create" || path === "/generate") && !sellerMode;
     }
-    if (id === "image") {
-      return isImage;
-    }
     if (id === "seller") {
       return path === "/create" && sellerMode;
-    }
-    if (id === "modules") {
-      return path === "/modules" || path === "/apps";
     }
     if (id === "recipes") {
       return path.startsWith("/effects");
     }
-    if (id === "flow") {
-      return path === "/flow";
-    }
     if (id === "library") {
       return path === "/library" || path.startsWith("/library/");
-    }
-    if (id === "cinema") {
-      return path === "/cinema" || path.startsWith("/cinema/");
     }
     return false;
   }
@@ -157,18 +109,11 @@ export function GenerateSuiteChrome({
                   "shrink-0 rounded-xl border px-3 py-1.5 transition duration-200",
                   active
                     ? "border-[var(--mint)] bg-[var(--mint)]/15 text-[var(--mint)] shadow-[0_0_24px_rgba(200,255,61,0.12)]"
-                    : m.preview
-                      ? "border-white/[0.07] bg-white/[0.02] text-white/55 hover:border-white/20 hover:text-white/80"
-                      : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
+                    : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
                 )}
               >
                 <span className="flex items-center gap-1 text-[11px] font-bold leading-none">
                   {t(m.labelKey)}
-                  {m.preview ? (
-                    <span className="rounded bg-white/10 px-1 py-px text-[8px] font-black uppercase tracking-wide text-white/45">
-                      {t("suite.preview")}
-                    </span>
-                  ) : null}
                 </span>
                 <span className="mt-0.5 block text-[9px] opacity-60">
                   {t(m.blurbKey)}

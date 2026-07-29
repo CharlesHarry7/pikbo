@@ -2,11 +2,13 @@ import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import {
   privateResultObjectKey,
+  privateStoredObjectMatches,
   providerOutputHostAllowed,
 } from "@/lib/privateGenerationResultsPure.mjs";
 
 export {
   privateResultObjectKey,
+  privateStoredObjectMatches,
   providerOutputHostAllowed,
 } from "@/lib/privateGenerationResultsPure.mjs";
 
@@ -57,6 +59,7 @@ export type PrivateGenerationRecovery =
 type SaveInput = {
   jobId: string;
   userId: string;
+  attemptKey?: string | null;
   providerRequestId: string;
   providerOutputUrl: string;
   effect: string;
@@ -70,6 +73,11 @@ type SaveFailure = {
   ok: false;
   code: string;
   error: string;
+  /**
+   * The object may already be durably attached even though the RPC response
+   * was lost. Callers must withhold (never refund/delete) until reconciliation.
+   */
+  settlementUncertain?: boolean;
 };
 
 function configuredProviderHosts(): string[] {
@@ -132,6 +140,50 @@ const RESULT_COLUMNS = [
   "created_at",
 ].join(",");
 
+async function attachedOutputState(input: {
+  jobId: string;
+  userId: string;
+  attemptKey?: string | null;
+  objectKey: string;
+  checksum: string;
+  providerRequestId: string;
+  byteLength: number;
+}): Promise<"match" | "empty" | "conflict" | "unavailable"> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return "unavailable";
+  const { data, error } = await admin
+    .from("generation_jobs")
+    .select(
+      [
+        "id",
+        "created_by",
+        "pack_attempt_key",
+        "provider_request_id",
+        "output_object_key",
+        "output_content_type",
+        "output_byte_length",
+        "output_sha256",
+      ].join(",")
+    )
+    .eq("id", input.jobId)
+    .eq("created_by", input.userId)
+    .maybeSingle();
+  if (error) return "unavailable";
+  if (!data) return "empty";
+  const row = data as unknown as Record<string, unknown>;
+  if (row.output_object_key == null) return "empty";
+  return row.id === input.jobId &&
+    row.created_by === input.userId &&
+    row.pack_attempt_key === (input.attemptKey ?? null) &&
+    row.output_object_key === input.objectKey &&
+    row.output_content_type === "video/mp4" &&
+    row.output_byte_length === input.byteLength &&
+    row.output_sha256 === input.checksum &&
+    row.provider_request_id === input.providerRequestId
+    ? "match"
+    : "conflict";
+}
+
 export async function getPrivateGenerationResult(input: {
   jobId: string;
   userId: string;
@@ -155,15 +207,31 @@ export async function getPrivateGenerationResultByIdempotency(input: {
 }): Promise<PrivateGenerationResult | null> {
   const admin = getSupabaseAdmin();
   if (!admin) return null;
-  const { data, error } = await admin
+  const direct = await admin
     .from("generation_jobs")
     .select(RESULT_COLUMNS)
     .eq("created_by", input.userId)
     .eq("idempotency_key", input.idempotencyKey)
     .eq("status", "succeeded")
     .maybeSingle();
-  if (error || !data) return null;
-  return resultFromRow(data as unknown as Record<string, unknown>);
+  if (!direct.error && direct.data) {
+    return resultFromRow(
+      direct.data as unknown as Record<string, unknown>
+    );
+  }
+  // Pack children keep a stable logical job id while every retry receives a
+  // new attempt key. The server-owned pack_attempt_key is the replay binding.
+  const packAttempt = await admin
+    .from("generation_jobs")
+    .select(RESULT_COLUMNS)
+    .eq("created_by", input.userId)
+    .eq("pack_attempt_key", input.idempotencyKey)
+    .eq("status", "succeeded")
+    .maybeSingle();
+  if (packAttempt.error || !packAttempt.data) return null;
+  return resultFromRow(
+    packAttempt.data as unknown as Record<string, unknown>
+  );
 }
 
 /**
@@ -177,13 +245,26 @@ export async function getPrivateGenerationRecovery(input: {
 }): Promise<PrivateGenerationRecovery> {
   const admin = getSupabaseAdmin();
   if (!admin) return { state: "unavailable" };
-  const { data, error } = await admin
+  const direct = await admin
     .from("generation_jobs")
     .select(`${RESULT_COLUMNS},error_code`)
     .eq("created_by", input.userId)
     .eq("idempotency_key", input.idempotencyKey)
     .maybeSingle();
-  if (error) return { state: "unavailable" };
+  let data = direct.data;
+  if (!data) {
+    const packAttempt = await admin
+      .from("generation_jobs")
+      .select(`${RESULT_COLUMNS},error_code`)
+      .eq("created_by", input.userId)
+      .eq("pack_attempt_key", input.idempotencyKey)
+      .maybeSingle();
+    if (packAttempt.error) {
+      return direct.error ? { state: "unavailable" } : { state: "not_found" };
+    }
+    data = packAttempt.data;
+  }
+  if (direct.error && !data) return { state: "unavailable" };
   if (!data) return { state: "not_found" };
 
   const row = data as unknown as Record<string, unknown>;
@@ -250,19 +331,25 @@ export async function listPrivateGenerationResults(input: {
 
 export async function signedPrivateResultUrl(
   objectKey: string,
-  expiresInSeconds = 60 * 60,
+  expiresInSeconds = 10 * 60,
   downloadFilename?: string
 ): Promise<string | null> {
   const admin = getSupabaseAdmin();
   if (!admin) return null;
-  const { data, error } = await admin.storage
-    .from(PRIVATE_RESULTS_BUCKET)
-    .createSignedUrl(
-      objectKey,
-      expiresInSeconds,
-      downloadFilename ? { download: downloadFilename } : undefined
-    );
-  return error ? null : data.signedUrl || null;
+  try {
+    const { data, error } = await admin.storage
+      .from(PRIVATE_RESULTS_BUCKET)
+      .createSignedUrl(
+        objectKey,
+        expiresInSeconds,
+        downloadFilename ? { download: downloadFilename } : undefined
+      );
+    return error ? null : data.signedUrl || null;
+  } catch {
+    // Signing is ephemeral. A temporary signing failure must not turn a
+    // durable private result into a credit release.
+    return null;
+  }
 }
 
 async function providerVideoBytes(
@@ -358,13 +445,58 @@ async function providerVideoBytes(
   }
 }
 
+function privateStorageObjectMissing(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const record = error as Record<string, unknown>;
+  const status = Number(record.statusCode ?? record.status ?? 0);
+  const message =
+    typeof record.message === "string" ? record.message.toLowerCase() : "";
+  return status === 404 || /object[_\s-]*not[_\s-]*found/.test(message);
+}
+
+async function storedPrivateObjectState(input: {
+  objectKey: string;
+  byteLength: number;
+  checksum: string;
+}): Promise<"match" | "absent" | "conflict" | "unavailable"> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return "unavailable";
+  try {
+    const { data, error } = await admin.storage
+      .from(PRIVATE_RESULTS_BUCKET)
+      .download(input.objectKey);
+    if (error) {
+      return privateStorageObjectMissing(error) ? "absent" : "unavailable";
+    }
+    if (!data) return "unavailable";
+    const bytes = new Uint8Array(await data.arrayBuffer());
+    const checksum = createHash("sha256").update(bytes).digest("hex");
+    return privateStoredObjectMatches({
+      expectedByteLength: input.byteLength,
+      expectedChecksum: input.checksum,
+      storedByteLength: bytes.byteLength,
+      storedChecksum: checksum,
+    })
+      ? "match"
+      : "conflict";
+  } catch {
+    return "unavailable";
+  }
+}
+
 export async function savePrivateGenerationResult(
   input: SaveInput
 ): Promise<
   | {
       ok: true;
       result: PrivateGenerationResult;
-      signedUrl: string;
+      /**
+       * Signing is an ephemeral delivery concern. A null value means the
+       * private object and durable job metadata were saved successfully, but
+       * the caller must retry signing (or let Library recovery do so). It must
+       * never turn a completed private save into a credit release.
+       */
+      signedUrl: string | null;
     }
   | SaveFailure
 > {
@@ -387,26 +519,52 @@ export async function savePrivateGenerationResult(
   const downloaded = await providerVideoBytes(input.providerOutputUrl);
   if (!downloaded.ok) return downloaded;
 
-  const uploaded = await admin.storage
-    .from(PRIVATE_RESULTS_BUCKET)
-    .upload(objectKey, downloaded.bytes, {
-      contentType: downloaded.contentType,
-      cacheControl: "private, max-age=0",
-      upsert: false,
+  let uploadError: string | null = null;
+  try {
+    const uploaded = await admin.storage
+      .from(PRIVATE_RESULTS_BUCKET)
+      .upload(objectKey, downloaded.bytes, {
+        contentType: downloaded.contentType,
+        cacheControl: "private, max-age=0",
+        upsert: false,
+      });
+    uploadError = uploaded.error?.message.slice(0, 160) || null;
+  } catch (error) {
+    uploadError =
+      error instanceof Error
+        ? error.message.slice(0, 160)
+        : "Private Storage write response was interrupted";
+  }
+  if (uploadError) {
+    const state = await storedPrivateObjectState({
+      objectKey,
+      byteLength: downloaded.bytes.byteLength,
+      checksum: downloaded.checksum,
     });
-  if (uploaded.error) {
-    return {
-      ok: false,
-      code: "PRIVATE_STORAGE_WRITE_FAILED",
-      error: uploaded.error.message.slice(0, 160),
-    };
+    if (state !== "match") {
+      if (state === "absent") {
+        return {
+          ok: false,
+          code: "PRIVATE_STORAGE_WRITE_FAILED",
+          error: uploadError,
+        };
+      }
+      return {
+        ok: false,
+        code: "PRIVATE_STORAGE_WRITE_UNCERTAIN",
+        error:
+          "Private Storage write could not be confirmed; settlement requires reconciliation",
+        settlementUncertain: true,
+      };
+    }
   }
 
   const { data, error } = await admin.rpc(
-    "pikbo_attach_private_generation_output_v1",
+    "pikbo_attach_private_generation_output_v2",
     {
       p_user_id: input.userId,
       p_job_id: input.jobId,
+      p_attempt_key: input.attemptKey ?? null,
       p_provider_request_id: input.providerRequestId.slice(0, 256),
       p_object_key: objectKey,
       p_content_type: downloaded.contentType,
@@ -418,16 +576,43 @@ export async function savePrivateGenerationResult(
       p_resolution: input.resolution.slice(0, 32),
     }
   );
-  const payload = (Array.isArray(data) ? data[0] : data) as
+  let payload = (Array.isArray(data) ? data[0] : data) as
     | Record<string, unknown>
     | null;
-  if (
-    error ||
-    !payload ||
-    payload.ok !== true ||
-    payload.jobId !== input.jobId ||
-    payload.objectKey !== objectKey
-  ) {
+  let attached =
+    !error &&
+    payload?.ok === true &&
+    payload.jobId === input.jobId &&
+    payload.objectKey === objectKey;
+  if (!attached && (error || !payload || payload.ok === true)) {
+    const state = await attachedOutputState({
+      jobId: input.jobId,
+      userId: input.userId,
+      attemptKey: input.attemptKey,
+      objectKey,
+      checksum: downloaded.checksum,
+      providerRequestId: input.providerRequestId,
+      byteLength: downloaded.bytes.byteLength,
+    });
+    if (state === "match") {
+      attached = true;
+      payload = {
+        ok: true,
+        jobId: input.jobId,
+        objectKey,
+        idempotent: true,
+      };
+    } else if (state === "conflict" || state === "unavailable") {
+      return {
+        ok: false,
+        code: "PRIVATE_RESULT_RECORD_UNCERTAIN",
+        error:
+          "Private output attachment could not be confirmed; settlement requires reconciliation",
+        settlementUncertain: true,
+      };
+    }
+  }
+  if (!attached) {
     await admin.storage
       .from(PRIVATE_RESULTS_BUCKET)
       .remove([objectKey])
@@ -445,13 +630,6 @@ export async function savePrivateGenerationResult(
   }
 
   const signedUrl = await signedPrivateResultUrl(objectKey);
-  if (!signedUrl) {
-    return {
-      ok: false,
-      code: "PRIVATE_RESULT_SIGN_FAILED",
-      error: "The generated video was saved but could not be opened",
-    };
-  }
   return {
     ok: true,
     result: {

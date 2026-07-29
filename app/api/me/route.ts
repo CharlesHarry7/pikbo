@@ -6,6 +6,10 @@ import {
   getPersonalWallet,
 } from "@/lib/durableCredits";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
+import {
+  getStripeBillingSnapshot,
+  stripeBillingRpcEnabled,
+} from "@/lib/stripeBilling";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { evaluateAccountLiveCapability } from "@/lib/liveCapability";
 import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
@@ -134,6 +138,45 @@ export async function GET(req: Request) {
   } catch {
     durable = null;
   }
+  const durablePlan =
+    durable?.planId === "founding_studio"
+      ? getPlan(durable.planId)
+      : getPlan("free");
+  let billing: null | {
+    plan: "founding_studio";
+    status:
+      | "trialing"
+      | "active"
+      | "past_due"
+      | "canceled"
+      | "unpaid"
+      | "incomplete"
+      | "paused";
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+    lastInvoiceApplied: boolean;
+  } = null;
+  if (durable && stripeBillingRpcEnabled()) {
+    try {
+      const snapshot = await getStripeBillingSnapshot({
+        accountId: durable.accountId,
+        userId: user.id,
+      });
+      if (snapshot?.subscription) {
+        billing = {
+          plan: snapshot.subscription.plan,
+          status: snapshot.subscription.status,
+          currentPeriodEnd: snapshot.subscription.currentPeriodEnd,
+          cancelAtPeriodEnd: snapshot.subscription.cancelAtPeriodEnd,
+          lastInvoiceApplied: Boolean(
+            snapshot.subscription.lastPaidInvoiceId
+          ),
+        };
+      }
+    } catch {
+      // Account plan remains fail-closed; billing detail is optional display.
+    }
+  }
   // /api/generate currently keeps Free provider delivery closed until the
   // protected server-owned derivative is verified. Keep account UI identical.
   const freeDeliveryReady = false;
@@ -152,17 +195,28 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     ...base,
+    // Signed-in account plan is authoritative after a Stripe webhook updates
+    // accounts.plan_id. The legacy browser cookie cannot grant a paid plan.
+    plan: durablePlan.id,
+    planName: durablePlan.name,
+    watermark: durablePlan.watermark,
     credits: Math.max(0, durable?.availableCredits ?? 0),
+    clipsLeft: Math.floor(
+      Math.max(0, durable?.availableCredits ?? 0) / CREDITS_PER_VIDEO
+    ),
     mode: capability.canLiveGenerate
       ? ("live-generate" as const)
       : ("demo-cached" as const),
     canLiveGenerate: capability.canLiveGenerate,
     freeTrial: {
       ...base.freeTrial,
+      planId: durablePlan.id,
+      isFreePlan: durablePlan.id === "free",
+      watermark: durablePlan.watermark,
       credits: liveCredits,
       clipsLeft: Math.floor(liveCredits / CREDITS_PER_VIDEO),
       freeLive:
-        session.plan === "free"
+        durablePlan.id === "free"
           ? {
               modelClass: "seedance-mini" as const,
               durationSec: 5,
@@ -172,9 +226,11 @@ export async function GET(req: Request) {
             }
           : null,
       exhausted:
-        base.freeTrial.exhausted,
+        durablePlan.id === "free" &&
+        Math.max(0, durable?.availableCredits ?? 0) < CREDITS_PER_VIDEO,
     },
     signedIn: true,
+    billing,
     auth: {
       id: user.id,
       email: user.email,

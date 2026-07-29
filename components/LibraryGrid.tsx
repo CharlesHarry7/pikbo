@@ -31,7 +31,6 @@ import {
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { useToast } from "@/components/Toast";
 import { LibraryStorageBanner } from "@/components/LibraryStorageBanner";
-import { CommunityPublishButton } from "@/components/CommunityPublishButton";
 import { PROVENANCE, resultProvenanceLabel } from "@/lib/provenance";
 import { track } from "@/lib/analytics";
 
@@ -236,8 +235,8 @@ function SessionStillJobsPanel({
             <Link href="/image" className="text-[var(--mint)] hover:underline">
               Still studio
             </Link>
-            . Cancel is ledger-only — in-flight Flux may still finish. TIMEOUT /
-            cancel stay refund unconfirmed until balance confirms.
+            . A canceled request may still finish if rendering already started.
+            Credit restoration is shown only after confirmation.
             {timeoutSec ? (
               <span className="text-[var(--fg-dim)]">
                 {" "}
@@ -296,8 +295,11 @@ function SessionStillJobsPanel({
                   {(j.prompt || j.id).slice(0, 56)}{" "}
                   <span className={`font-normal ${statusTone(j.status)}`}>
                     · {j.status}
-                    {j.errorCode ? ` · ${j.errorCode}` : ""}
-                    {j.creditsOutcome ? ` · ${j.creditsOutcome}` : ""}
+                    {j.creditsOutcome === "refund unconfirmed"
+                      ? " · credit restoration pending"
+                      : j.creditsOutcome
+                        ? ` · ${j.creditsOutcome}`
+                        : ""}
                   </span>
                 </p>
                 <p className="mt-0.5 truncate text-[10px] text-[var(--fg-dim)]">
@@ -309,7 +311,7 @@ function SessionStillJobsPanel({
                   j.errorCode === "CANCELED" ||
                   j.errorCode === "PROVIDER_NETWORK" ||
                   j.errorCode === "PROVIDER_TIMEOUT"
-                    ? " · refund unconfirmed"
+                    ? " · credit restoration pending"
                     : ""}
                 </p>
                 {j.error ? (
@@ -349,9 +351,9 @@ function SessionStillJobsPanel({
                       onClick={() => onForkRetry(j.id)}
                       className="text-[var(--mint)]/90 hover:text-[var(--mint)] disabled:opacity-50"
                       data-library-still-retry="ledger-fork"
-                      title="Fork process-memory retry job then open Still studio (does not re-run Flux by itself)"
+                      title="Prepare a new attempt, then open Still studio"
                     >
-                      {forkingId === j.id ? "Forking…" : "Ledger retry"}
+                      {forkingId === j.id ? "Preparing…" : "Retry request"}
                     </button>
                   </>
                 ) : null}
@@ -362,9 +364,9 @@ function SessionStillJobsPanel({
                     onClick={() => onCancel(j.id)}
                     className="text-amber-100/80 hover:text-amber-50 disabled:opacity-50"
                     data-library-still-cancel="ledger"
-                    title="Marks still ledger canceled — does not kill Flux mid-flight"
+                    title="Stops waiting here; a render already in progress may still finish"
                   >
-                    {cancellingId === j.id ? "Canceling…" : "Cancel ledger"}
+                    {cancellingId === j.id ? "Canceling…" : "Cancel request"}
                   </button>
                 ) : null}
               </div>
@@ -426,9 +428,7 @@ function SessionJobsPanel({
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <p className="text-[10px] font-black uppercase tracking-wider text-[var(--fg-dim)]">
-            {hasDurablePrivate
-              ? "Private results · account + session"
-              : "Session jobs · this server process"}
+            {hasDurablePrivate ? "Private results" : "Current session"}
             {open > 0 ? (
               <span className="ml-1.5 font-bold text-[var(--mint)]">
                 · {open} open
@@ -440,40 +440,25 @@ function SessionJobsPanel({
                 {histogramTotal > listed ? ` of ${histogramTotal}` : ""}
               </span>
             ) : null}
-            {meta.mode ? (
-              <span className="ml-1.5 font-semibold text-white/40">
-                · {meta.mode}
-                {!hasDurablePrivate &&
-                (meta.mode.includes("local") || meta.mode.includes("memory"))
-                  ? " · not durable cloud"
-                  : ""}
-              </span>
-            ) : (
-              <span className="ml-1.5 font-semibold text-white/40">
-                · process-memory · not durable cloud
-              </span>
-            )}
           </p>
           <p className="mt-1 text-xs text-[var(--fg-muted)]">
             {hasDurablePrivate ? (
               <>
-                Private completed clips persist in your account and download
-                through a fresh owner-only link. Open session jobs remain tied
-                to this server process.
+                Completed clips persist in your account and download through a
+                fresh owner-only link. In-progress jobs remain visible here.
               </>
             ) : (
               <>
-                Local ledger from Generate (not multi-node cloud). Device
-                Library below is{" "}
+                Results saved below remain in this browser. Your device Library
+                is{" "}
                 <span className="font-semibold text-[var(--mint)]">
                   Saved on this device
                 </span>{" "}
                 only — empty until a clip is saved here.
               </>
             )}{" "}
-            Cancel marks the ledger only; in-flight fal may still finish.
-            TIMEOUT rows show refund unconfirmed (check balance) — not a
-            confirmed restore.
+            A canceled request may still finish if rendering already started.
+            Credit restoration is shown only after confirmation.
             {timeoutMin ? (
               <span className="text-[var(--fg-dim)]">
                 {" "}
@@ -543,8 +528,11 @@ function SessionJobsPanel({
                 {j.effect}{" "}
                 <span className={`font-normal ${statusTone(j.status)}`}>
                   · {j.status}
-                  {j.errorCode ? ` · ${j.errorCode}` : ""}
-                  {j.creditsOutcome ? ` · ${j.creditsOutcome}` : ""}
+                  {j.creditsOutcome === "refund unconfirmed"
+                    ? " · credit restoration pending"
+                    : j.creditsOutcome
+                      ? ` · ${j.creditsOutcome}`
+                      : ""}
                 </span>
               </p>
               <p className="mt-0.5 truncate text-[10px] text-[var(--fg-dim)]">
@@ -567,20 +555,20 @@ function SessionJobsPanel({
                       j.errorCode === "UNSAFE_URL" ||
                       j.errorCode === "CONTENT_POLICY" ||
                       j.errorCode === "MODEL_EMPTY"
-                    ? " · refund unconfirmed"
+                    ? " · credit restoration pending"
                     : ""}
               </p>
               {j.error || j.status === "canceled" ? (
                 <p className="mt-0.5 truncate text-[10px] text-amber-100/80">
                   {j.errorCode === "TIMEOUT" ||
                   j.errorCode === "PROVIDER_TIMEOUT"
-                    ? "Timed out — Retry on Create (mint new attempt). Check balance if credits were debited."
+                    ? "Timed out — retry from Create after checking your balance."
                     : j.status === "canceled" ||
                         j.errorCode === "CANCELED" ||
                         j.errorCode === "REQUEST_CANCELED"
-                      ? "Canceled — Retry mints a new attempt. Check balance if live debit is unconfirmed."
+                      ? "Canceled — check your balance before starting another attempt."
                       : j.errorCode === "PROVIDER_NETWORK"
-                        ? "Provider network blip — Retry on Create. Check balance if debit is unconfirmed."
+                        ? "Network issue — retry from Create after checking your balance."
                         : j.error}
                 </p>
               ) : null}
@@ -608,9 +596,9 @@ function SessionJobsPanel({
                   onClick={() => onForkRetry(j.id)}
                   className="text-[var(--mint)]/90 hover:text-[var(--mint)] disabled:opacity-50"
                   data-session-retry="ledger-fork"
-                  title="Fork process-memory retry job then open Create (does not re-run fal by itself)"
+                  title="Prepare a new attempt, then open Create"
                 >
-                  {forkingId === j.id ? "Forking…" : "Ledger retry"}
+                  {forkingId === j.id ? "Preparing…" : "Retry request"}
                 </button>
               ) : null}
               {(j.status === "failed" || j.status === "canceled") &&
@@ -639,9 +627,9 @@ function SessionJobsPanel({
                   disabled={cancellingId === j.id}
                   onClick={() => onCancel(j.id)}
                   className="text-amber-100/80 hover:text-amber-50 disabled:opacity-50"
-                  title="Marks local ledger canceled — does not kill provider mid-flight"
+                  title="Stops waiting here; a render already in progress may still finish"
                 >
-                  {cancellingId === j.id ? "Canceling…" : "Cancel ledger"}
+                  {cancellingId === j.id ? "Canceling…" : "Cancel request"}
                 </button>
               ) : null}
               {j.status === "succeeded" && j.downloadAllowed && j.videoUrl ? (
@@ -649,7 +637,7 @@ function SessionJobsPanel({
                   type="button"
                   onClick={() => onDownload(j)}
                   className="text-[var(--fg-muted)] hover:text-white"
-                  title="HEAD gate then open — T6 / cancel / timeout honest"
+                  title="Open after delivery and ownership checks"
                   data-session-download="gated"
                 >
                   Download
@@ -657,7 +645,7 @@ function SessionJobsPanel({
               ) : j.status === "succeeded" && !j.downloadAllowed ? (
                 <span
                   className="text-amber-100/70"
-                  title="Free Mini live raw is gated until T6 file watermark bake"
+                  title="This raw preview is not available for download"
                 >
                   Download blocked · Free raw
                 </span>
@@ -960,7 +948,7 @@ export function LibraryGrid() {
         if (result === "ok") toast("Download started");
         else if (result === "fallback") toast("Opened video — save from browser");
         else if (result === "blocked" || result === "unsafe") {
-          toast("Download blocked — T6 / cancel / timeout / unsafe");
+          toast("Download blocked by a delivery safety check");
         } else toast("Download failed");
         return;
       }
@@ -1004,12 +992,12 @@ export function LibraryGrid() {
       ) {
         // Server DELETE echoes unconfirmed — never invent "10 restored".
         toast(
-          "Ledger canceled · refund unconfirmed until balance settles (in-flight provider may still complete)"
+          "Request canceled · credit restoration pending; a render already in progress may still complete"
         );
       } else {
         toast(
           body.note ||
-            "Ledger canceled · in-flight provider may still complete"
+            "Request canceled · a render already in progress may still complete"
         );
       }
       await refreshSessionJobs();
@@ -1042,12 +1030,12 @@ export function LibraryGrid() {
         body.creditsOutcome === "refund unconfirmed"
       ) {
         toast(
-          "Still ledger canceled · refund unconfirmed until balance settles (Flux may still complete)"
+          "Still request canceled · credit restoration pending; a render already in progress may still complete"
         );
       } else {
         toast(
           body.note ||
-            "Still ledger canceled · in-flight Flux may still complete"
+            "Still request canceled · a render already in progress may still complete"
         );
       }
       await refreshSessionStills();
@@ -1086,12 +1074,12 @@ export function LibraryGrid() {
         if (code === "JOB_IN_FLIGHT") {
           toast(
             body.message ||
-              "Still job still open — wait or cancel ledger first"
+              "This still is still in progress — wait or cancel the request first"
           );
         } else if (code === "NOT_RETRYABLE") {
           toast(
             body.message ||
-              "Not retryable on this still ledger — open Still studio"
+              "This still cannot be retried here — open Still studio"
           );
         } else {
           toast(body.message || body.code || "Could not fork still retry");
@@ -1100,7 +1088,7 @@ export function LibraryGrid() {
       }
       toast(
         body.message ||
-          "Still ledger retry forked · open Still studio to re-run Flux"
+          "New still attempt prepared · open Still studio to continue"
       );
       await refreshSessionStills();
       const parent = sessionStills.find((j) => j.id === id);
@@ -1114,7 +1102,7 @@ export function LibraryGrid() {
             body.next.retryToken
           );
         } catch {
-          toast("Retry token could not be stored — choose Ledger retry again");
+          toast("Retry could not be prepared — choose Retry request again");
           return;
         }
       }
@@ -1168,12 +1156,12 @@ export function LibraryGrid() {
         if (code === "JOB_IN_FLIGHT") {
           toast(
             body.message ||
-              "Job still open — wait or cancel ledger first"
+              "This job is still in progress — wait or cancel the request first"
           );
         } else if (code === "NOT_RETRYABLE") {
           toast(
             body.message ||
-              "Not retryable on this ledger — open Create for a new attempt"
+              "This job cannot be retried here — open Create for a new attempt"
           );
         } else {
           toast(body.message || body.code || "Could not fork retry job");
@@ -1182,7 +1170,7 @@ export function LibraryGrid() {
       }
       toast(
         body.message ||
-          "Ledger retry forked · open Create with your photo to re-run"
+          "New attempt prepared · open Create with your photo to continue"
       );
       await refreshSessionJobs();
       const parentJob = sessionJobs.find((j) => j.id === id);
@@ -1389,7 +1377,7 @@ export function LibraryGrid() {
           if (result === "ok") toast("Download started");
           else if (result === "fallback") toast("Opened video — save from browser");
           else if (result === "blocked" || result === "unsafe") {
-            toast("Download blocked — T6 / cancel / timeout / unsafe");
+            toast("Download blocked by a delivery safety check");
           } else toast("Download failed");
           return;
         }
@@ -1454,7 +1442,7 @@ export function LibraryGrid() {
           className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm"
           data-library-action="seller-pack"
         >
-          Seller Starter Pack
+          Launch Pack
         </Link>
       </div>
     </div>
@@ -1510,7 +1498,7 @@ export function LibraryGrid() {
                 <>
                   {sessionMeta.mode?.includes("supabase-private")
                     ? "Private results above persist in your account. Device-only clips also save under "
-                    : "Session jobs above are this server process only. Successful generates also save under "}
+                    : "In-progress jobs above are temporary. Successful clips also save under "}
                   <span className="font-semibold text-[var(--mint)]">
                     {PROVENANCE.localLibrary}
                   </span>{" "}
@@ -1526,8 +1514,8 @@ export function LibraryGrid() {
                   <span className="font-semibold text-[var(--mint)]">
                     Saved on this device
                   </span>
-                  . One photo → recipe → generate. Cloud multi-device assets
-                  wait on durable storage.
+                  . One photo → Launch Pack → private result. Sign in to keep
+                  generated clips with your account.
                 </>
               )}
             </p>
@@ -1543,7 +1531,7 @@ export function LibraryGrid() {
                 href="/create?mode=seller-pack"
                 className="btn btn-ghost text-sm"
               >
-                Seller Starter Pack · 3 clips / 30 credits
+                Launch Pack · 3 clips / 30 credits
               </Link>
               <FreeTrialCta
                 path="/library"
@@ -1552,13 +1540,10 @@ export function LibraryGrid() {
                 labelDemo="▶ Lab sample · free"
                 labelPlans="Compare plans"
               />
-              <Link href="/modules" className="btn btn-ghost text-sm">
-                Toy Modules
-              </Link>
             </div>
             <p className="mt-4 max-w-xs text-[10px] text-[var(--fg-dim)]">
-              Clips land here after success · failed live jobs usually restore
-              credits · TIMEOUT stays refund unconfirmed
+              Clips land here after success · confirmed failed items restore
+              their 10-credit charge
             </p>
           </div>
         </div>
@@ -1776,7 +1761,7 @@ export function LibraryGrid() {
                   }
                   className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70 hover:border-white/30"
                 >
-                  Seller Starter Pack
+                  Launch Pack
                 </Link>
                 <Link
                   href="/modules"
@@ -1876,7 +1861,7 @@ export function LibraryGrid() {
                   {!historyItemDownloadAllowed(item) ? (
                     <p className="mt-1 text-[10px] leading-snug text-amber-700/90 dark:text-amber-100/80">
                       Free Mini live — raw file download blocked until server
-                      watermark bake (T6). Preview on-player only.
+                      downloadable watermark. Preview on-player only.
                     </p>
                   ) : null}
                   <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5">
@@ -1887,7 +1872,7 @@ export function LibraryGrid() {
                         type="button"
                         onClick={() => void downloadClip(item)}
                         className="text-xs font-medium text-[var(--mint)] hover:underline"
-                        title="HEAD gate then open — cancel / timeout / T6 honest"
+                        title="Open after delivery and ownership checks"
                         data-history-open="gated"
                       >
                         Open result
@@ -1922,14 +1907,6 @@ export function LibraryGrid() {
                         Download blocked
                       </button>
                     )}
-                    <CommunityPublishButton
-                      videoUrl={item.videoUrl}
-                      posterUrl={item.inputImage}
-                      effectSlug={item.effect}
-                      effectName={item.effectName}
-                      demo={Boolean(item.demo)}
-                      watermark={Boolean(item.watermark)}
-                    />
                     <button
                       type="button"
                       className="text-xs text-[var(--fg-muted)] hover:text-[var(--mint)]"

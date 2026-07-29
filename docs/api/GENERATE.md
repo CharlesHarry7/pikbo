@@ -1,5 +1,13 @@
 # Generate API
 
+> **Historical v1; superseded on 2026-07-29.** The current endpoint requires
+> authenticated durable authority for any real provider call, pins validation
+> to Fast 720p / 5 seconds, saves a private owned result before settlement, and
+> restricts Founding Studio to fixed Pack children. See
+> [`../CURRENT_LAUNCH_CONTRACT.md`](../CURRENT_LAUNCH_CONTRACT.md). The
+> cookie-authoritative synchronous contract below must not be used to build a
+> current client.
+
 **Endpoint:** `POST /api/generate`  
 **Status:** Current synchronous v1 contract  
 **Last reviewed:** 2026-07-23  

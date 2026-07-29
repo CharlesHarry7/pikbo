@@ -15,9 +15,9 @@
  * load it with --experimental-strip-types (parity with privateLiveBeta.mjs).
  */
 
-/** Exact private-live model identity — Mini/Fast are never admitted here. */
+/** Exact private-live launch model identity. */
 export const SEEDANCE2_PRIVATE_LIVE_MODEL =
-  "bytedance/seedance-2.0/image-to-video" as const;
+  "bytedance/seedance-2.0/fast/image-to-video" as const;
 
 /**
  * Conservative planning rate (USD / second) for Seedance 2.0 Standard
@@ -109,8 +109,8 @@ export function isPrivateLiveSeedanceModel(modelId: string): boolean {
 }
 
 /**
- * Force the exact Seedance 2.0 full image-to-video endpoint for private live.
- * Client Mini/Fast preference and free-tier env overrides never win here.
+ * Force the exact Seedance 2.0 Fast endpoint for the 5s/720p launch contract.
+ * Client preference and free-tier env overrides never win here.
  */
 export function privateLiveSeedanceModel(
   clientPrefer?: string | null

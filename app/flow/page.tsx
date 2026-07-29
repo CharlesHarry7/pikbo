@@ -94,7 +94,7 @@ export default function FlowPage() {
       title: "Seller Starter Pack",
       blurb: "HF Product-studio subset: listing + reveal + social from one photo.",
       href: "/create?mode=seller-pack",
-      badge: "Shop",
+      badge: "Launch Pack",
       tier: "core",
       demoId: "beatbot-unboxed",
     },

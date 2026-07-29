@@ -26,7 +26,7 @@ const liveAccount = {
   softLiveReady: true,
   signedIn: true,
   durableCreditsActive: true,
-  planId: "creator",
+  planId: "founding_studio",
   availableCredits: 10,
   liveJobCredits: 10,
   freeDeliveryReady: false,
@@ -67,8 +67,18 @@ assert.equal(
 assert.equal(
   evaluateAccountLiveCapability(liveAccount).canLiveGenerate,
   true,
-  "fully ready signed-in durable Creator account may generate"
+  "fully ready signed-in durable Founding Studio account may generate"
 );
+for (const retiredPlan of ["creator", "shop", "enterprise", ""]) {
+  assert.equal(
+    evaluateAccountLiveCapability({
+      ...liveAccount,
+      planId: retiredPlan,
+    }).canLiveGenerate,
+    false,
+    `${retiredPlan || "empty"} plan must fail closed`
+  );
+}
 assert.equal(
   evaluateAccountLiveCapability({
     ...liveAccount,

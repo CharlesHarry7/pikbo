@@ -3,8 +3,7 @@
  * Default: ByteDance Seedance via fal.ai
  *
  * Free / wool path → Mini (cheapest, ~$0.07/s @ 480p)
- * Paid default     → Full Seedance 2.0
- * Paid can prefer  → Fast or Mini via UI later
+ * Paid validation  → Fast, 5s, 720p
  *
  * There is no unlimited free i2v API. "Wool" = fal signup credits + Mini.
  */
@@ -39,16 +38,16 @@ export function modelForTier(opts: {
 }
 
 /**
- * Authenticated private-live path (Issue #54 Seedance 2.0 delivery).
- * Always the full image-to-video endpoint — never Mini, Fast, or a free-tier
- * env override. Client model preference is ignored so processedUpload=true
- * cannot be claimed for a cheaper/unrelated model.
+ * Authenticated private-live launch path.
+ * Pinned to Fast so the P0 single clip and all Launch Pack children share one
+ * measured 5s/720p cost envelope. Client preference never selects another
+ * paid endpoint.
  */
 export function modelForPrivateLive(
   _prefer?: ModelPreference | string | null
-): typeof SEEDANCE_FULL {
+): typeof SEEDANCE_FAST {
   void _prefer;
-  return SEEDANCE_FULL;
+  return SEEDANCE_FAST;
 }
 
 export type SeedanceResolution = "480p" | "720p";
@@ -69,8 +68,8 @@ export function resolutionForTier(
 }
 
 /** Server-enforced model endpoint for live Seller Pack children. */
-export function sellerPackLiveModelEndpoint(): string {
-  return process.env.FAL_MODEL_FAST || SEEDANCE_FAST;
+export function sellerPackLiveModelEndpoint(): typeof SEEDANCE_FAST {
+  return SEEDANCE_FAST;
 }
 
 /** fal text-to-image for Image Studio (cheap/fast default). */

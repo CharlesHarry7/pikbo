@@ -1,16 +1,20 @@
 import Link from "next/link";
-import { PLANS, CREDITS_PER_VIDEO, clipsFromCredits } from "@/lib/pricing";
+import {
+  PAID_PLAN_ID,
+  PLANS,
+  CREDITS_PER_VIDEO,
+  clipsFromCredits,
+} from "@/lib/pricing";
 
 /** Compact upgrade CTA used when credits run out. */
 export function PaywallCard({
   title = "Out of credits",
-  subtitle = "Your current allowance is used up. Creator adds about five live jobs at today's flat rate, without the on-player mark.",
+  subtitle = "Your current allowance is used up. Founding Studio is the single paid candidate and remains closed until validation passes.",
 }: {
   title?: string;
   subtitle?: string;
 }) {
-  const free = PLANS.find((p) => p.id === "free")!;
-  const creator = PLANS.find((p) => p.id === "creator")!;
+  const founding = PLANS.find((p) => p.id === PAID_PLAN_ID)!;
 
   return (
     <div className="rounded-xl border border-[var(--brand)]/40 bg-[var(--grad-soft)] p-4 text-sm">
@@ -24,22 +28,22 @@ export function PaywallCard({
             Free
           </p>
           <p className="mt-0.5 text-xs text-[var(--fg-muted)]">
-            {free.credits} credits · ~{clipsFromCredits(free.credits)} trial clip
+            Cached prototypes · upload not processed
           </p>
           <p className="text-[10px] text-[var(--fg-dim)]">
-            {free.resolution} · on-player mark
+            0 provider calls · no live allowance
           </p>
         </div>
         <div className="rounded-lg border border-[var(--brand)]/50 bg-[var(--card)] p-2.5">
           <p className="text-[10px] font-bold uppercase text-[var(--mint)]">
-            Creator · ${creator.priceMonthly}/mo
+            Founding Studio · ${founding.priceMonthly}/mo
           </p>
           <p className="mt-0.5 text-xs text-[var(--fg-muted)]">
-            {creator.credits} credits · ~{clipsFromCredits(creator.credits)}{" "}
+            {founding.credits} credits · {clipsFromCredits(founding.credits)}{" "}
             clips
           </p>
           <p className="text-[10px] text-[var(--fg-dim)]">
-            {creator.resolution} · no player mark · commercial
+            {founding.resolution} · private delivery · commercial
           </p>
         </div>
       </div>
@@ -49,7 +53,7 @@ export function PaywallCard({
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Link href="/pricing" className="btn btn-primary px-4 py-2 text-xs">
-          See plans & checkout
+          See validation plan
         </Link>
         <Link href="/library" className="btn btn-ghost px-4 py-2 text-xs">
           Library

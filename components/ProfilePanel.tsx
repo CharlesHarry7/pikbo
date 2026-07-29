@@ -286,10 +286,10 @@ export function ProfilePanel() {
         <div>
           <p className="font-semibold">
             {auth.signedIn
-              ? auth.email || "Signed-in creator"
+              ? auth.email || "Signed-in studio"
               : session
-                ? `${session.planName} creator`
-                : "Guest creator"}
+                ? `${session.planName} studio`
+                : "Guest studio"}
           </p>
           <p className="text-xs text-[var(--fg-dim)]">
             {durableLine}
@@ -509,8 +509,8 @@ export function ProfilePanel() {
           : demo
             ? "Server is in demo-cached mode — labeled Lab clips cost 0 credits. Configure FAL_KEY for live Seedance Mini."
             : freeLive
-              ? `Free live jobs use Seedance Mini at ${freeLive.resolution} ${freeLive.durationSec}s with an on-player mark. Paid plans use the 720p path and include commercial listings.`
-              : "Free live jobs use Seedance Mini at 480p with an on-player mark. Paid plans use the 720p path and include commercial listings."}
+              ? `Free validation jobs use Seedance Mini at ${freeLive.resolution} ${freeLive.durationSec}s with an on-player mark. Founding Studio uses the fixed 5s Fast 720p Launch Pack path.`
+              : "Free live delivery remains gated. Founding Studio uses the fixed 5s Fast 720p Launch Pack path."}
       </p>
 
       <div className="flex flex-col gap-2">

@@ -1,98 +1,80 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { CREDITS_PER_VIDEO, PLANS } from "@/lib/pricing";
-
-const QUICK_COUNTS = [1, 5, 15];
+import { useState } from "react";
+import {
+  FOUNDING_STUDIO_PACKS,
+  PAID_PLAN_ID,
+  getPlan,
+} from "@/lib/pricing";
+import { SELLER_PACK_LIVE_TOTAL_CREDITS } from "@/lib/sellerPackContract";
 
 export function PricingUsageEstimator() {
-  const [clips, setClips] = useState(5);
-  const recommendation = useMemo(() => {
-    // Honest launch allowances: Free ~1 · Creator ~5 · Shop ~15
-    if (clips <= 1) return PLANS[0];
-    if (clips <= 5) return PLANS[1];
-    return PLANS[2];
-  }, [clips]);
-  const includedClips = Math.floor(recommendation.credits / CREDITS_PER_VIDEO);
-  const perClip = recommendation.priceMonthly > 0
-    ? recommendation.priceMonthly / includedClips
-    : 0;
+  const [packs, setPacks] = useState<number>(FOUNDING_STUDIO_PACKS);
+  const plan = getPlan(PAID_PLAN_ID);
+  const outputs = packs * 3;
+  const credits = packs * SELLER_PACK_LIVE_TOTAL_CREDITS;
 
   return (
     <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#111016] shadow-[0_30px_80px_-45px_rgba(200,255,61,.45)]">
       <div className="grid lg:grid-cols-[1.25fr_.75fr]">
         <div className="p-6 sm:p-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--mint)]">Allowance estimator</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--mint)]">
+            Launch Pack planner
+          </p>
           <div className="mt-3 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
-              <h2 className="text-2xl font-bold">How many clips are you planning?</h2>
-              <p className="mt-1 text-sm text-[var(--fg-muted)]">
-                Map your target to the current finite allowances. This is a
-                plan estimate, not a provider invoice quote.
+              <h2 className="text-2xl font-bold">
+                How many SKUs will you launch this month?
+              </h2>
+              <p className="mt-1 max-w-xl text-sm text-[var(--fg-muted)]">
+                One Pack turns one owned product photo into three fixed 5-second
+                formats. The full three-format Pack uses 30 credits.
               </p>
             </div>
             <p className="text-4xl font-black text-white">
-              {clips}<span className="ml-2 text-sm font-medium text-[var(--fg-dim)]">clips / month</span>
+              {packs}
+              <span className="ml-2 text-sm font-medium text-[var(--fg-dim)]">
+                Packs
+              </span>
             </p>
           </div>
 
           <input
-            aria-label="Monthly video clip estimate"
+            aria-label="Monthly Launch Pack estimate"
             type="range"
             min="1"
-            max="30"
+            max={FOUNDING_STUDIO_PACKS}
             step="1"
-            value={clips}
-            onChange={(event) => setClips(Number(event.target.value))}
+            value={packs}
+            onChange={(event) => setPacks(Number(event.target.value))}
             className="mt-8 h-2 w-full cursor-pointer accent-[var(--brand)]"
           />
           <div className="mt-2 flex justify-between text-[10px] font-bold uppercase tracking-wider text-[var(--fg-dim)]">
-            <span>1</span><span>5</span><span>15</span><span>30</span>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-2">
-            {QUICK_COUNTS.map((count) => (
-              <button
-                key={count}
-                type="button"
-                onClick={() => setClips(count)}
-                className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${clips === count ? "border-[var(--mint)] bg-[var(--mint)] text-black" : "border-white/10 bg-white/[.04] text-[var(--fg-muted)] hover:border-white/25 hover:text-white"}`}
-              >
-                {count === 1
-                  ? "1 trial"
-                  : count === 5
-                    ? "Creator pace"
-                    : "Shop pace"}
-              </button>
-            ))}
+            <span>1 SKU</span>
+            <span>{FOUNDING_STUDIO_PACKS} SKUs included</span>
           </div>
         </div>
 
         <div className="flex flex-col justify-between border-t border-white/10 bg-[radial-gradient(circle_at_90%_0%,rgba(110,231,199,.16),transparent_55%)] p-6 sm:p-8 lg:border-l lg:border-t-0">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--fg-dim)]">Recommended</p>
-            <div className="mt-3 flex items-end justify-between gap-3">
-              <h3 className="text-3xl font-black">{recommendation.name}</h3>
-              <p className="text-xl font-bold">${recommendation.priceMonthly}<span className="text-xs font-normal text-[var(--fg-dim)]"> / mo</span></p>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-[var(--fg-muted)]">
-              Current allowance: about {includedClips} clips at the flat {CREDITS_PER_VIDEO}-credit rate. Model, resolution, and duration weights come next.
-              {recommendation.id === "shop" ? " Batch tools are included for larger drops." : ""}
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--fg-dim)]">
+              Fixed output
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
-                <p className="text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">Credits</p>
-                <p className="mt-1 text-xl font-bold">{recommendation.credits.toLocaleString()}</p>
-              </div>
-              <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
-                <p className="text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">Included rate</p>
-                <p className="mt-1 text-xl font-bold">{perClip ? `$${perClip.toFixed(2)}` : "$0"}<span className="text-[10px] font-normal text-[var(--fg-dim)]"> / clip</span></p>
-              </div>
-            </div>
+            <h3 className="mt-3 text-3xl font-black">
+              {outputs} private videos
+            </h3>
+            <p className="mt-3 text-sm leading-6 text-[var(--fg-muted)]">
+              {credits} credits · Listing Spin 1:1 · Blind-box Reveal 9:16 ·
+              Social Flash 9:16. A confirmed failed format restores its 10
+              credits after the failure is confirmed.
+            </p>
           </div>
-          <Link href={`#plan-${recommendation.id}`} className="btn btn-primary mt-6 w-full text-sm">
-            See {recommendation.name} details ↓
+          <Link
+            href={`#plan-${plan.id}`}
+            className="btn btn-primary mt-6 w-full text-sm"
+          >
+            See {plan.name} details ↓
           </Link>
         </div>
       </div>

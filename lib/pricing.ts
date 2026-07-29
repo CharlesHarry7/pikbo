@@ -1,9 +1,20 @@
-// Credits model. Align with docs/UNIT_ECONOMICS.md (2026-07-23).
-// Every paid credit must stay above marginal Seedance cost. Anonymous and Free
-// remain cached-prototype-only until auth, atomic durable credits, and T6 ship.
-// Never offer true "unlimited" on expensive models.
+import { SELLER_PACK_LIVE_TOTAL_CREDITS } from "@/lib/sellerPackContract";
 
-export type PlanId = "free" | "creator" | "shop";
+/** Public launch plans. Legacy creator/shop values are never accepted here. */
+export type PlanId = "free" | "founding_studio";
+
+export const PAID_PLAN_ID = "founding_studio" as const;
+export const FOUNDING_STUDIO_PACKS = 3 as const;
+export const FOUNDING_STUDIO_CREDITS =
+  FOUNDING_STUDIO_PACKS * SELLER_PACK_LIVE_TOTAL_CREDITS;
+
+export function isPlanId(value: unknown): value is PlanId {
+  return value === "free" || value === PAID_PLAN_ID;
+}
+
+export function isPaidPlanId(value: unknown): value is typeof PAID_PLAN_ID {
+  return value === PAID_PLAN_ID;
+}
 
 export type Plan = {
   id: PlanId;
@@ -27,23 +38,24 @@ export type Plan = {
 export const CREDITS_PER_VIDEO = 10;
 
 /**
- * Launch allowances (honest vs fal cost, not "fake 50 clips").
- * Free credits are held for a future invited beta; Creator ≈ 5 clips ·
- * Shop ≈ 15 clips at 10 credits each.
+ * Founding Studio is deliberately three fixed 30-credit Launch Packs. Four
+ * packs at $49 miss the plan's 70% baseline-margin gate at the currently
+ * recorded 5s Fast rate, so the fourth pack remains gated on measured p95
+ * retry cost. Checkout stays disabled until that validation is complete.
  */
 export const PLANS: Plan[] = [
   {
     id: "free",
     name: "Free",
     priceMonthly: 0,
-    credits: 10,
+    credits: 0,
     blurb:
-      "Explore cached Lab prototype toy demos at no cost. Live Free generation stays closed until protected delivery is ready.",
+      "Explore labeled toy-video examples at no cost. Your upload is not processed on the public demo path.",
     perks: [
-      "Cached Lab prototype demos · 0 credits",
-      "Upload and configure locally before sign-in",
-      "All toy effect presets",
-      "No paid-model call from anonymous or Free sessions",
+      "Labeled preview examples · 0 credits",
+      "Explore the three Launch Pack formats",
+      "Upload and configure before sign-in",
+      "Your photo stays on your device in demo mode",
     ],
     cta: "Explore cached demos",
     watermark: true,
@@ -52,45 +64,27 @@ export const PLANS: Plan[] = [
     priority: false,
   },
   {
-    id: "creator",
-    name: "Creator",
-    priceMonthly: 19,
-    credits: 50,
-    blurb: "For collectors who post a few real clips a month — priced for model cost.",
+    id: PAID_PLAN_ID,
+    name: "Founding Studio",
+    priceMonthly: 49,
+    credits: FOUNDING_STUDIO_CREDITS,
+    blurb:
+      "For toy sellers validating a repeatable three-format launch workflow.",
     perks: [
-      "50 credits / month",
-      "~5 clips (5s Fast 720p class — not 50)",
-      "720p Seedance path · no player mark",
-      "Priority queue",
-      "Commercial use (toys you own)",
+      `${FOUNDING_STUDIO_PACKS} Launch Packs / billing month`,
+      `${FOUNDING_STUDIO_PACKS * 3} fixed 5s Fast 720p outputs`,
+      "Listing Spin 1:1 + Reveal 9:16 + Social Flash 9:16",
+      "Private Library delivery and owner-only downloads",
+      "Credits roll over while the subscription remains active",
+      "Commercial use for rights-owned product photos",
     ],
     featured: true,
-    cta: "Go Creator",
+    cta: "Join Founding Studio",
     watermark: false,
     resolution: "720p",
     commercial: true,
-    priority: true,
-    stripePriceEnv: "STRIPE_PRICE_CREATOR",
-  },
-  {
-    id: "shop",
-    name: "Shop",
-    priceMonthly: 49,
-    credits: 150,
-    blurb: "For sellers shipping finite listing packs at the current flat rate.",
-    perks: [
-      "150 credits / month",
-      "~15 clips at current credit rate",
-      "720p Seedance path · no player mark",
-      "Batch generate",
-      "Commercial use",
-    ],
-    cta: "Go Shop",
-    watermark: false,
-    resolution: "720p",
-    commercial: true,
-    priority: true,
-    stripePriceEnv: "STRIPE_PRICE_SHOP",
+    priority: false,
+    stripePriceEnv: "STRIPE_PRICE_FOUNDING_STUDIO",
   },
 ];
 

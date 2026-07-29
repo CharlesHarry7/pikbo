@@ -28,6 +28,7 @@ import { PRESETS } from "@/lib/presets";
 import { viralName } from "@/lib/viralNames";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { site } from "@/lib/site";
+import { stripeBillingAuthHeaders } from "@/lib/stripeBillingClient";
 import { useToast } from "@/components/Toast";
 import { PaywallCard } from "@/components/PaywallCard";
 import { emitSessionRefresh } from "@/lib/sessionEvents";
@@ -548,25 +549,34 @@ export function CreateStudio({
       const params = new URLSearchParams(window.location.search);
       const checkoutId = params.get("session_id");
       if (checkoutId?.startsWith("cs_")) {
+        let clearCheckoutParam = false;
         try {
+          const headers = await stripeBillingAuthHeaders();
           const res = await fetch("/api/checkout/confirm", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers,
             body: JSON.stringify({ session_id: checkoutId }),
           });
           const data = await res.json();
-          if (!cancelled && res.ok && data.session) {
-            setSession((prev) => mergeMeSession(prev, data.session));
-            setWatermark(data.session.watermark);
+          if (!cancelled && res.ok && data.ok === true) {
             setUpgradedBanner(true);
-            void refreshSession();
+            await refreshSession();
+            clearCheckoutParam = true;
+          } else if (!cancelled && data.pending === true) {
+            // Keep session_id for a manual refresh while the signed webhook
+            // commits; the browser return can never grant the plan itself.
+            await refreshSession();
+          } else if (res.status >= 400 && res.status < 500) {
+            clearCheckoutParam = true;
           }
         } catch {
           if (!cancelled) await refreshSession();
         }
-        const url = new URL(window.location.href);
-        url.searchParams.delete("session_id");
-        window.history.replaceState({}, "", url.pathname + url.search);
+        if (clearCheckoutParam) {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("session_id");
+          window.history.replaceState({}, "", url.pathname + url.search);
+        }
         return;
       }
       if (params.get("upgraded") === "1" && !cancelled) {

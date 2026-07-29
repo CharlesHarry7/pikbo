@@ -1,35 +1,28 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
-import { createRemixHref } from "@/lib/remixIntent";
 
-/** Default listing recipe for SEO body Generate doors. */
-const SEO_BODY_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const HIGH_INTENT_PAGES = [
+  ["/tools/ai-toy-video-generator", "AI toy video generator"],
+  ["/tools/figure-360-product-video", "360 toy listing video"],
+  ["/tools/blind-box-reveal-video-maker", "Blind-box reveal video"],
+] as const;
 
-/**
- * 哥飞：首页正文厚度 + 品牌场景；主词完整词组克制使用。
- * 必须有一条清晰内链 → /tools/ai-toy-video-generator（权重输送）。
- * SSR 纯文案；不替代上方 on-page 工具。
- */
 const FAQ = [
   {
-    q: "What does Pikbo do on this homepage?",
-    a: "Pikbo turns one owned photo of a designer toy, figure, or blind-box collectible into a fixed Launch Pack: listing spin, reveal clip, and social hook.",
+    q: "What does Pikbo make?",
+    a: "Pikbo turns one owned toy photo into a fixed Launch Pack: a square listing spin, a vertical blind-box reveal, and a vertical social hook.",
   },
   {
-    q: "Can I turn a photo into short video without filming?",
-    a: "Yes. Upload a clear product photo you own. The homepage sends it to the fixed three-format Launch Pack; cached validation stays free and eligible Live accounts receive an exact quote before submission.",
+    q: "Do preview examples use my photo?",
+    a: "No. Public examples are labeled previews and do not process your upload. Only invited, signed-in private-beta accounts can submit a real generation.",
   },
   {
-    q: "Is the homepage tool the same as /create?",
-    a: "Yes. The homepage upload hands the same photo to /create in Launch Pack mode. Confirm ownership, review the mode and quote, then generate the fixed three formats.",
+    q: "How are failed clips charged?",
+    a: "The three-format Pack uses 30 credits: 10 per completed clip. A confirmed failed format restores its 10-credit charge.",
   },
   {
-    q: "Do Lab demos use my photo?",
-    a: "No. Homepage Lab samples are cached prototypes and never process your upload. Your photo is only sent after the server confirms an eligible Live submission.",
-  },
-  {
-    q: "Where is the main keyword page for AI toy video?",
-    a: `The ranking-focused page is ${site.rankToolPath} — Title, H1, and body aligned to the primary search query. This homepage stays brand + suite with an embedded tool.`,
+    q: "Can I publish the result immediately?",
+    a: "Review the toy sculpt, paint, packaging text, and proportions first. AI video can drift on small product details.",
   },
 ] as const;
 
@@ -37,10 +30,10 @@ export function HomeSeoBody() {
   const faqLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQ.map((f) => ({
+    mainEntity: FAQ.map((item) => ({
       "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
     })),
   };
 
@@ -53,58 +46,27 @@ export function HomeSeoBody() {
       <div className="mx-auto max-w-3xl space-y-10 text-[15px] leading-relaxed text-white/70">
         <div>
           <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            Why generate toy video from one photo on this page
+            One toy photo. Three launch-ready formats.
           </h2>
           <p className="mt-4">
-            {site.name} is a{" "}
-            <strong className="text-white/90">designer-toy AI video suite</strong>
-            : collectors and sellers who already have product photos can{" "}
-            <strong className="text-white/90">
-              turn that photo into short video
-            </strong>{" "}
-            for listings, TikTok, and drops. You do not need a turntable, a studio
-            crew, or a multi-model zoo. Cached Lab prototypes show the workflow;
-            the Generate workbench checks Live eligibility before any provider call.
+            {site.name} is built for designer-toy sellers and studios that
+            already have sharp product photos but need motion for listings,
+            launches, and social posts. The fixed Launch Pack creates a Listing
+            Spin in 1:1, a Blind-box Reveal in 9:16, and a Social Flash in 9:16.
           </p>
           <p className="mt-3">
-            For the full head-term guide and On Page battlefield, use our{" "}
-            <Link
-              href={site.rankToolPath}
-              className="font-semibold text-[var(--mint)] hover:underline"
-            >
-              AI toy video generator tool page
-            </Link>
-            . This homepage gives brand visitors one path: upload, confirm rights,
-            generate the fixed listing/reveal/hook trio, then export the succeeded
-            downloadable results. Lab wall demos stay labeled cached
-            prototypes—not fake customer UGC.
+            The three focused guides below show the intended input, output,
+            commercial use, and current limitations for each high-intent job.
           </p>
           <nav
-            aria-label="Long-tail toy video jobs"
+            aria-label="Focused toy video guides"
             className="mt-5 flex flex-wrap gap-2"
-            data-home-seo-mesh="long-tail"
           >
-            {(
-              [
-                ["/tools/figure-360-product-video", "AI figure 360 video"],
-                ["/tools/blind-box-reveal-video-maker", "Blind box AI video"],
-                ["/tools/one-photo-product-video", "One photo toy video AI"],
-                ["/tools/ai-product-video-generator-for-toys", "Toy product video AI"],
-                ["/for/action-figure-product-videos", "Action figure AI video"],
-                [
-                  "/guides/designer-toy-ai-video-vs-generic-tools",
-                  "Why toy-vertical",
-                ],
-                [
-                  "/guides/toy-unboxing-video-from-one-photo",
-                  "Unboxing video from one photo",
-                ],
-              ] as const
-            ).map(([href, label]) => (
+            {HIGH_INTENT_PAGES.map(([href, label]) => (
               <Link
                 key={href}
                 href={href}
-                className="rounded-full border border-white/12 bg-white/[0.03] px-2.5 py-1 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
+                className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/60 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
               >
                 {label}
               </Link>
@@ -114,216 +76,47 @@ export function HomeSeoBody() {
 
         <div>
           <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            How photo-to-video works for designer toys
+            How the Launch Pack works
           </h2>
-          <p className="mt-4">
-            People often type “photo into short video” or “animate designer
-            toys.” For figures the quality bar is different from face-swap
-            filters: paint apps, sculpt edges, and packaging logos must stay
-            recognizable. Pikbo keeps the still as the visual reference, then
-            applies a toy-native recipe—spin for marketplaces, float for launch
-            teasers, unbox energy for short-form hooks.
-          </p>
           <ol className="mt-4 list-decimal space-y-2 pl-5">
-            <li>
-              <strong className="text-white/90">
-                Shoot or choose one owned still
-              </strong>
-              — plain background, full figure, sharp focus.
-            </li>
-            <li>
-              <strong className="text-white/90">Use the upload above</strong> for
-              the three-format Launch Pack—or open{" "}
-              <Link
-                href={SEO_BODY_GENERATE_HREF}
-                className="text-[var(--mint)] hover:underline"
-                data-home-seo="generate-remix"
-              >
-                full Generate
-              </Link>{" "}
-              for more recipes. Deep keyword write-up:{" "}
-              <Link
-                href={site.rankToolPath}
-                className="text-[var(--mint)] hover:underline"
-              >
-                {site.rankToolPath}
-              </Link>
-              .
-            </li>
-            <li>
-              <strong className="text-white/90">
-                Confirm you own the photo
-              </strong>
-              — required server-side before live jobs.
-            </li>
-            <li>
-              <strong className="text-white/90">Generate and wait</strong>—live
-              Mini often needs one to three minutes; keep the tab open.
-            </li>
-            <li>
-              <strong className="text-white/90">QA before publish</strong>—check
-              sculpt and color; AI can drift on small details.
-            </li>
+            <li>Choose a clear, full-product photo that you own.</li>
+            <li>Confirm your rights and review the fixed 30-credit quote.</li>
+            <li>Create the three 5-second formats from the same SKU photo.</li>
+            <li>Download completed clips from your private Library.</li>
+            <li>Check sculpt, paint, logos, and packaging before publishing.</li>
           </ol>
         </div>
 
         <div>
           <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            Use cases for listings and social
+            What is available now
           </h2>
           <p className="mt-4">
-            Sellers use short product motion on Etsy, Amazon, Depop, and Shopify
-            so buyers can sense depth. Collectors use toy video AI for shelf
-            flexes and pull reveals. Brands draft drop teasers from lookbook
-            stills without rebooking a motion studio.
+            Public visitors can explore labeled preview examples at zero
+            credits; those examples do not process an uploaded photo. Invited
+            private-beta accounts can create private 5-second 720p results and
+            recover them after refresh through owner-only downloads.
           </p>
           <p className="mt-3">
-            Deeper scene pages (one job per URL) live under{" "}
-            <Link href="/for" className="text-[var(--mint)] hover:underline">
-              use cases
-            </Link>
-            , including{" "}
-            <Link
-              href="/for/etsy-listing-videos"
-              className="text-[var(--mint)] hover:underline"
-            >
-              Etsy listing videos
-            </Link>
-            ,{" "}
-            <Link
-              href="/for/tiktok-shop-product-videos"
-              className="text-[var(--mint)] hover:underline"
-            >
-              TikTok Shop
-            </Link>
-            , and{" "}
-            <Link
-              href="/for/photo-to-video-for-toys"
-              className="text-[var(--mint)] hover:underline"
-            >
-              photo to video for toys
-            </Link>
-            . Intent tools live on{" "}
-            <Link href="/tools" className="text-[var(--mint)] hover:underline">
-              /tools
-            </Link>
-            —especially the primary rank page{" "}
-            <Link
-              href={site.rankToolPath}
-              className="font-semibold text-[var(--mint)] hover:underline"
-            >
-              AI toy video generator
-            </Link>
-            .
+            Founding Studio subscriptions remain closed until real SKU tests
+            meet the published quality, recovery, privacy, and cost thresholds.
+            No plan promises unlimited generation.
           </p>
         </div>
 
         <div>
           <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            Cached preview first; Live remains gated
-          </h2>
-          <p className="mt-4">
-            Cached Lab prototypes on the viral wall cost zero credits and never
-            process your upload. When Live is enabled for an eligible account,
-            Generate shows the configured duration, resolution, and credit quote.
-            A refund is only claimed after the server confirms release. We do not
-            claim unlimited free 4K or model access we have not shipped.
-          </p>
-          <p className="mt-3">
-            Stripe checkout stays off until durable accounts, protected delivery,
-            and billing validation pass. Soft launch prioritizes an honest product
-            path over premature charging. The default seller path is the
-            three-format{" "}
-            <Link
-              href="/create?mode=seller-pack"
-              className="text-[var(--mint)] hover:underline"
-            >
-              Launch Pack
-            </Link>
-            ; open{" "}
-            <Link
-              href={SEO_BODY_GENERATE_HREF}
-              className="text-[var(--mint)] hover:underline"
-              data-home-seo="generate-remix"
-            >
-              Generate
-            </Link>{" "}
-            for a single additional recipe.
-          </p>
-        </div>
-
-        <div>
-          <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            Recipes, Lab demos, and cached prototypes
-          </h2>
-          <p className="mt-4">
-            The dense wall above the tool is not a fake UGC feed. Each card is a
-            PIKBO Lab prototype sample or a recipe deep-link into Generate. Remix means
-            “run this recipe on a photo you own.” Inside pages show reference
-            posters, cached outputs, and evidence status for Lab prototypes.
-          </p>
-          <p className="mt-3">
-            Prefer a full preset browser? Visit{" "}
-            <Link
-              href="/effects"
-              className="text-[var(--mint)] hover:underline"
-            >
-              effects
-            </Link>
-            . Community stays Lab-only until real maker posts exist. For the
-            ranking-focused keyword page, open{" "}
-            <Link
-              href={site.rankToolPath}
-              className="font-semibold text-[var(--mint)] hover:underline"
-            >
-              {site.rankToolPath}
-            </Link>
-            . Start with{" "}
-            <Link
-              href="/guides/how-to-photograph-toys-for-ai-video"
-              className="text-[var(--mint)] hover:underline"
-            >
-              how to photograph a toy for AI video
-            </Link>{" "}
-            or continue with{" "}
-            <Link
-              href="/guides/how-to-make-a-figure-spin-video"
-              className="text-[var(--mint)] hover:underline"
-            >
-              how to make a figure spin video
-            </Link>{" "}
-            walk through photography without replacing the on-page generator
-            above.
-          </p>
-        </div>
-
-        <div>
-          <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            FAQ — designer toy video suite
+            FAQ
           </h2>
           <div className="mt-4 divide-y divide-white/10">
-            {FAQ.map((f) => (
-              <div key={f.q} className="py-4">
-                <h3 className="text-base font-bold text-white">{f.q}</h3>
-                <p className="mt-2 text-sm text-white/65">{f.a}</p>
+            {FAQ.map((item) => (
+              <div key={item.q} className="py-4">
+                <h3 className="text-base font-bold text-white">{item.q}</h3>
+                <p className="mt-2 text-sm text-white/65">{item.a}</p>
               </div>
             ))}
           </div>
         </div>
-
-        <p className="text-sm text-white/45">
-          This URL is the <strong className="text-white/70">brand home</strong>{" "}
-          with an embedded generate tool. Primary search keyword{" "}
-          <strong className="text-white/70">{site.keyword}</strong> is owned by{" "}
-          <Link
-            href={site.rankToolPath}
-            className="text-[var(--mint)] hover:underline"
-          >
-            {site.rankToolPath}
-          </Link>
-          . Supporting phrases here: photo into short video / animate designer
-          toys.
-        </p>
       </div>
     </section>
   );

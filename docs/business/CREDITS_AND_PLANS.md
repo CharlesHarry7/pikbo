@@ -1,5 +1,10 @@
 # PIKBO credits and plans
 
+> **Superseded on 2026-07-29.** Use
+> [`../CURRENT_LAUNCH_CONTRACT.md`](../CURRENT_LAUNCH_CONTRACT.md). The old
+> Free/Creator/Shop flat-credit contract below is retained only as decision
+> history and must not drive UI, checkout, entitlements, or operations.
+
 **Status:** Commercial contract v1 — current implementation truth  
 **Owner:** GPT (business rules)  
 **Last reviewed:** 2026-07-23  

@@ -57,7 +57,8 @@ export function evaluateAccountLiveCapability(
     typeof input.availableCredits === "number" &&
     input.availableCredits >= input.liveJobCredits;
   const deliveryAllowed =
-    input.planId !== "free" || input.freeDeliveryReady;
+    input.planId === "founding_studio" ||
+    (input.planId === "free" && input.freeDeliveryReady);
   const canLiveGenerate =
     input.softLiveReady &&
     input.signedIn &&

@@ -42,7 +42,11 @@
     "indexnow": "node scripts/indexnow-submit.mjs",
     "r0-safety-net": "node --experimental-strip-types scripts/r0-safety-net.mjs",
     "p0-private-live-generation": "node --experimental-strip-types scripts/p0-private-live-generation.mjs",
-    "auth-magic-link-regression": "node --experimental-strip-types scripts/auth-magic-link-regression.mjs"
+    "seller-pack-atomic-regression": "node --experimental-strip-types scripts/seller-pack-atomic-live-regression.mjs",
+    "provider-budget-regression": "node --experimental-strip-types scripts/provider-budget-private-settlement-regression.mjs",
+    "auth-magic-link-regression": "node --experimental-strip-types scripts/auth-magic-link-regression.mjs",
+    "stripe-billing-regression": "node --experimental-strip-types scripts/stripe-billing-regression.mjs",
+    "privacy-analytics-regression": "node --experimental-strip-types scripts/privacy-analytics-regression.mjs"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.1",

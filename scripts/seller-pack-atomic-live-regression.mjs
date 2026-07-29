@@ -15,6 +15,14 @@ import ts from "typescript";
 const root = process.cwd();
 const read = (rel) => readFileSync(join(root, rel), "utf8");
 
+function sqlFunction(source, name) {
+  const start = source.indexOf(`create or replace function public.${name}(`);
+  assert.notEqual(start, -1, `missing SQL function ${name}`);
+  const end = source.indexOf("\n$$;", start);
+  assert.notEqual(end, -1, `unterminated SQL function ${name}`);
+  return source.slice(start, end + 4);
+}
+
 function loadTypeScriptModule(relativePath, dependencies = {}) {
   const source = read(relativePath);
   const compiled = ts.transpileModule(source, {
@@ -70,6 +78,11 @@ const atomic = loadTypeScriptModule("lib/durableCredits/sellerPackAtomic.ts", {
       code: "OFFLINE",
       error: "offline",
     }),
+    supabaseExpireQueuedSellerPackChildren: async () => ({
+      ok: false,
+      code: "OFFLINE",
+      error: "offline",
+    }),
   },
 });
 
@@ -91,10 +104,13 @@ assert.equal(
   );
   assert.match(migration, /pikbo_reserve_seller_pack_v1/);
   assert.match(migration, /pikbo_authorize_seller_pack_child_v1/);
-  assert.match(migration, /pikbo_settle_seller_pack_child_v1/);
-  assert.match(migration, /pikbo_release_seller_pack_child_v1/);
+  assert.match(migration, /pikbo_settle_seller_pack_child_v2/);
+  assert.match(migration, /pikbo_release_seller_pack_child_v2/);
   assert.match(migration, /pikbo_retry_seller_pack_child_v1/);
   assert.match(migration, /pikbo_get_seller_pack_status_v1/);
+  assert.match(migration, /pikbo_expire_seller_pack_queued_v1/);
+  assert.match(migration, /PRIVATE_RESULT_REQUIRED/);
+  assert.match(migration, /output_object_key/);
   assert.match(migration, /grant execute[\s\S]*service_role/);
   assert.match(migration, /revoke all[\s\S]*from public, anon, authenticated/);
   assert.match(migration, /quoted_credits[\s\S]*30|v_quoted integer := 30/);
@@ -106,6 +122,88 @@ assert.equal(
   assert.match(migration, /paparazzi-flash/);
   assert.match(migration, /seedance-fast/);
   assert.match(migration, /720p/);
+
+  const reserveFn = sqlFunction(migration, "pikbo_reserve_seller_pack_v1");
+  const retryFn = sqlFunction(
+    migration,
+    "pikbo_retry_seller_pack_child_v1"
+  );
+  const settleFn = sqlFunction(
+    migration,
+    "pikbo_settle_seller_pack_child_v2"
+  );
+  const releaseFn = sqlFunction(
+    migration,
+    "pikbo_release_seller_pack_child_v2"
+  );
+  const expireFn = sqlFunction(
+    migration,
+    "pikbo_expire_seller_pack_queued_v1"
+  );
+  assert.match(settleFn, /p_attempt_key text/);
+  assert.match(settleFn, /v_job\.pack_attempt_key is distinct from btrim\(p_attempt_key\)/);
+  assert.match(settleFn, /'code', 'ATTEMPT_MISMATCH'/);
+  assert.match(
+    settleFn,
+    /'ledger:seller-pack-settle:'[\s\S]*btrim\(p_attempt_key\)/
+  );
+  assert.match(releaseFn, /p_attempt_key text/);
+  assert.match(releaseFn, /v_job\.pack_attempt_key is distinct from btrim\(p_attempt_key\)/);
+  assert.match(releaseFn, /'code', 'ATTEMPT_MISMATCH'/);
+  assert.match(releaseFn, /PRIVATE_RESULT_RECONCILIATION_REQUIRED/);
+  assert.match(
+    releaseFn,
+    /'ledger:seller-pack-release:'[\s\S]*btrim\(p_attempt_key\)[\s\S]*p_reason/
+  );
+  assert.match(
+    retryFn,
+    /expires_at = now\(\) \+ interval '30 minutes'/,
+    "retry must extend the queued attempt's expiry"
+  );
+  assert.match(retryFn, /ATTEMPT_REUSE_FORBIDDEN/);
+  assert.match(
+    expireFn,
+    /'ledger:seller-pack-expire:'[\s\S]*coalesce\(v_job\.pack_attempt_key, 'initial'\)/,
+    "queued expiry ledger identity must include the exact retry attempt"
+  );
+  const supportedPlanGuard =
+    /v_account\.plan_id::text not in \(\s*'free',\s*'founding_studio'\s*\)/;
+  assert.match(reserveFn, supportedPlanGuard);
+  assert.match(retryFn, supportedPlanGuard);
+  assert.match(reserveFn, /UNSUPPORTED_LEGACY_PLAN/);
+  assert.match(retryFn, /UNSUPPORTED_LEGACY_PLAN/);
+  assert.ok(
+    reserveFn.indexOf("from public.seller_pack_runs") <
+      reserveFn.indexOf("from public.credit_wallets"),
+    "reserve replay must lock pack before wallet to match worker lock order"
+  );
+  assert.match(
+    reserveFn,
+    /v_existing_found := found;[\s\S]*?from public\.credit_wallets[\s\S]*?if v_existing_found then/,
+    "wallet lookup must not overwrite the existing-Pack branch decision"
+  );
+  assert.ok(
+    reserveFn.search(supportedPlanGuard) <
+      reserveFn.indexOf("update public.credit_wallets"),
+    "reserve must reject creator/shop before its first wallet mutation"
+  );
+  assert.ok(
+    retryFn.search(supportedPlanGuard) <
+      retryFn.indexOf("update public.credit_wallets"),
+    "retry must reject creator/shop before its first wallet mutation"
+  );
+  assert.match(
+    retryFn,
+    /from public\.accounts[\s\S]*?for update;[\s\S]*?UNSUPPORTED_LEGACY_PLAN/,
+    "retry must lock the account while validating its plan"
+  );
+  const retryReplayStart = retryFn.indexOf("if v_job.status = 'queued'");
+  const retryReplayEnd = retryFn.indexOf("end if;", retryReplayStart);
+  assert.notEqual(retryReplayStart, -1, "missing retry idempotent branch");
+  assert.notEqual(retryReplayEnd, -1, "unterminated retry idempotent branch");
+  const retryReplay = retryFn.slice(retryReplayStart, retryReplayEnd);
+  assert.match(retryReplay, /'packSettledCredits',\s*v_pack\.settled_credits/);
+  assert.match(retryReplay, /'packReleasedCredits',\s*v_pack\.released_credits/);
 
   const gen = read("app/api/generate/route.ts");
   assert.match(gen, /parseSellerPackChildRequest|packRunId/);
@@ -128,10 +226,146 @@ assert.equal(
   assert.match(store, /supabaseReserveSellerPackAtomic/);
   assert.match(store, /pikbo_reserve_seller_pack_v1/);
   assert.match(store, /pikbo_authorize_seller_pack_child_v1/);
+  assert.match(store, /pikbo_settle_seller_pack_child_v2/);
+  assert.match(store, /pikbo_release_seller_pack_child_v2/);
+  assert.match(store, /p_attempt_key:\s*input\.attemptKey/);
+
+  const attemptFence = read(
+    "supabase/migrations/20260729020500_seller_pack_attempt_fencing.sql"
+  );
+  assert.match(attemptFence, /pikbo_attach_private_generation_output_v2/);
+  assert.match(
+    attemptFence,
+    /v_job\.pack_attempt_key is distinct from btrim\(p_attempt_key\)/
+  );
+  assert.match(attemptFence, /ATTEMPT_FENCE_V2_REQUIRED/);
+  assert.match(
+    attemptFence,
+    /pikbo_settle_seller_pack_child_v1[\s\S]*ATTEMPT_FENCE_V2_REQUIRED/
+  );
+  assert.match(
+    attemptFence,
+    /pikbo_release_seller_pack_child_v1[\s\S]*ATTEMPT_FENCE_V2_REQUIRED/
+  );
+  assert.match(
+    attemptFence,
+    /from public, anon, authenticated, service_role/
+  );
+
+  const parallelPathGuard = read(
+    "supabase/migrations/20260729021500_pack_parallel_path_guard.sql"
+  );
+  assert.match(parallelPathGuard, /PACK_PARALLEL_PATH_FORBIDDEN/);
+  assert.match(parallelPathGuard, /v_reservation\.purpose::text <> 'generation'/);
+  assert.match(parallelPathGuard, /v_job\.pack_run_id is not null/);
+  assert.match(
+    parallelPathGuard,
+    /PRIVATE_RESULT_RECONCILIATION_REQUIRED/
+  );
+  assert.match(
+    parallelPathGuard,
+    /pikbo_release_generation_unchecked_v1[\s\S]*from public, anon, authenticated, service_role/
+  );
+  assert.match(
+    parallelPathGuard,
+    /pikbo_record_generation_outcome_unchecked_v1[\s\S]*from public, anon, authenticated, service_role/
+  );
 
   const reserveRoute = read("app/api/seller-pack/reserve/route.ts");
   assert.match(reserveRoute, /reserveSellerPackAtomic/);
-  assert.match(reserveRoute, /reserveSellerPackShadow/);
+  assert.doesNotMatch(reserveRoute, /reserveSellerPackShadow/);
+  assert.match(reserveRoute, /AUTH_REQUIRED/);
+
+  const batch = read("components/BatchStudio.tsx");
+  assert.match(batch, /packRunId[\s\S]*packJobId/);
+  assert.doesNotMatch(batch, /seller-pack\/(?:settle|release)/);
+  assert.doesNotMatch(batch, /settleSellerPackChildClient|releaseSellerPackChildClient/);
+
+  assert.throws(
+    () => read("app/api/seller-pack/settle/route.ts"),
+    /ENOENT/
+  );
+  assert.throws(
+    () => read("app/api/seller-pack/release/route.ts"),
+    /ENOENT/
+  );
+  const workerRoute = read(
+    "app/api/internal/seller-pack/reconcile/route.ts"
+  );
+  assert.match(workerRoute, /PIKBO_INTERNAL_WORKER_SECRET/);
+  assert.match(workerRoute, /expireAtomicSellerPackQueuedChildren/);
+  assert.match(workerRoute, /discoverSellerPackResults/);
+  assert.match(workerRoute, /reconcileSellerPackCases/);
+  assert.ok(
+    workerRoute.indexOf("discoverSellerPackResults") <
+      workerRoute.indexOf("reconcileSellerPackCases"),
+    "worker must commit discovery before attempting settlement"
+  );
+  assert.match(workerRoute, /suppliedBytes\.byteLength !== secretBytes\.byteLength/);
+
+  const packReconciliation = read(
+    "supabase/migrations/20260729024500_seller_pack_reconciliation.sql"
+  );
+  assert.match(
+    packReconciliation,
+    /pikbo_record_seller_pack_outcome_v1/
+  );
+  assert.match(
+    packReconciliation,
+    /pikbo_reconcile_seller_pack_cases_v1/
+  );
+  assert.match(
+    packReconciliation,
+    /pikbo_discover_seller_pack_results_v1/
+  );
+  assert.match(packReconciliation, /case_id uuid primary key/);
+  assert.match(packReconciliation, /unique \(job_id, attempt_key\)/);
+  assert.match(packReconciliation, /p_attempt_key text/);
+  assert.match(
+    packReconciliation,
+    /v_job\.pack_attempt_key is distinct from btrim\(p_attempt_key\)/
+  );
+  assert.match(
+    packReconciliation,
+    /'attemptKey', btrim\(p_attempt_key\)/
+  );
+  assert.match(
+    packReconciliation,
+    /output_object_key is distinct from[\s\S]*private-results/
+  );
+  assert.match(
+    packReconciliation,
+    /state = 'review_required'[\s\S]*DISCOVERY_OUTCOME_CONFLICT/
+  );
+  assert.doesNotMatch(
+    sqlFunction(
+      packReconciliation,
+      "pikbo_reconcile_seller_pack_cases_v1"
+    ).split("loop", 1)[0],
+    /for update/,
+    "worker candidate selection must not lock reconciliation before pack/job"
+  );
+  assert.match(
+    packReconciliation,
+    /pikbo_settle_seller_pack_child_v2\([\s\S]*?v_case\.pack_run_id[\s\S]*?v_case\.job_id[\s\S]*?v_case\.attempt_key/
+  );
+  assert.match(
+    packReconciliation,
+    /pikbo_release_seller_pack_child_v2\([\s\S]*?v_case\.pack_run_id[\s\S]*?v_case\.job_id[\s\S]*?v_case\.attempt_key/
+  );
+  assert.doesNotMatch(
+    packReconciliation,
+    /pikbo_(?:capture|release)_generation_v1/,
+    "Pack reconciliation must never use whole-reservation R1c settlement"
+  );
+  assert.match(
+    packReconciliation,
+    /from public, anon, authenticated[\s\S]*grant execute[\s\S]*to service_role/
+  );
+  assert.match(gen, /recordSellerPackReconciliation/);
+  assert.match(gen, /packReconciliationEventId/);
+  assert.match(gen, /createHash\("sha256"\)[\s\S]*attemptKey/);
+  assert.match(gen, /attemptKey: activePackChild\.attemptKey/);
 
   const statusRoute = read("app/api/seller-pack/status/route.ts");
   assert.match(statusRoute, /getSellerPackStatusAtomic|getAtomicSellerPackStatus/);
@@ -141,6 +375,25 @@ assert.equal(
   const retryRoute = read("app/api/seller-pack/retry/route.ts");
   assert.match(retryRoute, /retrySellerPackChildAtomic/);
   assert.match(retryRoute, /attemptKey/);
+}
+
+// Attempt A and Retry Attempt B are separate durable reconciliation cases.
+// A terminal release can never poison B's capture idempotency identity.
+{
+  const cases = new Map();
+  const key = (jobId, attemptKey) => `${jobId}:${attemptKey}`;
+  const jobId = "same-logical-pack-job";
+  cases.set(key(jobId, "attempt-A"), {
+    state: "released",
+    providerOutcome: "failed",
+  });
+  cases.set(key(jobId, "attempt-B"), {
+    state: "capture_pending",
+    providerOutcome: "succeeded",
+  });
+  assert.equal(cases.size, 2);
+  assert.equal(cases.get(key(jobId, "attempt-A")).state, "released");
+  assert.equal(cases.get(key(jobId, "attempt-B")).state, "capture_pending");
 }
 
 // ─── 1. One 30-credit reserve; wallet available 0 / reserved 30 ────────────
@@ -174,6 +427,20 @@ assert.deepEqual(
 );
 assert.ok(r1.pack.jobs.every((j) => j.quotedCredits === 10));
 assert.equal(r1.pack.contractFingerprint, FINGERPRINT);
+
+// A child with no authorized attempt cannot be released by a guessed callback.
+const queuedRelease = atomic.pureReleaseSellerPackChild(store, {
+  ownerUserId: OWNER,
+  packRunId: r1.pack.packRunId,
+  jobId: r1.pack.jobs[0].jobId,
+  attemptKey: "attempt-queued-001",
+  confirmed: true,
+  reason: "browser_cancel",
+});
+assert.equal(queuedRelease.ok, false);
+assert.equal(queuedRelease.code, "ATTEMPT_MISMATCH");
+assert.equal(store.wallet.availableCredits, 0);
+assert.equal(store.wallet.reservedCredits, 30);
 
 // ─── 2. Reserve replay returns same pack + three job IDs ───────────────────
 
@@ -300,6 +567,7 @@ for (let i = 0; i < 2; i++) {
     ownerUserId: OWNER,
     packRunId: r1.pack.packRunId,
     jobId: job.jobId,
+    attemptKey: attempts[i],
     privateStored: false,
   });
   assert.equal(noPrivate.ok, false);
@@ -309,6 +577,7 @@ for (let i = 0; i < 2; i++) {
     ownerUserId: OWNER,
     packRunId: r1.pack.packRunId,
     jobId: job.jobId,
+    attemptKey: attempts[i],
     privateStored: true,
   });
   assert.equal(settled.ok, true);
@@ -335,6 +604,7 @@ for (let i = 0; i < 2; i++) {
     ownerUserId: OWNER,
     packRunId: r1.pack.packRunId,
     jobId: job.jobId,
+    attemptKey: attempts[2],
     confirmed: false,
     reason: "timeout_unknown",
   });
@@ -346,6 +616,7 @@ for (let i = 0; i < 2; i++) {
     ownerUserId: OWNER,
     packRunId: r1.pack.packRunId,
     jobId: job.jobId,
+    attemptKey: attempts[2],
     confirmed: true,
     reason: "provider_error",
   });
@@ -401,6 +672,19 @@ for (let i = 0; i < 2; i++) {
   assert.equal(retry.pack.releasedCredits, 0);
   assert.equal(retry.pack.jobs.length, 3, "never creates a fourth logical child");
 
+  // Retry has minted Attempt B, but no provider call has been authorized yet.
+  // Even the matching attempt cannot release queued/unstarted work.
+  const queuedRetryRelease = atomic.pureReleaseSellerPackChild(store, {
+    ownerUserId: OWNER,
+    packRunId: r1.pack.packRunId,
+    jobId: failedJob.jobId,
+    attemptKey: "attempt-retry-child-c",
+    confirmed: true,
+    reason: "browser_cancel",
+  });
+  assert.equal(queuedRetryRelease.ok, false);
+  assert.equal(queuedRetryRelease.code, "CHILD_NOT_RELEASABLE");
+
   const auth2 = atomic.pureAuthorizeSellerPackChild(store, {
     ownerUserId: OWNER,
     packRunId: r1.pack.packRunId,
@@ -419,6 +703,7 @@ for (let i = 0; i < 2; i++) {
     ownerUserId: OWNER,
     packRunId: r1.pack.packRunId,
     jobId: failedJob.jobId,
+    attemptKey: "attempt-retry-child-c",
     privateStored: true,
   });
   assert.equal(settle2.ok, true);
@@ -471,6 +756,7 @@ for (let i = 0; i < 2; i++) {
       ownerUserId: OWNER,
       packRunId: reserved.pack.packRunId,
       jobId: job.jobId,
+      attemptKey: `fresh-attempt-${i}-xxxx`,
       privateStored: true,
     });
     assert.equal(settled.ok, true);
@@ -510,6 +796,7 @@ for (let i = 0; i < 2; i++) {
         ownerUserId: OWNER,
         packRunId: reserved.pack.packRunId,
         jobId: job.jobId,
+        attemptKey: `partial-attempt-${i}-yyyy`,
         privateStored: true,
       });
     } else {
@@ -517,6 +804,7 @@ for (let i = 0; i < 2; i++) {
         ownerUserId: OWNER,
         packRunId: reserved.pack.packRunId,
         jobId: job.jobId,
+        attemptKey: `partial-attempt-${i}-yyyy`,
         confirmed: true,
       });
     }
@@ -533,7 +821,188 @@ for (let i = 0; i < 2; i++) {
   assert.equal(end.pack.status, "partial");
 }
 
-// ─── 12. Insufficient for full pack never requires 60 ──────────────────────
+// ─── 12. Same failure reason is isolated by retry attempt identity ─────────
+
+{
+  const s = atomic.createAtomicSellerPackStore({ availableCredits: 30 });
+  const reserved = atomic.pureReserveSellerPack(s, {
+    ownerUserId: OWNER,
+    clientPackKey: "attempt-fence-pack-ddd",
+  });
+  const job = reserved.pack.jobs[0];
+  const attemptA = "attempt-ledger-a-0001";
+  const attemptB = "attempt-ledger-b-0001";
+
+  const authA = atomic.pureAuthorizeSellerPackChild(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+    jobId: job.jobId,
+    effectSlug: job.effectSlug,
+    durationSec: job.durationSec,
+    aspectRatio: job.aspectRatio,
+    attemptKey: attemptA,
+  });
+  assert.equal(authA.ok, true);
+
+  const releasedA = atomic.pureReleaseSellerPackChild(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+    jobId: job.jobId,
+    attemptKey: attemptA,
+    confirmed: true,
+    reason: "provider_error",
+  });
+  assert.equal(releasedA.ok, true);
+  assert.equal(releasedA.idempotent, false);
+  assert.equal(releasedA.wallet.availableCredits, 10);
+  assert.equal(releasedA.wallet.reservedCredits, 20);
+  assert.equal(releasedA.pack.releasedCredits, 10);
+
+  const beforeReuse = atomic.pureGetSellerPackStatus(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+  });
+  assert.equal(beforeReuse.ok, true);
+  const reusedA = atomic.pureRetrySellerPackChild(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+    jobId: job.jobId,
+    attemptKey: attemptA,
+  });
+  assert.equal(reusedA.ok, false);
+  assert.equal(reusedA.code, "ATTEMPT_REUSE_FORBIDDEN");
+  const afterReuse = atomic.pureGetSellerPackStatus(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+  });
+  assert.equal(afterReuse.ok, true);
+  assert.deepEqual(afterReuse.pack, beforeReuse.pack);
+  assert.deepEqual(afterReuse.wallet, beforeReuse.wallet);
+  assert.equal(afterReuse.pack.releasedCredits, 10);
+  assert.equal(afterReuse.pack.jobs[0].status, "failed");
+  assert.equal(afterReuse.pack.jobs[0].attemptKey, attemptA);
+
+  const retriedB = atomic.pureRetrySellerPackChild(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+    jobId: job.jobId,
+    attemptKey: attemptB,
+  });
+  assert.equal(retriedB.ok, true);
+  assert.equal(retriedB.wallet.availableCredits, 0);
+  assert.equal(retriedB.wallet.reservedCredits, 30);
+  assert.equal(retriedB.pack.releasedCredits, 0);
+
+  const authB = atomic.pureAuthorizeSellerPackChild(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+    jobId: job.jobId,
+    effectSlug: job.effectSlug,
+    durationSec: job.durationSec,
+    aspectRatio: job.aspectRatio,
+    attemptKey: attemptB,
+  });
+  assert.equal(authB.ok, true);
+  assert.equal(authB.job.providerAuthorizations, 2);
+
+  // A late Attempt A callback cannot mutate Attempt B.
+  const staleReleaseA = atomic.pureReleaseSellerPackChild(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+    jobId: job.jobId,
+    attemptKey: attemptA,
+    confirmed: true,
+    reason: "provider_error",
+  });
+  assert.equal(staleReleaseA.ok, false);
+  assert.equal(staleReleaseA.code, "ATTEMPT_MISMATCH");
+  const staleSettleA = atomic.pureSettleSellerPackChild(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+    jobId: job.jobId,
+    attemptKey: attemptA,
+    privateStored: true,
+  });
+  assert.equal(staleSettleA.ok, false);
+  assert.equal(staleSettleA.code, "ATTEMPT_MISMATCH");
+  assert.equal(s.wallet.availableCredits, 0);
+  assert.equal(s.wallet.reservedCredits, 30);
+
+  // The same provider failure reason is legal for Attempt B because SQL ledger
+  // identity includes the attempt key, not only job + reason.
+  const releasedB = atomic.pureReleaseSellerPackChild(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+    jobId: job.jobId,
+    attemptKey: attemptB,
+    confirmed: true,
+    reason: "provider_error",
+  });
+  assert.equal(releasedB.ok, true);
+  assert.equal(releasedB.idempotent, false);
+  assert.equal(releasedB.wallet.availableCredits, 10);
+  assert.equal(releasedB.wallet.reservedCredits, 20);
+  assert.equal(releasedB.pack.releasedCredits, 10);
+
+  const replayB = atomic.pureReleaseSellerPackChild(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+    jobId: job.jobId,
+    attemptKey: attemptB,
+    confirmed: true,
+    reason: "provider_error",
+  });
+  assert.equal(replayB.ok, true);
+  assert.equal(replayB.idempotent, true);
+  assert.equal(replayB.wallet.availableCredits, 10);
+  assert.equal(replayB.wallet.reservedCredits, 20);
+
+  // Original funds are conserved across A release, B re-reserve, and B release.
+  assert.equal(
+    s.wallet.availableCredits +
+      s.wallet.reservedCredits +
+      s.wallet.lifetimeUsedCredits,
+    30
+  );
+  assert.equal(replayB.pack.settledCredits + replayB.pack.releasedCredits, 10);
+}
+
+// ─── 13. Private output evidence can never be refunded ─────────────────────
+
+{
+  const s = atomic.createAtomicSellerPackStore({ availableCredits: 30 });
+  const reserved = atomic.pureReserveSellerPack(s, {
+    ownerUserId: OWNER,
+    clientPackKey: "private-result-pack-eee",
+  });
+  const job = reserved.pack.jobs[0];
+  const attempt = "attempt-private-output-001";
+  atomic.pureAuthorizeSellerPackChild(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+    jobId: job.jobId,
+    effectSlug: job.effectSlug,
+    durationSec: job.durationSec,
+    aspectRatio: job.aspectRatio,
+    attemptKey: attempt,
+  });
+  s.packsById[reserved.pack.packRunId].jobs[0].hasPrivateResult = true;
+
+  const unsafeRefund = atomic.pureReleaseSellerPackChild(s, {
+    ownerUserId: OWNER,
+    packRunId: reserved.pack.packRunId,
+    jobId: job.jobId,
+    attemptKey: attempt,
+    confirmed: true,
+    reason: "signing_failed_after_attach",
+  });
+  assert.equal(unsafeRefund.ok, false);
+  assert.equal(unsafeRefund.code, "PRIVATE_RESULT_RECONCILIATION_REQUIRED");
+  assert.equal(s.wallet.availableCredits, 0);
+  assert.equal(s.wallet.reservedCredits, 30);
+}
+
+// ─── 14. Insufficient for full pack never requires 60 ──────────────────────
 
 {
   const s = atomic.createAtomicSellerPackStore({ availableCredits: 29 });
@@ -549,7 +1018,7 @@ for (let i = 0; i < 2; i++) {
   assert.equal(s.wallet.reservedCredits, 0);
 }
 
-// ─── 13. parseSellerPackChildRequest binding rules ─────────────────────────
+// ─── 15. parseSellerPackChildRequest binding rules ─────────────────────────
 
 {
   assert.equal(atomic.parseSellerPackChildRequest({}).kind, "none");
@@ -571,5 +1040,5 @@ for (let i = 0; i < 2; i++) {
 }
 
 console.log(
-  "seller-pack-atomic-live-regression: PASS (30-credit reserve · exact 3 jobs · per-child 10 settle/release · same-child retry · refresh · cross-account/tamper denial · private-before-settle · no R1a on pack path)"
+  "seller-pack-atomic-live-regression: PASS (30-credit reserve · exact 3 jobs · attempt-fenced settle/release · retry same-reason isolation · private-result refund denial · ledger conservation · refresh · cross-account/tamper denial)"
 );

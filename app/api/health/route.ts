@@ -6,6 +6,7 @@ import {
 } from "@/lib/durableCredits";
 import { generationJobsProbe, jobTimeoutMs } from "@/lib/generationJobs";
 import { paymentsReadiness } from "@/lib/stripe";
+import { probeStripeBillingStore } from "@/lib/stripeBilling";
 import { inflightJobCount, inflightTtlMs } from "@/lib/rateLimit";
 import { localAssetsProbe } from "@/lib/localAssets";
 import { probeDemoAssets } from "@/lib/demoClips";
@@ -38,9 +39,10 @@ export async function GET() {
   const degraded = production && !sessionSecret;
 
   const entitlements = await probeEntitlementsStore();
-  const [liveReadiness, privateResults] = await Promise.all([
+  const [liveReadiness, privateResults, stripeBillingStore] = await Promise.all([
     probeSoftLiveReadiness(),
     privateResultsProbe(),
+    probeStripeBillingStore(),
   ]);
   const {
     authPublic,
@@ -84,8 +86,8 @@ export async function GET() {
     durableReconciliation: durableReconciliationConfigured,
     serverOwnedDeliverable: serverOwnedDeliverableConfigured,
     /**
-     * Real charges — needs durable entitlements (PRELAUNCH R1).
-     * File store unwritable ⇒ paid stays false even if Stripe env is set.
+     * Real charges — needs the service-role-only Supabase billing RPC.
+     * Legacy JSON entitlements never satisfy this production gate.
      * Also requires Phase I test readiness (not live keys by accident).
      * Multi-node paid requires server-owned generation jobs (still hard-false).
      */
@@ -94,7 +96,9 @@ export async function GET() {
       sessionSecret &&
       stripe &&
       stripeWebhook &&
-      entitlements.writable &&
+      stripeBillingStore.backend === "supabase" &&
+      stripeBillingStore.schemaReady &&
+      stripeBillingStore.operatorReady &&
       durableCredits.writable &&
       payments.readyForTestCheckout &&
       durableServerOwnedJobs.effective,
@@ -273,6 +277,7 @@ export async function GET() {
     },
     ready,
     entitlements,
+    stripeBillingStore,
     durableCredits,
     privateResults,
     auth: {
@@ -293,6 +298,8 @@ export async function GET() {
       stripeWebhook,
       production,
       entitlementsWritable: entitlements.writable,
+      stripeBillingSchemaReady: stripeBillingStore.schemaReady,
+      stripeBillingOperatorReady: stripeBillingStore.operatorReady,
       durableCreditsWritable: durableCredits.writable,
       requireDurableCredits: process.env.REQUIRE_DURABLE_CREDITS === "1",
       atomicReservationOperatorReady:
@@ -339,6 +346,8 @@ export async function GET() {
       STRIPE_SECRET_KEY: stripe,
       STRIPE_WEBHOOK_SECRET: stripeWebhook,
       entitlementsWritable: entitlements.writable,
+      STRIPE_BILLING_RPC_READY:
+        stripeBillingStore.schemaReady && stripeBillingStore.operatorReady,
       AUTH_CONFIGURED: authConfigured,
       DURABLE_ATOMIC_RESERVATION_CONFIGURED:
         durableAtomicReservationConfigured,
@@ -357,7 +366,7 @@ export async function GET() {
       optionalUntilPaid: [
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
-        "entitlementsWritable",
+        "STRIPE_BILLING_RPC_READY",
       ],
       notes: [
         "Demo works without FAL_KEY (cached Lab clips, 0 credits)",
@@ -368,7 +377,7 @@ export async function GET() {
         "Set PIKBO_R1_ATOMIC_RESERVATION_READY only after the reviewed RPC migration passes non-production integration",
         "Set PIKBO_R1_RECONCILIATION_READY only after the R1c migration and crash/race rehearsal pass in non-production",
         "Live requires configured auth, Supabase atomic reservation, durable reconciliation, provider, and server-owned delivery",
-        "Paid later: durable entitlements + Stripe price IDs + webhook",
+        "Paid later: rehearsed Supabase Stripe billing RPC + test Price IDs + signed webhook",
         "PIKBO_FORCE_GENERATE_FAIL is ops-only and hard-off in production",
         "See docs/LAUNCH.md",
       ],

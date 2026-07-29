@@ -163,7 +163,7 @@ begin
   end if;
 
   v_fingerprint := encode(
-    digest(
+    extensions.digest(
       jsonb_build_object(
         'eventId', btrim(p_event_id),
         'eventType', p_event_type,
@@ -330,7 +330,7 @@ begin
            else state
          end,
          lease_owner = btrim(p_worker_id),
-         lease_token_hash = encode(digest(v_token, 'sha256'), 'hex'),
+         lease_token_hash = encode(extensions.digest(v_token, 'sha256'), 'hex'),
          lease_expires_at = now() + make_interval(secs => v_lease_seconds),
          attempt_count = attempt_count + 1,
          updated_at = now()
@@ -379,7 +379,7 @@ begin
   if p_lease_token is null or length(p_lease_token) < 32 then
     return jsonb_build_object('ok', false, 'code', 'INVALID_LEASE');
   end if;
-  v_token_hash := encode(digest(p_lease_token, 'sha256'), 'hex');
+  v_token_hash := encode(extensions.digest(p_lease_token, 'sha256'), 'hex');
 
   select *
     into v_case

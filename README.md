@@ -1,87 +1,92 @@
 # Pikbo — AI toy video generator
 
-**Live:** [https://pikbo.ai](https://pikbo.ai) · Free Mini trial · no card  
+**Public site:** [https://pikbo.ai](https://pikbo.ai) · validation mode · payments off
 
-Turn **one photo** of a designer toy / figure / blind box you own into a short AI video for listings, TikTok, and drops.
+Turn **one rights-owned photo** of a designer toy, figure, or blind box into
+three private launch videos for listings and social posts.
 
 ```text
-Photo you own → recipe (spin / float / unbox) → short video
+Owned SKU photo → Listing Spin 1:1 + Blind-box Reveal 9:16 + Social Flash 9:16
 ```
 
-Recovery honesty: anonymous visitors are cached-demo-only until authenticated
-durable reservation and server-owned delivery are ready. Existing Lab media is
-not customer UGC; its proof status is being audited. Stripe remains off during
-recovery, but future payment validation depends on sellers producing publishable
-packs—not on an arbitrary search-traffic threshold.
+Anonymous and ordinary Free visitors receive labeled cached prototypes; their
+upload is not processed. Real generation is restricted to invited,
+authenticated non-production validation accounts. It requires an atomic
+Supabase reservation, Seedance Fast 720p/5s, private Pikbo Storage, an
+owner-only signed download, and server-side settlement. Production Stripe and
+public live generation remain closed until the documented quality, privacy,
+accounting, margin, and target-buyer Beta gates pass.
 
 ## Try
 1. Open [pikbo.ai/create](https://pikbo.ai/create)  
 2. Confirm you own the photo  
-3. Generate (live Mini when configured; otherwise labeled demo)
+3. Preview a labeled cached example; invited validation accounts can run the
+   private Launch Pack
 
 ## Stack
 - **Next.js 16** (App Router) + **Tailwind v4**
-- **ByteDance Seedance** image-to-video via **fal.ai** (`@fal-ai/client`)
-  - Free tier → `bytedance/seedance-2.0/mini/image-to-video` at 480p
-  - Paid → `bytedance/seedance-2.0/image-to-video`
-- **Signed cookie session** — guest credits + plan (no DB required yet)
-- **Stripe Checkout** (optional, soft launch off) — Creator / Shop subscriptions
-- Programmatic SEO: `/effects/*`, `/for/*`, `/tools/*`, `/toys/*`, `/guides/*`
+- **ByteDance Seedance Fast** via fal.ai, pinned to 5 seconds / 720p for
+  non-production validation
+- **Supabase Auth + Postgres** for accounts, atomic credits, Pack jobs,
+  provider-budget authority, and Stripe idempotency
+- **Private Supabase Storage** with short-lived owner-only signed downloads
+- **Stripe test integration** for one future Founding Studio subscription;
+  purchase remains disabled
 
 ## Run
 ```bash
 cp .env.example .env.local
-# required for live gen: FAL_KEY, SESSION_SECRET
+# Cached mode needs no provider key. Private validation additionally requires
+# Supabase, FAL, allowlist, atomic migrations, and the durable US$20 budget.
 npm run dev      # http://localhost:3000
 ```
 
 | Mode | When | Behavior |
 |---|---|---|
-| **Demo** | no `FAL_KEY` | Labeled **Cached demo** clip · **0 credits** (does not animate your upload) |
-| **Live gen** | `FAL_KEY` set | Real image-to-video via fal.ai · 10 credits · refund on failure |
-| **Dev billing** | no Stripe keys, non-prod | `/api/checkout` upgrades plan instantly (never in production soft launch) |
-| **Live billing** | Stripe keys + price IDs + gate | Soft launch: paid CTAs stay **Coming soon** |
+| **Cached** | default / public | Labeled prototype · 0 credits · upload not processed |
+| **Private validation** | invited non-production account + all durable gates | Real Fast 720p/5s output copied to private Storage |
+| **Stripe test** | private Preview + rehearsed billing RPC | Test Checkout only; invoice grants are idempotent |
+| **Production paid** | all launch gates pass | Currently hard-closed |
 
 ## Credits & plans (see `docs/UNIT_ECONOMICS.md` + `lib/pricing.ts`)
-| Plan | Price | Credits/mo | Approx clips | On-player mark |
-|---|---|---|---|---|
-| Free | $0 | 10 | ~1 trial | yes |
-| Creator | $19 | 50 | ~5 | no |
-| Shop | $49 | 150 | ~15 | no |
+| Plan | Candidate price | Allowance | Availability |
+|---|---:|---:|---|
+| Free | $0 | Cached prototypes only | Public |
+| Founding Studio | $49/month | 3 fixed Launch Packs = 90 credits = 9 outputs | Closed until gates pass |
 
-Rule: **1 live clip = 10 credits** (flat until model×duration metering). Failed **live** jobs refund and return `creditsRefunded: true`.
-Free live path: Seedance Mini · 5s · 480p · on-player mark. Cached demos and homepage Lab examples use **0 credits**.
+Each Pack atomically reserves 30 credits and settles or restores 10 per child.
+Credits roll over while the subscription remains active. There is no unlimited
+usage and paid credits cannot be redirected into unpriced models or durations.
 
 ## Where things live
 | Path | What |
 |---|---|
 | `lib/presets.ts` | Effect presets — each is a studio effect **and** an SEO page |
 | `lib/pricing.ts` | Plans + credit cost |
-| `lib/session.ts` | Signed cookie guest session |
-| `lib/credits.ts` | Check / deduct / refund |
-| `app/api/generate` | Credits gate → fal.ai (or demo) |
+| `lib/session.ts` | Signed guest cookie; never paid-spend authority |
+| `lib/durableCredits/*` | Postgres reservation, settlement, Pack authority |
+| `app/api/generate` | Durable gate → provider → private object → settle |
 | `app/api/me` | Current balance / plan |
-| `app/api/checkout` | Stripe or dev upgrade |
+| `app/api/checkout` | Auth-bound Stripe Checkout, disabled by default |
 | `app/pricing` | Pricing page + checkout buttons |
 | `app/create` + `components/CreateStudio.tsx` | Upload → effect → generate |
 | `app/sitemap.ts`, `app/robots.ts` | SEO plumbing |
 
 ## Deploy checklist
 1. Host on Vercel (or any Node host) from this repo.
-2. Env: `SESSION_SECRET`, `FAL_KEY`, Stripe keys (see `.env.example`).
-3. Stripe webhook → `https://YOUR_DOMAIN/api/webhooks/stripe`  
-   Events: `checkout.session.completed`, `invoice.paid`, `customer.subscription.deleted`, `customer.subscription.updated`.
-4. Create products/prices for Creator ($19) and Shop ($49); paste Price IDs into env.
-5. Point domain (`pikbo.ai`) DNS to host.
+2. Keep Production at `PIKBO_PROVIDER_VALIDATION_MODE=0`,
+   `NEXT_PUBLIC_PAYMENTS_ENABLED=0`, `PAYMENTS_LIVE=0`, and
+   `STRIPE_BILLING_RPC_READY=0`.
+3. Apply new migrations and exercise provider/Stripe only in a disposable or
+   isolated non-production project.
+4. Do not copy Preview credentials or validation flags into Production.
 
 ## Roadmap
-1. ~~Credits + free watermark + pricing checkout path~~ (done — cookie session)
-2. ~~Stripe webhooks + checkout confirm~~ (done — file entitlements)
-3. **Auth + credits DB** (Supabase) — multi-device balance, history
-4. **Server-side video watermark** (ffmpeg) for free downloads
-5. **Verified live case studies** to replace cached Lab examples when fal renders are approved
-6. Vertical seller acquisition after activation, repeat use, and unit economics
-   are measurable
+1. Rehearse the private P0 single-video loop against non-production Postgres.
+2. Run the atomic three-video Pack for at least 3 SKUs / 10 provider calls
+   within the durable US$20 cap.
+3. Invite 10 independent toy sellers or studios and measure real reuse.
+4. Open one Founding Studio offer only after every release gate passes.
 
 ## Multi-agent workflow (Grok · GPT · Claude)
 Single source of truth: **this GitHub repo**.

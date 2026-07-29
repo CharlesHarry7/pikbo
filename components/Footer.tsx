@@ -19,8 +19,8 @@ export function Footer() {
             <Logo size={30} />
 
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/45">
-              {site.tagline} Video-first studio for toys you own — Generate,
-              Modules, Seller Starter Pack.
+              {site.tagline} Turn one owned toy photo into a listing spin,
+              reveal clip, and social hook.
             </p>
             <div
               className="mt-4 flex flex-wrap items-center gap-2"
@@ -38,14 +38,8 @@ export function Footer() {
               >
                 Launch Pack
               </Link>
-              <Link href="/modules" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-                Modules
-              </Link>
               <Link href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
                 Library
-              </Link>
-              <Link href="/flow" className="btn btn-ghost !px-3 !py-1.5 text-xs text-white/50">
-                Flow · Preview
               </Link>
               <FreeTrialCta
                 path="/"
@@ -87,16 +81,13 @@ export function Footer() {
                 ["/pricing", "Pricing"],
                 ["/explore", "Explore Lab"],
                 ["/tools/ai-toy-video-generator", "AI toy video generator"],
-                ["/create?mode=seller-pack", "Seller Starter Pack"],
-                ["/modules", "Modules"],
-                ["/library", "Assets · Local"],
+                ["/create?mode=seller-pack", "Launch Pack"],
+                ["/library", "Library"],
                 ["/about", "About"],
                 [
                   "/guides/seller-pack-workflow-listing-reveal-hook",
-                  "Seller Starter Pack guide",
+                  "Launch Pack guide",
                 ],
-                ["/flow", "Flow · Preview"],
-                ["/community", "Lab · noindex"],
                 ["/privacy", "Privacy"],
                 ["/terms", "Terms"],
               ].map(([h, l]) => (

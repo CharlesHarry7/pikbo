@@ -82,6 +82,7 @@ declare
   v_account public.accounts%rowtype;
   v_wallet public.credit_wallets%rowtype;
   v_existing public.seller_pack_runs%rowtype;
+  v_existing_found boolean := false;
   v_reservation public.credit_reservations%rowtype;
   v_pack public.seller_pack_runs%rowtype;
   v_reservation_key text;
@@ -110,10 +111,28 @@ begin
   if not found then
     return jsonb_build_object('ok', false, 'code', 'DURABLE_WALLET_NOT_FOUND');
   end if;
+  -- Historical creator/shop enum values are intentionally still readable,
+  -- but the current application contract cannot represent them. Reject them
+  -- while the account row is locked and before any wallet/ledger mutation.
+  if v_account.plan_id::text not in ('free', 'founding_studio') then
+    return jsonb_build_object('ok', false, 'code', 'UNSUPPORTED_LEGACY_PLAN');
+  end if;
   if v_account.status <> 'active'
      or not v_account.live_generation_allowed then
     return jsonb_build_object('ok', false, 'code', 'LIVE_ACCESS_REQUIRED');
   end if;
+
+  -- Global Pack lock order is account → pack → job/reservation → wallet.
+  -- The idempotent replay must therefore lock its existing Pack before the
+  -- wallet; otherwise it can deadlock with settle/release workers that hold
+  -- the Pack and are waiting for the wallet.
+  select *
+    into v_existing
+    from public.seller_pack_runs
+   where created_by = p_user_id
+     and client_pack_key = btrim(p_client_pack_key)
+   for update;
+  v_existing_found := found;
 
   select *
     into v_wallet
@@ -124,14 +143,7 @@ begin
     return jsonb_build_object('ok', false, 'code', 'DURABLE_WALLET_NOT_FOUND');
   end if;
 
-  select *
-    into v_existing
-    from public.seller_pack_runs
-   where created_by = p_user_id
-     and client_pack_key = btrim(p_client_pack_key)
-   for update;
-
-  if found then
+  if v_existing_found then
     if v_existing.contract_fingerprint is distinct from v_fingerprint
        or v_existing.quoted_credits <> v_quoted then
       return jsonb_build_object('ok', false, 'code', 'IDEMPOTENCY_CONFLICT');
@@ -388,11 +400,11 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
+  v_account public.accounts%rowtype;
   v_pack public.seller_pack_runs%rowtype;
   v_job public.generation_jobs%rowtype;
   v_reservation public.credit_reservations%rowtype;
   v_wallet public.credit_wallets%rowtype;
-  v_account public.accounts%rowtype;
   v_remaining integer;
 begin
   if p_user_id is null then
@@ -404,11 +416,28 @@ begin
     return jsonb_build_object('ok', false, 'code', 'INVALID_IDEMPOTENCY_KEY');
   end if;
 
+  -- Lock and validate the durable plan before touching the pack reservation
+  -- or wallet. This prevents legacy creator/shop rows from being debited and
+  -- only then rejected by the TypeScript response decoder.
+  select *
+    into v_account
+    from public.accounts
+   where owner_user_id = p_user_id
+     and kind = 'personal'
+   for update;
+  if not found then
+    return jsonb_build_object('ok', false, 'code', 'PACK_NOT_FOUND');
+  end if;
+  if v_account.plan_id::text not in ('free', 'founding_studio') then
+    return jsonb_build_object('ok', false, 'code', 'UNSUPPORTED_LEGACY_PLAN');
+  end if;
+
   select *
     into v_pack
     from public.seller_pack_runs
    where id = p_pack_run_id
      and created_by = p_user_id
+     and account_id = v_account.id
    for update;
   if not found then
     return jsonb_build_object('ok', false, 'code', 'PACK_NOT_FOUND');
@@ -508,11 +537,6 @@ begin
     from public.credit_wallets
    where account_id = v_pack.account_id
    for update;
-  select *
-    into v_account
-    from public.accounts
-   where id = v_pack.account_id
-   for update;
   if v_account.status <> 'active'
      or not v_account.live_generation_allowed then
     return jsonb_build_object('ok', false, 'code', 'LIVE_ACCESS_REQUIRED');
@@ -560,10 +584,11 @@ $$;
 
 -- ── Settle exactly 10 on one bound child ───────────────────────────────────
 
-create or replace function public.pikbo_settle_seller_pack_child_v1(
+create or replace function public.pikbo_settle_seller_pack_child_v2(
   p_user_id uuid,
   p_pack_run_id uuid,
   p_job_id uuid,
+  p_attempt_key text,
   p_provider_request_id text default null
 )
 returns jsonb
@@ -602,6 +627,55 @@ begin
    for update;
   if not found then
     return jsonb_build_object('ok', false, 'code', 'JOB_BINDING_MISMATCH');
+  end if;
+  if p_attempt_key is null
+     or length(btrim(p_attempt_key)) < 8
+     or v_job.pack_attempt_key is distinct from btrim(p_attempt_key) then
+    return jsonb_build_object('ok', false, 'code', 'ATTEMPT_MISMATCH');
+  end if;
+
+  -- Settlement authority is the Pikbo-owned private object, not an upstream
+  -- URL or a browser callback. The attach RPC writes this full shape before
+  -- the server is allowed to capture any part of the 30-credit hold.
+  if v_job.output_object_key is null
+     or v_job.output_object_key is distinct from
+       ('private-results/' || p_user_id::text || '/' || v_job.id::text || '.mp4')
+     or v_job.output_content_type is distinct from 'video/mp4'
+     or v_job.output_byte_length is null
+     or v_job.output_byte_length not between 32 and 67108864
+     or v_job.output_sha256 is null
+     or v_job.output_sha256 !~ '^[a-f0-9]{64}$'
+     or v_job.provider_request_id is null
+     or length(btrim(v_job.provider_request_id)) = 0
+     or v_job.model_id is distinct from
+       'bytedance/seedance-2.0/fast/image-to-video'
+     or v_job.duration_seconds is distinct from 5
+     or v_job.resolution is distinct from '720p'
+     or v_job.pack_child_key not in (
+       'listing_spin', 'blind_box_reveal', 'social_flash'
+     )
+     or v_job.aspect_ratio is distinct from (
+       case v_job.pack_child_key
+         when 'listing_spin' then '1:1'
+         when 'blind_box_reveal' then '9:16'
+         when 'social_flash' then '9:16'
+         else null
+       end
+     )
+     or v_job.effect_slug is distinct from (
+       case v_job.pack_child_key
+         when 'listing_spin' then '360-spin-showcase'
+         when 'blind_box_reveal' then 'blind-box-unboxing'
+         when 'social_flash' then 'paparazzi-flash'
+         else null
+       end
+     ) then
+    return jsonb_build_object('ok', false, 'code', 'PRIVATE_RESULT_REQUIRED');
+  end if;
+  if p_provider_request_id is not null
+     and btrim(p_provider_request_id) is distinct from
+       btrim(v_job.provider_request_id) then
+    return jsonb_build_object('ok', false, 'code', 'PROVIDER_REQUEST_MISMATCH');
   end if;
 
   select *
@@ -726,10 +800,12 @@ begin
     v_reservation.id,
     'seller_pack_settle',
     v_job.id::text,
-    'ledger:seller-pack-settle:' || v_job.id::text,
+    'ledger:seller-pack-settle:' || v_job.id::text || ':' ||
+      btrim(p_attempt_key),
     jsonb_build_object(
       'packRunId', v_pack.id,
       'childKey', v_job.pack_child_key,
+      'attemptKey', btrim(p_attempt_key),
       'providerRequestId', p_provider_request_id
     )
   );
@@ -753,10 +829,11 @@ $$;
 
 -- ── Release exactly 10 on confirmed child failure ──────────────────────────
 
-create or replace function public.pikbo_release_seller_pack_child_v1(
+create or replace function public.pikbo_release_seller_pack_child_v2(
   p_user_id uuid,
   p_pack_run_id uuid,
   p_job_id uuid,
+  p_attempt_key text,
   p_reason text default 'child_failed'
 )
 returns jsonb
@@ -795,6 +872,23 @@ begin
   if not found then
     return jsonb_build_object('ok', false, 'code', 'JOB_BINDING_MISMATCH');
   end if;
+  if p_attempt_key is null
+     or length(btrim(p_attempt_key)) < 8
+     or v_job.pack_attempt_key is distinct from btrim(p_attempt_key) then
+    return jsonb_build_object('ok', false, 'code', 'ATTEMPT_MISMATCH');
+  end if;
+  -- Any durable output evidence makes a refund unsafe. Leave the job running
+  -- so the discovery/reconciliation worker can capture the exact attempt.
+  if v_job.output_object_key is not null
+     or v_job.output_content_type is not null
+     or v_job.output_byte_length is not null
+     or v_job.output_sha256 is not null
+     or v_job.provider_request_id is not null then
+    return jsonb_build_object(
+      'ok', false,
+      'code', 'PRIVATE_RESULT_RECONCILIATION_REQUIRED'
+    );
+  end if;
 
   select *
     into v_reservation
@@ -832,7 +926,10 @@ begin
   if v_job.status = 'succeeded' then
     return jsonb_build_object('ok', false, 'code', 'CHILD_ALREADY_SUCCEEDED');
   end if;
-  if v_job.status not in ('running', 'queued') then
+  -- Only the server path that authorized this exact provider attempt may
+  -- release it here. Unstarted queued children are handled by the dedicated
+  -- expiry worker function; they are never releasable through this RPC.
+  if v_job.status <> 'running' then
     return jsonb_build_object('ok', false, 'code', 'CHILD_NOT_RELEASABLE');
   end if;
 
@@ -923,10 +1020,12 @@ begin
     'seller_pack_release',
     v_job.id::text,
     'ledger:seller-pack-release:' || v_job.id::text || ':' ||
+      btrim(p_attempt_key) || ':' ||
       left(coalesce(p_reason, 'child_failed'), 40),
     jsonb_build_object(
       'packRunId', v_pack.id,
       'childKey', v_job.pack_child_key,
+      'attemptKey', btrim(p_attempt_key),
       'reason', left(coalesce(p_reason, 'child_failed'), 120)
     )
   );
@@ -963,6 +1062,7 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
+  v_account public.accounts%rowtype;
   v_pack public.seller_pack_runs%rowtype;
   v_job public.generation_jobs%rowtype;
   v_reservation public.credit_reservations%rowtype;
@@ -976,11 +1076,31 @@ begin
     return jsonb_build_object('ok', false, 'code', 'INVALID_IDEMPOTENCY_KEY');
   end if;
 
+  -- Resolve and lock the durable owner/plan before any Pack or wallet
+  -- mutation. Legacy creator/shop rows must fail before retry re-reserves 10.
+  select *
+    into v_account
+    from public.accounts
+   where owner_user_id = p_user_id
+     and kind = 'personal'
+   for update;
+  if not found then
+    return jsonb_build_object('ok', false, 'code', 'PACK_NOT_FOUND');
+  end if;
+  if v_account.plan_id::text not in ('free', 'founding_studio') then
+    return jsonb_build_object('ok', false, 'code', 'UNSUPPORTED_LEGACY_PLAN');
+  end if;
+  if v_account.status <> 'active'
+     or not v_account.live_generation_allowed then
+    return jsonb_build_object('ok', false, 'code', 'LIVE_ACCESS_REQUIRED');
+  end if;
+
   select *
     into v_pack
     from public.seller_pack_runs
    where id = p_pack_run_id
      and created_by = p_user_id
+     and account_id = v_account.id
    for update;
   if not found then
     return jsonb_build_object('ok', false, 'code', 'PACK_NOT_FOUND');
@@ -1004,6 +1124,16 @@ begin
     return jsonb_build_object('ok', false, 'code', 'JOB_BINDING_MISMATCH');
   end if;
 
+  -- A retry is a new provider attempt, not a replay of the terminal attempt.
+  -- Reusing the old key would collide with its release ledger identity and
+  -- would also erase the fence that rejects late callbacks from that attempt.
+  if v_job.status = 'failed'
+     and v_job.pack_attempt_key is not null
+     and v_job.pack_attempt_key = btrim(p_attempt_key) then
+    return jsonb_build_object(
+      'ok', false, 'code', 'ATTEMPT_REUSE_FORBIDDEN'
+    );
+  end if;
   if v_job.status = 'succeeded' then
     return jsonb_build_object('ok', false, 'code', 'CHILD_ALREADY_SUCCEEDED');
   end if;
@@ -1021,7 +1151,9 @@ begin
       'status', 'queued',
       'attemptKey', v_job.pack_attempt_key,
       'availableCredits', v_wallet.available_credits,
-      'reservedCredits', v_wallet.reserved_credits
+      'reservedCredits', v_wallet.reserved_credits,
+      'packSettledCredits', v_pack.settled_credits,
+      'packReleasedCredits', v_pack.released_credits
     );
   end if;
   if v_job.status <> 'failed' then
@@ -1066,6 +1198,7 @@ begin
   update public.credit_reservations
      set released_credits = released_credits - v_amount,
          status = 'partially_settled',
+         expires_at = now() + interval '30 minutes',
          updated_at = now()
    where id = v_reservation.id
    returning * into v_reservation;
@@ -1222,6 +1355,185 @@ begin
 end;
 $$;
 
+-- ── Worker expiry: release queued/unstarted children only ──────────────────
+
+create or replace function public.pikbo_expire_seller_pack_queued_v1(
+  p_limit integer default 50
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_candidate record;
+  v_job public.generation_jobs%rowtype;
+  v_pack public.seller_pack_runs%rowtype;
+  v_reservation public.credit_reservations%rowtype;
+  v_wallet public.credit_wallets%rowtype;
+  v_succeeded integer;
+  v_failed integer;
+  v_pack_status public.seller_pack_status;
+  v_released_jobs integer := 0;
+  v_released_credits integer := 0;
+  v_limit integer := least(200, greatest(1, coalesce(p_limit, 50)));
+begin
+  for v_candidate in
+    select j.id as job_id,
+           j.pack_run_id
+      from public.generation_jobs j
+      join public.credit_reservations r on r.id = j.reservation_id
+     where j.pack_run_id is not null
+       and j.status = 'queued'
+       and r.purpose = 'seller_pack'
+       and r.expires_at <= now()
+     order by r.expires_at, j.created_at
+     limit v_limit
+  loop
+    -- Match the Pack route lock order. Concurrent workers may observe the same
+    -- candidate, but the second revalidates after the first commits.
+    select *
+      into v_pack
+      from public.seller_pack_runs
+     where id = v_candidate.pack_run_id
+     for update;
+    if not found then
+      continue;
+    end if;
+
+    select *
+      into v_job
+      from public.generation_jobs
+     where id = v_candidate.job_id
+       and pack_run_id = v_pack.id
+     for update;
+    if not found or v_job.status <> 'queued' then
+      continue;
+    end if;
+
+    select *
+      into v_reservation
+      from public.credit_reservations
+     where id = v_job.reservation_id
+     for update;
+    if not found
+       or v_reservation.expires_at > now()
+       or v_reservation.purpose <> 'seller_pack' then
+      continue;
+    end if;
+
+    select *
+      into v_wallet
+      from public.credit_wallets
+     where account_id = v_job.account_id
+     for update;
+    if not found
+       or v_wallet.reserved_credits < 10
+       or (
+         v_reservation.quoted_credits
+         - v_reservation.settled_credits
+         - v_reservation.released_credits
+       ) < 10 then
+      continue;
+    end if;
+
+    update public.credit_wallets
+       set available_credits = available_credits + 10,
+           reserved_credits = reserved_credits - 10,
+           version = version + 1,
+           updated_at = now()
+     where account_id = v_wallet.account_id
+     returning * into v_wallet;
+
+    update public.credit_reservations
+       set released_credits = released_credits + 10,
+           status = case
+             when settled_credits + released_credits + 10 >= quoted_credits
+                  and settled_credits = 0
+               then 'released'::public.reservation_status
+             else 'partially_settled'::public.reservation_status
+           end,
+           updated_at = now()
+     where id = v_reservation.id
+     returning * into v_reservation;
+
+    update public.generation_jobs
+       set status = 'failed',
+           error_code = 'expired_unstarted',
+           completed_at = now()
+     where id = v_job.id
+     returning * into v_job;
+
+    update public.seller_pack_runs
+       set released_credits = released_credits + 10
+     where id = v_pack.id
+     returning * into v_pack;
+
+    select count(*) filter (where status = 'succeeded'),
+           count(*) filter (where status = 'failed')
+      into v_succeeded, v_failed
+      from public.generation_jobs
+     where pack_run_id = v_pack.id;
+    if v_failed = 3 then
+      v_pack_status := 'failed';
+    elsif v_succeeded + v_failed = 3 then
+      v_pack_status := 'partial';
+    else
+      v_pack_status := 'running';
+    end if;
+
+    update public.seller_pack_runs
+       set status = v_pack_status,
+           completed_at = case
+             when v_pack_status in ('succeeded', 'partial', 'failed') then now()
+             else null
+           end
+     where id = v_pack.id;
+
+    insert into public.credit_ledger (
+      account_id,
+      kind,
+      delta_available,
+      delta_reserved,
+      available_after,
+      reserved_after,
+      reservation_id,
+      source_type,
+      source_id,
+      idempotency_key,
+      metadata
+    ) values (
+      v_wallet.account_id,
+      'expire',
+      10,
+      -10,
+      v_wallet.available_credits,
+      v_wallet.reserved_credits,
+      v_reservation.id,
+      'seller_pack_expiry',
+      v_job.id::text,
+      'ledger:seller-pack-expire:' || v_job.id::text || ':' ||
+        coalesce(v_job.pack_attempt_key, 'initial'),
+      jsonb_build_object(
+        'packRunId', v_pack.id,
+        'childKey', v_job.pack_child_key,
+        'attemptKey', coalesce(v_job.pack_attempt_key, 'initial'),
+        'reason', 'expired_unstarted'
+      )
+    );
+
+    v_released_jobs := v_released_jobs + 1;
+    v_released_credits := v_released_credits + 10;
+  end loop;
+
+  return jsonb_build_object(
+    'ok', true,
+    'releasedJobs', v_released_jobs,
+    'releasedCredits', v_released_credits
+  );
+end;
+$$;
+
 -- ── Privileges: service_role only ──────────────────────────────────────────
 
 revoke all on function public.pikbo_reserve_seller_pack_v1(uuid, text)
@@ -1229,16 +1541,18 @@ revoke all on function public.pikbo_reserve_seller_pack_v1(uuid, text)
 revoke all on function public.pikbo_authorize_seller_pack_child_v1(
   uuid, uuid, uuid, text, integer, text, text
 ) from public, anon, authenticated;
-revoke all on function public.pikbo_settle_seller_pack_child_v1(
-  uuid, uuid, uuid, text
+revoke all on function public.pikbo_settle_seller_pack_child_v2(
+  uuid, uuid, uuid, text, text
 ) from public, anon, authenticated;
-revoke all on function public.pikbo_release_seller_pack_child_v1(
-  uuid, uuid, uuid, text
+revoke all on function public.pikbo_release_seller_pack_child_v2(
+  uuid, uuid, uuid, text, text
 ) from public, anon, authenticated;
 revoke all on function public.pikbo_retry_seller_pack_child_v1(
   uuid, uuid, uuid, text
 ) from public, anon, authenticated;
 revoke all on function public.pikbo_get_seller_pack_status_v1(uuid, uuid)
+  from public, anon, authenticated;
+revoke all on function public.pikbo_expire_seller_pack_queued_v1(integer)
   from public, anon, authenticated;
 
 grant execute on function public.pikbo_reserve_seller_pack_v1(uuid, text)
@@ -1246,14 +1560,16 @@ grant execute on function public.pikbo_reserve_seller_pack_v1(uuid, text)
 grant execute on function public.pikbo_authorize_seller_pack_child_v1(
   uuid, uuid, uuid, text, integer, text, text
 ) to service_role;
-grant execute on function public.pikbo_settle_seller_pack_child_v1(
-  uuid, uuid, uuid, text
+grant execute on function public.pikbo_settle_seller_pack_child_v2(
+  uuid, uuid, uuid, text, text
 ) to service_role;
-grant execute on function public.pikbo_release_seller_pack_child_v1(
-  uuid, uuid, uuid, text
+grant execute on function public.pikbo_release_seller_pack_child_v2(
+  uuid, uuid, uuid, text, text
 ) to service_role;
 grant execute on function public.pikbo_retry_seller_pack_child_v1(
   uuid, uuid, uuid, text
 ) to service_role;
 grant execute on function public.pikbo_get_seller_pack_status_v1(uuid, uuid)
+  to service_role;
+grant execute on function public.pikbo_expire_seller_pack_queued_v1(integer)
   to service_role;

@@ -15,6 +15,7 @@ const quote = readFileSync(join(root, "lib/sellerPackQuote.ts"), "utf8");
 const packExport = readFileSync(join(root, "lib/sellerPackExport.ts"), "utf8");
 const recovery = readFileSync(join(root, "lib/sellerPackRecovery.ts"), "utf8");
 const contract = readFileSync(join(root, "lib/sellerPackContract.ts"), "utf8");
+const generateClient = readFileSync(join(root, "lib/generateClient.ts"), "utf8");
 const genRoute = readFileSync(join(root, "app/api/generate/route.ts"), "utf8");
 const liveGate = readFileSync(join(root, "lib/liveGenerationGate.mjs"), "utf8");
 const packageJson = readFileSync(join(root, "package.json"), "utf8");
@@ -44,6 +45,16 @@ const contractModule = loadTypeScriptModule("lib/sellerPackContract.ts");
 const recoveryModule = loadTypeScriptModule("lib/sellerPackRecovery.ts", {
   "@/lib/sellerPackContract": contractModule,
 });
+const generateClientModule = loadTypeScriptModule("lib/generateClient.ts", {
+  "@/lib/createTrust": {
+    isSafeDeliverableUrl: () => true,
+  },
+  "@/lib/generateRecoveryPolicy": {
+    isAuthoritativeRecoveryResult: () => false,
+    raceGenerateWithDurableRecovery: async () => ({ kind: "timeout" }),
+  },
+  "@/lib/sellerPackContract": contractModule,
+});
 
 // ─── Fixed trio in contract (PRD §4) ───
 const EXPECTED_SLUGS = [
@@ -55,6 +66,7 @@ assert.match(contract, /export const SELLER_PACK_ITEMS/);
 assert.match(contract, /export function sellerPackCachedGoldenSettlement/);
 assert.match(contract, /export function isExactSellerPackSelection/);
 assert.match(contract, /export function isSellerPackRetryableStatus/);
+assert.match(contract, /export function parseExactSellerPackServerJobs/);
 assert.match(contract, /SELLER_PACK_CHILD_COUNT = 3/);
 assert.match(contract, /providerCalls: 0/);
 assert.match(contract, /totalCredits: 0/);
@@ -101,17 +113,145 @@ assert.equal(
   false
 );
 
+// Reserve/status are untrusted network boundaries. The exact fixed child
+// contract must be executable (not a TypeScript-only assertion).
+const exactServerJobs = () =>
+  contractModule.SELLER_PACK_ITEMS.map((item, index) => ({
+    jobId: `pack-job-contract-000${index + 1}`,
+    childKey: item.key,
+    effectSlug: item.slug,
+    aspectRatio: item.aspectRatio,
+    durationSec: 5,
+    status: "queued",
+    quotedCredits: 10,
+    settledCredits: 0,
+    attemptKey: null,
+  }));
+assert.deepEqual(
+  contractModule
+    .parseExactSellerPackServerJobs(exactServerJobs())
+    ?.map((job) => job.childKey),
+  ["listing_spin", "blind_box_reveal", "social_flash"]
+);
+
+function malformedJobs(mutator) {
+  const jobs = structuredClone(exactServerJobs());
+  mutator(jobs);
+  return jobs;
+}
+
+assert.equal(
+  contractModule.parseExactSellerPackServerJobs(
+    malformedJobs((jobs) => jobs.reverse())
+  ),
+  null,
+  "server order is contractual"
+);
+assert.equal(
+  contractModule.parseExactSellerPackServerJobs(
+    malformedJobs((jobs) => {
+      jobs[1].jobId = jobs[0].jobId;
+    })
+  ),
+  null,
+  "job ids must be unique"
+);
+for (const mutate of [
+  (jobs) => {
+    jobs[0].childKey = "social_flash";
+  },
+  (jobs) => {
+    jobs[0].effectSlug = "paparazzi-flash";
+  },
+  (jobs) => {
+    jobs[0].aspectRatio = "9:16";
+  },
+  (jobs) => {
+    jobs[0].durationSec = 10;
+  },
+  (jobs) => {
+    jobs[0].quotedCredits = 9;
+  },
+]) {
+  assert.equal(
+    contractModule.parseExactSellerPackServerJobs(malformedJobs(mutate)),
+    null
+  );
+}
+
+let fetchPayload;
+const priorFetch = globalThis.fetch;
+globalThis.fetch = async () => ({
+  status: 200,
+  json: async () => structuredClone(fetchPayload),
+});
+try {
+  fetchPayload = {
+    ok: true,
+    mode: "atomic",
+    packRunId: "pack-run-contract-0001",
+    reservationId: "reservation-contract-0001",
+    quoteCredits: 30,
+    jobs: exactServerJobs(),
+    idempotent: false,
+  };
+  const validReserve = await generateClientModule.reserveSellerPackClient({
+    clientPackKey: "client-pack-contract-0001",
+  });
+  assert.equal(validReserve.ok, true);
+  assert.deepEqual(
+    validReserve.jobs.map((job) => job.childKey),
+    ["listing_spin", "blind_box_reveal", "social_flash"]
+  );
+
+  fetchPayload.jobs = malformedJobs((jobs) => jobs.reverse());
+  const malformedReserve = await generateClientModule.reserveSellerPackClient({
+    clientPackKey: "client-pack-contract-0002",
+  });
+  assert.equal(malformedReserve.ok, false);
+  assert.equal(malformedReserve.code, "INVALID_SERVER_CONTRACT");
+
+  fetchPayload = {
+    ok: true,
+    packRunId: "pack-run-contract-0001",
+    status: "running",
+    settledCredits: 0,
+    releasedCredits: 0,
+    jobs: exactServerJobs(),
+  };
+  const validStatus = await generateClientModule.getSellerPackStatusClient(
+    "pack-run-contract-0001"
+  );
+  assert.equal(validStatus.ok, true);
+
+  fetchPayload.jobs = malformedJobs((jobs) => {
+    jobs[2].quotedCredits = 20;
+  });
+  const malformedStatus = await generateClientModule.getSellerPackStatusClient(
+    "pack-run-contract-0001"
+  );
+  assert.equal(malformedStatus.ok, false);
+  assert.equal(malformedStatus.code, "INVALID_SERVER_CONTRACT");
+} finally {
+  globalThis.fetch = priorFetch;
+}
+
+assert.match(generateClient, /parseExactSellerPackServerJobs\(raw\.jobs\)/);
+assert.match(generateClient, /INVALID_SERVER_CONTRACT/);
+
 // Partial recovery is authoritative: success stays playable; only the failed
 // child is retryable; no sibling result or credit state is overwritten.
 const recoveredRun = {
-  version: 1,
+  version: 2,
   projectId: "seller-pack-smoke",
+  packRunId: "pack-run-smoke-0001",
   savedAt: "2026-07-28T00:00:00.000Z",
   children: contractModule.SELLER_PACK_ITEMS.map((item, index) => ({
+    packJobId: `pack-job-smoke-000${index + 1}`,
+    childKey: item.key,
     slug: item.slug,
     name: item.label,
     aspectRatio: item.aspectRatio,
-    requestId: `job-${index + 1}`,
     statusHint: index === 1 ? "failed" : "succeeded",
     retryCount: 0,
   })),
@@ -119,19 +259,22 @@ const recoveredRun = {
 const recoveredPartial = recoveryModule.reconcileSellerPackRecovery(
   recoveredRun,
   contractModule.SELLER_PACK_ITEMS.map((item, index) => ({
-    id: `job-${index + 1}`,
-    effect: item.slug,
+    jobId: `pack-job-smoke-000${index + 1}`,
+    childKey: item.key,
+    effectSlug: item.slug,
+    aspectRatio: item.aspectRatio,
     status: index === 1 ? "failed" : "succeeded",
-    videoUrl:
-      index === 1 ? undefined : `https://cdn.example.test/${item.slug}.mp4`,
-    demo: true,
-    creditsOutcome: index === 1 ? "0 cached" : "0 cached",
-    error: index === 1 ? "Injected cached failure" : undefined,
+    quotedCredits: 10,
+    settledCredits: index === 1 ? 0 : 10,
+    hasPrivateResult: index !== 1,
+    resultUrl:
+      index === 1 ? null : `https://private.example.test/${item.slug}.mp4`,
+    errorCode: index === 1 ? "provider_error" : undefined,
   }))
 );
 assert.deepEqual(
   recoveredPartial.children.map((child) => child.status),
-  ["succeeded", "failed", "succeeded"]
+  ["succeeded", "refunded", "succeeded"]
 );
 assert.deepEqual(
   recoveredPartial.children
@@ -143,11 +286,11 @@ assert.deepEqual(
 );
 assert.equal(
   recoveredPartial.children[0].videoUrl,
-  "https://cdn.example.test/360-spin-showcase.mp4"
+  "https://private.example.test/360-spin-showcase.mp4"
 );
 assert.equal(
   recoveredPartial.children[2].videoUrl,
-  "https://cdn.example.test/paparazzi-flash.mp4"
+  "https://private.example.test/paparazzi-flash.mp4"
 );
 
 // Free Mini full pack block
@@ -158,11 +301,16 @@ assert.match(batch, /data-seller-pack-free-mini=["']single-child["']/);
 assert.doesNotMatch(batch, /cookie generate remains authoritative/);
 assert.match(
   batch,
-  /cookie is never live-spend authority|not live-spend authority/
+  /if \(sellerPackActive && !demoMode\)[\s\S]{0,500}reserveSellerPackClient/
 );
+assert.match(batch, /no shadow\/per-child fallback/);
 assert.match(
   batch,
-  /if \(sellerPackActive && !demoMode\)[\s\S]{0,240}reserveSellerPackShadowClient/
+  /if \(reservedPack && !verifiedReservedJobs\)[\s\S]{0,500}No generation started[\s\S]{0,300}return;/
+);
+assert.doesNotMatch(
+  batch,
+  /throw new Error\("Server returned an invalid Launch Pack contract"\)/
 );
 
 // Export honesty
@@ -174,7 +322,7 @@ assert.match(packExport, /Failed siblings|failed siblings/i);
 // Recovery honesty
 assert.match(recovery, /parseSellerPackRecovery/);
 assert.match(recovery, /reconcileSellerPackRecovery/);
-assert.match(recovery, /restore an old success/i);
+  assert.match(recovery, /never restore a[\s\S]{0,20}success/i);
 assert.match(recovery, /recovery_unavailable/);
 assert.match(recovery, /refund unconfirmed/);
 
@@ -187,7 +335,7 @@ assert.match(liveGate, /LIVE_PROVIDER_REQUIRES_DURABLE_RESERVATION/);
 // Partial failure UI
 assert.match(batch, /retryEligible|Retry this item/);
 assert.match(batch, /retryAllFailed|Retry failed only|failed kept/i);
-assert.match(batch, /siblings kept|finished children kept/i);
+assert.match(batch, /completed formats kept|finished formats stay available/i);
 
 // Package + CI
 assert.match(packageJson, /"seller-pack-cached-smoke"/);

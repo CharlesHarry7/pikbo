@@ -120,7 +120,7 @@ begin
   v_idempotency_key :=
     't6-bake:' ||
     encode(
-      digest(
+      extensions.digest(
         v_job.id::text || ':' || v_case.provider_request_id,
         'sha256'
       ),
@@ -128,7 +128,7 @@ begin
     );
   v_object_key :=
     't6-baked/' ||
-    encode(digest(v_idempotency_key, 'sha256'), 'hex') ||
+    encode(extensions.digest(v_idempotency_key, 'sha256'), 'hex') ||
     '.mp4';
 
   insert into public.generation_derivatives (
@@ -220,7 +220,7 @@ begin
   update public.generation_derivatives
      set status = 'running',
          lease_owner = btrim(p_worker_id),
-         lease_token_hash = encode(digest(v_token, 'sha256'), 'hex'),
+         lease_token_hash = encode(extensions.digest(v_token, 'sha256'), 'hex'),
          lease_expires_at = now() + make_interval(secs => v_lease_seconds),
          attempt_count = attempt_count + 1,
          updated_at = now()
@@ -274,7 +274,7 @@ begin
   if p_lease_token is null or length(p_lease_token) < 32 then
     return jsonb_build_object('ok', false, 'code', 'INVALID_LEASE');
   end if;
-  v_token_hash := encode(digest(p_lease_token, 'sha256'), 'hex');
+  v_token_hash := encode(extensions.digest(p_lease_token, 'sha256'), 'hex');
 
   select *
     into v_row

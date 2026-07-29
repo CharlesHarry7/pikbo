@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PLANS, CREDITS_PER_VIDEO, clipsFromCredits } from "@/lib/pricing";
+import {
+  FOUNDING_STUDIO_PACKS,
+  PAID_PLAN_ID,
+  PLANS,
+  CREDITS_PER_VIDEO,
+  clipsFromCredits,
+} from "@/lib/pricing";
 import { site } from "@/lib/site";
 import { createRemixHref } from "@/lib/remixIntent";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
@@ -32,7 +38,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: `Pikbo Pricing for Toy Sellers and Collectors`,
-    description: `Finite Free / Creator / Shop credits for toy listing and social clips. Live billing stays off during validation.`,
+    description: `Free cached prototypes and one finite Founding Studio Launch Pack plan. Live billing stays off during validation.`,
     url: `${site.url}/pricing`,
     siteName: site.name,
     type: "website",
@@ -48,7 +54,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: `Pikbo Pricing for Toy Sellers and Collectors`,
-    description: `Finite Free / Creator / Shop credits for toy listing and social clips. Live billing stays off during validation.`,
+    description: `Free cached prototypes and one finite Founding Studio Launch Pack plan. Live billing stays off during validation.`,
     images: [site.socialImages.twitter],
   },
 };
@@ -58,23 +64,23 @@ function pricingFaqItems(): { q: string; a: string }[] {
   return [
     {
       q: "What does the current credit number mean?",
-      a: `The configured quote is ${CREDITS_PER_VIDEO} credits per eligible generation. It is a planning estimate while Live purchase is closed. A failure may be called refunded only after the server confirms release.`,
+      a: `Each finished Launch Pack clip uses ${CREDITS_PER_VIDEO} credits. The three-format Pack uses 30 credits; a confirmed failed format restores its 10 credits.`,
     },
     {
       q: "Can I test this with one real product photo?",
-      a: `Yes. Browse ${site.name} Lab cached prototypes, then open Studio with a photo of a toy you own. Only an eligible signed-in account with durable credits and live provider access can submit a 5-second 480p Mini render; otherwise Studio returns a clearly labeled cached prototype that does not animate your upload.`,
+      a: `Yes. Preview ${site.name}'s three formats, then open Create with a photo of a toy you own. Invited private-beta accounts can make a private 5-second 720p result; the public demo shows labeled examples without processing your upload.`,
     },
     {
       q: "Can I use clips commercially?",
-      a: "Creator and Shop are intended to include commercial use for reviewed listings and ads made from toy photos you own. Live billing is not open yet, and generated angles or product details must be checked before publishing.",
+      a: "Founding Studio is intended to include commercial use for reviewed listings and ads made from toy photos you own. Subscriptions are not open yet, and generated angles or product details must be checked before publishing.",
     },
     {
       q: "Is any plan unlimited?",
-      a: "No. Video models have a real per-generation cost, so every plan shows a finite credit allowance.",
+      a: "No. Every plan has a finite credit allowance and a fixed number of Launch Pack outputs.",
     },
     {
       q: "Can the credit rate change?",
-      a: "Yes. Provider cost changes with model, output size, and duration. PIKBO will only change public weights when the same quote is enforced by the server and verified against provider billing.",
+      a: "Yes, but Pikbo will show the exact quote before generation. Existing completed charges do not change retroactively.",
     },
   ];
 }
@@ -117,16 +123,16 @@ export default async function PricingPage({
                 Plan around finished product clips — not vague AI usage
               </p>
               <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--fg-muted)]">
-                Configured allowances: about 1 / 5 / 15 jobs at the flat
-                10-credit model when Live is enabled. Compare planned capacity
-                — not current availability or a sales guarantee. Checkout and
-                protected delivery stay closed during validation.
+                The current paid candidate is {FOUNDING_STUDIO_PACKS} fixed
+                Launch Packs: one owned SKU photo becomes three 5-second 720p
+                formats. Subscriptions open only after private-beta results meet
+                the published quality, recovery, and cost targets.
               </p>
             </div>
             <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-              <Badge variant="outline">Foundation aligned</Badge>
+              <Badge variant="outline">Fixed 3-video pack</Badge>
               <Badge variant="live" className="normal-case">
-                Billing soft-launch
+                Not yet for sale
               </Badge>
             </div>
           </CardContent>
@@ -142,7 +148,7 @@ export default async function PricingPage({
             </h2>
             <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--fg-muted)]">
               Test one owned toy, prepare a small product batch, or plan a
-              finite catalog run. No plan promises unlimited model usage.
+              finite catalog run. No plan is unlimited.
             </p>
           </div>
           <PricingPlanCards />
@@ -179,25 +185,45 @@ export default async function PricingPage({
                       ...PLANS.map((plan) => plan.credits.toLocaleString()),
                     ],
                     [
-                      "Approx. clips",
+                      "Included output",
                       ...PLANS.map((plan) =>
-                        String(clipsFromCredits(plan.credits))
+                        plan.id === PAID_PLAN_ID
+                          ? `${clipsFromCredits(plan.credits)} fixed videos`
+                          : "Cached prototypes"
                       ),
                     ],
-                    ["Resolution", ...PLANS.map((plan) => plan.resolution)],
                     [
-                      "On-player watermark",
-                      ...PLANS.map((plan) => (plan.watermark ? "✓" : "—")),
+                      "Resolution",
+                      ...PLANS.map((plan) =>
+                        plan.id === PAID_PLAN_ID ? plan.resolution : "Preview sample"
+                      ),
+                    ],
+                    [
+                      "Delivery",
+                      ...PLANS.map((plan) =>
+                        plan.id === PAID_PLAN_ID
+                          ? "Private Library"
+                          : "Labeled example"
+                      ),
                     ],
                     [
                       "Commercial use",
                       ...PLANS.map((plan) => (plan.commercial ? "✓" : "—")),
                     ],
                     [
-                      "Priority queue",
-                      ...PLANS.map((plan) => (plan.priority ? "✓" : "—")),
+                      "Three-format Launch Pack",
+                      ...PLANS.map((plan) =>
+                        plan.id === PAID_PLAN_ID ? "✓" : "—"
+                      ),
                     ],
-                    ["Batch workflow", "—", "—", "✓"],
+                    [
+                      "Unused credits",
+                      ...PLANS.map((plan) =>
+                        plan.id === PAID_PLAN_ID
+                          ? "Roll over while active"
+                          : "Not applicable"
+                      ),
+                    ],
                   ].map(([label, ...values]) => (
                     <tr key={label} className="hover:bg-white/[0.02]">
                       <th className="p-4 font-medium text-[var(--fg)]">
@@ -262,18 +288,10 @@ export default async function PricingPage({
                 </Link>
               </Button>
               <Button asChild variant="secondary">
-                <Link href="/create?mode=seller-pack">Seller Starter Pack</Link>
-              </Button>
-              <Button asChild variant="secondary">
-                <Link href="/modules">Toy Modules</Link>
+                <Link href="/create?mode=seller-pack">Launch Pack</Link>
               </Button>
               <Button asChild variant="secondary">
                 <Link href="/library">Library</Link>
-              </Button>
-              <Button asChild variant="secondary">
-                <Link href="/flow" title="Preview media wall — not a live job">
-                  Flow · Preview
-                </Link>
               </Button>
               <FreeTrialCta
                 path="/pricing#bottom"

@@ -14,6 +14,10 @@ import {
   raceGenerateWithDurableRecovery,
 } from "@/lib/generateRecoveryPolicy";
 import type { HistoryItem } from "@/lib/history";
+import {
+  parseExactSellerPackServerJobs,
+  type ExactSellerPackServerJob,
+} from "@/lib/sellerPackContract";
 import type { PublicSession } from "@/lib/session";
 
 export type GenerateFail = {
@@ -648,43 +652,93 @@ async function bearerAuthHeaders(): Promise<Record<string, string>> {
   return headers;
 }
 
-/** Seller Pack durable shadow reserve (30 for 3 children). Non-fatal if durable off. */
-export async function reserveSellerPackShadowClient(input?: {
-  childCount?: number;
-  idempotencyKey?: string;
-}): Promise<{
-  ok: boolean;
-  reservationId?: string;
-  code?: string;
-  error?: string;
-  quoteCredits?: number;
-}> {
+export type SellerPackClientJob = ExactSellerPackServerJob;
+
+export type SellerPackReserveClientResult =
+  | {
+      ok: true;
+      packRunId: string;
+      reservationId: string;
+      quoteCredits: 30;
+      jobs: SellerPackClientJob[];
+      idempotent: boolean;
+    }
+  | {
+      ok: false;
+      code: string;
+      error: string;
+      quoteCredits?: number;
+      need?: number;
+      have?: number;
+    };
+
+/**
+ * Authenticated atomic Launch Pack reserve: one 30-credit hold and exactly
+ * three server-created child ids. A live client never falls back to the old
+ * shadow reservation because that would reopen the double-debit path.
+ */
+export async function reserveSellerPackClient(input: {
+  clientPackKey: string;
+}): Promise<SellerPackReserveClientResult> {
   try {
     const headers = await bearerAuthHeaders();
     const res = await fetch("/api/seller-pack/reserve", {
       method: "POST",
       headers,
-      body: JSON.stringify(input ?? {}),
+      body: JSON.stringify({ clientPackKey: input.clientPackKey }),
     });
     const raw = (await res.json().catch(() => ({}))) as {
       ok?: boolean;
+      mode?: string;
       code?: string;
       error?: string;
+      need?: number;
+      have?: number;
       quoteCredits?: number;
-      pack?: { reservationId?: string };
+      packRunId?: string;
+      reservationId?: string;
+      jobs?: unknown;
+      idempotent?: boolean;
     };
-    if (raw.ok && raw.pack?.reservationId) {
+    const jobs = parseExactSellerPackServerJobs(raw.jobs);
+    if (
+      raw.ok &&
+      raw.mode === "atomic" &&
+      typeof raw.packRunId === "string" &&
+      raw.packRunId.length >= 8 &&
+      raw.packRunId.trim() === raw.packRunId &&
+      typeof raw.reservationId === "string" &&
+      raw.reservationId.length >= 8 &&
+      raw.reservationId.trim() === raw.reservationId &&
+      raw.quoteCredits === 30 &&
+      jobs
+    ) {
       return {
         ok: true,
-        reservationId: raw.pack.reservationId,
-        quoteCredits: raw.quoteCredits,
+        packRunId: raw.packRunId,
+        reservationId: raw.reservationId,
+        quoteCredits: 30,
+        jobs,
+        idempotent: raw.idempotent === true,
+      };
+    }
+    if (raw.ok) {
+      return {
+        ok: false,
+        code: "INVALID_SERVER_CONTRACT",
+        error:
+          "Launch Pack reservation response failed fixed-pack verification",
       };
     }
     return {
       ok: false,
       code: raw.code || String(res.status),
-      error: raw.error,
+      error:
+        raw.error ||
+        "Launch Pack requires an authenticated atomic 30-credit reservation",
       quoteCredits: raw.quoteCredits,
+      need: raw.need,
+      have: raw.have,
     };
   } catch (e) {
     return {
@@ -695,38 +749,118 @@ export async function reserveSellerPackShadowClient(input?: {
   }
 }
 
-export async function settleSellerPackChildClient(input: {
-  reservationId: string;
-  jobId?: string;
-  childKey?: string;
-}): Promise<void> {
+/** Owner-scoped durable pack recovery; never mutates credits. */
+export async function getSellerPackStatusClient(
+  packRunId: string
+): Promise<
+  | {
+      ok: true;
+      packRunId: string;
+      status: string;
+      settledCredits: number;
+      releasedCredits: number;
+      jobs: SellerPackClientJob[];
+    }
+  | { ok: false; code: string; error: string }
+> {
   try {
     const headers = await bearerAuthHeaders();
-    await fetch("/api/seller-pack/settle", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(input),
-    });
-  } catch {
-    /* best-effort shadow */
+    const res = await fetch(
+      `/api/seller-pack/status?packRunId=${encodeURIComponent(packRunId)}`,
+      {
+        method: "GET",
+        headers,
+        cache: "no-store",
+      }
+    );
+    const raw = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      code?: string;
+      error?: string;
+      packRunId?: string;
+      status?: string;
+      settledCredits?: number;
+      releasedCredits?: number;
+      jobs?: unknown;
+    };
+    const jobs = parseExactSellerPackServerJobs(raw.jobs);
+    if (
+      raw.ok &&
+      raw.packRunId === packRunId &&
+      typeof raw.status === "string" &&
+      typeof raw.settledCredits === "number" &&
+      typeof raw.releasedCredits === "number" &&
+      jobs
+    ) {
+      return {
+        ok: true,
+        packRunId,
+        status: raw.status,
+        settledCredits: raw.settledCredits,
+        releasedCredits: raw.releasedCredits,
+        jobs,
+      };
+    }
+    if (raw.ok) {
+      return {
+        ok: false,
+        code: "INVALID_SERVER_CONTRACT",
+        error: "Launch Pack status response failed fixed-pack verification",
+      };
+    }
+    return {
+      ok: false,
+      code: raw.code || String(res.status),
+      error: raw.error || "Launch Pack status unavailable",
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      code: "NETWORK",
+      error: e instanceof Error ? e.message : "status failed",
+    };
   }
 }
 
-export async function releaseSellerPackChildClient(input: {
-  reservationId: string;
-  jobId?: string;
-  childKey?: string;
-  reason?: string;
-}): Promise<void> {
+/**
+ * Re-reserve exactly one failed child's released 10 credits. The returned
+ * attempt key must be reused by the following /api/generate authorization.
+ */
+export async function retrySellerPackChildClient(input: {
+  packRunId: string;
+  packJobId: string;
+  attemptKey: string;
+}): Promise<
+  | { ok: true; attemptKey: string }
+  | { ok: false; code: string; error: string }
+> {
   try {
     const headers = await bearerAuthHeaders();
-    await fetch("/api/seller-pack/release", {
+    const res = await fetch("/api/seller-pack/retry", {
       method: "POST",
       headers,
       body: JSON.stringify(input),
     });
-  } catch {
-    /* best-effort shadow */
+    const raw = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      code?: string;
+      error?: string;
+      attemptKey?: string;
+    };
+    if (raw.ok && raw.attemptKey === input.attemptKey) {
+      return { ok: true, attemptKey: raw.attemptKey };
+    }
+    return {
+      ok: false,
+      code: raw.code || String(res.status),
+      error: raw.error || "Launch Pack retry could not reserve 10 credits",
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      code: "NETWORK",
+      error: e instanceof Error ? e.message : "retry failed",
+    };
   }
 }
 

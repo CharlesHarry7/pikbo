@@ -1,5 +1,11 @@
 # PIKBO soft launch PRD
 
+> **Superseded on 2026-07-29.** Public Free is cached-only; real Fast 720p/5s
+> generation is an invited non-production validation path with private
+> delivery, atomic accounting, and a durable US$20 cap. The current release
+> contract and gates are in
+> [`../CURRENT_LAUNCH_CONTRACT.md`](../CURRENT_LAUNCH_CONTRACT.md).
+
 **Status:** Product contract v1 — ready for engineering review  
 **Owner:** GPT (product specification)  
 **Engineering owner:** Claude  

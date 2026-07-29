@@ -31,6 +31,7 @@ import {
 } from "../lib/privateLiveBeta.mjs";
 import {
   privateResultObjectKey,
+  privateStoredObjectMatches,
   providerOutputHostAllowed,
 } from "../lib/privateGenerationResultsPure.mjs";
 import {
@@ -179,7 +180,7 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
 {
   // Mirrors lib/createTrust.ts customerFacingGenerateVideoUrl (pure contract).
   function customerFacingGenerateVideoUrl(opts) {
-    if (opts.demo || !opts.watermark) return opts.videoUrl;
+    if (opts.demo) return opts.videoUrl;
     const id = (opts.jobId || "").trim();
     if (!id) return `/api/downloads/unavailable`;
     return `/api/downloads/${encodeURIComponent(id)}`;
@@ -199,12 +200,13 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     jobId: "job-abc",
     videoUrl: raw,
   });
-  assert.equal(paid, raw);
+  assert.equal(paid, "/api/downloads/job-abc");
+  assert.doesNotMatch(paid, /fal\.media/);
   // Source lock: generate uses customerFacingGenerateVideoUrl for live success
   const createTrust = read("lib/createTrust.ts");
   assert.match(
     createTrust,
-    /export function customerFacingGenerateVideoUrl[\s\S]*\/api\/downloads\//
+    /export function customerFacingGenerateVideoUrl[\s\S]*if \(opts\.demo\)[\s\S]*\/api\/downloads\//
   );
   assert.match(read("app/api/generate/route.ts"), /customerFacingGenerateVideoUrl\(/);
 }
@@ -307,16 +309,49 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     providerOutputHostAllowed("http://fal.media/result.mp4", ["fal.media"]),
     false
   );
+  assert.equal(
+    privateStoredObjectMatches({
+      expectedByteLength: 1024,
+      expectedChecksum: "a".repeat(64),
+      storedByteLength: 1024,
+      storedChecksum: "a".repeat(64),
+    }),
+    true
+  );
+  assert.equal(
+    privateStoredObjectMatches({
+      expectedByteLength: 1024,
+      expectedChecksum: "a".repeat(64),
+      storedByteLength: 1024,
+      storedChecksum: "b".repeat(64),
+    }),
+    false
+  );
 
   const migration = read(
     "supabase/migrations/20260728233000_p0_private_generation_results.sql"
   );
   assert.match(migration, /pikbo-private-results/);
   assert.match(migration, /pikbo_attach_private_generation_output_v1/);
+  assert.match(migration, /output_object_key is not null/);
+  assert.match(migration, /output_byte_length is not null/);
+  assert.match(migration, /output_sha256 is not null/);
   assert.match(migration, /pikbo_reserve_generation_v1/);
   assert.match(migration, /output_object_key/);
   assert.match(migration, /set public = false/);
   assert.doesNotMatch(migration, /v_account\.plan_id\s*=\s*'free'/);
+  const attemptFence = read(
+    "supabase/migrations/20260729020500_seller_pack_attempt_fencing.sql"
+  );
+  assert.match(attemptFence, /pikbo_attach_private_generation_output_v2/);
+  assert.match(attemptFence, /p_byte_length is null/);
+  assert.match(attemptFence, /ATTEMPT_MISMATCH/);
+  assert.match(attemptFence, /PACK_CHILD_OUTPUT_CONTRACT_MISMATCH/);
+  assert.match(attemptFence, /ATTEMPT_FENCE_V2_REQUIRED/);
+  assert.match(
+    attemptFence,
+    /pikbo_attach_private_generation_output_v1[\s\S]*from public, anon, authenticated, service_role/
+  );
   const atomic = read(
     "supabase/migrations/20260727213000_r1_atomic_generation_credits.sql"
   );
@@ -351,8 +386,86 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     results,
     /status === "succeeded"[\s\S]*resultFromRow[\s\S]*state: "succeeded"/
   );
-  assert.match(results, /if \(error\) return \{ state: "unavailable" \}/);
+  assert.match(
+    results,
+    /direct\.error[\s\S]*state: "unavailable"/
+  );
+  assert.match(results, /pack_attempt_key/);
   assert.match(results, /creditsRefunded: status === "failed"/);
+  assert.match(
+    results,
+    /signedUrl:\s*string \| null/,
+    "ephemeral signing failure must not invalidate a durable private save"
+  );
+  assert.match(
+    results,
+    /createSignedUrl[\s\S]*catch \{[\s\S]*return null/,
+    "a thrown signer must remain a recoverable delivery concern"
+  );
+  assert.match(results, /pikbo_attach_private_generation_output_v2/);
+  assert.match(results, /p_attempt_key:\s*input\.attemptKey \?\? null/);
+  assert.match(
+    results,
+    /row\.pack_attempt_key === \(input\.attemptKey \?\? null\)/,
+    "lost attach responses must resolve only against the exact Pack attempt"
+  );
+  assert.doesNotMatch(
+    results,
+    /if \(!signedUrl\)[\s\S]{0,220}ok:\s*false/,
+    "a saved private object must not become a failed save only because signing failed"
+  );
+  assert.match(
+    results,
+    /attachedOutputState[\s\S]*output_sha256[\s\S]*provider_request_id/,
+    "lost attach responses must be resolved from owner-bound durable metadata"
+  );
+  assert.match(
+    results,
+    /PRIVATE_RESULT_RECORD_UNCERTAIN[\s\S]*settlementUncertain:\s*true/,
+    "ambiguous attach state must withhold instead of deleting the object"
+  );
+  assert.match(
+    results,
+    /state === "conflict" \|\| state === "unavailable"[\s\S]*PRIVATE_RESULT_RECORD_UNCERTAIN/
+  );
+  assert.match(results, /\.download\(input\.objectKey\)/);
+  assert.match(
+    results,
+    /PRIVATE_STORAGE_WRITE_UNCERTAIN[\s\S]*settlementUncertain:\s*true/
+  );
+  assert.match(
+    results,
+    /if \(state !== "match"\)[\s\S]*state === "absent"[\s\S]*PRIVATE_STORAGE_WRITE_FAILED/
+  );
+
+  const generateRoute = read("app/api/generate/route.ts");
+  assert.doesNotMatch(
+    generateRoute,
+    /result\.requestId\s*\|\|\s*reserved\.reservation\.jobId/,
+    "an internal job id must never impersonate provider evidence"
+  );
+  assert.match(generateRoute, /provider_request_id_missing/);
+  assert.match(
+    generateRoute,
+    /saved\.settlementUncertain[\s\S]*reservationLife\.markWithheld\("private_attach_uncertain"\)/
+  );
+  assert.doesNotMatch(
+    generateRoute,
+    /saved\.settlementUncertain[\s\S]{0,900}releaseReservation\(/,
+    "ambiguous attach must never trigger a refund"
+  );
+  assert.match(
+    generateRoute,
+    /reservationLife\.settle\([\s\S]*?signedPrivateResultUrl\(saved\.result\.objectKey\)/,
+    "a transient signing retry happens after durable settlement without refunding"
+  );
+
+  const settlementGuard = read(
+    "supabase/migrations/20260729021000_private_settlement_guard.sql"
+  );
+  assert.match(settlementGuard, /PRIVATE_RESULT_REQUIRED/);
+  assert.match(settlementGuard, /output_object_key is distinct from v_expected_key/);
+  assert.match(settlementGuard, /output_byte_length is null/);
 
   const recoveryRoute = read("app/api/generations/recover/route.ts");
   assert.match(recoveryRoute, /getAuthUserFromRequest/);

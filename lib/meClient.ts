@@ -65,6 +65,20 @@ export type MeResponse = PublicSession & {
   canLiveGenerate?: boolean;
   auth?: { id: string; email: string | null } | null;
   durable?: MeDurableWallet | null;
+  billing?: null | {
+    plan: "founding_studio";
+    status:
+      | "trialing"
+      | "active"
+      | "past_due"
+      | "canceled"
+      | "unpaid"
+      | "incomplete"
+      | "paused";
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+    lastInvoiceApplied: boolean;
+  };
 };
 
 function liveJobCost(me: Pick<MeResponse, "freeTrial" | "liveJobCredits" | "creditsPerVideo">): number {

@@ -65,8 +65,8 @@ assert.equal(
 assert.deepEqual(marketingPaths, [
   "/",
   "/tools/ai-toy-video-generator",
+  "/effects/360-spin-showcase",
   "/tools/blind-box-reveal-video-maker",
-  "/guides/how-to-photograph-toys-for-ai-video",
   "/pricing",
 ]);
 
@@ -211,8 +211,8 @@ const llmsUrls = [...llmsTxt.matchAll(/https:\/\/pikbo\.ai(?:\/[^\s)]+|\/)/g)].m
 assert.deepEqual(llmsUrls, [
   "https://pikbo.ai/",
   "https://pikbo.ai/tools/ai-toy-video-generator",
+  "https://pikbo.ai/effects/360-spin-showcase",
   "https://pikbo.ai/tools/blind-box-reveal-video-maker",
-  "https://pikbo.ai/guides/how-to-photograph-toys-for-ai-video",
   "https://pikbo.ai/pricing",
   "https://pikbo.ai/privacy",
   "https://pikbo.ai/terms",

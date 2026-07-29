@@ -4,9 +4,8 @@
  * - noindex: thin hubs, Lab-only community, preview suite, extra landings
  * Concept recipes without unique Lab proof stay noindex until proof lands.
  *
- * 2026-07-28 WorkBuddy five-page marketing release budget
- * (docs/growth/SEO_INDEXABLE_10_RELEASE.md). Long-tail tools/for leave the
- * index allowlist (reachable + noindex) until proof + query evidence exist.
+ * 2026-07-29 launch focus: home, pricing, and exactly three high-intent product
+ * jobs. Long-tail tools/for remain reachable + noindex until real proof exists.
  */
 
 import type { Metadata } from "next";
@@ -55,8 +54,8 @@ export const PREVIEW_ROBOTS: NonNullable<Metadata["robots"]> = {
 export const COLD_START_MARKETING_INDEX_PATHS = [
   "/",
   "/tools/ai-toy-video-generator",
+  "/effects/360-spin-showcase",
   "/tools/blind-box-reveal-video-maker",
-  "/guides/how-to-photograph-toys-for-ai-video",
   "/pricing",
 ] as const;
 
@@ -106,8 +105,9 @@ export function robotsForColdStartPath(
 }
 
 export function robotsForRecipe(slug: string): Metadata["robots"] | undefined {
-  // Cold-start: effect landings are not the rank battlefield — noindex.
-  void slug;
+  if (slug === "360-spin-showcase" && recipeHasUniqueProof(slug)) {
+    return undefined;
+  }
   return CONCEPT_ROBOTS;
 }
 

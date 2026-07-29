@@ -3,7 +3,7 @@
  * Pure contract used by local adapter and future Supabase adapter.
  */
 
-export type PlanId = "free" | "creator" | "shop";
+export type PlanId = "free" | "founding_studio";
 
 export type LedgerKind =
   | "grant"

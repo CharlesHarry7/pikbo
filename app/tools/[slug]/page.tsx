@@ -208,9 +208,10 @@ export default async function ToolPage({
             <p className="leading-relaxed">
               Generic photo-to-video apps optimize for faces and landscapes.
               An AI toy video generator for designer toys prioritizes product
-              identity—sculpt edges, paint apps, packaging. Soft launch uses
-              Seedance Mini with honest Free Mini limits rather than a fake
-              multi-model wall.
+              identity—sculpt edges, paint apps, packaging. Public access shows
+              honest cached prototypes; invited validation pins one Fast 720p,
+              5-second private-delivery path rather than a fake multi-model
+              wall.
             </p>
             <p className="leading-relaxed text-sm">
               Brand home with embedded tool:{" "}

@@ -19,6 +19,7 @@ import {
 } from "@/lib/sellerPackContract";
 import {
   supabaseAuthorizeSellerPackChildAtomic,
+  supabaseExpireQueuedSellerPackChildren,
   supabaseGetSellerPackStatusAtomic,
   supabaseReleaseSellerPackChildAtomic,
   supabaseReserveSellerPackAtomic,
@@ -315,6 +316,7 @@ export function pureSettleSellerPackChild(
     ownerUserId: string;
     packRunId: string;
     jobId: string;
+    attemptKey: string;
     /** Must be true: private storage precedes settlement. */
     privateStored: boolean;
   }
@@ -327,13 +329,18 @@ export function pureSettleSellerPackChild(
       wallet: AtomicPackWallet;
     }
   | { ok: false; code: string } {
-  if (!input.privateStored) return fail("PRIVATE_RESULT_REQUIRED");
+  const attempt = (input.attemptKey || "").trim();
+  if (attempt.length < 8 || attempt.length > 128) {
+    return fail("INVALID_IDEMPOTENCY_KEY");
+  }
   const pack = store.packsById[input.packRunId];
   if (!pack || pack.ownerUserId !== input.ownerUserId) {
     return fail("PACK_NOT_FOUND");
   }
   const job = pack.jobs.find((j) => j.jobId === input.jobId);
   if (!job) return fail("JOB_BINDING_MISMATCH");
+  if (job.attemptKey !== attempt) return fail("ATTEMPT_MISMATCH");
+  if (!input.privateStored) return fail("PRIVATE_RESULT_REQUIRED");
 
   if (job.status === "succeeded" && job.settledCredits >= SELLER_PACK_CHILD_CREDITS) {
     return {
@@ -377,6 +384,7 @@ export function pureReleaseSellerPackChild(
     ownerUserId: string;
     packRunId: string;
     jobId: string;
+    attemptKey: string;
     reason?: string;
     /** Ambiguous outcomes must not claim refund. */
     confirmed: boolean;
@@ -391,8 +399,9 @@ export function pureReleaseSellerPackChild(
       wallet: AtomicPackWallet;
     }
   | { ok: false; code: string; creditsRefunded?: false } {
-  if (!input.confirmed) {
-    return { ok: false, code: "AMBIGUOUS_FAILURE", creditsRefunded: false };
+  const attempt = (input.attemptKey || "").trim();
+  if (attempt.length < 8 || attempt.length > 128) {
+    return fail("INVALID_IDEMPOTENCY_KEY");
   }
   const pack = store.packsById[input.packRunId];
   if (!pack || pack.ownerUserId !== input.ownerUserId) {
@@ -400,6 +409,13 @@ export function pureReleaseSellerPackChild(
   }
   const job = pack.jobs.find((j) => j.jobId === input.jobId);
   if (!job) return fail("JOB_BINDING_MISMATCH");
+  if (job.attemptKey !== attempt) return fail("ATTEMPT_MISMATCH");
+  if (job.hasPrivateResult) {
+    return fail("PRIVATE_RESULT_RECONCILIATION_REQUIRED");
+  }
+  if (!input.confirmed) {
+    return { ok: false, code: "AMBIGUOUS_FAILURE", creditsRefunded: false };
+  }
 
   if (job.status === "failed" && job.settledCredits === 0) {
     return {
@@ -412,7 +428,10 @@ export function pureReleaseSellerPackChild(
     };
   }
   if (job.status === "succeeded") return fail("CHILD_ALREADY_SUCCEEDED");
-  if (job.status !== "running" && job.status !== "queued") {
+  // Normal release is only legal after this server authorized the exact
+  // provider attempt. Queued expiry is a separate worker-only operation so a
+  // browser cancellation can never restore credits while work is in flight.
+  if (job.status !== "running") {
     return fail("CHILD_NOT_RELEASABLE");
   }
 
@@ -471,6 +490,13 @@ export function pureRetrySellerPackChild(
   if (!job) return fail("JOB_BINDING_MISMATCH");
 
   if (job.status === "succeeded") return fail("CHILD_ALREADY_SUCCEEDED");
+  if (
+    job.status === "failed" &&
+    job.attemptKey &&
+    job.attemptKey === attempt
+  ) {
+    return fail("ATTEMPT_REUSE_FORBIDDEN");
+  }
   if (
     job.status === "queued" &&
     job.attemptKey &&
@@ -583,6 +609,7 @@ export async function settleAtomicSellerPackChild(input: {
   userId: string;
   packRunId: string;
   jobId: string;
+  attemptKey: string;
   providerRequestId?: string;
 }): Promise<
   | {
@@ -608,6 +635,7 @@ export async function releaseAtomicSellerPackChild(input: {
   userId: string;
   packRunId: string;
   jobId: string;
+  attemptKey: string;
   reason: string;
 }): Promise<
   | {
@@ -665,6 +693,12 @@ export async function getAtomicSellerPackStatus(input: {
   | { ok: false; code: string; error: string }
 > {
   return supabaseGetSellerPackStatusAtomic(input);
+}
+
+export async function expireAtomicSellerPackQueuedChildren(input?: {
+  limit?: number;
+}) {
+  return supabaseExpireQueuedSellerPackChildren(input);
 }
 
 export function mapPackJobsPublic(

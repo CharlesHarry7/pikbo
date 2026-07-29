@@ -23,11 +23,12 @@ import {
 } from "@/components/GenerateWaitStage";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import {
+  getSellerPackStatusClient,
   historyFieldsFromSuccess,
+  mintGenerateIdempotencyKey,
   postGenerateWithRetry,
-  releaseSellerPackChildClient,
-  reserveSellerPackShadowClient,
-  settleSellerPackChildClient,
+  reserveSellerPackClient,
+  retrySellerPackChildClient,
   sleep,
 } from "@/lib/generateClient";
 import { registerLocalAsset } from "@/lib/clientAssets";
@@ -79,7 +80,6 @@ import {
   reconcileSellerPackRecovery,
   SELLER_PACK_RECOVERY_KEY,
   type SellerPackChildStatus,
-  type SellerPackPublicJob,
   type SellerPackRecoveryRun,
 } from "@/lib/sellerPackRecovery";
 import {
@@ -87,6 +87,7 @@ import {
   SELLER_PACK_SLUGS,
   isSellerPackRetryableStatus,
   isExactSellerPackSelection,
+  parseExactSellerPackServerJobs,
 } from "@/lib/sellerPackContract";
 import { track } from "@/lib/analytics";
 
@@ -97,6 +98,9 @@ export {
 } from "@/lib/sellerPackContract";
 
 type Job = {
+  /** Server-created fixed child id. Required for every live Launch Pack job. */
+  packJobId?: string;
+  childKey?: string;
   slug: string;
   name: string;
   status:
@@ -125,19 +129,34 @@ function selectedMatchesSellerPack(slugs: string[]): boolean {
 }
 
 /** Active-run pointer only: no image/video, balance, credits, or Library history. */
-function saveSellerPackRecovery(projectId: string, jobs: Job[]) {
+function saveSellerPackRecovery(
+  projectId: string,
+  packRunId: string,
+  jobs: Job[]
+) {
   if (typeof window === "undefined") return;
   const fixed = SELLER_PACK_SLUGS.map((slug) => jobs.find((job) => job.slug === slug));
-  if (fixed.some((job) => !job)) return;
+  if (
+    fixed.some(
+      (job) =>
+        !job ||
+        typeof job.packJobId !== "string" ||
+        typeof job.childKey !== "string"
+    )
+  ) {
+    return;
+  }
   const run: SellerPackRecoveryRun = {
-    version: 1,
+    version: 2,
     projectId,
+    packRunId,
     savedAt: new Date().toISOString(),
     children: fixed.map((job) => ({
+      packJobId: job!.packJobId!,
+      childKey: job!.childKey!,
       slug: job!.slug,
       name: job!.name,
-      aspectRatio: job!.aspectRatio ?? "9:16",
-      requestId: job!.requestId,
+      aspectRatio: job!.aspectRatio === "1:1" ? "1:1" : "9:16",
       statusHint: job!.status,
       retryCount: job!.retryCount,
     })),
@@ -232,6 +251,7 @@ export function BatchStudio({
   const [me, setMe] = useState<MeResponse | null>(null);
   const [ownsRights, setOwnsRights] = useState(false);
   const [runProjectId, setRunProjectId] = useState<string | null>(null);
+  const [activePackRunId, setActivePackRunId] = useState<string | null>(null);
   const [sellerPackRecoveryHydrated, setSellerPackRecoveryHydrated] =
     useState(!isSellerPack);
   const [sellerPackRecoveryNote, setSellerPackRecoveryNote] = useState<
@@ -355,9 +375,8 @@ export function BatchStudio({
   }, [initialSample]);
 
   /**
-   * Re-open only this browser's active pack against the current local ledger.
-   * The browser hint merely identifies children; `/api/generations` decides
-   * whether they still exist and what happened to their credits/results.
+   * Re-open this owner's active pack from durable pack/job ids. The browser
+   * pointer contains no asset URL or credit authority.
    */
   useEffect(() => {
     if (!isSellerPack) return;
@@ -375,26 +394,21 @@ export function BatchStudio({
         return;
       }
       setRunProjectId(saved.projectId);
+      setActivePackRunId(saved.packRunId);
       setSelected([...SELLER_PACK_SLUGS]);
       setSellerPackRecoveryNote(
-        "Checking this device/server session for the active Launch Pack…"
+        "Checking the private Launch Pack record…"
       );
-      void fetch("/api/generations", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Generation job list unavailable");
-        return (await response.json()) as { jobs?: unknown };
-      })
-      .then((body) => {
+      void getSellerPackStatusClient(saved.packRunId)
+      .then((status) => {
         if (canceled) return;
-        const listed = Array.isArray(body.jobs)
-          ? (body.jobs as SellerPackPublicJob[])
-          : [];
-        const recovered = reconcileSellerPackRecovery(saved!, listed);
+        if (!status.ok) throw new Error(status.error);
+        const recovered = reconcileSellerPackRecovery(saved!, status.jobs);
         setJobs(recovered.children.map(toRecoveredJob));
         setSellerPackRecoveryNote(
           recovered.unavailable > 0
-            ? `${recovered.unavailable} child${recovered.unavailable === 1 ? "" : "ren"} cannot recover on this device/server session. Old local hints were not treated as results or refunds.`
-            : "Active pack restored from this device/server session."
+            ? `${recovered.unavailable} format${recovered.unavailable === 1 ? "" : "s"} is still being checked.`
+            : "Private Launch Pack restored."
         );
       })
       .catch(() => {
@@ -404,7 +418,7 @@ export function BatchStudio({
         );
         setJobs(unavailable);
         setSellerPackRecoveryNote(
-          "Cannot recover on this device/server session while generation jobs are unavailable. No local success or refund claim was restored."
+          "Private pack status is unavailable. No local success or refund claim was restored."
         );
       })
         .finally(() => {
@@ -422,12 +436,19 @@ export function BatchStudio({
       !isSellerPack ||
       !sellerPackRecoveryHydrated ||
       !runProjectId ||
+      !activePackRunId ||
       jobs.length === 0
     ) {
       return;
     }
-    saveSellerPackRecovery(runProjectId, jobs);
-  }, [isSellerPack, jobs, runProjectId, sellerPackRecoveryHydrated]);
+    saveSellerPackRecovery(runProjectId, activePackRunId, jobs);
+  }, [
+    activePackRunId,
+    isSellerPack,
+    jobs,
+    runProjectId,
+    sellerPackRecoveryHydrated,
+  ]);
 
   useEffect(() => {
     if (!running) return;
@@ -451,11 +472,11 @@ export function BatchStudio({
         job.status === "queued" || job.status === "running"
           ? {
               ...job,
-              status: job.status === "running" ? "failed" : "not_started",
+              status: job.status === "running" ? "failed" : "queued",
               error:
                 job.status === "running"
                   ? "Canceled · refund unconfirmed if live debit started"
-                  : undefined,
+                  : "Reserved but unstarted; the worker will release it at expiry.",
               creditState:
                 job.status === "running"
                   ? "refund unconfirmed"
@@ -465,7 +486,7 @@ export function BatchStudio({
       )
     );
     setError(
-      "Pack canceled — finished children kept. Live debit on the interrupted child may still settle server-side (refund unconfirmed until confirmed)."
+      "Pack canceled — finished formats stay available. The interrupted format may still complete; check your balance before trying again."
     );
   }
 
@@ -583,10 +604,11 @@ export function BatchStudio({
   async function executeJob(
     job: Job,
     projectId: string,
-    packReservationId?: string | null,
+    packRunId?: string | null,
     /** Phase D: shared still asset — avoids re-posting multi-MB Base64 per child */
     sharedAssetId?: string | null,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    retryAttemptKey?: string
   ): Promise<{
     job: Job;
     stopQueue: boolean;
@@ -602,11 +624,15 @@ export function BatchStudio({
     // CD: same still + character bible across all pack children (prompt extra only).
     const packExtra = composeExtraWithIdentity(toyIdentity, "");
     // Unique key per child attempt so abort cancelGenerateLedger hits the right row.
-    const childIdempotencyKey = `pack:${projectId}:${job.slug}:${Date.now().toString(36)}`;
+    const childIdempotencyKey =
+      retryAttemptKey ?? mintGenerateIdempotencyKey();
     const result = await postGenerateWithRetry(
       {
         effect: job.slug,
         idempotencyKey: childIdempotencyKey,
+        ...(packRunId && job.packJobId
+          ? { packRunId, packJobId: job.packJobId }
+          : {}),
         // Dual-send when possible: assetId for smaller POSTs + inline still for
         // multi-instance (Vercel) memory-asset misses.
         ...(sharedAssetId
@@ -647,15 +673,6 @@ export function BatchStudio({
         code: result.code,
       });
       const unconfirmed = settlement === "refund unconfirmed";
-      // Phase C: release 10 from Seller Pack shadow reservation on failed child.
-      // Failures only occur on the live debit path (demo never debits).
-      if (packReservationId) {
-        void releaseSellerPackChildClient({
-          reservationId: packReservationId,
-          childKey: job.slug,
-          reason: refunded ? "refunded" : "failed",
-        });
-      }
       return {
         job: {
           ...job,
@@ -685,15 +702,6 @@ export function BatchStudio({
     if (data.session) {
       setMe((previous) => mergeMeSession(previous, data.session));
       emitSessionRefresh();
-    }
-    // Settle 10 on shadow pack when live child succeeds (demo = 0, no settle).
-    if (packReservationId && !data.demo) {
-      void settleSellerPackChildClient({
-        reservationId: packReservationId,
-        jobId:
-          typeof data.requestId === "string" ? data.requestId : undefined,
-        childKey: job.slug,
-      });
     }
     pushHistory(
       historyFieldsFromSuccess(data, {
@@ -794,25 +802,42 @@ export function BatchStudio({
     const abortCtrl = new AbortController();
     packAbortRef.current = abortCtrl;
 
-    // Phase C: Seller Pack shadow-reserves 30 (or N×10) when durable is on.
-    // Shadow is audit-only; live child spend is enforced by /api/generate
-    // durable reserve (R0) — cookie is never live-spend authority.
-    let packReservationId: string | null = null;
+    // Live Launch Pack opens one atomic 30-credit reservation and receives
+    // exactly three server-created child ids. Failure is terminal for this run;
+    // there is no shadow/per-child fallback.
+    let reservedPack:
+      | Extract<Awaited<ReturnType<typeof reserveSellerPackClient>>, { ok: true }>
+      | null = null;
+    let runPackId: string | null = null;
     if (sellerPackActive && !demoMode) {
-      const reserved = await reserveSellerPackShadowClient({
-        childCount: selected.length,
-        idempotencyKey: `ui-pack:${projectId}`,
+      const reserved = await reserveSellerPackClient({
+        clientPackKey: `ui-pack:${projectId}`,
       });
-      if (reserved.ok && reserved.reservationId) {
-        packReservationId = reserved.reservationId;
-      } else if (reserved.code === "INSUFFICIENT_CREDITS") {
-        setError(
-          reserved.error ||
-            "Durable pack shadow short — each live child still requires signed-in durable reserve on Generate; Free Mini cannot fund a full 30-credit pack."
-        );
-      } else if (reserved.code === "DURABLE_OFF") {
-        // Non-fatal: children still hit generate cost gate (cached if free/anon).
+      if (!reserved.ok) {
+        setError(reserved.error);
+        setRunning(false);
+        if (packAbortRef.current === abortCtrl) packAbortRef.current = null;
+        return;
       }
+      reservedPack = reserved;
+      runPackId = reserved.packRunId;
+      setActivePackRunId(reserved.packRunId);
+    }
+
+    // Defense in depth: never translate or run a server-owned child unless the
+    // complete response still matches the frozen three-child contract. The
+    // client adapter already performs this check; this second boundary keeps a
+    // future adapter regression from throwing outside the run try/catch.
+    const verifiedReservedJobs = reservedPack
+      ? parseExactSellerPackServerJobs(reservedPack.jobs)
+      : null;
+    if (reservedPack && !verifiedReservedJobs) {
+      setError(
+        "Pikbo could not verify this Launch Pack. No generation started; your 30 credits remain protected while the Pack is checked."
+      );
+      setRunning(false);
+      if (packAbortRef.current === abortCtrl) packAbortRef.current = null;
+      return;
     }
 
     // Phase D: register still once — Seller Pack / batch children reuse assetId.
@@ -822,17 +847,31 @@ export function BatchStudio({
       if (reg?.assetId) sharedAssetId = reg.assetId;
     }
 
-    const queue: Job[] = selected.map((slug) => {
-      const p = PRESETS.find((x) => x.slug === slug)!;
-      const packItem = SELLER_PACK_ITEMS.find((i) => i.slug === slug);
-      return {
-        slug,
-        name: sellerPackActive && packItem ? packItem.label : p.name,
-        status: "queued" as const,
-        aspectRatio: aspectForSlug(slug),
-        retryCount: 0,
-      };
-    });
+    const queue: Job[] = verifiedReservedJobs
+      ? verifiedReservedJobs.map((serverJob, index) => {
+          // parseExactSellerPackServerJobs proves positional identity.
+          const item = SELLER_PACK_ITEMS[index];
+          return {
+            packJobId: serverJob.jobId,
+            childKey: serverJob.childKey,
+            slug: item.slug,
+            name: item.label,
+            status: "queued" as const,
+            aspectRatio: item.aspectRatio,
+            retryCount: 0,
+          };
+        })
+      : selected.map((slug) => {
+          const p = PRESETS.find((x) => x.slug === slug)!;
+          const packItem = SELLER_PACK_ITEMS.find((i) => i.slug === slug);
+          return {
+            slug,
+            name: sellerPackActive && packItem ? packItem.label : p.name,
+            status: "queued" as const,
+            aspectRatio: aspectForSlug(slug),
+            retryCount: 0,
+          };
+        });
     setJobs(queue);
 
     try {
@@ -844,7 +883,7 @@ export function BatchStudio({
         const outcome = await executeJob(
           queue[i],
           projectId,
-          packReservationId,
+          runPackId,
           sharedAssetId,
           abortCtrl.signal
         );
@@ -874,20 +913,14 @@ export function BatchStudio({
           setJobs((previous) =>
             previous.map((job, index) =>
               index > i && job.status === "queued"
-                ? { ...job, status: "not_started" }
+                ? {
+                    ...job,
+                    error:
+                      "Reserved but unstarted; the worker will release it at expiry.",
+                  }
                 : job
             )
           );
-          // Release remaining shadow hold for children that never ran.
-          if (packReservationId) {
-            for (let j = i + 1; j < queue.length; j++) {
-              void releaseSellerPackChildClient({
-                reservationId: packReservationId,
-                childKey: queue[j].slug,
-                reason: "not_started",
-              });
-            }
-          }
           break;
         }
         // Soft gap so sequential batch stays under session/IP soft limits.
@@ -906,11 +939,11 @@ export function BatchStudio({
               ? {
                   ...job,
                   status:
-                    job.status === "running" ? "failed" : "not_started",
+                    job.status === "running" ? "failed" : "queued",
                   error:
                     job.status === "running"
                       ? "Canceled · refund unconfirmed if live debit started"
-                      : undefined,
+                      : "Reserved but unstarted; the worker will release it at expiry.",
                   creditState:
                     job.status === "running"
                       ? "refund unconfirmed"
@@ -919,17 +952,6 @@ export function BatchStudio({
               : job
           )
         );
-        if (packReservationId) {
-          for (const job of queue) {
-            if (job.status === "queued" || job.status === "running") {
-              void releaseSellerPackChildClient({
-                reservationId: packReservationId,
-                childKey: job.slug,
-                reason: "canceled",
-              });
-            }
-          }
-        }
       } else {
         setError(e instanceof Error ? e.message : "Batch failed");
       }
@@ -962,6 +984,26 @@ export function BatchStudio({
       const reg = await registerLocalAsset(image);
       if (reg?.assetId) sharedAssetId = reg.assetId;
     }
+    const retryAttemptKey = mintGenerateIdempotencyKey();
+    if (sellerPackActive && !demoMode) {
+      if (!activePackRunId || !target.packJobId) {
+        setError("Durable Launch Pack ids are missing; refresh to recover.");
+        setRunning(false);
+        packAbortRef.current = null;
+        return;
+      }
+      const reopened = await retrySellerPackChildClient({
+        packRunId: activePackRunId,
+        packJobId: target.packJobId,
+        attemptKey: retryAttemptKey,
+      });
+      if (!reopened.ok) {
+        setError(reopened.error);
+        setRunning(false);
+        packAbortRef.current = null;
+        return;
+      }
+    }
     const retrying: Job = {
       ...target,
       status: "running",
@@ -977,9 +1019,10 @@ export function BatchStudio({
       const outcome = await executeJob(
         retrying,
         projectId,
-        null,
+        sellerPackActive && !demoMode ? activePackRunId : null,
         sharedAssetId,
-        abortCtrl.signal
+        abortCtrl.signal,
+        retryAttemptKey
       );
       setJobs((previous) =>
         previous.map((job) => (job.slug === slug ? outcome.job : job))
@@ -1019,6 +1062,24 @@ export function BatchStudio({
       for (let i = 0; i < failed.length; i++) {
         if (abortCtrl.signal.aborted) break;
         const target = failed[i];
+        const retryAttemptKey = mintGenerateIdempotencyKey();
+        if (sellerPackActive && !demoMode) {
+          if (!activePackRunId || !target.packJobId) {
+            setError(
+              `Cannot retry ${target.name}: durable Launch Pack ids are missing.`
+            );
+            break;
+          }
+          const reopened = await retrySellerPackChildClient({
+            packRunId: activePackRunId,
+            packJobId: target.packJobId,
+            attemptKey: retryAttemptKey,
+          });
+          if (!reopened.ok) {
+            setError(reopened.error);
+            break;
+          }
+        }
         const retrying: Job = {
           ...target,
           status: "running",
@@ -1033,9 +1094,10 @@ export function BatchStudio({
         const outcome = await executeJob(
           retrying,
           projectId,
-          null,
+          sellerPackActive && !demoMode ? activePackRunId : null,
           sharedAssetId,
-          abortCtrl.signal
+          abortCtrl.signal,
+          retryAttemptKey
         );
         setJobs((previous) =>
           previous.map((job) =>
@@ -1184,7 +1246,7 @@ export function BatchStudio({
           if (result === "ok" || result === "fallback") return;
           if (result === "blocked" || result === "unsafe") {
             setError(
-              `${j.name || j.slug}: download blocked — T6 / cancel / timeout / unsafe`
+              `${j.name || j.slug}: download blocked by a delivery safety check`
             );
             return;
           }
@@ -1234,8 +1296,8 @@ export function BatchStudio({
       if (ok + fallback === 0) {
         setError(
           blocked > 0
-            ? "Could not download — gate blocked (T6/canceled/timeout/unsafe). Try each child Download link."
-            : "Could not download available clips — blocked, unsafe URL, or expired. Try each child Download link."
+            ? "Could not download the Pack. Try each available clip's Download button."
+            : "Could not download the available clips. A link may be blocked or expired; try each clip's Download button."
         );
       } else if (fallback > 0 && ok === 0) {
         setError(null);
@@ -1351,7 +1413,7 @@ export function BatchStudio({
       </p>
       {demoMode ? (
         <p className="mt-0.5 text-[var(--fg-dim)]">
-          Demo mode · no debit · upload is not sent to the model.
+          Demo mode · no credits used · your upload is not processed.
         </p>
       ) : (
         <p className="mt-0.5 text-[var(--fg-dim)]">
@@ -1406,12 +1468,12 @@ export function BatchStudio({
               <p className="font-bold text-[var(--mint)]">
                 {demoMode
                   ? "Launch Pack — 3 cached prototype previews"
-                  : "Launch Pack — 3 live clips / 30 credits"}
+                  : "Launch Pack — 3 private clips / 30 credits"}
               </p>
               <p className="mt-1 leading-relaxed text-white/55">
                 {demoMode
                   ? "Preview three formats at 0 credits. Cached prototypes do not process your upload."
-                  : "Eligible live account. Review the 30-credit quote, then submit three independent jobs."}
+                  : "Review the 30-credit quote, then create three independent private clips."}
               </p>
               {/* Y5 + CD B3: full Director Plan when still ready; strip before photo */}
               {sellerDirectorPlan?.ready ? (
@@ -1434,12 +1496,11 @@ export function BatchStudio({
             </div>
             <SellerPackSteps step={sellerStep} demoMode={demoMode} />
             <p
-              data-seller-pack-recovery="device-local"
+              data-seller-pack-recovery="durable-pointer"
               className="rounded-lg border border-amber-300/20 bg-amber-300/[0.04] px-3 py-2 text-[10px] leading-relaxed text-amber-100/85"
             >
-              Current device/server session only — this reopens the active
-              pack from the local generation-job ledger. It is not cloud
-              storage, cross-device history, or a durable credits claim.
+              This browser remembers the active Pack. Signed-in private results
+              also recover from your account after refresh.
             </p>
             {sellerPackRecoveryNote ? (
               <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
@@ -1603,8 +1664,8 @@ export function BatchStudio({
                     {trialDone
                       ? "Free Mini trial used · Lab demos still free"
                       : freeLive
-                        ? `Free Mini · ${freeLive.resolution} · ${freeLive.durationSec}s (server-enforced)`
-                        : "Free · Mini · 480p · 5s (server-enforced)"}
+                        ? `Free Mini · ${freeLive.resolution} · ${freeLive.durationSec}s fixed`
+                        : "Free · Mini · 480p · 5s fixed"}
                     {clipsLeft !== null && !trialDone
                       ? ` · ~${clipsLeft} live left`
                       : ""}
@@ -1636,7 +1697,7 @@ export function BatchStudio({
           ) : (
             <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] p-3 text-xs text-[var(--fg-muted)]">
               Per-output formats are fixed: Listing Spin uses 1:1; Reveal and
-              Social Flash use 9:16. All three use the current 5s plan path.
+              Social Flash use 9:16. All three are 5 seconds.
             </div>
           )}
         </div>
@@ -1644,7 +1705,7 @@ export function BatchStudio({
         <div>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-semibold text-[var(--fg-muted)]">
-              Presets in this batch
+              {isSellerPack ? "Included formats" : "Presets in this batch"}
             </p>
             {!isSellerPack ? (
               <div className="flex flex-wrap gap-1">
@@ -1669,7 +1730,7 @@ export function BatchStudio({
               </div>
             ) : (
               <span className="rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/10 px-2.5 py-1 text-[10px] font-bold text-[var(--mint)]">
-                Frozen v1 configuration
+                Fixed launch formats
               </span>
             )}
           </div>
@@ -1790,9 +1851,9 @@ export function BatchStudio({
               type="button"
               onClick={cancelInFlightPack}
               className="btn btn-ghost hidden w-full border border-white/20 lg:flex"
-              title="Aborts this browser request. Live debit on the running child may still settle server-side."
+              title="Stops waiting in this browser. A render already in progress may still finish."
             >
-              Cancel pack · keep finished children
+              Cancel pack · keep finished formats
             </button>
           </>
         ) : (
@@ -1847,7 +1908,7 @@ export function BatchStudio({
                     { ratio: item.aspectRatio }
                   )}
                   data-seller-pack-free-mini="single-child"
-                  title="Open single Generate for this pack child (10 credits when Live)"
+                  title="Open this format in single Generate (10 credits when Live)"
                   className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70"
                   data-pack-try-recipe={item.slug}
                   data-pack-try-ratio={item.aspectRatio}
@@ -1886,7 +1947,7 @@ export function BatchStudio({
           />
         ) : null}
         <p className="text-[11px] text-[var(--fg-dim)]">
-          Sequential jobs use the same generate API
+          Each format runs independently
           {demoMode
             ? " (demo-cached · 0 credits)"
             : isFree
@@ -1895,7 +1956,7 @@ export function BatchStudio({
                 : freeLive
                   ? ` (Free Mini ${freeLive.resolution} ${freeLive.durationSec}s)`
                   : " (Free Mini 480p 5s)"
-              : " (paid Fast 720p path)"}
+              : " (private 720p)"}
           . Finished clips land in{" "}
           <Link href="/library" className="text-[var(--brand)] hover:underline">
             Library
@@ -1917,7 +1978,7 @@ export function BatchStudio({
                   ? ` · ${needsAttentionCount} need attention`
                   : ""}
                 {failedRetryCount > 0
-                  ? ` · ${failedRetryCount} failed (siblings kept)`
+                  ? ` · ${failedRetryCount} failed (completed formats kept)`
                   : ""}
               </p>
             ) : null}
@@ -1929,7 +1990,7 @@ export function BatchStudio({
                 disabled={running || !image || !ownsRights}
                 onClick={() => void retryAllFailed()}
                 className="rounded-full border border-[var(--mint)]/35 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"
-                title="Re-quote only confirmed failed or unsubmitted children · successful outputs stay playable; unconfirmed refunds never auto-retry"
+                title="Retry only confirmed failed or unsubmitted formats; completed clips stay available"
               >
                 Retry eligible only
               </button>
@@ -1950,7 +2011,7 @@ export function BatchStudio({
             </p>
             <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-[var(--fg-dim)]">
               {sellerPackActive
-                ? "Upload one owned toy photo → Generate pack. Three formats land here with independent success/fail. Failed children refund; siblings stay."
+                ? "Upload one owned toy photo → Generate pack. Each format finishes independently; a confirmed failed format restores its 10 credits while completed clips stay."
                 : "Pick presets (or open Batch from an effect page), confirm ownership, then run. Finished clips also save on this device Library."}
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -1968,7 +2029,7 @@ export function BatchStudio({
                 >
                   {demoMode
                     ? "Launch Pack — 3 cached previews / 0 credits"
-                    : "Launch Pack — 3 live clips / 30 credits"}
+                    : "Launch Pack — 3 private clips / 30 credits"}
                 </Link>
               ) : (
                 <Link
@@ -1997,7 +2058,7 @@ export function BatchStudio({
               disabled={!canExportPack || exportBusy}
               onClick={() => void downloadAvailableClips()}
               className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"
-              title="Saves each available clip sequentially. Failed siblings and Free raw live files are omitted."
+              title="Saves each available clip. Failed formats and unavailable raw files are omitted."
               data-launch-pack-export="downloadable-only"
             >
               {exportBusy
@@ -2133,7 +2194,7 @@ export function BatchStudio({
                     j.demo ? "text-[var(--fg-dim)]" : "text-[var(--mint)]"
                   }`}
                 >
-                  {j.demo ? "Cached demo" : "Live generation"}
+                  {j.demo ? "Cached demo" : "Private generation"}
                 </span>
                 {j.model && (
                   <span className="text-[10px] text-[var(--fg-dim)]">
@@ -2187,7 +2248,7 @@ export function BatchStudio({
             )}
             {j.creditState === "refund unconfirmed" ? (
               <p className="mt-2 text-[10px] text-amber-200">
-                Refund unconfirmed — check balance first; this child is not auto-retried.
+                Credit restoration is not confirmed — check your balance before retrying this format.
               </p>
             ) : null}
           </div>
@@ -2219,7 +2280,7 @@ export function BatchStudio({
               onChange={(e) => setOwnsRights(e.target.checked)}
               className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--mint)]"
             />
-            <span>I own this photo for every pack child.</span>
+            <span>I own this photo and may use it for all three formats.</span>
           </label>
         ) : null}
         {running ? (
@@ -2274,7 +2335,7 @@ export function BatchStudio({
                 onClick={() => void retryAllFailed()}
                 className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm disabled:opacity-50"
                 data-seller-pack-action="retry-failed"
-                title="Re-run only failed children · successes stay"
+                title="Re-run only confirmed failed formats; completed clips stay"
               >
                 Retry failed only
               </button>

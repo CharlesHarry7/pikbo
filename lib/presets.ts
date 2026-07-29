@@ -72,9 +72,9 @@ export const PRESETS: Preset[] = [
     h1: "Make a 360° Product Video of a Toy From One Photo",
     seoTitle: "Toy 360° Product Video Generator From One Photo | Pikbo",
     seoDescription:
-      "Turn a single product photo into a smooth 360° turntable video. Perfect for toy listings, storefronts, and product ads. No filming, no rig.",
+      "Draft a square toy-listing spin from one owned product photo. See the real cached reference/output pair, recorded limits, and the private validation path.",
     intro:
-      "A slow, clean 360° spin is the fastest way to show a collectible from every angle. Upload one photo of your figure and Pikbo renders a studio turntable video ready for your listing or storefront.",
+      "A slow square spin can add motion to a collectible listing without a filmed turntable. Pikbo drafts inferred angles from one photo; compare sculpt, paint, logos, and packaging with the physical product before publishing.",
     body: [
       "A short spin can help buyers inspect a collectible, but it does not guarantee a sale. Pikbo offers a generated alternative when you do not have a photographed turntable clip; inferred angles must be reviewed against the real product.",
       "Great for blind box figures, resin art toys, sofubi, and vinyl collectibles. Export in vertical for TikTok Shop or square for marketplace galleries.",
@@ -92,7 +92,7 @@ export const PRESETS: Preset[] = [
       },
       {
         q: "Do I need a real turntable?",
-        a: "No. Pikbo generates the rotation from a single photo, so no rig, lighting, or filming is required.",
+        a: "Not for an AI draft. A real turntable remains the accurate choice when every physical angle must be exact.",
       },
       {
         q: "What photo works best?",
