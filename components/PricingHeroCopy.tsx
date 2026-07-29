@@ -1,52 +1,26 @@
-import type { ReactNode } from "react";
 import Link from "next/link";
-import { FreeTrialCta } from "@/components/FreeTrialCta";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { createRemixHref } from "@/lib/remixIntent";
 
 export type PricingCopyVariant = "outcome" | "cost-control";
 
 const COPY: Record<
   PricingCopyVariant,
   {
-    badge: string;
     eyebrow: string;
-    title: ReactNode;
+    title: string;
     description: string;
-    primary: string;
-    secondary: string;
   }
 > = {
   outcome: {
-    badge: "Start with one owned-toy photo",
-    eyebrow: "For collectors, toy sellers, and small shops",
-    title: (
-      <>
-        Pikbo pricing for toy sellers.
-        <br />
-        <span className="text-grad">Choose capacity for launch-ready clips.</span>
-      </>
-    ),
+    eyebrow: "One finite plan · no unlimited",
+    title: "Pricing built around finished toy videos.",
     description:
-      "Reuse the product photos you already have instead of setting up a new shoot for every listing or drop. Preview the three formats now; private-beta accounts see the full quote before generation.",
-    primary: "Animate one SKU",
-    secondary: "See Founding Studio",
+      "The Founding Studio candidate is measured in fixed Launch Packs, not vague AI usage. Subscriptions open after the private beta proves quality, recovery, and sustainable cost.",
   },
   "cost-control": {
-    badge: "Finite credits · visible limits",
-    eyebrow: "Plan content before you spend",
-    title: (
-      <>
-        Know how many product clips
-        <br />
-        <span className="text-grad">your plan can produce.</span>
-      </>
-    ),
+    eyebrow: "Measured capacity · visible limits",
+    title: "Know exactly how many product clips are included.",
     description:
-      "The Founding Studio candidate includes three Launch Packs per month: nine fixed 5-second 720p outputs. Subscriptions open after the private beta proves quality, recovery, and sustainable cost.",
-    primary: "Build my first clip",
-    secondary: "Compare allowances",
+      "Three monthly Launch Packs means nine fixed 5-second 720p outputs. Subscriptions open after the private beta proves quality, recovery, and sustainable cost.",
   },
 };
 
@@ -59,65 +33,68 @@ export function PricingHeroCopy({
 
   return (
     <section
-      className="glow-bg overflow-hidden border-b border-[var(--border)]"
+      className="relative isolate overflow-hidden border-b border-black/15 bg-[#f1eee6] px-5 py-14 text-black sm:px-8 sm:py-20"
       data-pricing-copy-variant={variant}
     >
-      <div className="container-x relative z-10 py-14 text-center sm:py-20">
-        <Badge variant="live" className="mx-auto normal-case tracking-wider">
-          {copy.badge}
-        </Badge>
-        <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--fg-dim)]">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-40 [background-image:radial-gradient(rgba(8,8,8,0.16)_0.7px,transparent_0.7px)] [background-size:9px_9px]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -left-20 top-14 h-64 w-64 rounded-full bg-[#c8ff3d]/55 blur-[90px]"
+        aria-hidden
+      />
+      <div className="relative mx-auto max-w-6xl">
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <span className="rounded-full bg-black px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.17em] text-white">
+            Founding Studio
+          </span>
+          <span className="rounded-full border border-black/15 bg-white/45 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-black/48">
+            Validation candidate · not yet for sale
+          </span>
+        </div>
+
+        <p className="mt-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-[#5e7800]">
           {copy.eyebrow}
         </p>
-        <h1 className="mx-auto mt-3 max-w-4xl text-4xl font-black leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
+        <h1 className="mx-auto mt-4 max-w-5xl text-center font-display text-[clamp(3rem,6.7vw,6.8rem)] font-black leading-[0.86] tracking-[-0.065em]">
           {copy.title}
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-[var(--fg-muted)] sm:text-lg">
+        <p className="mx-auto mt-7 max-w-2xl text-center text-base font-semibold leading-7 text-black/58 sm:text-lg">
           {copy.description}
         </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-2">
-          <FreeTrialCta
-            path="/pricing"
-            variant="mint"
-            labelTry={copy.primary}
-            labelPlans="Compare plans"
-            labelDemo="Try Lab sample"
-            className="!px-6 !py-3 text-sm font-black"
-          />
-          <Button asChild size="lg" variant="secondary">
-            <Link
-              href={createRemixHref(
-                "360-spin-showcase",
-                `pricing-${variant}`
-              )}
-              data-pricing-studio="generate-remix"
-            >
-              Full studio
-            </Link>
-          </Button>
-          <Button asChild variant="secondary" size="lg">
-            <Link href="#plans">{copy.secondary}</Link>
-          </Button>
-        </div>
-        <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <Link
-            href="/library"
-            className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
-          >
-            Library
-          </Link>
+
+        <div className="mt-8 flex flex-col justify-center gap-2 sm:flex-row">
           <Link
             href="/create?mode=seller-pack"
-            className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
+            className="inline-flex min-h-13 items-center justify-center rounded-full bg-black px-7 text-sm font-black text-white transition hover:-translate-y-0.5"
           >
-            Launch Pack
+            Preview the 3-video Pack
+            <span className="ml-2 text-[#c8ff3d]" aria-hidden>
+              ↗
+            </span>
+          </Link>
+          <Link
+            href="#plans"
+            className="inline-flex min-h-13 items-center justify-center rounded-full border border-black/20 bg-white/45 px-7 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-white"
+          >
+            See the candidate plan
           </Link>
         </div>
-        <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-[var(--fg-dim)]">
-          <span>✓ Preview examples use no credits</span>
-          <span>✓ Confirmed failed jobs restore their credit charge</span>
-          <span>✓ Commercial use is scoped to Founding Studio</span>
-          <span>✓ Founding Studio opens after private beta</span>
+
+        <div className="mx-auto mt-9 grid max-w-3xl gap-px overflow-hidden rounded-2xl border border-black/15 bg-black/15 sm:grid-cols-3">
+          {[
+            ["3 Packs", "per billing month"],
+            ["9 videos", "fixed 5-second outputs"],
+            ["Private", "signed-in Library"],
+          ].map(([value, label]) => (
+            <div key={value} className="bg-white/48 px-4 py-4 text-center">
+              <p className="text-sm font-black">{value}</p>
+              <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.13em] text-black/42">
+                {label}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

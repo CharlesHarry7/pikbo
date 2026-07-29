@@ -26,8 +26,9 @@ const MORE = [
 ] as const;
 
 function active(path: string, href: string) {
-  if (href === "/") return path === "/";
-  return path === href || path.startsWith(`${href}/`);
+  const route = href.split("?")[0];
+  if (route === "/") return path === "/";
+  return path === route || path.startsWith(`${route}/`);
 }
 
 function MoreMenu({ path }: { path: string }) {
@@ -160,11 +161,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           <LanguageSwitcher />
           <CreditsBadge />
           <Link
-            href="/create"
+            href="/create?mode=seller-pack"
             className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[13px] font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.24)] transition hover:-translate-y-0.5 hover:bg-[#d5ff6b]"
             data-appshell-cta="generate"
           >
-            {t("cta.generate")}
+            {t("cta.launchPack")}
           </Link>
         </div>
       </header>
@@ -177,11 +178,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           <LanguageSwitcher compact />
           <CreditsBadge compact />
           <Link
-            href="/create"
+            href="/create?mode=seller-pack"
             className="rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[11px] font-black text-black"
             data-appshell-cta="generate"
           >
-            {t("cta.generate")}
+            {t("cta.launchPack")}
           </Link>
         </div>
       </header>
@@ -205,7 +206,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               aria-current={on ? "page" : undefined}
               className={cn(
                 "flex min-w-0 flex-col items-center justify-center px-0.5 py-3 text-[10px] font-semibold transition-colors",
-                item.href === "/create"
+                item.href.startsWith("/create")
                   ? "text-[#c8ff3d]"
                   : on
                     ? "text-[#c8ff3d]"

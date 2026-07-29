@@ -61,10 +61,10 @@ assert(
   "site metadata must lead with the cached validation path"
 );
 assert(
-  /Invited\s+private-beta accounts can create private 5-second 720p results/.test(
+  /When private Live is enabled,\s+eligible invited accounts\s+can create private 5-second 720p results/.test(
     read("components/HomeSeoBody.tsx")
   ),
-  "home SEO body must scope real generation to invited private-beta accounts"
+  "home SEO body must condition real generation on the private Live gate"
 );
 assert(
   read("components/PricingHeroCopy.tsx").includes(

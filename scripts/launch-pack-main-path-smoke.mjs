@@ -14,14 +14,14 @@ const contract = read("lib/sellerPackContract.ts");
 const packExport = read("lib/sellerPackExport.ts");
 const shell = read("components/AppShell.tsx");
 
-// Homepage V1 leads with Recipe remix; Launch Pack remains a later upgrade.
+// Homepage V2 leads with the fixed Launch Pack; Recipes remain a proof layer.
 assert.match(home, /data-home-upgrade="launch-pack"/);
 assert.match(home, /href="\/create\?mode=seller-pack"/);
-assert.match(homeWall, /Use this recipe/);
+assert.match(homeWall, /Try this recipe/);
 assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
-assert.doesNotMatch(shell, /create\?mode=seller-pack/);
+assert.match(shell, /create\?mode=seller-pack/);
 assert.doesNotMatch(
   [home, homeWall, shell].join("\n"),
   /#home-tool/

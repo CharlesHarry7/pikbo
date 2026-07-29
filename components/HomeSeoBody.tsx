@@ -13,16 +13,16 @@ const FAQ = [
     a: "Pikbo turns one owned toy photo into a fixed Launch Pack: a square listing spin, a vertical blind-box reveal, and a vertical social hook.",
   },
   {
-    q: "Do preview examples use my photo?",
-    a: "No. Public examples are labeled previews and do not process your upload. Only invited, signed-in private-beta accounts can submit a real generation.",
+    q: "Do public previews use my photo?",
+    a: "No. Public examples are labeled cached previews and do not process your upload. When private Live is enabled, only eligible invited, signed-in beta accounts can submit a real generation.",
   },
   {
     q: "How are failed clips charged?",
-    a: "The three-format Pack uses 30 credits: 10 per completed clip. A confirmed failed format restores its 10-credit charge.",
+    a: "The three-format Pack reserves 30 credits. Each completed clip settles 10 credits; a confirmed failed format restores 10 credits.",
   },
   {
-    q: "Can I publish the result immediately?",
-    a: "Review the toy sculpt, paint, packaging text, and proportions first. AI video can drift on small product details.",
+    q: "Can I publish a result without checking it?",
+    a: "Review the toy sculpt, paint, packaging text, logos, and proportions first. AI video can drift on small product details.",
   },
 ] as const;
 
@@ -38,81 +38,117 @@ export function HomeSeoBody() {
   };
 
   return (
-    <section className="border-t border-white/10 bg-black px-4 py-14 text-white sm:px-6">
+    <section className="bg-[#f1eee6] px-5 py-18 text-black sm:px-8 sm:py-24">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <div className="mx-auto max-w-3xl space-y-10 text-[15px] leading-relaxed text-white/70">
-        <div>
-          <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            One toy photo. Three launch-ready formats.
-          </h2>
-          <p className="mt-4">
-            {site.name} is built for designer-toy sellers and studios that
-            already have sharp product photos but need motion for listings,
-            launches, and social posts. The fixed Launch Pack creates a Listing
-            Spin in 1:1, a Blind-box Reveal in 9:16, and a Social Flash in 9:16.
-          </p>
-          <p className="mt-3">
-            The three focused guides below show the intended input, output,
-            commercial use, and current limitations for each high-intent job.
-          </p>
-          <nav
-            aria-label="Focused toy video guides"
-            className="mt-5 flex flex-wrap gap-2"
-          >
-            {HIGH_INTENT_PAGES.map(([href, label]) => (
-              <Link
-                key={href}
-                href={href}
-                className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/60 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5e7800]">
+              Built around the product
+            </p>
+            <h2 className="mt-3 font-display text-4xl font-black tracking-[-0.055em] sm:text-6xl">
+              See the input, the output, and the limits.
+            </h2>
+            <p className="mt-6 max-w-xl text-sm font-semibold leading-6 text-black/58 sm:text-base">
+              {site.name} is for designer-toy sellers and studios that already
+              have clear product photos but need motion for listings, launches,
+              and social posts. Public prototypes stay labeled until Pikbo can
+              publish verified beta input-to-output evidence.
+            </p>
+            <nav
+              aria-label="Focused toy video guides"
+              className="mt-7 flex flex-wrap gap-2"
+            >
+              {HIGH_INTENT_PAGES.map(([href, label]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="rounded-full border border-black/15 bg-white/45 px-3 py-2 text-[11px] font-black text-black/58 transition hover:border-black/40 hover:bg-white hover:text-black"
+                >
+                  {label} ↗
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              ["Input", "1 seller-owned toy photo"],
+              ["Output", "3 fixed 5-second formats"],
+              ["Credits", "10 per completed clip"],
+              ["Delivery", "Private signed-in Library"],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="rounded-[1.5rem] border border-black/12 bg-white/55 p-5"
               >
-                {label}
-              </Link>
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-black/38">
+                  {label}
+                </p>
+                <p className="mt-7 text-xl font-black tracking-[-0.03em]">
+                  {value}
+                </p>
+              </div>
             ))}
-          </nav>
+            <div className="rounded-[1.5rem] bg-[#090909] p-5 text-white sm:col-span-2">
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+                Private delivery, limited processing
+              </p>
+              <p className="mt-5 max-w-2xl text-sm leading-6 text-white/62">
+                Real beta photos are sent to the generation provider only for
+                the requested clips. Finished videos are copied to Pikbo&apos;s
+                private storage. Pikbo does not send your image, prompt, email,
+                or asset URL to analytics.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div>
-          <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            How the Launch Pack works
-          </h2>
-          <ol className="mt-4 list-decimal space-y-2 pl-5">
-            <li>Choose a clear, full-product photo that you own.</li>
-            <li>Confirm your rights and review the fixed 30-credit quote.</li>
-            <li>Create the three 5-second formats from the same SKU photo.</li>
-            <li>Download completed clips from your private Library.</li>
-            <li>Check sculpt, paint, logos, and packaging before publishing.</li>
-          </ol>
+        <div className="mt-18 grid gap-3 border-t border-black/15 pt-12 lg:grid-cols-2">
+          <article className="rounded-[1.75rem] border border-black/12 bg-[#e6e0d4] p-6 sm:p-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/42">
+              Private beta · invite only
+            </p>
+            <h3 className="mt-4 text-2xl font-black tracking-[-0.035em]">
+              What is available now
+            </h3>
+            <p className="mt-4 text-sm leading-6 text-black/58">
+              Public visitors can inspect cached examples without processing an
+              upload. When private Live is enabled, eligible invited accounts
+              can create private 5-second 720p results and recover completed
+              clips after refresh.
+              Subscriptions remain closed while quality, recovery, privacy, and
+              cost are tested.
+            </p>
+          </article>
+
+          <article className="rounded-[1.75rem] border border-black/12 bg-white/60 p-6 sm:p-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/42">
+              Before publishing
+            </p>
+            <h3 className="mt-4 text-2xl font-black tracking-[-0.035em]">
+              Treat every generated angle as a draft.
+            </h3>
+            <p className="mt-4 text-sm leading-6 text-black/58">
+              Review sculpt, paint, logos, packaging, accessories, and
+              proportions against the physical product. Pikbo does not
+              guarantee exact unseen details, sales, reach, or rankings.
+            </p>
+          </article>
         </div>
 
-        <div>
-          <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
-            What is available now
-          </h2>
-          <p className="mt-4">
-            Public visitors can explore labeled preview examples at zero
-            credits; those examples do not process an uploaded photo. Invited
-            private-beta accounts can create private 5-second 720p results and
-            recover them after refresh through owner-only downloads.
-          </p>
-          <p className="mt-3">
-            Founding Studio subscriptions remain closed until real SKU tests
-            meet the published quality, recovery, privacy, and cost thresholds.
-            No plan promises unlimited generation.
-          </p>
-        </div>
-
-        <div>
-          <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
+        <div className="mt-18">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5e7800]">
             FAQ
-          </h2>
-          <div className="mt-4 divide-y divide-white/10">
+          </p>
+          <div className="mt-4 grid gap-px overflow-hidden rounded-[1.75rem] border border-black/15 bg-black/15 md:grid-cols-2">
             {FAQ.map((item) => (
-              <div key={item.q} className="py-4">
-                <h3 className="text-base font-bold text-white">{item.q}</h3>
-                <p className="mt-2 text-sm text-white/65">{item.a}</p>
+              <div key={item.q} className="bg-[#f7f4ed] p-6 sm:p-7">
+                <h3 className="text-base font-black">{item.q}</h3>
+                <p className="mt-3 text-sm leading-6 text-black/56">{item.a}</p>
               </div>
             ))}
           </div>

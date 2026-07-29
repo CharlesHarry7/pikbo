@@ -20,7 +20,7 @@ assert.match(
 );
 assert.match(
   wall,
-  /href=\{item\.href\}[\s\S]*Use this recipe/,
+  /href=\{item\.href\}[\s\S]*Try this recipe/,
   "home Recipe cards must expose a separate one-click Remix contract"
 );
 assert.match(

@@ -68,7 +68,7 @@ function pricingFaqItems(): { q: string; a: string }[] {
     },
     {
       q: "Can I test this with one real product photo?",
-      a: `Yes. Preview ${site.name}'s three formats, then open Create with a photo of a toy you own. Invited private-beta accounts can make a private 5-second 720p result; the public demo shows labeled examples without processing your upload.`,
+      a: `Yes. Preview ${site.name}'s three formats, then open Create with a photo of a toy you own. Once private Live is enabled, eligible invited accounts can make a private 5-second 720p result; the public demo shows labeled examples without processing your upload.`,
     },
     {
       q: "Can I use clips commercially?",

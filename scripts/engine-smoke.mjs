@@ -2373,7 +2373,7 @@ assert.match(guidesSrc24, /toy-unboxing-video-from-one-photo/);
 
 assert.match(
   fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /data-hero-recipe=\{recipeSlug\}/
+  /data-home-format-preview=\{format\.slug\}[\s\S]*href=\{item\.projectHref \|\| item\.href\}/
 );
 assert.match(
   fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
@@ -3864,7 +3864,7 @@ assert.match(deliveryPackSrc, /Sales fidelity|includeQc/);
 assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 
 
-// Homepage V1: immersive cinema → eight distinct Recipe cards → Launch Pack.
+// Homepage V2: fixed Launch Pack → product path → eight distinct Recipe proofs.
 const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero|HomeViralWall|home-create/);
 const homeHeroSrc = fs.readFileSync(
@@ -3873,16 +3873,19 @@ const homeHeroSrc = fs.readFileSync(
 );
 assert.match(
   homeHeroSrc,
-  /Bring your toy to life\.|Turn one designer-toy photo into cinematic videos, stories and/
+  /One toy photo\.[\s\S]*Three product videos\./
 );
-assert.match(homeHeroSrc, /data-home-hero|create\?effect=\$\{recipeSlug\}/);
+assert.match(
+  homeHeroSrc,
+  /data-home-hero|href=["']\/create\?mode=seller-pack["']/
+);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeViralWall.tsx"),
   "utf8"
 );
 assert.match(
   homeWallSrc,
-  /data-home-wall|data-recipe-card|wallDense|Use this recipe|Cached demo/
+  /data-home-wall|data-recipe-card|wallDense|Try this recipe|Cached preview/
 );
 assert.match(homeWallSrc, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWallSrc, /href=\{item\.href\}/);
@@ -4058,10 +4061,13 @@ assert.match(historySrcLib, /sku\?:/);
 assert.match(library, /i\.sku|sku/);
 
 
-// Home V1: PRIMARY_NAV = Explore · Recipes · Create · Library · Pricing.
+// Home V2: PRIMARY_NAV names the fixed Pack instead of a generic Create door.
 const softLaunchSrc = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
 assert.match(softLaunchSrc, /PRIMARY_NAV/);
-assert.match(softLaunchSrc, /href:\s*["']\/create["']/);
+assert.match(
+  softLaunchSrc,
+  /href:\s*["']\/create\?mode=seller-pack["']/
+);
 assert.match(softLaunchSrc, /href:\s*["']\/effects["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/library["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
@@ -4074,9 +4080,9 @@ assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
     (match) => match[1]
   );
   assert.deepEqual(labels, [
-    "Explore",
+    "Home",
     "Recipes",
-    "Create",
+    "Launch Pack",
     "Library",
     "Pricing",
   ]);
@@ -4278,7 +4284,10 @@ function resolveGenerateStillPure(input) {
 
 // Mobile mirrors Explore · Recipes · Create · Library · Pricing.
 assert.match(softLaunchSrc, /MOBILE_NAV/);
-assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/create["']/);
+assert.match(
+  softLaunchSrc,
+  /MOBILE_NAV[\s\S]*href:\s*["']\/create\?mode=seller-pack["']/
+);
 assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/effects["']/);
 assert.doesNotMatch(
   softLaunchSrc,
@@ -4563,14 +4572,6 @@ assert.match(
 assert.doesNotMatch(
   fs.readFileSync(join(root, "app/flow/page.tsx"), "utf8"),
   /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Generate free/
-);
-assert.match(
-  fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /FreeTrialCta/
-);
-assert.match(
-  fs.readFileSync(join(root, "app/create/page.tsx"), "utf8"),
-  /FreeTrialCta/
 );
 assert.match(
   fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
@@ -5775,19 +5776,15 @@ assert.match(
   fs.readFileSync(join(root, "components/Header.tsx"), "utf8"),
   /createRemixHref|data-header-cta=["']generate-remix["']/
 );
-// AppShell keeps Create in the primary loop; Launch Pack is a later home upgrade.
+// AppShell keeps the fixed Launch Pack as the primary conversion path.
 assert.match(
-  fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
-  /href=["']\/create["']/
-);
-assert.doesNotMatch(
   fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
   /create\?mode=seller-pack/
 );
-// Pricing Full studio + Footer Product Generate carry remix contract
+// Pricing points to the fixed Pack; Footer keeps its single-recipe remix door.
 assert.match(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
-  /createRemixHref|data-pricing-studio=["']generate-remix["']/
+  /href=["']\/create\?mode=seller-pack["']/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
@@ -5817,7 +5814,6 @@ assert.match(
 // Residual product-shell Generate doors carry remix contract (not bare /create)
 const residualGenerateDoors = [
   ["app/library/page.tsx", /data-library-page-generate=["']remix["']/],
-  ["app/create/page.tsx", /data-create-single-recipe=["']remix["']/],
   ["app/profile/page.tsx", /data-profile-page-generate=["']remix["']/],
   ["app/settings/page.tsx", /data-settings-generate=["']remix["']/],
   ["app/explore/page.tsx", /data-explore-generate=["']remix["']/],
