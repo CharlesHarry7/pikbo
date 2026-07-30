@@ -22,6 +22,7 @@ const videoTile = read("components/VideoTile.tsx");
 const presetPreview = read("components/PresetPreviewCard.tsx");
 const createStudio = read("components/CreateStudio.tsx");
 const batchStudio = read("components/BatchStudio.tsx");
+const meClient = read("lib/meClient.ts");
 
 const proofList =
   softLaunch.match(/HOME_PROOF_SLUGS\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] ??
@@ -101,16 +102,30 @@ assert(
   "concept recipes must stay static and must not borrow cached videos"
 );
 assert(
-  createStudio.includes("const liveEntitled = canLiveGenerate(session)") &&
-    createStudio.includes("const demoMode = !liveEntitled"),
-  "Create must use the shared account capability and fail closed to cached preview"
+  createStudio.includes(
+    "const privateUploadEnabled = canUsePrivateLaunch(session)"
+  ) &&
+    createStudio.includes(
+      "const demoMode = !privateUploadEnabled || labStill"
+    ),
+  "Create must use the strict private-launch capability and fail closed to cached preview"
 );
 assert(
-  batchStudio.includes("me?.signedIn === true") &&
-    batchStudio.includes("me?.durableCreditsActive === true") &&
-    batchStudio.includes('me?.mode === "live-generate"') &&
-    batchStudio.includes("!liveEntitled"),
-  "Seller Pack must fail closed to cached preview without explicit live entitlement"
+  batchStudio.includes(
+    "const privateUploadEnabled = canUsePrivateLaunch(me)"
+  ) &&
+    batchStudio.includes(
+      "const demoMode = !privateUploadEnabled || labStill"
+    ),
+  "Seller Pack must use the same strict private-launch capability and fail closed"
+);
+assert(
+  meClient.includes("export function canUsePrivateLaunch") &&
+    meClient.includes("me?.signedIn === true") &&
+    meClient.includes("me.canLiveGenerate === true") &&
+    meClient.includes("me.durableCreditsActive === true") &&
+    meClient.includes('me.mode === "live-generate"'),
+  "shared private-launch capability must require auth, live permission, durable credits, and live mode"
 );
 
 console.log(
