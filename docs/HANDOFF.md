@@ -4,6 +4,17 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-30 — [gpt/grok/workbuddy] post-provider ambiguity fail-closed
+- Fixed a launch-blocking accounting race in `/api/generate`: once the provider request may have started, a timeout, network break or unknown exception no longer releases the user's reservation or permits an automatic second provider attempt.
+- The request synchronously enters `withheld` before fallible budget/reconciliation I/O. Pack reconciliation records `settlement_unknown` against the exact `packRunId`, child `jobId` and `attemptKey`; the response truthfully returns `DURABLE_CREDITS_UNAVAILABLE` with `refundUnconfirmed`, no `creditsRefunded`, no `Retry-After` and no final failed-state write.
+- Failures proven to occur before provider submission still release exactly once. A future post-submit release requires structured provider evidence that execution never began; error-message matching cannot authorize it.
+- Regression coverage executes timeout/network/unknown lifecycle behavior, recorder failure, pre-submit release, the real generate-client one-POST policy, exact Pack reconciliation wiring and the existing 30-credit/recovery safety suites.
+- Independent gates: GPT Pro `APPROVE` in chat `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`; Grok `APPROVE` in session `3fceeda9-6330-48da-9b55-e7ea275dc848`; WorkBuddy max-effort `APPROVE` in `pikbo-post-provider-ambiguity-diff-review-20260730-max-v1`, with the final one-line log-only delta separately approved in `pikbo-post-provider-ambiguity-delta-review-20260730-max-v2`.
+- PASS: provider-budget, R0 safety, Seller Pack atomic, recovery ledger/reconciliation, Launch Pack path, live-copy, SEO, engine, Stripe billing, TypeScript, ESLint and the 196-route production build. The build retains one pre-existing T6 dynamic NFT tracing warning.
+- No provider call, Supabase mutation, Stripe action, environment change, DNS change or public-live/payment enablement occurred. Production remains validation-only.
+
+---
+
 ### 2026-07-30 — [gpt/grok/workbuddy] public Lab versus invited private front door
 - Home and both Create modes now fail closed on the server-returned capability boundary. Public visitors get Pikbo Lab format previews with no product-photo input in the DOM; eligible invited accounts retain the existing private upload, 30-credit atomic reserve, three server child jobs, settle/release, status, retry and reconciliation path.
 - The homepage is now a toy-seller Launch Pack front door: one photo as the private product promise, three fixed target formats, one internal Listing Spin technical check, and an explicit list of what remains unproven. Archived Lab clips are not presented as one customer Pack.

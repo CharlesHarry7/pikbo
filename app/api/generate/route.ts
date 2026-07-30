@@ -38,7 +38,9 @@ import { clientIp } from "@/lib/requestMeta";
 import {
   classifyProviderError,
   isValidImageDataUrl,
+  recordAmbiguousSettlementStateSafely,
   providerErrorMessage,
+  providerFailureSettlementPlan,
   providerFailHttp,
 } from "@/lib/providerError";
 import {
@@ -998,6 +1000,8 @@ export async function POST(req: Request) {
       "empty_image",
       "deadline_before_upload",
       "deadline_before_generation",
+      "provider_error_before_submit",
+      "provider_rejected_before_execution",
       "unexpected_exit_safety_net",
     ]);
     const releaseReservation = async (reason: string): Promise<boolean> => {
@@ -1548,14 +1552,6 @@ export async function POST(req: Request) {
       return NextResponse.json(payload);
     } catch (e) {
       console.error("generate error:", model, e);
-      if (providerRequestStarted) {
-        if (!(await commitProviderSpendIfHeld())) {
-          console.error("[provider-budget] failure commit pending");
-        }
-      } else {
-        await releaseProviderSpendIfHeld();
-      }
-      const released = await releaseReservation("provider_error");
       const raw =
         e && typeof e === "object" && "body" in e
           ? JSON.stringify((e as { body?: unknown }).body)
@@ -1563,9 +1559,74 @@ export async function POST(req: Request) {
             ? e.message
             : "Generation failed";
       const kind = classifyProviderError(raw);
+      const settlementPlan = providerFailureSettlementPlan({
+        kind,
+        providerRequestStarted,
+      });
+
+      if (settlementPlan.action === "withhold") {
+        const target = reserved.reservation;
+        const eventId = activePackChild
+          ? packReconciliationEventId(
+              "settlement_unknown",
+              target.jobId,
+              activePackChild.attemptKey,
+              settlementPlan.reason
+            )
+          : reconciliationEventId(
+              "settlement_unknown",
+              target.jobId,
+              settlementPlan.reason
+            );
+        const safeguard = await recordAmbiguousSettlementStateSafely({
+          reason: settlementPlan.reason,
+          markWithheld: reservationLife.markWithheld,
+          commitProviderSpend: commitProviderSpendIfHeld,
+          recordReconciliation: () =>
+            activePackChild
+              ? recordSellerPackReconciliation({
+                  userId: activePackChild.userId,
+                  packRunId: activePackChild.packRunId,
+                  jobId: activePackChild.packJobId,
+                  attemptKey: activePackChild.attemptKey,
+                  eventId,
+                  eventType: "settlement_unknown",
+                  reason: settlementPlan.reason,
+                })
+              : recordSettlementUnknown(target, {
+                  eventId,
+                  reason: settlementPlan.reason,
+                }),
+        });
+        if (!safeguard.providerSpendCommitted) {
+          console.error("[provider-budget] failure commit pending");
+        }
+        if (!safeguard.reconciliationRecorded) {
+          console.error(
+            "[live-reconciliation] provider outcome enqueue failed",
+            safeguard.reconciliationCode
+          );
+        }
+        const failBody: GenerateErrorBody = {
+          error: settlementPlan.error,
+          code: settlementPlan.code,
+          model,
+          jobId: target.jobId,
+          session: publicSession(session),
+          refundUnconfirmed: settlementPlan.refundUnconfirmed,
+        };
+        // Do not stamp the process ledger terminal-failed. Durable Pack/R1
+        // reconciliation owns the outcome and keeps retry closed meanwhile.
+        return err(failBody, settlementPlan.status);
+      }
+
+      await releaseProviderSpendIfHeld();
+      const released = await releaseReservation(settlementPlan.reason);
       const fallback =
         e instanceof Error ? e.message : "Generation failed";
-      const msg = providerErrorMessage(kind, fallback);
+      const msg = released
+        ? providerErrorMessage(kind, fallback)
+        : "The provider did not start the video, but credit release is still being verified.";
       const http = providerFailHttp(kind);
       const failBody: GenerateErrorBody = {
         error: msg,

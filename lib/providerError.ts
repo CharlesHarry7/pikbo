@@ -11,6 +11,104 @@ export type ProviderFailKind =
   | "content"
   | "other";
 
+export type ProviderFailureSettlementPlan =
+  | {
+      action: "release";
+      reason:
+        | "provider_error_before_submit"
+        | "provider_rejected_before_execution";
+    }
+  | {
+      action: "withhold";
+      reason: `provider_outcome_unknown:${ProviderFailKind}`;
+      code: "DURABLE_CREDITS_UNAVAILABLE";
+      status: 503;
+      error: string;
+      refundUnconfirmed: true;
+    };
+
+/**
+ * A thrown subscribe() call does not prove that the provider rejected the job.
+ * It can also mean the queue accepted it and polling/result delivery failed.
+ * In that ambiguous state credits stay reserved until reconciliation proves a
+ * terminal provider outcome.
+ */
+export function providerFailureSettlementPlan(input: {
+  kind: ProviderFailKind;
+  providerRequestStarted: boolean;
+  /** Only structured provider evidence may set this; error-copy matching may not. */
+  providerConfirmedNoExecution?: boolean;
+}): ProviderFailureSettlementPlan {
+  if (!input.providerRequestStarted) {
+    return {
+      action: "release",
+      reason: "provider_error_before_submit",
+    };
+  }
+  if (input.providerConfirmedNoExecution === true) {
+    return {
+      action: "release",
+      reason: "provider_rejected_before_execution",
+    };
+  }
+  return {
+    action: "withhold",
+    reason: `provider_outcome_unknown:${input.kind}`,
+    code: "DURABLE_CREDITS_UNAVAILABLE",
+    status: 503,
+    error:
+      "The provider response was interrupted after generation may have started. Credits remain reserved while Pikbo verifies the provider result; do not retry this attempt yet.",
+    refundUnconfirmed: true,
+  };
+}
+
+/**
+ * Close the release path before any fallible I/O, then best-effort persist the
+ * unknown provider outcome. Neither a provider-budget RPC failure nor a
+ * reconciliation recorder failure may reopen the reservation in `finally`.
+ */
+export async function recordAmbiguousSettlementStateSafely(input: {
+  reason: string;
+  markWithheld: (reason: string) => void;
+  commitProviderSpend: () => Promise<boolean>;
+  recordReconciliation: () => Promise<{
+    ok: boolean;
+    code?: string;
+  }>;
+}): Promise<{
+  providerSpendCommitted: boolean;
+  reconciliationRecorded: boolean;
+  reconciliationCode?: string;
+}> {
+  // ReservationLifecycle.markWithheld is synchronous and non-throwing. This
+  // call must remain before the first await in this helper.
+  input.markWithheld(input.reason);
+
+  let providerSpendCommitted = false;
+  try {
+    providerSpendCommitted = await input.commitProviderSpend();
+  } catch {
+    // The durable budget keeps its reservation for later reconciliation.
+  }
+
+  try {
+    const recorded = await input.recordReconciliation();
+    return {
+      providerSpendCommitted,
+      reconciliationRecorded: recorded.ok,
+      ...(recorded.ok || !recorded.code
+        ? {}
+        : { reconciliationCode: recorded.code }),
+    };
+  } catch {
+    return {
+      providerSpendCommitted,
+      reconciliationRecorded: false,
+      reconciliationCode: "RECONCILIATION_RECORD_THROW",
+    };
+  }
+}
+
 export function classifyProviderError(raw: string): ProviderFailKind {
   if (!raw) return "other";
   if (/Exhausted balance|locked|top up|insufficient.*credit/i.test(raw)) {
