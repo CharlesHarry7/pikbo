@@ -1,28 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { site } from "@/lib/site";
-import { PricingPlanCards } from "@/components/PricingPlanCards";
-import {
-  PricingHeroCopy,
-  type PricingCopyVariant,
-} from "@/components/PricingHeroCopy";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Founding Studio Pricing · Coming Soon",
-  description: `${site.name} Founding Studio is not for sale yet. Public pricing and monthly Pack count will be set after private-beta quality, recovery, retry-cost, and margin validation.`,
+  title: "Founding Studio · Closed Beta",
+  description:
+    "Founding Studio is Pikbo's closed-beta Launch Pack subscription for independent toy sellers. Public checkout is not open.",
   alternates: { canonical: "/pricing" },
   openGraph: {
-    title: `Pikbo Founding Studio · Coming Soon`,
-    description: `No public subscription or checkout yet. Preview the fixed Launch Pack formats while private validation continues.`,
+    title: `Pikbo Founding Studio · Closed Beta`,
+    description:
+      "One finite Launch Pack subscription for toy sellers. Public checkout remains closed.",
     url: `${site.url}/pricing`,
     siteName: site.name,
     type: "website",
@@ -31,164 +19,112 @@ export const metadata: Metadata = {
         url: site.socialImages.openGraph,
         width: site.socialImages.width,
         height: site.socialImages.height,
-        alt: "Pikbo pricing for finite toy-video launch workflows",
+        alt: "Pikbo Founding Studio closed beta",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: `Pikbo Founding Studio · Coming Soon`,
-    description: `No public subscription or checkout yet. Preview the fixed Launch Pack formats while private validation continues.`,
+    title: `Pikbo Founding Studio · Closed Beta`,
+    description:
+      "One finite Launch Pack subscription for toy sellers. Public checkout remains closed.",
     images: [site.socialImages.twitter],
   },
 };
 
-/** Shared FAQ body + FAQPage JSON-LD (Phase H — no thin structured data). */
-function pricingFaqItems(): { q: string; a: string }[] {
-  return [
-    {
-      q: "What does the current credit number mean?",
-      a: `Each finished Launch Pack clip uses ${CREDITS_PER_VIDEO} credits. The three-format Pack uses 30 credits; a confirmed failed format restores its 10 credits.`,
-    },
-    {
-      q: "Can I test this with one real product photo?",
-      a: `Not on the public path. Public visitors preview ${site.name}'s three formats with Pikbo Lab samples and no product-photo upload. Invited private-beta accounts can submit a rights-owned photo when their access is enabled.`,
-    },
-    {
-      q: "Can I use clips commercially?",
-      a: "Final commercial terms will be shown when checkout opens. Any invited beta output must use rights-owned source media and be checked for sculpt, paint, packaging, logo, and proportion drift before publishing.",
-    },
-    {
-      q: "Is any plan unlimited?",
-      a: "No. Founding Studio will be finite. Its public price and included monthly Pack count are not frozen yet.",
-    },
-    {
-      q: "Can the credit rate change?",
-      a: "The private validation contract is 10 credits per completed clip and 30 for the fixed three-format Pack. A public subscription opens only after quality and cost validation.",
-    },
-  ];
-}
+const FORMATS = [
+  ["Listing Spin", "1:1", "Marketplace listings"],
+  ["Blind-box Reveal", "9:16", "Drops and restocks"],
+  ["Social Flash", "9:16", "Reels and short-form"],
+] as const;
 
-export default async function PricingPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ copy?: string | string[] }>;
-}) {
-  const params = await searchParams;
-  const requestedCopy = Array.isArray(params.copy)
-    ? params.copy[0]
-    : params.copy;
-  const copyVariant: PricingCopyVariant =
-    requestedCopy === "cost" ? "cost-control" : "outcome";
-  const faq = pricingFaqItems();
-  const faqLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faq.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
-  };
-
+export default function PricingPage() {
   return (
-    <div className="pb-24">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
-      />
-      <PricingHeroCopy variant={copyVariant} />
-
-      <div className="container-x py-12 sm:py-16">
-        <Card className="mb-8 overflow-hidden border-[var(--mint)]/25 bg-gradient-to-br from-[var(--mint)]/[0.08] via-[var(--mint)]/[0.03] to-transparent shadow-[0_0_40px_rgba(200,255,61,0.06)]">
-          <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-bold text-[var(--fg)]">
-                A real product unit first; a public price later
-              </p>
-              <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--fg-muted)]">
-                One Launch Pack remains the fixed three-format product. The
-                monthly inclusion and price will be published only after
-                private-beta output quality, recovery, p95 retry cost, payment
-                fees, and a 70% gross-margin floor are measured.
-              </p>
-            </div>
-            <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-              <Badge variant="outline">Fixed 3-format Pack</Badge>
-              <Badge variant="live" className="normal-case">
-                Price pending · not for sale
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div id="plans" className="mt-12 scroll-mt-24">
-          <div className="mb-8 text-center">
-            <p className="section-label">One future subscription</p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-              Founding Studio is still behind the quality gate
-            </h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--fg-muted)]">
-              There is no Free plan comparison and no purchasable candidate
-              price. Public visitors can inspect the fixed formats; invited
-              accounts handle real photos privately.
-            </p>
-          </div>
-          <PricingPlanCards />
+    <div className="min-h-[calc(100svh-4rem)] bg-[#F7F4ED] px-4 py-10 text-[#0A0A0A] sm:px-8 sm:py-16">
+      <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/44">
+            Founding Studio · closed beta
+          </p>
+          <h1 className="mt-3 font-display text-[clamp(3rem,7vw,6.5rem)] font-black leading-[0.88] tracking-[-0.07em]">
+            One plan for your next toy launch.
+          </h1>
+          <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-6 text-black/54 sm:text-lg sm:leading-7">
+            A finite subscription for independent toy sellers who need the same
+            three launch assets for every new SKU.
+          </p>
         </div>
 
-        <section className="mx-auto mt-20 max-w-3xl">
-          <p className="section-label">FAQ</p>
-          <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
-            Pricing questions, answered plainly
-          </h2>
-          <div className="mt-6 space-y-3">
-            {faq.map((item) => (
-              <Card key={item.q} className="overflow-hidden">
-                <details className="group">
-                  <summary className="cursor-pointer list-none p-5 font-semibold text-[var(--fg)] marker:content-none">
-                    {item.q}
-                    <span className="float-right text-[var(--mint)] transition group-open:rotate-45">
-                      ＋
-                    </span>
-                  </summary>
-                  <CardContent className="border-t border-[var(--border)] pt-4 text-sm leading-6 text-[var(--fg-muted)]">
-                    {item.a}
-                  </CardContent>
-                </details>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        <Card className="mt-16 overflow-hidden border-[var(--mint)]/20 bg-gradient-to-br from-[var(--card)] to-black/40">
-          <CardHeader className="sm:flex-row sm:items-center sm:justify-between">
+        <article
+          className="relative mx-auto mt-9 max-w-4xl overflow-hidden rounded-[2rem] border border-black/15 bg-[#0A0A0A] p-5 text-[#F7F4ED] shadow-[0_30px_90px_-45px_rgba(0,0,0,0.7)] sm:mt-12 sm:p-8"
+          data-pricing-state="closed-beta"
+        >
+          <div
+            className="absolute inset-x-0 top-0 h-1 bg-[#CBFF3D]"
+            aria-hidden
+          />
+          <div className="grid gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:items-start">
             <div>
-              <CardTitle className="text-xl">
-                Inspect the Pack before pricing exists
-              </CardTitle>
-              <p className="mt-2 text-sm text-[var(--fg-muted)]">
-                Public preview uses Pikbo Lab samples only. It does not accept
-                or process your product photo and it does not open checkout.
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-2xl font-black tracking-[-0.04em] sm:text-3xl">
+                  Founding Studio
+                </h2>
+                <span className="rounded-full bg-[#CBFF3D] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-[#0A0A0A]">
+                  Closed beta
+                </span>
+              </div>
+              <p className="mt-7 text-4xl font-black tracking-[-0.055em]">
+                Not on sale yet
+              </p>
+              <p className="mt-3 max-w-md text-sm leading-6 text-[#F7F4ED]/50">
+                Pricing and the monthly Pack allowance will be announced when
+                the private beta is ready to open. There is no public checkout
+                today. There is no Free plan comparison while the single
+                Founding Studio offer remains closed.
+              </p>
+
+              <Link
+                href="/create?mode=seller-pack&source=pricing-preview&try=1&sample=scout"
+                className="mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#CBFF3D] px-6 text-sm font-black text-[#0A0A0A] transition hover:-translate-y-0.5 hover:bg-[#D4FF62] sm:w-auto"
+              >
+                Preview the three formats
+              </Link>
+              <p className="mt-2 text-[10px] font-semibold text-[#F7F4ED]/34">
+                Pikbo Lab samples only · no product-photo input · no payment
               </p>
             </div>
-            <div
-              className="mt-4 flex flex-wrap gap-2 sm:mt-0"
-              data-pricing-path="product-first"
-            >
-              <Button asChild>
-                <Link href="/create?mode=seller-pack&source=pricing-bottom&try=1&sample=scout">
-                  Preview the 3 formats
-                </Link>
-              </Button>
-              <Button asChild variant="secondary">
-                <Link href="/tools/ai-toy-video-generator">
-                  See the validation record
-                </Link>
-              </Button>
+
+            <div className="overflow-hidden rounded-[1.4rem] border border-white/12">
+              <div className="border-b border-white/12 bg-white/[0.045] px-4 py-3">
+                <p className="text-[9px] font-black uppercase tracking-[0.17em] text-[#CBFF3D]">
+                  Every Launch Pack
+                </p>
+              </div>
+              {FORMATS.map(([name, ratio, channel], index) => (
+                <div
+                  key={name}
+                  className={`grid grid-cols-[1fr_auto] gap-4 px-4 py-4 ${
+                    index ? "border-t border-white/10" : ""
+                  }`}
+                >
+                  <div>
+                    <p className="text-sm font-black">{name}</p>
+                    <p className="mt-1 text-[10px] font-semibold text-[#F7F4ED]/38">
+                      {channel}
+                    </p>
+                  </div>
+                  <span className="self-center rounded-full border border-white/14 px-2.5 py-1 text-[10px] font-black text-[#CBFF3D]">
+                    {ratio}
+                  </span>
+                </div>
+              ))}
+              <div className="border-t border-white/10 bg-white/[0.03] px-4 py-4 text-xs font-semibold leading-5 text-[#F7F4ED]/48">
+                Private Library delivery, owner-only downloads, and a finite
+                monthly allowance when Founding Studio opens.
+              </div>
             </div>
-          </CardHeader>
-        </Card>
+          </div>
+        </article>
       </div>
     </div>
   );

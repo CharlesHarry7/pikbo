@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* ---------- Pikbo · Higgsfield-class dark creative suite ----------
-   Video-first, near-black canvas, lime/mint live accents.
+/* ---------- Pikbo seller studio ----------
+   Ink, warm paper, and one signal-lime action color.
 ---------------------------------------------------------------- */
 :root {
   /* Offline-safe faces — no Google Fonts network at build (Phase B). */
@@ -10,29 +10,28 @@
   --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 
-  --bg: #000000;
-  --bg-soft: #0a0a0b;
-  --card: #101012;
-  --card-2: #161619;
+  --bg: #0a0a0a;
+  --bg-soft: #121212;
+  --card: #151515;
+  --card-2: #1b1b1b;
   --border: rgba(255, 255, 255, 0.08);
-  --fg: #f4f4f5;
-  --fg-muted: #a1a1aa;
-  --fg-dim: #71717a;
+  --fg: #f7f4ed;
+  --fg-muted: rgba(247, 244, 237, 0.62);
+  --fg-dim: rgba(247, 244, 237, 0.38);
 
-  /* HF palette = pure black + lime ONLY. No pink/purple anywhere.
-     --brand kept as an alias of lime so every legacy text-[var(--brand)] goes lime. */
-  --brand: #c8ff3d;
-  --brand-2: #7fe6b4;
-  --mint: #c8ff3d; /* HF-style lime live accent */
-  --lime: #c8ff3d;
+  --paper: #f7f4ed;
+  --brand: #cbff3d;
+  --brand-2: #f7f4ed;
+  --mint: #cbff3d;
+  --lime: #cbff3d;
 
-  --grad: linear-gradient(135deg, #eafcb0 0%, #c8ff3d 50%, #9be870 100%);
+  --grad: linear-gradient(135deg, #f7f4ed 0%, #cbff3d 58%, #cbff3d 100%);
   --grad-soft: linear-gradient(
     135deg,
-    rgba(200, 255, 61, 0.16),
-    rgba(127, 230, 180, 0.1)
+    rgba(203, 255, 61, 0.16),
+    rgba(247, 244, 237, 0.05)
   );
-  --brand-glow: 0 0 40px rgba(200, 255, 61, 0.28);
+  --brand-glow: 0 0 40px rgba(203, 255, 61, 0.22);
 
   --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.04);
   --shadow-md: 0 12px 40px -16px rgba(0, 0, 0, 0.75);
@@ -43,11 +42,11 @@
   --background: var(--bg);
   --foreground: var(--fg);
   --primary: var(--mint);
-  --primary-foreground: #07070a;
+  --primary-foreground: #0a0a0a;
   --muted: var(--bg-soft);
   --muted-foreground: var(--fg-muted);
   --accent: rgba(255, 255, 255, 0.06);
-  --ring: rgba(200, 255, 61, 0.45);
+  --ring: rgba(203, 255, 61, 0.55);
 }
 
 @theme inline {
@@ -80,18 +79,6 @@ html[data-scroll-behavior="smooth"] {
   scroll-behavior: smooth;
 }
 
-/* Cinematic film grain — the subtle premium texture Higgsfield/Yiha have */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0.028;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 body {
   background: var(--bg);
   color: var(--fg);
@@ -100,7 +87,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Editorial display headings — tight tracking for premium, Higgsfield-class feel */
+/* Editorial display headings */
 h1,
 h2,
 h3,
@@ -152,25 +139,25 @@ h1,
 }
 .btn-primary {
   background: var(--mint);
-  color: #07070a;
+  color: #0a0a0a;
   padding: 0.8rem 1.4rem;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08) inset,
-    0 0 28px rgba(200, 255, 61, 0.28);
+    0 0 28px rgba(203, 255, 61, 0.2);
   letter-spacing: -0.01em;
 }
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12) inset,
-    0 0 42px rgba(200, 255, 61, 0.45);
+    0 0 42px rgba(203, 255, 61, 0.32);
 }
 .btn-primary:active {
   transform: translateY(0);
 }
 .btn-accent {
   background: var(--grad);
-  color: #07070a;
+  color: #0a0a0a;
   padding: 0.8rem 1.4rem;
 }
 .btn-ghost {
@@ -204,11 +191,11 @@ h1,
   background:
     radial-gradient(
       120% 80% at 50% 0%,
-      rgba(200, 255, 61, 0.07),
+      rgba(203, 255, 61, 0.07),
       transparent 55%
     ),
     #030305;
-  border: 1px solid rgba(200, 255, 61, 0.12);
+  border: 1px solid rgba(203, 255, 61, 0.12);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 24px 80px -40px rgba(0, 0, 0, 0.9);
@@ -340,8 +327,8 @@ select {
 
 /* On-brand text selection */
 ::selection {
-  background: rgba(200, 255, 61, 0.85);
-  color: #07070a;
+  background: rgba(203, 255, 61, 0.85);
+  color: #0a0a0a;
 }
 
 /* Accessible, on-brand keyboard focus ring */
@@ -360,7 +347,7 @@ input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(200, 255, 61, 0.14);
+  box-shadow: 0 0 0 3px rgba(203, 255, 61, 0.14);
 }
 
 /* Editorial eyebrow — uppercase tracked with a lime lead line */
@@ -399,4 +386,15 @@ a {
   transition:
     color 0.15s ease,
     opacity 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

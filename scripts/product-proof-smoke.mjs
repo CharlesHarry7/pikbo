@@ -28,8 +28,9 @@ const proofSlugs = [...proofList.matchAll(/"([^"]+)"/g)].map((match) => match[1]
 
 assert(proofSlugs.length === 8, "homepage proof whitelist must contain exactly 8 recipes");
 assert(
-  home.includes("<HomeViralWall items={showcase} />"),
-  "homepage wall must use the same Showcase registry feed as the hero"
+  home.includes("<HomeCinemaHero items={showcase} />") &&
+    !home.includes("<HomeViralWall"),
+  "homepage must keep the three-format hero proof and retire the eight-card wall"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),
