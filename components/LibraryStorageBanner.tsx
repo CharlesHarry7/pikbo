@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { fetchMe, type MeResponse } from "@/lib/meClient";
+import {
+  canUsePrivateLaunch,
+  fetchMe,
+  type MeResponse,
+} from "@/lib/meClient";
 import { isBrowserSupabaseReady } from "@/lib/supabase/browser";
 
 /** Distinguish private account results from device-only imports. */
@@ -28,6 +32,8 @@ export function LibraryStorageBanner({
 
   const signedIn =
     privateCount > 0 || Boolean(me?.signedIn && me?.auth?.id);
+  const privateGenerationEnabled =
+    privateCount > 0 || canUsePrivateLaunch(me);
   const authReady = isBrowserSupabaseReady() || Boolean(me?.authConfigured);
   const email = me?.auth?.email;
 
@@ -71,7 +77,9 @@ export function LibraryStorageBanner({
               <p className="mt-0.5 text-[11px] leading-snug text-white/45">
                 {privateCount > 0
                   ? `${privateCount} private clip${privateCount === 1 ? "" : "s"} · owner-only cloud download`
-                  : "Signed in · private generations will persist here"}
+                  : privateGenerationEnabled
+                    ? "Private generation access enabled · completed clips persist here"
+                    : "Signed in · private generation access is not enabled"}
               </p>
             </>
           ) : (
@@ -96,7 +104,8 @@ export function LibraryStorageBanner({
       </div>
       <div className="border-t border-white/10 bg-black/30 px-4 py-2">
         <p className="text-[10px] text-white/40">
-          Private generations persist by account · device imports stay local
+          Private results persist by account when access is enabled · device
+          imports stay local
         </p>
       </div>
     </section>

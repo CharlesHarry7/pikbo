@@ -42,9 +42,9 @@ import {
 import { isValidImageDataUrl } from "@/lib/providerError";
 import { SAMPLE_TOYS, sampleToDataUrl } from "@/lib/samples";
 import {
+  canUsePrivateLaunch,
   fetchMe,
   freeTrialExhausted,
-  isDemoMode,
   mergeMeSession,
   type MeResponse,
 } from "@/lib/meClient";
@@ -253,6 +253,7 @@ export function BatchStudio({
   const [duration, setDuration] = useState<5 | 10>(5);
   const [catFilter, setCatFilter] = useState<CategoryId | "all">("all");
   const [me, setMe] = useState<MeResponse | null>(null);
+  const [meResolved, setMeResolved] = useState(false);
   const [ownsRights, setOwnsRights] = useState(false);
   const [runProjectId, setRunProjectId] = useState<string | null>(null);
   const [activePackRunId, setActivePackRunId] = useState<string | null>(null);
@@ -266,12 +267,17 @@ export function BatchStudio({
   /** Abort in-flight pack child + rate-limit waits (parity with Create Cancel). */
   const packAbortRef = useRef<AbortController | null>(null);
   const quoteEventRef = useRef("");
+  const privateUploadEnabled = canUsePrivateLaunch(me);
+  const demoMode = !privateUploadEnabled || labStill;
 
   const { locale } = useI18n();
 
   useEffect(() => {
     const t = window.setTimeout(() => {
-      void fetchMe().then(setMe);
+      void fetchMe().then((next) => {
+        setMe(next);
+        setMeResolved(true);
+      });
       // Query ?sku= wins so Seller Pack AfterPath carry is not wiped by localStorage.
       setToyIdentity(hydrateToyIdentityFromQuery(initialSku));
     }, 0);
@@ -290,6 +296,7 @@ export function BatchStudio({
    * Customer pending still does not auto-check ownsRights (user must confirm).
    */
   useEffect(() => {
+    if (!meResolved) return;
     let canceled = false;
     const t = window.setTimeout(() => {
       void (async () => {
@@ -298,7 +305,10 @@ export function BatchStudio({
           const pending = sessionStorage.getItem("pikbo_pending_still");
           if (pending) {
             sessionStorage.removeItem("pikbo_pending_still");
-            if (pending.startsWith("data:image")) {
+            if (!privateUploadEnabled) {
+              // Public validation never displays or submits a visitor still.
+              // Continue to the explicit Lab sample path, when requested.
+            } else if (pending.startsWith("data:image")) {
               if (canceled) return;
               setImage(pending);
               setLabStill(false);
@@ -310,8 +320,7 @@ export function BatchStudio({
                 if (!canceled && meta) setImageProbe(meta);
               });
               return;
-            }
-            if (
+            } else if (
               pending.startsWith("https://") ||
               pending.startsWith("http://") ||
               (pending.startsWith("/") && !pending.startsWith("//"))
@@ -337,7 +346,7 @@ export function BatchStudio({
                 // Fall through to Lab sample if try=1 was also present.
               }
             }
-            // Drop unsafe schemes (javascript:, data: non-image, //…).
+            // Public, unsafe, or non-image handoffs are discarded.
           }
         } catch {
           /* private mode */
@@ -376,7 +385,7 @@ export function BatchStudio({
       canceled = true;
       window.clearTimeout(t);
     };
-  }, [initialSample]);
+  }, [initialSample, meResolved, privateUploadEnabled]);
 
   /**
    * Re-open this owner's active pack from durable pack/job ids. The browser
@@ -495,16 +504,6 @@ export function BatchStudio({
   }
 
   const isFree = me?.plan === "free" || me?.watermark === true;
-  const liveEntitled =
-    me?.signedIn === true &&
-    me?.durableCreditsActive === true &&
-    me?.mode === "live-generate" &&
-    typeof me?.credits === "number" &&
-    me.credits >= CREDITS_PER_VIDEO;
-  // Packs fail closed unless capability, durable entitlement, and balance
-  // are all explicit.
-  const demoMode =
-    isDemoMode(me) || me?.mode === "demo-cached" || !liveEntitled;
   /** Soft-launch freeTrial honesty — same contract as Create / SoftLaunchStrip. */
   const trialDone = freeTrialExhausted(me);
   const freeLive = me?.freeTrial?.freeLive;
@@ -545,6 +544,12 @@ export function BatchStudio({
   }, [catFilter, sellerPackActive]);
 
   function loadFile(file: File | undefined | null) {
+    if (!privateUploadEnabled) {
+      setError(
+        "Product-photo upload is available only inside the invited private beta."
+      );
+      return;
+    }
     if (!file?.type.startsWith("image/")) {
       setError("Upload a PNG/JPG of your toy.");
       return;
@@ -559,6 +564,7 @@ export function BatchStudio({
       setImage(dataUrl);
       setImageProbe(null);
       setLabStill(false);
+      setOwnsRights(false);
       setBriefCollapsed(true);
       setError(null);
       track({
@@ -573,6 +579,26 @@ export function BatchStudio({
       });
     };
     reader.readAsDataURL(file);
+  }
+
+  async function chooseLabSample(sampleId: string) {
+    try {
+      const sample =
+        SAMPLE_TOYS.find((candidate) => candidate.id === sampleId) ??
+        SAMPLE_TOYS[0];
+      const dataUrl = await sampleToDataUrl(sample.path);
+      setImage(dataUrl);
+      setLabStill(true);
+      setOwnsRights(true);
+      setImageProbe(null);
+      setBriefCollapsed(false);
+      setError(null);
+      void probeImageSize(dataUrl).then((meta) => {
+        if (meta) setImageProbe(meta);
+      });
+    } catch {
+      setError("Lab sample could not be loaded. Try another sample.");
+    }
   }
 
   const packAssetBrief = useMemo(
@@ -1409,7 +1435,9 @@ export function BatchStudio({
   const primaryBatchLabel = running
     ? `${sellerPackActive ? "Launch Pack" : "Batch"} running… ${doneCount}/${jobs.length}`
     : !image
-      ? "Upload owned toy photo"
+      ? privateUploadEnabled
+        ? "Upload owned toy photo"
+        : "Choose a Pikbo Lab sample"
       : !ownsRights
         ? "Confirm ownership to continue"
         : demoMode
@@ -1440,7 +1468,8 @@ export function BatchStudio({
       </p>
       {demoMode ? (
         <p className="mt-0.5 text-[var(--fg-dim)]">
-          Demo mode · no credits used · your upload is not processed.
+          Public Lab preview · no product photo is accepted or processed · 0
+          credits.
         </p>
       ) : (
         <p className="mt-0.5 text-[var(--fg-dim)]">
@@ -1467,7 +1496,7 @@ export function BatchStudio({
               {" "}
               · short {sellerPackShortfall(packQuote, me.credits)}
               {trialDone && isFree
-                ? " — trial exhausted; Lab demos still free · single Generate needs a plan top-up"
+                ? " — trial exhausted; Lab previews stay free · Founding Studio is not open yet"
                 : sellerPackActive
                   ? " — Free Mini covers one 10-cr job, not a full pack"
                   : " — Free Mini is one 10-cr job; deselect recipes or open single Generate"}
@@ -1558,51 +1587,84 @@ export function BatchStudio({
             <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black">
               1
             </span>
-            Upload owned toy photo
+            {privateUploadEnabled
+              ? "Upload owned toy photo"
+              : "Choose a Pikbo Lab sample"}
           </p>
-          <label
-            id="seller-pack-photo"
-            htmlFor="seller-pack-photo-input"
-            className={`flex aspect-video cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
-              image
-                ? "border-white/12 ring-1 ring-white/5"
-                : "border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)]"
-            }`}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              loadFile(e.dataTransfer.files?.[0]);
-            }}
-          >
-            {image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={image}
-                alt="toy"
-                className="h-full w-full object-contain"
+          {privateUploadEnabled ? (
+            <label
+              id="seller-pack-photo"
+              htmlFor="seller-pack-photo-input"
+              className={`flex aspect-video cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
+                image
+                  ? "border-white/12 ring-1 ring-white/5"
+                  : "border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)]"
+              }`}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                loadFile(event.dataTransfer.files?.[0]);
+              }}
+            >
+              {image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={image}
+                  alt={labStill ? "Pikbo Lab sample" : "Uploaded toy"}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <span className="px-4 text-center text-sm text-[var(--fg-dim)]">
+                  <span className="mb-2 block text-2xl" aria-hidden>
+                    🧸
+                  </span>
+                  Drop one rights-owned toy photo for the whole{" "}
+                  {sellerPackActive ? "pack" : "batch"}
+                  <br />
+                  <span className="text-xs">
+                    or tap · JPEG / PNG / WebP · under ~8 MB
+                  </span>
+                </span>
+              )}
+              <input
+                id="seller-pack-photo-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => loadFile(event.target.files?.[0])}
               />
-            ) : (
-              <span className="px-4 text-center text-sm text-[var(--fg-dim)]">
-                <span className="mb-2 block text-2xl" aria-hidden>
-                  🧸
+            </label>
+          ) : (
+            <div
+              id="seller-pack-photo"
+              data-public-pack-preview="lab-only"
+              className="flex aspect-video flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-[var(--mint)]/35 bg-black/40"
+            >
+              {image && labStill ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={image}
+                  alt="Selected Pikbo Lab sample"
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <span className="max-w-sm px-5 text-center text-sm leading-6 text-[var(--fg-dim)]">
+                  <span className="mb-2 block text-2xl" aria-hidden>
+                    ◉
+                  </span>
+                  Public preview uses Pikbo Lab samples only.
+                  <br />
+                  <span className="text-xs">
+                    No product-photo input is accepted or processed here.
+                  </span>
                 </span>
-                Drop one toy photo for the whole{" "}
-                {sellerPackActive ? "pack" : "batch"}
-                <br />
-                <span className="text-xs">
-                  or tap · JPEG / PNG / WebP · under ~8 MB
-                </span>
-              </span>
-            )}
-            <input
-              id="seller-pack-photo-input"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => loadFile(e.target.files?.[0])}
-            />
-          </label>
-          {image && packAssetBrief.ready ? (
+              )}
+            </div>
+          )}
+          {privateUploadEnabled &&
+          image &&
+          !labStill &&
+          packAssetBrief.ready ? (
             <AssetBriefPanel
               className="mt-3"
               brief={packAssetBrief}
@@ -1627,37 +1689,25 @@ export function BatchStudio({
               onToggle={() => setBriefCollapsed((v) => !v)}
             />
           ) : null}
-          {!image && (
+          {!image || labStill ? (
             <div className="mt-2 flex flex-wrap gap-2">
-              {SAMPLE_TOYS.map((s) => (
+              {SAMPLE_TOYS.map((sample) => (
                 <button
-                  key={s.id}
+                  key={sample.id}
                   type="button"
                   className="rounded-lg border border-[var(--border)] px-2 py-1 text-[10px] hover:border-[var(--brand)]"
-                  onClick={async () => {
-                    try {
-                      const dataUrl = await sampleToDataUrl(s.path);
-                      setImage(dataUrl);
-                      setLabStill(true);
-                      setImageProbe(null);
-                      setBriefCollapsed(false);
-                      setError(null);
-                      void probeImageSize(dataUrl).then((meta) => {
-                        if (meta) setImageProbe(meta);
-                      });
-                    } catch {
-                      setError("Sample load failed");
-                    }
-                  }}
+                  onClick={() => void chooseLabSample(sample.id)}
                 >
-                  Sample: {s.label}
+                  Sample: {sample.label}
                 </button>
               ))}
               <p className="w-full text-[10px] font-semibold text-[var(--mint)]">
-                Lab samples are cached prototypes · not a customer upload.
+                {privateUploadEnabled
+                  ? "Lab samples stay cached. Replace the sample with your own photo for private generation."
+                  : "Lab samples are archived prototypes · not a customer upload · 0 credits."}
               </p>
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className={`grid gap-2 ${isSellerPack ? "" : "grid-cols-2"}`}>
@@ -1835,7 +1885,7 @@ export function BatchStudio({
           )}
         </div>
 
-        {image ? (
+        {image && !demoMode ? (
           <label
             id="batch-ownership"
             data-launch-pack-primary-action="2"
@@ -1901,13 +1951,13 @@ export function BatchStudio({
               {trialDone && isFree ? (
                 <>
                   Cached Lab demos stay free (0 credits · upload not processed).
-                  One live Mini job needs {CREDITS_PER_VIDEO} credits after
-                  top-up when Live is enabled.{" "}
+                  Private generation remains invite-only; public checkout is
+                  closed while Founding Studio is validated.{" "}
                   <Link
                     href="/pricing"
                     className="font-semibold text-[var(--mint)] hover:underline"
                   >
-                    Compare plans
+                    See the validation gate
                   </Link>
                   .
                 </>
@@ -2018,7 +2068,7 @@ export function BatchStudio({
             ) : null}
             {jobs.length > 0 ? (
               <span className="text-[10px] text-[var(--fg-dim)]">
-                Current device/session only
+                {demoMode ? "Browser preview" : "Private account run"}
               </span>
             ) : null}
           </div>
@@ -2032,14 +2082,16 @@ export function BatchStudio({
             </p>
             <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-[var(--fg-dim)]">
               {sellerPackActive
-                ? "Upload one owned toy photo → Generate pack. Each format finishes independently; a confirmed failed format restores its 10 credits while completed clips stay."
+                ? demoMode
+                  ? "Choose one Pikbo Lab sample → preview the three archived formats. No product photo is accepted or processed."
+                  : "Upload one owned toy photo → Generate pack. Each format finishes independently; a confirmed failed format restores its 10 credits while completed clips stay."
                 : "Pick presets (or open Batch from an effect page), confirm ownership, then run. Finished clips also save on this device Library."}
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               <FreeTrialCta
                 path="/create?mode=seller-pack"
-                labelTry="Try free · Lab sample"
-                labelDemo="Try free · Lab sample"
+                labelTry="Preview Lab sample"
+                labelDemo="Preview Lab sample"
                 hideClipsChip
                 className="rounded-full border border-[var(--mint)]/35 px-3 py-1.5 text-[11px] font-bold text-[var(--mint)]"
               />
@@ -2058,7 +2110,7 @@ export function BatchStudio({
                   className="rounded-full border border-white/15 px-3 py-1.5 text-[11px] font-bold text-white/70"
                   data-batch-single-generate="remix"
                 >
-                  Single Generate
+                  Single-format preview
                 </Link>
               )}
             </div>
@@ -2290,7 +2342,7 @@ export function BatchStudio({
             {failedRetryCount > 0 ? ` · ${failedRetryCount} failed kept` : ""}
           </p>
         ) : null}
-        {image && !ownsRights ? (
+        {image && !ownsRights && !demoMode ? (
           <label
             className="mb-2 flex cursor-pointer items-start gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2 text-[10px] leading-snug text-[var(--fg-muted)]"
             data-launch-pack-primary-action="2"
@@ -2311,35 +2363,39 @@ export function BatchStudio({
             onCancel={cancelInFlightPack}
           />
         ) : !image ? (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                document
-                  .getElementById("seller-pack-photo")
-                  ?.scrollIntoView({ behavior: "smooth", block: "center" })
-              }
-              className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
-              data-seller-pack-action="upload"
-            >
-              Upload owned toy photo
-            </button>
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  setImage(await sampleToDataUrl(SAMPLE_TOYS[0].path));
-                  setError(null);
-                } catch {
-                  setError("Sample load failed");
+          privateUploadEnabled ? (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  document
+                    .getElementById("seller-pack-photo")
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" })
                 }
-              }}
-              className="btn btn-ghost shrink-0 px-3 py-3 text-xs"
-              title="PIKBO Lab prototype sample · not a customer upload"
+                className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
+                data-seller-pack-action="upload"
+              >
+                Upload owned toy photo
+              </button>
+              <button
+                type="button"
+                onClick={() => void chooseLabSample(SAMPLE_TOYS[0].id)}
+                className="btn btn-ghost shrink-0 px-3 py-3 text-xs"
+                title="Pikbo Lab prototype sample · never sent to private generation"
+              >
+                Preview Lab
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void chooseLabSample(SAMPLE_TOYS[0].id)}
+              className="btn btn-primary w-full py-3 text-sm"
+              data-seller-pack-action="preview-lab"
             >
-              Try free · Lab
+              Preview 3 Lab formats · 0 credits
             </button>
-          </div>
+          )
         ) : doneCount > 0 ? (
           <div className="flex gap-2">
             <Link

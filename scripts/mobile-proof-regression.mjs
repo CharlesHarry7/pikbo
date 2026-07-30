@@ -52,8 +52,8 @@ assert.doesNotMatch(
 
 assert.match(
   sellerSteps,
-  /demoMode\s*\?\s*"3 cached prototype previews · 0 credits"/,
-  "Seller Pack steps must render the cached quote from demoMode"
+  /const items = demoMode[\s\S]*Pikbo Lab only · no product upload[\s\S]*3 archived prototypes · 0 credits/,
+  "Seller Pack steps must render a public Lab-only path from demoMode"
 );
 assert.match(
   batch,

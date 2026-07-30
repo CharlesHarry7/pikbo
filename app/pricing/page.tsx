@@ -1,16 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  FOUNDING_STUDIO_PACKS,
-  PAID_PLAN_ID,
-  PLANS,
-  CREDITS_PER_VIDEO,
-  clipsFromCredits,
-} from "@/lib/pricing";
+import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { site } from "@/lib/site";
-import { createRemixHref } from "@/lib/remixIntent";
-import { FreeTrialCta } from "@/components/FreeTrialCta";
-import { PricingUsageEstimator } from "@/components/PricingUsageEstimator";
 import { PricingPlanCards } from "@/components/PricingPlanCards";
 import {
   PricingHeroCopy,
@@ -18,7 +9,6 @@ import {
 } from "@/components/PricingHeroCopy";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   Card,
   CardContent,
@@ -26,19 +16,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-/** Pricing bottom Animate CTA — listing spin remix; source tags the door. */
-const PRICING_ANIMATE_HREF = createRemixHref(
-  "360-spin-showcase",
-  "pricing-bottom"
-);
-
 export const metadata: Metadata = {
-  title: "Pricing for Toy Sellers and Collectors",
-  description: `Compare finite-credit ${site.name} plans for turning owned toy photos into listing, launch, and social videos. Live billing remains closed during validation.`,
+  title: "Founding Studio Pricing · Coming Soon",
+  description: `${site.name} Founding Studio is not for sale yet. Public pricing and monthly Pack count will be set after private-beta quality, recovery, retry-cost, and margin validation.`,
   alternates: { canonical: "/pricing" },
   openGraph: {
-    title: `Pikbo Pricing for Toy Sellers and Collectors`,
-    description: `Free cached prototypes and one finite Founding Studio Launch Pack plan. Live billing stays off during validation.`,
+    title: `Pikbo Founding Studio · Coming Soon`,
+    description: `No public subscription or checkout yet. Preview the fixed Launch Pack formats while private validation continues.`,
     url: `${site.url}/pricing`,
     siteName: site.name,
     type: "website",
@@ -53,8 +37,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `Pikbo Pricing for Toy Sellers and Collectors`,
-    description: `Free cached prototypes and one finite Founding Studio Launch Pack plan. Live billing stays off during validation.`,
+    title: `Pikbo Founding Studio · Coming Soon`,
+    description: `No public subscription or checkout yet. Preview the fixed Launch Pack formats while private validation continues.`,
     images: [site.socialImages.twitter],
   },
 };
@@ -68,19 +52,19 @@ function pricingFaqItems(): { q: string; a: string }[] {
     },
     {
       q: "Can I test this with one real product photo?",
-      a: `Yes. Preview ${site.name}'s three formats, then open Create with a photo of a toy you own. Once private Live is enabled, eligible invited accounts can make a private 5-second 720p result; the public demo shows labeled examples without processing your upload.`,
+      a: `Not on the public path. Public visitors preview ${site.name}'s three formats with Pikbo Lab samples and no product-photo upload. Invited private-beta accounts can submit a rights-owned photo when their access is enabled.`,
     },
     {
       q: "Can I use clips commercially?",
-      a: "Founding Studio is intended to include commercial use for reviewed listings and ads made from toy photos you own. Subscriptions are not open yet, and generated angles or product details must be checked before publishing.",
+      a: "Final commercial terms will be shown when checkout opens. Any invited beta output must use rights-owned source media and be checked for sculpt, paint, packaging, logo, and proportion drift before publishing.",
     },
     {
       q: "Is any plan unlimited?",
-      a: "No. Every plan has a finite credit allowance and a fixed number of Launch Pack outputs.",
+      a: "No. Founding Studio will be finite. Its public price and included monthly Pack count are not frozen yet.",
     },
     {
       q: "Can the credit rate change?",
-      a: "Yes, but Pikbo will show the exact quote before generation. Existing completed charges do not change retroactively.",
+      a: "The private validation contract is 10 credits per completed clip and 30 for the fixed three-format Pack. A public subscription opens only after quality and cost validation.",
     },
   ];
 }
@@ -120,127 +104,38 @@ export default async function PricingPage({
           <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-bold text-[var(--fg)]">
-                Plan around finished product clips — not vague AI usage
+                A real product unit first; a public price later
               </p>
               <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--fg-muted)]">
-                The current paid candidate is {FOUNDING_STUDIO_PACKS} fixed
-                Launch Packs: one owned SKU photo becomes three 5-second 720p
-                formats. Subscriptions open only after private-beta results meet
-                the published quality, recovery, and cost targets.
+                One Launch Pack remains the fixed three-format product. The
+                monthly inclusion and price will be published only after
+                private-beta output quality, recovery, p95 retry cost, payment
+                fees, and a 70% gross-margin floor are measured.
               </p>
             </div>
             <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-              <Badge variant="outline">Fixed 3-video pack</Badge>
+              <Badge variant="outline">Fixed 3-format Pack</Badge>
               <Badge variant="live" className="normal-case">
-                Not yet for sale
+                Price pending · not for sale
               </Badge>
             </div>
           </CardContent>
         </Card>
 
-        <PricingUsageEstimator />
-
-        <div id="plans" className="mt-16 scroll-mt-24">
+        <div id="plans" className="mt-12 scroll-mt-24">
           <div className="mb-8 text-center">
-            <p className="section-label">Plans</p>
+            <p className="section-label">One future subscription</p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-              Choose the volume that matches your catalog
+              Founding Studio is still behind the quality gate
             </h2>
             <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--fg-muted)]">
-              Test one owned toy, prepare a small product batch, or plan a
-              finite catalog run. No plan is unlimited.
+              There is no Free plan comparison and no purchasable candidate
+              price. Public visitors can inspect the fixed formats; invited
+              accounts handle real photos privately.
             </p>
           </div>
           <PricingPlanCards />
         </div>
-
-        <Separator className="my-16" />
-
-        <section>
-          <div className="mb-6">
-            <p className="section-label">Compare</p>
-            <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
-              What changes when your product workload grows
-            </h2>
-          </div>
-          <Card className="overflow-hidden p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[680px] text-left text-sm">
-                <thead className="bg-white/[0.04]">
-                  <tr>
-                    <th className="p-4 font-medium text-[var(--fg-dim)]">
-                      Capability
-                    </th>
-                    {PLANS.map((plan) => (
-                      <th key={plan.id} className="p-4 text-base font-bold">
-                        {plan.name}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.06] text-[var(--fg-muted)]">
-                  {[
-                    [
-                      "Monthly credits",
-                      ...PLANS.map((plan) => plan.credits.toLocaleString()),
-                    ],
-                    [
-                      "Included output",
-                      ...PLANS.map((plan) =>
-                        plan.id === PAID_PLAN_ID
-                          ? `${clipsFromCredits(plan.credits)} fixed videos`
-                          : "Cached prototypes"
-                      ),
-                    ],
-                    [
-                      "Resolution",
-                      ...PLANS.map((plan) =>
-                        plan.id === PAID_PLAN_ID ? plan.resolution : "Preview sample"
-                      ),
-                    ],
-                    [
-                      "Delivery",
-                      ...PLANS.map((plan) =>
-                        plan.id === PAID_PLAN_ID
-                          ? "Private Library"
-                          : "Labeled example"
-                      ),
-                    ],
-                    [
-                      "Commercial use",
-                      ...PLANS.map((plan) => (plan.commercial ? "✓" : "—")),
-                    ],
-                    [
-                      "Three-format Launch Pack",
-                      ...PLANS.map((plan) =>
-                        plan.id === PAID_PLAN_ID ? "✓" : "—"
-                      ),
-                    ],
-                    [
-                      "Unused credits",
-                      ...PLANS.map((plan) =>
-                        plan.id === PAID_PLAN_ID
-                          ? "Roll over while active"
-                          : "Not applicable"
-                      ),
-                    ],
-                  ].map(([label, ...values]) => (
-                    <tr key={label} className="hover:bg-white/[0.02]">
-                      <th className="p-4 font-medium text-[var(--fg)]">
-                        {label}
-                      </th>
-                      {values.map((value, index) => (
-                        <td key={`${label}-${PLANS[index].id}`} className="p-4">
-                          {value}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </section>
 
         <section className="mx-auto mt-20 max-w-3xl">
           <p className="section-label">FAQ</p>
@@ -269,10 +164,12 @@ export default async function PricingPage({
         <Card className="mt-16 overflow-hidden border-[var(--mint)]/20 bg-gradient-to-br from-[var(--card)] to-black/40">
           <CardHeader className="sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle className="text-xl">Start with one SKU you already sell</CardTitle>
+              <CardTitle className="text-xl">
+                Inspect the Pack before pricing exists
+              </CardTitle>
               <p className="mt-2 text-sm text-[var(--fg-muted)]">
-                Upload one owned-toy photo, choose a listing or launch recipe,
-                and review the result before you publish it.
+                Public preview uses Pikbo Lab samples only. It does not accept
+                or process your product photo and it does not open checkout.
               </p>
             </div>
             <div
@@ -280,24 +177,15 @@ export default async function PricingPage({
               data-pricing-path="product-first"
             >
               <Button asChild>
-                <Link
-                  href={PRICING_ANIMATE_HREF}
-                  data-pricing-animate="remix"
-                >
-                  Animate one SKU
+                <Link href="/create?mode=seller-pack&source=pricing-bottom&try=1&sample=scout">
+                  Preview the 3 formats
                 </Link>
               </Button>
               <Button asChild variant="secondary">
-                <Link href="/create?mode=seller-pack">Launch Pack</Link>
+                <Link href="/tools/ai-toy-video-generator">
+                  See the validation record
+                </Link>
               </Button>
-              <Button asChild variant="secondary">
-                <Link href="/library">Library</Link>
-              </Button>
-              <FreeTrialCta
-                path="/pricing#bottom"
-                labelTry="Try free"
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-4 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/[0.07]"
-              />
             </div>
           </CardHeader>
         </Card>

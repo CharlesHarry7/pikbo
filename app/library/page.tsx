@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   robots: PRIVATE_ROBOTS,
 };
 
-/** Private account results plus clearly labeled device-only imports. */
+/** Account results plus clearly labeled device-only imports. */
 export default function LibraryPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#09090a] px-4 py-8 sm:px-8 sm:py-12">
@@ -27,7 +27,7 @@ export default function LibraryPage() {
           <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--mint)]">
-              Private toy projects
+              Launch Pack Library
             </p>
             <h1 className="mt-3 max-w-3xl font-display text-4xl font-black tracking-[-0.055em] sm:text-6xl">
               Every SKU. Every clip. One place.
@@ -43,20 +43,20 @@ export default function LibraryPage() {
               href="/create?mode=seller-pack"
               className="btn btn-primary text-sm"
             >
-              Create another Pack
+              Open Launch Pack
             </Link>
             <Link
               href={LIBRARY_PAGE_GENERATE_HREF}
               className="btn btn-ghost text-sm"
               data-library-page-generate="remix"
             >
-              Single recipe
+              Open single preview
             </Link>
           </div>
         </div>
           <div className="mt-7 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-3">
             {[
-              ["Private", "Owner-only download links"],
+              ["Owner-only", "Private results use fresh download links"],
               ["Recoverable", "Completed clips return after refresh"],
               ["Review first", "Check product details before publishing"],
             ].map(([label, value]) => (

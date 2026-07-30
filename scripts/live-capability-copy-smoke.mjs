@@ -30,7 +30,12 @@ const publicPromiseFiles = [
   "app/flow/page.tsx",
   "app/cinema/page.tsx",
   "components/HomeSeoBody.tsx",
+  "components/HomeCinemaHero.tsx",
+  "components/HeroUpload.tsx",
+  "components/CreateStudio.tsx",
+  "components/PaywallCard.tsx",
   "components/PricingHeroCopy.tsx",
+  "components/PricingPlanCards.tsx",
   "components/HfExploreHome.tsx",
   "components/SoftLaunchStrip.tsx",
 ];
@@ -68,15 +73,24 @@ assert(
 );
 assert(
   read("components/PricingHeroCopy.tsx").includes(
-    "Subscriptions open after the private beta proves quality, recovery, and sustainable cost."
+    "No subscription is on sale today."
   ),
   "pricing must keep subscriptions closed until private-beta proof"
 );
 assert(
-  read("app/create/page.tsx").includes(
-    "Live access and quotes are gated"
+  /no product photo\s+is accepted or processed/.test(
+    read("app/create/page.tsx")
   ),
-  "Create metadata must not promise public Live"
+  "Create must not present public product-photo processing"
+);
+assert(
+  read("components/CreateStudio.tsx").includes(
+    'data-public-single-preview="lab-only"'
+  ) &&
+    read("components/CreateStudio.tsx").includes(
+      "Public preview does not accept or process product photos"
+    ),
+  "single Generate must hide upload controls until private access is verified"
 );
 const rankToolSource = read("lib/tools.ts");
 assert(

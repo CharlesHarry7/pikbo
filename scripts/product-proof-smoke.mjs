@@ -63,10 +63,14 @@ assert(
   "featured video must expose controls and respect reduced motion"
 );
 assert(
-  create.includes("Launch Pack — 3 private videos · 30 credits") &&
-    create.includes("One photo → your Launch Pack") &&
+  create.includes("Launch Pack · 3 fixed formats") &&
+    create.includes("Preview the fixed Pack—or create it in private beta.") &&
+    create.includes("Listing Spin") &&
+    create.includes("Blind-box Reveal") &&
+    create.includes("Social Flash") &&
+    create.includes("reserve 30 credits") &&
     !create.includes("Launch Pack — 12 recipes"),
-  "the primary Launch Pack must stay the fixed three-asset seller path"
+  "the primary Launch Pack must stay the fixed public-preview/private-generation three-asset path"
 );
 
 console.log(
