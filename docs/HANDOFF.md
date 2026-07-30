@@ -4,6 +4,16 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-30 — [gpt/grok/workbuddy] public Lab versus invited private front door
+- Home and both Create modes now fail closed on the server-returned capability boundary. Public visitors get Pikbo Lab format previews with no product-photo input in the DOM; eligible invited accounts retain the existing private upload, 30-credit atomic reserve, three server child jobs, settle/release, status, retry and reconciliation path.
+- The homepage is now a toy-seller Launch Pack front door: one photo as the private product promise, three fixed target formats, one internal Listing Spin technical check, and an explicit list of what remains unproven. Archived Lab clips are not presented as one customer Pack.
+- Pricing and the Paywall show one Founding Studio coming-soon state with no public price, Pack count, Free comparison or mounted Checkout. Stripe rehearsal code remains behind its existing gates.
+- Library recovery and owner-only download behavior remain intact. Only capability-aware account copy and neutral public CTAs changed; public empty state no longer asks for a product upload or implies a purchasable plan.
+- Grok independently reviewed the frozen 21-file diff and re-ran the critical recovery, billing, atomic-Pack and truth suites: PASS, no blockers, session `ab6bdd83-e7fe-48c1-83f1-b5c35e8f7856`.
+- WorkBuddy independently inspected Home, both Create paths, Pricing and Library in a production build at desktop and 390px, captured ten screenshots and returned 5/5 PASS with zero blockers. Actual task/session: `55ce4191-630a-49a5-9c5c-f8f6e4af1f94`; report: `/Users/x/WorkBuddy/2026-07-30-13-30-53/pikbo-acceptance-review.md`.
+- Codex verification: all required launch-gate scripts plus Launch Pack, cached-Pack, P0 private generation and privacy regressions pass; TypeScript, full ESLint and the 196-route production build pass. Latest browser proof has zero public photo inputs, zero purchase CTAs and zero horizontal overflow on all five routes.
+- No provider call, Supabase mutation, Stripe checkout, DNS change or public-generation enablement occurred. The real three-video same-input Pack and the remaining quality matrix stay blocked on restored Provider balance in the protected Preview; production remains validation-only.
+
 ### 2026-07-30 — [gpt] upload-first Launch Pack front door
 - The homepage now renders the existing `HeroUpload` handoff inside the first-screen Launch Studio instead of pointing `#home-create` at a three-step explanation. A selected PNG/JPG/WebP is kept in session storage and carried into the fixed three-output workbench; no new upload or generation path was invented.
 - The seller-pack Create introduction is compact enough that the mobile sticky Upload action remains visible immediately. The primary navigation stays Home, Recipes, Launch Pack, Library and Pricing; old suite shells remain hidden.

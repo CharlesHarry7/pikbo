@@ -387,7 +387,9 @@ assert.match(createFirstRunStudio, /aria-expanded=\{showAdvanced\}/);
 const firstRunRecipeAt = createFirstRunStudio.indexOf(
   "<JobIntentBar"
 );
-const firstRunLabAt = createFirstRunStudio.indexOf("Try free · Lab");
+const firstRunLabAt = createFirstRunStudio.indexOf(
+  'data-first-run-lab="samples"'
+);
 const firstRunAdvancedAt = createFirstRunStudio.indexOf(
   'id="create-advanced-options"'
 );
@@ -906,12 +908,15 @@ assert.match(remixIntentSrc, /remixOptsFromRecord/);
 assert.match(remixIntentSrc, /opts\?\.ratio|opts\?\.duration|opts\?\.channel/);
 
 
-// One-tap Lab sample honesty (not "free" when live)
+// One-tap Lab samples stay cached even for invited accounts; never spend Provider.
 assert.match(createStudio, /loadSampleToy/);
 assert.match(createStudio, /labSampleId|lab-sample-/);
 assert.match(createStudio, /PIKBO Lab prototype sample/);
 assert.doesNotMatch(createStudio, /Official Lab|official Lab/);
-assert.match(createStudio, /10 credits|cached demo free/i);
+assert.match(createStudio, /cached · 0 credits/i);
+assert.match(createStudio, /allowProviderSpend: !demoMode && !requestUsesLabSample/);
+assert.match(createStudio, /data-public-single-preview="lab-only"/);
+assert.match(createStudio, /if \(!requestUsesLabSample && !privateUploadEnabled\)/);
 
 // Wave A Create versions: stack + Before/After per-version still
 assert.match(createStudio, /ResultVersion|type ResultVersion/);
@@ -3898,8 +3903,12 @@ assert.match(
   homeHeroSrc,
   /data-home-hero|href=["']\/create\?mode=seller-pack["']/
 );
-assert.match(homeHeroSrc, /import \{ HeroUpload \}/);
-assert.match(homeHeroSrc, /<HeroUpload \/>/);
+assert.match(homeHeroSrc, /HeroUpload,[\s\S]*HomeLaunchAccess/);
+assert.match(
+  homeHeroSrc,
+  /<HeroUpload access=\{launchAccess\} credits=\{credits\} \/>/
+);
+assert.match(homeHeroSrc, /canUsePrivateLaunch|Public format preview · no upload/);
 assert.match(homeHeroSrc, /id=["']home-create["']/);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeViralWall.tsx"),
@@ -4595,12 +4604,16 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "app/flow/page.tsx"), "utf8"),
   /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Generate free/
 );
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /FreeTrialCta/
+const libraryGridPublicCtaSrc = fs.readFileSync(
+  join(root, "components/LibraryGrid.tsx"),
+  "utf8"
 );
+assert.doesNotMatch(libraryGridPublicCtaSrc, /FreeTrialCta/);
+assert.match(libraryGridPublicCtaSrc, /Open single-format preview/);
+assert.match(libraryGridPublicCtaSrc, /Preview Launch Pack formats/);
+assert.match(libraryGridPublicCtaSrc, /Lab sample · cached 0 credits/);
 assert.doesNotMatch(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  libraryGridPublicCtaSrc,
   /10 seconds/
 );
 // Auth + home suite residual FreeTrial honesty (Phase C/F)
@@ -4691,7 +4704,11 @@ assert.doesNotMatch(
 );
 assert.match(
   fs.readFileSync(join(root, "components/PricingPlanCards.tsx"), "utf8"),
-  /FreeTrialCta/
+  /data-pricing-state=["']coming-soon["']/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/PricingPlanCards.tsx"), "utf8"),
+  /FreeTrialCta|PricingCheckoutButton|PLANS\.map/
 );
 // Settings Phase C/D honesty: durable authority, jobs HEAD, live T6, onboard v3
 const settingsPageSrc = fs.readFileSync(
@@ -4796,8 +4813,11 @@ const createStudioSmoke = fs.readFileSync(
   "utf8"
 );
 assert.match(createStudioSmoke, /GenerateWaitStage/);
-// Mobile sticky Lab sample is not a Free Mini live claim.
-assert.match(createStudioSmoke, /Try free · Lab/);
+// Mobile sticky Lab sample is explicitly cached and not a Free Mini live claim.
+assert.match(
+  createStudioSmoke,
+  /Preview a Lab sample · cached prototype, not your upload/
+);
 // Device Library stills: path samples or tiny previews only (no multi-MB Base64).
 assert.match(createStudioSmoke, /stillForStore\.startsWith\(["']\/["']\)|8_000/);
 // HF post-generate path chips live in shared GenerateAfterPath (not inlined)
@@ -5810,7 +5830,7 @@ assert.match(
 // Pricing points to the fixed Pack; Footer keeps its single-recipe remix door.
 assert.match(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
-  /href=["']\/create\?mode=seller-pack["']/
+  /href=["']\/create\?mode=seller-pack&source=pricing-hero&try=1&sample=scout["']/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
@@ -5917,7 +5937,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "app/pricing/page.tsx"), "utf8"),
-  /data-pricing-animate=["']remix["']/
+  /source=pricing-bottom&try=1&sample=scout/
 );
 
 

@@ -5,14 +5,32 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { track } from "@/lib/analytics";
 
+export type HomeLaunchAccess =
+  | "checking"
+  | "public-preview"
+  | "private-short"
+  | "private-ready";
+
 /** Homepage handoff into the fixed three-output Launch Pack path. */
-export function HeroUpload() {
+export function HeroUpload({
+  access,
+  credits,
+}: {
+  access: HomeLaunchAccess;
+  credits: number;
+}) {
   const router = useRouter();
   const [hover, setHover] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const privateAccess =
+    access === "private-short" || access === "private-ready";
 
   function goWithFile(file: File | undefined | null) {
+    if (!privateAccess) {
+      setErr("Photo upload is available only inside the invited private beta.");
+      return;
+    }
     if (
       !file ||
       !["image/png", "image/jpeg", "image/webp"].includes(file.type)
@@ -51,8 +69,53 @@ export function HeroUpload() {
     reader.readAsDataURL(file);
   }
 
+  if (!privateAccess) {
+    return (
+      <div data-home-launch-pack="public-preview">
+        <button
+          type="button"
+          data-launch-pack-primary-action="preview"
+          disabled={access === "checking"}
+          onClick={() => {
+            track({
+              event: "recipe_use",
+              path: "/",
+              recipe: "seller-starter-pack",
+              demo: true,
+              meta: { source: "home_public_preview" },
+            });
+            router.push(
+              "/create?mode=seller-pack&source=home-preview&try=1&sample=scout"
+            );
+          }}
+          className="group flex min-h-36 w-full items-center gap-4 rounded-2xl border border-dashed border-white/16 bg-white/[0.045] p-4 text-left transition hover:border-[#c8ff3d]/55 hover:bg-white/[0.065] disabled:cursor-wait disabled:opacity-70 sm:min-h-40 sm:p-5"
+        >
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#c8ff3d] text-black shadow-[0_0_26px_rgba(200,255,61,0.2)] sm:h-14 sm:w-14">
+            <ImagePlus
+              className="h-5 w-5 sm:h-6 sm:w-6"
+              strokeWidth={2.4}
+            />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-base font-black tracking-[-0.025em] text-white sm:text-lg">
+              {access === "checking"
+                ? "Checking private beta access…"
+                : "Preview the 3 Launch Pack formats"}
+            </span>
+            <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/42">
+              No photo upload · choose a Pikbo Lab sample
+            </span>
+            <span className="mt-3 inline-flex rounded-full border border-white/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.13em] text-[#c8ff3d]">
+              Public preview · 0 credits · your image is not processed
+            </span>
+          </span>
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div data-home-launch-pack="fixed-three">
+    <div data-home-launch-pack="private-upload">
       <label
         data-launch-pack-primary-action="1"
         onDragOver={(event) => {
@@ -76,13 +139,17 @@ export function HeroUpload() {
         </span>
         <span className="min-w-0">
           <span className="block text-base font-black tracking-[-0.025em] text-white sm:text-lg">
-            {busy ? "Opening your Launch Pack…" : "Drop one clean toy photo"}
+            {busy
+              ? "Opening your private Launch Pack…"
+              : "Upload one rights-owned toy photo"}
           </span>
           <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/42">
             or tap to choose · PNG, JPG, WebP · under 2 MB
           </span>
           <span className="mt-3 inline-flex rounded-full border border-white/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.13em] text-[#c8ff3d]">
-            Next: confirm rights → create the fixed trio
+            {access === "private-ready"
+              ? "Private beta · 30-credit Pack available"
+              : `Private beta · ${credits} credits · Pack needs 30`}
           </span>
         </span>
         <input

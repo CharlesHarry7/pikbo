@@ -21,7 +21,7 @@ export async function generateMetadata({
     return {
       title: { absolute: `Launch Pack · 3 toy-video assets | ${site.name}` },
       description:
-        "Pikbo Launch Pack: one owned toy photo → listing 360°, box reveal, and social hook. Cached previews cost 0 credits; eligible Live accounts see the exact three-job quote before submission.",
+        "Preview Pikbo's fixed Listing Spin, Blind-box Reveal, and Social Flash with a Lab sample. Invited private-beta accounts can upload an authorized toy photo and see the exact three-job quote.",
       alternates: { canonical: "/create?mode=seller-pack" },
       robots: CONCEPT_ROBOTS,
     };
@@ -38,13 +38,13 @@ export async function generateMetadata({
   return {
     title: "Generate · Toy Creative Director",
     description:
-      "Pikbo Generate — upload an owned toy photo, pick a commercial goal, or configure a three-format Launch Pack. Cached previews stay free; Live access and quotes are gated.",
+      "Pikbo Generate — inspect cached Lab formats publicly, or use an authorized toy photo inside the invited private beta.",
     alternates: { canonical: "/create" },
     robots: CONCEPT_ROBOTS,
     openGraph: {
       title: `Generate · Toy Creative Director | ${site.name}`,
       description:
-        "Upload a toy photo you own. Choose a commercial goal and recipe, preview cached Lab examples, and check Live eligibility in the workbench.",
+        "Inspect cached Lab examples, choose a commercial goal, and use an authorized toy photo only when invited private-beta access is enabled.",
       url: `${site.url}/create`,
     },
   };
@@ -96,30 +96,35 @@ export default async function CreatePage({
                 <div>
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-black">
-                      Private beta · invite only
+                      Private validation
                     </span>
                     <span className="rounded-full border border-white/12 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white/52">
-                      Launch Pack — 3 private videos · 30 credits
+                      Launch Pack · 3 fixed formats
                     </span>
                   </div>
                   <p className="mt-3 text-[9px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]">
-                    One photo → your Launch Pack
+                    Public preview or invited private generation
                   </p>
                   <h1 className="mt-4 max-w-3xl font-display text-2xl font-black tracking-[-0.045em] text-white sm:text-4xl">
-                    Build three product videos from one toy photo.
+                    Preview the fixed Pack—or create it in private beta.
                   </h1>
                   <p className="mt-2 max-w-2xl text-xs leading-5 text-white/48 sm:text-sm">
-                    Add a clear photo you own, confirm the fixed trio, then
-                    review every finished clip in your private Library. Public
-                    uploads are not processed.
+                    Public visitors choose a Pikbo Lab sample; no product photo
+                    is accepted or processed. Invited accounts can upload one
+                    rights-owned photo, reserve 30 credits, and receive
+                    owner-only results.
+                  </p>
+                  <p className="mt-2 text-[10px] font-semibold text-amber-100/70">
+                    Only Listing Spin has passed Pikbo&apos;s internal
+                    end-to-end check so far.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-1.5 lg:w-[430px]">
                   {[
-                    ["01", "Listing Spin", "1:1 · 5 sec · 720p"],
-                    ["02", "Blind-box Reveal", "9:16 · 5 sec · 720p"],
-                    ["03", "Social Flash", "9:16 · 5 sec · 720p"],
+                    ["01", "Listing Spin", "1:1 · Fast 720p · 5 sec"],
+                    ["02", "Blind-box Reveal", "9:16 · Fast 720p · 5 sec"],
+                    ["03", "Social Flash", "9:16 · Fast 720p · 5 sec"],
                   ].map(([n, name, spec]) => (
                     <div
                       key={name}

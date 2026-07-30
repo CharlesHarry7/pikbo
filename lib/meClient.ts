@@ -242,6 +242,22 @@ export function canLiveGenerate(
   return me?.canLiveGenerate === true;
 }
 
+/**
+ * Client display boundary for the invited private-generation workbench.
+ * This is never spend authority: reserve/generate still re-check auth,
+ * durable credits, invite, delivery, and provider-budget gates server-side.
+ */
+export function canUsePrivateLaunch(
+  me: MeResponse | null | undefined
+): boolean {
+  return (
+    me?.signedIn === true &&
+    me.canLiveGenerate === true &&
+    me.durableCreditsActive === true &&
+    me.mode === "live-generate"
+  );
+}
+
 /** Account balance for signed-in users; anonymous cookie credits never display. */
 export function displayCredits(me: MeResponse | null | undefined): number {
   if (!me) return 0;

@@ -1,39 +1,77 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
-import { HeroUpload } from "@/components/HeroUpload";
+import {
+  HeroUpload,
+  type HomeLaunchAccess,
+} from "@/components/HeroUpload";
 import { track } from "@/lib/analytics";
+import {
+  canUsePrivateLaunch,
+  displayCredits,
+  fetchMe,
+} from "@/lib/meClient";
+import { SELLER_PACK_LIVE_TOTAL_CREDITS } from "@/lib/sellerPackContract";
 import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
 
 const FORMAT_DEFS = [
   {
     slug: "360-spin-showcase",
     name: "Listing Spin",
-    spec: "1:1 · 5 sec",
+    spec: "Target · 1:1 · Fast 720p · 5 sec",
     use: "Product pages",
   },
   {
     slug: "blind-box-unboxing",
     name: "Blind-box Reveal",
-    spec: "9:16 · 5 sec",
+    spec: "Target · 9:16 · Fast 720p · 5 sec",
     use: "Launch posts",
   },
   {
     slug: "paparazzi-flash",
     name: "Social Flash",
-    spec: "9:16 · 5 sec",
+    spec: "Target · 9:16 · Fast 720p · 5 sec",
     use: "Reels & Shorts",
   },
 ] as const;
 
 export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
+  const [launchAccess, setLaunchAccess] =
+    useState<HomeLaunchAccess>("checking");
+  const [credits, setCredits] = useState(0);
   const formats = FORMAT_DEFS.flatMap((format) => {
     const item = items.find((candidate) => candidate.recipeSlug === format.slug);
     return item && hasFeedVideo(item) ? [{ format, item }] : [];
   });
   const inputPoster =
     formats[0]?.item.demo.poster ?? "/demos/scout-still.webp";
+
+  useEffect(() => {
+    let canceled = false;
+    void fetchMe().then((me) => {
+      if (canceled) return;
+      if (!canUsePrivateLaunch(me)) {
+        setLaunchAccess("public-preview");
+        setCredits(0);
+        return;
+      }
+      const balance = displayCredits(me);
+      setCredits(balance);
+      setLaunchAccess(
+        balance >= SELLER_PACK_LIVE_TOTAL_CREDITS
+          ? "private-ready"
+          : "private-short"
+      );
+    });
+    return () => {
+      canceled = true;
+    };
+  }, []);
+
+  const privateAccess =
+    launchAccess === "private-short" || launchAccess === "private-ready";
 
   return (
     <section
@@ -63,7 +101,9 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
                 Launch Studio for toy sellers
               </span>
               <span className="rounded-full border border-white/12 bg-white/[0.04] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-white/48">
-                Private beta · invite only
+                {privateAccess
+                  ? "Private beta access"
+                  : "Public format preview · no upload"}
               </span>
             </div>
 
@@ -78,8 +118,9 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
             </h1>
 
             <p className="mt-5 max-w-xl text-sm font-semibold leading-6 text-white/58 sm:mt-6 sm:text-lg sm:leading-relaxed">
-              Turn one rights-owned product photo into a Listing Spin,
-              Blind-box Reveal, and Social Flash—without model menus or prompts.
+              A fixed Listing Spin, Blind-box Reveal, and Social Flash for toy
+              sellers. Preview the formats now; generation from your own photo
+              is invite-only.
             </p>
 
             <div className="mt-7 hidden flex-wrap items-center gap-x-5 gap-y-3 text-xs font-black sm:flex">
@@ -93,7 +134,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
                 href="/pricing"
                 className="text-white/42 hover:text-white"
               >
-                Founding Studio · $49 candidate
+                Founding Studio · coming soon
               </Link>
             </div>
 
@@ -111,7 +152,9 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
               <div className="flex items-center gap-2.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#c8ff3d] shadow-[0_0_18px_#c8ff3d]" />
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/72">
-                  Start a Launch Pack
+                  {privateAccess
+                    ? "Prepare a private Launch Pack"
+                    : "Preview a Launch Pack"}
                 </p>
               </div>
               <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/32">
@@ -120,7 +163,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
             </div>
 
             <div className="mt-3">
-              <HeroUpload />
+              <HeroUpload access={launchAccess} credits={credits} />
             </div>
 
             <div className="mt-3 flex items-center gap-2 px-1 text-[9px] font-black uppercase tracking-[0.14em] text-white/28">
@@ -198,8 +241,9 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
               </div>
               <p className="text-[10px] font-semibold leading-4 text-white/38">
                 The three clips above are archived Pikbo Lab format previews,
-                not one customer Pack. Public uploads stay in the browser and
-                are not processed; invited accounts receive private results.
+                not one customer Pack. Only Listing Spin has completed Pikbo&apos;s
+                internal end-to-end check. Public visitors do not upload a
+                product image here.
               </p>
             </div>
           </div>

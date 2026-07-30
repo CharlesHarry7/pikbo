@@ -12,11 +12,6 @@ import {
   softwareApplicationJsonLd,
   websiteJsonLd,
 } from "@/lib/jsonLd";
-import {
-  FOUNDING_STUDIO_PACKS,
-  PAID_PLAN_ID,
-  getPlan,
-} from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
@@ -47,7 +42,6 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const showcase = buildHomeShowcaseFeed();
-  const foundingPlan = getPlan(PAID_PLAN_ID);
   const lcpPoster =
     showcase.find((item) => item.recipeSlug === "360-spin-showcase")?.demo
       ?.poster ?? "/demos/scout-still.webp";
@@ -56,21 +50,21 @@ export default function Home() {
     {
       n: "01",
       name: "Listing Spin",
-      spec: "1:1 · 5 sec · 720p",
+      spec: "1:1 · Fast 720p · 5 sec",
       use: "A centered product-showcase draft for marketplace listings and product pages.",
       note: "Check inferred side and back details before publishing.",
     },
     {
       n: "02",
       name: "Blind-box Reveal",
-      spec: "9:16 · 5 sec · 720p",
+      spec: "9:16 · Fast 720p · 5 sec",
       use: "A vertical box-to-figure reveal for drop announcements and unboxing posts.",
       note: "Check packaging, logos, paint, and small product details.",
     },
     {
       n: "03",
       name: "Social Flash",
-      spec: "9:16 · 5 sec · 720p",
+      spec: "9:16 · Fast 720p · 5 sec",
       use: "A fast vertical hero shot for Reels, Shorts, and launch teasers.",
       note: "Check the first frame, silhouette, and accessory stability.",
     },
@@ -149,26 +143,50 @@ export default function Home() {
             ))}
           </div>
 
+          <div
+            className="mt-8 rounded-[1.75rem] border border-sky-300/20 bg-sky-300/[0.06] p-5 sm:p-6"
+            data-home-evidence="internal-listing-spin"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-black">
+                Internal technical check — not a customer case
+              </p>
+              <span className="rounded-full border border-sky-200/20 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-sky-100/70">
+                1 of 3 formats checked
+              </span>
+            </div>
+            <p className="mt-3 max-w-4xl text-sm leading-6 text-white/55">
+              One original synthetic toy still completed Listing Spin at 1:1,
+              Fast 720p, 5.042 seconds. The private download was ready in about
+              2 minutes 39 seconds, Library recovery passed, and 10 credits
+              settled once.
+            </p>
+            <p className="mt-3 text-xs leading-5 text-white/38">
+              Not yet proven: Blind-box Reveal, Social Flash, one complete
+              same-input Pack, physical-SKU fidelity, seller reuse, or a paid
+              order.
+            </p>
+          </div>
+
           <div className="mt-8 flex flex-col gap-5 rounded-[1.75rem] border border-[#c8ff3d]/25 bg-[#c8ff3d]/[0.07] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-sm font-black">Founding Studio</p>
                 <span className="rounded-full border border-[#c8ff3d]/30 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#c8ff3d]">
-                  Checkout closed · private beta
+                  Coming soon · checkout closed
                 </span>
               </div>
               <p className="mt-2 text-sm leading-6 text-white/52">
-                ${foundingPlan.priceMonthly}/month candidate ·{" "}
-                {FOUNDING_STUDIO_PACKS} Launch Packs ·{" "}
-                {FOUNDING_STUDIO_PACKS * 3} fixed 5-second 720p outputs ·
-                private Library.
+                One finite monthly subscription is being measured against
+                real quality, retry cost, and a 70% gross-margin gate. Price
+                and included Pack count are not frozen yet.
               </p>
             </div>
             <Link
               href="/pricing"
               className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-white/15 px-5 text-xs font-black text-white transition hover:border-[#c8ff3d]/55 hover:text-[#c8ff3d]"
             >
-              See the honest pricing contract ↗
+              See what is still gated ↗
             </Link>
           </div>
         </div>
@@ -187,24 +205,29 @@ export default function Home() {
               From shelf photo to private Library.
             </h2>
             <p className="mt-5 max-w-xl text-sm font-semibold leading-6 text-black/62 sm:text-base">
-              No model maze. No public gallery. Upload a photo you have the
-              right to use, confirm the fixed Pack, then recover every completed
-              clip from the same signed-in account.
+              Public visitors inspect the fixed formats with a Pikbo Lab
+              sample. Invited accounts upload one rights-owned photo, confirm
+              the Pack, and recover completed clips from the same private
+              signed-in Library.
             </p>
           </div>
 
           <div className="grid gap-px overflow-hidden rounded-[1.75rem] border border-black/20 bg-black/20 sm:grid-cols-3">
             {[
-              ["01", "Add one SKU", "Use a clear, full-product photo you own."],
+              [
+                "01",
+                "Choose your path",
+                "Public Lab sample or invited private upload.",
+              ],
               [
                 "02",
-                "Create the trio",
-                "30 credits reserved; 10 settled per completed clip.",
+                "Preview or create",
+                "Public: archived Lab formats. Invited private beta: 30-credit Pack.",
               ],
               [
                 "03",
-                "Review & download",
-                "Private results reopen through short-lived owner links.",
+                "Review the result",
+                "Lab examples stay labeled; private results use owner-only links.",
               ],
             ].map(([n, title, body]) => (
               <div key={n} className="bg-[#d6ff69] p-5 sm:min-h-48 sm:p-6">

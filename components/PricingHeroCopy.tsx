@@ -11,16 +11,16 @@ const COPY: Record<
   }
 > = {
   outcome: {
-    eyebrow: "One finite plan · no unlimited",
-    title: "Pricing built around finished toy videos.",
+    eyebrow: "Private validation · checkout closed",
+    title: "Founding Studio opens after the Pack is proven.",
     description:
-      "The Founding Studio candidate is measured in fixed Launch Packs, not vague AI usage. Subscriptions open after the private beta proves quality, recovery, and sustainable cost.",
+      "Pikbo is measuring real output quality, recovery, and p95 retry cost before setting a public price or monthly Pack count. No subscription is on sale today.",
   },
   "cost-control": {
-    eyebrow: "Measured capacity · visible limits",
-    title: "Know exactly how many product clips are included.",
+    eyebrow: "Margin gate · no premature price",
+    title: "Cost first. Public subscription second.",
     description:
-      "Three monthly Launch Packs means nine fixed 5-second 720p outputs. Subscriptions open after the private beta proves quality, recovery, and sustainable cost.",
+      "Founding Studio will open only after a finite monthly inclusion clears the measured quality, retry-cost, payment-fee, and 70% gross-margin gates.",
   },
 };
 
@@ -50,7 +50,7 @@ export function PricingHeroCopy({
             Founding Studio
           </span>
           <span className="rounded-full border border-black/15 bg-white/45 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-black/48">
-            Validation candidate · not yet for sale
+            Coming soon · not for sale
           </span>
         </div>
 
@@ -66,26 +66,26 @@ export function PricingHeroCopy({
 
         <div className="mt-8 flex flex-col justify-center gap-2 sm:flex-row">
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?mode=seller-pack&source=pricing-hero&try=1&sample=scout"
             className="inline-flex min-h-13 items-center justify-center rounded-full bg-black px-7 text-sm font-black text-white transition hover:-translate-y-0.5"
           >
-            Preview the 3-video Pack
+            Preview the 3 formats
             <span className="ml-2 text-[#c8ff3d]" aria-hidden>
               ↗
             </span>
           </Link>
           <Link
-            href="#plans"
+            href="/tools/ai-toy-video-generator"
             className="inline-flex min-h-13 items-center justify-center rounded-full border border-black/20 bg-white/45 px-7 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-white"
           >
-            See the candidate plan
+            See the validation record
           </Link>
         </div>
 
         <div className="mx-auto mt-9 grid max-w-3xl gap-px overflow-hidden rounded-2xl border border-black/15 bg-black/15 sm:grid-cols-3">
           {[
-            ["3 Packs", "per billing month"],
-            ["9 videos", "fixed 5-second outputs"],
+            ["1 Pack", "3 fixed video formats"],
+            ["Pending", "price and monthly count"],
             ["Private", "signed-in Library"],
           ].map(([value, label]) => (
             <div key={value} className="bg-white/48 px-4 py-4 text-center">

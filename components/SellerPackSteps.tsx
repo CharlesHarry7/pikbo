@@ -15,17 +15,37 @@ export function SellerPackSteps({
   /** Public sessions fail closed to cached prototypes. */
   demoMode: boolean;
 }) {
-  const items = [
-    { n: 1 as const, label: "Upload", blurb: "One owned toy photo" },
-    {
-      n: 2 as const,
-      label: "Generate pack",
-      blurb: demoMode
-        ? "3 cached prototype previews · 0 credits"
-        : "3 live clips · 10 credits each (30 total)",
-    },
-    { n: 3 as const, label: "Deliver", blurb: "Export Launch Pack · post" },
-  ];
+  const items = demoMode
+    ? [
+        {
+          n: 1 as const,
+          label: "Choose sample",
+          blurb: "Pikbo Lab only · no product upload",
+        },
+        {
+          n: 2 as const,
+          label: "Preview formats",
+          blurb: "3 archived prototypes · 0 credits",
+        },
+        {
+          n: 3 as const,
+          label: "Review",
+          blurb: "Inspect format and limitations",
+        },
+      ]
+    : [
+        { n: 1 as const, label: "Upload", blurb: "One rights-owned toy photo" },
+        {
+          n: 2 as const,
+          label: "Generate pack",
+          blurb: "3 private clips · 10 credits each (30 total)",
+        },
+        {
+          n: 3 as const,
+          label: "Deliver",
+          blurb: "Owner-only Library and download",
+        },
+      ];
 
   return (
     <>

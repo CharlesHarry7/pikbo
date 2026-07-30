@@ -28,7 +28,6 @@ import {
   isSessionGatedDownloadUrl,
   publicShareableVideoUrl,
 } from "@/lib/createTrust";
-import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { useToast } from "@/components/Toast";
 import { LibraryStorageBanner } from "@/components/LibraryStorageBanner";
 import { PROVENANCE, resultProvenanceLabel } from "@/lib/provenance";
@@ -1514,8 +1513,8 @@ export function LibraryGrid() {
                   <span className="font-semibold text-[var(--mint)]">
                     Saved on this device
                   </span>
-                  . One photo → Launch Pack → private result. Sign in to keep
-                  generated clips with your account.
+                  . Public Lab previews stay labeled. Invited private results
+                  remain attached to the same signed-in account.
                 </>
               )}
             </p>
@@ -1525,21 +1524,20 @@ export function LibraryGrid() {
                 className="btn btn-primary text-sm"
                 data-library-empty="generate-remix"
               >
-                Generate · upload toy photo
+                Open single-format preview
               </Link>
               <Link
                 href="/create?mode=seller-pack"
                 className="btn btn-ghost text-sm"
               >
-                Launch Pack · 3 clips / 30 credits
+                Preview Launch Pack formats
               </Link>
-              <FreeTrialCta
-                path="/library"
-                variant="ghost"
-                labelTry="▶ Free sample · Mini 5s"
-                labelDemo="▶ Lab sample · free"
-                labelPlans="Compare plans"
-              />
+              <Link
+                href={LIBRARY_LAB_SAMPLE_HREF}
+                className="btn btn-ghost text-sm"
+              >
+                ▶ Lab sample · cached 0 credits
+              </Link>
             </div>
             <p className="mt-4 max-w-xs text-[10px] text-[var(--fg-dim)]">
               Clips land here after success · confirmed failed items restore

@@ -15,7 +15,7 @@ import {
   pushHistory,
 } from "@/lib/history";
 import {
-  canLiveGenerate,
+  canUsePrivateLaunch,
   fetchMe,
   freeTrialExhausted,
   generationDisplayCredits,
@@ -146,14 +146,14 @@ const MODELS = [
     id: "seedance-fast",
     label: "Seedance Fast",
     vendor: "ByteDance",
-    blurb: "Balanced speed · paid",
+    blurb: "Private beta · balanced speed",
     free: false,
   },
   {
     id: "seedance-2",
     label: "Seedance 2.0",
     vendor: "ByteDance",
-    blurb: "Best quality · paid",
+    blurb: "Private beta · high quality",
     free: false,
   },
 ] as const;
@@ -281,6 +281,8 @@ export function CreateStudio({
   const [demo, setDemo] = useState(false);
   const [watermark, setWatermark] = useState(true);
   const [session, setSession] = useState<MeResponse | null>(null);
+  const [sessionResolved, setSessionResolved] = useState(false);
+  const privateUploadEnabled = canUsePrivateLaunch(session);
   const [showPaywall, setShowPaywall] = useState(false);
   const [upgradedBanner, setUpgradedBanner] = useState(false);
   const [usedModel, setUsedModel] = useState<string | null>(null);
@@ -445,11 +447,7 @@ export function CreateStudio({
       // PIKBO Lab reference stills — not a visitor upload or verified provider input.
       setOwnsRights(true);
       if (autoGenerate) {
-        toast(
-          demoMode
-            ? "Generating PIKBO Lab prototype sample · cached demo free…"
-            : "Generating PIKBO Lab prototype sample · eligible live render · 10 credits…"
-        );
+        toast("Previewing PIKBO Lab prototype sample · cached · 0 credits…");
         await generate({
           imageOverride: data,
           effectOverride: s.effect,
@@ -460,7 +458,11 @@ export function CreateStudio({
         toast("PIKBO Lab prototype still ready — tap Generate when you want the clip");
       }
     } catch {
-      setError("Could not load sample photo — try another or upload your own");
+      setError(
+        privateUploadEnabled
+          ? "Could not load sample photo — try another or upload your own"
+          : "Could not load that Lab sample — try another cached sample"
+      );
     } finally {
       setSampleLoading(false);
     }
@@ -535,6 +537,7 @@ export function CreateStudio({
 
   const refreshSession = useCallback(async () => {
     const data = await fetchMe();
+    setSessionResolved(true);
     if (!data) return;
     setSession(data);
     setWatermark(data.watermark);
@@ -627,6 +630,12 @@ export function CreateStudio({
 
   const adoptImage = useCallback(
     async (dataUrl: string, opts?: { labSample?: boolean }) => {
+      if (!opts?.labSample && !privateUploadEnabled) {
+        setError(
+          "Real product-photo upload is available only to invited private-beta accounts. Choose a Pikbo Lab sample instead."
+        );
+        return;
+      }
       setImage(dataUrl);
       setAssetId(null);
       setImageProbe(null);
@@ -675,18 +684,21 @@ export function CreateStudio({
         /* generate still works with inline data URL */
       }
     },
-    [effect]
+    [effect, privateUploadEnabled]
   );
 
   // Favorites + toy identity + optional still from Image studio (after adoptImage exists).
   // Query ?sku= wins over device bible so Next SKU / AfterPath carry survives mount.
   useEffect(() => {
+    if (!sessionResolved) return;
     const t = window.setTimeout(() => {
       setFavorites(loadFavorites());
       setToyIdentity(hydrateToyIdentityFromQuery(initialSku));
       try {
         const pending = sessionStorage.getItem("pikbo_pending_still");
-        if (pending?.startsWith("data:image")) {
+        if (!privateUploadEnabled && pending) {
+          sessionStorage.removeItem("pikbo_pending_still");
+        } else if (pending?.startsWith("data:image")) {
           sessionStorage.removeItem("pikbo_pending_still");
           void adoptImage(pending);
         } else if (
@@ -706,9 +718,15 @@ export function CreateStudio({
       }
     }, 0);
     return () => window.clearTimeout(t);
-  }, [adoptImage, initialSku]);
+  }, [adoptImage, initialSku, privateUploadEnabled, sessionResolved]);
 
   function loadFile(file: File | undefined | null) {
+    if (!privateUploadEnabled) {
+      setError(
+        "Public preview does not accept or process product photos. Choose a Pikbo Lab sample."
+      );
+      return;
+    }
     if (!file || !file.type.startsWith("image/")) {
       setError("Please drop a PNG or JPG of your toy.");
       return;
@@ -730,12 +748,12 @@ export function CreateStudio({
   }
 
   const creditsLeft = session ? generationDisplayCredits(session) : null;
-  const liveEntitled = canLiveGenerate(session);
+  const liveEntitled = privateUploadEnabled;
   const canAfford = liveEntitled;
   const isFree = session?.plan === "free" || session?.watermark;
   // Fail closed: anonymous, non-durable, unknown, and zero-credit sessions
   // may only use the cached prototype path.
-  const demoMode = !liveEntitled;
+  const demoMode = !privateUploadEnabled || labStill;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
   const clipsLeft =
@@ -776,6 +794,13 @@ export function CreateStudio({
     retrySpec?: GenerationSpec;
   }) {
     const retry = opts?.retrySpec;
+    const requestUsesLabSample = Boolean(opts?.labSampleId || labStill);
+    if (!requestUsesLabSample && !privateUploadEnabled) {
+      setError(
+        "Public preview does not accept or process product photos. Choose a Pikbo Lab sample."
+      );
+      return;
+    }
     // Retry freezes the version still — never the composer's latest re-upload asset.
     const still = resolveGenerateStill({
       retry,
@@ -874,7 +899,7 @@ export function CreateStudio({
         model: requestModel,
         resolution: requestRes,
         ownsRights: true,
-        allowProviderSpend: !demoMode,
+        allowProviderSpend: !demoMode && !requestUsesLabSample,
         retryJobId: retryHandoff?.retryJobId,
         retryToken: retryHandoff?.retryToken,
         seed:
@@ -1012,7 +1037,7 @@ export function CreateStudio({
       setError(
         result.error ||
           (result.paywall
-            ? "This allowance is used up. Compare finite plans to continue."
+            ? "This private allowance is used up. Public checkout remains closed."
             : "Something went wrong")
       );
       // Keep prior versions visible after a failed attempt; leave error banner on.
@@ -1808,28 +1833,28 @@ export function CreateStudio({
             </p>
           </div>
           <div className="flex items-center gap-3 text-[11px] text-[var(--fg-muted)]">
-            {session && (
-              <span>
-                <span className="font-semibold text-[var(--mint)]">
-                  {creditsLeft ?? 0}
-                </span>{" "}
-                · {session.planName}
-                {isFree && !demoMode ? (
-                  <span
-                    className={
-                      trialDone
-                        ? " ml-1 text-amber-200"
-                        : " ml-1 text-[var(--fg-dim)]"
-                    }
-                  >
-                    {trialDone ? "· trial done" : "· Free Mini"}
+            {privateUploadEnabled ? (
+              <>
+                {session ? (
+                  <span>
+                    <span className="font-semibold text-[var(--mint)]">
+                      {creditsLeft ?? 0}
+                    </span>{" "}
+                    credits · private beta
                   </span>
                 ) : null}
+                <Link
+                  href="/pricing"
+                  className="text-[var(--mint)] hover:underline"
+                >
+                  Access status
+                </Link>
+              </>
+            ) : (
+              <span className="font-semibold text-white/65">
+                Public Lab · cached 0 credits
               </span>
             )}
-            <Link href="/pricing" className="text-[var(--mint)] hover:underline">
-              Plans
-            </Link>
           </div>
         </div>
       </div>
@@ -1860,8 +1885,9 @@ export function CreateStudio({
                 ) : null}
               </p>
               <p className="text-[11px] text-[var(--fg-muted)]">
-                Upload a photo of a toy you own. The example does not become
-                your output until live generation runs on your image.
+                {privateUploadEnabled
+                  ? "Upload a photo you own to create a separate private result. The example is never presented as your output."
+                  : "Public preview keeps this archived Lab example. It does not accept or process your product photo."}
               </p>
               {remix.notices.map((n) => (
                 <p key={n} className="text-[11px] text-amber-200/90">
@@ -1892,9 +1918,15 @@ export function CreateStudio({
         >
           {(
             [
-              { n: 1 as const, label: "Photo" },
+              {
+                n: 1 as const,
+                label: privateUploadEnabled ? "Photo" : "Lab sample",
+              },
               { n: 2 as const, label: "Recipe" },
-              { n: 3 as const, label: "Generate" },
+              {
+                n: 3 as const,
+                label: privateUploadEnabled ? "Generate" : "Preview",
+              },
             ] as const
           ).map((s, i) => (
             <li key={s.n} className="flex flex-1 items-center gap-1">
@@ -2037,7 +2069,7 @@ export function CreateStudio({
         <section className="space-y-4 overflow-y-auto border-b border-white/[0.07] bg-[#08080a] p-4 lg:max-h-[calc(100vh-8rem)] lg:border-b-0 lg:border-r">
           {upgradedBanner && (
             <div className="rounded-xl border border-[var(--mint)]/40 bg-[color-mix(in_srgb,var(--mint)_10%,transparent)] px-3 py-2 text-xs">
-              Paid allowance active — 720p path, no on-player watermark.
+              Private allowance active — 720p path, no on-player watermark.
             </div>
           )}
 
@@ -2058,79 +2090,103 @@ export function CreateStudio({
             </div>
           )}
 
-          {/* Step 1 — Upload owned toy photo */}
-          <div id="create-photo-step" data-first-run-step="upload">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <label
-                htmlFor="create-photo-input"
-                className="text-xs font-bold uppercase tracking-wide text-[var(--fg-muted)]"
-              >
-                <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black lg:hidden">
-                  1
-                </span>
-                <span className="lg:hidden">Upload owned toy photo</span>
-                <span className="hidden lg:inline">{t("create.yourPhoto")}</span>
-              </label>
-              {image && (
-                <button
-                  type="button"
-                  className="text-[10px] font-semibold text-[var(--fg-dim)] hover:text-[var(--brand)]"
-                  onClick={() => {
-                    setImage(null);
-                    setAssetId(null);
-                    setImageProbe(null);
-                    setLabStill(false);
-                    setFidelityAngles([]);
-                    setSecondaryStill(null);
-                  }}
+          {/* Step 1 — public Lab-only preview or invited private upload */}
+          {privateUploadEnabled ? (
+            <div id="create-photo-step" data-first-run-step="upload">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <label
+                  htmlFor="create-photo-input"
+                  className="text-xs font-bold uppercase tracking-wide text-[var(--fg-muted)]"
                 >
-                  {t("create.replace")}
-                </button>
-              )}
+                  <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black lg:hidden">
+                    1
+                  </span>
+                  <span className="lg:hidden">Upload owned toy photo</span>
+                  <span className="hidden lg:inline">{t("create.yourPhoto")}</span>
+                </label>
+                {image && (
+                  <button
+                    type="button"
+                    className="text-[10px] font-semibold text-[var(--fg-dim)] hover:text-[var(--brand)]"
+                    onClick={() => {
+                      setImage(null);
+                      setAssetId(null);
+                      setImageProbe(null);
+                      setLabStill(false);
+                      setFidelityAngles([]);
+                      setSecondaryStill(null);
+                    }}
+                  >
+                    {t("create.replace")}
+                  </button>
+                )}
+              </div>
+              <label
+                className={`group/drop relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
+                  image
+                    ? "aspect-[16/10] border-[var(--mint)]/25 ring-1 ring-[var(--mint)]/15"
+                    : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:aspect-video"
+                }`}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={onDrop}
+              >
+                {image ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={image}
+                      alt="your toy"
+                      className="h-full w-full object-contain"
+                    />
+                    <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-3 py-2.5 text-center text-[10px] font-semibold text-white/70 opacity-0 transition group-hover/drop:opacity-100">
+                      {t("create.replaceStill")}
+                    </span>
+                  </>
+                ) : (
+                  <span className="px-6 text-center text-sm text-[var(--fg-dim)]">
+                    <span className="mb-2 mx-auto grid h-12 w-12 place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.08] text-2xl" aria-hidden>
+                      🧸
+                    </span>
+                    <span className="block font-semibold text-white/80">
+                      {t("create.dropPhoto")}
+                    </span>
+                    <span className="mt-1 block text-xs text-white/45">
+                      {t("create.dropHint")}
+                    </span>
+                  </span>
+                )}
+                <input
+                  id="create-photo-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={onFile}
+                />
+              </label>
             </div>
-            <label
-              className={`group/drop relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
-                image
-                  ? "aspect-[16/10] border-[var(--mint)]/25 ring-1 ring-[var(--mint)]/15"
-                  : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:aspect-video"
-              }`}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={onDrop}
+          ) : (
+            <div
+              id="create-photo-step"
+              data-public-single-preview="lab-only"
+              className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-4"
             >
-              {image ? (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={image}
-                    alt="your toy"
-                    className="h-full w-full object-contain"
-                  />
-                  <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-3 py-2.5 text-center text-[10px] font-semibold text-white/70 opacity-0 transition group-hover/drop:opacity-100">
-                    {t("create.replaceStill")}
-                  </span>
-                </>
-              ) : (
-                <span className="px-6 text-center text-sm text-[var(--fg-dim)]">
-                  <span className="mb-2 grid h-12 w-12 place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.08] text-2xl mx-auto" aria-hidden>
-                    🧸
-                  </span>
-                  <span className="block font-semibold text-white/80">
-                    {t("create.dropPhoto")}
-                  </span>
-                  <span className="mt-1 block text-xs text-white/45">
-                    {t("create.dropHint")}
-                  </span>
-                </span>
-              )}
-              <input
-                id="create-photo-input"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={onFile}
-              />
-            </label>
-          </div>
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-[var(--mint)]">
+                {sessionResolved
+                  ? "Public Lab preview · no upload"
+                  : "Checking private-beta access…"}
+              </p>
+              <p className="mt-2 text-sm font-bold text-white">
+                {sessionResolved
+                  ? "Choose a Pikbo Lab sample below."
+                  : "Real product-photo controls stay hidden until access is verified."}
+              </p>
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--fg-muted)]">
+                Public preview does not accept, register, or process your
+                product photo. Invited signed-in accounts see a separate
+                owner-only upload control here.
+              </p>
+            </div>
+          )}
 
           {/* Step 2 — choose a sales outcome; model and full catalog stay Advanced. */}
           <JobIntentBar activeId={activeSellingTask} onPick={applyJobIntent} />
@@ -2150,7 +2206,7 @@ export function CreateStudio({
                 tap loads the recipe and opens the preview path.
               </p>
               <p className="mt-1 text-[10px] font-semibold text-[var(--mint)]">
-                Try free · Lab samples are cached prototypes, not your upload.
+                Preview a Lab sample · cached prototype, not your upload.
               </p>
               <button
                 type="button"
@@ -2337,7 +2393,7 @@ export function CreateStudio({
                               : "border-[var(--border)] text-[var(--fg-muted)]"
                           } ${freeLock ? "cursor-not-allowed opacity-50" : ""}`}
                         >
-                          {d}s{freeLock ? " · paid" : ""}
+                          {d}s{freeLock ? " · unavailable" : ""}
                         </button>
                       );
                     })}
@@ -2372,7 +2428,9 @@ export function CreateStudio({
                                 );
                               } else {
                                 setShowPaywall(true);
-                                setError("720p is on paid plans.");
+                                setError(
+                                  "720p is unavailable in the public Lab preview."
+                                );
                               }
                               return;
                             }
@@ -2385,7 +2443,7 @@ export function CreateStudio({
                           } ${locked ? "opacity-60" : ""}`}
                         >
                           {r}
-                          {locked ? " · paid" : ""}
+                          {locked ? " · private" : ""}
                         </button>
                       );
                     })}
@@ -2418,7 +2476,7 @@ export function CreateStudio({
                             if (lockedPaid) {
                               setShowPaywall(true);
                               setError(
-                                "Paid models are locked — Free live jobs use Seedance Mini at 480p."
+                                "Private models are unavailable in the public Lab preview."
                               );
                               setModelId("seedance-mini");
                               return;
@@ -2435,7 +2493,7 @@ export function CreateStudio({
                           {lockedForValidation
                             ? " · fixed off"
                             : lockedPaid
-                              ? " · paid"
+                              ? " · private"
                               : liveEntitled && active
                                 ? " · fixed"
                                 : m.free
@@ -2544,7 +2602,9 @@ export function CreateStudio({
                       );
                     }}
                     secondaryStill={secondaryStill}
-                    onSecondaryStill={setSecondaryStill}
+                    onSecondaryStill={
+                      privateUploadEnabled ? setSecondaryStill : undefined
+                    }
                     collapsed={briefCollapsed}
                     onToggle={() => setBriefCollapsed((v) => !v)}
                   />
@@ -2585,13 +2645,15 @@ export function CreateStudio({
               </div>
             ) : (
               <p className="mt-2 text-xs text-[var(--fg-muted)]">
-                Upload one owned front photo to unlock the exact quote.
+                {privateUploadEnabled
+                  ? "Upload one owned front photo to unlock the exact quote."
+                  : "Choose one Pikbo Lab sample to preview this recipe at 0 credits."}
               </p>
             )}
             {image && demoMode ? (
               <p className="mt-2 rounded-lg border border-white/10 bg-black/25 px-2.5 py-2 text-[10px] leading-snug text-white/55">
-                Cached prototype · your uploaded photo is not sent to a
-                model or used in this preview.
+                Cached Pikbo Lab prototype · no visitor product photo is sent
+                to a model or used in this preview.
               </p>
             ) : null}
             {trialDone && isFree && !demoMode ? (
@@ -2608,21 +2670,30 @@ export function CreateStudio({
             ) : null}
           </div>
 
-          <label
-            id="create-ownership"
-            className="flex cursor-pointer items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2.5 text-[11px] leading-snug text-[var(--fg-muted)]"
-          >
-            <input
-              type="checkbox"
-              checked={ownsRights}
-              onChange={(e) => setOwnsRights(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--mint)]"
-            />
-            <span>
-              I own this photo and have the right to animate and publish this toy
-              or character. Pikbo grants no third-party IP rights.
-            </span>
-          </label>
+          {!demoMode ? (
+            <label
+              id="create-ownership"
+              className="flex cursor-pointer items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2.5 text-[11px] leading-snug text-[var(--fg-muted)]"
+            >
+              <input
+                type="checkbox"
+                checked={ownsRights}
+                onChange={(e) => setOwnsRights(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--mint)]"
+              />
+              <span>
+                I own this photo and have the right to animate and publish this
+                toy or character. Pikbo grants no third-party IP rights.
+              </span>
+            </label>
+          ) : (
+            <div
+              id="create-ownership"
+              className="rounded-lg border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2.5 text-[11px] leading-snug text-[var(--fg-muted)]"
+            >
+              Pikbo Lab sample · cached prototype · not a customer upload.
+            </div>
+          )}
 
           {status === "generating" ? (
             <button
@@ -2673,7 +2744,7 @@ export function CreateStudio({
           )}
 
           {showPaywall && (
-            <PaywallCard title="Allowance used up — compare finite plans" />
+            <PaywallCard title="Private beta access is not available here" />
           )}
         </section>
 
@@ -3308,18 +3379,30 @@ export function CreateStudio({
           </p>
         ) : null}
         {!image ? (
-          <button
-            type="button"
-            onClick={() =>
-              document
-                .getElementById("create-photo-step")
-                ?.scrollIntoView({ behavior: "smooth", block: "center" })
-            }
-            className="btn btn-primary w-full py-3 text-sm"
-            data-first-run-action="upload"
-          >
-            Upload owned toy photo
-          </button>
+          privateUploadEnabled ? (
+            <button
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById("create-photo-step")
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" })
+              }
+              className="btn btn-primary w-full py-3 text-sm"
+              data-first-run-action="upload"
+            >
+              Upload owned toy photo
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={sampleLoading || busy}
+              onClick={() => void loadSampleToy("scout", true)}
+              className="btn btn-primary w-full py-3 text-sm disabled:opacity-50"
+              data-first-run-action="lab-preview"
+            >
+              Preview a Lab sample · 0 credits
+            </button>
+          )
         ) : busy ? (
           <GenerateWaitMobileStrip
             elapsed={elapsed}

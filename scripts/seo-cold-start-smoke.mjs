@@ -198,7 +198,10 @@ assert.match(guidePageSrc, /datePublished/);
 assert.match(guidePageSrc, /dateModified/);
 assert.match(guidePageSrc, /href="\/tools\/ai-toy-video-generator"/);
 assert.match(guidePageSrc, /href="\/tools\/blind-box-reveal-video-maker"/);
-assert.match(pricingHeroSrc, /Pricing built around finished toy videos/);
+assert.match(
+  pricingHeroSrc,
+  /Founding Studio opens after the Pack is proven/
+);
 
 // Trust/legal copy must distinguish 0-credit cached previews from gated Live jobs.
 assert.match(
