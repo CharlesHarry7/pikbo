@@ -5025,6 +5025,23 @@ assert.match(
 );
 assert.match(batchStudio, /data-seller-pack-recovery="durable-pointer"/);
 assert.match(batchStudio, /retryEligible/);
+const synchronousPackPointer = batchStudio.indexOf(
+  "saveSellerPackRecovery(projectId, runPackId, queue)"
+);
+const awaitedPackAssetRegistration = batchStudio.indexOf(
+  "const reg = await registerLocalAsset(image)",
+  synchronousPackPointer
+);
+assert.ok(
+  synchronousPackPointer > -1 &&
+    awaitedPackAssetRegistration > synchronousPackPointer,
+  "the exact packRunId + three packJobIds must be saved before asset registration can yield"
+);
+assert.match(batchStudio, /const pollRecoveredPack = async/);
+assert.match(
+  batchStudio,
+  /openCount > 0[\s\S]*window\.setTimeout\(\(\) => \{[\s\S]*void pollRecoveredPack\(\)/
+);
 const recoveryCjs = require("typescript").transpileModule(sellerPackRecoverySrc, {
   compilerOptions: {
     module: require("typescript").ModuleKind.CommonJS,

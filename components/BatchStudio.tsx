@@ -385,6 +385,7 @@ export function BatchStudio({
   useEffect(() => {
     if (!isSellerPack) return;
     let canceled = false;
+    let pollTimer: number | null = null;
     const start = window.setTimeout(() => {
       let saved: SellerPackRecoveryRun | null = null;
       try {
@@ -403,35 +404,48 @@ export function BatchStudio({
       setSellerPackRecoveryNote(
         "Checking the private Launch Pack record…"
       );
-      void getSellerPackStatusClient(saved.packRunId)
-      .then((status) => {
-        if (canceled) return;
-        if (!status.ok) throw new Error(status.error);
-        const recovered = reconcileSellerPackRecovery(saved!, status.jobs);
-        setJobs(recovered.children.map(toRecoveredJob));
-        setSellerPackRecoveryNote(
-          recovered.unavailable > 0
-            ? `${recovered.unavailable} format${recovered.unavailable === 1 ? "" : "s"} is still being checked.`
-            : "Private Launch Pack restored."
-        );
-      })
-      .catch(() => {
-        if (canceled) return;
-        const unavailable = reconcileSellerPackRecovery(saved!, []).children.map(
-          toRecoveredJob
-        );
-        setJobs(unavailable);
-        setSellerPackRecoveryNote(
-          "Private pack status is unavailable. No local success or refund claim was restored."
-        );
-      })
-        .finally(() => {
-          if (!canceled) setSellerPackRecoveryHydrated(true);
-        });
-      });
+      const pollRecoveredPack = async () => {
+        try {
+          const status = await getSellerPackStatusClient(saved!.packRunId);
+          if (canceled) return;
+          if (!status.ok) throw new Error(status.error);
+          const recovered = reconcileSellerPackRecovery(saved!, status.jobs);
+          setJobs(recovered.children.map(toRecoveredJob));
+          const openCount = recovered.children.filter(
+            (child) => child.status === "queued" || child.status === "running"
+          ).length;
+          setSellerPackRecoveryNote(
+            openCount > 0
+              ? `${openCount} format${openCount === 1 ? "" : "s"} still processing. Pikbo will keep checking this private Pack.`
+              : recovered.unavailable > 0
+                ? `${recovered.unavailable} format${recovered.unavailable === 1 ? "" : "s"} is still being checked.`
+                : "Private Launch Pack restored."
+          );
+          setSellerPackRecoveryHydrated(true);
+          if (openCount > 0 && !canceled) {
+            pollTimer = window.setTimeout(() => {
+              void pollRecoveredPack();
+            }, 2_000);
+          }
+        } catch {
+          if (canceled) return;
+          const unavailable = reconcileSellerPackRecovery(
+            saved!,
+            []
+          ).children.map(toRecoveredJob);
+          setJobs(unavailable);
+          setSellerPackRecoveryNote(
+            "Private pack status is unavailable. No local success or refund claim was restored."
+          );
+          setSellerPackRecoveryHydrated(true);
+        }
+      };
+      void pollRecoveredPack();
+    });
     return () => {
       canceled = true;
       window.clearTimeout(start);
+      if (pollTimer !== null) window.clearTimeout(pollTimer);
     };
   }, [isSellerPack]);
 
@@ -863,13 +877,6 @@ export function BatchStudio({
       return;
     }
 
-    // Phase D: register still once — Seller Pack / batch children reuse assetId.
-    let sharedAssetId: string | null = null;
-    if (!demoMode && image && image.startsWith("data:image")) {
-      const reg = await registerLocalAsset(image);
-      if (reg?.assetId) sharedAssetId = reg.assetId;
-    }
-
     const queue: Job[] = verifiedReservedJobs
       ? verifiedReservedJobs.map((serverJob, index) => {
           // parseExactSellerPackServerJobs proves positional identity.
@@ -896,6 +903,19 @@ export function BatchStudio({
           };
         });
     setJobs(queue);
+    // Persist the exact server-owned recovery pointer immediately after the
+    // atomic reservation is verified. No upload/register await may open a
+    // refresh window between the 30-credit reserve and durable UI recovery.
+    if (runPackId && verifiedReservedJobs) {
+      saveSellerPackRecovery(projectId, runPackId, queue);
+    }
+
+    // Phase D: register still once — Seller Pack / batch children reuse assetId.
+    let sharedAssetId: string | null = null;
+    if (!demoMode && image && image.startsWith("data:image")) {
+      const reg = await registerLocalAsset(image);
+      if (reg?.assetId) sharedAssetId = reg.assetId;
+    }
 
     try {
       for (let i = 0; i < queue.length; i++) {
