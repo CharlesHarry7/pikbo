@@ -21,7 +21,6 @@ import {
   GenerateWaitMobileStrip,
   GenerateWaitStage,
 } from "@/components/GenerateWaitStage";
-import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import {
   getSellerPackStatusClient,
   historyFieldsFromSuccess,
@@ -52,8 +51,6 @@ import { emitSessionRefresh } from "@/lib/sessionEvents";
 import {
   canExportSellerPack,
   sellerPackAvailableDownloads,
-  sellerPackCsv,
-  sellerPackManifest,
   type SellerPackExportItem,
 } from "@/lib/sellerPackExport";
 import { downloadVideoFile } from "@/lib/history";
@@ -73,8 +70,6 @@ import {
   isSafeDeliverableUrl,
   requestCreditStateFromFailure,
 } from "@/lib/createTrust";
-import { sellerPackPostItems } from "@/lib/deliveryPack";
-import { DeliveryChecklist } from "@/components/DeliveryChecklist";
 import { DirectorPlanPanel } from "@/components/DirectorPlanPanel";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { SellerPackSteps } from "@/components/SellerPackSteps";
@@ -1228,37 +1223,6 @@ export function BatchStudio({
   );
   const [exportBusy, setExportBusy] = useState(false);
 
-  function downloadText(filename: string, body: string, mime: string) {
-    const blob = new Blob([body], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function exportAvailableCsv() {
-    const csv = sellerPackCsv(exportItems);
-    if (!csv) return;
-    downloadText(
-      `pikbo-launch-pack-${Date.now()}.csv`,
-      csv,
-      "text/csv;charset=utf-8"
-    );
-  }
-
-  function exportAvailableManifest() {
-    const manifest = sellerPackManifest(exportItems);
-    downloadText(
-      `pikbo-launch-pack-manifest-${Date.now()}.json`,
-      JSON.stringify(manifest, null, 2),
-      "application/json"
-    );
-  }
-
   /**
    * Phase F: sequential multi-file save of downloadable children only.
    * No server ZIP (needs object storage). Free raw / failed siblings omitted.
@@ -2138,70 +2102,39 @@ export function BatchStudio({
             >
               {exportBusy
                 ? "Saving clips…"
-                : `${demoMode ? "Download Lab previews" : "Export Launch Pack"}${
+                : `${demoMode ? "Download Lab previews" : "Download available videos"}${
                     availableDownloads.length
                       ? ` · ${availableDownloads.length}`
                       : ""
                   }`}
             </button>
-            <button
-              type="button"
-              disabled={!canExportPack || exportBusy}
-              onClick={exportAvailableCsv}
-              className="rounded-full border border-[var(--mint)]/30 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"
-            >
-              Export CSV
-            </button>
-            <button
-              type="button"
-              disabled={!canExportPack || exportBusy}
-              onClick={exportAvailableManifest}
-              className="rounded-full border border-[var(--border)] px-3 py-1 text-[10px] font-bold text-[var(--fg-muted)] disabled:opacity-40"
-            >
-              Manifest JSON
-            </button>
             <span className="text-[10px] text-[var(--fg-dim)]">
-              Multi-file save · no server ZIP yet · Free raw / failures omitted
+              Only completed, downloadable clips are included.
             </span>
           </div>
         )}
-        {/* Post pack checklist — interactive ticks after first success */}
-        {sellerPackActive && doneCount > 0 && (
-          <DeliveryChecklist
-            title={`Post pack · fidelity QC · ${
-              jobs.filter(
-                (j) =>
-                  j.status === "succeeded" &&
-                  canDownloadResult({
-                    demo: Boolean(j.demo),
-                    watermark: Boolean(j.watermark),
-                  })
-              ).length
-            }/${doneCount} downloadable`}
-            surface="seller-pack"
-            items={sellerPackPostItems({
-              readyCount: doneCount,
-              downloadableCount: jobs.filter(
-                (j) =>
-                  j.status === "succeeded" &&
-                  canDownloadResult({
-                    demo: Boolean(j.demo),
-                    watermark: Boolean(j.watermark),
-                  })
-              ).length,
-              demo: demoMode,
-              includeQc: true,
-            })}
-            className="border-[var(--mint)]/25 bg-[var(--mint)]/[0.06]"
-          />
-        )}
         {doneCount > 0 && !running ? (
-          <GenerateAfterPath
-            demo={demoMode}
-            jobIntentId="seller-pack"
-            sku={toyIdentity.sku || null}
-            className="mt-3 justify-start"
-          />
+          <nav
+            aria-label="Launch Pack next steps"
+            className="mt-3 hidden flex-wrap items-center gap-2 lg:flex"
+          >
+            <Link
+              href="/library"
+              className="btn btn-primary px-4 py-2 text-xs"
+            >
+              Open in Library
+            </Link>
+            <a
+              href={
+                demoMode
+                  ? "/create?mode=seller-pack&try=1&source=next-sample"
+                  : "/create?mode=seller-pack&source=next-sku"
+              }
+              className="btn btn-ghost border border-white/15 px-4 py-2 text-xs"
+            >
+              {demoMode ? "Preview another sample" : "Create next SKU"}
+            </a>
+          </nav>
         ) : null}
         {jobs.map((j) => (
           <div
@@ -2421,17 +2354,17 @@ export function BatchStudio({
                 Retry failed only
               </button>
             ) : (
-              <button
-                type="button"
-                disabled={!canRun}
-                onClick={() => {
-                  if (canRun) void runBatch();
-                }}
+              <a
+                href={
+                  demoMode
+                    ? "/create?mode=seller-pack&try=1&source=next-sample"
+                    : "/create?mode=seller-pack&source=next-sku"
+                }
                 className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm disabled:opacity-50"
-                data-seller-pack-action="run-again"
+                data-seller-pack-action="next-sku"
               >
-                Run pack again
-              </button>
+                {demoMode ? "Another sample" : "Create next SKU"}
+              </a>
             )}
           </div>
         ) : (

@@ -1654,9 +1654,9 @@ assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
   /downloadAvailableClips|Download available/
 );
-assert.match(
+assert.doesNotMatch(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
-  /exportAvailableCsv|Export CSV/
+  /exportAvailableCsv|Export CSV|Manifest JSON/
 );
 // Library honesty: HF Assets IA + device-local labels (banner, not raw page string)
 assert.match(
@@ -4072,9 +4072,13 @@ const landingToolPanel = fs.readFileSync(
 );
 assert.match(landingToolPanel, /registerLocalAsset|assetId/);
 assert.match(landingToolPanel, /deliveryItemsForJob|DeliveryChecklist/);
-assert.match(
+assert.doesNotMatch(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
   /sellerPackPostItems|DeliveryChecklist/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /Open in Library|Create next SKU|Preview another sample/
 );
 assert.match(
   fs.readFileSync(join(root, "components/DeliveryChecklist.tsx"), "utf8"),
@@ -4981,9 +4985,13 @@ assert.doesNotMatch(
   presetCardSrc,
   /Official · cached|data-proof-quality|provisionalLabQualityLabel|Lab\s*≥\s*4/
 );
-assert.match(
+assert.doesNotMatch(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
   /GenerateAfterPath/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /Open in Library|Create next SKU|Preview another sample/
 );
 // Profile suite exits for closed loop (Generate / Library / Seller Pack / Flow)
 assert.match(
