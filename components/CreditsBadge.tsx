@@ -98,7 +98,7 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
     return (
       <Link
         href={signed ? "/profile" : "/pricing"}
-        className={`grid h-8 min-w-8 place-items-center rounded-full border px-1.5 text-[10px] font-bold ${
+        className={`grid h-11 min-w-11 place-items-center rounded-full border px-2 text-[10px] font-bold ${
           low && !demo
             ? "border-amber-400/50 text-amber-300"
             : "border-white/10 text-[var(--mint)]"

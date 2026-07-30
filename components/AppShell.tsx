@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { CommandPalette } from "@/components/CommandPalette";
+import { useEffect } from "react";
 import { CreditsBadge } from "@/components/CreditsBadge";
 import { Footer } from "@/components/Footer";
 import {
@@ -17,85 +16,10 @@ import { trackPageView } from "@/lib/analytics";
 import { MOBILE_NAV, PRIMARY_NAV } from "@/lib/softLaunch";
 import { cn } from "@/lib/utils";
 
-const MORE = [
-  { href: "/tools", label: "Tools", tag: null },
-  { href: "/guides", label: "Guides", tag: null },
-  { href: "/toys", label: "Toy types", tag: null },
-  { href: "/login", label: "Sign in", tag: null },
-  { href: "/profile", label: "Profile", tag: null },
-] as const;
-
 function active(path: string, href: string) {
   const route = href.split("?")[0];
   if (route === "/") return path === "/";
   return path === route || path.startsWith(`${route}/`);
-}
-
-function MoreMenu({ path }: { path: string }) {
-  const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const selected = MORE.some((item) => active(path, item.href));
-
-  useEffect(() => {
-    if (!open) return;
-    const closeOutside = (event: MouseEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const closeEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", closeOutside);
-    document.addEventListener("keydown", closeEscape);
-    return () => {
-      document.removeEventListener("mousedown", closeOutside);
-      document.removeEventListener("keydown", closeEscape);
-    };
-  }, [open]);
-
-  return (
-    <div ref={root} className="relative shrink-0">
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-        className={cn(
-          "text-[13px] font-semibold transition-colors",
-          open || selected ? "text-white" : "text-white/52 hover:text-white"
-        )}
-      >
-        More <span aria-hidden>▾</span>
-      </button>
-      {open ? (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-50 mt-3 min-w-44 rounded-2xl border border-white/10 bg-[#0c0c10]/95 p-1.5 shadow-2xl backdrop-blur-xl"
-        >
-          {MORE.map((item) => (
-            <Link
-              key={item.href}
-              role="menuitem"
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className={cn(
-                "flex items-center justify-between gap-4 rounded-xl px-3 py-2 text-[13px] font-medium",
-                active(path, item.href)
-                  ? "bg-white/[0.07] text-[#c8ff3d]"
-                  : "text-white/68 hover:bg-white/[0.05] hover:text-white"
-              )}
-            >
-              <span>{item.label}</span>
-              {item.tag ? (
-                <span className="text-[9px] font-bold uppercase tracking-wide text-white/35">
-                  {item.tag}
-                </span>
-              ) : null}
-            </Link>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -112,9 +36,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
   const path = usePathname() || "/";
   const home = path === "/";
+  const create = path.startsWith("/create");
   const hideFooter =
     home ||
-    path.startsWith("/create") ||
+    create ||
     path.startsWith("/supercomputer") ||
     path.startsWith("/explore") ||
     path.startsWith("/community");
@@ -124,77 +49,66 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   }, [path]);
 
   return (
-    <div className="flex min-h-screen min-w-0 flex-col bg-black text-white">
-      <header className="sticky top-0 z-50 hidden h-14 items-center gap-4 border-b border-white/[0.08] bg-black/80 px-5 backdrop-blur-xl lg:flex">
-        <Link
-          href="/"
-          className="flex shrink-0 items-center"
-          aria-label="Pikbo Explore"
-        >
+    <div className="flex min-h-screen min-w-0 flex-col bg-[#0A0A0A] text-[#F7F4ED]">
+      <header className="sticky top-0 z-50 hidden h-16 items-center border-b border-white/10 bg-[#0A0A0A]/92 px-7 backdrop-blur-xl lg:flex">
+        <Link href="/" className="shrink-0" aria-label="Pikbo home">
           <Logo size={30} />
         </Link>
         <nav
-          className="mx-auto flex items-center gap-5 xl:gap-7"
+          className="mx-auto flex items-center gap-9"
           aria-label="Primary navigation"
+          data-primary-create-href="/create?mode=seller-pack"
         >
-          {PRIMARY_NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active(path, item.href) ? "page" : undefined}
-              className={cn(
-                "relative whitespace-nowrap text-[13px] font-semibold transition-colors",
-                active(path, item.href)
-                  ? "text-white"
-                  : "text-white/52 hover:text-white"
-              )}
-            >
-              {item.label}
-              {active(path, item.href) ? (
-                <span className="absolute -bottom-[18px] left-0 right-0 h-px bg-[#c8ff3d] shadow-[0_0_12px_#c8ff3d]" />
-              ) : null}
-            </Link>
-          ))}
-          <MoreMenu path={path} />
+          {PRIMARY_NAV.map((item) => {
+            const on = active(path, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={on ? "page" : undefined}
+                className={cn(
+                  "relative py-5 text-[13px] font-bold transition-colors",
+                  on
+                    ? "text-[#F7F4ED]"
+                    : "text-[#F7F4ED]/46 hover:text-[#F7F4ED]"
+                )}
+              >
+                {item.label}
+                {on ? (
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#CBFF3D]" />
+                ) : null}
+              </Link>
+            );
+          })}
         </nav>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-3">
           <LanguageSwitcher />
           <CreditsBadge />
-          <Link
-            href="/create?mode=seller-pack"
-            className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[13px] font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.24)] transition hover:-translate-y-0.5 hover:bg-[#d5ff6b]"
-            data-appshell-cta="generate"
-          >
-            {t("cta.launchPack")}
-          </Link>
         </div>
       </header>
 
-      <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-white/[0.08] bg-black/80 px-3 backdrop-blur-xl lg:hidden">
-        <Link href="/" aria-label="Pikbo Explore">
+      <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-white/10 bg-[#0A0A0A]/92 px-3 backdrop-blur-xl lg:hidden">
+        <Link href="/" aria-label="Pikbo home">
           <Logo size={26} wordClassName="text-base" />
         </Link>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <LanguageSwitcher compact />
           <CreditsBadge compact />
-          <Link
-            href="/create?mode=seller-pack"
-            className="rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[11px] font-black text-black"
-            data-appshell-cta="generate"
-          >
-            {t("cta.launchPack")}
-          </Link>
+          {create ? (
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#CBFF3D]">
+              {t("cta.launchPack")}
+            </span>
+          ) : null}
         </div>
       </header>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <CommandPalette />
-        <main className="min-w-0 flex-1 bg-black">{children}</main>
+        <main className="min-w-0 flex-1 bg-[#0A0A0A]">{children}</main>
         {!hideFooter ? <Footer /> : null}
       </div>
 
       <nav
-        className="sticky bottom-0 z-50 grid grid-cols-5 border-t border-white/[0.08] bg-[#070708]/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+        className="sticky bottom-0 z-50 grid grid-cols-5 border-t border-white/10 bg-[#0A0A0A]/96 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
         aria-label="Mobile navigation"
       >
         {MOBILE_NAV.map((item) => {
@@ -205,18 +119,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               href={item.href}
               aria-current={on ? "page" : undefined}
               className={cn(
-                "flex min-w-0 flex-col items-center justify-center px-0.5 py-3 text-[10px] font-semibold transition-colors",
-                item.href.startsWith("/create")
-                  ? "text-[#c8ff3d]"
-                  : on
-                    ? "text-[#c8ff3d]"
-                    : "text-white/42"
+                "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
+                on ? "text-[#CBFF3D]" : "text-[#F7F4ED]/38"
               )}
             >
               <span
                 className={cn(
                   "mb-1 h-1 w-1 rounded-full",
-                  on ? "bg-[#c8ff3d]" : "bg-transparent"
+                  on ? "bg-[#CBFF3D]" : "bg-transparent"
                 )}
                 aria-hidden
               />

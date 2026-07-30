@@ -3,12 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
-  clearHistory,
   downloadVideoFile,
-  exportHistoryJson,
   historyDownloadBlockReason,
   historyItemDownloadAllowed,
-  importHistoryJson,
   LIBRARY_HISTORY_CHANGED_EVENT,
   loadHistory,
   privateDownloadHeaders,
@@ -1295,23 +1292,6 @@ export function LibraryGrid() {
       });
   }, [filtered, groupMode]);
 
-  function onImportFile(file: File | undefined) {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = typeof reader.result === "string" ? reader.result : "";
-      const n = importHistoryJson(text);
-      if (n < 0) {
-        toast("Import failed — need a Pikbo library JSON export");
-        return;
-      }
-      setItems(loadHistory());
-      toast(`Library restored · ${n} clip${n === 1 ? "" : "s"}`);
-    };
-    reader.onerror = () => toast("Could not read file");
-    reader.readAsText(file);
-  }
-
   async function copyLink(url: string) {
     // Session-gated /api/downloads is cookie-bound — not a portable public link.
     const share = publicShareableVideoUrl(
@@ -1424,26 +1404,17 @@ export function LibraryGrid() {
     >
       <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
         {items.length > 0
-          ? `${items.length} clip${items.length === 1 ? "" : "s"} · Saved on this device`
-          : "Saved on this device · not multi-device cloud"}
+          ? `${items.length} available clip${items.length === 1 ? "" : "s"}`
+          : "Your Launch Pack Library"}
         {sessionMeta.open > 0 ? ` · ${sessionMeta.open} session open` : ""}
       </p>
-      <div className="flex gap-2">
-        <Link
-          href={LIBRARY_GENERATE_HREF}
-          className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
-          data-library-action="generate"
-        >
-          Generate
-        </Link>
-        <Link
-          href="/create?mode=seller-pack"
-          className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm"
-          data-library-action="seller-pack"
-        >
-          Launch Pack
-        </Link>
-      </div>
+      <Link
+        href="/create?mode=seller-pack"
+        className="btn btn-primary w-full py-3 text-sm"
+        data-library-action="seller-pack"
+      >
+        Create new Pack
+      </Link>
     </div>
   );
 
@@ -1520,23 +1491,10 @@ export function LibraryGrid() {
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
               <Link
-                href={LIBRARY_GENERATE_HREF}
-                className="btn btn-primary text-sm"
-                data-library-empty="generate-remix"
-              >
-                Open single-format preview
-              </Link>
-              <Link
                 href="/create?mode=seller-pack"
-                className="btn btn-ghost text-sm"
+                className="btn btn-primary text-sm"
               >
-                Preview Launch Pack formats
-              </Link>
-              <Link
-                href={LIBRARY_LAB_SAMPLE_HREF}
-                className="btn btn-ghost text-sm"
-              >
-                ▶ Lab sample · cached 0 credits
+                Create your first Pack
               </Link>
             </div>
             <p className="mt-4 max-w-xs text-[10px] text-[var(--fg-dim)]">
@@ -1595,7 +1553,8 @@ export function LibraryGrid() {
         onRefresh={() => void refreshSessionStills()}
       />
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      {items.length >= 10 ? (
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <input
             value={filter}
@@ -1635,43 +1594,8 @@ export function LibraryGrid() {
             {filtered.length} / {items.length} · Saved on this device
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="text-xs text-[var(--fg-muted)] hover:text-[var(--mint)]"
-            onClick={() => {
-              exportHistoryJson();
-              toast("Library JSON exported");
-            }}
-          >
-            Export JSON
-          </button>
-          <label className="cursor-pointer text-xs text-[var(--fg-muted)] hover:text-[var(--mint)]">
-            Import JSON
-            <input
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              onChange={(e) => {
-                onImportFile(e.target.files?.[0]);
-                e.target.value = "";
-              }}
-            />
-          </label>
-          <button
-            type="button"
-            className="text-xs text-[var(--fg-dim)] hover:text-[var(--brand)]"
-            onClick={() => {
-              if (confirm("Clear all clips from this browser?")) {
-                clearHistory();
-                setItems([]);
-              }
-            }}
-          >
-            Clear all
-          </button>
-        </div>
       </div>
+      ) : null}
 
       {effectNames.length > 1 && (
         <div className="mb-4 flex flex-wrap gap-1.5">
@@ -1760,12 +1684,6 @@ export function LibraryGrid() {
                   className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70 hover:border-white/30"
                 >
                   Launch Pack
-                </Link>
-                <Link
-                  href="/modules"
-                  className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70 hover:border-white/30"
-                >
-                  Modules
                 </Link>
                 <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[10px] font-bold uppercase text-[var(--fg-dim)]">
                   Local only

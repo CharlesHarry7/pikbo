@@ -100,10 +100,11 @@ assert.doesNotMatch(pricingCards, /PricingCheckoutButton|PLANS\.map|FreeTrialCta
 assert.match(paywall, /Founding Studio · coming soon/);
 assert.match(paywall, /No public price, Pack count, subscription, or checkout/);
 assert.doesNotMatch(paywall, /PLANS|priceMonthly|\$49|\/mo/);
-assert.match(libraryGrid, /Lab sample · cached 0 credits/);
+assert.match(libraryGrid, /Create your first Pack/);
+assert.match(libraryGrid, /data-library-action="seller-pack"/);
 assert.doesNotMatch(
   libraryGrid,
-  /FreeTrialCta|Generate · upload toy photo|Compare plans/
+  /FreeTrialCta|Generate · upload toy photo|Compare plans|data-library-action="generate"/
 );
 assert.match(pricing, /There is no Free plan comparison/);
 assert.doesNotMatch(
@@ -142,12 +143,13 @@ assert.match(
 assert.match(steps, /Owner-only Library and download/);
 assert.match(steps, /Pikbo Lab only · no product upload/);
 assert.match(batch, /data-launch-pack-export="downloadable-only"/);
-assert.match(batch, /Export Launch Pack/);
-assert.match(batch, /Free raw files stay out|Free raw \/ failures omitted/);
+assert.match(batch, /Download available videos/);
+assert.match(batch, /Only completed, downloadable clips are included/);
+assert.doesNotMatch(batch, /Export CSV|Manifest JSON|Post pack · fidelity QC/);
 assert.match(packExport, /status === "succeeded"/);
 assert.match(packExport, /i\.downloadable/);
 assert.match(packExport, /Failed siblings and Free raw URLs are omitted/);
 
 console.log(
-  "launch-pack-main-path-smoke: PASS (home upgrade → fixed trio → downloadable-only export)"
+  "launch-pack-main-path-smoke: PASS (home upgrade → fixed trio → downloadable-only seller handoff)"
 );

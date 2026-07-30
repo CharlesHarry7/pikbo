@@ -3,16 +3,16 @@
  * Code imports this so G1/G2 cannot drift from the product contract.
  *
  * 2026-07-26 GSC P0: PRIMARY = real indexable core only.
- * Preview/Lab doors live under More (crawlable + noindex, not robots.txt block).
+ * Preview/Lab routes stay crawlable + noindex, but remain outside primary navigation.
  */
 
-/** Primary product path: Pack first, Recipes second. */
+/** Seller-first frontdoor: one clear path from promise to private assets. */
 export const PRIMARY_NAV = [
   { href: "/", label: "Home" },
-  { href: "/effects", label: "Recipes" },
-  { href: "/create?mode=seller-pack", label: "Launch Pack" },
+  { href: "/create?mode=seller-pack", label: "Create" },
   { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/profile", label: "Account" },
 ] as const;
 
 export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
@@ -20,10 +20,10 @@ export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
 /** Mobile mirrors the same five product doors; secondary routes stay hidden. */
 export const MOBILE_NAV = [
   { href: "/", label: "Home" },
-  { href: "/effects", label: "Recipes" },
-  { href: "/create?mode=seller-pack", label: "Pack" },
+  { href: "/create?mode=seller-pack", label: "Create" },
   { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/profile", label: "Account" },
 ] as const;
 
 export const MOBILE_NAV_HREFS = MOBILE_NAV.map((item) => item.href);

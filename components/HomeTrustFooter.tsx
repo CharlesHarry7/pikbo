@@ -10,12 +10,12 @@ import { site } from "@/lib/site";
 export function HomeTrustFooter() {
   return (
     <footer
-      className="border-t border-white/10 bg-[#050506] px-4 py-10 text-white sm:px-6"
+      className="border-t border-white/10 bg-[#0A0A0A] px-4 py-10 text-[#F7F4ED] sm:px-6"
       data-home-trust-footer
     >
       <div className="mx-auto grid max-w-5xl gap-8 sm:grid-cols-[1.4fr_1fr] sm:items-start">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#CBFF3D]">
             Built for product truth
           </p>
           <h2 className="mt-2 text-xl font-black text-white">
@@ -34,19 +34,19 @@ export function HomeTrustFooter() {
             aria-label="Pikbo trust and support"
             className="flex flex-wrap gap-x-4 gap-y-2 text-sm"
           >
-            <Link href="/about" className="text-white/75 hover:text-[#c8ff3d]">
+            <Link href="/about" className="text-white/75 hover:text-[#CBFF3D]">
               About
             </Link>
             <Link
               href="/guides/how-to-photograph-toys-for-ai-video"
-              className="text-white/75 hover:text-[#c8ff3d]"
+              className="text-white/75 hover:text-[#CBFF3D]"
             >
               Photo guide
             </Link>
-            <Link href="/privacy" className="text-white/75 hover:text-[#c8ff3d]">
+            <Link href="/privacy" className="text-white/75 hover:text-[#CBFF3D]">
               Privacy
             </Link>
-            <Link href="/terms" className="text-white/75 hover:text-[#c8ff3d]">
+            <Link href="/terms" className="text-white/75 hover:text-[#CBFF3D]">
               Terms
             </Link>
           </nav>
@@ -55,7 +55,7 @@ export function HomeTrustFooter() {
               Privacy questions:{" "}
               <a
                 href={`mailto:${site.contact.privacyEmail}`}
-                className="text-white/65 underline decoration-white/25 underline-offset-2 hover:text-[#c8ff3d]"
+                className="text-white/65 underline decoration-white/25 underline-offset-2 hover:text-[#CBFF3D]"
               >
                 {site.contact.privacyEmail}
               </a>
@@ -64,7 +64,7 @@ export function HomeTrustFooter() {
               Legal questions:{" "}
               <a
                 href={`mailto:${site.contact.legalEmail}`}
-                className="text-white/65 underline decoration-white/25 underline-offset-2 hover:text-[#c8ff3d]"
+                className="text-white/65 underline decoration-white/25 underline-offset-2 hover:text-[#CBFF3D]"
               >
                 {site.contact.legalEmail}
               </a>

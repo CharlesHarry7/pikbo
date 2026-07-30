@@ -2159,3 +2159,45 @@ Newest first. One block per meaningful landing.
   194/194 routes.
 - Safety: no real generation, environment-variable change, Supabase mutation,
   Stripe/DNS action, production deployment or merge was performed.
+
+### 2026-07-30 — [gpt/grok/workbuddy] Seller-first MVP convergence
+
+- Product surface: Home now leads with one toy photo → three fixed seller
+  videos; Create separates the public cached Lab preview from invited private
+  generation; Library presents Launch Packs instead of engineering controls;
+  Pricing exposes one closed Founding Studio offer with no checkout.
+- Navigation: desktop and mobile primary navigation are exactly Home, Create,
+  Library, Pricing and Account. More, Command Palette and the top-level suite
+  doors are no longer mounted in the primary shell.
+- Removed from the active seller path: the eight-card homepage wall, public
+  Director Plan wall, Library JSON Import/Export/Clear/Modules controls, pricing
+  comparisons, duplicate page-level actions, and the Footer's Effects/use-case/
+  toy-type directory wall. The underlying generation, recovery and billing
+  modules remain frozen rather than being rewritten.
+- Chrome runtime proof at `127.0.0.1:43110`: the public Home CTA opened the
+  exact seller-Pack sample route; its one primary action reached `3 ready` /
+  `3 available` using cached media; Library then rendered those results and
+  retained them after reload. Desktop plus 390px Home, Create, Library and
+  Pricing had no console errors or horizontal overflow.
+- Grok read-only audit session
+  `e8a670c9-c6c8-4882-ada0-58b73ad0fce2` reviewed the complete working-tree
+  diff against `origin/main@e3af301` and returned product-surface **GO**, no
+  P0, with public live/payment still correctly **NO-GO**.
+- WorkBuddy runtime session `pikbo-mvp-runtime-final-20260730` (reported ID
+  `WB-20260730-curl-only`) fetched all four routes and passed seller-value,
+  public/private truth and primary-action copy. Its own browser connector could
+  not exercise viewport or localStorage, so it conservatively returned NO-GO
+  for unproven interaction; the Chrome runtime proof above resolves those two
+  evidence gaps without treating WorkBuddy's limitation as a product pass.
+- Final Preview QA removed the remaining CSV/Manifest buttons, the 11-item
+  internal QC checklist and generic suite exits from the Create success state.
+  Grok session `bb2c82a6-82fd-4d76-99f0-9ea6ddda100b` returned **GO** with no
+  P0 after checking download, failed-only retry, recovery and 30-credit symbols.
+  WorkBuddy session `pikbo-mvp-final-cut-verdict-20260730` returned **GO** with
+  no P0 for the focused `Download available videos` → `Open in Library` →
+  `Create next SKU` handoff.
+- Verification: live-copy, SEO cold-start, engine, seller-Pack atomic,
+  recovery ledger/reconciliation, Stripe billing, Launch-Pack path, product
+  proof, mobile proof, TypeScript, ESLint and the production build pass.
+- Safety: no API, auth, database, provider, Stripe, DNS or production-gate
+  behavior changed; no paid model call or public checkout was enabled.

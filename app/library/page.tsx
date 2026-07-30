@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LibraryGrid } from "@/components/LibraryGrid";
-import { createRemixHref } from "@/lib/remixIntent";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
-
-/** Page chrome Generate — listing spin remix (ratio/duration/channel). */
-const LIBRARY_PAGE_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
   title: "Library · Assets",
@@ -30,27 +26,19 @@ export default function LibraryPage() {
               Launch Pack Library
             </p>
             <h1 className="mt-3 max-w-3xl font-display text-4xl font-black tracking-[-0.055em] sm:text-6xl">
-              Every SKU. Every clip. One place.
+              Your Launch Packs.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--fg-muted)]">
-              Reopen completed Launch Pack clips through fresh owner-only links.
-              Device imports stay on this browser; signed-in private results
-              remain attached to your account.
+              Completed clips return here after refresh with fresh owner-only
+              links. Start the next SKU from the same fixed three-format Pack.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div>
             <Link
               href="/create?mode=seller-pack"
               className="btn btn-primary text-sm"
             >
-              Open Launch Pack
-            </Link>
-            <Link
-              href={LIBRARY_PAGE_GENERATE_HREF}
-              className="btn btn-ghost text-sm"
-              data-library-page-generate="remix"
-            >
-              Open single preview
+              Create new Pack
             </Link>
           </div>
         </div>

@@ -221,7 +221,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
                     <p className="truncate text-[10px] font-black sm:text-sm">
                       {format.name}
                     </p>
-                    <div className="mt-1 flex flex-wrap gap-x-2 text-[7px] font-bold uppercase tracking-[0.1em] text-white/50 sm:text-[9px]">
+                    <div className="mt-1 flex flex-wrap gap-x-2 text-[10px] font-bold uppercase tracking-[0.08em] text-white/65">
                       <span>{format.spec}</span>
                       <span className="hidden xl:inline">{format.use}</span>
                     </div>

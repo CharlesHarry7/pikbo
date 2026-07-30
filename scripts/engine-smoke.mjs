@@ -783,9 +783,12 @@ assert.match(gen, /creditsRefunded/);
 assert.match(gen, /10 credits restored/);
 const appShell = fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8");
 assert.match(appShell, /PRIMARY_NAV\.map/);
-assert.match(appShell, /const MORE|MoreMenu/);
+assert.doesNotMatch(appShell, /const MORE|MoreMenu|CommandPalette/);
 assert.match(appShell, /CreditsBadge|LanguageSwitcher/);
-assert.match(appShell, /data-appshell-cta=["']generate["']/);
+assert.match(
+  appShell,
+  /data-primary-create-href=["']\/create\?mode=seller-pack["']/
+);
 const historySrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historySrc, /historyProvenance|provenance/);
 assert.match(historySrc, /sourceProject/);
@@ -1651,9 +1654,9 @@ assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
   /downloadAvailableClips|Download available/
 );
-assert.match(
+assert.doesNotMatch(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
-  /exportAvailableCsv|Export CSV/
+  /exportAvailableCsv|Export CSV|Manifest JSON/
 );
 // Library honesty: HF Assets IA + device-local labels (banner, not raw page string)
 assert.match(
@@ -1664,14 +1667,16 @@ assert.match(
   fs.readFileSync(join(root, "components/LibraryStorageBanner.tsx"), "utf8"),
   /device-local|this browser|export JSON|no fake multi-device|Saved on this device/i
 );
-// Library Phase F first-run: sticky Generate/Seller Pack + device-local honesty
+// Library MVP first-run: one Launch Pack action + device-local honesty
 const libraryFirstRun = fs.readFileSync(
   join(root, "components/LibraryGrid.tsx"),
   "utf8"
 );
 assert.match(libraryFirstRun, /data-library-sticky="mobile"/);
-assert.match(libraryFirstRun, /data-library-action="generate"/);
 assert.match(libraryFirstRun, /data-library-action="seller-pack"/);
+assert.match(libraryFirstRun, /Create new Pack/);
+assert.doesNotMatch(libraryFirstRun, /data-library-action="generate"/);
+assert.doesNotMatch(libraryFirstRun, /Export JSON|Import JSON|Clear all/);
 assert.match(libraryFirstRun, /data-library-state="empty"/);
 assert.match(libraryFirstRun, /data-library-state="filled"/);
 assert.match(libraryFirstRun, /data-library-label="device-local"/);
@@ -4067,9 +4072,13 @@ const landingToolPanel = fs.readFileSync(
 );
 assert.match(landingToolPanel, /registerLocalAsset|assetId/);
 assert.match(landingToolPanel, /deliveryItemsForJob|DeliveryChecklist/);
-assert.match(
+assert.doesNotMatch(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
   /sellerPackPostItems|DeliveryChecklist/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /Open in Library|Create next SKU|Preview another sample/
 );
 assert.match(
   fs.readFileSync(join(root, "components/DeliveryChecklist.tsx"), "utf8"),
@@ -4092,16 +4101,16 @@ assert.match(historySrcLib, /sku\?:/);
 assert.match(library, /i\.sku|sku/);
 
 
-// Home V2: PRIMARY_NAV names the fixed Pack instead of a generic Create door.
+// MVP convergence: navigation exposes only the seller value loop.
 const softLaunchSrc = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
 assert.match(softLaunchSrc, /PRIMARY_NAV/);
 assert.match(
   softLaunchSrc,
   /href:\s*["']\/create\?mode=seller-pack["']/
 );
-assert.match(softLaunchSrc, /href:\s*["']\/effects["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/library["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
+assert.match(softLaunchSrc, /href:\s*["']\/profile["']/);
 {
   const primaryBlock =
     softLaunchSrc.match(
@@ -4112,10 +4121,10 @@ assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
   );
   assert.deepEqual(labels, [
     "Home",
-    "Recipes",
-    "Launch Pack",
+    "Create",
     "Library",
     "Pricing",
+    "Account",
   ]);
 }
 // Cold-start: /create is a tool, not a rank landing — noindex,follow
@@ -4125,7 +4134,7 @@ const createPageMeta = fs.readFileSync(
 );
 assert.match(createPageMeta, /CONCEPT_ROBOTS/);
 assert.match(createPageMeta, /robots:\s*CONCEPT_ROBOTS/);
-// Cmd-K + Footer stay focused on the shipped loop; empty suite shells are hidden.
+// Frozen Command Palette + live Footer stay focused on the seller loop.
 const commandPaletteSrc = fs.readFileSync(
   join(root, "components/CommandPalette.tsx"),
   "utf8"
@@ -4146,7 +4155,7 @@ assert.match(footerCoreSrc, /Launch Pack/);
 assert.match(footerCoreSrc, /AI toy video generator/);
 assert.doesNotMatch(
   footerCoreSrc,
-  /Flow · Preview|Community|Supercomputer|Modules/
+  /FreeTrialCta|\/effects|\/explore|\/for|\/toys|Community|Supercomputer|Modules/
 );
 // Preview doors must not sit in PRIMARY_NAV
 {
@@ -4163,8 +4172,12 @@ const appShellSrc = fs.readFileSync(
   "utf8"
 );
 assert.match(appShellSrc, /PRIMARY_NAV/);
-assert.match(appShellSrc, /MoreMenu|CreditsBadge|LanguageSwitcher/);
-assert.match(appShellSrc, /data-appshell-cta=["']generate["']/);
+assert.match(appShellSrc, /CreditsBadge|LanguageSwitcher/);
+assert.doesNotMatch(appShellSrc, /MoreMenu|CommandPalette/);
+assert.match(
+  appShellSrc,
+  /data-primary-create-href=["']\/create\?mode=seller-pack["']/
+);
 // GA4 adapter is env-gated no-op when unset (reuse analyticsSrc declared above)
 assert.match(analyticsSrc, /NEXT_PUBLIC_GA_MEASUREMENT_ID/);
 assert.match(analyticsSrc, /PRIVACY_FUNNEL_EVENTS/);
@@ -4313,20 +4326,19 @@ function resolveGenerateStillPure(input) {
   assert.equal(fresh.assetId, "asset_cur");
 }
 
-// Mobile mirrors Explore · Recipes · Create · Library · Pricing.
+// Mobile mirrors Home · Create · Library · Pricing · Account.
 assert.match(softLaunchSrc, /MOBILE_NAV/);
 assert.match(
   softLaunchSrc,
   /MOBILE_NAV[\s\S]*href:\s*["']\/create\?mode=seller-pack["']/
 );
-assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/effects["']/);
 assert.doesNotMatch(
   softLaunchSrc,
-  /MOBILE_NAV[\s\S]*href:\s*["']\/community["']/
+  /MOBILE_NAV[\s\S]*href:\s*["']\/(?:effects|community)["']/
 );
 assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/library["']/);
 assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/pricing["']/);
-assert.doesNotMatch(
+assert.match(
   softLaunchSrc,
   /MOBILE_NAV[\s\S]*href:\s*["']\/profile["']/
 );
@@ -4575,7 +4587,8 @@ assert.match(
   fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
   /Mini 5s|Mini 5 秒/
 );
-// Shared surfaces: freeTrial-honest CTAs (exhausted → plans, not static Try free)
+// Shared landing surfaces keep free-trial honesty; the converged Footer has no
+// trial CTA and points only to the fixed public sample.
 assert.match(
   fs.readFileSync(join(root, "components/LandingSeoMesh.tsx"), "utf8"),
   /FreeTrialCta/
@@ -4584,7 +4597,7 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "components/LandingSeoMesh.tsx"), "utf8"),
   /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Try free Mini/
 );
-assert.match(
+assert.doesNotMatch(
   fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
   /FreeTrialCta/
 );
@@ -4609,9 +4622,8 @@ const libraryGridPublicCtaSrc = fs.readFileSync(
   "utf8"
 );
 assert.doesNotMatch(libraryGridPublicCtaSrc, /FreeTrialCta/);
-assert.match(libraryGridPublicCtaSrc, /Open single-format preview/);
-assert.match(libraryGridPublicCtaSrc, /Preview Launch Pack formats/);
-assert.match(libraryGridPublicCtaSrc, /Lab sample · cached 0 credits/);
+assert.match(libraryGridPublicCtaSrc, /Create your first Pack/);
+assert.match(libraryGridPublicCtaSrc, /Create new Pack/);
 assert.doesNotMatch(
   libraryGridPublicCtaSrc,
   /10 seconds/
@@ -4973,9 +4985,13 @@ assert.doesNotMatch(
   presetCardSrc,
   /Official · cached|data-proof-quality|provisionalLabQualityLabel|Lab\s*≥\s*4/
 );
-assert.match(
+assert.doesNotMatch(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
   /GenerateAfterPath/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /Open in Library|Create next SKU|Preview another sample/
 );
 // Profile suite exits for closed loop (Generate / Library / Seller Pack / Flow)
 assert.match(
@@ -5827,7 +5843,7 @@ assert.match(
   fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
   /create\?mode=seller-pack/
 );
-// Pricing points to the fixed Pack; Footer keeps its single-recipe remix door.
+// Pricing and Footer both point to the fixed seller Pack.
 assert.match(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
   /href=["']\/create\?mode=seller-pack&source=pricing-hero&try=1&sample=scout["']/
@@ -5838,7 +5854,7 @@ assert.doesNotMatch(
 );
 assert.match(
   fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
-  /FOOTER_GENERATE_HREF|createRemixHref\(["']360-spin-showcase["']\)/
+  /create\?mode=seller-pack&source=footer&try=1&sample=scout/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
@@ -5859,7 +5875,6 @@ assert.match(
 
 // Residual product-shell Generate doors carry remix contract (not bare /create)
 const residualGenerateDoors = [
-  ["app/library/page.tsx", /data-library-page-generate=["']remix["']/],
   ["app/profile/page.tsx", /data-profile-page-generate=["']remix["']/],
   ["app/settings/page.tsx", /data-settings-generate=["']remix["']/],
   ["app/explore/page.tsx", /data-explore-generate=["']remix["']/],
@@ -5888,6 +5903,10 @@ for (const [rel, re] of residualGenerateDoors) {
     `${rel} primary Generate door must use createRemixHref remix marker`
   );
 }
+assert.match(
+  fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
+  /href=["']\/create\?mode=seller-pack["'][\s\S]*Create new Pack/
+);
 // Cinema director board compose → Generate carries remix + prompt (not bare effect=)
 const cinemaComposeSrc = fs.readFileSync(
   join(root, "app/cinema/page.tsx"),
@@ -5937,7 +5956,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "app/pricing/page.tsx"), "utf8"),
-  /source=pricing-bottom&try=1&sample=scout/
+  /mode=seller-pack&source=pricing-preview&try=1&sample=scout/
 );
 
 

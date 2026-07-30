@@ -34,7 +34,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
         aria-label={t("lang.change")}
         title={t("lang.change")}
         className={`flex items-center gap-1.5 rounded-full border border-white/10 text-white/70 transition-colors hover:border-white/25 hover:text-white ${
-          compact ? "h-8 px-2 text-[11px]" : "px-3 py-1.5 text-[13px]"
+          compact ? "h-11 px-3 text-[11px]" : "px-3 py-1.5 text-[13px]"
         }`}
       >
         <svg

@@ -84,76 +84,43 @@ export default async function CreatePage({
   // Wave A: Seller Pack is a Create mode, not a separate suite door.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return (
-      <div className="min-h-screen bg-[#09090a]">
-        <div className="px-4 py-4 sm:px-8 sm:py-6">
-          <div className="mx-auto max-w-7xl">
-            <section className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111113] p-4 sm:p-5">
-              <div
-                className="pointer-events-none absolute right-[-4rem] top-[-5rem] h-64 w-64 rounded-full bg-[#c8ff3d]/10 blur-[80px]"
-                aria-hidden
-              />
-              <div className="relative grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
-                <div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-black">
-                      Private validation
-                    </span>
-                    <span className="rounded-full border border-white/12 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white/52">
-                      Launch Pack · 3 fixed formats
-                    </span>
-                  </div>
-                  <p className="mt-3 text-[9px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]">
-                    Public preview or invited private generation
-                  </p>
-                  <h1 className="mt-4 max-w-3xl font-display text-2xl font-black tracking-[-0.045em] text-white sm:text-4xl">
-                    Preview the fixed Pack—or create it in private beta.
-                  </h1>
-                  <p className="mt-2 max-w-2xl text-xs leading-5 text-white/48 sm:text-sm">
-                    Public visitors choose a Pikbo Lab sample; no product photo
-                    is accepted or processed. Invited accounts can upload one
-                    rights-owned photo, reserve 30 credits, and receive
-                    owner-only results.
-                  </p>
-                  <p className="mt-2 text-[10px] font-semibold text-amber-100/70">
-                    Only Listing Spin has passed Pikbo&apos;s internal
-                    end-to-end check so far.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-1.5 lg:w-[430px]">
-                  {[
-                    ["01", "Listing Spin", "1:1 · Fast 720p · 5 sec"],
-                    ["02", "Blind-box Reveal", "9:16 · Fast 720p · 5 sec"],
-                    ["03", "Social Flash", "9:16 · Fast 720p · 5 sec"],
-                  ].map(([n, name, spec]) => (
-                    <div
-                      key={name}
-                      className="min-w-0 rounded-xl border border-white/10 bg-white/[0.045] p-2.5 sm:p-3"
-                    >
-                      <span className="text-[9px] font-black text-[#c8ff3d]">
-                        {n}
-                      </span>
-                      <p className="mt-2 text-[10px] font-black leading-tight text-white sm:text-xs">
-                        {name}
-                      </p>
-                      <p className="mt-1 text-[7px] font-bold uppercase tracking-[0.06em] text-white/45 sm:text-[8px]">
-                        {spec}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            <div className="mt-3" data-launch-pack-workbench>
-              {/* AfterPath ?sku= / ?try=1 hydrate bible + Lab still (no auto 3× run) */}
-              <BatchStudio
-                pack="seller"
-                initialSku={sp.sku}
-                initialSample={firstRunSample}
-              />
+      <div className="min-h-screen bg-[#0A0A0A] pb-28 text-[#F7F4ED] lg:pb-8">
+        <div className="border-b border-white/10 bg-[#F7F4ED] px-4 py-4 text-[#0A0A0A] sm:px-8 sm:py-6">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-black/42">
+                Launch Pack · 3 fixed formats
+                <span className="sr-only">
+                  {" "}
+                  · Public preview or invited private generation
+                </span>
+              </p>
+              <h1 className="mt-1 font-display text-3xl font-black tracking-[-0.055em] sm:text-5xl">
+                Preview a Launch Pack.
+              </h1>
             </div>
+            <p className="max-w-xl text-xs font-semibold leading-5 text-black/52 sm:text-sm">
+              Choose a Pikbo Lab sample to preview the three fixed formats.
+              Public preview: no product photo is accepted or processed.
+              Invited sellers can sign in for private generation.
+            </p>
           </div>
+          <p className="mx-auto mt-3 max-w-7xl text-[10px] font-bold text-amber-800/75">
+            Only Listing Spin has passed Pikbo&apos;s current private technical
+            check so far.
+          </p>
+        </div>
+
+        <div
+          className="mx-auto max-w-7xl px-3 sm:px-8"
+          data-launch-pack-workbench
+        >
+          {/* Public samples and invited private generation share one gated workbench. */}
+          <BatchStudio
+            pack="seller"
+            initialSku={sp.sku}
+            initialSample={firstRunSample}
+          />
         </div>
       </div>
     );

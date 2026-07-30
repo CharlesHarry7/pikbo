@@ -31,7 +31,7 @@ export function Logo({
         aria-hidden="true"
         className="shrink-0"
       >
-        <rect x="1" y="1" width="30" height="30" rx="9.5" fill="#c8ff3d" />
+        <rect x="1" y="1" width="30" height="30" rx="9.5" fill="#CBFF3D" />
         <rect
           x="1"
           y="1"
@@ -57,7 +57,7 @@ export function Logo({
           className={`font-display font-extrabold leading-none tracking-[-0.03em] text-white ${wordClassName}`}
         >
           {site.name}
-          <span className="text-[#c8ff3d]">.</span>
+          <span className="text-[#CBFF3D]">.</span>
         </span>
       )}
     </span>
