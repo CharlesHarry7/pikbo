@@ -149,6 +149,13 @@ assert.doesNotMatch(homeSrc, /videoObjectJsonLd/);
 assert.doesNotMatch(toolPageSrc, /videoObjectJsonLd/);
 assert.match(toolPageSrc, /Watch a cached AI toy video prototype/);
 assert.match(toolPageSrc, /data-tools-friction="cached-preview"/);
+assert.match(
+  toolPageSrc,
+  /\{isHighIntentTool \? \(\s*<p[\s\S]{0,400}data-tools-friction="cached-preview"/,
+  "every high-intent tool must show the cached-preview truth line"
+);
+assert.match(toolPageSrc, /your upload is not processed/);
+assert.match(toolPageSrc, /subscriptions are not open\s+yet/);
 assert.doesNotMatch(
   toolPageSrc,
   /No sign-up\. No card\. One photo → one video\. Free\./
