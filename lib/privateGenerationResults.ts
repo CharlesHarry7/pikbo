@@ -87,6 +87,10 @@ function configuredProviderHosts(): string[] {
     .filter(Boolean);
 }
 
+export function privateProviderOutputAllowlistConfigured(): boolean {
+  return configuredProviderHosts().length > 0;
+}
+
 function resultFromRow(row: Record<string, unknown>): PrivateGenerationResult | null {
   if (
     typeof row.id !== "string" ||
@@ -654,6 +658,8 @@ export async function savePrivateGenerationResult(
 export async function privateResultsProbe(): Promise<{
   configured: boolean;
   bucketReady: boolean;
+  schemaReady: boolean;
+  rpcReady: boolean;
   warning?: string;
 }> {
   const admin = getSupabaseAdmin();
@@ -661,24 +667,66 @@ export async function privateResultsProbe(): Promise<{
     return {
       configured: false,
       bucketReady: false,
+      schemaReady: false,
+      rpcReady: false,
       warning: "Supabase service role unavailable",
     };
   }
-  const { data, error } = await admin.storage.getBucket(
-    PRIVATE_RESULTS_BUCKET
-  );
-  if (error || !data) {
+  const [bucket, schema, attachRpc] = await Promise.all([
+    admin.storage.getBucket(PRIVATE_RESULTS_BUCKET),
+    admin
+      .from("generation_jobs")
+      .select(
+        "id,output_object_key,output_content_type,output_byte_length,output_sha256,pack_attempt_key"
+      )
+      .limit(1),
+    admin.rpc("pikbo_attach_private_generation_output_v2", {
+      p_user_id: null,
+      p_job_id: null,
+      p_provider_request_id: null,
+      p_object_key: null,
+      p_content_type: null,
+      p_byte_length: null,
+      p_sha256: null,
+      p_model_id: null,
+      p_duration_seconds: null,
+      p_aspect_ratio: null,
+      p_resolution: null,
+      p_attempt_key: null,
+    }),
+  ]);
+  const rpcPayload = (Array.isArray(attachRpc.data)
+    ? attachRpc.data[0]
+    : attachRpc.data) as Record<string, unknown> | null;
+  const bucketReady = Boolean(bucket.data && bucket.data.public === false);
+  const schemaReady = !schema.error;
+  const rpcReady =
+    !attachRpc.error &&
+    rpcPayload?.ok === false &&
+    rpcPayload.code === "INVALID_IDENTITY";
+  if (!bucketReady || !schemaReady || !rpcReady) {
     return {
       configured: true,
-      bucketReady: false,
-      warning: error?.message.slice(0, 160) || "Private result bucket missing",
+      bucketReady,
+      schemaReady,
+      rpcReady,
+      warning: (
+        bucket.error?.message ||
+        (!bucket.data
+          ? "Private result bucket missing"
+          : bucket.data.public
+            ? "Private result bucket must not be public"
+            : "") ||
+        schema.error?.message ||
+        attachRpc.error?.message ||
+        "Private result RPC readiness probe returned an invalid result"
+      ).slice(0, 160),
     };
   }
   return {
     configured: true,
-    bucketReady: data.public === false,
-    ...(data.public
-      ? { warning: "Private result bucket must not be public" }
-      : {}),
+    bucketReady: true,
+    schemaReady: true,
+    rpcReady: true,
   };
 }

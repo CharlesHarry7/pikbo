@@ -13,7 +13,6 @@ import { probeDemoAssets } from "@/lib/demoClips";
 import { communityUgcConfigured } from "@/lib/communityPosts";
 import { imageJobsProbe } from "@/lib/imageJobs";
 import { localReconciliationProbe } from "@/lib/durableCredits/localReconciliationJournal";
-import { privateResultsProbe } from "@/lib/privateGenerationResults";
 import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
 import {
   providerValidationBudgetUsd,
@@ -47,15 +46,17 @@ export async function GET() {
   const degraded = production && !sessionSecret;
 
   const entitlements = await probeEntitlementsStore();
-  const [liveReadiness, privateResults, stripeBillingStore] = await Promise.all([
+  const [liveReadiness, stripeBillingStore] = await Promise.all([
     probeSoftLiveReadiness(),
-    privateResultsProbe(),
     probeStripeBillingStore(),
   ]);
   const {
     authPublic,
     durableCredits,
     durableReconciliation,
+    durableProviderBudget,
+    privatePreview,
+    privateResults,
     supabase,
     t6,
     truth,
@@ -114,15 +115,7 @@ export async function GET() {
     durableCredits:
       durableAtomicReservationConfigured && durableReconciliationConfigured,
     /** Owner-only Preview path; independent from public Free/T6 readiness. */
-    privatePreview:
-      authConfigured &&
-      durableAtomicReservationConfigured &&
-      durableReconciliationConfigured &&
-      fal &&
-      privateResults.bucketReady &&
-      process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1" &&
-      Boolean((process.env.PIKBO_PRIVATE_LIVE_ALLOWLIST || "").trim()) &&
-      Number(process.env.PIKBO_PRIVATE_LIVE_BUDGET_MAX || "0") > 0,
+    privatePreview: privatePreview.ready,
   };
 
   return NextResponse.json({
@@ -139,6 +132,8 @@ export async function GET() {
       softLive: ready.softLive === true,
       paid: ready.paid === true,
       missingLiveRequirements: truth.missing,
+      privatePreview: ready.privatePreview === true,
+      missingPrivatePreviewRequirements: privatePreview.missing,
     },
     /** T6 file watermark bake — blocked until operator proves pipeline */
     t6,
@@ -287,6 +282,7 @@ export async function GET() {
     entitlements,
     stripeBillingStore,
     durableCredits,
+    durableProviderBudget,
     privateResults,
     auth: {
       mode: authPublic.mode,
@@ -359,11 +355,17 @@ export async function GET() {
         previewOverride: deploymentGate.previewOverride,
         enabled: ceilingUsd > 0,
         ceilingUsd,
+        durableBudgetSchemaReady: durableProviderBudget.schemaReady,
+        durableBudgetRpcReady: durableProviderBudget.rpcReady,
         productionHardClosed: deploymentGate.productionHardClosed,
         note:
           "The database project-wide budget remains authoritative; this field never exposes keys, users, or remaining spend.",
       };
     })(),
+    privatePreviewReadiness: {
+      ready: privatePreview.ready,
+      missing: privatePreview.missing,
+    },
     /** Live-readiness checklist (presence only — never echo secrets) */
     softLiveChecklist: {
       SESSION_SECRET: sessionSecret,

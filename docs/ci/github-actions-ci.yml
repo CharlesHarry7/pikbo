@@ -52,7 +52,9 @@ jobs:
         run: npm run r0-safety-net
 
       - name: P0 private live generation contract
-        run: npm run p0-private-live-generation
+        run: |
+          npm run p0-private-live-generation
+          npm run capability-matrix
 
       - name: Recovery retry + deadline (R1b video + image)
         run: npm run recovery-retry-deadline

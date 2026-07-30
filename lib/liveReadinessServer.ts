@@ -5,8 +5,20 @@ import {
 import { probeDurableReconciliationSchema } from "@/lib/durableCredits/reconciliation";
 import {
   evaluateHealthTruth,
+  evaluatePrivatePreviewReadiness,
   type HealthTruthInput,
+  type PrivatePreviewReadinessInput,
 } from "@/lib/liveCapability";
+import {
+  probeDurableProviderBudgetStore,
+  providerValidationBudgetUsd,
+  providerValidationEnvironmentGate,
+} from "@/lib/durableProviderBudget";
+import {
+  privateProviderOutputAllowlistConfigured,
+  privateResultsProbe,
+} from "@/lib/privateGenerationResults";
+import { parsePrivateLiveAllowlist } from "@/lib/privateLiveBeta.mjs";
 import { probeSupabase } from "@/lib/supabase/server";
 import { t6Report } from "@/lib/t6Watermark";
 
@@ -16,9 +28,17 @@ import { t6Report } from "@/lib/t6Watermark";
  * fail-closed.
  */
 async function computeSoftLiveReadiness() {
-  const [durableCredits, durableReconciliation, supabase] = await Promise.all([
+  const [
+    durableCredits,
+    durableReconciliation,
+    durableProviderBudget,
+    privateResults,
+    supabase,
+  ] = await Promise.all([
     probeDurableCreditsStore(),
     probeDurableReconciliationSchema(),
+    probeDurableProviderBudgetStore(),
+    privateResultsProbe(),
     probeSupabase(),
   ]);
   const authPublic = publicAuthStatus();
@@ -52,13 +72,46 @@ async function computeSoftLiveReadiness() {
     providerConfigured: Boolean(process.env.FAL_KEY),
     serverOwnedDeliverableConfigured,
   };
+  const providerValidationDeployment =
+    providerValidationEnvironmentGate();
+  const privatePreviewInput: PrivatePreviewReadinessInput = {
+    authConfigured,
+    durableAtomicReservationConfigured,
+    durableReconciliationConfigured,
+    providerConfigured: Boolean(process.env.FAL_KEY),
+    privateResultsBucketReady: privateResults.bucketReady,
+    privateResultsSchemaReady: privateResults.schemaReady,
+    privateResultsRpcReady: privateResults.rpcReady,
+    providerOutputAllowlistConfigured:
+      privateProviderOutputAllowlistConfigured(),
+    privateLiveEnabled: process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1",
+    privateLiveAllowlistConfigured:
+      parsePrivateLiveAllowlist(
+        process.env.PIKBO_PRIVATE_LIVE_ALLOWLIST || ""
+      ).length > 0,
+    privateLiveBudgetConfigured:
+      Math.floor(
+        Number(process.env.PIKBO_PRIVATE_LIVE_BUDGET_MAX || "0")
+      ) > 0,
+    providerValidationEnvironmentAllowed:
+      providerValidationDeployment.environmentAllowed,
+    providerValidationBudgetConfigured:
+      providerValidationBudgetUsd() > 0,
+    durableProviderBudgetSchemaReady:
+      durableProviderBudget.schemaReady,
+    durableProviderBudgetRpcReady: durableProviderBudget.rpcReady,
+  };
 
   return {
     truth: evaluateHealthTruth(input),
+    privatePreview: evaluatePrivatePreviewReadiness(privatePreviewInput),
     input,
+    privatePreviewInput,
     authPublic,
     durableCredits,
     durableReconciliation,
+    durableProviderBudget,
+    privateResults,
     supabase,
     t6,
   };
