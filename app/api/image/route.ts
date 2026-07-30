@@ -3,7 +3,9 @@ import { fal } from "@fal-ai/client";
 import { IMAGE_MODEL } from "@/lib/models";
 import {
   classifyProviderError,
+  recordAmbiguousSettlementStateSafely,
   providerErrorMessage,
+  providerFailureSettlementPlan,
   providerFailHttp,
 } from "@/lib/providerError";
 import {
@@ -44,6 +46,7 @@ import {
   imageJobTimeoutMs,
   listImageJobCountsForSession,
   listImageJobsForSession,
+  markImageProviderRequestStarted,
   normalizeImageIdempotencyKey,
   recordImageWorkerHeartbeat,
   sweepTimedOutImageJobs,
@@ -365,21 +368,23 @@ export async function POST(req: Request) {
         const code = prior.errorCode || "GENERATION_FAILED";
         // HTTP status map parity with /api/generate fail replay.
         const status =
-          code === "CONTENT_POLICY"
-            ? 422
-            : code === "PROVIDER_TIMEOUT" || code === "TIMEOUT"
-              ? 504
-              : code === "PROVIDER_NETWORK"
-                ? 503
-                : code === "PROVIDER_BALANCE"
-                  ? 402
-                  : code === "PROVIDER_RATE_LIMIT"
-                    ? 429
-                    : code === "CANCELED" || code === "REQUEST_CANCELED"
-                      ? 409
-                      : code === "UNSAFE_URL" || code === "MODEL_EMPTY"
-                        ? 502
-                        : 500;
+          code === "DURABLE_CREDITS_UNAVAILABLE"
+            ? 503
+            : code === "CONTENT_POLICY"
+              ? 422
+              : code === "PROVIDER_TIMEOUT" || code === "TIMEOUT"
+                ? 504
+                : code === "PROVIDER_NETWORK"
+                  ? 503
+                  : code === "PROVIDER_BALANCE"
+                    ? 402
+                    : code === "PROVIDER_RATE_LIMIT"
+                      ? 429
+                      : code === "CANCELED" || code === "REQUEST_CANCELED"
+                        ? 409
+                        : code === "UNSAFE_URL" || code === "MODEL_EMPTY"
+                          ? 502
+                          : 500;
         return NextResponse.json(
           {
             error:
@@ -637,6 +642,8 @@ export async function POST(req: Request) {
         const confirmedPreOutput = new Set([
           "force_fail",
           "retry_claim_rejected",
+          "provider_error_before_submit",
+          "provider_rejected_before_execution",
           "unexpected_exit_safety_net",
         ]).has(reason);
         const recorded = confirmedPreOutput
@@ -678,6 +685,23 @@ export async function POST(req: Request) {
     };
     await saveSession(session);
 
+    const markImageReconciliationPending = (error: string) => {
+      try {
+        failImageJob({
+          jobId: liveJobId,
+          sessionId: session.id,
+          prompt,
+          error,
+          errorCode: "DURABLE_CREDITS_UNAVAILABLE",
+          model: IMAGE_MODEL,
+          refundUnconfirmed: true,
+          idempotencyKey: ledgerIdempotencyKey,
+        });
+      } catch {
+        /* best-effort process ledger */
+      }
+    };
+
     // Match generate: non-prod forced fail for refund path tests (never production).
     const forceFail =
       process.env.PIKBO_FORCE_GENERATE_FAIL === "1" &&
@@ -710,6 +734,7 @@ export async function POST(req: Request) {
       return NextResponse.json(failBody, { status: 500 });
     }
 
+    let providerRequestStarted = false;
     try {
       fal.config({ credentials: process.env.FAL_KEY });
       const aspect = aspectEcho;
@@ -724,15 +749,29 @@ export async function POST(req: Request) {
       if (liveJobId) recordImageWorkerHeartbeat(liveJobId);
       const result = await invokeReservedProvider(
         reserved.reservation,
-        () =>
-          fal.subscribe(IMAGE_MODEL, {
+        () => {
+          // The reservation gate itself may reject before provider submission.
+          // Mark started only immediately before calling the provider.
+          if (liveJobId) {
+            const providerStart = markImageProviderRequestStarted(liveJobId);
+            if (!providerStart.ok) {
+              throw new Error(
+                providerStart.code === "PARENT_RECONCILING"
+                  ? "The original image attempt is still being reconciled; the retry provider call was not started."
+                  : "The image attempt was canceled before the provider call started."
+              );
+            }
+          }
+          providerRequestStarted = true;
+          return fal.subscribe(IMAGE_MODEL, {
             input: {
               prompt: `${prompt}. Product photography style, designer toy / collectible figure, sharp detail, studio lighting.`,
               image_size: sizeMap[aspect] || "portrait_4_3",
               num_images: 1,
             },
             logs: false,
-          })
+          });
+        }
       );
       if (liveJobId) recordImageWorkerHeartbeat(liveJobId);
 
@@ -808,6 +847,7 @@ export async function POST(req: Request) {
           // Provider output already exists. Close the release path before any
           // reconciliation I/O, because that I/O may itself throw.
           reservationLife.markWithheld(completionDecision.code);
+          markImageReconciliationPending(completionDecision.message);
           const recorded = await recordProviderSucceededWithheld(
             reserved.reservation,
             {
@@ -848,6 +888,9 @@ export async function POST(req: Request) {
         console.error("[live-reservation] image capture failed");
         // settle() already moves failed/thrown capture to withheld.
         reservationLife.markWithheld("capture_failed");
+        markImageReconciliationPending(
+          "The still was generated, but credits could not be finalized. The output remains withheld while the durable reservation is reconciled."
+        );
         const recorded = await recordProviderSucceededWithheld(
           reserved.reservation,
           {
@@ -875,6 +918,7 @@ export async function POST(req: Request) {
             model: IMAGE_MODEL,
             jobId: reserved.reservation.jobId,
             session: publicSession(session),
+            refundUnconfirmed: true,
           },
           { status: 503 }
         );
@@ -916,7 +960,6 @@ export async function POST(req: Request) {
       });
     } catch (err) {
       console.error("image gen error:", err);
-      const released = await releaseReservation("provider_error");
       const raw =
         err && typeof err === "object" && "body" in err
           ? JSON.stringify((err as { body?: unknown }).body)
@@ -924,9 +967,60 @@ export async function POST(req: Request) {
             ? err.message
             : "Image generation failed";
       const kind = classifyProviderError(raw);
+      const settlementPlan = providerFailureSettlementPlan({
+        kind,
+        providerRequestStarted,
+      });
+
+      if (settlementPlan.action === "withhold") {
+        const target = reserved.reservation;
+        const safeguard = await recordAmbiguousSettlementStateSafely({
+          reason: settlementPlan.reason,
+          markWithheld: (reason) => {
+            reservationLife.markWithheld(reason);
+            markImageReconciliationPending(settlementPlan.error);
+          },
+          // Unlike the video validation path, live image generation has no
+          // separate project-level USD hold to commit.
+          commitProviderSpend: async () => true,
+          recordReconciliation: () =>
+            recordSettlementUnknown(target, {
+              eventId: reconciliationEventId(
+                "settlement_unknown",
+                target.jobId,
+                settlementPlan.reason
+              ),
+              reason: settlementPlan.reason,
+            }),
+        });
+        if (!safeguard.reconciliationRecorded) {
+          console.error(
+            "[live-reconciliation] image provider outcome enqueue failed",
+            safeguard.reconciliationCode
+          );
+        }
+        // The process ledger has no withheld status. Persist the durable error
+        // code so same-key replay remains non-retryable; forkRetryImageJob
+        // explicitly treats this code as reconciliation still in flight.
+        return NextResponse.json(
+          {
+            error: settlementPlan.error,
+            code: settlementPlan.code,
+            model: IMAGE_MODEL,
+            jobId: target.jobId,
+            session: publicSession(session),
+            refundUnconfirmed: settlementPlan.refundUnconfirmed,
+          },
+          { status: settlementPlan.status }
+        );
+      }
+
+      const released = await releaseReservation(settlementPlan.reason);
       const fallback =
         err instanceof Error ? err.message : "Image generation failed";
-      const msg = providerErrorMessage(kind, fallback);
+      const msg = released
+        ? providerErrorMessage(kind, fallback)
+        : "The provider did not start the still, but credit release is still being verified.";
       const http = providerFailHttp(kind);
       try {
         failImageJob({

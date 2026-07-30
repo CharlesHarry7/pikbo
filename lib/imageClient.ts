@@ -194,7 +194,7 @@ export function interpretImageResponse(
       status,
       error:
         body.error ||
-        "Credits could not be finalized. Still withheld while the durable reservation is reconciled — do not retry with the same idempotency key.",
+        "Credits could not be finalized. Still withheld while the durable reservation is reconciled — do not retry this attempt yet.",
       code,
       session: body.session,
       retryAfterSec,

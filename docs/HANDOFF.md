@@ -4,6 +4,17 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-30 — [gpt/grok/workbuddy] image-provider ambiguity and retry fence
+- Applied PR #88's fail-closed accounting semantics to the optional `/api/image` route without changing UI, video generation, Stripe, storage, schema or product scope. Once `fal.subscribe` may have started, timeout/network/unknown exceptions retain the durable reservation, record `settlement_unknown`, return `DURABLE_CREDITS_UNAVAILABLE`, and expose neither refund nor automatic-retry signals.
+- A final synchronous provider boundary records `providerRequestStartedAt` immediately before `fal.subscribe`. Cancel before that boundary prevents the original provider call and permits the ordinary retry child; cancel or timeout after it blocks fork, claim and every retry descendant until reconciliation.
+- Late provider output, capture failure and ambiguous catch all close release synchronously before fallible reconciliation I/O. A child claimed before its parent becomes durable is rechecked after credit reservation at the final provider boundary, so the remaining claim → await reserve → late parent race cannot make a second provider call.
+- Regression coverage executes one-POST client behavior, same-key replay, canceled/TIMEOUT/capture ambiguity, cancel → fork → late success, claim → await-equivalent → parent durable, ancestor fencing, ordinary pre-submit cancellation, pre-submit release and the shared recorder-failure lifecycle.
+- Independent gates: GPT Pro `APPROVE` in chat `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`; Grok `APPROVE` in session `019fb369-5431-7041-8de0-7f5703fa7a00`; WorkBuddy max-effort `APPROVE` in `pikbo-image-provider-final-gate-1d3d9e17-20260730-max-v1`.
+- PASS: provider-budget, retry-deadline, R0 safety, live-copy, SEO, engine, Seller Pack atomic, recovery ledger/reconciliation, Stripe billing, TypeScript, ESLint and the 196-route production build. The build retains one pre-existing T6 dynamic NFT tracing warning.
+- No provider call, Supabase mutation, Stripe action, environment change, DNS change or public-live/payment enablement occurred. Production remains validation-only.
+
+---
+
 ### 2026-07-30 — [gpt/grok/workbuddy] post-provider ambiguity fail-closed
 - Fixed a launch-blocking accounting race in `/api/generate`: once the provider request may have started, a timeout, network break or unknown exception no longer releases the user's reservation or permits an automatic second provider attempt.
 - The request synchronously enters `withheld` before fallible budget/reconciliation I/O. Pack reconciliation records `settlement_unknown` against the exact `packRunId`, child `jobId` and `attemptKey`; the response truthfully returns `DURABLE_CREDITS_UNAVAILABLE` with `refundUnconfirmed`, no `creditsRefunded`, no `Retry-After` and no final failed-state write.

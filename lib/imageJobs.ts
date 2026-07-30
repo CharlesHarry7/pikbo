@@ -57,6 +57,8 @@ export type ImageJob = {
   deadlineAt: string;
   /** Trusted worker liveness only; never written by GET/poll. */
   workerHeartbeatAt?: string;
+  /** Set synchronously at the final boundary before fal.subscribe. */
+  providerRequestStartedAt?: string;
   /** One-time retry bearer digest. Never in PublicImageJob. */
   retryTokenHash?: string;
   retryClaimedAt?: string;
@@ -117,6 +119,25 @@ function nowIso() {
 
 function newId() {
   return `img_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function imageProviderOutcomePending(job: ImageJob): boolean {
+  const seen = new Set<string>();
+  let current: ImageJob | undefined = job;
+  while (current && !seen.has(current.id)) {
+    seen.add(current.id);
+    if (current.errorCode === "DURABLE_CREDITS_UNAVAILABLE") return true;
+    if (
+      current.providerRequestStartedAt &&
+      (current.status === "canceled" || current.errorCode === "TIMEOUT")
+    ) {
+      return true;
+    }
+    current = current.parentJobId
+      ? jobs.get(current.parentJobId)
+      : undefined;
+  }
+  return false;
 }
 
 export function imageJobTimeoutMs(): number {
@@ -266,6 +287,14 @@ export function forkRetryImageJob(input: {
         "Parent still open — wait for success/failure or cancel ledger first",
     };
   }
+  if (imageProviderOutcomePending(parent)) {
+    return {
+      ok: false,
+      code: "JOB_IN_FLIGHT",
+      message:
+        "Provider outcome and credits are still being reconciled — do not retry this still yet",
+    };
+  }
   if (parent.status === "succeeded") {
     return {
       ok: false,
@@ -360,6 +389,15 @@ export function claimRetryImageJob(input: {
       message: `Retry child is ${child.status}; mint a retry from the selected terminal still`,
     };
   }
+  const parent = jobs.get(child.parentJobId);
+  if (parent && imageProviderOutcomePending(parent)) {
+    return {
+      ok: false,
+      code: "RETRY_JOB_NOT_READY",
+      message:
+        "Parent provider outcome and credits are still being reconciled — retry remains blocked",
+    };
+  }
   const prompt = input.prompt.slice(0, 2000);
   if (child.prompt && child.prompt !== prompt) {
     return {
@@ -432,6 +470,38 @@ export function recordImageWorkerHeartbeat(id: string): ImageJob | null {
   const next = { ...job, workerHeartbeatAt: nowIso(), updatedAt: nowIso() };
   jobs.set(job.id, next);
   return next;
+}
+
+/**
+ * Final synchronous provider boundary. A cancel before this mark prevents the
+ * original request from reaching Flux; a cancel after it cannot fork a retry
+ * until the provider outcome is reconciled.
+ */
+export function markImageProviderRequestStarted(id: string):
+  | { ok: true; job: ImageJob }
+  | {
+      ok: false;
+      code: "JOB_NOT_RUNNING" | "PARENT_RECONCILING";
+    } {
+  trimStore();
+  sweepTimedOutImageJobs();
+  const job = jobs.get(id);
+  if (!job || job.status !== "running") {
+    return { ok: false, code: "JOB_NOT_RUNNING" };
+  }
+  if (job.parentJobId) {
+    const parent = jobs.get(job.parentJobId);
+    if (parent && imageProviderOutcomePending(parent)) {
+      return { ok: false, code: "PARENT_RECONCILING" };
+    }
+  }
+  const next: ImageJob = {
+    ...job,
+    providerRequestStartedAt: job.providerRequestStartedAt || nowIso(),
+    updatedAt: nowIso(),
+  };
+  jobs.set(job.id, next);
+  return { ok: true, job: next };
 }
 
 /**
@@ -723,8 +793,12 @@ export function failImageJob(input: {
   });
 
   if (existing && existing.sessionId === input.sessionId) {
-    // Respect ledger cancel — do not overwrite canceled with failed.
-    if (existing.status === "canceled") {
+    // Respect ordinary ledger cancel, but an ambiguous provider submission is
+    // stronger evidence: keep reconciliation pending and block retry.
+    if (
+      existing.status === "canceled" &&
+      input.errorCode !== "DURABLE_CREDITS_UNAVAILABLE"
+    ) {
       return existing;
     }
     if (existing.status === "succeeded") {
