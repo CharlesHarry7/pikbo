@@ -206,6 +206,8 @@ function SessionStillJobsPanel({
       className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4"
       data-library-panel="session-stills"
       data-session-stills-listed={meta.listed}
+      id="library-session-stills-panel"
+      tabIndex={-1}
     >
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
@@ -420,6 +422,8 @@ function SessionJobsPanel({
       data-library-panel="session-jobs"
       data-session-list-limit={pageCap}
       data-session-listed={listed}
+      id="library-session-jobs-panel"
+      tabIndex={-1}
     >
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
@@ -1397,24 +1401,54 @@ export function LibraryGrid() {
     );
   }
 
+  const activeJobs = sessionMeta.open + sessionStillMeta.open;
+
+  // Recovery CTA: when jobs are open, scroll/focus the existing recovery panel
+  // (video wins when both are open) instead of opening a duplicate /create door.
+  function handleReviewActiveJobs() {
+    const targetId =
+      sessionMeta.open > 0
+        ? "library-session-jobs-panel"
+        : "library-session-stills-panel";
+    const el = document.getElementById(targetId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.focus({ preventScroll: true });
+  }
+
   const stickyCta = (
     <div
       className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
       data-library-sticky="mobile"
+      data-library-active-jobs={activeJobs}
     >
       <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
         {items.length > 0
           ? `${items.length} available clip${items.length === 1 ? "" : "s"}`
           : "Your Launch Pack Library"}
-        {sessionMeta.open > 0 ? ` · ${sessionMeta.open} session open` : ""}
+        {activeJobs > 0
+          ? ` · ${activeJobs} active job${activeJobs === 1 ? "" : "s"}`
+          : ""}
       </p>
-      <Link
-        href="/create?mode=seller-pack"
-        className="btn btn-primary w-full py-3 text-sm"
-        data-library-action="seller-pack"
-      >
-        Create new Pack
-      </Link>
+      {activeJobs > 0 ? (
+        <button
+          type="button"
+          onClick={handleReviewActiveJobs}
+          className="btn btn-primary w-full py-3 text-sm"
+          data-library-action="review-active"
+          aria-label={`Review ${activeJobs} active job${activeJobs === 1 ? "" : "s"}`}
+        >
+          Review {activeJobs} active job{activeJobs === 1 ? "" : "s"}
+        </button>
+      ) : (
+        <Link
+          href="/create?mode=seller-pack"
+          className="btn btn-primary w-full py-3 text-sm"
+          data-library-action="seller-pack"
+        >
+          Create new Pack
+        </Link>
+      )}
     </div>
   );
 
