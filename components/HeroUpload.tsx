@@ -1,5 +1,6 @@
 "use client";
 
+import { ImagePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { track } from "@/lib/analytics";
@@ -12,12 +13,17 @@ export function HeroUpload() {
   const [err, setErr] = useState<string | null>(null);
 
   function goWithFile(file: File | undefined | null) {
-    if (!file || !file.type.startsWith("image/")) {
-      setErr("PNG or JPG of a toy you own.");
+    if (
+      !file ||
+      !["image/png", "image/jpeg", "image/webp"].includes(file.type)
+    ) {
+      setErr("Choose a PNG, JPG, or WebP photo of a toy you own.");
       return;
     }
-    if (file.size > 8_000_000) {
-      setErr("Max ~8MB.");
+    if (file.size > 2_000_000) {
+      setErr(
+        "For this quick handoff, use a photo under 2 MB. Larger photos can be added inside Launch Pack."
+      );
       return;
     }
     setBusy(true);
@@ -27,7 +33,7 @@ export function HeroUpload() {
       try {
         sessionStorage.setItem("pikbo_pending_still", reader.result as string);
       } catch {
-        setErr("Storage full — open Generate instead.");
+        setErr("This browser could not prepare the photo. Open Launch Pack instead.");
         setBusy(false);
         return;
       }
@@ -39,7 +45,7 @@ export function HeroUpload() {
       router.push("/create?mode=seller-pack&source=home-launch-pack");
     };
     reader.onerror = () => {
-      setErr("Could not read file.");
+      setErr("Pikbo could not read that photo. Try another file.");
       setBusy(false);
     };
     reader.readAsDataURL(file);
@@ -47,52 +53,49 @@ export function HeroUpload() {
 
   return (
     <div data-home-launch-pack="fixed-three">
-      <div className="mb-3 grid grid-cols-3 gap-2 text-[10px] font-bold uppercase tracking-wide text-white/65">
-        <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-2 text-center">
-          Listing · 1:1
-        </span>
-        <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-2 text-center">
-          Reveal · 9:16
-        </span>
-        <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-2 text-center">
-          Hook · 9:16
-        </span>
-      </div>
       <label
         data-launch-pack-primary-action="1"
-        onDragOver={(e) => {
-          e.preventDefault();
+        onDragOver={(event) => {
+          event.preventDefault();
           setHover(true);
         }}
         onDragLeave={() => setHover(false)}
-        onDrop={(e) => {
-          e.preventDefault();
+        onDrop={(event) => {
+          event.preventDefault();
           setHover(false);
-          goWithFile(e.dataTransfer.files?.[0]);
+          goWithFile(event.dataTransfer.files?.[0]);
         }}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-5 transition-colors ${
+        className={`group flex min-h-36 cursor-pointer items-center gap-4 rounded-2xl border border-dashed p-4 transition focus-within:ring-2 focus-within:ring-[#c8ff3d] sm:min-h-40 sm:p-5 ${
           hover
-            ? "border-[var(--mint)] bg-[var(--mint)]/10"
-            : "border-[var(--border)] bg-[var(--card)] hover:border-white/20"
+            ? "border-[#c8ff3d] bg-[#c8ff3d]/10"
+            : "border-white/16 bg-white/[0.045] hover:border-[#c8ff3d]/55 hover:bg-white/[0.065]"
         }`}
       >
-        <p className="text-sm font-semibold">
-          {busy ? "Opening Launch Pack…" : "Upload one toy photo → build 3 assets"}
-        </p>
-        <p className="mt-1 text-[11px] text-[var(--fg-dim)]">
-          Next: confirm ownership, then generate · no recipe hunting
-        </p>
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#c8ff3d] text-black shadow-[0_0_26px_rgba(200,255,61,0.2)] sm:h-14 sm:w-14">
+          <ImagePlus className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-base font-black tracking-[-0.025em] text-white sm:text-lg">
+            {busy ? "Opening your Launch Pack…" : "Drop one clean toy photo"}
+          </span>
+          <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/42">
+            or tap to choose · PNG, JPG, WebP · under 2 MB
+          </span>
+          <span className="mt-3 inline-flex rounded-full border border-white/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.13em] text-[#c8ff3d]">
+            Next: confirm rights → create the fixed trio
+          </span>
+        </span>
         <input
           type="file"
-          accept="image/*"
-          className="hidden"
+          accept="image/png,image/jpeg,image/webp"
+          className="sr-only"
           disabled={busy}
-          onChange={(e) => goWithFile(e.target.files?.[0])}
+          onChange={(event) => goWithFile(event.target.files?.[0])}
         />
       </label>
-      {err && (
-        <p className="mt-2 text-center text-xs text-[var(--brand)]">{err}</p>
-      )}
+      {err ? (
+        <p className="mt-2 text-xs font-semibold text-amber-200">{err}</p>
+      ) : null}
     </div>
   );
 }

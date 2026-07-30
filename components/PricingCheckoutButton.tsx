@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { PlanId } from "@/lib/pricing";
 import { stripeBillingAuthHeaders } from "@/lib/stripeBillingClient";
 import { Button } from "@/components/ui/button";
@@ -21,24 +22,49 @@ export function PricingCheckoutButton({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const live = paymentsLive();
+  const clientEnabled = paymentsLive();
+  const [serverAccepted, setServerAccepted] = useState(false);
+  const live = clientEnabled && serverAccepted;
 
-  // Validation mode: never pretend the paid candidate is buyable.
+  useEffect(() => {
+    if (!clientEnabled) return;
+    let canceled = false;
+    void fetch("/api/health", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return false;
+        const data = (await response.json()) as {
+          acceptance?: { paid?: boolean };
+        };
+        return data.acceptance?.paid === true;
+      })
+      .then((accepted) => {
+        if (!canceled) setServerAccepted(accepted);
+      })
+      .catch(() => {
+        if (!canceled) setServerAccepted(false);
+      });
+    return () => {
+      canceled = true;
+    };
+  }, [clientEnabled]);
+
+  // Validation mode: both the public flag and server acceptance must pass.
   if (!live && planId !== "free") {
     return (
       <div className="w-full">
         <Button
-          type="button"
-          disabled
+          asChild
           variant={featured ? "default" : "secondary"}
           size="lg"
-          className="w-full opacity-70"
+          className="w-full"
         >
-          Coming soon
+          <Link href="/create?mode=seller-pack&source=pricing-founding">
+            Preview the Founding Pack
+          </Link>
         </Button>
         <p className="mt-2 text-center text-[10px] leading-relaxed text-[var(--fg-dim)]">
-          Cached prototypes are open. Founding Studio remains unavailable until
-          quality, accounting, privacy, and target-buyer gates pass.
+          Checkout is closed while Stripe approval and private-beta quality
+          gates are unfinished. The Pack preview is open now.
         </p>
       </div>
     );

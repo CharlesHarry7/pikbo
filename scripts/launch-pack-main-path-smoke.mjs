@@ -6,6 +6,8 @@ const root = process.cwd();
 const read = (file) => readFileSync(join(root, file), "utf8");
 
 const home = read("app/page.tsx");
+const homeHero = read("components/HomeCinemaHero.tsx");
+const heroUpload = read("components/HeroUpload.tsx");
 const homeWall = read("components/HomeViralWall.tsx");
 const create = read("app/create/page.tsx");
 const batch = read("components/BatchStudio.tsx");
@@ -13,15 +15,35 @@ const steps = read("components/SellerPackSteps.tsx");
 const contract = read("lib/sellerPackContract.ts");
 const packExport = read("lib/sellerPackExport.ts");
 const shell = read("components/AppShell.tsx");
+const pricingCheckout = read("components/PricingCheckoutButton.tsx");
 
 // Homepage V2 leads with the fixed Launch Pack; Recipes remain a proof layer.
 assert.match(home, /data-home-upgrade="launch-pack"/);
 assert.match(home, /href="\/create\?mode=seller-pack"/);
+assert.match(homeHero, /<HeroUpload \/>/);
+assert.match(homeHero, /id="home-create"/);
+assert.match(heroUpload, /mode=seller-pack&source=home-launch-pack/);
+assert.match(heroUpload, /pikbo_pending_still/);
+assert.match(heroUpload, /file\.size > 2_000_000/);
+assert.match(heroUpload, /className="sr-only"/);
+assert.match(batch, /const privateInputPayload = demoMode\s*\?\s*\{\}/);
+assert.match(batch, /if \(!demoMode && image && image\.startsWith/);
+assert.match(
+  batch,
+  /!demoMode && image && image\.length <= 300_000 \? image : undefined/
+);
 assert.match(homeWall, /Try this recipe/);
 assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
 assert.match(shell, /create\?mode=seller-pack/);
+assert.match(
+  pricingCheckout,
+  /href="\/create\?mode=seller-pack&source=pricing-founding"/
+);
+assert.match(pricingCheckout, /Preview the Founding Pack/);
+assert.match(pricingCheckout, /fetch\("\/api\/checkout"/);
+assert.match(pricingCheckout, /data\.acceptance\?\.paid === true/);
 assert.doesNotMatch(
   [home, homeWall, shell].join("\n"),
   /#home-tool/

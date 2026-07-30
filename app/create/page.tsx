@@ -85,14 +85,14 @@ export default async function CreatePage({
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return (
       <div className="min-h-screen bg-[#09090a]">
-        <div className="px-4 py-6 sm:px-8 sm:py-10">
+        <div className="px-4 py-4 sm:px-8 sm:py-6">
           <div className="mx-auto max-w-7xl">
-            <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#111113] p-5 sm:p-8 lg:p-10">
+            <section className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111113] p-4 sm:p-5">
               <div
                 className="pointer-events-none absolute right-[-4rem] top-[-5rem] h-64 w-64 rounded-full bg-[#c8ff3d]/10 blur-[80px]"
                 aria-hidden
               />
-              <div className="relative grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
+              <div className="relative grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div>
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-black">
@@ -102,20 +102,20 @@ export default async function CreatePage({
                       Launch Pack — 3 private videos · 30 credits
                     </span>
                   </div>
-                  <p className="mt-7 text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+                  <p className="mt-3 text-[9px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]">
                     One photo → your Launch Pack
                   </p>
-                  <h1 className="mt-3 max-w-3xl font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-6xl">
+                  <h1 className="mt-4 max-w-3xl font-display text-2xl font-black tracking-[-0.045em] text-white sm:text-4xl">
                     Build three product videos from one toy photo.
                   </h1>
-                  <p className="mt-5 max-w-2xl text-sm leading-6 text-white/52">
-                    Use a clear photo you own. Pikbo fixes the format, duration,
-                    and delivery so you can focus on one SKU—not a maze of
-                    models and controls.
+                  <p className="mt-2 max-w-2xl text-xs leading-5 text-white/48 sm:text-sm">
+                    Add a clear photo you own, confirm the fixed trio, then
+                    review every finished clip in your private Library. Public
+                    uploads are not processed.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-1.5 lg:w-[430px]">
                   {[
                     ["01", "Listing Spin", "1:1 · 5 sec · 720p"],
                     ["02", "Blind-box Reveal", "9:16 · 5 sec · 720p"],
@@ -123,30 +123,24 @@ export default async function CreatePage({
                   ].map(([n, name, spec]) => (
                     <div
                       key={name}
-                      className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.045] p-3 sm:p-4"
+                      className="min-w-0 rounded-xl border border-white/10 bg-white/[0.045] p-2.5 sm:p-3"
                     >
                       <span className="text-[9px] font-black text-[#c8ff3d]">
                         {n}
                       </span>
-                      <p className="mt-4 text-[11px] font-black leading-tight text-white sm:mt-5 sm:text-sm">
+                      <p className="mt-2 text-[10px] font-black leading-tight text-white sm:text-xs">
                         {name}
                       </p>
-                      <p className="mt-1 text-[8px] font-bold uppercase tracking-[0.08em] text-white/55 sm:text-[9px] sm:tracking-[0.1em]">
+                      <p className="mt-1 text-[7px] font-bold uppercase tracking-[0.06em] text-white/45 sm:text-[8px]">
                         {spec}
                       </p>
                     </div>
                   ))}
                 </div>
               </div>
-
-              <p className="relative mt-7 border-t border-white/10 pt-5 text-xs font-semibold leading-5 text-white/62">
-                Only completed private clips can be downloaded. A confirmed
-                failed format restores its own 10-credit charge. Public
-                visitors see cached previews; their uploads are not processed.
-              </p>
             </section>
 
-            <div className="mt-6" data-launch-pack-workbench>
+            <div className="mt-3" data-launch-pack-workbench>
               {/* AfterPath ?sku= / ?try=1 hydrate bible + Lab still (no auto 3× run) */}
               <BatchStudio
                 pack="seller"
