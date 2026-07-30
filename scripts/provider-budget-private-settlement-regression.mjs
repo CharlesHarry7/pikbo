@@ -2,10 +2,246 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import ts from "typescript";
 
 const root = process.cwd();
 const read = (path) => readFileSync(join(root, path), "utf8");
+
+const providerErrorUrl = pathToFileURL(
+  join(root, "lib/providerError.ts")
+).href;
+const {
+  providerFailureSettlementPlan,
+  recordAmbiguousSettlementStateSafely,
+} = await import(providerErrorUrl);
+const reservationLifecycleUrl = pathToFileURL(
+  join(root, "lib/reservationLifecycle.ts")
+).href;
+const {
+  createReservationLifecycle,
+} = await import(reservationLifecycleUrl);
+const recoveryPolicyUrl = pathToFileURL(
+  join(root, "lib/generateRecoveryPolicy.ts")
+).href;
+const recoveryPolicy = await import(recoveryPolicyUrl);
+
+function fakeReservation(id) {
+  return {
+    reservationId: `reservation-${id}`,
+    jobId: `job-${id}`,
+    accountId: "account-1",
+    userId: "user-1",
+    credits: 10,
+    status: "reserved",
+    providerAuthorized: true,
+    planId: "founding_studio",
+    idempotencyKey: `idempotency-${id}`,
+    expiresAt: new Date(Date.now() + 60_000).toISOString(),
+  };
+}
+
+// A timeout/network/unknown exception after subscribe() may represent an
+// accepted provider job. It must withhold before finally and never release.
+for (const kind of ["timeout", "network", "other"]) {
+  let releaseCalls = 0;
+  let settleCalls = 0;
+  let providerSpendCommitCalls = 0;
+  let reconciliationCalls = 0;
+  const lifecycle = createReservationLifecycle({
+    async release() {
+      releaseCalls += 1;
+      return { ok: true };
+    },
+    async settle() {
+      settleCalls += 1;
+      return { ok: true };
+    },
+  });
+  lifecycle.assign(fakeReservation(`post-submit-${kind}`));
+  const plan = providerFailureSettlementPlan({
+    kind,
+    providerRequestStarted: true,
+  });
+  assert.equal(plan.action, "withhold");
+  assert.equal(plan.code, "DURABLE_CREDITS_UNAVAILABLE");
+  assert.equal(plan.status, 503);
+  assert.equal(plan.refundUnconfirmed, true);
+  assert.doesNotMatch(plan.error, /credits? (?:were )?restored|refunded/i);
+  const safeguard = await recordAmbiguousSettlementStateSafely({
+    reason: plan.reason,
+    markWithheld: lifecycle.markWithheld,
+    async commitProviderSpend() {
+      providerSpendCommitCalls += 1;
+      return true;
+    },
+    async recordReconciliation() {
+      reconciliationCalls += 1;
+      return { ok: true };
+    },
+  });
+  const finallyResult = await lifecycle.safetyNetRelease();
+  assert.equal(safeguard.providerSpendCommitted, true);
+  assert.equal(safeguard.reconciliationRecorded, true);
+  assert.equal(lifecycle.phase(), "withheld");
+  assert.equal(finallyResult.skipped, true);
+  assert.equal(releaseCalls, 0);
+  assert.equal(settleCalls, 0);
+  assert.equal(providerSpendCommitCalls, 1);
+  assert.equal(reconciliationCalls, 1);
+}
+
+// Even when the durable Pack/R1 recorder throws, the synchronous withhold has
+// already closed both the explicit and finally release paths.
+{
+  let releaseCalls = 0;
+  let providerSpendCommitCalls = 0;
+  let reconciliationCalls = 0;
+  const lifecycle = createReservationLifecycle({
+    async release() {
+      releaseCalls += 1;
+      return { ok: true };
+    },
+    async settle() {
+      return { ok: true };
+    },
+  });
+  lifecycle.assign(fakeReservation("recorder-throws"));
+  const plan = providerFailureSettlementPlan({
+    kind: "timeout",
+    providerRequestStarted: true,
+  });
+  assert.equal(plan.action, "withhold");
+  const safeguard = await recordAmbiguousSettlementStateSafely({
+    reason: plan.reason,
+    markWithheld: lifecycle.markWithheld,
+    async commitProviderSpend() {
+      providerSpendCommitCalls += 1;
+      return true;
+    },
+    async recordReconciliation() {
+      reconciliationCalls += 1;
+      throw new Error("recorder unavailable");
+    },
+  });
+  await lifecycle.safetyNetRelease();
+  assert.equal(safeguard.providerSpendCommitted, true);
+  assert.equal(safeguard.reconciliationRecorded, false);
+  assert.equal(
+    safeguard.reconciliationCode,
+    "RECONCILIATION_RECORD_THROW"
+  );
+  assert.equal(lifecycle.phase(), "withheld");
+  assert.equal(releaseCalls, 0);
+  assert.equal(providerSpendCommitCalls, 1);
+  assert.equal(reconciliationCalls, 1);
+}
+
+// A failure before subscribe() is authoritative and releases exactly once.
+{
+  let releaseCalls = 0;
+  const lifecycle = createReservationLifecycle({
+    async release() {
+      releaseCalls += 1;
+      return { ok: true };
+    },
+    async settle() {
+      return { ok: true };
+    },
+  });
+  lifecycle.assign(fakeReservation("pre-submit"));
+  const plan = providerFailureSettlementPlan({
+    kind: "network",
+    providerRequestStarted: false,
+  });
+  assert.equal(plan.action, "release");
+  assert.equal(plan.reason, "provider_error_before_submit");
+  await lifecycle.release(plan.reason);
+  await lifecycle.safetyNetRelease();
+  assert.equal(releaseCalls, 1);
+}
+
+// Post-submit release is allowed only when structured provider evidence
+// explicitly proves that execution never began.
+{
+  const plan = providerFailureSettlementPlan({
+    kind: "content",
+    providerRequestStarted: true,
+    providerConfirmedNoExecution: true,
+  });
+  assert.equal(plan.action, "release");
+  assert.equal(plan.reason, "provider_rejected_before_execution");
+}
+
+// The ambiguous API contract is terminal for this client call: no Retry-After
+// and no automatic second POST with the same provider attempt.
+{
+  const clientSource = read("lib/generateClient.ts");
+  const clientCompiled = ts.transpileModule(clientSource, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const clientModule = { exports: {} };
+  new Function("require", "exports", "module", clientCompiled)(
+    (id) => {
+      if (id === "@/lib/createTrust") {
+        return { isSafeDeliverableUrl: () => true };
+      }
+      if (id === "@/lib/generateRecoveryPolicy") {
+        return recoveryPolicy;
+      }
+      if (id === "@/lib/sellerPackContract") {
+        return { parseExactSellerPackServerJobs: () => null };
+      }
+      throw new Error(`unexpected generateClient import: ${id}`);
+    },
+    clientModule.exports,
+    clientModule
+  );
+  const originalFetch = globalThis.fetch;
+  let generatePostCalls = 0;
+  let otherFetchCalls = 0;
+  globalThis.fetch = async (url) => {
+    if (url === "/api/generate") {
+      generatePostCalls += 1;
+      return {
+        status: 503,
+        async json() {
+          return {
+            error:
+              "The provider response was interrupted after generation may have started. Credits remain reserved while Pikbo verifies the provider result; do not retry this attempt yet.",
+            code: "DURABLE_CREDITS_UNAVAILABLE",
+            refundUnconfirmed: true,
+          };
+        },
+      };
+    }
+    otherFetchCalls += 1;
+    throw new Error(`unexpected fetch: ${String(url)}`);
+  };
+  try {
+    const result = await clientModule.exports.postGenerateWithRetry(
+      {
+        effect: "listing-spin",
+        idempotencyKey: "idempotency-client-ambiguity",
+        ownsRights: true,
+        allowProviderSpend: true,
+      },
+      { maxRetries: 1 }
+    );
+    assert.equal(result.ok, false);
+    assert.equal(result.code, "DURABLE_CREDITS_UNAVAILABLE");
+    assert.equal(result.retryAfterSec, undefined);
+    assert.equal(result.creditsRefunded, undefined);
+    assert.equal(generatePostCalls, 1);
+    assert.equal(otherFetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
 
 const source = read("lib/durableProviderBudget.ts");
 const compiled = ts.transpileModule(source, {
@@ -275,6 +511,34 @@ assert.match(generate, /reserveDurableProviderSpend/);
 assert.match(generate, /commitDurableProviderSpend/);
 assert.match(generate, /releaseDurableProviderSpend/);
 assert.match(generate, /providerRequestStarted = true/);
+assert.match(
+  generate,
+  /recordAmbiguousSettlementStateSafely\(\{[\s\S]*markWithheld:\s*reservationLife\.markWithheld[\s\S]*recordSellerPackReconciliation/
+);
+assert.match(
+  generate,
+  /packRunId:\s*activePackChild\.packRunId[\s\S]*jobId:\s*activePackChild\.packJobId[\s\S]*attemptKey:\s*activePackChild\.attemptKey[\s\S]*eventType:\s*"settlement_unknown"/
+);
+assert.doesNotMatch(
+  generate,
+  /providerRequestStarted[\s\S]{0,500}releaseReservation\("provider_error"\)/
+);
+const ambiguousCatchStart = generate.indexOf(
+  'if (settlementPlan.action === "withhold")'
+);
+const ambiguousCatchEnd = generate.indexOf(
+  "await releaseProviderSpendIfHeld();",
+  ambiguousCatchStart
+);
+const ambiguousCatch = generate.slice(
+  ambiguousCatchStart,
+  ambiguousCatchEnd
+);
+assert.match(
+  ambiguousCatch,
+  /refundUnconfirmed:\s*settlementPlan\.refundUnconfirmed/
+);
+assert.doesNotMatch(ambiguousCatch, /creditsRefunded|retryAfterSec|noteFailed/);
 assert.match(generate, /bindProviderSpendIntent\(serverAccess,\s*allowProviderSpend\)/);
 assert.ok(
   generate.indexOf("bindProviderSpendIntent(serverAccess") <
@@ -310,5 +574,5 @@ for (const clientPath of [
 }
 
 console.log(
-  "provider-budget-private-settlement-regression: PASS (preview-only project-global US$20 cap · idempotent transition/expiry · private-object capture guard)"
+  "provider-budget-private-settlement-regression: PASS (US$20 cap · private-object capture guard · post-submit ambiguity withheld/reconciled · no automatic retry)"
 );
