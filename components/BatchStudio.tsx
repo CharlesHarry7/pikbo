@@ -642,6 +642,14 @@ export function BatchStudio({
     // Unique key per child attempt so abort cancelGenerateLedger hits the right row.
     const childIdempotencyKey =
       retryAttemptKey ?? mintGenerateIdempotencyKey();
+    const privateInputPayload = demoMode
+      ? {}
+      : sharedAssetId
+        ? {
+            assetId: sharedAssetId,
+            ...(dualStill ? { image: dualStill } : {}),
+          }
+        : { image: dualStill ?? image ?? undefined };
     const result = await postGenerateWithRetry(
       {
         effect: job.slug,
@@ -651,12 +659,7 @@ export function BatchStudio({
           : {}),
         // Dual-send when possible: assetId for smaller POSTs + inline still for
         // multi-instance (Vercel) memory-asset misses.
-        ...(sharedAssetId
-          ? {
-              assetId: sharedAssetId,
-              ...(dualStill ? { image: dualStill } : {}),
-            }
-          : { image: dualStill ?? image ?? undefined }),
+        ...privateInputPayload,
         duration: effectiveDuration,
         aspectRatio: jobAspect,
         model: effectiveModel,
@@ -669,7 +672,10 @@ export function BatchStudio({
         maxRetries: 1,
         // Mid-pack asset TTL / process restart: recover with local still once.
         fallbackImage:
-          sharedAssetId && image && image.startsWith("data:image")
+          !demoMode &&
+          sharedAssetId &&
+          image &&
+          image.startsWith("data:image")
             ? image
             : undefined,
         signal,
@@ -732,7 +738,7 @@ export function BatchStudio({
           ? "Launch Pack · 3 clips / 30 credits"
           : "Custom batch",
         inputImage:
-          image && image.length <= 300_000 ? image : undefined,
+          !demoMode && image && image.length <= 300_000 ? image : undefined,
         channel: SELLER_PACK_ITEMS.find((item) => item.slug === job.slug)
           ?.channel,
         // SKU for Library By-SKU + Remake bible carry
@@ -859,7 +865,7 @@ export function BatchStudio({
 
     // Phase D: register still once — Seller Pack / batch children reuse assetId.
     let sharedAssetId: string | null = null;
-    if (image && image.startsWith("data:image")) {
+    if (!demoMode && image && image.startsWith("data:image")) {
       const reg = await registerLocalAsset(image);
       if (reg?.assetId) sharedAssetId = reg.assetId;
     }
@@ -909,7 +915,11 @@ export function BatchStudio({
           previous.map((job, index) => (index === i ? outcome.job : job))
         );
         // Mid-pack asset miss: re-register still so remaining children use a fresh assetId.
-        if (outcome.recoveredFromAssetMiss && image?.startsWith("data:image")) {
+        if (
+          !demoMode &&
+          outcome.recoveredFromAssetMiss &&
+          image?.startsWith("data:image")
+        ) {
           sharedAssetId = null;
           try {
             const reg = await registerLocalAsset(image);
@@ -997,7 +1007,7 @@ export function BatchStudio({
     const abortCtrl = new AbortController();
     packAbortRef.current = abortCtrl;
     let sharedAssetId: string | null = null;
-    if (image.startsWith("data:image")) {
+    if (!demoMode && image.startsWith("data:image")) {
       const reg = await registerLocalAsset(image);
       if (reg?.assetId) sharedAssetId = reg.assetId;
     }
@@ -1071,7 +1081,7 @@ export function BatchStudio({
     const abortCtrl = new AbortController();
     packAbortRef.current = abortCtrl;
     let sharedAssetId: string | null = null;
-    if (image.startsWith("data:image")) {
+    if (!demoMode && image.startsWith("data:image")) {
       const reg = await registerLocalAsset(image);
       if (reg?.assetId) sharedAssetId = reg.assetId;
     }

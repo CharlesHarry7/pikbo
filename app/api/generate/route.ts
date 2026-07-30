@@ -423,14 +423,21 @@ export async function POST(req: Request) {
     }
   }
 
-  // Phase D: prefer session-local asset over re-posted Base64.
+  // Phase D: cached previews never inspect, resolve, or require the user's still.
+  // Only an authorized live request may move private image data beyond the browser.
   // On multi-instance hosts (Vercel), memory assets often miss on another node —
-  // if the client also sent a data URL, fall through instead of hard-failing.
+  // if the live client also sent a data URL, fall through instead of hard-failing.
   let image =
-    typeof imageField === "string" && imageField.startsWith("data:image")
-      ? imageField
-      : undefined;
-  if (typeof assetId === "string" && assetId.startsWith("asset_")) {
+    access.kind === "cached"
+      ? undefined
+      : typeof imageField === "string" && imageField.startsWith("data:image")
+        ? imageField
+        : undefined;
+  if (
+    access.kind !== "cached" &&
+    typeof assetId === "string" &&
+    assetId.startsWith("asset_")
+  ) {
     const asset = getLocalAsset(assetId, session.id);
     if (asset) {
       image = asset.dataUrl;
@@ -447,7 +454,7 @@ export async function POST(req: Request) {
     }
   }
 
-  if (!image || !isValidImageDataUrl(image)) {
+  if (access.kind !== "cached" && (!image || !isValidImageDataUrl(image))) {
     return err(
       {
         error:
@@ -457,7 +464,7 @@ export async function POST(req: Request) {
       400
     );
   }
-  if (image.length > 12_000_000) {
+  if (access.kind !== "cached" && image && image.length > 12_000_000) {
     return err(
       { error: "Image too large (max ~8MB)", code: "IMAGE_TOO_LARGE" },
       413
@@ -727,6 +734,21 @@ export async function POST(req: Request) {
         /* best-effort job ledger */
       }
       return NextResponse.json(payload);
+    }
+
+    // The cached branch has returned. A live request must still carry the
+    // validated private input established above; keep this explicit so an
+    // authorization refactor cannot accidentally call the provider without it.
+    const liveImage = image;
+    if (!liveImage) {
+      return err(
+        {
+          error: "A validated toy photo is required for live generation",
+          code: "INVALID_REQUEST",
+          session: publicSession(session),
+        },
+        400
+      );
     }
 
     // Live is fail-closed: verified Supabase user + committed Supabase reserve.
@@ -1124,7 +1146,7 @@ export async function POST(req: Request) {
 
       let blob: Blob;
       try {
-        blob = await (await fetch(image)).blob();
+        blob = await (await fetch(liveImage)).blob();
       } catch {
         const released = await releaseReservation("invalid_image");
         const failBody: GenerateErrorBody = {
