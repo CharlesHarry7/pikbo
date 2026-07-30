@@ -3,7 +3,7 @@
  * Code imports this so G1/G2 cannot drift from the product contract.
  *
  * 2026-07-26 GSC P0: PRIMARY = real indexable core only.
- * Preview/Lab doors live under More (crawlable + noindex, not robots.txt block).
+ * Preview/Lab routes stay crawlable + noindex, but remain outside primary navigation.
  */
 
 /** Seller-first frontdoor: one clear path from promise to private assets. */

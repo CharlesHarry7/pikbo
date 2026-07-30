@@ -20,6 +20,7 @@ const tile = read("components/VideoTile.tsx");
 const presetPreview = read("components/PresetPreviewCard.tsx");
 const autoplay = read("components/AutoPlayVideo.tsx");
 const create = read("app/create/page.tsx");
+const batch = read("components/BatchStudio.tsx");
 
 const proofList =
   softLaunch.match(/HOME_PROOF_SLUGS\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] ??
@@ -65,12 +66,14 @@ assert(
 );
 assert(
   create.includes("Launch Pack · 3 fixed formats") &&
-    create.includes("Preview the fixed Pack—or create it in private beta.") &&
+    create.includes("Preview a Launch Pack.") &&
     create.includes("Listing Spin") &&
     create.includes("Blind-box Reveal") &&
     create.includes("Social Flash") &&
-    create.includes("reserve 30 credits") &&
-    !create.includes("Launch Pack — 12 recipes"),
+    batch.includes("Launch Pack — 3 private clips / 30 credits") &&
+    batch.includes('data-public-pack-preview="lab-only"') &&
+    !create.includes("Launch Pack — 12 recipes") &&
+    !batch.includes("Launch Pack — 12 recipes"),
   "the primary Launch Pack must stay the fixed public-preview/private-generation three-asset path"
 );
 

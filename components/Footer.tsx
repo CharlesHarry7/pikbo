@@ -1,143 +1,75 @@
 import Link from "next/link";
-import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { site } from "@/lib/site";
 import { Logo } from "@/components/Logo";
-import { CATEGORIES } from "@/lib/presets";
-import { USE_CASES } from "@/lib/usecases";
-import { TOY_TYPES } from "@/lib/toytypes";
-import { createRemixHref } from "@/lib/remixIntent";
 
-/** Product nav Generate — listing-spin remix (ratio/duration/channel). */
-const FOOTER_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const FOOTER_GROUPS = [
+  {
+    label: "Product",
+    links: [
+      ["/create?mode=seller-pack&source=footer&try=1&sample=scout", "Create"],
+      ["/library", "Library"],
+      ["/pricing", "Pricing"],
+    ],
+  },
+  {
+    label: "Learn",
+    links: [
+      ["/tools/ai-toy-video-generator", "AI toy video generator"],
+      [
+        "/guides/seller-pack-workflow-listing-reveal-hook",
+        "Launch Pack guide",
+      ],
+    ],
+  },
+  {
+    label: "Company",
+    links: [
+      ["/about", "About"],
+      ["/privacy", "Privacy"],
+      ["/terms", "Terms"],
+    ],
+  },
+] as const;
 
 export function Footer() {
   return (
     <footer className="mt-10 border-t border-white/[0.07] bg-gradient-to-b from-[#0a0a0c] to-black">
       <div className="container-x py-14">
-        <div className="grid gap-10 md:grid-cols-6">
-          <div className="md:col-span-2">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          <div>
             <Logo size={30} />
 
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/45">
-              {site.tagline} Turn one owned toy photo into a listing spin,
-              reveal clip, and social hook.
+              Turn one owned toy photo into a fixed Listing Spin, Blind-box
+              Reveal, and Social Flash.
             </p>
-            <div
-              className="mt-4 flex flex-wrap items-center gap-2"
+            <Link
+              href="/create?mode=seller-pack&source=footer&try=1&sample=scout"
+              className="btn btn-primary mt-5 !px-4 !py-2 text-xs"
               data-footer-path="product-first"
             >
-              <Link
-                href="/#home-create"
-                className="btn btn-primary !px-3 !py-1.5 text-xs"
-              >
-                Generate
-              </Link>
-              <Link
-                href="/create?mode=seller-pack"
-                className="btn btn-ghost !px-3 !py-1.5 text-xs"
-              >
-                Launch Pack
-              </Link>
-              <Link href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-                Library
-              </Link>
-              <FreeTrialCta
-                path="/"
-                variant="ghost"
-                className="btn btn-ghost !px-3 !py-1.5 text-xs"
-              />
+              Preview Launch Pack
+            </Link>
+          </div>
+          {FOOTER_GROUPS.map((group) => (
+            <div key={group.label}>
+              <h4 className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]/80">
+                {group.label}
+              </h4>
+              <ul className="space-y-2 text-sm text-white/50">
+                {group.links.map(([href, label]) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className="transition hover:text-[var(--mint)]"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-          <div>
-            <h4 className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]/80">
-              Effects
-            </h4>
-            <ul className="space-y-2 text-sm text-white/50">
-              <li>
-                <Link href="/effects" className="transition hover:text-[var(--mint)]">
-                  All presets
-                </Link>
-              </li>
-              {CATEGORIES.map((c) => (
-                <li key={c.id}>
-                  <Link
-                    href={`/effects#cat-${c.id}`}
-                    className="transition hover:text-[var(--mint)]"
-                  >
-                    {c.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]/80">
-              Product
-            </h4>
-            <ul className="space-y-2 text-sm text-white/50">
-              {[
-                [FOOTER_GENERATE_HREF, "Generate"],
-                ["/effects", "Effects"],
-                ["/pricing", "Pricing"],
-                ["/explore", "Explore Lab"],
-                ["/tools/ai-toy-video-generator", "AI toy video generator"],
-                ["/create?mode=seller-pack", "Launch Pack"],
-                ["/library", "Library"],
-                ["/about", "About"],
-                [
-                  "/guides/seller-pack-workflow-listing-reveal-hook",
-                  "Launch Pack guide",
-                ],
-                ["/privacy", "Privacy"],
-                ["/terms", "Terms"],
-              ].map(([h, l]) => (
-                <li key={h}>
-                  <Link href={h} className="transition hover:text-[var(--mint)]">
-                    {l}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--fg-dim)]">
-              For
-            </h4>
-            <ul className="space-y-2 text-sm text-[var(--fg-muted)]">
-              <li>
-                <Link href="/for" className="font-semibold text-[var(--mint)]/90 hover:text-[var(--mint)]">
-                  All use cases
-                </Link>
-              </li>
-              {USE_CASES.slice(0, 10).map((u) => (
-                <li key={u.slug}>
-                  <Link
-                    href={`/for/${u.slug}`}
-                    className="hover:text-[var(--mint)]"
-                  >
-                    {u.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--fg-dim)]">
-              Toys
-            </h4>
-            <ul className="space-y-2 text-sm text-[var(--fg-muted)]">
-              {TOY_TYPES.map((t) => (
-                <li key={t.slug}>
-                  <Link
-                    href={`/toys/${t.slug}`}
-                    className="hover:text-[var(--mint)]"
-                  >
-                    {t.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          ))}
         </div>
         <div className="mt-10 border-t border-[var(--border)] pt-6 text-xs text-[var(--fg-dim)]">
           © {new Date().getFullYear()} {site.name} · {site.domain}

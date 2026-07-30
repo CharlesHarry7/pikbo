@@ -96,11 +96,13 @@ export default async function CreatePage({
                 </span>
               </p>
               <h1 className="mt-1 font-display text-3xl font-black tracking-[-0.055em] sm:text-5xl">
-                Preview the fixed Pack—or create it in private beta.
+                Preview a Launch Pack.
               </h1>
             </div>
             <p className="max-w-xl text-xs font-semibold leading-5 text-black/52 sm:text-sm">
-              Public visitors use Pikbo Lab samples only: 0 credits, and no product photo is accepted or processed. Invited accounts can upload one rights-owned photo and reserve 30 credits; a confirmed failed format restores 10 credits while completed formats stay.
+              Choose a Pikbo Lab sample to preview the three fixed formats.
+              Public preview: no product photo is accepted or processed.
+              Invited sellers can sign in for private generation.
             </p>
           </div>
           <p className="mx-auto mt-3 max-w-7xl text-[10px] font-bold text-amber-800/75">

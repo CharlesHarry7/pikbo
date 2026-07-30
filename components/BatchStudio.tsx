@@ -1441,7 +1441,9 @@ export function BatchStudio({
       : !ownsRights
         ? "Confirm ownership to continue"
         : demoMode
-          ? `${sellerPackActive ? "Preview Launch Pack" : "Run batch"} · ${selected.length} · cached free`
+          ? sellerPackActive
+            ? "Preview the 3 Launch Pack formats"
+            : `Run batch · ${selected.length} · cached free`
           : trialDone && isFree && !liveQuoteCovered
             ? "Free Mini trial used · open single Generate or plans"
             : sellerPackActive
@@ -1530,7 +1532,7 @@ export function BatchStudio({
                   : "Review the 30-credit quote, then create three independent private clips."}
               </p>
               {/* Y5 + CD B3: full Director Plan when still ready; strip before photo */}
-              {sellerDirectorPlan?.ready ? (
+              {demoMode ? null : sellerDirectorPlan?.ready ? (
                 <div className="mt-2" data-seller-pack-plan="director">
                   <DirectorPlanPanel plan={sellerDirectorPlan} />
                 </div>
@@ -1543,7 +1545,7 @@ export function BatchStudio({
                     {item.label} → {item.channel}
                     {!demoMode
                       ? ` · ${CREDITS_PER_VIDEO} credits`
-                      : " · 0 cached"}
+                      : ` · ${item.aspectRatio} · ${item.durationSec}s`}
                   </li>
                 ))}
               </ul>
@@ -1695,7 +1697,7 @@ export function BatchStudio({
                 <button
                   key={sample.id}
                   type="button"
-                  className="rounded-lg border border-[var(--border)] px-2 py-1 text-[10px] hover:border-[var(--brand)]"
+                  className="min-h-11 rounded-lg border border-[var(--border)] px-3 py-2.5 text-xs hover:border-[var(--brand)]"
                   onClick={() => void chooseLabSample(sample.id)}
                 >
                   Sample: {sample.label}
@@ -1877,7 +1879,7 @@ export function BatchStudio({
                     {item.aspectRatio} · 5s · {item.channel}
                   </p>
                   <p className="mt-2 text-[10px] font-semibold text-[var(--fg-muted)]">
-                    {demoMode ? "0 cached" : "10 credits"}
+                    {demoMode ? "Cached preview" : "10 credits"}
                   </p>
                 </article>
               ))}
@@ -2022,7 +2024,7 @@ export function BatchStudio({
         <p className="text-[11px] text-[var(--fg-dim)]">
           Each format runs independently
           {demoMode
-            ? " (demo-cached · 0 credits)"
+            ? " as a cached Lab preview"
             : isFree
               ? trialDone
                 ? " (Free Mini trial used · Lab demos still free)"
@@ -2336,7 +2338,9 @@ export function BatchStudio({
         {image ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
             {sellerPackActive
-              ? `Launch Pack · ${sellerPackQuoteLabel(packQuote)}`
+              ? demoMode
+                ? "Launch Pack · 3 cached previews"
+                : `Launch Pack · ${sellerPackQuoteLabel(packQuote)}`
               : `Batch · ${selected.length} recipes · ${batchQuoteLabel(packQuote)}`}
             {doneCount > 0 ? ` · ${doneCount} ready` : ""}
             {failedRetryCount > 0 ? ` · ${failedRetryCount} failed kept` : ""}

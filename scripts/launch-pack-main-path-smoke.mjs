@@ -100,10 +100,11 @@ assert.doesNotMatch(pricingCards, /PricingCheckoutButton|PLANS\.map|FreeTrialCta
 assert.match(paywall, /Founding Studio · coming soon/);
 assert.match(paywall, /No public price, Pack count, subscription, or checkout/);
 assert.doesNotMatch(paywall, /PLANS|priceMonthly|\$49|\/mo/);
-assert.match(libraryGrid, /Lab sample · cached 0 credits/);
+assert.match(libraryGrid, /Create your first Pack/);
+assert.match(libraryGrid, /data-library-action="seller-pack"/);
 assert.doesNotMatch(
   libraryGrid,
-  /FreeTrialCta|Generate · upload toy photo|Compare plans/
+  /FreeTrialCta|Generate · upload toy photo|Compare plans|data-library-action="generate"/
 );
 assert.match(pricing, /There is no Free plan comparison/);
 assert.doesNotMatch(

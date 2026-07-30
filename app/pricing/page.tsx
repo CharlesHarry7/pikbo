@@ -38,9 +38,47 @@ const FORMATS = [
   ["Social Flash", "9:16", "Reels and short-form"],
 ] as const;
 
+const pricingFaqItems = [
+  {
+    question: "Can I subscribe to Founding Studio today?",
+    answer:
+      "No. Pikbo is still validating private delivery and recovery with invited toy sellers, so public checkout remains closed.",
+  },
+  {
+    question: "What is included in one Launch Pack?",
+    answer:
+      "The planned Pack contains three fixed formats from one toy photo: Listing Spin, Blind-box Reveal, and Social Flash.",
+  },
+  {
+    question: "Will the subscription be unlimited?",
+    answer:
+      "No. Founding Studio will use a finite monthly Pack allowance so delivery quality, retries, and private storage remain sustainable.",
+  },
+] as const;
+
 export default function PricingPage() {
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: pricingFaqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
   return (
-    <div className="min-h-[calc(100svh-4rem)] bg-[#F7F4ED] px-4 py-10 text-[#0A0A0A] sm:px-8 sm:py-16">
+    <div
+      className="min-h-[calc(100svh-4rem)] bg-[#F7F4ED] px-4 py-10 text-[#0A0A0A] sm:px-8 sm:py-16"
+      data-pricing-path="product-first"
+    >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+      />
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/44">
@@ -125,6 +163,30 @@ export default function PricingPage() {
             </div>
           </div>
         </article>
+
+        <section
+          className="mx-auto mt-12 max-w-4xl border-t border-black/12 pt-8 sm:mt-16 sm:pt-10"
+          aria-labelledby="pricing-faq-title"
+        >
+          <h2
+            id="pricing-faq-title"
+            className="text-2xl font-black tracking-[-0.04em]"
+          >
+            Before Founding Studio opens
+          </h2>
+          <div className="mt-5 grid gap-px overflow-hidden rounded-[1.4rem] border border-black/12 bg-black/12 md:grid-cols-3">
+            {pricingFaqItems.map((item) => (
+              <article key={item.question} className="bg-[#F7F4ED] p-5">
+                <h3 className="text-sm font-black leading-5">
+                  {item.question}
+                </h3>
+                <p className="mt-3 text-xs font-semibold leading-5 text-black/52">
+                  {item.answer}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

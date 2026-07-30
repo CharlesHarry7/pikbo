@@ -48,7 +48,7 @@ export function LibraryStorageBanner({
             {deviceCount}
           </p>
           <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-            Saved only in this browser · export JSON to move it
+            Saved only in this browser
           </p>
         </div>
         <div className="border-b border-white/10 p-4 sm:border-b-0 sm:border-r">
