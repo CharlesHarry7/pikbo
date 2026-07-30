@@ -12,6 +12,11 @@ import {
   softwareApplicationJsonLd,
   websiteJsonLd,
 } from "@/lib/jsonLd";
+import {
+  FOUNDING_STUDIO_PACKS,
+  PAID_PLAN_ID,
+  getPlan,
+} from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
@@ -42,6 +47,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const showcase = buildHomeShowcaseFeed();
+  const foundingPlan = getPlan(PAID_PLAN_ID);
   const lcpPoster =
     showcase.find((item) => item.recipeSlug === "360-spin-showcase")?.demo
       ?.poster ?? "/demos/scout-still.webp";
@@ -142,11 +148,34 @@ export default function Home() {
               </article>
             ))}
           </div>
+
+          <div className="mt-8 flex flex-col gap-5 rounded-[1.75rem] border border-[#c8ff3d]/25 bg-[#c8ff3d]/[0.07] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-black">Founding Studio</p>
+                <span className="rounded-full border border-[#c8ff3d]/30 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#c8ff3d]">
+                  Checkout closed · private beta
+                </span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-white/52">
+                ${foundingPlan.priceMonthly}/month candidate ·{" "}
+                {FOUNDING_STUDIO_PACKS} Launch Packs ·{" "}
+                {FOUNDING_STUDIO_PACKS * 3} fixed 5-second 720p outputs ·
+                private Library.
+              </p>
+            </div>
+            <Link
+              href="/pricing"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-white/15 px-5 text-xs font-black text-white transition hover:border-[#c8ff3d]/55 hover:text-[#c8ff3d]"
+            >
+              See the honest pricing contract ↗
+            </Link>
+          </div>
         </div>
       </section>
 
       <section
-        id="home-create"
+        id="pack-workflow"
         className="overflow-hidden bg-[#c8ff3d] px-5 py-16 text-black sm:px-8 sm:py-20"
       >
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.84fr_1.16fr] lg:items-center">

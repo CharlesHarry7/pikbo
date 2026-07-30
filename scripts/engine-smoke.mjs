@@ -3887,6 +3887,9 @@ assert.match(
   homeHeroSrc,
   /data-home-hero|href=["']\/create\?mode=seller-pack["']/
 );
+assert.match(homeHeroSrc, /import \{ HeroUpload \}/);
+assert.match(homeHeroSrc, /<HeroUpload \/>/);
+assert.match(homeHeroSrc, /id=["']home-create["']/);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeViralWall.tsx"),
   "utf8"

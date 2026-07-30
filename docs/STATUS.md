@@ -1,6 +1,6 @@
 # Pikbo board — claim before you code
 
-**Last human intent:** Build the designer-toy vertical Higgsfield: immersive Recipe browsing and one-click Remix first; Launch Pack is the later commercial upgrade. Public production remains GO-gated.
+**Last human intent:** Make the public website itself the product front door: one owned toy photo → the fixed three-video Launch Pack → private Library, with no empty suite shells or dead-end “preview” journey. Public Live and payment remain quality-gated.
 
 Update this file in the same PR/commit as your work start/finish.
 
@@ -21,7 +21,8 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 | T6-PROOF | Non-prod baked watermark proof + fail-closed controlled delivery source | Grok / Codex | done | main via PR #51 | GitHub CI #481 green; real ffmpeg/ffprobe decoded-pixel proof, SSRF/IPv6 gates, 20-way owned-write fixture and 193-route build passed |
 | T6-PRODUCTION | Apply reviewed SQL, shared object storage and scheduled worker rehearsal | External / unassigned | blocked | none | `SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED=false`; disposable DB rehearsal, shared storage and worker deployment are required before Free live download |
 | WB-WAIT | No growth work before publishable product proof | WorkBuddy | blocked | none | #41/#46 closed; wait for explicit new queue row |
-| REAL-LOOP | Authenticated owned-toy upload → private Seedance result → durable Library/download, then fixed 3-output Launch Pack | Codex | doing | `agent/gpt/real-launch-loop` | Non-production P0/P1 implementation only; production remains validation until DB rehearsal, privacy/ledger gates and real-call evidence pass |
+| REAL-LOOP | Authenticated owned-toy upload → private Seedance result → durable Library/download, then fixed 3-output Launch Pack | Codex | blocked | main via PRs #79–#82; protected Preview `f70dbc5` | Single-clip P0 passed; quality matrix is 1/10 and resumes only in the authenticated Preview within the US$20 cap. Production remains validation. |
+| FRONTDOOR-V2 | Replace the homepage preview dead end with a real upload-first Launch Pack entry and move Create’s upload above marketing explanation | Codex | review | `codex/higgsfield-toy-front-door` | Homepage now renders the existing upload handoff above the fold; 390px visual check has 0 overflow and upload top=466px. Cached Pack calls transmit no image or asset and the API does not inspect one; the no-image three-child API golden passes. Pricing closed state leads to the Pack and still needs `/api/health.acceptance.paid=true` before Checkout. Source smokes, typecheck, strict lint, 196-route build, 165-route rendered truth contract and full link-check pass. |
 
 Completion of an old row below does not authorize a new branch. Codex must add a row here first.
 

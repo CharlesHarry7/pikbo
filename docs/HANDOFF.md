@@ -4,6 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-07-30 — [gpt] upload-first Launch Pack front door
+- The homepage now renders the existing `HeroUpload` handoff inside the first-screen Launch Studio instead of pointing `#home-create` at a three-step explanation. A selected PNG/JPG/WebP is kept in session storage and carried into the fixed three-output workbench; no new upload or generation path was invented.
+- The seller-pack Create introduction is compact enough that the mobile sticky Upload action remains visible immediately. The primary navigation stays Home, Recipes, Launch Pack, Library and Pricing; old suite shells remain hidden.
+- Founding Studio is shown as one finite $49/month candidate with checkout explicitly closed. The closed CTA now opens the Pack preview instead of becoming a dead disabled button; real Checkout requires both the public payment flag and `/api/health.acceptance.paid=true`.
+- Public cached Pack calls now transmit neither `image` nor `assetId`; `/api/generate` also skips image resolution and validation for cached access. The selected still stays in browser storage for the visible handoff, while only an authorized Live request can carry it into the private provider path.
+- Honesty is unchanged: public uploads are not processed, cached previews are labeled, real generation remains private-beta only, and no cached media is presented as one customer Pack.
+- PASS: no-image three-child running-server API golden; Launch Pack, engine, product-proof, mobile-source, live-copy and SEO smokes; TypeScript; strict ESLint; 196-route production build; 165 rendered-route truth contract; full local link check. Browser proof at 390×844: 0 horizontal overflow, homepage upload top 466px, and pricing has one enabled Pack-preview link with no `Coming soon` dead button.
+
 ### 2026-07-28 — [gpt] Issue #54 owned-upload result truth
 - Branch `agent/gpt/p0-live-owned-toy-review` stacks on Grok PR #55.
 - An owned upload that falls back to cached mode is now a visible 0-credit

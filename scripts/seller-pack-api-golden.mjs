@@ -6,9 +6,9 @@
  * - Start a local production build without FAL_KEY.
  * - Run with PIKBO_BASE=http://127.0.0.1:3107 (default shown below).
  *
- * This sends one bundled Pikbo Lab still through the fixed three-child API
- * contract. It fails unless the server is cached-only and every child returns
- * a zero-credit, demo-cached result in the expected format.
+ * This calls the fixed three-child API contract without transmitting an image.
+ * It fails unless the server is cached-only and every child returns a
+ * zero-credit, demo-cached result in the expected format.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -87,10 +87,6 @@ async function main() {
   assert.equal(before.mode, "demo-cached");
   assert.equal(typeof before.credits, "number");
 
-  const image = `data:image/webp;base64,${readFileSync(
-    join(root, "public/demos/scout-still.webp")
-  ).toString("base64")}`;
-
   const results = [];
   for (const [index, child] of fixedChildren.entries()) {
     const response = await fetch(`${base}/api/generate`, {
@@ -101,7 +97,6 @@ async function main() {
       },
       body: JSON.stringify({
         effect: child.effect,
-        image,
         ownsRights: true,
         duration: child.duration,
         aspectRatio: child.aspectRatio,
@@ -126,6 +121,16 @@ async function main() {
     assert.equal(payload.model, "demo-cached");
     assert.equal(payload.costCredits, 0);
     assert.equal(payload.creditsOutcome, "0 cached");
+    assert.equal(
+      payload.processedUpload,
+      false,
+      `${child.effect}: cached preview must not process an upload`
+    );
+    assert.equal(
+      payload.uploadIgnored,
+      undefined,
+      `${child.effect}: client must not transmit an upload for cached preview`
+    );
     assert.equal(payload.session?.credits, before.credits);
     assert.equal(typeof payload.videoUrl, "string");
     assert.ok(payload.videoUrl.length > 0);
@@ -158,7 +163,7 @@ async function main() {
   assert.ok(packJobs.every((job) => job.creditsOutcome === "0 cached"));
 
   console.log(
-    "seller-pack-api-golden: PASS (1 Lab still · fixed 3 children · cached-only · 0 credits · provider unavailable)"
+    "seller-pack-api-golden: PASS (no image transmitted · fixed 3 children · cached-only · 0 credits · provider unavailable)"
   );
 }
 
