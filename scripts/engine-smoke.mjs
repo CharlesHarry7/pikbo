@@ -512,7 +512,7 @@ const freeTrialCtaR0 = fs.readFileSync(
   join(root, "components/FreeTrialCta.tsx"),
   "utf8"
 );
-assert.match(freeTrialCtaR0, /liveEnabled|Cached Lab free|Try Lab sample/);
+assert.match(freeTrialCtaR0, /liveEnabled|Cached preview|Try cached sample/);
 assert.match(
   fs.readFileSync(join(root, "app/settings/page.tsx"), "utf8"),
   /cookieIsLiveSpendAuthority|Display credits \(not live authority\)|blocked until T6/
@@ -2341,7 +2341,7 @@ assert.match(landingResults, /recipeHasUniqueProof/);
 const sitemapSrc = fs.readFileSync(join(root, "app/sitemap.ts"), "utf8");
 assert.match(sitemapSrc, /COLD_START_INDEX_PATHS/);
 assert.doesNotMatch(sitemapSrc, /\/cinema|\/supercomputer|\/models|\/community/);
-// Phase H: WorkBuddy five-page marketing budget + legal (not 13 long-tail dump).
+// Phase H: proof-gated three-page marketing budget + legal.
 const seoIndexSrc = fs.readFileSync(join(root, "lib/seoIndex.ts"), "utf8");
 assert.match(seoIndexSrc, /COLD_START_INDEX_PATHS/);
 assert.match(seoIndexSrc, /COLD_START_MARKETING_INDEX_PATHS/);
@@ -2354,14 +2354,17 @@ assert.match(seoIndexSrc, /COLD_START_LEGAL_INDEX_PATHS/);
   const n = (mkt[1].match(/"[^"]+"/g) || []).length;
   assert.equal(
     n,
-    5,
-    `marketing index allowlist must be 5 URLs (WorkBuddy release budget), got ${n}`
+    3,
+    `marketing index allowlist must be 3 URLs until distinct proof exists, got ${n}`
   );
 }
 assert.match(seoIndexSrc, /COLD_START_INDEXABLE_TOOL_SLUGS/);
 assert.match(seoIndexSrc, /ai-toy-video-generator/);
-assert.match(seoIndexSrc, /blind-box-reveal-video-maker/);
-// Long-tail tools remain reachable but leave the cold-start index tool set
+// Specialist pages remain reachable but leave the index set until distinct proof exists.
+assert.doesNotMatch(
+  seoIndexSrc,
+  /COLD_START_INDEXABLE_TOOL_SLUGS\s*=\s*\[[\s\S]*?blind-box-reveal-video-maker/
+);
 assert.doesNotMatch(
   seoIndexSrc,
   /COLD_START_INDEXABLE_TOOL_SLUGS\s*=\s*\[[\s\S]*?figure-360-product-video/
@@ -2397,9 +2400,17 @@ const homeSeoBody = fs.readFileSync(
   "utf8"
 );
 assert.match(homeSeoBody, /\/tools\/ai-toy-video-generator/);
-assert.match(homeSeoBody, /\/tools\/figure-360-product-video/);
+assert.match(homeSeoBody, /\/effects\/360-spin-showcase/);
 assert.match(homeSeoBody, /\/tools\/blind-box-reveal-video-maker/);
 assert.doesNotMatch(homeSeoBody, /data-home-seo-mesh=["']long-tail["']/);
+const highIntentTruth = fs.readFileSync(
+  join(root, "components/HighIntentProductTruth.tsx"),
+  "utf8"
+);
+assert.match(highIntentTruth, /Fast 720p/);
+assert.match(highIntentTruth, /5\.042 sec/);
+assert.match(highIntentTruth, /About 2 min 39 sec/);
+assert.match(highIntentTruth, /not a physical product, customer testimonial/);
 
 // GSC P0: Preview pages must NOT be dual-blocked by robots.txt (need crawl for noindex)
 const robotsSrc = fs.readFileSync(join(root, "app/robots.ts"), "utf8");

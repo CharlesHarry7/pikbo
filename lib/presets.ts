@@ -68,7 +68,8 @@ export const PRESETS: Preset[] = [
     gradient: "linear-gradient(135deg,#ff4d8d,#a855f7)",
     category: "showcase",
     audience: "seller",
-    tagline: "One photo → a listing spin that shows every angle.",
+    tagline:
+      "One photo → a square listing-spin draft with inferred angles to review.",
     h1: "Make a 360° Product Video of a Toy From One Photo",
     seoTitle: "Toy 360° Product Video Generator From One Photo | Pikbo",
     seoDescription:

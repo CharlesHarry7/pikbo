@@ -32,18 +32,16 @@ export const TOOLS: Tool[] = [
     h1: "AI Toy Video Generator — Photo to Short Video for Designer Toys",
     seoTitle: "AI Toy Video Generator: One Photo to Toy Video | Pikbo",
     seoDescription:
-      "Turn one owned toy photo into a spin, reveal, or hero-video recipe. Preview cached Pikbo Lab prototypes; eligible Live generation is clearly gated.",
+      "Turn one owned toy photo toward a fixed three-video Launch Pack: Listing Spin, Blind-box Reveal, and Social Flash. See verified limits before beta access.",
     intro:
-      "This is Pikbo’s focused page for turning one owned figure photo into short motion. Upload a blind box, vinyl, or art toy still, pick a toy-native recipe, and generate a clip here — no turntable, no stop-motion rig, no multi-model theater.",
+      "Pikbo is a focused toy-video studio for sellers and independent brands. One rights-owned figure photo becomes a fixed product-video workflow instead of a maze of model menus and prompts.",
     body: [
-      "An AI toy video generator is not a generic face-filter app. Collectors and sellers need paint, sculpt, and packaging to stay readable while motion sells depth on Etsy, TikTok Shop, and Instagram. Pikbo keeps your still as the visual reference and applies recipes built for toys: 360° spin, floating hero, unbox energy, and more.",
-      "Use this tool when you already have a clean product photo. Front-facing, even light, plain background, full figure in frame. Busy shelves and harsh shadows lower quality. Confirm you own the photo before any eligible Live submission.",
-      "How validation works: every visitor can preview a cached Pikbo Lab prototype for 0 credits, and that preview never processes the upload. When Live is enabled for a signed-in, durable-credit account with protected delivery, Generate shows the exact duration, resolution, and credit quote before submission.",
-      "Why a dedicated URL? Search engines and users both need a clear job. This page owns the head term above; related jobs live elsewhere so signals stay clean: photo-to-video scenes on /for/photo-to-video-for-toys, Etsy listings on /for/etsy-listing-videos, and the brand home at pikbo.ai with an embedded generate panel for people who arrive by brand.",
-      "Compared with broad “photo to short video” apps, toy video AI for designer figures prioritizes product identity over cinematic chaos. We do not advertise a model as available from a configured key alone. Validation honesty: no fake multi-model carousel, no unlimited free 4K, no guaranteed sales.",
-      "Best path: clean owned photo → recipe (spin for listings, float for drops, unbox for social) → generate → wait → QA paint and logos → post or list. Need three formats from one still? Open Seller Pack from Generate. Need the full recipe browser? Visit Effects or Flow.",
-      "The cached prototype path is intentionally small: upload → choose recipe → preview the product flow without a provider call. Live purchase stays closed until durable credits and protected delivery pass the launch gate.",
-      "Internal links for crawlers and humans: brand home, photo-to-video for toys use case, Etsy listing videos, guides on photographing toys for motion, and the full tools index. Each page keeps one primary job; this page’s job is the head-term tool above.",
+      "The fixed Launch Pack is one Listing Spin in 1:1, one Blind-box Reveal in 9:16, and one Social Flash in 9:16. Each beta format is fixed at five seconds and Fast 720p so quality, recovery, and cost can be measured before more choices are added.",
+      "Start with a full-product photo you own: front-facing, even light, plain background, and the complete figure in frame. Busy shelves, clipped accessories, and harsh shadows make identity drift more likely.",
+      "Public visitors can inspect cached format previews; those previews do not process the uploaded image. Invited accounts use a private Library, short-lived owner download links, and ten credits per completed clip.",
+      "Current technical evidence is deliberately narrow. An original unbranded synthetic still produced one private Listing Spin in about two minutes thirty-nine seconds; the 5.042-second 960×960 file reopened after refresh and downloaded twice with identical bytes. This is not a physical product or customer case.",
+      "A second internal run stopped before a video was made. Zero credits settled and ten credits were restored. The complete three-video Pack, seller reuse, and paid demand are still being validated.",
+      "Generated side and back details are inferred. Compare sculpt, paint, logos, packaging, accessories, and proportions with the physical toy before a listing or launch post.",
     ],
     keywords: [
       "ai toy video generator",
@@ -63,7 +61,7 @@ export const TOOLS: Tool[] = [
       },
       {
         q: "Is this free to try?",
-        a: "Yes. The cached Pikbo Lab prototype costs 0 credits, needs no card, and does not process your upload. Live availability and its exact quote appear only for an eligible account.",
+        a: "Public cached previews need no card and do not process your upload. Private generation and subscriptions remain closed while quality, recovery, and cost are validated.",
       },
       {
         q: "Can it replace a real turntable shoot?",
@@ -75,7 +73,7 @@ export const TOOLS: Tool[] = [
       },
       {
         q: "Where else should I go after this page?",
-        a: "Brand home for the suite wall, /for pages for channel jobs (Etsy, TikTok), and /create for full studio controls.",
+        a: "Use the Launch Pack preview to inspect the fixed three-format workflow, then read pricing for the current beta limits.",
       },
     ],
   },
@@ -583,17 +581,16 @@ export const TOOLS: Tool[] = [
     emoji: "🔄",
     label: "360 figure video",
     h1: "AI Figure 360 Video From One Photo",
-    // CTR 优化 2026-07-27: 加入 Free 驱动点击
-    seoTitle: "AI Figure 360 Video: Spin From One Photo, Free | Pikbo",
+    seoTitle: "AI Figure 360 Video: Listing Spin From One Photo | Pikbo",
     seoDescription:
-      "AI figure 360 recipe from one photo — no turntable. Preview cached product-spin examples, then check gated Live access.",
+      "Draft a square figure listing spin from one owned photo. See the verified Fast 720p beta result, download time, recovery evidence, and limits.",
     intro:
       "AI figure 360 video is the turntable look without the rig. This tool turns one owned figure photo into a short 360-style product spin for listings and shop pages.",
     body: [
       "Marketplace buyers want to sense depth. A calm AI figure 360 video answers more questions than three extra stills.",
-      "Start with a front-facing packshot on a plain background. Free Mini is Seedance Mini at 5s · 480p with an on-player mark.",
+      "Start with a front-facing packshot on a plain background. Pikbo's validated private Listing Spin is fixed at five seconds, 1:1, and Fast 720p.",
       "Review sculpt and paint before you publish. High-value figures need stricter QA than mass blind boxes.",
-      "Related jobs: toy product video AI, Etsy listing use case, and the head-term AI toy video generator — each keeps its own URL.",
+      "The current proof is one internal synthetic validation result, not a physical product or customer case. A generated reverse angle is an inference, not proof of the real toy's condition.",
     ],
     keywords: [
       "AI figure 360 video",
@@ -614,8 +611,8 @@ export const TOOLS: Tool[] = [
         a: "No. Upload one clear photo and run the spin recipe. Always QA the result.",
       },
       {
-        q: "Is Free Mini unlimited?",
-        a: "No. Soft launch Free Mini has fixed caps. Lab demos are free cached samples and never process your upload.",
+        q: "Has Pikbo verified this result end to end?",
+        a: "One private internal Listing Spin completed, reopened after refresh, and downloaded twice with identical bytes. The complete three-video Pack and customer use are not verified yet.",
       },
     ],
   },
@@ -633,14 +630,14 @@ export const TOOLS: Tool[] = [
     seoTitle:
       "Blind Box Reveal Video From One Photo (No Filming) | Pikbo",
     seoDescription:
-      "Draft a blind-box reveal recipe from one owned photo. Preview a cached Pikbo Lab prototype first; eligible Live access is checked before submission.",
+      "Draft a vertical blind-box reveal from one owned photo. See the fixed five-second format, cached pacing preview, current evidence gap, and publishing limits.",
     intro:
-      "A blind box AI video generator is for pull energy, not generic face filters. Upload one photo of an original or rights-owned blind-box figure (not a selfie) and draft an unboxing-style short for TikTok, Reels, or restock posts.",
+      "A blind box AI video generator is for pull energy, not generic face filters. Start with one original or rights-owned blind-box photo and inspect the fixed vertical reveal workflow for TikTok, Reels, or restock posts.",
     body: [
-      "This tool page owns the blind box AI video generator job: make a reveal clip from one photo. Brand-wide drop campaigns and series teasers belong on /for/blind-box-brand-marketing — same engine, different intent, one canonical each.",
-      "Lead with the first second: lid motion or mystery light works better than a slow fade. Use vertical recipes for TikTok/Reels. Cached prototypes show pacing without processing your upload.",
-      "Collectors flex a pull; small shops draft restock hooks. Always confirm you own the photo and product rights before an eligible Live submission.",
-      "Channel SEO (TikTok Shop, Etsy) stays on /for/* platform pages. Link out for distribution; do not re-title this tool as a brand marketing page.",
+      "Blind-box Reveal is the vertical 9:16 format in Pikbo's fixed three-video Launch Pack. It is designed for drop announcements, restock posts, Reels, and Shorts from one rights-owned figure photo.",
+      "Lead with the first second: box motion, a silhouette, or mystery light works better than a slow fade. The format stays five seconds and Fast 720p during private beta.",
+      "The reveal shown publicly is a cached format preview and does not process your upload. Pikbo has not yet completed a verified private Blind-box Reveal output, so this page does not present the preview as customer proof.",
+      "Generated packaging text, logos, paint, accessories, and hidden angles can drift. Compare the draft with the physical figure and box before publishing.",
     ],
     keywords: [
       "blind box AI video generator",
@@ -663,6 +660,10 @@ export const TOOLS: Tool[] = [
       {
         q: "Can I use a stock unbox template?",
         a: "Recipes are toy-native templates. Your photo is the product reference — review likeness before posting. Only upload collectibles you own.",
+      },
+      {
+        q: "Is the Blind-box Reveal format already verified?",
+        a: "Not yet. Public visitors can inspect a cached pacing preview, but the completed private beta evidence currently covers Listing Spin only.",
       },
     ],
   },

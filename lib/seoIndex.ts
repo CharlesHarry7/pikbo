@@ -4,8 +4,8 @@
  * - noindex: thin hubs, Lab-only community, preview suite, extra landings
  * Concept recipes without unique Lab proof stay noindex until proof lands.
  *
- * 2026-07-29 launch focus: home, pricing, and exactly three high-intent product
- * jobs. Long-tail tools/for remain reachable + noindex until real proof exists.
+ * 2026-07-30 proof gate: only the primary tool stays indexable until each
+ * additional intent has its own verified input/output evidence.
  */
 
 import type { Metadata } from "next";
@@ -48,14 +48,12 @@ export const PREVIEW_ROBOTS: NonNullable<Metadata["robots"]> = {
 };
 
 /**
- * Marketing index allowlist — exactly five pages (WorkBuddy release budget).
+ * Marketing index allowlist — three pages while public proof is still single-run.
  * Paths have no trailing slash; root is "/".
  */
 export const COLD_START_MARKETING_INDEX_PATHS = [
   "/",
   "/tools/ai-toy-video-generator",
-  "/effects/360-spin-showcase",
-  "/tools/blind-box-reveal-video-maker",
   "/pricing",
 ] as const;
 
@@ -73,11 +71,11 @@ export const COLD_START_INDEX_PATHS = [
 
 /**
  * Tools allowed to index in cold start (must also appear in COLD_START_INDEX_PATHS).
- * Release budget: primary category tool + one distinct commercial tool only.
+ * Release budget: primary category tool only. Listing-spin and blind-box pages
+ * remain reachable + noindex until each has distinct public proof.
  */
 export const COLD_START_INDEXABLE_TOOL_SLUGS = [
   "ai-toy-video-generator",
-  "blind-box-reveal-video-maker",
 ] as const;
 
 const COLD_START_SET = new Set<string>(COLD_START_INDEX_PATHS);
@@ -105,10 +103,7 @@ export function robotsForColdStartPath(
 }
 
 export function robotsForRecipe(slug: string): Metadata["robots"] | undefined {
-  if (slug === "360-spin-showcase" && recipeHasUniqueProof(slug)) {
-    return undefined;
-  }
-  return CONCEPT_ROBOTS;
+  return robotsForColdStartPath(`/effects/${slug}`);
 }
 
 /** Tools: cold-start allowlist only (primary + one commercial tool). */

@@ -19,6 +19,7 @@ import {
   listSellerJobWorkflows,
   workflowsForEffect,
 } from "@/lib/workflows";
+import { HighIntentProductTruth } from "@/components/HighIntentProductTruth";
 
 // Pre-render every effect page at build time. Concept recipes without unique
 // Lab proof are noindex (Phase H) but still reachable for Create deep-links.
@@ -55,6 +56,7 @@ export default async function EffectPage({
   const { slug } = await params;
   const preset = getPreset(slug);
   if (!preset) notFound();
+  const isCoreListingSpin = preset.slug === "360-spin-showcase";
 
   const related = PRESETS.filter(
     (p) => p.slug !== preset.slug && p.category === preset.category
@@ -69,7 +71,9 @@ export default async function EffectPage({
   ).slice(0, 4);
 
   // Preset-specific FAQ + shared objection FAQ (allowance/watermark/commercial/input/review)
-  const allFaq = [...preset.faq, ...COMMON_FAQ];
+  const allFaq = isCoreListingSpin
+    ? preset.faq
+    : [...preset.faq, ...COMMON_FAQ];
 
   // 哥飞 V2: FAQ + HowTo + SoftwareApplication JSON-LD (SSR)
   const faqJsonLd = {
@@ -94,13 +98,6 @@ export default async function EffectPage({
     name: `${preset.name} — ${site.name}`,
     applicationCategory: "MultimediaApplication",
     operatingSystem: "Web",
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-      description:
-        "Cached Pikbo Lab recipe preview at 0 credits; eligible Live generation is checked in Create.",
-    },
     description: preset.seoDescription,
     url: `${site.url}/effects/${preset.slug}`,
   };
@@ -132,35 +129,52 @@ export default async function EffectPage({
             </Link>
             <div className="flex flex-wrap gap-2">
               <Link
-                href={createRemixHref(preset.slug)}
+                href={
+                  isCoreListingSpin
+                    ? "/create?mode=seller-pack"
+                    : createRemixHref(preset.slug)
+                }
                 className="btn btn-primary !px-4 !py-2 text-xs font-black"
               >
-                Open Generate
+                {isCoreListingSpin
+                  ? "Preview the fixed Launch Pack"
+                  : "Open Generate"}
               </Link>
-              <FreeTrialCta
-                path={`/effects/${preset.slug}`}
-                variant="ghost"
-                className="btn btn-ghost !px-3 !py-2 text-xs"
-              />
-              <Link
-                href="/create?mode=seller-pack"
-                className="btn btn-ghost !px-3 !py-2 text-xs"
-              >
-                Seller Starter Pack
-              </Link>
-              <Link
-                href="/modules"
-                className="btn btn-ghost !px-3 !py-2 text-xs"
-              >
-                Modules
-              </Link>
-              <Link
-                href="/flow"
-                className="btn btn-ghost !px-3 !py-2 text-xs text-white/50"
-                title="Preview media wall — not a live Seedance job"
-              >
-                Flow · Preview
-              </Link>
+              {isCoreListingSpin ? (
+                <Link
+                  href="/pricing"
+                  className="btn btn-ghost !px-3 !py-2 text-xs"
+                >
+                  Beta limits
+                </Link>
+              ) : (
+                <>
+                  <FreeTrialCta
+                    path={`/effects/${preset.slug}`}
+                    variant="ghost"
+                    className="btn btn-ghost !px-3 !py-2 text-xs"
+                  />
+                  <Link
+                    href="/create?mode=seller-pack"
+                    className="btn btn-ghost !px-3 !py-2 text-xs"
+                  >
+                    Launch Pack
+                  </Link>
+                  <Link
+                    href="/modules"
+                    className="btn btn-ghost !px-3 !py-2 text-xs"
+                  >
+                    Modules
+                  </Link>
+                  <Link
+                    href="/flow"
+                    className="btn btn-ghost !px-3 !py-2 text-xs text-white/50"
+                    title="Preview media wall — not a live Seedance job"
+                  >
+                    Flow · Preview
+                  </Link>
+                </>
+              )}
             </div>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -189,26 +203,33 @@ export default async function EffectPage({
             {preset.intro}
           </p>
           <p className="mt-3 text-xs text-[var(--fg-dim)]">
-            Public preview: cached prototype · 0 credits · upload not
-            processed. Invited validation: private Fast 720p · 5 seconds ·
-            exact credit reservation.
+            Public preview: cached format reference · upload not processed.
+            Private beta: Fast 720p · 5 seconds · invite only.
           </p>
         </div>
       </section>
 
+      {isCoreListingSpin ? (
+        <HighIntentProductTruth focus="listing-spin" />
+      ) : null}
+
       {/* Tool + three steps on first product surface */}
-      <section className="container-x py-8">
-        <LandingToolPanel
-          effectSlug={preset.slug}
-          effectName={preset.name}
-          duration={preset.duration}
-          aspectRatio={preset.aspectRatio}
-        />
-      </section>
-      <LandingHowItWorks productLabel="video draft" compact />
+      {!isCoreListingSpin ? (
+        <>
+          <section className="container-x py-8">
+            <LandingToolPanel
+              effectSlug={preset.slug}
+              effectName={preset.name}
+              duration={preset.duration}
+              aspectRatio={preset.aspectRatio}
+            />
+          </section>
+          <LandingHowItWorks productLabel="video draft" compact />
+        </>
+      ) : null}
 
       {/* Suite modules tied to this recipe (or seller jobs fallback) */}
-      {(() => {
+      {!isCoreListingSpin && (() => {
         const bound = workflowsForEffect(preset.slug);
         const modules =
           bound.length > 0 ? bound : listSellerJobWorkflows().slice(0, 4);
@@ -275,10 +296,12 @@ export default async function EffectPage({
       </section>
 
       {/* V2: result showcase */}
-      <LandingResults
-        effectSlug={preset.slug}
-        title="Cached PIKBO Lab references"
-      />
+      {!isCoreListingSpin ? (
+        <LandingResults
+          effectSlug={preset.slug}
+          title="Cached PIKBO Lab references"
+        />
+      ) : null}
 
       {/* FAQ */}
       <section className="container-x py-8">
@@ -294,7 +317,7 @@ export default async function EffectPage({
       </section>
 
       {/* Internal links — 内链 */}
-      {forLinks.length > 0 && (
+      {!isCoreListingSpin && forLinks.length > 0 && (
         <section className="container-x py-8">
           <h2 className="text-2xl font-bold">Made for</h2>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -310,14 +333,16 @@ export default async function EffectPage({
         </section>
       )}
 
-      <section className="container-x py-12">
-        <h2 className="text-2xl font-bold">More effects</h2>
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {relatedFallback.map((p) => (
-            <PresetCard key={p.slug} preset={p} />
-          ))}
-        </div>
-      </section>
+      {!isCoreListingSpin ? (
+        <section className="container-x py-12">
+          <h2 className="text-2xl font-bold">More effects</h2>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {relatedFallback.map((p) => (
+              <PresetCard key={p.slug} preset={p} />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }

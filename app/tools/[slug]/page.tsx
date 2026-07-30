@@ -18,12 +18,16 @@ import { LandingSeoMesh } from "@/components/LandingSeoMesh";
 import { JsonLd } from "@/components/JsonLd";
 import {
   softwareApplicationJsonLd,
-  videoObjectJsonLd,
 } from "@/lib/jsonLd";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
+import { HighIntentProductTruth } from "@/components/HighIntentProductTruth";
 
 /** 哥飞：排名主战场 slug — On Page 火力集中 */
 const PRIMARY_RANK_SLUG = "ai-toy-video-generator";
+const HIGH_INTENT_TOOL_SLUGS = new Set([
+  PRIMARY_RANK_SLUG,
+  "blind-box-reveal-video-maker",
+]);
 
 export function generateStaticParams() {
   return TOOLS.map((t) => ({ slug: t.slug }));
@@ -80,8 +84,9 @@ export default async function ToolPage({
     .map((s) => getPreset(s))
     .filter((p) => p !== undefined);
 
-  const allFaq = [...t.faq, ...COMMON_FAQ];
   const isPrimaryRank = t.slug === PRIMARY_RANK_SLUG;
+  const isHighIntentTool = HIGH_INTENT_TOOL_SLUGS.has(t.slug);
+  const allFaq = isHighIntentTool ? t.faq : [...t.faq, ...COMMON_FAQ];
   const primaryDemo = isPrimaryRank
     ? DEMO_VIDEOS.find((demo) => demo.preset === t.primaryEffect)
     : undefined;
@@ -113,12 +118,6 @@ export default async function ToolPage({
       })
     );
   }
-  if (primaryDemo) {
-    jsonLdBlocks.push(
-      videoObjectJsonLd(primaryDemo, `/tools/${t.slug}`)
-    );
-  }
-
   return (
     <>
       <JsonLd data={jsonLdBlocks} />
@@ -134,8 +133,8 @@ export default async function ToolPage({
               className="mt-4 max-w-2xl text-sm font-semibold tracking-wide text-[#c8ff3d]/95 sm:text-base"
               data-tools-friction="cached-preview"
             >
-              Cached prototype · 0 credits · no card · your upload is not
-              processed. Live is eligibility-gated.
+              Cached format preview · no card · your upload is not processed.
+              Private generation is invite-only.
             </p>
           ) : null}
           <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl">
@@ -150,18 +149,41 @@ export default async function ToolPage({
               into a short video draft for listings and social.
             </p>
           ) : null}
-          <SuiteDoorLinks effectSlug={primary?.slug} className="mt-5" />
+          {isHighIntentTool ? (
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link
+                href="/create?mode=seller-pack"
+                className="btn btn-primary !px-4 !py-2 text-xs font-black"
+              >
+                Preview the fixed Launch Pack
+              </Link>
+              <Link
+                href="/pricing"
+                className="btn btn-ghost !px-3 !py-2 text-xs font-black"
+              >
+                Beta limits
+              </Link>
+            </div>
+          ) : (
+            <SuiteDoorLinks effectSlug={primary?.slug} className="mt-5" />
+          )}
         </div>
       </section>
 
-      {primaryDemo ? (
+      {isHighIntentTool ? (
+        <HighIntentProductTruth
+          focus={isPrimaryRank ? "generator" : "blind-box"}
+        />
+      ) : null}
+
+      {primaryDemo && !isHighIntentTool ? (
         <LandingResults
           effectSlug={primaryDemo.preset}
           title="Watch a cached AI toy video prototype"
         />
       ) : null}
 
-      {primary ? (
+      {primary && !isHighIntentTool ? (
         <>
           <section className="container-x py-8">
             <LandingToolPanel
@@ -262,22 +284,20 @@ export default async function ToolPage({
         ) : null}
       </section>
 
-      {!primaryDemo ? (
+      {!primaryDemo && !isHighIntentTool ? (
         <LandingResults effectSlug={primary?.slug} title="Example clips" />
       ) : null}
 
-      <section className="container-x py-8">
-        <h2 className="text-2xl font-bold">
-          {t.slug === PRIMARY_RANK_SLUG
-            ? "Recipes inside this AI toy video generator"
-            : "Recipes for this tool"}
-        </h2>
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {effects.map((p) => (
-            <PresetCard key={p.slug} preset={p} />
-          ))}
-        </div>
-      </section>
+      {!isHighIntentTool ? (
+        <section className="container-x py-8">
+          <h2 className="text-2xl font-bold">Recipes for this tool</h2>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {effects.map((p) => (
+              <PresetCard key={p.slug} preset={p} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="container-x py-8">
         <h2 className="text-2xl font-bold">
@@ -295,11 +315,13 @@ export default async function ToolPage({
         </div>
       </section>
 
-      <LandingSeoMesh
-        kind="tools"
-        currentSlug={t.slug}
-        effectSlugs={[t.primaryEffect, ...t.effects]}
-      />
+      {!isHighIntentTool ? (
+        <LandingSeoMesh
+          kind="tools"
+          currentSlug={t.slug}
+          effectSlugs={[t.primaryEffect, ...t.effects]}
+        />
+      ) : null}
     </>
   );
 }
