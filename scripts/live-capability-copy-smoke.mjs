@@ -78,11 +78,17 @@ assert(
   ),
   "Create metadata must not promise public Live"
 );
+const rankToolSource = read("lib/tools.ts");
 assert(
-  read("lib/tools.ts").includes(
-    "cached Pikbo Lab prototype for 0 credits"
+  rankToolSource.includes("cached format previews") &&
+    rankToolSource.includes("do not process the uploaded image"),
+  "rank tool must explain that public previews are cached and never process the upload"
+);
+assert(
+  rankToolSource.includes(
+    "Private generation and subscriptions remain closed while quality, recovery, and cost are validated."
   ),
-  "rank tool must explain the cached path"
+  "rank tool must keep private generation and subscriptions closed during validation"
 );
 
 function walkHtml(directory) {

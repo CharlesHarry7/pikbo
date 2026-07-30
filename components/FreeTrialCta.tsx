@@ -13,7 +13,7 @@ import {
 } from "@/lib/meClient";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
-/** Free Mini / Lab sample try path — remix + try=1&sample=scout. */
+/** Cached sample try path — remix + try=1&sample=scout. */
 const FREE_TRIAL_TRY_HREF = createLabSampleTryHref("scout");
 
 type Variant = "primary" | "ghost" | "mint";
@@ -27,8 +27,8 @@ const VARIANT_CLASS: Record<Variant, string> = {
 };
 
 /**
- * Soft-launch primary CTA — never claims free live when Free Mini is spent.
- * Lab sample path stays free (cached); exhausted → plans.
+ * Soft-launch primary CTA — never claims public generation when it is closed.
+ * The sample path stays cached; exhausted private access → plans.
  */
 export function FreeTrialCta({
   path,
@@ -88,7 +88,7 @@ export function FreeTrialCta({
     path.includes("home") ||
     path.includes("product-rail") ||
     path.includes("seedance");
-  // Prefer Lab sample when Free live is blocked (honest soft-launch).
+  // Prefer the cached sample when public generation is blocked.
   const href =
     trialDone && !demo && freeLiveOpen
       ? "/pricing"
@@ -103,7 +103,7 @@ export function FreeTrialCta({
     trialDone && !demo && freeLiveOpen
       ? labelPlans ?? "Compare plans"
       : demo || !freeLiveOpen
-        ? labelDemo ?? "Try Lab sample"
+        ? labelDemo ?? "Try cached sample"
         : labelTry ?? "Try free";
 
   return (
@@ -119,7 +119,7 @@ export function FreeTrialCta({
       ) : null}
       {!hideClipsChip && !demo && !freeLiveOpen ? (
         <span className="hidden text-[10px] text-white/40 sm:inline">
-          Cached Lab free
+          Cached preview
         </span>
       ) : null}
       {!hideClipsChip && trialDone && !demo && freeLiveOpen ? (

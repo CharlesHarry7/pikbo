@@ -71,18 +71,11 @@ export function softwareApplicationJsonLd(opts?: {
     operatingSystem: "Web",
     url: opts?.url ?? `${site.url}/create`,
     description: opts?.description ?? site.description,
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-      description:
-        "Cached Pikbo Lab prototype preview at 0 credits. It does not process the visitor's upload; eligible Live access is gated.",
-    },
     featureList: [
       "Photo to short toy video",
-      "Cached recipe previews with gated generation",
+      "Cached recipe previews and private beta generation",
       "Listing and social aspect ratios",
-      "Explicit Live eligibility and credit quotes",
+      "Explicit beta limits and credit quotes",
     ],
     publisher: {
       "@type": "Organization",

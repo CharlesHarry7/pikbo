@@ -1,6 +1,6 @@
 /**
  * Phase H — cold-start index allowlist honesty.
- * WorkBuddy five-page marketing budget + legal (privacy/terms).
+ * Proof-gated three-page marketing budget + legal (privacy/terms).
  * Run: npm run seo-cold-start-smoke
  */
 import assert from "node:assert/strict";
@@ -10,10 +10,6 @@ import { join } from "node:path";
 const root = process.cwd();
 const seoIndex = readFileSync(join(root, "lib/seoIndex.ts"), "utf8");
 const sitemap = readFileSync(join(root, "app/sitemap.ts"), "utf8");
-const releaseDoc = readFileSync(
-  join(root, "docs/growth/SEO_INDEXABLE_10_RELEASE.md"),
-  "utf8"
-);
 const siteSrc = readFileSync(join(root, "lib/site.ts"), "utf8");
 const layoutSrc = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const homeSrc = readFileSync(join(root, "app/page.tsx"), "utf8");
@@ -43,12 +39,15 @@ const pricingHeroSrc = readFileSync(
   "utf8"
 );
 const llmsTxt = readFileSync(join(root, "public/llms.txt"), "utf8");
+const productTruthSrc = readFileSync(
+  join(root, "components/HighIntentProductTruth.tsx"),
+  "utf8"
+);
 
 assert.match(seoIndex, /COLD_START_MARKETING_INDEX_PATHS/);
 assert.match(seoIndex, /COLD_START_LEGAL_INDEX_PATHS/);
 assert.match(seoIndex, /COLD_START_INDEX_PATHS/);
 assert.match(sitemap, /COLD_START_INDEX_PATHS/);
-assert.match(releaseDoc, /five indexable URLs|Five-page release/i);
 
 const marketingBlock = seoIndex.match(
   /COLD_START_MARKETING_INDEX_PATHS\s*=\s*\[([\s\S]*?)\]\s*as const/
@@ -59,14 +58,12 @@ const marketingPaths = [...marketingBlock[1].matchAll(/"([^"]+)"/g)].map(
 );
 assert.equal(
   marketingPaths.length,
-  5,
-  `marketing budget must be exactly 5, got ${marketingPaths.length}`
+  3,
+  `marketing budget must be exactly 3, got ${marketingPaths.length}`
 );
 assert.deepEqual(marketingPaths, [
   "/",
   "/tools/ai-toy-video-generator",
-  "/effects/360-spin-showcase",
-  "/tools/blind-box-reveal-video-maker",
   "/pricing",
 ]);
 
@@ -84,12 +81,14 @@ assert.ok(fullBlock, "full COLD_START_INDEX_PATHS present");
 // Spread composition — count by resolving marketing + legal lengths
 assert.equal(
   marketingPaths.length + legalPaths.length,
-  7,
-  "sitemap allowlist = 5 marketing + 2 legal"
+  5,
+  "sitemap allowlist = 3 marketing + 2 legal"
 );
 
 // Long-tail dump must leave the index allowlist (stay reachable + noindex)
 for (const thin of [
+  "/effects/360-spin-showcase",
+  "/tools/blind-box-reveal-video-maker",
   "/tools/figure-360-product-video",
   "/tools/one-photo-product-video",
   "/tools/ai-product-video-generator-for-toys",
@@ -112,10 +111,7 @@ const toolSlugs = seoIndex.match(
 );
 assert.ok(toolSlugs);
 const tools = [...toolSlugs[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
-assert.deepEqual(tools, [
-  "ai-toy-video-generator",
-  "blind-box-reveal-video-maker",
-]);
+assert.deepEqual(tools, ["ai-toy-video-generator"]);
 
 // Private / preview still noindex helpers
 assert.match(seoIndex, /PRIVATE_ROBOTS/);
@@ -148,18 +144,29 @@ for (const [name, src] of [
 assert.doesNotMatch(jsonLdSrc, /SearchAction|potentialAction/);
 assert.doesNotMatch(jsonLdSrc, /sameAs:\s*\[\s*\]/);
 
-// Video indexing: one prominent primary-tool prototype, not six homepage decorations.
+// Cached Lab media remains visible but is not submitted as verified video proof.
 assert.doesNotMatch(homeSrc, /videoObjectJsonLd/);
-assert.match(toolPageSrc, /videoObjectJsonLd\(primaryDemo/);
+assert.doesNotMatch(toolPageSrc, /videoObjectJsonLd/);
 assert.match(toolPageSrc, /Watch a cached AI toy video prototype/);
 assert.match(toolPageSrc, /data-tools-friction="cached-preview"/);
+assert.match(
+  toolPageSrc,
+  /\{isHighIntentTool \? \(\s*<p[\s\S]{0,400}data-tools-friction="cached-preview"/,
+  "every high-intent tool must show the cached-preview truth line"
+);
+assert.match(toolPageSrc, /your upload is not processed/);
+assert.match(toolPageSrc, /subscriptions are not open\s+yet/);
 assert.doesNotMatch(
   toolPageSrc,
   /No sign-up\. No card\. One photo → one video\. Free\./
 );
-assert.match(sitemap, /videos:/);
-assert.match(sitemap, /content_loc:/);
-assert.match(sitemap, /scout-spin/);
+assert.doesNotMatch(sitemap, /videos:|content_loc:|scout-spin/);
+assert.match(toolPageSrc, /HighIntentProductTruth/);
+assert.match(productTruthSrc, /Fast 720p/);
+assert.match(productTruthSrc, /5\.042 sec/);
+assert.match(productTruthSrc, /About 2 min 39 sec/);
+assert.match(productTruthSrc, /not a physical product, customer testimonial/);
+assert.match(productTruthSrc, /Blind-box Live result pending/);
 
 // Homepage language and trust surface.
 assert.doesNotMatch(homeSrc, /轮到你|上传自有/);
@@ -203,15 +210,13 @@ assert.match(termsSrc, /Cached prototype previews do not process your upload/);
 assert.match(termsSrc, /eligible signed-in\s+account/);
 assert.doesNotMatch(robotsSrc, /9-URL/);
 
-// llms.txt is a supplemental, truthful mirror of the seven canonical URLs.
+// llms.txt mirrors only the five proof-gated canonical URLs.
 const llmsUrls = [...llmsTxt.matchAll(/https:\/\/pikbo\.ai(?:\/[^\s)]+|\/)/g)].map(
   (match) => match[0]
 );
 assert.deepEqual(llmsUrls, [
   "https://pikbo.ai/",
   "https://pikbo.ai/tools/ai-toy-video-generator",
-  "https://pikbo.ai/effects/360-spin-showcase",
-  "https://pikbo.ai/tools/blind-box-reveal-video-maker",
   "https://pikbo.ai/pricing",
   "https://pikbo.ai/privacy",
   "https://pikbo.ai/terms",
@@ -219,5 +224,5 @@ assert.deepEqual(llmsUrls, [
 assert.match(llmsTxt, /does not guarantee sales, reach, rankings/i);
 
 console.log(
-  "seo-cold-start-smoke: PASS (7 canonical URLs; Google-first metadata, trust, guide evidence and one primary-tool video)"
+  "seo-cold-start-smoke: PASS (5 canonical URLs; proof-gated index, honest validation evidence, no cached video submission)"
 );

@@ -3,7 +3,7 @@ import { site } from "@/lib/site";
 
 const HIGH_INTENT_PAGES = [
   ["/tools/ai-toy-video-generator", "AI toy video generator"],
-  ["/tools/figure-360-product-video", "360 toy listing video"],
+  ["/effects/360-spin-showcase", "360 toy listing video"],
   ["/tools/blind-box-reveal-video-maker", "Blind-box reveal video"],
 ] as const;
 
