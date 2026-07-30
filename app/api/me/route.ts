@@ -15,7 +15,6 @@ import { evaluateAccountLiveCapability } from "@/lib/liveCapability";
 import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
 import { liveGenerationAccess } from "@/lib/liveGenerationGate.mjs";
 import { resolvePrivateLiveAccess } from "@/lib/privateLiveAccessServer";
-import { providerValidationBudgetUsd } from "@/lib/durableProviderBudget";
 import {
   SELLER_PACK_LIVE_MODEL_ID,
   SELLER_PACK_LIVE_RESOLUTION,
@@ -192,10 +191,11 @@ export async function GET(req: Request) {
     freeDeliveryReady: privateLive.freeDeliveryReady,
   });
   // Match /api/generate's current paid-provider admission. Production remains
-  // cached while its validation budget is hard-closed; an invited Preview can
-  // advertise Live only when the same route gate can actually spend.
+  // cached while any global Preview prerequisite is hard-closed; an invited
+  // Preview can advertise Live only when the same spend/storage gates used by
+  // the route are ready.
   const liveRouteReady =
-    routeAccess.kind === "live" && providerValidationBudgetUsd() > 0;
+    routeAccess.kind === "live" && liveReadiness.privatePreview.ready;
   const capability = evaluateAccountLiveCapability({
     liveRouteReady,
     signedIn: true,

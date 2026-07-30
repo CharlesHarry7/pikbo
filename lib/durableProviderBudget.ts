@@ -25,6 +25,84 @@ function numberValue(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+export type DurableProviderBudgetProbe = {
+  configured: boolean;
+  schemaReady: boolean;
+  rpcReady: boolean;
+  warning?: string;
+};
+
+/**
+ * Read-only readiness probe for the non-production provider-spend authority.
+ *
+ * The null-user RPC call is an intentional no-op: the SQL function returns
+ * AUTH_REQUIRED before it reads or mutates budget state. It proves that the
+ * service-role RPC is present without reserving spend.
+ */
+export async function probeDurableProviderBudgetStore(): Promise<DurableProviderBudgetProbe> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      configured: false,
+      schemaReady: false,
+      rpcReady: false,
+      warning: "Supabase service role unavailable",
+    };
+  }
+  try {
+    const [budgetTable, reservationTable, reserveRpc] = await Promise.all([
+      admin
+        .from("provider_validation_budgets")
+        .select("scope")
+        .limit(1),
+      admin
+        .from("provider_spend_reservations")
+        .select("id")
+        .limit(1),
+      admin.rpc("pikbo_reserve_provider_spend_v1", {
+        p_user_id: null,
+        p_idempotency_key: "readiness-probe",
+        p_model_id: SEEDANCE_FAST,
+        p_estimated_microusd: 1,
+        p_ceiling_microusd: 1,
+      }),
+    ]);
+    const tableError = budgetTable.error || reservationTable.error;
+    const rpcResult = payload(reserveRpc.data);
+    const rpcReady =
+      !reserveRpc.error &&
+      rpcResult?.ok === false &&
+      rpcResult.code === "AUTH_REQUIRED";
+    if (tableError || !rpcReady) {
+      return {
+        configured: true,
+        schemaReady: !tableError,
+        rpcReady,
+        warning: (
+          tableError?.message ||
+          reserveRpc.error?.message ||
+          "Provider budget RPC readiness probe returned an invalid result"
+        ).slice(0, 160),
+      };
+    }
+    return {
+      configured: true,
+      schemaReady: true,
+      rpcReady: true,
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      schemaReady: false,
+      rpcReady: false,
+      warning:
+        error instanceof Error
+          ? error.message.slice(0, 160)
+          : "Provider budget readiness probe failed",
+    };
+  }
+}
+
 export function providerValidationBudgetUsd(
   env: NodeJS.ProcessEnv = process.env
 ): number {

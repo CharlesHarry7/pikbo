@@ -2223,3 +2223,41 @@ Newest first. One block per meaningful landing.
   proof, mobile proof, TypeScript, ESLint and the production build pass.
 - Safety: no API, auth, database, provider, Stripe, DNS or production-gate
   behavior changed; no paid model call or public checkout was enabled.
+
+### 2026-07-30 — [gpt/grok/workbuddy] Private Preview readiness truth
+
+- Grok session `019fb390-b1dd-75a3-a13b-599d8d3e44bc` reproduced a real
+  false-ready state: the old health response could claim private Preview ready
+  while the generate route rejected the deployment environment, validation
+  budget, or missing provider-spend RPC.
+- A shared fail-closed matrix now governs both `/api/health` and `/api/me`.
+  It covers auth, durable reserve/reconciliation, Provider, private bucket and
+  output schema/RPC, output-host allowlist, private invite/budget flags,
+  deployment admission, the non-production budget, and provider-budget
+  schema/RPC readiness.
+- Both RPC readiness checks use null identity and hit deterministic validation
+  returns before any database or Storage mutation. Missing or unexpected probe
+  results keep the Preview closed.
+- `capability-matrix` was repaired for the current
+  `canUsePrivateLaunch(session)` boundary, expanded to cover every private
+  prerequisite, and added to the real GitHub workflow.
+- GPT Pro returned **APPROVE** in persistent chat
+  `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`.
+- WorkBuddy returned **APPROVE** after inspecting the local diff and live
+  health/account/Create truth:
+  `pikbo-private-preview-readiness-final-20260730-wb2`.
+- GitHub review found one residual false-ready case: a non-empty malformed
+  `PIKBO_PROVIDER_OUTPUT_HOST_ALLOWLIST` could pass readiness but never match a
+  delivered URL after Provider spend. Readiness and enforcement now share one
+  strict hostname-only parser; any malformed or empty segment invalidates the
+  complete configuration, while valid HTTPS apex and subdomain delivery stays
+  allowed.
+- The frozen review delta passed all three independent gates: GPT Pro
+  **APPROVE** in `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`; Grok **APPROVE** in
+  `019fb3ef-62ed-7653-9ba7-4669c3f66f4c`; WorkBuddy **APPROVE** with `No P0
+  blockers.` in `pikbo-pr90-allowlist-final-delta-20260731-wb1`.
+- Focused and launch-gate regressions, TypeScript, ESLint, and the 196-route
+  webpack production build pass. Production flags, secrets, database,
+  Provider, Stripe, DNS and public/paid state remain unchanged.
+- Full evidence:
+  `docs/evidence/PRIVATE_PREVIEW_READINESS_2026-07-30.md`.

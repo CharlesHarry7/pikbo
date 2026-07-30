@@ -46,6 +46,45 @@ export type AccountLiveCapabilityInput = {
   freeDeliveryReady: boolean;
 };
 
+export type PrivatePreviewReadinessInput = {
+  authConfigured: boolean;
+  durableAtomicReservationConfigured: boolean;
+  durableReconciliationConfigured: boolean;
+  providerConfigured: boolean;
+  privateResultsBucketReady: boolean;
+  privateResultsSchemaReady: boolean;
+  privateResultsRpcReady: boolean;
+  providerOutputAllowlistConfigured: boolean;
+  privateLiveEnabled: boolean;
+  privateLiveAllowlistConfigured: boolean;
+  privateLiveBudgetConfigured: boolean;
+  providerValidationEnvironmentAllowed: boolean;
+  providerValidationBudgetConfigured: boolean;
+  durableProviderBudgetSchemaReady: boolean;
+  durableProviderBudgetRpcReady: boolean;
+};
+
+/**
+ * Global readiness for the invited private Preview path. This deliberately
+ * stays separate from public soft-live readiness: Preview may use an
+ * owner-only delivery path, but every spend, storage, and environment gate
+ * must still be true before account UI may advertise real generation.
+ */
+export function evaluatePrivatePreviewReadiness(
+  input: PrivatePreviewReadinessInput
+) {
+  const missing: Array<keyof PrivatePreviewReadinessInput> = [];
+  for (const key of Object.keys(input) as Array<
+    keyof PrivatePreviewReadinessInput
+  >) {
+    if (!input[key]) missing.push(key);
+  }
+  return {
+    ready: missing.length === 0,
+    missing,
+  };
+}
+
 /**
  * One account-level answer for every live-looking credit label and CTA.
  * Cookie credits are deliberately absent: only an authenticated durable wallet
