@@ -31,6 +31,7 @@ import {
   privateLiveBudget,
 } from "../lib/privateLiveBeta.mjs";
 import {
+  parseProviderOutputHostAllowlist,
   privateResultObjectKey,
   privateStoredObjectMatches,
   providerOutputHostAllowed,
@@ -349,6 +350,71 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     providerOutputHostAllowed("http://fal.media/result.mp4", ["fal.media"]),
     false
   );
+  assert.deepEqual(
+    parseProviderOutputHostAllowlist(" FAL.MEDIA, .Fal.Run, fal.media "),
+    ["fal.media", "fal.run"],
+    "hostname-only entries normalize and deduplicate"
+  );
+  assert.equal(
+    providerOutputHostAllowed(
+      "https://fal.media:443/files/private/result.mp4",
+      ["FAL.MEDIA"]
+    ),
+    true,
+    "a valid HTTPS apex host remains deliverable"
+  );
+  for (const malformed of [
+    "",
+    "fal.media,",
+    "fal.media,,fal.run",
+    "https://fal.media",
+    "fal.media:443",
+    "fal.media/path",
+    "fal.media?download=1",
+    "fal.media#result",
+    "user@fal.media",
+    "*.fal.media",
+    "fal",
+    "fal_media",
+    "fal media",
+    "-fal.media",
+    "fal-.media",
+    "fal..media",
+    "fal.media.",
+    "localhost",
+    "sub.localhost",
+    "127.0.0.1",
+    "[::1]",
+    `${"a".repeat(64)}.media`,
+    `${"a".repeat(250)}.media`,
+    "fal.media,https://fal.run",
+  ]) {
+    assert.deepEqual(
+      parseProviderOutputHostAllowlist(malformed),
+      [],
+      `${malformed || "empty allowlist"} must fail closed`
+    );
+  }
+  assert.equal(
+    providerOutputHostAllowed(
+      "https://v3b.fal.media/files/private/result.mp4",
+      ["fal.media", "https://fal.run"]
+    ),
+    false,
+    "a mixed malformed allowlist must fail delivery closed"
+  );
+  for (const blockedUrl of [
+    "https://evilfal.media/result.mp4",
+    "https://fal.media.evil.com/result.mp4",
+    "https://fal.media@evil.com/result.mp4",
+    "https://user:pass@fal.media/result.mp4",
+  ]) {
+    assert.equal(
+      providerOutputHostAllowed(blockedUrl, ["fal.media"]),
+      false,
+      `${blockedUrl} must not cross the host boundary`
+    );
+  }
   assert.equal(
     privateStoredObjectMatches({
       expectedByteLength: 1024,

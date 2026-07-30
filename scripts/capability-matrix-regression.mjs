@@ -221,6 +221,7 @@ assert.match(providerBudget, /p_user_id:\s*null/);
 assert.match(providerBudget, /rpcResult\.code === "AUTH_REQUIRED"/);
 assert.match(privateResults, /p_user_id:\s*null/);
 assert.match(privateResults, /rpcPayload\.code === "INVALID_IDENTITY"/);
+assert.match(privateResults, /parseProviderOutputHostAllowlist/);
 assert.match(healthRoute, /privatePreview:\s*privatePreview\.ready/);
 assert.match(healthRoute, /missingPrivatePreviewRequirements/);
 

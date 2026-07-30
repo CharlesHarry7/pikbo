@@ -1,12 +1,14 @@
 import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import {
+  parseProviderOutputHostAllowlist,
   privateResultObjectKey,
   privateStoredObjectMatches,
   providerOutputHostAllowed,
 } from "@/lib/privateGenerationResultsPure.mjs";
 
 export {
+  parseProviderOutputHostAllowlist,
   privateResultObjectKey,
   privateStoredObjectMatches,
   providerOutputHostAllowed,
@@ -81,10 +83,9 @@ type SaveFailure = {
 };
 
 function configuredProviderHosts(): string[] {
-  return (process.env.PIKBO_PROVIDER_OUTPUT_HOST_ALLOWLIST || "")
-    .split(",")
-    .map((value) => value.trim().toLowerCase().replace(/^\./, ""))
-    .filter(Boolean);
+  return parseProviderOutputHostAllowlist(
+    process.env.PIKBO_PROVIDER_OUTPUT_HOST_ALLOWLIST || ""
+  );
 }
 
 export function privateProviderOutputAllowlistConfigured(): boolean {

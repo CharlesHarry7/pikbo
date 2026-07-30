@@ -2246,6 +2246,16 @@ Newest first. One block per meaningful landing.
 - WorkBuddy returned **APPROVE** after inspecting the local diff and live
   health/account/Create truth:
   `pikbo-private-preview-readiness-final-20260730-wb2`.
+- GitHub review found one residual false-ready case: a non-empty malformed
+  `PIKBO_PROVIDER_OUTPUT_HOST_ALLOWLIST` could pass readiness but never match a
+  delivered URL after Provider spend. Readiness and enforcement now share one
+  strict hostname-only parser; any malformed or empty segment invalidates the
+  complete configuration, while valid HTTPS apex and subdomain delivery stays
+  allowed.
+- The frozen review delta passed all three independent gates: GPT Pro
+  **APPROVE** in `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`; Grok **APPROVE** in
+  `019fb3ef-62ed-7653-9ba7-4669c3f66f4c`; WorkBuddy **APPROVE** with `No P0
+  blockers.` in `pikbo-pr90-allowlist-final-delta-20260731-wb1`.
 - Focused and launch-gate regressions, TypeScript, ESLint, and the 196-route
   webpack production build pass. Production flags, secrets, database,
   Provider, Stripe, DNS and public/paid state remain unchanged.

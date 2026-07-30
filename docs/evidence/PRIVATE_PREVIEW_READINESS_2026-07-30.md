@@ -68,6 +68,14 @@ object:
 Any missing table, column, function, unexpected response, or network error
 keeps private Preview closed.
 
+The output-host prerequisite is not a non-empty-string check. Readiness and
+delivery use the same hostname-only parser. A scheme, port, path, query,
+fragment, credentials, wildcard, underscore, space, empty label or segment,
+hyphen boundary, trailing dot, single-label name, localhost name, IP-shaped
+value, overlong label/name, or any mixed valid/invalid list invalidates the
+whole configuration. This prevents a malformed allowlist from admitting
+Provider spend and rejecting the result only after the paid call.
+
 ## Verification
 
 Passed locally:
@@ -101,6 +109,17 @@ normal runner and is the authoritative release build gate.
 - WorkBuddy inspected the local diff and live `/api/health`, `/api/me`, and
   `/create`, then returned **APPROVE** with no P0 correction:
   `pikbo-private-preview-readiness-final-20260730-wb2`.
+- GitHub's automated review then found that a malformed but non-empty
+  provider-output allowlist could still report ready. The final delta makes
+  readiness and runtime enforcement share one strict fail-closed parser.
+- Grok returned **APPROVE** for that frozen delta:
+  `019fb3ef-62ed-7653-9ba7-4669c3f66f4c`.
+- GPT Pro returned **APPROVE** for the same delta in the persistent Pikbo chat
+  `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`.
+- WorkBuddy returned **APPROVE** and `No P0 blockers.` after checking the
+  parser matrix, every runtime caller, the pre-fetch output guard, accounting
+  boundaries, and the public cached path:
+  `pikbo-pr90-allowlist-final-delta-20260731-wb1`.
 
 ## Next execution
 
