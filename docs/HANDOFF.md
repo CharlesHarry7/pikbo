@@ -2325,6 +2325,12 @@ Newest first. One block per meaningful landing.
   Pack, recovery ledger/reconciliation, Stripe billing, TypeScript, ESLint and
   the 198-route Next production build. Focused Launch-Pack, product-proof and
   mobile source regressions also pass.
+- WorkBuddy Preview review found the first deployed cut was materially better
+  than PR #94 but still had six polish/truth issues. The follow-up removes the
+  false `Choose` interaction cue, labels every static card as a direction
+  frame, moves old-toy motion out of the cards, makes the public CTA available
+  immediately, shortens mobile style names, and stops the Home mobile nav from
+  covering the first result. Final Preview recheck follows the delta deploy.
 - Safety: no API, Supabase, Provider, private Storage, credit, Stripe, Library,
   DNS, production flag or public payment behavior changed. Production remains
   validation/cached-only.

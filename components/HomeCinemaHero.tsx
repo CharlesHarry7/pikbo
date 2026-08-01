@@ -17,19 +17,19 @@ import type { FeedItem } from "@/lib/videoFeed";
 
 const STYLE_STUDIES = [
   {
-    name: "Art vinyl",
+    name: "Vinyl",
     detail: "Graphic form",
     image: "/style-studies/art-vinyl-guardian-v1.jpg",
     alt: "Original white, cobalt, and red art-vinyl toy style study",
   },
   {
-    name: "Plush hybrid",
+    name: "Plush",
     detail: "Soft character",
     image: "/style-studies/plush-hybrid-v1.jpg",
     alt: "Original cream plush-hybrid toy style study",
   },
   {
-    name: "Precision mecha",
+    name: "Mecha",
     detail: "Hard-surface detail",
     image: "/style-studies/precision-mecha-v1.jpg",
     alt: "Original white, black, and orange mecha toy style study",
@@ -44,7 +44,7 @@ const FORMAT_DIRECTIONS = [
     spec: "1:1 · 5 sec",
     image: "/style-studies/art-vinyl-guardian-v1.jpg",
     alt: "Art-vinyl sample on a product plinth for the Listing Spin direction",
-    evidence: "Original sample",
+    evidence: "Original direction frame",
     tone: "blue",
   },
   {
@@ -71,7 +71,7 @@ const FORMAT_DIRECTIONS = [
 
 export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
   const [launchAccess, setLaunchAccess] =
-    useState<HomeLaunchAccess>("checking");
+    useState<HomeLaunchAccess>("public-preview");
   const [credits, setCredits] = useState(0);
   const formats = FORMAT_DIRECTIONS.flatMap((format) => {
     const item = items.find((candidate) => candidate.recipeSlug === format.slug);
@@ -142,7 +142,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
                 />
               </div>
               <div className="min-w-0">
-                <h2 className="truncate text-[10px] font-black sm:text-xs">
+                <h2 className="text-[10px] font-black sm:text-xs">
                   {style.name}
                 </h2>
                 <p className="mt-0.5 hidden text-[9px] text-[#747C89] sm:block">
@@ -165,7 +165,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
               id="home-hero-title"
               className="mt-3 max-w-5xl font-display text-[clamp(2.55rem,5.8vw,6.25rem)] font-black leading-[0.91] tracking-[-0.065em]"
             >
-              Choose the launch look for your toy.
+              Explore launch looks for designer toys.
             </h1>
             <p className="mt-4 max-w-2xl text-sm font-semibold leading-6 text-[#626B78] sm:text-base">
               Pikbo turns one authorized toy photo into three fixed video jobs:
@@ -181,7 +181,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
           id="pack-formats"
           className="mt-7 grid scroll-mt-20 gap-3 lg:grid-cols-3"
         >
-          {formats.map(({ format, item }, index) => (
+          {formats.map(({ format }, index) => (
             <article
               key={format.slug}
               data-home-format-preview={format.slug}
@@ -207,13 +207,6 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
                 >
                   {format.evidence}
                 </span>
-                <Link
-                  href={item.projectHref || item.href}
-                  aria-label={`Open a different archived ${format.name} Lab prototype`}
-                  className="absolute right-3 top-3 rounded-md border border-white/25 bg-black/45 px-2.5 py-1.5 text-[8px] font-black uppercase tracking-[0.1em] text-white backdrop-blur transition hover:bg-black/70"
-                >
-                  Other toy · motion ↗
-                </Link>
                 <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 text-white">
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-[0.13em] text-white/68">
@@ -245,7 +238,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
                 href={archivedListing.projectHref || archivedListing.href}
                 className="text-[#2457E6] underline decoration-[#2457E6]/25 underline-offset-4 hover:decoration-[#2457E6]"
               >
-                View archived Lab motion ↗
+                View archived motion test — different toy ↗
               </Link>
             ) : null}
             <Link href="/pricing" className="text-[#5F6774] hover:text-[#15171B]">

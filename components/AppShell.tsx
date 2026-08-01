@@ -152,10 +152,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
       <nav
         className={cn(
-          "sticky bottom-0 z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
+          "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
           home
-            ? "border-[#D4D8E0] bg-[#F7F8FA]/96"
-            : "border-white/10 bg-[#0A0A0A]/96"
+            ? "relative border-[#D4D8E0] bg-[#F7F8FA]/96"
+            : "sticky bottom-0 border-white/10 bg-[#0A0A0A]/96"
         )}
         aria-label="Mobile navigation"
       >

@@ -2394,7 +2394,7 @@ assert.match(guidesSrc24, /toy-unboxing-video-from-one-photo/);
 
 assert.match(
   fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /data-home-format-preview=\{format\.slug\}[\s\S]*href=\{item\.projectHref \|\| item\.href\}/
+  /data-home-format-preview=\{format\.slug\}[\s\S]*View archived motion test — different toy/
 );
 assert.match(
   [
@@ -3906,7 +3906,7 @@ const homeHeroSrc = fs.readFileSync(
 );
 assert.match(
   homeHeroSrc,
-  /Choose the launch look for your toy\./
+  /Explore launch looks for designer toys\./
 );
 assert.match(homeHeroSrc, /Listing Spin/);
 assert.match(homeHeroSrc, /Blind-box Reveal/);

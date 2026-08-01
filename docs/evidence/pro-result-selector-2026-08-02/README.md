@@ -35,6 +35,12 @@ three-video Provider run.
   `/create?mode=seller-pack&source=home-preview&try=1&sample=scout`.
 - Destination remained the public cached prototype path and stated that no
   product photo is accepted or processed.
+- WorkBuddy first Preview review verified 1440×900 and 390×844 with zero
+  horizontal overflow, CTA + result visible, six images loaded and no console
+  errors. Its follow-up fixes are included: non-interactive `Explore` copy,
+  direction-frame labeling for all three cards, one separated archived-motion
+  link, immediately usable public CTA, full mobile style names, and a
+  non-sticky Home mobile nav.
 
 ## Regression gate
 
@@ -53,4 +59,3 @@ Passed locally:
 - `npm run typecheck`
 - `npm run lint`
 - `npm run build` — 198/198 routes
-
