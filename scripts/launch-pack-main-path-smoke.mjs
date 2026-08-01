@@ -24,8 +24,8 @@ const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
 
 // Homepage V3 separates public Lab preview from invited private upload.
-assert.match(home, /data-home-upgrade="launch-pack"/);
-assert.match(home, /href="\/create\?mode=seller-pack"/);
+assert.match(homeHero, /data-home-upgrade="launch-pack"/);
+assert.match(homeHero, /id="pack-formats"/);
 assert.match(
   homeHero,
   /<HeroUpload access=\{launchAccess\} credits=\{credits\} \/>/

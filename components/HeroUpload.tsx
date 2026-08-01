@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus } from "lucide-react";
+import { ArrowUpRight, ImagePlus, Play } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { track } from "@/lib/analytics";
@@ -88,27 +88,29 @@ export function HeroUpload({
               "/create?mode=seller-pack&source=home-preview&try=1&sample=scout"
             );
           }}
-          className="group flex min-h-36 w-full items-center gap-4 rounded-2xl border border-dashed border-white/16 bg-white/[0.045] p-4 text-left transition hover:border-[#c8ff3d]/55 hover:bg-white/[0.065] disabled:cursor-wait disabled:opacity-70 sm:min-h-40 sm:p-5"
+          className="group flex min-h-[116px] w-full items-center gap-4 rounded-2xl bg-[#2457E6] p-4 text-left text-white shadow-[0_18px_45px_-28px_rgba(36,87,230,0.9)] transition hover:-translate-y-0.5 hover:bg-[#1F4FD5] disabled:cursor-wait disabled:opacity-70 sm:p-5"
         >
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#c8ff3d] text-black shadow-[0_0_26px_rgba(200,255,61,0.2)] sm:h-14 sm:w-14">
-            <ImagePlus
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-[#2457E6] sm:h-12 sm:w-12">
+            <Play
               className="h-5 w-5 sm:h-6 sm:w-6"
-              strokeWidth={2.4}
+              fill="currentColor"
+              strokeWidth={1.8}
             />
           </span>
-          <span className="min-w-0">
-            <span className="block text-base font-black tracking-[-0.025em] text-white sm:text-lg">
+          <span className="min-w-0 flex-1">
+            <span className="block text-base font-black tracking-[-0.025em] sm:text-lg">
               {access === "checking"
                 ? "Checking private beta access…"
-                : "Preview the 3 Launch Pack formats"}
+                : "Try a sample Launch Pack"}
             </span>
-            <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/42">
+            <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/72">
               No photo upload · choose a Pikbo Lab sample
             </span>
-            <span className="mt-3 inline-flex rounded-full border border-white/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.13em] text-[#c8ff3d]">
+            <span className="mt-2 block text-[8px] font-black uppercase tracking-[0.12em] text-white/58">
               Public preview · 0 credits · your image is not processed
             </span>
           </span>
+          <ArrowUpRight className="h-5 w-5 shrink-0 text-white/72 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </button>
       </div>
     );
@@ -128,25 +130,25 @@ export function HeroUpload({
           setHover(false);
           goWithFile(event.dataTransfer.files?.[0]);
         }}
-        className={`group flex min-h-36 cursor-pointer items-center gap-4 rounded-2xl border border-dashed p-4 transition focus-within:ring-2 focus-within:ring-[#c8ff3d] sm:min-h-40 sm:p-5 ${
+        className={`group flex min-h-[116px] cursor-pointer items-center gap-4 rounded-2xl border p-4 transition focus-within:ring-2 focus-within:ring-[#2457E6] sm:p-5 ${
           hover
-            ? "border-[#c8ff3d] bg-[#c8ff3d]/10"
-            : "border-white/16 bg-white/[0.045] hover:border-[#c8ff3d]/55 hover:bg-white/[0.065]"
+            ? "border-[#2457E6] bg-[#E7EDFF]"
+            : "border-[#C9CED8] bg-white hover:border-[#2457E6]"
         }`}
       >
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#c8ff3d] text-black shadow-[0_0_26px_rgba(200,255,61,0.2)] sm:h-14 sm:w-14">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#2457E6] text-white sm:h-12 sm:w-12">
           <ImagePlus className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} />
         </span>
         <span className="min-w-0">
-          <span className="block text-base font-black tracking-[-0.025em] text-white sm:text-lg">
+          <span className="block text-base font-black tracking-[-0.025em] text-[#15171B] sm:text-lg">
             {busy
               ? "Opening your private Launch Pack…"
               : "Upload one rights-owned toy photo"}
           </span>
-          <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/42">
+          <span className="mt-1 block text-[11px] font-semibold leading-5 text-[#69717E]">
             or tap to choose · PNG, JPG, WebP · under 2 MB
           </span>
-          <span className="mt-3 inline-flex rounded-full border border-white/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.13em] text-[#c8ff3d]">
+          <span className="mt-2 block text-[8px] font-black uppercase tracking-[0.12em] text-[#2457E6]">
             {access === "private-ready"
               ? "Private beta · 30-credit Pack available"
               : `Private beta · ${credits} credits · Pack needs 30`}
@@ -161,7 +163,7 @@ export function HeroUpload({
         />
       </label>
       {err ? (
-        <p className="mt-2 text-xs font-semibold text-amber-200">{err}</p>
+        <p className="mt-2 text-xs font-semibold text-[#B3402D]">{err}</p>
       ) : null}
     </div>
   );
