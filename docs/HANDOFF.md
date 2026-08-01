@@ -4,6 +4,39 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-08-01 — [gpt] Mercury reapplication website readiness
+- Added public Contact and Refund Policy routes and linked them from the global
+  and homepage trust footers. The public operator is now consistently named as
+  Pikbo Labs LLC, a Wyoming LLC, with founder-operated remote activity from
+  Beijing and an explicit statement that Pikbo does not claim a US office.
+- About, Pricing, Terms and Privacy now share one truthful business state:
+  invited private beta, public pricing/checkout closed, and Founding Studio
+  planned as three Launch Packs (nine videos), with final pricing shown before
+  any charge. No customer, revenue, US-office or live-payment claim was added.
+- Refund terms cover cancellation of future renewal, a seven-day unused
+  first-purchase refund, duplicate/incorrect charges, confirmed failed-job
+  allowance restoration, uncertain-outcome reconciliation and stronger local
+  consumer rights.
+- A focused `mercury-readiness-smoke` locks legal identity, pricing, contact,
+  refund and address truth. The sitemap and llms.txt contain the seven reviewed
+  marketing/legal/support URLs, and the regular link check now includes About,
+  Contact and Refund.
+- PASS: focused Mercury smoke, SEO cold-start smoke, public capability-copy
+  smoke, TypeScript, ESLint, 198-page production build, 167 rendered-route copy
+  check, and local runtime links. Contact, Refund, Pricing, Privacy, Terms and
+  About all prerender successfully.
+- On 2026-08-01, Spaceship Domain Manager was used to create the reversible
+  forwarding rule `support@pikbo.ai` → the owner's existing Gmail inbox. No
+  mailbox product was purchased. Spaceship's authoritative DNS and both
+  Cloudflare (`1.1.1.1`) and Google (`8.8.8.8`) now return
+  `mx1.efwd.spaceship.net` / `mx2.efwd.spaceship.net` plus the matching SPF
+  record. A same-Gmail delivery probe was sent, but Gmail deduplicates the
+  forwarded copy against the Sent message, so an independent external-sender
+  receipt check remains useful. Production deploy and Mercury submission have
+  not occurred and still require owner confirmation.
+
+---
+
 ### 2026-07-30 — [gpt/grok/workbuddy] image-provider ambiguity and retry fence
 - Applied PR #88's fail-closed accounting semantics to the optional `/api/image` route without changing UI, video generation, Stripe, storage, schema or product scope. Once `fal.subscribe` may have started, timeout/network/unknown exceptions retain the durable reservation, record `settlement_unknown`, return `DURABLE_CREDITS_UNAVAILABLE`, and expose neither refund nor automatic-retry signals.
 - A final synchronous provider boundary records `providerRequestStartedAt` immediately before `fal.subscribe`. Cancel before that boundary prevents the original provider call and permits the ordinary retry child; cancel or timeout after it blocks fork, claim and every retry descendant until reconciliation.

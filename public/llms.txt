@@ -1,6 +1,6 @@
 # Pikbo
 
-> Pikbo is a designer-toy AI video suite for sellers, independent toy brands, and collectors. It turns an owned toy photo into short launch-video drafts for listings, reveals, and social posts.
+> Pikbo is subscription-based AI software from Pikbo Labs LLC, a Wyoming limited liability company. It turns an owned designer-toy photo into short launch-video drafts for listings, reveals, and social posts.
 
 Pikbo labels cached Lab prototypes honestly. Cached previews do not process a visitor upload. Live generation, billing, durable credits, and protected delivery remain gated until their production checks pass. Generated angles and product details must be compared with the physical toy before commercial publishing.
 
@@ -9,7 +9,9 @@ Pikbo labels cached Lab prototypes honestly. Cached previews do not process a vi
 - [Pikbo home](https://pikbo.ai/)
 - [AI toy video generator](https://pikbo.ai/tools/ai-toy-video-generator)
 - [Pricing](https://pikbo.ai/pricing)
+- [Contact](https://pikbo.ai/contact)
 - [Privacy policy](https://pikbo.ai/privacy)
+- [Refund policy](https://pikbo.ai/refund)
 - [Terms of service](https://pikbo.ai/terms)
 
 ## Usage notes

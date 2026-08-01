@@ -1,6 +1,6 @@
 /**
  * Phase H — cold-start index allowlist honesty.
- * Proof-gated three-page marketing budget + legal (privacy/terms).
+ * Proof-gated three-page marketing budget + public legal/support pages.
  * Run: npm run seo-cold-start-smoke
  */
 import assert from "node:assert/strict";
@@ -72,7 +72,7 @@ const legalBlock = seoIndex.match(
 );
 assert.ok(legalBlock, "legal allowlist present");
 const legalPaths = [...legalBlock[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
-assert.deepEqual(legalPaths, ["/privacy", "/terms"]);
+assert.deepEqual(legalPaths, ["/contact", "/privacy", "/refund", "/terms"]);
 
 const fullBlock = seoIndex.match(
   /export const COLD_START_INDEX_PATHS\s*=\s*\[([\s\S]*?)\]\s*as const/
@@ -81,8 +81,8 @@ assert.ok(fullBlock, "full COLD_START_INDEX_PATHS present");
 // Spread composition — count by resolving marketing + legal lengths
 assert.equal(
   marketingPaths.length + legalPaths.length,
-  5,
-  "sitemap allowlist = 3 marketing + 2 legal"
+  7,
+  "sitemap allowlist = 3 marketing + 4 legal/support"
 );
 
 // Long-tail dump must leave the index allowlist (stay reachable + noindex)
@@ -177,7 +177,9 @@ assert.doesNotMatch(
 );
 for (const path of [
   "/about",
+  "/contact",
   "/privacy",
+  "/refund",
   "/terms",
   "/guides/how-to-photograph-toys-for-ai-video",
 ]) {
@@ -213,7 +215,7 @@ assert.match(termsSrc, /Cached prototype previews do not process your upload/);
 assert.match(termsSrc, /eligible signed-in\s+account/);
 assert.doesNotMatch(robotsSrc, /9-URL/);
 
-// llms.txt mirrors only the five proof-gated canonical URLs.
+// llms.txt mirrors only the seven reviewed canonical URLs.
 const llmsUrls = [...llmsTxt.matchAll(/https:\/\/pikbo\.ai(?:\/[^\s)]+|\/)/g)].map(
   (match) => match[0]
 );
@@ -221,11 +223,13 @@ assert.deepEqual(llmsUrls, [
   "https://pikbo.ai/",
   "https://pikbo.ai/tools/ai-toy-video-generator",
   "https://pikbo.ai/pricing",
+  "https://pikbo.ai/contact",
   "https://pikbo.ai/privacy",
+  "https://pikbo.ai/refund",
   "https://pikbo.ai/terms",
 ]);
 assert.match(llmsTxt, /does not guarantee sales, reach, rankings/i);
 
 console.log(
-  "seo-cold-start-smoke: PASS (5 canonical URLs; proof-gated index, honest validation evidence, no cached video submission)"
+  "seo-cold-start-smoke: PASS (7 canonical URLs; proof-gated index, legal/support visibility, honest validation evidence)"
 );

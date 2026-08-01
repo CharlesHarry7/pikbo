@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
+import { company } from "@/lib/company";
 
 /**
  * Compact trust surface for the cinema-style homepage.
@@ -37,6 +38,12 @@ export function HomeTrustFooter() {
             <Link href="/about" className="text-white/75 hover:text-[#CBFF3D]">
               About
             </Link>
+            <Link href="/contact" className="text-white/75 hover:text-[#CBFF3D]">
+              Contact
+            </Link>
+            <Link href="/refund" className="text-white/75 hover:text-[#CBFF3D]">
+              Refunds
+            </Link>
             <Link
               href="/guides/how-to-photograph-toys-for-ai-video"
               className="text-white/75 hover:text-[#CBFF3D]"
@@ -52,23 +59,15 @@ export function HomeTrustFooter() {
           </nav>
           <div className="mt-4 space-y-1 text-xs text-white/45">
             <p>
-              Privacy questions:{" "}
+              Support:{" "}
               <a
-                href={`mailto:${site.contact.privacyEmail}`}
+                href={`mailto:${site.contact.supportEmail}`}
                 className="text-white/65 underline decoration-white/25 underline-offset-2 hover:text-[#CBFF3D]"
               >
-                {site.contact.privacyEmail}
+                {site.contact.supportEmail}
               </a>
             </p>
-            <p>
-              Legal questions:{" "}
-              <a
-                href={`mailto:${site.contact.legalEmail}`}
-                className="text-white/65 underline decoration-white/25 underline-offset-2 hover:text-[#CBFF3D]"
-              >
-                {site.contact.legalEmail}
-              </a>
-            </p>
+            <p>{company.legalName} · Wyoming LLC · remote operations from Beijing, China</p>
           </div>
         </div>
       </div>
