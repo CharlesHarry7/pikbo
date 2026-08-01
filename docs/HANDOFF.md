@@ -2294,3 +2294,37 @@ Newest first. One block per meaningful landing.
   Provider, Stripe, DNS and public/paid state remain unchanged.
 - Full evidence:
   `docs/evidence/PRIVATE_PREVIEW_READINESS_2026-07-30.md`.
+# 2026-08-02 — [gpt/grok/workbuddy] Pro result-selector front door
+
+- Decision: the rejected PR #94 editorial/Mothcat direction is not a merge
+  base. This slice starts clean from `origin/main@2cfb584` and changes only the
+  Home/shell presentation layer.
+- GPT Pro produced the approved implementation direction in persistent chat
+  `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`: cool-neutral result chooser, compact
+  toy-style range, one primary action and three publishing-use visuals before
+  technical explanation.
+- Grok read-only audit rejected PR #94 because it removed Home access detection,
+  `HeroUpload` and distinct motion proof while rewriting tests around the
+  rejected Mothcat. The clean branch preserves all access, sample-route and
+  fixed-Pack contracts. Agent task: `/root/grok_code_audit`.
+- WorkBuddy desktop/390 red-team confirmed PR #94 hid the CTA/results below the
+  fold and reused one image three times. Its minimum acceptance is now encoded:
+  result visuals before explanation, no engineering step wall, and explicit
+  distinction between format directions and archived Lab motion. Agent task:
+  `/root/workbuddy_visual_redteam`.
+- New media: three original project-bound style studies plus two same-SKU
+  image-generation edits. The two edits are unbranded Blind-box Reveal and
+  Social Flash direction frames. None is represented as a customer result or
+  completed video.
+- Runtime proof at `http://localhost:43120`: the 1280px Home has no horizontal
+  overflow, resolves to an enabled `Try a sample Launch Pack` CTA and opens the
+  exact public sample URL. Public copy remains `0 credits`, no upload and no
+  image processing. Evidence is in
+  `docs/evidence/pro-result-selector-2026-08-02/`.
+- Full required gate passes: live copy, SEO cold start, engine, atomic Seller
+  Pack, recovery ledger/reconciliation, Stripe billing, TypeScript, ESLint and
+  the 198-route Next production build. Focused Launch-Pack, product-proof and
+  mobile source regressions also pass.
+- Safety: no API, Supabase, Provider, private Storage, credit, Stripe, Library,
+  DNS, production flag or public payment behavior changed. Production remains
+  validation/cached-only.

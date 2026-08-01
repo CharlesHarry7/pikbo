@@ -2397,7 +2397,11 @@ assert.match(
   /data-home-format-preview=\{format\.slug\}[\s\S]*href=\{item\.projectHref \|\| item\.href\}/
 );
 assert.match(
-  fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
+  [
+    fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
+    fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
+    fs.readFileSync(join(root, "components/HeroUpload.tsx"), "utf8"),
+  ].join("\n"),
   /data-home-upgrade=["']launch-pack["'][\s\S]*\/create\?mode=seller-pack/
 );
 
@@ -3902,8 +3906,11 @@ const homeHeroSrc = fs.readFileSync(
 );
 assert.match(
   homeHeroSrc,
-  /One toy photo\.[\s\S]*Three product videos\./
+  /Choose the launch look for your toy\./
 );
+assert.match(homeHeroSrc, /Listing Spin/);
+assert.match(homeHeroSrc, /Blind-box Reveal/);
+assert.match(homeHeroSrc, /Social Flash/);
 assert.match(
   homeHeroSrc,
   /data-home-hero|href=["']\/create\?mode=seller-pack["']/
