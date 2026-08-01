@@ -38,7 +38,7 @@ export function HomeSeoBody() {
   };
 
   return (
-    <section className="bg-[#f1eee6] px-5 py-18 text-black sm:px-8 sm:py-24">
+    <section className="bg-[#EDE8DF] px-5 py-18 text-[#121014] sm:px-8 sm:py-24">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
@@ -46,13 +46,13 @@ export function HomeSeoBody() {
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5e7800]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9B493B]">
               Built around the product
             </p>
-            <h2 className="mt-3 font-display text-4xl font-black tracking-[-0.055em] sm:text-6xl">
+            <h2 className="mt-4 font-display text-4xl font-medium tracking-[-0.055em] sm:text-6xl">
               See the input, the output, and the limits.
             </h2>
-            <p className="mt-6 max-w-xl text-sm font-semibold leading-6 text-black/58 sm:text-base">
+            <p className="mt-6 max-w-xl text-sm font-normal leading-6 text-black/56 sm:text-base">
               {site.name} is for designer-toy sellers and studios that already
               have clear product photos but need motion for listings, launches,
               and social posts. Public prototypes stay labeled until Pikbo can
@@ -66,7 +66,7 @@ export function HomeSeoBody() {
                 <Link
                   key={href}
                   href={href}
-                  className="rounded-full border border-black/15 bg-white/45 px-3 py-2 text-[11px] font-black text-black/58 transition hover:border-black/40 hover:bg-white hover:text-black"
+                  className="rounded-full border border-black/14 bg-white/28 px-3 py-2 text-[11px] font-semibold text-black/58 transition hover:border-black/35 hover:bg-white/55 hover:text-black"
                 >
                   {label} ↗
                 </Link>
@@ -83,18 +83,18 @@ export function HomeSeoBody() {
             ].map(([label, value]) => (
               <div
                 key={label}
-                className="rounded-[1.5rem] border border-black/12 bg-white/55 p-5"
+                className="rounded-[1.25rem] border border-black/10 bg-white/35 p-5"
               >
-                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-black/38">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#9B493B]">
                   {label}
                 </p>
-                <p className="mt-7 text-xl font-black tracking-[-0.03em]">
+                <p className="mt-7 text-xl font-semibold tracking-[-0.03em]">
                   {value}
                 </p>
               </div>
             ))}
-            <div className="rounded-[1.5rem] bg-[#090909] p-5 text-white sm:col-span-2">
-              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+            <div className="rounded-[1.25rem] bg-[#121014] p-5 text-white sm:col-span-2">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#C6B59A]">
                 Private delivery, limited processing
               </p>
               <p className="mt-5 max-w-2xl text-sm leading-6 text-white/62">
@@ -108,11 +108,11 @@ export function HomeSeoBody() {
         </div>
 
         <div className="mt-18 grid gap-3 border-t border-black/15 pt-12 lg:grid-cols-2">
-          <article className="rounded-[1.75rem] border border-black/12 bg-[#e6e0d4] p-6 sm:p-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/42">
+          <article className="rounded-[1.4rem] border border-black/10 bg-[#E4DDD1] p-6 sm:p-8">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-black/42">
               Private beta · invite only
             </p>
-            <h3 className="mt-4 text-2xl font-black tracking-[-0.035em]">
+            <h3 className="mt-4 text-2xl font-semibold tracking-[-0.035em]">
               What is available now
             </h3>
             <p className="mt-4 text-sm leading-6 text-black/58">
@@ -125,11 +125,11 @@ export function HomeSeoBody() {
             </p>
           </article>
 
-          <article className="rounded-[1.75rem] border border-black/12 bg-white/60 p-6 sm:p-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/42">
+          <article className="rounded-[1.4rem] border border-black/10 bg-white/38 p-6 sm:p-8">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-black/42">
               Before publishing
             </p>
-            <h3 className="mt-4 text-2xl font-black tracking-[-0.035em]">
+            <h3 className="mt-4 text-2xl font-semibold tracking-[-0.035em]">
               Treat every generated angle as a draft.
             </h3>
             <p className="mt-4 text-sm leading-6 text-black/58">
@@ -141,13 +141,13 @@ export function HomeSeoBody() {
         </div>
 
         <div className="mt-18">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5e7800]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9B493B]">
             FAQ
           </p>
-          <div className="mt-4 grid gap-px overflow-hidden rounded-[1.75rem] border border-black/15 bg-black/15 md:grid-cols-2">
+          <div className="mt-4 grid gap-px overflow-hidden rounded-[1.4rem] border border-black/12 bg-black/12 md:grid-cols-2">
             {FAQ.map((item) => (
-              <div key={item.q} className="bg-[#f7f4ed] p-6 sm:p-7">
-                <h3 className="text-base font-black">{item.q}</h3>
+              <div key={item.q} className="bg-[#F3EFE6] p-6 sm:p-7">
+                <h3 className="text-base font-semibold">{item.q}</h3>
                 <p className="mt-3 text-sm leading-6 text-black/56">{item.a}</p>
               </div>
             ))}

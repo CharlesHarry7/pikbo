@@ -1418,7 +1418,7 @@ export function LibraryGrid() {
 
   const stickyCta = (
     <div
-      className="fixed inset-x-0 bottom-[4.75rem] z-40 flex items-center gap-3 border-t-2 border-[#4A55FF]/55 bg-[#17131D]/97 px-3 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-[4.75rem] z-40 flex items-center gap-3 border-t border-white/10 bg-[#0C0B0F]/97 px-3 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
       data-library-sticky="mobile"
       data-library-active-jobs={activeJobs}
     >
@@ -1489,8 +1489,8 @@ export function LibraryGrid() {
         />
         <div className="media-stage grid place-items-center py-16 text-center sm:py-20">
           <div className="relative z-[2] flex flex-col items-center px-4">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] text-2xl text-[var(--mint)]">
-              ▢
+            <span className="grid h-14 w-14 place-items-center rounded-full border border-[var(--mint)]/24 bg-[var(--mint)]/[0.04] text-[9px] font-semibold uppercase tracking-[0.15em] text-[var(--mint)]">
+              Pack
             </span>
             <p className="mt-4 font-display text-base font-bold uppercase tracking-tight text-white sm:text-lg">
               {sessionJobs.length > 0 || sessionStills.length > 0

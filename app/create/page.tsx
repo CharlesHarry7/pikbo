@@ -84,32 +84,32 @@ export default async function CreatePage({
   // Wave A: Seller Pack is a Create mode, not a separate suite door.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return (
-      <div className="min-h-screen bg-[#17131D] pb-28 text-[#F6F0E5] lg:pb-8">
-        <div className="border-b-2 border-[#17131D] bg-[#F6F0E5] px-4 py-5 text-[#17131D] sm:px-8 sm:py-8">
+      <div className="min-h-screen bg-[#0C0B0F] pb-28 text-[#F3EFE6] lg:pb-8">
+        <div className="border-b border-white/[0.08] bg-[#0C0B0F] px-4 py-7 text-[#F3EFE6] sm:px-8 sm:py-10">
           <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="inline-flex rotate-[-1deg] rounded-full bg-[#FF5A47] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white">
+              <p className="border-l border-[#C45C4A] pl-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#C6B59A]">
                 Toy Drop Workbench · 3 fixed formats
                 <span className="sr-only">
                   {" "}
                   · Public preview or invited private generation
                 </span>
               </p>
-              <h1 className="mt-3 font-display text-4xl font-black leading-[0.9] tracking-[-0.06em] sm:text-6xl">
+              <h1 className="mt-4 font-display text-4xl font-medium leading-[0.94] tracking-[-0.055em] sm:text-6xl">
                 Build one complete toy drop.
               </h1>
             </div>
-            <p className="max-w-xl text-xs font-semibold leading-5 text-[#17131D]/55 sm:text-sm">
+            <p className="max-w-xl text-xs font-normal leading-5 text-[#F3EFE6]/50 sm:text-sm">
               Start with a Pikbo Lab toy and inspect all three outcomes. Invited
               sellers can replace it with one rights-owned product photo for
               private generation and Library delivery.
             </p>
           </div>
-          <div className="mx-auto mt-4 flex max-w-7xl flex-wrap gap-2 text-[9px] font-black uppercase tracking-[0.12em]">
-            <span className="rounded-full bg-[#4A55FF] px-3 py-1.5 text-white">01 · Listing Spin</span>
-            <span className="rounded-full bg-[#FF5A47] px-3 py-1.5 text-white">02 · Blind-box Reveal</span>
-            <span className="rounded-full bg-[#FFD447] px-3 py-1.5 text-[#17131D]">03 · Social Flash</span>
-            <span className="rounded-full border border-[#17131D]/20 px-3 py-1.5 text-[#17131D]/55">Listing Spin is the verified technical run</span>
+          <div className="mx-auto mt-6 flex max-w-7xl flex-wrap gap-2 text-[9px] font-medium uppercase tracking-[0.13em] text-[#F3EFE6]/58">
+            <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5">01 · Listing Spin</span>
+            <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5">02 · Blind-box Reveal</span>
+            <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5">03 · Social Flash</span>
+            <span className="rounded-full border border-[#C6B59A]/24 px-3 py-1.5 text-[#C6B59A]">Listing Spin is the verified technical run</span>
           </div>
           <p className="sr-only">
             In public preview, no product photo is accepted or processed.

@@ -4,6 +4,17 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-08-01 — [gpt/grok/workbuddy] Premium Collector Cabinet correction
+
+- The previous ChinaJoy pass was visually rejected: saturated cobalt/coral/yellow cards, thick borders, rotated labels and hard offset shadows read as a children’s activity page rather than a paid collectible-toy sales tool.
+- Home, Create, Library and Pricing now use one quiet exhibition system: void black, two cabinet surfaces, warm bone, muted stone, foil beige and one lacquer-red accent. Toy imagery supplies the remaining colour; the product preview is visually louder than the chrome.
+- The mobile Home screen keeps the value statement, working sample CTA and first Pack image in view. Create keeps the exact three-format outcome and primary action; Library retains owner-only recovery; Pricing remains one closed-beta offer with no fake price or checkout.
+- Grok independently returned a visual NO-GO on the prior implementation and prescribed this exact single direction in session `019fbd7c-32a7-7ab3-8042-c9cbe760ca8e`. WorkBuddy’s existing eight-route screenshot audit at `/Users/x/Documents/Codex/2026-07-26/yon/outputs/pikbo-audit/pikbo-audit-report.md` is the recorded before baseline; its community and two-tier-pricing recommendations remain rejected as outside the MVP.
+- Local Chrome proof at 1440×900 and 390×844 covers Home, seller-Pack Create, Library and Pricing. TypeScript, ESLint, the 198-route production build, live-copy, SEO cold-start, engine, atomic Pack accounting, both recovery suites, Stripe billing, Launch-Pack path and private-input binding pass.
+- No API, auth, Storage, database, Provider, credit accounting, recovery, Stripe, DNS, production flag or real-model budget changed.
+
+---
+
 ### 2026-07-30 — [gpt/grok/workbuddy] image-provider ambiguity and retry fence
 - Applied PR #88's fail-closed accounting semantics to the optional `/api/image` route without changing UI, video generation, Stripe, storage, schema or product scope. Once `fal.subscribe` may have started, timeout/network/unknown exceptions retain the durable reservation, record `settlement_unknown`, return `DURABLE_CREDITS_UNAVAILABLE`, and expose neither refund nor automatic-retry signals.
 - A final synchronous provider boundary records `providerRequestStartedAt` immediately before `fal.subscribe`. Cancel before that boundary prevents the original provider call and permits the ordinary retry child; cancel or timeout after it blocks fork, claim and every retry descendant until reconciliation.

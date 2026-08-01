@@ -86,20 +86,20 @@ export default function Home() {
       <section
         id="pack-formats"
         data-home-upgrade="launch-pack"
-        className="scroll-mt-16 bg-[#F6F0E5] px-4 py-16 text-[#17131D] sm:px-8 sm:py-24"
+        className="scroll-mt-16 border-t border-white/[0.08] bg-[#0C0B0F] px-4 py-16 text-[#F3EFE6] sm:px-8 sm:py-24"
       >
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/45">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#C6B59A]">
                 The fixed Launch Pack
               </p>
-              <h2 className="mt-3 max-w-3xl font-display text-4xl font-black leading-[0.95] tracking-[-0.055em] sm:text-6xl">
+              <h2 className="mt-4 max-w-3xl font-display text-4xl font-medium leading-[0.98] tracking-[-0.05em] sm:text-6xl">
                 Three drop formats.
-                <span className="block text-[#FF5A47]">One selling job.</span>
+                <span className="block text-[#C45C4A]">One selling job.</span>
               </h2>
             </div>
-            <p className="max-w-2xl text-sm font-semibold leading-6 text-black/56 sm:text-base">
+            <p className="max-w-2xl text-sm font-normal leading-6 text-[#F3EFE6]/54 sm:text-base">
               Pikbo is intentionally not a wall of models and settings. The
               first Pack keeps the outputs predictable, reviewable, and ready
               for the places toy sellers already publish.
@@ -107,32 +107,26 @@ export default function Home() {
           </div>
 
           <div className="mt-10 grid gap-4 lg:grid-cols-3">
-            {FORMATS.map((format, index) => (
+            {FORMATS.map((format) => (
               <article
                 key={format.name}
-                className={`relative overflow-hidden rounded-[1.75rem] border-2 border-[#17131D] p-6 shadow-[7px_7px_0_#17131D] ${
-                  index === 0
-                    ? "bg-[#4A55FF] text-white"
-                    : index === 1
-                      ? "bg-[#FF5A47] text-white"
-                      : "bg-[#FFD447] text-[#17131D]"
-                }`}
+                className="relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#16141C] p-6 shadow-[0_22px_64px_-48px_rgba(0,0,0,0.98)]"
               >
-                <p className="text-[10px] font-black tracking-[0.16em] opacity-55">
+                <p className="text-[10px] font-medium tracking-[0.18em] text-[#C45C4A]">
                   {format.n}
                 </p>
-                <div className="mt-10 flex items-end justify-between gap-3">
-                  <h3 className="text-2xl font-black tracking-[-0.04em]">
+                <div className="mt-12 flex items-end justify-between gap-3">
+                  <h3 className="text-2xl font-semibold tracking-[-0.04em]">
                     {format.name}
                   </h3>
-                  <span className="rounded-full border border-current/30 bg-white/20 px-2.5 py-1 text-[10px] font-black">
+                  <span className="rounded-full border border-white/12 px-2.5 py-1 text-[10px] font-semibold text-[#C6B59A]">
                     {format.ratio}
                   </span>
                 </div>
-                <p className="mt-3 text-[10px] font-black uppercase tracking-[0.14em] opacity-60">
+                <p className="mt-3 text-[10px] font-medium uppercase tracking-[0.14em] text-[#F3EFE6]/38">
                   {format.channel}
                 </p>
-                <p className="mt-4 text-sm font-semibold leading-6 opacity-72">
+                <p className="mt-4 text-sm font-normal leading-6 text-[#F3EFE6]/55">
                   {format.description}
                 </p>
               </article>
@@ -141,7 +135,7 @@ export default function Home() {
           <div className="mt-8">
             <Link
               href="/create?mode=seller-pack"
-              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#17131D] px-6 text-sm font-black text-[#F6F0E5] shadow-[4px_4px_0_#4A55FF] transition hover:-translate-y-0.5"
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#EDE8DF] px-6 text-sm font-semibold text-[#121014] transition hover:bg-[#F3EFE6]"
             >
               Open the fixed Launch Pack
             </Link>
@@ -149,13 +143,13 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#4A55FF] px-4 py-14 text-white sm:px-8 sm:py-20">
+      <section className="border-t border-white/[0.08] bg-[#16141C] px-4 py-14 text-[#F3EFE6] sm:px-8 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:items-center">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/55">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#C6B59A]">
               One straight line
             </p>
-            <h2 className="mt-3 max-w-xl font-display text-4xl font-black leading-[0.95] tracking-[-0.055em] sm:text-6xl">
+            <h2 className="mt-4 max-w-xl font-display text-4xl font-medium leading-[0.98] tracking-[-0.05em] sm:text-6xl">
               Photo in. Private assets out.
             </h2>
           </div>
@@ -165,12 +159,12 @@ export default function Home() {
               ["02", "Create", "The three launch formats stay fixed."],
               ["03", "Review", "Check product details before publishing."],
             ].map(([n, title, body]) => (
-              <li key={n} className="rounded-[1.25rem] border-2 border-white/75 bg-[#F6F0E5] p-5 text-[#17131D] shadow-[5px_5px_0_rgba(23,19,29,0.55)]">
-                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#17131D]/40">
+              <li key={n} className="rounded-[1.2rem] border border-white/10 bg-[#1E1B26] p-5 text-[#F3EFE6]">
+                <p className="text-[9px] font-medium uppercase tracking-[0.17em] text-[#C45C4A]">
                   Step {n}
                 </p>
-                <h3 className="mt-8 text-xl font-black">{title}</h3>
-                <p className="mt-2 text-xs font-semibold leading-5 text-[#17131D]/54">
+                <h3 className="mt-8 text-xl font-semibold">{title}</h3>
+                <p className="mt-2 text-xs font-normal leading-5 text-[#F3EFE6]/48">
                   {body}
                 </p>
               </li>

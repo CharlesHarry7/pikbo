@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
-/* ---------- Pikbo Toy Drop Studio ----------
-   Warm display paper, collector ink, cobalt, coral, and signal yellow.
+/* ---------- Pikbo Collector Cabinet ----------
+   A quiet, product-led system inspired by collectible packaging and gallery
+   display cases. One lacquer accent; product imagery carries the colour.
 ---------------------------------------------------------------- */
 :root {
   /* Offline-safe faces — no Google Fonts network at build (Phase B). */
@@ -10,31 +11,42 @@
   --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 
-  --bg: #17131d;
-  --bg-soft: #211c28;
-  --card: #26202f;
-  --card-2: #2d2637;
-  --border: rgba(255, 255, 255, 0.08);
-  --fg: #f7f4ed;
-  --fg-muted: rgba(247, 244, 237, 0.62);
-  --fg-dim: rgba(247, 244, 237, 0.38);
+  --bg: #0c0b0f;
+  --bg-soft: #16141c;
+  --card: #16141c;
+  --card-2: #1e1b26;
+  --border: rgba(243, 239, 230, 0.1);
+  --fg: #f3efe6;
+  --fg-muted: rgba(243, 239, 230, 0.6);
+  --fg-dim: rgba(243, 239, 230, 0.38);
 
-  --paper: #f6f0e5;
-  --brand: #ff5a47;
-  --brand-2: #4a55ff;
-  --mint: #ffd447;
-  --lime: #cbff3d;
-  --cobalt: #4a55ff;
-  --coral: #ff5a47;
-  --signal: #ffd447;
+  --paper: #ede8df;
+  --brand: #c45c4a;
+  --brand-2: #c6b59a;
+  --mint: #c6b59a;
+  --lime: #c6b59a;
+  --cobalt: #c6b59a;
+  --coral: #c45c4a;
+  --signal: #c6b59a;
 
-  --grad: linear-gradient(135deg, #ffd447 0%, #ff5a47 100%);
+  --cabinet-void: #0c0b0f;
+  --cabinet-surface: #16141c;
+  --cabinet-surface-2: #1e1b26;
+  --cabinet-bone: #f3efe6;
+  --cabinet-stone: rgba(243, 239, 230, 0.6);
+  --cabinet-paper: #ede8df;
+  --cabinet-ink: #121014;
+  --cabinet-lacquer: #c45c4a;
+  --cabinet-foil: #c6b59a;
+  --cabinet-hairline: rgba(243, 239, 230, 0.1);
+
+  --grad: linear-gradient(135deg, #c6b59a 0%, #c45c4a 100%);
   --grad-soft: linear-gradient(
     135deg,
-    rgba(74, 85, 255, 0.18),
-    rgba(247, 244, 237, 0.05)
+    rgba(198, 181, 154, 0.12),
+    rgba(243, 239, 230, 0.035)
   );
-  --brand-glow: 0 0 40px rgba(74, 85, 255, 0.24);
+  --brand-glow: 0 0 40px rgba(196, 92, 74, 0.16);
 
   --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.04);
   --shadow-md: 0 12px 40px -16px rgba(0, 0, 0, 0.75);
@@ -45,11 +57,11 @@
   --background: var(--bg);
   --foreground: var(--fg);
   --primary: var(--mint);
-  --primary-foreground: #17131d;
+  --primary-foreground: #121014;
   --muted: var(--bg-soft);
   --muted-foreground: var(--fg-muted);
   --accent: rgba(255, 255, 255, 0.06);
-  --ring: rgba(74, 85, 255, 0.65);
+  --ring: rgba(198, 181, 154, 0.62);
 }
 
 @theme inline {
@@ -114,14 +126,14 @@ h1,
   inset: -10% -5% auto;
   height: 520px;
   background:
-    radial-gradient(46% 46% at 50% -4%, rgba(74, 85, 255, 0.12), transparent 70%),
-    radial-gradient(38% 38% at 84% 6%, rgba(255, 90, 71, 0.08), transparent 66%);
+    radial-gradient(46% 46% at 50% -4%, rgba(198, 181, 154, 0.1), transparent 70%),
+    radial-gradient(38% 38% at 84% 6%, rgba(196, 92, 74, 0.08), transparent 66%);
   pointer-events: none;
   z-index: 0;
 }
 
 .text-grad {
-  background: linear-gradient(100deg, #ffd447 0%, #ff5a47 46%, #8991ff 100%);
+  background: linear-gradient(100deg, #f3efe6 0%, #c6b59a 54%, #c45c4a 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -142,18 +154,18 @@ h1,
 }
 .btn-primary {
   background: var(--mint);
-  color: #0a0a0a;
+  color: var(--cabinet-ink);
   padding: 0.8rem 1.4rem;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08) inset,
-    0 0 28px rgba(255, 212, 71, 0.2);
+    0 12px 34px -22px rgba(198, 181, 154, 0.72);
   letter-spacing: -0.01em;
 }
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12) inset,
-    0 0 42px rgba(255, 212, 71, 0.32);
+    0 16px 40px -22px rgba(198, 181, 154, 0.8);
 }
 .btn-primary:active {
   transform: translateY(0);
@@ -174,16 +186,12 @@ h1,
 }
 
 .card {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.035) 0%,
-    rgba(16, 16, 18, 1) 40%
-  );
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 12px 40px -24px rgba(0, 0, 0, 0.85);
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 20px 60px -42px rgba(0, 0, 0, 0.95);
 }
 
 /* Cinematic result stage — Create / landing after generate */
@@ -194,11 +202,11 @@ h1,
   background:
     radial-gradient(
       120% 80% at 50% 0%,
-      rgba(74, 85, 255, 0.09),
+      rgba(198, 181, 154, 0.07),
       transparent 55%
     ),
     #030305;
-  border: 1px solid rgba(74, 85, 255, 0.18);
+  border: 1px solid var(--cabinet-hairline);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 24px 80px -40px rgba(0, 0, 0, 0.9);
@@ -257,7 +265,7 @@ h1,
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--mint);
+  color: var(--cabinet-foil);
 }
 
 /* Video tiles */
@@ -274,7 +282,7 @@ h1,
 }
 .video-tile:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 212, 71, 0.42);
+  border-color: rgba(198, 181, 154, 0.36);
   box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.8);
 }
 .video-tile video {

@@ -49,8 +49,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   }, [path]);
 
   return (
-    <div className="flex min-h-screen min-w-0 flex-col bg-[#17131D] text-[#F6F0E5]">
-      <header className="sticky top-0 z-50 hidden h-16 items-center border-b border-white/10 bg-[#17131D]/94 px-7 backdrop-blur-xl lg:flex">
+    <div className="flex min-h-screen min-w-0 flex-col bg-[#0C0B0F] text-[#F3EFE6]">
+      <header className="sticky top-0 z-50 hidden h-16 items-center border-b border-white/[0.08] bg-[#0C0B0F]/94 px-7 backdrop-blur-xl lg:flex">
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
           <Logo size={30} />
         </Link>
@@ -69,13 +69,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "relative py-5 text-[13px] font-bold transition-colors",
                   on
-                    ? "text-[#F6F0E5]"
-                    : "text-[#F6F0E5]/46 hover:text-[#F6F0E5]"
+                    ? "text-[#F3EFE6]"
+                    : "text-[#F3EFE6]/42 hover:text-[#F3EFE6]"
                 )}
               >
                 {item.label}
                 {on ? (
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#FF5A47]" />
+                  <span className="absolute inset-x-0 bottom-0 h-px bg-[#C45C4A]" />
                 ) : null}
               </Link>
             );
@@ -87,7 +87,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-white/10 bg-[#17131D]/95 px-3 backdrop-blur-xl lg:hidden">
+      <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-white/[0.08] bg-[#0C0B0F]/95 px-3 backdrop-blur-xl lg:hidden">
         <Link href="/" aria-label="Pikbo home">
           <Logo size={26} wordClassName="text-base" />
         </Link>
@@ -95,7 +95,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           <LanguageSwitcher compact />
           <CreditsBadge compact />
           {create ? (
-            <span className="rounded-full bg-[#FF5A47] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white">
+            <span className="rounded-full border border-[#C6B59A]/24 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.13em] text-[#C6B59A]">
               {t("cta.launchPack")}
             </span>
           ) : null}
@@ -103,12 +103,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="min-w-0 flex-1 bg-[#17131D]">{children}</main>
+        <main className="min-w-0 flex-1 bg-[#0C0B0F]">{children}</main>
         {!hideFooter ? <Footer /> : null}
       </div>
 
       <nav
-        className="sticky bottom-0 z-50 grid grid-cols-5 border-t border-white/10 bg-[#17131D]/97 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+        className="sticky bottom-0 z-50 grid grid-cols-5 border-t border-white/[0.08] bg-[#0C0B0F]/97 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
         aria-label="Mobile navigation"
       >
         {MOBILE_NAV.map((item) => {
@@ -120,13 +120,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               aria-current={on ? "page" : undefined}
               className={cn(
                 "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
-                on ? "text-[#FFD447]" : "text-[#F6F0E5]/38"
+                on ? "text-[#F3EFE6]" : "text-[#F3EFE6]/34"
               )}
             >
               <span
                 className={cn(
                   "mb-1 h-1 w-1 rounded-full",
-                  on ? "bg-[#FF5A47]" : "bg-transparent"
+                  on ? "bg-[#C45C4A]" : "bg-transparent"
                 )}
                 aria-hidden
               />

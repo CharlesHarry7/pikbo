@@ -15,24 +15,18 @@ const FORMAT_DEFS = [
     name: "Listing Spin",
     spec: "1:1 · 5 sec",
     use: "Shop listing",
-    frame: "bg-[#4A55FF]",
-    ink: "text-white",
   },
   {
     slug: "blind-box-unboxing",
     name: "Blind-box Reveal",
     spec: "9:16 · 5 sec",
     use: "Drop day",
-    frame: "bg-[#FF5A47]",
-    ink: "text-white",
   },
   {
     slug: "paparazzi-flash",
     name: "Social Flash",
     spec: "9:16 · 5 sec",
     use: "Reels & Shorts",
-    frame: "bg-[#FFD447]",
-    ink: "text-[#17131D]",
   },
 ] as const;
 
@@ -74,75 +68,69 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
     <section
       id="home-create"
       data-home-hero="toy-drop-studio"
-      className="relative isolate scroll-mt-14 overflow-hidden bg-[#F6F0E5] text-[#17131D]"
+      className="relative isolate scroll-mt-14 overflow-hidden bg-[#0C0B0F] text-[#F3EFE6]"
       aria-labelledby="home-hero-title"
     >
-      <div
-        className="pointer-events-none absolute inset-0 opacity-50 [background-image:linear-gradient(rgba(23,19,29,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(23,19,29,0.055)_1px,transparent_1px)] [background-size:32px_32px]"
-        aria-hidden
-      />
-      <div className="relative mx-auto max-w-[1600px] px-4 py-7 sm:px-8 sm:py-14 lg:px-10 lg:py-16 xl:px-16">
-        <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-12">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[44rem] bg-[radial-gradient(50%_60%_at_78%_12%,rgba(196,92,74,0.12),transparent_72%),radial-gradient(40%_55%_at_20%_0%,rgba(198,181,154,0.08),transparent_70%)]" aria-hidden />
+      <div className="relative mx-auto max-w-[1560px] px-4 py-9 sm:px-8 sm:py-16 lg:px-10 lg:py-20 xl:px-16">
+        <div className="grid gap-10 lg:grid-cols-[0.84fr_1.16fr] lg:items-center lg:gap-14">
           <div className="max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rotate-[-1deg] rounded-full bg-[#17131D] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#F6F0E5]">
+              <span className="border-l border-[#C45C4A] pl-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#C6B59A]">
                 AI launch pack for designer toys
               </span>
-              <span className="rounded-full border border-[#17131D]/16 bg-white/55 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#17131D]/58">
+              <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-[#F3EFE6]/44">
                 {privateAccess ? "Private beta access" : "Lab preview · no upload"}
               </span>
             </div>
 
             <h1
               id="home-hero-title"
-              className="mt-6 max-w-[820px] font-display text-[clamp(3rem,5vw,5.5rem)] font-black leading-[0.86] tracking-[-0.07em]"
+              className="mt-7 max-w-[820px] font-display text-[clamp(3rem,5.4vw,5.4rem)] font-medium leading-[0.91] tracking-[-0.062em]"
             >
               One toy photo.
-              <span className="mt-2 block text-[#4A55FF]">Three clips that sell it.</span>
+              <span className="mt-2 block text-[#C45C4A]">Three clips that sell it.</span>
             </h1>
 
-            <p className="mt-6 max-w-xl text-sm font-semibold leading-6 text-[#17131D]/62 sm:text-lg sm:leading-7">
+            <p className="mt-7 max-w-xl text-sm font-normal leading-6 text-[#F3EFE6]/58 sm:text-lg sm:leading-7">
               Turn one owned product photo into a square listing spin, a
               vertical blind-box reveal, and a social launch flash. No prompt
               engineering. No model shopping.
             </p>
 
-            <div className="mt-7 max-w-xl rounded-[1.6rem] border-2 border-[#17131D] bg-white/72 p-2 shadow-[8px_8px_0_#17131D] sm:p-3">
+            <div className="mt-8 max-w-xl rounded-[1.35rem] border border-white/10 bg-[#16141C]/88 p-2 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.95)] sm:p-3">
               <HeroUpload access={launchAccess} credits={credits} />
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 text-xs font-black">
+            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 text-xs font-semibold">
               <a
                 href="#pack-formats"
-                className="text-[#17131D] underline decoration-[#FF5A47] decoration-2 underline-offset-4 hover:text-[#4A55FF]"
+                className="text-[#F3EFE6] underline decoration-[#C45C4A] decoration-1 underline-offset-4 hover:text-[#C6B59A]"
               >
                 See the three sell-ready formats ↘
               </a>
-              <Link href="/pricing" className="text-[#17131D]/44 hover:text-[#17131D]">
+              <Link href="/pricing" className="text-[#F3EFE6]/38 hover:text-[#F3EFE6]">
                 Founding Studio · coming soon
               </Link>
             </div>
           </div>
 
-          <div className="relative">
-            <div className="absolute -right-3 -top-5 z-20 rotate-[5deg] rounded-full border-2 border-[#17131D] bg-[#CBFF3D] px-4 py-2 text-[10px] font-black uppercase tracking-[0.13em] shadow-[4px_4px_0_#17131D] sm:right-2">
-              1 input → 3 outputs
-            </div>
-            <div className="rounded-[2rem] border-2 border-[#17131D] bg-[#17131D] p-3 shadow-[12px_12px_0_rgba(74,85,255,0.32)] sm:p-4 lg:rounded-[2.6rem] lg:p-5">
+          <div className="relative min-w-0">
+            <div className="rounded-[1.75rem] border border-white/10 bg-[#16141C] p-3 shadow-[0_38px_110px_-58px_rgba(0,0,0,1)] sm:p-4 lg:rounded-[2rem] lg:p-5">
               <div className="flex items-center justify-between gap-4 px-1 pb-3 text-[#F6F0E5]">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em]">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#C6B59A]">
                   The fixed Launch Pack
                 </p>
-                <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#F6F0E5]/44">
-                  Archived format prototypes
+                <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[#F3EFE6]/38">
+                  1 input · 3 fixed outputs
                 </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+              <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-3 sm:overflow-visible">
                 {formats.map(({ format, item }, index) => (
                   <article
                     key={format.slug}
-                    className={`group relative min-w-0 overflow-hidden rounded-[1.35rem] border-2 border-[#F6F0E5]/18 ${format.frame}`}
+                    className="group relative min-w-[72%] snap-start overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#1E1B26] sm:min-w-0"
                     data-home-format-preview={format.slug}
                   >
                     <Link
@@ -168,17 +156,17 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
                         wallDense
                         focusable={false}
                         label={`${format.name} archived prototype`}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
+                        className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.015]"
                       />
                     </div>
-                    <div className={`${format.ink} relative min-h-[6.2rem] p-2.5 sm:p-3`}>
-                      <p className="text-[9px] font-black uppercase tracking-[0.12em] opacity-70">
+                    <div className="relative min-h-[6.2rem] border-t border-white/[0.08] p-3 text-[#F3EFE6]">
+                      <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-[#C6B59A]/68">
                         {format.use}
                       </p>
-                      <p className="mt-2 text-xs font-black leading-tight sm:text-base">
+                      <p className="mt-2 text-sm font-semibold leading-tight sm:text-base">
                         {format.name}
                       </p>
-                      <p className="mt-1 text-[9px] font-bold opacity-70 sm:text-[10px]">
+                      <p className="mt-1 text-[9px] font-medium text-[#F3EFE6]/42 sm:text-[10px]">
                         {format.spec}
                       </p>
                     </div>
@@ -186,7 +174,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
                 ))}
               </div>
 
-              <p className="mt-3 rounded-2xl border border-white/10 bg-white/[0.055] px-3 py-2.5 text-[9px] font-semibold leading-4 text-[#F6F0E5]/46 sm:text-[10px]">
+              <p className="mt-3 border-t border-white/[0.08] px-1 pt-3 text-[9px] font-normal leading-4 text-[#F3EFE6]/40 sm:text-[10px]">
                 These are separate archived Pikbo Lab prototypes, not one
                 customer Pack. Listing Spin is the only format with a completed
                 private end-to-end technical check so far.
