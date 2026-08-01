@@ -84,35 +84,37 @@ export default async function CreatePage({
   // Wave A: Seller Pack is a Create mode, not a separate suite door.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] pb-28 text-[#F7F4ED] lg:pb-8">
-        <div className="border-b border-white/10 bg-[#F7F4ED] px-4 py-4 text-[#0A0A0A] sm:px-8 sm:py-6">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4">
+      <div className="min-h-screen bg-[#EEF0F4] pb-28 text-[#111827] lg:pb-12">
+        <div className="border-b border-[#C9CED8] bg-[#EEF0F4] px-4 py-5 sm:px-8 sm:py-8">
+          <div className="mx-auto grid max-w-[1480px] gap-4 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-black/42">
-                Launch Pack · 3 fixed formats
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#2457E6]">
+                Pikbo Launch Workspace
                 <span className="sr-only">
-                  {" "}
-                  · Public preview or invited private generation
+                  {" "}· Launch Pack · 3 fixed formats · Public preview or
+                  invited private generation
                 </span>
               </p>
-              <h1 className="mt-1 font-display text-3xl font-black tracking-[-0.055em] sm:text-5xl">
+              <h1 className="mt-2 max-w-4xl font-display text-[clamp(2.35rem,5vw,5.25rem)] font-black leading-[0.92] tracking-[-0.06em]">
                 Preview a Launch Pack.
               </h1>
             </div>
-            <p className="max-w-xl text-xs font-semibold leading-5 text-black/52 sm:text-sm">
-              Choose a Pikbo Lab sample to preview the three fixed formats.
-              Public preview: no product photo is accepted or processed.
-              Invited sellers can sign in for private generation.
-            </p>
+            <div className="border-l-2 border-[#2457E6] pl-4">
+              <p className="text-sm font-semibold leading-6 text-[#626B78]">
+                Compare the three fixed Launch Pack formats. Public preview
+                opens three archived tests made with separate Pikbo sample
+                toys; private generation appears only for eligible signed-in
+                validation accounts.
+              </p>
+              <p className="mt-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#E85C45]">
+                Public sample · 0 credits · no product photo is accepted or processed
+              </p>
+            </div>
           </div>
-          <p className="mx-auto mt-3 max-w-7xl text-[10px] font-bold text-amber-800/75">
-            Only Listing Spin has passed Pikbo&apos;s current private technical
-            check so far.
-          </p>
         </div>
 
         <div
-          className="mx-auto max-w-7xl px-3 sm:px-8"
+          className="mx-auto max-w-[1480px] px-3 sm:px-8"
           data-launch-pack-workbench
         >
           {/* Public samples and invited private generation share one gated workbench. */}

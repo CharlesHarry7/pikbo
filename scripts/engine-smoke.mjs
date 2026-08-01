@@ -436,10 +436,12 @@ assert.match(batchFirstRun, /Upload owned toy photo/);
 assert.match(batchFirstRun, /data-seller-pack-action="upload"/);
 assert.match(batchFirstRun, /data-seller-pack-action="generate"/);
 assert.match(batchFirstRun, /data-seller-pack-action="library"/);
-assert.match(batchFirstRun, /data-seller-pack-action="retry-failed"/);
+assert.match(batchFirstRun, /data-seller-pack-action="review-failed"/);
 assert.match(batchFirstRun, /data-seller-pack-sticky="mobile"/);
-assert.match(batchFirstRun, /Retry failed only/);
-assert.match(batchFirstRun, /cached prototype/i);
+assert.match(batchFirstRun, /Review failed clip/);
+assert.match(batchFirstRun, /Retry this format · reserve 10 credits/);
+assert.match(batchFirstRun, /archived motion test/i);
+assert.match(batchFirstRun, /separate sample toy/i);
 assert.doesNotMatch(batchFirstRun, /Lab samples are official examples/i);
 
 const meClient = fs.readFileSync(join(root, "lib/meClient.ts"), "utf8");
@@ -2555,7 +2557,8 @@ assert.match(createStudio, /create-ownership/);
 assert.match(createStudio, /create-photo-step/);
 assert.match(createStudio, /Download policy/);
 assert.match(batchStudio, /batch-ownership/);
-assert.match(batchStudio, /bottom-\[4\.75rem\]/);
+assert.match(batchStudio, /fixed inset-x-0 bottom-0/);
+assert.match(appShell, /!sellerPackCreate\s*\?\s*<nav/);
 assert.match(batchStudio, /api\/downloads/);
 
 // Landing tool Free-download honesty (parity with Create/Library)
@@ -5077,7 +5080,8 @@ assert.match(
   fs.readFileSync(join(root, "lib/sellerPackContract.ts"), "utf8"),
   /360-spin-showcase[\s\S]*blind-box-unboxing[\s\S]*paparazzi-flash/
 );
-assert.match(batchStudio, /data-seller-pack-recovery="durable-pointer"/);
+assert.match(batchStudio, /data-seller-pack-recovery="session-pointer"/);
+assert.match(batchStudio, /Server status remains authoritative/);
 assert.match(batchStudio, /retryEligible/);
 const recoveryCjs = require("typescript").transpileModule(sellerPackRecoverySrc, {
   compilerOptions: {
