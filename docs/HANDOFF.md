@@ -25,10 +25,15 @@ Newest first. One block per meaningful landing.
   smoke, TypeScript, ESLint, 198-page production build, 167 rendered-route copy
   check, and local runtime links. Contact, Refund, Pricing, Privacy, Terms and
   About all prerender successfully.
-- External blocker: pikbo.ai currently has no MX record, so `support@pikbo.ai`
-  must be made genuinely receivable before this branch is deployed. A Spaceship
-  login tab is open for the owner; no password, verification, DNS mutation,
-  email purchase, production deploy, payment or Mercury submission occurred.
+- On 2026-08-01, Spaceship Domain Manager was used to create the reversible
+  forwarding rule `support@pikbo.ai` → the owner's existing Gmail inbox. No
+  mailbox product was purchased. Spaceship's authoritative DNS and both
+  Cloudflare (`1.1.1.1`) and Google (`8.8.8.8`) now return
+  `mx1.efwd.spaceship.net` / `mx2.efwd.spaceship.net` plus the matching SPF
+  record. A same-Gmail delivery probe was sent, but Gmail deduplicates the
+  forwarded copy against the Sent message, so an independent external-sender
+  receipt check remains useful. Production deploy and Mercury submission have
+  not occurred and still require owner confirmation.
 
 ---
 
