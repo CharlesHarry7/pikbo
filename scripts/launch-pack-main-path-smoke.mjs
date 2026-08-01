@@ -58,11 +58,18 @@ assert.match(batch, /const demoMode = !privateUploadEnabled \|\| labStill/);
 assert.match(batch, /data-public-pack-preview="lab-only"/);
 assert.match(batch, /No product-photo input is accepted or processed here/);
 assert.match(batch, /setOwnsRights\(false\)/);
-assert.match(batch, /const privateInputPayload = demoMode\s*\?\s*\{\}/);
-assert.match(batch, /if \(!demoMode && image && image\.startsWith/);
 assert.match(
   batch,
-  /!demoMode && image && image\.length <= 300_000 \? image : undefined/
+  /const privateInputPayload = jobDemoMode \|\| boundPrivateChild\s*\?\s*\{\}/
+);
+assert.match(batch, /const boundPrivateChild = Boolean\(packRunId && job\.packJobId\)/);
+assert.match(
+  batch,
+  /!jobDemoMode &&\s*!packRunId &&\s*sharedAssetId &&\s*image &&\s*image\.startsWith/
+);
+assert.match(
+  batch,
+  /!jobDemoMode && image && image\.length <= 300_000\s*\? image\s*: undefined/
 );
 assert.match(createStudio, /const privateUploadEnabled = canUsePrivateLaunch\(session\)/);
 assert.match(createStudio, /data-public-single-preview="lab-only"/);
