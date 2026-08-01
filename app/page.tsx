@@ -86,7 +86,7 @@ export default function Home() {
       <section
         id="pack-formats"
         data-home-upgrade="launch-pack"
-        className="scroll-mt-16 bg-[#F7F4ED] px-4 py-16 text-[#0A0A0A] sm:px-8 sm:py-24"
+        className="scroll-mt-16 bg-[#F6F0E5] px-4 py-16 text-[#17131D] sm:px-8 sm:py-24"
       >
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
@@ -95,8 +95,8 @@ export default function Home() {
                 The fixed Launch Pack
               </p>
               <h2 className="mt-3 max-w-3xl font-display text-4xl font-black leading-[0.95] tracking-[-0.055em] sm:text-6xl">
-                Three assets.
-                <span className="block">One selling job.</span>
+                Three drop formats.
+                <span className="block text-[#FF5A47]">One selling job.</span>
               </h2>
             </div>
             <p className="max-w-2xl text-sm font-semibold leading-6 text-black/56 sm:text-base">
@@ -106,27 +106,33 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-3 lg:grid-cols-3">
-            {FORMATS.map((format) => (
+          <div className="mt-10 grid gap-4 lg:grid-cols-3">
+            {FORMATS.map((format, index) => (
               <article
                 key={format.name}
-                className="relative overflow-hidden rounded-[1.75rem] border border-black/12 bg-white/55 p-6"
+                className={`relative overflow-hidden rounded-[1.75rem] border-2 border-[#17131D] p-6 shadow-[7px_7px_0_#17131D] ${
+                  index === 0
+                    ? "bg-[#4A55FF] text-white"
+                    : index === 1
+                      ? "bg-[#FF5A47] text-white"
+                      : "bg-[#FFD447] text-[#17131D]"
+                }`}
               >
-                <p className="text-[10px] font-black tracking-[0.16em] text-black/36">
+                <p className="text-[10px] font-black tracking-[0.16em] opacity-55">
                   {format.n}
                 </p>
                 <div className="mt-10 flex items-end justify-between gap-3">
                   <h3 className="text-2xl font-black tracking-[-0.04em]">
                     {format.name}
                   </h3>
-                  <span className="rounded-full bg-[#CBFF3D] px-2.5 py-1 text-[10px] font-black">
+                  <span className="rounded-full border border-current/30 bg-white/20 px-2.5 py-1 text-[10px] font-black">
                     {format.ratio}
                   </span>
                 </div>
-                <p className="mt-3 text-[10px] font-black uppercase tracking-[0.14em] text-black/42">
+                <p className="mt-3 text-[10px] font-black uppercase tracking-[0.14em] opacity-60">
                   {format.channel}
                 </p>
-                <p className="mt-4 text-sm leading-6 text-black/56">
+                <p className="mt-4 text-sm font-semibold leading-6 opacity-72">
                   {format.description}
                 </p>
               </article>
@@ -135,7 +141,7 @@ export default function Home() {
           <div className="mt-8">
             <Link
               href="/create?mode=seller-pack"
-              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#0A0A0A] px-6 text-sm font-black text-[#CBFF3D]"
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#17131D] px-6 text-sm font-black text-[#F6F0E5] shadow-[4px_4px_0_#4A55FF] transition hover:-translate-y-0.5"
             >
               Open the fixed Launch Pack
             </Link>
@@ -143,28 +149,28 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#CBFF3D] px-4 py-14 text-[#0A0A0A] sm:px-8 sm:py-20">
+      <section className="bg-[#4A55FF] px-4 py-14 text-white sm:px-8 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:items-center">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/45">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/55">
               One straight line
             </p>
             <h2 className="mt-3 max-w-xl font-display text-4xl font-black leading-[0.95] tracking-[-0.055em] sm:text-6xl">
               Photo in. Private assets out.
             </h2>
           </div>
-          <ol className="grid gap-px overflow-hidden rounded-[1.5rem] border border-black/20 bg-black/20 sm:grid-cols-3">
+          <ol className="grid gap-2 rounded-[1.5rem] sm:grid-cols-3">
             {[
               ["01", "Choose", "Public sample or invited private photo."],
               ["02", "Create", "The three launch formats stay fixed."],
               ["03", "Review", "Check product details before publishing."],
             ].map(([n, title, body]) => (
-              <li key={n} className="bg-[#D5FF62] p-5">
-                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-black/40">
+              <li key={n} className="rounded-[1.25rem] border-2 border-white/75 bg-[#F6F0E5] p-5 text-[#17131D] shadow-[5px_5px_0_rgba(23,19,29,0.55)]">
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#17131D]/40">
                   Step {n}
                 </p>
                 <h3 className="mt-8 text-xl font-black">{title}</h3>
-                <p className="mt-2 text-xs font-semibold leading-5 text-black/54">
+                <p className="mt-2 text-xs font-semibold leading-5 text-[#17131D]/54">
                   {body}
                 </p>
               </li>

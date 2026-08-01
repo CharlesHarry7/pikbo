@@ -75,7 +75,6 @@ export function HeroUpload({
         <button
           type="button"
           data-launch-pack-primary-action="preview"
-          disabled={access === "checking"}
           onClick={() => {
             track({
               event: "recipe_use",
@@ -88,22 +87,20 @@ export function HeroUpload({
               "/create?mode=seller-pack&source=home-preview&try=1&sample=scout"
             );
           }}
-          className="group flex min-h-36 w-full items-center gap-4 rounded-2xl border border-dashed border-white/16 bg-white/[0.045] p-4 text-left transition hover:border-[#c8ff3d]/55 hover:bg-white/[0.065] disabled:cursor-wait disabled:opacity-70 sm:min-h-40 sm:p-5"
+          className="group flex min-h-28 w-full items-center gap-4 rounded-[1.15rem] bg-[#FF5A47] p-4 text-left text-white transition hover:-translate-y-0.5 hover:bg-[#f34d3a] sm:min-h-32 sm:p-5"
         >
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#c8ff3d] text-black shadow-[0_0_26px_rgba(200,255,61,0.2)] sm:h-14 sm:w-14">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-white/70 bg-white text-[#17131D] shadow-[3px_3px_0_#17131D] sm:h-14 sm:w-14">
             <Play className="h-5 w-5 fill-current sm:h-6 sm:w-6" strokeWidth={2.4} />
           </span>
           <span className="min-w-0">
-            <span className="block text-base font-black tracking-[-0.025em] text-white sm:text-lg">
-              {access === "checking"
-                ? "Checking private beta access…"
-                : "Try a sample Launch Pack"}
+            <span className="block text-base font-black tracking-[-0.025em] sm:text-lg">
+              Try a sample Launch Pack
             </span>
-            <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/42">
-              Choose a Pikbo Lab toy · no photo upload
+            <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/74">
+              Instant format preview · no sign-in · no photo upload
             </span>
-            <span className="mt-3 inline-flex rounded-full border border-white/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.13em] text-[#c8ff3d]">
-              Public preview · 0 credits · your image is not processed
+            <span className="mt-3 inline-flex rounded-full border border-white/35 bg-white/12 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.13em]">
+              Pikbo Lab prototype · 0 credits
             </span>
           </span>
         </button>
@@ -125,25 +122,25 @@ export function HeroUpload({
           setHover(false);
           goWithFile(event.dataTransfer.files?.[0]);
         }}
-        className={`group flex min-h-36 cursor-pointer items-center gap-4 rounded-2xl border border-dashed p-4 transition focus-within:ring-2 focus-within:ring-[#c8ff3d] sm:min-h-40 sm:p-5 ${
+        className={`group flex min-h-28 cursor-pointer items-center gap-4 rounded-[1.15rem] border-2 p-4 transition focus-within:ring-2 focus-within:ring-[#4A55FF] sm:min-h-32 sm:p-5 ${
           hover
-            ? "border-[#c8ff3d] bg-[#c8ff3d]/10"
-            : "border-white/16 bg-white/[0.045] hover:border-[#c8ff3d]/55 hover:bg-white/[0.065]"
+            ? "border-[#4A55FF] bg-[#4A55FF]/10"
+            : "border-[#17131D] bg-white hover:bg-[#F6F0E5]"
         }`}
       >
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#c8ff3d] text-black shadow-[0_0_26px_rgba(200,255,61,0.2)] sm:h-14 sm:w-14">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#4A55FF] text-white shadow-[3px_3px_0_#17131D] sm:h-14 sm:w-14">
           <ImagePlus className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} />
         </span>
         <span className="min-w-0">
-          <span className="block text-base font-black tracking-[-0.025em] text-white sm:text-lg">
+          <span className="block text-base font-black tracking-[-0.025em] text-[#17131D] sm:text-lg">
             {busy
               ? "Opening your private Launch Pack…"
               : "Upload your toy photo"}
           </span>
-          <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/42">
+          <span className="mt-1 block text-[11px] font-semibold leading-5 text-[#17131D]/52">
             or tap to choose · PNG, JPG, WebP · under 2 MB
           </span>
-          <span className="mt-3 inline-flex rounded-full border border-white/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.13em] text-[#c8ff3d]">
+          <span className="mt-3 inline-flex rounded-full border border-[#17131D]/14 bg-[#FFD447] px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.13em] text-[#17131D]">
             {access === "private-ready"
               ? "Private beta · 30-credit Pack available"
               : `Private beta · ${credits} credits · Pack needs 30`}

@@ -1935,12 +1935,12 @@ export function BatchStudio({
   );
 
   return (
-    <div className="mt-8 grid gap-6 pb-36 lg:grid-cols-[1fr_1.1fr] lg:pb-0">
+    <div className="mt-5 grid gap-6 pb-44 lg:mt-8 lg:grid-cols-[1fr_1.1fr] lg:pb-0">
       <div className="space-y-4">
         {sellerPackActive && (
           <div className="space-y-3">
-            <div className="rounded-2xl border border-[var(--mint)]/35 bg-gradient-to-br from-[var(--mint)]/[0.1] to-black/40 px-3.5 py-3 text-xs text-[var(--fg-muted)] shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
-              <p className="font-bold text-[var(--mint)]">
+            <div className="rounded-[1.6rem] border-2 border-white/14 bg-[#211C28] px-3.5 py-3 text-xs text-[var(--fg-muted)] shadow-[8px_8px_0_rgba(74,85,255,0.25)]">
+              <p className="font-black text-[#FFD447]">
                 {displayDemoMode
                   ? "Launch Pack — 3 cached prototype previews"
                   : "Launch Pack — 3 private clips / 30 credits"}
@@ -1951,30 +1951,36 @@ export function BatchStudio({
                   : "Review the 30-credit quote, then create three independent private clips."}
               </p>
               <div
-                className="mt-3 grid gap-2 sm:grid-cols-3"
+                className="mt-3 grid grid-cols-3 gap-2"
                 data-seller-pack-outcomes="preset-first"
                 aria-label="Fixed Launch Pack outcomes"
               >
                 {SELLER_PACK_ITEMS.map((item, index) => (
                   <article
                     key={item.key}
-                    className="rounded-xl border border-white/10 bg-black/30 p-3"
+                    className={`min-w-0 rounded-xl border-2 border-white/20 p-2.5 sm:p-3 ${
+                      index === 0
+                        ? "bg-[#4A55FF] text-white"
+                        : index === 1
+                          ? "bg-[#FF5A47] text-white"
+                          : "bg-[#FFD447] text-[#17131D]"
+                    }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[9px] font-black uppercase tracking-[0.16em] text-[var(--mint)]">
+                      <span className="text-[9px] font-black uppercase tracking-[0.16em] opacity-65">
                         0{index + 1}
                       </span>
-                      <span className="rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-bold text-white/55">
+                      <span className="hidden rounded-full border border-current/20 px-2 py-0.5 text-[9px] font-bold opacity-70 sm:inline-flex">
                         {item.aspectRatio} · {item.durationSec}s
                       </span>
                     </div>
-                    <p className="mt-5 text-sm font-black text-white">
+                    <p className="mt-6 text-[11px] font-black leading-tight sm:text-sm">
                       {item.label}
                     </p>
-                    <p className="mt-1 text-[10px] font-semibold text-white/45">
+                    <p className="mt-1 hidden text-[10px] font-semibold opacity-60 sm:block">
                       {item.channel}
                     </p>
-                    <p className="mt-3 text-[10px] font-bold text-[var(--mint)]">
+                    <p className="mt-2 text-[9px] font-bold opacity-72 sm:text-[10px]">
                       {displayDemoMode
                         ? "Cached Lab preview · 0 credits"
                         : "Private output · 10 credits"}
@@ -2040,15 +2046,22 @@ export function BatchStudio({
             <label
               id="seller-pack-photo"
               htmlFor="seller-pack-photo-input"
-              className={`flex aspect-video cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
+              tabIndex={0}
+              className={`flex aspect-video cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[1.6rem] border-2 border-dashed bg-[#211C28] transition-all duration-200 hover:border-[#FFD447] hover:bg-[#26202F] ${
                 image
                   ? "border-white/12 ring-1 ring-white/5"
-                  : "border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)]"
+                  : "border-[#4A55FF] shadow-[7px_7px_0_rgba(255,90,71,0.28)]"
               }`}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
                 loadFile(event.dataTransfer.files?.[0]);
+              }}
+              onPaste={(event) => {
+                const pasted = Array.from(event.clipboardData.items)
+                  .find((item) => item.kind === "file")
+                  ?.getAsFile();
+                if (pasted) loadFile(pasted);
               }}
             >
               {image ? (
@@ -2063,11 +2076,11 @@ export function BatchStudio({
                   <span className="mb-2 block text-2xl" aria-hidden>
                     🧸
                   </span>
-                  Drop one rights-owned toy photo for the whole{" "}
+                  Drop or paste one rights-owned toy photo for the whole{" "}
                   {sellerPackActive ? "pack" : "batch"}
                   <br />
                   <span className="text-xs">
-                    or tap · JPEG / PNG / WebP · under ~8 MB
+                    or tap to choose · JPEG / PNG / WebP · under ~8 MB
                   </span>
                 </span>
               )}
@@ -2084,7 +2097,7 @@ export function BatchStudio({
             <div
               id="seller-pack-photo"
               data-public-pack-preview="lab-only"
-              className="flex aspect-video flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-[var(--mint)]/35 bg-black/40"
+              className="flex aspect-video flex-col items-center justify-center overflow-hidden rounded-[1.6rem] border-2 border-dashed border-[#4A55FF] bg-[#211C28] shadow-[7px_7px_0_rgba(255,90,71,0.28)]"
             >
               {image && labStill ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -2095,8 +2108,8 @@ export function BatchStudio({
                 />
               ) : (
                 <span className="max-w-sm px-5 text-center text-sm leading-6 text-[var(--fg-dim)]">
-                  <span className="mb-2 block text-2xl" aria-hidden>
-                    ◉
+                  <span className="mb-2 block text-3xl" aria-hidden>
+                    🧸
                   </span>
                   Public preview uses Pikbo Lab samples only.
                   <br />
@@ -2141,13 +2154,13 @@ export function BatchStudio({
                 <button
                   key={sample.id}
                   type="button"
-                  className="min-h-11 rounded-lg border border-[var(--border)] px-3 py-2.5 text-xs hover:border-[var(--brand)]"
+                  className="min-h-11 rounded-full border border-white/16 bg-white/[0.04] px-3 py-2.5 text-xs font-bold text-white/66 hover:border-[#FFD447] hover:text-[#FFD447]"
                   onClick={() => void chooseLabSample(sample.id)}
                 >
                   Sample: {sample.label}
                 </button>
               ))}
-              <p className="w-full text-[10px] font-semibold text-[var(--mint)]">
+              <p className="w-full text-[10px] font-semibold text-[#FFD447]">
                 {privateUploadEnabled
                   ? "Lab samples stay cached. Replace the sample with your own photo for private generation."
                   : "Lab samples are archived prototypes · not a customer upload · 0 credits."}
@@ -2734,7 +2747,7 @@ export function BatchStudio({
 
       {/* Phase F: sticky mobile Seller Pack / Batch CTA above tab nav */}
       <div
-        className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t-2 border-[#4A55FF]/55 bg-[#17131D]/97 px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-16px_44px_rgba(0,0,0,0.6)] backdrop-blur-xl lg:hidden"
         data-seller-pack-sticky="mobile"
       >
         {image ? (

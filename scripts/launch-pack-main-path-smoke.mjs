@@ -33,7 +33,7 @@ assert.match(
 assert.match(homeHero, /id="home-create"/);
 assert.match(homeHero, /fetchMe\(\)/);
 assert.match(homeHero, /canUsePrivateLaunch\(me\)/);
-assert.match(homeHero, /Public format preview · no upload/);
+assert.match(homeHero, /Lab preview · no upload/);
 assert.match(homeHero, /Founding Studio · coming soon/);
 assert.doesNotMatch(homeHero, /\$49 candidate/);
 assert.match(heroUpload, /mode=seller-pack&source=home-launch-pack/);
@@ -47,10 +47,15 @@ assert.match(heroUpload, /className="sr-only"/);
 assert.match(heroUpload, /if \(!privateAccess\)/);
 assert.match(heroUpload, /data-home-launch-pack="public-preview"/);
 assert.match(heroUpload, /Try a sample Launch Pack/);
-assert.match(heroUpload, /Choose a Pikbo Lab toy · no photo upload/);
+assert.match(heroUpload, /Instant format preview · no sign-in · no photo upload/);
 assert.match(
   heroUpload,
-  /Public preview · 0 credits · your image is not processed/
+  /Pikbo Lab prototype · 0 credits/
+);
+assert.doesNotMatch(
+  heroUpload,
+  /disabled=\{access === "checking"\}/,
+  "public sample CTA must remain usable while private access is checked"
 );
 assert.match(meClient, /export function canUsePrivateLaunch/);
 assert.match(meClient, /me\.canLiveGenerate === true/);
@@ -133,11 +138,11 @@ for (const slug of [
 ]) {
   assert.match(contract, new RegExp(`"${slug}"`));
 }
-assert.match(create, /Launch Pack · 3 fixed formats/);
+assert.match(create, /Toy Drop Workbench · 3 fixed formats/);
 assert.match(create, /Public preview or invited private generation/);
-assert.match(create, /One photo\. Three launch videos\./);
-assert.match(create, /Public visitors can try the three fixed formats/);
-assert.match(create, /Only Listing Spin has passed/);
+assert.match(create, /Build one complete toy drop\./);
+assert.match(create, /Start with a Pikbo Lab toy and inspect all three outcomes/);
+assert.match(create, /Listing Spin is the verified technical run/);
 assert.doesNotMatch(create, /Launch Pack — 3 private videos · 30 credits/);
 assert.doesNotMatch(create, /Launch Pack — 12 recipes/);
 

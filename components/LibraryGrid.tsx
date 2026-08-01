@@ -1418,11 +1418,11 @@ export function LibraryGrid() {
 
   const stickyCta = (
     <div
-      className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-[4.75rem] z-40 flex items-center gap-3 border-t-2 border-[#4A55FF]/55 bg-[#17131D]/97 px-3 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
       data-library-sticky="mobile"
       data-library-active-jobs={activeJobs}
     >
-      <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
+      <p className="min-w-0 flex-1 truncate text-left text-[10px] font-medium text-white/55">
         {items.length > 0
           ? `${items.length} available clip${items.length === 1 ? "" : "s"}`
           : "Your Launch Pack Library"}
@@ -1434,7 +1434,7 @@ export function LibraryGrid() {
         <button
           type="button"
           onClick={handleReviewActiveJobs}
-          className="btn btn-primary w-full py-3 text-sm"
+          className="btn btn-primary shrink-0 px-4 py-2.5 text-xs"
           data-library-action="review-active"
           aria-label={`Review ${activeJobs} active job${activeJobs === 1 ? "" : "s"}`}
         >
@@ -1443,7 +1443,7 @@ export function LibraryGrid() {
       ) : (
         <Link
           href="/create?mode=seller-pack"
-          className="btn btn-primary w-full py-3 text-sm"
+          className="btn btn-primary shrink-0 px-4 py-2.5 text-xs"
           data-library-action="seller-pack"
         >
           Create new Pack

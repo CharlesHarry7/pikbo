@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* ---------- Pikbo seller studio ----------
-   Ink, warm paper, and one signal-lime action color.
+/* ---------- Pikbo Toy Drop Studio ----------
+   Warm display paper, collector ink, cobalt, coral, and signal yellow.
 ---------------------------------------------------------------- */
 :root {
   /* Offline-safe faces — no Google Fonts network at build (Phase B). */
@@ -10,28 +10,31 @@
   --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 
-  --bg: #0a0a0a;
-  --bg-soft: #121212;
-  --card: #151515;
-  --card-2: #1b1b1b;
+  --bg: #17131d;
+  --bg-soft: #211c28;
+  --card: #26202f;
+  --card-2: #2d2637;
   --border: rgba(255, 255, 255, 0.08);
   --fg: #f7f4ed;
   --fg-muted: rgba(247, 244, 237, 0.62);
   --fg-dim: rgba(247, 244, 237, 0.38);
 
-  --paper: #f7f4ed;
-  --brand: #cbff3d;
-  --brand-2: #f7f4ed;
-  --mint: #cbff3d;
+  --paper: #f6f0e5;
+  --brand: #ff5a47;
+  --brand-2: #4a55ff;
+  --mint: #ffd447;
   --lime: #cbff3d;
+  --cobalt: #4a55ff;
+  --coral: #ff5a47;
+  --signal: #ffd447;
 
-  --grad: linear-gradient(135deg, #f7f4ed 0%, #cbff3d 58%, #cbff3d 100%);
+  --grad: linear-gradient(135deg, #ffd447 0%, #ff5a47 100%);
   --grad-soft: linear-gradient(
     135deg,
-    rgba(203, 255, 61, 0.16),
+    rgba(74, 85, 255, 0.18),
     rgba(247, 244, 237, 0.05)
   );
-  --brand-glow: 0 0 40px rgba(203, 255, 61, 0.22);
+  --brand-glow: 0 0 40px rgba(74, 85, 255, 0.24);
 
   --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.04);
   --shadow-md: 0 12px 40px -16px rgba(0, 0, 0, 0.75);
@@ -42,11 +45,11 @@
   --background: var(--bg);
   --foreground: var(--fg);
   --primary: var(--mint);
-  --primary-foreground: #0a0a0a;
+  --primary-foreground: #17131d;
   --muted: var(--bg-soft);
   --muted-foreground: var(--fg-muted);
   --accent: rgba(255, 255, 255, 0.06);
-  --ring: rgba(203, 255, 61, 0.55);
+  --ring: rgba(74, 85, 255, 0.65);
 }
 
 @theme inline {
@@ -111,14 +114,14 @@ h1,
   inset: -10% -5% auto;
   height: 520px;
   background:
-    radial-gradient(46% 46% at 50% -4%, rgba(200, 255, 61, 0.1), transparent 70%),
-    radial-gradient(38% 38% at 84% 6%, rgba(127, 230, 180, 0.06), transparent 66%);
+    radial-gradient(46% 46% at 50% -4%, rgba(74, 85, 255, 0.12), transparent 70%),
+    radial-gradient(38% 38% at 84% 6%, rgba(255, 90, 71, 0.08), transparent 66%);
   pointer-events: none;
   z-index: 0;
 }
 
 .text-grad {
-  background: linear-gradient(100deg, #eafcb0 0%, var(--mint) 42%, #7fe6b4 100%);
+  background: linear-gradient(100deg, #ffd447 0%, #ff5a47 46%, #8991ff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -143,14 +146,14 @@ h1,
   padding: 0.8rem 1.4rem;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08) inset,
-    0 0 28px rgba(203, 255, 61, 0.2);
+    0 0 28px rgba(255, 212, 71, 0.2);
   letter-spacing: -0.01em;
 }
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12) inset,
-    0 0 42px rgba(203, 255, 61, 0.32);
+    0 0 42px rgba(255, 212, 71, 0.32);
 }
 .btn-primary:active {
   transform: translateY(0);
@@ -191,11 +194,11 @@ h1,
   background:
     radial-gradient(
       120% 80% at 50% 0%,
-      rgba(203, 255, 61, 0.07),
+      rgba(74, 85, 255, 0.09),
       transparent 55%
     ),
     #030305;
-  border: 1px solid rgba(203, 255, 61, 0.12);
+  border: 1px solid rgba(74, 85, 255, 0.18);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 24px 80px -40px rgba(0, 0, 0, 0.9);
@@ -271,7 +274,7 @@ h1,
 }
 .video-tile:hover {
   transform: translateY(-2px);
-  border-color: rgba(200, 255, 61, 0.35);
+  border-color: rgba(255, 212, 71, 0.42);
   box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.8);
 }
 .video-tile video {
@@ -327,8 +330,8 @@ select {
 
 /* On-brand text selection */
 ::selection {
-  background: rgba(203, 255, 61, 0.85);
-  color: #0a0a0a;
+  background: rgba(255, 212, 71, 0.9);
+  color: #17131d;
 }
 
 /* Accessible, on-brand keyboard focus ring */
@@ -347,7 +350,7 @@ input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(203, 255, 61, 0.14);
+  box-shadow: 0 0 0 3px rgba(74, 85, 255, 0.18);
 }
 
 /* Editorial eyebrow — uppercase tracked with a lime lead line */
@@ -377,7 +380,7 @@ select:focus {
 }
 .card-i:hover {
   transform: translateY(-2px);
-  border-color: rgba(200, 255, 61, 0.28);
+  border-color: rgba(255, 212, 71, 0.34);
   box-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
 }
 

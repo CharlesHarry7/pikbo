@@ -2283,3 +2283,42 @@ Newest first. One block per meaningful landing.
 - Verification: Launch-Pack main path, product proof, live copy, SEO cold start,
   engine, Seller Pack atomic accounting, recovery ledger, reconciliation,
   Stripe billing, TypeScript, ESLint and the 198-route production build pass.
+
+### 2026-08-01 — [gpt/grok/workbuddy] ChinaJoy Toy Drop visual convergence
+
+- Replaced the generic black/acid-lime public front door with a collector-led
+  Toy Drop system: warm display paper, collector ink, cobalt, coral and
+  blind-box yellow. Home now shows the sellable unit before the technology:
+  one toy photo, three channel-labelled clips, and one immediate sample CTA.
+- Public visitors no longer wait on `/api/me` before opening the cached Pack.
+  The public CTA remains enabled while access is checked; invited accounts are
+  upgraded to the existing private upload path when entitlement resolves.
+- Create keeps one fixed three-output Pack and adopts only the useful purchased
+  ShipAny interaction patterns: clearer upload states plus drag, paste and
+  replace. ShipAny's text/image/video tabs, model/provider/prompt selectors,
+  generic generator IA, payment rewrite and admin surface were rejected.
+- Library and Pricing now share the same tactile product-card language. The
+  mobile Library action was reduced from a tall overlay to one compact row, and
+  the first asset surface appears inside the 390px first screen. Pricing still
+  states that checkout is closed; no placeholder price or fake tier was added.
+- Chrome local proof at 1440x900 and 390x844 covered Home, seller-Pack Create,
+  Library and Pricing. The 390px Home first screen contains the outcome, a
+  working CTA and the beginning of the three-format Pack; Create shows all
+  three fixed outcomes and the primary action before the input preview;
+  Library exposes assets below a compact seller header; Pricing exposes the
+  sample CTA above the fold.
+- Grok's finished red-team session `019fbd60-1d6d-7641-bead-e94beeff3fb2`
+  returned GO for the narrow UI slice and NO-GO for ShipAny's generic tabs,
+  model/provider/prompt controls, payment flip and backend changes.
+- WorkBuddy independently captured eight production screenshots and produced
+  a 16-observation seller/ChinaJoy audit in
+  `/Users/x/Documents/Codex/2026-07-26/yon/outputs/pikbo-audit/`. Its mobile
+  overlap finding was addressed. Its public-community Library and two-tier
+  pricing suggestions were rejected because they violate the owner-private MVP
+  and the frozen payment gate.
+- Verification: live copy, SEO cold start, engine, Seller Pack atomic
+  accounting, recovery ledger, reconciliation, Stripe billing, Launch-Pack
+  path, private-input binding, TypeScript, ESLint and the Next 16.2.11
+  198-route production build pass.
+- Safety: no API route, auth, Storage, database, provider, credit accounting,
+  recovery, Stripe, DNS, production flag or real-model budget changed.

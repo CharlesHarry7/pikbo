@@ -49,8 +49,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   }, [path]);
 
   return (
-    <div className="flex min-h-screen min-w-0 flex-col bg-[#0A0A0A] text-[#F7F4ED]">
-      <header className="sticky top-0 z-50 hidden h-16 items-center border-b border-white/10 bg-[#0A0A0A]/92 px-7 backdrop-blur-xl lg:flex">
+    <div className="flex min-h-screen min-w-0 flex-col bg-[#17131D] text-[#F6F0E5]">
+      <header className="sticky top-0 z-50 hidden h-16 items-center border-b border-white/10 bg-[#17131D]/94 px-7 backdrop-blur-xl lg:flex">
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
           <Logo size={30} />
         </Link>
@@ -69,13 +69,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "relative py-5 text-[13px] font-bold transition-colors",
                   on
-                    ? "text-[#F7F4ED]"
-                    : "text-[#F7F4ED]/46 hover:text-[#F7F4ED]"
+                    ? "text-[#F6F0E5]"
+                    : "text-[#F6F0E5]/46 hover:text-[#F6F0E5]"
                 )}
               >
                 {item.label}
                 {on ? (
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#CBFF3D]" />
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#FF5A47]" />
                 ) : null}
               </Link>
             );
@@ -87,7 +87,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-white/10 bg-[#0A0A0A]/92 px-3 backdrop-blur-xl lg:hidden">
+      <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-white/10 bg-[#17131D]/95 px-3 backdrop-blur-xl lg:hidden">
         <Link href="/" aria-label="Pikbo home">
           <Logo size={26} wordClassName="text-base" />
         </Link>
@@ -95,7 +95,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           <LanguageSwitcher compact />
           <CreditsBadge compact />
           {create ? (
-            <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#CBFF3D]">
+            <span className="rounded-full bg-[#FF5A47] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white">
               {t("cta.launchPack")}
             </span>
           ) : null}
@@ -103,12 +103,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="min-w-0 flex-1 bg-[#0A0A0A]">{children}</main>
+        <main className="min-w-0 flex-1 bg-[#17131D]">{children}</main>
         {!hideFooter ? <Footer /> : null}
       </div>
 
       <nav
-        className="sticky bottom-0 z-50 grid grid-cols-5 border-t border-white/10 bg-[#0A0A0A]/96 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+        className="sticky bottom-0 z-50 grid grid-cols-5 border-t border-white/10 bg-[#17131D]/97 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
         aria-label="Mobile navigation"
       >
         {MOBILE_NAV.map((item) => {
@@ -120,13 +120,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               aria-current={on ? "page" : undefined}
               className={cn(
                 "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
-                on ? "text-[#CBFF3D]" : "text-[#F7F4ED]/38"
+                on ? "text-[#FFD447]" : "text-[#F6F0E5]/38"
               )}
             >
               <span
                 className={cn(
                   "mb-1 h-1 w-1 rounded-full",
-                  on ? "bg-[#CBFF3D]" : "bg-transparent"
+                  on ? "bg-[#FF5A47]" : "bg-transparent"
                 )}
                 aria-hidden
               />

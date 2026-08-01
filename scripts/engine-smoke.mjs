@@ -3902,7 +3902,7 @@ const homeHeroSrc = fs.readFileSync(
 );
 assert.match(
   homeHeroSrc,
-  /One toy photo\.[\s\S]*Three product videos\./
+  /One toy photo\.[\s\S]*Three clips that sell it\./
 );
 assert.match(
   homeHeroSrc,
@@ -3913,7 +3913,7 @@ assert.match(
   homeHeroSrc,
   /<HeroUpload access=\{launchAccess\} credits=\{credits\} \/>/
 );
-assert.match(homeHeroSrc, /canUsePrivateLaunch|Public format preview · no upload/);
+assert.match(homeHeroSrc, /canUsePrivateLaunch|Lab preview · no upload/);
 assert.match(homeHeroSrc, /id=["']home-create["']/);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeViralWall.tsx"),
