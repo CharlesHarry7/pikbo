@@ -38,7 +38,7 @@ export function HomeSeoBody() {
   };
 
   return (
-    <section className="bg-[#f1eee6] px-5 py-18 text-black sm:px-8 sm:py-24">
+    <section className="bg-[#EFE8DD] px-5 py-18 text-[#111111] sm:px-8 sm:py-24">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
@@ -46,7 +46,7 @@ export function HomeSeoBody() {
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5e7800]">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#E94B35]">
               Built around the product
             </p>
             <h2 className="mt-3 font-display text-4xl font-black tracking-[-0.055em] sm:text-6xl">
@@ -93,8 +93,8 @@ export function HomeSeoBody() {
                 </p>
               </div>
             ))}
-            <div className="rounded-[1.5rem] bg-[#090909] p-5 text-white sm:col-span-2">
-              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+            <div className="rounded-[1.5rem] bg-[#111111] p-5 text-white sm:col-span-2">
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#E94B35]">
                 Private delivery, limited processing
               </p>
               <p className="mt-5 max-w-2xl text-sm leading-6 text-white/62">
@@ -141,12 +141,12 @@ export function HomeSeoBody() {
         </div>
 
         <div className="mt-18">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5e7800]">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#E94B35]">
             FAQ
           </p>
           <div className="mt-4 grid gap-px overflow-hidden rounded-[1.75rem] border border-black/15 bg-black/15 md:grid-cols-2">
             {FAQ.map((item) => (
-              <div key={item.q} className="bg-[#f7f4ed] p-6 sm:p-7">
+              <div key={item.q} className="bg-[#F7F3EA] p-6 sm:p-7">
                 <h3 className="text-base font-black">{item.q}</h3>
                 <p className="mt-3 text-sm leading-6 text-black/56">{item.a}</p>
               </div>

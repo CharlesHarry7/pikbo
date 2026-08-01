@@ -37,6 +37,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const path = usePathname() || "/";
   const home = path === "/";
   const create = path.startsWith("/create");
+  const editorialFrontDoor = home || create;
   const hideFooter =
     home ||
     create ||
@@ -52,7 +53,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen min-w-0 flex-col bg-[#0A0A0A] text-[#F7F4ED]">
       <header className="sticky top-0 z-50 hidden h-16 items-center border-b border-white/10 bg-[#0A0A0A]/92 px-7 backdrop-blur-xl lg:flex">
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
-          <Logo size={30} />
+          <Logo size={30} accent={editorialFrontDoor ? "#E94B35" : "#CBFF3D"} />
         </Link>
         <nav
           className="mx-auto flex items-center gap-9"
@@ -75,7 +76,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               >
                 {item.label}
                 {on ? (
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#CBFF3D]" />
+                  <span
+                    className={cn(
+                      "absolute inset-x-0 bottom-0 h-0.5",
+                      editorialFrontDoor ? "bg-[#E94B35]" : "bg-[#CBFF3D]"
+                    )}
+                  />
                 ) : null}
               </Link>
             );
@@ -89,13 +95,17 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
       <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-white/10 bg-[#0A0A0A]/92 px-3 backdrop-blur-xl lg:hidden">
         <Link href="/" aria-label="Pikbo home">
-          <Logo size={26} wordClassName="text-base" />
+          <Logo
+            size={26}
+            wordClassName="text-base"
+            accent={editorialFrontDoor ? "#E94B35" : "#CBFF3D"}
+          />
         </Link>
         <div className="flex items-center gap-2">
           <LanguageSwitcher compact />
           <CreditsBadge compact />
           {create ? (
-            <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#CBFF3D]">
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#E94B35]">
               {t("cta.launchPack")}
             </span>
           ) : null}
@@ -120,13 +130,21 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               aria-current={on ? "page" : undefined}
               className={cn(
                 "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
-                on ? "text-[#CBFF3D]" : "text-[#F7F4ED]/38"
+                on
+                  ? editorialFrontDoor
+                    ? "text-[#E94B35]"
+                    : "text-[#CBFF3D]"
+                  : "text-[#F7F4ED]/38"
               )}
             >
               <span
                 className={cn(
                   "mb-1 h-1 w-1 rounded-full",
-                  on ? "bg-[#CBFF3D]" : "bg-transparent"
+                  on
+                    ? editorialFrontDoor
+                      ? "bg-[#E94B35]"
+                      : "bg-[#CBFF3D]"
+                    : "bg-transparent"
                 )}
                 aria-hidden
               />

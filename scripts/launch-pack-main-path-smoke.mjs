@@ -23,18 +23,16 @@ const paywall = read("components/PaywallCard.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
 
-// Homepage V3 separates public Lab preview from invited private upload.
+// Homepage V4 is a truthful editorial preview. Private upload stays in Create.
 assert.match(home, /data-home-upgrade="launch-pack"/);
 assert.match(home, /href="\/create\?mode=seller-pack"/);
-assert.match(
-  homeHero,
-  /<HeroUpload access=\{launchAccess\} credits=\{credits\} \/>/
-);
 assert.match(homeHero, /id="home-create"/);
-assert.match(homeHero, /fetchMe\(\)/);
-assert.match(homeHero, /canUsePrivateLaunch\(me\)/);
+assert.match(homeHero, /data-home-same-sku-storyboard/);
+assert.match(homeHero, /Pikbo Lab art-direction storyboard/);
+assert.match(homeHero, /not a customer Pack or a[\s\n]+generated result/);
 assert.match(homeHero, /Public format preview · no upload/);
 assert.match(homeHero, /Founding Studio · coming soon/);
+assert.doesNotMatch(homeHero, /HeroUpload|fetchMe|canUsePrivateLaunch/);
 assert.doesNotMatch(homeHero, /\$49 candidate/);
 assert.match(heroUpload, /mode=seller-pack&source=home-launch-pack/);
 assert.match(

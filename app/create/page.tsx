@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { Suspense } from "react";
 import { CreateStudio } from "@/components/CreateStudio";
 import { CreateSeoFooter } from "@/components/CreateSeoFooter";
@@ -84,36 +85,46 @@ export default async function CreatePage({
   // Wave A: Seller Pack is a Create mode, not a separate suite door.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] pb-28 text-[#F7F4ED] lg:pb-8">
-        <div className="border-b border-white/10 bg-[#F7F4ED] px-4 py-4 text-[#0A0A0A] sm:px-8 sm:py-6">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4">
+      <div className="min-h-screen bg-[#F7F3EA] pb-28 text-[#111111] lg:pb-10">
+        <div className="border-b border-[#D9D0C3] px-4 py-7 sm:px-8 sm:py-10">
+          <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-black/42">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E94B35] sm:text-[10px]">
                 Launch Pack · 3 fixed formats
                 <span className="sr-only">
                   {" "}
                   · Public preview or invited private generation
                 </span>
               </p>
-              <h1 className="mt-1 font-display text-3xl font-black tracking-[-0.055em] sm:text-5xl">
+              <h1 className="mt-2 font-display text-4xl font-black leading-[0.92] tracking-[-0.06em] sm:text-6xl">
                 Preview a Launch Pack.
               </h1>
             </div>
-            <p className="max-w-xl text-xs font-semibold leading-5 text-black/52 sm:text-sm">
+            <p className="max-w-xl text-xs font-semibold leading-5 text-[#111111]/54 sm:text-sm sm:leading-6">
               Choose a Pikbo Lab sample to preview the three fixed formats.
               Public preview: no product photo is accepted or processed.
               Invited sellers can sign in for private generation.
             </p>
           </div>
-          <p className="mx-auto mt-3 max-w-7xl text-[10px] font-bold text-amber-800/75">
+          <p className="mx-auto mt-4 max-w-7xl border-l-2 border-[#E94B35] pl-3 text-[10px] font-bold text-[#111111]/48">
             Only Listing Spin has passed Pikbo&apos;s current private technical
             check so far.
           </p>
         </div>
 
         <div
-          className="mx-auto max-w-7xl px-3 sm:px-8"
+          className="mx-auto mt-4 max-w-7xl rounded-t-[1.5rem] bg-[#111111] px-3 pb-5 pt-1 text-[#F7F3EA] shadow-[0_24px_70px_rgba(17,17,17,0.12)] sm:mt-8 sm:rounded-[2rem] sm:px-8 sm:pb-8 lg:px-10"
           data-launch-pack-workbench
+          style={
+            {
+              "--brand": "#E94B35",
+              "--mint": "#E94B35",
+              "--lime": "#E94B35",
+              "--grad-soft":
+                "linear-gradient(135deg, rgba(233, 75, 53, 0.16), rgba(247, 243, 234, 0.05))",
+              "--ring": "rgba(233, 75, 53, 0.55)",
+            } as CSSProperties
+          }
         >
           {/* Public samples and invited private generation share one gated workbench. */}
           <BatchStudio

@@ -16,7 +16,7 @@ export function HomeTrustFooter() {
     >
       <div className="mx-auto grid max-w-5xl gap-8 sm:grid-cols-[1.4fr_1fr] sm:items-start">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#CBFF3D]">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#E94B35]">
             Built for product truth
           </p>
           <h2 className="mt-2 text-xl font-black text-white">
@@ -35,25 +35,25 @@ export function HomeTrustFooter() {
             aria-label="Pikbo trust and support"
             className="flex flex-wrap gap-x-4 gap-y-2 text-sm"
           >
-            <Link href="/about" className="text-white/75 hover:text-[#CBFF3D]">
+            <Link href="/about" className="text-white/75 hover:text-[#E94B35]">
               About
             </Link>
-            <Link href="/contact" className="text-white/75 hover:text-[#CBFF3D]">
+            <Link href="/contact" className="text-white/75 hover:text-[#E94B35]">
               Contact
             </Link>
-            <Link href="/refund" className="text-white/75 hover:text-[#CBFF3D]">
+            <Link href="/refund" className="text-white/75 hover:text-[#E94B35]">
               Refunds
             </Link>
             <Link
               href="/guides/how-to-photograph-toys-for-ai-video"
-              className="text-white/75 hover:text-[#CBFF3D]"
+              className="text-white/75 hover:text-[#E94B35]"
             >
               Photo guide
             </Link>
-            <Link href="/privacy" className="text-white/75 hover:text-[#CBFF3D]">
+            <Link href="/privacy" className="text-white/75 hover:text-[#E94B35]">
               Privacy
             </Link>
-            <Link href="/terms" className="text-white/75 hover:text-[#CBFF3D]">
+            <Link href="/terms" className="text-white/75 hover:text-[#E94B35]">
               Terms
             </Link>
           </nav>
@@ -62,7 +62,7 @@ export function HomeTrustFooter() {
               Support:{" "}
               <a
                 href={`mailto:${site.contact.supportEmail}`}
-                className="text-white/65 underline decoration-white/25 underline-offset-2 hover:text-[#CBFF3D]"
+                className="text-white/65 underline decoration-white/25 underline-offset-2 hover:text-[#E94B35]"
               >
                 {site.contact.supportEmail}
               </a>

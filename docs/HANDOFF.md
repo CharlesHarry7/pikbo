@@ -2294,3 +2294,26 @@ Newest first. One block per meaningful landing.
   Provider, Stripe, DNS and public/paid state remain unchanged.
 - Full evidence:
   `docs/evidence/PRIVATE_PREVIEW_READINESS_2026-07-30.md`.
+
+### 2026-08-02 — [gpt/grok/workbuddy/pro] Designer-toy editorial front door
+
+- ChatGPT Pro fixed the visual direction as a Tokyo designer-toy editorial
+  studio: paper ivory, carbon and toy red; one coherent SKU; visible result
+  first; no generic black/neon AI SaaS styling.
+- Grok session `019fbe43-f9e0-7e73-87c5-9464978747df` returned `MODIFY` and
+  required removal of the Home upload and the three unrelated robot previews
+  while preserving the fixed trio and all public/private truth gates.
+- WorkBuddy completed a 1440px + 390px live audit in 5m22s. Its responsive and
+  evidence warnings were combined with Pro's stronger art direction rather
+  than adopting its conservative copy-only recommendation.
+- Home now uses one original non-IP Mothcat art-direction board across Listing
+  Spin, Blind-box Reveal and Social Flash. It is explicitly not described as a
+  customer Pack or generated result. The old three-robot pseudo-Pack is gone.
+- Create keeps the existing Lab-only/public and invited/private state machine;
+  only its editorial shell and scoped accent variables changed. No generation,
+  auth, ledger, recovery, Storage or Stripe code changed.
+- Chrome verified Home and Create at 1440/390 with zero horizontal overflow;
+  the 358x56 mobile hero CTA reaches the exact Seller Pack route; public Create
+  exposes no visible file input.
+- Complete evidence, final screenshots and verification commands:
+  `docs/evidence/editorial-frontdoor-2026-08-02/README.md`.

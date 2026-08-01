@@ -12,11 +12,13 @@ export function Logo({
   showWord = true,
   className = "",
   wordClassName = "text-[19px]",
+  accent = "#CBFF3D",
 }: {
   size?: number;
   showWord?: boolean;
   className?: string;
   wordClassName?: string;
+  accent?: string;
 }) {
   const rawId = useId().replace(/:/g, "");
   const sheenId = `pikbo-sheen-${rawId}`;
@@ -31,7 +33,7 @@ export function Logo({
         aria-hidden="true"
         className="shrink-0"
       >
-        <rect x="1" y="1" width="30" height="30" rx="9.5" fill="#CBFF3D" />
+        <rect x="1" y="1" width="30" height="30" rx="9.5" fill={accent} />
         <rect
           x="1"
           y="1"
@@ -57,7 +59,7 @@ export function Logo({
           className={`font-display font-extrabold leading-none tracking-[-0.03em] text-white ${wordClassName}`}
         >
           {site.name}
-          <span className="text-[#CBFF3D]">.</span>
+          <span style={{ color: accent }}>.</span>
         </span>
       )}
     </span>

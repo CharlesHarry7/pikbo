@@ -2394,7 +2394,7 @@ assert.match(guidesSrc24, /toy-unboxing-video-from-one-photo/);
 
 assert.match(
   fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /data-home-format-preview=\{format\.slug\}[\s\S]*href=\{item\.projectHref \|\| item\.href\}/
+  /data-home-same-sku-storyboard[\s\S]*data-home-format-preview=\{format\.slug\}/
 );
 assert.match(
   fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
@@ -3893,7 +3893,7 @@ assert.match(deliveryPackSrc, /Sales fidelity|includeQc/);
 assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 
 
-// Homepage V2: fixed Launch Pack → product path → eight distinct Recipe proofs.
+// Homepage V4: one truthful same-SKU storyboard → fixed Launch Pack path.
 const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero|HomeViralWall|home-create/);
 const homeHeroSrc = fs.readFileSync(
@@ -3902,18 +3902,16 @@ const homeHeroSrc = fs.readFileSync(
 );
 assert.match(
   homeHeroSrc,
-  /One toy photo\.[\s\S]*Three product videos\./
+  /Turn one toy photo into a[\s\S]*collector-ready launch\./
 );
 assert.match(
   homeHeroSrc,
   /data-home-hero|href=["']\/create\?mode=seller-pack["']/
 );
-assert.match(homeHeroSrc, /HeroUpload,[\s\S]*HomeLaunchAccess/);
-assert.match(
-  homeHeroSrc,
-  /<HeroUpload access=\{launchAccess\} credits=\{credits\} \/>/
-);
-assert.match(homeHeroSrc, /canUsePrivateLaunch|Public format preview · no upload/);
+assert.match(homeHeroSrc, /data-home-same-sku-storyboard/);
+assert.match(homeHeroSrc, /Pikbo Lab art-direction storyboard/);
+assert.match(homeHeroSrc, /Public format preview · no upload/);
+assert.doesNotMatch(homeHeroSrc, /HeroUpload|canUsePrivateLaunch|fetchMe/);
 assert.match(homeHeroSrc, /id=["']home-create["']/);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeViralWall.tsx"),
@@ -3926,7 +3924,7 @@ assert.match(
 assert.match(homeWallSrc, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWallSrc, /href=\{item\.href\}/);
 assert.match(homeWallSrc, /project_open|recipe_use/);
-assert.match(homePageSrc, /HomeCinemaHero items=|data-home-upgrade="launch-pack"/);
+assert.match(homePageSrc, /<HomeCinemaHero \/>|data-home-upgrade="launch-pack"/);
 assert.doesNotMatch(
   [homePageSrc, homeHeroSrc, homeWallSrc, appShell].join("\n"),
   /Supabase|cached ledger|state machine|internal status|credits ledger/i
