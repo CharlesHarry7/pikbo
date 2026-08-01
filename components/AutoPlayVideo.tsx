@@ -297,7 +297,7 @@ export function AutoPlayVideo({
           <button
             type="button"
             onClick={togglePlayback}
-            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition hover:border-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition hover:border-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C6B59A]"
             aria-label={isPlaying ? "Pause example video" : "Play example video"}
           >
             {isPlaying ? <Pause size={16} /> : <Play size={16} />}
@@ -305,7 +305,7 @@ export function AutoPlayVideo({
           <button
             type="button"
             onClick={toggleMuted}
-            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition hover:border-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition hover:border-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C6B59A]"
             aria-label={isMuted ? "Unmute example video" : "Mute example video"}
           >
             {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
