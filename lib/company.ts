@@ -8,7 +8,6 @@ export const company = {
     "Subscription-based AI software that turns customer-owned designer-toy photos into short product-listing and social-media videos.",
   plannedOffer: {
     name: "Founding Studio",
-    monthlyPriceUsd: 49,
     launchPacksPerMonth: 3,
     videosPerPack: 3,
   },

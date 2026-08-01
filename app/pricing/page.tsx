@@ -6,12 +6,12 @@ import { company } from "@/lib/company";
 export const metadata: Metadata = {
   title: "Founding Studio · Closed Beta",
   description:
-    "Founding Studio is Pikbo's planned $49/month Launch Pack subscription for independent toy sellers. Private-beta applications are open; public checkout is closed.",
+    "Founding Studio is Pikbo's planned finite Launch Pack subscription for independent toy sellers. Private-beta applications are open; public pricing and checkout are closed.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: `Pikbo Founding Studio · Closed Beta`,
     description:
-      "A planned $49/month finite Launch Pack subscription for toy sellers. Private-beta applications are open; public checkout remains closed.",
+      "A planned finite Launch Pack subscription for toy sellers. Private-beta applications are open; public pricing and checkout remain closed.",
     url: `${site.url}/pricing`,
     siteName: site.name,
     type: "website",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `Pikbo Founding Studio · Closed Beta`,
     description:
-      "A planned $49/month finite Launch Pack subscription for toy sellers. Private-beta applications are open; public checkout remains closed.",
+      "A planned finite Launch Pack subscription for toy sellers. Private-beta applications are open; public pricing and checkout remain closed.",
     images: [site.socialImages.twitter],
   },
 };
@@ -51,9 +51,9 @@ const pricingFaqItems = [
       "The planned Pack contains three fixed formats from one toy photo: Listing Spin, Blind-box Reveal, and Social Flash.",
   },
   {
-    question: "What is the planned launch price?",
+    question: "When will pricing be announced?",
     answer:
-      "The current Founding Studio launch candidate is $49 per month for three Launch Packs, or nine videos. The final paid offer will be shown before any charge.",
+      "The final Founding Studio price will be announced after the private beta validates delivery quality and cost. The complete paid offer will be shown before any charge.",
   },
   {
     question: "Will the subscription be unlimited?",
@@ -119,13 +119,12 @@ export default function PricingPage() {
                 </span>
               </div>
               <p className="mt-7 text-4xl font-black tracking-[-0.055em]">
-                ${company.plannedOffer.monthlyPriceUsd}
-                <span className="text-base text-[#F7F4ED]/45"> / month planned</span>
+                Price pending
               </p>
               <p className="mt-3 max-w-md text-sm leading-6 text-[#F7F4ED]/50">
                 The current launch candidate includes {company.plannedOffer.launchPacksPerMonth} Launch
                 Packs ({company.plannedOffer.launchPacksPerMonth * company.plannedOffer.videosPerPack} videos) per month. The final paid offer will be shown before
-                any charge. There is no public checkout today.
+                any charge. There is no public price or checkout today. There is no Free plan comparison while the single Founding Studio offer remains closed.
               </p>
 
               <Link

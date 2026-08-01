@@ -10,10 +10,9 @@ Newest first. One block per meaningful landing.
   Pikbo Labs LLC, a Wyoming LLC, with founder-operated remote activity from
   Beijing and an explicit statement that Pikbo does not claim a US office.
 - About, Pricing, Terms and Privacy now share one truthful business state:
-  invited private beta, public checkout closed, Founding Studio planned at
-  $49/month for three Launch Packs (nine videos), with the final offer shown
-  before any charge. No customer, revenue, US-office or live-payment claim was
-  added.
+  invited private beta, public pricing/checkout closed, and Founding Studio
+  planned as three Launch Packs (nine videos), with final pricing shown before
+  any charge. No customer, revenue, US-office or live-payment claim was added.
 - Refund terms cover cancellation of future renewal, a seven-day unused
   first-purchase refund, duplicate/incorrect charges, confirmed failed-job
   allowance restoration, uncertain-outcome reconciliation and stronger local

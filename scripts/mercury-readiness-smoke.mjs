@@ -40,7 +40,6 @@ const publicBusinessSources = [
 assert.match(company, /Pikbo Labs LLC/);
 assert.match(company, /Wyoming/);
 assert.match(company, /remote from Beijing, China/);
-assert.match(company, /monthlyPriceUsd:\s*49/);
 assert.match(company, /launchPacksPerMonth:\s*3/);
 assert.match(company, /videosPerPack:\s*3/);
 
@@ -48,8 +47,8 @@ assert.match(site, /supportEmail:\s*`support@\$\{SITE_DOMAIN\}`/);
 assert.match(contact, /does not claim a US office or\s+storefront/);
 assert.match(contact, /public checkout is closed/);
 assert.match(contact, /Private beta/);
-assert.match(pricing, /planned \$49\/month/i);
-assert.match(pricing, /There is no public checkout today/);
+assert.match(pricing, /Price pending/);
+assert.match(pricing, /There is no public price or checkout today/);
 assert.match(pricing, /Apply to the private beta/);
 
 for (const rule of [
@@ -82,5 +81,5 @@ for (const source of publicBusinessSources) {
 }
 
 console.log(
-  "mercury-readiness-smoke: PASS (legal entity, truthful beta, planned pricing, support/refund surfaces)"
+  "mercury-readiness-smoke: PASS (legal entity, truthful beta, price-pending offer, support/refund surfaces)"
 );
