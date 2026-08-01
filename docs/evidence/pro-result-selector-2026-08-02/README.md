@@ -59,3 +59,16 @@ Passed locally:
 - `npm run typecheck`
 - `npm run lint`
 - `npm run build` — 198/198 routes
+
+## Frozen Preview gate
+
+- Frozen head: `f5d42ab5948f7251db1e621d8b79846df199c5d5`.
+- Preview: `https://pikbo-pmzedq6q9-pi-kbo.vercel.app`.
+- GitHub CI and Vercel: success.
+- Grok final code/safety review: **GO, P0=0**. The public-first state exposes
+  only cached samples until `/api/me` proves private eligibility.
+- WorkBuddy final live 1440/390 review: **GO, P0=0**. The CTA is enabled on the
+  first frame and opens
+  `/create?mode=seller-pack&source=home-preview&try=1&sample=scout`; the three
+  same-SKU directions and Vinyl / Plush / Mecha labels fit without horizontal
+  overflow or a mobile navigation overlay.
