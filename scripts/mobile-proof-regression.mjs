@@ -57,8 +57,13 @@ assert.match(
 );
 assert.match(
   batch,
-  /<SellerPackSteps step=\{sellerStep\} demoMode=\{demoMode\} \/>/,
+  /<SellerPackSteps step=\{sellerStep\} demoMode=\{displayDemoMode\} \/>/,
   "Seller Pack must pass the authoritative fail-closed mode into its steps"
+);
+assert.match(
+  batch,
+  /const displayDemoMode = hasBoundPrivatePack && !image \? false : demoMode/,
+  "a server-verified recovered Pack must not be mislabeled as a public Lab preview"
 );
 assert.doesNotMatch(
   zh,
