@@ -1,6 +1,6 @@
 # Pikbo board — claim before you code
 
-**Last human intent:** Make the public website itself the product front door: one owned toy photo → the fixed three-video Launch Pack → private Library, with no empty suite shells or dead-end “preview” journey. Public Live and payment remain quality-gated.
+**Last human intent:** Make Pikbo's legal, contact, refund, and private-beta operating information complete and truthful for a Mercury reapplication. Public Live and payment remain quality-gated; do not invent customers, revenue, or a US operating address.
 
 Update this file in the same PR/commit as your work start/finish.
 
@@ -14,6 +14,7 @@ Legend: `todo` · `doing` · `review` · `done` · `blocked`
 
 | ID | Outcome | Owner | Status | PR / branch | Reviewer gate |
 |---|---|---|---|---|---|
+| MERCURY-READINESS | Publish truthful legal/contact/refund/private-beta operating information and prepare a consistent Mercury reapplication packet | Codex | review | `agent/gpt/mercury-readiness` | Company/contact/refund/pricing/legal source complete; typecheck, lint, focused smokes, 198-page build, 167 rendered-route truth check and local link check pass. Deploy waits for a working `support@pikbo.ai` mailbox/forwarder and owner production GO; no payment/public generation change or invented evidence. |
 | HOME-V1 | Immersive 8-demo toy Recipe home → auditable project → Create in ≤2 clicks | Codex | done | main via PR #50 | GitHub CI #476 green; 390/768/1440 browser proof, 8 distinct cached demos, Project/Recipe analytics, SEO/trust and 193-route build passed |
 | CTRL-RESET | Close stale PRs, close R2 and enforce one active task per agent | Codex | done | main via PR #45 | Isolated worktrees and the one-task queue are now mandatory |
 | R0-NET | Unexpected-exit reservation safety without double release/refund | Codex / Grok | done | main via PR #47 | GitHub CI #466 green; capture throw/failure withheld, 0 release calls, behavior test in real CI |

@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { site } from "@/lib/site";
+import { company } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "Founding Studio · Closed Beta",
   description:
-    "Founding Studio is Pikbo's closed-beta Launch Pack subscription for independent toy sellers. Public checkout is not open.",
+    "Founding Studio is Pikbo's planned $49/month Launch Pack subscription for independent toy sellers. Private-beta applications are open; public checkout is closed.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: `Pikbo Founding Studio · Closed Beta`,
     description:
-      "One finite Launch Pack subscription for toy sellers. Public checkout remains closed.",
+      "A planned $49/month finite Launch Pack subscription for toy sellers. Private-beta applications are open; public checkout remains closed.",
     url: `${site.url}/pricing`,
     siteName: site.name,
     type: "website",
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `Pikbo Founding Studio · Closed Beta`,
     description:
-      "One finite Launch Pack subscription for toy sellers. Public checkout remains closed.",
+      "A planned $49/month finite Launch Pack subscription for toy sellers. Private-beta applications are open; public checkout remains closed.",
     images: [site.socialImages.twitter],
   },
 };
@@ -42,12 +43,17 @@ const pricingFaqItems = [
   {
     question: "Can I subscribe to Founding Studio today?",
     answer:
-      "No. Pikbo is still validating private delivery and recovery with invited toy sellers, so public checkout remains closed.",
+      "Not through public checkout. Pikbo is accepting applications for an invited private beta while validating delivery and recovery. Applying is free and is not a purchase.",
   },
   {
     question: "What is included in one Launch Pack?",
     answer:
       "The planned Pack contains three fixed formats from one toy photo: Listing Spin, Blind-box Reveal, and Social Flash.",
+  },
+  {
+    question: "What is the planned launch price?",
+    answer:
+      "The current Founding Studio launch candidate is $49 per month for three Launch Packs, or nine videos. The final paid offer will be shown before any charge.",
   },
   {
     question: "Will the subscription be unlimited?",
@@ -89,7 +95,8 @@ export default function PricingPage() {
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-6 text-black/54 sm:text-lg sm:leading-7">
             A finite subscription for independent toy sellers who need the same
-            three launch assets for every new SKU.
+            three launch assets for every new SKU. Private-beta applications
+            are open; public payment is not.
           </p>
         </div>
 
@@ -112,24 +119,30 @@ export default function PricingPage() {
                 </span>
               </div>
               <p className="mt-7 text-4xl font-black tracking-[-0.055em]">
-                Not on sale yet
+                ${company.plannedOffer.monthlyPriceUsd}
+                <span className="text-base text-[#F7F4ED]/45"> / month planned</span>
               </p>
               <p className="mt-3 max-w-md text-sm leading-6 text-[#F7F4ED]/50">
-                Pricing and the monthly Pack allowance will be announced when
-                the private beta is ready to open. There is no public checkout
-                today. There is no Free plan comparison while the single
-                Founding Studio offer remains closed.
+                The current launch candidate includes {company.plannedOffer.launchPacksPerMonth} Launch
+                Packs ({company.plannedOffer.launchPacksPerMonth * company.plannedOffer.videosPerPack} videos) per month. The final paid offer will be shown before
+                any charge. There is no public checkout today.
               </p>
 
               <Link
-                href="/create?mode=seller-pack&source=pricing-preview&try=1&sample=scout"
+                href="/contact"
                 className="mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#CBFF3D] px-6 text-sm font-black text-[#0A0A0A] transition hover:-translate-y-0.5 hover:bg-[#D4FF62] sm:w-auto"
               >
-                Preview the three formats
+                Apply to the private beta
               </Link>
               <p className="mt-2 text-[10px] font-semibold text-[#F7F4ED]/34">
-                Pikbo Lab samples only · no product-photo input · no payment
+                Free application · no card · no payment
               </p>
+              <Link
+                href="/create?mode=seller-pack&source=pricing-preview&try=1&sample=scout"
+                className="mt-4 inline-block text-xs font-bold text-[#F7F4ED]/58 underline decoration-white/20 underline-offset-4 hover:text-[#CBFF3D]"
+              >
+                Preview the three Pikbo Lab formats
+              </Link>
             </div>
 
             <div className="overflow-hidden rounded-[1.4rem] border border-white/12">
@@ -174,7 +187,7 @@ export default function PricingPage() {
           >
             Before Founding Studio opens
           </h2>
-          <div className="mt-5 grid gap-px overflow-hidden rounded-[1.4rem] border border-black/12 bg-black/12 md:grid-cols-3">
+          <div className="mt-5 grid gap-px overflow-hidden rounded-[1.4rem] border border-black/12 bg-black/12 md:grid-cols-2 lg:grid-cols-4">
             {pricingFaqItems.map((item) => (
               <article key={item.question} className="bg-[#F7F4ED] p-5">
                 <h3 className="text-sm font-black leading-5">

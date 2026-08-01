@@ -59,11 +59,13 @@ export const COLD_START_MARKETING_INDEX_PATHS = [
 
 /** Legal surfaces kept indexable (not marketing crawl budget). */
 export const COLD_START_LEGAL_INDEX_PATHS = [
+  "/contact",
   "/privacy",
+  "/refund",
   "/terms",
 ] as const;
 
-/** Full sitemap / robots allowlist = marketing five + legal. */
+/** Full sitemap allowlist = proof-gated marketing pages + public legal/support pages. */
 export const COLD_START_INDEX_PATHS = [
   ...COLD_START_MARKETING_INDEX_PATHS,
   ...COLD_START_LEGAL_INDEX_PATHS,

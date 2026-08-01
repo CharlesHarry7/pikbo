@@ -35,6 +35,14 @@
 - 生产继续 `validation` / `softLive=false` / `paid=false`，直到非生产 SQL、私有对象、Worker-only 结算、错账/越权测试和真实调用门槛全部通过。
 - Stripe 只补测试模式、幂等和订阅到账代码；没有真实质量与成本证据前不开放收费。
 
+### 2026-08-01 owner override — Mercury reapplication readiness
+
+- 唯一任务：`MERCURY-READINESS`，分支 `agent/gpt/mercury-readiness`。
+- 补齐真实的公司、联系、退款和私测运营信息；网站必须明确 Pikbo Labs LLC 的业务、当前私测状态和支付关闭状态。
+- 准备重新申请 Mercury 的一致性资料包，区分 Wyoming 注册代理地址、公司邮寄地址和北京真实经营/居住地址。
+- 禁止虚构美国办公室、客户、收入、合同或交易；不因银行审核而开放尚未通过质量门槛的支付或公开生成。
+- 生产发布、Mercury 协议接受与最终提交仍需老板本人明确确认。
+
 ---
 
 ## 死序优先级（不可跳级）
