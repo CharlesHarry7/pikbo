@@ -1939,8 +1939,8 @@ export function BatchStudio({
       <div className="space-y-4">
         {sellerPackActive && (
           <div className="space-y-3">
-            <div className="rounded-[1.35rem] border border-white/10 bg-[#16141C] px-3.5 py-3 text-xs text-[var(--fg-muted)] shadow-[0_24px_72px_-50px_rgba(0,0,0,1)]">
-              <p className="font-semibold text-[#C6B59A]">
+            <div className="rounded-[0.9rem] border border-white/[0.08] bg-[#121214] px-3.5 py-3 text-xs text-[var(--fg-muted)]">
+              <p className="font-semibold text-[#C8FF3D]">
                 {displayDemoMode
                   ? "Launch Pack — 3 cached prototype previews"
                   : "Launch Pack — 3 private clips / 30 credits"}
@@ -1958,23 +1958,23 @@ export function BatchStudio({
                 {SELLER_PACK_ITEMS.map((item, index) => (
                   <article
                     key={item.key}
-                    className="min-w-0 rounded-xl border border-white/[0.08] bg-[#1E1B26] p-2.5 text-[#F3EFE6] sm:p-3"
+                    className="min-w-0 rounded-xl border border-white/[0.08] bg-[#1A1A1E] p-2.5 text-[#F4F4F5] sm:p-3"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[9px] font-medium uppercase tracking-[0.17em] text-[#C45C4A]">
+                      <span className="text-[9px] font-medium uppercase tracking-[0.13em] text-[#C8FF3D]">
                         0{index + 1}
                       </span>
-                      <span className="hidden rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-medium text-[#C6B59A] sm:inline-flex">
+                      <span className="hidden rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-medium text-white/58 sm:inline-flex">
                         {item.aspectRatio} · {item.durationSec}s
                       </span>
                     </div>
                     <p className="mt-6 text-[11px] font-semibold leading-tight sm:text-sm">
                       {item.label}
                     </p>
-                    <p className="mt-1 hidden text-[10px] font-normal text-[#F3EFE6]/42 sm:block">
+                    <p className="mt-1 hidden text-[10px] font-normal text-[#F4F4F5]/42 sm:block">
                       {item.channel}
                     </p>
-                    <p className="mt-2 text-[9px] font-medium text-[#F3EFE6]/52 sm:text-[10px]">
+                    <p className="mt-2 text-[9px] font-medium text-[#F4F4F5]/52 sm:text-[10px]">
                       {displayDemoMode
                         ? "Cached Lab preview · 0 credits"
                         : "Private output · 10 credits"}
@@ -2041,10 +2041,10 @@ export function BatchStudio({
               id="seller-pack-photo"
               htmlFor="seller-pack-photo-input"
               tabIndex={0}
-              className={`flex aspect-video cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[1.35rem] border bg-[#16141C] transition-all duration-200 hover:border-[#C6B59A]/45 hover:bg-[#1E1B26] ${
+              className={`flex aspect-video cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[0.9rem] border bg-[#121214] transition-all duration-200 hover:border-[#C8FF3D]/45 hover:bg-[#1A1A1E] ${
                 image
                   ? "border-white/12 ring-1 ring-white/5"
-                  : "border-[#C6B59A]/28"
+                  : "border-[#C8FF3D]/28"
               }`}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
@@ -2067,7 +2067,7 @@ export function BatchStudio({
                 />
               ) : (
                 <span className="px-4 text-center text-sm text-[var(--fg-dim)]">
-                  <span className="mb-2 block text-[9px] font-semibold uppercase tracking-[0.22em] text-[#C45C4A]" aria-hidden>
+                  <span className="mb-2 block text-[9px] font-semibold uppercase tracking-[0.14em] text-[#C8FF3D]" aria-hidden>
                     Product input
                   </span>
                   Drop or paste one rights-owned toy photo for the whole{" "}
@@ -2091,7 +2091,7 @@ export function BatchStudio({
             <div
               id="seller-pack-photo"
               data-public-pack-preview="lab-only"
-              className="flex aspect-video flex-col items-center justify-center overflow-hidden rounded-[1.35rem] border border-[#C6B59A]/24 bg-[#16141C]"
+              className="flex aspect-video flex-col items-center justify-center overflow-hidden rounded-[0.9rem] border border-[#C8FF3D]/24 bg-[#121214]"
             >
               {image && labStill ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -2102,7 +2102,7 @@ export function BatchStudio({
                 />
               ) : (
                 <span className="max-w-sm px-5 text-center text-sm leading-6 text-[var(--fg-dim)]">
-                  <span className="mb-2 block text-[9px] font-semibold uppercase tracking-[0.22em] text-[#C45C4A]" aria-hidden>
+                  <span className="mb-2 block text-[9px] font-semibold uppercase tracking-[0.14em] text-[#C8FF3D]" aria-hidden>
                     Pikbo Lab
                   </span>
                   Public preview uses Pikbo Lab samples only.
@@ -2148,13 +2148,13 @@ export function BatchStudio({
                 <button
                   key={sample.id}
                   type="button"
-                  className="min-h-11 rounded-full border border-white/10 bg-white/[0.025] px-3 py-2.5 text-xs font-medium text-white/60 hover:border-[#C6B59A]/40 hover:text-[#C6B59A]"
+                  className="min-h-11 rounded-full border border-white/10 bg-white/[0.025] px-3 py-2.5 text-xs font-medium text-white/60 hover:border-[#C8FF3D]/40 hover:text-[#C8FF3D]"
                   onClick={() => void chooseLabSample(sample.id)}
                 >
                   Sample: {sample.label}
                 </button>
               ))}
-              <p className="w-full text-[10px] font-medium text-[#C6B59A]">
+              <p className="w-full text-[10px] font-medium text-[#C8FF3D]">
                 {privateUploadEnabled
                   ? "Lab samples stay cached. Replace the sample with your own photo for private generation."
                   : "Lab samples are archived prototypes · not a customer upload · 0 credits."}
@@ -2741,7 +2741,7 @@ export function BatchStudio({
 
       {/* Phase F: sticky mobile Seller Pack / Batch CTA above tab nav */}
       <div
-        className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-[#0C0B0F]/97 px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-16px_44px_rgba(0,0,0,0.6)] backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-[#09090B]/97 px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-16px_44px_rgba(0,0,0,0.6)] backdrop-blur-xl lg:hidden"
         data-seller-pack-sticky="mobile"
       >
         {image ? (

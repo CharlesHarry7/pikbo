@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-/* ---------- Pikbo Collector Cabinet ----------
-   A quiet, product-led system inspired by collectible packaging and gallery
-   display cases. One lacquer accent; product imagery carries the colour.
+/* ---------- Pikbo Seller Explore ----------
+   A compact, media-first creative tool. Neutral chrome stays out of the way;
+   one acid-lime action colour makes the next step unmistakable.
 ---------------------------------------------------------------- */
 :root {
   /* Offline-safe faces — no Google Fonts network at build (Phase B). */
@@ -11,42 +11,43 @@
   --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 
-  --bg: #0c0b0f;
-  --bg-soft: #16141c;
-  --card: #16141c;
-  --card-2: #1e1b26;
-  --border: rgba(243, 239, 230, 0.1);
-  --fg: #f3efe6;
-  --fg-muted: rgba(243, 239, 230, 0.6);
-  --fg-dim: rgba(243, 239, 230, 0.38);
+  --bg: #09090b;
+  --bg-soft: #121214;
+  --card: #121214;
+  --card-2: #1a1a1e;
+  --border: rgba(255, 255, 255, 0.08);
+  --fg: #f4f4f5;
+  --fg-muted: rgba(244, 244, 245, 0.56);
+  --fg-dim: rgba(244, 244, 245, 0.34);
 
-  --paper: #ede8df;
-  --brand: #c45c4a;
-  --brand-2: #c6b59a;
-  --mint: #c6b59a;
-  --lime: #c6b59a;
-  --cobalt: #c6b59a;
-  --coral: #c45c4a;
-  --signal: #c6b59a;
+  --paper: #f4f4f5;
+  --brand: #c8ff3d;
+  --brand-2: #c8ff3d;
+  --mint: #c8ff3d;
+  --lime: #c8ff3d;
+  --cobalt: #c8ff3d;
+  --coral: #ff5d5d;
+  --signal: #c8ff3d;
 
-  --cabinet-void: #0c0b0f;
-  --cabinet-surface: #16141c;
-  --cabinet-surface-2: #1e1b26;
-  --cabinet-bone: #f3efe6;
-  --cabinet-stone: rgba(243, 239, 230, 0.6);
-  --cabinet-paper: #ede8df;
-  --cabinet-ink: #121014;
-  --cabinet-lacquer: #c45c4a;
-  --cabinet-foil: #c6b59a;
-  --cabinet-hairline: rgba(243, 239, 230, 0.1);
+  /* Compatibility aliases while product surfaces migrate off cabinet names. */
+  --cabinet-void: #09090b;
+  --cabinet-surface: #121214;
+  --cabinet-surface-2: #1a1a1e;
+  --cabinet-bone: #f4f4f5;
+  --cabinet-stone: rgba(244, 244, 245, 0.56);
+  --cabinet-paper: #f4f4f5;
+  --cabinet-ink: #09090b;
+  --cabinet-lacquer: #c8ff3d;
+  --cabinet-foil: #c8ff3d;
+  --cabinet-hairline: rgba(255, 255, 255, 0.08);
 
-  --grad: linear-gradient(135deg, #c6b59a 0%, #c45c4a 100%);
+  --grad: linear-gradient(135deg, #d9ff77 0%, #c8ff3d 100%);
   --grad-soft: linear-gradient(
     135deg,
-    rgba(198, 181, 154, 0.12),
-    rgba(243, 239, 230, 0.035)
+    rgba(200, 255, 61, 0.1),
+    rgba(255, 255, 255, 0.025)
   );
-  --brand-glow: 0 0 40px rgba(196, 92, 74, 0.16);
+  --brand-glow: 0 0 34px rgba(200, 255, 61, 0.14);
 
   --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.04);
   --shadow-md: 0 12px 40px -16px rgba(0, 0, 0, 0.75);
@@ -57,11 +58,11 @@
   --background: var(--bg);
   --foreground: var(--fg);
   --primary: var(--mint);
-  --primary-foreground: #121014;
+  --primary-foreground: #09090b;
   --muted: var(--bg-soft);
   --muted-foreground: var(--fg-muted);
   --accent: rgba(255, 255, 255, 0.06);
-  --ring: rgba(198, 181, 154, 0.62);
+  --ring: rgba(200, 255, 61, 0.72);
 }
 
 @theme inline {
@@ -126,14 +127,14 @@ h1,
   inset: -10% -5% auto;
   height: 520px;
   background:
-    radial-gradient(46% 46% at 50% -4%, rgba(198, 181, 154, 0.1), transparent 70%),
-    radial-gradient(38% 38% at 84% 6%, rgba(196, 92, 74, 0.08), transparent 66%);
+    radial-gradient(46% 46% at 50% -4%, rgba(200, 255, 61, 0.07), transparent 70%),
+    radial-gradient(38% 38% at 84% 6%, rgba(255, 255, 255, 0.04), transparent 66%);
   pointer-events: none;
   z-index: 0;
 }
 
 .text-grad {
-  background: linear-gradient(100deg, #f3efe6 0%, #c6b59a 54%, #c45c4a 100%);
+  background: linear-gradient(100deg, #f4f4f5 0%, #f4f4f5 60%, #c8ff3d 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -158,14 +159,14 @@ h1,
   padding: 0.8rem 1.4rem;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08) inset,
-    0 12px 34px -22px rgba(198, 181, 154, 0.72);
+    0 12px 34px -22px rgba(200, 255, 61, 0.62);
   letter-spacing: -0.01em;
 }
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12) inset,
-    0 16px 40px -22px rgba(198, 181, 154, 0.8);
+    0 16px 40px -22px rgba(200, 255, 61, 0.72);
 }
 .btn-primary:active {
   transform: translateY(0);
@@ -202,7 +203,7 @@ h1,
   background:
     radial-gradient(
       120% 80% at 50% 0%,
-      rgba(198, 181, 154, 0.07),
+      rgba(200, 255, 61, 0.055),
       transparent 55%
     ),
     #030305;
@@ -265,7 +266,7 @@ h1,
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--cabinet-foil);
+  color: var(--fg-muted);
 }
 
 /* Video tiles */
@@ -282,7 +283,7 @@ h1,
 }
 .video-tile:hover {
   transform: translateY(-2px);
-  border-color: rgba(198, 181, 154, 0.36);
+  border-color: rgba(200, 255, 61, 0.34);
   box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.8);
 }
 .video-tile video {
@@ -338,8 +339,8 @@ select {
 
 /* On-brand text selection */
 ::selection {
-  background: rgba(255, 212, 71, 0.9);
-  color: #17131d;
+  background: rgba(200, 255, 61, 0.9);
+  color: #09090b;
 }
 
 /* Accessible, on-brand keyboard focus ring */
@@ -358,7 +359,7 @@ input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(74, 85, 255, 0.18);
+  box-shadow: 0 0 0 3px rgba(200, 255, 61, 0.18);
 }
 
 /* Editorial eyebrow — uppercase tracked with a lime lead line */
@@ -388,7 +389,7 @@ select:focus {
 }
 .card-i:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 212, 71, 0.34);
+  border-color: rgba(200, 255, 61, 0.34);
   box-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
 }
 

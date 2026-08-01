@@ -4,13 +4,14 @@ Newest first. One block per meaningful landing.
 
 ---
 
-### 2026-08-01 — [gpt/grok/workbuddy] Premium Collector Cabinet correction
+### 2026-08-01 — [gpt/grok/workbuddy] Seller Explore correction
 
-- The previous ChinaJoy pass was visually rejected: saturated cobalt/coral/yellow cards, thick borders, rotated labels and hard offset shadows read as a children’s activity page rather than a paid collectible-toy sales tool.
-- Home, Create, Library and Pricing now use one quiet exhibition system: void black, two cabinet surfaces, warm bone, muted stone, foil beige and one lacquer-red accent. Toy imagery supplies the remaining colour; the product preview is visually louder than the chrome.
-- The mobile Home screen keeps the value statement, working sample CTA and first Pack image in view. Create keeps the exact three-format outcome and primary action; Library retains owner-only recovery; Pricing remains one closed-beta offer with no fake price or checkout.
-- Grok independently returned a visual NO-GO on the prior implementation and prescribed this exact single direction in session `019fbd7c-32a7-7ab3-8042-c9cbe760ca8e`. Its frozen review APPROVED the implementation in `019fbd96-3391-7b22-917a-27b5058375a9`; the only P1—pre-existing lime logo/language/video-focus chrome—was removed before final deployment. WorkBuddy’s existing eight-route screenshot audit at `/Users/x/Documents/Codex/2026-07-26/yon/outputs/pikbo-audit/pikbo-audit-report.md` is the recorded before baseline; its community and two-tier-pricing recommendations remain rejected as outside the MVP.
-- Local Chrome proof at 1440×900 and 390×844 covers Home, seller-Pack Create, Library and Pricing. TypeScript, ESLint, the 198-route production build, live-copy, SEO cold-start, engine, atomic Pack accounting, both recovery suites, Stripe billing, Launch-Pack path and private-input binding pass.
+- The owner rejected the Collector Cabinet implementation as even uglier. That verdict is accepted: large museum headlines, warm beige, lacquer red, nested display frames and low-contrast gray copy made Pikbo feel like a brand proposal rather than a tool.
+- Home, Create, Library and Pricing now share a compact Seller Explore shell: neutral near-black chrome, 12–16px tool surfaces, one acid-lime action colour, tighter type and much less marketing prose. Home puts three moving product previews directly above the fold; mobile keeps the value, CTA and first video in one screen.
+- Create preserves the exact public-sample versus invited-private state, fixed three-format contract and sticky primary action. Library replaces the three-column zero-stat/debug banner with one compact account/storage status. Pricing stays one closed-beta offer with no invented price, tier or Checkout.
+- Grok independently returned the single Seller Explore direction in session `019fbda1-7a5a-71c2-8f8b-3e4aec40e0d2`: media-first tool, compact navigation, neutral surfaces and one lime action. WorkBuddy completed a new five-minute real-site audit and saved `/Users/x/Documents/Codex/2026-07-26/yon/outputs/pikbo-audit/pikbo-higgsfield-toy-redesign.md`. Its useful findings (media density, empty Library statistics, Create outcome preview) were applied; its community, creator-profile, multi-tier placeholder-price and pricing-calculator proposals are explicitly rejected as MVP-breaking feature creep.
+- Chrome proof at 1440×900 and 390×844 covers Home, seller-Pack Create, Library and Pricing: mobile Home has one primary action, no horizontal overflow and shows the CTA plus the first moving result above the fold; public Create exposes no file input. The complete fixed Launch-Pack, recovery, billing, SEO, typecheck, lint and 198-route production-build gate passes.
+- Grok's final frozen-diff review returned **APPROVE** with no P0 in terminal session `94818`. Its only concrete surface bug, two stale sticky-bar background colours, was corrected before the final gate.
 - No API, auth, Storage, database, Provider, credit accounting, recovery, Stripe, DNS, production flag or real-model budget changed.
 
 ---

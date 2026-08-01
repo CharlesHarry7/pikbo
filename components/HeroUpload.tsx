@@ -87,22 +87,21 @@ export function HeroUpload({
               "/create?mode=seller-pack&source=home-preview&try=1&sample=scout"
             );
           }}
-          className="group flex min-h-28 w-full items-center gap-4 rounded-[1rem] border border-white/10 bg-[#EDE8DF] p-4 text-left text-[#121014] transition hover:bg-[#F3EFE6] sm:min-h-32 sm:p-5"
+          className="group flex min-h-[76px] w-full items-center gap-3 rounded-[0.9rem] bg-[#C8FF3D] p-3 text-left text-[#09090B] transition hover:bg-[#D6FF70] sm:min-h-[82px] sm:p-4"
         >
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#C45C4A] text-white shadow-[0_10px_26px_-16px_rgba(196,92,74,0.9)] sm:h-14 sm:w-14">
-            <Play className="h-5 w-5 fill-current sm:h-6 sm:w-6" strokeWidth={2.4} />
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#09090B] text-[#C8FF3D] sm:h-11 sm:w-11">
+            <Play className="h-4 w-4 fill-current sm:h-5 sm:w-5" strokeWidth={2.4} />
           </span>
           <span className="min-w-0">
-            <span className="block text-base font-semibold tracking-[-0.025em] sm:text-lg">
+            <span className="block text-sm font-bold tracking-[-0.02em] sm:text-base">
               Try a sample Launch Pack
             </span>
-            <span className="mt-1 block text-[11px] font-medium leading-5 text-[#121014]/56">
+            <span className="mt-0.5 block text-[10px] font-medium leading-4 text-[#09090B]/62 sm:text-[11px]">
               Instant format preview · no sign-in · no photo upload
             </span>
-            <span className="mt-3 inline-flex rounded-full border border-[#121014]/12 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.14em] text-[#121014]/52">
-              Pikbo Lab prototype · 0 credits
-            </span>
           </span>
+          <span className="ml-auto text-lg" aria-hidden>↗</span>
+          <span className="sr-only">Pikbo Lab prototype · 0 credits</span>
         </button>
       </div>
     );
@@ -122,25 +121,25 @@ export function HeroUpload({
           setHover(false);
           goWithFile(event.dataTransfer.files?.[0]);
         }}
-        className={`group flex min-h-28 cursor-pointer items-center gap-4 rounded-[1rem] border p-4 transition focus-within:ring-2 focus-within:ring-[#C6B59A] sm:min-h-32 sm:p-5 ${
+        className={`group flex min-h-[76px] cursor-pointer items-center gap-3 rounded-[0.9rem] border p-3 transition focus-within:ring-2 focus-within:ring-[#C8FF3D] sm:min-h-[82px] sm:p-4 ${
           hover
-            ? "border-[#C6B59A]/65 bg-[#C6B59A]/10"
-            : "border-white/10 bg-[#1E1B26] hover:border-white/20"
+            ? "border-[#C8FF3D]/75 bg-[#C8FF3D]/10"
+            : "border-[#C8FF3D]/32 bg-[#121214] hover:border-[#C8FF3D]/62"
         }`}
       >
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/10 bg-[#C45C4A] text-white sm:h-14 sm:w-14">
-          <ImagePlus className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} />
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#C8FF3D] text-[#09090B] sm:h-11 sm:w-11">
+          <ImagePlus className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.4} />
         </span>
         <span className="min-w-0">
-          <span className="block text-base font-semibold tracking-[-0.025em] text-[#F3EFE6] sm:text-lg">
+          <span className="block text-sm font-bold tracking-[-0.02em] text-[#F4F4F5] sm:text-base">
             {busy
               ? "Opening your private Launch Pack…"
               : "Upload your toy photo"}
           </span>
-          <span className="mt-1 block text-[11px] font-medium leading-5 text-[#F3EFE6]/48">
+          <span className="mt-0.5 block text-[10px] font-medium leading-4 text-[#F4F4F5]/48 sm:text-[11px]">
             or tap to choose · PNG, JPG, WebP · under 2 MB
           </span>
-          <span className="mt-3 inline-flex rounded-full border border-[#C6B59A]/28 bg-[#C6B59A]/[0.08] px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.13em] text-[#C6B59A]">
+          <span className="mt-1.5 inline-flex text-[8px] font-semibold uppercase tracking-[0.1em] text-[#C8FF3D]">
             {access === "private-ready"
               ? "Private beta · 30-credit Pack available"
               : `Private beta · ${credits} credits · Pack needs 30`}

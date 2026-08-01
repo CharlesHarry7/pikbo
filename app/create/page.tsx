@@ -84,32 +84,32 @@ export default async function CreatePage({
   // Wave A: Seller Pack is a Create mode, not a separate suite door.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return (
-      <div className="min-h-screen bg-[#0C0B0F] pb-28 text-[#F3EFE6] lg:pb-8">
-        <div className="border-b border-white/[0.08] bg-[#0C0B0F] px-4 py-7 text-[#F3EFE6] sm:px-8 sm:py-10">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4">
+      <div className="min-h-screen bg-[#09090B] pb-28 text-[#F4F4F5] lg:pb-8">
+        <div className="border-b border-white/[0.08] bg-[#09090B] px-3 py-5 text-[#F4F4F5] sm:px-6 sm:py-6">
+          <div className="mx-auto flex max-w-[1500px] flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="border-l border-[#C45C4A] pl-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#C6B59A]">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.13em] text-[#C8FF3D]">
                 Toy Drop Workbench · 3 fixed formats
                 <span className="sr-only">
                   {" "}
                   · Public preview or invited private generation
                 </span>
               </p>
-              <h1 className="mt-4 font-display text-4xl font-medium leading-[0.94] tracking-[-0.055em] sm:text-6xl">
+              <h1 className="mt-2 font-display text-3xl font-semibold leading-tight tracking-[-0.045em] sm:text-4xl">
                 Build one complete toy drop.
               </h1>
             </div>
-            <p className="max-w-xl text-xs font-normal leading-5 text-[#F3EFE6]/50 sm:text-sm">
+            <p className="max-w-xl text-xs leading-5 text-white/48 sm:text-sm">
               Start with a Pikbo Lab toy and inspect all three outcomes. Invited
               sellers can replace it with one rights-owned product photo for
               private generation and Library delivery.
             </p>
           </div>
-          <div className="mx-auto mt-6 flex max-w-7xl flex-wrap gap-2 text-[9px] font-medium uppercase tracking-[0.13em] text-[#F3EFE6]/58">
-            <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5">01 · Listing Spin</span>
-            <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5">02 · Blind-box Reveal</span>
-            <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5">03 · Social Flash</span>
-            <span className="rounded-full border border-[#C6B59A]/24 px-3 py-1.5 text-[#C6B59A]">Listing Spin is the verified technical run</span>
+          <div className="mx-auto mt-4 flex max-w-[1500px] flex-wrap gap-1.5 text-[9px] font-medium uppercase tracking-[0.1em] text-white/50">
+            <span className="rounded-full border border-white/10 bg-white/[0.035] px-2.5 py-1">01 · Listing Spin</span>
+            <span className="rounded-full border border-white/10 bg-white/[0.035] px-2.5 py-1">02 · Blind-box Reveal</span>
+            <span className="rounded-full border border-white/10 bg-white/[0.035] px-2.5 py-1">03 · Social Flash</span>
+            <span className="rounded-full border border-[#C8FF3D]/25 px-2.5 py-1 text-[#C8FF3D]">Listing Spin is the verified technical run</span>
           </div>
           <p className="sr-only">
             In public preview, no product photo is accepted or processed.
@@ -117,7 +117,7 @@ export default async function CreatePage({
         </div>
 
         <div
-          className="mx-auto max-w-7xl px-3 sm:px-8"
+          className="mx-auto max-w-[1500px] px-3 sm:px-6"
           data-launch-pack-workbench
         >
           {/* Public samples and invited private generation share one gated workbench. */}

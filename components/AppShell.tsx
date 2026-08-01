@@ -49,13 +49,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   }, [path]);
 
   return (
-    <div className="flex min-h-screen min-w-0 flex-col bg-[#0C0B0F] text-[#F3EFE6]">
-      <header className="sticky top-0 z-50 hidden h-16 items-center border-b border-white/[0.08] bg-[#0C0B0F]/94 px-7 backdrop-blur-xl lg:flex">
+    <div className="flex min-h-screen min-w-0 flex-col bg-[#09090B] text-[#F4F4F5]">
+      <header className="sticky top-0 z-50 hidden h-[54px] items-center border-b border-white/[0.08] bg-[#09090B]/94 px-5 backdrop-blur-xl lg:flex">
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
           <Logo size={30} />
         </Link>
         <nav
-          className="mx-auto flex items-center gap-9"
+          className="mx-auto flex items-center gap-7"
           aria-label="Primary navigation"
           data-primary-create-href="/create?mode=seller-pack"
         >
@@ -67,15 +67,15 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 aria-current={on ? "page" : undefined}
                 className={cn(
-                  "relative py-5 text-[13px] font-bold transition-colors",
+                  "relative py-[18px] text-[12px] font-semibold transition-colors",
                   on
-                    ? "text-[#F3EFE6]"
-                    : "text-[#F3EFE6]/42 hover:text-[#F3EFE6]"
+                    ? "text-[#C8FF3D]"
+                    : "text-[#F4F4F5]/46 hover:text-[#F4F4F5]"
                 )}
               >
                 {item.label}
                 {on ? (
-                  <span className="absolute inset-x-0 bottom-0 h-px bg-[#C45C4A]" />
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[#C8FF3D]" />
                 ) : null}
               </Link>
             );
@@ -87,7 +87,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-white/[0.08] bg-[#0C0B0F]/95 px-3 backdrop-blur-xl lg:hidden">
+      <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-white/[0.08] bg-[#09090B]/95 px-3 backdrop-blur-xl lg:hidden">
         <Link href="/" aria-label="Pikbo home">
           <Logo size={26} wordClassName="text-base" />
         </Link>
@@ -95,7 +95,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           <LanguageSwitcher compact />
           <CreditsBadge compact />
           {create ? (
-            <span className="rounded-full border border-[#C6B59A]/24 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.13em] text-[#C6B59A]">
+            <span className="rounded-full bg-[#C8FF3D] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#09090B]">
               {t("cta.launchPack")}
             </span>
           ) : null}
@@ -103,12 +103,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="min-w-0 flex-1 bg-[#0C0B0F]">{children}</main>
+        <main className="min-w-0 flex-1 bg-[#09090B]">{children}</main>
         {!hideFooter ? <Footer /> : null}
       </div>
 
       <nav
-        className="sticky bottom-0 z-50 grid grid-cols-5 border-t border-white/[0.08] bg-[#0C0B0F]/97 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+        className="sticky bottom-0 z-50 grid grid-cols-5 border-t border-white/[0.08] bg-[#09090B]/97 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
         aria-label="Mobile navigation"
       >
         {MOBILE_NAV.map((item) => {
@@ -120,13 +120,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               aria-current={on ? "page" : undefined}
               className={cn(
                 "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
-                on ? "text-[#F3EFE6]" : "text-[#F3EFE6]/34"
+                on ? "text-[#C8FF3D]" : "text-[#F4F4F5]/38"
               )}
             >
               <span
                 className={cn(
                   "mb-1 h-1 w-1 rounded-full",
-                  on ? "bg-[#C45C4A]" : "bg-transparent"
+                  on ? "bg-[#C8FF3D]" : "bg-transparent"
                 )}
                 aria-hidden
               />

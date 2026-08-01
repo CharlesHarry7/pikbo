@@ -38,75 +38,42 @@ export function LibraryStorageBanner({
   const email = me?.auth?.email;
 
   return (
-    <section className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent">
-      <div className="grid gap-0 sm:grid-cols-3">
-        <div className="border-b border-white/10 p-4 sm:border-b-0 sm:border-r">
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--mint)]">
-            Device
-          </p>
-          <p className="mt-1 text-lg font-black tabular-nums text-white">
-            {deviceCount}
-          </p>
-          <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-            Saved only in this browser
-          </p>
-        </div>
-        <div className="border-b border-white/10 p-4 sm:border-b-0 sm:border-r">
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/50">
-            In progress
-          </p>
-          <p className="mt-1 text-lg font-black tabular-nums text-white">
-            {sessionOpen}
-            <span className="ml-1 text-xs font-semibold text-white/40">
-              open
-            </span>
-          </p>
-          <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-            Jobs started in this browser session
-          </p>
-        </div>
-        <div className="p-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/50">
-            Account
-          </p>
-          {signedIn ? (
-            <>
-              <p className="mt-1 truncate text-sm font-bold text-white">
-                {email || "Signed in"}
-              </p>
-              <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-                {privateCount > 0
-                  ? `${privateCount} private clip${privateCount === 1 ? "" : "s"} · owner-only cloud download`
-                  : privateGenerationEnabled
-                    ? "Private generation access enabled · completed clips persist here"
-                    : "Signed in · private generation access is not enabled"}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="mt-1 text-sm font-bold text-white/80">Guest</p>
-              <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-                {authReady
-                  ? "Sign in to save private generations to your account"
-                  : "Auth not configured · Library stays on-device"}
-              </p>
-              {authReady ? (
-                <Link
-                  href="/login?next=/library"
-                  className="mt-2 inline-block text-[11px] font-bold text-[var(--mint)] hover:underline"
-                >
-                  Sign in →
-                </Link>
-              ) : null}
-            </>
-          )}
-        </div>
-      </div>
-      <div className="border-t border-white/10 bg-black/30 px-4 py-2">
-        <p className="text-[10px] text-white/40">
-          Private results persist by account when access is enabled · device
-          imports stay local
+    <section className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[0.8rem] border border-white/[0.08] bg-[#1A1A1E] px-3.5 py-3">
+      <div className="min-w-0">
+        <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#C8FF3D]">
+          {signedIn ? email || "Private account Library" : "Guest Library"}
         </p>
+        <p className="mt-1 text-[10px] leading-4 text-white/43 sm:text-xs">
+          {signedIn
+            ? privateCount > 0
+              ? `${privateCount} owner-only clip${privateCount === 1 ? "" : "s"} ready`
+              : privateGenerationEnabled
+                ? "Completed private clips persist here after refresh."
+                : "Private generation access is not enabled."
+            : authReady
+              ? "Sign in to recover private Packs across sessions."
+              : "Public preview mode · no private assets are stored here."}
+        </p>
+      </div>
+      <div className="flex items-center gap-1.5 text-[9px] font-semibold">
+        {deviceCount > 0 ? (
+          <span className="rounded-full border border-white/10 px-2.5 py-1.5 text-white/52">
+            {deviceCount} Device-local clip{deviceCount === 1 ? "" : "s"}
+          </span>
+        ) : null}
+        {sessionOpen > 0 ? (
+          <span className="rounded-full border border-[#C8FF3D]/30 px-2.5 py-1.5 text-[#C8FF3D]">
+            {sessionOpen} in progress
+          </span>
+        ) : null}
+        {!signedIn && authReady ? (
+          <Link
+            href="/login?next=/library"
+            className="rounded-full bg-[#C8FF3D] px-3 py-1.5 text-[#09090B] hover:bg-[#D6FF70]"
+          >
+            Sign in
+          </Link>
+        ) : null}
       </div>
     </section>
   );

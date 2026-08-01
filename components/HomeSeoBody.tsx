@@ -38,21 +38,21 @@ export function HomeSeoBody() {
   };
 
   return (
-    <section className="bg-[#EDE8DF] px-5 py-18 text-[#121014] sm:px-8 sm:py-24">
+    <section className="border-t border-white/[0.08] bg-[#09090B] px-3 py-10 text-[#F4F4F5] sm:px-5 sm:py-14">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <div className="mx-auto max-w-[1500px]">
+        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9B493B]">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#C8FF3D]">
               Built around the product
             </p>
-            <h2 className="mt-4 font-display text-4xl font-medium tracking-[-0.055em] sm:text-6xl">
+            <h2 className="mt-2 max-w-2xl font-display text-2xl font-semibold tracking-[-0.04em] sm:text-4xl">
               See the input, the output, and the limits.
             </h2>
-            <p className="mt-6 max-w-xl text-sm font-normal leading-6 text-black/56 sm:text-base">
+            <p className="mt-4 max-w-xl text-xs leading-5 text-white/50 sm:text-sm sm:leading-6">
               {site.name} is for designer-toy sellers and studios that already
               have clear product photos but need motion for listings, launches,
               and social posts. Public prototypes stay labeled until Pikbo can
@@ -60,13 +60,13 @@ export function HomeSeoBody() {
             </p>
             <nav
               aria-label="Focused toy video guides"
-              className="mt-7 flex flex-wrap gap-2"
+              className="mt-5 flex flex-wrap gap-2"
             >
               {HIGH_INTENT_PAGES.map(([href, label]) => (
                 <Link
                   key={href}
                   href={href}
-                  className="rounded-full border border-black/14 bg-white/28 px-3 py-2 text-[11px] font-semibold text-black/58 transition hover:border-black/35 hover:bg-white/55 hover:text-black"
+                  className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-2 text-[10px] font-semibold text-white/58 transition hover:border-[#C8FF3D]/45 hover:text-[#C8FF3D]"
                 >
                   {label} ↗
                 </Link>
@@ -74,7 +74,7 @@ export function HomeSeoBody() {
             </nav>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-2">
             {[
               ["Input", "1 seller-owned toy photo"],
               ["Output", "3 fixed 5-second formats"],
@@ -83,21 +83,21 @@ export function HomeSeoBody() {
             ].map(([label, value]) => (
               <div
                 key={label}
-                className="rounded-[1.25rem] border border-black/10 bg-white/35 p-5"
+                className="rounded-[0.9rem] border border-white/[0.08] bg-[#121214] p-4"
               >
-                <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#9B493B]">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.13em] text-[#C8FF3D]">
                   {label}
                 </p>
-                <p className="mt-7 text-xl font-semibold tracking-[-0.03em]">
+                <p className="mt-4 text-base font-semibold tracking-[-0.02em]">
                   {value}
                 </p>
               </div>
             ))}
-            <div className="rounded-[1.25rem] bg-[#121014] p-5 text-white sm:col-span-2">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#C6B59A]">
+            <div className="rounded-[0.9rem] border border-white/[0.08] bg-[#161619] p-4 text-white sm:col-span-2">
+              <p className="text-[8px] font-semibold uppercase tracking-[0.13em] text-[#C8FF3D]">
                 Private delivery, limited processing
               </p>
-              <p className="mt-5 max-w-2xl text-sm leading-6 text-white/62">
+              <p className="mt-3 max-w-2xl text-xs leading-5 text-white/52">
                 Real beta photos are sent to the generation provider only for
                 the requested clips. Finished videos are copied to Pikbo&apos;s
                 private storage. Pikbo does not send your image, prompt, email,
@@ -107,15 +107,15 @@ export function HomeSeoBody() {
           </div>
         </div>
 
-        <div className="mt-18 grid gap-3 border-t border-black/15 pt-12 lg:grid-cols-2">
-          <article className="rounded-[1.4rem] border border-black/10 bg-[#E4DDD1] p-6 sm:p-8">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-black/42">
+        <div className="mt-10 grid gap-2 border-t border-white/[0.08] pt-8 lg:grid-cols-2">
+          <article className="rounded-[0.9rem] border border-white/[0.08] bg-[#121214] p-5">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.13em] text-white/36">
               Private beta · invite only
             </p>
-            <h3 className="mt-4 text-2xl font-semibold tracking-[-0.035em]">
+            <h3 className="mt-3 text-lg font-semibold tracking-[-0.025em]">
               What is available now
             </h3>
-            <p className="mt-4 text-sm leading-6 text-black/58">
+            <p className="mt-3 text-xs leading-5 text-white/48">
               Public visitors can inspect cached examples without processing an
               upload. When private Live is enabled, eligible invited accounts
               can create private 5-second 720p results and recover completed
@@ -125,14 +125,14 @@ export function HomeSeoBody() {
             </p>
           </article>
 
-          <article className="rounded-[1.4rem] border border-black/10 bg-white/38 p-6 sm:p-8">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-black/42">
+          <article className="rounded-[0.9rem] border border-white/[0.08] bg-[#121214] p-5">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.13em] text-white/36">
               Before publishing
             </p>
-            <h3 className="mt-4 text-2xl font-semibold tracking-[-0.035em]">
+            <h3 className="mt-3 text-lg font-semibold tracking-[-0.025em]">
               Treat every generated angle as a draft.
             </h3>
-            <p className="mt-4 text-sm leading-6 text-black/58">
+            <p className="mt-3 text-xs leading-5 text-white/48">
               Review sculpt, paint, logos, packaging, accessories, and
               proportions against the physical product. Pikbo does not
               guarantee exact unseen details, sales, reach, or rankings.
@@ -140,15 +140,15 @@ export function HomeSeoBody() {
           </article>
         </div>
 
-        <div className="mt-18">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9B493B]">
+        <div className="mt-10">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#C8FF3D]">
             FAQ
           </p>
-          <div className="mt-4 grid gap-px overflow-hidden rounded-[1.4rem] border border-black/12 bg-black/12 md:grid-cols-2">
+          <div className="mt-3 grid gap-px overflow-hidden rounded-[0.9rem] border border-white/[0.08] bg-white/[0.08] md:grid-cols-2">
             {FAQ.map((item) => (
-              <div key={item.q} className="bg-[#F3EFE6] p-6 sm:p-7">
-                <h3 className="text-base font-semibold">{item.q}</h3>
-                <p className="mt-3 text-sm leading-6 text-black/56">{item.a}</p>
+              <div key={item.q} className="bg-[#121214] p-5">
+                <h3 className="text-sm font-semibold">{item.q}</h3>
+                <p className="mt-2 text-xs leading-5 text-white/48">{item.a}</p>
               </div>
             ))}
           </div>

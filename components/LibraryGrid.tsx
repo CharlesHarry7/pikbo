@@ -1418,7 +1418,7 @@ export function LibraryGrid() {
 
   const stickyCta = (
     <div
-      className="fixed inset-x-0 bottom-[4.75rem] z-40 flex items-center gap-3 border-t border-white/10 bg-[#0C0B0F]/97 px-3 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-[4.75rem] z-40 flex items-center gap-3 border-t border-white/10 bg-[#09090B]/97 px-3 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
       data-library-sticky="mobile"
       data-library-active-jobs={activeJobs}
     >
