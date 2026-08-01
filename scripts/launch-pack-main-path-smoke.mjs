@@ -46,7 +46,8 @@ assert.match(heroUpload, /file\.size > 2_000_000/);
 assert.match(heroUpload, /className="sr-only"/);
 assert.match(heroUpload, /if \(!privateAccess\)/);
 assert.match(heroUpload, /data-home-launch-pack="public-preview"/);
-assert.match(heroUpload, /No photo upload · choose a Pikbo Lab sample/);
+assert.match(heroUpload, /Try a sample Launch Pack/);
+assert.match(heroUpload, /Choose a Pikbo Lab toy · no photo upload/);
 assert.match(
   heroUpload,
   /Public preview · 0 credits · your image is not processed/
@@ -134,13 +135,18 @@ for (const slug of [
 }
 assert.match(create, /Launch Pack · 3 fixed formats/);
 assert.match(create, /Public preview or invited private generation/);
-assert.match(create, /no product photo\s+is accepted or processed/);
+assert.match(create, /One photo\. Three launch videos\./);
+assert.match(create, /Public visitors can try the three fixed formats/);
 assert.match(create, /Only Listing Spin has passed/);
 assert.doesNotMatch(create, /Launch Pack — 3 private videos · 30 credits/);
 assert.doesNotMatch(create, /Launch Pack — 12 recipes/);
 
 // Launch Pack submission still keeps the existing rights and generate actions.
 assert.match(batch, /data-launch-pack-primary-action="2"/);
+assert.match(batch, /data-seller-pack-outcomes="preset-first"/);
+assert.match(batch, /Cached Lab preview · 0 credits/);
+assert.match(batch, /Private output · 10 credits/);
+assert.doesNotMatch(batch, /Per-output formats are fixed/);
 assert.match(
   batch,
   /data-launch-pack-primary-action=\{image \? "3" : "1"\}/

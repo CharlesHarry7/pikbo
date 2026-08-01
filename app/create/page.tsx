@@ -96,13 +96,14 @@ export default async function CreatePage({
                 </span>
               </p>
               <h1 className="mt-1 font-display text-3xl font-black tracking-[-0.055em] sm:text-5xl">
-                Preview a Launch Pack.
+                One photo. Three launch videos.
               </h1>
             </div>
             <p className="max-w-xl text-xs font-semibold leading-5 text-black/52 sm:text-sm">
-              Choose a Pikbo Lab sample to preview the three fixed formats.
-              Public preview: no product photo is accepted or processed.
-              Invited sellers can sign in for private generation.
+              Public visitors can try the three fixed formats with a Pikbo Lab
+              sample; no product photo is accepted or processed in public
+              preview. Invited sellers can upload one rights-owned toy photo
+              for private generation.
             </p>
           </div>
           <p className="mx-auto mt-3 max-w-7xl text-[10px] font-bold text-amber-800/75">

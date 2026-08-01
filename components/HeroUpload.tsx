@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, Play } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { track } from "@/lib/analytics";
@@ -91,19 +91,16 @@ export function HeroUpload({
           className="group flex min-h-36 w-full items-center gap-4 rounded-2xl border border-dashed border-white/16 bg-white/[0.045] p-4 text-left transition hover:border-[#c8ff3d]/55 hover:bg-white/[0.065] disabled:cursor-wait disabled:opacity-70 sm:min-h-40 sm:p-5"
         >
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#c8ff3d] text-black shadow-[0_0_26px_rgba(200,255,61,0.2)] sm:h-14 sm:w-14">
-            <ImagePlus
-              className="h-5 w-5 sm:h-6 sm:w-6"
-              strokeWidth={2.4}
-            />
+            <Play className="h-5 w-5 fill-current sm:h-6 sm:w-6" strokeWidth={2.4} />
           </span>
           <span className="min-w-0">
             <span className="block text-base font-black tracking-[-0.025em] text-white sm:text-lg">
               {access === "checking"
                 ? "Checking private beta access…"
-                : "Preview the 3 Launch Pack formats"}
+                : "Try a sample Launch Pack"}
             </span>
             <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/42">
-              No photo upload · choose a Pikbo Lab sample
+              Choose a Pikbo Lab toy · no photo upload
             </span>
             <span className="mt-3 inline-flex rounded-full border border-white/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.13em] text-[#c8ff3d]">
               Public preview · 0 credits · your image is not processed
@@ -141,7 +138,7 @@ export function HeroUpload({
           <span className="block text-base font-black tracking-[-0.025em] text-white sm:text-lg">
             {busy
               ? "Opening your private Launch Pack…"
-              : "Upload one rights-owned toy photo"}
+              : "Upload your toy photo"}
           </span>
           <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/42">
             or tap to choose · PNG, JPG, WebP · under 2 MB

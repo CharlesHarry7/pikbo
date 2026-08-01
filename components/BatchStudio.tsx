@@ -1950,6 +1950,38 @@ export function BatchStudio({
                   ? "Preview three formats at 0 credits. Cached prototypes do not process your upload."
                   : "Review the 30-credit quote, then create three independent private clips."}
               </p>
+              <div
+                className="mt-3 grid gap-2 sm:grid-cols-3"
+                data-seller-pack-outcomes="preset-first"
+                aria-label="Fixed Launch Pack outcomes"
+              >
+                {SELLER_PACK_ITEMS.map((item, index) => (
+                  <article
+                    key={item.key}
+                    className="rounded-xl border border-white/10 bg-black/30 p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[9px] font-black uppercase tracking-[0.16em] text-[var(--mint)]">
+                        0{index + 1}
+                      </span>
+                      <span className="rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-bold text-white/55">
+                        {item.aspectRatio} · {item.durationSec}s
+                      </span>
+                    </div>
+                    <p className="mt-5 text-sm font-black text-white">
+                      {item.label}
+                    </p>
+                    <p className="mt-1 text-[10px] font-semibold text-white/45">
+                      {item.channel}
+                    </p>
+                    <p className="mt-3 text-[10px] font-bold text-[var(--mint)]">
+                      {displayDemoMode
+                        ? "Cached Lab preview · 0 credits"
+                        : "Private output · 10 credits"}
+                    </p>
+                  </article>
+                ))}
+              </div>
               {/* Y5 + CD B3: full Director Plan when still ready; strip before photo */}
               {hasBoundPrivatePack && !image ? null : demoMode ? null : sellerDirectorPlan?.ready ? (
                 <div className="mt-2" data-seller-pack-plan="director">
@@ -1958,25 +1990,17 @@ export function BatchStudio({
               ) : (
                 <div className="mt-2">{creditStrip}</div>
               )}
-              <ul className="mt-2 space-y-0.5 text-[10px] text-[var(--fg-dim)]">
-                {SELLER_PACK_ITEMS.map((item) => (
-                  <li key={item.key}>
-                    {item.label} → {item.channel}
-                    {!displayDemoMode
-                      ? ` · ${CREDITS_PER_VIDEO} credits`
-                      : ` · ${item.aspectRatio} · ${item.durationSec}s`}
-                  </li>
-                ))}
-              </ul>
             </div>
             <SellerPackSteps step={sellerStep} demoMode={displayDemoMode} />
-            <p
-              data-seller-pack-recovery="durable-pointer"
-              className="rounded-lg border border-amber-300/20 bg-amber-300/[0.04] px-3 py-2 text-[10px] leading-relaxed text-amber-100/85"
-            >
-              Your account remembers the active Pack, its original private
-              input, and every available result after refresh or sign-in.
-            </p>
+            {hasBoundPrivatePack ? (
+              <p
+                data-seller-pack-recovery="durable-pointer"
+                className="rounded-lg border border-amber-300/20 bg-amber-300/[0.04] px-3 py-2 text-[10px] leading-relaxed text-amber-100/85"
+              >
+                This active Pack, its original private input, and every
+                available result are restored after refresh or sign-in.
+              </p>
+            ) : null}
             {sellerPackRecoveryNote ? (
               <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
                 {sellerPackRecoveryNote}
@@ -2132,77 +2156,70 @@ export function BatchStudio({
           ) : null}
         </div>
 
-        <div className={`grid gap-2 ${isSellerPack ? "" : "grid-cols-2"}`}>
-          {!isSellerPack ? (
-            <>
-              <div>
-                <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
-                  Duration
-                </p>
-                <div className="mt-1 flex gap-1">
-                  {([5, 10] as const).map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      disabled={isFree && d === 10}
-                      onClick={() => setDuration(d)}
-                      className={`flex-1 rounded-lg border py-1.5 text-xs font-semibold disabled:opacity-40 ${
-                        effectiveDuration === d
-                          ? "border-[var(--brand)]"
-                          : "border-[var(--border)] text-[var(--fg-muted)]"
-                      }`}
-                    >
-                      {d}s{isFree && d === 10 ? " · paid" : ""}
-                    </button>
-                  ))}
-                </div>
-                {isFree && (
-                  <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
-                    {trialDone
-                      ? "Free Mini trial used · Lab demos still free"
-                      : `${liveContractLabel} fixed`}
-                    {clipsLeft !== null && !trialDone
-                      ? ` · ~${clipsLeft} live left`
-                      : ""}
-                  </p>
-                )}
+        {!isSellerPack ? (
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
+                Duration
+              </p>
+              <div className="mt-1 flex gap-1">
+                {([5, 10] as const).map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    disabled={isFree && d === 10}
+                    onClick={() => setDuration(d)}
+                    className={`flex-1 rounded-lg border py-1.5 text-xs font-semibold disabled:opacity-40 ${
+                      effectiveDuration === d
+                        ? "border-[var(--brand)]"
+                        : "border-[var(--border)] text-[var(--fg-muted)]"
+                    }`}
+                  >
+                    {d}s{isFree && d === 10 ? " · paid" : ""}
+                  </button>
+                ))}
               </div>
-              <div>
-                <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
-                  Aspect
+              {isFree && (
+                <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
+                  {trialDone
+                    ? "Free Mini trial used · Lab demos still free"
+                    : `${liveContractLabel} fixed`}
+                  {clipsLeft !== null && !trialDone
+                    ? ` · ~${clipsLeft} live left`
+                    : ""}
                 </p>
-                <div className="mt-1 flex gap-1">
-                  {(["9:16", "1:1", "16:9"] as const).map((a) => (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() => setAspectRatio(a)}
-                      className={`flex-1 rounded-lg border py-1.5 text-[10px] font-semibold ${
-                        aspectRatio === a
-                          ? "border-[var(--brand)]"
-                          : "border-[var(--border)] text-[var(--fg-muted)]"
-                      }`}
-                    >
-                      {a}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] p-3 text-xs text-[var(--fg-muted)]">
-              Per-output formats are fixed: Listing Spin uses 1:1; Reveal and
-              Social Flash use 9:16. All three are 5 seconds.
+              )}
             </div>
-          )}
-        </div>
+            <div>
+              <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
+                Aspect
+              </p>
+              <div className="mt-1 flex gap-1">
+                {(["9:16", "1:1", "16:9"] as const).map((a) => (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => setAspectRatio(a)}
+                    className={`flex-1 rounded-lg border py-1.5 text-[10px] font-semibold ${
+                      aspectRatio === a
+                        ? "border-[var(--brand)]"
+                        : "border-[var(--border)] text-[var(--fg-muted)]"
+                    }`}
+                  >
+                    {a}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
 
-        <div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold text-[var(--fg-muted)]">
-              {isSellerPack ? "Included formats" : "Presets in this batch"}
-            </p>
-            {!isSellerPack ? (
+        {!isSellerPack ? (
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold text-[var(--fg-muted)]">
+                Presets in this batch
+              </p>
               <div className="flex flex-wrap gap-1">
                 <button
                   type="button"
@@ -2223,15 +2240,8 @@ export function BatchStudio({
                   Clear
                 </button>
               </div>
-            ) : (
-              <span className="rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/10 px-2.5 py-1 text-[10px] font-bold text-[var(--mint)]">
-                Fixed launch formats
-              </span>
-            )}
-          </div>
-          {!isSellerPack ? (
-            <>
-              <div className="mt-2 flex flex-wrap gap-1">
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1">
                 <button
                   type="button"
                   onClick={() => setCatFilter("all")}
@@ -2258,8 +2268,8 @@ export function BatchStudio({
                     {c.label}
                   </button>
                 ))}
-              </div>
-              <div className="mt-2 flex max-h-56 flex-wrap gap-2 overflow-y-auto">
+            </div>
+            <div className="mt-2 flex max-h-56 flex-wrap gap-2 overflow-y-auto">
                 {visiblePresets.map((p) => {
                   const on = selected.includes(p.slug);
                   return (
@@ -2277,35 +2287,14 @@ export function BatchStudio({
                     </button>
                   );
                 })}
-              </div>
-              {validInitial && validInitial.length > 0 && (
-                <p className="mt-2 text-[10px] text-[var(--mint)]">
-                  Pre-selected from tool page link ({validInitial.length} effects).
-                </p>
-              )}
-            </>
-          ) : (
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
-              {SELLER_PACK_ITEMS.map((item, index) => (
-                <article
-                  key={item.key}
-                  className="rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] p-3"
-                >
-                  <span className="text-[10px] font-black text-[var(--mint)]">
-                    0{index + 1}
-                  </span>
-                  <p className="mt-1 text-xs font-bold">{item.label}</p>
-                  <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
-                    {item.aspectRatio} · 5s · {item.channel}
-                  </p>
-                  <p className="mt-2 text-[10px] font-semibold text-[var(--fg-muted)]">
-                    {demoMode ? "Cached preview" : "10 credits"}
-                  </p>
-                </article>
-              ))}
             </div>
-          )}
-        </div>
+            {validInitial && validInitial.length > 0 && (
+              <p className="mt-2 text-[10px] text-[var(--mint)]">
+                Pre-selected from tool page link ({validInitial.length} effects).
+              </p>
+            )}
+          </div>
+        ) : null}
 
         {image && !demoMode ? (
           <label

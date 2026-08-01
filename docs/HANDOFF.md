@@ -2261,3 +2261,25 @@ Newest first. One block per meaningful landing.
   Provider, Stripe, DNS and public/paid state remain unchanged.
 - Full evidence:
   `docs/evidence/PRIVATE_PREVIEW_READINESS_2026-07-30.md`.
+
+### 2026-08-01 — [gpt/grok/workbuddy] Preset-first Seller Pack front door
+
+- Applied ImgAny's outcome-first interaction and ShipAny's SaaS clarity to the
+  existing Launch Pack instead of migrating frameworks or adding product
+  features. Create now leads with the three seller outcomes and their channels,
+  ratios, durations and honest cached/private credit state.
+- Removed three duplicate explanations: the compact outcome list, the fixed
+  format paragraph and the second outcome-card grid. The durable recovery notice
+  is now progressive: it appears only for a server-bound active Pack.
+- Public Home uses a Play action labelled `Try a sample Launch Pack`; invited
+  private access keeps the upload action. Public Create rendered with zero
+  enabled file inputs, three cached/0-credit outcome cards, no first-run recovery
+  notice and zero horizontal overflow.
+- No `app/api/**`, `lib/**`, Storage, Provider, credits, recovery, retry,
+  download, Stripe or production flags changed.
+- Grok frozen-diff review: **APPROVE**
+  `019fbc5e-f05c-7981-9411-ee2e5b7b6c00`. WorkBuddy final verdict:
+  **APPROVE** `pikbo-preset-frontdoor-final-verdict-20260801`.
+- Verification: Launch-Pack main path, product proof, live copy, SEO cold start,
+  engine, Seller Pack atomic accounting, recovery ledger, reconciliation,
+  Stripe billing, TypeScript, ESLint and the 198-route production build pass.

@@ -66,7 +66,7 @@ assert(
 );
 assert(
   create.includes("Launch Pack · 3 fixed formats") &&
-    create.includes("Preview a Launch Pack.") &&
+    create.includes("One photo. Three launch videos.") &&
     create.includes("Listing Spin") &&
     create.includes("Blind-box Reveal") &&
     create.includes("Social Flash") &&
