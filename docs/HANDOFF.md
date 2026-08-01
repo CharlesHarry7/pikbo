@@ -4,6 +4,19 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-08-01 — [gpt/grok/workbuddy] Collectible style-study correction
+
+- The three generic glossy astronaut/robot prototypes are removed from the Home merchandising surface. They collapsed very different collectible audiences into one interchangeable AI-mascot aesthetic and were not credible evidence of a designer-toy seller product.
+- Home now leads with three original, project-bound still studies that deliberately span distinct collectible categories: art vinyl/resin, precision mecha and plush-vinyl hybrid. The cards are non-interactive, visibly labelled `Original style study`, and cannot be mistaken for Listing Spin, Blind-box Reveal or Social Flash outputs.
+- Truth is explicit: `Original Pikbo style studies for category direction — not Launch Pack outputs or customer uploads.` The fixed three video formats remain a separate, functional explanation below the style board; no still is mapped to a video format, customer, upload, ratio or duration.
+- The restrained Seller Explore shell remains intact. This is a media correction, not another theme rewrite: compact chrome, neutral near-black surfaces, one acid-lime action, one dominant visual board and no new page, model, backend, pricing or public capability.
+- Built-in image generation produced the three original PNG studies; optimized JPEG derivatives live in `public/style-studies/`. No third-party IP, logo, brand name, customer asset or downloaded ChinaJoy image is used.
+- Grok independently returned **APPROVE** on the frozen diff in session `437e8202-90da-4cde-88aa-38034ae513d4`: art vinyl is hero-ready, mecha is the quality anchor with expectation risk, plush is usable but the weakest; the hard gate is truthful style-board labelling rather than false output proof. WorkBuddy's existing real-site review remains `/Users/x/Documents/Codex/2026-07-26/yon/outputs/pikbo-audit/pikbo-higgsfield-toy-redesign.md`; its public-community and placeholder-pricing proposals remain rejected as scope creep.
+- Local Chrome proof at desktop and 390×844 shows three studies, zero links inside those cards, the truth line, one primary CTA and no horizontal overflow. PASS: live-copy, SEO cold-start, engine, Seller Pack atomic, recovery ledger/reconciliation, Stripe billing, Launch Pack main path, private-input binding, TypeScript, ESLint and the 198-route production build. The only build warning is the pre-existing T6 NFT trace warning.
+- Production remains unchanged and validation-only.
+
+---
+
 ### 2026-08-01 — [gpt/grok/workbuddy] Seller Explore correction
 
 - The owner rejected the Collector Cabinet implementation as even uglier. That verdict is accepted: large museum headlines, warm beige, lacquer red, nested display frames and low-contrast gray copy made Pikbo feel like a brand proposal rather than a tool.

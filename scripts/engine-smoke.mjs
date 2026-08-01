@@ -2392,10 +2392,20 @@ assert.match(guidesSrc24, /designer-toy-ai-video-vs-generic-tools/);
 assert.match(guidesSrc24, /seller-pack-workflow-listing-reveal-hook/);
 assert.match(guidesSrc24, /toy-unboxing-video-from-one-photo/);
 
-assert.match(
-  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /data-home-format-preview=\{format\.slug\}[\s\S]*href=\{item\.projectHref \|\| item\.href\}/
+const homeCinemaHeroSrc = fs.readFileSync(
+  join(root, "components/HomeCinemaHero.tsx"),
+  "utf8"
 );
+assert.match(
+  homeCinemaHeroSrc,
+  /data-home-style-study=\{study\.slug\}[\s\S]*Original style study[\s\S]*Original Pikbo style studies for category direction/
+);
+const styleStudyTemplateSrc =
+  homeCinemaHeroSrc.match(/STYLE_STUDIES\.map\([\s\S]*?<\/article>/)?.[0] ?? "";
+assert.ok(styleStudyTemplateSrc, "Home must render the collectible style-study cards");
+assert.doesNotMatch(styleStudyTemplateSrc, /<Link|<a\s/);
+assert.doesNotMatch(styleStudyTemplateSrc, /Listing Spin|Blind-box Reveal|Social Flash/);
+assert.doesNotMatch(styleStudyTemplateSrc, /9:16|1:1|5 sec/);
 assert.match(
   fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
   /data-home-upgrade=["']launch-pack["'][\s\S]*\/create\?mode=seller-pack/

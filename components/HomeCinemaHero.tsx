@@ -1,32 +1,34 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { HeroUpload, type HomeLaunchAccess } from "@/components/HeroUpload";
-import { track } from "@/lib/analytics";
 import { canUsePrivateLaunch, displayCredits, fetchMe } from "@/lib/meClient";
 import { SELLER_PACK_LIVE_TOTAL_CREDITS } from "@/lib/sellerPackContract";
-import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
+import type { FeedItem } from "@/lib/videoFeed";
 
-const FORMAT_DEFS = [
+const STYLE_STUDIES = [
   {
-    slug: "360-spin-showcase",
-    name: "Listing Spin",
-    spec: "1:1 · 5 sec",
-    use: "Shop listing",
+    slug: "art-vinyl",
+    name: "Art vinyl",
+    material: "Soft vinyl · translucent resin",
+    image: "/style-studies/art-vinyl-guardian-v1.jpg",
+    alt: "Original abstract art-vinyl guardian on a cobalt and vermilion display plinth",
   },
   {
-    slug: "blind-box-unboxing",
-    name: "Blind-box Reveal",
-    spec: "9:16 · 5 sec",
-    use: "Drop day",
+    slug: "precision-mecha",
+    name: "Precision mecha",
+    material: "Articulated ABS · die-cast detail",
+    image: "/style-studies/precision-mecha-v1.jpg",
+    alt: "Original precision mecha collectible photographed on a brushed metal turntable",
   },
   {
-    slug: "paparazzi-flash",
-    name: "Social Flash",
-    spec: "9:16 · 5 sec",
-    use: "Reels & Shorts",
+    slug: "plush-hybrid",
+    name: "Plush hybrid",
+    material: "Fleece · matte vinyl · woven textile",
+    image: "/style-studies/plush-hybrid-v1.jpg",
+    alt: "Original plush-and-vinyl hybrid collectible in a warm editorial studio",
   },
 ] as const;
 
@@ -34,10 +36,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
   const [launchAccess, setLaunchAccess] =
     useState<HomeLaunchAccess>("checking");
   const [credits, setCredits] = useState(0);
-  const formats = FORMAT_DEFS.flatMap((format) => {
-    const item = items.find((candidate) => candidate.recipeSlug === format.slug);
-    return item && hasFeedVideo(item) ? [{ format, item }] : [];
-  });
+  const archivedPrototypeCount = items.length;
 
   useEffect(() => {
     let canceled = false;
@@ -68,6 +67,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
     <section
       id="home-create"
       data-home-hero="seller-explore"
+      data-archived-prototype-count={archivedPrototypeCount}
       className="relative isolate scroll-mt-14 overflow-hidden bg-[#09090B] text-[#F4F4F5]"
       aria-labelledby="home-hero-title"
     >
@@ -87,7 +87,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
               One toy photo. Three clips that sell it.
             </h1>
             <p className="mt-3 max-w-2xl text-xs leading-5 text-white/52 sm:text-sm">
-              Three fixed seller formats. No prompt writing, model hunting, or timeline editing.
+              Three fixed seller formats are shown below. This style board reflects the range of collectibles Pikbo is being built for.
             </p>
           </div>
 
@@ -97,50 +97,30 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
         </div>
 
         <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-3 sm:overflow-visible">
-          {formats.map(({ format, item }, index) => (
+          {STYLE_STUDIES.map((study, index) => (
             <article
-              key={format.slug}
+              key={study.slug}
               className="group relative min-w-[86%] snap-start overflow-hidden rounded-[0.9rem] border border-white/[0.08] bg-[#121214] sm:min-w-0"
-              data-home-format-preview={format.slug}
+              data-home-style-study={study.slug}
             >
-              <Link
-                href={item.projectHref || item.href}
-                aria-label={`Open ${format.name} archived prototype`}
-                className="absolute inset-0 z-20"
-                onClick={() =>
-                  track({
-                    event: item.projectHref ? "project_open" : "recipe_use",
-                    path: "/",
-                    recipe: format.slug,
-                    meta: { source: "home_format_board" },
-                  })
-                }
-              />
-              <div className="aspect-[5/4] min-h-[240px] sm:min-h-0 lg:aspect-[16/10]">
-                <AutoPlayVideo
-                  poster={item.demo.poster}
-                  webm={item.demo.webm}
-                  mp4={item.demo.mp4}
-                  eager={index === 0}
-                  lazySources={index > 0}
-                  wallDense
-                  focusable={false}
-                  label={`${format.name} archived prototype`}
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+              <div className="relative aspect-[5/4] min-h-[240px] sm:min-h-0 lg:aspect-[16/10]">
+                <Image
+                  src={study.image}
+                  alt={study.alt}
+                  fill
+                  priority={index === 0}
+                  sizes="(max-width: 639px) 86vw, 33vw"
+                  className="object-cover transition duration-700 group-hover:scale-[1.015]"
                 />
               </div>
+              <span className="pointer-events-none absolute left-3 top-3 z-10 rounded-full border border-white/20 bg-black/45 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.14em] text-[#C8FF3D] backdrop-blur-md">
+                Original style study
+              </span>
               <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black via-black/70 to-transparent px-3 pb-3 pt-14 text-white">
-                <div className="flex items-end justify-between gap-3">
-                  <div>
-                    <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[#C8FF3D]">
-                      {format.use}
-                    </p>
-                    <p className="mt-1 text-sm font-bold sm:text-base">{format.name}</p>
-                  </div>
-                  <span className="rounded-full border border-white/20 bg-black/30 px-2 py-1 text-[9px] font-semibold text-white/76 backdrop-blur">
-                    {format.spec}
-                  </span>
-                </div>
+                <p className="text-sm font-bold sm:text-base">{study.name}</p>
+                <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.1em] text-white/62">
+                  {study.material}
+                </p>
               </div>
             </article>
           ))}
@@ -148,7 +128,7 @@ export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[9px] leading-4 text-white/38 sm:text-[10px]">
           <p className="max-w-4xl">
-            Separate Pikbo Lab prototypes, not one customer Pack. Listing Spin is the completed private technical check.
+            Original Pikbo style studies for category direction — not Launch Pack outputs or customer uploads.
           </p>
           <div className="flex gap-4 font-semibold">
             <a href="#pack-formats" className="text-white/66 hover:text-[#C8FF3D]">View format details</a>

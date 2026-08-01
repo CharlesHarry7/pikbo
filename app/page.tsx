@@ -67,9 +67,7 @@ const FORMATS = [
 
 export default function Home() {
   const showcase = buildHomeShowcaseFeed();
-  const lcpPoster =
-    showcase.find((item) => item.recipeSlug === "360-spin-showcase")?.demo
-      ?.poster ?? "/demos/scout-still.webp";
+  const lcpPoster = "/style-studies/art-vinyl-guardian-v1.jpg";
 
   return (
     <>
