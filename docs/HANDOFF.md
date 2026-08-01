@@ -2317,3 +2317,7 @@ Newest first. One block per meaningful landing.
   exposes no visible file input.
 - Complete evidence, final screenshots and verification commands:
   `docs/evidence/editorial-frontdoor-2026-08-02/README.md`.
+- Delivery: commit `b29efed`, PR #94, protected Preview
+  `https://pikbo-git-agent-gpteditorial-frontdoor-pi-kbo.vercel.app`; GitHub CI
+  and Vercel checks passed. The authenticated in-app browser verified the
+  deployed Home CTA and public Create truth path.

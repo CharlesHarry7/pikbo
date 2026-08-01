@@ -71,3 +71,10 @@ Passed:
 
 No real Provider request, Stripe charge, database mutation, public deploy or
 production-gate change was made for this slice.
+
+Delivery: commit `b29efed`, PR #94 and protected Vercel Preview
+`https://pikbo-git-agent-gpteditorial-frontdoor-pi-kbo.vercel.app`. GitHub CI
+and Vercel passed. The deployed Preview was rechecked through the authenticated
+in-app browser: the same-SKU board loaded, the disclosure was visible, the Home
+CTA reached Seller Pack Create, and public Create exposed zero visible file
+inputs.
