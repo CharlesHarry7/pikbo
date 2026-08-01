@@ -66,6 +66,15 @@ function hexDigest(bytes: ArrayBuffer): string {
     .join("");
 }
 
+export type PrivateToyAssetUploadStage =
+  | "reading"
+  | "hashing"
+  | "reserving"
+  | "uploading"
+  | "verifying"
+  | "ready"
+  | "error";
+
 /**
  * Invited Seller Pack input:
  * browser → short-lived signed PUT → server byte verification → ready asset id.
@@ -73,12 +82,14 @@ function hexDigest(bytes: ArrayBuffer): string {
  */
 export async function registerPrivateToyAsset(
   dataUrl: string,
-  skuLabel?: string
+  skuLabel?: string,
+  onStage?: (stage: PrivateToyAssetUploadStage) => void
 ): Promise<
   | { ok: true; inputAssetId: string; sha256: string }
   | { ok: false; code: string; error: string }
 > {
   if (!dataUrl.startsWith("data:image")) {
+    onStage?.("error");
     return {
       ok: false,
       code: "INVALID_IMAGE",
@@ -86,6 +97,7 @@ export async function registerPrivateToyAsset(
     };
   }
   try {
+    onStage?.("reading");
     const blob = await (await fetch(dataUrl)).blob();
     const mimeType = blob.type.toLowerCase();
     if (
@@ -93,6 +105,7 @@ export async function registerPrivateToyAsset(
       mimeType !== "image/png" &&
       mimeType !== "image/webp"
     ) {
+      onStage?.("error");
       return {
         ok: false,
         code: "INVALID_IMAGE_TYPE",
@@ -100,6 +113,7 @@ export async function registerPrivateToyAsset(
       };
     }
     if (blob.size < 32 || blob.size > 8 * 1024 * 1024) {
+      onStage?.("error");
       return {
         ok: false,
         code: blob.size > 8 * 1024 * 1024
@@ -109,6 +123,7 @@ export async function registerPrivateToyAsset(
       };
     }
     const bytes = await blob.arrayBuffer();
+    onStage?.("hashing");
     const sha256 = hexDigest(
       await crypto.subtle.digest("SHA-256", bytes)
     );
@@ -119,6 +134,7 @@ export async function registerPrivateToyAsset(
             .toString(36)
             .slice(2)}`;
     const authHeaders = await privateAssetAuthHeaders();
+    onStage?.("reserving");
     const prep = await fetch("/api/assets/upload-url", {
       method: "POST",
       headers: authHeaders,
@@ -149,6 +165,7 @@ export async function registerPrivateToyAsset(
       prepared.inputAssetId.length < 8 ||
       prepared.sha256 !== sha256
     ) {
+      onStage?.("error");
       return {
         ok: false,
         code: prepared.code || String(prep.status),
@@ -161,6 +178,7 @@ export async function registerPrivateToyAsset(
         typeof prepared.uploadUrl !== "string" ||
         !prepared.uploadUrl.startsWith("https://")
       ) {
+        onStage?.("error");
         return {
           ok: false,
           code: "INVALID_UPLOAD_URL",
@@ -173,18 +191,28 @@ export async function registerPrivateToyAsset(
       const uploadBody = new FormData();
       uploadBody.append("cacheControl", "3600");
       uploadBody.append("", blob);
-      await fetch(prepared.uploadUrl, {
+      onStage?.("uploading");
+      const uploaded = await fetch(prepared.uploadUrl, {
         method: "PUT",
         headers: {
           ...(prepared.headers || {}),
         },
         body: uploadBody,
       });
+      if (!uploaded.ok) {
+        onStage?.("error");
+        return {
+          ok: false,
+          code: "PRIVATE_INPUT_UPLOAD_FAILED",
+          error: "Private toy-photo upload failed before verification",
+        };
+      }
       // Always ask the owner-scoped server to verify the object. This also
       // recovers the idempotent case where Storage committed but the browser
       // lost the upload response.
     }
 
+    onStage?.("verifying");
     const complete = await fetch("/api/assets/complete", {
       method: "POST",
       headers: authHeaders,
@@ -205,6 +233,7 @@ export async function registerPrivateToyAsset(
       verified.inputAssetId !== prepared.inputAssetId ||
       verified.sha256 !== sha256
     ) {
+      onStage?.("error");
       return {
         ok: false,
         code: verified.code || String(complete.status),
@@ -213,12 +242,14 @@ export async function registerPrivateToyAsset(
           "Private toy-photo verification failed before generation",
       };
     }
+    onStage?.("ready");
     return {
       ok: true,
       inputAssetId: verified.inputAssetId,
       sha256,
     };
   } catch (error) {
+    onStage?.("error");
     return {
       ok: false,
       code: "NETWORK",

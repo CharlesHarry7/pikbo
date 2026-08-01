@@ -4,6 +4,20 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-08-02 — [gpt/grok/workbuddy] Paid four-repository audit and private-upload fail-closed
+
+- Audited the purchased `shipany-next`, `shipany-vinext`, `shipany-tanstack` and `shipany-template` repositories against Pikbo's actual seller path. They remain reference code only: no framework migration, parallel Auth/wallet, generic AI task system, public upload route, Admin, model/provider selectors, pricing rewrite or page factory was imported.
+- Kept the stronger Pikbo spine already present on PR #91: owner-scoped private input/output Storage, one input bound to the fixed three-job Pack, 30-credit atomic reserve, per-child settle/release, retry fencing, reconciliation, Library recovery and idempotent Stripe rehearsal.
+- Borrowed one interaction pattern from the paid code: explicit upload lifecycle. `registerPrivateToyAsset` now reports reading, hashing, private-object preparation, upload, server verification and ready/error. Desktop and 390px Create render those real stages with `aria-live` before any credit reservation.
+- A signed Storage PUT is now checked. Any non-2xx response returns `PRIVATE_INPUT_UPLOAD_FAILED` and stops before `/api/assets/complete`, the 30-credit reserve and Provider work. The private-input regression locks this ordering and both responsive progress surfaces.
+- Grok independently returned **APPROVE** in session `49ba14ad-b47c-479d-af40-4f76dac183de`, with no P0 and an explicit NO to copying any further paid-template modules. Its only P1 is to keep server verification authoritative, which PR #91 already does and the existing regression suite covers.
+- WorkBuddy completed the real task `审计 Pikbo 创建页面` in 3m37s and returned **APPROVE** for public `/create` at 1440×900 and 390×844: HTTP 200, one H1, no overflow, no broken images, no visible/JavaScript errors. Artifacts are under `/Users/x/Documents/Codex/2026-07-26/yon/work/audit-create-screens/`. It could not prove invited private auth and is not cited for that path.
+- Codex Chrome separately checked the exact `/create?mode=seller-pack`: desktop and 390×844 both have 0 public file inputs, 0 purchase CTAs and 0 horizontal overflow; the mobile primary action truthfully says `Preview 3 Lab formats · 0 credits`. Invited-private stage behavior is proven by source/regression rather than fabricated browser state.
+- PASS: private-input binding, live copy, SEO cold start, engine, Seller Pack atomic accounting, recovery ledger/reconciliation, Stripe billing, Launch-Pack main path, Magic Link, TypeScript, ESLint and the Next 16.2.11 198-route production build. The pre-existing T6 NFT trace warning remains the only build warning.
+- No Provider call, Storage/database mutation, Stripe action, environment/DNS change, production deploy or public/paid enablement occurred.
+
+---
+
 ### 2026-08-01 — [gpt/grok/workbuddy] Collectible style-study correction
 
 - The three generic glossy astronaut/robot prototypes are removed from the Home merchandising surface. They collapsed very different collectible audiences into one interchangeable AI-mascot aesthetic and were not credible evidence of a designer-toy seller product.

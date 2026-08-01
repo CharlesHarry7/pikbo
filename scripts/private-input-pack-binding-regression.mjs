@@ -247,6 +247,17 @@ assert.match(clientAssets, /crypto\.subtle\.digest\("SHA-256"/);
 assert.match(clientAssets, /new FormData\(\)/);
 assert.match(clientAssets, /append\("cacheControl", "3600"\)/);
 assert.match(clientAssets, /append\("", blob\)/);
+assert.match(clientAssets, /PrivateToyAssetUploadStage/);
+assert.match(
+  clientAssets,
+  /onStage\?\.\("reading"\)[\s\S]*onStage\?\.\("hashing"\)[\s\S]*onStage\?\.\("reserving"\)[\s\S]*onStage\?\.\("uploading"\)[\s\S]*onStage\?\.\("verifying"\)[\s\S]*onStage\?\.\("ready"\)/,
+  "private input upload must expose an ordered, truthful progress lifecycle"
+);
+assert.match(
+  clientAssets,
+  /const uploaded = await fetch\(prepared\.uploadUrl[\s\S]*if \(!uploaded\.ok\)[\s\S]*PRIVATE_INPUT_UPLOAD_FAILED/,
+  "a failed signed PUT must stop before server verification and Provider work"
+);
 assert.ok(
   batch.indexOf("registerPrivateToyAsset(") <
     batch.indexOf("reserveSellerPackClient({"),
@@ -287,6 +298,14 @@ assert.match(
   /accept="\.jpg,\.jpeg,\.png,\.webp,image\/jpeg,image\/png,image\/webp"/
 );
 assert.match(batch, /const demoMode = !privateUploadEnabled \|\| labStill/);
+assert.match(batch, /setPrivateInputStage/);
+assert.match(batch, /data-private-input-stage=/);
+assert.match(batch, /data-private-input-stage-mobile=/);
+assert.match(
+  batch,
+  /registerPrivateToyAsset\([\s\S]*setPrivateInputStage[\s\S]*reserveSellerPackClient\(/,
+  "the UI must report private upload progress before the 30-credit reserve"
+);
 assert.match(
   batch,
   /verifiedPackRunId === activePackRunId[\s\S]*jobs\.some\(\(job\) => Boolean\(job\.packJobId\)\)/

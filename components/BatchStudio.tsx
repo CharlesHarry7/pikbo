@@ -34,6 +34,7 @@ import {
 import {
   registerLocalAsset,
   registerPrivateToyAsset,
+  type PrivateToyAssetUploadStage,
 } from "@/lib/clientAssets";
 import { pushHistory } from "@/lib/history";
 import { CATEGORIES, PRESETS, type CategoryId } from "@/lib/presets";
@@ -309,6 +310,9 @@ export function BatchStudio({
   >(null);
   /** Wall-clock while pack/batch runs — feeds GenerateWaitStage (1–3 min Mini). */
   const [packElapsed, setPackElapsed] = useState(0);
+  /** Private input progress before the first Provider request is allowed. */
+  const [privateInputStage, setPrivateInputStage] =
+    useState<PrivateToyAssetUploadStage | null>(null);
   /** Abort in-flight pack child + rate-limit waits (parity with Create Cancel). */
   const packAbortRef = useRef<AbortController | null>(null);
   const privatePackStartIntentRef = useRef<PrivatePackStartIntent | null>(
@@ -1054,6 +1058,7 @@ export function BatchStudio({
     setError(null);
     setFailRetryAfterSec(null);
     setPackElapsed(0);
+    setPrivateInputStage(null);
     try {
       // Live Launch Pack opens one atomic 30-credit reservation and receives
       // exactly three server-created child ids. Failure is terminal for this
@@ -1070,9 +1075,11 @@ export function BatchStudio({
         if (!startIntent.inputAssetId) {
           const registeredInput = await registerPrivateToyAsset(
             image,
-            toyIdentity.sku
+            toyIdentity.sku,
+            setPrivateInputStage
           );
           if (!registeredInput.ok) {
+            setPrivateInputStage("error");
             setError(registeredInput.error);
             return;
           }
@@ -1168,6 +1175,7 @@ export function BatchStudio({
         setVerifiedPackRunId(runPackId);
       }
       setJobs(queue);
+      setPrivateInputStage(null);
 
       for (let i = 0; i < queue.length; i++) {
         if (abortCtrl.signal.aborted) break;
@@ -1255,6 +1263,7 @@ export function BatchStudio({
         setError(e instanceof Error ? e.message : "Batch failed");
       }
     } finally {
+      setPrivateInputStage(null);
       finishPackOperation(abortCtrl);
     }
   }
@@ -1869,6 +1878,18 @@ export function BatchStudio({
               ? `Generate Launch Pack · ${sellerPackQuoteLabel(packQuote)}`
               : `Run batch · ${batchQuoteLabel(packQuote)}`;
 
+  const privateInputStageLabel = privateInputStage
+    ? {
+        reading: "Reading your toy photo…",
+        hashing: "Checking photo integrity…",
+        reserving: "Preparing private storage…",
+        uploading: "Uploading privately…",
+        verifying: "Verifying the private photo…",
+        ready: "Photo verified · reserving 30 credits…",
+        error: "Private upload needs retry",
+      }[privateInputStage]
+    : null;
+
   const creditStrip = (
     <div
       className={`rounded-lg border px-2.5 py-2 text-[11px] leading-relaxed text-[var(--fg-muted)] ${
@@ -2324,11 +2345,21 @@ export function BatchStudio({
 
         {running ? (
           <>
+            {privateInputStageLabel ? (
+              <p
+                className="rounded-lg border border-[#C8FF3D]/20 bg-[#C8FF3D]/[0.05] px-3 py-2 text-[11px] font-semibold text-[#C8FF3D]"
+                data-private-input-stage={privateInputStage}
+                aria-live="polite"
+              >
+                {privateInputStageLabel}
+              </p>
+            ) : null}
             <GenerateWaitStage
               elapsed={packElapsed}
               demoMode={demoMode}
               image={image}
               effectLabel={
+                privateInputStageLabel ||
                 jobs.find((j) => j.status === "running")?.name ||
                 (sellerPackActive
                   ? `Launch Pack · ${doneCount}/${jobs.length || 3}`
@@ -2770,11 +2801,22 @@ export function BatchStudio({
           </label>
         ) : null}
         {running ? (
-          <GenerateWaitMobileStrip
-            elapsed={packElapsed}
-            demoMode={demoMode}
-            onCancel={cancelInFlightPack}
-          />
+          <div>
+            {privateInputStageLabel ? (
+              <p
+                className="mb-2 text-center text-[10px] font-semibold text-[#C8FF3D]"
+                data-private-input-stage-mobile={privateInputStage}
+                aria-live="polite"
+              >
+                {privateInputStageLabel}
+              </p>
+            ) : null}
+            <GenerateWaitMobileStrip
+              elapsed={packElapsed}
+              demoMode={demoMode}
+              onCancel={cancelInFlightPack}
+            />
+          </div>
         ) : hasBoundPrivatePack && !image ? (
           <div className="flex gap-2">
             <Link
