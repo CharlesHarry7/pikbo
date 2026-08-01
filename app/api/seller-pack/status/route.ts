@@ -98,8 +98,6 @@ export async function GET(req: Request) {
       quotedCredits: job.quotedCredits,
       settledCredits: job.settledCredits,
       errorCode: job.errorCode ?? null,
-      attemptKey: job.attemptKey,
-      modelId: job.modelId ?? null,
       resolution: job.resolution ?? null,
       hasPrivateResult: job.hasPrivateResult === true,
       // Owner-signed Pikbo private URL only — never a raw provider URL.
@@ -114,14 +112,11 @@ export async function GET(req: Request) {
     quotedCredits: status.data.quotedCredits,
     settledCredits: status.data.settledCredits,
     releasedCredits: status.data.releasedCredits,
-    reservationId: status.data.reservationId,
-    contractFingerprint: status.data.contractFingerprint,
-    clientPackKey: status.data.clientPackKey,
-    mode: status.data.mode,
     createdAt: status.data.createdAt,
     completedAt: status.data.completedAt,
-    availableCredits: status.data.availableCredits,
-    reservedCredits: status.data.reservedCredits,
+    input: {
+      skuLabel: status.data.inputSkuLabel,
+    },
     jobs,
     session: publicSession(session),
   });

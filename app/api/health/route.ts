@@ -56,6 +56,7 @@ export async function GET() {
     durableReconciliation,
     durableProviderBudget,
     privatePreview,
+    privateInputs,
     privateResults,
     supabase,
     t6,
@@ -284,6 +285,7 @@ export async function GET() {
     durableCredits,
     durableProviderBudget,
     privateResults,
+    privateInputs,
     auth: {
       mode: authPublic.mode,
       configured: authPublic.configured,

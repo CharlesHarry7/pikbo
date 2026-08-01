@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import { emitSessionRefresh } from "@/lib/sessionEvents";
 import {
   completeAuthCallback,
   parseAuthCallbackUrl,
 } from "@/lib/authCallback";
+import { consumeAuthReturnPath } from "@/lib/authReturnPath";
 
 /**
  * Email magic-link lands here with ?code=...
  * Exchanges the code for a session, claims durable Free account + one-time
- * guest credit migration, then sends the user to Profile.
+ * guest credit migration, then returns the user to their validated app path.
  */
 export default function AuthCallbackPage() {
+  const router = useRouter();
   const [status, setStatus] = useState<"working" | "ok" | "error">("working");
   const [detail, setDetail] = useState("Signing you in…");
 
@@ -78,6 +81,7 @@ export default function AuthCallbackPage() {
 
       emitSessionRefresh();
       if (!cancelled) {
+        const returnPath = consumeAuthReturnPath(window.sessionStorage);
         setStatus("ok");
         setDetail((detail) =>
           detail.startsWith("Signed in")
@@ -85,7 +89,7 @@ export default function AuthCallbackPage() {
             : "Signed in. Redirecting…"
         );
         window.setTimeout(() => {
-          window.location.replace("/profile");
+          router.replace(returnPath);
         }, 700);
       }
     }
@@ -93,7 +97,7 @@ export default function AuthCallbackPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router]);
 
   return (
     <main

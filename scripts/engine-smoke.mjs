@@ -4250,15 +4250,19 @@ assert.match(batchStudio, /data-seller-download=["']gated["']/);
 assert.match(batchStudio, /downloadVideoFile\(gateUrl|downloadVideoFile\(j\.videoUrl/);
 
 assert.match(batchStudio, /Cancel pack/);
-// Pack cancel immediately marks running children refund unconfirmed (Create parity)
-assert.match(
-  batchStudio,
-  /function cancelInFlightPack[\s\S]{0,900}refund unconfirmed/
+// Pack cancel aborts the owning operation but must not unlock it or invent a
+// local settlement. The guarded operation/poll reconciles server truth.
+const batchCancelSource = batchStudio.slice(
+  batchStudio.indexOf("function cancelInFlightPack()"),
+  batchStudio.indexOf("const isFree", batchStudio.indexOf("function cancelInFlightPack()"))
 );
 assert.match(
-  batchStudio,
-  /function cancelInFlightPack[\s\S]{0,900}setJobs/
+  batchCancelSource,
+  /ctrl\.abort\(\)/
 );
+assert.doesNotMatch(batchCancelSource, /packAbortRef\.current = null/);
+assert.doesNotMatch(batchCancelSource, /setJobs|refund unconfirmed/);
+assert.match(batchStudio, /abortCtrl\.signal\.aborted[\s\S]*refund unconfirmed/);
 assert.match(landingTool, /postGenerateWithRetry|fallbackImage/);
 assert.match(landingTool, /recoveredFromAssetMiss|registerLocalAsset/);
 function resolveSpecImagePure(spec, store) {

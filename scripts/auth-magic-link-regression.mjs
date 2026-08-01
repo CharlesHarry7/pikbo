@@ -10,6 +10,9 @@ const redirect = await import(
 const callback = await import(
   pathToFileURL(join(root, "lib/authCallback.ts")).href
 );
+const returnPath = await import(
+  pathToFileURL(join(root, "lib/authReturnPath.ts")).href
+);
 
 const preview =
   "https://pikbo-git-agent-gptp0-live-owned-toy-review-pi-kbo.vercel.app";
@@ -137,6 +140,81 @@ const noSessionAfterExchange = await callback.completeAuthCallback(
 assert.equal(noSessionAfterExchange.ok, false);
 assert.equal(noSessionAfterExchange.reason, "missing_session");
 
+assert.equal(
+  returnPath.authReturnPathFromLoginHref(
+    `${production}/login?next=%2Fcreate%3Fmode%3Dseller-pack`
+  ),
+  "/create?mode=seller-pack"
+);
+for (const unsafeNext of [
+  "https://evil.example/steal",
+  "//evil.example/steal",
+  "javascript:alert(1)",
+  "/https://evil.example/steal",
+  "/\\evil.example/steal",
+  "/create\n?mode=seller-pack",
+  "%2F%2Fevil.example%2Fsteal",
+  "%2F%5Cevil.example%2Fsteal",
+  "%252F%252Fevil.example%252Fsteal",
+]) {
+  assert.equal(
+    returnPath.authReturnPathFromLoginHref(
+      `${production}/login?next=${encodeURIComponent(unsafeNext)}`
+    ),
+    "/profile",
+    `unsafe next must fail closed: ${JSON.stringify(unsafeNext)}`
+  );
+}
+
+const sessionValues = new Map();
+const fakeSessionStorage = {
+  getItem(key) {
+    return sessionValues.get(key) ?? null;
+  },
+  setItem(key, value) {
+    sessionValues.set(key, value);
+  },
+  removeItem(key) {
+    sessionValues.delete(key);
+  },
+};
+returnPath.storeAuthReturnPath(
+  fakeSessionStorage,
+  `${production}/login?next=%2Fcreate%3Fmode%3Dseller-pack`
+);
+assert.equal(
+  returnPath.consumeAuthReturnPath(fakeSessionStorage),
+  "/create?mode=seller-pack"
+);
+assert.equal(
+  returnPath.consumeAuthReturnPath(fakeSessionStorage),
+  "/profile",
+  "the callback return path must be consumed exactly once"
+);
+fakeSessionStorage.setItem(
+  returnPath.AUTH_RETURN_PATH_STORAGE_KEY,
+  "//evil.example/steal"
+);
+assert.equal(returnPath.consumeAuthReturnPath(fakeSessionStorage), "/profile");
+assert.equal(
+  fakeSessionStorage.getItem(returnPath.AUTH_RETURN_PATH_STORAGE_KEY),
+  null,
+  "an unsafe stored path must still be deleted"
+);
+assert.equal(
+  returnPath.consumeAuthReturnPath({
+    getItem() {
+      return "/create?mode=seller-pack";
+    },
+    setItem() {},
+    removeItem() {
+      throw new Error("blocked");
+    },
+  }),
+  "/profile",
+  "a return path that cannot be consumed exactly once must fail closed"
+);
+
 const routeSource = readFileSync(
   join(root, "app/api/auth/magic-link/route.ts"),
   "utf8"
@@ -159,9 +237,12 @@ assert.doesNotMatch(
 );
 assert.match(callbackSource, /parseAuthCallbackUrl/);
 assert.match(callbackSource, /completeAuthCallback/);
+assert.match(callbackSource, /consumeAuthReturnPath/);
+assert.match(callbackSource, /router\.replace\(returnPath\)/);
 assert.match(callbackSource, /Request a new magic link/);
 assert.match(loginSource, /Check your inbox for a Pikbo sign-in link/);
+assert.match(loginSource, /storeAuthReturnPath/);
 
 console.log(
-  "auth-magic-link-regression: PASS (trusted same-origin callback · invalid origin fail-closed · provider errors · missing-session honesty · successful exchange)"
+  "auth-magic-link-regression: PASS (trusted same-origin callback · safe one-time return path · invalid origin/path fail-closed · provider errors · missing-session honesty · successful exchange)"
 );

@@ -106,6 +106,7 @@ import {
   savePrivateGenerationResult,
   signedPrivateResultUrl,
 } from "@/lib/privateGenerationResults";
+import { resolvePrivateToyAssetForPack } from "@/lib/privateToyAssets";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -247,8 +248,27 @@ export async function POST(req: Request) {
   if (!preset) {
     return err({ error: "Unknown effect", code: "UNKNOWN_EFFECT" }, 400);
   }
-  // Soft-launch PRD §3/§5 — server-enforced rights attestation (not UI-only).
-  if (ownsRights !== true) {
+
+  // Parse Pack identity before any image handling. A Pack child never trusts
+  // browser image/asset fields; its rights attestation and exact input were
+  // frozen by the owner-scoped atomic reserve.
+  const packBinding = parseSellerPackChildRequest(body);
+  if (packBinding.kind === "invalid") {
+    return err(
+      { error: packBinding.error, code: "INVALID_REQUEST" },
+      400
+    );
+  }
+  const packChild =
+    packBinding.kind === "pack"
+      ? {
+          packRunId: packBinding.packRunId,
+          packJobId: packBinding.packJobId,
+        }
+      : null;
+
+  // Non-Pack generation still requires request-time rights confirmation.
+  if (!packChild && ownsRights !== true) {
     return err(
       {
         error:
@@ -285,6 +305,31 @@ export async function POST(req: Request) {
   // That client state must never be silently upgraded into a credit debit and
   // paid provider call just because the POST independently carries auth.
   const access = bindProviderSpendIntent(serverAccess, allowProviderSpend);
+  if (packChild && access.kind !== "live") {
+    return err(
+      {
+        error:
+          "A reserved Launch Pack child requires invited private live access",
+        code: "LIVE_ACCESS_REQUIRED",
+        session: publicCachedSession(session),
+      },
+      403
+    );
+  }
+  // Private Preview provider spend is Pack-only. An invited account may still
+  // use cached/demo effects, but it cannot bypass the fixed three-child
+  // reservation by posting a standalone live request.
+  if (access.kind === "live" && !packChild) {
+    return err(
+      {
+        error:
+          "Private Preview live generation starts from the fixed Launch Pack",
+        code: "LIVE_ACCESS_REQUIRED",
+        session: publicCachedSession(session),
+      },
+      403
+    );
+  }
 
   // Idempotent replay BEFORE image/asset resolve — network retries must not
   // re-upload multi-MB stills or fail on expired assetId after success.
@@ -295,6 +340,21 @@ export async function POST(req: Request) {
       idempotencyKey,
     });
     if (durablePrior) {
+      if (
+        packChild &&
+        (durablePrior.jobId !== packChild.packJobId ||
+          durablePrior.effect !== preset.slug)
+      ) {
+        return err(
+          {
+            error:
+              "Idempotent result does not match this bound Launch Pack child",
+            code: "IDEMPOTENCY_CONFLICT",
+            session: publicSession(session),
+          },
+          409
+        );
+      }
       const signedUrl = await signedPrivateResultUrl(durablePrior.objectKey);
       if (signedUrl) {
         // The private Free allowance is one clip. Do not downgrade a paid
@@ -425,34 +485,68 @@ export async function POST(req: Request) {
     }
   }
 
-  // Phase D: cached previews never inspect, resolve, or require the user's still.
-  // Only an authorized live request may move private image data beyond the browser.
-  // On multi-instance hosts (Vercel), memory assets often miss on another node —
-  // if the live client also sent a data URL, fall through instead of hard-failing.
-  let image =
-    access.kind === "cached"
-      ? undefined
-      : typeof imageField === "string" && imageField.startsWith("data:image")
-        ? imageField
-        : undefined;
-  if (
-    access.kind !== "cached" &&
-    typeof assetId === "string" &&
-    assetId.startsWith("asset_")
-  ) {
-    const asset = getLocalAsset(assetId, session.id);
-    if (asset) {
-      image = asset.dataUrl;
-    } else if (!image) {
+  // Cached previews never inspect a visitor still. Live Pack children resolve
+  // only the durable owner/Pack/job-bound input; inline image and local assetId
+  // are deliberately ignored. Non-Pack live keeps the existing local fallback.
+  let image: string | undefined;
+  if (access.kind !== "cached" && packChild) {
+    if (!authUser?.id) {
       return err(
         {
-          error:
-            "Asset missing, expired, or not owned by this session — re-upload the photo",
-          code: "ASSET_NOT_FOUND",
+          error: "Sign in to use a private Launch Pack input",
+          code: "AUTH_REQUIRED",
           session: publicSession(session),
         },
-        404
+        401
       );
+    }
+    const boundInput = await resolvePrivateToyAssetForPack({
+      userId: authUser.id,
+      packRunId: packChild.packRunId,
+      packJobId: packChild.packJobId,
+    });
+    if (!boundInput.ok) {
+      const status =
+        boundInput.code === "PACK_NOT_FOUND" ||
+        boundInput.code === "JOB_BINDING_MISMATCH" ||
+        boundInput.code === "PACK_INPUT_NOT_FOUND"
+          ? 404
+          : boundInput.code === "PRIVATE_INPUT_UNAVAILABLE"
+            ? 503
+            : 409;
+      return err(
+        {
+          error: boundInput.error,
+          code:
+            boundInput.code === "PRIVATE_INPUT_UNAVAILABLE"
+              ? "DURABLE_CREDITS_UNAVAILABLE"
+              : "ASSET_NOT_FOUND",
+          session: publicSession(session),
+        },
+        status
+      );
+    }
+    image = boundInput.dataUrl;
+  } else if (access.kind !== "cached") {
+    image =
+      typeof imageField === "string" && imageField.startsWith("data:image")
+        ? imageField
+        : undefined;
+    if (typeof assetId === "string" && assetId.startsWith("asset_")) {
+      const asset = getLocalAsset(assetId, session.id);
+      if (asset) {
+        image = asset.dataUrl;
+      } else if (!image) {
+        return err(
+          {
+            error:
+              "Asset missing, expired, or not owned by this session — re-upload the photo",
+            code: "ASSET_NOT_FOUND",
+            session: publicSession(session),
+          },
+          404
+        );
+      }
     }
   }
 
@@ -501,27 +595,6 @@ export async function POST(req: Request) {
     );
   }
 
-  // Seller Pack child binding (optional). When present, live spend uses the
-  // parent 30-credit pack reservation and never opens R1a per-generation reserve.
-  const packBinding = parseSellerPackChildRequest(body);
-  if (packBinding.kind === "invalid") {
-    endJob(session.id);
-    return err(
-      {
-        error: packBinding.error,
-        code: "INVALID_REQUEST",
-        session: publicSession(session),
-      },
-      400
-    );
-  }
-  const packChild =
-    packBinding.kind === "pack"
-      ? {
-          packRunId: packBinding.packRunId,
-          packJobId: packBinding.packJobId,
-        }
-      : null;
   // Mutable pack context filled after authorize (for settle/release backends).
   let activePackChild: {
     packRunId: string;

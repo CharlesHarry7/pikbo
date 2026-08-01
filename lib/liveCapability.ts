@@ -54,6 +54,9 @@ export type PrivatePreviewReadinessInput = {
   privateResultsBucketReady: boolean;
   privateResultsSchemaReady: boolean;
   privateResultsRpcReady: boolean;
+  privateInputsBucketReady: boolean;
+  privateInputsSchemaReady: boolean;
+  privateInputsRpcReady: boolean;
   providerOutputAllowlistConfigured: boolean;
   privateLiveEnabled: boolean;
   privateLiveAllowlistConfigured: boolean;
