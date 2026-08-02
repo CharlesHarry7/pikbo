@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-02T05:08:34Z",
+  "sourceBaseSha": "46594609e98efc556d77c00266b212537e5e975d",
+  "testKind": "nonprod-private-input-pack-reservation",
+  "verdict": "PASS_WITH_SCHEMA_DRIFT",
+  "environment": {
+    "production": false,
+    "projectRef": "lpfvfybkggiugosugfcw"
+  },
+  "truthBoundary": {
+    "providerCalls": 0,
+    "stripeCalls": 0,
+    "aiGeneratedMedia": false,
+    "fixtureLabel": "PIKBO QA SYNTHETIC INPUT"
+  },
+  "input": {
+    "ready": true,
+    "ownerVisible": true,
+    "outsiderVisible": false,
+    "checksumVerified": true
+  },
+  "pack": {
+    "count": 1,
+    "quotedCredits": 30,
+    "jobs": 3,
+    "sameInputAsset": true,
+    "idempotentReserve": true
+  },
+  "recovery": {
+    "owner": true,
+    "outsiderVisible": false
+  },
+  "accounting": {
+    "available": 10,
+    "reserved": 30,
+    "settled": 0,
+    "providerAuthorizations": 0
+  },
+  "delivery": {
+    "tested": false,
+    "reason": "No fake generated result or settlement was created"
+  },
+  "network": {
+    "allowedOrigin": "https://lpfvfybkggiugosugfcw.supabase.co",
+    "thirdPartyRequests": 0,
+    "supabaseRequests": 103
+  },
+  "schemaCompatibility": {
+    "remoteStatusRpc": "pikbo_get_seller_pack_status_v2",
+    "canonicalApplicationStatusRpc": "pikbo_get_seller_pack_status_v1",
+    "driftDetected": true,
+    "canonicalRuntimeGo": false
+  },
+  "cleanup": {
+    "passed": true,
+    "residue": 0
+  }
+}
