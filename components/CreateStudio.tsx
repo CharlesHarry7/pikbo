@@ -158,6 +158,8 @@ const MODELS = [
   },
 ] as const;
 
+const FIXED_MOMENT_EFFECT = "street-power-up";
+
 export function CreateStudio({
   initialEffect,
   initialModel,
@@ -173,6 +175,7 @@ export function CreateStudio({
   initialSku,
   initialRetryJobId,
   initialRetryToken,
+  fixedMomentContract = false,
 }: {
   initialEffect?: string;
   initialModel?: string;
@@ -193,6 +196,8 @@ export function CreateStudio({
   /** Exact process-ledger retry child + one-time token. */
   initialRetryJobId?: string;
   initialRetryToken?: string;
+  /** Hide catalog choices for a real, fixed Moment contract. */
+  fixedMomentContract?: boolean;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -226,12 +231,15 @@ export function CreateStudio({
   const mode: Mode = "i2v";
   void initialMode;
   const [modelId, setModelId] = useState<(typeof MODELS)[number]["id"]>(() => {
+    if (fixedMomentContract) return "seedance-fast";
     if (initialModel === "seedance-mini") return "seedance-mini";
     if (initialModel === "seedance-fast") return "seedance-fast";
     if (initialModel === "seedance-2") return "seedance-2";
     return "seedance-mini";
   });
-  const [effect, setEffect] = useState(bootPreset.slug);
+  const [effect, setEffect] = useState(
+    fixedMomentContract ? FIXED_MOMENT_EFFECT : bootPreset.slug
+  );
   const [image, setImage] = useState<string | null>(null);
   /** Phase D local asset id — generate prefers assetId over re-posting Base64. */
   const [assetId, setAssetId] = useState<string | null>(null);
@@ -245,19 +253,25 @@ export function CreateStudio({
   const [secondaryStill, setSecondaryStill] = useState<string | null>(null);
   /** Soft-applied primary recipe once per still (Phase B2). */
   const briefAutoAppliedRef = useRef(false);
-  const [extra, setExtra] = useState(initialPrompt ?? "");
+  const [extra, setExtra] = useState(
+    fixedMomentContract
+      ? PRESETS.find((p) => p.slug === FIXED_MOMENT_EFFECT)?.promptTemplate ?? ""
+      : initialPrompt ?? ""
+  );
   /** Optional SKU lock — first principles, not Character/Soul cloud */
   const [toyIdentity, setToyIdentity] = useState<ToyIdentity>({
     sku: (initialSku || "").trim().slice(0, 64),
     preserve: "",
   });
   const [duration, setDuration] = useState<5 | 10>(() => {
+    if (fixedMomentContract) return 5;
     if (remix.intent?.durationSeconds === 10 || remix.intent?.durationSeconds === 5) {
       return remix.intent.durationSeconds;
     }
     return bootPreset.duration === 10 ? 10 : 5;
   });
   const [aspectRatio, setAspectRatio] = useState<"9:16" | "16:9" | "1:1">(() => {
+    if (fixedMomentContract) return "9:16";
     if (
       remix.intent?.aspectRatio === "16:9" ||
       remix.intent?.aspectRatio === "1:1" ||
@@ -309,7 +323,11 @@ export function CreateStudio({
   const [favorites, setFavorites] = useState<string[]>([]);
   const [compare, setCompare] = useState(true);
   const [resolution, setResolution] = useState<"480p" | "720p">(
-    initialResolution === "480p" ? "480p" : "720p"
+    fixedMomentContract
+      ? "720p"
+      : initialResolution === "480p"
+        ? "480p"
+        : "720p"
   );
   const [seed, setSeed] = useState<string>("");
   /** Collapsed by default — soft launch is photo → recipe → one generate. */
@@ -414,6 +432,12 @@ export function CreateStudio({
   }, [presetFilter]);
 
   function selectEffect(slug: string) {
+    if (fixedMomentContract && slug !== FIXED_MOMENT_EFFECT) {
+      setEffect(FIXED_MOMENT_EFFECT);
+      setDuration(5);
+      setAspectRatio("9:16");
+      return;
+    }
     setEffect(slug);
     const p = PRESETS.find((x) => x.slug === slug);
     if (!p) return;
@@ -764,17 +788,23 @@ export function CreateStudio({
         : null;
   // Private validation is one measured Fast 720p / 5s cost envelope. Cached
   // Free remains the labeled Mini 480p prototype contract.
-  const effectiveDuration = liveEntitled
+  const effectiveDuration = fixedMomentContract
+    ? 5
+    : liveEntitled
     ? freeLive?.durationSec ?? 5
     : isFree
       ? 5
       : duration;
-  const effectiveResolution = liveEntitled
+  const effectiveResolution = fixedMomentContract
+    ? "720p"
+    : liveEntitled
     ? freeLive?.resolution ?? "720p"
     : isFree
       ? "480p"
       : resolution;
-  const effectiveModel = liveEntitled
+  const effectiveModel = fixedMomentContract
+    ? "seedance-fast"
+    : liveEntitled
     ? freeLive?.modelClass ?? "seedance-fast"
     : modelId;
   const effectiveModelLabel =
@@ -812,21 +842,34 @@ export function CreateStudio({
     const img = still.image ?? null;
     const postAssetId = still.assetId ?? undefined;
     const useAsset = still.mode === "asset" || still.mode === "retry-asset";
-    const fx = retry?.effect ?? opts?.effectOverride ?? effect;
+    const fx = fixedMomentContract
+      ? FIXED_MOMENT_EFFECT
+      : retry?.effect ?? opts?.effectOverride ?? effect;
     const rights = opts?.rightsOverride ?? ownsRights;
     // Retry freezes prior extra; new runs merge optional Toy Identity into extra.
-    const requestExtra = retry
-      ? retry.extra
-      : composeExtraWithIdentity(toyIdentity, extra, {
-          angles: fidelityAngles,
-          hasSecondaryStill: Boolean(secondaryStill),
-        });
-    const requestAspect = (retry?.aspectRatio ??
-      opts?.aspectOverride ??
-      aspectRatio) as "9:16" | "16:9" | "1:1";
-    const requestDuration = retry?.duration ?? effectiveDuration;
-    const requestModel = retry?.model ?? effectiveModel;
-    const requestRes = retry?.resolution ?? effectiveResolution;
+    const requestExtra = fixedMomentContract
+      ? PRESETS.find((p) => p.slug === FIXED_MOMENT_EFFECT)?.promptTemplate ?? ""
+      : retry
+        ? retry.extra
+        : composeExtraWithIdentity(toyIdentity, extra, {
+            angles: fidelityAngles,
+            hasSecondaryStill: Boolean(secondaryStill),
+          });
+    const requestAspect = (fixedMomentContract
+      ? "9:16"
+      : retry?.aspectRatio ?? opts?.aspectOverride ?? aspectRatio) as
+      | "9:16"
+      | "16:9"
+      | "1:1";
+    const requestDuration = fixedMomentContract
+      ? 5
+      : retry?.duration ?? effectiveDuration;
+    const requestModel = fixedMomentContract
+      ? "seedance-fast"
+      : retry?.model ?? effectiveModel;
+    const requestRes = fixedMomentContract
+      ? "720p"
+      : retry?.resolution ?? effectiveResolution;
     const requestSeed =
       retry && typeof retry.seed === "number"
         ? retry.seed
@@ -2188,8 +2231,23 @@ export function CreateStudio({
             </div>
           )}
 
-          {/* Step 2 — choose a sales outcome; model and full catalog stay Advanced. */}
-          <JobIntentBar activeId={activeSellingTask} onPick={applyJobIntent} />
+          {/* Moment validation has one measured outcome; the general studio keeps
+              its job rail for later exploration. */}
+          {fixedMomentContract ? (
+            <div className="rounded-xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] px-3 py-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]/80">
+                Fixed validation format
+              </p>
+              <p className="mt-1 text-sm font-bold text-white">
+                Street Power-Up · vertical drop-day launch moment
+              </p>
+              <p className="mt-1 text-[11px] text-white/50">
+                The private check uses one recipe and one measured output contract.
+              </p>
+            </div>
+          ) : (
+            <JobIntentBar activeId={activeSellingTask} onPick={applyJobIntent} />
+          )}
 
           {/* Collapsed Lab path — after recipe so first-run stays upload→recipe→generate */}
           {!image && (
@@ -2305,12 +2363,15 @@ export function CreateStudio({
                       <button
                         key={a.id}
                         type="button"
-                        onClick={() => setAspectRatio(a.id)}
+                        disabled={fixedMomentContract}
+                        onClick={() => {
+                          if (!fixedMomentContract) setAspectRatio(a.id);
+                        }}
                         className={`flex-1 rounded-lg border py-2 text-[11px] font-semibold transition ${
                           aspectRatio === a.id
                             ? "border-[var(--mint)] bg-[var(--mint)]/15 text-[var(--mint)]"
                             : "border-white/10 text-white/55 hover:border-white/25"
-                        }`}
+                        } ${fixedMomentContract ? "cursor-not-allowed opacity-60" : ""}`}
                       >
                         <span className="block">{a.label}</span>
                         <span className="mt-0.5 block text-[9px] font-medium opacity-70">
@@ -2325,47 +2386,60 @@ export function CreateStudio({
                   <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
                     Full recipe catalog
                   </p>
-                  <input
-                    value={presetFilter}
-                    onChange={(e) => setPresetFilter(e.target.value)}
-                    placeholder="Search spin, unbox, dance…"
-                    className="mt-1.5 w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2.5 py-2 text-xs outline-none focus:border-[var(--brand)]"
-                  />
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {(showAllRecipes
-                      ? featuredPresets
-                      : featuredPresets.slice(0, 8)
-                    ).map((p) => (
-                      <button
-                        key={p.slug}
-                        type="button"
-                        onClick={() => selectEffect(p.slug)}
-                        className={`min-w-0 rounded-xl border px-2.5 py-2 text-left transition ${
-                          effect === p.slug
-                            ? "border-[var(--mint)] bg-[var(--mint)]/12 text-[var(--mint)]"
-                            : "border-white/10 bg-black/35 text-white/70 hover:border-white/25"
-                        }`}
-                      >
-                        <span className="block text-[11px] font-bold leading-tight">
-                          {p.emoji} {viralName(p.slug, p.name)}
-                        </span>
-                        <span className="mt-0.5 block text-[9px] opacity-65">
-                          {p.aspectRatio} · {p.duration}s
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  {!presetFilter.trim() ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllRecipes((v) => !v)}
-                      className="mt-2 w-full rounded-lg border border-[var(--border)] px-2 py-1.5 text-[11px] font-semibold text-[var(--fg-muted)] hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
-                    >
-                      {showAllRecipes
-                        ? t("create.launchOnly")
-                        : t("create.moreRecipes")}
-                    </button>
-                  ) : null}
+                  {fixedMomentContract ? (
+                    <div className="mt-1.5 rounded-xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] px-3 py-2 text-xs text-white/70">
+                      <span className="font-semibold text-[var(--mint)]">
+                        ⚡ Street Power-Up
+                      </span>
+                      <span className="mt-1 block text-[10px] text-white/45">
+                        The only recipe in this private validation run.
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        value={presetFilter}
+                        onChange={(e) => setPresetFilter(e.target.value)}
+                        placeholder="Search spin, unbox, dance…"
+                        className="mt-1.5 w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2.5 py-2 text-xs outline-none focus:border-[var(--brand)]"
+                      />
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {(showAllRecipes
+                          ? featuredPresets
+                          : featuredPresets.slice(0, 8)
+                        ).map((p) => (
+                          <button
+                            key={p.slug}
+                            type="button"
+                            onClick={() => selectEffect(p.slug)}
+                            className={`min-w-0 rounded-xl border px-2.5 py-2 text-left transition ${
+                              effect === p.slug
+                                ? "border-[var(--mint)] bg-[var(--mint)]/12 text-[var(--mint)]"
+                                : "border-white/10 bg-black/35 text-white/70 hover:border-white/25"
+                            }`}
+                          >
+                            <span className="block text-[11px] font-bold leading-tight">
+                              {p.emoji} {viralName(p.slug, p.name)}
+                            </span>
+                            <span className="mt-0.5 block text-[9px] opacity-65">
+                              {p.aspectRatio} · {p.duration}s
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                      {!presetFilter.trim() ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowAllRecipes((v) => !v)}
+                          className="mt-2 w-full rounded-lg border border-[var(--border)] px-2 py-1.5 text-[11px] font-semibold text-[var(--fg-muted)] hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
+                        >
+                          {showAllRecipes
+                            ? t("create.launchOnly")
+                            : t("create.moreRecipes")}
+                        </button>
+                      ) : null}
+                    </>
+                  )}
                 </div>
 
                 <div>
@@ -2379,9 +2453,13 @@ export function CreateStudio({
                         <button
                           key={d}
                           type="button"
-                          disabled={freeLock}
+                          disabled={freeLock || fixedMomentContract}
                           onClick={() => {
-                            if (freeLock) {
+                            if (freeLock || fixedMomentContract) {
+                              if (fixedMomentContract) {
+                                setError("Moment validation is fixed to Fast · 5s · 720p.");
+                                return;
+                              }
                               setShowPaywall(true);
                               return;
                             }
@@ -2391,7 +2469,7 @@ export function CreateStudio({
                             effectiveDuration === d
                               ? "border-[var(--brand)] bg-[var(--grad-soft)]"
                               : "border-[var(--border)] text-[var(--fg-muted)]"
-                          } ${freeLock ? "cursor-not-allowed opacity-50" : ""}`}
+                          } ${freeLock || fixedMomentContract ? "cursor-not-allowed opacity-50" : ""}`}
                         >
                           {d}s{freeLock ? " · unavailable" : ""}
                         </button>
@@ -2413,7 +2491,7 @@ export function CreateStudio({
                   </p>
                   <div className="mt-1.5 flex gap-2">
                     {(["480p", "720p"] as const).map((r) => {
-                      const locked = liveEntitled
+                      const locked = fixedMomentContract || liveEntitled
                         ? r !== effectiveResolution
                         : Boolean(isFree && r === "720p");
                       return (
@@ -2422,7 +2500,7 @@ export function CreateStudio({
                           type="button"
                           onClick={() => {
                             if (locked) {
-                              if (liveEntitled) {
+                              if (fixedMomentContract || liveEntitled) {
                                 setError(
                                   "Invited validation is fixed to Fast 720p."
                                 );
@@ -2454,8 +2532,13 @@ export function CreateStudio({
                   <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
                     Model
                   </p>
-                  <div className="mt-1.5 flex flex-wrap gap-2">
-                    {MODELS.map((m) => {
+                  {fixedMomentContract ? (
+                    <div className="mt-1.5 rounded-xl border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-2 text-xs font-semibold text-[var(--mint)]">
+                      Seedance Fast · fixed private validation contract
+                    </div>
+                  ) : (
+                    <div className="mt-1.5 flex flex-wrap gap-2">
+                      {MODELS.map((m) => {
                       const lockedForValidation =
                         liveEntitled && m.id !== effectiveModel;
                       const lockedPaid = Boolean(
@@ -2501,10 +2584,13 @@ export function CreateStudio({
                                   : ""}
                         </button>
                       );
-                    })}
-                  </div>
+                      })}
+                    </div>
+                  )}
                   <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
-                    {liveEntitled
+                    {fixedMomentContract
+                      ? "One owned toy photo · FAL Seedance Fast · 9:16 · 5s · 720p."
+                      : liveEntitled
                       ? "Private validation enforces one measured Fast 720p contract."
                       : "Cached Free uses Mini 480p. No fake multi-model shelf."}
                   </p>
@@ -2544,39 +2630,55 @@ export function CreateStudio({
                     </label>
                     <button
                       type="button"
+                      disabled={fixedMomentContract}
                       className="text-[10px] text-[var(--brand)] hover:underline"
-                      onClick={() => setExtra(preset.promptTemplate)}
+                      onClick={() => {
+                        if (!fixedMomentContract) setExtra(preset.promptTemplate);
+                      }}
                     >
                       Reset to preset
                     </button>
                   </div>
-                  <textarea
-                    value={extra || preset.promptTemplate}
-                    onChange={(e) => setExtra(e.target.value)}
-                    rows={4}
-                    className="mt-1.5 w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2.5 text-sm outline-none focus:border-[var(--brand)]"
-                  />
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {[
-                      "slow turntable",
-                      "soft studio light",
-                      "keep paint sharp",
-                      "subtle float",
-                      "no morph face",
-                    ].map((chip) => (
-                      <button
-                        key={chip}
-                        type="button"
-                        className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] text-[var(--fg-dim)] hover:border-[var(--brand)] hover:text-[var(--fg)]"
-                        onClick={() => {
-                          const base = extra || preset.promptTemplate;
-                          setExtra(`${base} ${chip}.`);
-                        }}
-                      >
-                        + {chip}
-                      </button>
-                    ))}
-                  </div>
+                  {fixedMomentContract ? (
+                    <div className="mt-1.5 rounded-xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] px-3 py-2.5 text-xs leading-relaxed text-white/65">
+                      <span className="font-semibold text-[var(--mint)]">
+                        Locked motion recipe
+                      </span>
+                      <span className="mt-1 block">
+                        Slow camera push, rain-slick city light, and a restrained energy reveal. Prompt editing is disabled for this measured run.
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <textarea
+                        value={extra || preset.promptTemplate}
+                        onChange={(e) => setExtra(e.target.value)}
+                        rows={4}
+                        className="mt-1.5 w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2.5 text-sm outline-none focus:border-[var(--brand)]"
+                      />
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {[
+                          "slow turntable",
+                          "soft studio light",
+                          "keep paint sharp",
+                          "subtle float",
+                          "no morph face",
+                        ].map((chip) => (
+                          <button
+                            key={chip}
+                            type="button"
+                            className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] text-[var(--fg-dim)] hover:border-[var(--brand)] hover:text-[var(--fg)]"
+                            onClick={() => {
+                              const base = extra || preset.promptTemplate;
+                              setExtra(`${base} ${chip}.`);
+                            }}
+                          >
+                            + {chip}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {image && assetBrief.ready ? (

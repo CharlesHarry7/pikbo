@@ -219,6 +219,7 @@ export default async function CreatePage({
           initialSku={sp.sku}
           initialRetryJobId={sp.retryJobId}
           initialRetryToken={sp.retryToken}
+          fixedMomentContract
         />
       </div>
     );
