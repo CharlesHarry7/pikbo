@@ -34,6 +34,9 @@ assert.doesNotMatch(moments, /provider|modelId|prompt|generated result/i);
 
 assert.match(home, /Upload your toy\. Pick its moment\./);
 assert.match(home, /Start with a photo you own\. Preview the composition/);
+assert.match(home, /Preview a Moment/);
+assert.match(home, /Private beta contract/);
+assert.match(home, /\/contact\?source=homepage-moment/);
 assert.match(home, /<MomentStage moment=\{active\}/);
 assert.match(home, /<MomentRail moments=\{MOMENTS\}/);
 assert.match(stage, /Preview with my toy/);
@@ -48,6 +51,8 @@ assert.ok(sellerPackBranch > -1 && sellerPackBranch < genericStudio);
 assert.match(createPage, /Array\.isArray\(sp\.moment\) \? null : parseMomentId/);
 assert.match(createPage, /if \(!momentId\) return <InvalidMomentNotice/);
 assert.match(createPage, /fixedMomentContract/);
+assert.match(createPage, /Request private beta/);
+assert.match(createPage, /\/contact\?source=moment-private-access&moment=street-power-up/);
 assert.match(studio, /fixedMomentContract\?: boolean/);
 assert.match(studio, /const FIXED_MOMENT_EFFECT = "street-power-up"/);
 assert.match(studio, /fixedMomentContract \? FIXED_MOMENT_EFFECT/);

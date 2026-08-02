@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { CreateStudio } from "@/components/CreateStudio";
 import { CreateSeoFooter } from "@/components/CreateSeoFooter";
@@ -203,6 +204,21 @@ export default async function CreatePage({
             can be downloaded from Library. Public visitors only see the
             cached Lab path.
           </p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Link
+              href="/contact?source=moment-private-access&moment=street-power-up"
+              className="inline-flex min-h-11 items-center rounded-full bg-[#CBFF3D] px-5 text-xs font-black text-black transition hover:brightness-95"
+              data-moment-beta-cta
+            >
+              Request private beta
+            </Link>
+            <Link
+              href="/create?moment=capsule-reveal"
+              className="inline-flex min-h-11 items-center rounded-full border border-white/20 px-5 text-xs font-black text-white/85 transition hover:border-white/45 hover:text-white"
+            >
+              See the public preview
+            </Link>
+          </div>
         </div>
         <CreateStudio
           initialEffect="street-power-up"
