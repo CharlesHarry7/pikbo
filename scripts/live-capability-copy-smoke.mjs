@@ -62,8 +62,9 @@ for (const relativePath of publicPromiseFiles) {
 }
 
 assert(
-  read("lib/site.ts").includes("Preview cached Pikbo Lab prototypes"),
-  "site metadata must lead with the cached validation path"
+  read("lib/site.ts").includes("place one owned designer-toy photo into a local preview") &&
+    read("lib/site.ts").includes("invitation-only private creation workflow"),
+  "site metadata must lead with the device-local Moment path and gated private continuation"
 );
 assert(
   /When private Live is enabled,\s+eligible invited accounts\s+can create private 5-second 720p results/.test(

@@ -792,7 +792,7 @@ assert.doesNotMatch(appShell, /const MORE|MoreMenu|CommandPalette/);
 assert.match(appShell, /CreditsBadge|LanguageSwitcher/);
 assert.match(
   appShell,
-  /data-primary-create-href=["']\/create\?mode=seller-pack["']/
+  /data-primary-create-href=\{[\s\S]*?\/create\?moment=capsule-reveal[\s\S]*?\/create\?mode=seller-pack/
 );
 const historySrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historySrc, /historyProvenance|provenance/);
@@ -3911,38 +3911,36 @@ assert.match(deliveryPackSrc, /Sales fidelity|includeQc/);
 assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 
 
-// Homepage V2: fixed Launch Pack → instant truthful sample browser.
+// Homepage V3: one Moment → device-local Toy Stage Preview. Existing Launch
+// Pack generation remains private and is tested independently below.
 const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
-assert.match(homePageSrc, /HomeCinemaHero|HomeViralWall|home-create/);
+assert.match(homePageSrc, /HomeCinemaHero/);
 const homeHeroSrc = fs.readFileSync(
   join(root, "components/HomeCinemaHero.tsx"),
+  "utf8"
+);
+const homeMomentsSrc = fs.readFileSync(
+  join(root, "components/HomeMomentShowcase.tsx"),
+  "utf8"
+);
+const momentStageSrc = fs.readFileSync(
+  join(root, "components/MomentStage.tsx"),
   "utf8"
 );
 const publicSampleSrc = fs.readFileSync(
   join(root, "components/PublicLaunchPackSample.tsx"),
   "utf8"
 );
-const homeArchiveSrc = publicSampleSrc.slice(
-  publicSampleSrc.indexOf("function HomeDropArchive"),
-  publicSampleSrc.indexOf("function CreateSampleBrowser")
-);
 const createSampleSrc = publicSampleSrc.slice(
   publicSampleSrc.indexOf("function CreateSampleBrowser")
 );
-assert.match(homeHeroSrc, /PublicLaunchPackSample surface="home"/);
-assert.match(homeArchiveSrc, /See how toys become launches\./);
-assert.doesNotMatch(homeArchiveSrc, /One toy photo\. Three launch-ready videos\./);
-assert.match(homeArchiveSrc, /data-home-hero="drop-archive"/);
-assert.match(homeArchiveSrc, /id="home-create"/);
-assert.match(homeArchiveSrc, /Preview Launch Pack/);
-assert.match(homeArchiveSrc, /preview=1&source=home-drop-archive/);
-assert.match(homeArchiveSrc, /Product target · one toy · three launch formats/);
-assert.match(
-  homeArchiveSrc,
-  /Archive shown · three different Pikbo-owned prototypes · no product upload/
-);
-assert.match(homeArchiveSrc, /Three separate archived format prototypes/);
-assert.equal((homeArchiveSrc.match(/<AutoPlayVideo/g) || []).length, 1);
+assert.match(homeHeroSrc, /HomeMomentShowcase/);
+assert.match(homeMomentsSrc, /Choose the moment your toy enters\./);
+assert.match(homeMomentsSrc, /Pick a world\. Place your toy inside\. Create its first scene\./);
+assert.match(momentStageSrc, /Official Concept/);
+assert.match(momentStageSrc, /Try this moment/);
+assert.doesNotMatch(homeHeroSrc, /PublicLaunchPackSample surface="home"/);
+assert.doesNotMatch(homePageSrc, /One toy photo\. Three launch-ready videos\./);
 assert.match(createSampleSrc, /Pikbo Lab archive/);
 assert.match(createSampleSrc, /No sign-in · no upload/);
 assert.match(createSampleSrc, /No product upload in this public preview/);
@@ -4219,7 +4217,7 @@ assert.match(appShellSrc, /CreditsBadge|LanguageSwitcher/);
 assert.doesNotMatch(appShellSrc, /MoreMenu|CommandPalette/);
 assert.match(
   appShellSrc,
-  /data-primary-create-href=["']\/create\?mode=seller-pack["']/
+  /data-primary-create-href=\{[\s\S]*?\/create\?moment=capsule-reveal[\s\S]*?\/create\?mode=seller-pack/
 );
 // GA4 adapter is env-gated no-op when unset (reuse analyticsSrc declared above)
 assert.match(analyticsSrc, /NEXT_PUBLIC_GA_MEASUREMENT_ID/);
@@ -4407,10 +4405,10 @@ assert.match(
 
 // Video-first product line (not stills shop) — site + suite order + image honesty
 const siteSrc = fs.readFileSync(join(root, "lib/site.ts"), "utf8");
-assert.match(siteSrc, /titleDefault|homeH1|Turn Toy Photos into Videos|Designer Toy AI Video Suite/i);
+assert.match(siteSrc, /titleDefault|homeH1|Creative Moments for Designer Toys/i);
 assert.match(siteSrc, /Turn your toy photos into short videos|VIDEO-first|Free Mini Trial/i);
 // 哥飞 P0: homepage title must not cannibalize tools rank title
-assert.match(siteSrc, /Pikbo — (Turn Toy Photos into Videos|Designer Toy AI Video Suite)/);
+assert.match(siteSrc, /Pikbo — Creative Moments for Designer Toys/);
 assert.doesNotMatch(
   siteSrc,
   /titleDefault:\s*["']AI Toy Video Generator from One Photo/

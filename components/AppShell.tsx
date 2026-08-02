@@ -13,6 +13,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
 import { ToastProvider } from "@/components/Toast";
 import { trackPageView } from "@/lib/analytics";
+import { parseMomentId } from "@/lib/moments";
 import { MOBILE_NAV, PRIMARY_NAV } from "@/lib/softLaunch";
 import { cn } from "@/lib/utils";
 
@@ -45,9 +46,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const publicSampleCreate =
     sellerPackCreate &&
     ["1", "true"].includes(searchParams.get("preview") || "");
-  const dropArchiveHome = home;
-  const lightShell = home || sellerPackCreate;
-  const resultShell = home || publicSampleCreate;
+  const momentValues = searchParams.getAll("moment");
+  const momentCreate =
+    create &&
+    momentValues.length === 1 &&
+    Boolean(parseMomentId(momentValues[0]));
+  const momentSurface = home || momentCreate;
+  const lightShell = momentSurface || sellerPackCreate;
+  const resultShell = momentSurface || publicSampleCreate;
   const hideFooter =
     home ||
     create ||
@@ -64,9 +70,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       className={cn(
         "flex min-h-screen min-w-0 flex-col",
         resultShell
-          ? dropArchiveHome
-            ? "bg-[#F2EDE3] text-[#171717] lg:bg-[#111111] lg:text-[#F5F1E8]"
-            : "bg-[#F2EDE3] text-[#171717]"
+          ? "bg-[#F2EFE7] text-[#171719]"
           : lightShell
             ? "bg-[#EEF0F4] text-[#15171B]"
             : "bg-[#0A0A0A] text-[#F7F4ED]"
@@ -75,28 +79,26 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       <header
         className={cn(
           "sticky top-0 z-50 hidden items-center border-b px-7 backdrop-blur-xl lg:flex",
-          dropArchiveHome ? "h-16" : "h-14",
-          dropArchiveHome
-            ? "border-white/10 bg-[#111111]/94 px-8"
-            : resultShell
-            ? "border-black/10 bg-[#F2EDE3]/92"
+          momentSurface ? "h-16" : "h-14",
+          resultShell
+            ? "border-[#171719]/15 bg-[#F2EFE7]/94 px-8"
             : lightShell
               ? "border-[#D4D8E0] bg-[#F7F8FA]/92"
               : "border-white/10 bg-[#0A0A0A]/92"
         )}
       >
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
-          {dropArchiveHome ? (
-            <span className="flex items-center gap-3 text-[#F5F1E8]">
-              <span className="grid h-8 w-8 place-items-center rounded-[8px] bg-[#D84A35] font-display text-sm font-black text-white">
+          {momentSurface ? (
+            <span className="flex items-center gap-3 text-[#171719]">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-[#FF5A36] font-display text-sm font-black text-[#171719]">
                 P
               </span>
               <span>
                 <span className="block font-display text-base font-black leading-none tracking-[-0.04em]">
                   Pikbo
                 </span>
-                <span className="mt-1 block text-[7px] font-black uppercase tracking-[0.2em] text-[#A39C91]">
-                  Motion archive
+                <span className="mt-1 block text-[7px] font-black uppercase tracking-[0.2em] text-[#79756D]">
+                  Toy moments
                 </span>
               </span>
             </span>
@@ -113,14 +115,18 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <nav
           className="mx-auto flex items-center gap-9"
           aria-label="Primary navigation"
-          data-primary-create-href="/create?mode=seller-pack"
+          data-primary-create-href={
+            momentSurface
+              ? "/create?moment=capsule-reveal"
+              : "/create?mode=seller-pack"
+          }
         >
-          {(dropArchiveHome
+          {(momentSurface
             ? [
-                { href: "#home-create", label: "Archive" },
-                { href: "/create?mode=seller-pack", label: "Create" },
-                { href: "/library", label: "Library" },
-                { href: "/pricing", label: "Pricing" },
+                { href: "/#moment-stage", label: "Explore" },
+                { href: "/create?moment=capsule-reveal", label: "Create" },
+                { href: "/library", label: "Projects" },
+                { href: "/login", label: "Sign in" },
               ]
             : PRIMARY_NAV.filter(
                 (item) => !resultShell || item.href !== "/"
@@ -134,10 +140,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 aria-current={on ? "page" : undefined}
                 className={cn(
                   "relative py-5 text-[13px] font-bold transition-colors",
-                  dropArchiveHome
+                  momentSurface
                     ? on
-                      ? "text-[#F5F1E8]"
-                      : "text-[#A39C91] hover:text-[#F5F1E8]"
+                      ? "text-[#171719]"
+                      : "text-[#77736C] hover:text-[#171719]"
                     : resultShell
                     ? on
                       ? "text-[#15171B]"
@@ -156,8 +162,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                   <span
                     className={cn(
                       "absolute inset-x-0 bottom-0 h-0.5",
-                      dropArchiveHome
-                        ? "bg-[#D84A35]"
+                      momentSurface
+                        ? "bg-[#FF5A36]"
                         : resultShell
                         ? "bg-[#FF6846]"
                         : lightShell
@@ -171,12 +177,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="flex shrink-0 items-center gap-3">
-          {dropArchiveHome ? (
+          {momentSurface ? (
             <Link
-              href="/create?mode=seller-pack&preview=1&source=header-drop-archive"
-              className="inline-flex min-h-10 items-center rounded-[10px] bg-[#D84A35] px-5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-[#E25A43]"
+              href="/create?moment=capsule-reveal"
+              className="inline-flex min-h-10 items-center rounded-full bg-[#171719] px-5 text-xs font-black text-[#F5F1E8] transition hover:-translate-y-0.5 hover:bg-[#FF5A36] hover:text-[#171719]"
             >
-              Preview Launch Pack
+              Create with my toy
             </Link>
           ) : resultShell ? (
             <Link
@@ -202,7 +208,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         className={cn(
           "sticky top-0 z-50 flex h-12 items-center justify-between border-b px-3 backdrop-blur-xl lg:hidden",
           resultShell
-            ? "border-black/10 bg-[#F2EDE3]/94"
+            ? "border-black/10 bg-[#F2EFE7]/94"
             : lightShell
               ? "border-[#D4D8E0] bg-[#F7F8FA]/94"
               : "border-white/10 bg-[#0A0A0A]/92"
@@ -215,7 +221,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           />
         </Link>
         <div className="flex items-center gap-2">
-          {resultShell ? (
+          {momentSurface ? (
+            <Link
+              href="/create?moment=capsule-reveal"
+              className="inline-flex min-h-9 items-center rounded-full bg-[#171719] px-4 text-[10px] font-black text-[#F5F1E8]"
+            >
+              Add my toy
+            </Link>
+          ) : resultShell ? (
             <>
               <Link
                 href={
@@ -273,9 +286,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           className={cn(
             "min-w-0 flex-1",
             resultShell
-              ? dropArchiveHome
-                ? "bg-[#F2EDE3] lg:bg-[#111111]"
-                : "bg-[#F2EDE3]"
+              ? "bg-[#F2EFE7]"
               : lightShell
                 ? "bg-[#EEF0F4]"
                 : "bg-[#0A0A0A]"

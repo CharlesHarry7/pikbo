@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
-import { HomeSeoBody } from "@/components/HomeSeoBody";
 import { HomeTrustFooter } from "@/components/HomeTrustFooter";
 import { JsonLd } from "@/components/JsonLd";
 import {
@@ -8,7 +7,6 @@ import {
   websiteJsonLd,
 } from "@/lib/jsonLd";
 import { site } from "@/lib/site";
-import { buildHomeShowcaseFeed } from "@/lib/videoFeed";
 
 export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
@@ -38,8 +36,7 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  const showcase = buildHomeShowcaseFeed();
-  const lcpPoster = "/demos/scout-still.webp";
+  const lcpPoster = "/moments/capsule-reveal.jpg";
 
   return (
     <>
@@ -51,9 +48,7 @@ export default function Home() {
         ]}
       />
 
-      <HomeCinemaHero items={showcase} />
-
-      <HomeSeoBody />
+      <HomeCinemaHero />
       <HomeTrustFooter />
     </>
   );
