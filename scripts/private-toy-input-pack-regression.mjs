@@ -57,6 +57,9 @@ assert.equal(validateToyAssetRequest({ ...validRequest, clientAssetKey: "short" 
 assert.equal(validateToyAssetRequest({ ...validRequest, skuLabel: "x".repeat(121) })?.code, "INVALID_SKU_LABEL");
 
 const migration = read("supabase/migrations/20260802010000_private_toy_input_pack_binding.sql");
+const admissionMigration = read(
+  "supabase/migrations/20260802020000_private_toy_asset_admission_rpcs.sql"
+);
 assert.match(migration, /create table if not exists public\.toy_assets/);
 assert.match(migration, /alter table public\.toy_assets enable row level security/);
 assert.match(migration, /grant select \([\s\S]*verified_at[\s\S]*\) on public\.toy_assets to authenticated/);
@@ -69,6 +72,41 @@ assert.match(migration, /if v_bound_count <> 3/);
 assert.match(migration, /pikbo_authorize_seller_pack_child_with_asset_v1/);
 assert.match(migration, /j\.input_asset_id = p\.input_asset_id/);
 assert.doesNotMatch(migration, /grant execute[\s\S]{0,120}authenticated/);
+assert.match(admissionMigration, /add column if not exists client_asset_key text/);
+assert.match(admissionMigration, /toy_assets_owner_client_key_uidx/);
+assert.match(
+  admissionMigration,
+  /create or replace function public\.pikbo_create_toy_asset_v1/
+);
+assert.match(
+  admissionMigration,
+  /create or replace function public\.pikbo_complete_toy_asset_v1/
+);
+assert.match(
+  admissionMigration,
+  /on conflict \(owner_user_id, client_asset_key\) do nothing/
+);
+assert.match(admissionMigration, /where id = p_asset_id[\s\S]*owner_user_id = p_user_id/);
+assert.match(
+  admissionMigration,
+  /p_actual_sha256 is null[\s\S]*p_actual_mime_type is null[\s\S]*p_actual_size_bytes is null[\s\S]*INPUT_ASSET_IDENTITY_CONFLICT/
+);
+assert.match(
+  admissionMigration,
+  /v_asset\.sha256 is distinct from p_actual_sha256[\s\S]*v_asset\.mime_type is distinct from p_actual_mime_type[\s\S]*v_asset\.size_bytes is distinct from p_actual_size_bytes/
+);
+assert.match(
+  admissionMigration,
+  /grant execute on function public\.pikbo_create_toy_asset_v1[\s\S]*to service_role/
+);
+assert.match(
+  admissionMigration,
+  /grant execute on function public\.pikbo_complete_toy_asset_v1[\s\S]*to service_role/
+);
+assert.doesNotMatch(
+  admissionMigration,
+  /grant execute[\s\S]{0,160}to (?:public|anon|authenticated)/
+);
 
 const upload = read("app/api/assets/upload-url/route.ts");
 const complete = read("app/api/assets/complete/route.ts");
@@ -143,6 +181,9 @@ assert.match(batch, /registerPrivateToyAsset[\s\S]*reserveSellerPackClient/);
 assert.match(batch, /canPreparePrivateInput/);
 assert.match(batch, /Verify private photo/);
 assert.match(batch, /0 credits reserved · 0 video jobs created/);
+assert.match(batch, /privateInputOnly[\s\S]*void verifyPrivateInput\(\)/);
+assert.match(batch, /Retry photo verification/);
+assert.match(batch, /Private photo verification needs attention/);
 assert.match(status, /mine === "active"/);
 assert.match(status, /mine === "recent"/);
 assert.doesNotMatch(status, /\bobjectKey\s*:|\bproviderRequestId\s*:/);

@@ -22,12 +22,22 @@ Newest first. One block per meaningful landing.
   outputs or a Library promise. Owner completion may finish an already admitted
   signed PUT across invite/readiness drift, but cannot create an asset, Pack,
   job, charge or Provider request.
+- GitHub review found two release gaps after the first green Preview: a fresh
+  canonical database did not yet receive the service-only create/complete
+  asset RPCs, and the input-only error button still retried Pack setup. The
+  forward migration now installs idempotent owner/client-key admission RPCs,
+  rejects NULL or mismatched verified identity fields, keeps execute authority
+  service-role-only, and the UI retries photo verification with input-only copy.
+  Grok and WorkBuddy both returned **APPROVE** on this corrected delta.
 - The focused route regression executes auth, invite, input-infrastructure,
   rate-limit and upload/complete outcomes while full private Preview is false.
   The complete launch-gate, accounting, recovery, Provider-budget, billing,
   TypeScript, ESLint and 199-page production build gates pass.
 - No Provider request, credit mutation, Stripe action, environment change,
-  Supabase mutation, DNS change or public-live enablement occurred. Full
+  Supabase mutation, DNS change or public-live enablement occurred. A follow-up
+  remote harness attempt also stopped before fixture creation because the
+  branch-scoped Vercel service-role value is an invalid placeholder; that is
+  recorded as an external non-production configuration blocker, not a PASS. Full
   evidence: `docs/evidence/PRIVATE_INPUT_ADMISSION_2026-08-02.md`.
 
 ---

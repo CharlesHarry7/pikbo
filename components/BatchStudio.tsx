@@ -2268,18 +2268,31 @@ export function BatchStudio({
         {error ? (
           sellerPackActive ? (
             <div className="rounded-xl border border-[#F2C9BE] bg-[#FFF6F3] p-3 text-xs text-[#8A3C2C]">
-              <p className="font-black">This Pack needs attention</p>
+              <p className="font-black">
+                {privateInputOnly
+                  ? "Private photo verification needs attention"
+                  : "This Pack needs attention"}
+              </p>
               <p className="mt-1 font-semibold leading-5">{error}</p>
               {canRetryUnreservedPack ? (
                 <button
                   type="button"
                   onClick={() => {
                     setFailRetryAfterSec(null);
-                    void runBatch();
+                    if (privateInputOnly) {
+                      void verifyPrivateInput();
+                    } else {
+                      void runBatch();
+                    }
                   }}
                   className="mt-3 rounded-xl bg-[#2457E6] px-4 py-2 text-[11px] font-black text-white"
+                  data-private-input-action={
+                    privateInputOnly ? "retry-verify-private-input" : undefined
+                  }
                 >
-                  Try Pack setup again
+                  {privateInputOnly
+                    ? "Retry photo verification"
+                    : "Try Pack setup again"}
                 </button>
               ) : jobs.length > 0 || activePackRunId || runProjectId ? (
                 <p className="mt-2 text-[10px] font-bold text-[#8A5A50]">

@@ -57,6 +57,27 @@ PASS on 2026-08-02:
 - `npm run lint`
 - `npm run build` (199 generated pages; one pre-existing T6 dynamic NFT tracing warning)
 
+GitHub review then identified two omissions outside that initial green run. The
+source tree now includes
+`20260802020000_private_toy_asset_admission_rpcs.sql`, which installs the two
+service-role-only input admission RPCs on a fresh canonical database, adds the
+stable owner/client idempotency key, and fails closed when any verified hash,
+MIME, or byte count is NULL or mismatched. The input-only error CTA now retries
+photo verification rather than Pack setup. Focused regression, engine, type and
+lint gates pass on the corrected delta; Grok and WorkBuddy independently
+returned **APPROVE**.
+
+## Remote rehearsal boundary
+
+A zero-Provider harness was attempted against the exact dedicated non-production
+project `lpfvfybkggiugosugfcw`. It stopped at the first service-role API preflight
+because the branch-scoped Vercel value is an invalid placeholder. The harness
+tracked zero users, zero accounts, zero assets, zero Pack runs, zero reservations
+and zero jobs, so it performed no database or Storage mutation. This attempt is
+not counted as a PASS. Reapplying a valid non-production service-role secret and
+then applying/exercising the forward migration remains an environment task; it
+does not authorize Provider, credits, delivery or Stripe.
+
 ## Collaboration evidence
 
 - GPT Pro persistent chat: `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`.
