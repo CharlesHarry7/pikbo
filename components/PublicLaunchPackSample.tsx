@@ -93,7 +93,13 @@ function HomeDropArchive({
     const current = FORMATS.findIndex((format) => format.id === active.id);
     const direction = event.key === "ArrowRight" ? 1 : -1;
     const next = (current + direction + FORMATS.length) % FORMATS.length;
-    onSelect(FORMATS[next]);
+    const nextFormat = FORMATS[next];
+    onSelect(nextFormat);
+    event.currentTarget
+      .querySelector<HTMLButtonElement>(
+        `[data-home-format-preview="${nextFormat.id}"]`
+      )
+      ?.focus();
   }
 
   return (
