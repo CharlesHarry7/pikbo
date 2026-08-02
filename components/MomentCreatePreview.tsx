@@ -25,6 +25,7 @@ import {
   type MeResponse,
 } from "@/lib/meClient";
 import { cn } from "@/lib/utils";
+import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 
 type DraftStatus = "loading" | "empty" | "ready" | "tab-only";
 
@@ -374,6 +375,43 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
               <div className="absolute inset-x-0 bottom-0 z-30 flex items-center justify-between gap-4 bg-black/62 px-4 py-3 text-[9px] font-black uppercase tracking-[0.14em] text-white/80 backdrop-blur-sm">
                 <span>Preview composition only. This is not a generated result.</span>
                 {objectUrl ? <span>Drag to position · wheel to scale</span> : null}
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 border border-[#171719]/15 bg-[#E8E3D9] p-4 sm:grid-cols-[minmax(0,1fr)_220px] sm:items-stretch">
+              <div className="flex flex-col justify-between gap-6 py-1">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F04E30]">
+                    Motion proof
+                  </p>
+                  <h2 className="mt-3 max-w-sm font-display text-3xl font-black leading-[0.92] tracking-[-0.05em]">
+                    Watch a finished reveal.
+                  </h2>
+                  <p className="mt-3 max-w-sm text-xs font-semibold leading-5 text-[#57544E]">
+                    Archived format study · separate sample toy · not your output.
+                    Use it to judge the motion before requesting private access.
+                  </p>
+                </div>
+                <Link
+                  href="/create?mode=seller-pack&preview=1&source=moment-proof"
+                  className="text-[10px] font-black uppercase tracking-[0.16em] text-[#171719] underline decoration-[#F04E30]/60 underline-offset-4 hover:text-[#F04E30]"
+                >
+                  See all three sample formats →
+                </Link>
+              </div>
+              <div className="relative min-h-[250px] overflow-hidden bg-[#171719]">
+                <AutoPlayVideo
+                  poster="/demos/moon-float.webp"
+                  webm="/demos/moon-box-reveal.webm"
+                  mp4="/demos/moon-box-reveal.mp4"
+                  className="h-full min-h-[250px] w-full object-cover"
+                  lazySources
+                  label="Archived blind-box reveal format study"
+                  showControls
+                />
+                <span className="pointer-events-none absolute inset-x-3 bottom-3 z-20 bg-black/65 px-2 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-white/85">
+                  Archived study · separate sample toy
+                </span>
               </div>
             </div>
           </section>
