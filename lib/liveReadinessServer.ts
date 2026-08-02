@@ -5,8 +5,10 @@ import {
 import { probeDurableReconciliationSchema } from "@/lib/durableCredits/reconciliation";
 import {
   evaluateHealthTruth,
+  evaluatePrivateInputAdmissionReadiness,
   evaluatePrivatePreviewReadiness,
   type HealthTruthInput,
+  type PrivateInputAdmissionReadinessInput,
   type PrivatePreviewReadinessInput,
 } from "@/lib/liveCapability";
 import {
@@ -77,6 +79,20 @@ async function computeSoftLiveReadiness() {
   };
   const providerValidationDeployment =
     providerValidationEnvironmentGate();
+  const privateLiveEnabled =
+    process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1";
+  const privateLiveAllowlistConfigured =
+    parsePrivateLiveAllowlist(
+      process.env.PIKBO_PRIVATE_LIVE_ALLOWLIST || ""
+    ).length > 0;
+  const privateInputAdmissionInput: PrivateInputAdmissionReadinessInput = {
+    authConfigured,
+    privateInputsBucketReady: privateInputs.bucketReady,
+    privateInputsSchemaReady: privateInputs.schemaReady,
+    privateInputsAssetRpcReady: privateInputs.assetRpcReady,
+    privateLiveEnabled,
+    privateLiveAllowlistConfigured,
+  };
   const privatePreviewInput: PrivatePreviewReadinessInput = {
     authConfigured,
     durableAtomicReservationConfigured,
@@ -91,11 +107,8 @@ async function computeSoftLiveReadiness() {
     privateInputsDiscoveryReady: privateInputs.discoveryReady,
     providerOutputAllowlistConfigured:
       privateProviderOutputAllowlistConfigured(),
-    privateLiveEnabled: process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1",
-    privateLiveAllowlistConfigured:
-      parsePrivateLiveAllowlist(
-        process.env.PIKBO_PRIVATE_LIVE_ALLOWLIST || ""
-      ).length > 0,
+    privateLiveEnabled,
+    privateLiveAllowlistConfigured,
     privateLiveBudgetConfigured:
       Math.floor(
         Number(process.env.PIKBO_PRIVATE_LIVE_BUDGET_MAX || "0")
@@ -111,8 +124,12 @@ async function computeSoftLiveReadiness() {
 
   return {
     truth: evaluateHealthTruth(input),
+    privateInputAdmission: evaluatePrivateInputAdmissionReadiness(
+      privateInputAdmissionInput
+    ),
     privatePreview: evaluatePrivatePreviewReadiness(privatePreviewInput),
     input,
+    privateInputAdmissionInput,
     privatePreviewInput,
     authPublic,
     durableCredits,

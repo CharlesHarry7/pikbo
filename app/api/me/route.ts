@@ -125,6 +125,7 @@ export async function GET(req: Request) {
   if (!user) {
     return NextResponse.json({
       ...base,
+      canPreparePrivateInput: false,
       canLiveGenerate: false,
       signedIn: false,
       auth: null,
@@ -184,6 +185,9 @@ export async function GET(req: Request) {
     }
   }
   const privateLive = resolvePrivateLiveAccess(user);
+  const canPreparePrivateInput =
+    privateLive.invite.invited === true &&
+    liveReadiness.privateInputAdmission.ready;
   const routeAccess = liveGenerationAccess({
     providerConfigured: Boolean(process.env.FAL_KEY),
     authenticated: true,
@@ -223,6 +227,7 @@ export async function GET(req: Request) {
     mode: capability.canLiveGenerate
       ? ("live-generate" as const)
       : ("demo-cached" as const),
+    canPreparePrivateInput,
     canLiveGenerate: capability.canLiveGenerate,
     freeTrial: {
       ...base.freeTrial,

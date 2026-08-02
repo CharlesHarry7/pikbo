@@ -470,12 +470,19 @@ export async function getOwnerSellerPackInput(input: {
 export async function probePrivateToyAssets(): Promise<{
   bucketReady: boolean;
   schemaReady: boolean;
+  assetRpcReady: boolean;
   reserveRpcReady: boolean;
   discoveryReady: boolean;
 }> {
   const admin = getSupabaseAdmin();
   if (!admin) {
-    return { bucketReady: false, schemaReady: false, reserveRpcReady: false, discoveryReady: false };
+    return {
+      bucketReady: false,
+      schemaReady: false,
+      assetRpcReady: false,
+      reserveRpcReady: false,
+      discoveryReady: false,
+    };
   }
   const [bucket, table, createRpc, completeRpc, reserveRpc, statusRpc, resolveRpc, discovery] = await Promise.all([
     admin.storage.getBucket(PRIVATE_TOY_INPUTS_BUCKET),
@@ -520,11 +527,12 @@ export async function probePrivateToyAssets(): Promise<{
   return {
     bucketReady: !bucket.error && bucket.data?.public === false,
     schemaReady: !table.error,
-    reserveRpcReady:
+    assetRpcReady:
       !createRpc.error &&
       createPayload?.code === "AUTH_REQUIRED" &&
       !completeRpc.error &&
-      completePayload?.code === "INVALID_IDENTITY" &&
+      completePayload?.code === "INVALID_IDENTITY",
+    reserveRpcReady:
       !reserveRpc.error &&
       reservePayload?.code === "AUTH_REQUIRED" &&
       !statusRpc.error &&

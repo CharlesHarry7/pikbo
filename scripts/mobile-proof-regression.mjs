@@ -52,14 +52,15 @@ assert.doesNotMatch(
 
 assert.match(
   batch,
-  /const demoMode = !privateUploadEnabled \|\| labStill/,
+  /const demoMode = !privateLaunchEnabled \|\| labStill/,
   "Launch Workspace must keep the authoritative fail-closed public mode"
 );
 assert.match(
   createPage,
-  /Public sample · 0 credits[\s\S]*no product photo is accepted or processed/i,
-  "Launch Workspace must state the public no-upload, zero-credit contract"
+  /Access is confirmed inside the workspace[\s\S]*no credits until generation starts/i,
+  "Launch Workspace header must remain truthful before account capability resolves"
 );
+assert.match(batch, /Public Lab preview · no product photo is accepted or processed · 0\s*credits/);
 assert.doesNotMatch(
   batch,
   /SellerPackSteps/,

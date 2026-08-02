@@ -68,6 +68,38 @@ export type PrivatePreviewReadinessInput = {
   durableProviderBudgetRpcReady: boolean;
 };
 
+export type PrivateInputAdmissionReadinessInput = {
+  authConfigured: boolean;
+  privateInputsBucketReady: boolean;
+  privateInputsSchemaReady: boolean;
+  privateInputsAssetRpcReady: boolean;
+  privateLiveEnabled: boolean;
+  privateLiveAllowlistConfigured: boolean;
+};
+
+/**
+ * Readiness for the zero-Provider input-admission leg only. A true result may
+ * authorize an invited seller to prepare and verify one private toy image; it
+ * must never authorize Pack reserve, credits, generation, or delivery.
+ */
+export function evaluatePrivateInputAdmissionReadiness(
+  input: PrivateInputAdmissionReadinessInput
+) {
+  const required: Array<keyof PrivateInputAdmissionReadinessInput> = [
+    "authConfigured",
+    "privateInputsBucketReady",
+    "privateInputsSchemaReady",
+    "privateInputsAssetRpcReady",
+    "privateLiveEnabled",
+    "privateLiveAllowlistConfigured",
+  ];
+  const missing: Array<keyof PrivateInputAdmissionReadinessInput> = [];
+  for (const key of required) {
+    if (!input[key]) missing.push(key);
+  }
+  return { ready: missing.length === 0, missing };
+}
+
 /**
  * Global readiness for the invited private Preview path. This deliberately
  * stays separate from public soft-live readiness: Preview may use an

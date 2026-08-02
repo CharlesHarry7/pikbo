@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 import { completePrivateToyAsset } from "@/lib/privateToyAssets";
+import { takeToken } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -10,6 +11,25 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { ok: false, code: "AUTH_REQUIRED", error: "Sign in to verify a private toy photo" },
       { status: 401 }
+    );
+  }
+  // Completion is the owner-scoped second half of an already admitted signed
+  // upload. Do not strand a private object if invite/readiness changes between
+  // PUT and completion; ownership, object bytes, MIME, size and hash remain
+  // authoritative inside completePrivateToyAsset.
+  const rateLimit = takeToken(`private-input-complete:${auth.id}`, 18, 60_000);
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "RATE_LIMITED",
+        error: `Too many private photo checks — try again in ${rateLimit.retryAfterSec}s`,
+        retryAfterSec: rateLimit.retryAfterSec,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSec) },
+      }
     );
   }
   let body: { assetId?: string } = {};

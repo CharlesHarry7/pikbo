@@ -55,6 +55,7 @@ export async function GET() {
     durableCredits,
     durableReconciliation,
     durableProviderBudget,
+    privateInputAdmission,
     privatePreview,
     privateResults,
     supabase,
@@ -116,6 +117,8 @@ export async function GET() {
       durableAtomicReservationConfigured && durableReconciliationConfigured,
     /** Owner-only Preview path; independent from public Free/T6 readiness. */
     privatePreview: privatePreview.ready,
+    /** Zero-Provider, invite-only private toy-photo admission. */
+    privateInputAdmission: privateInputAdmission.ready,
   };
 
   return NextResponse.json({
@@ -134,6 +137,8 @@ export async function GET() {
       missingLiveRequirements: truth.missing,
       privatePreview: ready.privatePreview === true,
       missingPrivatePreviewRequirements: privatePreview.missing,
+      privateInputAdmission: ready.privateInputAdmission === true,
+      missingPrivateInputAdmissionRequirements: privateInputAdmission.missing,
     },
     /** T6 file watermark bake — blocked until operator proves pipeline */
     t6,
@@ -365,6 +370,17 @@ export async function GET() {
     privatePreviewReadiness: {
       ready: privatePreview.ready,
       missing: privatePreview.missing,
+    },
+    privateInputAdmissionReadiness: {
+      ready: privateInputAdmission.ready,
+      missing: privateInputAdmission.missing,
+      authorizes: "private-photo-upload-and-verification-only" as const,
+      doesNotAuthorize: [
+        "seller-pack-reserve",
+        "provider-generation",
+        "credit-settlement",
+        "stripe",
+      ] as const,
     },
     /** Live-readiness checklist (presence only — never echo secrets) */
     softLiveChecklist: {
