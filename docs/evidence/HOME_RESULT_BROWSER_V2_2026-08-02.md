@@ -47,6 +47,8 @@ Reviewer screenshots:
 Passed:
 
 - `npm run launch-pack-main-path-smoke`
+- `npm run product-proof-smoke`
+- `npm run mobile-proof-regression`
 - `npm run live-copy-smoke`
 - `npm run seo-cold-start-smoke`
 - `npm run engine-smoke`

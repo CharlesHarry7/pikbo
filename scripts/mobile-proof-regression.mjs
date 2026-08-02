@@ -68,7 +68,7 @@ assert.doesNotMatch(
 );
 assert.match(
   shell,
-  /\{!sellerPackCreate \? <nav/,
+  /\{!resultShell && !sellerPackCreate \? <nav/,
   "Seller Pack Create must not stack the five-item mobile nav under its fixed primary action"
 );
 assert.doesNotMatch(
