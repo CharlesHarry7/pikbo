@@ -48,6 +48,15 @@ export async function generateMetadata({
       robots: CONCEPT_ROBOTS,
     };
   }
+  if (sp.mode === "moment") {
+    return {
+      title: { absolute: `Street Power-Up · Private Moment | ${site.name}` },
+      description:
+        "Generate one private 9:16, 5-second, 720p toy launch moment from a photo you own when your invited seller account is enabled.",
+      alternates: { canonical: "/create?mode=moment&effect=street-power-up" },
+      robots: CONCEPT_ROBOTS,
+    };
+  }
   const preset = sp.effect ? getPreset(sp.effect) : undefined;
   if (preset) {
     return {
@@ -169,6 +178,48 @@ export default async function CreatePage({
             initialRecoverPackRunId={recoverPackRunId}
           />
         </div>
+      </div>
+    );
+  }
+
+  // First real Moment contract: one owned toy photo → one private 5s clip.
+  // This intentionally uses the existing CreateStudio/live gate instead of
+  // creating a second generation system. Founding Studio still starts from
+  // the fixed three-video Launch Pack; invited validation accounts use this
+  // single-moment path for the first quality check.
+  if (sp.mode === "moment") {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] pb-24 text-[#F7F4ED]">
+        <div className="mx-auto max-w-[1480px] px-5 pb-4 pt-8 sm:px-8 lg:px-12">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#CBFF3D]">
+            Pikbo Moment · real private render
+          </p>
+          <h1 className="mt-3 max-w-4xl font-display text-[clamp(2.8rem,6vw,6rem)] font-black leading-[0.88] tracking-[-0.065em]">
+            One toy photo. One Street Power-Up.
+          </h1>
+          <p className="mt-5 max-w-2xl text-base font-semibold leading-7 text-white/60">
+            An invited seller can submit one owned toy photo for a private
+            9:16 · 5s · 720p launch clip. The result is stored privately and
+            can be downloaded from Library. Public visitors only see the
+            cached Lab path.
+          </p>
+        </div>
+        <CreateStudio
+          initialEffect="street-power-up"
+          initialModel={sp.model}
+          initialResolution={sp.resolution}
+          initialMode="i2v"
+          initialPrompt={sp.prompt}
+          initialSource={sp.source}
+          initialRatio="9:16"
+          initialDuration="5"
+          initialChannel={sp.channel}
+          initialSample={firstRunSample}
+          initialJob={sp.job}
+          initialSku={sp.sku}
+          initialRetryJobId={sp.retryJobId}
+          initialRetryToken={sp.retryToken}
+        />
       </div>
     );
   }
