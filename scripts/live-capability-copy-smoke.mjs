@@ -62,9 +62,9 @@ for (const relativePath of publicPromiseFiles) {
 }
 
 assert(
-  read("lib/site.ts").includes("place one owned designer-toy photo into a local preview") &&
-    read("lib/site.ts").includes("invitation-only private creation workflow"),
-  "site metadata must lead with the device-local Moment path and gated private continuation"
+  read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
+    read("lib/site.ts").includes("AI product video studio for toy sellers"),
+  "site metadata must lead with concrete seller outcomes and the gated private workflow"
 );
 assert(
   /When private Live is enabled,\s+eligible invited accounts\s+can create private 5-second 720p results/.test(
