@@ -59,6 +59,14 @@
 - 现有 Scout、Moon、Beatbot 必须继续标明为三个不同 archive prototypes，不得冒充同一 SKU Pack、客户案例或公开生成结果。
 - 生产改动只限 `components/AppShell.tsx`、`components/PublicLaunchPackSample.tsx` 与 `components/HomeSeoBody.tsx`；其中 `HomeSeoBody` 只允许桌面配色衔接，不改内容或行为。禁止修改 API、Provider、Storage、Supabase、credits、Stripe、Library、Create 私有流程和生产门禁。
 
+### 2026-08-02 owner override — Moment to Create bridge
+
+- 唯一任务：`MOMENT-CREATE-BRIDGE-V1`，分支 `agent/gpt/moment-create-preview-bridge-v1`。老板明确否决 Motion Archive 和固定三条视频作为首要产品交互；本轮以 Higgsfield 的真实产品循环为参考，改成一次选一个潮玩 Moment、放入一个自有玩具、然后继续创作。
+- GPT Pro 已在持久会话 `6a6b4960-4dcc-83e8-8404-b5cb6748abf6` 冻结 Home + Create 竖直切片；Codex 是唯一实现者，Grok 做工程/安全审查，WorkBuddy 做 ChinaJoy 潮玩审美和桌面实站审查。
+- Home 只展示六个原创潮玩 Moment：Capsule Reveal、Hangar Ignition、Colorblock Pedestal、Softroom Morning、Gallery Spotlight、Alley Drop Flash。六个均必须标记 `Official Concept`；旧的唯一真实输出只能作为独立 `Verified Technical Output`，不得绑定任何 Moment。
+- 匿名用户的玩具图片只保存于设备本地草稿，不上传、不生成、不消耗 Provider；Create 必须清楚区分未登录、已登录未受邀、仅允许私有输入准备、完整私测生成四个状态，并复用当前认证和私有生成路径。
+- 只做 1440px 桌面主体，手机版不重做。禁止修改 Provider、Storage、Supabase、credits、Stripe、Generation API、数据库、readiness 和生产付费门禁。
+
 ---
 
 ## 死序优先级（不可跳级）

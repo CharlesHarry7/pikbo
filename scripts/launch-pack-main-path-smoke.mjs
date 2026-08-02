@@ -25,30 +25,20 @@ const pricingCards = read("components/PricingPlanCards.tsx");
 const paywall = read("components/PaywallCard.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
-const homeArchive = publicSample.slice(
-  publicSample.indexOf("function HomeDropArchive"),
-  publicSample.indexOf("function CreateSampleBrowser")
-);
 const createSample = publicSample.slice(
   publicSample.indexOf("function CreateSampleBrowser")
 );
 
-// Homepage presents the value immediately and routes public visitors into an
-// instant, truthful sample browser. Private upload remains in BatchStudio.
-assert.match(homeHero, /PublicLaunchPackSample surface="home"/);
-assert.match(homeArchive, /data-home-upgrade="launch-pack"/);
-assert.match(homeArchive, /id="home-create"/);
-assert.match(homeArchive, /See how toys become launches\./);
-assert.match(homeArchive, /Preview Launch Pack/);
-assert.match(homeArchive, /preview=1&source=home-drop-archive/);
-assert.match(homeArchive, /Product target · one toy · three launch formats/);
-assert.match(
-  homeArchive,
-  /Archive shown · three different Pikbo-owned prototypes · no product upload/
-);
-assert.match(homeArchive, /Three separate archived format prototypes/);
-assert.equal((homeArchive.match(/<AutoPlayVideo/g) || []).length, 1);
-assert.doesNotMatch(homeArchive, /One toy photo\. Three launch-ready videos\./);
+// The public homepage now starts from a single Moment selection. The existing
+// Launch Pack remains an explicitly private workspace, not the public product
+// definition and not a fabricated public result.
+assert.match(homeHero, /HomeMomentShowcase/);
+assert.match(read("components/HomeMomentShowcase.tsx"), /Choose the moment your toy enters\./);
+assert.match(read("components/MomentStage.tsx"), /Try this moment/);
+assert.match(read("components/MomentStage.tsx"), /Official Concept/);
+assert.match(read("components/MomentCreatePreview.tsx"), /no upload · no generation · 0 credits/i);
+assert.doesNotMatch(homeHero, /PublicLaunchPackSample surface="home"/);
+assert.doesNotMatch(home, /One toy photo\. Three launch-ready videos\./);
 assert.match(createSample, /data-public-pack-preview="instant-archived-samples"/);
 assert.match(createSample, /Pikbo Lab archive/);
 assert.match(createSample, /No sign-in · no upload/);
@@ -109,10 +99,10 @@ assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
 assert.match(shell, /create\?mode=seller-pack/);
-assert.match(shell, /Preview Launch Pack/);
-assert.match(shell, /preview=1&source=header-drop-archive/);
-assert.match(shell, /aria-label="Mobile product menu"/);
-assert.match(shell, /PRIMARY_NAV\.filter\(\(item\) => item\.href !== "\/"\)/);
+assert.match(shell, /create\?moment=capsule-reveal/);
+assert.match(shell, /Create with my toy/);
+assert.match(shell, /label: "Projects"/);
+assert.doesNotMatch(shell, /Motion archive/);
 assert.match(softLaunchStrip, /: "\/create\?mode=seller-pack";/);
 assert.match(hfExploreHome, /href="\/create\?mode=seller-pack"/);
 assert.match(freeTrialCta, /onHome\s*\? "\/create\?mode=seller-pack"/);
@@ -143,7 +133,7 @@ assert.doesNotMatch(
 assert.match(pricing, /There is no Free plan comparison/);
 assert.doesNotMatch(
   [home, homeHero, pricing, pricingCards].join("\n"),
-  /\$49|\/mo|Choose the volume/
+  /\$49|\/mo(?:nth|\b)|Choose the volume/
 );
 assert.doesNotMatch(
   [home, homeWall, shell].join("\n"),
@@ -221,5 +211,5 @@ assert.match(packExport, /i\.downloadable/);
 assert.match(packExport, /Failed siblings and Free raw URLs are omitted/);
 
 console.log(
-  "launch-pack-main-path-smoke: PASS (home upgrade → fixed trio → downloadable-only seller handoff)"
+  "launch-pack-main-path-smoke: PASS (public Moment entry + private fixed trio + downloadable-only seller handoff)"
 );

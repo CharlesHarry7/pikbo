@@ -9,13 +9,34 @@ import { getPreset } from "@/lib/presets";
 import { site } from "@/lib/site";
 import { softwareApplicationJsonLd } from "@/lib/jsonLd";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import {
+  InvalidMomentNotice,
+  MomentCreatePreview,
+} from "@/components/MomentCreatePreview";
+import { getMoment, parseMomentId } from "@/lib/moments";
 
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ effect?: string; mode?: string; preview?: string }>;
+  searchParams: Promise<{
+    effect?: string;
+    mode?: string;
+    preview?: string;
+    moment?: string | string[];
+  }>;
 }): Promise<Metadata> {
   const sp = await searchParams;
+  const moment = Array.isArray(sp.moment) ? null : parseMomentId(sp.moment);
+  if (sp.moment !== undefined) {
+    return {
+      title: { absolute: moment ? `${getMoment(moment).name} | ${site.name}` : `Moment unavailable | ${site.name}` },
+      description: moment
+        ? `Place your owned toy into Pikbo's ${getMoment(moment).name} local composition preview. No upload or generation occurs in the public preview.`
+        : "Choose one of Pikbo's published toy Moments. Invalid Moment links do not upload or generate anything.",
+      alternates: { canonical: "/create" },
+      robots: CONCEPT_ROBOTS,
+    };
+  }
   // Cold-start: /create is the product tool but not a rank landing (home tool is).
   // Keep crawlable + follow for deep links; stay out of the 9-URL index budget.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
@@ -78,9 +99,19 @@ export default async function CreatePage({
     recover?: string;
     /** Truthful instant public sample browser; never enters the private workbench. */
     preview?: string;
+    /** Truthful device-local Moment preview; never enters generation by itself. */
+    moment?: string | string[];
   }>;
 }) {
   const sp = await searchParams;
+
+  // A present Moment query is a fail-closed product surface. It never falls
+  // through to the generic Studio or Seller Pack routes.
+  if (sp.moment !== undefined) {
+    const momentId = Array.isArray(sp.moment) ? null : parseMomentId(sp.moment);
+    if (!momentId) return <InvalidMomentNotice />;
+    return <MomentCreatePreview moment={getMoment(momentId)} />;
+  }
 
   const firstRunSample =
     sp.sample ||
