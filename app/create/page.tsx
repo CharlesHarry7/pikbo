@@ -102,18 +102,18 @@ export default async function CreatePage({
                 </span>
               </p>
               <h1 className="mt-2 max-w-4xl font-display text-[clamp(2.35rem,5vw,5.25rem)] font-black leading-[0.92] tracking-[-0.06em]">
-                Preview a Launch Pack.
+                Prepare or preview a Launch Pack.
               </h1>
             </div>
             <div className="border-l-2 border-[#2457E6] pl-4">
               <p className="text-sm font-semibold leading-6 text-[#626B78]">
-                Compare the three fixed Launch Pack formats. Public preview
-                opens three archived tests made with separate Pikbo sample
-                toys; private generation appears only for eligible signed-in
-                validation accounts.
+                Public visitors can inspect archived tests made with Pikbo
+                sample toys. Eligible signed-in sellers may prepare a private
+                product photo; generation appears only when its separate live
+                gate is ready.
               </p>
               <p className="mt-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#E85C45]">
-                Public sample · 0 credits · no product photo is accepted or processed
+                Access is confirmed inside the workspace · no credits until generation starts
               </p>
             </div>
           </div>

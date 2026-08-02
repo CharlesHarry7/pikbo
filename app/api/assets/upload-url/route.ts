@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 import { resolvePrivateLiveAccess } from "@/lib/privateLiveAccessServer";
 import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
+import { takeToken } from "@/lib/rateLimit";
 import {
   createPrivateToyAssetUpload,
   PRIVATE_TOY_INPUT_MAX_BYTES,
@@ -19,17 +20,32 @@ export async function POST(req: Request) {
     );
   }
   const access = resolvePrivateLiveAccess(auth);
-  if (!access.invite.invited || !access.budget.ok) {
+  if (!access.invite.invited) {
     return NextResponse.json(
-      { ok: false, code: "PRIVATE_PREVIEW_REQUIRED", error: "Private seller Preview access is required" },
+      { ok: false, code: "PRIVATE_INPUT_ACCESS_REQUIRED", error: "Private seller input access is required" },
       { status: 403 }
     );
   }
   const readiness = await probeSoftLiveReadiness();
-  if (!readiness.privatePreview.ready) {
+  if (!readiness.privateInputAdmission.ready) {
     return NextResponse.json(
-      { ok: false, code: "PRIVATE_PREVIEW_NOT_READY", error: "Private input delivery is not ready" },
+      { ok: false, code: "PRIVATE_INPUT_NOT_READY", error: "Private photo upload is temporarily unavailable" },
       { status: 503 }
+    );
+  }
+  const rateLimit = takeToken(`private-input-prepare:${auth.id}`, 12, 60_000);
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "RATE_LIMITED",
+        error: `Too many private photo attempts — try again in ${rateLimit.retryAfterSec}s`,
+        retryAfterSec: rateLimit.retryAfterSec,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSec) },
+      }
     );
   }
 

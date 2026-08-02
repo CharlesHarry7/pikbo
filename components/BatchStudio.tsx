@@ -47,6 +47,7 @@ import {
 import { isValidImageDataUrl } from "@/lib/providerError";
 import { SAMPLE_TOYS, sampleToDataUrl } from "@/lib/samples";
 import {
+  canPreparePrivateInput,
   canUsePrivateLaunch,
   fetchMe,
   freeTrialExhausted,
@@ -320,13 +321,20 @@ export function BatchStudio({
   const [sellerPackRecoveryNote, setSellerPackRecoveryNote] = useState<
     string | null
   >(null);
+  const [verifiedInputAssetId, setVerifiedInputAssetId] = useState<
+    string | null
+  >(null);
+  const [verifyingInput, setVerifyingInput] = useState(false);
   /** Wall-clock while pack/batch runs — feeds GenerateWaitStage (1–3 min Mini). */
   const [packElapsed, setPackElapsed] = useState(0);
   /** Abort in-flight pack child + rate-limit waits (parity with Create Cancel). */
   const packAbortRef = useRef<AbortController | null>(null);
   const quoteEventRef = useRef("");
-  const privateUploadEnabled = canUsePrivateLaunch(me);
-  const demoMode = !privateUploadEnabled || labStill;
+  const privateInputEnabled = canPreparePrivateInput(me);
+  const privateLaunchEnabled = canUsePrivateLaunch(me);
+  const demoMode = !privateLaunchEnabled || labStill;
+  const privateInputOnly =
+    privateInputEnabled && !privateLaunchEnabled && !labStill;
 
   const { locale } = useI18n();
 
@@ -363,7 +371,7 @@ export function BatchStudio({
           const pending = sessionStorage.getItem("pikbo_pending_still");
           if (pending) {
             sessionStorage.removeItem("pikbo_pending_still");
-            if (!privateUploadEnabled) {
+            if (!privateInputEnabled) {
               // Public validation never displays or submits a visitor still.
               // Continue to the explicit Lab sample path, when requested.
             } else if (pending.startsWith("data:image")) {
@@ -446,7 +454,7 @@ export function BatchStudio({
       canceled = true;
       window.clearTimeout(t);
     };
-  }, [initialSample, meResolved, privateUploadEnabled]);
+  }, [initialSample, meResolved, privateInputEnabled]);
 
   /**
    * Re-open this owner's active pack from durable pack/job ids. The browser
@@ -638,14 +646,19 @@ export function BatchStudio({
   }, [catFilter, sellerPackActive]);
 
   function loadFile(file: File | undefined | null) {
-    if (!privateUploadEnabled) {
+    if (!privateInputEnabled) {
       setError(
         "Product-photo upload is available only inside the invited private beta."
       );
       return;
     }
-    if (!file?.type.startsWith("image/")) {
-      setError("Upload a PNG/JPG of your toy.");
+    if (
+      !file ||
+      !["image/jpeg", "image/png", "image/webp"].includes(
+        file.type.toLowerCase()
+      )
+    ) {
+      setError("Upload a JPEG, PNG, or WebP photo of your toy.");
       return;
     }
     if (file.size > 8_000_000) {
@@ -660,6 +673,8 @@ export function BatchStudio({
       setLabStill(false);
       setActiveSampleId(null);
       setOwnsRights(false);
+      setVerifiedInputAssetId(null);
+      setVerifyingInput(false);
       setBriefCollapsed(true);
       setError(null);
       track({
@@ -686,6 +701,8 @@ export function BatchStudio({
       setLabStill(true);
       setActiveSampleId(sample.id);
       setOwnsRights(true);
+      setVerifiedInputAssetId(null);
+      setVerifyingInput(false);
       setImageProbe(null);
       setBriefCollapsed(false);
       setError(null);
@@ -694,6 +711,34 @@ export function BatchStudio({
       });
     } catch {
       setError("Lab sample could not be loaded. Try another sample.");
+    }
+  }
+
+  async function verifyPrivateInput() {
+    if (
+      !privateInputEnabled ||
+      !image ||
+      !image.startsWith("data:image") ||
+      labStill ||
+      verifyingInput
+    ) {
+      return;
+    }
+    if (!ownsRights) {
+      setError("Confirm you own this photo before private verification.");
+      return;
+    }
+    setError(null);
+    setVerifyingInput(true);
+    try {
+      const registered = await registerPrivateToyAsset(image, toyIdentity.sku);
+      if (!registered?.assetId) {
+        setError("Your private photo could not be verified. No credits were reserved.");
+        return;
+      }
+      setVerifiedInputAssetId(registered.assetId);
+    } finally {
+      setVerifyingInput(false);
     }
   }
 
@@ -912,6 +957,12 @@ export function BatchStudio({
       setError("Confirm you own this photo before running the batch.");
       return;
     }
+    if (!labStill && !privateLaunchEnabled) {
+      setError(
+        "Your photo can be verified privately, but generation is temporarily unavailable. No credits were reserved."
+      );
+      return;
+    }
     if (
       sellerPackActive &&
       (jobs.length > 0 ||
@@ -967,12 +1018,14 @@ export function BatchStudio({
     let runPackId: string | null = null;
     // A live Launch Pack cannot reserve credits until its one private input is
     // durably uploaded and verified. All three children bind to this asset.
-    let sharedAssetId: string | null = null;
+    let sharedAssetId: string | null = verifiedInputAssetId;
     if (!demoMode && image && image.startsWith("data:image")) {
-      const reg = sellerPackActive
-        ? await registerPrivateToyAsset(image, toyIdentity.sku)
-        : await registerLocalAsset(image);
-      if (reg?.assetId) sharedAssetId = reg.assetId;
+      if (!sharedAssetId) {
+        const reg = sellerPackActive
+          ? await registerPrivateToyAsset(image, toyIdentity.sku)
+          : await registerLocalAsset(image);
+        if (reg?.assetId) sharedAssetId = reg.assetId;
+      }
     }
     if (sellerPackActive && !demoMode) {
       if (!sharedAssetId) {
@@ -1498,6 +1551,7 @@ export function BatchStudio({
     Boolean(image) &&
     selected.length > 0 &&
     ownsRights &&
+    (labStill || privateLaunchEnabled) &&
     liveQuoteCovered;
   const canRetryUnreservedPack =
     Boolean(image) &&
@@ -1517,11 +1571,17 @@ export function BatchStudio({
   const primaryBatchLabel = running
     ? `${sellerPackActive ? "Launch Pack" : "Batch"} running… ${doneCount}/${jobs.length}`
     : !image
-      ? privateUploadEnabled
+      ? privateInputEnabled
         ? "Upload owned toy photo"
         : "Choose a Pikbo Lab sample"
       : !ownsRights
         ? "Confirm ownership to continue"
+        : !labStill && !privateLaunchEnabled
+          ? verifiedInputAssetId
+            ? "Photo verified privately"
+            : verifyingInput
+              ? "Verifying private photo…"
+              : "Verify private photo"
           : demoMode
           ? sellerPackActive
             ? "Open 3 archived motion tests"
@@ -1552,8 +1612,9 @@ export function BatchStudio({
       </p>
       {demoMode ? (
         <p className="mt-0.5 text-[var(--fg-dim)]">
-          Public Lab preview · no product photo is accepted or processed · 0
-          credits.
+          {privateInputEnabled && !privateLaunchEnabled && !labStill
+            ? "Private photo verification only · generation unavailable · 0 credits reserved."
+            : "Public Lab preview · no product photo is accepted or processed · 0 credits."}
         </p>
       ) : (
         <p className="mt-0.5 text-[var(--fg-dim)]">
@@ -1612,24 +1673,30 @@ export function BatchStudio({
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2457E6]">
-                  {privateUploadEnabled ? "Your toy" : "Pikbo sample toy"}
+                  {privateInputEnabled ? "Your toy" : "Pikbo sample toy"}
                 </p>
                 <h2 className="mt-1 text-xl font-black tracking-[-0.035em] sm:text-2xl">
-                  {privateUploadEnabled
-                    ? "Create your toy launch."
+                  {privateInputEnabled
+                    ? privateLaunchEnabled
+                      ? "Create your toy launch."
+                      : "Prepare your toy privately."
                     : "Explore the three Launch Pack formats."}
                 </h2>
               </div>
               <span className="rounded-md border border-[#D5D9E1] bg-[#F7F8FA] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#667085]">
-                {demoMode
-                  ? "Three fixed outputs"
-                  : "Private validation"}
+                {privateInputEnabled && !privateLaunchEnabled && !labStill
+                  ? "Input validation"
+                  : demoMode
+                    ? "Three fixed outputs"
+                    : "Private validation"}
               </span>
             </div>
             <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-[#667085]">
-              {demoMode
-                ? "Choose a Pikbo-owned sample to inspect three static format directions. The archived motion tests use separate sample toys and are not generated from your selection."
-                : "Drop one authorized product photo. Pikbo keeps the fixed three-format Pack and server-led status checks unchanged."}
+              {privateInputEnabled && !privateLaunchEnabled && !labStill
+                ? "Upload and privately verify one authorized product photo. Video generation is still closed, and this step reserves no credits."
+                : demoMode
+                  ? "Choose a Pikbo-owned sample to inspect three static format directions. The archived motion tests use separate sample toys and are not generated from your selection."
+                  : "Drop one authorized product photo. Pikbo keeps the fixed three-format Pack and server-led status checks unchanged."}
             </p>
             {!demoMode ? (
               sellerDirectorPlan?.ready ? (
@@ -1644,9 +1711,11 @@ export function BatchStudio({
               data-seller-pack-recovery="session-pointer"
               className="mt-3 border-t border-[#E1E4EA] pt-3 text-[10px] font-semibold leading-4 text-[#7A8290]"
             >
-              {demoMode
-                ? "Direction frames are not completed customer videos."
-                : "This browser can reopen the active Pack after refresh using its session pointer. Server status remains authoritative; completed signed-in results can appear in Library."}
+              {privateInputEnabled && !privateLaunchEnabled && !labStill
+                ? "A verified photo is a private input asset, not a Launch Pack. No jobs are created until the full generation gate opens."
+                : demoMode
+                  ? "Direction frames are not completed customer videos."
+                  : "This browser can reopen the active Pack after refresh using its session pointer. Server status remains authoritative; completed signed-in results can appear in Library."}
             </p>
             {sellerPackRecoveryNote ? (
               <p className="mt-2 text-[10px] font-semibold leading-relaxed text-[#667085]">
@@ -1655,13 +1724,23 @@ export function BatchStudio({
             ) : null}
             <button
               type="button"
-              disabled={Boolean(image) && !canStartFreshSellerPack}
+              disabled={
+                verifyingInput ||
+                (Boolean(image) &&
+                  (privateLaunchEnabled
+                    ? !canStartFreshSellerPack
+                    : Boolean(verifiedInputAssetId)))
+              }
               onClick={() => {
                 if (image) {
-                  if (canStartFreshSellerPack) void runBatch();
+                  if (!labStill && !privateLaunchEnabled) {
+                    void verifyPrivateInput();
+                  } else if (canStartFreshSellerPack) {
+                    void runBatch();
+                  }
                   return;
                 }
-                if (privateUploadEnabled) {
+                if (privateInputEnabled) {
                   document
                     .getElementById("seller-pack-photo")
                     ?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1676,7 +1755,7 @@ export function BatchStudio({
                 ? jobs.length > 0 || activePackRunId || runProjectId
                   ? "Review this Pack below"
                   : primaryBatchLabel
-                : privateUploadEnabled
+                : privateInputEnabled
                   ? "Upload owned toy photo"
                   : "Choose a sample toy"}
             </button>
@@ -1703,11 +1782,11 @@ export function BatchStudio({
         ) : null}
         <div data-seller-pack-step="upload">
           <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#667085] sm:hidden">
-            {privateUploadEnabled
+            {privateInputEnabled
               ? "Your product photo"
               : "Selected sample"}
           </p>
-          {privateUploadEnabled ? (
+          {privateInputEnabled ? (
             <label
               id="seller-pack-photo"
               htmlFor="seller-pack-photo-input"
@@ -1744,7 +1823,7 @@ export function BatchStudio({
               <input
                 id="seller-pack-photo-input"
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 className="hidden"
                 onChange={(event) => loadFile(event.target.files?.[0])}
               />
@@ -1773,7 +1852,27 @@ export function BatchStudio({
               )}
             </div>
           )}
-          {privateUploadEnabled &&
+          {privateInputEnabled && image && !labStill && !privateLaunchEnabled ? (
+            <div
+              className="mt-3 rounded-xl border border-[#D5D9E1] bg-[#F7F8FA] px-3 py-2.5 text-xs font-semibold leading-5 text-[#667085]"
+              data-private-input-only="true"
+            >
+              <p className="font-black text-[#111827]">
+                {verifiedInputAssetId
+                  ? "Photo verified privately"
+                  : "Private photo verification"}
+              </p>
+              <p>
+                {verifiedInputAssetId
+                  ? "Your photo passed the private size, type, and checksum checks. Generation is temporarily unavailable."
+                  : "Verify this photo in Pikbo's private input storage. This does not create a Pack or reserve credits."}
+              </p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#2457E6]">
+                0 credits reserved · 0 video jobs created
+              </p>
+            </div>
+          ) : null}
+          {privateInputEnabled &&
           image &&
           !labStill &&
           packAssetBrief.ready ? (
@@ -1825,8 +1924,10 @@ export function BatchStudio({
                 </button>
               ))}
               <p className="col-span-4 hidden text-[10px] font-semibold leading-4 text-[#667085] sm:block">
-                {privateUploadEnabled
-                  ? "Samples stay public. Replace one with your own photo for invited private generation."
+                {privateInputEnabled
+                  ? privateLaunchEnabled
+                    ? "Samples stay public. Replace one with your own photo for invited private generation."
+                    : "Samples stay public. Your own photo is accepted only for private verification while generation is closed."
                   : "Pikbo-owned samples · no customer upload · 0 credits."}
               </p>
             </div>
@@ -2008,7 +2109,7 @@ export function BatchStudio({
           )}
         </div>
 
-        {image && !demoMode ? (
+        {image && privateInputEnabled && !labStill ? (
           <label
             id="batch-ownership"
             data-launch-pack-primary-action="2"
@@ -2021,8 +2122,9 @@ export function BatchStudio({
               className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#2457E6]"
             />
             <span>
-              I own this photo and have the right to animate and publish this
-              toy for every preset in the batch.
+              {privateLaunchEnabled
+                ? "I own this photo and have the right to animate and publish this toy for every preset in the batch."
+                : "I own this photo and authorize Pikbo to store and verify it privately."}
             </span>
           </label>
         ) : null}
@@ -2206,25 +2308,32 @@ export function BatchStudio({
             />
           )
         ) : null}
-        <p className={sellerPackActive ? "hidden text-[11px] font-semibold text-[#717987] lg:block" : "text-[11px] text-[var(--fg-dim)]"}>
-          {demoMode && sellerPackActive
-            ? "Open three archived examples for the fixed launch formats"
-            : "Each format runs independently"}
-          {!demoMode || !sellerPackActive
-            ? demoMode
-              ? " as a cached Lab preview"
-            : isFree
-              ? trialDone
-                ? " (Free Mini trial used · Lab demos still free)"
-                : ` (${liveContractLabel})`
-              : " (private 720p)"
-            : null}
-          . Finished clips land in{" "}
-          <Link href="/library" className={sellerPackActive ? "text-[#2457E6] hover:underline" : "text-[var(--brand)] hover:underline"}>
-            Library
-          </Link>
-          .
-        </p>
+        {privateInputOnly ? (
+          <p className="hidden text-[11px] font-semibold text-[#717987] lg:block">
+            This step verifies one private input only. It creates no Pack,
+            video jobs, Library result, or credit reservation.
+          </p>
+        ) : (
+          <p className={sellerPackActive ? "hidden text-[11px] font-semibold text-[#717987] lg:block" : "text-[11px] text-[var(--fg-dim)]"}>
+            {demoMode && sellerPackActive
+              ? "Open three archived examples for the fixed launch formats"
+              : "Each format runs independently"}
+            {!demoMode || !sellerPackActive
+              ? demoMode
+                ? " as a cached Lab preview"
+              : isFree
+                ? trialDone
+                  ? " (Free Mini trial used · Lab demos still free)"
+                  : ` (${liveContractLabel})`
+                : " (private 720p)"
+              : null}
+            . Finished clips land in{" "}
+            <Link href="/library" className={sellerPackActive ? "text-[#2457E6] hover:underline" : "text-[var(--brand)] hover:underline"}>
+              Library
+            </Link>
+            .
+          </p>
+        )}
       </div>
 
       <div
@@ -2237,11 +2346,15 @@ export function BatchStudio({
         <div className="flex items-center justify-between">
           <div>
             <p className={sellerPackActive ? "text-[9px] font-black uppercase tracking-[0.14em] text-[#2457E6]" : "hidden"}>
-              Three fixed outputs
+              {privateInputOnly ? "Private input" : "Three fixed outputs"}
             </p>
             <h2 className={sellerPackActive ? "mt-1 text-xl font-black tracking-[-0.035em]" : "font-semibold"}>
               {sellerPackActive
-                ? demoMode
+                ? privateInputOnly
+                  ? verifiedInputAssetId
+                    ? "Private photo verified"
+                    : "Verify before generation"
+                  : demoMode
                   ? jobs.length > 0
                     ? "Archived format motion tests"
                     : "Launch Pack directions"
@@ -2289,51 +2402,70 @@ export function BatchStudio({
         </div>
         {jobs.length === 0 && (
           sellerPackActive ? (
-            <div className="grid gap-2 sm:grid-cols-3">
-              {SELLER_PACK_ITEMS.map((item, index) => {
-                const direction = SELLER_PACK_DIRECTION_FRAMES[index];
-                return (
-                  <article
-                    key={item.key}
-                    className="overflow-hidden rounded-xl border border-[#D5D9E1] bg-[#F7F8FA]"
-                  >
-                    <div className="relative aspect-[16/10] overflow-hidden bg-[#E2E5EB]">
-                      {image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={image}
-                          alt={`${item.label} direction using the selected toy sample`}
-                          className={`h-full w-full ${
-                            index === 0
-                              ? "bg-[#EDF0F5] object-contain"
-                              : index === 1
-                                ? "object-cover object-center"
-                                : "object-cover object-top"
-                          }`}
-                        />
-                      ) : (
-                        <div className="grid h-full place-items-center px-4 text-center text-[10px] font-black uppercase tracking-[0.1em] text-[#7A8290]">
-                          Choose a sample toy
-                        </div>
-                      )}
-                      <span className={`absolute left-2 top-2 rounded-md px-2 py-1 text-[7px] font-black uppercase tracking-[0.08em] text-white ${index === 0 ? "bg-[#2457E6]" : "bg-[#E85C45]"}`}>
-                        {index === 0 ? "Selected toy still" : direction.evidence}
-                      </span>
-                    </div>
-                    <div className="p-3">
-                      <p className="text-sm font-black tracking-[-0.025em]">{item.label}</p>
-                      <p className="mt-1 text-[9px] font-semibold text-[#717987]">
-                        {direction.use} · {item.aspectRatio} · 5 sec
-                      </p>
-                    </div>
-                  </article>
-                );
-              })}
-              <p className="sm:col-span-3 text-[10px] font-semibold leading-4 text-[#717987]">
-                The selected toy stays visible across three static format
-                directions. These are not completed videos or customer results.
-              </p>
-            </div>
+            privateInputOnly ? (
+              <div
+                className="rounded-xl border border-[#D5D9E1] bg-[#F7F8FA] px-4 py-5"
+                data-private-input-review="original-only"
+              >
+                <p className="text-sm font-black tracking-[-0.025em] text-[#111827]">
+                  Original photo only · no generated outputs
+                </p>
+                <p className="mt-1 max-w-2xl text-xs font-semibold leading-5 text-[#667085]">
+                  Pikbo is storing and verifying the selected original. It is
+                  not shown as a Launch Pack result, and no output cards exist
+                  until the separate generation gate opens.
+                </p>
+                <p className="mt-3 text-[10px] font-black uppercase tracking-[0.08em] text-[#2457E6]">
+                  0 Pack jobs · 0 Library results · 0 credits reserved
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-3">
+                {SELLER_PACK_ITEMS.map((item, index) => {
+                  const direction = SELLER_PACK_DIRECTION_FRAMES[index];
+                  return (
+                    <article
+                      key={item.key}
+                      className="overflow-hidden rounded-xl border border-[#D5D9E1] bg-[#F7F8FA]"
+                    >
+                      <div className="relative aspect-[16/10] overflow-hidden bg-[#E2E5EB]">
+                        {image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={image}
+                            alt={`${item.label} direction using the selected toy sample`}
+                            className={`h-full w-full ${
+                              index === 0
+                                ? "bg-[#EDF0F5] object-contain"
+                                : index === 1
+                                  ? "object-cover object-center"
+                                  : "object-cover object-top"
+                            }`}
+                          />
+                        ) : (
+                          <div className="grid h-full place-items-center px-4 text-center text-[10px] font-black uppercase tracking-[0.1em] text-[#7A8290]">
+                            Choose a sample toy
+                          </div>
+                        )}
+                        <span className={`absolute left-2 top-2 rounded-md px-2 py-1 text-[7px] font-black uppercase tracking-[0.08em] text-white ${index === 0 ? "bg-[#2457E6]" : "bg-[#E85C45]"}`}>
+                          {index === 0 ? "Selected toy still" : direction.evidence}
+                        </span>
+                      </div>
+                      <div className="p-3">
+                        <p className="text-sm font-black tracking-[-0.025em]">{item.label}</p>
+                        <p className="mt-1 text-[9px] font-semibold text-[#717987]">
+                          {direction.use} · {item.aspectRatio} · 5 sec
+                        </p>
+                      </div>
+                    </article>
+                  );
+                })}
+                <p className="sm:col-span-3 text-[10px] font-semibold leading-4 text-[#717987]">
+                  The selected toy stays visible across three static format
+                  directions. These are not completed videos or customer results.
+                </p>
+              </div>
+            )
           ) : (
             <div className="rounded-xl border border-dashed border-white/12 bg-black/25 px-4 py-8 text-center">
               <p className="text-sm font-semibold text-[var(--fg)]">No batch jobs yet</p>
@@ -2578,15 +2710,19 @@ export function BatchStudio({
         {image ? (
           <p className={sellerPackActive ? "mb-1.5 truncate text-center text-[10px] font-bold text-[#667085]" : "mb-1.5 truncate text-center text-[10px] font-medium text-white/55"}>
             {sellerPackActive
-              ? demoMode
-                ? "3 archived motion tests · separate sample toys"
-                : `Launch Pack · ${sellerPackQuoteLabel(packQuote)}`
+              ? privateInputEnabled && !privateLaunchEnabled && !labStill
+                ? verifiedInputAssetId
+                  ? "Photo verified privately · generation closed"
+                  : "Private photo verification · 0 credits reserved"
+                : demoMode
+                  ? "3 archived motion tests · separate sample toys"
+                  : `Launch Pack · ${sellerPackQuoteLabel(packQuote)}`
               : `Batch · ${selected.length} recipes · ${batchQuoteLabel(packQuote)}`}
             {doneCount > 0 ? ` · ${doneCount} ready` : ""}
             {failedRetryCount > 0 ? ` · ${failedRetryCount} failed kept` : ""}
           </p>
         ) : null}
-        {image && !ownsRights && !demoMode ? (
+        {image && !ownsRights && privateInputEnabled && !labStill ? (
           <label
             className="mb-2 flex cursor-pointer items-start gap-2 rounded-lg border border-[#D5D9E1] bg-[#F7F8FA] px-2.5 py-2 text-[10px] font-semibold leading-snug text-[#667085]"
             data-launch-pack-primary-action="2"
@@ -2628,7 +2764,7 @@ export function BatchStudio({
             />
           )
         ) : !image ? (
-          privateUploadEnabled ? (
+          privateInputEnabled ? (
             <div className="flex gap-2">
               <button
                 type="button"
@@ -2703,7 +2839,11 @@ export function BatchStudio({
         ) : (
           <button
             type="button"
-            disabled={!canStartFreshSellerPack}
+            disabled={
+              !labStill && !privateLaunchEnabled
+                ? !ownsRights || verifyingInput || Boolean(verifiedInputAssetId)
+                : !canStartFreshSellerPack
+            }
             onClick={() => {
               if (!ownsRights) {
                 document
@@ -2711,14 +2851,23 @@ export function BatchStudio({
                   ?.scrollIntoView({ behavior: "smooth", block: "center" });
                 return;
               }
-              if (canStartFreshSellerPack) void runBatch();
+              if (!labStill && !privateLaunchEnabled) {
+                void verifyPrivateInput();
+              } else if (canStartFreshSellerPack) {
+                void runBatch();
+              }
             }}
             className={
               sellerPackActive
                 ? "w-full rounded-xl bg-[#2457E6] px-4 py-3.5 text-[15px] font-black tracking-tight text-white disabled:opacity-45"
                 : "btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
             }
-            data-seller-pack-action="generate"
+            data-seller-pack-action={
+              privateInputOnly ? undefined : "generate"
+            }
+            data-private-input-action={
+              !labStill && !privateLaunchEnabled ? "verify-private-input" : undefined
+            }
             data-launch-pack-primary-action={image ? "3" : "1"}
           >
             {primaryBatchLabel}

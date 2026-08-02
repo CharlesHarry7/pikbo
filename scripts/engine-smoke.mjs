@@ -434,7 +434,10 @@ const batchFirstRun = fs.readFileSync(
 assert.match(batchFirstRun, /data-seller-pack-step="upload"/);
 assert.match(batchFirstRun, /Upload owned toy photo/);
 assert.match(batchFirstRun, /data-seller-pack-action="upload"/);
-assert.match(batchFirstRun, /data-seller-pack-action="generate"/);
+assert.match(
+  batchFirstRun,
+  /data-seller-pack-action=\{[\s\S]*privateInputOnly \? undefined : "generate"/
+);
 assert.match(batchFirstRun, /data-seller-pack-action="library"/);
 assert.match(batchFirstRun, /data-seller-pack-action="review-failed"/);
 assert.match(batchFirstRun, /data-seller-pack-sticky="mobile"/);

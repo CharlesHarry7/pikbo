@@ -4,6 +4,34 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-08-02 — [gpt/grok/workbuddy] private input admission boundary
+- Split the first private seller proof from full Provider readiness. An
+  authenticated, explicitly allowlisted seller may verify one owned JPEG, PNG,
+  or WebP in Pikbo's private input bucket only when the input bucket, schema and
+  asset RPCs pass readiness. Public visitors still have no product-photo input.
+- Seller Pack reserve, all three generation jobs, credits, Provider, private
+  result delivery, reconciliation and Stripe remain behind the unchanged full
+  `privatePreview` gate. The input-only Create state says generation is
+  unavailable and records `0 credits reserved · 0 video jobs created`.
+- GPT Pro chose this boundary in persistent chat
+  `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`. Grok returned **APPROVE**, P0=0 and
+  blocking P1=0, in `/root/grok_code_audit`. WorkBuddy first blocked three
+  seller-truth defects, then returned **APPROVE** on the corrected delta in
+  `/root/workbuddy_visual_redteam`.
+- Input-only UI now shows one original-photo verification state, not three fake
+  outputs or a Library promise. Owner completion may finish an already admitted
+  signed PUT across invite/readiness drift, but cannot create an asset, Pack,
+  job, charge or Provider request.
+- The focused route regression executes auth, invite, input-infrastructure,
+  rate-limit and upload/complete outcomes while full private Preview is false.
+  The complete launch-gate, accounting, recovery, Provider-budget, billing,
+  TypeScript, ESLint and 199-page production build gates pass.
+- No Provider request, credit mutation, Stripe action, environment change,
+  Supabase mutation, DNS change or public-live enablement occurred. Full
+  evidence: `docs/evidence/PRIVATE_INPUT_ADMISSION_2026-08-02.md`.
+
+---
+
 ### 2026-08-01 — [gpt] Mercury reapplication website readiness
 - Added public Contact and Refund Policy routes and linked them from the global
   and homepage trust footers. The public operator is now consistently named as

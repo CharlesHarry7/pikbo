@@ -53,8 +53,9 @@ assert.match(
 );
 assert.match(meClient, /export function canUsePrivateLaunch/);
 assert.match(meClient, /me\.canLiveGenerate === true/);
-assert.match(batch, /const privateUploadEnabled = canUsePrivateLaunch\(me\)/);
-assert.match(batch, /const demoMode = !privateUploadEnabled \|\| labStill/);
+assert.match(batch, /const privateInputEnabled = canPreparePrivateInput\(me\)/);
+assert.match(batch, /const privateLaunchEnabled = canUsePrivateLaunch\(me\)/);
+assert.match(batch, /const demoMode = !privateLaunchEnabled \|\| labStill/);
 assert.match(batch, /data-public-pack-preview="lab-only"/);
 assert.match(batch, /No product-photo input is accepted or processed here/);
 assert.match(batch, /setOwnsRights\(false\)/);
@@ -127,7 +128,10 @@ for (const slug of [
 }
 assert.match(create, /Launch Pack · 3 fixed formats/);
 assert.match(create, /Public preview or\s+invited private generation/);
-assert.match(create, /no product photo is accepted or processed/i);
+assert.match(create, /Access is confirmed inside the workspace/);
+assert.match(batch, /no product photo is accepted or processed/i);
+assert.match(batch, /data-private-input-review="original-only"/);
+assert.match(batch, /0 Pack jobs · 0 Library results · 0 credits reserved/);
 assert.match(batch, /Direction frames are not completed customer videos/);
 assert.match(batch, /selected toy stays visible across three static format\s+directions/);
 assert.match(batch, /separate sample toys/);
@@ -160,9 +164,16 @@ assert.match(
 );
 assert.match(
   batch,
-  /disabled=\{Boolean\(image\) && !canStartFreshSellerPack\}/
+  /privateLaunchEnabled\s*\? !canStartFreshSellerPack\s*: Boolean\(verifiedInputAssetId\)/
 );
-assert.match(batch, /disabled=\{!canStartFreshSellerPack\}/);
+assert.match(
+  batch,
+  /!ownsRights \|\| verifyingInput \|\| Boolean\(verifiedInputAssetId\)/
+);
+assert.match(
+  batch,
+  /!labStill && !privateLaunchEnabled[\s\S]*\? !ownsRights \|\| verifyingInput \|\| Boolean\(verifiedInputAssetId\)[\s\S]*: !canStartFreshSellerPack/
+);
 assert.match(batch, /\) : jobs\.length > 0 \? \(/);
 
 // Export stays fail-closed: only succeeded/downloadable children are offered.

@@ -63,6 +63,8 @@ export type MeResponse = PublicSession & {
   softLiveReady?: boolean;
   /** Server-authored account capability; cookie credits never make this true. */
   canLiveGenerate?: boolean;
+  /** Invite-only, zero-Provider capability to verify one private toy photo. */
+  canPreparePrivateInput?: boolean;
   auth?: { id: string; email: string | null } | null;
   durable?: MeDurableWallet | null;
   billing?: null | {
@@ -240,6 +242,12 @@ export function canLiveGenerate(
   me: MeResponse | null | undefined
 ): boolean {
   return me?.canLiveGenerate === true;
+}
+
+export function canPreparePrivateInput(
+  me: MeResponse | null | undefined
+): boolean {
+  return me?.signedIn === true && me.canPreparePrivateInput === true;
 }
 
 /**

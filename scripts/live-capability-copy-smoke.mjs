@@ -78,10 +78,16 @@ assert(
   "pricing must keep subscriptions closed until private-beta proof"
 );
 assert(
-  /no product photo\s+is accepted or processed/.test(
-    read("app/create/page.tsx")
-  ),
-  "Create must not present public product-photo processing"
+  read("app/create/page.tsx").includes(
+    "Eligible signed-in sellers may prepare a private"
+  ) &&
+    /Public Lab preview · no product photo is accepted or processed/.test(
+      read("components/BatchStudio.tsx")
+    ) &&
+    /\{privateInputEnabled \? \([\s\S]*type="file"/.test(
+      read("components/BatchStudio.tsx")
+    ),
+  "Create must keep product-photo input behind the private account capability"
 );
 assert(
   read("components/CreateStudio.tsx").includes(

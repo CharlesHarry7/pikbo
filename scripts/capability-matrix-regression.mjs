@@ -4,6 +4,7 @@ import { join } from "node:path";
 import {
   evaluateAccountLiveCapability,
   evaluateHealthTruth,
+  evaluatePrivateInputAdmissionReadiness,
   evaluatePrivatePreviewReadiness,
 } from "../lib/liveCapability.ts";
 
@@ -57,6 +58,39 @@ for (const key of Object.keys(privatePreviewReady)) {
   assert.equal(result.ready, false, `${key}=false must close private Preview`);
   assert.deepEqual(result.missing, [key]);
 }
+
+const privateInputAdmissionReady = {
+  authConfigured: true,
+  privateInputsBucketReady: true,
+  privateInputsSchemaReady: true,
+  privateInputsAssetRpcReady: true,
+  privateLiveEnabled: true,
+  privateLiveAllowlistConfigured: true,
+};
+assert.equal(
+  evaluatePrivateInputAdmissionReadiness(privateInputAdmissionReady).ready,
+  true,
+  "private input admission opens without Provider, credits, results, or Stripe"
+);
+for (const key of Object.keys(privateInputAdmissionReady)) {
+  const result = evaluatePrivateInputAdmissionReadiness({
+    ...privateInputAdmissionReady,
+    [key]: false,
+  });
+  assert.equal(result.ready, false, `${key}=false must close input admission`);
+  assert.deepEqual(result.missing, [key]);
+}
+assert.equal(
+  evaluatePrivatePreviewReadiness({
+    ...privatePreviewReady,
+    providerConfigured: false,
+    privateResultsBucketReady: false,
+    privateLiveBudgetConfigured: false,
+    providerValidationBudgetConfigured: false,
+  }).ready,
+  false,
+  "input readiness must never open full generation readiness"
+);
 
 const liveAccount = {
   liveRouteReady: true,
@@ -168,6 +202,8 @@ assert.match(
 assert.match(meRoute, /liveGenerationAccess/);
 assert.match(meRoute, /routeAccess\.kind === "live"/);
 assert.match(meRoute, /liveReadiness\.privatePreview\.ready/);
+assert.match(meRoute, /liveReadiness\.privateInputAdmission\.ready/);
+assert.match(meRoute, /canPreparePrivateInput/);
 assert.match(meRoute, /"private-preview"/);
 assert.match(meRoute, /credits:\s*0,[\s\S]{0,120}mode:\s*"demo-cached"/);
 assert.match(meRoute, /canLiveGenerate:\s*false/);
@@ -210,6 +246,8 @@ assert.match(badge, /canLiveGenerate\(session\)/);
 assert.match(badge, /cached previews · 0 credits/);
 assert.match(freeCta, /canLiveGenerate\(me\)/);
 assert.match(liveReadiness, /evaluatePrivatePreviewReadiness/);
+assert.match(liveReadiness, /evaluatePrivateInputAdmissionReadiness/);
+assert.match(liveReadiness, /privateInputsAssetRpcReady/);
 assert.match(liveReadiness, /providerValidationEnvironmentGate/);
 assert.match(
   liveReadiness,
@@ -228,6 +266,8 @@ assert.match(privateResults, /rpcPayload\.code === "INVALID_IDENTITY"/);
 assert.match(privateResults, /parseProviderOutputHostAllowlist/);
 assert.match(healthRoute, /privatePreview:\s*privatePreview\.ready/);
 assert.match(healthRoute, /missingPrivatePreviewRequirements/);
+assert.match(healthRoute, /privateInputAdmission:\s*privateInputAdmission\.ready/);
+assert.match(healthRoute, /missingPrivateInputAdmissionRequirements/);
 
 console.log(
   "capability matrix regression: public and private readiness, anonymous, zero-wallet, delivery, spend, storage, and fully-ready states passed"

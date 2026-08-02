@@ -112,10 +112,10 @@ assert(
 );
 assert(
   batchStudio.includes(
-    "const privateUploadEnabled = canUsePrivateLaunch(me)"
+    "const privateLaunchEnabled = canUsePrivateLaunch(me)"
   ) &&
     batchStudio.includes(
-      "const demoMode = !privateUploadEnabled || labStill"
+      "const demoMode = !privateLaunchEnabled || labStill"
     ),
   "Seller Pack must use the same strict private-launch capability and fail closed"
 );
