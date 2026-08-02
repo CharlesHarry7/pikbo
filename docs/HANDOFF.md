@@ -4,6 +4,35 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-08-02 — [gpt/grok/workbuddy] fail-closed Launch Pack quality gate
+- Added a pure manual seller-quality contract for the frozen Listing Spin,
+  Blind-box Reveal and Social Flash trio. Within this standalone manual
+  evaluator, technical job success alone never qualifies an output as
+  seller-publishable without identity, reference truth, format-specific and
+  publish-without-editing evidence.
+- The review is bound to the Pack, input asset/hash and each child
+  job/attempt/output hash. Exact replay is idempotent; changed evidence
+  conflicts; a new attempt or output is a new identity. Wrong SKU/colorway,
+  identity drift, invented commercial detail and unverifiable surface claims
+  fail hard. Fixable crop, pacing or effect defects request a targeted manual
+  retry while preserving passing siblings.
+- GPT Pro fixed the pure-domain scope in chat
+  `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`. The governance reviewer approved the
+  frozen boundary. WorkBuddy initially blocked all-retry aggregation and
+  hidden-surface truth, then approved both corrections. Grok's final invariant
+  verdict is recorded in
+  `docs/evidence/LAUNCH_PACK_QUALITY_GATE_2026-08-02.md`.
+- PASS: focused quality regression, live/SEO/engine truth, cached/atomic/private
+  input Pack regressions, showcase gates, recovery ledger/reconciliation,
+  Stripe billing regression, TypeScript, ESLint and the 199-page production
+  build. The build retains one pre-existing T6 NFT tracing warning.
+- No UI, API, Provider, Prompt, Storage, Supabase, credits, runtime retry,
+  Stripe, environment, deployment or production-gate behavior changed. This
+  is a future manual acceptance ruler, not persistence, automation, a real
+  passed three-video Pack or charge readiness.
+
+---
+
 ### 2026-08-02 — [gpt/grok/workbuddy] private input admission boundary
 - Split the first private seller proof from full Provider readiness. An
   authenticated, explicitly allowlisted seller may verify one owned JPEG, PNG,

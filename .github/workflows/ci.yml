@@ -57,6 +57,9 @@ jobs:
       - name: P1 atomic Launch Pack (30 once · three bound children)
         run: npm run seller-pack-atomic-regression
 
+      - name: Launch Pack seller-quality contract (manual · fail-closed)
+        run: npm run launch-pack-quality-gate
+
       - name: Private toy input · Pack discovery · auth return path
         run: |
           npm run private-toy-input-pack-regression

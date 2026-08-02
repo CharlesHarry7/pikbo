@@ -56,6 +56,9 @@ jobs:
           npm run p0-private-live-generation
           npm run capability-matrix
 
+      - name: Launch Pack seller-quality contract (manual · fail-closed)
+        run: npm run launch-pack-quality-gate
+
       - name: Recovery retry + deadline (R1b video + image)
         run: npm run recovery-retry-deadline
 

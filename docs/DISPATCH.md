@@ -43,6 +43,22 @@
 - 禁止虚构美国办公室、客户、收入、合同或交易；不因银行审核而开放尚未通过质量门槛的支付或公开生成。
 - 生产发布、Mercury 协议接受与最终提交仍需老板本人明确确认。
 
+### 2026-08-02 owner override — Launch Pack quality gate contract
+
+- 当前唯一实现任务：`LAUNCH-PACK-QUALITY-GATE`，分支
+  `agent/gpt/launch-pack-quality-gate-contract`。新实现期间暂停 Mercury
+  以及其他历史队列的代码扩展；既有 review 状态保留，不自动恢复为任务。
+- Codex/GPT 是唯一实现 owner：只新增无副作用的三格式质量契约、
+  fail-closed 回归和未填写证据模板。
+- Grok 只做 invariants、重试绑定、幂等和旧数据兼容的只读红队；
+  WorkBuddy 只做卖家视角的判定标准只读审核。二者不修改业务代码。
+- 质量 `pass | retry | hard_failed` 是人工评审契约，不得改写运行时
+  job 状态，不得触发重试、退分、Provider 或任何新支出。
+- 禁止修改 `app/**`、`components/**`、Provider、Storage、Supabase/RLS、
+  `toy_assets`、credits、Stripe、Library/Create 状态、SEO、部署和环境变量。
+- 本切片仅建立未来真实输出的统一验收尺度；完成后仍不得宣称
+  评审已持久化、已自动检测、已有真实三片 Pack 或已可收费。
+
 ---
 
 ## 死序优先级（不可跳级）

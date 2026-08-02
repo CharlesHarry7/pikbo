@@ -1,0 +1,167 @@
+{
+  "templateOnly": true,
+  "templateNotice": "Blank example only. Remove templateOnly/templateNotice and replace every placeholder with evidence from one real owned SKU before validation. This file is not product proof.",
+  "schemaVersion": 1,
+  "reviewId": "",
+  "packRunId": "",
+  "inputAssetId": "",
+  "inputSha256": "",
+  "skuLabel": "",
+  "rightsConfirmed": true,
+  "referenceCoverage": {
+    "physicalSkuAvailable": false,
+    "surfaces": ["front"]
+  },
+  "crossClipIdentity": "unverifiable",
+  "crossClipDefects": [],
+  "reviewer": {
+    "id": "",
+    "role": "internal"
+  },
+  "reviewedAt": "",
+  "children": [
+    {
+      "packJobId": "",
+      "attemptKey": "",
+      "childKey": "listing_spin",
+      "effectSlug": "360-spin-showcase",
+      "aspectRatio": "1:1",
+      "durationSec": 5,
+      "inputSha256": "",
+      "outputSha256": "",
+      "fullClipWatched": false,
+      "technical": {
+        "privateResultAvailable": true,
+        "playable": false,
+        "aspectRatio": "1:1",
+        "durationSec": 5,
+        "resolution": "720p",
+        "blackFrames": "present",
+        "frozenFrames": "present",
+        "truncated": true
+      },
+      "identity": {
+        "toyRecognized": false,
+        "sameSkuVariantColorway": "unverifiable",
+        "silhouetteAndProportions": "unverifiable",
+        "facePaintAndMarkings": "unverifiable",
+        "accessoriesLimbsAndBase": "unverifiable",
+        "material": "unverifiable",
+        "logoPackagingText": "unverifiable",
+        "motionContinuity": "identity_break",
+        "unseenSurfaces": "unverifiable"
+      },
+      "formatReview": {
+        "kind": "listing_spin",
+        "subjectFullyInFrame": false,
+        "rotationSupportsInspection": false,
+        "backgroundKeepsDetailsVisible": false,
+        "safeAreaClear": false,
+        "productPageReady": false
+      },
+      "publishExactFileWithoutEditing": false,
+      "targetChannel": "marketplace_listing",
+      "defects": [],
+      "recordedDecision": {
+        "manualDecision": "unassessed",
+        "reasonCodes": []
+      }
+    },
+    {
+      "packJobId": "",
+      "attemptKey": "",
+      "childKey": "blind_box_reveal",
+      "effectSlug": "blind-box-unboxing",
+      "aspectRatio": "9:16",
+      "durationSec": 5,
+      "inputSha256": "",
+      "outputSha256": "",
+      "fullClipWatched": false,
+      "technical": {
+        "privateResultAvailable": true,
+        "playable": false,
+        "aspectRatio": "9:16",
+        "durationSec": 5,
+        "resolution": "720p",
+        "blackFrames": "present",
+        "frozenFrames": "present",
+        "truncated": true
+      },
+      "identity": {
+        "toyRecognized": false,
+        "sameSkuVariantColorway": "unverifiable",
+        "silhouetteAndProportions": "unverifiable",
+        "facePaintAndMarkings": "unverifiable",
+        "accessoriesLimbsAndBase": "unverifiable",
+        "material": "unverifiable",
+        "logoPackagingText": "unverifiable",
+        "motionContinuity": "identity_break",
+        "unseenSurfaces": "unverifiable"
+      },
+      "formatReview": {
+        "kind": "blind_box_reveal",
+        "revealActionCompletes": false,
+        "cleanProductHoldSec": 0,
+        "productUnobscuredAtHold": false,
+        "packagingTruth": "unverifiable",
+        "safeAreaClear": false,
+        "dropReady": false
+      },
+      "publishExactFileWithoutEditing": false,
+      "targetChannel": "launch_social",
+      "defects": [],
+      "recordedDecision": {
+        "manualDecision": "unassessed",
+        "reasonCodes": []
+      }
+    },
+    {
+      "packJobId": "",
+      "attemptKey": "",
+      "childKey": "social_flash",
+      "effectSlug": "paparazzi-flash",
+      "aspectRatio": "9:16",
+      "durationSec": 5,
+      "inputSha256": "",
+      "outputSha256": "",
+      "fullClipWatched": false,
+      "technical": {
+        "privateResultAvailable": true,
+        "playable": false,
+        "aspectRatio": "9:16",
+        "durationSec": 5,
+        "resolution": "720p",
+        "blackFrames": "present",
+        "frozenFrames": "present",
+        "truncated": true
+      },
+      "identity": {
+        "toyRecognized": false,
+        "sameSkuVariantColorway": "unverifiable",
+        "silhouetteAndProportions": "unverifiable",
+        "facePaintAndMarkings": "unverifiable",
+        "accessoriesLimbsAndBase": "unverifiable",
+        "material": "unverifiable",
+        "logoPackagingText": "unverifiable",
+        "motionContinuity": "identity_break",
+        "unseenSurfaces": "unverifiable"
+      },
+      "formatReview": {
+        "kind": "social_flash",
+        "recognizableWithinFirstSecond": false,
+        "toyRemainsHero": false,
+        "cleanProductHold": false,
+        "effectsSupportProduct": false,
+        "safeAreaClear": false,
+        "shortFormReady": false
+      },
+      "publishExactFileWithoutEditing": false,
+      "targetChannel": "short_form_social",
+      "defects": [],
+      "recordedDecision": {
+        "manualDecision": "unassessed",
+        "reasonCodes": []
+      }
+    }
+  ]
+}
