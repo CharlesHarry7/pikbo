@@ -43,6 +43,14 @@
 - 禁止虚构美国办公室、客户、收入、合同或交易；不因银行审核而开放尚未通过质量门槛的支付或公开生成。
 - 生产发布、Mercury 协议接受与最终提交仍需老板本人明确确认。
 
+### 2026-08-02 owner override — visible product front door
+
+- 唯一任务：`HOME-RESULT-BROWSER-V2`，分支 `agent/gpt/home-result-browser-v2`。
+- 老板明确拒绝当前首页的视觉与第一屏价值表达；PR #101 已关闭，不再以后台质量规则替代可见产品改善。
+- GPT Pro 负责本切片的产品方向；Codex 为唯一实现者；Grok 与 WorkBuddy 只做独立代码、事实和视觉审查。
+- 本切片只允许重做 Home、公开 Sample Create 展示及其直接相关的轻量导航和回归测试；复用现有缓存视频。
+- 严禁修改 API、Provider、Prompt、Storage、Supabase、credits、Stripe、Library 恢复或生产门禁；严禁把三个不同素材原型冒充同一 SKU 的完整 Pack、客户结果或精确导出规格。
+
 ---
 
 ## 死序优先级（不可跳级）

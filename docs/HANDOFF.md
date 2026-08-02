@@ -4,6 +4,43 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-08-02 — [gpt/grok/workbuddy] media-first Launch Result Browser
+- Replaced the rejected explanatory homepage with one media-led Launch Result
+  Browser. The first viewport now contains a real cached video, a short
+  seller-facing value statement, three direct format selectors and one Sample
+  Pack action. The former style-study strip, static direction-card wall,
+  engineering metrics, credit badge and long first-screen status explanations
+  are no longer part of the public front door.
+- Added an explicit public Sample Create route behind
+  `?mode=seller-pack&preview=1`. It renders the same instant result browser and
+  never enters a simulated generation state. The ordinary invited/private
+  Seller Pack route still renders the existing `BatchStudio`; no private API,
+  upload, Provider, Storage, credit, Stripe or Library behavior changed.
+- The three cached clips remain separate Scout, Moon and Beatbot archive
+  prototypes. Each visibly distinguishes its actual 6-second aspect ratio from
+  the target 5-second Pack contract, and the page explicitly says they are not
+  one completed customer Pack. The false one-photo/one-Pack proof headline was
+  rejected during review and removed before release.
+- GPT Pro supplied the product hierarchy in persistent chat
+  `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`. Grok first blocked one headline truth
+  error plus public/private shell leakage, then returned **APPROVE**, P0=0/P1=0,
+  as `grok-home-result-browser-v2-frozen-20260802-v2`.
+- WorkBuddy inspected Home and public Sample Create at 1440×900 and 390×844,
+  exercised Reveal and Flash, and blocked the first desktop cut because its main
+  CTA was below the fold. After widening the copy column, WorkBuddy returned
+  **APPROVE** in browser session `019fbe82-8c49-7620-bd3f-ddb4cda78057`: both
+  sizes are media-first, both CTAs are fully visible, and both have zero
+  horizontal overflow.
+- PASS: Launch Pack path, live-copy, SEO cold-start, engine, Seller Pack atomic,
+  recovery ledger/reconciliation, Stripe billing, TypeScript, ESLint and the
+  199-page production build. The build retains the pre-existing T6 dynamic NFT
+  tracing warning.
+- No production deploy, Provider call, Supabase mutation, Stripe action, DNS
+  change, public-generation enablement or payment enablement occurred. Full
+  evidence: `docs/evidence/HOME_RESULT_BROWSER_V2_2026-08-02.md`.
+
+---
+
 ### 2026-08-02 — [gpt/grok/workbuddy] private input admission boundary
 - Split the first private seller proof from full Provider readiness. An
   authenticated, explicitly allowlisted seller may verify one owned JPEG, PNG,
