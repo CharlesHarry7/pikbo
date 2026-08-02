@@ -2422,3 +2422,30 @@ Newest first. One block per meaningful landing.
   cards render without overflow, and the CTA opens the exact cached sample
   route. This is approval for the Home slice only, not proof of a completed
   same-input three-video Pack or a paid product loop.
+
+# 2026-08-02 — [gpt/grok/workbuddy] Desktop Pikbo Drop Archive
+
+- GPT Pro froze one desktop direction in persistent chat
+  `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`: a designer-toy motion archive,
+  not another generic AI SaaS hero. The new front door uses exhibit black,
+  warm paper, terracotta red, one active media stage and three object selectors.
+- The public truth is explicit: the product target is one toy across three
+  launch formats, while the archive currently shows three different
+  Pikbo-owned prototypes and no customer Pack. Both desktop CTAs say
+  `Preview Launch Pack` and open the cached public preview.
+- Home mounts one `AutoPlayVideo`; Scout, Moon and Beatbot switch that single
+  stage. The existing public Create sample keeps no-upload, Lab badges, seller
+  beta and private sign-in behavior. Mobile layout remains frozen.
+- GPT Pro final verdict: **APPROVE**. Grok final frozen-diff verdict:
+  **APPROVE, P0=0/P1=0**, evidence
+  `grok-desktop-toy-desire-v3-frozen-20260802-v3`. WorkBuddy final desktop
+  runtime verdict: **APPROVE**, browser session
+  `019fbe82-8c49-7620-bd3f-ddb4cda78057`.
+- Full launch/accounting, SEO, product-proof and mobile source gates,
+  TypeScript, ESLint and the 199-page production build pass. No API, Provider,
+  Storage, Supabase, credits, Stripe, Library, production flag or real-model
+  spend changed.
+- PR #103 passed GitHub CI and Vercel Preview. The deployed Preview at
+  `https://pikbo-git-agent-gptdesktop-toy-desire-v3-pi-kbo.vercel.app/`
+  rendered one video, three working archive selectors, Preview-only CTAs,
+  truthful archive limits and no horizontal overflow.

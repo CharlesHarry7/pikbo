@@ -25,25 +25,43 @@ const pricingCards = read("components/PricingPlanCards.tsx");
 const paywall = read("components/PaywallCard.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
+const homeArchive = publicSample.slice(
+  publicSample.indexOf("function HomeDropArchive"),
+  publicSample.indexOf("function CreateSampleBrowser")
+);
+const createSample = publicSample.slice(
+  publicSample.indexOf("function CreateSampleBrowser")
+);
 
 // Homepage presents the value immediately and routes public visitors into an
 // instant, truthful sample browser. Private upload remains in BatchStudio.
 assert.match(homeHero, /PublicLaunchPackSample surface="home"/);
-assert.match(publicSample, /data-home-upgrade=\{isHome \? "launch-pack"/);
-assert.match(publicSample, /id=\{isHome \? "home-create"/);
-assert.match(publicSample, /Three video formats for your next toy launch\./);
-assert.doesNotMatch(publicSample, /One toy photo\. Three launch-ready videos\./);
-assert.match(publicSample, /Try a sample Pack/);
-assert.match(publicSample, /preview=1&source=home-result-browser/);
-assert.match(publicSample, /No product upload in this public\s+preview/);
-assert.match(publicSample, /Three separate archived format prototypes/);
-for (const [actual, target] of [
-  ["Archived sample · 16:9 · 6 sec", "Target output · 1:1 · 5 sec"],
-  ["Archived sample · 16:9 · 6 sec", "Target output · 9:16 · 5 sec"],
-  ["Archived sample · 9:16 · 6 sec", "Target output · 9:16 · 5 sec"],
+assert.match(homeArchive, /data-home-upgrade="launch-pack"/);
+assert.match(homeArchive, /id="home-create"/);
+assert.match(homeArchive, /See how toys become launches\./);
+assert.match(homeArchive, /Preview Launch Pack/);
+assert.match(homeArchive, /preview=1&source=home-drop-archive/);
+assert.match(homeArchive, /Product target · one toy · three launch formats/);
+assert.match(
+  homeArchive,
+  /Archive shown · three different Pikbo-owned prototypes · no product upload/
+);
+assert.match(homeArchive, /Three separate archived format prototypes/);
+assert.equal((homeArchive.match(/<AutoPlayVideo/g) || []).length, 1);
+assert.doesNotMatch(homeArchive, /One toy photo\. Three launch-ready videos\./);
+assert.match(createSample, /data-public-pack-preview="instant-archived-samples"/);
+assert.match(createSample, /Pikbo Lab archive/);
+assert.match(createSample, /No sign-in · no upload/);
+assert.match(createSample, /No product upload in this public preview/);
+assert.match(createSample, /Request seller beta/);
+assert.match(createSample, /Private studio sign in/);
+assert.equal((createSample.match(/<AutoPlayVideo/g) || []).length, 1);
+for (const formatContract of [
+  /sample: "Scout"[\s\S]*actual: "Archive media · 16:9 · 6 sec"[\s\S]*target: "Target format · 1:1 · 5 sec"/,
+  /sample: "Moon"[\s\S]*actual: "Archive media · 16:9 · 6 sec"[\s\S]*target: "Target format · 9:16 · 5 sec"/,
+  /sample: "Beatbot"[\s\S]*actual: "Archive media · 9:16 · 6 sec"[\s\S]*target: "Target format · 9:16 · 5 sec"/,
 ]) {
-  assert.match(publicSample, new RegExp(actual));
-  assert.match(publicSample, new RegExp(target));
+  assert.match(publicSample, formatContract);
 }
 for (const media of [
   "/demos/scout-packshot-spin.mp4",
@@ -91,6 +109,8 @@ assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
 assert.match(shell, /create\?mode=seller-pack/);
+assert.match(shell, /Preview Launch Pack/);
+assert.match(shell, /preview=1&source=header-drop-archive/);
 assert.match(shell, /aria-label="Mobile product menu"/);
 assert.match(shell, /PRIMARY_NAV\.filter\(\(item\) => item\.href !== "\/"\)/);
 assert.match(softLaunchStrip, /: "\/create\?mode=seller-pack";/);

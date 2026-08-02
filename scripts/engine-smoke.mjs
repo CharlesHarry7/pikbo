@@ -2415,7 +2415,7 @@ assert.match(
     fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
     fs.readFileSync(join(root, "components/PublicLaunchPackSample.tsx"), "utf8"),
   ].join("\n"),
-  /data-home-upgrade=\{isHome \? "launch-pack"[\s\S]*\/create\?mode=seller-pack/
+  /data-home-upgrade="launch-pack"[\s\S]*\/create\?mode=seller-pack/
 );
 
 assert.match(
@@ -3922,20 +3922,38 @@ const publicSampleSrc = fs.readFileSync(
   join(root, "components/PublicLaunchPackSample.tsx"),
   "utf8"
 );
+const homeArchiveSrc = publicSampleSrc.slice(
+  publicSampleSrc.indexOf("function HomeDropArchive"),
+  publicSampleSrc.indexOf("function CreateSampleBrowser")
+);
+const createSampleSrc = publicSampleSrc.slice(
+  publicSampleSrc.indexOf("function CreateSampleBrowser")
+);
 assert.match(homeHeroSrc, /PublicLaunchPackSample surface="home"/);
-assert.match(publicSampleSrc, /Three video formats for your next toy launch\./);
-assert.doesNotMatch(publicSampleSrc, /One toy photo\. Three launch-ready videos\./);
+assert.match(homeArchiveSrc, /See how toys become launches\./);
+assert.doesNotMatch(homeArchiveSrc, /One toy photo\. Three launch-ready videos\./);
+assert.match(homeArchiveSrc, /data-home-hero="drop-archive"/);
+assert.match(homeArchiveSrc, /id="home-create"/);
+assert.match(homeArchiveSrc, /Preview Launch Pack/);
+assert.match(homeArchiveSrc, /preview=1&source=home-drop-archive/);
+assert.match(homeArchiveSrc, /Product target · one toy · three launch formats/);
+assert.match(
+  homeArchiveSrc,
+  /Archive shown · three different Pikbo-owned prototypes · no product upload/
+);
+assert.match(homeArchiveSrc, /Three separate archived format prototypes/);
+assert.equal((homeArchiveSrc.match(/<AutoPlayVideo/g) || []).length, 1);
+assert.match(createSampleSrc, /Pikbo Lab archive/);
+assert.match(createSampleSrc, /No sign-in · no upload/);
+assert.match(createSampleSrc, /No product upload in this public preview/);
+assert.equal((createSampleSrc.match(/<AutoPlayVideo/g) || []).length, 1);
 assert.match(publicSampleSrc, /Listing Spin/);
 assert.match(publicSampleSrc, /Blind-box Reveal/);
 assert.match(publicSampleSrc, /Social Flash/);
-assert.match(publicSampleSrc, /data-home-hero|preview=1&source=home-result-browser/);
-assert.match(publicSampleSrc, /id=\{isHome \? "home-create"/);
-assert.match(publicSampleSrc, /No product upload in this public\s+preview/);
-assert.match(publicSampleSrc, /Three separate archived format prototypes/);
-assert.match(publicSampleSrc, /Archived sample · 16:9 · 6 sec/);
-assert.match(publicSampleSrc, /Archived sample · 9:16 · 6 sec/);
-assert.match(publicSampleSrc, /Target output · 1:1 · 5 sec/);
-assert.match(publicSampleSrc, /Target output · 9:16 · 5 sec/);
+assert.match(publicSampleSrc, /Archive media · 16:9 · 6 sec/);
+assert.match(publicSampleSrc, /Archive media · 9:16 · 6 sec/);
+assert.match(publicSampleSrc, /Target format · 1:1 · 5 sec/);
+assert.match(publicSampleSrc, /Target format · 9:16 · 5 sec/);
 assert.doesNotMatch(publicSampleSrc, /HeroUpload|fetchMe|canUsePrivateLaunch|credits/);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeViralWall.tsx"),
@@ -3950,7 +3968,7 @@ assert.match(homeWallSrc, /href=\{item\.href\}/);
 assert.match(homeWallSrc, /project_open|recipe_use/);
 assert.match(
   [homePageSrc, publicSampleSrc].join("\n"),
-  /HomeCinemaHero items=|data-home-upgrade=\{isHome/
+  /HomeCinemaHero items=|data-home-upgrade="launch-pack"/
 );
 assert.doesNotMatch(
   [homePageSrc, homeHeroSrc, publicSampleSrc, homeWallSrc, appShell].join("\n"),

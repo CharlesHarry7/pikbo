@@ -33,28 +33,28 @@ export function HomeSeoBody() {
   };
 
   return (
-    <section className="bg-[#F2EDE3] px-4 pb-20 text-[#171717] sm:px-7 sm:pb-28">
+    <section className="bg-[#F2EDE3] px-4 pb-20 text-[#171717] sm:px-7 sm:pb-28 lg:bg-[#111111] lg:px-8 lg:pb-24 lg:text-[#F5F1E8]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <div className="mx-auto max-w-[1440px]">
-        <div className="grid overflow-hidden rounded-[26px] border border-black/12 bg-[#FAF7F0] lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="border-b border-black/12 p-6 sm:p-9 lg:border-b-0 lg:border-r lg:p-12">
+        <div className="grid overflow-hidden rounded-[26px] border border-black/12 bg-[#FAF7F0] lg:grid-cols-[0.8fr_1.2fr] lg:rounded-[18px] lg:border-white/12 lg:bg-[#181818]">
+          <div className="border-b border-black/12 p-6 sm:p-9 lg:border-b-0 lg:border-r lg:border-white/12 lg:p-12">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF6846]">
               One simple workflow
             </p>
             <h2 className="mt-4 font-display text-4xl font-black leading-[0.94] tracking-[-0.055em] sm:text-5xl">
               From shelf shot to launch set.
             </h2>
-            <p className="mt-5 max-w-md text-sm font-semibold leading-6 text-[#6D675E]">
+            <p className="mt-5 max-w-md text-sm font-semibold leading-6 text-[#6D675E] lg:text-[#A39C91]">
               No prompt engineering, model hunting, or editing timeline. The
               invited private-beta workflow is designed to keep completed clips
               private and reusable.
             </p>
           </div>
 
-          <div className="divide-y divide-black/10">
+          <div className="divide-y divide-black/10 lg:divide-white/10">
             {[
               ["01", "Add your toy", "Use one clean, authorized product photo."],
               ["02", "Pikbo directs the motion", "The three seller formats are fixed for you."],
@@ -64,14 +64,14 @@ export function HomeSeoBody() {
                 key={number}
                 className="grid grid-cols-[44px_1fr] gap-4 p-6 sm:grid-cols-[62px_1fr] sm:p-8"
               >
-                <span className="font-display text-xl font-black text-[#2876FF]">
+                <span className="font-display text-xl font-black text-[#2876FF] lg:text-[#D84A35]">
                   {number}
                 </span>
                 <div>
                   <h3 className="text-lg font-black tracking-[-0.025em]">
                     {title}
                   </h3>
-                  <p className="mt-1 text-sm leading-6 text-[#6D675E]">{copy}</p>
+                  <p className="mt-1 text-sm leading-6 text-[#6D675E] lg:text-[#A39C91]">{copy}</p>
                 </div>
               </div>
             ))}
@@ -79,14 +79,14 @@ export function HomeSeoBody() {
         </div>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
-          <article className="rounded-[26px] bg-[#2876FF] p-7 text-white sm:p-10">
+          <article className="rounded-[26px] bg-[#2876FF] p-7 text-white sm:p-10 lg:rounded-[18px] lg:border lg:border-white/12 lg:bg-[#181818] lg:text-[#F5F1E8]">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
               Your working shelf
             </p>
             <h2 className="mt-12 max-w-2xl font-display text-3xl font-black leading-[0.96] tracking-[-0.045em] sm:mt-20 sm:text-5xl">
               Private beta is built for private, reusable launches.
             </h2>
-            <p className="mt-5 max-w-2xl text-sm leading-6 text-white/70">
+            <p className="mt-5 max-w-2xl text-sm leading-6 text-white/70 lg:text-[#A39C91]">
               When private Live is enabled,
               eligible invited accounts
               can create private 5-second 720p results. Completed clips are
@@ -94,7 +94,7 @@ export function HomeSeoBody() {
             </p>
           </article>
 
-          <article className="flex flex-col justify-between rounded-[26px] bg-[#FF6846] p-7 text-[#1B0B06] sm:p-10">
+          <article className="flex flex-col justify-between rounded-[26px] bg-[#FF6846] p-7 text-[#1B0B06] sm:p-10 lg:rounded-[18px] lg:bg-[#F5F1E8] lg:text-[#111111]">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/48">
                 Founding Studio
@@ -105,16 +105,16 @@ export function HomeSeoBody() {
             </div>
             <Link
               href="/contact?source=home-founding-studio"
-              className="mt-10 inline-flex min-h-14 items-center justify-between rounded-full bg-[#171717] px-6 text-sm font-black text-white hover:bg-black"
+              className="mt-10 inline-flex min-h-14 items-center justify-between rounded-full bg-[#171717] px-6 text-sm font-black text-white hover:bg-black lg:rounded-[10px] lg:bg-[#D84A35] lg:hover:bg-[#E25A43]"
             >
               Request seller beta <span aria-hidden>↗</span>
             </Link>
           </article>
         </div>
 
-        <div className="mt-16 grid gap-10 border-t border-black/15 pt-8 lg:grid-cols-[0.7fr_1.3fr]">
+        <div className="mt-16 grid gap-10 border-t border-black/15 pt-8 lg:grid-cols-[0.7fr_1.3fr] lg:border-white/12">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6D675E]">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6D675E] lg:text-[#A39C91]">
               Focused tools
             </p>
             <nav className="mt-4 flex flex-col items-start gap-2" aria-label="Toy video guides">
@@ -122,7 +122,7 @@ export function HomeSeoBody() {
                 <Link
                   key={href}
                   href={href}
-                  className="text-sm font-black underline decoration-black/20 underline-offset-4 hover:decoration-[#FF6846]"
+                  className="text-sm font-black underline decoration-black/20 underline-offset-4 hover:decoration-[#FF6846] lg:decoration-white/20 lg:hover:decoration-[#D84A35]"
                 >
                   {label} ↗
                 </Link>
@@ -130,11 +130,11 @@ export function HomeSeoBody() {
             </nav>
           </div>
 
-          <div className="grid gap-px overflow-hidden rounded-2xl border border-black/12 bg-black/12 md:grid-cols-3">
+          <div className="grid gap-px overflow-hidden rounded-2xl border border-black/12 bg-black/12 md:grid-cols-3 lg:rounded-[14px] lg:border-white/12 lg:bg-white/12">
             {FAQ.map((item) => (
-              <article key={item.q} className="bg-[#FAF7F0] p-6">
+              <article key={item.q} className="bg-[#FAF7F0] p-6 lg:bg-[#181818]">
                 <h3 className="font-black">{item.q}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#6D675E]">{item.a}</p>
+                <p className="mt-3 text-sm leading-6 text-[#6D675E] lg:text-[#A39C91]">{item.a}</p>
               </article>
             ))}
           </div>
