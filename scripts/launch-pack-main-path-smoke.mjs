@@ -29,15 +29,13 @@ const createSample = publicSample.slice(
   publicSample.indexOf("function CreateSampleBrowser")
 );
 
-// The public homepage now starts from a single Moment selection. The existing
-// Launch Pack remains an explicitly private workspace, not the public product
-// definition and not a fabricated public result.
-assert.match(homeHero, /HomeMomentShowcase/);
-assert.match(read("components/HomeMomentShowcase.tsx"), /One toy photo\. More ways to sell\./);
-assert.match(read("components/MomentStage.tsx"), /Preview with my toy/);
-assert.match(read("components/MomentStage.tsx"), /Official Concept/);
+// The public homepage starts from a video-first archived Launch Pack browser.
+// Archived samples remain explicitly labeled and never imply a customer result.
+assert.match(homeHero, /PublicLaunchPackSample surface="home"/);
+assert.match(publicSample, /See how toys become launches\./);
+assert.match(publicSample, /Archive motion sample/);
+assert.match(publicSample, /Three separate archived format prototypes/);
 assert.match(read("components/MomentCreatePreview.tsx"), /no upload · no generation · 0 credits/i);
-assert.doesNotMatch(homeHero, /PublicLaunchPackSample surface="home"/);
 assert.doesNotMatch(home, /One toy photo\. Three launch-ready videos\./);
 assert.match(createSample, /data-public-pack-preview="instant-archived-samples"/);
 assert.match(createSample, /Pikbo Lab archive/);

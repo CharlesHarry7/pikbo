@@ -53,6 +53,9 @@ const FORMATS = [
   },
 ] as const;
 
+const PRIVATE_BETA_MAILTO =
+  "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
+
 type Format = (typeof FORMATS)[number];
 
 export function PublicLaunchPackSample({
@@ -312,8 +315,9 @@ function HomeDropArchive({
                 Try a sample Pack <span aria-hidden>↗</span>
               </Link>
               <Link
-                href="/contact?source=home-seller-beta"
+                href={PRIVATE_BETA_MAILTO}
                 className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/18 px-6 text-sm font-black text-white"
+                aria-label="Email Pikbo to request seller beta access"
               >
                 Request seller beta
               </Link>
@@ -499,8 +503,9 @@ function CreateSampleBrowser({
             <div className="mt-6">
               <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
                 <Link
-                  href="/contact?source=sample-launch-pack"
+                  href={PRIVATE_BETA_MAILTO}
                   className="inline-flex min-h-14 items-center justify-between gap-4 rounded-full bg-[#C9FF45] px-6 text-sm font-black text-[#0A1700] transition hover:bg-[#DCFF81] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#101012]"
+                  aria-label="Email Pikbo to request seller beta access"
                 >
                   Request seller beta <span aria-hidden>↗</span>
                 </Link>
