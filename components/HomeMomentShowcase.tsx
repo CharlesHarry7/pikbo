@@ -62,9 +62,10 @@ export function HomeMomentShowcase() {
               <span aria-hidden className="text-lg">↗</span>
             </Link>
             <Link
-              href="/contact?source=homepage-moment"
+              href="mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access."
               className="inline-flex min-h-12 items-center rounded-full border border-[#171719]/25 px-5 text-xs font-black uppercase tracking-[0.12em] text-[#171719] transition-colors hover:border-[#F04E30] hover:text-[#F04E30]"
               data-moment-beta-cta
+              aria-label="Email Pikbo to request private beta access"
             >
               Request private beta
             </Link>
