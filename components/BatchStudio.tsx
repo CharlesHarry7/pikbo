@@ -1668,6 +1668,68 @@ export function BatchStudio({
       data-launch-workspace={sellerPackActive ? "seller-pack" : undefined}
     >
       <div className="space-y-4">
+        {sellerPackActive && meResolved && !privateLaunchEnabled ? (
+          <div
+            className="rounded-2xl border border-[#BFCDF7] bg-[#F6F8FF] p-4 sm:p-5"
+            data-seller-pack-eligibility="closed"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2457E6]">
+                  {privateInputEnabled
+                    ? "Private input access"
+                    : "Private beta access"}
+                </p>
+                <h2 className="mt-1 text-lg font-black tracking-[-0.03em] text-[#111827] sm:text-xl">
+                  {privateInputEnabled
+                    ? "Your photo can be checked privately."
+                    : "Public preview is not your product run."}
+                </h2>
+                <p className="mt-1.5 max-w-xl text-xs font-semibold leading-5 text-[#667085]">
+                  {privateInputEnabled
+                    ? "Verify one owned toy photo first. Video generation is still closed, so this step reserves 0 credits and creates no jobs."
+                    : "Your own toy is not processed in public preview. Apply for private beta access; once approved, the path is one owned photo → rights check → three-format Pack."
+                  }
+                </p>
+              </div>
+              <span className="rounded-full border border-[#BFCDF7] bg-white px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#2457E6]">
+                Validation · generation closed
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {privateInputEnabled ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    document
+                      .getElementById("seller-pack-photo")
+                      ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                  }
+                  className="inline-flex min-h-10 items-center rounded-xl bg-[#2457E6] px-3.5 text-xs font-black text-white transition hover:bg-[#1948C7]"
+                  data-seller-pack-eligibility-action="verify"
+                >
+                  Verify private photo
+                </button>
+              ) : (
+                <Link
+                  href="/contact?source=seller-pack-beta"
+                  className="inline-flex min-h-10 items-center rounded-xl bg-[#2457E6] px-3.5 text-xs font-black text-white transition hover:bg-[#1948C7]"
+                  data-seller-pack-eligibility-action="request"
+                >
+                  Request private beta
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => void chooseLabSample(SAMPLE_TOYS[0].id)}
+                className="inline-flex min-h-10 items-center rounded-xl border border-[#BFCDF7] bg-white px-3.5 text-xs font-black text-[#2457E6] transition hover:border-[#2457E6]"
+                data-seller-pack-eligibility-action="sample"
+              >
+                Try cached sample Pack
+              </button>
+            </div>
+          </div>
+        ) : null}
         {sellerPackActive && (
           <div className="hidden rounded-2xl border border-[#D5D9E1] bg-white p-4 shadow-[0_18px_50px_-38px_rgba(22,32,51,0.45)] sm:p-5 lg:block">
             <div className="flex flex-wrap items-start justify-between gap-3">
