@@ -38,6 +38,8 @@ export type SellerPackAtomicReserve = {
   availableCredits: number;
   reservedCredits: number;
   idempotent: boolean;
+  inputAssetId: string;
+  skuLabel: string | null;
   jobs: Array<{
     jobId: string;
     childKey: string;
@@ -58,6 +60,8 @@ export type SellerPackAtomicReserve = {
 export async function reserveSellerPackAtomic(input: {
   ownerUserId: string;
   clientPackKey: string;
+  inputAssetId: string;
+  rightsConfirmed: true;
 }): Promise<
   | { ok: true; data: SellerPackAtomicReserve }
   | { ok: false; code: string; error: string; need?: number; have?: number }
@@ -78,9 +82,18 @@ export async function reserveSellerPackAtomic(input: {
       error: "clientPackKey must be 8–128 characters",
     };
   }
+  if (!/^[0-9a-f-]{36}$/i.test(input.inputAssetId)) {
+    return {
+      ok: false,
+      code: "INPUT_ASSET_REQUIRED",
+      error: "A verified private toy input is required",
+    };
+  }
   const reserved = await reserveAtomicSellerPack({
     userId: input.ownerUserId,
     clientPackKey: key,
+    inputAssetId: input.inputAssetId,
+    rightsConfirmed: input.rightsConfirmed,
   });
   if (!reserved.ok) {
     return {
@@ -110,6 +123,8 @@ export async function reserveSellerPackAtomic(input: {
       availableCredits: d.availableCredits,
       reservedCredits: d.reservedCredits,
       idempotent: d.idempotent,
+      inputAssetId: d.inputAssetId,
+      skuLabel: d.skuLabel,
       jobs: d.jobs.map((job) => ({
         jobId: job.jobId,
         childKey: job.childKey,

@@ -73,6 +73,8 @@ export default async function CreatePage({
     /** Exact local retry handoff; paired one-time bearer. */
     retryJobId?: string;
     retryToken?: string;
+    /** Owner-scoped durable Pack selected from Library. */
+    recover?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -80,6 +82,10 @@ export default async function CreatePage({
   const firstRunSample =
     sp.sample ||
     (sp.try === "1" || sp.try === "true" ? "scout" : undefined);
+  const recoverPackRunId =
+    typeof sp.recover === "string" && /^[0-9a-f-]{36}$/i.test(sp.recover)
+      ? sp.recover
+      : undefined;
 
   // Wave A: Seller Pack is a Create mode, not a separate suite door.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
@@ -122,6 +128,7 @@ export default async function CreatePage({
             pack="seller"
             initialSku={sp.sku}
             initialSample={firstRunSample}
+            initialRecoverPackRunId={recoverPackRunId}
           />
         </div>
       </div>

@@ -8,6 +8,7 @@ import {
   completeAuthCallback,
   parseAuthCallbackUrl,
 } from "@/lib/authCallback";
+import { sanitizeInternalNextPath } from "@/lib/authRedirect";
 
 /**
  * Email magic-link lands here with ?code=...
@@ -78,6 +79,9 @@ export default function AuthCallbackPage() {
 
       emitSessionRefresh();
       if (!cancelled) {
+        const next = sanitizeInternalNextPath(
+          new URL(window.location.href).searchParams.get("next")
+        );
         setStatus("ok");
         setDetail((detail) =>
           detail.startsWith("Signed in")
@@ -85,7 +89,7 @@ export default function AuthCallbackPage() {
             : "Signed in. Redirecting…"
         );
         window.setTimeout(() => {
-          window.location.replace("/profile");
+          window.location.replace(next);
         }, 700);
       }
     }

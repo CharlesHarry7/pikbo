@@ -583,6 +583,8 @@ export function pureRejectFourthChild(
 export async function reserveAtomicSellerPack(input: {
   userId: string;
   clientPackKey: string;
+  inputAssetId: string;
+  rightsConfirmed: true;
 }): Promise<
   | { ok: true; data: AtomicSellerPackReserveResult }
   | { ok: false; code: string; error: string; need?: number; have?: number }

@@ -64,12 +64,33 @@ export function resolveTrustedAuthOrigin(
 
 export function authCallbackUrl(
   origin: string,
-  nodeEnv = process.env.NODE_ENV
+  nodeEnv = process.env.NODE_ENV,
+  nextPath?: string | null
 ): string {
   if (!isTrustedAuthOrigin(origin, nodeEnv)) {
     throw new Error("untrusted_auth_origin");
   }
-  return `${new URL(origin).origin}/auth/callback`;
+  const callback = new URL("/auth/callback", new URL(origin).origin);
+  const next = sanitizeInternalNextPath(nextPath);
+  if (next !== "/profile") callback.searchParams.set("next", next);
+  return callback.toString();
+}
+
+/** Same-origin path only; rejects protocol-relative and encoded redirect tricks. */
+export function sanitizeInternalNextPath(
+  value: string | null | undefined,
+  fallback = "/profile"
+): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return fallback;
+  if (value.includes("\\") || /[\u0000-\u001f\u007f]/.test(value)) return fallback;
+  try {
+    const base = new URL("https://pikbo.invalid");
+    const parsed = new URL(value, base);
+    if (parsed.origin !== base.origin || !parsed.pathname.startsWith("/")) return fallback;
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return fallback;
+  }
 }
 
 export const AUTH_CALLBACK_URLS = {

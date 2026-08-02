@@ -21,6 +21,7 @@ import {
 import { parsePrivateLiveAllowlist } from "@/lib/privateLiveBeta.mjs";
 import { probeSupabase } from "@/lib/supabase/server";
 import { t6Report } from "@/lib/t6Watermark";
+import { probePrivateToyAssets } from "@/lib/privateToyAssets";
 
 /**
  * Shared server probe used by /api/health and /api/me. Keeping these facts in
@@ -33,12 +34,14 @@ async function computeSoftLiveReadiness() {
     durableReconciliation,
     durableProviderBudget,
     privateResults,
+    privateInputs,
     supabase,
   ] = await Promise.all([
     probeDurableCreditsStore(),
     probeDurableReconciliationSchema(),
     probeDurableProviderBudgetStore(),
     privateResultsProbe(),
+    probePrivateToyAssets(),
     probeSupabase(),
   ]);
   const authPublic = publicAuthStatus();
@@ -82,6 +85,10 @@ async function computeSoftLiveReadiness() {
     privateResultsBucketReady: privateResults.bucketReady,
     privateResultsSchemaReady: privateResults.schemaReady,
     privateResultsRpcReady: privateResults.rpcReady,
+    privateInputsBucketReady: privateInputs.bucketReady,
+    privateInputsSchemaReady: privateInputs.schemaReady,
+    privateInputsReserveRpcReady: privateInputs.reserveRpcReady,
+    privateInputsDiscoveryReady: privateInputs.discoveryReady,
     providerOutputAllowlistConfigured:
       privateProviderOutputAllowlistConfigured(),
     privateLiveEnabled: process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1",
@@ -112,6 +119,7 @@ async function computeSoftLiveReadiness() {
     durableReconciliation,
     durableProviderBudget,
     privateResults,
+    privateInputs,
     supabase,
     t6,
   };

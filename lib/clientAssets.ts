@@ -1,43 +1,70 @@
-/**
- * Browser helper — register a data-URL image into the local Phase D asset path
- * so generate can send assetId instead of re-posting large Base64.
- */
+/** Browser helper for the authenticated private toy-input flow. */
 
-export async function registerLocalAsset(
-  dataUrl: string
+import { privateDownloadHeaders } from "@/lib/history";
+
+function hex(bytes: Uint8Array): string {
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+export async function registerPrivateToyAsset(
+  dataUrl: string,
+  skuLabel?: string
 ): Promise<{ assetId: string } | null> {
   if (!dataUrl.startsWith("data:image")) return null;
   try {
-    const comma = dataUrl.indexOf(",");
-    const meta = dataUrl.slice(0, comma);
-    const contentType =
-      /data:(image\/[a-zA-Z0-9.+-]+)/.exec(meta)?.[1] || "image/jpeg";
-    // Rough decoded size estimate for preflight (base64 → ~3/4).
-    const approxBytes = Math.floor(((dataUrl.length - comma) * 3) / 4);
-
+    const blob = await (await fetch(dataUrl)).blob();
+    const bytes = await blob.arrayBuffer();
+    const sha256 = hex(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)));
+    const auth = await privateDownloadHeaders();
     const prep = await fetch("/api/assets/upload-url", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contentType, byteLength: approxBytes }),
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename: "toy-input",
+        mimeType: blob.type,
+        sizeBytes: blob.size,
+        sha256,
+        skuLabel: skuLabel?.trim() || undefined,
+      }),
     });
-    const prepBody = (await prep.json()) as {
+    const prepared = (await prep.json().catch(() => ({}))) as {
       ok?: boolean;
       assetId?: string;
       uploadUrl?: string;
     };
-    if (!prep.ok || !prepBody.ok || !prepBody.assetId || !prepBody.uploadUrl) {
-      return null;
-    }
-
-    const blob = await (await fetch(dataUrl)).blob();
-    const put = await fetch(prepBody.uploadUrl, {
+    if (!prep.ok || !prepared.ok || !prepared.assetId || !prepared.uploadUrl) return null;
+    const uploaded = await fetch(prepared.uploadUrl, {
       method: "PUT",
-      headers: { "Content-Type": contentType },
+      headers: { "Content-Type": blob.type },
       body: blob,
     });
-    if (!put.ok) return null;
-    return { assetId: prepBody.assetId };
+    if (!uploaded.ok) return null;
+    const complete = await fetch("/api/assets/complete", {
+      method: "POST",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ assetId: prepared.assetId }),
+    });
+    const completed = (await complete.json().catch(() => ({}))) as {
+      ok?: boolean;
+      asset?: { id?: string; state?: string };
+    };
+    if (
+      !complete.ok ||
+      !completed.ok ||
+      completed.asset?.id !== prepared.assetId ||
+      completed.asset?.state !== "ready"
+    ) {
+      return null;
+    }
+    return { assetId: prepared.assetId };
   } catch {
     return null;
   }
+}
+
+/** Compatibility name used by current Create surfaces. It is durable now. */
+export async function registerLocalAsset(
+  dataUrl: string
+): Promise<{ assetId: string } | null> {
+  return registerPrivateToyAsset(dataUrl);
 }

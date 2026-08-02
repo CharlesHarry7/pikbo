@@ -14,7 +14,7 @@ type AuthPublic = {
   message: string;
 };
 
-export function LoginForm({ auth }: { auth: AuthPublic }) {
+export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -77,7 +77,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
       const res = await fetch("/api/auth/magic-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), next }),
       });
       const data = (await res.json()) as {
         ok?: boolean;
@@ -125,7 +125,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${origin}/auth/callback`,
+          redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
           queryParams: { prompt: "select_account" },
         },
       });

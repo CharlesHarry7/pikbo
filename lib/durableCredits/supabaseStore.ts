@@ -1113,6 +1113,9 @@ export type AtomicSellerPackReserveResult = {
   availableCredits: number;
   reservedCredits: number;
   idempotent: boolean;
+  inputAssetId: string;
+  skuLabel: string | null;
+  rightsConfirmed: true;
   jobs: AtomicSellerPackJobPublic[];
 };
 
@@ -1239,6 +1242,8 @@ function planIdField(value: unknown): PlanId | null {
 export async function supabaseReserveSellerPackAtomic(input: {
   userId: string;
   clientPackKey: string;
+  inputAssetId: string;
+  rightsConfirmed: true;
 }): Promise<
   | { ok: true; data: AtomicSellerPackReserveResult }
   | AtomicRpcFailure
@@ -1251,9 +1256,11 @@ export async function supabaseReserveSellerPackAtomic(input: {
       error: "Supabase service role unavailable",
     };
   }
-  const { data, error } = await admin.rpc("pikbo_reserve_seller_pack_v1", {
+  const { data, error } = await admin.rpc("pikbo_reserve_seller_pack_with_asset_v1", {
     p_user_id: input.userId,
     p_client_pack_key: input.clientPackKey,
+    p_input_asset_id: input.inputAssetId,
+    p_rights_confirmed: input.rightsConfirmed,
   });
   if (error) {
     return {
@@ -1291,6 +1298,9 @@ export async function supabaseReserveSellerPackAtomic(input: {
     availableCredits == null ||
     reservedCredits == null ||
     payload.userId !== input.userId
+    || typeof payload.inputAssetId !== "string"
+    || payload.inputAssetId !== input.inputAssetId
+    || payload.rightsConfirmed !== true
   ) {
     return {
       ok: false,
@@ -1315,6 +1325,9 @@ export async function supabaseReserveSellerPackAtomic(input: {
       availableCredits,
       reservedCredits,
       idempotent: payload.idempotent === true,
+      inputAssetId: payload.inputAssetId,
+      skuLabel: typeof payload.skuLabel === "string" ? payload.skuLabel : null,
+      rightsConfirmed: true,
       jobs,
     },
   };
@@ -1341,7 +1354,7 @@ export async function supabaseAuthorizeSellerPackChildAtomic(input: {
     };
   }
   const { data, error } = await admin.rpc(
-    "pikbo_authorize_seller_pack_child_v1",
+    "pikbo_authorize_seller_pack_child_with_asset_v1",
     {
       p_user_id: input.userId,
       p_pack_run_id: input.packRunId,

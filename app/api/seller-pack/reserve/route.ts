@@ -10,6 +10,8 @@ import {
   SELLER_PACK_CHILD_COUNT,
   SELLER_PACK_QUOTE_CREDITS,
 } from "@/lib/durableCredits/sellerPack";
+import { resolvePrivateLiveAccess } from "@/lib/privateLiveAccessServer";
+import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
 
 export const runtime = "nodejs";
 
@@ -19,7 +21,11 @@ export const runtime = "nodejs";
  * guest/shadow fallback on this endpoint.
  */
 export async function POST(req: Request) {
-  let body: { clientPackKey?: string } = {};
+  let body: {
+    clientPackKey?: string;
+    inputAssetId?: string;
+    rightsConfirmed?: boolean;
+  } = {};
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -52,6 +58,24 @@ export async function POST(req: Request) {
       { status: 503 }
     );
   }
+  const privateLive = resolvePrivateLiveAccess(auth);
+  const readiness = await probeSoftLiveReadiness();
+  if (
+    !privateLive.invite.invited ||
+    !privateLive.budget.ok ||
+    !readiness.privatePreview.ready
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "PRIVATE_PREVIEW_REQUIRED",
+        error: "Private seller Preview is not ready for provider spend",
+        quoteCredits: SELLER_PACK_QUOTE_CREDITS,
+        session: publicSession(session),
+      },
+      { status: privateLive.invite.invited ? 503 : 403 }
+    );
+  }
 
   const clientPackKey =
     typeof body.clientPackKey === "string"
@@ -69,10 +93,29 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
+  const inputAssetId =
+    typeof body.inputAssetId === "string" ? body.inputAssetId.trim() : "";
+  if (!/^[0-9a-f-]{36}$/i.test(inputAssetId) || body.rightsConfirmed !== true) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code:
+          body.rightsConfirmed === true
+            ? "INPUT_ASSET_REQUIRED"
+            : "RIGHTS_CONFIRMATION_REQUIRED",
+        error: "A verified private toy input and rights confirmation are required",
+        quoteCredits: SELLER_PACK_QUOTE_CREDITS,
+        session: publicSession(session),
+      },
+      { status: 400 }
+    );
+  }
 
   const atomic = await reserveSellerPackAtomic({
     ownerUserId: auth.id,
     clientPackKey,
+    inputAssetId,
+    rightsConfirmed: true,
   });
   if (!atomic.ok) {
     const status =
@@ -106,6 +149,8 @@ export async function POST(req: Request) {
     mode: "atomic",
     authority: "server-owned-atomic-pack",
     packRunId: atomic.data.packRunId,
+    inputAssetId: atomic.data.inputAssetId,
+    skuLabel: atomic.data.skuLabel,
     reservationId: atomic.data.reservationId,
     jobs: atomic.data.jobs,
     quoteCredits: atomic.data.quotedCredits,

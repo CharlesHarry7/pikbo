@@ -45,6 +45,18 @@ assert.equal(
   `${production}/auth/callback`
 );
 assert.equal(
+  redirect.authCallbackUrl(production, "production", "/create?mode=seller-pack"),
+  `${production}/auth/callback?next=%2Fcreate%3Fmode%3Dseller-pack`
+);
+assert.equal(
+  redirect.sanitizeInternalNextPath("//evil.example/steal"),
+  "/profile"
+);
+assert.equal(
+  redirect.sanitizeInternalNextPath("/create?mode=seller-pack"),
+  "/create?mode=seller-pack"
+);
+assert.equal(
   redirect.resolveTrustedAuthOrigin(
     request(`${preview}/api/auth/magic-link`, "https://evil.example"),
     "production"
@@ -160,6 +172,9 @@ assert.doesNotMatch(
 assert.match(callbackSource, /parseAuthCallbackUrl/);
 assert.match(callbackSource, /completeAuthCallback/);
 assert.match(callbackSource, /Request a new magic link/);
+assert.match(callbackSource, /window\.location\.replace\(next\)/);
+assert.match(routeSource, /sanitizeInternalNextPath/);
+assert.match(loginSource, /JSON\.stringify\(\{ email: email\.trim\(\), next \}\)/);
 assert.match(loginSource, /Check your inbox for a Pikbo sign-in link/);
 
 console.log(
