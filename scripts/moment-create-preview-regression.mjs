@@ -81,6 +81,10 @@ assert.match(createPreview, /Sign in to continue/);
 assert.match(createPreview, /Verify private photo/);
 assert.match(createPreview, /Continue to private studio/);
 assert.match(createPreview, /Request private access/);
+assert.match(
+  createPreview,
+  /mailto:support@pikbo\.ai\?subject=Pikbo%20private%20beta%20request/
+);
 assert.match(createPreview, /Watch a finished reveal/);
 assert.match(createPreview, /moon-box-reveal\.mp4/);
 assert.match(createPreview, /Archived study · separate sample toy/);

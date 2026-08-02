@@ -29,6 +29,9 @@ import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 
 type DraftStatus = "loading" | "empty" | "ready" | "tab-only";
 
+const PRIVATE_BETA_MAILTO =
+  "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
+
 async function decodeImage(blob: Blob): Promise<boolean> {
   if (typeof createImageBitmap === "function") {
     try {
@@ -271,7 +274,7 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
     }
     return {
       label: "Request private access",
-      href: `/contact?source=moment-private-access&moment=${moment.id}`,
+      href: PRIVATE_BETA_MAILTO,
       note: "Private generation is invitation-only. No Provider call or credit reservation will start here.",
     };
   }, [blob, me, meResolved, moment.id]);
