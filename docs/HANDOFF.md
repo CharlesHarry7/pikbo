@@ -2445,3 +2445,7 @@ Newest first. One block per meaningful landing.
   TypeScript, ESLint and the 199-page production build pass. No API, Provider,
   Storage, Supabase, credits, Stripe, Library, production flag or real-model
   spend changed.
+- PR #103 passed GitHub CI and Vercel Preview. The deployed Preview at
+  `https://pikbo-git-agent-gptdesktop-toy-desire-v3-pi-kbo.vercel.app/`
+  rendered one video, three working archive selectors, Preview-only CTAs,
+  truthful archive limits and no horizontal overflow.
