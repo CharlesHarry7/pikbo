@@ -180,6 +180,7 @@ for (const mutate of [
 }
 
 let fetchPayload;
+const contractInputAssetId = "11111111-1111-4111-8111-111111111111";
 const priorFetch = globalThis.fetch;
 globalThis.fetch = async () => ({
   status: 200,
@@ -194,9 +195,13 @@ try {
     quoteCredits: 30,
     jobs: exactServerJobs(),
     idempotent: false,
+    inputAssetId: contractInputAssetId,
+    skuLabel: "Cached contract toy",
   };
   const validReserve = await generateClientModule.reserveSellerPackClient({
     clientPackKey: "client-pack-contract-0001",
+    inputAssetId: contractInputAssetId,
+    rightsConfirmed: true,
   });
   assert.equal(validReserve.ok, true);
   assert.deepEqual(
@@ -207,6 +212,8 @@ try {
   fetchPayload.jobs = malformedJobs((jobs) => jobs.reverse());
   const malformedReserve = await generateClientModule.reserveSellerPackClient({
     clientPackKey: "client-pack-contract-0002",
+    inputAssetId: contractInputAssetId,
+    rightsConfirmed: true,
   });
   assert.equal(malformedReserve.ok, false);
   assert.equal(malformedReserve.code, "INVALID_SERVER_CONTRACT");
@@ -217,6 +224,9 @@ try {
     status: "running",
     settledCredits: 0,
     releasedCredits: 0,
+    inputAssetId: contractInputAssetId,
+    skuLabel: "Cached contract toy",
+    inputPreviewUrl: null,
     jobs: exactServerJobs(),
   };
   const validStatus = await generateClientModule.getSellerPackStatusClient(
