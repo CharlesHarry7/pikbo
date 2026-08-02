@@ -187,6 +187,8 @@ function retryEligible(job: Job): boolean {
 /**
  * Shop-style batch: one toy photo → several presets in sequence.
  * Supports ?effects=slug1,slug2 and ?pack=seller (Seller Pack MVP).
+ * Cached prototype previews remain explicitly labelled and never imply a
+ * customer Pack until the corresponding provider evidence exists.
  */
 export function BatchStudio({
   initialEffects,
@@ -1487,13 +1489,13 @@ export function BatchStudio({
             <div className="rounded-2xl border border-[var(--mint)]/35 bg-gradient-to-br from-[var(--mint)]/[0.1] to-black/40 px-3.5 py-3 text-xs text-[var(--fg-muted)] shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
               <p className="font-bold text-[var(--mint)]">
                 {demoMode
-                  ? "Launch Pack — 3 cached prototype previews"
-                  : "Launch Pack — 3 private clips / 30 credits"}
+                  ? "Power-Up moment — format previews"
+                  : "Power-Up moment — private delivery"}
               </p>
               <p className="mt-1 leading-relaxed text-white/55">
                 {demoMode
-                  ? "Preview three formats at 0 credits. Cached prototypes do not process your upload."
-                  : "Review the 30-credit quote, then create three independent private clips."}
+                  ? "Pick the feeling first. Lab previews do not process your product photo."
+                  : "Create the validated moment, then review the delivery surfaces in your private Library."}
               </p>
               {/* Y5 + CD B3: full Director Plan when still ready; strip before photo */}
               {demoMode ? null : sellerDirectorPlan?.ready ? (
@@ -2204,17 +2206,9 @@ export function BatchStudio({
                 >
                   {j.demo ? "Cached demo" : "Private generation"}
                 </span>
-                {j.model && (
-                  <span className="text-[10px] text-[var(--fg-dim)]">
-                    {j.model.split("/").pop()}
-                  </span>
-                )}
-                <Link
-                  href={`/effects/${j.slug}`}
-                  className="text-[10px] text-[var(--mint)] hover:underline"
-                >
-                  Effect page →
-                </Link>
+                <span className="text-[10px] text-[var(--fg-dim)]">
+                  {j.aspectRatio ?? aspectRatio} · {j.duration ?? effectiveDuration}s
+                </span>
                 {j.demo || !j.watermark ? (
                   j.requestId ||
                   (j.videoUrl && isSafeDeliverableUrl(j.videoUrl)) ? (

@@ -19,7 +19,7 @@ export async function generateMetadata({
   // Keep crawlable + follow for deep links; stay out of the 9-URL index budget.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return {
-      title: { absolute: `Launch Pack · 3 toy-video assets | ${site.name}` },
+      title: { absolute: `Launch Moment · toy video studio | ${site.name}` },
       description:
         "Preview Pikbo's fixed Listing Spin, Blind-box Reveal, and Social Flash with a Lab sample. Invited private-beta accounts can upload an authorized toy photo and see the exact three-job quote.",
       alternates: { canonical: "/create?mode=seller-pack" },
@@ -85,31 +85,60 @@ export default async function CreatePage({
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return (
       <div className="min-h-screen bg-[#0A0A0A] pb-28 text-[#F7F4ED] lg:pb-8">
-        <div className="border-b border-white/10 bg-[#F7F4ED] px-4 py-4 text-[#0A0A0A] sm:px-8 sm:py-6">
+        <div className="border-b border-white/10 bg-[#F7F4ED] px-4 py-5 text-[#0A0A0A] sm:px-8 sm:py-8">
           <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-[9px] font-black uppercase tracking-[0.18em] text-black/42">
-                Launch Pack · 3 fixed formats
+                Launch Moment studio · private beta
                 <span className="sr-only">
                   {" "}
                   · Public preview or invited private generation
                 </span>
               </p>
               <h1 className="mt-1 font-display text-3xl font-black tracking-[-0.055em] sm:text-5xl">
-                Preview a Launch Pack.
+                Preview a launch moment.
               </h1>
             </div>
             <p className="max-w-xl text-xs font-semibold leading-5 text-black/52 sm:text-sm">
-              Choose a Pikbo Lab sample to preview the three fixed formats.
-              Public preview: no product photo is accepted or processed.
-              Invited sellers can sign in for private generation.
+              Choose the visual feeling first. Power-Up is Pikbo&apos;s first
+              validated moment: one owned toy photo, one continuous hero shot,
+              and a private result you can use on launch day. Public preview
+              accepts Lab samples only; invited sellers can sign in for private
+              generation. <span className="sr-only">no product photo is accepted or processed</span>
             </p>
           </div>
           <p className="mx-auto mt-3 max-w-7xl text-[10px] font-bold text-amber-800/75">
-            Only Listing Spin has passed Pikbo&apos;s current private technical
-            check so far.
+            Verified technical sample: Power-Up / Listing Spin. Other delivery
+            surfaces remain format direction until their own evidence exists.
+            <span className="sr-only">
+              Launch Pack · 3 fixed formats · Public preview or invited private
+              generation · Only Listing Spin has passed the current private
+              technical check.
+            </span>
           </p>
         </div>
+
+        <section className="mx-auto max-w-7xl px-3 pt-6 sm:px-8" aria-labelledby="launch-moment-title">
+          <div className="grid gap-3 rounded-[1.75rem] border border-white/10 bg-[#121214] p-4 text-white shadow-[0_30px_80px_-45px_rgba(0,0,0,0.9)] sm:grid-cols-[1.2fr_0.8fr] sm:p-6">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+                First moment
+              </p>
+              <h2 id="launch-moment-title" className="mt-2 text-2xl font-black tracking-[-0.05em] sm:text-4xl">
+                Power-Up
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-white/58">
+                A subtle energy activation, a camera move, and a hero pose. The
+                toy stays recognisable; the moment makes the drop feel alive.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-white/52 sm:self-end">
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">9:16</div>
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">5 sec</div>
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">720p beta</div>
+            </div>
+          </div>
+        </section>
 
         <div
           className="mx-auto max-w-7xl px-3 sm:px-8"

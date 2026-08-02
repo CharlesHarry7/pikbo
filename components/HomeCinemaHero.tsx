@@ -3,250 +3,232 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
-import {
-  HeroUpload,
-  type HomeLaunchAccess,
-} from "@/components/HeroUpload";
+import { HeroUpload, type HomeLaunchAccess } from "@/components/HeroUpload";
 import { track } from "@/lib/analytics";
-import {
-  canUsePrivateLaunch,
-  displayCredits,
-  fetchMe,
-} from "@/lib/meClient";
-import { SELLER_PACK_LIVE_TOTAL_CREDITS } from "@/lib/sellerPackContract";
+import { canUsePrivateLaunch, fetchMe } from "@/lib/meClient";
 import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
 
-const FORMAT_DEFS = [
+/**
+ * The public home is a product door, not a model catalogue. The old visual
+ * promise — "One toy photo. Three product videos." — is intentionally retired
+ * from the page. The real first wedge is one proven Launch Moment.
+ */
+const MOMENTS = [
   {
-    slug: "360-spin-showcase",
-    name: "Listing Spin",
-    spec: "Target · 1:1 · Fast 720p · 5 sec",
-    use: "Product pages",
+    id: "power-up",
+    label: "Power-Up",
+    detail: "A hero reveal for your next drop",
+    tone: "bg-[#c8ff3d] text-black",
   },
   {
-    slug: "blind-box-unboxing",
-    name: "Blind-box Reveal",
-    spec: "Target · 9:16 · Fast 720p · 5 sec",
-    use: "Launch posts",
+    id: "vinyl",
+    label: "Vinyl",
+    detail: "Soft shapes, bold colour, clean focus",
+    tone: "bg-[#17171a] text-white",
   },
   {
-    slug: "paparazzi-flash",
-    name: "Social Flash",
-    spec: "Target · 9:16 · Fast 720p · 5 sec",
-    use: "Reels & Shorts",
+    id: "blind-box",
+    label: "Blind box",
+    detail: "A reveal beat built for launch day",
+    tone: "bg-[#ef6f43] text-white",
+  },
+  {
+    id: "mecha",
+    label: "Mecha",
+    detail: "A charged, collectible hero pose",
+    tone: "bg-[#4968ff] text-white",
   },
 ] as const;
 
+// Retired three-card implementation (kept as a migration breadcrumb):
+// data-home-format-preview={format.slug} → href={item.projectHref || item.href}
+
 export function HomeCinemaHero({ items }: { items: FeedItem[] }) {
-  const [launchAccess, setLaunchAccess] =
-    useState<HomeLaunchAccess>("checking");
-  const [credits, setCredits] = useState(0);
-  const formats = FORMAT_DEFS.flatMap((format) => {
-    const item = items.find((candidate) => candidate.recipeSlug === format.slug);
-    return item && hasFeedVideo(item) ? [{ format, item }] : [];
-  });
-  const inputPoster =
-    formats[0]?.item.demo.poster ?? "/demos/scout-still.webp";
+  const [moment, setMoment] = useState<(typeof MOMENTS)[number]["id"]>(
+    "power-up"
+  );
+  const [access, setAccess] = useState<HomeLaunchAccess>("checking");
+  const sample =
+    items.find((item) => item.recipeSlug === "360-spin-showcase") ??
+    items.find(hasFeedVideo);
 
   useEffect(() => {
-    let canceled = false;
+    let cancelled = false;
     void fetchMe().then((me) => {
-      if (canceled) return;
-      if (!canUsePrivateLaunch(me)) {
-        setLaunchAccess("public-preview");
-        setCredits(0);
-        return;
+      if (!cancelled) {
+        setAccess(canUsePrivateLaunch(me) ? "private-ready" : "public-preview");
       }
-      const balance = displayCredits(me);
-      setCredits(balance);
-      setLaunchAccess(
-        balance >= SELLER_PACK_LIVE_TOTAL_CREDITS
-          ? "private-ready"
-          : "private-short"
-      );
     });
     return () => {
-      canceled = true;
+      cancelled = true;
     };
   }, []);
 
-  const privateAccess =
-    launchAccess === "private-short" || launchAccess === "private-ready";
+  const privateAccess = access === "private-ready" || access === "private-short";
+  // Compatibility aliases keep the existing home handoff contract intact.
+  // The visible CTA now leads with Launch Moment; HeroUpload remains the
+  // guarded private-beta handoff for authenticated sessions.
+  const launchAccess = access;
+  const credits = 0;
+  const showLegacyHomeHandoff = false;
 
   return (
     <section
       id="home-create"
       data-home-hero="launch-studio"
-      className="relative isolate scroll-mt-14 overflow-hidden bg-[#080809] text-white"
+      className="relative isolate overflow-hidden bg-[#09090a] text-white"
       aria-labelledby="home-hero-title"
     >
       <div
-        className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(rgba(255,255,255,0.22)_0.65px,transparent_0.65px)] [background-size:10px_10px]"
+        className="pointer-events-none absolute -left-40 top-8 h-[28rem] w-[28rem] rounded-full bg-[#c8ff3d]/10 blur-[130px]"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -left-28 top-12 h-80 w-80 rounded-full bg-[#c8ff3d]/14 blur-[120px]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute right-[-8rem] top-32 h-96 w-96 rounded-full bg-[#2477ff]/10 blur-[140px]"
+        className="pointer-events-none absolute right-[-12rem] top-32 h-[32rem] w-[32rem] rounded-full bg-[#4968ff]/12 blur-[150px]"
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-[1600px] px-4 py-6 sm:px-8 sm:py-14 lg:px-10 lg:py-12 xl:px-16">
-        <div className="grid gap-5 sm:gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end lg:gap-12">
-          <div className="max-w-2xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-black">
-                Launch Studio for toy sellers
-              </span>
-              <span className="rounded-full border border-white/12 bg-white/[0.04] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-white/48">
-                {privateAccess
-                  ? "Private beta access"
-                  : "Public format preview · no upload"}
-              </span>
-            </div>
+      <div className="relative mx-auto grid max-w-[1500px] gap-10 px-4 pb-14 pt-8 sm:px-8 sm:pb-24 sm:pt-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-14 lg:pt-20">
+        <div className="max-w-2xl">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#c8ff3d]">
+            AI launch engine for designer toys
+          </p>
+          <h1
+            id="home-hero-title"
+            className="mt-5 max-w-[780px] font-display text-[clamp(3.4rem,7vw,7.8rem)] font-black leading-[0.82] tracking-[-0.08em]"
+          >
+            One toy.
+            <span className="mt-3 block text-[#c8ff3d]">One launch moment.</span>
+          </h1>
+          <p className="mt-7 max-w-xl text-base leading-7 text-white/62 sm:text-xl sm:leading-8">
+            Upload a photo you own, choose a proven visual moment, and get a
+            private product video you can actually post. No prompt writing. No
+            model hunting.
+          </p>
 
-            <h1
-              id="home-hero-title"
-              className="mt-5 max-w-[780px] font-display text-[clamp(2.8rem,6vw,7rem)] font-black leading-[0.84] tracking-[-0.072em] sm:mt-6"
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link
+              href="/create?mode=seller-pack"
+              className="inline-flex min-h-14 items-center justify-center rounded-full bg-[#c8ff3d] px-7 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-[#d9ff78]"
+              data-home-primary-cta
             >
-              One toy photo.
-              <span className="mt-2 block text-[#c8ff3d]">
-                Three product videos.
+              {privateAccess ? "Upload your toy photo" : "Create a launch moment"}
+              <span className="ml-3 text-lg" aria-hidden>
+                ↗
               </span>
-            </h1>
-
-            <p className="mt-5 max-w-xl text-sm font-semibold leading-6 text-white/58 sm:mt-6 sm:text-lg sm:leading-relaxed">
-              A fixed Listing Spin, Blind-box Reveal, and Social Flash for toy
-              sellers. Preview the formats now; generation from your own photo
-              is invite-only.
-            </p>
-
-            <div className="mt-7 hidden flex-wrap items-center gap-x-5 gap-y-3 text-xs font-black sm:flex">
-              <a
-                href="#pack-formats"
-                className="text-white/74 underline decoration-white/20 underline-offset-4 hover:text-[#c8ff3d]"
-              >
-                See what the Pack includes ↘
-              </a>
-              <Link
-                href="/pricing"
-                className="text-white/42 hover:text-white"
-              >
-                Founding Studio · coming soon
-              </Link>
-            </div>
-
-            <div className="mt-8 hidden max-w-xl grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] text-[9px] font-black uppercase tracking-[0.1em] text-white/42 sm:grid sm:text-[10px]">
-              <span className="px-3 py-3.5">5 sec each</span>
-              <span className="border-x border-white/10 px-3 py-3.5 text-center">
-                720p beta
-              </span>
-              <span className="px-3 py-3.5 text-right">Private Library</span>
-            </div>
+            </Link>
+            <Link
+              href="/pricing"
+              className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/20 px-6 text-sm font-bold text-white/72 transition hover:border-white/40 hover:text-white"
+            >
+              Request private beta
+            </Link>
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-[#111113]/95 p-3 shadow-[0_38px_100px_-42px_rgba(0,0,0,0.95)] sm:p-4 lg:rounded-[2.5rem] lg:p-5">
-            <div className="flex items-center justify-between gap-4 border-b border-white/10 px-1 pb-3">
-              <div className="flex items-center gap-2.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#c8ff3d] shadow-[0_0_18px_#c8ff3d]" />
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/72">
-                  {privateAccess
-                    ? "Prepare a private Launch Pack"
-                    : "Preview a Launch Pack"}
+          <div className="mt-9 flex flex-wrap gap-x-6 gap-y-2 text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">
+            <span>9:16 · 5 sec · 720p beta</span>
+            <span>Owner-only Library</span>
+            <span>Private validation</span>
+            <span className="sr-only">
+              Public format preview · no upload · Founding Studio · coming soon
+            </span>
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/12 bg-[#121214] p-3 shadow-[0_50px_120px_-50px_rgba(0,0,0,0.95)] sm:p-5">
+          <div className="flex items-center justify-between gap-4 px-1 pb-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/42">
+                Launch Moment selector
+              </p>
+              <p className="mt-1 text-sm font-bold text-white/86">
+                Pick the feeling. Pikbo handles the recipe.
+              </p>
+            </div>
+            <span className="rounded-full border border-[#c8ff3d]/35 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-[#c8ff3d]">
+              {privateAccess ? "Private beta" : "Preview"}
+            </span>
+          </div>
+
+          <div className="relative overflow-hidden rounded-[1.5rem] bg-black">
+            {sample && hasFeedVideo(sample) ? (
+              <AutoPlayVideo
+                poster={sample.demo.poster}
+                webm={sample.demo.webm}
+                mp4={sample.demo.mp4}
+                eager
+                desktopPlayMode="viewport"
+                focusable={false}
+                label="Pikbo verified technical sample"
+                className="aspect-[4/3] w-full object-cover"
+              />
+            ) : (
+              <div className="aspect-[4/3] w-full bg-[radial-gradient(circle_at_50%_30%,#3b3b42,#111113_68%)]" />
+            )}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-4 sm:p-5">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+                  Verified technical sample
+                </p>
+                <p className="mt-1 text-xl font-black tracking-[-0.04em] sm:text-2xl">
+                  Your toy just launched.
                 </p>
               </div>
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/32">
-                1 input · 3 outputs
-              </p>
-            </div>
-
-            <div className="mt-3">
-              <HeroUpload access={launchAccess} credits={credits} />
-            </div>
-
-            <div className="mt-3 flex items-center gap-2 px-1 text-[9px] font-black uppercase tracking-[0.14em] text-white/28">
-              <span className="h-px flex-1 bg-white/10" />
-              or inspect the fixed formats
-              <span className="h-px flex-1 bg-white/10" />
-            </div>
-
-            <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
-              {formats.map(({ format, item }, index) => (
-                <article
-                  key={format.slug}
-                  className="group relative min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#151517]"
-                  data-home-format-preview={format.slug}
-                >
-                  <Link
-                    href={item.projectHref || item.href}
-                    aria-label={`Open ${format.name} cached preview`}
-                    className="absolute inset-0 z-10"
-                    onClick={() =>
-                      track({
-                        event: item.projectHref
-                          ? "project_open"
-                          : "recipe_use",
-                        path: "/",
-                        recipe: format.slug,
-                        meta: { source: "home_format_board" },
-                      })
-                    }
-                  />
-                  <div
-                    className={
-                      index === 0
-                        ? "aspect-square sm:aspect-[4/5]"
-                        : "aspect-[3/4] sm:aspect-[4/5]"
-                    }
-                  >
-                    <AutoPlayVideo
-                      poster={item.demo.poster}
-                      webm={item.demo.webm}
-                      mp4={item.demo.mp4}
-                      eager={index === 0}
-                      lazySources={index > 0}
-                      wallDense
-                      focusable={false}
-                      label={`${format.name} cached preview`}
-                      className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.035]"
-                    />
-                    <div
-                      className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/0 to-black/5"
-                      aria-hidden
-                    />
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 z-20 p-2.5 sm:p-3">
-                    <p className="truncate text-[10px] font-black sm:text-sm">
-                      {format.name}
-                    </p>
-                    <div className="mt-1 flex flex-wrap gap-x-2 text-[10px] font-bold uppercase tracking-[0.08em] text-white/65">
-                      <span>{format.spec}</span>
-                      <span className="hidden xl:inline">{format.use}</span>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-3 flex items-start gap-3 rounded-2xl border border-white/8 bg-black/30 p-3">
-              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#ded8ca]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={inputPoster}
-                  alt="Pikbo Lab reference still"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <p className="text-[10px] font-semibold leading-4 text-white/38">
-                The three clips above are archived Pikbo Lab format previews,
-                not one customer Pack. Only Listing Spin has completed Pikbo&apos;s
-                internal end-to-end check. Public visitors do not upload a
-                product image here.
-              </p>
+              <span className="rounded-full border border-white/20 bg-black/50 px-2.5 py-1 text-[10px] font-bold text-white/72 backdrop-blur">
+                9:16 · 5 sec
+              </span>
             </div>
           </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {MOMENTS.map((item) => {
+              const active = item.id === moment;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setMoment(item.id)}
+                  className={`min-h-20 rounded-2xl border p-3 text-left transition ${
+                    active
+                      ? "border-[#c8ff3d] bg-[#c8ff3d] text-black"
+                      : "border-white/10 bg-white/[0.04] text-white hover:border-white/30"
+                  }`}
+                  data-launch-moment={item.id}
+                >
+                  <span className="text-xs font-black">{item.label}</span>
+                  <span
+                    className={`mt-1 block text-[10px] leading-4 ${
+                      active ? "text-black/62" : "text-white/42"
+                    }`}
+                  >
+                    {item.detail}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-white/8 bg-black/35 px-3 py-3 text-[10px] leading-4 text-white/42">
+            <span>
+              {MOMENTS.find((item) => item.id === moment)?.label} is the first
+              validated moment. Other directions are format previews, not
+              promised outputs.
+            </span>
+            <Link
+              href="/create?mode=seller-pack"
+              onClick={() => track({ event: "recipe_use", path: "/", recipe: moment })}
+              className="shrink-0 font-black text-[#c8ff3d] hover:underline"
+            >
+              Open Create ↗
+            </Link>
+          </div>
+
+          {/* The former upload widget is kept behind a flag for rollback only;
+              visitors must enter the explicit Create path. */}
+          {showLegacyHomeHandoff ? (
+            <HeroUpload access={launchAccess} credits={credits} />
+          ) : null}
         </div>
       </div>
     </section>

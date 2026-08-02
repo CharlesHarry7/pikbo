@@ -92,17 +92,18 @@ export default function Home() {
           <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/45">
-                The fixed Launch Pack
+                From one launch moment to a complete drop
               </p>
               <h2 className="mt-3 max-w-3xl font-display text-4xl font-black leading-[0.95] tracking-[-0.055em] sm:text-6xl">
-                Three assets.
-                <span className="block">One selling job.</span>
+                Choose the moment.
+                <span className="block">Publish where it matters.</span>
               </h2>
             </div>
             <p className="max-w-2xl text-sm font-semibold leading-6 text-black/56 sm:text-base">
-              Pikbo is intentionally not a wall of models and settings. The
-              first Pack keeps the outputs predictable, reviewable, and ready
-              for the places toy sellers already publish.
+              Pikbo is intentionally not a wall of models and settings. Start
+              with the Power-Up moment, then use the fixed delivery surfaces
+              below when your private Pack is ready. Preview cards are format
+              direction, not fabricated customer results.
             </p>
           </div>
 
@@ -137,7 +138,7 @@ export default function Home() {
               href="/create?mode=seller-pack"
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#0A0A0A] px-6 text-sm font-black text-[#CBFF3D]"
             >
-              Open the fixed Launch Pack
+              Open the Launch Moment studio
             </Link>
           </div>
         </div>
