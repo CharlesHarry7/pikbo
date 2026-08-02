@@ -33,7 +33,7 @@ const createSample = publicSample.slice(
 // Launch Pack remains an explicitly private workspace, not the public product
 // definition and not a fabricated public result.
 assert.match(homeHero, /HomeMomentShowcase/);
-assert.match(read("components/HomeMomentShowcase.tsx"), /Upload your toy\. Pick its moment\./);
+assert.match(read("components/HomeMomentShowcase.tsx"), /One toy photo\. More ways to sell\./);
 assert.match(read("components/MomentStage.tsx"), /Preview with my toy/);
 assert.match(read("components/MomentStage.tsx"), /Official Concept/);
 assert.match(read("components/MomentCreatePreview.tsx"), /no upload · no generation · 0 credits/i);
