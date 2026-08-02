@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { company } from "@/lib/company";
 import { site } from "@/lib/site";
+import { BetaRequestForm } from "@/components/BetaRequestForm";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -62,6 +63,7 @@ export default function ContactPage() {
             Tell us where you sell and which product-video formats you need. An
             application is not a purchase and does not guarantee admission.
           </p>
+          <BetaRequestForm />
         </section>
       </div>
 
