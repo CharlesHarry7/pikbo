@@ -1844,7 +1844,15 @@ assert.match(localAssetsSrc, /reserveLocalAssetId/);
 assert.match(localAssetsSrc, /NOT_OWNED/);
 assert.match(
   fs.readFileSync(join(root, "app/api/assets/upload-url/route.ts"), "utf8"),
-  /reserveLocalAssetId/
+  /createPrivateToyAssetUpload/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/assets/upload-url/route.ts"), "utf8"),
+  /AUTH_REQUIRED|PRIVATE_PREVIEW_REQUIRED/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/assets/complete/route.ts"), "utf8"),
+  /completePrivateToyAsset/
 );
 assert.match(
   fs.readFileSync(
@@ -4255,9 +4263,14 @@ assert.match(createStudio, /recoveredFromAssetMiss|registerLocalAsset/);
 assert.match(batchStudio, /fallbackImage/);
 assert.match(batchStudio, /recoveredFromAssetMiss/);
 assert.match(batchStudio, /cancelInFlightPack|AbortController/);
-assert.match(batchStudio, /downloadChild|classifyDownloadHead/);
+assert.match(batchStudio, /downloadChild/);
 assert.match(batchStudio, /data-seller-download=["']gated["']/);
 assert.match(batchStudio, /downloadVideoFile\(gateUrl|downloadVideoFile\(j\.videoUrl/);
+assert.doesNotMatch(
+  batchStudio,
+  /fetch\(gateUrl[\s\S]{0,120}method:\s*["']HEAD["']/,
+  "Create must not probe private Pack downloads without the auth headers owned by downloadVideoFile"
+);
 
 assert.match(batchStudio, /Cancel pack/);
 // Pack cancel immediately marks running children refund unconfirmed (Create parity)

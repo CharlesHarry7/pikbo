@@ -224,11 +224,18 @@ assert.equal(
 
   const store = read("lib/durableCredits/supabaseStore.ts");
   assert.match(store, /supabaseReserveSellerPackAtomic/);
-  assert.match(store, /pikbo_reserve_seller_pack_v1/);
-  assert.match(store, /pikbo_authorize_seller_pack_child_v1/);
+  assert.match(store, /pikbo_reserve_seller_pack_with_asset_v1/);
+  assert.match(store, /pikbo_authorize_seller_pack_child_with_asset_v1/);
   assert.match(store, /pikbo_settle_seller_pack_child_v2/);
   assert.match(store, /pikbo_release_seller_pack_child_v2/);
   assert.match(store, /p_attempt_key:\s*input\.attemptKey/);
+
+  const privateInputBinding = read(
+    "supabase/migrations/20260802010000_private_toy_input_pack_binding.sql"
+  );
+  assert.match(privateInputBinding, /pikbo_reserve_seller_pack_v1/);
+  assert.match(privateInputBinding, /pikbo_authorize_seller_pack_child_v1/);
+  assert.match(privateInputBinding, /if v_bound_count <> 3/);
 
   const attemptFence = read(
     "supabase/migrations/20260729020500_seller_pack_attempt_fencing.sql"

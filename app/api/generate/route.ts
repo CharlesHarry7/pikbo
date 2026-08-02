@@ -66,6 +66,10 @@ import {
 } from "@/lib/durableCredits/sellerPack";
 import { supabaseGetPersonalWallet } from "@/lib/durableCredits/supabaseStore";
 import { parseSellerPackChildRequest } from "@/lib/durableCredits/sellerPackAtomic";
+import {
+  resolveBoundToyAssetDataUrl,
+  resolveReadyPrivateToyAssetDataUrl,
+} from "@/lib/privateToyAssets";
 import { recordSellerPackReconciliation } from "@/lib/durableCredits/sellerPackReconciliation";
 import { sellerPackItemBySlug } from "@/lib/sellerPackContract";
 import { createReservationLifecycle } from "@/lib/reservationLifecycle";
@@ -425,18 +429,52 @@ export async function POST(req: Request) {
     }
   }
 
-  // Phase D: cached previews never inspect, resolve, or require the user's still.
-  // Only an authorized live request may move private image data beyond the browser.
-  // On multi-instance hosts (Vercel), memory assets often miss on another node —
-  // if the live client also sent a data URL, fall through instead of hard-failing.
+  const packBinding = parseSellerPackChildRequest(body);
+  if (packBinding.kind === "invalid") {
+    return err(
+      {
+        error: packBinding.error,
+        code: "INVALID_REQUEST",
+        session: publicSession(session),
+      },
+      400
+    );
+  }
+  const boundPackInput =
+    access.kind === "live" && packBinding.kind === "pack" && authUser
+      ? await resolveBoundToyAssetDataUrl({
+          ownerUserId: authUser.id,
+          packRunId: packBinding.packRunId,
+          jobId: packBinding.packJobId,
+        })
+      : null;
+  const directPrivateInput =
+    access.kind === "live" &&
+    packBinding.kind !== "pack" &&
+    authUser &&
+    typeof assetId === "string" &&
+    /^[0-9a-f-]{36}$/i.test(assetId)
+      ? await resolveReadyPrivateToyAssetDataUrl({
+          ownerUserId: authUser.id,
+          assetId,
+        })
+      : null;
+
+  // Cached previews never inspect the user's still. Live Pack children ignore
+  // client image bytes and resolve the one owner-verified server-bound asset.
   let image =
     access.kind === "cached"
       ? undefined
-      : typeof imageField === "string" && imageField.startsWith("data:image")
-        ? imageField
-        : undefined;
+      : packBinding.kind === "pack"
+        ? boundPackInput?.dataUrl
+        : directPrivateInput?.dataUrl
+          ? directPrivateInput.dataUrl
+        : typeof imageField === "string" && imageField.startsWith("data:image")
+          ? imageField
+          : undefined;
   if (
     access.kind !== "cached" &&
+    packBinding.kind !== "pack" &&
     typeof assetId === "string" &&
     assetId.startsWith("asset_")
   ) {
@@ -460,7 +498,9 @@ export async function POST(req: Request) {
     return err(
       {
         error:
-          "A toy photo is required (JPEG, PNG, WebP, or GIF data URL, or assetId from /api/assets)",
+          packBinding.kind === "pack"
+            ? "The Launch Pack private input is missing or no longer usable"
+            : "A toy photo is required (JPEG, PNG, WebP, or GIF data URL)",
         code: "INVALID_REQUEST",
       },
       400
@@ -503,18 +543,6 @@ export async function POST(req: Request) {
 
   // Seller Pack child binding (optional). When present, live spend uses the
   // parent 30-credit pack reservation and never opens R1a per-generation reserve.
-  const packBinding = parseSellerPackChildRequest(body);
-  if (packBinding.kind === "invalid") {
-    endJob(session.id);
-    return err(
-      {
-        error: packBinding.error,
-        code: "INVALID_REQUEST",
-        session: publicSession(session),
-      },
-      400
-    );
-  }
   const packChild =
     packBinding.kind === "pack"
       ? {

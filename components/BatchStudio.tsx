@@ -23,14 +23,20 @@ import {
 } from "@/components/GenerateWaitStage";
 import {
   getSellerPackStatusClient,
+  getSellerPackDiscoveryClient,
   historyFieldsFromSuccess,
   mintGenerateIdempotencyKey,
   postGenerateWithRetry,
   reserveSellerPackClient,
   retrySellerPackChildClient,
   sleep,
+  type SellerPackDiscoveryItem,
+  type SellerPackClientJob,
 } from "@/lib/generateClient";
-import { registerLocalAsset } from "@/lib/clientAssets";
+import {
+  registerLocalAsset,
+  registerPrivateToyAsset,
+} from "@/lib/clientAssets";
 import { pushHistory } from "@/lib/history";
 import { CATEGORIES, PRESETS, type CategoryId } from "@/lib/presets";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
@@ -64,7 +70,6 @@ import {
 } from "@/lib/sellerPackQuote";
 import {
   canDownloadResult,
-  classifyDownloadHead,
   freeLiveDownloadBlockReason,
   isPlayableResultVideoUrl,
   isSafeDeliverableUrl,
@@ -172,6 +177,32 @@ function toRecoveredJob(child: ReturnType<typeof reconcileSellerPackRecovery>["c
   return job;
 }
 
+function recoveryRunFromServerJobs(
+  packRunId: string,
+  jobs: SellerPackClientJob[],
+  savedAt: string
+): SellerPackRecoveryRun {
+  return {
+    version: 2,
+    projectId: `recovered-${packRunId}`,
+    packRunId,
+    savedAt,
+    children: jobs.map((job, index) => ({
+      packJobId: job.jobId,
+      childKey: job.childKey,
+      slug: job.effectSlug,
+      name: SELLER_PACK_ITEMS[index].label,
+      aspectRatio: job.aspectRatio,
+      statusHint: job.status,
+      retryCount: 0,
+    })),
+  };
+}
+
+function recoveryRunFromDiscovery(pack: SellerPackDiscoveryItem): SellerPackRecoveryRun {
+  return recoveryRunFromServerJobs(pack.packRunId, pack.jobs, pack.createdAt);
+}
+
 /**
  * Seller Pack / batch partial-retry eligibility.
  * Allow failed with TIMEOUT / cancel settlement (refund unconfirmed) —
@@ -221,6 +252,7 @@ export function BatchStudio({
   pack,
   initialSku,
   initialSample,
+  initialRecoverPackRunId,
 }: {
   initialEffects?: string[];
   /** Named pack from SELLER_PACK PRD — freezes the three seller outputs. */
@@ -232,6 +264,8 @@ export function BatchStudio({
    * Loads photo only — does not auto-run the 3-child pack (cost honesty).
    */
   initialSample?: string;
+  /** Explicit owner-scoped Pack selected in Library; takes recovery priority. */
+  initialRecoverPackRunId?: string;
 }) {
   const isSellerPack = pack === "seller";
 
@@ -422,45 +456,78 @@ export function BatchStudio({
     if (!isSellerPack) return;
     let canceled = false;
     const start = window.setTimeout(() => {
-      let saved: SellerPackRecoveryRun | null = null;
-      try {
-        const raw = sessionStorage.getItem(SELLER_PACK_RECOVERY_KEY);
-        saved = raw ? parseSellerPackRecovery(JSON.parse(raw)) : null;
-      } catch {
-        saved = null;
-      }
-      if (!saved) {
-        setSellerPackRecoveryHydrated(true);
-        return;
-      }
-      setRunProjectId(saved.projectId);
-      setActivePackRunId(saved.packRunId);
-      setSelected([...SELLER_PACK_SLUGS]);
-      setSellerPackRecoveryNote(
-        "Checking the private Launch Pack record…"
-      );
-      void getSellerPackStatusClient(saved.packRunId)
-      .then((status) => {
+      void (async () => {
+        let saved: SellerPackRecoveryRun | null = null;
+        let savedFromSession = false;
+        let explicitStatus: Awaited<ReturnType<typeof getSellerPackStatusClient>> | null = null;
+        if (initialRecoverPackRunId) {
+          explicitStatus = await getSellerPackStatusClient(initialRecoverPackRunId);
+          if (!explicitStatus.ok) throw new Error(explicitStatus.error);
+          saved = recoveryRunFromServerJobs(
+            explicitStatus.packRunId,
+            explicitStatus.jobs,
+            new Date().toISOString()
+          );
+        }
+        try {
+          if (!saved) {
+            const raw = sessionStorage.getItem(SELLER_PACK_RECOVERY_KEY);
+            saved = raw ? parseSellerPackRecovery(JSON.parse(raw)) : null;
+            savedFromSession = Boolean(saved);
+          }
+        } catch {
+          saved = null;
+        }
+        if (!saved) {
+          const discovered = await getSellerPackDiscoveryClient("active");
+          const newest = discovered.ok ? discovered.packs[0] : null;
+          if (!newest) return;
+          saved = recoveryRunFromDiscovery(newest);
+        }
         if (canceled) return;
+        let status = explicitStatus ?? await getSellerPackStatusClient(saved.packRunId);
+        if (!status.ok && savedFromSession) {
+          // A stale browser pointer must not permanently lock Create. Remove
+          // it, leave local run state empty, and ask the owner-scoped server
+          // once for the current active Pack. Explicit deep links never fall
+          // through to a different Pack.
+          sessionStorage.removeItem(SELLER_PACK_RECOVERY_KEY);
+          setRunProjectId(null);
+          setActivePackRunId(null);
+          const discovered = await getSellerPackDiscoveryClient("active");
+          const newest = discovered.ok ? discovered.packs[0] : null;
+          if (!newest) return;
+          saved = recoveryRunFromDiscovery(newest);
+          status = await getSellerPackStatusClient(saved.packRunId);
+        }
         if (!status.ok) throw new Error(status.error);
-        const recovered = reconcileSellerPackRecovery(saved!, status.jobs);
+        if (canceled) return;
+        setRunProjectId(saved.projectId);
+        setActivePackRunId(saved.packRunId);
+        // Server discovery only returns packs whose rights confirmation was
+        // recorded at reserve; this does not trust a new browser assertion.
+        setOwnsRights(true);
+        setSelected([...SELLER_PACK_SLUGS]);
+        setSellerPackRecoveryNote("Checking the private Launch Pack record…");
+        if (status.inputPreviewUrl) setImage(status.inputPreviewUrl);
+        if (status.skuLabel) {
+          setToyIdentity((previous) => ({ ...previous, sku: status.skuLabel || "" }));
+        }
+        const recovered = reconcileSellerPackRecovery(saved, status.jobs);
         setJobs(recovered.children.map(toRecoveredJob));
         setSellerPackRecoveryNote(
           recovered.unavailable > 0
             ? `${recovered.unavailable} format${recovered.unavailable === 1 ? "" : "s"} is still being checked.`
             : "Private Launch Pack restored."
         );
-      })
-      .catch(() => {
-        if (canceled) return;
-        const unavailable = reconcileSellerPackRecovery(saved!, []).children.map(
-          toRecoveredJob
-        );
-        setJobs(unavailable);
-        setSellerPackRecoveryNote(
-          "Private pack status is unavailable. No local success or refund claim was restored."
-        );
-      })
+      })()
+        .catch(() => {
+          if (!canceled) {
+            setSellerPackRecoveryNote(
+              "Private pack status is unavailable. No local success or refund claim was restored."
+            );
+          }
+        })
         .finally(() => {
           if (!canceled) setSellerPackRecoveryHydrated(true);
         });
@@ -469,7 +536,7 @@ export function BatchStudio({
       canceled = true;
       window.clearTimeout(start);
     };
-  }, [isSellerPack]);
+  }, [initialRecoverPackRunId, isSellerPack]);
 
   useEffect(() => {
     if (
@@ -885,7 +952,6 @@ export function BatchStudio({
     setPackElapsed(0);
     setRunning(true);
     const projectId = `${sellerPackActive ? "seller-pack" : "batch"}-${Date.now()}`;
-    setRunProjectId(projectId);
 
     // Abort any prior pack before starting a new one.
     packAbortRef.current?.abort();
@@ -899,9 +965,26 @@ export function BatchStudio({
       | Extract<Awaited<ReturnType<typeof reserveSellerPackClient>>, { ok: true }>
       | null = null;
     let runPackId: string | null = null;
+    // A live Launch Pack cannot reserve credits until its one private input is
+    // durably uploaded and verified. All three children bind to this asset.
+    let sharedAssetId: string | null = null;
+    if (!demoMode && image && image.startsWith("data:image")) {
+      const reg = sellerPackActive
+        ? await registerPrivateToyAsset(image, toyIdentity.sku)
+        : await registerLocalAsset(image);
+      if (reg?.assetId) sharedAssetId = reg.assetId;
+    }
     if (sellerPackActive && !demoMode) {
+      if (!sharedAssetId) {
+        setError("Your private toy photo could not be verified. No credits were reserved.");
+        setRunning(false);
+        if (packAbortRef.current === abortCtrl) packAbortRef.current = null;
+        return;
+      }
       const reserved = await reserveSellerPackClient({
         clientPackKey: `ui-pack:${projectId}`,
+        inputAssetId: sharedAssetId,
+        rightsConfirmed: true,
       });
       if (!reserved.ok) {
         setError(reserved.error);
@@ -929,13 +1012,9 @@ export function BatchStudio({
       if (packAbortRef.current === abortCtrl) packAbortRef.current = null;
       return;
     }
-
-    // Phase D: register still once — Seller Pack / batch children reuse assetId.
-    let sharedAssetId: string | null = null;
-    if (!demoMode && image && image.startsWith("data:image")) {
-      const reg = await registerLocalAsset(image);
-      if (reg?.assetId) sharedAssetId = reg.assetId;
-    }
+    // Only persist a run pointer after every pre-reserve failure boundary has
+    // passed. Upload/verification/reserve errors must leave Create retryable.
+    setRunProjectId(projectId);
 
     const queue: Job[] = verifiedReservedJobs
       ? verifiedReservedJobs.map((serverJob, index) => {
@@ -1058,7 +1137,11 @@ export function BatchStudio({
   }
 
   async function retryJob(slug: string) {
-    if (running || !image || !ownsRights) return;
+    if (
+      running ||
+      !ownsRights ||
+      (!image && !(sellerPackActive && !demoMode && activePackRunId))
+    ) return;
     const target = jobs.find((job) => job.slug === slug);
     if (!target || !retryEligible(target)) {
       return;
@@ -1074,7 +1157,7 @@ export function BatchStudio({
     const abortCtrl = new AbortController();
     packAbortRef.current = abortCtrl;
     let sharedAssetId: string | null = null;
-    if (!demoMode && image.startsWith("data:image")) {
+    if (!demoMode && image?.startsWith("data:image")) {
       const reg = await registerLocalAsset(image);
       if (reg?.assetId) sharedAssetId = reg.assetId;
     }
@@ -1134,7 +1217,11 @@ export function BatchStudio({
 
   /** Phase F: partial failure — re-run only failed/refunded children; successes stay. */
   async function retryAllFailed() {
-    if (running || !image || !ownsRights) return;
+    if (
+      running ||
+      !ownsRights ||
+      (!image && !(sellerPackActive && !demoMode && activePackRunId))
+    ) return;
     const failed = jobs.filter(retryEligible);
     if (failed.length === 0) return;
     const projectId =
@@ -1148,7 +1235,7 @@ export function BatchStudio({
     const abortCtrl = new AbortController();
     packAbortRef.current = abortCtrl;
     let sharedAssetId: string | null = null;
-    if (!demoMode && image.startsWith("data:image")) {
+    if (!demoMode && image?.startsWith("data:image")) {
       const reg = await registerLocalAsset(image);
       if (reg?.assetId) sharedAssetId = reg.assetId;
     }
@@ -1264,9 +1351,9 @@ export function BatchStudio({
    * No server ZIP (needs object storage). Free raw / failed siblings omitted.
    */
   /**
-   * Per-child download: HEAD /api/downloads first (Create/Library parity) so
-   * canceled / timeout / in-flight never open a dead tab. Allowed GET uses
-   * downloadVideoFile (blob) — never window.open the gate (JSON error tabs).
+   * Per-child download delegates the private gate check to downloadVideoFile.
+   * That helper sends the signed-in bearer token for both HEAD and GET; an
+   * unauthenticated duplicate probe here would reject every private Pack.
    */
   async function downloadChild(j: Job) {
     const downloadAllowed = canDownloadResult({
@@ -1282,36 +1369,17 @@ export function BatchStudio({
       .slice(0, 32)}.mp4`;
     if (j.requestId) {
       const gateUrl = `/api/downloads/${encodeURIComponent(j.requestId)}`;
-      try {
-        const head = await fetch(gateUrl, { method: "HEAD" });
-        const gate = classifyDownloadHead({
-          status: head.status,
-          code: head.headers.get("X-Pikbo-Download-Code"),
-          t6Mode: head.headers.get("X-Pikbo-T6"),
-        });
-        if (gate.kind === "block") {
-          setError(`${j.name || j.slug}: ${gate.message}`);
-          return;
-        }
-        if (gate.kind === "allow") {
-          setError(null);
-          const result = await downloadVideoFile(gateUrl, filename);
-          if (result === "ok" || result === "fallback") return;
-          if (result === "blocked" || result === "unsafe") {
-            setError(
-              `${j.name || j.slug}: download blocked by a delivery safety check`
-            );
-            return;
-          }
-          setError(`${j.name || j.slug}: download failed`);
-          return;
-        }
-        if (gate.kind === "not_found") {
-          setError(`${j.name || j.slug}: ${gate.message}`);
-        }
-      } catch {
-        /* fall through to safe direct URL */
+      setError(null);
+      const result = await downloadVideoFile(gateUrl, filename);
+      if (result === "ok" || result === "fallback") return;
+      if (result === "blocked" || result === "unsafe") {
+        setError(
+          `${j.name || j.slug}: download blocked by a delivery safety check`
+        );
+        return;
       }
+      setError(`${j.name || j.slug}: download failed`);
+      return;
     }
     if (j.videoUrl && isSafeDeliverableUrl(j.videoUrl)) {
       setError(null);

@@ -54,6 +54,10 @@ export type PrivatePreviewReadinessInput = {
   privateResultsBucketReady: boolean;
   privateResultsSchemaReady: boolean;
   privateResultsRpcReady: boolean;
+  privateInputsBucketReady: boolean;
+  privateInputsSchemaReady: boolean;
+  privateInputsReserveRpcReady: boolean;
+  privateInputsDiscoveryReady: boolean;
   providerOutputAllowlistConfigured: boolean;
   privateLiveEnabled: boolean;
   privateLiveAllowlistConfigured: boolean;
@@ -73,10 +77,29 @@ export type PrivatePreviewReadinessInput = {
 export function evaluatePrivatePreviewReadiness(
   input: PrivatePreviewReadinessInput
 ) {
+  const required: Array<keyof PrivatePreviewReadinessInput> = [
+    "authConfigured",
+    "durableAtomicReservationConfigured",
+    "durableReconciliationConfigured",
+    "providerConfigured",
+    "privateResultsBucketReady",
+    "privateResultsSchemaReady",
+    "privateResultsRpcReady",
+    "privateInputsBucketReady",
+    "privateInputsSchemaReady",
+    "privateInputsReserveRpcReady",
+    "privateInputsDiscoveryReady",
+    "providerOutputAllowlistConfigured",
+    "privateLiveEnabled",
+    "privateLiveAllowlistConfigured",
+    "privateLiveBudgetConfigured",
+    "providerValidationEnvironmentAllowed",
+    "providerValidationBudgetConfigured",
+    "durableProviderBudgetSchemaReady",
+    "durableProviderBudgetRpcReady",
+  ];
   const missing: Array<keyof PrivatePreviewReadinessInput> = [];
-  for (const key of Object.keys(input) as Array<
-    keyof PrivatePreviewReadinessInput
-  >) {
+  for (const key of required) {
     if (!input[key]) missing.push(key);
   }
   return {

@@ -29,6 +29,10 @@ import { useToast } from "@/components/Toast";
 import { LibraryStorageBanner } from "@/components/LibraryStorageBanner";
 import { PROVENANCE, resultProvenanceLabel } from "@/lib/provenance";
 import { track } from "@/lib/analytics";
+import {
+  getSellerPackDiscoveryClient,
+  type SellerPackDiscoveryItem,
+} from "@/lib/generateClient";
 
 type KindFilter = "all" | "live" | "demo";
 /** Assets-like: project = upload/remix group · sku = Toy Identity SKU · flat. */
@@ -89,6 +93,82 @@ const EMPTY_BY_STATUS: SessionByStatus = {
   failed: 0,
   canceled: 0,
 };
+
+function SellerPackLibraryPanel() {
+  const [packs, setPacks] = useState<SellerPackDiscoveryItem[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const toast = useToast();
+  useEffect(() => {
+    let canceled = false;
+    const load = () => getSellerPackDiscoveryClient("recent")
+      .then((result) => {
+        if (!canceled && result.ok) setPacks(result.packs);
+      })
+      .finally(() => {
+        if (!canceled) setLoaded(true);
+      });
+    void load();
+    const timer = window.setInterval(() => void load(), 15_000);
+    return () => {
+      canceled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+  if (!loaded || packs.length === 0) return null;
+  return (
+    <section className="mb-5 rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.04] p-4" data-library-seller-packs="owner-scoped">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--mint)]">Private seller Packs</p>
+          <h2 className="mt-1 text-base font-bold text-white">Your Launch Packs</h2>
+        </div>
+        <Link href="/create?mode=seller-pack" className="btn btn-primary min-h-11 !px-3 !py-1.5 text-xs">Create new Pack</Link>
+      </div>
+      <div className="mt-4 grid gap-3">
+        {packs.map((pack) => (
+          <article key={pack.packRunId} className="grid gap-3 rounded-xl border border-white/10 bg-black/40 p-3 sm:grid-cols-[72px_1fr_auto] sm:items-center">
+            {pack.inputPreviewUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={pack.inputPreviewUrl} alt={`${pack.skuLabel || "Toy"} private input`} className="h-[72px] w-[72px] rounded-xl object-cover" />
+            ) : (
+              <span className="grid h-[72px] w-[72px] place-items-center rounded-xl border border-dashed border-white/15 text-[10px] text-white/35">Private input</span>
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-white">{pack.skuLabel || "Untitled toy"}</p>
+              <p className="mt-1 text-[10px] uppercase tracking-wide text-white/40">{pack.status} · {new Date(pack.createdAt).toLocaleDateString()}</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {pack.jobs.map((job) => (
+                  <span key={job.jobId} className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-white/60">{job.childKey.replaceAll("_", " ")} · {job.status}</span>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 sm:justify-end">
+              <Link href={`/create?mode=seller-pack&recover=${encodeURIComponent(pack.packRunId)}`} className="btn btn-ghost min-h-11 !px-3 !py-1.5 text-xs">Open</Link>
+              {pack.jobs.filter((job) => job.resultUrl).map((job) => (
+                <button
+                  key={job.jobId}
+                  type="button"
+                  className="btn btn-ghost min-h-11 !px-3 !py-1.5 text-xs"
+                  onClick={() => {
+                    const filename = `pikbo-pack-${job.childKey.replaceAll("_", "-")}.mp4`;
+                    void downloadVideoFile(job.resultUrl || "", filename).then((result) => {
+                      if (result === "ok") toast("Download started");
+                      else if (result === "fallback") toast("Opened video — save from browser");
+                      else if (result === "blocked") toast("Download blocked by a delivery safety check");
+                      else toast("Download failed");
+                    });
+                  }}
+                >
+                  Download {job.childKey.replaceAll("_", " ")}
+                </button>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function isCancellableSessionJob(status: string): boolean {
   return status === "queued" || status === "running";
@@ -1468,6 +1548,7 @@ export function LibraryGrid() {
             ).length
           }
         />
+        <SellerPackLibraryPanel />
         <SessionJobsPanel
           jobs={sessionJobs}
           meta={sessionMeta}
@@ -1567,6 +1648,7 @@ export function LibraryGrid() {
           ).length
         }
       />
+      <SellerPackLibraryPanel />
       <SessionJobsPanel
         jobs={sessionJobs}
         meta={sessionMeta}

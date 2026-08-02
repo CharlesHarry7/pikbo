@@ -6,6 +6,7 @@ import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { LoginForm } from "@/components/LoginForm";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
 import { createRemixHref } from "@/lib/remixIntent";
+import { sanitizeInternalNextPath } from "@/lib/authRedirect";
 
 /** Guest Generate from login — listing spin remix (ratio/duration/channel). */
 const LOGIN_GUEST_GENERATE_HREF = createRemixHref("360-spin-showcase");
@@ -16,8 +17,16 @@ export const metadata: Metadata = {
   robots: PRIVATE_ROBOTS,
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ next?: string | string[] }>;
+}) {
   const auth = publicAuthStatus();
+  const params = await searchParams;
+  const next = sanitizeInternalNextPath(
+    typeof params?.next === "string" ? params.next : null
+  );
 
   return (
     <main className="min-h-[70vh] px-4 py-12 sm:px-8">
@@ -63,7 +72,7 @@ export default function LoginPage() {
           <p className="mt-1 leading-relaxed">{auth.message}</p>
         </div>
 
-        <LoginForm auth={auth} />
+        <LoginForm auth={auth} next={next} />
 
         <div
           className="mt-8 flex flex-wrap items-center gap-3 text-sm"

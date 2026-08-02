@@ -1,98 +1,78 @@
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
-import { ensureSession } from "@/lib/session";
+import { getAuthUserFromRequest } from "@/lib/supabase/user";
+import { resolvePrivateLiveAccess } from "@/lib/privateLiveAccessServer";
+import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
 import {
-  localAssetMaxBytes,
-  localAssetTtlMs,
-  reserveLocalAssetId,
-} from "@/lib/localAssets";
+  createPrivateToyAssetUpload,
+  PRIVATE_TOY_INPUT_MAX_BYTES,
+} from "@/lib/privateToyAssets";
 
 export const runtime = "nodejs";
 
-/**
- * Phase D — local upload contract (no object storage yet).
- * Returns a same-origin PUT target for soft-launch demos. Clients may still
- * post Base64 to /api/generate; this path avoids repeating large payloads when
- * the local content route is used.
- *
- * Mints a session-scoped reservation so another cookie cannot PUT the same id.
- */
+/** Invited, authenticated sellers only. No anonymous/local-memory fallback. */
 export async function POST(req: Request) {
-  let contentType = "image/jpeg";
-  let byteLength: number | undefined;
-  try {
-    const body = (await req.json()) as {
-      contentType?: string;
-      byteLength?: number;
-    };
-    if (typeof body.contentType === "string" && body.contentType.startsWith("image/")) {
-      contentType = body.contentType.slice(0, 64);
-    }
-    if (typeof body.byteLength === "number") byteLength = body.byteLength;
-  } catch {
-    // empty body ok
-  }
-
-  const maxBytes = localAssetMaxBytes();
-  if (typeof byteLength === "number" && byteLength > maxBytes) {
+  const auth = await getAuthUserFromRequest(req);
+  if (!auth?.id) {
     return NextResponse.json(
-      {
-        ok: false,
-        code: "IMAGE_TOO_LARGE",
-        error: `Max upload ${maxBytes} bytes`,
-        maxBytes,
-      },
-      { status: 413 }
+      { ok: false, code: "AUTH_REQUIRED", error: "Sign in to upload a private toy photo" },
+      { status: 401 }
     );
   }
-
-  const session = await ensureSession();
-  // Rare: re-mint if the first id collides with a foreign reservation (UUID clash).
-  let assetId = "";
-  let expiresAt = "";
-  for (let i = 0; i < 3; i++) {
-    assetId = `asset_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
-    const reserved = reserveLocalAssetId({
-      id: assetId,
-      sessionId: session.id,
-    });
-    if (reserved.ok) {
-      expiresAt = reserved.expiresAt;
-      break;
-    }
-  }
-  if (!expiresAt) {
+  const access = resolvePrivateLiveAccess(auth);
+  if (!access.invite.invited || !access.budget.ok) {
     return NextResponse.json(
-      {
-        ok: false,
-        code: "RESERVE_FAILED",
-        error: "Could not reserve asset id — retry upload",
-      },
+      { ok: false, code: "PRIVATE_PREVIEW_REQUIRED", error: "Private seller Preview access is required" },
+      { status: 403 }
+    );
+  }
+  const readiness = await probeSoftLiveReadiness();
+  if (!readiness.privatePreview.ready) {
+    return NextResponse.json(
+      { ok: false, code: "PRIVATE_PREVIEW_NOT_READY", error: "Private input delivery is not ready" },
       { status: 503 }
     );
   }
 
+  let body: {
+    filename?: string;
+    mimeType?: string;
+    contentType?: string;
+    sizeBytes?: number;
+    byteLength?: number;
+    sha256?: string;
+    skuLabel?: string;
+  } = {};
+  try {
+    body = (await req.json()) as typeof body;
+  } catch {
+    body = {};
+  }
+  const prepared = await createPrivateToyAssetUpload({
+    ownerUserId: auth.id,
+    mimeType: String(body.mimeType || body.contentType || ""),
+    sizeBytes: Number(body.sizeBytes ?? body.byteLength),
+    sha256: String(body.sha256 || "").toLowerCase(),
+    skuLabel: typeof body.skuLabel === "string" ? body.skuLabel : null,
+  });
+  if (!prepared.ok) {
+    const status =
+      prepared.code === "IMAGE_TOO_LARGE" ? 413 :
+      prepared.code === "PRIVATE_INPUTS_UNAVAILABLE" ? 503 : 400;
+    return NextResponse.json(
+      { ...prepared, maxBytes: PRIVATE_TOY_INPUT_MAX_BYTES },
+      { status }
+    );
+  }
   return NextResponse.json(
     {
       ok: true,
-      mode: "local-memory",
-      durable: false,
-      assetId,
-      uploadUrl: `/api/assets/${assetId}/content`,
+      assetId: prepared.assetId,
+      uploadUrl: prepared.uploadUrl,
       method: "PUT",
-      headers: {
-        "Content-Type": contentType,
-        "X-Pikbo-Session": "cookie",
-      },
-      maxBytes,
-      ttlMs: localAssetTtlMs(),
-      expiresAt,
-      sessionId: session.id,
-      note:
-        "Local PUT target for soft-launch (session-reserved id). Object storage not wired. Soft-launch generate still accepts data URLs.",
-      planned: {
-        production: "signed PUT to private bucket; never expose permanent raw provider URLs",
-      },
+      expiresAt: prepared.expiresAt,
+      maxBytes: prepared.maxBytes,
+      private: true,
+      durable: true,
     },
     { status: 201 }
   );
