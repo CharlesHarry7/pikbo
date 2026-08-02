@@ -3935,8 +3935,8 @@ const createSampleSrc = publicSampleSrc.slice(
   publicSampleSrc.indexOf("function CreateSampleBrowser")
 );
 assert.match(homeHeroSrc, /HomeMomentShowcase/);
-assert.match(homeMomentsSrc, /Upload your toy\. Pick its moment\./);
-assert.match(homeMomentsSrc, /Start with a photo you own\. Preview the composition/);
+assert.match(homeMomentsSrc, /One toy photo\. More ways to sell\./);
+assert.match(homeMomentsSrc, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(momentStageSrc, /Official Concept/);
 assert.match(momentStageSrc, /Preview with my toy/);
 assert.doesNotMatch(homeHeroSrc, /PublicLaunchPackSample surface="home"/);
@@ -4405,10 +4405,10 @@ assert.match(
 
 // Video-first product line (not stills shop) — site + suite order + image honesty
 const siteSrc = fs.readFileSync(join(root, "lib/site.ts"), "utf8");
-assert.match(siteSrc, /titleDefault|homeH1|Creative Moments for Designer Toys/i);
+assert.match(siteSrc, /titleDefault|homeH1|AI Product Video Studio for Toy Sellers/i);
 assert.match(siteSrc, /Turn your toy photos into short videos|VIDEO-first|Free Mini Trial/i);
 // 哥飞 P0: homepage title must not cannibalize tools rank title
-assert.match(siteSrc, /Pikbo — Creative Moments for Designer Toys/);
+assert.match(siteSrc, /Pikbo — AI Product Video Studio for Toy Sellers/);
 assert.doesNotMatch(
   siteSrc,
   /titleDefault:\s*["']AI Toy Video Generator from One Photo/
