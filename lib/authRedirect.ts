@@ -1,10 +1,19 @@
 const PRODUCTION_AUTH_ORIGIN = "https://pikbo.ai";
 const PREVIEW_AUTH_ORIGIN =
   "https://pikbo-git-agent-gptp0-live-owned-toy-review-pi-kbo.vercel.app";
+// Preview deployments are explicitly enumerated. Never broaden this to an
+// arbitrary *.vercel.app pattern: the callback must stay tied to deployments
+// whose Supabase redirect URL has been registered by the operator.
+const PRIVATE_BETA_PREVIEW_AUTH_ORIGIN =
+  "https://pikbo-git-codex-private-beta-readiness-pi-kbo.vercel.app";
+const LAUNCH_MOMENT_PREVIEW_AUTH_ORIGIN =
+  "https://pikbo-git-codex-launch-moment-production-pi-kbo.vercel.app";
 
 const DEPLOYED_AUTH_ORIGINS = new Set([
   PRODUCTION_AUTH_ORIGIN,
   PREVIEW_AUTH_ORIGIN,
+  PRIVATE_BETA_PREVIEW_AUTH_ORIGIN,
+  LAUNCH_MOMENT_PREVIEW_AUTH_ORIGIN,
 ]);
 
 const LOCAL_AUTH_ORIGINS = new Set([
@@ -95,5 +104,5 @@ export function sanitizeInternalNextPath(
 
 export const AUTH_CALLBACK_URLS = {
   production: `${PRODUCTION_AUTH_ORIGIN}/auth/callback`,
-  preview: `${PREVIEW_AUTH_ORIGIN}/auth/callback`,
+  preview: `${LAUNCH_MOMENT_PREVIEW_AUTH_ORIGIN}/auth/callback`,
 } as const;

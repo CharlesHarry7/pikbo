@@ -300,6 +300,12 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
             >
               Choose another moment
             </Link>
+            <Link
+              href={`/contact?source=moment-private-access&moment=${moment.id}`}
+              className="mt-4 inline-flex min-h-11 items-center rounded-full bg-[#171719] px-5 text-[11px] font-black uppercase tracking-[0.12em] text-[#F5F1E8] transition hover:-translate-y-0.5 hover:bg-[#F04E30] hover:text-[#171719]"
+            >
+              Request private beta <span aria-hidden="true">↗</span>
+            </Link>
           </div>
         </div>
 

@@ -13,6 +13,10 @@ const callback = await import(
 
 const preview =
   "https://pikbo-git-agent-gptp0-live-owned-toy-review-pi-kbo.vercel.app";
+const privateBetaPreview =
+  "https://pikbo-git-codex-private-beta-readiness-pi-kbo.vercel.app";
+const launchMomentPreview =
+  "https://pikbo-git-codex-launch-moment-production-pi-kbo.vercel.app";
 const production = "https://pikbo.ai";
 
 function request(url, origin) {
@@ -39,6 +43,24 @@ assert.equal(
 assert.equal(
   redirect.authCallbackUrl(preview),
   `${preview}/auth/callback`
+);
+assert.equal(
+  redirect.resolveTrustedAuthOrigin(
+    request(`${privateBetaPreview}/api/auth/magic-link`, privateBetaPreview),
+    "production"
+  ),
+  privateBetaPreview
+);
+assert.equal(
+  redirect.resolveTrustedAuthOrigin(
+    request(`${launchMomentPreview}/api/auth/magic-link`, launchMomentPreview),
+    "production"
+  ),
+  launchMomentPreview
+);
+assert.equal(
+  redirect.authCallbackUrl(launchMomentPreview),
+  `${launchMomentPreview}/auth/callback`
 );
 assert.equal(
   redirect.authCallbackUrl(production),

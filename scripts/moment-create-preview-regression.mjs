@@ -78,6 +78,8 @@ assert.match(createPreview, /Sign in to continue/);
 assert.match(createPreview, /Verify private photo/);
 assert.match(createPreview, /Continue to private studio/);
 assert.match(createPreview, /Request private access/);
+assert.match(createPreview, /Request private beta/);
+assert.match(createPreview, /\/contact\?source=moment-private-access/);
 assert.match(createPreview, /\/login\?next=\$\{encodeURIComponent/);
 assert.doesNotMatch(createPreview, /fetch\(["']\/api\/(?:generate|assets|seller-pack)/);
 assert.doesNotMatch(createPreview, /settle|reserve.*credits|release.*credits/i);
