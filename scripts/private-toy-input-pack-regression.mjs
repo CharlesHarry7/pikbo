@@ -60,6 +60,9 @@ const migration = read("supabase/migrations/20260802010000_private_toy_input_pac
 const admissionMigration = read(
   "supabase/migrations/20260802020000_private_toy_asset_admission_rpcs.sql"
 );
+const rpcAlignmentMigration = read(
+  "supabase/migrations/20260803010000_align_private_pack_rpcs.sql"
+);
 assert.match(migration, /create table if not exists public\.toy_assets/);
 assert.match(migration, /alter table public\.toy_assets enable row level security/);
 assert.match(migration, /grant select \([\s\S]*verified_at[\s\S]*\) on public\.toy_assets to authenticated/);
@@ -105,6 +108,26 @@ assert.match(
 );
 assert.doesNotMatch(
   admissionMigration,
+  /grant execute[\s\S]{0,160}to (?:public|anon|authenticated)/
+);
+assert.match(
+  rpcAlignmentMigration,
+  /create or replace function public\.pikbo_reserve_seller_pack_v2/
+);
+assert.match(rpcAlignmentMigration, /pikbo_reserve_seller_pack_with_asset_v1/);
+assert.match(
+  rpcAlignmentMigration,
+  /create or replace function public\.pikbo_get_seller_pack_status_v2/
+);
+assert.match(rpcAlignmentMigration, /pikbo_get_seller_pack_status_v1/);
+assert.match(
+  rpcAlignmentMigration,
+  /create or replace function public\.pikbo_resolve_seller_pack_input_v1/
+);
+assert.match(rpcAlignmentMigration, /objectKey[\s\S]*v_asset\.object_key/);
+assert.match(rpcAlignmentMigration, /grant execute[\s\S]*to service_role/);
+assert.doesNotMatch(
+  rpcAlignmentMigration,
   /grant execute[\s\S]{0,160}to (?:public|anon|authenticated)/
 );
 
