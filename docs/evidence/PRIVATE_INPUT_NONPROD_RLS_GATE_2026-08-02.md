@@ -190,3 +190,56 @@ no email, user/account UUID, object key, JWT, API key, or Provider identifier.
 Updated release decision: **GO** for the repeatable non-production private
 input + Pack reservation harness. **NO-GO** for the current canonical HTTP
 upload/recovery path until the v2 adapter drift is repaired and retested.
+
+## Selective v2 adapter alignment rerun
+
+The follow-up branch started from `main@fb1f9204a88609e519255462eb5783554564c7c5`
+and selectively aligned the canonical application adapters to the verified
+forward-applied v2 contract. It did not copy the historical migration, change
+the active `pikbo-toy-inputs` bucket, weaken a database constraint, or alter
+Provider, Stripe, credit settlement, readiness, UI, or SEO behavior.
+
+The immutable implementation commit is
+`0c3eb687758d445883f4493cc26b22569b74e542`; this evidence-only follow-up adds
+that commit reference without changing the tested adapters or harness.
+
+The bounded changes are:
+
+- private asset metadata is created and completed through
+  `pikbo_create_toy_asset_v1` and `pikbo_complete_toy_asset_v1`;
+- the database remains the only authority that mints the private
+  `/{owner}/{asset}/source.{ext}` key;
+- the browser uses Supabase's signed multipart upload body and verifies the
+  HTTP result before completion;
+- Pack reserve and recovery use `pikbo_reserve_seller_pack_v2` and
+  `pikbo_get_seller_pack_status_v2`;
+- generation resolves the owner/Pack/job/input binding through
+  `pikbo_resolve_seller_pack_input_v1` and rechecks bytes, SHA-256, MIME, and
+  exact size before constructing the server-only data URL;
+- object keys and Provider identifiers remain absent from every public asset
+  response.
+
+The controlled harness was upgraded to exercise the same create, complete,
+reserve, and status RPCs. Its second real run returned:
+
+| Probe | Result |
+| --- | --- |
+| exact-origin Supabase requests | 109 |
+| Provider / Stripe / other third-party calls | 0 / 0 / 0 |
+| create pending asset | passed |
+| server-side checksum/MIME/size completion | passed |
+| same-key/same-metadata asset replay | idempotent, same ready asset |
+| same-key/different-metadata replay | rejected with `IDEMPOTENCY_CONFLICT` |
+| Pack reserve/replay | v2, 30 credits, idempotent |
+| children | exactly three, one shared asset, fixed formats |
+| owner Pack-child input resolver | correct private object and checksum |
+| outsider / wrong-child resolver | denied without object key |
+| v2 owner recovery | passed |
+| separate-account visibility | 0 assets / 0 Packs / 0 jobs |
+| final DB/Auth/Storage residue | 0 |
+
+Adapter decision: **GO** for the v2 application/remote contract and repeatable
+zero-Provider non-production gate. Product decision remains **NO-GO** for
+claiming real video delivery, HTTP Create/Library completion, settlement,
+retry, private output download, production, or paid launch; none of those were
+exercised by this slice.

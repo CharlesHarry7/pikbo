@@ -21,8 +21,11 @@ const TARGET_PROJECT_REF = "lpfvfybkggiugosugfcw";
 const TARGET_ORIGIN = `https://${TARGET_PROJECT_REF}.supabase.co`;
 const INPUT_BUCKET = "pikbo-toy-inputs";
 const ALLOWED_RPC_PATHS = new Set([
-  "/rest/v1/rpc/pikbo_reserve_seller_pack_with_asset_v1",
+  "/rest/v1/rpc/pikbo_create_toy_asset_v1",
+  "/rest/v1/rpc/pikbo_complete_toy_asset_v1",
+  "/rest/v1/rpc/pikbo_reserve_seller_pack_v2",
   "/rest/v1/rpc/pikbo_get_seller_pack_status_v2",
+  "/rest/v1/rpc/pikbo_resolve_seller_pack_input_v1",
 ]);
 const SENSITIVE_READ_ONLY_TABLE_PATHS = new Set([
   "/rest/v1/provider_validation_budgets",
@@ -650,9 +653,30 @@ async function main() {
 
     const bytes = await readFile(join(root, "public/demos/scout-still.webp"));
     const sha256 = createHash("sha256").update(bytes).digest("hex");
-    fixture.assetId = randomUUID();
-    fixture.objectKey = `${owner.userId}/${fixture.assetId}/source.webp`;
     const clientAssetKey = `qa-zero-provider:${runId}`;
+    const createdAsset = payload(
+      assertOk(
+        "create pending private input",
+        await admin.rpc("pikbo_create_toy_asset_v1", {
+          p_user_id: owner.userId,
+          p_client_asset_key: clientAssetKey,
+          p_sha256: sha256,
+          p_mime_type: "image/webp",
+          p_size_bytes: bytes.byteLength,
+          p_sku_label: "PIKBO QA SYNTHETIC INPUT",
+        })
+      ),
+      "create private input payload missing"
+    );
+    assert.equal(createdAsset.ok, true);
+    assert.equal(createdAsset.state, "pending");
+    assert.equal(createdAsset.idempotent, false);
+    fixture.assetId = createdAsset.inputAssetId;
+    fixture.objectKey = createdAsset.objectKey;
+    assert.equal(
+      fixture.objectKey,
+      `${owner.userId}/${fixture.assetId}/source.webp`
+    );
     assertOk(
       "upload synthetic input fixture",
       await admin.storage.from(INPUT_BUCKET).upload(fixture.objectKey, bytes, {
@@ -660,28 +684,65 @@ async function main() {
         upsert: false,
       })
     );
-    assertOk(
-      "insert ready toy asset fixture",
-      await admin.from("toy_assets").insert({
-        id: fixture.assetId,
-        owner_user_id: owner.userId,
-        client_asset_key: clientAssetKey,
-        object_key: fixture.objectKey,
-        sha256,
-        mime_type: "image/webp",
-        size_bytes: bytes.byteLength,
-        sku_label: "PIKBO QA SYNTHETIC INPUT",
-        state: "ready",
-        verified_at: new Date().toISOString(),
-      })
+    const completedAsset = payload(
+      assertOk(
+        "complete verified private input",
+        await admin.rpc("pikbo_complete_toy_asset_v1", {
+          p_user_id: owner.userId,
+          p_asset_id: fixture.assetId,
+          p_actual_sha256: sha256,
+          p_actual_mime_type: "image/webp",
+          p_actual_size_bytes: bytes.byteLength,
+        })
+      ),
+      "complete private input payload missing"
     );
+    assert.equal(completedAsset.ok, true);
+    assert.equal(completedAsset.state, "ready");
+    assert.equal(completedAsset.inputAssetId, fixture.assetId);
+
+    const replayedAsset = payload(
+      assertOk(
+        "idempotent private input replay",
+        await admin.rpc("pikbo_create_toy_asset_v1", {
+          p_user_id: owner.userId,
+          p_client_asset_key: clientAssetKey,
+          p_sha256: sha256,
+          p_mime_type: "image/webp",
+          p_size_bytes: bytes.byteLength,
+          p_sku_label: "PIKBO QA SYNTHETIC INPUT",
+        })
+      ),
+      "private input replay payload missing"
+    );
+    assert.equal(replayedAsset.ok, true);
+    assert.equal(replayedAsset.idempotent, true);
+    assert.equal(replayedAsset.state, "ready");
+    assert.equal(replayedAsset.inputAssetId, fixture.assetId);
+
+    const conflictingAsset = payload(
+      assertOk(
+        "private input idempotency conflict",
+        await admin.rpc("pikbo_create_toy_asset_v1", {
+          p_user_id: owner.userId,
+          p_client_asset_key: clientAssetKey,
+          p_sha256: "0".repeat(64),
+          p_mime_type: "image/webp",
+          p_size_bytes: bytes.byteLength,
+          p_sku_label: "PIKBO QA SYNTHETIC INPUT",
+        })
+      ),
+      "private input conflict payload missing"
+    );
+    assert.equal(conflictingAsset.ok, false);
+    assert.equal(conflictingAsset.code, "IDEMPOTENCY_CONFLICT");
 
     const clientPackKey = `qa-zero-provider:${runId}`;
     fixture.clientPackKey = clientPackKey;
     const reserved = payload(
       assertOk(
         "asset-bound Pack reserve",
-        await admin.rpc("pikbo_reserve_seller_pack_with_asset_v1", {
+        await admin.rpc("pikbo_reserve_seller_pack_v2", {
           p_user_id: owner.userId,
           p_client_pack_key: clientPackKey,
           p_input_asset_id: fixture.assetId,
@@ -693,6 +754,11 @@ async function main() {
     assert.equal(reserved.ok, true);
     assert.equal(reserved.quotedCredits, 30);
     assert.equal(reserved.inputAssetId, fixture.assetId);
+    assert.equal(reserved.inputSha256, sha256);
+    assert.equal(reserved.inputMimeType, "image/webp");
+    assert.equal(reserved.inputSizeBytes, bytes.byteLength);
+    assert.equal(reserved.inputSkuLabel, "PIKBO QA SYNTHETIC INPUT");
+    assert.equal(Object.hasOwn(reserved, "objectKey"), false);
     assert.ok(Array.isArray(reserved.jobs));
     assert.equal(reserved.jobs.length, 3);
     fixture.packRunId = reserved.packRunId;
@@ -702,7 +768,7 @@ async function main() {
     const replay = payload(
       assertOk(
         "idempotent Pack replay",
-        await admin.rpc("pikbo_reserve_seller_pack_with_asset_v1", {
+        await admin.rpc("pikbo_reserve_seller_pack_v2", {
           p_user_id: owner.userId,
           p_client_pack_key: clientPackKey,
           p_input_asset_id: fixture.assetId,
@@ -736,6 +802,50 @@ async function main() {
       ]
     );
 
+    const resolvedInput = payload(
+      assertOk(
+        "owner Pack child input resolver",
+        await admin.rpc("pikbo_resolve_seller_pack_input_v1", {
+          p_user_id: owner.userId,
+          p_pack_run_id: fixture.packRunId,
+          p_job_id: jobs[0].id,
+        })
+      ),
+      "owner input resolver payload missing"
+    );
+    assert.equal(resolvedInput.ok, true);
+    assert.equal(resolvedInput.inputAssetId, fixture.assetId);
+    assert.equal(resolvedInput.objectKey, fixture.objectKey);
+    assert.equal(resolvedInput.sha256, sha256);
+
+    const outsiderResolvedInput = payload(
+      assertOk(
+        "outsider Pack child input denial",
+        await admin.rpc("pikbo_resolve_seller_pack_input_v1", {
+          p_user_id: outsider.userId,
+          p_pack_run_id: fixture.packRunId,
+          p_job_id: jobs[0].id,
+        })
+      ),
+      "outsider input resolver payload missing"
+    );
+    assert.equal(outsiderResolvedInput.ok, false);
+    assert.equal(Object.hasOwn(outsiderResolvedInput, "objectKey"), false);
+
+    const wrongJobResolvedInput = payload(
+      assertOk(
+        "wrong child input denial",
+        await admin.rpc("pikbo_resolve_seller_pack_input_v1", {
+          p_user_id: owner.userId,
+          p_pack_run_id: fixture.packRunId,
+          p_job_id: randomUUID(),
+        })
+      ),
+      "wrong child input resolver payload missing"
+    );
+    assert.equal(wrongJobResolvedInput.ok, false);
+    assert.equal(Object.hasOwn(wrongJobResolvedInput, "objectKey"), false);
+
     const wallet = assertOk(
       "wallet after reserve",
       await admin
@@ -763,6 +873,12 @@ async function main() {
     assert.equal(recovered.ok, true);
     assert.equal(recovered.packRunId, fixture.packRunId);
     assert.equal(recovered.jobs.length, 3);
+    assert.equal(recovered.inputAssetId, fixture.assetId);
+    assert.equal(recovered.inputSha256, sha256);
+    assert.equal(recovered.inputMimeType, "image/webp");
+    assert.equal(recovered.inputSizeBytes, bytes.byteLength);
+    assert.equal(recovered.inputSkuLabel, "PIKBO QA SYNTHETIC INPUT");
+    assert.equal(Object.hasOwn(recovered, "objectKey"), false);
 
     const safeColumns = "id,sha256,mime_type,size_bytes,sku_label,state,created_at,verified_at";
     const ownerAssets = assertOk(
@@ -836,7 +952,7 @@ async function main() {
     report = {
       schemaVersion: 1,
       testKind: "nonprod-private-input-pack-reservation",
-      verdict: "PASS_WITH_SCHEMA_DRIFT",
+      verdict: "PASS",
       environment: { production: false, projectRef: TARGET_PROJECT_REF },
       truthBoundary: {
         providerCalls: 0,
@@ -844,7 +960,15 @@ async function main() {
         aiGeneratedMedia: false,
         fixtureLabel: "PIKBO QA SYNTHETIC INPUT",
       },
-      input: { ready: true, ownerVisible: true, outsiderVisible: false, checksumVerified: true },
+      input: {
+        ready: true,
+        ownerVisible: true,
+        outsiderVisible: false,
+        checksumVerified: true,
+        ownerPackChildResolved: true,
+        outsiderPackChildDenied: true,
+        wrongChildDenied: true,
+      },
       pack: { count: 1, quotedCredits: 30, jobs: 3, sameInputAsset: true, idempotentReserve: true },
       recovery: { owner: true, outsiderVisible: false },
       accounting: { available: 10, reserved: 30, settled: 0, providerAuthorizations: 0 },
@@ -852,10 +976,17 @@ async function main() {
       network: { allowedOrigin: supabaseUrl, thirdPartyRequests: 0 },
       schemaCompatibility: {
         remoteStatusRpc: "pikbo_get_seller_pack_status_v2",
-        canonicalApplicationStatusRpc: "pikbo_get_seller_pack_status_v1",
-        driftDetected: true,
-        canonicalRuntimeGo: false,
+        canonicalApplicationStatusRpc: "pikbo_get_seller_pack_status_v2",
+        canonicalReserveRpc: "pikbo_reserve_seller_pack_v2",
+        privateInputRpcs: [
+          "pikbo_create_toy_asset_v1",
+          "pikbo_complete_toy_asset_v1",
+          "pikbo_resolve_seller_pack_input_v1",
+        ],
+        adapterAligned: true,
       },
+      productRuntimeGo: false,
+      productRuntimeReason: "HTTP UI, Provider delivery, settlement, retry, and Stripe were not tested",
     };
   } catch (error) {
     primaryError = error;

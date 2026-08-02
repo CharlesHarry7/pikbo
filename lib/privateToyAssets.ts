@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import {
   PRIVATE_TOY_INPUT_MAX_BYTES,
@@ -34,10 +34,11 @@ export type PrivateToyAsset = {
 
 type Failure = { ok: false; code: string; error: string };
 
-function extensionForMime(mimeType: string): string {
-  if (mimeType === "image/png") return "png";
-  if (mimeType === "image/webp") return "webp";
-  return "jpg";
+function rpcPayload(value: unknown): Record<string, unknown> | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return raw && typeof raw === "object"
+    ? (raw as Record<string, unknown>)
+    : null;
 }
 
 function rowToAsset(row: Record<string, unknown>): PrivateToyAsset | null {
@@ -72,14 +73,17 @@ export async function createPrivateToyAssetUpload(input: {
   mimeType: string;
   sizeBytes: number;
   sha256: string;
+  clientAssetKey: string;
   skuLabel?: string | null;
 }): Promise<
   | {
       ok: true;
       assetId: string;
-      uploadUrl: string;
-      expiresAt: string;
+      uploadUrl: string | null;
+      expiresAt: string | null;
       maxBytes: number;
+      state: "pending" | "ready";
+      idempotent: boolean;
     }
   | Failure
 > {
@@ -89,30 +93,67 @@ export async function createPrivateToyAssetUpload(input: {
   if (!admin) {
     return { ok: false, code: "PRIVATE_INPUTS_UNAVAILABLE", error: "Private storage unavailable" };
   }
-  const assetId = randomUUID();
-  const objectKey = `${input.ownerUserId}/${assetId}/input.${extensionForMime(input.mimeType)}`;
-  const { error: insertError } = await admin.from("toy_assets").insert({
-    id: assetId,
-    owner_user_id: input.ownerUserId,
-    object_key: objectKey,
-    sha256: input.sha256,
-    mime_type: input.mimeType,
-    size_bytes: input.sizeBytes,
-    sku_label: input.skuLabel?.trim() || null,
-    state: "pending",
-  });
-  if (insertError) {
+  const { data: createData, error: createError } = await admin.rpc(
+    "pikbo_create_toy_asset_v1",
+    {
+      p_user_id: input.ownerUserId,
+      p_client_asset_key: input.clientAssetKey.trim(),
+      p_sha256: input.sha256,
+      p_mime_type: input.mimeType,
+      p_size_bytes: input.sizeBytes,
+      p_sku_label: input.skuLabel?.trim() || null,
+    }
+  );
+  if (createError) {
     return {
       ok: false,
       code: "PRIVATE_INPUTS_UNAVAILABLE",
-      error: insertError.message.slice(0, 160),
+      error: createError.message.slice(0, 160),
+    };
+  }
+  const created = rpcPayload(createData);
+  if (!created || created.ok !== true) {
+    return {
+      ok: false,
+      code:
+        typeof created?.code === "string"
+          ? created.code
+          : "PRIVATE_INPUTS_UNAVAILABLE",
+      error: "Private input metadata could not be created",
+    };
+  }
+  const assetId = typeof created.inputAssetId === "string" ? created.inputAssetId : null;
+  const objectKey = typeof created.objectKey === "string" ? created.objectKey : null;
+  const state = created.state === "ready" ? "ready" : created.state === "pending" ? "pending" : null;
+  if (
+    !assetId ||
+    !objectKey ||
+    !state ||
+    created.sha256 !== input.sha256 ||
+    created.mimeType !== input.mimeType ||
+    created.sizeBytes !== input.sizeBytes
+  ) {
+    return {
+      ok: false,
+      code: "PRIVATE_INPUT_INVALID_RESPONSE",
+      error: "Private input service returned an invalid asset",
+    };
+  }
+  if (state === "ready") {
+    return {
+      ok: true,
+      assetId,
+      uploadUrl: null,
+      expiresAt: null,
+      maxBytes: PRIVATE_TOY_INPUT_MAX_BYTES,
+      state,
+      idempotent: true,
     };
   }
   const { data, error } = await admin.storage
     .from(PRIVATE_TOY_INPUTS_BUCKET)
     .createSignedUploadUrl(objectKey, { upsert: false });
   if (error || !data?.signedUrl || !data.token) {
-    await admin.from("toy_assets").delete().eq("id", assetId).eq("owner_user_id", input.ownerUserId);
     return {
       ok: false,
       code: "PRIVATE_INPUTS_UNAVAILABLE",
@@ -125,13 +166,17 @@ export async function createPrivateToyAssetUpload(input: {
     uploadUrl: data.signedUrl,
     expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
     maxBytes: PRIVATE_TOY_INPUT_MAX_BYTES,
+    state,
+    idempotent: created.idempotent === true,
   };
 }
 
 export async function completePrivateToyAsset(input: {
   ownerUserId: string;
   assetId: string;
-}): Promise<{ ok: true; asset: PrivateToyAsset } | Failure> {
+}): Promise<
+  { ok: true; asset: PrivateToyAsset; idempotent: boolean } | Failure
+> {
   const admin = getSupabaseAdmin();
   if (!admin) {
     return { ok: false, code: "PRIVATE_INPUTS_UNAVAILABLE", error: "Private storage unavailable" };
@@ -148,7 +193,9 @@ export async function completePrivateToyAsset(input: {
   if (found.error || !asset) {
     return { ok: false, code: "INPUT_ASSET_NOT_FOUND", error: "Private input not found" };
   }
-  if (asset.state === "ready") return { ok: true, asset };
+  if (asset.state === "ready") {
+    return { ok: true, asset, idempotent: true };
+  }
   if (asset.state !== "pending") {
     return { ok: false, code: "INPUT_ASSET_REJECTED", error: "Private input is not usable" };
   }
@@ -166,22 +213,13 @@ export async function completePrivateToyAsset(input: {
     bytes.byteLength <= PRIVATE_TOY_INPUT_MAX_BYTES &&
     actualMime === asset.mimeType &&
     actualHash === asset.sha256;
-  const now = new Date().toISOString();
-  const updated = await admin
-    .from("toy_assets")
-    .update({ state: verified ? "ready" : "rejected", verified_at: now })
-    .eq("id", asset.id)
-    .eq("owner_user_id", input.ownerUserId)
-    .eq("state", "pending")
-    .select("*")
-    .maybeSingle();
-  const finalAsset = updated.data
-    ? rowToAsset(updated.data as unknown as Record<string, unknown>)
-    : null;
-  if (updated.error || !finalAsset) {
-    return { ok: false, code: "PRIVATE_INPUTS_UNAVAILABLE", error: "Input verification could not be recorded" };
-  }
   if (!verified) {
+    await admin
+      .from("toy_assets")
+      .update({ state: "rejected", verified_at: null })
+      .eq("id", asset.id)
+      .eq("owner_user_id", input.ownerUserId)
+      .eq("state", "pending");
     await admin.storage.from(PRIVATE_TOY_INPUTS_BUCKET).remove([asset.objectKey]);
     return {
       ok: false,
@@ -189,7 +227,46 @@ export async function completePrivateToyAsset(input: {
       error: "Image bytes, size, type, or checksum did not match",
     };
   }
-  return { ok: true, asset: finalAsset };
+
+  const { data: completeData, error: completeError } = await admin.rpc(
+    "pikbo_complete_toy_asset_v1",
+    {
+      p_user_id: input.ownerUserId,
+      p_asset_id: asset.id,
+      p_actual_sha256: actualHash,
+      p_actual_mime_type: actualMime,
+      p_actual_size_bytes: bytes.byteLength,
+    }
+  );
+  const completed = rpcPayload(completeData);
+  if (completeError || !completed || completed.ok !== true) {
+    return {
+      ok: false,
+      code:
+        typeof completed?.code === "string"
+          ? completed.code
+          : "PRIVATE_INPUTS_UNAVAILABLE",
+      error: (completeError?.message || "Input verification could not be recorded").slice(0, 160),
+    };
+  }
+  const updated = await admin
+    .from("toy_assets")
+    .select("*")
+    .eq("id", asset.id)
+    .eq("owner_user_id", input.ownerUserId)
+    .eq("state", "ready")
+    .maybeSingle();
+  const finalAsset = updated.data
+    ? rowToAsset(updated.data as unknown as Record<string, unknown>)
+    : null;
+  if (updated.error || !finalAsset) {
+    return { ok: false, code: "PRIVATE_INPUTS_UNAVAILABLE", error: "Verified input could not be reloaded" };
+  }
+  return {
+    ok: true,
+    asset: finalAsset,
+    idempotent: completed.idempotent === true,
+  };
 }
 
 export async function getReadyPrivateToyAsset(input: {
@@ -231,44 +308,53 @@ export async function resolveBoundToyAssetDataUrl(input: {
 }): Promise<{ assetId: string; dataUrl: string; skuLabel: string | null } | null> {
   const admin = getSupabaseAdmin();
   if (!admin) return null;
-  const pack = await admin
-    .from("seller_pack_runs")
-    .select("input_asset_id,rights_confirmed_at")
-    .eq("id", input.packRunId)
-    .eq("created_by", input.ownerUserId)
-    .maybeSingle();
+  const { data, error } = await admin.rpc("pikbo_resolve_seller_pack_input_v1", {
+    p_user_id: input.ownerUserId,
+    p_pack_run_id: input.packRunId,
+    p_job_id: input.jobId,
+  });
+  const resolved = rpcPayload(data);
+  if (error || !resolved || resolved.ok !== true) return null;
   const assetId =
-    pack.data && typeof pack.data.input_asset_id === "string"
-      ? pack.data.input_asset_id
-      : null;
-  if (pack.error || !assetId || !pack.data?.rights_confirmed_at) return null;
-  const job = await admin
-    .from("generation_jobs")
-    .select("id")
-    .eq("id", input.jobId)
-    .eq("pack_run_id", input.packRunId)
-    .eq("created_by", input.ownerUserId)
-    .eq("input_asset_id", assetId)
-    .maybeSingle();
-  if (job.error || !job.data) return null;
-  const asset = await getReadyPrivateToyAsset({ ownerUserId: input.ownerUserId, assetId });
-  if (!asset) return null;
+    typeof resolved.inputAssetId === "string" ? resolved.inputAssetId : null;
+  const objectKey =
+    typeof resolved.objectKey === "string" ? resolved.objectKey : null;
+  const sha256 = typeof resolved.sha256 === "string" ? resolved.sha256 : null;
+  const mimeType = ALLOWED_MIME.has(String(resolved.mimeType))
+    ? (resolved.mimeType as PrivateToyAsset["mimeType"])
+    : null;
+  const sizeBytes =
+    typeof resolved.sizeBytes === "number" ? resolved.sizeBytes : null;
+  const extension =
+    mimeType === "image/png" ? "png" : mimeType === "image/webp" ? "webp" : "jpg";
+  if (
+    !assetId ||
+    !objectKey ||
+    !sha256 ||
+    !mimeType ||
+    sizeBytes == null ||
+    resolved.packRunId !== input.packRunId ||
+    resolved.jobId !== input.jobId ||
+    objectKey !== `${input.ownerUserId}/${assetId}/source.${extension}`
+  ) {
+    return null;
+  }
   const downloaded = await admin.storage
     .from(PRIVATE_TOY_INPUTS_BUCKET)
-    .download(asset.objectKey);
+    .download(objectKey);
   if (downloaded.error || !downloaded.data) return null;
   const bytes = Buffer.from(await downloaded.data.arrayBuffer());
   if (
-    bytes.byteLength !== asset.sizeBytes ||
-    createHash("sha256").update(bytes).digest("hex") !== asset.sha256 ||
-    sniffToyImageMime(bytes) !== asset.mimeType
+    bytes.byteLength !== sizeBytes ||
+    createHash("sha256").update(bytes).digest("hex") !== sha256 ||
+    sniffToyImageMime(bytes) !== mimeType
   ) {
     return null;
   }
   return {
     assetId,
-    dataUrl: `data:${asset.mimeType};base64,${bytes.toString("base64")}`,
-    skuLabel: asset.skuLabel,
+    dataUrl: `data:${mimeType};base64,${bytes.toString("base64")}`,
+    skuLabel: typeof resolved.skuLabel === "string" ? resolved.skuLabel : null,
   };
 }
 
@@ -391,22 +477,60 @@ export async function probePrivateToyAssets(): Promise<{
   if (!admin) {
     return { bucketReady: false, schemaReady: false, reserveRpcReady: false, discoveryReady: false };
   }
-  const [bucket, table, rpc, discovery] = await Promise.all([
+  const [bucket, table, createRpc, completeRpc, reserveRpc, statusRpc, resolveRpc, discovery] = await Promise.all([
     admin.storage.getBucket(PRIVATE_TOY_INPUTS_BUCKET),
     admin.from("toy_assets").select("id", { head: true, count: "exact" }).limit(1),
-    admin.rpc("pikbo_reserve_seller_pack_with_asset_v1", {
+    admin.rpc("pikbo_create_toy_asset_v1", {
+      p_user_id: null,
+      p_client_asset_key: null,
+      p_sha256: null,
+      p_mime_type: null,
+      p_size_bytes: null,
+      p_sku_label: null,
+    }),
+    admin.rpc("pikbo_complete_toy_asset_v1", {
+      p_user_id: null,
+      p_asset_id: null,
+      p_actual_sha256: null,
+      p_actual_mime_type: null,
+      p_actual_size_bytes: null,
+    }),
+    admin.rpc("pikbo_reserve_seller_pack_v2", {
       p_user_id: null,
       p_client_pack_key: "readiness-probe",
       p_input_asset_id: null,
       p_rights_confirmed: false,
     }),
+    admin.rpc("pikbo_get_seller_pack_status_v2", {
+      p_user_id: null,
+      p_pack_run_id: null,
+    }),
+    admin.rpc("pikbo_resolve_seller_pack_input_v1", {
+      p_user_id: null,
+      p_pack_run_id: null,
+      p_job_id: null,
+    }),
     admin.from("seller_pack_runs").select("id,input_asset_id,rights_confirmed_at").limit(1),
   ]);
-  const rpcPayload = rpc.data as Record<string, unknown> | null;
+  const createPayload = rpcPayload(createRpc.data);
+  const completePayload = rpcPayload(completeRpc.data);
+  const reservePayload = rpcPayload(reserveRpc.data);
+  const statusPayload = rpcPayload(statusRpc.data);
+  const resolvePayload = rpcPayload(resolveRpc.data);
   return {
     bucketReady: !bucket.error && bucket.data?.public === false,
     schemaReady: !table.error,
-    reserveRpcReady: !rpc.error && rpcPayload?.code === "AUTH_REQUIRED",
+    reserveRpcReady:
+      !createRpc.error &&
+      createPayload?.code === "AUTH_REQUIRED" &&
+      !completeRpc.error &&
+      completePayload?.code === "INVALID_IDENTITY" &&
+      !reserveRpc.error &&
+      reservePayload?.code === "AUTH_REQUIRED" &&
+      !statusRpc.error &&
+      statusPayload?.code === "AUTH_REQUIRED" &&
+      !resolveRpc.error &&
+      resolvePayload?.code === "INVALID_IDENTITY",
     discoveryReady: !discovery.error,
   };
 }

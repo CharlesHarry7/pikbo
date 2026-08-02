@@ -40,6 +40,7 @@ export async function POST(req: Request) {
     sizeBytes?: number;
     byteLength?: number;
     sha256?: string;
+    clientAssetKey?: string;
     skuLabel?: string;
   } = {};
   try {
@@ -52,11 +53,14 @@ export async function POST(req: Request) {
     mimeType: String(body.mimeType || body.contentType || ""),
     sizeBytes: Number(body.sizeBytes ?? body.byteLength),
     sha256: String(body.sha256 || "").toLowerCase(),
+    clientAssetKey: String(body.clientAssetKey || ""),
     skuLabel: typeof body.skuLabel === "string" ? body.skuLabel : null,
   });
   if (!prepared.ok) {
     const status =
       prepared.code === "IMAGE_TOO_LARGE" ? 413 :
+      prepared.code === "IDEMPOTENCY_CONFLICT" ? 409 :
+      prepared.code === "PRIVATE_INPUT_INVALID_RESPONSE" ? 503 :
       prepared.code === "PRIVATE_INPUTS_UNAVAILABLE" ? 503 : 400;
     return NextResponse.json(
       { ...prepared, maxBytes: PRIVATE_TOY_INPUT_MAX_BYTES },
@@ -67,13 +71,16 @@ export async function POST(req: Request) {
     {
       ok: true,
       assetId: prepared.assetId,
+      inputAssetId: prepared.assetId,
       uploadUrl: prepared.uploadUrl,
-      method: "PUT",
+      method: prepared.uploadUrl ? "PUT" : null,
       expiresAt: prepared.expiresAt,
       maxBytes: prepared.maxBytes,
+      state: prepared.state,
+      idempotent: prepared.idempotent,
       private: true,
       durable: true,
     },
-    { status: 201 }
+    { status: prepared.state === "ready" ? 200 : 201 }
   );
 }

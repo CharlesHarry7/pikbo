@@ -1,9 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-02T05:08:34Z",
-  "sourceBaseSha": "46594609e98efc556d77c00266b212537e5e975d",
+  "generatedAt": "2026-08-02T05:30:00Z",
+  "sourceBaseSha": "fb1f9204a88609e519255462eb5783554564c7c5",
+  "implementationCommit": "0c3eb687758d445883f4493cc26b22569b74e542",
   "testKind": "nonprod-private-input-pack-reservation",
-  "verdict": "PASS_WITH_SCHEMA_DRIFT",
+  "verdict": "PASS",
   "environment": {
     "production": false,
     "projectRef": "lpfvfybkggiugosugfcw"
@@ -18,7 +19,10 @@
     "ready": true,
     "ownerVisible": true,
     "outsiderVisible": false,
-    "checksumVerified": true
+    "checksumVerified": true,
+    "ownerPackChildResolved": true,
+    "outsiderPackChildDenied": true,
+    "wrongChildDenied": true
   },
   "pack": {
     "count": 1,
@@ -44,14 +48,21 @@
   "network": {
     "allowedOrigin": "https://lpfvfybkggiugosugfcw.supabase.co",
     "thirdPartyRequests": 0,
-    "supabaseRequests": 103
+    "supabaseRequests": 109
   },
   "schemaCompatibility": {
     "remoteStatusRpc": "pikbo_get_seller_pack_status_v2",
-    "canonicalApplicationStatusRpc": "pikbo_get_seller_pack_status_v1",
-    "driftDetected": true,
-    "canonicalRuntimeGo": false
+    "canonicalApplicationStatusRpc": "pikbo_get_seller_pack_status_v2",
+    "canonicalReserveRpc": "pikbo_reserve_seller_pack_v2",
+    "privateInputRpcs": [
+      "pikbo_create_toy_asset_v1",
+      "pikbo_complete_toy_asset_v1",
+      "pikbo_resolve_seller_pack_input_v1"
+    ],
+    "adapterAligned": true
   },
+  "productRuntimeGo": false,
+  "productRuntimeReason": "HTTP UI, Provider delivery, settlement, retry, and Stripe were not tested",
   "cleanup": {
     "passed": true,
     "residue": 0
