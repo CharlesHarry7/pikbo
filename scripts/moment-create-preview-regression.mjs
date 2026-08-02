@@ -49,6 +49,11 @@ assert.match(createPage, /Array\.isArray\(sp\.moment\) \? null : parseMomentId/)
 assert.match(createPage, /if \(!momentId\) return <InvalidMomentNotice/);
 assert.match(createPage, /fixedMomentContract/);
 assert.match(studio, /fixedMomentContract\?: boolean/);
+assert.match(studio, /const FIXED_MOMENT_EFFECT = "street-power-up"/);
+assert.match(studio, /fixedMomentContract \? FIXED_MOMENT_EFFECT/);
+assert.match(studio, /if \(fixedMomentContract\) return "9:16"/);
+assert.match(studio, /fixedMomentContract\n    \? "720p"/);
+assert.match(studio, /Locked motion recipe/);
 assert.match(studio, /Seedance Fast · fixed private validation contract/);
 assert.match(studio, /One owned toy photo · FAL Seedance Fast · 9:16 · 5s · 720p/);
 
