@@ -16,6 +16,9 @@ const steps = read("components/SellerPackSteps.tsx");
 const contract = read("lib/sellerPackContract.ts");
 const packExport = read("lib/sellerPackExport.ts");
 const shell = read("components/AppShell.tsx");
+const softLaunchStrip = read("components/SoftLaunchStrip.tsx");
+const hfExploreHome = read("components/HfExploreHome.tsx");
+const freeTrialCta = read("components/FreeTrialCta.tsx");
 const pricingCheckout = read("components/PricingCheckoutButton.tsx");
 const pricing = read("app/pricing/page.tsx");
 const pricingCards = read("components/PricingPlanCards.tsx");
@@ -88,6 +91,15 @@ assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
 assert.match(shell, /create\?mode=seller-pack/);
+assert.match(shell, /aria-label="Mobile product menu"/);
+assert.match(shell, /PRIMARY_NAV\.filter\(\(item\) => item\.href !== "\/"\)/);
+assert.match(softLaunchStrip, /: "\/create\?mode=seller-pack";/);
+assert.match(hfExploreHome, /href="\/create\?mode=seller-pack"/);
+assert.match(freeTrialCta, /onHome\s*\? "\/create\?mode=seller-pack"/);
+assert.doesNotMatch(
+  [softLaunchStrip, hfExploreHome, freeTrialCta].join("\n"),
+  /href=.{0,40}#home-create|\? "\/#home-create"/
+);
 assert.match(
   pricingCheckout,
   /href="\/create\?mode=seller-pack&source=pricing-founding"/

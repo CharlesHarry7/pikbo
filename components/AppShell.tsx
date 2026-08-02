@@ -170,16 +170,39 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="flex items-center gap-2">
           {resultShell ? (
-            <Link
-              href={
-                publicSampleCreate
-                  ? "/contact?source=sample-mobile-header"
-                  : "/create?mode=seller-pack&preview=1&source=mobile-header"
-              }
-              className="inline-flex min-h-9 items-center rounded-full bg-[#171717] px-4 text-[10px] font-black text-white"
-            >
-              {publicSampleCreate ? "Request beta" : "Try sample"}
-            </Link>
+            <>
+              <Link
+                href={
+                  publicSampleCreate
+                    ? "/contact?source=sample-mobile-header"
+                    : "/create?mode=seller-pack&preview=1&source=mobile-header"
+                }
+                className="inline-flex min-h-9 items-center rounded-full bg-[#171717] px-4 text-[10px] font-black text-white"
+              >
+                {publicSampleCreate ? "Request beta" : "Try sample"}
+              </Link>
+              <details className="group relative">
+                <summary className="grid min-h-9 cursor-pointer list-none place-items-center rounded-full border border-black/15 bg-white/55 px-3 text-[10px] font-black text-[#171717] [&::-webkit-details-marker]:hidden">
+                  Menu
+                </summary>
+                <nav
+                  aria-label="Mobile product menu"
+                  className="absolute right-0 top-11 z-[70] w-44 overflow-hidden rounded-2xl border border-black/10 bg-[#FAF7F0] p-1.5 text-[#171717] shadow-[0_22px_60px_-24px_rgba(0,0,0,0.55)]"
+                >
+                  {PRIMARY_NAV.filter((item) => item.href !== "/").map(
+                    (item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="block rounded-xl px-3 py-2.5 text-xs font-black hover:bg-black/[0.06]"
+                      >
+                        {item.label}
+                      </Link>
+                    )
+                  )}
+                </nav>
+              </details>
+            </>
           ) : (
             <>
               <LanguageSwitcher compact tone={lightShell ? "light" : "dark"} />

@@ -34,6 +34,9 @@ WorkBuddy final measurements:
   `beatbot-viral-hook.webm`; both reached `readyState=4`.
 - No public `Creating`, `Preparing`, `0 of 3` or simulated eight-second
   generation state is shown.
+- Existing Live seller CTAs route directly to `/create?mode=seller-pack`, not
+  the public sample anchor. The result-shell mobile Menu exposes Create,
+  Library, Pricing and Account without changing the private workbench.
 
 Reviewer screenshots:
 

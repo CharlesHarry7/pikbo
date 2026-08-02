@@ -31,6 +31,12 @@ Newest first. One block per meaningful landing.
   **APPROVE** in browser session `019fbe82-8c49-7620-bd3f-ddb4cda78057`: both
   sizes are media-first, both CTAs are fully visible, and both have zero
   horizontal overflow.
+- GitHub inline review then caught two returning-seller navigation gaps: older
+  Live CTAs still targeted the public sample anchor, and the simplified mobile
+  header had no Library/Pricing/Account route. Live CTAs now open the existing
+  private Seller Pack workspace directly; the result-shell mobile header exposes
+  Create, Library, Pricing and Account in a compact menu without restoring the
+  old five-item bottom bar.
 - PASS: Launch Pack path, live-copy, SEO cold-start, engine, Seller Pack atomic,
   recovery ledger/reconciliation, Stripe billing, TypeScript, ESLint and the
   199-page production build. The build retains the pre-existing T6 dynamic NFT
