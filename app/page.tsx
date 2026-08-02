@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  const lcpPoster = "/moments/capsule-reveal.jpg";
+  const lcpPoster = "/demos/scout-still.webp";
 
   return (
     <>

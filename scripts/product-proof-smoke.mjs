@@ -16,6 +16,7 @@ function assert(condition, message) {
 const home = read("app/page.tsx");
 const homeHero = read("components/HomeCinemaHero.tsx");
 const moments = read("lib/moments.ts");
+const publicSample = read("components/PublicLaunchPackSample.tsx");
 const softLaunch = read("lib/softLaunch.ts");
 const feed = read("lib/videoFeed.ts");
 const tile = read("components/VideoTile.tsx");
@@ -32,10 +33,11 @@ const proofSlugs = [...proofList.matchAll(/"([^"]+)"/g)].map((match) => match[1]
 assert(proofSlugs.length === 8, "homepage proof whitelist must contain exactly 8 recipes");
 assert(
   home.includes("<HomeCinemaHero />") &&
-    homeHero.includes("<HomeMomentShowcase />") &&
+    homeHero.includes('<PublicLaunchPackSample surface="home" />') &&
     !home.includes("<HomeViralWall") &&
+    publicSample.includes("Archive motion sample") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must keep the six truth-labeled Moment stage and retire proof-card walls"
+  "homepage must lead with the video archive and retire proof-card walls"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),

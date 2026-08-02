@@ -3934,12 +3934,11 @@ const publicSampleSrc = fs.readFileSync(
 const createSampleSrc = publicSampleSrc.slice(
   publicSampleSrc.indexOf("function CreateSampleBrowser")
 );
-assert.match(homeHeroSrc, /HomeMomentShowcase/);
+assert.match(homeHeroSrc, /PublicLaunchPackSample surface="home"/);
 assert.match(homeMomentsSrc, /One toy photo\. More ways to sell\./);
 assert.match(homeMomentsSrc, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(momentStageSrc, /Official Concept/);
 assert.match(momentStageSrc, /Preview with my toy/);
-assert.doesNotMatch(homeHeroSrc, /PublicLaunchPackSample surface="home"/);
 assert.doesNotMatch(homePageSrc, /One toy photo\. Three launch-ready videos\./);
 assert.match(createSampleSrc, /Pikbo Lab archive/);
 assert.match(createSampleSrc, /No sign-in · no upload/);
