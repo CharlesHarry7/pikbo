@@ -17,6 +17,9 @@ import { parseMomentId } from "@/lib/moments";
 import { MOBILE_NAV, PRIMARY_NAV } from "@/lib/softLaunch";
 import { cn } from "@/lib/utils";
 
+const PRIVATE_BETA_MAILTO =
+  "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
+
 function active(path: string, href: string) {
   const route = href.split("?")[0];
   if (route === "/") return path === "/";
@@ -188,7 +191,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <Link
               href={
                 publicSampleCreate
-                  ? "/contact?source=sample-header"
+                  ? PRIVATE_BETA_MAILTO
                   : "/create?mode=seller-pack&preview=1&source=header"
               }
               className="inline-flex min-h-10 items-center rounded-full bg-[#171717] px-5 text-xs font-black text-white transition hover:bg-[#FF6846]"
@@ -233,7 +236,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               <Link
                 href={
                   publicSampleCreate
-                    ? "/contact?source=sample-mobile-header"
+                    ? PRIVATE_BETA_MAILTO
                     : "/create?mode=seller-pack&preview=1&source=mobile-header"
                 }
                 className="inline-flex min-h-9 items-center rounded-full bg-[#171717] px-4 text-[10px] font-black text-white"
