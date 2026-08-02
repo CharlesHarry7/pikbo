@@ -31,11 +31,11 @@ for (const [id, name] of expectedMoments) {
 assert.equal((moments.match(/evidence: "Official Concept",/g) || []).length, 6);
 assert.doesNotMatch(moments, /provider|modelId|prompt|generated result/i);
 
-assert.match(home, /Choose the moment your toy enters\./);
-assert.match(home, /Pick a world\. Place your toy inside\. Create its first scene\./);
+assert.match(home, /Upload your toy\. Pick its moment\./);
+assert.match(home, /Start with a photo you own\. Preview the composition/);
 assert.match(home, /<MomentStage moment=\{active\}/);
 assert.match(home, /<MomentRail moments=\{MOMENTS\}/);
-assert.match(stage, /Try this moment/);
+assert.match(stage, /Preview with my toy/);
 assert.match(stage, /href=\{`\/create\?moment=\$\{moment\.id\}`\}/);
 assert.match(rail, /role="tablist"/);
 

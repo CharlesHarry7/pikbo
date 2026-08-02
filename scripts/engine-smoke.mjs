@@ -3935,10 +3935,10 @@ const createSampleSrc = publicSampleSrc.slice(
   publicSampleSrc.indexOf("function CreateSampleBrowser")
 );
 assert.match(homeHeroSrc, /HomeMomentShowcase/);
-assert.match(homeMomentsSrc, /Choose the moment your toy enters\./);
-assert.match(homeMomentsSrc, /Pick a world\. Place your toy inside\. Create its first scene\./);
+assert.match(homeMomentsSrc, /Upload your toy\. Pick its moment\./);
+assert.match(homeMomentsSrc, /Start with a photo you own\. Preview the composition/);
 assert.match(momentStageSrc, /Official Concept/);
-assert.match(momentStageSrc, /Try this moment/);
+assert.match(momentStageSrc, /Preview with my toy/);
 assert.doesNotMatch(homeHeroSrc, /PublicLaunchPackSample surface="home"/);
 assert.doesNotMatch(homePageSrc, /One toy photo\. Three launch-ready videos\./);
 assert.match(createSampleSrc, /Pikbo Lab archive/);

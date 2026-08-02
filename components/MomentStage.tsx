@@ -53,7 +53,7 @@ export function MomentStage({ moment }: { moment: PikboMoment }) {
           className="group inline-flex min-h-14 items-center justify-between border-t border-[#171719] pt-4 text-sm font-black text-[#171719]"
           data-moment-primary-cta={moment.id}
         >
-          Try this moment
+          Preview with my toy
           <span
             aria-hidden
             className="grid h-9 w-9 place-items-center rounded-full bg-[#171719] text-lg text-[#F5F1E8] transition-transform duration-200 group-hover:translate-x-1"
@@ -61,6 +61,9 @@ export function MomentStage({ moment }: { moment: PikboMoment }) {
             →
           </span>
         </Link>
+        <p className="mt-2 text-[9px] font-black uppercase tracking-[0.16em] text-[#817D75]">
+          Local preview · no Provider call
+        </p>
       </aside>
     </div>
   );
