@@ -32,10 +32,10 @@ for (const [id, name] of expectedMoments) {
 assert.equal((moments.match(/evidence: "Official Concept",/g) || []).length, 6);
 assert.doesNotMatch(moments, /provider|modelId|prompt|generated result/i);
 
-assert.match(home, /Upload your toy\. Pick its moment\./);
-assert.match(home, /Start with a photo you own\. Preview the composition/);
+assert.match(home, /One toy photo\. More ways to sell\./);
+assert.match(home, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(home, /Preview a Moment/);
-assert.match(home, /Private beta contract/);
+assert.match(home, /Three seller formats/);
 assert.match(home, /\/contact\?source=homepage-moment/);
 assert.match(home, /<MomentStage moment=\{active\}/);
 assert.match(home, /<MomentRail moments=\{MOMENTS\}/);
