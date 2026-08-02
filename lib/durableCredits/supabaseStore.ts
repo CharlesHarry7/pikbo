@@ -1114,6 +1114,10 @@ export type AtomicSellerPackReserveResult = {
   reservedCredits: number;
   idempotent: boolean;
   inputAssetId: string;
+  inputSha256: string;
+  inputMimeType: string;
+  inputSizeBytes: number;
+  inputSkuLabel: string | null;
   skuLabel: string | null;
   rightsConfirmed: true;
   jobs: AtomicSellerPackJobPublic[];
@@ -1154,6 +1158,12 @@ export type AtomicSellerPackStatusResult = {
   completedAt: string | null;
   availableCredits: number;
   reservedCredits: number;
+  inputAssetId: string;
+  inputSha256: string;
+  inputMimeType: string;
+  inputSizeBytes: number;
+  inputSkuLabel: string | null;
+  inputCreatedAt: string;
   jobs: AtomicSellerPackJobPublic[];
 };
 
@@ -1256,7 +1266,7 @@ export async function supabaseReserveSellerPackAtomic(input: {
       error: "Supabase service role unavailable",
     };
   }
-  const { data, error } = await admin.rpc("pikbo_reserve_seller_pack_with_asset_v1", {
+  const { data, error } = await admin.rpc("pikbo_reserve_seller_pack_v2", {
     p_user_id: input.userId,
     p_client_pack_key: input.clientPackKey,
     p_input_asset_id: input.inputAssetId,
@@ -1280,6 +1290,7 @@ export async function supabaseReserveSellerPackAtomic(input: {
   const releasedCredits = numberField(payload, "releasedCredits");
   const availableCredits = numberField(payload, "availableCredits");
   const reservedCredits = numberField(payload, "reservedCredits");
+  const inputSizeBytes = numberField(payload, "inputSizeBytes");
   if (
     typeof payload.packRunId !== "string" ||
     typeof payload.reservationId !== "string" ||
@@ -1300,7 +1311,9 @@ export async function supabaseReserveSellerPackAtomic(input: {
     payload.userId !== input.userId
     || typeof payload.inputAssetId !== "string"
     || payload.inputAssetId !== input.inputAssetId
-    || payload.rightsConfirmed !== true
+    || typeof payload.inputSha256 !== "string"
+    || typeof payload.inputMimeType !== "string"
+    || inputSizeBytes == null
   ) {
     return {
       ok: false,
@@ -1326,7 +1339,13 @@ export async function supabaseReserveSellerPackAtomic(input: {
       reservedCredits,
       idempotent: payload.idempotent === true,
       inputAssetId: payload.inputAssetId,
-      skuLabel: typeof payload.skuLabel === "string" ? payload.skuLabel : null,
+      inputSha256: payload.inputSha256,
+      inputMimeType: payload.inputMimeType,
+      inputSizeBytes,
+      inputSkuLabel:
+        typeof payload.inputSkuLabel === "string" ? payload.inputSkuLabel : null,
+      skuLabel:
+        typeof payload.inputSkuLabel === "string" ? payload.inputSkuLabel : null,
       rightsConfirmed: true,
       jobs,
     },
@@ -1726,7 +1745,7 @@ export async function supabaseGetSellerPackStatusAtomic(input: {
       error: "Supabase service role unavailable",
     };
   }
-  const { data, error } = await admin.rpc("pikbo_get_seller_pack_status_v1", {
+  const { data, error } = await admin.rpc("pikbo_get_seller_pack_status_v2", {
     p_user_id: input.userId,
     p_pack_run_id: input.packRunId,
   });
@@ -1747,17 +1766,23 @@ export async function supabaseGetSellerPackStatusAtomic(input: {
   const releasedCredits = numberField(payload, "releasedCredits");
   const availableCredits = numberField(payload, "availableCredits");
   const reservedCredits = numberField(payload, "reservedCredits");
+  const inputSizeBytes = numberField(payload, "inputSizeBytes");
   if (
     typeof payload.packRunId !== "string" ||
     typeof payload.status !== "string" ||
     typeof payload.reservationId !== "string" ||
     typeof payload.mode !== "string" ||
+    typeof payload.inputAssetId !== "string" ||
+    typeof payload.inputSha256 !== "string" ||
+    typeof payload.inputMimeType !== "string" ||
+    typeof payload.inputCreatedAt !== "string" ||
     !jobs ||
     quotedCredits == null ||
     settledCredits == null ||
     releasedCredits == null ||
     availableCredits == null ||
     reservedCredits == null ||
+    inputSizeBytes == null ||
     payload.packRunId !== input.packRunId
   ) {
     return {
@@ -1794,6 +1819,15 @@ export async function supabaseGetSellerPackStatusAtomic(input: {
             : null,
       availableCredits,
       reservedCredits,
+      inputAssetId: payload.inputAssetId,
+      inputSha256: payload.inputSha256,
+      inputMimeType: payload.inputMimeType,
+      inputSizeBytes,
+      inputSkuLabel:
+        typeof payload.inputSkuLabel === "string"
+          ? payload.inputSkuLabel
+          : null,
+      inputCreatedAt: payload.inputCreatedAt,
       jobs,
     },
   };

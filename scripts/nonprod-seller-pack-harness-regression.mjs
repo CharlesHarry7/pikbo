@@ -45,11 +45,20 @@ for (const invalid of [
 }
 assert.doesNotThrow(() =>
   validateHarnessRequest(
-    `${exactOrigin}/rest/v1/rpc/pikbo_reserve_seller_pack_with_asset_v1`
+    `${exactOrigin}/rest/v1/rpc/pikbo_create_toy_asset_v1`
   )
 );
 assert.doesNotThrow(() =>
+  validateHarnessRequest(`${exactOrigin}/rest/v1/rpc/pikbo_complete_toy_asset_v1`)
+);
+assert.doesNotThrow(() =>
+  validateHarnessRequest(`${exactOrigin}/rest/v1/rpc/pikbo_reserve_seller_pack_v2`)
+);
+assert.doesNotThrow(() =>
   validateHarnessRequest(`${exactOrigin}/rest/v1/rpc/pikbo_get_seller_pack_status_v2`)
+);
+assert.doesNotThrow(() =>
+  validateHarnessRequest(`${exactOrigin}/rest/v1/rpc/pikbo_resolve_seller_pack_input_v1`)
 );
 for (const forbidden of [
   "https://api.stripe.com/v1/checkout/sessions",

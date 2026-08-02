@@ -15,6 +15,13 @@ export async function registerPrivateToyAsset(
     const blob = await (await fetch(dataUrl)).blob();
     const bytes = await blob.arrayBuffer();
     const sha256 = hex(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)));
+    const normalizedSkuLabel = skuLabel?.trim() || "";
+    const clientKeyBytes = new TextEncoder().encode(
+      JSON.stringify([sha256, blob.type.toLowerCase(), blob.size, normalizedSkuLabel])
+    );
+    const clientAssetKey = `input:${hex(
+      new Uint8Array(await crypto.subtle.digest("SHA-256", clientKeyBytes))
+    )}`;
     const auth = await privateDownloadHeaders();
     const prep = await fetch("/api/assets/upload-url", {
       method: "POST",
@@ -24,39 +31,61 @@ export async function registerPrivateToyAsset(
         mimeType: blob.type,
         sizeBytes: blob.size,
         sha256,
-        skuLabel: skuLabel?.trim() || undefined,
+        clientAssetKey,
+        skuLabel: normalizedSkuLabel || undefined,
       }),
     });
     const prepared = (await prep.json().catch(() => ({}))) as {
       ok?: boolean;
       assetId?: string;
-      uploadUrl?: string;
+      inputAssetId?: string;
+      uploadUrl?: string | null;
+      state?: "pending" | "ready";
+      idempotent?: boolean;
     };
-    if (!prep.ok || !prepared.ok || !prepared.assetId || !prepared.uploadUrl) return null;
-    const uploaded = await fetch(prepared.uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": blob.type },
-      body: blob,
-    });
-    if (!uploaded.ok) return null;
+    const assetId = prepared.inputAssetId || prepared.assetId;
+    if (
+      !prep.ok ||
+      !prepared.ok ||
+      !assetId ||
+      (prepared.state !== "pending" && prepared.state !== "ready")
+    ) return null;
+    if (prepared.state === "pending") {
+      if (!prepared.uploadUrl) return null;
+      const uploadBody = new FormData();
+      uploadBody.append("cacheControl", "3600");
+      uploadBody.append("", blob);
+      try {
+        await fetch(prepared.uploadUrl, {
+          method: "PUT",
+          headers: { "x-upsert": "false" },
+          body: uploadBody,
+        });
+      } catch {
+        // A lost upload response is ambiguous: Storage may already have
+        // committed the object. The owner-scoped completion endpoint is the
+        // byte/hash/MIME authority and safely distinguishes that from absence.
+      }
+    }
     const complete = await fetch("/api/assets/complete", {
       method: "POST",
       headers: { ...auth, "Content-Type": "application/json" },
-      body: JSON.stringify({ assetId: prepared.assetId }),
+      body: JSON.stringify({ assetId }),
     });
     const completed = (await complete.json().catch(() => ({}))) as {
       ok?: boolean;
+      inputAssetId?: string;
       asset?: { id?: string; state?: string };
     };
     if (
       !complete.ok ||
       !completed.ok ||
-      completed.asset?.id !== prepared.assetId ||
+      (completed.inputAssetId || completed.asset?.id) !== assetId ||
       completed.asset?.state !== "ready"
     ) {
       return null;
     }
-    return { assetId: prepared.assetId };
+    return { assetId };
   } catch {
     return null;
   }

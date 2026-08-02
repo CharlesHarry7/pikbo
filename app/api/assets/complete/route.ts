@@ -33,6 +33,8 @@ export async function POST(req: Request) {
   }
   return NextResponse.json({
     ok: true,
+    inputAssetId: completed.asset.id,
+    idempotent: completed.idempotent,
     asset: {
       id: completed.asset.id,
       state: completed.asset.state,
