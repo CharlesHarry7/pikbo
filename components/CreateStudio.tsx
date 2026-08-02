@@ -173,6 +173,7 @@ export function CreateStudio({
   initialSku,
   initialRetryJobId,
   initialRetryToken,
+  fixedMomentContract = false,
 }: {
   initialEffect?: string;
   initialModel?: string;
@@ -193,6 +194,8 @@ export function CreateStudio({
   /** Exact process-ledger retry child + one-time token. */
   initialRetryJobId?: string;
   initialRetryToken?: string;
+  /** Hide catalog choices for a real, fixed Moment contract. */
+  fixedMomentContract?: boolean;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -226,6 +229,7 @@ export function CreateStudio({
   const mode: Mode = "i2v";
   void initialMode;
   const [modelId, setModelId] = useState<(typeof MODELS)[number]["id"]>(() => {
+    if (fixedMomentContract) return "seedance-fast";
     if (initialModel === "seedance-mini") return "seedance-mini";
     if (initialModel === "seedance-fast") return "seedance-fast";
     if (initialModel === "seedance-2") return "seedance-2";
@@ -2454,8 +2458,13 @@ export function CreateStudio({
                   <p className="text-[10px] font-semibold text-[var(--fg-dim)]">
                     Model
                   </p>
-                  <div className="mt-1.5 flex flex-wrap gap-2">
-                    {MODELS.map((m) => {
+                  {fixedMomentContract ? (
+                    <div className="mt-1.5 rounded-xl border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-2 text-xs font-semibold text-[var(--mint)]">
+                      Seedance Fast · fixed private validation contract
+                    </div>
+                  ) : (
+                    <div className="mt-1.5 flex flex-wrap gap-2">
+                      {MODELS.map((m) => {
                       const lockedForValidation =
                         liveEntitled && m.id !== effectiveModel;
                       const lockedPaid = Boolean(
@@ -2501,10 +2510,13 @@ export function CreateStudio({
                                   : ""}
                         </button>
                       );
-                    })}
-                  </div>
+                      })}
+                    </div>
+                  )}
                   <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
-                    {liveEntitled
+                    {fixedMomentContract
+                      ? "One owned toy photo · FAL Seedance Fast · 9:16 · 5s · 720p."
+                      : liveEntitled
                       ? "Private validation enforces one measured Fast 720p contract."
                       : "Cached Free uses Mini 480p. No fake multi-model shelf."}
                   </p>
