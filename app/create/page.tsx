@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { CreateStudio } from "@/components/CreateStudio";
 import { CreateSeoFooter } from "@/components/CreateSeoFooter";
 import { BatchStudio } from "@/components/BatchStudio";
+import { PublicLaunchPackSample } from "@/components/PublicLaunchPackSample";
 import { JsonLd } from "@/components/JsonLd";
 import { getPreset } from "@/lib/presets";
 import { site } from "@/lib/site";
@@ -12,7 +13,7 @@ import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ effect?: string; mode?: string }>;
+  searchParams: Promise<{ effect?: string; mode?: string; preview?: string }>;
 }): Promise<Metadata> {
   const sp = await searchParams;
   // Cold-start: /create is the product tool but not a rank landing (home tool is).
@@ -75,6 +76,8 @@ export default async function CreatePage({
     retryToken?: string;
     /** Owner-scoped durable Pack selected from Library. */
     recover?: string;
+    /** Truthful instant public sample browser; never enters the private workbench. */
+    preview?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -89,6 +92,10 @@ export default async function CreatePage({
 
   // Wave A: Seller Pack is a Create mode, not a separate suite door.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
+    if (sp.preview === "1" || sp.preview === "true") {
+      return <PublicLaunchPackSample surface="create" />;
+    }
+
     return (
       <div className="min-h-screen bg-[#EEF0F4] pb-28 text-[#111827] lg:pb-12">
         <div className="border-b border-[#C9CED8] bg-[#EEF0F4] px-4 py-5 sm:px-8 sm:py-8">

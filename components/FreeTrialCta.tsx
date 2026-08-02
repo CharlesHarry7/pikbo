@@ -97,7 +97,7 @@ export function FreeTrialCta({
         : demo || !freeLiveOpen
           ? FREE_TRIAL_TRY_HREF
           : onHome
-            ? "/#home-create"
+            ? "/create?mode=seller-pack"
             : FREE_TRIAL_TRY_HREF;
   const label =
     trialDone && !demo && freeLiveOpen

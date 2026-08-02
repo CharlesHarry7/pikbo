@@ -7,7 +7,7 @@ const read = (file) => readFileSync(join(root, file), "utf8");
 
 const home = read("app/page.tsx");
 const homeHero = read("components/HomeCinemaHero.tsx");
-const heroUpload = read("components/HeroUpload.tsx");
+const publicSample = read("components/PublicLaunchPackSample.tsx");
 const homeWall = read("components/HomeViralWall.tsx");
 const create = read("app/create/page.tsx");
 const createStudio = read("components/CreateStudio.tsx");
@@ -16,6 +16,9 @@ const steps = read("components/SellerPackSteps.tsx");
 const contract = read("lib/sellerPackContract.ts");
 const packExport = read("lib/sellerPackExport.ts");
 const shell = read("components/AppShell.tsx");
+const softLaunchStrip = read("components/SoftLaunchStrip.tsx");
+const hfExploreHome = read("components/HfExploreHome.tsx");
+const freeTrialCta = read("components/FreeTrialCta.tsx");
 const pricingCheckout = read("components/PricingCheckoutButton.tsx");
 const pricing = read("app/pricing/page.tsx");
 const pricingCards = read("components/PricingPlanCards.tsx");
@@ -23,34 +26,35 @@ const paywall = read("components/PaywallCard.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
 
-// Homepage V3 separates public Lab preview from invited private upload.
-assert.match(homeHero, /data-home-upgrade="launch-pack"/);
-assert.match(homeHero, /id="pack-formats"/);
-assert.match(
-  homeHero,
-  /<HeroUpload access=\{launchAccess\} credits=\{credits\} \/>/
-);
-assert.match(homeHero, /id="home-create"/);
-assert.match(homeHero, /fetchMe\(\)/);
-assert.match(homeHero, /canUsePrivateLaunch\(me\)/);
-assert.match(homeHero, /Public format preview · no upload/);
-assert.match(homeHero, /Founding Studio · coming soon/);
-assert.doesNotMatch(homeHero, /\$49 candidate/);
-assert.match(heroUpload, /mode=seller-pack&source=home-launch-pack/);
-assert.match(
-  heroUpload,
-  /mode=seller-pack&source=home-preview&try=1&sample=scout/
-);
-assert.match(heroUpload, /pikbo_pending_still/);
-assert.match(heroUpload, /file\.size > 2_000_000/);
-assert.match(heroUpload, /className="sr-only"/);
-assert.match(heroUpload, /if \(!privateAccess\)/);
-assert.match(heroUpload, /data-home-launch-pack="public-preview"/);
-assert.match(heroUpload, /No photo upload · choose a Pikbo Lab sample/);
-assert.match(
-  heroUpload,
-  /Public preview · 0 credits · your image is not processed/
-);
+// Homepage presents the value immediately and routes public visitors into an
+// instant, truthful sample browser. Private upload remains in BatchStudio.
+assert.match(homeHero, /PublicLaunchPackSample surface="home"/);
+assert.match(publicSample, /data-home-upgrade=\{isHome \? "launch-pack"/);
+assert.match(publicSample, /id=\{isHome \? "home-create"/);
+assert.match(publicSample, /Three video formats for your next toy launch\./);
+assert.doesNotMatch(publicSample, /One toy photo\. Three launch-ready videos\./);
+assert.match(publicSample, /Try a sample Pack/);
+assert.match(publicSample, /preview=1&source=home-result-browser/);
+assert.match(publicSample, /No product upload in this public\s+preview/);
+assert.match(publicSample, /Three separate archived format prototypes/);
+for (const [actual, target] of [
+  ["Archived sample · 16:9 · 6 sec", "Target output · 1:1 · 5 sec"],
+  ["Archived sample · 16:9 · 6 sec", "Target output · 9:16 · 5 sec"],
+  ["Archived sample · 9:16 · 6 sec", "Target output · 9:16 · 5 sec"],
+]) {
+  assert.match(publicSample, new RegExp(actual));
+  assert.match(publicSample, new RegExp(target));
+}
+for (const media of [
+  "/demos/scout-packshot-spin.mp4",
+  "/demos/moon-box-reveal.mp4",
+  "/demos/beatbot-viral-hook.mp4",
+]) {
+  assert.match(publicSample, new RegExp(media.replaceAll("/", "\\/")));
+}
+assert.match(create, /sp\.preview === "1"/);
+assert.match(create, /<PublicLaunchPackSample surface="create" \/>/);
+assert.doesNotMatch(publicSample, /HeroUpload|fetchMe|canUsePrivateLaunch|credits/);
 assert.match(meClient, /export function canUsePrivateLaunch/);
 assert.match(meClient, /me\.canLiveGenerate === true/);
 assert.match(batch, /const privateInputEnabled = canPreparePrivateInput\(me\)/);
@@ -87,6 +91,15 @@ assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
 assert.match(shell, /create\?mode=seller-pack/);
+assert.match(shell, /aria-label="Mobile product menu"/);
+assert.match(shell, /PRIMARY_NAV\.filter\(\(item\) => item\.href !== "\/"\)/);
+assert.match(softLaunchStrip, /: "\/create\?mode=seller-pack";/);
+assert.match(hfExploreHome, /href="\/create\?mode=seller-pack"/);
+assert.match(freeTrialCta, /onHome\s*\? "\/create\?mode=seller-pack"/);
+assert.doesNotMatch(
+  [softLaunchStrip, hfExploreHome, freeTrialCta].join("\n"),
+  /href=.{0,40}#home-create|\? "\/#home-create"/
+);
 assert.match(
   pricingCheckout,
   /href="\/create\?mode=seller-pack&source=pricing-founding"/

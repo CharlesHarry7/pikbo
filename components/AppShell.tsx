@@ -42,7 +42,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const create = path.startsWith("/create");
   const sellerPackCreate =
     create && ["seller-pack", "seller"].includes(searchParams.get("mode") || "");
+  const publicSampleCreate =
+    sellerPackCreate &&
+    ["1", "true"].includes(searchParams.get("preview") || "");
   const lightShell = home || sellerPackCreate;
+  const resultShell = home || publicSampleCreate;
   const hideFooter =
     home ||
     create ||
@@ -58,17 +62,21 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     <div
       className={cn(
         "flex min-h-screen min-w-0 flex-col",
-        lightShell
-          ? "bg-[#EEF0F4] text-[#15171B]"
-          : "bg-[#0A0A0A] text-[#F7F4ED]"
+        resultShell
+          ? "bg-[#F2EDE3] text-[#171717]"
+          : lightShell
+            ? "bg-[#EEF0F4] text-[#15171B]"
+            : "bg-[#0A0A0A] text-[#F7F4ED]"
       )}
     >
       <header
         className={cn(
-          "sticky top-0 z-50 hidden h-16 items-center border-b px-7 backdrop-blur-xl lg:flex",
-          lightShell
-            ? "border-[#D4D8E0] bg-[#F7F8FA]/92"
-            : "border-white/10 bg-[#0A0A0A]/92"
+          "sticky top-0 z-50 hidden h-14 items-center border-b px-7 backdrop-blur-xl lg:flex",
+          resultShell
+            ? "border-black/10 bg-[#F2EDE3]/92"
+            : lightShell
+              ? "border-[#D4D8E0] bg-[#F7F8FA]/92"
+              : "border-white/10 bg-[#0A0A0A]/92"
         )}
       >
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
@@ -82,7 +90,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           aria-label="Primary navigation"
           data-primary-create-href="/create?mode=seller-pack"
         >
-          {PRIMARY_NAV.map((item) => {
+          {PRIMARY_NAV.filter(
+            (item) => !resultShell || item.href !== "/"
+          ).map((item) => {
             const on = active(path, item.href);
             return (
               <Link
@@ -91,10 +101,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 aria-current={on ? "page" : undefined}
                 className={cn(
                   "relative py-5 text-[13px] font-bold transition-colors",
-                  lightShell
+                  resultShell
                     ? on
                       ? "text-[#15171B]"
-                      : "text-[#6D7480] hover:text-[#15171B]"
+                      : "text-[#716C64] hover:text-[#15171B]"
+                    : lightShell
+                      ? on
+                        ? "text-[#15171B]"
+                        : "text-[#6D7480] hover:text-[#15171B]"
                     : on
                       ? "text-[#F7F4ED]"
                       : "text-[#F7F4ED]/46 hover:text-[#F7F4ED]"
@@ -105,7 +119,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                   <span
                     className={cn(
                       "absolute inset-x-0 bottom-0 h-0.5",
-                      lightShell ? "bg-[#2457E6]" : "bg-[#CBFF3D]"
+                      resultShell
+                        ? "bg-[#FF6846]"
+                        : lightShell
+                          ? "bg-[#2457E6]"
+                          : "bg-[#CBFF3D]"
                     )}
                   />
                 ) : null}
@@ -114,17 +132,34 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="flex shrink-0 items-center gap-3">
-          <LanguageSwitcher tone={lightShell ? "light" : "dark"} />
-          <CreditsBadge tone={lightShell ? "light" : "dark"} />
+          {resultShell ? (
+            <Link
+              href={
+                publicSampleCreate
+                  ? "/contact?source=sample-header"
+                  : "/create?mode=seller-pack&preview=1&source=header"
+              }
+              className="inline-flex min-h-10 items-center rounded-full bg-[#171717] px-5 text-xs font-black text-white transition hover:bg-[#FF6846]"
+            >
+              {publicSampleCreate ? "Request beta" : "Try sample"}
+            </Link>
+          ) : (
+            <>
+              <LanguageSwitcher tone={lightShell ? "light" : "dark"} />
+              <CreditsBadge tone={lightShell ? "light" : "dark"} />
+            </>
+          )}
         </div>
       </header>
 
       <header
         className={cn(
           "sticky top-0 z-50 flex h-12 items-center justify-between border-b px-3 backdrop-blur-xl lg:hidden",
-          lightShell
-            ? "border-[#D4D8E0] bg-[#F7F8FA]/94"
-            : "border-white/10 bg-[#0A0A0A]/92"
+          resultShell
+            ? "border-black/10 bg-[#F2EDE3]/94"
+            : lightShell
+              ? "border-[#D4D8E0] bg-[#F7F8FA]/94"
+              : "border-white/10 bg-[#0A0A0A]/92"
         )}
       >
         <Link href="/" aria-label="Pikbo home">
@@ -134,9 +169,47 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           />
         </Link>
         <div className="flex items-center gap-2">
-          <LanguageSwitcher compact tone={lightShell ? "light" : "dark"} />
-          <CreditsBadge compact tone={lightShell ? "light" : "dark"} />
-          {create ? (
+          {resultShell ? (
+            <>
+              <Link
+                href={
+                  publicSampleCreate
+                    ? "/contact?source=sample-mobile-header"
+                    : "/create?mode=seller-pack&preview=1&source=mobile-header"
+                }
+                className="inline-flex min-h-9 items-center rounded-full bg-[#171717] px-4 text-[10px] font-black text-white"
+              >
+                {publicSampleCreate ? "Request beta" : "Try sample"}
+              </Link>
+              <details className="group relative">
+                <summary className="grid min-h-9 cursor-pointer list-none place-items-center rounded-full border border-black/15 bg-white/55 px-3 text-[10px] font-black text-[#171717] [&::-webkit-details-marker]:hidden">
+                  Menu
+                </summary>
+                <nav
+                  aria-label="Mobile product menu"
+                  className="absolute right-0 top-11 z-[70] w-44 overflow-hidden rounded-2xl border border-black/10 bg-[#FAF7F0] p-1.5 text-[#171717] shadow-[0_22px_60px_-24px_rgba(0,0,0,0.55)]"
+                >
+                  {PRIMARY_NAV.filter((item) => item.href !== "/").map(
+                    (item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="block rounded-xl px-3 py-2.5 text-xs font-black hover:bg-black/[0.06]"
+                      >
+                        {item.label}
+                      </Link>
+                    )
+                  )}
+                </nav>
+              </details>
+            </>
+          ) : (
+            <>
+              <LanguageSwitcher compact tone={lightShell ? "light" : "dark"} />
+              <CreditsBadge compact tone={lightShell ? "light" : "dark"} />
+            </>
+          )}
+          {create && !resultShell ? (
             <span
               className={cn(
                 "text-[10px] font-black uppercase tracking-[0.16em]",
@@ -153,7 +226,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <main
           className={cn(
             "min-w-0 flex-1",
-            lightShell ? "bg-[#EEF0F4]" : "bg-[#0A0A0A]"
+            resultShell
+              ? "bg-[#F2EDE3]"
+              : lightShell
+                ? "bg-[#EEF0F4]"
+                : "bg-[#0A0A0A]"
           )}
         >
           {children}
@@ -161,7 +238,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         {!hideFooter ? <Footer /> : null}
       </div>
 
-      {!sellerPackCreate ? <nav
+      {!resultShell && !sellerPackCreate ? <nav
         className={cn(
           "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
           home

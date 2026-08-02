@@ -63,7 +63,7 @@ export function SoftLaunchStrip() {
     ? "/pricing"
     : demo
       ? SOFT_LAUNCH_LAB_SAMPLE_HREF
-      : "/#home-create";
+      : "/create?mode=seller-pack";
   const primaryLabel = trialDone
     ? "Compare plans"
     : demo

@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const showcase = buildHomeShowcaseFeed();
-  const lcpPoster = "/style-studies/art-vinyl-guardian-v1.jpg";
+  const lcpPoster = "/demos/scout-still.webp";
 
   return (
     <>

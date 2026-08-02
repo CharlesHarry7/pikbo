@@ -98,7 +98,7 @@ export default async function LoginPage({
             Modules
           </Link>
           <Link href="/#home-create" className="text-[var(--fg-muted)] hover:text-white">
-            Home tool
+            Home samples
           </Link>
           <FreeTrialCta
             path="/login"

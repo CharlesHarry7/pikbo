@@ -787,7 +787,7 @@ assert.match(genRoute, /creditsRefunded:\s*released/);
 assert.match(gen, /creditsRefunded/);
 assert.match(gen, /10 credits restored/);
 const appShell = fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8");
-assert.match(appShell, /PRIMARY_NAV\.map/);
+assert.match(appShell, /PRIMARY_NAV\.filter\([\s\S]*?\.map/);
 assert.doesNotMatch(appShell, /const MORE|MoreMenu|CommandPalette/);
 assert.match(appShell, /CreditsBadge|LanguageSwitcher/);
 assert.match(
@@ -2406,16 +2406,16 @@ assert.match(guidesSrc24, /seller-pack-workflow-listing-reveal-hook/);
 assert.match(guidesSrc24, /toy-unboxing-video-from-one-photo/);
 
 assert.match(
-  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /data-home-format-preview=\{format\.slug\}[\s\S]*View archived motion test — different toy/
+  fs.readFileSync(join(root, "components/PublicLaunchPackSample.tsx"), "utf8"),
+  /data-home-format-preview=\{format\.id\}[\s\S]*Three separate archived format prototypes/
 );
 assert.match(
   [
     fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
     fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-    fs.readFileSync(join(root, "components/HeroUpload.tsx"), "utf8"),
+    fs.readFileSync(join(root, "components/PublicLaunchPackSample.tsx"), "utf8"),
   ].join("\n"),
-  /data-home-upgrade=["']launch-pack["'][\s\S]*\/create\?mode=seller-pack/
+  /data-home-upgrade=\{isHome \? "launch-pack"[\s\S]*\/create\?mode=seller-pack/
 );
 
 assert.match(
@@ -3911,31 +3911,32 @@ assert.match(deliveryPackSrc, /Sales fidelity|includeQc/);
 assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 
 
-// Homepage V2: fixed Launch Pack → product path → eight distinct Recipe proofs.
+// Homepage V2: fixed Launch Pack → instant truthful sample browser.
 const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero|HomeViralWall|home-create/);
 const homeHeroSrc = fs.readFileSync(
   join(root, "components/HomeCinemaHero.tsx"),
   "utf8"
 );
-assert.match(
-  homeHeroSrc,
-  /Explore launch looks for designer toys\./
+const publicSampleSrc = fs.readFileSync(
+  join(root, "components/PublicLaunchPackSample.tsx"),
+  "utf8"
 );
-assert.match(homeHeroSrc, /Listing Spin/);
-assert.match(homeHeroSrc, /Blind-box Reveal/);
-assert.match(homeHeroSrc, /Social Flash/);
-assert.match(
-  homeHeroSrc,
-  /data-home-hero|href=["']\/create\?mode=seller-pack["']/
-);
-assert.match(homeHeroSrc, /HeroUpload,[\s\S]*HomeLaunchAccess/);
-assert.match(
-  homeHeroSrc,
-  /<HeroUpload access=\{launchAccess\} credits=\{credits\} \/>/
-);
-assert.match(homeHeroSrc, /canUsePrivateLaunch|Public format preview · no upload/);
-assert.match(homeHeroSrc, /id=["']home-create["']/);
+assert.match(homeHeroSrc, /PublicLaunchPackSample surface="home"/);
+assert.match(publicSampleSrc, /Three video formats for your next toy launch\./);
+assert.doesNotMatch(publicSampleSrc, /One toy photo\. Three launch-ready videos\./);
+assert.match(publicSampleSrc, /Listing Spin/);
+assert.match(publicSampleSrc, /Blind-box Reveal/);
+assert.match(publicSampleSrc, /Social Flash/);
+assert.match(publicSampleSrc, /data-home-hero|preview=1&source=home-result-browser/);
+assert.match(publicSampleSrc, /id=\{isHome \? "home-create"/);
+assert.match(publicSampleSrc, /No product upload in this public\s+preview/);
+assert.match(publicSampleSrc, /Three separate archived format prototypes/);
+assert.match(publicSampleSrc, /Archived sample · 16:9 · 6 sec/);
+assert.match(publicSampleSrc, /Archived sample · 9:16 · 6 sec/);
+assert.match(publicSampleSrc, /Target output · 1:1 · 5 sec/);
+assert.match(publicSampleSrc, /Target output · 9:16 · 5 sec/);
+assert.doesNotMatch(publicSampleSrc, /HeroUpload|fetchMe|canUsePrivateLaunch|credits/);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeViralWall.tsx"),
   "utf8"
@@ -3947,9 +3948,12 @@ assert.match(
 assert.match(homeWallSrc, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWallSrc, /href=\{item\.href\}/);
 assert.match(homeWallSrc, /project_open|recipe_use/);
-assert.match(homePageSrc, /HomeCinemaHero items=|data-home-upgrade="launch-pack"/);
+assert.match(
+  [homePageSrc, publicSampleSrc].join("\n"),
+  /HomeCinemaHero items=|data-home-upgrade=\{isHome/
+);
 assert.doesNotMatch(
-  [homePageSrc, homeHeroSrc, homeWallSrc, appShell].join("\n"),
+  [homePageSrc, homeHeroSrc, publicSampleSrc, homeWallSrc, appShell].join("\n"),
   /Supabase|cached ledger|state machine|internal status|credits ledger/i
 );
 assert.match(

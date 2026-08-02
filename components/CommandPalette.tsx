@@ -19,7 +19,7 @@ const CMD_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
  */
 const LINKS = [
   { href: "/", label: "Home · Explore" },
-  { href: "/#home-create", label: "Home · Launch Pack upload" },
+  { href: "/#home-create", label: "Home · Sample result browser" },
   { href: CMD_GENERATE_HREF, label: "Generate · Toy Studio" },
   { href: "/effects", label: "Effects · toy presets" },
   { href: "/pricing", label: "Pricing · Founding Studio" },
