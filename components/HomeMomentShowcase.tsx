@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { MomentRail } from "@/components/MomentRail";
 import { MomentStage } from "@/components/MomentStage";
 import {
@@ -39,6 +40,25 @@ export function HomeMomentShowcase() {
               Upload · pick · preview · private creation is invitation-only
             </p>
           </div>
+        </div>
+
+        <div className="mb-6 flex flex-col gap-3 border-y border-[#171719]/20 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#F04E30]">
+              First real Moment contract
+            </p>
+            <p className="mt-1 text-sm font-semibold text-[#45433F]">
+              Street Power-Up · one owned photo → one private 9:16 · 5s · 720p clip
+            </p>
+          </div>
+          <Link
+            href="/create?mode=moment&effect=street-power-up"
+            className="inline-flex min-h-12 items-center justify-between gap-8 rounded-full bg-[#171719] px-5 text-xs font-black uppercase tracking-[0.12em] text-[#F5F1E8] transition-transform hover:-translate-y-0.5"
+            data-real-moment-cta
+          >
+            Try the real Moment
+            <span aria-hidden className="text-lg">↗</span>
+          </Link>
         </div>
 
         <MomentStage moment={active} />

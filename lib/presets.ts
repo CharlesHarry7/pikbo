@@ -823,6 +823,45 @@ export const PRESETS: Preset[] = [
     aspectRatio: "9:16",
   },
   {
+    slug: "street-power-up",
+    emoji: "⚡",
+    name: "Street Power-Up",
+    gradient: "linear-gradient(135deg,#111827,#22d3ee)",
+    category: "scene",
+    audience: "seller",
+    tagline: "A 5-second vertical launch moment for drop day.",
+    h1: "Street Power-Up Toy Launch Video From One Photo",
+    seoTitle: "Street Power-Up Toy Launch Video | Pikbo",
+    seoDescription:
+      "Turn one owned toy photo into a 5-second vertical launch moment with a slow camera push, city light, and a restrained energy reveal.",
+    intro:
+      "Street Power-Up is Pikbo's first real Moment contract: one owned toy photo becomes one private 9:16, 5-second launch clip for a drop-day post.",
+    body: [
+      "The preset keeps the toy's original shape, colors, and proportions while adding a single continuous camera move, rain-slick city light, and a restrained energy activation.",
+      "Generated details can vary. Review the clip against the physical toy before publishing, especially face, paint, logos, and small accessories.",
+    ],
+    keywords: [
+      "toy launch video",
+      "toy video from photo",
+      "streetwear toy promo video",
+      "vertical collectible video",
+    ],
+    faq: [
+      {
+        q: "What does Street Power-Up generate?",
+        a: "One 5-second, 9:16, 720p clip from a clear photo of a toy you own. It is a single continuous shot, not a multi-scene edit.",
+      },
+      {
+        q: "Will it preserve my toy?",
+        a: "The prompt explicitly preserves the toy's design, colors, shape, and proportions, but generated details still need a seller review before publishing.",
+      },
+    ],
+    promptTemplate:
+      "Create a premium collectible toy launch moment. Keep the original toy design, colors, shape and proportions unchanged. The toy stands on a rainy city street at night. Subtle energy lights activate around the character. Small particles appear, the camera slowly pushes in, and the toy ends in a confident hero pose. Single continuous cinematic shot. Product launch video style.",
+    duration: 5,
+    aspectRatio: "9:16",
+  },
+  {
     slug: "hologram-glitch",
     emoji: "🔮",
     name: "Hologram Glitch",
