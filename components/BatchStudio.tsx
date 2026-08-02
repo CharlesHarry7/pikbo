@@ -22,14 +22,16 @@ import {
   GenerateWaitStage,
 } from "@/components/GenerateWaitStage";
 import {
-  getActiveSellerPackClient,
   getSellerPackStatusClient,
+  getSellerPackDiscoveryClient,
   historyFieldsFromSuccess,
   mintGenerateIdempotencyKey,
   postGenerateWithRetry,
   reserveSellerPackClient,
   retrySellerPackChildClient,
   sleep,
+  type SellerPackDiscoveryItem,
+  type SellerPackClientJob,
 } from "@/lib/generateClient";
 import {
   registerLocalAsset,
@@ -68,7 +70,6 @@ import {
 } from "@/lib/sellerPackQuote";
 import {
   canDownloadResult,
-  classifyDownloadHead,
   freeLiveDownloadBlockReason,
   isPlayableResultVideoUrl,
   isSafeDeliverableUrl,
@@ -76,9 +77,9 @@ import {
 } from "@/lib/createTrust";
 import { DirectorPlanPanel } from "@/components/DirectorPlanPanel";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
-import { SellerPackSteps } from "@/components/SellerPackSteps";
 import { buildSellerPackDirectorPlan } from "@/lib/directorPlan";
 import {
+  parseSellerPackRecovery,
   reconcileSellerPackRecovery,
   SELLER_PACK_RECOVERY_KEY,
   type SellerPackChildStatus,
@@ -126,13 +127,6 @@ type Job = {
   retryCount: number;
 };
 
-type PrivatePackStartIntent = {
-  /** Browser-local equality fence only; never used as durable Pack identity. */
-  image: string;
-  clientPackKey: string;
-  inputAssetId: string | null;
-};
-
 function selectedMatchesSellerPack(slugs: string[]): boolean {
   return isExactSellerPackSelection(slugs);
 }
@@ -177,47 +171,36 @@ function saveSellerPackRecovery(
   }
 }
 
-function recoveryRunFromServerJobs(
-  packRunId: string,
-  jobs: NonNullable<ReturnType<typeof parseExactSellerPackServerJobs>>
-): SellerPackRecoveryRun {
-  return {
-    version: 2,
-    projectId: `account-pack:${packRunId}`,
-    packRunId,
-    savedAt: new Date().toISOString(),
-    children: jobs.map((job, index) => {
-      const fixed = SELLER_PACK_ITEMS[index];
-      return {
-        packJobId: job.jobId,
-        childKey: fixed.key,
-        slug: fixed.slug,
-        name: fixed.label,
-        aspectRatio: fixed.aspectRatio,
-        statusHint: job.status,
-        retryCount: 0,
-      };
-    }),
-  };
-}
-
-function recoverSellerPackFromServer(
-  packRunId: string,
-  jobs: NonNullable<ReturnType<typeof parseExactSellerPackServerJobs>>
-) {
-  const run = recoveryRunFromServerJobs(packRunId, jobs);
-  const recovered = reconcileSellerPackRecovery(run, jobs);
-  return {
-    run,
-    jobs: recovered.children.map(toRecoveredJob),
-    unavailable: recovered.unavailable,
-  };
-}
-
 function toRecoveredJob(child: ReturnType<typeof reconcileSellerPackRecovery>["children"][number]): Job {
   const { statusHint: _hint, ...job } = child;
   void _hint;
   return job;
+}
+
+function recoveryRunFromServerJobs(
+  packRunId: string,
+  jobs: SellerPackClientJob[],
+  savedAt: string
+): SellerPackRecoveryRun {
+  return {
+    version: 2,
+    projectId: `recovered-${packRunId}`,
+    packRunId,
+    savedAt,
+    children: jobs.map((job, index) => ({
+      packJobId: job.jobId,
+      childKey: job.childKey,
+      slug: job.effectSlug,
+      name: SELLER_PACK_ITEMS[index].label,
+      aspectRatio: job.aspectRatio,
+      statusHint: job.status,
+      retryCount: 0,
+    })),
+  };
+}
+
+function recoveryRunFromDiscovery(pack: SellerPackDiscoveryItem): SellerPackRecoveryRun {
+  return recoveryRunFromServerJobs(pack.packRunId, pack.jobs, pack.createdAt);
 }
 
 /**
@@ -231,6 +214,35 @@ function retryEligible(job: Job): boolean {
   return isSellerPackRetryableStatus(job.status);
 }
 
+function launchWorkspaceStatus(status: Job["status"]): string {
+  if (status === "succeeded") return "Ready";
+  if (
+    status === "failed" ||
+    status === "refunded" ||
+    status === "not_started"
+  ) {
+    return "Needs retry";
+  }
+  if (status === "recovery_unavailable") return "Checking status";
+  if (status === "running") return "Creating";
+  return "Preparing";
+}
+
+const SELLER_PACK_DIRECTION_FRAMES = [
+  {
+    evidence: "Original direction frame",
+    use: "Product page motion",
+  },
+  {
+    evidence: "Format direction",
+    use: "Drop-day reveal",
+  },
+  {
+    evidence: "Format direction",
+    use: "Short-form launch",
+  },
+] as const;
+
 /**
  * Shop-style batch: one toy photo → several presets in sequence.
  * Supports ?effects=slug1,slug2 and ?pack=seller (Seller Pack MVP).
@@ -240,6 +252,7 @@ export function BatchStudio({
   pack,
   initialSku,
   initialSample,
+  initialRecoverPackRunId,
 }: {
   initialEffects?: string[];
   /** Named pack from SELLER_PACK PRD — freezes the three seller outputs. */
@@ -251,6 +264,8 @@ export function BatchStudio({
    * Loads photo only — does not auto-run the 3-child pack (cost honesty).
    */
   initialSample?: string;
+  /** Explicit owner-scoped Pack selected in Library; takes recovery priority. */
+  initialRecoverPackRunId?: string;
 }) {
   const isSellerPack = pack === "seller";
 
@@ -277,6 +292,7 @@ export function BatchStudio({
   const [image, setImage] = useState<string | null>(null);
   const [imageProbe, setImageProbe] = useState<ImageProbe | null>(null);
   const [labStill, setLabStill] = useState(false);
+  const [activeSampleId, setActiveSampleId] = useState<string | null>(null);
   const [briefCollapsed, setBriefCollapsed] = useState(true);
   const [toyIdentity, setToyIdentity] = useState<ToyIdentity>({
     sku: (initialSku || "").trim().slice(0, 64),
@@ -299,9 +315,6 @@ export function BatchStudio({
   const [ownsRights, setOwnsRights] = useState(false);
   const [runProjectId, setRunProjectId] = useState<string | null>(null);
   const [activePackRunId, setActivePackRunId] = useState<string | null>(null);
-  const [verifiedPackRunId, setVerifiedPackRunId] = useState<string | null>(
-    null
-  );
   const [sellerPackRecoveryHydrated, setSellerPackRecoveryHydrated] =
     useState(!isSellerPack);
   const [sellerPackRecoveryNote, setSellerPackRecoveryNote] = useState<
@@ -311,55 +324,11 @@ export function BatchStudio({
   const [packElapsed, setPackElapsed] = useState(0);
   /** Abort in-flight pack child + rate-limit waits (parity with Create Cancel). */
   const packAbortRef = useRef<AbortController | null>(null);
-  const privatePackStartIntentRef = useRef<PrivatePackStartIntent | null>(
-    null
-  );
   const quoteEventRef = useRef("");
   const privateUploadEnabled = canUsePrivateLaunch(me);
-  const accountRecoveryEnabled =
-    me?.signedIn === true && me.durableCreditsActive === true;
-  const hasBoundPrivatePack = Boolean(
-    activePackRunId &&
-      verifiedPackRunId === activePackRunId &&
-      jobs.some((job) => Boolean(job.packJobId))
-  );
-  // New spend intent is derived only from the current gate + current still.
-  // A prior Pack may affect how its existing results are displayed, never
-  // whether a new upload/provider request is allowed.
   const demoMode = !privateUploadEnabled || labStill;
-  const displayDemoMode = hasBoundPrivatePack && !image ? false : demoMode;
-  const canRetryBoundPrivatePack =
-    hasBoundPrivatePack && privateUploadEnabled;
-  const packRefreshKey = jobs
-    .filter(
-      (job) =>
-        job.packJobId &&
-        (job.status === "running" ||
-          job.status === "recovery_unavailable" ||
-          job.creditState === "refund unconfirmed")
-    )
-    .map((job) => `${job.packJobId}:${job.status}:${job.creditState || ""}`)
-    .join(",");
 
   const { locale } = useI18n();
-
-  function clearPrivatePackStartIntent() {
-    privatePackStartIntentRef.current = null;
-  }
-
-  function privatePackStartIntentFor(
-    currentImage: string
-  ): PrivatePackStartIntent {
-    const current = privatePackStartIntentRef.current;
-    if (current?.image === currentImage) return current;
-    const next: PrivatePackStartIntent = {
-      image: currentImage,
-      clientPackKey: `ui-pack:${mintGenerateIdempotencyKey()}`,
-      inputAssetId: null,
-    };
-    privatePackStartIntentRef.current = next;
-    return next;
-  }
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -399,9 +368,9 @@ export function BatchStudio({
               // Continue to the explicit Lab sample path, when requested.
             } else if (pending.startsWith("data:image")) {
               if (canceled) return;
-              clearPrivatePackStartIntent();
               setImage(pending);
               setLabStill(false);
+              setActiveSampleId(null);
               setImageProbe(null);
               setBriefCollapsed(true);
               setError(null);
@@ -418,9 +387,9 @@ export function BatchStudio({
               try {
                 const dataUrl = await sampleToDataUrl(pending);
                 if (canceled) return;
-                clearPrivatePackStartIntent();
                 setImage(dataUrl);
                 setLabStill(false);
+                setActiveSampleId(null);
                 setImageProbe(null);
                 setBriefCollapsed(true);
                 setError(null);
@@ -453,9 +422,9 @@ export function BatchStudio({
             SAMPLE_TOYS.find((x) => x.id === id) ?? SAMPLE_TOYS[0];
           const dataUrl = await sampleToDataUrl(s.path);
           if (canceled) return;
-          clearPrivatePackStartIntent();
           setImage(dataUrl);
           setLabStill(true);
+          setActiveSampleId(s.id);
           setImageProbe(null);
           setBriefCollapsed(true);
           // PIKBO Lab reference stills — not a visitor upload or verified provider input.
@@ -480,127 +449,94 @@ export function BatchStudio({
   }, [initialSample, meResolved, privateUploadEnabled]);
 
   /**
-   * Re-open only the newest actionable Pack returned by the owner-scoped DB
-   * endpoint. sessionStorage is an optional hint, never live identity.
+   * Re-open this owner's active pack from durable pack/job ids. The browser
+   * pointer contains no asset URL or credit authority.
    */
   useEffect(() => {
-    if (!isSellerPack || !meResolved) return;
+    if (!isSellerPack) return;
     let canceled = false;
-    void (async () => {
-      // A local pointer can be stale, cross-account, or terminal. It never
-      // selects a Pack; the owner-scoped active endpoint is the sole authority.
-      try {
-        sessionStorage.removeItem(SELLER_PACK_RECOVERY_KEY);
-      } catch {
-        /* optional local pointer */
-      }
-      if (!accountRecoveryEnabled) {
-        setActivePackRunId(null);
-        setVerifiedPackRunId(null);
-        setJobs([]);
-        setSellerPackRecoveryHydrated(true);
-        return;
-      }
-
-      setSellerPackRecoveryNote(
-        "Checking your account for an active private Launch Pack…"
-      );
-      const active = await getActiveSellerPackClient();
-      if (canceled) return;
-      if (!active.ok) {
-        setRunProjectId(null);
-        setActivePackRunId(null);
-        setVerifiedPackRunId(null);
-        setJobs([]);
-        setSellerPackRecoveryNote(
-          active.code === "ACTIVE_PACK_NOT_FOUND" ||
-            active.code === "404"
-            ? null
-            : "Private Pack recovery is temporarily unavailable."
-        );
-        setSellerPackRecoveryHydrated(true);
-        return;
-      }
-
-      const recovered = recoverSellerPackFromServer(
-        active.packRunId,
-        active.jobs
-      );
-      setRunProjectId(recovered.run.projectId);
-      setActivePackRunId(active.packRunId);
-      setVerifiedPackRunId(active.packRunId);
-      setSelected([...SELLER_PACK_SLUGS]);
-      setJobs(recovered.jobs);
-      if (active.input.skuLabel) {
-        setToyIdentity((previous) => ({
-          ...previous,
-          sku: active.input.skuLabel || previous.sku,
-        }));
-      }
-      setSellerPackRecoveryNote(
-        recovered.unavailable > 0
-          ? `${recovered.unavailable} format${recovered.unavailable === 1 ? "" : "s"} is still being checked.`
-          : "Private Launch Pack restored from your account."
-      );
-      setSellerPackRecoveryHydrated(true);
-    })();
-    return () => {
-      canceled = true;
-    };
-  }, [isSellerPack, meResolved, accountRecoveryEnabled]);
-
-  /**
-   * A recovered in-flight child may finish in another request/worker. Refresh
-   * owner-scoped truth until no child is running; reads never call Provider or
-   * mutate credits.
-   */
-  useEffect(() => {
-    if (
-      !isSellerPack ||
-      !accountRecoveryEnabled ||
-      !hasBoundPrivatePack ||
-      !activePackRunId ||
-      running ||
-      !packRefreshKey
-    ) {
-      return;
-    }
-    let canceled = false;
-    let timer: number | null = null;
-    const poll = async () => {
-      const status = await getSellerPackStatusClient(activePackRunId);
-      if (canceled || packAbortRef.current) return;
-      if (status.ok) {
-        const recovered = recoverSellerPackFromServer(
-          activePackRunId,
-          status.jobs
-        );
-        setJobs(recovered.jobs);
+    const start = window.setTimeout(() => {
+      void (async () => {
+        let saved: SellerPackRecoveryRun | null = null;
+        let savedFromSession = false;
+        let explicitStatus: Awaited<ReturnType<typeof getSellerPackStatusClient>> | null = null;
+        if (initialRecoverPackRunId) {
+          explicitStatus = await getSellerPackStatusClient(initialRecoverPackRunId);
+          if (!explicitStatus.ok) throw new Error(explicitStatus.error);
+          saved = recoveryRunFromServerJobs(
+            explicitStatus.packRunId,
+            explicitStatus.jobs,
+            new Date().toISOString()
+          );
+        }
+        try {
+          if (!saved) {
+            const raw = sessionStorage.getItem(SELLER_PACK_RECOVERY_KEY);
+            saved = raw ? parseSellerPackRecovery(JSON.parse(raw)) : null;
+            savedFromSession = Boolean(saved);
+          }
+        } catch {
+          saved = null;
+        }
+        if (!saved) {
+          const discovered = await getSellerPackDiscoveryClient("active");
+          const newest = discovered.ok ? discovered.packs[0] : null;
+          if (!newest) return;
+          saved = recoveryRunFromDiscovery(newest);
+        }
+        if (canceled) return;
+        let status = explicitStatus ?? await getSellerPackStatusClient(saved.packRunId);
+        if (!status.ok && savedFromSession) {
+          // A stale browser pointer must not permanently lock Create. Remove
+          // it, leave local run state empty, and ask the owner-scoped server
+          // once for the current active Pack. Explicit deep links never fall
+          // through to a different Pack.
+          sessionStorage.removeItem(SELLER_PACK_RECOVERY_KEY);
+          setRunProjectId(null);
+          setActivePackRunId(null);
+          const discovered = await getSellerPackDiscoveryClient("active");
+          const newest = discovered.ok ? discovered.packs[0] : null;
+          if (!newest) return;
+          saved = recoveryRunFromDiscovery(newest);
+          status = await getSellerPackStatusClient(saved.packRunId);
+        }
+        if (!status.ok) throw new Error(status.error);
+        if (canceled) return;
+        setRunProjectId(saved.projectId);
+        setActivePackRunId(saved.packRunId);
+        // Server discovery only returns packs whose rights confirmation was
+        // recorded at reserve; this does not trust a new browser assertion.
+        setOwnsRights(true);
+        setSelected([...SELLER_PACK_SLUGS]);
+        setSellerPackRecoveryNote("Checking the private Launch Pack record…");
+        if (status.inputPreviewUrl) setImage(status.inputPreviewUrl);
+        if (status.skuLabel) {
+          setToyIdentity((previous) => ({ ...previous, sku: status.skuLabel || "" }));
+        }
+        const recovered = reconcileSellerPackRecovery(saved, status.jobs);
+        setJobs(recovered.children.map(toRecoveredJob));
         setSellerPackRecoveryNote(
           recovered.unavailable > 0
-            ? "Some Pack state still needs reconciliation."
-            : "Private Launch Pack refreshed from your account."
+            ? `${recovered.unavailable} format${recovered.unavailable === 1 ? "" : "s"} is still being checked.`
+            : "Private Launch Pack restored."
         );
-      }
-      if (!canceled) {
-        // Recursive scheduling is single-flight: a slow response can never
-        // overlap a newer poll and overwrite a terminal state.
-        timer = window.setTimeout(() => void poll(), 5_000);
-      }
-    };
-    timer = window.setTimeout(() => void poll(), 1_500);
+      })()
+        .catch(() => {
+          if (!canceled) {
+            setSellerPackRecoveryNote(
+              "Private pack status is unavailable. No local success or refund claim was restored."
+            );
+          }
+        })
+        .finally(() => {
+          if (!canceled) setSellerPackRecoveryHydrated(true);
+        });
+      });
     return () => {
       canceled = true;
-      if (timer !== null) window.clearTimeout(timer);
+      window.clearTimeout(start);
     };
-  }, [
-    isSellerPack,
-    accountRecoveryEnabled,
-    hasBoundPrivatePack,
-    activePackRunId,
-    running,
-    packRefreshKey,
-  ]);
+  }, [initialRecoverPackRunId, isSellerPack]);
 
   useEffect(() => {
     if (
@@ -608,7 +544,6 @@ export function BatchStudio({
       !sellerPackRecoveryHydrated ||
       !runProjectId ||
       !activePackRunId ||
-      verifiedPackRunId !== activePackRunId ||
       jobs.length === 0
     ) {
       return;
@@ -620,7 +555,6 @@ export function BatchStudio({
     jobs,
     runProjectId,
     sellerPackRecoveryHydrated,
-    verifiedPackRunId,
   ]);
 
   useEffect(() => {
@@ -633,46 +567,33 @@ export function BatchStudio({
     return () => window.clearInterval(id);
   }, [running]);
 
-  function beginPackOperation(): AbortController | null {
-    // React state is not a synchronous lock: two taps in one event turn can
-    // both observe running=false. The ref owns exactly one operation.
-    if (packAbortRef.current) return null;
-    const controller = new AbortController();
-    packAbortRef.current = controller;
-    setRunning(true);
-    return controller;
-  }
-
-  function finishPackOperation(controller: AbortController) {
-    // A stale finally block must never unlock a newer operation.
-    if (packAbortRef.current !== controller) return;
-    packAbortRef.current = null;
-    setRunning(false);
-  }
-
-  async function refreshVerifiedPackFromServer(
-    packRunId: string,
-    successNote = "Private Launch Pack refreshed from your account."
-  ): Promise<Job[] | null> {
-    const status = await getSellerPackStatusClient(packRunId);
-    if (!status.ok) return null;
-    const recovered = recoverSellerPackFromServer(packRunId, status.jobs);
-    setJobs(recovered.jobs);
-    setSellerPackRecoveryNote(
-      recovered.unavailable > 0
-        ? "Some Pack state still needs reconciliation."
-        : successNote
-    );
-    return recovered.jobs;
-  }
-
   function cancelInFlightPack() {
     const ctrl = packAbortRef.current;
     if (!ctrl) return;
     ctrl.abort();
-    // The owning operation releases the mutex in its guarded finally block.
+    packAbortRef.current = null;
+    // Immediate Wave B settlement UI (parity with Create cancel) before the
+    // generate loop unwinds — finished siblings stay; running → unconfirmed.
+    setJobs((previous) =>
+      previous.map((job) =>
+        job.status === "queued" || job.status === "running"
+          ? {
+              ...job,
+              status: job.status === "running" ? "failed" : "queued",
+              error:
+                job.status === "running"
+                  ? "Canceled · refund unconfirmed if live debit started"
+                  : "Reserved but unstarted; the worker will release it at expiry.",
+              creditState:
+                job.status === "running"
+                  ? "refund unconfirmed"
+                  : job.creditState,
+            }
+          : job
+      )
+    );
     setError(
-      "Stopping this browser operation. Finished formats stay available; Pikbo will refresh the server record before another action."
+      "Pack canceled — finished formats stay available. The interrupted format may still complete; check your balance before trying again."
     );
   }
 
@@ -717,38 +638,27 @@ export function BatchStudio({
   }, [catFilter, sellerPackActive]);
 
   function loadFile(file: File | undefined | null) {
-    if (packAbortRef.current) {
-      setError("Stop the current Pack before replacing its photo.");
-      return;
-    }
     if (!privateUploadEnabled) {
       setError(
         "Product-photo upload is available only inside the invited private beta."
       );
       return;
     }
-    if (
-      !file ||
-      !["image/jpeg", "image/png", "image/webp"].includes(
-        file.type.toLowerCase()
-      )
-    ) {
-      setError("Upload a JPEG, PNG, or WebP photo of your toy.");
+    if (!file?.type.startsWith("image/")) {
+      setError("Upload a PNG/JPG of your toy.");
       return;
     }
     if (file.size > 8_000_000) {
       setError("Image too large (max ~8MB).");
       return;
     }
-    // A deliberate file selection starts a new upload intent, even when the
-    // user selects the same bytes again.
-    clearPrivatePackStartIntent();
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
       setImage(dataUrl);
       setImageProbe(null);
       setLabStill(false);
+      setActiveSampleId(null);
       setOwnsRights(false);
       setBriefCollapsed(true);
       setError(null);
@@ -767,18 +677,14 @@ export function BatchStudio({
   }
 
   async function chooseLabSample(sampleId: string) {
-    if (packAbortRef.current) {
-      setError("Stop the current Pack before changing its sample.");
-      return;
-    }
     try {
       const sample =
         SAMPLE_TOYS.find((candidate) => candidate.id === sampleId) ??
         SAMPLE_TOYS[0];
       const dataUrl = await sampleToDataUrl(sample.path);
-      clearPrivatePackStartIntent();
       setImage(dataUrl);
       setLabStill(true);
+      setActiveSampleId(sample.id);
       setOwnsRights(true);
       setImageProbe(null);
       setBriefCollapsed(false);
@@ -849,15 +755,6 @@ export function BatchStudio({
     retryAfterSec?: number;
   }> {
     const jobAspect = job.aspectRatio ?? aspectRatio;
-    const boundPrivateChild = Boolean(packRunId && job.packJobId);
-    const jobDemoMode = boundPrivateChild ? false : demoMode;
-    const jobDuration = boundPrivateChild ? 5 : effectiveDuration;
-    const jobResolution = boundPrivateChild
-      ? SELLER_PACK_LIVE_RESOLUTION
-      : effectiveResolution;
-    const jobModel = boundPrivateChild
-      ? SELLER_PACK_LIVE_MODEL_ID
-      : effectiveModel;
     const dualStill =
       image && image.startsWith("data:image") && image.length < 3_500_000
         ? image
@@ -867,9 +764,7 @@ export function BatchStudio({
     // Unique key per child attempt so abort cancelGenerateLedger hits the right row.
     const childIdempotencyKey =
       retryAttemptKey ?? mintGenerateIdempotencyKey();
-    // A verified server-owned child is always resumed against its private
-    // bound input. The currently selected Lab still controls only a new run.
-    const privateInputPayload = jobDemoMode || boundPrivateChild
+    const privateInputPayload = demoMode
       ? {}
       : sharedAssetId
         ? {
@@ -887,20 +782,19 @@ export function BatchStudio({
         // Dual-send when possible: assetId for smaller POSTs + inline still for
         // multi-instance (Vercel) memory-asset misses.
         ...privateInputPayload,
-        duration: jobDuration,
+        duration: effectiveDuration,
         aspectRatio: jobAspect,
-        model: jobModel,
-        resolution: jobResolution,
-        ownsRights: boundPrivateChild ? true : ownsRights,
-        allowProviderSpend: !jobDemoMode,
+        model: effectiveModel,
+        resolution: effectiveResolution,
+        ownsRights,
+        allowProviderSpend: !demoMode,
         ...(packExtra ? { extra: packExtra } : {}),
       },
       {
         maxRetries: 1,
         // Mid-pack asset TTL / process restart: recover with local still once.
         fallbackImage:
-          !jobDemoMode &&
-          !packRunId &&
+          !demoMode &&
           sharedAssetId &&
           image &&
           image.startsWith("data:image")
@@ -958,17 +852,15 @@ export function BatchStudio({
       historyFieldsFromSuccess(data, {
         effect: job.slug,
         effectName: job.name,
-        fallbackDuration: jobDuration,
+        fallbackDuration: effectiveDuration,
         fallbackAspect: jobAspect,
-        fallbackResolution: jobResolution,
+        fallbackResolution: effectiveResolution,
         projectId,
         projectName: sellerPackActive
           ? "Launch Pack · 3 clips / 30 credits"
           : "Custom batch",
         inputImage:
-          !jobDemoMode && image && image.length <= 300_000
-            ? image
-            : undefined,
+          !demoMode && image && image.length <= 300_000 ? image : undefined,
         channel: SELLER_PACK_ITEMS.find((item) => item.slug === job.slug)
           ?.channel,
         // SKU for Library By-SKU + Remake bible carry
@@ -986,11 +878,11 @@ export function BatchStudio({
         duration:
           typeof data.duration === "number"
             ? data.duration
-            : jobDuration,
+            : effectiveDuration,
         resolution:
           typeof data.resolution === "string"
             ? data.resolution
-            : jobResolution,
+            : effectiveResolution,
         aspectRatio:
           data.aspectRatio === "1:1" ||
           data.aspectRatio === "16:9" ||
@@ -1008,13 +900,8 @@ export function BatchStudio({
   }
 
   async function runBatch() {
-    if (isSellerPack && !sellerPackRecoveryHydrated) {
-      setError("Checking your account for an active Launch Pack…");
-      return;
-    }
-    if (packAbortRef.current) return;
     if (!image || !isValidImageDataUrl(image)) {
-      setError("Add a toy photo first (JPEG, PNG, or WebP).");
+      setError("Add a toy photo first (JPEG, PNG, WebP, or GIF).");
       return;
     }
     if (selected.length === 0) {
@@ -1023,6 +910,18 @@ export function BatchStudio({
     }
     if (!ownsRights) {
       setError("Confirm you own this photo before running the batch.");
+      return;
+    }
+    if (
+      sellerPackActive &&
+      (jobs.length > 0 ||
+        activePackRunId !== null ||
+        runProjectId !== null ||
+        !sellerPackRecoveryHydrated)
+    ) {
+      setError(
+        "This Launch Pack already has a run record. Review its format cards or refresh status; Pikbo will not reserve another 30 credits."
+      );
       return;
     }
 
@@ -1038,9 +937,6 @@ export function BatchStudio({
       return;
     }
 
-    const abortCtrl = beginPackOperation();
-    if (!abortCtrl) return;
-    const projectId = `${sellerPackActive ? "seller-pack" : "batch"}-${Date.now()}`;
     track({
       event: "pack_start",
       path: "/create",
@@ -1054,121 +950,100 @@ export function BatchStudio({
     setError(null);
     setFailRetryAfterSec(null);
     setPackElapsed(0);
-    try {
-      // Live Launch Pack opens one atomic 30-credit reservation and receives
-      // exactly three server-created child ids. Failure is terminal for this
-      // run; there is no shadow/per-child fallback.
-      let reservedPack:
-        | Extract<
-            Awaited<ReturnType<typeof reserveSellerPackClient>>,
-            { ok: true }
-          >
-        | null = null;
-      let runPackId: string | null = null;
-      if (sellerPackActive && !demoMode) {
-        const startIntent = privatePackStartIntentFor(image);
-        if (!startIntent.inputAssetId) {
-          const registeredInput = await registerPrivateToyAsset(
-            image,
-            toyIdentity.sku
-          );
-          if (!registeredInput.ok) {
-            setError(registeredInput.error);
-            return;
-          }
-          startIntent.inputAssetId = registeredInput.inputAssetId;
-        }
-        if (abortCtrl.signal.aborted) return;
-        const reserved = await reserveSellerPackClient({
-          clientPackKey: startIntent.clientPackKey,
-          inputAssetId: startIntent.inputAssetId,
-          rightsConfirmed: true,
+    setRunning(true);
+    const projectId = `${sellerPackActive ? "seller-pack" : "batch"}-${Date.now()}`;
+
+    // Abort any prior pack before starting a new one.
+    packAbortRef.current?.abort();
+    const abortCtrl = new AbortController();
+    packAbortRef.current = abortCtrl;
+
+    // Live Launch Pack opens one atomic 30-credit reservation and receives
+    // exactly three server-created child ids. Failure is terminal for this run;
+    // there is no shadow/per-child fallback.
+    let reservedPack:
+      | Extract<Awaited<ReturnType<typeof reserveSellerPackClient>>, { ok: true }>
+      | null = null;
+    let runPackId: string | null = null;
+    // A live Launch Pack cannot reserve credits until its one private input is
+    // durably uploaded and verified. All three children bind to this asset.
+    let sharedAssetId: string | null = null;
+    if (!demoMode && image && image.startsWith("data:image")) {
+      const reg = sellerPackActive
+        ? await registerPrivateToyAsset(image, toyIdentity.sku)
+        : await registerLocalAsset(image);
+      if (reg?.assetId) sharedAssetId = reg.assetId;
+    }
+    if (sellerPackActive && !demoMode) {
+      if (!sharedAssetId) {
+        setError("Your private toy photo could not be verified. No credits were reserved.");
+        setRunning(false);
+        if (packAbortRef.current === abortCtrl) packAbortRef.current = null;
+        return;
+      }
+      const reserved = await reserveSellerPackClient({
+        clientPackKey: `ui-pack:${projectId}`,
+        inputAssetId: sharedAssetId,
+        rightsConfirmed: true,
+      });
+      if (!reserved.ok) {
+        setError(reserved.error);
+        setRunning(false);
+        if (packAbortRef.current === abortCtrl) packAbortRef.current = null;
+        return;
+      }
+      reservedPack = reserved;
+      runPackId = reserved.packRunId;
+      setActivePackRunId(reserved.packRunId);
+    }
+
+    // Defense in depth: never translate or run a server-owned child unless the
+    // complete response still matches the frozen three-child contract. The
+    // client adapter already performs this check; this second boundary keeps a
+    // future adapter regression from throwing outside the run try/catch.
+    const verifiedReservedJobs = reservedPack
+      ? parseExactSellerPackServerJobs(reservedPack.jobs)
+      : null;
+    if (reservedPack && !verifiedReservedJobs) {
+      setError(
+        "Pikbo could not verify this Launch Pack. No generation started; your 30 credits remain protected while the Pack is checked."
+      );
+      setRunning(false);
+      if (packAbortRef.current === abortCtrl) packAbortRef.current = null;
+      return;
+    }
+    // Only persist a run pointer after every pre-reserve failure boundary has
+    // passed. Upload/verification/reserve errors must leave Create retryable.
+    setRunProjectId(projectId);
+
+    const queue: Job[] = verifiedReservedJobs
+      ? verifiedReservedJobs.map((serverJob, index) => {
+          // parseExactSellerPackServerJobs proves positional identity.
+          const item = SELLER_PACK_ITEMS[index];
+          return {
+            packJobId: serverJob.jobId,
+            childKey: serverJob.childKey,
+            slug: item.slug,
+            name: item.label,
+            status: "queued" as const,
+            aspectRatio: item.aspectRatio,
+            retryCount: 0,
+          };
+        })
+      : selected.map((slug) => {
+          const p = PRESETS.find((x) => x.slug === slug)!;
+          const packItem = SELLER_PACK_ITEMS.find((i) => i.slug === slug);
+          return {
+            slug,
+            name: sellerPackActive && packItem ? packItem.label : p.name,
+            status: "queued" as const,
+            aspectRatio: aspectForSlug(slug),
+            retryCount: 0,
+          };
         });
-        if (!reserved.ok) {
-          setError(reserved.error);
-          return;
-        }
-        reservedPack = reserved;
-        runPackId = reserved.packRunId;
-      }
+    setJobs(queue);
 
-      // Defense in depth: never translate or run a server-owned child unless
-      // the complete response still matches the frozen three-child contract.
-      const verifiedReservedJobs = reservedPack
-        ? parseExactSellerPackServerJobs(reservedPack.jobs)
-        : null;
-      if (reservedPack && !verifiedReservedJobs) {
-        setError(
-          "Pikbo could not verify this Launch Pack. No generation started; your 30 credits remain protected while the Pack is checked."
-        );
-        return;
-      }
-
-      // A lost reserve response may be retried with the same browser-local
-      // clientPackKey. On an idempotent replay, restore owner-scoped truth and
-      // stop: never translate the replay into three new provider calls.
-      if (reservedPack?.idempotent && runPackId && verifiedReservedJobs) {
-        const recovered = recoverSellerPackFromServer(
-          runPackId,
-          verifiedReservedJobs
-        );
-        setRunProjectId(recovered.run.projectId);
-        setActivePackRunId(runPackId);
-        setVerifiedPackRunId(runPackId);
-        setSelected([...SELLER_PACK_SLUGS]);
-        setJobs(recovered.jobs);
-        setSellerPackRecoveryNote(
-          "Existing Launch Pack reservation restored. Continue only server-confirmed pending formats."
-        );
-        return;
-      }
-
-      // Phase D: register still once — non-Pack batch children reuse assetId.
-      let sharedAssetId: string | null = null;
-      if (
-        !demoMode &&
-        !sellerPackActive &&
-        image.startsWith("data:image")
-      ) {
-        const reg = await registerLocalAsset(image);
-        if (reg?.assetId) sharedAssetId = reg.assetId;
-      }
-
-      const queue: Job[] = verifiedReservedJobs
-        ? verifiedReservedJobs.map((serverJob, index) => {
-            // parseExactSellerPackServerJobs proves positional identity.
-            const item = SELLER_PACK_ITEMS[index];
-            return {
-              packJobId: serverJob.jobId,
-              childKey: serverJob.childKey,
-              slug: item.slug,
-              name: item.label,
-              status: "queued" as const,
-              aspectRatio: item.aspectRatio,
-              retryCount: 0,
-            };
-          })
-        : selected.map((slug) => {
-            const p = PRESETS.find((x) => x.slug === slug)!;
-            const packItem = SELLER_PACK_ITEMS.find((i) => i.slug === slug);
-            return {
-              slug,
-              name: sellerPackActive && packItem ? packItem.label : p.name,
-              status: "queued" as const,
-              aspectRatio: aspectForSlug(slug),
-              retryCount: 0,
-            };
-          });
-
-      // Commit Pack identity and its three children as one validated UI step.
-      // A malformed/failed reserve can never pair a new run id with old jobs.
-      setRunProjectId(projectId);
-      if (runPackId && verifiedReservedJobs) {
-        setActivePackRunId(runPackId);
-        setVerifiedPackRunId(runPackId);
-      }
-      setJobs(queue);
-
+    try {
       for (let i = 0; i < queue.length; i++) {
         if (abortCtrl.signal.aborted) break;
         setJobs((prev) =>
@@ -1188,7 +1063,6 @@ export function BatchStudio({
         // Mid-pack asset miss: re-register still so remaining children use a fresh assetId.
         if (
           !demoMode &&
-          !sellerPackActive &&
           outcome.recoveredFromAssetMiss &&
           image?.startsWith("data:image")
         ) {
@@ -1255,79 +1129,74 @@ export function BatchStudio({
         setError(e instanceof Error ? e.message : "Batch failed");
       }
     } finally {
-      finishPackOperation(abortCtrl);
+      if (packAbortRef.current === abortCtrl) {
+        packAbortRef.current = null;
+      }
+      setRunning(false);
     }
   }
 
   async function retryJob(slug: string) {
-    const boundLivePackRetry =
-      sellerPackActive && canRetryBoundPrivatePack;
     if (
       running ||
-      packAbortRef.current ||
-      (!boundLivePackRetry && (!image || !ownsRights))
-    ) {
-      return;
-    }
+      !ownsRights ||
+      (!image && !(sellerPackActive && !demoMode && activePackRunId))
+    ) return;
     const target = jobs.find((job) => job.slug === slug);
     if (!target || !retryEligible(target)) {
       return;
     }
-    const abortCtrl = beginPackOperation();
-    if (!abortCtrl) return;
     const projectId =
       runProjectId ??
       `${sellerPackActive ? "seller-pack" : "batch"}-retry-${target.slug}`;
     setRunProjectId(projectId);
     setPackElapsed(0);
+    setRunning(true);
     setError(null);
+    packAbortRef.current?.abort();
+    const abortCtrl = new AbortController();
+    packAbortRef.current = abortCtrl;
+    let sharedAssetId: string | null = null;
+    if (!demoMode && image?.startsWith("data:image")) {
+      const reg = await registerLocalAsset(image);
+      if (reg?.assetId) sharedAssetId = reg.assetId;
+    }
+    const retryAttemptKey = mintGenerateIdempotencyKey();
+    if (sellerPackActive && !demoMode) {
+      if (!activePackRunId || !target.packJobId) {
+        setError("Durable Launch Pack ids are missing; refresh to recover.");
+        setRunning(false);
+        packAbortRef.current = null;
+        return;
+      }
+      const reopened = await retrySellerPackChildClient({
+        packRunId: activePackRunId,
+        packJobId: target.packJobId,
+        attemptKey: retryAttemptKey,
+      });
+      if (!reopened.ok) {
+        setError(reopened.error);
+        setRunning(false);
+        packAbortRef.current = null;
+        return;
+      }
+    }
+    const retrying: Job = {
+      ...target,
+      status: "running",
+      error: undefined,
+      errorCode: undefined,
+      creditState: undefined,
+      retryCount: target.retryCount + 1,
+    };
+    setJobs((previous) =>
+      previous.map((job) => (job.slug === slug ? retrying : job))
+    );
     try {
-      let sharedAssetId: string | null = null;
-      if (
-        !boundLivePackRetry &&
-        !demoMode &&
-        image?.startsWith("data:image")
-      ) {
-        const reg = await registerLocalAsset(image);
-        if (reg?.assetId) sharedAssetId = reg.assetId;
-      }
-      if (abortCtrl.signal.aborted) return;
-      const retryAttemptKey = mintGenerateIdempotencyKey();
-      if (boundLivePackRetry) {
-        if (!activePackRunId || !target.packJobId) {
-          setError("Durable Launch Pack ids are missing; refresh to recover.");
-          return;
-        }
-        const reopened = await retrySellerPackChildClient({
-          packRunId: activePackRunId,
-          packJobId: target.packJobId,
-          attemptKey: retryAttemptKey,
-        });
-        if (!reopened.ok) {
-          setError(reopened.error);
-          await refreshVerifiedPackFromServer(activePackRunId);
-          return;
-        }
-        if (abortCtrl.signal.aborted) {
-          await refreshVerifiedPackFromServer(activePackRunId);
-          return;
-        }
-      }
-      const retrying: Job = {
-        ...target,
-        status: "running",
-        error: undefined,
-        errorCode: undefined,
-        creditState: undefined,
-        retryCount: target.retryCount + 1,
-      };
-      setJobs((previous) =>
-        previous.map((job) => (job.slug === slug ? retrying : job))
-      );
       const outcome = await executeJob(
         retrying,
         projectId,
-        boundLivePackRetry ? activePackRunId : null,
+        sellerPackActive && !demoMode ? activePackRunId : null,
         sharedAssetId,
         abortCtrl.signal,
         retryAttemptKey
@@ -1338,74 +1207,44 @@ export function BatchStudio({
       if (!outcome.job.videoUrl) {
         setError(outcome.job.error ?? "Retry failed");
       }
-    } catch (retryError) {
-      if (boundLivePackRetry && activePackRunId) {
-        const refreshed = await refreshVerifiedPackFromServer(activePackRunId);
-        if (!refreshed) {
-          setJobs((previous) =>
-            previous.map((job) =>
-              job.packJobId === target.packJobId
-                ? {
-                    ...job,
-                    status: "recovery_unavailable",
-                    error: "Checking the server record before another retry.",
-                  }
-                : job
-            )
-          );
-        }
-      }
-      if (
-        !(
-          retryError instanceof Error &&
-          retryError.name === "AbortError"
-        )
-      ) {
-        setError(
-          retryError instanceof Error ? retryError.message : "Retry failed"
-        );
-      }
     } finally {
-      finishPackOperation(abortCtrl);
+      if (packAbortRef.current === abortCtrl) {
+        packAbortRef.current = null;
+      }
+      setRunning(false);
     }
   }
 
   /** Phase F: partial failure — re-run only failed/refunded children; successes stay. */
   async function retryAllFailed() {
-    const boundLivePackRetry =
-      sellerPackActive && canRetryBoundPrivatePack;
     if (
       running ||
-      packAbortRef.current ||
-      (!boundLivePackRetry && (!image || !ownsRights))
-    ) {
-      return;
-    }
+      !ownsRights ||
+      (!image && !(sellerPackActive && !demoMode && activePackRunId))
+    ) return;
     const failed = jobs.filter(retryEligible);
     if (failed.length === 0) return;
-    const abortCtrl = beginPackOperation();
-    if (!abortCtrl) return;
     const projectId =
       runProjectId ??
       `${sellerPackActive ? "seller-pack" : "batch"}-retry-failed-${Date.now().toString(36)}`;
     setRunProjectId(projectId);
     setPackElapsed(0);
+    setRunning(true);
     setError(null);
+    packAbortRef.current?.abort();
+    const abortCtrl = new AbortController();
+    packAbortRef.current = abortCtrl;
+    let sharedAssetId: string | null = null;
+    if (!demoMode && image?.startsWith("data:image")) {
+      const reg = await registerLocalAsset(image);
+      if (reg?.assetId) sharedAssetId = reg.assetId;
+    }
     try {
-      let sharedAssetId: string | null = null;
-      if (
-        !boundLivePackRetry &&
-        !demoMode &&
-        image?.startsWith("data:image")
-      ) {
-        const reg = await registerLocalAsset(image);
-        if (reg?.assetId) sharedAssetId = reg.assetId;
-      }
       for (let i = 0; i < failed.length; i++) {
         if (abortCtrl.signal.aborted) break;
         const target = failed[i];
         const retryAttemptKey = mintGenerateIdempotencyKey();
-        if (boundLivePackRetry) {
+        if (sellerPackActive && !demoMode) {
           if (!activePackRunId || !target.packJobId) {
             setError(
               `Cannot retry ${target.name}: durable Launch Pack ids are missing.`
@@ -1419,11 +1258,6 @@ export function BatchStudio({
           });
           if (!reopened.ok) {
             setError(reopened.error);
-            await refreshVerifiedPackFromServer(activePackRunId);
-            break;
-          }
-          if (abortCtrl.signal.aborted) {
-            await refreshVerifiedPackFromServer(activePackRunId);
             break;
           }
         }
@@ -1441,7 +1275,7 @@ export function BatchStudio({
         const outcome = await executeJob(
           retrying,
           projectId,
-          boundLivePackRetry ? activePackRunId : null,
+          sellerPackActive && !demoMode ? activePackRunId : null,
           sharedAssetId,
           abortCtrl.signal,
           retryAttemptKey
@@ -1454,190 +1288,25 @@ export function BatchStudio({
         if (!outcome.job.videoUrl) {
           setError(outcome.job.error ?? `Retry failed · ${target.name}`);
         }
-        if (outcome.stopQueue || abortCtrl.signal.aborted) {
-          if (boundLivePackRetry && activePackRunId) {
-            await refreshVerifiedPackFromServer(activePackRunId);
-          }
-          if (!abortCtrl.signal.aborted) {
-            setError(
-              outcome.job.error ??
-                "Retry paused until this format's server state is confirmed."
-            );
-          }
-          break;
-        }
         if (i < failed.length - 1) {
           await sleep(400, abortCtrl.signal);
         }
       }
     } catch (e) {
-      if (boundLivePackRetry && activePackRunId) {
-        const refreshed = await refreshVerifiedPackFromServer(activePackRunId);
-        if (!refreshed) {
-          setJobs((previous) =>
-            previous.map((job) =>
-              job.status === "running"
-                ? {
-                    ...job,
-                    status: "recovery_unavailable",
-                    error: "Checking the server record before another retry.",
-                  }
-                : job
-            )
-          );
-        }
-      }
       if (!(e instanceof Error && e.name === "AbortError")) {
         setError(e instanceof Error ? e.message : "Retry failed");
       }
     } finally {
-      finishPackOperation(abortCtrl);
-    }
-  }
-
-  /** Continue only already-reserved queued children after refresh or a pause. */
-  async function continueQueuedPack() {
-    if (
-      running ||
-      packAbortRef.current ||
-      !sellerPackRecoveryHydrated ||
-      !canRetryBoundPrivatePack ||
-      !activePackRunId
-    ) {
-      return;
-    }
-    const abortCtrl = beginPackOperation();
-    if (!abortCtrl) return;
-    const boundPackRunId = activePackRunId;
-    const projectId =
-      runProjectId ?? `account-pack:${boundPackRunId}`;
-    setRunProjectId(projectId);
-    setPackElapsed(0);
-    setError(null);
-    try {
-      // Local queued hints are never authority. Fetch owner-scoped DB truth
-      // first so a delayed success/conflict cannot be submitted again.
-      const currentStatus = await getSellerPackStatusClient(boundPackRunId);
-      if (!currentStatus.ok) {
-        setError(currentStatus.error);
-        return;
+      if (packAbortRef.current === abortCtrl) {
+        packAbortRef.current = null;
       }
-      const canonical = recoverSellerPackFromServer(
-        boundPackRunId,
-        currentStatus.jobs
-      );
-      setJobs(canonical.jobs);
-      const pending = canonical.jobs.filter(
-        (job) => job.status === "queued"
-      );
-      if (pending.length === 0 || abortCtrl.signal.aborted) {
-        setSellerPackRecoveryNote(
-          "No server-confirmed queued format needs continuation."
-        );
-        return;
-      }
-
-      for (let index = 0; index < pending.length; index++) {
-        if (abortCtrl.signal.aborted) break;
-        const target: Job = {
-          ...pending[index],
-          status: "running",
-          error: undefined,
-          errorCode: undefined,
-        };
-        setJobs((previous) =>
-          previous.map((job) =>
-            job.packJobId === target.packJobId ? target : job
-          )
-        );
-        const outcome = await executeJob(
-          target,
-          projectId,
-          boundPackRunId,
-          null,
-          abortCtrl.signal
-        );
-        // Generate success and all conflicts are reconciled from the server.
-        // Never translate an ambiguous client response into a local failure.
-        const refreshed = await refreshVerifiedPackFromServer(
-          boundPackRunId,
-          "Continued Pack refreshed from your account."
-        );
-        if (!refreshed) {
-          setJobs((previous) =>
-            previous.map((job) =>
-              job.packJobId === target.packJobId
-                ? {
-                    ...job,
-                    status: "recovery_unavailable",
-                    error:
-                      "The server result is being checked before another action.",
-                  }
-                : job
-            )
-          );
-          setError(
-            "Could not confirm the server result. Pikbo will keep checking; no local failure was recorded."
-          );
-          break;
-        }
-        const confirmed = refreshed.find(
-          (job) => job.packJobId === target.packJobId
-        );
-        if (confirmed?.status !== "succeeded") {
-          setError(
-            outcome.job.error ??
-              "The server has not confirmed this format as ready; Pikbo will keep checking."
-          );
-          break;
-        }
-        if (index < pending.length - 1) {
-          await sleep(400, abortCtrl.signal);
-        }
-      }
-    } catch (error) {
-      const refreshed = await refreshVerifiedPackFromServer(boundPackRunId);
-      if (!refreshed) {
-        setJobs((previous) =>
-          previous.map((job) =>
-            job.status === "running"
-              ? {
-                  ...job,
-                  status: "recovery_unavailable",
-                  error: "The server result is being checked.",
-                }
-              : job
-          )
-        );
-      }
-      if (!(error instanceof Error && error.name === "AbortError")) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Could not continue the queued Pack"
-        );
-      }
-    } finally {
-      finishPackOperation(abortCtrl);
+      setRunning(false);
     }
   }
 
   const doneCount = jobs.filter((j) => j.status === "succeeded").length;
-  /** HF Product three-step: upload → run → deliver */
-  const sellerStep: 1 | 2 | 3 = !image && !hasBoundPrivatePack
-    ? 1
-    : doneCount > 0
-      ? 3
-      : running || jobs.some((j) => j.status === "running" || j.status === "queued")
-        ? 2
-        : image
-          ? 2
-          : 1;
   const failedRetryCount = jobs.filter(
     retryEligible
-  ).length;
-  const queuedContinueCount = jobs.filter(
-    (job) => job.status === "queued"
   ).length;
   const needsAttentionCount = jobs.filter(
     (job) =>
@@ -1682,9 +1351,9 @@ export function BatchStudio({
    * No server ZIP (needs object storage). Free raw / failed siblings omitted.
    */
   /**
-   * Per-child download: HEAD /api/downloads first (Create/Library parity) so
-   * canceled / timeout / in-flight never open a dead tab. Allowed GET uses
-   * downloadVideoFile (blob) — never window.open the gate (JSON error tabs).
+   * Per-child download delegates the private gate check to downloadVideoFile.
+   * That helper sends the signed-in bearer token for both HEAD and GET; an
+   * unauthenticated duplicate probe here would reject every private Pack.
    */
   async function downloadChild(j: Job) {
     const downloadAllowed = canDownloadResult({
@@ -1700,36 +1369,17 @@ export function BatchStudio({
       .slice(0, 32)}.mp4`;
     if (j.requestId) {
       const gateUrl = `/api/downloads/${encodeURIComponent(j.requestId)}`;
-      try {
-        const head = await fetch(gateUrl, { method: "HEAD" });
-        const gate = classifyDownloadHead({
-          status: head.status,
-          code: head.headers.get("X-Pikbo-Download-Code"),
-          t6Mode: head.headers.get("X-Pikbo-T6"),
-        });
-        if (gate.kind === "block") {
-          setError(`${j.name || j.slug}: ${gate.message}`);
-          return;
-        }
-        if (gate.kind === "allow") {
-          setError(null);
-          const result = await downloadVideoFile(gateUrl, filename);
-          if (result === "ok" || result === "fallback") return;
-          if (result === "blocked" || result === "unsafe") {
-            setError(
-              `${j.name || j.slug}: download blocked by a delivery safety check`
-            );
-            return;
-          }
-          setError(`${j.name || j.slug}: download failed`);
-          return;
-        }
-        if (gate.kind === "not_found") {
-          setError(`${j.name || j.slug}: ${gate.message}`);
-        }
-      } catch {
-        /* fall through to safe direct URL */
+      setError(null);
+      const result = await downloadVideoFile(gateUrl, filename);
+      if (result === "ok" || result === "fallback") return;
+      if (result === "blocked" || result === "unsafe") {
+        setError(
+          `${j.name || j.slug}: download blocked by a delivery safety check`
+        );
+        return;
       }
+      setError(`${j.name || j.slug}: download failed`);
+      return;
     }
     if (j.videoUrl && isSafeDeliverableUrl(j.videoUrl)) {
       setError(null);
@@ -1845,11 +1495,24 @@ export function BatchStudio({
   ]);
   const canRun =
     !running &&
-    (!isSellerPack || sellerPackRecoveryHydrated) &&
     Boolean(image) &&
     selected.length > 0 &&
     ownsRights &&
     liveQuoteCovered;
+  const canRetryUnreservedPack =
+    Boolean(image) &&
+    !running &&
+    selected.length > 0 &&
+    jobs.length === 0 &&
+    activePackRunId === null &&
+    runProjectId === null &&
+    sellerPackRecoveryHydrated;
+  const canStartFreshSellerPack =
+    canRun &&
+    jobs.length === 0 &&
+    activePackRunId === null &&
+    runProjectId === null &&
+    sellerPackRecoveryHydrated;
 
   const primaryBatchLabel = running
     ? `${sellerPackActive ? "Launch Pack" : "Batch"} running… ${doneCount}/${jobs.length}`
@@ -1859,9 +1522,9 @@ export function BatchStudio({
         : "Choose a Pikbo Lab sample"
       : !ownsRights
         ? "Confirm ownership to continue"
-        : demoMode
+          : demoMode
           ? sellerPackActive
-            ? "Preview the 3 Launch Pack formats"
+            ? "Open 3 archived motion tests"
             : `Run batch · ${selected.length} · cached free`
           : trialDone && isFree && !liveQuoteCovered
             ? "Free Mini trial used · open single Generate or plans"
@@ -1935,53 +1598,88 @@ export function BatchStudio({
   );
 
   return (
-    <div className="mt-8 grid gap-6 pb-36 lg:grid-cols-[1fr_1.1fr] lg:pb-0">
+    <div
+      className={
+        sellerPackActive
+          ? "mt-4 grid gap-4 pb-32 text-[#111827] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-5 lg:pb-0"
+          : "mt-8 grid gap-6 pb-36 lg:grid-cols-[1fr_1.1fr] lg:pb-0"
+      }
+      data-launch-workspace={sellerPackActive ? "seller-pack" : undefined}
+    >
       <div className="space-y-4">
         {sellerPackActive && (
-          <div className="space-y-3">
-            <div className="rounded-2xl border border-[var(--mint)]/35 bg-gradient-to-br from-[var(--mint)]/[0.1] to-black/40 px-3.5 py-3 text-xs text-[var(--fg-muted)] shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
-              <p className="font-bold text-[var(--mint)]">
-                {displayDemoMode
-                  ? "Launch Pack — 3 cached prototype previews"
-                  : "Launch Pack — 3 private clips / 30 credits"}
-              </p>
-              <p className="mt-1 leading-relaxed text-white/55">
-                {displayDemoMode
-                  ? "Preview three formats at 0 credits. Cached prototypes do not process your upload."
-                  : "Review the 30-credit quote, then create three independent private clips."}
-              </p>
-              {/* Y5 + CD B3: full Director Plan when still ready; strip before photo */}
-              {hasBoundPrivatePack && !image ? null : demoMode ? null : sellerDirectorPlan?.ready ? (
-                <div className="mt-2" data-seller-pack-plan="director">
+          <div className="hidden rounded-2xl border border-[#D5D9E1] bg-white p-4 shadow-[0_18px_50px_-38px_rgba(22,32,51,0.45)] sm:p-5 lg:block">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2457E6]">
+                  {privateUploadEnabled ? "Your toy" : "Pikbo sample toy"}
+                </p>
+                <h2 className="mt-1 text-xl font-black tracking-[-0.035em] sm:text-2xl">
+                  {privateUploadEnabled
+                    ? "Create your toy launch."
+                    : "Explore the three Launch Pack formats."}
+                </h2>
+              </div>
+              <span className="rounded-md border border-[#D5D9E1] bg-[#F7F8FA] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#667085]">
+                {demoMode
+                  ? "Three fixed outputs"
+                  : "Private validation"}
+              </span>
+            </div>
+            <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-[#667085]">
+              {demoMode
+                ? "Choose a Pikbo-owned sample to inspect three static format directions. The archived motion tests use separate sample toys and are not generated from your selection."
+                : "Drop one authorized product photo. Pikbo keeps the fixed three-format Pack and server-led status checks unchanged."}
+            </p>
+            {!demoMode ? (
+              sellerDirectorPlan?.ready ? (
+                <div className="mt-3" data-seller-pack-plan="director">
                   <DirectorPlanPanel plan={sellerDirectorPlan} />
                 </div>
               ) : (
-                <div className="mt-2">{creditStrip}</div>
-              )}
-              <ul className="mt-2 space-y-0.5 text-[10px] text-[var(--fg-dim)]">
-                {SELLER_PACK_ITEMS.map((item) => (
-                  <li key={item.key}>
-                    {item.label} → {item.channel}
-                    {!displayDemoMode
-                      ? ` · ${CREDITS_PER_VIDEO} credits`
-                      : ` · ${item.aspectRatio} · ${item.durationSec}s`}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <SellerPackSteps step={sellerStep} demoMode={displayDemoMode} />
+                <div className="mt-3">{creditStrip}</div>
+              )
+            ) : null}
             <p
-              data-seller-pack-recovery="durable-pointer"
-              className="rounded-lg border border-amber-300/20 bg-amber-300/[0.04] px-3 py-2 text-[10px] leading-relaxed text-amber-100/85"
+              data-seller-pack-recovery="session-pointer"
+              className="mt-3 border-t border-[#E1E4EA] pt-3 text-[10px] font-semibold leading-4 text-[#7A8290]"
             >
-              Your account remembers the active Pack, its original private
-              input, and every available result after refresh or sign-in.
+              {demoMode
+                ? "Direction frames are not completed customer videos."
+                : "This browser can reopen the active Pack after refresh using its session pointer. Server status remains authoritative; completed signed-in results can appear in Library."}
             </p>
             {sellerPackRecoveryNote ? (
-              <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
+              <p className="mt-2 text-[10px] font-semibold leading-relaxed text-[#667085]">
                 {sellerPackRecoveryNote}
               </p>
             ) : null}
+            <button
+              type="button"
+              disabled={Boolean(image) && !canStartFreshSellerPack}
+              onClick={() => {
+                if (image) {
+                  if (canStartFreshSellerPack) void runBatch();
+                  return;
+                }
+                if (privateUploadEnabled) {
+                  document
+                    .getElementById("seller-pack-photo")
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  return;
+                }
+                void chooseLabSample(SAMPLE_TOYS[0].id);
+              }}
+              className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#2457E6] px-4 text-sm font-black text-white transition hover:bg-[#1948C7] disabled:cursor-not-allowed disabled:opacity-45"
+              data-seller-pack-action="desktop-primary"
+            >
+              {image
+                ? jobs.length > 0 || activePackRunId || runProjectId
+                  ? "Review this Pack below"
+                  : primaryBatchLabel
+                : privateUploadEnabled
+                  ? "Upload owned toy photo"
+                  : "Choose a sample toy"}
+            </button>
           </div>
         )}
         {!sellerPackActive ? (
@@ -2004,22 +1702,19 @@ export function BatchStudio({
           </div>
         ) : null}
         <div data-seller-pack-step="upload">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--fg-muted)] sm:hidden">
-            <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black">
-              1
-            </span>
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#667085] sm:hidden">
             {privateUploadEnabled
-              ? "Upload owned toy photo"
-              : "Choose a Pikbo Lab sample"}
+              ? "Your product photo"
+              : "Selected sample"}
           </p>
           {privateUploadEnabled ? (
             <label
               id="seller-pack-photo"
               htmlFor="seller-pack-photo-input"
-              className={`flex aspect-video cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
+              className={`flex aspect-[16/5] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-white transition-all duration-200 hover:border-[#2457E6] hover:bg-[#F8FAFF] sm:aspect-[16/10] ${
                 image
-                  ? "border-white/12 ring-1 ring-white/5"
-                  : "border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)]"
+                  ? "border-[#D5D9E1] shadow-[0_18px_50px_-38px_rgba(22,32,51,0.45)]"
+                  : "border-[#2457E6]/45"
               }`}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
@@ -2035,23 +1730,21 @@ export function BatchStudio({
                   className="h-full w-full object-contain"
                 />
               ) : (
-                <span className="px-4 text-center text-sm text-[var(--fg-dim)]">
-                  <span className="mb-2 block text-2xl" aria-hidden>
-                    🧸
+                <span className="px-4 text-center text-sm font-semibold text-[#667085]">
+                  <span className="mb-2 block text-2xl text-[#2457E6]" aria-hidden>
+                    +
                   </span>
-                  Drop one rights-owned toy photo for the whole{" "}
-                  {sellerPackActive ? "pack" : "batch"}
+                  Drop your product photo
                   <br />
-                  <span className="text-xs">
-                    or tap · JPEG / PNG / WebP · under ~8 MB
+                  <span className="text-xs font-medium text-[#8A919D]">
+                    One owned toy image · JPEG / PNG / WebP · under 8 MB
                   </span>
                 </span>
               )}
               <input
                 id="seller-pack-photo-input"
                 type="file"
-                disabled={running}
-                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                accept="image/*"
                 className="hidden"
                 onChange={(event) => loadFile(event.target.files?.[0])}
               />
@@ -2060,23 +1753,20 @@ export function BatchStudio({
             <div
               id="seller-pack-photo"
               data-public-pack-preview="lab-only"
-              className="flex aspect-video flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-[var(--mint)]/35 bg-black/40"
+              className="flex aspect-[16/5] flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#D5D9E1] bg-white shadow-[0_18px_50px_-38px_rgba(22,32,51,0.45)] sm:aspect-[16/10]"
             >
               {image && labStill ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={image}
-                  alt="Selected Pikbo Lab sample"
-                  className="h-full w-full object-contain"
+                  alt="Selected Pikbo sample toy"
+                  className="h-full w-full bg-[#F7F8FA] object-contain"
                 />
               ) : (
-                <span className="max-w-sm px-5 text-center text-sm leading-6 text-[var(--fg-dim)]">
-                  <span className="mb-2 block text-2xl" aria-hidden>
-                    ◉
-                  </span>
-                  Public preview uses Pikbo Lab samples only.
+                <span className="max-w-sm px-5 text-center text-sm font-semibold leading-6 text-[#667085]">
+                  Choose a Pikbo-owned sample.
                   <br />
-                  <span className="text-xs">
+                  <span className="text-xs font-medium text-[#8A919D]">
                     No product-photo input is accepted or processed here.
                   </span>
                 </span>
@@ -2112,21 +1802,32 @@ export function BatchStudio({
             />
           ) : null}
           {!image || labStill ? (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 grid grid-cols-4 gap-2">
               {SAMPLE_TOYS.map((sample) => (
                 <button
                   key={sample.id}
                   type="button"
-                  className="min-h-11 rounded-lg border border-[var(--border)] px-3 py-2.5 text-xs hover:border-[var(--brand)]"
+                  className={`grid min-h-14 items-center justify-center gap-2 rounded-xl border bg-white p-1.5 text-left text-[11px] font-black transition sm:grid-cols-[42px_1fr] sm:justify-stretch ${
+                    activeSampleId === sample.id
+                      ? "border-[#2457E6] text-[#2457E6] ring-2 ring-[#2457E6]/12"
+                      : "border-[#D5D9E1] text-[#4E5663] hover:border-[#2457E6] hover:text-[#2457E6]"
+                  }`}
                   onClick={() => void chooseLabSample(sample.id)}
+                  aria-pressed={activeSampleId === sample.id}
                 >
-                  Sample: {sample.label}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={sample.path}
+                    alt=""
+                    className="h-10 w-10 rounded-lg bg-[#E4E7ED] object-cover"
+                  />
+                  <span className="sr-only sm:not-sr-only">{sample.label}</span>
                 </button>
               ))}
-              <p className="w-full text-[10px] font-semibold text-[var(--mint)]">
+              <p className="col-span-4 hidden text-[10px] font-semibold leading-4 text-[#667085] sm:block">
                 {privateUploadEnabled
-                  ? "Lab samples stay cached. Replace the sample with your own photo for private generation."
-                  : "Lab samples are archived prototypes · not a customer upload · 0 credits."}
+                  ? "Samples stay public. Replace one with your own photo for invited private generation."
+                  : "Pikbo-owned samples · no customer upload · 0 credits."}
               </p>
             </div>
           ) : null}
@@ -2190,14 +1891,14 @@ export function BatchStudio({
               </div>
             </>
           ) : (
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] p-3 text-xs text-[var(--fg-muted)]">
-              Per-output formats are fixed: Listing Spin uses 1:1; Reveal and
-              Social Flash use 9:16. All three are 5 seconds.
+            <div className="rounded-xl border border-[#D5D9E1] bg-white px-3 py-2.5 text-xs font-semibold text-[#667085]">
+              Three fixed formats · Listing Spin 1:1 · Reveal and Social Flash
+              9:16 · 5 seconds each
             </div>
           )}
         </div>
 
-        <div>
+        <div className={isSellerPack ? "hidden" : undefined}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-semibold text-[var(--fg-muted)]">
               {isSellerPack ? "Included formats" : "Presets in this batch"}
@@ -2311,13 +2012,13 @@ export function BatchStudio({
           <label
             id="batch-ownership"
             data-launch-pack-primary-action="2"
-            className="hidden cursor-pointer items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2 text-[11px] leading-snug text-[var(--fg-muted)] lg:flex"
+            className="hidden cursor-pointer items-start gap-2 rounded-xl border border-[#D5D9E1] bg-white px-3 py-2.5 text-[11px] font-semibold leading-snug text-[#667085] lg:flex"
           >
             <input
               type="checkbox"
               checked={ownsRights}
               onChange={(e) => setOwnsRights(e.target.checked)}
-              className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[var(--mint)]"
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#2457E6]"
             />
             <span>
               I own this photo and have the right to animate and publish this
@@ -2327,7 +2028,42 @@ export function BatchStudio({
         ) : null}
 
         {running ? (
-          <>
+          sellerPackActive ? (
+            <div className="rounded-2xl border border-[#BFCDF7] bg-[#F6F8FF] p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#2457E6]">
+                Creating your Launch Pack
+              </p>
+              <p className="mt-1 text-lg font-black tracking-[-0.03em]">
+                {doneCount} of 3 clips ready
+              </p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-[#667085]">
+                Completed clips stay available if another format needs
+                attention. Server status confirms settlement and restoration.
+              </p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {SELLER_PACK_ITEMS.map((item) => {
+                  const job = jobs.find((candidate) => candidate.slug === item.slug);
+                  return (
+                    <div key={item.key} className="rounded-lg border border-[#D5D9E1] bg-white px-2.5 py-2">
+                      <p className="truncate text-[10px] font-black">{item.label}</p>
+                      <p className="mt-1 text-[9px] font-bold text-[#2457E6]">
+                        {job ? launchWorkspaceStatus(job.status) : "Preparing"}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={cancelInFlightPack}
+                className="mt-3 min-h-10 w-full rounded-xl border border-[#D5D9E1] bg-white px-4 text-xs font-black text-[#4E5663]"
+                title="Stops waiting in this browser. A render already in progress may still finish."
+              >
+                Cancel Pack · keep finished clips
+              </button>
+            </div>
+          ) : (
+            <>
             <GenerateWaitStage
               elapsed={packElapsed}
               demoMode={demoMode}
@@ -2350,26 +2086,31 @@ export function BatchStudio({
             >
               Cancel pack · keep finished formats
             </button>
-          </>
+            </>
+          )
         ) : (
           <button
             type="button"
             disabled={!canRun}
             onClick={() => void runBatch()}
-            className="btn btn-primary hidden w-full disabled:opacity-50 lg:flex"
+            className={
+              sellerPackActive
+                ? "hidden"
+                : "btn btn-primary hidden w-full disabled:opacity-50 lg:flex"
+            }
             data-launch-pack-primary-action={image ? "3" : "1"}
           >
             {primaryBatchLabel}
           </button>
         )}
         {!liveQuoteCovered && sellerPackActive ? (
-          <div className="rounded-xl border border-amber-300/25 bg-amber-300/[0.06] p-3 text-xs text-amber-100">
-            <p className="font-bold">
+          <div className="rounded-xl border border-[#F2C9BE] bg-[#FFF6F3] p-3 text-xs text-[#8A3C2C]">
+            <p className="font-black">
               {trialDone && isFree
                 ? "Free Mini trial used · Launch Pack needs 30 live credits"
                 : `Full live pack needs ${cost} credits; this session has ${me?.credits ?? 0}.`}
             </p>
-            <p className="mt-1 text-[11px] text-white/50">
+            <p className="mt-1 text-[11px] font-semibold text-[#8A5A50]">
               {trialDone && isFree ? (
                 <>
                   Cached Lab demos stay free (0 credits · upload not processed).
@@ -2377,7 +2118,7 @@ export function BatchStudio({
                   closed while Founding Studio is validated.{" "}
                   <Link
                     href="/pricing"
-                    className="font-semibold text-[var(--mint)] hover:underline"
+                    className="font-bold text-[#2457E6] hover:underline"
                   >
                     See the validation gate
                   </Link>
@@ -2404,7 +2145,7 @@ export function BatchStudio({
                   )}
                   data-seller-pack-free-mini="single-child"
                   title="Open this format in single Generate (10 credits when Live)"
-                  className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70"
+                  className="rounded-md border border-[#D5D9E1] bg-white px-2.5 py-1 text-[10px] font-bold text-[#596170]"
                   data-pack-try-recipe={item.slug}
                   data-pack-try-ratio={item.aspectRatio}
                 >
@@ -2414,7 +2155,7 @@ export function BatchStudio({
               {trialDone && isFree ? (
                 <Link
                   href="/pricing"
-                  className="rounded-full border border-[var(--mint)]/35 px-2.5 py-1 text-[10px] font-bold text-[var(--mint)]"
+                  className="rounded-md border border-[#2457E6]/30 bg-white px-2.5 py-1 text-[10px] font-bold text-[#2457E6]"
                 >
                   Plans
                 </Link>
@@ -2423,53 +2164,101 @@ export function BatchStudio({
           </div>
         ) : null}
         {error ? (
-          <GenerateFailPanel
-            message={error}
-            retryAfterSec={failRetryAfterSec}
-            onRetry={
-              image &&
-              !running &&
-              selected.length > 0 &&
-              !hasBoundPrivatePack
-                ? () => {
+          sellerPackActive ? (
+            <div className="rounded-xl border border-[#F2C9BE] bg-[#FFF6F3] p-3 text-xs text-[#8A3C2C]">
+              <p className="font-black">This Pack needs attention</p>
+              <p className="mt-1 font-semibold leading-5">{error}</p>
+              {canRetryUnreservedPack ? (
+                <button
+                  type="button"
+                  onClick={() => {
                     setFailRetryAfterSec(null);
                     void runBatch();
-                  }
-                : undefined
-            }
-            retryLabel={
-              sellerPackActive ? "Retry Launch Pack" : "Retry batch"
-            }
-            showLabSample={!image}
-            showModules={false}
-          />
+                  }}
+                  className="mt-3 rounded-xl bg-[#2457E6] px-4 py-2 text-[11px] font-black text-white"
+                >
+                  Try Pack setup again
+                </button>
+              ) : jobs.length > 0 || activePackRunId || runProjectId ? (
+                <p className="mt-2 text-[10px] font-bold text-[#8A5A50]">
+                  Completed formats stay available. Use the failed-format
+                  controls or refresh the owner status. If Pack setup was
+                  interrupted, refresh before trying again; this notice will
+                  not rerun the whole Pack.
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <GenerateFailPanel
+              message={error}
+              retryAfterSec={failRetryAfterSec}
+              onRetry={
+                image && !running && selected.length > 0
+                  ? () => {
+                      setFailRetryAfterSec(null);
+                      void runBatch();
+                    }
+                  : undefined
+              }
+              retryLabel="Retry batch"
+              showLabSample={!image}
+              showModules={false}
+            />
+          )
         ) : null}
-        <p className="text-[11px] text-[var(--fg-dim)]">
-          Each format runs independently
-          {displayDemoMode
-            ? " as a cached Lab preview"
+        <p className={sellerPackActive ? "hidden text-[11px] font-semibold text-[#717987] lg:block" : "text-[11px] text-[var(--fg-dim)]"}>
+          {demoMode && sellerPackActive
+            ? "Open three archived examples for the fixed launch formats"
+            : "Each format runs independently"}
+          {!demoMode || !sellerPackActive
+            ? demoMode
+              ? " as a cached Lab preview"
             : isFree
               ? trialDone
                 ? " (Free Mini trial used · Lab demos still free)"
                 : ` (${liveContractLabel})`
-              : " (private 720p)"}
+              : " (private 720p)"
+            : null}
           . Finished clips land in{" "}
-          <Link href="/library" className="text-[var(--brand)] hover:underline">
+          <Link href="/library" className={sellerPackActive ? "text-[#2457E6] hover:underline" : "text-[var(--brand)] hover:underline"}>
             Library
           </Link>
           .
         </p>
       </div>
 
-      <div className="card space-y-3 p-4">
+      <div
+        className={
+          sellerPackActive
+            ? "space-y-3 rounded-2xl border border-[#D5D9E1] bg-white p-3 shadow-[0_18px_50px_-38px_rgba(22,32,51,0.45)] sm:p-4"
+            : "card space-y-3 p-4"
+        }
+      >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-semibold">
-              {sellerPackActive ? "Launch Pack queue" : "Queue"}
+            <p className={sellerPackActive ? "text-[9px] font-black uppercase tracking-[0.14em] text-[#2457E6]" : "hidden"}>
+              Three fixed outputs
+            </p>
+            <h2 className={sellerPackActive ? "mt-1 text-xl font-black tracking-[-0.035em]" : "font-semibold"}>
+              {sellerPackActive
+                ? demoMode
+                  ? jobs.length > 0
+                    ? "Archived format motion tests"
+                    : "Launch Pack directions"
+                  : running
+                    ? "Creating your Launch Pack"
+                    : doneCount > 0 && doneCount < 3
+                      ? "Your Pack is partially ready"
+                      : doneCount === 3 && availableDownloads.length === 3
+                        ? "Your Launch Pack is ready"
+                        : "Your Launch Pack"
+                : "Queue"}
             </h2>
             {jobs.length > 0 ? (
-              <p className="mt-0.5 text-[10px] text-[var(--fg-dim)]">
-                {doneCount} ready
+              <p className={sellerPackActive ? "mt-1 text-[10px] font-semibold text-[#717987]" : "mt-0.5 text-[10px] text-[var(--fg-dim)]"}>
+                {demoMode
+                  ? `${doneCount} archived prototype${doneCount === 1 ? "" : "s"} · separate sample toys`
+                  : `${doneCount} of 3 clips ready`}
                 {needsAttentionCount > 0
                   ? ` · ${needsAttentionCount} need attention`
                   : ""}
@@ -2480,74 +2269,86 @@ export function BatchStudio({
             ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {queuedContinueCount > 0 && hasBoundPrivatePack ? (
+            {failedRetryCount > 0 && !sellerPackActive ? (
               <button
                 type="button"
-                disabled={running || !canRetryBoundPrivatePack}
-                onClick={() => void continueQueuedPack()}
-                className="rounded-full border border-[var(--mint)]/35 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"
-                title={
-                  canRetryBoundPrivatePack
-                    ? "Continue only the formats already covered by this Pack reservation"
-                    : "Private generation is currently gated; existing results remain available"
-                }
-              >
-                Continue pending · {queuedContinueCount}
-              </button>
-            ) : null}
-            {failedRetryCount > 0 ? (
-              <button
-                type="button"
-                disabled={
-                  running ||
-                  !(canRetryBoundPrivatePack || (image && ownsRights))
-                }
+                disabled={running || !image || !ownsRights}
                 onClick={() => void retryAllFailed()}
-                className="rounded-full border border-[var(--mint)]/35 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"
+                className={sellerPackActive ? "rounded-md border border-[#2457E6]/30 bg-[#F6F8FF] px-3 py-1.5 text-[10px] font-black text-[#2457E6] disabled:opacity-40" : "rounded-full border border-[var(--mint)]/35 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"}
                 title="Retry only confirmed failed or unsubmitted formats; completed clips stay available"
               >
-                Retry eligible only
+                Retry failed formats
               </button>
             ) : null}
             {jobs.length > 0 ? (
-              <span className="text-[10px] text-[var(--fg-dim)]">
-                {displayDemoMode ? "Browser preview" : "Private account run"}
+              <span className={sellerPackActive ? "text-[10px] font-semibold text-[#8A919D]" : "text-[10px] text-[var(--fg-dim)]"}>
+                {demoMode ? "Public sample" : "Private validation"}
               </span>
             ) : null}
           </div>
         </div>
         {jobs.length === 0 && (
-          <div className="rounded-xl border border-dashed border-white/12 bg-black/25 px-4 py-8 text-center">
-            <p className="text-sm font-semibold text-[var(--fg)]">
-              {sellerPackActive
-                ? "Your Launch Pack queue is empty"
-                : "No batch jobs yet"}
-            </p>
-            <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-[var(--fg-dim)]">
-              {sellerPackActive
-                ? demoMode
-                  ? "Choose one Pikbo Lab sample → preview the three archived formats. No product photo is accepted or processed."
-                  : "Upload one owned toy photo → Generate pack. Each format finishes independently; a confirmed failed format restores its 10 credits while completed clips stay."
-                : "Pick presets (or open Batch from an effect page), confirm ownership, then run. Finished clips also save on this device Library."}
-            </p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <FreeTrialCta
-                path="/create?mode=seller-pack"
-                labelTry="Preview Lab sample"
-                labelDemo="Preview Lab sample"
-                hideClipsChip
-                className="rounded-full border border-[var(--mint)]/35 px-3 py-1.5 text-[11px] font-bold text-[var(--mint)]"
-              />
-              {!sellerPackActive ? (
-                <Link
-                  href="/create?mode=seller-pack"
-                  className="rounded-full border border-white/15 px-3 py-1.5 text-[11px] font-bold text-white/70"
-                >
-                  {demoMode
-                    ? "Launch Pack — 3 cached previews / 0 credits"
-                    : "Launch Pack — 3 private clips / 30 credits"}
-                </Link>
-              ) : (
+          sellerPackActive ? (
+            <div className="grid gap-2 sm:grid-cols-3">
+              {SELLER_PACK_ITEMS.map((item, index) => {
+                const direction = SELLER_PACK_DIRECTION_FRAMES[index];
+                return (
+                  <article
+                    key={item.key}
+                    className="overflow-hidden rounded-xl border border-[#D5D9E1] bg-[#F7F8FA]"
+                  >
+                    <div className="relative aspect-[16/10] overflow-hidden bg-[#E2E5EB]">
+                      {image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={image}
+                          alt={`${item.label} direction using the selected toy sample`}
+                          className={`h-full w-full ${
+                            index === 0
+                              ? "bg-[#EDF0F5] object-contain"
+                              : index === 1
+                                ? "object-cover object-center"
+                                : "object-cover object-top"
+                          }`}
+                        />
+                      ) : (
+                        <div className="grid h-full place-items-center px-4 text-center text-[10px] font-black uppercase tracking-[0.1em] text-[#7A8290]">
+                          Choose a sample toy
+                        </div>
+                      )}
+                      <span className={`absolute left-2 top-2 rounded-md px-2 py-1 text-[7px] font-black uppercase tracking-[0.08em] text-white ${index === 0 ? "bg-[#2457E6]" : "bg-[#E85C45]"}`}>
+                        {index === 0 ? "Selected toy still" : direction.evidence}
+                      </span>
+                    </div>
+                    <div className="p-3">
+                      <p className="text-sm font-black tracking-[-0.025em]">{item.label}</p>
+                      <p className="mt-1 text-[9px] font-semibold text-[#717987]">
+                        {direction.use} · {item.aspectRatio} · 5 sec
+                      </p>
+                    </div>
+                  </article>
+                );
+              })}
+              <p className="sm:col-span-3 text-[10px] font-semibold leading-4 text-[#717987]">
+                The selected toy stays visible across three static format
+                directions. These are not completed videos or customer results.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-white/12 bg-black/25 px-4 py-8 text-center">
+              <p className="text-sm font-semibold text-[var(--fg)]">No batch jobs yet</p>
+              <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-[var(--fg-dim)]">
+                Pick presets, confirm ownership, then run. Finished clips also
+                save on this device Library.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                <FreeTrialCta
+                  path="/create?mode=seller-pack"
+                  labelTry="Preview Lab sample"
+                  labelDemo="Preview Lab sample"
+                  hideClipsChip
+                  className="rounded-full border border-[var(--mint)]/35 px-3 py-1.5 text-[11px] font-bold text-[var(--mint)]"
+                />
                 <Link
                   href={createRemixHref("360-spin-showcase")}
                   className="rounded-full border border-white/15 px-3 py-1.5 text-[11px] font-bold text-white/70"
@@ -2555,14 +2356,14 @@ export function BatchStudio({
                 >
                   Single-format preview
                 </Link>
-              )}
+              </div>
             </div>
-          </div>
+          )
         )}
         {jobs.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-black/30 px-3 py-2">
-            <p className="text-[11px] text-[var(--fg-muted)]">
-              {displayDemoMode
+          <div className={sellerPackActive ? "flex flex-wrap items-center gap-2 rounded-xl border border-[#D5D9E1] bg-[#F7F8FA] px-3 py-2" : "flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-black/30 px-3 py-2"}>
+            <p className={sellerPackActive ? "text-[11px] font-semibold text-[#667085]" : "text-[11px] text-[var(--fg-muted)]"}>
+              {demoMode
                 ? "Lab previews only — not made from your upload"
                 : "Launch Pack includes only succeeded downloadable clips"}
               {canExportPack
@@ -2573,19 +2374,19 @@ export function BatchStudio({
               type="button"
               disabled={!canExportPack || exportBusy}
               onClick={() => void downloadAvailableClips()}
-              className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"
+              className={sellerPackActive ? "rounded-md bg-[#2457E6] px-3 py-1.5 text-[10px] font-black text-white disabled:opacity-40" : "rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"}
               title="Saves each available clip. Failed formats and unavailable raw files are omitted."
               data-launch-pack-export="downloadable-only"
             >
               {exportBusy
                 ? "Saving clips…"
-                : `${displayDemoMode ? "Download Lab previews" : "Download available videos"}${
+                : `${demoMode ? "Download archived tests" : "Download available videos"}${
                     availableDownloads.length
                       ? ` · ${availableDownloads.length}`
                       : ""
                   }`}
             </button>
-            <span className="text-[10px] text-[var(--fg-dim)]">
+            <span className={sellerPackActive ? "text-[10px] font-semibold text-[#8A919D]" : "text-[10px] text-[var(--fg-dim)]"}>
               Only completed, downloadable clips are included.
             </span>
           </div>
@@ -2597,56 +2398,69 @@ export function BatchStudio({
           >
             <Link
               href="/library"
-              className="btn btn-primary px-4 py-2 text-xs"
+              className={sellerPackActive ? "inline-flex min-h-10 items-center rounded-xl bg-[#2457E6] px-4 py-2 text-xs font-black text-white" : "btn btn-primary px-4 py-2 text-xs"}
             >
               Open in Library
             </Link>
             <a
               href={
-                displayDemoMode
+                demoMode
                   ? "/create?mode=seller-pack&try=1&source=next-sample"
                   : "/create?mode=seller-pack&source=next-sku"
               }
-              className="btn btn-ghost border border-white/15 px-4 py-2 text-xs"
+              className={sellerPackActive ? "inline-flex min-h-10 items-center rounded-xl border border-[#D5D9E1] bg-white px-4 py-2 text-xs font-black text-[#4E5663]" : "btn btn-ghost border border-white/15 px-4 py-2 text-xs"}
             >
-              {displayDemoMode ? "Preview another sample" : "Create next SKU"}
+              {demoMode ? "Preview another sample" : "Create next SKU"}
             </a>
           </nav>
         ) : null}
         {jobs.map((j) => (
           <div
             key={j.slug}
-            className="rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] p-3"
+            id={`pack-job-${j.slug}`}
+            className={sellerPackActive ? "rounded-xl border border-[#D5D9E1] bg-[#F7F8FA] p-3" : "rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] p-3"}
           >
             <div className="flex items-center justify-between gap-2 text-sm">
-              <span className="font-medium">{j.name}</span>
+              <span className={sellerPackActive ? "font-black tracking-[-0.02em]" : "font-medium"}>{j.name}</span>
               <span
                 className={`text-[10px] font-bold uppercase ${
-                  j.status === "succeeded"
-                    ? "text-[var(--mint)]"
-                    : j.status === "failed" || j.status === "refunded"
-                      ? "text-[var(--brand)]"
-                      : j.status === "running"
-                        ? "text-[var(--brand-2)]"
-                        : "text-[var(--fg-dim)]"
+                  sellerPackActive
+                    ? j.status === "succeeded"
+                      ? "text-[#16824B]"
+                      : j.status === "failed" || j.status === "refunded"
+                        ? "text-[#C34732]"
+                        : j.status === "running" || j.status === "queued"
+                          ? "text-[#2457E6]"
+                          : "text-[#7A8290]"
+                    : j.status === "succeeded"
+                      ? "text-[var(--mint)]"
+                      : j.status === "failed" || j.status === "refunded"
+                        ? "text-[var(--brand)]"
+                        : j.status === "running"
+                          ? "text-[var(--brand-2)]"
+                          : "text-[var(--fg-dim)]"
                 }`}
               >
-                {j.status}
+                {sellerPackActive ? launchWorkspaceStatus(j.status) : j.status}
               </span>
             </div>
             {j.error && (
-              <p className="mt-1 text-xs text-[var(--brand)]">{j.error}</p>
+              <p className={sellerPackActive ? "mt-1 text-xs font-semibold text-[#C34732]" : "mt-1 text-xs text-[var(--brand)]"}>{j.error}</p>
             )}
-            <div className="mt-1 flex flex-wrap gap-1.5 text-[10px] text-[var(--fg-dim)]">
+            <div className={sellerPackActive ? "mt-1 flex flex-wrap gap-1.5 text-[10px] font-semibold text-[#717987]" : "mt-1 flex flex-wrap gap-1.5 text-[10px] text-[var(--fg-dim)]"}>
               <span>{j.aspectRatio ?? aspectRatio}</span>
               <span>· {j.duration ?? effectiveDuration}s</span>
-              <span>· {j.resolution ?? effectiveResolution}</span>
-              {j.creditState ? (
+              {!sellerPackActive ? <span>· {j.resolution ?? effectiveResolution}</span> : null}
+              {j.creditState && !demoMode ? (
                 <span
                   className={
                     j.creditState === "refund unconfirmed"
-                      ? "font-bold text-amber-300"
-                      : "font-bold text-[var(--fg-muted)]"
+                      ? sellerPackActive
+                        ? "font-bold text-[#B45309]"
+                        : "font-bold text-amber-300"
+                      : sellerPackActive
+                        ? "font-bold text-[#667085]"
+                        : "font-bold text-[var(--fg-muted)]"
                   }
                 >
                   · {j.creditState}
@@ -2664,34 +2478,46 @@ export function BatchStudio({
                 controls
                 muted
                 playsInline
-                className="mt-2 max-h-40 w-full rounded-lg bg-black/40"
+                className="mt-2 max-h-52 w-full rounded-lg bg-black"
               />
             ) : j.status === "succeeded" && j.videoUrl && j.watermark && !j.demo ? (
-              <div className="mt-2 rounded-lg border border-amber-400/30 bg-amber-400/[0.06] px-3 py-3 text-[10px] leading-snug text-amber-100/90">
+              <div className={sellerPackActive ? "mt-2 rounded-lg border border-[#E8C88D] bg-[#FFF8EA] px-3 py-3 text-[10px] font-semibold leading-snug text-[#8A5A12]" : "mt-2 rounded-lg border border-amber-400/30 bg-amber-400/[0.06] px-3 py-3 text-[10px] leading-snug text-amber-100/90"}>
                 <p className="font-bold">Free live held for T6 bake</p>
-                <p className="mt-0.5 text-white/50">{freeLiveDownloadBlockReason()}</p>
+                <p className={sellerPackActive ? "mt-0.5 text-[#8A6A35]" : "mt-0.5 text-white/50"}>{freeLiveDownloadBlockReason()}</p>
               </div>
             ) : null}
             {j.status === "succeeded" && (
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <span
                   className={`text-[10px] font-bold uppercase ${
-                    j.demo ? "text-[var(--fg-dim)]" : "text-[var(--mint)]"
+                    sellerPackActive
+                      ? j.demo
+                        ? "text-[#E85C45]"
+                        : "text-[#16824B]"
+                      : j.demo
+                        ? "text-[var(--fg-dim)]"
+                        : "text-[var(--mint)]"
                   }`}
                 >
-                  {j.demo ? "Cached demo" : "Private generation"}
+                  {j.demo
+                    ? sellerPackActive
+                      ? "Archived motion test · separate sample toy"
+                      : "Cached demo"
+                    : "Private generation"}
                 </span>
-                {j.model && (
+                {j.model && !sellerPackActive && (
                   <span className="text-[10px] text-[var(--fg-dim)]">
                     {j.model.split("/").pop()}
                   </span>
                 )}
-                <Link
-                  href={`/effects/${j.slug}`}
-                  className="text-[10px] text-[var(--mint)] hover:underline"
-                >
-                  Effect page →
-                </Link>
+                {!sellerPackActive ? (
+                  <Link
+                    href={`/effects/${j.slug}`}
+                    className="text-[10px] text-[var(--mint)] hover:underline"
+                  >
+                    Effect page →
+                  </Link>
+                ) : null}
                 {j.demo || !j.watermark ? (
                   j.requestId ||
                   (j.videoUrl && isSafeDeliverableUrl(j.videoUrl)) ? (
@@ -2699,7 +2525,7 @@ export function BatchStudio({
                       type="button"
                       data-seller-download="gated"
                       onClick={() => void downloadChild(j)}
-                      className="text-[10px] text-[var(--mint)] hover:underline"
+                      className={sellerPackActive ? "text-[10px] font-black text-[#2457E6] hover:underline" : "text-[10px] text-[var(--mint)] hover:underline"}
                     >
                       Download / open
                     </button>
@@ -2724,18 +2550,15 @@ export function BatchStudio({
             {retryEligible(j) && (
               <button
                 type="button"
-                disabled={
-                  running ||
-                  !(canRetryBoundPrivatePack || (image && ownsRights))
-                }
+                disabled={running || !image || !ownsRights}
                 onClick={() => void retryJob(j.slug)}
-                className="mt-2 rounded-full border border-[var(--mint)]/30 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"
+                className={sellerPackActive ? "mt-2 rounded-md border border-[#2457E6]/30 bg-white px-3 py-1.5 text-[10px] font-black text-[#2457E6] disabled:opacity-40" : "mt-2 rounded-full border border-[var(--mint)]/30 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"}
               >
-                Retry this item · new 10-credit quote
+                Retry this format · reserve 10 credits
               </button>
             )}
             {j.creditState === "refund unconfirmed" ? (
-              <p className="mt-2 text-[10px] text-amber-200">
+              <p className={sellerPackActive ? "mt-2 text-[10px] font-semibold text-[#B45309]" : "mt-2 text-[10px] text-amber-200"}>
                 Credit restoration is not confirmed — check your balance before retrying this format.
               </p>
             ) : null}
@@ -2745,14 +2568,18 @@ export function BatchStudio({
 
       {/* Phase F: sticky mobile Seller Pack / Batch CTA above tab nav */}
       <div
-        className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+        className={
+          sellerPackActive
+            ? "fixed inset-x-0 bottom-0 z-40 border-t border-[#D5D9E1] bg-white/96 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_36px_rgba(22,32,51,0.12)] backdrop-blur-xl lg:hidden"
+            : "fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+        }
         data-seller-pack-sticky="mobile"
       >
         {image ? (
-          <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
+          <p className={sellerPackActive ? "mb-1.5 truncate text-center text-[10px] font-bold text-[#667085]" : "mb-1.5 truncate text-center text-[10px] font-medium text-white/55"}>
             {sellerPackActive
               ? demoMode
-                ? "Launch Pack · 3 cached previews"
+                ? "3 archived motion tests · separate sample toys"
                 : `Launch Pack · ${sellerPackQuoteLabel(packQuote)}`
               : `Batch · ${selected.length} recipes · ${batchQuoteLabel(packQuote)}`}
             {doneCount > 0 ? ` · ${doneCount} ready` : ""}
@@ -2761,60 +2588,45 @@ export function BatchStudio({
         ) : null}
         {image && !ownsRights && !demoMode ? (
           <label
-            className="mb-2 flex cursor-pointer items-start gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2 text-[10px] leading-snug text-[var(--fg-muted)]"
+            className="mb-2 flex cursor-pointer items-start gap-2 rounded-lg border border-[#D5D9E1] bg-[#F7F8FA] px-2.5 py-2 text-[10px] font-semibold leading-snug text-[#667085]"
             data-launch-pack-primary-action="2"
           >
             <input
               type="checkbox"
               checked={ownsRights}
               onChange={(e) => setOwnsRights(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--mint)]"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[#2457E6]"
             />
             <span>I own this photo and may use it for all three formats.</span>
           </label>
         ) : null}
         {running ? (
-          <GenerateWaitMobileStrip
-            elapsed={packElapsed}
-            demoMode={demoMode}
-            onCancel={cancelInFlightPack}
-          />
-        ) : hasBoundPrivatePack && !image ? (
-          <div className="flex gap-2">
-            <Link
-              href="/library"
-              className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
-              data-seller-pack-action="library"
-            >
-              Open recovered Pack
-            </Link>
-            {queuedContinueCount > 0 ? (
+          sellerPackActive ? (
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-black text-[#111827]">
+                  Creating your Pack · {doneCount}/3 ready
+                </p>
+                <p className="mt-0.5 text-[9px] font-semibold leading-3 text-[#717987]">
+                  Stops waiting here; a render may still finish. Check Pack
+                  status and balance before retrying.
+                </p>
+              </div>
               <button
                 type="button"
-                disabled={running || !canRetryBoundPrivatePack}
-                onClick={() => void continueQueuedPack()}
-                className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm disabled:opacity-50"
-                data-seller-pack-action="continue-pending"
+                onClick={cancelInFlightPack}
+                className="shrink-0 rounded-xl border border-[#D5D9E1] bg-white px-3 py-2 text-[10px] font-black text-[#4E5663]"
               >
-                Continue {queuedContinueCount} pending
+                Cancel Pack
               </button>
-            ) : failedRetryCount > 0 ? (
-              <button
-                type="button"
-                disabled={running || !canRetryBoundPrivatePack}
-                onClick={() => void retryAllFailed()}
-                className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm disabled:opacity-50"
-                data-seller-pack-action="retry-failed"
-                title={
-                  canRetryBoundPrivatePack
-                    ? "Re-run only confirmed failed formats"
-                    : "Private generation is currently gated; existing downloads stay available"
-                }
-              >
-                Retry failed only
-              </button>
-            ) : null}
-          </div>
+            </div>
+          ) : (
+            <GenerateWaitMobileStrip
+              elapsed={packElapsed}
+              demoMode={demoMode}
+              onCancel={cancelInFlightPack}
+            />
+          )
         ) : !image ? (
           privateUploadEnabled ? (
             <div className="flex gap-2">
@@ -2825,7 +2637,7 @@ export function BatchStudio({
                     .getElementById("seller-pack-photo")
                     ?.scrollIntoView({ behavior: "smooth", block: "center" })
                 }
-                className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
+                className="min-w-0 flex-1 rounded-xl bg-[#2457E6] px-4 py-3 text-sm font-black text-white"
                 data-seller-pack-action="upload"
               >
                 Upload owned toy photo
@@ -2833,7 +2645,7 @@ export function BatchStudio({
               <button
                 type="button"
                 onClick={() => void chooseLabSample(SAMPLE_TOYS[0].id)}
-                className="btn btn-ghost shrink-0 px-3 py-3 text-xs"
+                className="shrink-0 rounded-xl border border-[#D5D9E1] bg-white px-3 py-3 text-xs font-black text-[#4E5663]"
                 title="Pikbo Lab prototype sample · never sent to private generation"
               >
                 Preview Lab
@@ -2843,17 +2655,17 @@ export function BatchStudio({
             <button
               type="button"
               onClick={() => void chooseLabSample(SAMPLE_TOYS[0].id)}
-              className="btn btn-primary w-full py-3 text-sm"
+              className="w-full rounded-xl bg-[#2457E6] px-4 py-3 text-sm font-black text-white"
               data-seller-pack-action="preview-lab"
             >
-              Preview 3 Lab formats · 0 credits
+              Open 3 archived motion tests · 0 credits
             </button>
           )
-        ) : doneCount > 0 ? (
+        ) : jobs.length > 0 ? (
           <div className="flex gap-2">
             <Link
               href="/library"
-              className="btn btn-primary min-w-0 flex-1 py-3 text-sm"
+              className="min-w-0 flex-1 rounded-xl bg-[#2457E6] px-4 py-3 text-center text-sm font-black text-white"
               data-seller-pack-action="library"
             >
               Library
@@ -2861,35 +2673,37 @@ export function BatchStudio({
             {failedRetryCount > 0 ? (
               <button
                 type="button"
-                disabled={
-                  running ||
-                  !(canRetryBoundPrivatePack || (image && ownsRights))
-                }
-                onClick={() => void retryAllFailed()}
-                className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm disabled:opacity-50"
-                data-seller-pack-action="retry-failed"
-                title="Re-run only confirmed failed formats; completed clips stay"
+                onClick={() => {
+                  const firstFailed = jobs.find(retryEligible);
+                  if (!firstFailed) return;
+                  document
+                    .getElementById(`pack-job-${firstFailed.slug}`)
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }}
+                className="min-w-0 flex-1 rounded-xl border border-[#D5D9E1] bg-white px-3 py-3 text-sm font-black text-[#2457E6] disabled:opacity-50"
+                data-seller-pack-action="review-failed"
+                title="Review the failed clip before confirming a per-format retry"
               >
-                Retry failed only
+                Review failed clip
               </button>
             ) : (
               <a
                 href={
-                  displayDemoMode
+                  demoMode
                     ? "/create?mode=seller-pack&try=1&source=next-sample"
                     : "/create?mode=seller-pack&source=next-sku"
                 }
-                className="btn btn-ghost min-w-0 flex-1 border border-white/15 py-3 text-sm disabled:opacity-50"
+                className="min-w-0 flex-1 rounded-xl border border-[#D5D9E1] bg-white px-3 py-3 text-center text-sm font-black text-[#4E5663]"
                 data-seller-pack-action="next-sku"
               >
-                {displayDemoMode ? "Another sample" : "Create next SKU"}
+                {demoMode ? "Another sample" : "Create next SKU"}
               </a>
             )}
           </div>
         ) : (
           <button
             type="button"
-            disabled={!canRun}
+            disabled={!canStartFreshSellerPack}
             onClick={() => {
               if (!ownsRights) {
                 document
@@ -2897,9 +2711,13 @@ export function BatchStudio({
                   ?.scrollIntoView({ behavior: "smooth", block: "center" });
                 return;
               }
-              if (canRun) void runBatch();
+              if (canStartFreshSellerPack) void runBatch();
             }}
-            className="btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
+            className={
+              sellerPackActive
+                ? "w-full rounded-xl bg-[#2457E6] px-4 py-3.5 text-[15px] font-black tracking-tight text-white disabled:opacity-45"
+                : "btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
+            }
             data-seller-pack-action="generate"
             data-launch-pack-primary-action={image ? "3" : "1"}
           >

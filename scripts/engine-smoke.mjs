@@ -436,10 +436,12 @@ assert.match(batchFirstRun, /Upload owned toy photo/);
 assert.match(batchFirstRun, /data-seller-pack-action="upload"/);
 assert.match(batchFirstRun, /data-seller-pack-action="generate"/);
 assert.match(batchFirstRun, /data-seller-pack-action="library"/);
-assert.match(batchFirstRun, /data-seller-pack-action="retry-failed"/);
+assert.match(batchFirstRun, /data-seller-pack-action="review-failed"/);
 assert.match(batchFirstRun, /data-seller-pack-sticky="mobile"/);
-assert.match(batchFirstRun, /Retry failed only/);
-assert.match(batchFirstRun, /cached prototype/i);
+assert.match(batchFirstRun, /Review failed clip/);
+assert.match(batchFirstRun, /Retry this format · reserve 10 credits/);
+assert.match(batchFirstRun, /archived motion test/i);
+assert.match(batchFirstRun, /separate sample toy/i);
 assert.doesNotMatch(batchFirstRun, /Lab samples are official examples/i);
 
 const meClient = fs.readFileSync(join(root, "lib/meClient.ts"), "utf8");
@@ -1842,7 +1844,15 @@ assert.match(localAssetsSrc, /reserveLocalAssetId/);
 assert.match(localAssetsSrc, /NOT_OWNED/);
 assert.match(
   fs.readFileSync(join(root, "app/api/assets/upload-url/route.ts"), "utf8"),
-  /reserveLocalAssetId/
+  /createPrivateToyAssetUpload/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/assets/upload-url/route.ts"), "utf8"),
+  /AUTH_REQUIRED|PRIVATE_PREVIEW_REQUIRED/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/assets/complete/route.ts"), "utf8"),
+  /completePrivateToyAsset/
 );
 assert.match(
   fs.readFileSync(
@@ -2394,10 +2404,14 @@ assert.match(guidesSrc24, /toy-unboxing-video-from-one-photo/);
 
 assert.match(
   fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-  /data-home-format-preview=\{format\.slug\}[\s\S]*href=\{item\.projectHref \|\| item\.href\}/
+  /data-home-format-preview=\{format\.slug\}[\s\S]*View archived motion test — different toy/
 );
 assert.match(
-  fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
+  [
+    fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
+    fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
+    fs.readFileSync(join(root, "components/HeroUpload.tsx"), "utf8"),
+  ].join("\n"),
   /data-home-upgrade=["']launch-pack["'][\s\S]*\/create\?mode=seller-pack/
 );
 
@@ -2551,7 +2565,8 @@ assert.match(createStudio, /create-ownership/);
 assert.match(createStudio, /create-photo-step/);
 assert.match(createStudio, /Download policy/);
 assert.match(batchStudio, /batch-ownership/);
-assert.match(batchStudio, /bottom-\[4\.75rem\]/);
+assert.match(batchStudio, /fixed inset-x-0 bottom-0/);
+assert.match(appShell, /!sellerPackCreate\s*\?\s*<nav/);
 assert.match(batchStudio, /api\/downloads/);
 
 // Landing tool Free-download honesty (parity with Create/Library)
@@ -3902,8 +3917,11 @@ const homeHeroSrc = fs.readFileSync(
 );
 assert.match(
   homeHeroSrc,
-  /One toy photo\.[\s\S]*Three product videos\./
+  /Explore launch looks for designer toys\./
 );
+assert.match(homeHeroSrc, /Listing Spin/);
+assert.match(homeHeroSrc, /Blind-box Reveal/);
+assert.match(homeHeroSrc, /Social Flash/);
 assert.match(
   homeHeroSrc,
   /data-home-hero|href=["']\/create\?mode=seller-pack["']/
@@ -4245,24 +4263,25 @@ assert.match(createStudio, /recoveredFromAssetMiss|registerLocalAsset/);
 assert.match(batchStudio, /fallbackImage/);
 assert.match(batchStudio, /recoveredFromAssetMiss/);
 assert.match(batchStudio, /cancelInFlightPack|AbortController/);
-assert.match(batchStudio, /downloadChild|classifyDownloadHead/);
+assert.match(batchStudio, /downloadChild/);
 assert.match(batchStudio, /data-seller-download=["']gated["']/);
 assert.match(batchStudio, /downloadVideoFile\(gateUrl|downloadVideoFile\(j\.videoUrl/);
+assert.doesNotMatch(
+  batchStudio,
+  /fetch\(gateUrl[\s\S]{0,120}method:\s*["']HEAD["']/,
+  "Create must not probe private Pack downloads without the auth headers owned by downloadVideoFile"
+);
 
 assert.match(batchStudio, /Cancel pack/);
-// Pack cancel aborts the owning operation but must not unlock it or invent a
-// local settlement. The guarded operation/poll reconciles server truth.
-const batchCancelSource = batchStudio.slice(
-  batchStudio.indexOf("function cancelInFlightPack()"),
-  batchStudio.indexOf("const isFree", batchStudio.indexOf("function cancelInFlightPack()"))
+// Pack cancel immediately marks running children refund unconfirmed (Create parity)
+assert.match(
+  batchStudio,
+  /function cancelInFlightPack[\s\S]{0,900}refund unconfirmed/
 );
 assert.match(
-  batchCancelSource,
-  /ctrl\.abort\(\)/
+  batchStudio,
+  /function cancelInFlightPack[\s\S]{0,900}setJobs/
 );
-assert.doesNotMatch(batchCancelSource, /packAbortRef\.current = null/);
-assert.doesNotMatch(batchCancelSource, /setJobs|refund unconfirmed/);
-assert.match(batchStudio, /abortCtrl\.signal\.aborted[\s\S]*refund unconfirmed/);
 assert.match(landingTool, /postGenerateWithRetry|fallbackImage/);
 assert.match(landingTool, /recoveredFromAssetMiss|registerLocalAsset/);
 function resolveSpecImagePure(spec, store) {
@@ -5074,7 +5093,8 @@ assert.match(
   fs.readFileSync(join(root, "lib/sellerPackContract.ts"), "utf8"),
   /360-spin-showcase[\s\S]*blind-box-unboxing[\s\S]*paparazzi-flash/
 );
-assert.match(batchStudio, /data-seller-pack-recovery="durable-pointer"/);
+assert.match(batchStudio, /data-seller-pack-recovery="session-pointer"/);
+assert.match(batchStudio, /Server status remains authoritative/);
 assert.match(batchStudio, /retryEligible/);
 const recoveryCjs = require("typescript").transpileModule(sellerPackRecoverySrc, {
   compilerOptions: {

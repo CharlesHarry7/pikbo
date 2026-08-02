@@ -70,7 +70,9 @@ assert(
     create.includes("Listing Spin") &&
     create.includes("Blind-box Reveal") &&
     create.includes("Social Flash") &&
-    batch.includes("Launch Pack — 3 private clips / 30 credits") &&
+    batch.includes("reserveSellerPackClient") &&
+    batch.includes("parseExactSellerPackServerJobs") &&
+    batch.includes("sellerPackQuoteLabel(packQuote)") &&
     batch.includes('data-public-pack-preview="lab-only"') &&
     !create.includes("Launch Pack — 12 recipes") &&
     !batch.includes("Launch Pack — 12 recipes"),

@@ -5,7 +5,13 @@ import { LOCALES, LOCALE_LABELS, LOCALE_SHORT } from "@/lib/i18n";
 import { useI18n } from "@/components/LanguageProvider";
 
 /** Globe dropdown to switch UI language. Compact variant for the mobile header. */
-export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
+export function LanguageSwitcher({
+  compact = false,
+  tone = "dark",
+}: {
+  compact?: boolean;
+  tone?: "dark" | "light";
+}) {
   const { locale, setLocale, t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -33,7 +39,11 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
         aria-expanded={open}
         aria-label={t("lang.change")}
         title={t("lang.change")}
-        className={`flex items-center gap-1.5 rounded-full border border-white/10 text-white/70 transition-colors hover:border-white/25 hover:text-white ${
+        className={`flex items-center gap-1.5 rounded-full border transition-colors ${
+          tone === "light"
+            ? "border-[#C9CED8] text-[#5F6774] hover:border-[#2457E6] hover:text-[#15171B]"
+            : "border-white/10 text-white/70 hover:border-white/25 hover:text-white"
+        } ${
           compact ? "h-11 px-3 text-[11px]" : "px-3 py-1.5 text-[13px]"
         }`}
       >

@@ -3,12 +3,12 @@ import { site } from "@/lib/site";
 import { COLD_START_INDEX_PATHS } from "@/lib/seoIndex";
 
 /**
- * Cold-start crawl budget: home + primary product job + pricing + legal.
+ * Cold-start crawl budget: home + primary product job + pricing + legal/support.
  * Thin hubs, Lab walls, extra tools/for/guides stay reachable + noindex.
  * See docs/growth/SEO_INDEXABLE_10_RELEASE.md.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const reviewedAt = "2026-07-30";
+  const reviewedAt = "2026-08-01";
 
   return COLD_START_INDEX_PATHS.map((path) => ({
     url: path === "/" ? site.url : `${site.url}${path}`,

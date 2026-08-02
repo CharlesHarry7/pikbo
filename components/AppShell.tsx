@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
 import { CreditsBadge } from "@/components/CreditsBadge";
 import { Footer } from "@/components/Footer";
 import {
@@ -26,7 +26,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
       <ToastProvider>
-        <AppShellInner>{children}</AppShellInner>
+        <Suspense fallback={children}>
+          <AppShellInner>{children}</AppShellInner>
+        </Suspense>
       </ToastProvider>
     </LanguageProvider>
   );
@@ -35,8 +37,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
   const path = usePathname() || "/";
+  const searchParams = useSearchParams();
   const home = path === "/";
   const create = path.startsWith("/create");
+  const sellerPackCreate =
+    create && ["seller-pack", "seller"].includes(searchParams.get("mode") || "");
+  const lightShell = home || sellerPackCreate;
   const hideFooter =
     home ||
     create ||
@@ -49,10 +55,27 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   }, [path]);
 
   return (
-    <div className="flex min-h-screen min-w-0 flex-col bg-[#0A0A0A] text-[#F7F4ED]">
-      <header className="sticky top-0 z-50 hidden h-16 items-center border-b border-white/10 bg-[#0A0A0A]/92 px-7 backdrop-blur-xl lg:flex">
+    <div
+      className={cn(
+        "flex min-h-screen min-w-0 flex-col",
+        lightShell
+          ? "bg-[#EEF0F4] text-[#15171B]"
+          : "bg-[#0A0A0A] text-[#F7F4ED]"
+      )}
+    >
+      <header
+        className={cn(
+          "sticky top-0 z-50 hidden h-16 items-center border-b px-7 backdrop-blur-xl lg:flex",
+          lightShell
+            ? "border-[#D4D8E0] bg-[#F7F8FA]/92"
+            : "border-white/10 bg-[#0A0A0A]/92"
+        )}
+      >
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
-          <Logo size={30} />
+          <Logo
+            size={30}
+            wordClassName={cn("text-[19px]", lightShell && "!text-[#15171B]")}
+          />
         </Link>
         <nav
           className="mx-auto flex items-center gap-9"
@@ -68,34 +91,58 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 aria-current={on ? "page" : undefined}
                 className={cn(
                   "relative py-5 text-[13px] font-bold transition-colors",
-                  on
-                    ? "text-[#F7F4ED]"
-                    : "text-[#F7F4ED]/46 hover:text-[#F7F4ED]"
+                  lightShell
+                    ? on
+                      ? "text-[#15171B]"
+                      : "text-[#6D7480] hover:text-[#15171B]"
+                    : on
+                      ? "text-[#F7F4ED]"
+                      : "text-[#F7F4ED]/46 hover:text-[#F7F4ED]"
                 )}
               >
                 {item.label}
                 {on ? (
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#CBFF3D]" />
+                  <span
+                    className={cn(
+                      "absolute inset-x-0 bottom-0 h-0.5",
+                      lightShell ? "bg-[#2457E6]" : "bg-[#CBFF3D]"
+                    )}
+                  />
                 ) : null}
               </Link>
             );
           })}
         </nav>
         <div className="flex shrink-0 items-center gap-3">
-          <LanguageSwitcher />
-          <CreditsBadge />
+          <LanguageSwitcher tone={lightShell ? "light" : "dark"} />
+          <CreditsBadge tone={lightShell ? "light" : "dark"} />
         </div>
       </header>
 
-      <header className="sticky top-0 z-50 flex h-12 items-center justify-between border-b border-white/10 bg-[#0A0A0A]/92 px-3 backdrop-blur-xl lg:hidden">
+      <header
+        className={cn(
+          "sticky top-0 z-50 flex h-12 items-center justify-between border-b px-3 backdrop-blur-xl lg:hidden",
+          lightShell
+            ? "border-[#D4D8E0] bg-[#F7F8FA]/94"
+            : "border-white/10 bg-[#0A0A0A]/92"
+        )}
+      >
         <Link href="/" aria-label="Pikbo home">
-          <Logo size={26} wordClassName="text-base" />
+          <Logo
+            size={26}
+            wordClassName={cn("text-base", lightShell && "!text-[#15171B]")}
+          />
         </Link>
         <div className="flex items-center gap-2">
-          <LanguageSwitcher compact />
-          <CreditsBadge compact />
+          <LanguageSwitcher compact tone={lightShell ? "light" : "dark"} />
+          <CreditsBadge compact tone={lightShell ? "light" : "dark"} />
           {create ? (
-            <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#CBFF3D]">
+            <span
+              className={cn(
+                "text-[10px] font-black uppercase tracking-[0.16em]",
+                lightShell ? "text-[#2457E6]" : "text-[#CBFF3D]"
+              )}
+            >
               {t("cta.launchPack")}
             </span>
           ) : null}
@@ -103,12 +150,24 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="min-w-0 flex-1 bg-[#0A0A0A]">{children}</main>
+        <main
+          className={cn(
+            "min-w-0 flex-1",
+            lightShell ? "bg-[#EEF0F4]" : "bg-[#0A0A0A]"
+          )}
+        >
+          {children}
+        </main>
         {!hideFooter ? <Footer /> : null}
       </div>
 
-      <nav
-        className="sticky bottom-0 z-50 grid grid-cols-5 border-t border-white/10 bg-[#0A0A0A]/96 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+      {!sellerPackCreate ? <nav
+        className={cn(
+          "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
+          home
+            ? "relative border-[#D4D8E0] bg-[#F7F8FA]/96"
+            : "sticky bottom-0 border-white/10 bg-[#0A0A0A]/96"
+        )}
         aria-label="Mobile navigation"
       >
         {MOBILE_NAV.map((item) => {
@@ -120,13 +179,23 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               aria-current={on ? "page" : undefined}
               className={cn(
                 "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
-                on ? "text-[#CBFF3D]" : "text-[#F7F4ED]/38"
+                home
+                  ? on
+                    ? "text-[#2457E6]"
+                    : "text-[#747B87]"
+                  : on
+                    ? "text-[#CBFF3D]"
+                    : "text-[#F7F4ED]/38"
               )}
             >
               <span
                 className={cn(
                   "mb-1 h-1 w-1 rounded-full",
-                  on ? "bg-[#CBFF3D]" : "bg-transparent"
+                  on
+                    ? home
+                      ? "bg-[#2457E6]"
+                      : "bg-[#CBFF3D]"
+                    : "bg-transparent"
                 )}
                 aria-hidden
               />
@@ -134,7 +203,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             </Link>
           );
         })}
-      </nav>
+      </nav> : null}
     </div>
   );
 }

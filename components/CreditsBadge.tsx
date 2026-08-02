@@ -14,7 +14,13 @@ import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 import { useI18n } from "@/components/LanguageProvider";
 
-export function CreditsBadge({ compact }: { compact?: boolean }) {
+export function CreditsBadge({
+  compact,
+  tone = "dark",
+}: {
+  compact?: boolean;
+  tone?: "dark" | "light";
+}) {
   const { t } = useI18n();
   const [session, setSession] = useState<MeResponse | null>(null);
 
@@ -39,7 +45,9 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
       <span
         className={
           compact
-            ? "text-[10px] text-white/30"
+            ? tone === "light"
+              ? "text-[10px] text-[#7C8490]"
+              : "text-[10px] text-white/30"
             : "hidden text-xs text-[var(--fg-dim)] sm:inline"
         }
       >
@@ -101,7 +109,9 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
         className={`grid h-11 min-w-11 place-items-center rounded-full border px-2 text-[10px] font-bold ${
           low && !demo
             ? "border-amber-400/50 text-amber-300"
-            : "border-white/10 text-[var(--mint)]"
+            : tone === "light"
+              ? "border-[#C9CED8] text-[#2457E6]"
+              : "border-white/10 text-[var(--mint)]"
         }`}
         title={compactTitle}
       >
@@ -116,13 +126,19 @@ export function CreditsBadge({ compact }: { compact?: boolean }) {
       className={`hidden items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:flex ${
         low && !demo
           ? "border-amber-400/45 bg-amber-400/10 text-[var(--fg)]"
-          : "border-white/12 bg-white/[0.04] text-[var(--fg-muted)] hover:border-[var(--mint)]/35 hover:text-[var(--fg)]"
+          : tone === "light"
+            ? "border-[#C9CED8] bg-white text-[#5F6774] hover:border-[#2457E6] hover:text-[#15171B]"
+            : "border-white/12 bg-white/[0.04] text-[var(--fg-muted)] hover:border-[var(--mint)]/35 hover:text-[var(--fg)]"
       }`}
       title={fullTitle}
     >
       <span
         className={`font-bold tabular-nums ${
-          low && !demo ? "text-amber-200" : "text-[var(--mint)]"
+          low && !demo
+            ? "text-amber-200"
+            : tone === "light"
+              ? "text-[#2457E6]"
+              : "text-[var(--mint)]"
         }`}
       >
         {credits}

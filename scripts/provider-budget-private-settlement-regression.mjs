@@ -1046,22 +1046,17 @@ assert.match(
   imageJobs,
   /export function markImageProviderRequestStarted[\s\S]*job\.status !== "running"[\s\S]*imageProviderOutcomePending\(parent\)[\s\S]*providerRequestStartedAt/
 );
-for (const [clientPath, spendConsentPattern] of [
-  ["components/CreateStudio.tsx", /allowProviderSpend:\s*!demoMode/],
-  ["components/LandingToolPanel.tsx", /allowProviderSpend:\s*!demoMode/],
-  ["components/BatchStudio.tsx", /allowProviderSpend:\s*!jobDemoMode/],
+for (const clientPath of [
+  "components/CreateStudio.tsx",
+  "components/BatchStudio.tsx",
+  "components/LandingToolPanel.tsx",
 ]) {
   assert.match(
     read(clientPath),
-    spendConsentPattern,
+    /allowProviderSpend:\s*!demoMode/,
     `${clientPath} must bind the displayed mode to provider-spend consent`
   );
 }
-assert.match(
-  read("components/BatchStudio.tsx"),
-  /const jobDemoMode = boundPrivateChild \? false : demoMode/,
-  "bound private Pack children must use their server binding instead of the browser demo state"
-);
 
 console.log(
   "provider-budget-private-settlement-regression: PASS (US$20 cap · private-object capture guard · video/image post-submit ambiguity withheld/reconciled · no automatic retry)"

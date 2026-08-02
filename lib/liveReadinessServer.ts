@@ -18,10 +18,10 @@ import {
   privateProviderOutputAllowlistConfigured,
   privateResultsProbe,
 } from "@/lib/privateGenerationResults";
-import { privateToyAssetsProbe } from "@/lib/privateToyAssets";
 import { parsePrivateLiveAllowlist } from "@/lib/privateLiveBeta.mjs";
 import { probeSupabase } from "@/lib/supabase/server";
 import { t6Report } from "@/lib/t6Watermark";
+import { probePrivateToyAssets } from "@/lib/privateToyAssets";
 
 /**
  * Shared server probe used by /api/health and /api/me. Keeping these facts in
@@ -41,7 +41,7 @@ async function computeSoftLiveReadiness() {
     probeDurableReconciliationSchema(),
     probeDurableProviderBudgetStore(),
     privateResultsProbe(),
-    privateToyAssetsProbe(),
+    probePrivateToyAssets(),
     probeSupabase(),
   ]);
   const authPublic = publicAuthStatus();
@@ -87,7 +87,8 @@ async function computeSoftLiveReadiness() {
     privateResultsRpcReady: privateResults.rpcReady,
     privateInputsBucketReady: privateInputs.bucketReady,
     privateInputsSchemaReady: privateInputs.schemaReady,
-    privateInputsRpcReady: privateInputs.rpcReady,
+    privateInputsReserveRpcReady: privateInputs.reserveRpcReady,
+    privateInputsDiscoveryReady: privateInputs.discoveryReady,
     providerOutputAllowlistConfigured:
       privateProviderOutputAllowlistConfigured(),
     privateLiveEnabled: process.env.PIKBO_PRIVATE_LIVE_ENABLED === "1",

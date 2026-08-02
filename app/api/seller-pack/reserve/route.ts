@@ -10,8 +10,8 @@ import {
   SELLER_PACK_CHILD_COUNT,
   SELLER_PACK_QUOTE_CREDITS,
 } from "@/lib/durableCredits/sellerPack";
-import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
 import { resolvePrivateLiveAccess } from "@/lib/privateLiveAccessServer";
+import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
 
 export const runtime = "nodejs";
 
@@ -46,29 +46,6 @@ export async function POST(req: Request) {
       { status: 401 }
     );
   }
-  // Reserve is a spend-capability boundary, not merely an authenticated write.
-  // Check current invite, validation budget and deployment readiness before
-  // touching the durable wallet. Status/active intentionally remain owner-only
-  // read paths so a later invite revocation cannot strand completed results.
-  const privateAccess = resolvePrivateLiveAccess(auth);
-  const liveReadiness = await probeSoftLiveReadiness();
-  if (
-    !privateAccess.invite.invited ||
-    !privateAccess.budget.ok ||
-    !liveReadiness.privatePreview.ready
-  ) {
-    return NextResponse.json(
-      {
-        ok: false,
-        code: "LIVE_ACCESS_REQUIRED",
-        error:
-          "Private Launch Pack access is not currently available for this account",
-        quoteCredits: SELLER_PACK_QUOTE_CREDITS,
-        session: publicSession(session),
-      },
-      { status: 403 }
-    );
-  }
   if (!durableCreditsActive()) {
     return NextResponse.json(
       {
@@ -79,6 +56,24 @@ export async function POST(req: Request) {
         session: publicSession(session),
       },
       { status: 503 }
+    );
+  }
+  const privateLive = resolvePrivateLiveAccess(auth);
+  const readiness = await probeSoftLiveReadiness();
+  if (
+    !privateLive.invite.invited ||
+    !privateLive.budget.ok ||
+    !readiness.privatePreview.ready
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "PRIVATE_PREVIEW_REQUIRED",
+        error: "Private seller Preview is not ready for provider spend",
+        quoteCredits: SELLER_PACK_QUOTE_CREDITS,
+        session: publicSession(session),
+      },
+      { status: privateLive.invite.invited ? 503 : 403 }
     );
   }
 
@@ -99,27 +94,16 @@ export async function POST(req: Request) {
     );
   }
   const inputAssetId =
-    typeof body.inputAssetId === "string"
-      ? body.inputAssetId.trim()
-      : "";
-  if (inputAssetId.length < 8) {
+    typeof body.inputAssetId === "string" ? body.inputAssetId.trim() : "";
+  if (!/^[0-9a-f-]{36}$/i.test(inputAssetId) || body.rightsConfirmed !== true) {
     return NextResponse.json(
       {
         ok: false,
-        code: "INPUT_ASSET_REQUIRED",
-        error: "A verified private inputAssetId is required",
-        quoteCredits: SELLER_PACK_QUOTE_CREDITS,
-        session: publicSession(session),
-      },
-      { status: 400 }
-    );
-  }
-  if (body.rightsConfirmed !== true) {
-    return NextResponse.json(
-      {
-        ok: false,
-        code: "RIGHTS_REQUIRED",
-        error: "Confirm you own this photo before reserving the Launch Pack",
+        code:
+          body.rightsConfirmed === true
+            ? "INPUT_ASSET_REQUIRED"
+            : "RIGHTS_CONFIRMATION_REQUIRED",
+        error: "A verified private toy input and rights confirmation are required",
         quoteCredits: SELLER_PACK_QUOTE_CREDITS,
         session: publicSession(session),
       },
@@ -139,9 +123,6 @@ export async function POST(req: Request) {
         ? 402
         : atomic.code === "IDEMPOTENCY_CONFLICT"
           ? 409
-          : atomic.code === "INPUT_ASSET_NOT_READY" ||
-              atomic.code === "PACK_INPUT_UNBOUND"
-            ? 409
           : atomic.code === "LIVE_ACCESS_REQUIRED"
             ? 403
             : atomic.code === "DURABLE_OFF" ||
@@ -168,19 +149,14 @@ export async function POST(req: Request) {
     mode: "atomic",
     authority: "server-owned-atomic-pack",
     packRunId: atomic.data.packRunId,
+    inputAssetId: atomic.data.inputAssetId,
+    skuLabel: atomic.data.skuLabel,
     reservationId: atomic.data.reservationId,
     jobs: atomic.data.jobs,
     quoteCredits: atomic.data.quotedCredits,
     childCredits: atomic.data.childCredits,
     childCount: SELLER_PACK_CHILD_COUNT,
     idempotent: atomic.data.idempotent,
-    input: {
-      inputAssetId: atomic.data.inputAssetId,
-      sha256: atomic.data.inputSha256,
-      mimeType: atomic.data.inputMimeType,
-      sizeBytes: atomic.data.inputSizeBytes,
-      skuLabel: atomic.data.inputSkuLabel,
-    },
     session: publicSession(session),
     durable: await getPersonalWallet(auth.id),
   });

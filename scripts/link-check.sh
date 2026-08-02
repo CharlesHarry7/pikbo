@@ -86,8 +86,8 @@ do
   check "$p"
 done
 
-# Legal / soft surfaces (+ preview hubs must still 200)
-for p in /privacy /terms /guides /models /cinema /image /supercomputer /flow; do
+# Company / legal / soft surfaces (+ preview hubs must still 200)
+for p in /about /contact /privacy /refund /terms /guides /models /cinema /image /supercomputer /flow; do
   check "$p"
 done
 

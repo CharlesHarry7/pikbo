@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { site } from "@/lib/site";
+import { company } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -26,15 +28,18 @@ export default function TermsPage() {
     <div className="container-x py-16 max-w-3xl">
       <h1 className="text-4xl font-bold">Terms of Service</h1>
       <p className="mt-2 text-sm text-[var(--fg-dim)]">
-        Last updated: July 22, 2026 · {site.domain}
+        Effective August 1, 2026 · {company.legalName}
       </p>
 
       <div className="mt-10 space-y-8 text-sm leading-relaxed text-[var(--fg-muted)]">
         <section>
           <h2 className="text-lg font-semibold text-[var(--fg)]">The service</h2>
           <p className="mt-2">
-            {site.name} lets you turn photos of designer toys, figures, and collectibles
-            into short videos using AI. Features and credit allowances may change.
+            These terms are between you and {company.legalName},{" "}
+            {company.entityDescription}, which operates {site.name}. Pikbo is
+            subscription-based AI software for turning customer-owned
+            designer-toy photos into short product and social-media videos.
+            Features and allowances may change as the private beta develops.
           </p>
         </section>
 
@@ -59,7 +64,27 @@ export default function TermsPage() {
             monthly candidate, but production billing remains gated until the
             delivery, cost, and billing checks pass. When enabled, Stripe
             handles the subscription. Credits never guarantee unlimited Live
-            generation, and we may rate-limit to protect the service.
+            generation, and we may rate-limit to protect the service. The
+            current planned Founding Studio offer is described on the{" "}
+            <Link href="/pricing" className="underline hover:text-[var(--mint)]">
+              pricing page
+            </Link>
+            .
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-[var(--fg)]">
+            Cancellation & refunds
+          </h2>
+          <p className="mt-2">
+            There is no public paid checkout during the current private beta.
+            When billing opens, cancellation, first-purchase, duplicate-charge,
+            and failed-generation rules are governed by our{" "}
+            <Link href="/refund" className="underline hover:text-[var(--mint)]">
+              Refund Policy
+            </Link>
+            , subject to any stronger non-waivable consumer rights.
           </p>
         </section>
 
@@ -75,8 +100,10 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold text-[var(--fg)]">Disclaimer</h2>
           <p className="mt-2">
-            The service is provided &quot;as is&quot;. AI outputs may contain artifacts.
+            The service is provided &quot;as is&quot;. AI outputs may contain artifacts.{" "}
             {site.name} is not affiliated with any toy manufacturer or brand.
+            Review every output before publishing it or relying on it for a
+            product listing.
           </p>
         </section>
 
@@ -84,11 +111,16 @@ export default function TermsPage() {
           <h2 className="text-lg font-semibold text-[var(--fg)]">Contact</h2>
           <p className="mt-2">
             <a
-              href={`mailto:${site.contact.legalEmail}`}
+              href={`mailto:${site.contact.supportEmail}`}
               className="underline hover:text-[var(--mint)]"
             >
-              {site.contact.legalEmail}
+              {site.contact.supportEmail}
             </a>
+            {" "}or use our{" "}
+            <Link href="/contact" className="underline hover:text-[var(--mint)]">
+              contact page
+            </Link>
+            .
           </p>
         </section>
       </div>

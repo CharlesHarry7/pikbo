@@ -126,7 +126,6 @@ const exactServerJobs = () =>
     quotedCredits: 10,
     settledCredits: 0,
     attemptKey: null,
-    modelId: "internal-model-must-not-reach-browser-state",
   }));
 assert.deepEqual(
   contractModule
@@ -181,19 +180,13 @@ for (const mutate of [
 }
 
 let fetchPayload;
+const contractInputAssetId = "11111111-1111-4111-8111-111111111111";
 const priorFetch = globalThis.fetch;
 globalThis.fetch = async () => ({
   status: 200,
   json: async () => structuredClone(fetchPayload),
 });
 try {
-  const privateInput = {
-    inputAssetId: "input-asset-contract-0001",
-    sha256: "a".repeat(64),
-    mimeType: "image/png",
-    sizeBytes: 1024,
-    skuLabel: "SKU-01",
-  };
   fetchPayload = {
     ok: true,
     mode: "atomic",
@@ -202,11 +195,12 @@ try {
     quoteCredits: 30,
     jobs: exactServerJobs(),
     idempotent: false,
-    input: privateInput,
+    inputAssetId: contractInputAssetId,
+    skuLabel: "Cached contract toy",
   };
   const validReserve = await generateClientModule.reserveSellerPackClient({
     clientPackKey: "client-pack-contract-0001",
-    inputAssetId: privateInput.inputAssetId,
+    inputAssetId: contractInputAssetId,
     rightsConfirmed: true,
   });
   assert.equal(validReserve.ok, true);
@@ -214,13 +208,11 @@ try {
     validReserve.jobs.map((job) => job.childKey),
     ["listing_spin", "blind_box_reveal", "social_flash"]
   );
-  assert.equal("attemptKey" in validReserve.jobs[0], false);
-  assert.equal("modelId" in validReserve.jobs[0], false);
 
   fetchPayload.jobs = malformedJobs((jobs) => jobs.reverse());
   const malformedReserve = await generateClientModule.reserveSellerPackClient({
     clientPackKey: "client-pack-contract-0002",
-    inputAssetId: privateInput.inputAssetId,
+    inputAssetId: contractInputAssetId,
     rightsConfirmed: true,
   });
   assert.equal(malformedReserve.ok, false);
@@ -232,15 +224,15 @@ try {
     status: "running",
     settledCredits: 0,
     releasedCredits: 0,
+    inputAssetId: contractInputAssetId,
+    skuLabel: "Cached contract toy",
+    inputPreviewUrl: null,
     jobs: exactServerJobs(),
-    input: { skuLabel: privateInput.skuLabel },
   };
   const validStatus = await generateClientModule.getSellerPackStatusClient(
     "pack-run-contract-0001"
   );
   assert.equal(validStatus.ok, true);
-  assert.equal("attemptKey" in validStatus.jobs[0], false);
-  assert.equal("modelId" in validStatus.jobs[0], false);
 
   fetchPayload.jobs = malformedJobs((jobs) => {
     jobs[2].quotedCredits = 20;
@@ -254,17 +246,7 @@ try {
   globalThis.fetch = priorFetch;
 }
 
-assert.match(generateClient, /parseSellerPackClientJobs\(raw\.jobs\)/);
-assert.match(
-  generateClient,
-  /runtime boundary[\s\S]*deliberately omits attemptKey\/modelId/
-);
-assert.doesNotMatch(
-  generateClient.match(
-    /function parseSellerPackClientJobs[\s\S]*?\n}\n\nexport type SellerPackClientInput/
-  )?.[0] || "",
-  /attemptKey:|modelId:/
-);
+assert.match(generateClient, /parseExactSellerPackServerJobs\(raw\.jobs\)/);
 assert.match(generateClient, /INVALID_SERVER_CONTRACT/);
 
 // Partial recovery is authoritative: success stays playable; only the failed

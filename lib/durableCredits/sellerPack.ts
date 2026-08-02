@@ -9,7 +9,6 @@
 import { durableCreditsActive } from "@/lib/durableCredits";
 import {
   authorizeAtomicSellerPackChild,
-  getActiveAtomicSellerPack,
   getAtomicSellerPackStatus,
   releaseAtomicSellerPackChild,
   reserveAtomicSellerPack,
@@ -40,10 +39,7 @@ export type SellerPackAtomicReserve = {
   reservedCredits: number;
   idempotent: boolean;
   inputAssetId: string;
-  inputSha256: string;
-  inputMimeType: string;
-  inputSizeBytes: number;
-  inputSkuLabel: string | null;
+  skuLabel: string | null;
   jobs: Array<{
     jobId: string;
     childKey: string;
@@ -86,25 +82,18 @@ export async function reserveSellerPackAtomic(input: {
       error: "clientPackKey must be 8–128 characters",
     };
   }
-  const inputAssetId = input.inputAssetId.trim();
-  if (inputAssetId.length < 8 || input.rightsConfirmed !== true) {
+  if (!/^[0-9a-f-]{36}$/i.test(input.inputAssetId)) {
     return {
       ok: false,
-      code:
-        input.rightsConfirmed === true
-          ? "INPUT_ASSET_REQUIRED"
-          : "RIGHTS_REQUIRED",
-      error:
-        input.rightsConfirmed === true
-          ? "A ready private inputAssetId is required"
-          : "Confirm photo rights before reserving the Launch Pack",
+      code: "INPUT_ASSET_REQUIRED",
+      error: "A verified private toy input is required",
     };
   }
   const reserved = await reserveAtomicSellerPack({
     userId: input.ownerUserId,
     clientPackKey: key,
-    inputAssetId,
-    rightsConfirmed: true,
+    inputAssetId: input.inputAssetId,
+    rightsConfirmed: input.rightsConfirmed,
   });
   if (!reserved.ok) {
     return {
@@ -135,10 +124,7 @@ export async function reserveSellerPackAtomic(input: {
       reservedCredits: d.reservedCredits,
       idempotent: d.idempotent,
       inputAssetId: d.inputAssetId,
-      inputSha256: d.inputSha256,
-      inputMimeType: d.inputMimeType,
-      inputSizeBytes: d.inputSizeBytes,
-      inputSkuLabel: d.inputSkuLabel,
+      skuLabel: d.skuLabel,
       jobs: d.jobs.map((job) => ({
         jobId: job.jobId,
         childKey: job.childKey,
@@ -261,10 +247,4 @@ export async function getSellerPackStatusAtomic(input: {
   packRunId: string;
 }) {
   return getAtomicSellerPackStatus(input);
-}
-
-export async function getActiveSellerPackAtomic(input: {
-  userId: string;
-}) {
-  return getActiveAtomicSellerPack(input);
 }

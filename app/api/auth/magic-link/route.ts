@@ -7,6 +7,7 @@ import { clientIp } from "@/lib/requestMeta";
 import {
   authCallbackUrl,
   resolveTrustedAuthOrigin,
+  sanitizeInternalNextPath,
 } from "@/lib/authRedirect";
 
 export const runtime = "nodejs";
@@ -29,9 +30,11 @@ export async function POST(req: Request) {
   }
 
   let email = "";
+  let next = "/profile";
   try {
-    const body = (await req.json()) as { email?: string };
+    const body = (await req.json()) as { email?: string; next?: string };
     email = typeof body.email === "string" ? body.email.trim() : "";
+    next = sanitizeInternalNextPath(body.next);
   } catch {
     return NextResponse.json(
       { ok: false, code: "INVALID_REQUEST", error: "Invalid request." },
@@ -105,7 +108,7 @@ export async function POST(req: Request) {
       { status: 403 }
     );
   }
-  const emailRedirectTo = authCallbackUrl(origin);
+  const emailRedirectTo = authCallbackUrl(origin, process.env.NODE_ENV, next);
 
   const { error } = await supabase.auth.signInWithOtp({
     email,

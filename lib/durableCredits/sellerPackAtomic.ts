@@ -20,7 +20,6 @@ import {
 import {
   supabaseAuthorizeSellerPackChildAtomic,
   supabaseExpireQueuedSellerPackChildren,
-  supabaseGetActiveSellerPackAtomic,
   supabaseGetSellerPackStatusAtomic,
   supabaseReleaseSellerPackChildAtomic,
   supabaseReserveSellerPackAtomic,
@@ -696,15 +695,6 @@ export async function getAtomicSellerPackStatus(input: {
   | { ok: false; code: string; error: string }
 > {
   return supabaseGetSellerPackStatusAtomic(input);
-}
-
-export async function getActiveAtomicSellerPack(input: {
-  userId: string;
-}): Promise<
-  | { ok: true; data: AtomicSellerPackStatusResult }
-  | { ok: false; code: string; error: string }
-> {
-  return supabaseGetActiveSellerPackAtomic(input);
 }
 
 export async function expireAtomicSellerPackQueuedChildren(input?: {

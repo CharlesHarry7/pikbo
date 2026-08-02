@@ -44,8 +44,7 @@ export const site = {
     alt: "Pikbo — one designer-toy photo becomes three product-video formats",
   },
   contact: {
-    privacyEmail: `privacy@${SITE_DOMAIN}`,
-    legalEmail: `legal@${SITE_DOMAIN}`,
+    supportEmail: `support@${SITE_DOMAIN}`,
   },
   /**
    * Add only profiles that have been verified to resolve publicly.

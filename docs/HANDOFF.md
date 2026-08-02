@@ -4,6 +4,39 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-08-01 — [gpt] Mercury reapplication website readiness
+- Added public Contact and Refund Policy routes and linked them from the global
+  and homepage trust footers. The public operator is now consistently named as
+  Pikbo Labs LLC, a Wyoming LLC, with founder-operated remote activity from
+  Beijing and an explicit statement that Pikbo does not claim a US office.
+- About, Pricing, Terms and Privacy now share one truthful business state:
+  invited private beta, public pricing/checkout closed, and Founding Studio
+  planned as three Launch Packs (nine videos), with final pricing shown before
+  any charge. No customer, revenue, US-office or live-payment claim was added.
+- Refund terms cover cancellation of future renewal, a seven-day unused
+  first-purchase refund, duplicate/incorrect charges, confirmed failed-job
+  allowance restoration, uncertain-outcome reconciliation and stronger local
+  consumer rights.
+- A focused `mercury-readiness-smoke` locks legal identity, pricing, contact,
+  refund and address truth. The sitemap and llms.txt contain the seven reviewed
+  marketing/legal/support URLs, and the regular link check now includes About,
+  Contact and Refund.
+- PASS: focused Mercury smoke, SEO cold-start smoke, public capability-copy
+  smoke, TypeScript, ESLint, 198-page production build, 167 rendered-route copy
+  check, and local runtime links. Contact, Refund, Pricing, Privacy, Terms and
+  About all prerender successfully.
+- On 2026-08-01, Spaceship Domain Manager was used to create the reversible
+  forwarding rule `support@pikbo.ai` → the owner's existing Gmail inbox. No
+  mailbox product was purchased. Spaceship's authoritative DNS and both
+  Cloudflare (`1.1.1.1`) and Google (`8.8.8.8`) now return
+  `mx1.efwd.spaceship.net` / `mx2.efwd.spaceship.net` plus the matching SPF
+  record. A same-Gmail delivery probe was sent, but Gmail deduplicates the
+  forwarded copy against the Sent message, so an independent external-sender
+  receipt check remains useful. Production deploy and Mercury submission have
+  not occurred and still require owner confirmation.
+
+---
+
 ### 2026-07-30 — [gpt/grok/workbuddy] image-provider ambiguity and retry fence
 - Applied PR #88's fail-closed accounting semantics to the optional `/api/image` route without changing UI, video generation, Stripe, storage, schema or product scope. Once `fal.subscribe` may have started, timeout/network/unknown exceptions retain the durable reservation, record `settlement_unknown`, return `DURABLE_CREDITS_UNAVAILABLE`, and expose neither refund nor automatic-retry signals.
 - A final synchronous provider boundary records `providerRequestStartedAt` immediately before `fal.subscribe`. Cancel before that boundary prevents the original provider call and permits the ordinary retry child; cancel or timeout after it blocks fork, claim and every retry descendant until reconciliation.
@@ -2261,3 +2294,50 @@ Newest first. One block per meaningful landing.
   Provider, Stripe, DNS and public/paid state remain unchanged.
 - Full evidence:
   `docs/evidence/PRIVATE_PREVIEW_READINESS_2026-07-30.md`.
+# 2026-08-02 — [gpt/grok/workbuddy] Pro result-selector front door
+
+- Decision: the rejected PR #94 editorial/Mothcat direction is not a merge
+  base. This slice starts clean from `origin/main@2cfb584` and changes only the
+  Home/shell presentation layer.
+- GPT Pro produced the approved implementation direction in persistent chat
+  `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`: cool-neutral result chooser, compact
+  toy-style range, one primary action and three publishing-use visuals before
+  technical explanation.
+- Grok read-only audit rejected PR #94 because it removed Home access detection,
+  `HeroUpload` and distinct motion proof while rewriting tests around the
+  rejected Mothcat. The clean branch preserves all access, sample-route and
+  fixed-Pack contracts. Agent task: `/root/grok_code_audit`.
+- WorkBuddy desktop/390 red-team confirmed PR #94 hid the CTA/results below the
+  fold and reused one image three times. Its minimum acceptance is now encoded:
+  result visuals before explanation, no engineering step wall, and explicit
+  distinction between format directions and archived Lab motion. Agent task:
+  `/root/workbuddy_visual_redteam`.
+- New media: three original project-bound style studies plus two same-SKU
+  image-generation edits. The two edits are unbranded Blind-box Reveal and
+  Social Flash direction frames. None is represented as a customer result or
+  completed video.
+- Runtime proof at `http://localhost:43120`: the 1280px Home has no horizontal
+  overflow, resolves to an enabled `Try a sample Launch Pack` CTA and opens the
+  exact public sample URL. Public copy remains `0 credits`, no upload and no
+  image processing. Evidence is in
+  `docs/evidence/pro-result-selector-2026-08-02/`.
+- Full required gate passes: live copy, SEO cold start, engine, atomic Seller
+  Pack, recovery ledger/reconciliation, Stripe billing, TypeScript, ESLint and
+  the 198-route Next production build. Focused Launch-Pack, product-proof and
+  mobile source regressions also pass.
+- WorkBuddy Preview review found the first deployed cut was materially better
+  than PR #94 but still had six polish/truth issues. The follow-up removes the
+  false `Choose` interaction cue, labels every static card as a direction
+  frame, moves old-toy motion out of the cards, makes the public CTA available
+  immediately, shortens mobile style names, and stops the Home mobile nav from
+  covering the first result. Final Preview recheck follows the delta deploy.
+- Safety: no API, Supabase, Provider, private Storage, credit, Stripe, Library,
+  DNS, production flag or public payment behavior changed. Production remains
+  validation/cached-only.
+- Frozen head `f5d42ab5948f7251db1e621d8b79846df199c5d5` passed GitHub CI and Vercel.
+  Grok's final code/safety verdict is **GO, P0=0**. WorkBuddy's final live
+  1440/390 verdict on `https://pikbo-pmzedq6q9-pi-kbo.vercel.app` is **GO,
+  P0=0**: CTA and a result are visible on mobile, all three same-SKU direction
+  cards render without overflow, and the CTA opens the exact cached sample
+  route. This is approval for the Home slice only, not proof of a completed
+  same-input three-video Pack or a paid product loop.

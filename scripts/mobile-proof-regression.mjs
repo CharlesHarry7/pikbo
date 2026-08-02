@@ -7,9 +7,9 @@ function source(path) {
 
 const wall = source("components/HomeViralWall.tsx");
 const landing = source("components/LandingToolPanel.tsx");
-const sellerSteps = source("components/SellerPackSteps.tsx");
 const batch = source("components/BatchStudio.tsx");
 const createPage = source("app/create/page.tsx");
+const shell = source("components/AppShell.tsx");
 const video = source("components/AutoPlayVideo.tsx");
 const zh = source("lib/i18n.ts");
 
@@ -51,19 +51,24 @@ assert.doesNotMatch(
 );
 
 assert.match(
-  sellerSteps,
-  /const items = demoMode[\s\S]*Pikbo Lab only · no product upload[\s\S]*3 archived prototypes · 0 credits/,
-  "Seller Pack steps must render a public Lab-only path from demoMode"
+  batch,
+  /const demoMode = !privateUploadEnabled \|\| labStill/,
+  "Launch Workspace must keep the authoritative fail-closed public mode"
 );
 assert.match(
+  createPage,
+  /Public sample · 0 credits[\s\S]*no product photo is accepted or processed/i,
+  "Launch Workspace must state the public no-upload, zero-credit contract"
+);
+assert.doesNotMatch(
   batch,
-  /<SellerPackSteps step=\{sellerStep\} demoMode=\{displayDemoMode\} \/>/,
-  "Seller Pack must pass the authoritative fail-closed mode into its steps"
+  /SellerPackSteps/,
+  "Launch Workspace must not restore the rejected mobile SaaS stepper"
 );
 assert.match(
-  batch,
-  /const displayDemoMode = hasBoundPrivatePack && !image \? false : demoMode/,
-  "a server-verified recovered Pack must not be mislabeled as a public Lab preview"
+  shell,
+  /\{!sellerPackCreate \? <nav/,
+  "Seller Pack Create must not stack the five-item mobile nav under its fixed primary action"
 );
 assert.doesNotMatch(
   zh,

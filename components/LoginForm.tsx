@@ -4,7 +4,6 @@ import { useState } from "react";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import { createRemixHref } from "@/lib/remixIntent";
-import { storeAuthReturnPath } from "@/lib/authReturnPath";
 
 const LOGIN_GUEST_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
@@ -15,7 +14,7 @@ type AuthPublic = {
   message: string;
 };
 
-export function LoginForm({ auth }: { auth: AuthPublic }) {
+export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -75,11 +74,10 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
     setErr(null);
     setNote(null);
     try {
-      storeAuthReturnPath(window.sessionStorage, window.location.href);
       const res = await fetch("/api/auth/magic-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), next }),
       });
       const data = (await res.json()) as {
         ok?: boolean;
@@ -118,7 +116,6 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
     setErr(null);
     setNote(null);
     try {
-      storeAuthReturnPath(window.sessionStorage, window.location.href);
       const supabase = getSupabaseBrowser();
       if (!supabase) {
         setErr("Google sign-in is temporarily unavailable. Try email sign-in instead.");
@@ -128,7 +125,7 @@ export function LoginForm({ auth }: { auth: AuthPublic }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${origin}/auth/callback`,
+          redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
           queryParams: { prompt: "select_account" },
         },
       });

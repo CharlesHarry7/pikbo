@@ -7,8 +7,46 @@ import {
   getPrivateGenerationResult,
   signedPrivateResultUrl,
 } from "@/lib/privateGenerationResults";
+import {
+  getOwnerSellerPackInput,
+  listOwnerSellerPackInputs,
+} from "@/lib/privateToyAssets";
+import type { AtomicSellerPackJobPublic } from "@/lib/durableCredits/supabaseStore";
 
 export const runtime = "nodejs";
+
+async function safeOwnerJobs(
+  userId: string,
+  source: AtomicSellerPackJobPublic[]
+) {
+  const jobs = [];
+  for (const job of source) {
+    let resultUrl: string | null = null;
+    if (job.status === "succeeded" && job.hasPrivateResult) {
+      const privateResult = await getPrivateGenerationResult({
+        jobId: job.jobId,
+        userId,
+      });
+      if (privateResult) resultUrl = await signedPrivateResultUrl(privateResult.objectKey);
+    }
+    jobs.push({
+      jobId: job.jobId,
+      childKey: job.childKey,
+      effectSlug: job.effectSlug,
+      aspectRatio: job.aspectRatio,
+      durationSec: job.durationSec,
+      status: job.status,
+      quotedCredits: job.quotedCredits,
+      settledCredits: job.settledCredits,
+      errorCode: job.errorCode ?? null,
+      modelId: job.modelId ?? null,
+      resolution: job.resolution ?? null,
+      hasPrivateResult: job.hasPrivateResult === true,
+      resultUrl,
+    });
+  }
+  return jobs;
+}
 
 /**
  * Owner-scoped pack status for refresh recovery.
@@ -42,6 +80,36 @@ export async function GET(req: Request) {
   }
 
   const url = new URL(req.url);
+  const mine = url.searchParams.get("mine");
+  if (mine === "active" || mine === "recent") {
+    const inputs = await listOwnerSellerPackInputs({
+      ownerUserId: auth.id,
+      activeOnly: mine === "active",
+      limit: mine === "active" ? 5 : 10,
+    });
+    const packs = [];
+    for (const input of inputs) {
+      const status = await getSellerPackStatusAtomic({
+        userId: auth.id,
+        packRunId: input.packRunId,
+      });
+      if (!status.ok) continue;
+      packs.push({
+        packRunId: status.data.packRunId,
+        status: status.data.status,
+        quotedCredits: status.data.quotedCredits,
+        settledCredits: status.data.settledCredits,
+        releasedCredits: status.data.releasedCredits,
+        createdAt: status.data.createdAt,
+        completedAt: status.data.completedAt,
+        inputAssetId: input.inputAssetId,
+        skuLabel: input.skuLabel,
+        inputPreviewUrl: input.inputPreviewUrl,
+        jobs: await safeOwnerJobs(auth.id, status.data.jobs),
+      });
+    }
+    return NextResponse.json({ ok: true, scope: mine, packs });
+  }
   const packRunId = (url.searchParams.get("packRunId") || "").trim();
   if (packRunId.length < 8) {
     return NextResponse.json(
@@ -76,34 +144,11 @@ export async function GET(req: Request) {
     );
   }
 
-  const jobs = [];
-  for (const job of status.data.jobs) {
-    let resultUrl: string | null = null;
-    if (job.status === "succeeded" && job.hasPrivateResult) {
-      const privateResult = await getPrivateGenerationResult({
-        jobId: job.jobId,
-        userId: auth.id,
-      });
-      if (privateResult) {
-        resultUrl = await signedPrivateResultUrl(privateResult.objectKey);
-      }
-    }
-    jobs.push({
-      jobId: job.jobId,
-      childKey: job.childKey,
-      effectSlug: job.effectSlug,
-      aspectRatio: job.aspectRatio,
-      durationSec: job.durationSec,
-      status: job.status,
-      quotedCredits: job.quotedCredits,
-      settledCredits: job.settledCredits,
-      errorCode: job.errorCode ?? null,
-      resolution: job.resolution ?? null,
-      hasPrivateResult: job.hasPrivateResult === true,
-      // Owner-signed Pikbo private URL only — never a raw provider URL.
-      resultUrl,
-    });
-  }
+  const jobs = await safeOwnerJobs(auth.id, status.data.jobs);
+  const input = await getOwnerSellerPackInput({
+    ownerUserId: auth.id,
+    packRunId: status.data.packRunId,
+  });
 
   return NextResponse.json({
     ok: true,
@@ -112,11 +157,14 @@ export async function GET(req: Request) {
     quotedCredits: status.data.quotedCredits,
     settledCredits: status.data.settledCredits,
     releasedCredits: status.data.releasedCredits,
+    mode: status.data.mode,
     createdAt: status.data.createdAt,
     completedAt: status.data.completedAt,
-    input: {
-      skuLabel: status.data.inputSkuLabel,
-    },
+    availableCredits: status.data.availableCredits,
+    reservedCredits: status.data.reservedCredits,
+    inputAssetId: input?.inputAssetId ?? null,
+    skuLabel: input?.skuLabel ?? null,
+    inputPreviewUrl: input?.inputPreviewUrl ?? null,
     jobs,
     session: publicSession(session),
   });

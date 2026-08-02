@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
+import { company } from "@/lib/company";
 import { Logo } from "@/components/Logo";
 
 const FOOTER_GROUPS = [
@@ -25,6 +26,8 @@ const FOOTER_GROUPS = [
     label: "Company",
     links: [
       ["/about", "About"],
+      ["/contact", "Contact"],
+      ["/refund", "Refunds"],
       ["/privacy", "Privacy"],
       ["/terms", "Terms"],
     ],
@@ -71,8 +74,14 @@ export function Footer() {
             </div>
           ))}
         </div>
-        <div className="mt-10 border-t border-[var(--border)] pt-6 text-xs text-[var(--fg-dim)]">
-          © {new Date().getFullYear()} {site.name} · {site.domain}
+        <div className="mt-10 flex flex-col gap-2 border-t border-[var(--border)] pt-6 text-xs text-[var(--fg-dim)] sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} {company.legalName} · {site.domain}</p>
+          <a
+            href={`mailto:${site.contact.supportEmail}`}
+            className="hover:text-[var(--mint)]"
+          >
+            {site.contact.supportEmail}
+          </a>
         </div>
       </div>
     </footer>

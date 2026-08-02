@@ -652,88 +652,7 @@ async function bearerAuthHeaders(): Promise<Record<string, string>> {
   return headers;
 }
 
-// Keep the exported alias compatible with the existing recovery helpers,
-// which consume the fixed contract structurally. The parser below is the
-// runtime boundary and deliberately omits attemptKey/modelId from every object.
 export type SellerPackClientJob = ExactSellerPackServerJob;
-
-/**
- * Parse the fixed Pack contract, then copy only product/recovery fields into
- * browser state. Internal attempt, model, provider and accounting identifiers
- * never survive the network boundary even if a server response regresses.
- */
-function parseSellerPackClientJobs(
-  value: unknown
-): SellerPackClientJob[] | null {
-  const jobs = parseExactSellerPackServerJobs(value);
-  if (!jobs) return null;
-  return jobs.map(
-    (job) =>
-      ({
-        jobId: job.jobId,
-        childKey: job.childKey,
-        effectSlug: job.effectSlug,
-        aspectRatio: job.aspectRatio,
-        durationSec: job.durationSec,
-        status: job.status,
-        quotedCredits: job.quotedCredits,
-        settledCredits: job.settledCredits,
-        errorCode: job.errorCode,
-        hasPrivateResult: job.hasPrivateResult,
-        resultUrl: job.resultUrl,
-        resolution: job.resolution,
-      }) as SellerPackClientJob
-  );
-}
-
-export type SellerPackClientInput = {
-  inputAssetId: string;
-  sha256: string;
-  mimeType: "image/jpeg" | "image/png" | "image/webp";
-  sizeBytes: number;
-  skuLabel: string | null;
-};
-
-function parseSellerPackClientInput(
-  value: unknown
-): SellerPackClientInput | null {
-  if (!value || typeof value !== "object") return null;
-  const input = value as Record<string, unknown>;
-  if (
-    typeof input.inputAssetId !== "string" ||
-    input.inputAssetId.length < 8 ||
-    typeof input.sha256 !== "string" ||
-    !/^[0-9a-f]{64}$/.test(input.sha256) ||
-    !(
-      input.mimeType === "image/jpeg" ||
-      input.mimeType === "image/png" ||
-      input.mimeType === "image/webp"
-    ) ||
-    typeof input.sizeBytes !== "number" ||
-    !Number.isInteger(input.sizeBytes) ||
-    input.sizeBytes < 32 ||
-    input.sizeBytes > 8 * 1024 * 1024 ||
-    !(input.skuLabel == null || typeof input.skuLabel === "string")
-  ) {
-    return null;
-  }
-  return input as SellerPackClientInput;
-}
-
-export type SellerPackClientRecoveryInput = {
-  skuLabel: string | null;
-};
-
-function parseSellerPackClientRecoveryInput(
-  value: unknown
-): SellerPackClientRecoveryInput | null {
-  if (!value || typeof value !== "object") return null;
-  const input = value as Record<string, unknown>;
-  if (!(input.skuLabel == null || typeof input.skuLabel === "string")) {
-    return null;
-  }
-  return { skuLabel: typeof input.skuLabel === "string" ? input.skuLabel : null };
-}
 
 export type SellerPackReserveClientResult =
   | {
@@ -743,7 +662,8 @@ export type SellerPackReserveClientResult =
       quoteCredits: 30;
       jobs: SellerPackClientJob[];
       idempotent: boolean;
-      input: SellerPackClientInput;
+      inputAssetId: string;
+      skuLabel: string | null;
     }
   | {
       ok: false;
@@ -769,11 +689,7 @@ export async function reserveSellerPackClient(input: {
     const res = await fetch("/api/seller-pack/reserve", {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        clientPackKey: input.clientPackKey,
-        inputAssetId: input.inputAssetId,
-        rightsConfirmed: input.rightsConfirmed,
-      }),
+      body: JSON.stringify(input),
     });
     const raw = (await res.json().catch(() => ({}))) as {
       ok?: boolean;
@@ -787,10 +703,10 @@ export async function reserveSellerPackClient(input: {
       reservationId?: string;
       jobs?: unknown;
       idempotent?: boolean;
-      input?: unknown;
+      inputAssetId?: string;
+      skuLabel?: string | null;
     };
-    const jobs = parseSellerPackClientJobs(raw.jobs);
-    const privateInput = parseSellerPackClientInput(raw.input);
+    const jobs = parseExactSellerPackServerJobs(raw.jobs);
     if (
       raw.ok &&
       raw.mode === "atomic" &&
@@ -801,9 +717,8 @@ export async function reserveSellerPackClient(input: {
       raw.reservationId.length >= 8 &&
       raw.reservationId.trim() === raw.reservationId &&
       raw.quoteCredits === 30 &&
-      jobs &&
-      privateInput &&
-      privateInput.inputAssetId === input.inputAssetId
+      raw.inputAssetId === input.inputAssetId &&
+      jobs
     ) {
       return {
         ok: true,
@@ -812,7 +727,8 @@ export async function reserveSellerPackClient(input: {
         quoteCredits: 30,
         jobs,
         idempotent: raw.idempotent === true,
-        input: privateInput,
+        inputAssetId: raw.inputAssetId,
+        skuLabel: typeof raw.skuLabel === "string" ? raw.skuLabel : null,
       };
     }
     if (raw.ok) {
@@ -852,8 +768,10 @@ export async function getSellerPackStatusClient(
       status: string;
       settledCredits: number;
       releasedCredits: number;
+      inputAssetId: string;
+      skuLabel: string | null;
+      inputPreviewUrl: string | null;
       jobs: SellerPackClientJob[];
-      input: SellerPackClientRecoveryInput;
     }
   | { ok: false; code: string; error: string }
 > {
@@ -875,19 +793,20 @@ export async function getSellerPackStatusClient(
       status?: string;
       settledCredits?: number;
       releasedCredits?: number;
+      inputAssetId?: string | null;
+      skuLabel?: string | null;
+      inputPreviewUrl?: string | null;
       jobs?: unknown;
-      input?: unknown;
     };
-    const jobs = parseSellerPackClientJobs(raw.jobs);
-    const privateInput = parseSellerPackClientRecoveryInput(raw.input);
+    const jobs = parseExactSellerPackServerJobs(raw.jobs);
     if (
       raw.ok &&
       raw.packRunId === packRunId &&
       typeof raw.status === "string" &&
       typeof raw.settledCredits === "number" &&
       typeof raw.releasedCredits === "number" &&
-      jobs &&
-      privateInput
+      typeof raw.inputAssetId === "string" &&
+      jobs
     ) {
       return {
         ok: true,
@@ -895,8 +814,11 @@ export async function getSellerPackStatusClient(
         status: raw.status,
         settledCredits: raw.settledCredits,
         releasedCredits: raw.releasedCredits,
+        inputAssetId: raw.inputAssetId,
+        skuLabel: typeof raw.skuLabel === "string" ? raw.skuLabel : null,
+        inputPreviewUrl:
+          typeof raw.inputPreviewUrl === "string" ? raw.inputPreviewUrl : null,
         jobs,
-        input: privateInput,
       };
     }
     if (raw.ok) {
@@ -920,22 +842,28 @@ export async function getSellerPackStatusClient(
   }
 }
 
-/** Account-scoped recovery when the current browser has no Pack pointer. */
-export async function getActiveSellerPackClient(): Promise<
-  | {
-      ok: true;
-      packRunId: string;
-      status: string;
-      settledCredits: number;
-      releasedCredits: number;
-      jobs: SellerPackClientJob[];
-      input: SellerPackClientRecoveryInput;
-    }
+export type SellerPackDiscoveryItem = {
+  packRunId: string;
+  status: string;
+  createdAt: string;
+  inputAssetId: string;
+  skuLabel: string | null;
+  inputPreviewUrl: string | null;
+  settledCredits: number;
+  releasedCredits: number;
+  jobs: SellerPackClientJob[];
+};
+
+/** Owner-scoped discovery survives cleared browser storage and new devices. */
+export async function getSellerPackDiscoveryClient(
+  scope: "active" | "recent" = "active"
+): Promise<
+  | { ok: true; packs: SellerPackDiscoveryItem[] }
   | { ok: false; code: string; error: string }
 > {
   try {
     const headers = await bearerAuthHeaders();
-    const res = await fetch("/api/seller-pack/active", {
+    const res = await fetch(`/api/seller-pack/status?mine=${scope}`, {
       method: "GET",
       headers,
       cache: "no-store",
@@ -944,55 +872,48 @@ export async function getActiveSellerPackClient(): Promise<
       ok?: boolean;
       code?: string;
       error?: string;
-      packRunId?: string;
-      status?: string;
-      settledCredits?: number;
-      releasedCredits?: number;
-      jobs?: unknown;
-      input?: unknown;
+      packs?: unknown;
     };
-    const jobs = parseSellerPackClientJobs(raw.jobs);
-    const privateInput = parseSellerPackClientRecoveryInput(raw.input);
-    if (
-      raw.ok &&
-      typeof raw.packRunId === "string" &&
-      raw.packRunId.length >= 8 &&
-      typeof raw.status === "string" &&
-      typeof raw.settledCredits === "number" &&
-      typeof raw.releasedCredits === "number" &&
-      jobs &&
-      privateInput
-    ) {
-      return {
-        ok: true,
-        packRunId: raw.packRunId,
-        status: raw.status,
-        settledCredits: raw.settledCredits,
-        releasedCredits: raw.releasedCredits,
-        jobs,
-        input: privateInput,
-      };
-    }
-    if (raw.ok) {
+    if (!res.ok || !raw.ok || !Array.isArray(raw.packs)) {
       return {
         ok: false,
-        code: "INVALID_SERVER_CONTRACT",
-        error: "Active Launch Pack failed fixed-pack verification",
+        code: raw.code || String(res.status),
+        error: raw.error || "Launch Pack discovery unavailable",
       };
     }
-    return {
-      ok: false,
-      code: raw.code || String(res.status),
-      error: raw.error || "No active Launch Pack",
-    };
+    const packs: SellerPackDiscoveryItem[] = [];
+    for (const value of raw.packs) {
+      if (!value || typeof value !== "object") continue;
+      const item = value as Record<string, unknown>;
+      const jobs = parseExactSellerPackServerJobs(item.jobs);
+      if (
+        typeof item.packRunId !== "string" ||
+        typeof item.status !== "string" ||
+        typeof item.createdAt !== "string" ||
+        typeof item.inputAssetId !== "string" ||
+        typeof item.settledCredits !== "number" ||
+        typeof item.releasedCredits !== "number" ||
+        !jobs
+      ) continue;
+      packs.push({
+        packRunId: item.packRunId,
+        status: item.status,
+        createdAt: item.createdAt,
+        inputAssetId: item.inputAssetId,
+        skuLabel: typeof item.skuLabel === "string" ? item.skuLabel : null,
+        inputPreviewUrl:
+          typeof item.inputPreviewUrl === "string" ? item.inputPreviewUrl : null,
+        settledCredits: item.settledCredits,
+        releasedCredits: item.releasedCredits,
+        jobs,
+      });
+    }
+    return { ok: true, packs };
   } catch (error) {
     return {
       ok: false,
       code: "NETWORK",
-      error:
-        error instanceof Error
-          ? error.message
-          : "Active Launch Pack recovery failed",
+      error: error instanceof Error ? error.message : "discovery failed",
     };
   }
 }

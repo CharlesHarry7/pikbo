@@ -43,11 +43,12 @@
     "r0-safety-net": "node --experimental-strip-types scripts/r0-safety-net.mjs",
     "p0-private-live-generation": "node --experimental-strip-types scripts/p0-private-live-generation.mjs",
     "seller-pack-atomic-regression": "node --experimental-strip-types scripts/seller-pack-atomic-live-regression.mjs",
-    "private-input-binding-regression": "node --experimental-strip-types scripts/private-input-pack-binding-regression.mjs",
     "provider-budget-regression": "node --experimental-strip-types scripts/provider-budget-private-settlement-regression.mjs",
     "auth-magic-link-regression": "node --experimental-strip-types scripts/auth-magic-link-regression.mjs",
+    "private-toy-input-pack-regression": "node scripts/private-toy-input-pack-regression.mjs",
     "stripe-billing-regression": "node --experimental-strip-types scripts/stripe-billing-regression.mjs",
-    "privacy-analytics-regression": "node --experimental-strip-types scripts/privacy-analytics-regression.mjs"
+    "privacy-analytics-regression": "node --experimental-strip-types scripts/privacy-analytics-regression.mjs",
+    "mercury-readiness-smoke": "node scripts/mercury-readiness-smoke.mjs"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.1",

@@ -1114,10 +1114,8 @@ export type AtomicSellerPackReserveResult = {
   reservedCredits: number;
   idempotent: boolean;
   inputAssetId: string;
-  inputSha256: string;
-  inputMimeType: string;
-  inputSizeBytes: number;
-  inputSkuLabel: string | null;
+  skuLabel: string | null;
+  rightsConfirmed: true;
   jobs: AtomicSellerPackJobPublic[];
 };
 
@@ -1156,12 +1154,6 @@ export type AtomicSellerPackStatusResult = {
   completedAt: string | null;
   availableCredits: number;
   reservedCredits: number;
-  inputAssetId: string;
-  inputSha256: string;
-  inputMimeType: string;
-  inputSizeBytes: number;
-  inputSkuLabel: string | null;
-  inputCreatedAt: string;
   jobs: AtomicSellerPackJobPublic[];
 };
 
@@ -1264,7 +1256,7 @@ export async function supabaseReserveSellerPackAtomic(input: {
       error: "Supabase service role unavailable",
     };
   }
-  const { data, error } = await admin.rpc("pikbo_reserve_seller_pack_v2", {
+  const { data, error } = await admin.rpc("pikbo_reserve_seller_pack_with_asset_v1", {
     p_user_id: input.userId,
     p_client_pack_key: input.clientPackKey,
     p_input_asset_id: input.inputAssetId,
@@ -1288,7 +1280,6 @@ export async function supabaseReserveSellerPackAtomic(input: {
   const releasedCredits = numberField(payload, "releasedCredits");
   const availableCredits = numberField(payload, "availableCredits");
   const reservedCredits = numberField(payload, "reservedCredits");
-  const inputSizeBytes = numberField(payload, "inputSizeBytes");
   if (
     typeof payload.packRunId !== "string" ||
     typeof payload.reservationId !== "string" ||
@@ -1298,9 +1289,6 @@ export async function supabaseReserveSellerPackAtomic(input: {
     typeof payload.contractFingerprint !== "string" ||
     typeof payload.clientPackKey !== "string" ||
     typeof payload.idempotent !== "boolean" ||
-    typeof payload.inputAssetId !== "string" ||
-    typeof payload.inputSha256 !== "string" ||
-    typeof payload.inputMimeType !== "string" ||
     !jobs ||
     jobs.length !== 3 ||
     !planId ||
@@ -1309,9 +1297,10 @@ export async function supabaseReserveSellerPackAtomic(input: {
     releasedCredits == null ||
     availableCredits == null ||
     reservedCredits == null ||
-    inputSizeBytes == null ||
-    payload.userId !== input.userId ||
-    payload.inputAssetId !== input.inputAssetId
+    payload.userId !== input.userId
+    || typeof payload.inputAssetId !== "string"
+    || payload.inputAssetId !== input.inputAssetId
+    || payload.rightsConfirmed !== true
   ) {
     return {
       ok: false,
@@ -1337,13 +1326,8 @@ export async function supabaseReserveSellerPackAtomic(input: {
       reservedCredits,
       idempotent: payload.idempotent === true,
       inputAssetId: payload.inputAssetId,
-      inputSha256: payload.inputSha256,
-      inputMimeType: payload.inputMimeType,
-      inputSizeBytes,
-      inputSkuLabel:
-        typeof payload.inputSkuLabel === "string"
-          ? payload.inputSkuLabel
-          : null,
+      skuLabel: typeof payload.skuLabel === "string" ? payload.skuLabel : null,
+      rightsConfirmed: true,
       jobs,
     },
   };
@@ -1370,7 +1354,7 @@ export async function supabaseAuthorizeSellerPackChildAtomic(input: {
     };
   }
   const { data, error } = await admin.rpc(
-    "pikbo_authorize_seller_pack_child_v1",
+    "pikbo_authorize_seller_pack_child_with_asset_v1",
     {
       p_user_id: input.userId,
       p_pack_run_id: input.packRunId,
@@ -1742,7 +1726,7 @@ export async function supabaseGetSellerPackStatusAtomic(input: {
       error: "Supabase service role unavailable",
     };
   }
-  const { data, error } = await admin.rpc("pikbo_get_seller_pack_status_v2", {
+  const { data, error } = await admin.rpc("pikbo_get_seller_pack_status_v1", {
     p_user_id: input.userId,
     p_pack_run_id: input.packRunId,
   });
@@ -1763,23 +1747,17 @@ export async function supabaseGetSellerPackStatusAtomic(input: {
   const releasedCredits = numberField(payload, "releasedCredits");
   const availableCredits = numberField(payload, "availableCredits");
   const reservedCredits = numberField(payload, "reservedCredits");
-  const inputSizeBytes = numberField(payload, "inputSizeBytes");
   if (
     typeof payload.packRunId !== "string" ||
     typeof payload.status !== "string" ||
     typeof payload.reservationId !== "string" ||
     typeof payload.mode !== "string" ||
-    typeof payload.inputAssetId !== "string" ||
-    typeof payload.inputSha256 !== "string" ||
-    typeof payload.inputMimeType !== "string" ||
-    typeof payload.inputCreatedAt !== "string" ||
     !jobs ||
     quotedCredits == null ||
     settledCredits == null ||
     releasedCredits == null ||
     availableCredits == null ||
     reservedCredits == null ||
-    inputSizeBytes == null ||
     payload.packRunId !== input.packRunId
   ) {
     return {
@@ -1816,62 +1794,9 @@ export async function supabaseGetSellerPackStatusAtomic(input: {
             : null,
       availableCredits,
       reservedCredits,
-      inputAssetId: payload.inputAssetId,
-      inputSha256: payload.inputSha256,
-      inputMimeType: payload.inputMimeType,
-      inputSizeBytes,
-      inputSkuLabel:
-        typeof payload.inputSkuLabel === "string"
-          ? payload.inputSkuLabel
-          : null,
-      inputCreatedAt: payload.inputCreatedAt,
       jobs,
     },
   };
-}
-
-export async function supabaseGetActiveSellerPackAtomic(input: {
-  userId: string;
-}): Promise<
-  | { ok: true; data: AtomicSellerPackStatusResult }
-  | AtomicRpcFailure
-> {
-  const admin = getSupabaseAdmin();
-  if (!admin) {
-    return {
-      ok: false,
-      code: "DURABLE_CREDITS_UNAVAILABLE",
-      error: "Supabase service role unavailable",
-    };
-  }
-  const { data, error } = await admin.rpc(
-    "pikbo_get_active_seller_pack_v1",
-    { p_user_id: input.userId }
-  );
-  if (error) {
-    return {
-      ok: false,
-      code: "DURABLE_CREDITS_UNAVAILABLE",
-      error: error.message.slice(0, 160),
-    };
-  }
-  const payload = rpcPayload(data);
-  if (!payload || payload.ok !== true) {
-    return rpcFailure(payload, "Active Seller Pack discovery failed");
-  }
-  const packRunId = stringField(payload, "packRunId");
-  if (!packRunId) {
-    return {
-      ok: false,
-      code: "ATOMIC_RPC_INVALID_RESPONSE",
-      error: "Active Seller Pack discovery returned an invalid payload",
-    };
-  }
-  // Reuse the strict owner/status parser. The second read is mutation-free.
-  return supabaseGetSellerPackStatusAtomic({
-    userId: input.userId,
-    packRunId,
-  });
 }
 
 /** Service-role worker cleanup. It releases only expired queued pack children. */

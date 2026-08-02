@@ -24,8 +24,8 @@ const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
 
 // Homepage V3 separates public Lab preview from invited private upload.
-assert.match(home, /data-home-upgrade="launch-pack"/);
-assert.match(home, /href="\/create\?mode=seller-pack"/);
+assert.match(homeHero, /data-home-upgrade="launch-pack"/);
+assert.match(homeHero, /id="pack-formats"/);
 assert.match(
   homeHero,
   /<HeroUpload access=\{launchAccess\} credits=\{credits\} \/>/
@@ -58,18 +58,11 @@ assert.match(batch, /const demoMode = !privateUploadEnabled \|\| labStill/);
 assert.match(batch, /data-public-pack-preview="lab-only"/);
 assert.match(batch, /No product-photo input is accepted or processed here/);
 assert.match(batch, /setOwnsRights\(false\)/);
+assert.match(batch, /const privateInputPayload = demoMode\s*\?\s*\{\}/);
+assert.match(batch, /if \(!demoMode && image && image\.startsWith/);
 assert.match(
   batch,
-  /const privateInputPayload = jobDemoMode \|\| boundPrivateChild\s*\?\s*\{\}/
-);
-assert.match(batch, /const boundPrivateChild = Boolean\(packRunId && job\.packJobId\)/);
-assert.match(
-  batch,
-  /!jobDemoMode &&\s*!packRunId &&\s*sharedAssetId &&\s*image &&\s*image\.startsWith/
-);
-assert.match(
-  batch,
-  /!jobDemoMode && image && image\.length <= 300_000\s*\? image\s*: undefined/
+  /!demoMode && image && image\.length <= 300_000 \? image : undefined/
 );
 assert.match(createStudio, /const privateUploadEnabled = canUsePrivateLaunch\(session\)/);
 assert.match(createStudio, /data-public-single-preview="lab-only"/);
@@ -133,9 +126,11 @@ for (const slug of [
   assert.match(contract, new RegExp(`"${slug}"`));
 }
 assert.match(create, /Launch Pack · 3 fixed formats/);
-assert.match(create, /Public preview or invited private generation/);
-assert.match(create, /no product photo\s+is accepted or processed/);
-assert.match(create, /Only Listing Spin has passed/);
+assert.match(create, /Public preview or\s+invited private generation/);
+assert.match(create, /no product photo is accepted or processed/i);
+assert.match(batch, /Direction frames are not completed customer videos/);
+assert.match(batch, /selected toy stays visible across three static format\s+directions/);
+assert.match(batch, /separate sample toys/);
 assert.doesNotMatch(create, /Launch Pack — 3 private videos · 30 credits/);
 assert.doesNotMatch(create, /Launch Pack — 12 recipes/);
 
@@ -145,6 +140,30 @@ assert.match(
   batch,
   /data-launch-pack-primary-action=\{image \? "3" : "1"\}/
 );
+// A post-reservation/download error must not expose a whole-Pack 30-credit rerun.
+assert.match(batch, /const canRetryUnreservedPack =/);
+assert.match(batch, /jobs\.length === 0/);
+assert.match(batch, /activePackRunId === null/);
+assert.match(batch, /runProjectId === null/);
+assert.match(batch, /sellerPackRecoveryHydrated/);
+assert.match(batch, /this notice will\s+not rerun the whole Pack/);
+assert.match(batch, /Retry this format · reserve 10 credits/);
+// Starting a fresh seller Pack must fail closed once any run identity or job exists.
+assert.match(batch, /const canStartFreshSellerPack =/);
+assert.match(
+  batch,
+  /canRun &&\s*jobs\.length === 0 &&\s*activePackRunId === null &&\s*runProjectId === null &&\s*sellerPackRecoveryHydrated/
+);
+assert.match(
+  batch,
+  /This Launch Pack already has a run record[\s\S]*Pikbo will not reserve another 30 credits/
+);
+assert.match(
+  batch,
+  /disabled=\{Boolean\(image\) && !canStartFreshSellerPack\}/
+);
+assert.match(batch, /disabled=\{!canStartFreshSellerPack\}/);
+assert.match(batch, /\) : jobs\.length > 0 \? \(/);
 
 // Export stays fail-closed: only succeeded/downloadable children are offered.
 assert.match(steps, /Owner-only Library and download/);

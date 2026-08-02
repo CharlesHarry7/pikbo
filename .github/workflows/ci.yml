@@ -54,10 +54,13 @@ jobs:
           npm run provider-budget-regression
           npm run capability-matrix
 
-      - name: P1 private-input Launch Pack (30 once · three bound children)
+      - name: P1 atomic Launch Pack (30 once · three bound children)
+        run: npm run seller-pack-atomic-regression
+
+      - name: Private toy input · Pack discovery · auth return path
         run: |
-          npm run seller-pack-atomic-regression
-          npm run private-input-binding-regression
+          npm run private-toy-input-pack-regression
+          npm run auth-magic-link-regression
 
       - name: Stripe billing (paid binding · event ordering · credit idempotency)
         run: npm run stripe-billing-regression
