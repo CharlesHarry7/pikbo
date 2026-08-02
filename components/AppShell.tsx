@@ -126,7 +126,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         >
           {(momentSurface
             ? [
-                { href: "/#moment-stage", label: "Explore" },
+                {
+                  href: home ? "/#archive-selector" : "/#moment-stage",
+                  label: "Explore",
+                },
                 { href: "/create?moment=capsule-reveal", label: "Create" },
                 { href: "/library", label: "Projects" },
                 { href: "/login", label: "Sign in" },
