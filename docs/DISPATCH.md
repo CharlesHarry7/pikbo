@@ -51,6 +51,14 @@
 - 本切片只允许重做 Home、公开 Sample Create 展示及其直接相关的轻量导航和回归测试；复用现有缓存视频。
 - 严禁修改 API、Provider、Prompt、Storage、Supabase、credits、Stripe、Library 恢复或生产门禁；严禁把三个不同素材原型冒充同一 SKU 的完整 Pack、客户结果或精确导出规格。
 
+### 2026-08-02 owner override — desktop toy desire
+
+- 唯一任务：`DESKTOP-TOY-DESIRE-V3`，分支 `agent/gpt/desktop-toy-desire-v3`。
+- 老板以 ChinaJoy 潮玩玩家视角否决当前首页；本轮只做 1440px 桌面首屏，移动端冻结且仅保持无灾难性溢出。
+- GPT Pro 冻结唯一方向 `Pikbo Drop Archive`；Codex 只重建桌面展柜舞台、archive selector、truth labels 与轻量 header。
+- 现有 Scout、Moon、Beatbot 必须继续标明为三个不同 archive prototypes，不得冒充同一 SKU Pack、客户案例或公开生成结果。
+- 生产改动只限 `components/AppShell.tsx`、`components/PublicLaunchPackSample.tsx` 与 `components/HomeSeoBody.tsx`；其中 `HomeSeoBody` 只允许桌面配色衔接，不改内容或行为。禁止修改 API、Provider、Storage、Supabase、credits、Stripe、Library、Create 私有流程和生产门禁。
+
 ---
 
 ## 死序优先级（不可跳级）
