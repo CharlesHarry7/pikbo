@@ -355,6 +355,7 @@ export function CreateStudio({
   // get an autoplaying first render; the video remounts once the real setting
   // is known for ordinary users.
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(true);
+  const [labSampleReady, setLabSampleReady] = useState(false);
   /** Successful retries/variants remain selectable; a new run never overwrites one. */
   const [versions, setVersions] = useState<ResultVersion[]>([]);
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
@@ -3558,6 +3559,16 @@ export function CreateStudio({
               >
                 <div className="mx-auto grid w-full max-w-4xl items-center gap-4 rounded-3xl border border-[var(--mint)]/25 bg-gradient-to-br from-[var(--mint)]/[0.08] via-black/20 to-black/60 p-3 shadow-[0_0_60px_rgba(200,255,61,0.08)] sm:p-4 lg:grid-cols-[minmax(0,1.18fr)_minmax(16rem,0.82fr)]">
                   <div className="relative mx-auto w-full max-w-[30rem] overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
+                    {/* Keep the owned poster visible while a Preview media request is pending. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={FIXED_MOMENT_LAB_SAMPLE.poster}
+                      alt=""
+                      aria-hidden="true"
+                      className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ${
+                        labSampleReady ? "opacity-0" : "opacity-100"
+                      }`}
+                    />
                     <video
                       key={
                         prefersReducedMotion
@@ -3568,12 +3579,15 @@ export function CreateStudio({
                       poster={FIXED_MOMENT_LAB_SAMPLE.poster}
                       autoPlay={!prefersReducedMotion}
                       controls
+                      onLoadedData={() => setLabSampleReady(true)}
                       loop
                       muted
                       playsInline
                       preload="metadata"
                       aria-label={`${FIXED_MOMENT_LAB_SAMPLE.title}, ${FIXED_MOMENT_LAB_SAMPLE.source}`}
-                      className="aspect-[9/16] max-h-[64vh] w-full object-cover"
+                      className={`relative z-[1] aspect-[9/16] max-h-[64vh] w-full object-cover transition-opacity duration-200 ${
+                        labSampleReady ? "opacity-100" : "opacity-0"
+                      }`}
                     />
                     <span className="pointer-events-none absolute left-3 top-3 rounded-full border border-white/20 bg-black/75 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
                       {FIXED_MOMENT_LAB_SAMPLE.provenance}
