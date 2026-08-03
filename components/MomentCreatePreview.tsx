@@ -396,10 +396,10 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
                   </p>
                 </div>
                 <Link
-                  href="/create?mode=seller-pack&preview=1&source=moment-proof"
+                  href="/#archive-selector"
                   className="text-[10px] font-black uppercase tracking-[0.16em] text-[#171719] underline decoration-[#F04E30]/60 underline-offset-4 hover:text-[#F04E30]"
                 >
-                  See all three sample formats →
+                  Explore the Moment archive →
                 </Link>
               </div>
               <div className="relative min-h-[250px] overflow-hidden bg-[#171719]">

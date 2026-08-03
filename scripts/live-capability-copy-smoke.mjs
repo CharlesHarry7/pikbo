@@ -79,16 +79,14 @@ assert(
   "pricing must keep subscriptions closed until private-beta proof"
 );
 assert(
-  read("app/create/page.tsx").includes(
-    "Eligible signed-in sellers may prepare a private"
-  ) &&
-    /Public Lab preview · no product photo is accepted or processed/.test(
-      read("components/BatchStudio.tsx")
+  read("app/create/page.tsx").includes("<PrivateSellerPackGate>") &&
+    read("components/PrivateSellerPackGate.tsx").includes(
+      "canUsePrivateLaunch(me)"
     ) &&
     /\{privateInputEnabled \? \([\s\S]*type="file"/.test(
       read("components/BatchStudio.tsx")
     ),
-  "Create must keep product-photo input behind the private account capability"
+  "Create must gate the Pack route and product-photo input behind private account capability"
 );
 assert(
   read("components/CreateStudio.tsx").includes(

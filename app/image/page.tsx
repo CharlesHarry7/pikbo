@@ -542,7 +542,7 @@ export default function ImageStudioPage() {
               </Link>{" "}
               (stills stay labeled demo · 0 credits). Paid plans: Flux via fal (
               {CREDITS_PER_VIDEO} credits live). Hand a safe URL into Generate,
-              Modules, or Seller Starter Pack.
+              Modules, or one directed toy Moment.
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
@@ -706,14 +706,14 @@ export default function ImageStudioPage() {
                 <Link
                   href={
                     toySku.trim()
-                      ? `/create?mode=seller-pack&sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
-                      : "/create?mode=seller-pack"
+                      ? `/create?effect=street-power-up&sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
+                      : "/create?effect=street-power-up"
                   }
                   className="btn btn-ghost w-full text-sm"
-                  data-image-handoff="seller-pack"
+                  data-image-handoff="single-moment"
                   onClick={() => stashPendingStill(imageUrl)}
                 >
-                  Seller Starter Pack · 3 clips / 30 credits →
+                  Create one toy Moment →
                 </Link>
                 <Link
                   href="/modules"

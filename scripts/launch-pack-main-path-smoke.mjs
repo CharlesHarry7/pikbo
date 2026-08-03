@@ -10,6 +10,7 @@ const homeHero = read("components/HomeCinemaHero.tsx");
 const publicSample = read("components/PublicLaunchPackSample.tsx");
 const homeWall = read("components/HomeViralWall.tsx");
 const create = read("app/create/page.tsx");
+const privateSellerPackGate = read("components/PrivateSellerPackGate.tsx");
 const createStudio = read("components/CreateStudio.tsx");
 const batch = read("components/BatchStudio.tsx");
 const steps = read("components/SellerPackSteps.tsx");
@@ -34,8 +35,8 @@ const homeSample = publicSample.slice(
 );
 
 // The public homepage starts from a video-first archive, then routes to one
-// selected Moment. The old three-output Pack stays available only as a
-// separate truthful public sample browser.
+// selected Moment. The old three-output Pack stays behind an authenticated
+// private-validation gate and is never a public product door.
 assert.match(homeHero, /PublicLaunchPackSample surface="home"/);
 assert.match(publicSample, /See how toys become launches\./);
 assert.match(publicSample, /Archive motion sample/);
@@ -55,7 +56,7 @@ assert.match(createSample, /Pikbo Lab archive/);
 assert.match(createSample, /No sign-in · no upload/);
 assert.match(createSample, /No product upload in this public preview/);
 assert.match(createSample, /Request seller beta/);
-assert.match(createSample, /Private studio sign in/);
+assert.match(createSample, /Sign in to create/);
 assert.equal((createSample.match(/<AutoPlayVideo/g) || []).length, 1);
 for (const formatContract of [
   /sample: "Scout"[\s\S]*actual: "Archive media · 16:9 · 6 sec"[\s\S]*target: "Target format · 1:1 · 5 sec"/,
@@ -71,10 +72,18 @@ for (const media of [
 ]) {
   assert.match(publicSample, new RegExp(media.replaceAll("/", "\\/")));
 }
-assert.match(create, /sp\.preview === "1"/);
-assert.match(create, /<PublicLaunchPackSample surface="create" \/>/);
+assert.doesNotMatch(create, /<PublicLaunchPackSample surface="create" \/>/);
+assert.match(create, /<PrivateSellerPackGate>/);
+assert.match(privateSellerPackGate, /canUsePrivateLaunch\(me\)/);
+assert.match(privateSellerPackGate, /router\.replace\(PUBLIC_MOMENT_HREF\)/);
+assert.match(privateSellerPackGate, /Create one Moment/);
+assert.match(privateSellerPackGate, /Request private beta/);
 assert.doesNotMatch(publicSample, /HeroUpload|fetchMe|canUsePrivateLaunch|credits/);
 assert.match(meClient, /export function canUsePrivateLaunch/);
+assert.match(
+  meClient,
+  /canUsePrivateLaunch\([\s\S]*?me\.canPreparePrivateInput === true/
+);
 assert.match(meClient, /me\.canLiveGenerate === true/);
 assert.match(batch, /const privateInputEnabled = canPreparePrivateInput\(me\)/);
 assert.match(batch, /const privateLaunchEnabled = canUsePrivateLaunch\(me\)/);
@@ -89,6 +98,25 @@ assert.match(
   /!demoMode && image && image\.length <= 300_000 \? image : undefined/
 );
 assert.match(createStudio, /const privateUploadEnabled = canUsePrivateLaunch\(session\)/);
+
+const retryRoute = read("app/api/seller-pack/retry/route.ts");
+const retryInviteGuard = retryRoute.indexOf("privateLive.invite.invited");
+const retryAtomicCall = retryRoute.indexOf("retrySellerPackChildAtomic({");
+assert.ok(
+  retryInviteGuard > -1 && retryAtomicCall > retryInviteGuard,
+  "Seller Pack retry must check the current private invite before re-reserving credits"
+);
+const generateRoute = read("app/api/generate/route.ts");
+const packBindingGuard = generateRoute.indexOf(
+  'packBinding.kind === "pack" && !privateLive.invite.invited'
+);
+const providerBudgetCall = generateRoute.indexOf(
+  "reserveDurableProviderSpend({"
+);
+assert.ok(
+  packBindingGuard > -1 && providerBudgetCall > packBindingGuard,
+  "Seller Pack child generation must check the current private invite before provider spend"
+);
 assert.match(createStudio, /data-public-single-preview="lab-only"/);
 assert.match(createStudio, /Public preview does not accept or process product photos/);
 assert.match(createStudio, /if \(!opts\?\.labSample && !privateUploadEnabled\)/);
@@ -109,24 +137,28 @@ assert.match(homeWall, /Try this recipe/);
 assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
-assert.match(shell, /create\?mode=seller-pack/);
+assert.doesNotMatch(shell, /create\?mode=seller-pack/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.match(shell, /create\?mode=moment&effect=street-power-up/);
 assert.match(shell, /Create a Moment/);
 assert.match(shell, /label: "Projects"/);
 assert.doesNotMatch(shell, /Motion archive/);
-assert.match(softLaunchStrip, /: "\/create\?mode=seller-pack";/);
-assert.match(hfExploreHome, /href="\/create\?mode=seller-pack"/);
-assert.match(freeTrialCta, /onHome\s*\? "\/create\?mode=seller-pack"/);
+assert.match(softLaunchStrip, /create\?effect=street-power-up&source=soft-launch/);
+assert.match(hfExploreHome, /create\?effect=street-power-up/);
+assert.match(freeTrialCta, /onHome\s*\? "\/create\?effect=street-power-up&source=free-trial"/);
+assert.doesNotMatch(
+  [shell, softLaunchStrip, hfExploreHome, freeTrialCta].join("\n"),
+  /create\?mode=seller-pack/
+);
 assert.doesNotMatch(
   [softLaunchStrip, hfExploreHome, freeTrialCta].join("\n"),
   /href=.{0,40}#home-create|\? "\/#home-create"/
 );
 assert.match(
   pricingCheckout,
-  /href="\/create\?mode=seller-pack&source=pricing-founding"/
+  /href="\/create\?effect=street-power-up&source=pricing-founding"/
 );
-assert.match(pricingCheckout, /Preview the Founding Pack/);
+assert.match(pricingCheckout, /Preview one Moment/);
 assert.match(pricingCheckout, /fetch\("\/api\/checkout"/);
 assert.match(pricingCheckout, /data\.acceptance\?\.paid === true/);
 assert.match(pricingCards, /data-pricing-state="coming-soon"/);
@@ -134,15 +166,15 @@ assert.match(pricingCards, /Price pending/);
 assert.match(pricingCards, /No public subscription or checkout/);
 assert.doesNotMatch(pricingCards, /PricingCheckoutButton|PLANS\.map|FreeTrialCta/);
 assert.match(paywall, /Founding Studio · coming soon/);
-assert.match(paywall, /No public price, Pack count, subscription, or checkout/);
+assert.match(paywall, /No public price, monthly allowance, subscription, or checkout/);
 assert.doesNotMatch(paywall, /PLANS|priceMonthly|\$49|\/mo/);
-assert.match(libraryGrid, /Create your first Pack/);
-assert.match(libraryGrid, /data-library-action="seller-pack"/);
+assert.match(libraryGrid, /Your Launch Packs/);
+assert.match(libraryGrid, /data-library-action="moment"/);
 assert.doesNotMatch(
   libraryGrid,
   /FreeTrialCta|Generate · upload toy photo|Compare plans|data-library-action="generate"/
 );
-assert.match(pricing, /There is no Free plan comparison/);
+assert.match(pricing, /There is no public price or checkout today/);
 assert.doesNotMatch(
   [home, homeHero, pricing, pricingCards].join("\n"),
   /\$49|\/mo(?:nth|\b)|Choose the volume/
@@ -161,9 +193,9 @@ for (const slug of [
 ]) {
   assert.match(contract, new RegExp(`"${slug}"`));
 }
-assert.match(create, /Launch Pack · 3 fixed formats/);
-assert.match(create, /Public preview or\s+invited private generation/);
-assert.match(create, /Access is confirmed inside the workspace/);
+assert.match(create, /Prepare a private Launch Pack/);
+assert.match(create, /Public creation uses one selected Moment instead/);
+assert.match(create, /Access is confirmed before any private asset or credit action/);
 assert.match(batch, /no product photo is accepted or processed/i);
 assert.match(batch, /data-private-input-review="original-only"/);
 assert.match(batch, /0 Pack jobs · 0 Library results · 0 credits reserved/);

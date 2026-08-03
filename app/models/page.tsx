@@ -71,10 +71,10 @@ export default function ModelsPage() {
             Toy Modules
           </Link>
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up&source=models"
             className="btn btn-ghost text-sm"
           >
-            Seller Starter Pack
+            Create one Moment
           </Link>
           <Link
             href="/flow"

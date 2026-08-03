@@ -28,7 +28,7 @@ export default function StatusPage() {
         shown. Launch gates: docs/prd/GO_NO_GO.md.
       </p>
       <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] leading-relaxed text-[var(--fg-dim)]">
-        Product soft-live: Generate · Modules · Seller Starter Pack · Cancel mid-job.
+        Product soft-live: Generate · directed Moments · Library · Cancel mid-job.
         Public Mode B still needs boss Vercel + DNS; paid path needs T6 bake +
         Stripe when you open charging.
       </p>
@@ -51,10 +51,10 @@ export default function StatusPage() {
           Modules
         </Link>
         <Link
-          href="/create?mode=seller-pack"
+          href="/create?effect=street-power-up&source=status"
           className="text-[var(--fg-muted)] hover:text-white"
         >
-          Seller Starter Pack
+          Create one Moment
         </Link>
         <Link href="/login" className="text-[var(--fg-muted)] hover:text-white">
           Sign in

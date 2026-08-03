@@ -20,8 +20,8 @@ const FOOTER_GROUPS = [
     links: [
       ["/tools/ai-toy-video-generator", "AI toy video generator"],
       [
-        "/guides/seller-pack-workflow-listing-reveal-hook",
-        "Launch Pack guide",
+        "/guides/how-to-make-a-figure-spin-video",
+        "Figure spin guide",
       ],
     ],
   },

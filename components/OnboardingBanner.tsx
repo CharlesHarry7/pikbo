@@ -51,11 +51,11 @@ export function OnboardingBanner() {
             className="btn btn-primary px-3.5 py-1.5 text-xs font-black"
           />
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up"
             onClick={dismiss}
             className="btn btn-ghost px-3 py-1.5 text-xs"
           >
-            Seller Starter Pack
+            Create one Moment
           </Link>
           <Link
             href="/modules"

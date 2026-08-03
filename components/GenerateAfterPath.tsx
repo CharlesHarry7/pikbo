@@ -12,7 +12,7 @@ import {
 
 /**
  * Post-generate closed loop — product path first (CD Phase A + job carry):
- * Library · Seller Pack · Next SKU · Modules · Remix · Publish,
+ * Library · another Moment · Next SKU · Modules · Remix · Publish,
  * then Flow · Preview last (not a live job peer).
  * Shared by CreateStudio + LandingToolPanel + BatchStudio + Preview shelves.
  *
@@ -94,11 +94,8 @@ export function GenerateAfterPath({
     channel: intent?.channel,
   });
 
-  /**
-   * Jobs with `href` (Seller Pack) must land on mode=seller-pack — not
-   * /create?job=seller-pack which CreateStudio used to ignore (href early-return).
-   * Otherwise remix contract carries ratio/duration/channel (+ optional job).
-   */
+  /** Legacy href intents are normalized by jobIntents; ordinary remixes carry
+   * ratio/duration/channel plus the optional commercial job. */
   const studioHref = intent?.href
     ? withQuery(intent.href, { sku: carry.sku })
     : carry.effect
@@ -122,8 +119,8 @@ export function GenerateAfterPath({
           sku: carry.sku,
           try: "1",
         });
-  const sellerPackHref = withQuery("/create", {
-    mode: "seller-pack",
+  const nextMomentHref = withQuery("/create", {
+    effect: "street-power-up",
     sku: carry.sku,
   });
 
@@ -165,12 +162,12 @@ export function GenerateAfterPath({
         Library
       </Link>
       <Link
-        href={sellerPackHref}
+        href={nextMomentHref}
         className={chipMint}
-        title="Listing spin + box reveal + social hook"
-        data-after-seller-pack="1"
+        title="Try a different directed toy Moment"
+        data-after-moment="street-power-up"
       >
-        Seller Starter Pack
+        Street Power-Up
       </Link>
       <Link
         href={nextSkuHref}

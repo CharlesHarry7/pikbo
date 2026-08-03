@@ -129,10 +129,10 @@ export default async function CommunityPage() {
               Generate
             </Link>
             <Link
-              href="/create?mode=seller-pack"
+              href="/create?effect=street-power-up"
               className="btn btn-ghost !px-3 !py-2 text-xs"
             >
-              Seller Starter Pack
+              Create one Moment
             </Link>
             <Link
               href="/modules"

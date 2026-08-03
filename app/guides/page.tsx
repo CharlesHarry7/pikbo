@@ -105,10 +105,10 @@ export default function GuidesHub() {
           Toy Modules
         </Link>
         <Link
-          href="/create?mode=seller-pack"
+          href="/create?effect=street-power-up&source=guides"
           className="btn btn-ghost text-sm"
         >
-          Seller Starter Pack
+          Create one Moment
         </Link>
         <Link
           href="/flow"

@@ -455,11 +455,11 @@ function CreateSampleBrowser({
                 id="create-launch-title"
                 className="mt-3 max-w-[620px] font-display text-[clamp(2.35rem,5.2vw,5.1rem)] font-black leading-[0.9] tracking-[-0.065em] lg:mt-5"
               >
-                Preview all three launch formats.
+                Preview a directed toy Moment.
               </h1>
               <p className="mt-4 max-w-[560px] text-[13px] font-semibold leading-5 text-white/58 sm:text-[15px] sm:leading-6">
-                Explore three separate Pikbo Lab prototypes for listing spin,
-                blind-box reveal, and social hook—without prompt or model setup.
+                Compare Pikbo Lab directions for listing spin, blind-box reveal,
+                and social hooks, then continue with only the one you need.
               </p>
 
               <div
@@ -515,10 +515,10 @@ function CreateSampleBrowser({
                   Request seller beta <span aria-hidden>↗</span>
                 </Link>
                 <Link
-                  href="/login?next=%2Fcreate%3Fmode%3Dseller-pack"
+                  href="/login?next=%2Fcreate%3Feffect%3Dstreet-power-up"
                   className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/18 px-6 text-sm font-black text-white transition hover:border-white/45 hover:bg-white/[0.06]"
                 >
-                  Private studio sign in
+                  Sign in to create
                 </Link>
               </div>
               <p className="mt-3 text-[10px] font-bold leading-4 text-white/40">

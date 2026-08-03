@@ -278,7 +278,7 @@ export default async function AppDetailPage({ params }: Props) {
           <p className="mx-auto mt-8 max-w-sm text-[11px] leading-relaxed text-white/40">
             {live
               ? "Open-door shell — use Launch to Create. Search indexes the /apps hub and proof-backed recipe landings, not thin intermediate doors."
-              : "Preview / SOON card — not a live Seedance job. Prefer Listing Spin, Seller Starter Pack, or Photo → Clip."}
+              : "Preview / SOON card — not a live Seedance job. Prefer Listing Spin, Street Power-Up, or Photo → Clip."}
           </p>
         )}
       </div>

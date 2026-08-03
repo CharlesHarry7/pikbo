@@ -19,9 +19,9 @@ const TOOLS: ToolChip[] = [
   { href: SHELF_GENERATE_HREF, label: "Generate", sub: "Workbench", emoji: "✦", hot: true },
   { href: "/modules", label: "Modules", sub: "Job blocks", emoji: "▦", hot: true },
   {
-    href: "/create?mode=seller-pack",
-    label: "Seller Starter Pack",
-    sub: "3 clips",
+    href: "/create?effect=street-power-up",
+    label: "Create one Moment",
+    sub: "1 directed clip",
     emoji: "🛍️",
     hot: true,
   },

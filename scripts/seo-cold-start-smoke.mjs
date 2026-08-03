@@ -203,7 +203,7 @@ assert.match(guidePageSrc, /href="\/tools\/ai-toy-video-generator"/);
 assert.match(guidePageSrc, /href="\/tools\/blind-box-reveal-video-maker"/);
 assert.match(
   pricingHeroSrc,
-  /Founding Studio opens after the Pack is proven/
+  /Founding Studio opens after real Moments are proven/
 );
 
 // Trust/legal copy must distinguish 0-credit cached previews from gated Live jobs.

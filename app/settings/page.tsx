@@ -232,10 +232,10 @@ export default function SettingsPage() {
             Generate
           </Link>
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up"
             className="btn btn-ghost !px-3 !py-1.5 text-xs"
           >
-            Seller Starter Pack
+            Create one Moment
           </Link>
           <FreeTrialCta
             path="/settings"

@@ -106,10 +106,10 @@ export default function ToolsIndexPage() {
             Modules
           </Link>
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up"
             className="btn btn-ghost text-sm"
           >
-            Seller Starter Pack
+            Create one Moment
           </Link>
           <Link
             href="/flow"
@@ -158,10 +158,10 @@ export default function ToolsIndexPage() {
             Toy Modules
           </Link>
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up"
             className="btn btn-ghost text-sm"
           >
-            Seller Starter Pack
+            Create one Moment
           </Link>
           <Link href="/effects" className="btn btn-ghost text-sm">
             All presets

@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { CreateStudio } from "@/components/CreateStudio";
 import { CreateSeoFooter } from "@/components/CreateSeoFooter";
 import { BatchStudio } from "@/components/BatchStudio";
-import { PublicLaunchPackSample } from "@/components/PublicLaunchPackSample";
 import { JsonLd } from "@/components/JsonLd";
 import { getPreset } from "@/lib/presets";
 import { site } from "@/lib/site";
@@ -14,6 +13,7 @@ import {
   MomentCreatePreview,
 } from "@/components/MomentCreatePreview";
 import { getMoment, parseMomentId } from "@/lib/moments";
+import { PrivateSellerPackGate } from "@/components/PrivateSellerPackGate";
 
 export async function generateMetadata({
   searchParams,
@@ -41,10 +41,10 @@ export async function generateMetadata({
   // Keep crawlable + follow for deep links; stay out of the 9-URL index budget.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
     return {
-      title: { absolute: `Launch Pack · 3 toy-video assets | ${site.name}` },
+      title: { absolute: `Private validation | ${site.name}` },
       description:
-        "Preview Pikbo's fixed Listing Spin, Blind-box Reveal, and Social Flash with a Lab sample. Invited private-beta accounts can upload an authorized toy photo and see the exact three-job quote.",
-      alternates: { canonical: "/create?mode=seller-pack" },
+        "Private validation workspace for invited Pikbo seller accounts. Public creation starts with one directed toy Moment.",
+      alternates: { canonical: "/create?effect=street-power-up" },
       robots: CONCEPT_ROBOTS,
     };
   }
@@ -106,7 +106,7 @@ export default async function CreatePage({
     retryToken?: string;
     /** Owner-scoped durable Pack selected from Library. */
     recover?: string;
-    /** Truthful instant public sample browser; never enters the private workbench. */
+    /** Legacy query retained for redirect compatibility; never opens public Pack UI. */
     preview?: string;
     /** Truthful device-local Moment preview; never enters generation by itself. */
     moment?: string | string[];
@@ -132,53 +132,44 @@ export default async function CreatePage({
 
   // Wave A: Seller Pack is a Create mode, not a separate suite door.
   if (sp.mode === "seller-pack" || sp.mode === "seller") {
-    if (sp.preview === "1" || sp.preview === "true") {
-      return <PublicLaunchPackSample surface="create" />;
-    }
-
     return (
-      <div className="min-h-screen bg-[#EEF0F4] pb-28 text-[#111827] lg:pb-12">
-        <div className="border-b border-[#C9CED8] bg-[#EEF0F4] px-4 py-5 sm:px-8 sm:py-8">
-          <div className="mx-auto grid max-w-[1480px] gap-4 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#2457E6]">
-                Pikbo Launch Workspace
-                <span className="sr-only">
-                  {" "}· Launch Pack · 3 fixed formats · Public preview or
-                  invited private generation
-                </span>
-              </p>
-              <h1 className="mt-2 max-w-4xl font-display text-[clamp(2.35rem,5vw,5.25rem)] font-black leading-[0.92] tracking-[-0.06em]">
-                Prepare or preview a Launch Pack.
-              </h1>
-            </div>
-            <div className="border-l-2 border-[#2457E6] pl-4">
-              <p className="text-sm font-semibold leading-6 text-[#626B78]">
-                Public visitors can inspect archived tests made with Pikbo
-                sample toys. Eligible signed-in sellers may prepare a private
-                product photo; generation appears only when its separate live
-                gate is ready.
-              </p>
-              <p className="mt-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#E85C45]">
-                Access is confirmed inside the workspace · no credits until generation starts
-              </p>
+      <PrivateSellerPackGate>
+        <div className="min-h-screen bg-[#EEF0F4] pb-28 text-[#111827] lg:pb-12">
+          <div className="border-b border-[#C9CED8] bg-[#EEF0F4] px-4 py-5 sm:px-8 sm:py-8">
+            <div className="mx-auto grid max-w-[1480px] gap-4 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#2457E6]">
+                  Pikbo Launch Workspace
+                </p>
+                <h1 className="mt-2 max-w-4xl font-display text-[clamp(2.35rem,5vw,5.25rem)] font-black leading-[0.92] tracking-[-0.06em]">
+                  Prepare a private Launch Pack.
+                </h1>
+              </div>
+              <div className="border-l-2 border-[#2457E6] pl-4">
+                <p className="text-sm font-semibold leading-6 text-[#626B78]">
+                  This validation workspace is limited to eligible signed-in
+                  sellers. Public creation uses one selected Moment instead.
+                </p>
+                <p className="mt-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#E85C45]">
+                  Access is confirmed before any private asset or credit action
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div
-          className="mx-auto max-w-[1480px] px-3 sm:px-8"
-          data-launch-pack-workbench
-        >
-          {/* Public samples and invited private generation share one gated workbench. */}
-          <BatchStudio
-            pack="seller"
-            initialSku={sp.sku}
-            initialSample={firstRunSample}
-            initialRecoverPackRunId={recoverPackRunId}
-          />
+          <div
+            className="mx-auto max-w-[1480px] px-3 sm:px-8"
+            data-launch-pack-workbench
+          >
+            <BatchStudio
+              pack="seller"
+              initialSku={sp.sku}
+              initialSample={firstRunSample}
+              initialRecoverPackRunId={recoverPackRunId}
+            />
+          </div>
         </div>
-      </div>
+      </PrivateSellerPackGate>
     );
   }
 

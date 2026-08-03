@@ -7,7 +7,6 @@ import { CreditsBadge } from "@/components/CreditsBadge";
 import { Footer } from "@/components/Footer";
 import {
   LanguageProvider,
-  useI18n,
 } from "@/components/LanguageProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
@@ -17,8 +16,6 @@ import { parseMomentId } from "@/lib/moments";
 import { MOBILE_NAV, PRIMARY_NAV } from "@/lib/softLaunch";
 import { cn } from "@/lib/utils";
 
-const PRIVATE_BETA_MAILTO =
-  "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
 const DEFAULT_MOMENT_CREATE_HREF =
   "/create?mode=moment&effect=street-power-up&source=moment-shell";
 
@@ -41,16 +38,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
-  const { t } = useI18n();
   const path = usePathname() || "/";
   const searchParams = useSearchParams();
   const home = path === "/";
   const create = path.startsWith("/create");
   const sellerPackCreate =
     create && ["seller-pack", "seller"].includes(searchParams.get("mode") || "");
-  const publicSampleCreate =
-    sellerPackCreate &&
-    ["1", "true"].includes(searchParams.get("preview") || "");
   const momentValues = searchParams.getAll("moment");
   const momentCreate =
     create &&
@@ -58,7 +51,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     Boolean(parseMomentId(momentValues[0]));
   const momentSurface = home || momentCreate;
   const lightShell = momentSurface || sellerPackCreate;
-  const resultShell = momentSurface || publicSampleCreate;
+  const resultShell = momentSurface;
   const hideFooter =
     home ||
     create ||
@@ -194,14 +187,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             </Link>
           ) : resultShell ? (
             <Link
-              href={
-                publicSampleCreate
-                  ? PRIVATE_BETA_MAILTO
-                  : "/create?mode=seller-pack&preview=1&source=header"
-              }
+              href={DEFAULT_MOMENT_CREATE_HREF}
               className="inline-flex min-h-10 items-center rounded-full bg-[#171717] px-5 text-xs font-black text-white transition hover:bg-[#FF6846]"
             >
-              {publicSampleCreate ? "Request beta" : "Try sample"}
+              Create a Moment
             </Link>
           ) : (
             <>
@@ -239,14 +228,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           ) : resultShell ? (
             <>
               <Link
-                href={
-                  publicSampleCreate
-                    ? PRIVATE_BETA_MAILTO
-                    : "/create?mode=seller-pack&preview=1&source=mobile-header"
-                }
+                href={DEFAULT_MOMENT_CREATE_HREF}
                 className="inline-flex min-h-9 items-center rounded-full bg-[#171717] px-4 text-[10px] font-black text-white"
               >
-                {publicSampleCreate ? "Request beta" : "Try sample"}
+                Create a Moment
               </Link>
               <details className="group relative">
                 <summary className="grid min-h-9 cursor-pointer list-none place-items-center rounded-full border border-black/15 bg-white/55 px-3 text-[10px] font-black text-[#171717] [&::-webkit-details-marker]:hidden">
@@ -283,7 +268,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 lightShell ? "text-[#2457E6]" : "text-[#CBFF3D]"
               )}
             >
-              {t("cta.launchPack")}
+              Create
             </span>
           ) : null}
         </div>

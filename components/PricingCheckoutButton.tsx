@@ -58,13 +58,13 @@ export function PricingCheckoutButton({
           size="lg"
           className="w-full"
         >
-          <Link href="/create?mode=seller-pack&source=pricing-founding">
-            Preview the Founding Pack
+          <Link href="/create?effect=street-power-up&source=pricing-founding">
+            Preview one Moment
           </Link>
         </Button>
         <p className="mt-2 text-center text-[10px] leading-relaxed text-[var(--fg-dim)]">
           Checkout is closed while Stripe approval and private-beta quality
-          gates are unfinished. The Pack preview is open now.
+          gates are unfinished. The Moment preview is open now.
         </p>
       </div>
     );

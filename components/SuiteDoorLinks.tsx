@@ -33,11 +33,11 @@ export function SuiteDoorLinks({
         className="btn btn-ghost !px-3 !py-2 text-xs"
       />
       <Link
-        href="/create?mode=seller-pack"
+        href="/create?effect=street-power-up"
         className="btn btn-ghost !px-3 !py-2 text-xs"
-        data-suite-door="seller-pack"
+        data-suite-door="single-moment"
       >
-        Seller Starter Pack
+        Create one Moment
       </Link>
       <Link href="/modules" className="btn btn-ghost !px-3 !py-2 text-xs">
         Modules

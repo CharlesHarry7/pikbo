@@ -125,10 +125,10 @@ export default async function ExplorePage({
               Generate
             </Link>
             <Link
-              href="/create?mode=seller-pack"
+              href="/create?effect=street-power-up&source=explore"
               className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/80 transition hover:border-white/30"
             >
-              Seller Starter Pack
+              Create one Moment
             </Link>
             <Link
               href="/modules"
@@ -208,18 +208,18 @@ export default async function ExplorePage({
               Seller workflow
             </p>
             <h2 className="mt-1 text-lg font-black">
-              One photo → three fixed marketplace formats
+              One photo → one directed marketplace clip
             </h2>
             <p className="mt-1 text-xs text-white/45">
-              Listing Spin, Blind-box Reveal, and Social Flash keep independent
-              queue and refund states.
+              Pick a preset for the selling job; Pikbo keeps the public choice
+              focused on one result at a time.
             </p>
           </div>
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up&source=explore-seller-workflow"
             className="shrink-0 rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-xs font-black text-[#c8ff3d]"
           >
-            Open Seller Starter Pack →
+            Create one Moment →
           </Link>
         </div>
       </section>

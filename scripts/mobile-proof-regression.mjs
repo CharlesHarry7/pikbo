@@ -57,7 +57,7 @@ assert.match(
 );
 assert.match(
   createPage,
-  /Access is confirmed inside the workspace[\s\S]*no credits until generation starts/i,
+  /Access is confirmed before any private asset or credit action/i,
   "Launch Workspace header must remain truthful before account capability resolves"
 );
 assert.match(batch, /Public Lab preview · no product photo is accepted or processed · 0\s*credits/);

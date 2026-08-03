@@ -112,10 +112,10 @@ export default async function ShowcaseProjectPage({ params }: Props) {
             </Link>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
               <Link
-                href="/create?mode=seller-pack"
+                href="/create?effect=street-power-up"
                 className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-[#c8ff3d]/40 hover:text-[#c8ff3d]"
               >
-                Seller Starter Pack
+                Create one Moment
               </Link>
               <Link
                 href="/modules"
@@ -353,10 +353,10 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               </Link>
               <div className="grid grid-cols-2 gap-2">
                 <Link
-                  href="/create?mode=seller-pack"
+                  href="/create?effect=street-power-up"
                   className="rounded-full border border-white/12 px-3 py-2 text-center text-[11px] font-semibold text-white/55 hover:text-white"
                 >
-                  Seller Starter Pack
+                  Create one Moment
                 </Link>
                 <Link
                   href="/explore"

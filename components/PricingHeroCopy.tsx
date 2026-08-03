@@ -12,9 +12,9 @@ const COPY: Record<
 > = {
   outcome: {
     eyebrow: "Private validation · checkout closed",
-    title: "Founding Studio opens after the Pack is proven.",
+    title: "Founding Studio opens after real Moments are proven.",
     description:
-      "Pikbo is measuring real output quality, recovery, and p95 retry cost before setting a public price or monthly Pack count. No subscription is on sale today.",
+      "Pikbo is measuring real output quality, recovery, and p95 retry cost before setting a public price or monthly allowance. No subscription is on sale today.",
   },
   "cost-control": {
     eyebrow: "Margin gate · no premature price",
@@ -66,10 +66,10 @@ export function PricingHeroCopy({
 
         <div className="mt-8 flex flex-col justify-center gap-2 sm:flex-row">
           <Link
-            href="/create?mode=seller-pack&source=pricing-hero&try=1&sample=scout"
+            href="/create?effect=street-power-up&source=pricing-hero&try=1&sample=beatbot"
             className="inline-flex min-h-13 items-center justify-center rounded-full bg-black px-7 text-sm font-black text-white transition hover:-translate-y-0.5"
           >
-            Preview the 3 formats
+            Preview one Moment
             <span className="ml-2 text-[#c8ff3d]" aria-hidden>
               ↗
             </span>
@@ -84,7 +84,7 @@ export function PricingHeroCopy({
 
         <div className="mx-auto mt-9 grid max-w-3xl gap-px overflow-hidden rounded-2xl border border-black/15 bg-black/15 sm:grid-cols-3">
           {[
-            ["1 Pack", "3 fixed video formats"],
+            ["1 Moment", "one selected video direction"],
             ["Pending", "price and monthly count"],
             ["Private", "signed-in Library"],
           ].map(([value, label]) => (
