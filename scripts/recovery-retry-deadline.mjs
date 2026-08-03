@@ -158,7 +158,7 @@ const library = readFileSync(
 );
 assert.match(
   library,
-  /forkSessionStillRetry[\s\S]{0,4000}pikbo_retry_token:/
+  /async function retry\(job: GenerationJob\)[\s\S]{0,4000}pikbo_retry_token:/
 );
 
 console.log(
