@@ -1,13 +1,12 @@
 ## Outcome
 
-<!-- What user or project outcome changes? Keep this concrete. -->
+<!-- What single seller or repository outcome changes? -->
 
-## Gate and knowledge context
+## Current contract
 
-- Outbound Gate: `G0 / G1 / G2 / G3 / G4 / G5 / N/A`
-- GitHub task: <!-- STATUS row or issue -->
-- Knowledge base / decision: <!-- Feishu node or repo-native decision doc -->
-- Assumption being tested:
+- GitHub issue:
+- `docs/STATUS.md` item:
+- Relevant release gate:
 
 ## Scope
 
@@ -27,11 +26,11 @@
 
 ## Checklist
 
-- [ ] I pulled the latest `main` and checked active ownership.
-- [ ] This agent has no other active task/branch/PR.
-- [ ] `docs/STATUS.md` reflects the task state.
-- [ ] A reusable delivery is summarized at the top of `docs/HANDOFF.md`.
-- [ ] Claims distinguish demo, live, provisional and externally verified evidence.
+- [ ] This branch started from current `origin/main`, not a historical agent branch.
+- [ ] The PR contains one bounded outcome and does not revive frozen surfaces.
+- [ ] The change matches `docs/CURRENT_LAUNCH_CONTRACT.md`.
+- [ ] Relevant regression tests, lint, typecheck and build passed.
+- [ ] Claims distinguish cached previews, private validation and production truth.
 - [ ] No secret, personal data or customer-owned asset is committed.
-- [ ] Public DNS, Stripe live, paid spend or irreversible actions have explicit approval.
-- [ ] I did not request GSC indexing, change production data/credits/billing, or deploy publicly without a separate explicit owner GO.
+- [ ] Provider spend, billing, data and deployment remain fail-closed unless this PR explicitly proves and authorizes them.
+- [ ] If released, the production URL and behavior were verified separately from CI.

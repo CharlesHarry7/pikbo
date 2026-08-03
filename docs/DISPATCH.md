@@ -1,130 +1,15 @@
-# docs/DISPATCH.md
-**更新时间：2026-07-28**
-**老板唯一目标：**  
-产品真正好用 → 真实卖家愿意反复用并付费订阅 → 再靠真实案例和 SEO 获得流量。
+# Current dispatch
 
-**总指挥：Codex（GPT）**  
-所有 Agent 以本文件为准。先读本文件 + `docs/STATUS.md` + `AGENTS.md`，再 claim 任务。
+There is no general feature-expansion dispatch.
 
----
+Work only on an open item in `docs/STATUS.md`, from current `origin/main`, and
+within that issue's acceptance criteria. The order is fixed:
 
-## 唯一活动队列（高于本文其余历史内容）
+1. Put `main@2d01241` on production and verify it.
+2. Complete one authenticated owned-photo Street Power-Up result with private
+   recovery and download.
+3. Prove retry, accounting, and privacy behavior.
+4. Rehearse Stripe in test mode only after the product loop passes.
 
-除下表外，所有旧 STATUS 行、旧 PR、旧分支、旧接管文档都只是历史记录，**不能自行恢复为任务**。
-
-| Agent | 唯一任务 | 当前入口 | 完成标准 |
-|---|---|---|---|
-| Codex | 移动端真实主路径回归审查 | `agent/claude/mobile-proof-regression` | 基于最新 main；390/768/1440 首页→项目→Create 无误导、无横向溢出、移动端只播一条 |
-| Grok | 免费下载服务端水印闭环 | `agent/grok/t6-deliverable-proof` | 基于最新 main；真实 ffmpeg/ffprobe 非生产证明；原片不可下载；失败 fail closed |
-| WorkBuddy | 等待产品证明 | 无活动分支 | 不提交目录、不写新 SEO；等待真实可发布案例后再派工 |
-
-规则：
-
-- 一个 Agent 同时只有上表中的一个任务；没有 Codex 新派工就等待。
-- PR 必须从最新 `main` 创建；旧分支内容只能按明确缺口选择性复用。
-- 测试数量、文档页数和提交次数不是产品进度。
-- 有效进度必须改善至少一项：真实生成成功、可发布导出、第二次 SKU 使用、真实外部获客证据。
-- 外部阻塞只记录一次，由 Codex 统一处理；禁止换一种文档重复汇报。
-- #47 已合并，#41 已关闭。当前只补移动端主路径与免费水印交付安全；完成后进入真实卖家私有验收，不扩张 SEO。
-
-### 2026-07-29 owner override — current Codex implementation
-
-- 唯一任务：`REAL-LOOP`，分支 `agent/gpt/real-launch-loop`。
-- 顺序：先完成非生产私有单片闭环，再扩成固定 Listing Spin / Blind-box Reveal / Social Flash 三条 Launch Pack。
-- 只选择性复用 PR #56 的私有生成、私有结果和 Library 恢复；不合入旧 `$49` 意向表或无关视觉改动。
-- 生产继续 `validation` / `softLive=false` / `paid=false`，直到非生产 SQL、私有对象、Worker-only 结算、错账/越权测试和真实调用门槛全部通过。
-- Stripe 只补测试模式、幂等和订阅到账代码；没有真实质量与成本证据前不开放收费。
-
-### 2026-08-01 owner override — Mercury reapplication readiness
-
-- 唯一任务：`MERCURY-READINESS`，分支 `agent/gpt/mercury-readiness`。
-- 补齐真实的公司、联系、退款和私测运营信息；网站必须明确 Pikbo Labs LLC 的业务、当前私测状态和支付关闭状态。
-- 准备重新申请 Mercury 的一致性资料包，区分 Wyoming 注册代理地址、公司邮寄地址和北京真实经营/居住地址。
-- 禁止虚构美国办公室、客户、收入、合同或交易；不因银行审核而开放尚未通过质量门槛的支付或公开生成。
-- 生产发布、Mercury 协议接受与最终提交仍需老板本人明确确认。
-
-### 2026-08-02 owner override — visible product front door
-
-- 唯一任务：`HOME-RESULT-BROWSER-V2`，分支 `agent/gpt/home-result-browser-v2`。
-- 老板明确拒绝当前首页的视觉与第一屏价值表达；PR #101 已关闭，不再以后台质量规则替代可见产品改善。
-- GPT Pro 负责本切片的产品方向；Codex 为唯一实现者；Grok 与 WorkBuddy 只做独立代码、事实和视觉审查。
-- 本切片只允许重做 Home、公开 Sample Create 展示及其直接相关的轻量导航和回归测试；复用现有缓存视频。
-- 严禁修改 API、Provider、Prompt、Storage、Supabase、credits、Stripe、Library 恢复或生产门禁；严禁把三个不同素材原型冒充同一 SKU 的完整 Pack、客户结果或精确导出规格。
-
-### 2026-08-02 owner override — desktop toy desire
-
-- 唯一任务：`DESKTOP-TOY-DESIRE-V3`，分支 `agent/gpt/desktop-toy-desire-v3`。
-- 老板以 ChinaJoy 潮玩玩家视角否决当前首页；本轮只做 1440px 桌面首屏，移动端冻结且仅保持无灾难性溢出。
-- GPT Pro 冻结唯一方向 `Pikbo Drop Archive`；Codex 只重建桌面展柜舞台、archive selector、truth labels 与轻量 header。
-- 现有 Scout、Moon、Beatbot 必须继续标明为三个不同 archive prototypes，不得冒充同一 SKU Pack、客户案例或公开生成结果。
-- 生产改动只限 `components/AppShell.tsx`、`components/PublicLaunchPackSample.tsx` 与 `components/HomeSeoBody.tsx`；其中 `HomeSeoBody` 只允许桌面配色衔接，不改内容或行为。禁止修改 API、Provider、Storage、Supabase、credits、Stripe、Library、Create 私有流程和生产门禁。
-
-### 2026-08-02 owner override — Moment to Create bridge
-
-- 唯一任务：`MOMENT-CREATE-BRIDGE-V1`，分支 `agent/gpt/moment-create-preview-bridge-v1`。老板明确否决 Motion Archive 和固定三条视频作为首要产品交互；本轮以 Higgsfield 的真实产品循环为参考，改成一次选一个潮玩 Moment、放入一个自有玩具、然后继续创作。
-- GPT Pro 已在持久会话 `6a6b4960-4dcc-83e8-8404-b5cb6748abf6` 冻结 Home + Create 竖直切片；Codex 是唯一实现者，Grok 做工程/安全审查，WorkBuddy 做 ChinaJoy 潮玩审美和桌面实站审查。
-- Home 只展示六个原创潮玩 Moment：Capsule Reveal、Hangar Ignition、Colorblock Pedestal、Softroom Morning、Gallery Spotlight、Alley Drop Flash。六个均必须标记 `Official Concept`；旧的唯一真实输出只能作为独立 `Verified Technical Output`，不得绑定任何 Moment。
-- 匿名用户的玩具图片只保存于设备本地草稿，不上传、不生成、不消耗 Provider；Create 必须清楚区分未登录、已登录未受邀、仅允许私有输入准备、完整私测生成四个状态，并复用当前认证和私有生成路径。
-- 只做 1440px 桌面主体，手机版不重做。禁止修改 Provider、Storage、Supabase、credits、Stripe、Generation API、数据库、readiness 和生产付费门禁。
-
----
-
-## 死序优先级（不可跳级）
-
-1. **W1 身份保真 + 可发布结果**（出片稳定、不漂、能真正发到 Etsy/TikTok）
-2. **真实卖家能完成「一张图 → 三条可发素材」并愿意付费**
-3. **真实出片证明墙**（有证据、可审计，不是缓存 Lab）
-4. **才允许扩大 SEO / 流量动作**（必须服务真实可生成路径）
-
-公开域名全面开放 live 付费、正式 Stripe、GSC 批量请求收录，继续等待老板明确 GO。
-
----
-
-## 角色边界（不是额外待办清单）
-
-### Codex（总指挥）—— `agent/gpt/...`
-**当前唯一 claim：** `MOBILE-PROOF` · review `agent/claude/mobile-proof-regression`
-
-1. 唯一最终 Reviewer；负责派工、冲突处理、验收和低风险合并。
-2. 不接受“写完文档/测试”作为完成，必须核对用户路径或可审计外部证据。
-3. 生产、付费、数据库、DNS 等动作继续单独过门禁。
-
-### Grok —— `agent/grok/...`
-**当前唯一 claim：** `T6-DERIVATIVE` · `agent/grok/t6-deliverable-proof`
-
-1. 先 rebase 最新 main，只补免费结果的服务端水印交付闭环。
-2. 必须用真实 ffmpeg/ffprobe 做非生产验证；无二进制或对象存储时保持 fail closed。
-3. 不恢复 #42，不新开 T5、SEO、首页或接管任务。
-
-### WorkBuddy —— `agent/workbuddy/...`
-1. PR #41 与 #46 已关闭；五个历史提交均为 0 已发布 / 0 已验证外链。
-2. 当前等待；不得新开 SEO/外链任务。
-3. **严格禁止**：产品代码、测试归属、生产密钥、数据库、请求收录、直接 push main、部署。
-4. 遇到登录、验证码、权限或未发布结果只记录事实，不猜测、不绕过。
-
----
-
-## 执行与报告规则
-
-- 每个 Agent 同时只占 **一个任务、一个独立分支、一个 PR**。
-- 分支命名：`agent/<你>/<topic>`
-- 提交前缀：`[gpt]` / `[grok]` / `[workbuddy]`
-- 完成必须：更新 `docs/STATUS.md` + 提 PR + 有测试/证据。
-- 每小时可自检远端 PR 和 STATUS，忙时不重复派工。
-- 同一失败连续三轮后停止该线，记录证据，等老板最小动作。
-
----
-
-## 硬性禁止（直到老板明确 GO）
-
-- 公开 pikbo.ai 全面开放 live 付费生成
-- 批量新增 SEO 页面或目录自动化
-- 任何没有真实出片证据的「看起来很忙」动作
-- 直接 push main
-- 把缓存 Lab 说成客户真实结果
-
----
-
-**钱的对齐（全员记住）**  
-现在是 S0→S1 阶段。目标不是先堆流量，而是先让产品好到「有人愿意付钱」。  
-SEO 只放大已经验证过的真实卖家路径。
+Do not create a new surface, model catalog, Pack, growth lane, or architecture
+project while these items remain incomplete.
