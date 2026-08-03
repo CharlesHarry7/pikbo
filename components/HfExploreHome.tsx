@@ -168,23 +168,25 @@ export function HfExploreHome({
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <Link
-              href="/create?effect=360-spin-showcase&source=home-hero-generate"
-              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-8 py-4 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
-            >
-              Generate
-            </Link>
-            <Link
               href={item.href}
               onClick={() =>
                 track({
                   event: "recipe_use",
                   path: "/",
                   recipe: item.recipeSlug,
+                  meta: { surface: "home_hero_generate" },
                 })
               }
+              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-8 py-4 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
+              data-home-hero="generate-active-clip"
+            >
+              Generate this clip
+            </Link>
+            <Link
+              href="/create?effect=360-spin-showcase&source=home-hero-studio"
               className="inline-flex items-center justify-center rounded-full border border-white/25 bg-black/50 px-6 py-4 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50 hover:bg-black/60"
             >
-              {t("home.useRecipe")}
+              Open studio
             </Link>
             <Link
               href="/effects"
@@ -192,9 +194,15 @@ export function HfExploreHome({
             >
               Viral presets
             </Link>
+            <Link
+              href="/community"
+              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
+            >
+              Projects
+            </Link>
           </div>
           <p className="mt-3 text-[11px] text-white/45">
-            Watch Lab free · Generate with your figure when signed in
+            World-class toy AIGC · Lab free to watch · remake on your figure when invited
           </p>
 
           <div className="mt-8 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
