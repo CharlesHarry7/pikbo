@@ -3961,7 +3961,7 @@ const homeWallSrc = fs.readFileSync(
 );
 assert.match(
   homeWallSrc,
-  /data-home-wall|data-recipe-card|wallDense|Try this recipe|Cached preview/
+  /data-home-wall|data-recipe-card|wallDense|Generate|Cached preview/
 );
 assert.match(homeWallSrc, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWallSrc, /href=\{item\.href\}/);

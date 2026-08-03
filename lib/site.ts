@@ -31,7 +31,7 @@ export const site = {
    * Homepage H1 — brand + scene, not the full primary keyword phrase.
    * Rank H1 stays on /tools/ai-toy-video-generator.
    */
-  homeH1: "One toy photo. More ways to sell.",
+  homeH1: "The AI video suite for designer toys.",
   /** Primary rank keyword — tools page only; not homepage Title/H1 */
   keyword: "AI toy video generator",
   /** Rank battlefield URL for internal links */

@@ -22,6 +22,7 @@ import { SuiteEntryStrip } from "@/components/SuiteEntryStrip";
 import { HomeViralPresetRail } from "@/components/HomeViralPresetRail";
 import { HomeViralWall } from "@/components/HomeViralWall";
 import { HfProductRail } from "@/components/HfProductRail";
+import { HfPromoCampaignStrip } from "@/components/HfPromoCampaignStrip";
 import { SeedanceCampaign } from "@/components/SeedanceCampaign";
 import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
@@ -122,10 +123,13 @@ export function HfExploreHome({
     >
       {!toolFirstLayout ? <SoftLaunchStrip /> : null}
 
-      {/* HF product entry rail — secondary when tool already on page */}
+      {/* HF promo campaign cards — free / flagship / presets / jobs */}
+      {!toolFirstLayout ? <HfPromoCampaignStrip /> : null}
+
+      {/* HF product entry rail — app shelf */}
       <HfProductRail />
 
-      {/* HF Viral Presets wall */}
+      {/* HF Viral Presets wall — dense toy media */}
       <HomeViralWall items={wallItems} />
 
       <SeedanceCampaign />
@@ -168,10 +172,10 @@ export function HfExploreHome({
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
-              href="/create?effect=street-power-up"
+              href="/create?effect=360-spin-showcase&source=home-hero-generate"
               className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
             >
-              Use tool on this page
+              Generate
             </Link>
             <Link
               href={item.href}
@@ -187,20 +191,20 @@ export function HfExploreHome({
               {t("home.useRecipe")}
             </Link>
             <Link
-              href="/tools/ai-toy-video-generator"
+              href="/effects"
               className="text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
             >
-              Keyword tool page
+              All presets
             </Link>
             <Link
-              href="/for/photo-to-video-for-toys"
+              href="/login"
               className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
             >
-              Photo → video use case
+              Sign in for private live
             </Link>
           </div>
           <p className="mt-3 text-[11px] text-white/45">
-            Designer-toy suite · cached Lab prototypes · Live access gated
+            Designer-toy creative suite · watch Lab free · private live for invited sellers
           </p>
 
           {/* Progress rail */}
@@ -478,10 +482,10 @@ export function HfExploreHome({
             </p>
           </div>
           <Link
-            href="/create?effect=street-power-up"
-            className="inline-flex shrink-0 items-center rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-sm font-bold text-[#c8ff3d] transition hover:bg-[#c8ff3d]/10"
+            href="/create?effect=360-spin-showcase&source=home-moment-cta"
+            className="inline-flex shrink-0 items-center rounded-full bg-[#c8ff3d] px-5 py-2.5 text-sm font-black text-black shadow-[0_0_28px_-6px_rgba(200,255,61,0.45)] transition hover:brightness-110"
           >
-            Create one Moment →
+            Generate with my toy →
           </Link>
         </div>
       </section>

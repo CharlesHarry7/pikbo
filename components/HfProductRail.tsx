@@ -85,10 +85,10 @@ export function HfProductRail() {
         <div className="mb-3 flex items-end justify-between gap-2">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
-              Create
+              Apps
             </p>
             <p className="mt-0.5 text-[11px] text-white/40">
-              Toy-native creative suite · same OS loop as a full AI video stack
+              Designer-toy suite · one tap into Generate · video is the product
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">

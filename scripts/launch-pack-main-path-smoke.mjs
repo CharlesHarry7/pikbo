@@ -133,7 +133,7 @@ assert.match(
   createStudio,
   /privateUploadEnabled \? \(\s*<div id="create-photo-step" data-first-run-step="upload">/
 );
-assert.match(homeWall, /Try this recipe/);
+assert.match(homeWall, /Generate/);
 assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);

@@ -49,7 +49,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     create &&
     momentValues.length === 1 &&
     Boolean(parseMomentId(momentValues[0]));
-  const momentSurface = home || momentCreate;
+  // Home is HF-class dark Explore suite (not the light Moment archive shell).
+  // Only explicit moment create keeps the light/result chrome.
+  const momentSurface = momentCreate;
   const lightShell = momentSurface || sellerPackCreate;
   const resultShell = momentSurface;
   const hideFooter =
@@ -116,7 +118,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           data-primary-create-href={
             momentSurface
               ? DEFAULT_MOMENT_CREATE_HREF
-              : "/create?effect=street-power-up&source=primary-nav"
+              : "/create?effect=360-spin-showcase&source=primary-nav"
           }
         >
           {(momentSurface
@@ -196,6 +198,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <>
               <LanguageSwitcher tone={lightShell ? "light" : "dark"} />
               <CreditsBadge tone={lightShell ? "light" : "dark"} />
+              {home ? (
+                <Link
+                  href="/create?effect=360-spin-showcase&source=home-header-generate"
+                  className="inline-flex min-h-10 items-center rounded-full bg-[#CBFF3D] px-5 text-xs font-black text-black shadow-[0_0_28px_-6px_rgba(203,255,61,0.55)] transition hover:-translate-y-0.5"
+                >
+                  Generate
+                </Link>
+              ) : null}
             </>
           )}
         </div>
@@ -292,15 +302,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
       {!resultShell && !sellerPackCreate ? <nav
         className={cn(
-          "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
-          home
-            ? "relative border-[#D4D8E0] bg-[#F7F8FA]/96"
-            : "sticky bottom-0 border-white/10 bg-[#0A0A0A]/96"
+          "z-50 sticky bottom-0 grid grid-cols-5 border-t border-white/10 bg-[#0A0A0A]/96 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
         )}
         aria-label="Mobile navigation"
       >
         {MOBILE_NAV.map((item) => {
           const on = active(path, item.href);
+          const isCreate = item.href.startsWith("/create");
           return (
             <Link
               key={item.href}
@@ -308,10 +316,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               aria-current={on ? "page" : undefined}
               className={cn(
                 "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
-                home
+                isCreate
                   ? on
-                    ? "text-[#2457E6]"
-                    : "text-[#747B87]"
+                    ? "text-[#CBFF3D]"
+                    : "text-[#CBFF3D]/85"
                   : on
                     ? "text-[#CBFF3D]"
                     : "text-[#F7F4ED]/38"
@@ -320,15 +328,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               <span
                 className={cn(
                   "mb-1 h-1 w-1 rounded-full",
-                  on
-                    ? home
-                      ? "bg-[#2457E6]"
-                      : "bg-[#CBFF3D]"
-                    : "bg-transparent"
+                  on || isCreate ? "bg-[#CBFF3D]" : "bg-transparent"
                 )}
                 aria-hidden
               />
-              <span className="truncate">{item.label}</span>
+              <span className="truncate">{isCreate ? "Generate" : item.label}</span>
             </Link>
           );
         })}

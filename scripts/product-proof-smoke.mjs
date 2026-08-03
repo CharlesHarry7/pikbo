@@ -14,9 +14,8 @@ function assert(condition, message) {
 }
 
 const home = read("app/page.tsx");
-const homeHero = read("components/HomeCinemaHero.tsx");
+const hfExplore = read("components/HfExploreHome.tsx");
 const moments = read("lib/moments.ts");
-const publicSample = read("components/PublicLaunchPackSample.tsx");
 const softLaunch = read("lib/softLaunch.ts");
 const feed = read("lib/videoFeed.ts");
 const tile = read("components/VideoTile.tsx");
@@ -25,6 +24,7 @@ const autoplay = read("components/AutoPlayVideo.tsx");
 const create = read("app/create/page.tsx");
 const batch = read("components/BatchStudio.tsx");
 const privateSellerPackGate = read("components/PrivateSellerPackGate.tsx");
+const appShell = read("components/AppShell.tsx");
 
 const proofList =
   softLaunch.match(/HOME_PROOF_SLUGS\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] ??
@@ -32,17 +32,20 @@ const proofList =
 const proofSlugs = [...proofList.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
 
 assert(proofSlugs.length === 8, "homepage proof whitelist must contain exactly 8 recipes");
+// North star: 潮玩版 Higgsfield — Explore suite home (video wall + Generate),
+// not a light marketing archive landing.
 assert(
-  home.includes("<HomeCinemaHero />") &&
-    homeHero.includes('<PublicLaunchPackSample surface="home" />') &&
-    !home.includes("<HomeViralWall") &&
-    publicSample.includes("Archive motion sample") &&
+  home.includes("HfExploreHome") &&
+    home.includes("buildHomeShowcaseFeed") &&
+    home.includes("buildViralPresetsWallFeed") &&
+    hfExplore.includes("HomeViralWall") &&
+    hfExplore.includes("HfProductRail") &&
+    hfExplore.includes("HfPromoCampaignStrip") &&
+    softLaunch.includes('label: "Generate"') &&
+    softLaunch.includes('label: "Explore"') &&
+    appShell.includes("momentSurface = momentCreate") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must lead with the video archive and retire proof-card walls"
-);
-assert(
-  !home.includes("buildViralPresetsWallFeed"),
-  "homepage must not rebuild a larger demo wall outside the Showcase registry"
+  "homepage must be HF-class Explore suite (viral wall + Generate chrome)"
 );
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
