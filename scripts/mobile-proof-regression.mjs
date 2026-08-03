@@ -57,8 +57,13 @@ assert.match(
 );
 assert.match(
   createPage,
-  /Access is confirmed before any private asset or credit action/i,
-  "Launch Workspace header must remain truthful before account capability resolves"
+  /<CreateStudio[\s\S]*initialEffect=["']street-power-up["'][\s\S]*fixedMomentContract/,
+  "Create must mount the fixed Street Power-Up Moment contract"
+);
+assert.doesNotMatch(
+  createPage,
+  /BatchStudio|PrivateSellerPackGate|initialRecoverPackRunId|recoverPackRunId/,
+  "Create must not expose the retired Seller Pack workspace"
 );
 assert.match(batch, /Public Lab preview · no product photo is accepted or processed · 0\s*credits/);
 assert.doesNotMatch(
@@ -79,8 +84,8 @@ assert.doesNotMatch(
 
 assert.match(
   createPage,
-  /<h1 className="sr-only">Generate toy video from one owned photo<\/h1>/,
-  "single Create needs an accessible page heading"
+  /<h1\b[\s\S]*Turn one toy photo into Street Power-Up\./,
+  "single Create needs an accessible Moment page heading"
 );
 assert.match(
   video,
