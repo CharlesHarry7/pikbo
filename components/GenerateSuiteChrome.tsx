@@ -27,6 +27,12 @@ const MODE_DEFS = [
     blurbKey: "suite.mode.recipes.blurb",
   },
   {
+    id: "community" as const,
+    href: "/community",
+    labelKey: "suite.mode.community",
+    blurbKey: "suite.mode.community.blurb",
+  },
+  {
     id: "library" as const,
     href: "/library",
     labelKey: "suite.mode.library",
@@ -57,6 +63,9 @@ export function GenerateSuiteChrome({
     }
     if (id === "recipes") {
       return path.startsWith("/effects");
+    }
+    if (id === "community") {
+      return path.startsWith("/community") || path.startsWith("/explore");
     }
     if (id === "library") {
       return path === "/library" || path.startsWith("/library/");

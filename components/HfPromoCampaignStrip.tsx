@@ -49,6 +49,16 @@ const CAMPAIGNS = [
     accent: false,
     poster: DEMO_VIDEOS[3]?.poster || DEMO_VIDEOS[0]?.poster,
   },
+  {
+    id: "community",
+    eyebrow: "Community",
+    title: "Inside every project",
+    body: "Browse Lab prototypes — remix a recipe onto your toy.",
+    cta: "Open community",
+    href: "/community",
+    accent: false,
+    poster: DEMO_VIDEOS[4]?.poster || DEMO_VIDEOS[0]?.poster,
+  },
 ] as const;
 
 export function HfPromoCampaignStrip() {

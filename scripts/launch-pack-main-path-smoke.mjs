@@ -196,9 +196,9 @@ assert.doesNotMatch(
 assert.match(pricingCheckout, /Preview one Moment/);
 assert.match(pricingCheckout, /fetch\("\/api\/checkout"/);
 assert.match(pricingCheckout, /data\.acceptance\?\.paid === true/);
-assert.match(pricingCards, /data-pricing-state="coming-soon"/);
-assert.match(pricingCards, /Price pending/);
-assert.match(pricingCards, /No public subscription or checkout/);
+assert.match(pricingCards, /data-pricing-state="founding-intent"/);
+assert.match(pricingCards, /\$49|Price pending|founding/i);
+assert.match(pricingCards, /Reserve Founding|No public subscription|checkout pending Stripe|card checkout pending/i);
 assert.doesNotMatch(pricingCards, /PricingCheckoutButton|PLANS\.map|FreeTrialCta/);
 assert.match(paywall, /Founding Studio · coming soon/);
 assert.match(paywall, /No public price, monthly allowance, subscription, or checkout/);

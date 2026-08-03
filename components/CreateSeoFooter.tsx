@@ -31,11 +31,30 @@ export function CreateSeoFooter({ effectSlug }: { effectSlug?: string }) {
   const guides = GUIDES.slice(0, 3);
 
   return (
-    <div className="border-t border-[var(--border)] bg-[var(--bg)]">
-      <section className="container-x py-14">
-        <h2 className="text-2xl font-bold">{h1}</h2>
-        <p className="mt-3 max-w-2xl text-[var(--fg-muted)]">{intro}</p>
-        <div className="mt-6 max-w-2xl space-y-4 text-sm leading-relaxed text-[var(--fg-muted)]">
+    <div
+      className="border-t border-white/10 bg-[#0A0A0A] text-[#F7F4ED]"
+      data-create-seo-footer="collapsed-default"
+    >
+      {/*
+        HF product rule: Generate is the app. SEO copy stays crawlable but
+        collapsed so the studio does not feel like a marketing blog.
+      */}
+      <details className="group container-x py-6">
+        <summary className="cursor-pointer list-none text-sm font-bold text-white/55 marker:content-none [&::-webkit-details-marker]:hidden">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 transition group-open:border-[#c8ff3d]/40 group-open:text-[#c8ff3d]">
+            Guides · effects · seller paths
+            <span className="text-[10px] font-black uppercase tracking-wider text-white/35 group-open:hidden">
+              expand
+            </span>
+            <span className="hidden text-[10px] font-black uppercase tracking-wider text-white/35 group-open:inline">
+              collapse
+            </span>
+          </span>
+        </summary>
+        <section className="pb-10 pt-8">
+        <h2 className="text-2xl font-bold text-white">{h1}</h2>
+        <p className="mt-3 max-w-2xl text-white/55">{intro}</p>
+        <div className="mt-6 max-w-2xl space-y-4 text-sm leading-relaxed text-white/45">
           {body.map((p, i) => (
             <p key={i}>{p}</p>
           ))}
@@ -50,7 +69,7 @@ export function CreateSeoFooter({ effectSlug }: { effectSlug?: string }) {
 
         <div className="mt-12 grid gap-10 md:grid-cols-3">
           <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--fg-dim)]">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white/40">
               Effects
             </h3>
             <ul className="mt-3 space-y-2 text-sm">
@@ -112,6 +131,7 @@ export function CreateSeoFooter({ effectSlug }: { effectSlug?: string }) {
           </div>
         </div>
       </section>
+      </details>
     </div>
   );
 }

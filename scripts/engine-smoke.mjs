@@ -4767,7 +4767,7 @@ assert.doesNotMatch(
 );
 assert.match(
   fs.readFileSync(join(root, "components/PricingPlanCards.tsx"), "utf8"),
-  /data-pricing-state=["']coming-soon["']/
+  /data-pricing-state=["'](founding-intent|coming-soon)["']/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/PricingPlanCards.tsx"), "utf8"),
