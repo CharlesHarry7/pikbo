@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LibraryGrid } from "@/components/LibraryGrid";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 export const metadata: Metadata = {
   title: "Library · Assets",
@@ -36,7 +37,7 @@ export default function LibraryPage() {
           </div>
           <div>
             <Link
-              href="/create?effect=street-power-up&source=library-empty"
+              href={`${MOMENT_CREATE_HREF}&source=library-empty`}
               className="btn btn-primary text-sm"
             >
               Create one Moment

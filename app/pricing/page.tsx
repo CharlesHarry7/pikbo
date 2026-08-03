@@ -3,6 +3,10 @@ import Link from "next/link";
 import { PricingCheckoutButton } from "@/components/PricingCheckoutButton";
 import { getPlan } from "@/lib/pricing";
 import { site } from "@/lib/site";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+
+const PRICING_PREVIEW_HREF =
+  `${MOMENT_CREATE_HREF}&source=pricing-preview&try=1&sample=beatbot` as const;
 
 export const metadata: Metadata = {
   title: "Founding Studio · Private Beta",
@@ -149,7 +153,7 @@ export default function PricingPage() {
                 Request private beta access
               </Link>
               <Link
-                href="/create?effect=street-power-up&source=pricing-preview&try=1&sample=beatbot"
+                href={PRICING_PREVIEW_HREF}
                 className="mt-4 inline-block text-xs font-bold text-[#F7F4ED]/58 underline decoration-white/20 underline-offset-4 hover:text-[#CBFF3D]"
               >
                 Preview one Pikbo Lab Moment

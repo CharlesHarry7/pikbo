@@ -181,18 +181,18 @@ export default async function CreatePage({
   if (sp.mode === "moment") {
     return (
       <div className="min-h-screen bg-[#0A0A0A] pb-24 text-[#F7F4ED]">
-        <div className="mx-auto max-w-[1480px] px-5 pb-4 pt-8 sm:px-8 lg:px-12">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#CBFF3D]">
-            Pikbo Moment · real private render
-          </p>
-          <h1 className="mt-3 max-w-4xl font-display text-[clamp(2.8rem,6vw,6rem)] font-black leading-[0.88] tracking-[-0.065em]">
-            One toy photo. One Street Power-Up.
-          </h1>
-          <p className="mt-5 max-w-2xl text-base font-semibold leading-7 text-white/60">
-            An invited seller can submit one owned toy photo for a private
-            9:16 · 5s · 720p launch clip. The result is stored privately and
-            can be downloaded from Library. Public visitors only see the
-            cached Lab path.
+        <div className="mx-auto grid max-w-[1480px] gap-4 border-b border-white/10 px-5 py-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:px-12">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#CBFF3D]">
+              Pikbo Moment · private render
+            </p>
+            <h1 className="mt-2 max-w-4xl font-display text-[clamp(2.45rem,4.2vw,4.5rem)] font-black leading-[0.9] tracking-[-0.06em]">
+              Turn one toy photo into Street Power-Up.
+            </h1>
+          </div>
+          <p className="border-l border-[#CBFF3D]/35 pl-4 text-sm font-semibold leading-6 text-white/56">
+            One fixed 9:16 · 5s · 720p Moment. Invited sellers upload privately,
+            spend 10 credits only on completion, then download from Library.
           </p>
         </div>
         <CreateStudio

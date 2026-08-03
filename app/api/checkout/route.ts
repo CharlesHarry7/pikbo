@@ -266,7 +266,7 @@ export async function POST(req: Request) {
       params.set("mode", "subscription");
       params.set(
         "success_url",
-        `${origin}/create?checkout=return&session_id={CHECKOUT_SESSION_ID}`
+        `${origin}/create?mode=moment&effect=street-power-up&checkout=return&session_id={CHECKOUT_SESSION_ID}`
       );
       params.set("cancel_url", `${origin}/pricing?canceled=1`);
       params.set("client_reference_id", auth.id);

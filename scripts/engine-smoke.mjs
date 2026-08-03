@@ -792,7 +792,11 @@ assert.doesNotMatch(appShell, /const MORE|MoreMenu|CommandPalette/);
 assert.match(appShell, /CreditsBadge|LanguageSwitcher/);
 assert.match(
   appShell,
-  /DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?mode=moment&effect=street-power-up[\s\S]*?data-primary-create-href=\{[\s\S]*?DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?effect=street-power-up&source=primary-nav/
+  /MOMENT_CREATE_HREF[\s\S]*?const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`[\s\S]*?const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`[\s\S]*?data-primary-create-href=\{\s*momentSurface\s*\?\s*DEFAULT_MOMENT_CREATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF\s*\}/
+);
+assert.doesNotMatch(
+  appShell,
+  /\/create\?effect=street-power-up&source=primary-nav/
 );
 const historySrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historySrc, /historyProvenance|provenance/);
@@ -2417,7 +2421,11 @@ const homeMomentEntrySrc = [
 assert.match(homeMomentEntrySrc, /data-home-upgrade="moment"/);
 assert.match(
   homeMomentEntrySrc,
-  /const createHref = `\/create\?effect=\$\{active\.effect\}/
+  /const createHref = `\$\{MOMENT_CREATE_HREF\}&source=home-motion-archive`/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8"),
+  /MOMENT_CREATE_HREF\s*=\s*[\s\S]{0,100}\/create\?mode=moment&effect=street-power-up/
 );
 
 assert.match(
@@ -2762,19 +2770,47 @@ assert.match(
   fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
   /Free live held for T6 bake/
 );
-// Phase C auth guest path product-first (single Moment before legacy modules)
+// Phase C auth guest path product-first: one fixed Moment preview, no legacy
+// remix or Modules fallback.
 const loginFormSrc = fs.readFileSync(
   join(root, "components/LoginForm.tsx"),
   "utf8"
 );
 const loginPageSrc = fs.readFileSync(join(root, "app/login/page.tsx"), "utf8");
+const loginMomentImportPattern =
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/;
+const loginGuestMomentHrefPattern =
+  /const LOGIN_GUEST_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=login-guest`/;
 assert.match(loginFormSrc, /data-auth-guest-path="product-first"/);
 assert.match(loginPageSrc, /data-auth-guest-path="product-first"/);
-assert.match(loginFormSrc, /effect=street-power-up&source=login-guest/);
-assert.match(loginPageSrc, /effect=street-power-up&source=login-guest/);
-// Guest Generate carries remix contract (createRemixHref), not bare /create
-assert.match(loginFormSrc, /createRemixHref|data-login-guest=["']generate-remix["']/);
-assert.match(loginPageSrc, /createRemixHref|data-login-guest=["']generate-remix["']/);
+assert.match(loginFormSrc, loginMomentImportPattern);
+assert.match(loginPageSrc, loginMomentImportPattern);
+assert.match(loginFormSrc, loginGuestMomentHrefPattern);
+assert.match(loginPageSrc, loginGuestMomentHrefPattern);
+assert.match(loginFormSrc, /data-login-guest=["']moment-preview["']/);
+assert.match(loginPageSrc, /data-login-guest=["']moment-preview["']/);
+assert.match(loginFormSrc, /Preview Street Power-Up/);
+assert.match(loginPageSrc, /Preview Street Power-Up/);
+assert.doesNotMatch(loginFormSrc, /createRemixHref|360-spin-showcase/);
+assert.doesNotMatch(loginPageSrc, /createRemixHref|360-spin-showcase/);
+assert.doesNotMatch(
+  loginFormSrc,
+  /\/create\?effect=street-power-up&source=login-guest/
+);
+assert.doesNotMatch(
+  loginPageSrc,
+  /\/create\?effect=street-power-up&source=login-guest/
+);
+assert.doesNotMatch(loginFormSrc, /\/modules/);
+assert.doesNotMatch(loginPageSrc, /\/modules/);
+assert.doesNotMatch(
+  loginFormSrc,
+  /data-login-guest=["']generate-remix["']|\b(?:Continue as guest\s*→\s*)?Generate\b/
+);
+assert.doesNotMatch(
+  loginPageSrc,
+  /data-login-guest=["']generate-remix["']|\b(?:Continue as guest\s*→\s*)?Generate\b/
+);
 assert.doesNotMatch(
   loginPageSrc,
   /data-login-guest=["']generate-remix["'][\s\S]{0,80}href=["']\/create["']/
@@ -2782,19 +2818,6 @@ assert.doesNotMatch(
 assert.match(
   fs.readFileSync(join(root, "components/MobileGenerateBar.tsx"), "utf8"),
   /createRemixHref|data-mobile-bar=["']generate-remix["']/
-);
-assert.ok(
-  loginFormSrc.indexOf("effect=street-power-up") < loginFormSrc.indexOf("/modules"),
-  "LoginForm guest: Moment before Modules"
-);
-assert.ok(
-  !loginFormSrc.includes('href="/flow"') ||
-    loginFormSrc.indexOf("effect=street-power-up") < loginFormSrc.indexOf('href="/flow"'),
-  "LoginForm guest: Moment before Flow when Flow present"
-);
-assert.ok(
-  loginPageSrc.indexOf("effect=street-power-up") < loginPageSrc.indexOf("/modules"),
-  "Login page guest: Moment before Modules"
 );
 assert.match(
   genRoute,
@@ -4149,7 +4172,7 @@ const softLaunchSrc = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
 assert.match(softLaunchSrc, /PRIMARY_NAV/);
 assert.match(
   softLaunchSrc,
-  /href:\s*["']\/create\?effect=street-power-up&source=primary-nav["']/
+  /href:\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`/
 );
 assert.match(softLaunchSrc, /href:\s*["']\/library["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
@@ -4220,7 +4243,11 @@ assert.match(appShellSrc, /CreditsBadge|LanguageSwitcher/);
 assert.doesNotMatch(appShellSrc, /MoreMenu|CommandPalette/);
 assert.match(
   appShellSrc,
-  /DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?mode=moment&effect=street-power-up[\s\S]*?data-primary-create-href=\{[\s\S]*?DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?effect=street-power-up&source=primary-nav/
+  /MOMENT_CREATE_HREF[\s\S]*?const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`[\s\S]*?const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`[\s\S]*?data-primary-create-href=\{\s*momentSurface\s*\?\s*DEFAULT_MOMENT_CREATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF\s*\}/
+);
+assert.doesNotMatch(
+  appShellSrc,
+  /\/create\?effect=street-power-up&source=primary-nav/
 );
 // GA4 adapter is env-gated no-op when unset (reuse analyticsSrc declared above)
 assert.match(analyticsSrc, /NEXT_PUBLIC_GA_MEASUREMENT_ID/);
@@ -4380,7 +4407,7 @@ function resolveGenerateStillPure(input) {
 assert.match(softLaunchSrc, /MOBILE_NAV/);
 assert.match(
   softLaunchSrc,
-  /MOBILE_NAV[\s\S]*href:\s*["']\/create\?effect=street-power-up&source=primary-nav["']/
+  /MOBILE_NAV[\s\S]*href:\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`/
 );
 assert.doesNotMatch(
   softLaunchSrc,
@@ -4688,14 +4715,8 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
   /href=["']\/create\?try=1&sample=scout["']/
 );
-assert.match(
-  fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
-  /FreeTrialCta/
-);
-assert.match(
-  fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
-  /FreeTrialCta/
-);
+assert.doesNotMatch(loginFormSrc, /FreeTrialCta/);
+assert.doesNotMatch(loginPageSrc, /FreeTrialCta/);
 assert.match(
   fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
   /FreeTrialCta/
@@ -5827,19 +5848,19 @@ assert.match(
   /code:\s*["']CANCELED["'][\s\S]{0,500}refundUnconfirmed/
 );
 
-// Login guest Generate: remix contract (not bare /create) — page + form
-assert.match(
-  fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
-  /createRemixHref\(["']360-spin-showcase["']\)|data-login-guest=["']generate-remix["']/
-);
+// Login guest fallback remains the fixed Moment contract — page + form.
+assert.match(loginPageSrc, loginGuestMomentHrefPattern);
 assert.doesNotMatch(
-  fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
+  loginPageSrc,
   /Continue as guest[\s\S]{0,80}href=["']\/create["']/
 );
-assert.match(
-  fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
-  /createRemixHref\(["']360-spin-showcase["']\)/
-);
+assert.match(loginFormSrc, loginGuestMomentHrefPattern);
+assert.doesNotMatch(loginPageSrc, /createRemixHref|360-spin-showcase/);
+assert.doesNotMatch(loginFormSrc, /createRemixHref|360-spin-showcase/);
+assert.doesNotMatch(loginPageSrc, /\/create\?effect=street-power-up&source=login-guest/);
+assert.doesNotMatch(loginFormSrc, /\/create\?effect=street-power-up&source=login-guest/);
+assert.doesNotMatch(loginPageSrc, /\/modules/);
+assert.doesNotMatch(loginFormSrc, /\/modules/);
 // DELETE cancel ledgers echo refundUnconfirmed (client settlement honesty)
 assert.match(
   fs.readFileSync(join(root, "app/api/generations/route.ts"), "utf8"),
@@ -5894,9 +5915,53 @@ assert.match(
 // AppShell routes the public Moment shell to one fixed private validation clip.
 assert.match(
   fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
-  /DEFAULT_MOMENT_CREATE_HREF[\s\S]*create\?mode=moment&effect=street-power-up/
+  /DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`/
 );
-// Pricing and Footer both route public visitors to one current Moment.
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
+  /\/create\?effect=street-power-up&source=primary-nav/
+);
+// Pricing, closed checkout, and Footer all derive their public Moment doors
+// from one frozen base path.  Keep source/try/sample attribution local to the
+// surface so a future base-path change cannot silently split this funnel.
+const pricingCheckoutButtonSrc = fs.readFileSync(
+  join(root, "components/PricingCheckoutButton.tsx"),
+  "utf8"
+);
+const pricingMomentSurfaceSources = [
+  ["app/pricing/page.tsx", pricingPage],
+  ["components/PricingCheckoutButton.tsx", pricingCheckoutButtonSrc],
+  ["components/Footer.tsx", footerSrc],
+];
+for (const [rel, source] of pricingMomentSurfaceSources) {
+  assert.match(
+    source,
+    /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/,
+    `${rel} must import the fixed Moment base href`
+  );
+  assert.doesNotMatch(
+    source,
+    /\/create\?(?:mode=moment&)?effect=street-power-up/,
+    `${rel} must not parallel-hardcode the Moment base path`
+  );
+}
+assert.match(
+  pricingPage,
+  /const PRICING_PREVIEW_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=pricing-preview&try=1&sample=beatbot`/
+);
+assert.match(pricingPage, /href=\{PRICING_PREVIEW_HREF\}/);
+assert.match(
+  pricingCheckoutButtonSrc,
+  /const PRICING_FOUNDING_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=pricing-founding`/
+);
+assert.match(pricingCheckoutButtonSrc, /href=\{PRICING_FOUNDING_HREF\}/);
+assert.match(
+  footerSrc,
+  /const FOOTER_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=footer`/
+);
+assert.match(footerSrc, /\[FOOTER_CREATE_HREF,\s*["']Create["']\]/);
+assert.match(footerSrc, /<Link\s+href=\{FOOTER_CREATE_HREF\}/);
+// Pricing and Footer still preserve their existing product-first assertions.
 assert.match(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
   /href=["']\/create\?effect=street-power-up&source=pricing-hero&try=1&sample=beatbot["']/
@@ -5905,10 +5970,6 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
   /href=\{`\/create\?source=pricing-/
 );
-assert.match(
-  fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
-  /create\?mode=moment&effect=street-power-up&source=footer/
-);
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
   /\[["']\/create["'],\s*["']Generate["']\]/
@@ -5916,6 +5977,37 @@ assert.doesNotMatch(
 assert.match(
   fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
   /LIBRARY_GENERATE_HREF|data-library-empty=["']generate-remix["']/
+);
+assert.match(
+  library,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+for (const [name, source] of [
+  ["LIBRARY_STICKY_MOMENT_HREF", "library-sticky"],
+  ["LIBRARY_EMPTY_MOMENT_HREF", "library-empty"],
+  ["LIBRARY_PROJECT_MOMENT_HREF", "library-project"],
+]) {
+  assert.match(
+    library,
+    new RegExp(
+      "const " +
+        name +
+        "\\s*=\\s*`\\$\\{MOMENT_CREATE_HREF\\}&source=" +
+        source +
+        "`"
+    ),
+    `LibraryGrid must derive ${name} from MOMENT_CREATE_HREF`
+  );
+  assert.match(
+    library,
+    new RegExp("href=\\{" + name + "\\}"),
+    `LibraryGrid must use ${name}`
+  );
+}
+assert.doesNotMatch(
+  library,
+  /\/create\?effect=street-power-up/,
+  "LibraryGrid must not retain an old effect-only Moment entry"
 );
 assert.match(
   fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
@@ -5958,7 +6050,7 @@ for (const [rel, re] of residualGenerateDoors) {
 }
 assert.match(
   fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /href=["']\/create\?effect=street-power-up[^"']*["'][\s\S]*Create one Moment/
+  /href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}[\s\S]*Create one Moment/
 );
 // Cinema director board compose → Generate carries remix + prompt (not bare effect=)
 const cinemaComposeSrc = fs.readFileSync(
@@ -6009,7 +6101,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "app/pricing/page.tsx"), "utf8"),
-  /effect=street-power-up&source=pricing-preview&try=1&sample=beatbot/
+  /const PRICING_PREVIEW_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=pricing-preview&try=1&sample=beatbot`/
 );
 
 

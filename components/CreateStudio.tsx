@@ -2342,7 +2342,9 @@ export function CreateStudio({
             </div>
           </div>
 
-          {/* Advanced — models, duration, seed, prompt (collapsed by default) */}
+          {/* Fixed Moments remove model/prompt decisions. The general Studio
+              keeps Advanced available for later exploration. */}
+          {!fixedMomentContract ? (
           <div className="rounded-xl border border-white/10 bg-black/25">
             <button
               type="button"
@@ -2731,6 +2733,7 @@ export function CreateStudio({
               </div>
             )}
           </div>
+          ) : null}
 
           {/* Step 3 — exact quote, rights confirmation, one Generate action. */}
           <div
@@ -3078,7 +3081,7 @@ export function CreateStudio({
                   </p>
                 </div>
 
-                {status === "done" && videoUrl ? (
+                {!fixedMomentContract && status === "done" && videoUrl ? (
                   <GenerateAfterPath
                     effectSlug={activeVersion?.effect || effect}
                     demo={demo}
@@ -3097,7 +3100,7 @@ export function CreateStudio({
                 ) : null}
 
                 {/* Delivery pack — interactive ticks (session-local, first principles P4) */}
-                <DeliveryChecklist
+                {!fixedMomentContract ? <DeliveryChecklist
                   className="mx-auto mt-3 max-w-md"
                   title={
                     toyIdentity.sku
@@ -3110,10 +3113,10 @@ export function CreateStudio({
                     downloadAllowed,
                     includeQc: true,
                   })}
-                />
+                /> : null}
 
                 {/* Same photo · next job — accelerate cycle, no re-upload */}
-                {image && status === "done" && (
+                {!fixedMomentContract && image && status === "done" && (
                   <div className="mx-auto mt-4 max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-black/40 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <div className="mb-2.5 flex flex-wrap items-end justify-between gap-2">
                       <div>
@@ -3205,6 +3208,33 @@ export function CreateStudio({
                       {downloadBlockedCtaLabel({ downloadAllowed: false })}
                     </button>
                   )}
+                  {fixedMomentContract ? (
+                    <div
+                      className="flex flex-wrap items-center justify-center gap-2"
+                      data-fixed-moment-after="first-dollar"
+                    >
+                      <button
+                        type="button"
+                        onClick={retryActiveVersion}
+                        className="btn btn-ghost px-3.5 py-2 text-xs"
+                      >
+                        Retry this Moment
+                      </button>
+                      <Link
+                        href="/library"
+                        className="btn btn-ghost px-4 py-2 text-xs"
+                      >
+                        Open Library
+                      </Link>
+                      <Link
+                        href="/pricing"
+                        className="btn btn-primary px-4 py-2 text-xs"
+                        data-fixed-moment-upgrade
+                      >
+                        Continue creating · 9 Moments/month · $49
+                      </Link>
+                    </div>
+                  ) : (
                   <div className="flex flex-wrap items-center justify-center gap-2">
                   <button
                     type="button"
@@ -3270,9 +3300,12 @@ export function CreateStudio({
                     </Link>
                   ) : null}
                   </div>
+                  )}
                 </div>
 
                 {/* Wave A: server-returned metadata for the active version */}
+                {!fixedMomentContract ? (
+                <>
                 <dl className="mx-auto mt-4 grid max-w-lg grid-cols-2 gap-x-4 gap-y-1.5 rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-[11px] sm:grid-cols-3">
                   <div>
                     <dt className="text-[var(--fg-dim)]">Recipe</dt>
@@ -3379,6 +3412,8 @@ export function CreateStudio({
                       ? privateLibraryNote()
                       : localLibraryNote()}
                 </p>
+                </>
+                ) : null}
               </div>
             )}
             {status === "error" && !videoUrl && (

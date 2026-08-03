@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, type KeyboardEvent } from "react";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const FORMATS = [
   {
@@ -58,6 +59,9 @@ const FORMATS = [
 
 const PRIVATE_BETA_MAILTO =
   "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
+const PRIVATE_MOMENT_LOGIN_HREF = `/login?next=${encodeURIComponent(
+  `${MOMENT_CREATE_HREF}&source=public-sample`
+)}`;
 
 type Format = (typeof FORMATS)[number];
 
@@ -93,7 +97,7 @@ function HomeDropArchive({
   active: Format;
   onSelect: (format: Format) => void;
 }) {
-  const createHref = `/create?effect=${active.effect}&source=home-motion-archive`;
+  const createHref = `${MOMENT_CREATE_HREF}&source=home-motion-archive`;
 
   function moveSelection(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -134,15 +138,15 @@ function HomeDropArchive({
 
           <div className="mt-5 lg:mt-0 lg:pb-1">
             <p className="max-w-[390px] text-sm font-semibold leading-6 text-[#686159] lg:text-[15px] lg:text-[#A39C91]">
-              Pick one directed Moment, then turn one owned toy photo into one
-              launch-ready clip.
+              Explore the archive, then use the one private render available
+              now: Street Power-Up from one owned toy photo.
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-4">
               <Link
                 href={createHref}
                 className="inline-flex min-h-12 items-center justify-between gap-6 rounded-[10px] bg-[#D84A35] px-5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-[#E25A43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F1E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]"
               >
-                Create {active.name} <span aria-hidden>↗</span>
+                Create Street Power-Up <span aria-hidden>↗</span>
               </Link>
               <a
                 href="#archive-selector"
@@ -459,7 +463,8 @@ function CreateSampleBrowser({
               </h1>
               <p className="mt-4 max-w-[560px] text-[13px] font-semibold leading-5 text-white/58 sm:text-[15px] sm:leading-6">
                 Compare Pikbo Lab directions for listing spin, blind-box reveal,
-                and social hooks, then continue with only the one you need.
+                and social hooks. Street Power-Up is the private render
+                available in validation now.
               </p>
 
               <div
@@ -515,10 +520,10 @@ function CreateSampleBrowser({
                   Request seller beta <span aria-hidden>↗</span>
                 </Link>
                 <Link
-                  href="/login?next=%2Fcreate%3Feffect%3Dstreet-power-up"
+                  href={PRIVATE_MOMENT_LOGIN_HREF}
                   className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/18 px-6 text-sm font-black text-white transition hover:border-white/45 hover:bg-white/[0.06]"
                 >
-                  Sign in to create
+                  Sign in for Street Power-Up
                 </Link>
               </div>
               <p className="mt-3 text-[10px] font-bold leading-4 text-white/40">
