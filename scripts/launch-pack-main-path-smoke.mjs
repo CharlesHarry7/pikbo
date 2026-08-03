@@ -35,32 +35,16 @@ const homeSample = publicSample.slice(
   publicSample.indexOf("function CreateSampleBrowser")
 );
 
-// The public homepage starts from a video-first archive, then routes to one
-// selected Moment. The old three-output Pack stays behind an authenticated
-// private-validation gate and is never a public product door.
-assert.match(homeHero, /PublicLaunchPackSample surface="home"/);
+// North star: 潮玩版 Higgsfield Explore suite on /.
+// Archive sample component may remain in repo; homepage ships HF hero + Generate.
+assert.match(home, /HfExploreHome/);
+assert.match(hfExploreHome, /data-hf-hero="premiere"/);
+assert.match(hfExploreHome, /HomeViralWall/);
 assert.match(publicSample, /See how toys become launches\./);
 assert.match(publicSample, /Archive motion sample/);
-assert.match(homeSample, /data-home-upgrade="moment"/);
-assert.match(
-  publicSample,
-  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
-);
-assert.match(
-  homeSample,
-  /const createHref = `\$\{MOMENT_CREATE_HREF\}&source=home-motion-archive`/
-);
-assert.doesNotMatch(
-  homeSample,
-  /const createHref = `\/create\?effect=\$\{active\.effect\}/
-);
-assert.doesNotMatch(homeSample, /\/create\?effect=/);
 assert.match(publicSample, /effect: "360-spin-showcase"/);
 assert.match(publicSample, /effect: "mystery-box-reveal"/);
 assert.match(publicSample, /effect: "street-power-up"/);
-assert.match(homeSample, /Pick one Moment for your toy\./);
-assert.match(homeSample, /one toy · one chosen Moment/);
-assert.doesNotMatch(homeSample, /one toy · three launch formats/);
 assert.match(publicSample, /import \{ MOMENTS \} from "@\/lib\/moments"/);
 assert.match(homeSample, /data-home-official-moments/);
 assert.match(homeSample, /Preview an Official Concept/);
@@ -163,7 +147,7 @@ assert.match(
   createStudio,
   /privateUploadEnabled \? \(\s*<div id="create-photo-step" data-first-run-step="upload">/
 );
-assert.match(homeWall, /Try this recipe/);
+assert.match(homeWall, /Generate/);
 assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);

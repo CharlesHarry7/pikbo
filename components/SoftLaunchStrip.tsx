@@ -50,38 +50,53 @@ export function SoftLaunchStrip() {
       ? me.freeTrial.clipsLeft
       : null;
 
-  const line = demo
-    ? "Cached Pikbo Lab prototypes · 0 credits · your upload is not processed"
+  // HF-class campaign energy first; honesty stays secondary (no fake live).
+  const badge = demo
+    ? "FREE TOY LAB"
     : trialDone
-      ? "Free Mini trial used · Lab demos still free · compare finite plans"
+      ? "Trial used"
       : freeLive
-        ? `${freeLiveModelLabel} · ${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · refunds when confirmed`
-        : "Live access is not confirmed · continue with cached Lab prototypes";
+        ? freeLiveModelLabel
+        : "Live eligibility";
+  const line = demo
+    ? "8 designer-toy video recipes · watch free · generate with your figure when signed in"
+    : trialDone
+      ? "Free Mini used · Lab demos still free · compare finite plans"
+      : freeLive
+        ? `${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · refunds when confirmed`
+        : "Continue with cached Lab · private live for invited sellers";
 
-  // Keep every public conversion on one preset-first Moment.
-  const primaryHref = trialDone
-    ? "/pricing"
-    : demo
-      ? SOFT_LAUNCH_LAB_SAMPLE_HREF
+  // Demo/guest: always lead with Generate (HF free-hook energy).
+  // Signed-in exhausted trial may route to pricing as secondary path.
+  const primaryHref = demo
+    ? `/create?effect=${SOFT_LAUNCH_GENERATE_EFFECT}&source=soft-launch`
+    : trialDone
+      ? "/pricing"
       : "/create?effect=street-power-up&source=soft-launch";
-  const primaryLabel = trialDone
-    ? "Compare plans"
-    : demo
-      ? "Preview cached Lab video"
+  const primaryLabel = demo
+    ? "Generate"
+    : trialDone
+      ? "Compare plans"
       : `Generate · ${freeLiveModelLabel} 5s`;
+  const secondaryHref = demo
+    ? SOFT_LAUNCH_LAB_SAMPLE_HREF
+    : trialDone
+      ? createRemixHref(SOFT_LAUNCH_GENERATE_EFFECT)
+      : createRemixHref(SOFT_LAUNCH_GENERATE_EFFECT);
+  const secondaryLabel = demo
+    ? "Watch Lab sample"
+    : trialDone
+      ? "Keep exploring Lab"
+      : "Open studio";
 
   return (
-    <div className="border-b border-[#c8ff3d]/25 bg-gradient-to-r from-[#c8ff3d]/[0.12] via-black to-black px-3 py-2.5 sm:px-5">
+    <div className="border-b border-[#c8ff3d]/30 bg-gradient-to-r from-[#c8ff3d]/[0.16] via-black to-black px-3 py-3 sm:px-5">
       <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2">
-        <p className="text-[12px] leading-snug text-white/80 sm:text-[13px]">
-          <span className="font-black text-[#c8ff3d]">
-            {demo
-              ? "Cached preview"
-              : trialDone
-                ? "Trial used"
-                : "Live eligibility"}
+        <p className="text-[12px] leading-snug text-white/85 sm:text-[13px]">
+          <span className="font-black uppercase tracking-[0.12em] text-[#c8ff3d]">
+            {badge}
           </span>
-          <span className="text-white/50"> · </span>
+          <span className="text-white/45"> · </span>
           {line}
           {clipsLeft !== null && !demo && !trialDone ? (
             <span className="text-white/45">
@@ -104,13 +119,13 @@ export function SoftLaunchStrip() {
             }
             className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[12px] font-black text-black shadow-[0_0_20px_rgba(200,255,61,0.25)]"
             data-soft-launch-try={
-              trialDone ? "pricing" : demo ? "lab-sample-remix" : "single-moment"
+              trialDone ? "pricing" : demo ? "generate" : "single-moment"
             }
           >
             {primaryLabel}
           </Link>
           <Link
-            href={createRemixHref(SOFT_LAUNCH_GENERATE_EFFECT)}
+            href={secondaryHref}
             onClick={() =>
               track({
                 event: "landing_view",
@@ -121,7 +136,7 @@ export function SoftLaunchStrip() {
             className="rounded-full border border-white/20 px-3 py-1.5 text-[12px] font-bold text-white/85 hover:border-[#c8ff3d]/40"
             data-soft-launch="generate-remix"
           >
-            Open Generate
+            {secondaryLabel}
           </Link>
         </div>
       </div>

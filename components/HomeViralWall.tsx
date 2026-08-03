@@ -19,25 +19,25 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
       <div className="mx-auto mb-8 flex max-w-[1600px] items-end justify-between gap-6 px-2 sm:mb-11">
         <div className="max-w-3xl">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#c8ff3d]">
-            Pikbo Lab · 8 cached previews
+            Viral toy presets
           </p>
           <h2
             id="recipe-wall-title"
             className="mt-3 font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-6xl"
           >
-            One toy. More ways to move.
+            One toy. More ways to sell.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/48 sm:text-base">
-            Choose the one recipe that fits the launch you are making now.
-            These studies explore movement, atmosphere, and story without
-            pretending every concept is already a live product.
+            HF-style preset wall, designer-toy native. Tap a card → Generate
+            with your figure. Lab media is free to watch; private live stays
+            gated for invited sellers.
           </p>
         </div>
         <Link
           href="/effects"
           className="hidden shrink-0 rounded-full border border-white/15 px-5 py-2.5 text-xs font-black text-white/60 transition hover:border-[#c8ff3d]/50 hover:text-[#c8ff3d] sm:block"
         >
-          Browse recipe notes ↗
+          View all presets ↗
         </Link>
       </div>
 
@@ -84,22 +84,22 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                   className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/5 to-black/10"
                   aria-hidden
                 />
-                <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/55 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.14em] text-white/72 backdrop-blur sm:left-3 sm:top-3 sm:text-[9px]">
-                  Cached preview
+                <span className="absolute left-2 top-2 rounded-full border border-[#c8ff3d]/35 bg-black/55 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.14em] text-[#c8ff3d] backdrop-blur sm:left-3 sm:top-3 sm:text-[9px]">
+                  Lab
                 </span>
                 <span className="absolute inset-x-0 bottom-0 p-3 pb-12 sm:p-4 sm:pb-14">
                   <span className="block text-sm font-black leading-tight text-white sm:text-lg">
                     {recipeName}
                   </span>
                   <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-white/50 sm:text-[10px]">
-                    Open recipe proof →
+                    Your photo → this motion
                   </span>
                 </span>
               </Link>
               <Link
                 href={item.href}
                 prefetch
-                aria-label={`Use the ${recipeName} recipe`}
+                aria-label={`Generate with the ${recipeName} recipe`}
                 className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-black shadow-[0_0_18px_rgba(200,255,61,0.3)] transition hover:bg-[#d5ff6b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:bottom-4 sm:left-4 sm:text-[10px]"
                 onClick={() =>
                   track({
@@ -113,7 +113,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                   })
                 }
               >
-                Try this recipe
+                Generate
                 <span aria-hidden>↗</span>
               </Link>
             </article>
@@ -126,7 +126,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
           href="/effects"
           className="rounded-full border border-white/15 px-5 py-2.5 text-xs font-bold text-white/70"
         >
-          Browse recipe notes
+          View all presets
         </Link>
       </div>
     </section>
