@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-04
 
-**Canonical code:** `main@0b71986` — single Street Power-Up Moment with owner-only live input and reconciliation hardening
+**Canonical code:** `main@02ba045` — single Street Power-Up Moment with owner-only live input, reconciliation hardening, and an honest guest Create proof
 
 **Production:** validation-only and behind canonical code while Vercel's
 daily deployment limit is active; no alias workaround or Provider gate change
@@ -23,6 +23,9 @@ Git history and must not be treated as current work.
 - #132: direct live generation now requires an owner-scoped ready private
   asset, every direct live allowance uses the fixed Street Power-Up contract,
   and R1c reconciliation is worker-only and fail-closed.
+- #133: anonymous Create now shows the existing cached Street Power-Up study
+  before the private gate. It does not mount CreateStudio or expose upload,
+  credits, Generate, Provider, or Checkout controls.
 - #65: the Magic Link return-path implementation and regression landed before
   the convergence; its remaining real-user proof is part of #54.
 
@@ -36,6 +39,6 @@ Git history and must not be treated as current work.
 
 ## Branch policy
 
-Every new task starts from current `main`; this Create proof started from
-`main@0b71986`. One active task gets one new branch and one PR. Closed
+Every new task starts from current `main`; the next protected Preview proof
+starts from `main@02ba045`. One active task gets one new branch and one PR. Closed
 historical PRs are reference material, not merge candidates.
