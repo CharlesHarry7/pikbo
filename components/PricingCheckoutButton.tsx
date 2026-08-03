@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 
 const PRICING_FOUNDING_HREF =
   `${MOMENT_CREATE_HREF}&source=pricing-founding` as const;
+const PRICING_LOGIN_HREF = `/login?next=${encodeURIComponent("/pricing")}` as const;
 
 /** Soft launch: paid checkout only when explicitly enabled + Stripe configured. */
 function paymentsLive(): boolean {
@@ -89,7 +90,15 @@ export function PricingCheckoutButton({
         headers,
         body: JSON.stringify({ plan: planId }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as {
+        code?: string;
+        error?: string;
+        url?: string;
+      };
+      if (data.code === "AUTH_REQUIRED") {
+        window.location.assign(PRICING_LOGIN_HREF);
+        return;
+      }
       if (!res.ok) throw new Error(data.error || "Checkout failed");
       if (data.url) {
         window.location.href = data.url;
@@ -97,6 +106,13 @@ export function PricingCheckoutButton({
       }
       throw new Error("No checkout URL returned");
     } catch (err) {
+      if (
+        err instanceof Error &&
+        err.message === "Sign in before subscribing."
+      ) {
+        window.location.assign(PRICING_LOGIN_HREF);
+        return;
+      }
       setError(err instanceof Error ? err.message : "Checkout failed");
       setBusy(false);
     }
