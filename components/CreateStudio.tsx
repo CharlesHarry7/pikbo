@@ -28,6 +28,7 @@ import { PRESETS } from "@/lib/presets";
 import { viralName } from "@/lib/viralNames";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { site } from "@/lib/site";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { stripeBillingAuthHeaders } from "@/lib/stripeBillingClient";
 import { useToast } from "@/components/Toast";
 import { PaywallCard } from "@/components/PaywallCard";
@@ -299,6 +300,12 @@ export function CreateStudio({
   const [session, setSession] = useState<MeResponse | null>(null);
   const [sessionResolved, setSessionResolved] = useState(false);
   const privateUploadEnabled = canUsePrivateLaunch(session);
+  const fixedMomentNextPath = initialSource
+    ? `${MOMENT_CREATE_HREF}&source=${encodeURIComponent(initialSource)}`
+    : MOMENT_CREATE_HREF;
+  const privateMomentLoginHref = `/login?next=${encodeURIComponent(
+    fixedMomentNextPath
+  )}`;
   const [showPaywall, setShowPaywall] = useState(false);
   const [upgradedBanner, setUpgradedBanner] = useState(false);
   const [usedModel, setUsedModel] = useState<string | null>(null);
@@ -2230,14 +2237,25 @@ export function CreateStudio({
                 owner-only upload control here.
               </p>
               {sessionResolved ? (
-                <Link
-                  href={PRIVATE_BETA_MAILTO}
-                  className="mt-3 inline-flex min-h-10 items-center rounded-full bg-[var(--mint)] px-4 text-xs font-black text-black transition hover:brightness-110"
-                  aria-label="Email Pikbo to request private beta access"
-                  data-public-single-preview-beta
-                >
-                  Request private beta
-                </Link>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link
+                    href={PRIVATE_BETA_MAILTO}
+                    className="inline-flex min-h-10 items-center rounded-full bg-[var(--mint)] px-4 text-xs font-black text-black transition hover:brightness-110"
+                    aria-label="Email Pikbo to request private beta access"
+                    data-public-single-preview-beta
+                  >
+                    Request private beta
+                  </Link>
+                  {fixedMomentContract && !session?.signedIn ? (
+                    <Link
+                      href={privateMomentLoginHref}
+                      className="inline-flex min-h-10 items-center rounded-full border border-white/20 px-4 text-xs font-black text-white transition hover:border-white/45 hover:bg-white/[0.06]"
+                      data-public-single-preview-sign-in
+                    >
+                      Sign in for Street Power-Up
+                    </Link>
+                  ) : null}
+                </div>
               ) : null}
             </div>
           )}

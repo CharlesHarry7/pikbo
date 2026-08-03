@@ -75,6 +75,21 @@ assertMatch(
   "homepage create CTA must enter the fixed Moment, not generic Studio"
 );
 assertMatch(
+  studio,
+  /const fixedMomentNextPath\s*=\s*[\s\S]{0,220}MOMENT_CREATE_HREF/,
+  "fixed Moment gate must derive its sign-in return path from the shared Moment href"
+);
+assertMatch(
+  studio,
+  /const privateMomentLoginHref\s*=\s*`\/login\?next=\$\{encodeURIComponent\([\s\S]{0,120}fixedMomentNextPath[\s\S]{0,40}\)\}`/,
+  "fixed Moment gate must preserve the exact Moment path through login"
+);
+assertMatch(
+  studio,
+  /fixedMomentContract\s*&&\s*!session\?\.signedIn\s*\?\s*\([\s\S]{0,600}data-public-single-preview-sign-in[\s\S]{0,120}Sign in for Street Power-Up/,
+  "only anonymous fixed Moment visitors may receive the exact-path sign-in action"
+);
+assertMatch(
   libraryPage,
   /href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}/,
   "Library create CTA must return to the fixed Moment"
