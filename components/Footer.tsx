@@ -4,7 +4,8 @@ import { company } from "@/lib/company";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { Logo } from "@/components/Logo";
 
-const FOOTER_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=footer` as const;
+const FOOTER_CREATE_HREF =
+  "/create?mode=moment&effect=street-power-up&source=footer" as const;
 
 const FOOTER_GROUPS = [
   {

@@ -3,9 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
-import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+import { createRemixHref } from "@/lib/remixIntent";
 
-const LOGIN_GUEST_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=login-guest`;
+/** Guest Generate — full studio Lab preview (world-class toy AIGC entry). */
+const LOGIN_GUEST_GENERATE_HREF =
+  createRemixHref("360-spin-showcase", "login-guest") ||
+  "/create?effect=360-spin-showcase&source=login-guest";
 
 type AuthPublic = {
   configured: boolean;
@@ -27,20 +30,19 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
           Sign-in is temporarily unavailable
         </p>
         <p className="text-xs leading-relaxed text-white/55">
-          You can still try a cached Moment and Library on this
-          device. Cached Lab previews cost 0 credits and do not process your
-          upload.
+          You can still try the Generate studio and Library on this device.
+          Cached Lab previews cost 0 credits and do not process your upload.
         </p>
         <div
           className="flex flex-wrap items-center gap-2 pt-1"
           data-auth-guest-path="product-first"
         >
           <a
-            href={LOGIN_GUEST_MOMENT_HREF}
+            href={LOGIN_GUEST_GENERATE_HREF}
             className="btn btn-primary !px-3 !py-1.5 text-xs"
-            data-login-guest="moment-preview"
+            data-login-guest="generate-remix"
           >
-            Preview Street Power-Up
+            Generate Lab sample
           </a>
           <a href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Library

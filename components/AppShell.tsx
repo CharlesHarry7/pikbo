@@ -123,7 +123,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           data-primary-create-href={
             momentSurface
               ? DEFAULT_MOMENT_CREATE_HREF
-              : PRIMARY_NAV_CREATE_HREF
+              : "/create?effect=360-spin-showcase&source=primary-nav"
           }
         >
           {(momentSurface

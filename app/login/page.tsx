@@ -4,11 +4,13 @@ import { publicAuthStatus } from "@/lib/authConfig";
 import { site } from "@/lib/site";
 import { LoginForm } from "@/components/LoginForm";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
-import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+import { createRemixHref } from "@/lib/remixIntent";
 import { sanitizeInternalNextPath } from "@/lib/authRedirect";
 
-/** Guest login fallback — preview the fixed Street Power-Up Moment. */
-const LOGIN_GUEST_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=login-guest`;
+/** Guest Generate — studio Lab sample (world-class toy AIGC entry). */
+const LOGIN_GUEST_GENERATE_HREF =
+  createRemixHref("360-spin-showcase", "login-guest") ||
+  "/create?effect=360-spin-showcase&source=login-guest";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -78,11 +80,11 @@ export default async function LoginPage({
           data-auth-guest-path="product-first"
         >
           <Link
-            href={LOGIN_GUEST_MOMENT_HREF}
+            href={LOGIN_GUEST_GENERATE_HREF}
             className="font-semibold text-[var(--mint)] hover:underline"
-            data-login-guest="moment-preview"
+            data-login-guest="generate-remix"
           >
-            Preview Street Power-Up
+            Generate Lab sample
           </Link>
           <Link href="/library" className="text-[var(--mint)] hover:underline">
             Library

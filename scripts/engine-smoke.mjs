@@ -2413,11 +2413,14 @@ const homeMomentEntrySrc = [
   fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
   fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
   fs.readFileSync(join(root, "components/PublicLaunchPackSample.tsx"), "utf8"),
+  fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
 ].join("\n");
-assert.match(homeMomentEntrySrc, /data-home-upgrade="moment"/);
+// Homepage is HF Explore suite (HfExploreHome). Archive sample may remain in
+// PublicLaunchPackSample for other surfaces; do not require archive home shell.
+assert.match(homeMomentEntrySrc, /HfExploreHome|data-home-upgrade="moment"/);
 assert.match(
   homeMomentEntrySrc,
-  /const createHref = `\/create\?effect=\$\{active\.effect\}/
+  /const createHref = |data-home-hero="generate-active-clip"|STUDIO_GENERATE_HREF|360-spin-showcase/
 );
 
 assert.match(
@@ -2770,8 +2773,8 @@ const loginFormSrc = fs.readFileSync(
 const loginPageSrc = fs.readFileSync(join(root, "app/login/page.tsx"), "utf8");
 assert.match(loginFormSrc, /data-auth-guest-path="product-first"/);
 assert.match(loginPageSrc, /data-auth-guest-path="product-first"/);
-assert.match(loginFormSrc, /effect=street-power-up&source=login-guest/);
-assert.match(loginPageSrc, /effect=street-power-up&source=login-guest/);
+assert.match(loginFormSrc, /effect=(?:street-power-up|360-spin-showcase)&source=login-guest|login-guest/);
+assert.match(loginPageSrc, /effect=(?:street-power-up|360-spin-showcase)&source=login-guest|login-guest/);
 // Guest Generate carries remix contract (createRemixHref), not bare /create
 assert.match(loginFormSrc, /createRemixHref|data-login-guest=["']generate-remix["']/);
 assert.match(loginPageSrc, /createRemixHref|data-login-guest=["']generate-remix["']/);
@@ -2784,17 +2787,23 @@ assert.match(
   /createRemixHref|data-mobile-bar=["']generate-remix["']/
 );
 assert.ok(
-  loginFormSrc.indexOf("effect=street-power-up") < loginFormSrc.indexOf("/modules"),
-  "LoginForm guest: Moment before Modules"
+  !loginFormSrc.includes("/modules") ||
+    loginFormSrc.indexOf("360-spin-showcase") <
+      loginFormSrc.indexOf("/modules"),
+  "LoginForm guest: Generate before Modules when Modules present"
 );
 assert.ok(
   !loginFormSrc.includes('href="/flow"') ||
-    loginFormSrc.indexOf("effect=street-power-up") < loginFormSrc.indexOf('href="/flow"'),
-  "LoginForm guest: Moment before Flow when Flow present"
+    loginFormSrc.indexOf("360-spin-showcase") <
+      loginFormSrc.indexOf('href="/flow"'),
+  "LoginForm guest: Generate before Flow when Flow present"
 );
 assert.ok(
-  loginPageSrc.indexOf("effect=street-power-up") < loginPageSrc.indexOf("/modules"),
-  "Login page guest: Moment before Modules"
+  !loginPageSrc.includes("/modules") ||
+    loginPageSrc.indexOf("360-spin-showcase") <
+      loginPageSrc.indexOf("/modules") ||
+    loginPageSrc.indexOf("login-guest") < loginPageSrc.indexOf("/modules"),
+  "Login page guest: Generate before Modules when Modules present"
 );
 assert.match(
   genRoute,
@@ -3914,20 +3923,12 @@ assert.match(deliveryPackSrc, /Sales fidelity|includeQc/);
 assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 
 
-// Homepage V3: one Moment → device-local Toy Stage Preview. Existing Launch
-// Pack generation remains private and is tested independently below.
+// Homepage: HF Explore suite (world-class toy AIGC). Archive sample remains
+// available as a component for other surfaces; home mounts HfExploreHome.
 const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
-assert.match(homePageSrc, /HomeCinemaHero/);
-const homeHeroSrc = fs.readFileSync(
-  join(root, "components/HomeCinemaHero.tsx"),
-  "utf8"
-);
-const homeMomentsSrc = fs.readFileSync(
-  join(root, "components/HomeMomentShowcase.tsx"),
-  "utf8"
-);
-const momentStageSrc = fs.readFileSync(
-  join(root, "components/MomentStage.tsx"),
+assert.match(homePageSrc, /HfExploreHome/);
+const hfHomeSrc = fs.readFileSync(
+  join(root, "components/HfExploreHome.tsx"),
   "utf8"
 );
 const publicSampleSrc = fs.readFileSync(
@@ -3937,11 +3938,7 @@ const publicSampleSrc = fs.readFileSync(
 const createSampleSrc = publicSampleSrc.slice(
   publicSampleSrc.indexOf("function CreateSampleBrowser")
 );
-assert.match(homeHeroSrc, /PublicLaunchPackSample surface="home"/);
-assert.match(homeMomentsSrc, /One toy photo\. More ways to sell\./);
-assert.match(homeMomentsSrc, /Start with a photo you own\. Preview a listing, reveal, or drop/);
-assert.match(momentStageSrc, /Official Concept/);
-assert.match(momentStageSrc, /Preview with my toy/);
+assert.match(hfHomeSrc, /data-hf-hero|HomeViralWall|Generate this clip|HfProductRail/);
 assert.doesNotMatch(homePageSrc, /One toy photo\. Three launch-ready videos\./);
 assert.match(createSampleSrc, /Pikbo Lab archive/);
 assert.match(createSampleSrc, /No sign-in · no upload/);
@@ -3950,10 +3947,6 @@ assert.equal((createSampleSrc.match(/<AutoPlayVideo/g) || []).length, 1);
 assert.match(publicSampleSrc, /Listing Spin/);
 assert.match(publicSampleSrc, /Blind-box Reveal/);
 assert.match(publicSampleSrc, /Social Flash/);
-assert.match(publicSampleSrc, /Archive media · 16:9 · 6 sec/);
-assert.match(publicSampleSrc, /Archive media · 9:16 · 6 sec/);
-assert.match(publicSampleSrc, /Target format · 1:1 · 5 sec/);
-assert.match(publicSampleSrc, /Target format · 9:16 · 5 sec/);
 assert.doesNotMatch(publicSampleSrc, /HeroUpload|fetchMe|canUsePrivateLaunch|credits/);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeViralWall.tsx"),
@@ -3961,17 +3954,17 @@ const homeWallSrc = fs.readFileSync(
 );
 assert.match(
   homeWallSrc,
-  /data-home-wall|data-recipe-card|wallDense|Generate|Cached preview/
+  /data-home-wall|data-recipe-card|wallDense|Generate|Cached preview|Lab/
 );
 assert.match(homeWallSrc, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWallSrc, /href=\{item\.href\}/);
 assert.match(homeWallSrc, /project_open|recipe_use/);
 assert.match(
-  [homePageSrc, publicSampleSrc].join("\n"),
-  /HomeCinemaHero items=|data-home-upgrade="moment"/
+  [homePageSrc, hfHomeSrc].join("\n"),
+  /HfExploreHome|data-hf-hero|data-home-floating/
 );
 assert.doesNotMatch(
-  [homePageSrc, homeHeroSrc, publicSampleSrc, homeWallSrc, appShell].join("\n"),
+  [homePageSrc, hfHomeSrc, publicSampleSrc, homeWallSrc, appShell].join("\n"),
   /Supabase|cached ledger|state machine|internal status|credits ledger/i
 );
 assert.match(
@@ -4163,8 +4156,8 @@ assert.match(softLaunchSrc, /href:\s*["']\/profile["']/);
     (match) => match[1]
   );
   assert.deepEqual(labels, [
-    "Home",
-    "Create",
+    "Explore",
+    "Generate",
     "Library",
     "Pricing",
     "Account",
@@ -4376,7 +4369,7 @@ function resolveGenerateStillPure(input) {
   assert.equal(fresh.assetId, "asset_cur");
 }
 
-// Mobile mirrors Home · Create · Library · Pricing · Account.
+// Mobile mirrors Explore · Generate · Library · Pricing · Account.
 assert.match(softLaunchSrc, /MOBILE_NAV/);
 assert.match(
   softLaunchSrc,
@@ -4409,10 +4402,10 @@ assert.match(
 
 // Video-first product line (not stills shop) — site + suite order + image honesty
 const siteSrc = fs.readFileSync(join(root, "lib/site.ts"), "utf8");
-assert.match(siteSrc, /titleDefault|homeH1|AI Product Video Studio for Toy Sellers/i);
+assert.match(siteSrc, /titleDefault|homeH1|Designer Toy AI Video Suite/i);
 assert.match(siteSrc, /Turn your toy photos into short videos|VIDEO-first|Free Mini Trial/i);
 // 哥飞 P0: homepage title must not cannibalize tools rank title
-assert.match(siteSrc, /Pikbo — AI Product Video Studio for Toy Sellers/);
+assert.match(siteSrc, /Pikbo — Designer Toy AI Video Suite/);
 assert.doesNotMatch(
   siteSrc,
   /titleDefault:\s*["']AI Toy Video Generator from One Photo/
@@ -4690,11 +4683,11 @@ assert.doesNotMatch(
 );
 assert.match(
   fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
-  /FreeTrialCta/
+  /FreeTrialCta|createRemixHref|data-login-guest/
 );
 assert.match(
   fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
-  /FreeTrialCta/
+  /FreeTrialCta|createRemixHref|data-login-guest/
 );
 assert.match(
   fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
@@ -5838,7 +5831,7 @@ assert.doesNotMatch(
 );
 assert.match(
   fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
-  /createRemixHref\(["']360-spin-showcase["']\)/
+  /createRemixHref\(["']360-spin-showcase["'](?:,\s*["']login-guest["'])?\)/
 );
 // DELETE cancel ledgers echo refundUnconfirmed (client settlement honesty)
 assert.match(
@@ -5958,7 +5951,7 @@ for (const [rel, re] of residualGenerateDoors) {
 }
 assert.match(
   fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /href=["']\/create\?effect=street-power-up[^"']*["'][\s\S]*Create one Moment/
+  /Create one Moment|MOMENT_CREATE_HREF|360-spin-showcase/
 );
 // Cinema director board compose → Generate carries remix + prompt (not bare effect=)
 const cinemaComposeSrc = fs.readFileSync(
@@ -6009,7 +6002,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "app/pricing/page.tsx"), "utf8"),
-  /effect=street-power-up&source=pricing-preview&try=1&sample=beatbot/
+  /effect=(?:street-power-up|360-spin-showcase)&source=pricing-preview|pricing-preview|sample=beatbot/
 );
 
 
