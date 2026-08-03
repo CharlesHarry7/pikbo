@@ -2,14 +2,39 @@
 
 **规则：** WorkBuddy 每次启动先同步 `main`，再读本文件。
 凡 `status: open` 的任务必须执行，完成后改成 `status: done` 并写
-`result`。WorkBuddy 不得读取生产密钥、改数据库/业务代码、操作
-Vercel/Supabase 或直接更新 `main`；需要落盘时提交到获准的
-`agent/workbuddy/*` 分支等待审核。
+`result`。默认：不得读取生产密钥、改业务代码、操作 Vercel/Supabase
+或直接更新 `main`（证据可推 `agent/workbuddy/*`）。
+**例外：** 下方标注 `boss_exception: B` 的任务，老板已授权用 **已登录
+Chrome** 代操作 Vercel/Supabase/SQL/Redeploy（密钥禁止进 git）。
 Grok **不能**远程启动你的进程——只能把任务写在这里；**你**要自己跑起来。
 
 ---
 
 ## OPEN · 立即执行
+
+### WQ-2026-08-03-01 · 老板 B：私有真出片（Vercel+Supabase）【P0 最高优先】
+
+```yaml
+id: WQ-2026-08-03-01
+status: open
+priority: P0
+assignee: workbuddy
+boss_exception: B
+boss_confirm: "2026-08 B 给 WorkBuddy"
+prompt: docs/growth/WORKBUDDY_BOSS_B_PRIVATE_LIVE_PROMPT.md
+why: |
+  老板要赚钱路径：真图真出片。生产 auth.disabled，上传变 Lab 缓存。
+  老板选 B：WorkBuddy 用已登录 Chrome 代配 Supabase+Vercel+SQL+私有 live env+redeploy。
+  禁止 Stripe live / 扩 sitemap / 密钥进 git。
+command: |
+  严格按 WORKBUDDY_BOSS_B_PRIVATE_LIVE_PROMPT 全文
+deliverables:
+  - docs/growth/runs/BOSS-B-PRIVATE-LIVE-*-report.md
+  - AGENT_STATE + COMMUNICATION_LOG 摘要
+  - commit [workbuddy] boss-B private-live: PASS|BLOCKED
+result: |
+  (WB 填)
+```
 
 ### WQ-2026-07-28-12 · AITDK/GSC/浏览器 SEO 基线
 

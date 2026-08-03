@@ -1,24 +1,25 @@
 # Agent State（覆盖写 · 最后写入者生效 · 老板不传话）
 
 ```yaml
-updated_at: "2026-07-27"
+updated_at: "2026-08-03T07:19:10Z"
 writer: grok
-branch: "agent/grok/growth-truth"
+main_tip: "89fd60e"
+branch: "main"
 status: |
-  Recovery R4/R5 evidence boundary in progress.
-  Current search evidence: about 6 GSC impressions / 0 clicks; insufficient for
-  ranking, CTR or demand conclusions.
-  Current directory evidence: historical submitted forms; 0 published listings
-  with recorded public URL and 0 verified backlinks.
-  Current showcase audit: 0 official / 12 prototype because complete
-  input-rights + provider-task + output + named-review evidence is absent.
-report: "docs/growth/SHOWCASE_EVIDENCE_LEDGER.md"
+  Boss chose B: WorkBuddy owns private live enable via logged-in Chrome.
+  P0 open: WQ-2026-08-03-01 boss_exception=B
+  prompt: docs/growth/WORKBUDDY_BOSS_B_PRIVATE_LIVE_PROMPT.md
+  Goal: auth on + private live flags + SQL + redeploy so /create can leave
+  anonymous cached-demo path for invited owner.
+  Not: Stripe live, sitemap expand, secrets in git.
+report: "docs/growth/WORKBUDDY_BOSS_B_PRIVATE_LIVE_PROMPT.md"
+preflight_pikbo_ai: check-on-wb-run
 next_for_grok: |
-  Review the R4/R5 evidence branch. Coordinate runtime removal of provisional
-  4/5 scores with the engineering owner; do not change business code here.
+  Wait WB PASS/BLOCKED report; verify health auth + privateLiveBeta after redeploy.
+  Eng: keep product honesty; no boss secret relay in chat.
 next_for_workbuddy: |
-  Read docs/growth/WORK_QUEUE.md.
-  Execute only WQ-10 raw GSC/AITDK/哥飞 collection and WQ-11 public listing
-  verification. Generic directory submission and auth/deploy work are paused.
-  Do not read secrets, modify production, or push main.
+  P0 NOW: pull main; execute WORKBUDDY_BOSS_B_PRIVATE_LIVE_PROMPT.md
+  Requires Chrome logged into Vercel project pikbo + Supabase.
+  If not logged in → blocked_secret:console_login + report + stop.
+  commit [workbuddy] boss-B private-live: PASS|BLOCKED …
 ```

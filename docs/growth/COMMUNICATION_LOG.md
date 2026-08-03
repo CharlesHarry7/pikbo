@@ -135,3 +135,16 @@
   3. 飞书用于访谈原文、业务决策、合规意见和 Gate 记录，研发状态不重复维护。
   4. 在独立分支 `agent/gpt/outbound-kb-bridge` 交付项目 Gate、任务映射、周复盘模板和 PR 关联字段。
 - **阻塞**：当前运行环境没有可用的飞书写入客户端；先完成 GitHub 侧桥接，飞书空间创建和双向回链待连接恢复后执行。
+
+---
+
+### 2026-08-03 — 老板选 B：WorkBuddy 代配私有真出片
+- **老板指令**：`B 给 WorkBuddy`（Chrome 已登录 Vercel/Supabase 时由 WB 代操作）
+- **目的**：真图真出片 / 赚钱主路径；结束 auth.disabled + 上传出 Lab 缓存
+- **派工**：
+  - `WORK_QUEUE` **WQ-2026-08-03-01** `boss_exception: B` P0
+  - 全文：`docs/growth/WORKBUDDY_BOSS_B_PRIVATE_LIVE_PROMPT.md`
+- **成功标志**：`[workbuddy] boss-B private-live: PASS` + `/login` 可 magic link + health privateLiveBeta.enabled
+- **禁止**：Stripe live、密钥进 git/report、扩 sitemap、匿名 live
+- **Grok**：不代点控制台；验收 WB report + health
+
