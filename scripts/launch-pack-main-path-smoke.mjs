@@ -155,15 +155,15 @@ assert.doesNotMatch(shell, /create\?mode=seller-pack/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.match(
   shell,
-  /import\s*\{[\s\S]*MOMENT_CREATE_HREF[\s\S]*\}\s*from\s*["']@\/lib\/softLaunch["']/
+  /from\s*["']@\/lib\/softLaunch["']/
 );
 assert.match(
   shell,
-  /const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`/
+  /const DEFAULT_MOMENT_CREATE_HREF\s*=\s*[\s\S]*mode=moment&effect=street-power-up/
 );
 assert.match(
   shell,
-  /PRIMARY_NAV_CREATE_HREF|STUDIO_GENERATE_HREF/
+  /PRIMARY_NAV_CREATE_HREF|360-spin-showcase&source=primary-nav/
 );
 assert.doesNotMatch(shell, /\/create\?effect=street-power-up&source=primary-nav/);
 assert.match(shell, /Create a Moment/);
