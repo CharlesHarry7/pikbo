@@ -13,6 +13,8 @@ const callback = await import(
 
 const preview =
   "https://pikbo-git-codex-private-input-pack-binding-pi-kbo.vercel.app";
+const privateValidationPreview =
+  "https://pikbo-git-codex-private-validation-pi-kbo.vercel.app";
 const legacyPreview =
   "https://pikbo-git-agent-gptp0-live-owned-toy-review-pi-kbo.vercel.app";
 const maliciousPreview =
@@ -26,6 +28,16 @@ function request(url, origin) {
   });
 }
 
+assert.equal(
+  redirect.resolveTrustedAuthOrigin(
+    request(
+      `${privateValidationPreview}/api/auth/magic-link`,
+      privateValidationPreview
+    ),
+    "production"
+  ),
+  privateValidationPreview
+);
 assert.equal(
   redirect.resolveTrustedAuthOrigin(
     request(`${preview}/api/auth/magic-link`, preview),
@@ -46,6 +58,10 @@ assert.equal(
     "production"
   ),
   production
+);
+assert.equal(
+  redirect.authCallbackUrl(privateValidationPreview),
+  `${privateValidationPreview}/auth/callback`
 );
 assert.equal(
   redirect.authCallbackUrl(preview),
