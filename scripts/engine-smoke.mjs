@@ -409,7 +409,7 @@ assert.doesNotMatch(createFirstRunStudio, /<WorkflowShelf/);
 assert.doesNotMatch(createFirstRunStudio, /<ActivationChecklist/);
 assert.match(
   createFirstRunStudio,
-  /JobIntentBar activeId=\{activeSellingTask\}/
+  /<JobIntentBar[\s\S]{0,220}showSellerPack=\{privateUploadEnabled\}/
 );
 // Model shelf and activation chrome are removed from the first-run path.
 assert.doesNotMatch(createFirstRunStudio, /Seedance · live/);
@@ -792,7 +792,7 @@ assert.doesNotMatch(appShell, /const MORE|MoreMenu|CommandPalette/);
 assert.match(appShell, /CreditsBadge|LanguageSwitcher/);
 assert.match(
   appShell,
-  /data-primary-create-href=\{[\s\S]*?\/create\?moment=capsule-reveal[\s\S]*?\/create\?mode=seller-pack/
+  /DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?mode=moment&effect=street-power-up[\s\S]*?data-primary-create-href=\{[\s\S]*?DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?effect=street-power-up&source=primary-nav/
 );
 const historySrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historySrc, /historyProvenance|provenance/);
@@ -2409,13 +2409,15 @@ assert.match(
   fs.readFileSync(join(root, "components/PublicLaunchPackSample.tsx"), "utf8"),
   /data-home-format-preview=\{format\.id\}[\s\S]*Three separate archived format prototypes/
 );
+const homeMomentEntrySrc = [
+  fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
+  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
+  fs.readFileSync(join(root, "components/PublicLaunchPackSample.tsx"), "utf8"),
+].join("\n");
+assert.match(homeMomentEntrySrc, /data-home-upgrade="moment"/);
 assert.match(
-  [
-    fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
-    fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
-    fs.readFileSync(join(root, "components/PublicLaunchPackSample.tsx"), "utf8"),
-  ].join("\n"),
-  /data-home-upgrade="launch-pack"[\s\S]*\/create\?mode=seller-pack/
+  homeMomentEntrySrc,
+  /const createHref = `\/create\?effect=\$\{active\.effect\}/
 );
 
 assert.match(
@@ -3965,7 +3967,7 @@ assert.match(homeWallSrc, /href=\{item\.href\}/);
 assert.match(homeWallSrc, /project_open|recipe_use/);
 assert.match(
   [homePageSrc, publicSampleSrc].join("\n"),
-  /HomeCinemaHero items=|data-home-upgrade="launch-pack"/
+  /HomeCinemaHero items=|data-home-upgrade="moment"/
 );
 assert.doesNotMatch(
   [homePageSrc, homeHeroSrc, publicSampleSrc, homeWallSrc, appShell].join("\n"),
@@ -4146,7 +4148,7 @@ const softLaunchSrc = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
 assert.match(softLaunchSrc, /PRIMARY_NAV/);
 assert.match(
   softLaunchSrc,
-  /href:\s*["']\/create\?mode=seller-pack["']/
+  /href:\s*["']\/create\?effect=street-power-up&source=primary-nav["']/
 );
 assert.match(softLaunchSrc, /href:\s*["']\/library["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
@@ -4216,7 +4218,7 @@ assert.match(appShellSrc, /CreditsBadge|LanguageSwitcher/);
 assert.doesNotMatch(appShellSrc, /MoreMenu|CommandPalette/);
 assert.match(
   appShellSrc,
-  /data-primary-create-href=\{[\s\S]*?\/create\?moment=capsule-reveal[\s\S]*?\/create\?mode=seller-pack/
+  /DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?mode=moment&effect=street-power-up[\s\S]*?data-primary-create-href=\{[\s\S]*?DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?effect=street-power-up&source=primary-nav/
 );
 // GA4 adapter is env-gated no-op when unset (reuse analyticsSrc declared above)
 assert.match(analyticsSrc, /NEXT_PUBLIC_GA_MEASUREMENT_ID/);
@@ -4375,7 +4377,7 @@ function resolveGenerateStillPure(input) {
 assert.match(softLaunchSrc, /MOBILE_NAV/);
 assert.match(
   softLaunchSrc,
-  /MOBILE_NAV[\s\S]*href:\s*["']\/create\?mode=seller-pack["']/
+  /MOBILE_NAV[\s\S]*href:\s*["']\/create\?effect=street-power-up&source=primary-nav["']/
 );
 assert.doesNotMatch(
   softLaunchSrc,
@@ -5884,12 +5886,12 @@ assert.match(
   fs.readFileSync(join(root, "components/Header.tsx"), "utf8"),
   /createRemixHref|data-header-cta=["']generate-remix["']/
 );
-// AppShell keeps the fixed Launch Pack as the primary conversion path.
+// AppShell routes the public Moment shell to one fixed private validation clip.
 assert.match(
   fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
-  /create\?mode=seller-pack/
+  /DEFAULT_MOMENT_CREATE_HREF[\s\S]*create\?mode=moment&effect=street-power-up/
 );
-// Pricing and Footer both point to the fixed seller Pack.
+// Pricing still describes the future Pack; Footer routes to the current Moment.
 assert.match(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
   /href=["']\/create\?mode=seller-pack&source=pricing-hero&try=1&sample=scout["']/
@@ -5900,7 +5902,7 @@ assert.doesNotMatch(
 );
 assert.match(
   fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
-  /create\?mode=seller-pack&source=footer&try=1&sample=scout/
+  /create\?mode=moment&effect=street-power-up&source=footer/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),

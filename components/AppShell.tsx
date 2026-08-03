@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 
 const PRIVATE_BETA_MAILTO =
   "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
+const DEFAULT_MOMENT_CREATE_HREF =
+  "/create?mode=moment&effect=street-power-up&source=moment-shell";
 
 function active(path: string, href: string) {
   const route = href.split("?")[0];
@@ -120,17 +122,17 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           aria-label="Primary navigation"
           data-primary-create-href={
             momentSurface
-              ? "/create?moment=capsule-reveal"
-              : "/create?mode=seller-pack"
+              ? DEFAULT_MOMENT_CREATE_HREF
+              : "/create?effect=street-power-up&source=primary-nav"
           }
         >
           {(momentSurface
             ? [
                 {
-                  href: home ? "/#archive-selector" : "/#moment-stage",
+                  href: "/#archive-selector",
                   label: "Explore",
                 },
-                { href: "/create?moment=capsule-reveal", label: "Create" },
+                { href: DEFAULT_MOMENT_CREATE_HREF, label: "Create" },
                 { href: "/library", label: "Projects" },
                 { href: "/login", label: "Sign in" },
               ]
@@ -185,10 +187,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <div className="flex shrink-0 items-center gap-3">
           {momentSurface ? (
             <Link
-              href="/create?moment=capsule-reveal"
+              href={DEFAULT_MOMENT_CREATE_HREF}
               className="inline-flex min-h-10 items-center rounded-full bg-[#171719] px-5 text-xs font-black text-[#F5F1E8] transition hover:-translate-y-0.5 hover:bg-[#FF5A36] hover:text-[#171719]"
             >
-              Create with my toy
+              Create a Moment
             </Link>
           ) : resultShell ? (
             <Link
@@ -229,10 +231,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-2">
           {momentSurface ? (
             <Link
-              href="/create?moment=capsule-reveal"
+              href={DEFAULT_MOMENT_CREATE_HREF}
               className="inline-flex min-h-9 items-center rounded-full bg-[#171719] px-4 text-[10px] font-black text-[#F5F1E8]"
             >
-              Add my toy
+              Create a Moment
             </Link>
           ) : resultShell ? (
             <>

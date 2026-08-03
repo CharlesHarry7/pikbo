@@ -9,7 +9,10 @@
 /** Seller-first frontdoor: one clear path from promise to private assets. */
 export const PRIMARY_NAV = [
   { href: "/", label: "Home" },
-  { href: "/create?mode=seller-pack", label: "Create" },
+  {
+    href: "/create?effect=street-power-up&source=primary-nav",
+    label: "Create",
+  },
   { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
   { href: "/profile", label: "Account" },
@@ -20,7 +23,10 @@ export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
 /** Mobile mirrors the same five product doors; secondary routes stay hidden. */
 export const MOBILE_NAV = [
   { href: "/", label: "Home" },
-  { href: "/create?mode=seller-pack", label: "Create" },
+  {
+    href: "/create?effect=street-power-up&source=primary-nav",
+    label: "Create",
+  },
   { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
   { href: "/profile", label: "Account" },

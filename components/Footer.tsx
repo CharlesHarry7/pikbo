@@ -7,7 +7,10 @@ const FOOTER_GROUPS = [
   {
     label: "Product",
     links: [
-      ["/create?mode=seller-pack&source=footer&try=1&sample=scout", "Create"],
+      [
+        "/create?mode=moment&effect=street-power-up&source=footer",
+        "Create",
+      ],
       ["/library", "Library"],
       ["/pricing", "Pricing"],
     ],
@@ -43,15 +46,15 @@ export function Footer() {
             <Logo size={30} />
 
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/45">
-              Turn one owned toy photo into a fixed Listing Spin, Blind-box
-              Reveal, and Social Flash.
+              Pick one directed Moment and turn one owned toy photo into one
+              launch-ready clip.
             </p>
             <Link
-              href="/create?mode=seller-pack&source=footer&try=1&sample=scout"
+              href="/create?mode=moment&effect=street-power-up&source=footer"
               className="btn btn-primary mt-5 !px-4 !py-2 text-xs"
               data-footer-path="product-first"
             >
-              Preview Launch Pack
+              Create a toy Moment
             </Link>
           </div>
           {FOOTER_GROUPS.map((group) => (
