@@ -16,15 +16,15 @@ import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 const EFFECTS_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
 export const metadata: Metadata = {
-  title: "Toy video presets · Recipes",
+  title: "Viral toy video presets · Recipes",
   description:
-    "Verified Pikbo effects use their own cached clip. Unverified toy-video recipes stay static concepts until proof exists.",
+    "World-class designer-toy motion recipes: Lab-backed spins, unbox, and drop clips you can remake on your figure. Concepts stay labeled until proof exists.",
   alternates: { canonical: "/effects" },
   robots: CONCEPT_ROBOTS,
   openGraph: {
-    title: `Toy video presets · Recipes | ${site.name}`,
+    title: `Viral toy video presets | ${site.name}`,
     description:
-      "Verified Lab clips and clearly labeled static concept recipes for designer toys.",
+      "Higgsfield-class preset wall, toy-vertical: remake listing spin, blind-box reveal, and social hooks from one photo.",
     url: `${site.url}/effects`,
   },
 };
@@ -107,13 +107,13 @@ export default function EffectsHub() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 max-w-full">
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
-              Viral presets · {PRESETS.length} · {proofPresets.length} with Lab video
+              World-class toy AIGC · {PRESETS.length} recipes · {proofPresets.length} Lab-backed
             </p>
             <h1 className="font-display break-words text-lg font-black uppercase tracking-tight sm:text-2xl">
-              Big-budget motion · remake as video
+              Viral toy presets · remake as video
             </h1>
             <p className="mt-0.5 text-[11px] text-white/45">
-              Pixel-parity with suite viral walls — tap any card to Generate video ·{" "}
+              Designer-toy suite wall — one photo, sellable motion. Tap any Lab card to Generate ·{" "}
               <Link
                 href={EFFECTS_GENERATE_HREF}
                 className="font-semibold text-[#c8ff3d] hover:underline"

@@ -15,23 +15,22 @@ export const site = {
    * VIDEO-first product. Photo = input; short AI video = output.
    * Soft launch: free Mini trial / labeled Lab demos; no fake multi-model.
    */
-  tagline: "AI creative studio for designer toys",
+  tagline: "World-class AIGC video for designer toys",
   /**
-   * Meta description — 哥飞 CTR 优化 2026-07-27: 加入搜索意图词 + 利益点驱动
+   * Meta description — seller outcome + category leadership, not multi-model zoo.
    */
   description:
-    "Turn one owned toy photo into product-listing, blind-box reveal, and social-launch video directions with Pikbo, an AI product video studio for toy sellers.",
+    "Pikbo is the designer-toy AI video suite: one owned photo → listing spin, blind-box reveal, and social drop clips. Built like a creative OS, specialized for figures, sofubi, and collectibles.",
   /**
-   * Document title (homepage default) — brand first.
-   * 哥飞 P0: must NOT match tools rank-page title.
-   * CTR 优化 2026-07-27: "Designer Toy AI Video Suite" → "Turn Toy Photos into Videos" (利益点驱动)
+   * Document title (homepage default) — brand + category claim.
+   * Rank keyword title stays on /tools (no cannibalization).
    */
-  titleDefault: "Pikbo — AI Product Video Studio for Toy Sellers",
+  titleDefault: "Pikbo — Designer Toy AI Video Suite",
   /**
-   * Homepage H1 — brand + scene, not the full primary keyword phrase.
+   * Homepage H1 — category leadership claim (HF-class suite, toy-vertical).
    * Rank H1 stays on /tools/ai-toy-video-generator.
    */
-  homeH1: "The AI video suite for designer toys.",
+  homeH1: "The world's designer-toy AI video suite.",
   /** Primary rank keyword — tools page only; not homepage Title/H1 */
   keyword: "AI toy video generator",
   /** Rank battlefield URL for internal links */
@@ -51,5 +50,5 @@ export const site = {
    * The former @pikbo_ai URL returned 404 and must not be an entity signal.
    */
   officialProfiles: [] as readonly string[],
-  suiteLine: "Three seller formats · private creation beta",
+  suiteLine: "World-class toy video AIGC · one photo → sellable clips",
 } as const;

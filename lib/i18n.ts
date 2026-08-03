@@ -149,7 +149,7 @@ const en: Dict = {
   "home.viral.title": "Viral toy presets",
   "home.viral.all": "ALL",
   "home.hero.sub":
-    "Designer-toy Creative Director: one free try turns your figure photo into listing, reveal, or social video — TikTok, drops, shelf posts. Video is the product.",
+    "World-class AIGC for designer toys: one owned photo → listing spin, blind-box reveal, social drop. Video is the product — not a multi-model zoo.",
   "home.tryFree10s": "Try free video · Mini 5s",
   "home.useRecipe": "Use this video recipe",
   "home.browseFlow": "Browse Flow",
@@ -485,7 +485,7 @@ const zh: Dict = {
   "home.viral.title": "爆款潮玩预设",
   "home.viral.all": "全部",
   "home.hero.sub":
-    "潮玩创意总监：免费试一次，把你的手办照片变成上架 / 开箱 / 社媒短视频 —— 抖音、发售、晒柜。视频才是产品。",
+    "世界一流潮玩视频 AIGC：一张自有照片 → 上架转体、盲盒揭晓、社媒发售片。视频才是产品，不是模型动物园。",
   "home.tryFree10s": "免费试视频 · Mini 5 秒",
   "home.useRecipe": "用这个视频配方",
   "home.browseFlow": "逛创作矩阵",

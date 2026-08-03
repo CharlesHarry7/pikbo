@@ -230,8 +230,22 @@ export default async function CreatePage({
       {/* V2 tool core — remix deep link: effect/source/ratio/duration/channel */}
       <Suspense
         fallback={
-          <div className="flex min-h-[50vh] items-center justify-center text-sm text-white/40">
-            Loading Generate…
+          <div
+            className="min-h-[70vh] bg-[#0A0A0A] px-4 py-8 text-[#F7F4ED]"
+            data-create-fallback="studio-skeleton"
+          >
+            <div className="mx-auto max-w-6xl">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#CBFF3D]">
+                Generate · toy video
+              </p>
+              <p className="mt-2 font-display text-2xl font-black tracking-tight">
+                Opening studio…
+              </p>
+              <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+                <div className="h-[28rem] animate-pulse rounded-2xl border border-white/10 bg-white/[0.04]" />
+                <div className="h-[28rem] animate-pulse rounded-2xl border border-white/10 bg-white/[0.03]" />
+              </div>
+            </div>
           </div>
         }
       >
