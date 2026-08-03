@@ -15,14 +15,15 @@ import { trackPageView } from "@/lib/analytics";
 import { parseMomentId } from "@/lib/moments";
 import {
   MOBILE_NAV,
-  MOMENT_CREATE_HREF,
   PRIMARY_NAV,
-  STUDIO_GENERATE_HREF,
 } from "@/lib/softLaunch";
 import { cn } from "@/lib/utils";
 
-const DEFAULT_MOMENT_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=moment-shell`;
-const PRIMARY_NAV_CREATE_HREF = STUDIO_GENERATE_HREF;
+/** Moment shell (invited private) vs full studio Generate door. */
+const DEFAULT_MOMENT_CREATE_HREF =
+  "/create?mode=moment&effect=street-power-up&source=moment-shell";
+const PRIMARY_NAV_CREATE_HREF =
+  "/create?effect=360-spin-showcase&source=primary-nav";
 
 function active(path: string, href: string) {
   const route = href.split("?")[0];
