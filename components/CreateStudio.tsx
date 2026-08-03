@@ -501,19 +501,57 @@ export function CreateStudio({
     }
   }
 
-  // First-run: ?sample=scout or ?try=1 → load sample and auto-generate
+  /**
+   * First-run joy path (world-class toy AIGC):
+   * - explicit ?sample= / ?try=1
+   * - OR home/effects remix deep-link (?source=scout-spin, ?effect=360-spin…)
+   * Auto-plays a Lab prototype so Generate never feels empty.
+   */
   useEffect(() => {
-    if (!initialSample) return;
-    const id = SAMPLE_TOYS.some((s) => s.id === initialSample)
+    if (fixedMomentContract) return;
+    const fromParam = SAMPLE_TOYS.some((s) => s.id === initialSample)
       ? initialSample
-      : "scout";
-    // Defer so we don't setState synchronously inside the effect body.
+      : undefined;
+    const src = (initialSource || "").toLowerCase();
+    const fromSource =
+      src.includes("scout")
+        ? "scout"
+        : src.includes("moon")
+          ? "moon"
+          : src.includes("orbit")
+            ? "orbit"
+            : src.includes("beatbot")
+              ? "beatbot"
+              : null;
+    const fromEffect =
+      effect === "360-spin-showcase" || initialEffect === "360-spin-showcase"
+        ? "scout"
+        : effect === "floating-hero" || initialEffect === "floating-hero"
+          ? "orbit"
+          : effect === "blind-box-unboxing" ||
+              effect === "mystery-box-reveal" ||
+              initialEffect === "blind-box-unboxing"
+            ? "moon"
+            : effect === "paparazzi-flash" ||
+                effect === "street-power-up" ||
+                initialEffect === "paparazzi-flash"
+              ? "beatbot"
+              : null;
+    // Prefer explicit sample; else remix source; else effect-matched Lab still.
+    // Skip bare /create with no intent so we do not surprise return visitors.
+    const hasIntent = Boolean(fromParam || initialSource || initialEffect);
+    if (!hasIntent) return;
+    const id =
+      fromParam ||
+      fromSource ||
+      fromEffect ||
+      "scout";
     const t = window.setTimeout(() => {
       void loadSampleToy(id, true);
     }, 0);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialSample]);
+  }, [initialSample, initialSource, initialEffect, fixedMomentContract]);
 
   // Deep link: ?job=etsy-listing → select recipe + aspect (outcome routing).
   // Jobs with href (Seller Pack) redirect to mode=seller-pack + sku carry —
