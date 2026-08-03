@@ -8,8 +8,9 @@ within that issue's acceptance criteria. The order is fixed:
 1. Put current `main` on production after Vercel's 24-hour deployment limit
    resets, then verify the guest Street Power-Up proof and the hard-closed
    production health gate.
-2. Redeploy `codex/private-validation` after its exact auth origin lands, then
-   require `/api/health` to report
+2. Merge the exact auth-origin change, advance `codex/private-validation` to
+   that merged commit, and only then request a fresh protected-branch
+   deployment. Require `/api/health` to report
    `privatePreviewReadiness.ready=true` with no missing requirements.
 3. After the dedicated FAL account has enough balance for one job, complete one
    authenticated owned-photo Street Power-Up result with private

@@ -58,8 +58,14 @@ Provider responses.
 - The default local Turbopack build was blocked only because this workspace's
   `node_modules` symlink points outside Turbopack's filesystem root.
   `next build --webpack` compiled, typechecked and generated all 201 pages.
-- Grok red-team session:
+- Grok Preview gate/environment red-team session:
   `c34e4a96-a0dd-4d13-9463-0d0f095c1fa4`.
+- Grok current exact-origin auth red-team session:
+  `fa451c02-4739-410d-9d98-e5f67134235e`.
 - Luna produced the exact health/env/migration matrix. WorkBuddy had no
   callable endpoint, so no session ID was fabricated; Vercel and Supabase were
   inspected directly in the authenticated browser.
+
+The owner wallet, Supabase callback setting, FAL key and FAL balance are
+operator-observed dashboard facts, not repository-test assertions. They still
+require a fresh protected-branch deployment and green runtime health proof.

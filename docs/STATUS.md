@@ -32,9 +32,10 @@ Git history and must not be treated as current work.
   the convergence; its remaining real-user proof is part of #54.
 - `codex/private-validation`: branch-only Supabase credentials, private-live
   allowlist, one-job budget, FAL key, durable gates and Stripe-off overrides
-  are configured. The owner account is enabled with 10 non-production credits.
-  Supabase allows the exact callback origin. The GitHub-linked FAL account
-  balance is `$0.00`, so no paid Provider request has been attempted.
+  are configured. Operator-observed dashboard state shows the owner account
+  enabled with 10 non-production credits, the exact Supabase callback allowed,
+  and the GitHub-linked FAL balance at `$0.00`. These are not yet runtime
+  health proof, and no paid Provider request has been attempted.
 
 ## Frozen
 

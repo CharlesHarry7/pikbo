@@ -21,10 +21,10 @@ const maliciousPreview =
   "https://pikbo-git-untrusted-branch-pi-kbo.vercel.app";
 const production = "https://pikbo.ai";
 
-function request(url, origin) {
+function request(url, origin, extraHeaders = {}) {
   return new Request(url, {
     method: "POST",
-    headers: origin ? { origin } : undefined,
+    headers: origin ? { ...extraHeaders, origin } : extraHeaders,
   });
 }
 
@@ -79,6 +79,12 @@ assert.equal(
   redirect.authCallbackUrl(production, "production", "/create?mode=seller-pack"),
   `${production}/auth/callback?next=%2Fcreate%3Fmode%3Dseller-pack`
 );
+const momentNext = "/create?mode=moment&effect=street-power-up";
+assert.equal(redirect.sanitizeInternalNextPath(momentNext), momentNext);
+assert.equal(
+  redirect.authCallbackUrl(privateValidationPreview, "production", momentNext),
+  `${privateValidationPreview}/auth/callback?next=%2Fcreate%3Fmode%3Dmoment%26effect%3Dstreet-power-up`
+);
 assert.equal(
   redirect.sanitizeInternalNextPath("//evil.example/steal"),
   "/profile"
@@ -101,6 +107,49 @@ assert.equal(
     "production"
   ),
   null
+);
+for (const hostileOrigin of [
+  privateValidationPreview.replace("https://", "http://"),
+  `${privateValidationPreview}:444`,
+  privateValidationPreview.replace("https://", "https://user@"),
+  `${privateValidationPreview}.evil.example`,
+  `${privateValidationPreview}, https://evil.example`,
+]) {
+  assert.equal(
+    redirect.resolveTrustedAuthOrigin(
+      request(`${privateValidationPreview}/api/auth/magic-link`, hostileOrigin),
+      "production"
+    ),
+    null,
+    `hostile Origin must fail closed: ${hostileOrigin}`
+  );
+}
+assert.equal(
+  redirect.resolveTrustedAuthOrigin(
+    request(
+      `${maliciousPreview}/api/auth/magic-link`,
+      undefined,
+      {
+        host: new URL(privateValidationPreview).host,
+        "x-forwarded-host": new URL(privateValidationPreview).host,
+        "x-forwarded-proto": "https",
+      }
+    ),
+    "production"
+  ),
+  null,
+  "Host and forwarded headers must not turn an untrusted request URL into a trusted origin"
+);
+assert.equal(
+  redirect.resolveTrustedAuthOrigin(
+    request(
+      `${privateValidationPreview}/api/auth/magic-link`,
+      "HTTPS://PIKBO-GIT-CODEX-PRIVATE-VALIDATION-PI-KBO.VERCEL.APP:443"
+    ),
+    "production"
+  ),
+  privateValidationPreview,
+  "URL canonicalization may accept the exact HTTPS origin with case/default-port differences"
 );
 assert.equal(
   redirect.resolveTrustedAuthOrigin(
