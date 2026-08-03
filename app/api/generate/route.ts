@@ -104,7 +104,6 @@ import {
   recordSucceededGenerate,
   type GenerationJob,
 } from "@/lib/generationJobs";
-import { getLocalAsset } from "@/lib/localAssets";
 import {
   getPrivateGenerationResultByIdempotency,
   savePrivateGenerationResult,
@@ -113,6 +112,9 @@ import {
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
+
+const PRIVATE_ASSET_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function err(
   body: GenerateErrorBody,
@@ -468,39 +470,28 @@ export async function POST(req: Request) {
     packBinding.kind !== "pack" &&
     authUser &&
     typeof assetId === "string" &&
-    /^[0-9a-f-]{36}$/i.test(assetId)
+    PRIVATE_ASSET_ID_RE.test(assetId)
       ? await resolveReadyPrivateToyAssetDataUrl({
           ownerUserId: authUser.id,
           assetId,
         })
       : null;
 
-  // Cached previews never inspect the user's still. Live Pack children ignore
-  // client image bytes and resolve the one owner-verified server-bound asset.
-  let image =
-    access.kind === "cached"
-      ? undefined
-      : packBinding.kind === "pack"
-        ? boundPackInput?.dataUrl
-        : directPrivateInput?.dataUrl
-          ? directPrivateInput.dataUrl
-        : typeof imageField === "string" && imageField.startsWith("data:image")
-          ? imageField
-          : undefined;
-  if (
-    access.kind !== "cached" &&
-    packBinding.kind !== "pack" &&
-    typeof assetId === "string" &&
-    assetId.startsWith("asset_")
-  ) {
-    const asset = getLocalAsset(assetId, session.id);
-    if (asset) {
-      image = asset.dataUrl;
-    } else if (!image) {
+  // Every direct live Moment must come from the authenticated owner's verified
+  // private Storage object. Inline data URLs and the legacy process-local asset
+  // registry are cached-demo compatibility only; neither may cross the live
+  // provider boundary.
+  if (access.kind === "live" && packBinding.kind !== "pack") {
+    if (
+      !authUser ||
+      typeof assetId !== "string" ||
+      !PRIVATE_ASSET_ID_RE.test(assetId) ||
+      !directPrivateInput
+    ) {
       return err(
         {
           error:
-            "Asset missing, expired, or not owned by this session — re-upload the photo",
+            "Your private toy photo is missing or not ready. Upload it again before generating.",
           code: "ASSET_NOT_FOUND",
           session: publicSession(session),
         },
@@ -508,6 +499,15 @@ export async function POST(req: Request) {
       );
     }
   }
+
+  // Cached previews never inspect the user's still. Live Pack children ignore
+  // client image bytes and resolve the one owner-verified server-bound asset.
+  const image =
+    access.kind === "cached"
+      ? undefined
+      : packBinding.kind === "pack"
+        ? boundPackInput?.dataUrl
+        : directPrivateInput?.dataUrl;
 
   if (access.kind !== "cached" && (!image || !isValidImageDataUrl(image))) {
     return err(
@@ -834,17 +834,14 @@ export async function POST(req: Request) {
         400
       );
     }
-    // Founding Studio may spend on one fixed, server-verified Moment or on an
-    // already-reserved Pack child. Arbitrary single clips remain fail-closed.
-    if (
-      accessPlanId === "founding_studio" &&
-      !packChild &&
-      !fixedMomentRequest
-    ) {
+    // Every direct live request, including an invited validation allowance,
+    // is the same server-verified product. A free invite must not become an
+    // arbitrary effect/aspect/model back door.
+    if (!packChild && !fixedMomentRequest) {
       return err(
         {
           error:
-            "Founding Studio generation requires a supported fixed Moment contract",
+            "Live generation requires the fixed Street Power-Up Moment contract",
           code: "LIVE_ACCESS_REQUIRED",
           session: publicSession(session),
         },

@@ -48,8 +48,8 @@ export type GenerateOk = {
   data: GenerateSuccess;
   /**
    * True when the first attempt used assetId, server returned ASSET_NOT_FOUND,
-   * and a second POST with inline fallbackImage succeeded. Clients should clear
-   * the dead assetId and re-register the still for later smaller POSTs.
+   * and a cached-only second POST with inline fallbackImage succeeded. Live
+   * provider requests never downgrade a private asset into inline image bytes.
    */
   recoveredFromAssetMiss?: boolean;
 };
@@ -976,8 +976,8 @@ export function mintGenerateIdempotencyKey(): string {
  * POST generate with automatic recovery:
  * - one retry on RATE_LIMITED / PROVIDER_RATE_LIMIT / JOB_IN_FLIGHT /
  *   PROVIDER_NETWORK / PROVIDER_TIMEOUT (transient provider blips)
- * - one ASSET_NOT_FOUND recovery: drop expired assetId and re-POST inline still
- *   (Phase D local assets TTL ~15m / process restart — Seller Pack mid-queue)
+ * - cached-only ASSET_NOT_FOUND recovery for legacy process-local previews;
+ *   live provider requests must keep the owner-scoped private asset boundary
  * - stable idempotencyKey for the whole attempt (network retry = no double debit)
  * - owner-only durable polling if the POST stays open after the private result saved
  * - never auto-retry TIMEOUT (ledger kill) — client must mint a new key
@@ -989,8 +989,8 @@ export async function postGenerateWithRetry(
     signal?: AbortSignal;
     onRecoveryState?: (state: GenerateRecoveryState) => void;
     /**
-     * Local data URL for the still. Used only when the server returns
-     * ASSET_NOT_FOUND for body.assetId (never re-debits on the failed attempt).
+     * Local data URL for cached compatibility only. Live provider requests do
+     * not remove assetId or transmit this fallback.
      */
     fallbackImage?: string;
   }
@@ -1060,6 +1060,7 @@ export async function postGenerateWithRetry(
   if (
     !result.ok &&
     result.code === "ASSET_NOT_FOUND" &&
+    body.allowProviderSpend !== true &&
     typeof body.assetId === "string" &&
     body.assetId &&
     typeof fallback === "string" &&

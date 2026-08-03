@@ -925,9 +925,9 @@ export function CreateStudio({
     document
       .getElementById("create-result")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    // Prefer assetId when registered (smaller POST); always also send data URL when
-    // available so multi-instance (Vercel) asset-memory misses still generate.
-    // ASSET_NOT_FOUND auto-recovers via fallbackImage when only assetId was sent.
+    // A real Moment crosses the provider boundary only through the verified
+    // owner-scoped private asset id. Inline bytes remain a cached-preview
+    // compatibility path and are never the fallback for live generation.
     const fallbackStill =
       (img && isValidImageDataUrl(img) ? img : null) ||
       (image && isValidImageDataUrl(image) ? image : null) ||
@@ -940,11 +940,13 @@ export function CreateStudio({
       {
         effect: fx,
         productContract: fixedMomentContract ? "toy-moment-v1" : undefined,
-        image: useAsset
-          ? dualImageOk
-            ? fallbackStill
-            : undefined
-          : img ?? undefined,
+        image: demoMode
+          ? useAsset
+            ? dualImageOk
+              ? fallbackStill
+              : undefined
+            : img ?? undefined
+          : undefined,
         assetId: useAsset && postAssetId ? postAssetId : undefined,
         extra: requestExtra,
         duration: requestDuration,
@@ -962,7 +964,7 @@ export function CreateStudio({
       },
       {
         maxRetries: 1,
-        fallbackImage: useAsset ? fallbackStill : undefined,
+        fallbackImage: demoMode && useAsset ? fallbackStill : undefined,
         signal: abortCtrl.signal,
         onRecoveryState: (state) => {
           if (detachedWaitRef.current || !generateMountedRef.current) return;
@@ -1051,7 +1053,8 @@ export function CreateStudio({
     setRecoveringSavedResult(false);
     setAwaitingPrimaryAfterRecovery(false);
 
-    // Dead assetId after process restart/TTL — clear and re-register for next POST.
+    // A missing/rejected private asset never downgrades to inline live bytes.
+    // Re-register it through the owner-scoped upload flow for the next attempt.
     if (
       (!result.ok && result.code === "ASSET_NOT_FOUND") ||
       (result.ok && result.recoveredFromAssetMiss)
@@ -1064,7 +1067,7 @@ export function CreateStudio({
           const reg = await registerLocalAsset(still);
           if (reg?.assetId) setAssetId(reg.assetId);
         } catch {
-          /* next generate can still post Base64 */
+          /* next live attempt remains blocked until private registration succeeds */
         }
       }
     }
