@@ -6,11 +6,15 @@
  * Preview/Lab routes stay crawlable + noindex, but remain outside primary navigation.
  */
 
+/** First-dollar product: one fixed, private seller Moment. */
+export const MOMENT_CREATE_HREF =
+  "/create?mode=moment&effect=street-power-up" as const;
+
 /** Seller-first frontdoor: one clear path from promise to private assets. */
 export const PRIMARY_NAV = [
   { href: "/", label: "Home" },
   {
-    href: "/create?effect=street-power-up&source=primary-nav",
+    href: `${MOMENT_CREATE_HREF}&source=primary-nav`,
     label: "Create",
   },
   { href: "/library", label: "Library" },
@@ -24,7 +28,7 @@ export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
 export const MOBILE_NAV = [
   { href: "/", label: "Home" },
   {
-    href: "/create?effect=street-power-up&source=primary-nav",
+    href: `${MOMENT_CREATE_HREF}&source=primary-nav`,
     label: "Create",
   },
   { href: "/library", label: "Library" },

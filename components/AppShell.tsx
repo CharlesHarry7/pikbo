@@ -13,11 +13,15 @@ import { Logo } from "@/components/Logo";
 import { ToastProvider } from "@/components/Toast";
 import { trackPageView } from "@/lib/analytics";
 import { parseMomentId } from "@/lib/moments";
-import { MOBILE_NAV, PRIMARY_NAV } from "@/lib/softLaunch";
+import {
+  MOBILE_NAV,
+  MOMENT_CREATE_HREF,
+  PRIMARY_NAV,
+} from "@/lib/softLaunch";
 import { cn } from "@/lib/utils";
 
-const DEFAULT_MOMENT_CREATE_HREF =
-  "/create?mode=moment&effect=street-power-up&source=moment-shell";
+const DEFAULT_MOMENT_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=moment-shell`;
+const PRIMARY_NAV_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=primary-nav`;
 
 function active(path: string, href: string) {
   const route = href.split("?")[0];
@@ -116,7 +120,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           data-primary-create-href={
             momentSurface
               ? DEFAULT_MOMENT_CREATE_HREF
-              : "/create?effect=street-power-up&source=primary-nav"
+              : PRIMARY_NAV_CREATE_HREF
           }
         >
           {(momentSurface

@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
 import { company } from "@/lib/company";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { Logo } from "@/components/Logo";
+
+const FOOTER_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=footer` as const;
 
 const FOOTER_GROUPS = [
   {
     label: "Product",
     links: [
-      [
-        "/create?mode=moment&effect=street-power-up&source=footer",
-        "Create",
-      ],
+      [FOOTER_CREATE_HREF, "Create"],
       ["/library", "Library"],
       ["/pricing", "Pricing"],
     ],
@@ -50,7 +50,7 @@ export function Footer() {
               launch-ready clip.
             </p>
             <Link
-              href="/create?mode=moment&effect=street-power-up&source=footer"
+              href={FOOTER_CREATE_HREF}
               className="btn btn-primary mt-5 !px-4 !py-2 text-xs"
               data-footer-path="product-first"
             >

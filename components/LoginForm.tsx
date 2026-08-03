@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { FreeTrialCta } from "@/components/FreeTrialCta";
+import Link from "next/link";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
-import { createRemixHref } from "@/lib/remixIntent";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
-const LOGIN_GUEST_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const LOGIN_GUEST_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=login-guest`;
 
 type AuthPublic = {
   configured: boolean;
@@ -36,29 +36,21 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
           data-auth-guest-path="product-first"
         >
           <a
-            href={LOGIN_GUEST_GENERATE_HREF}
+            href={LOGIN_GUEST_MOMENT_HREF}
             className="btn btn-primary !px-3 !py-1.5 text-xs"
-            data-login-guest="generate-remix"
+            data-login-guest="moment-preview"
           >
-            Generate
-          </a>
-          <a
-            href="/create?effect=street-power-up&source=login-guest"
-            className="btn btn-ghost !px-3 !py-1.5 text-xs"
-          >
-            Toy Moment
+            Preview Street Power-Up
           </a>
           <a href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Library
           </a>
-          <a href="/modules" className="btn btn-ghost !px-3 !py-1.5 text-xs">
-            Modules
+          <Link href="/#home-create" className="btn btn-ghost !px-3 !py-1.5 text-xs">
+            Home samples
+          </Link>
+          <a href="/pricing" className="btn btn-ghost !px-3 !py-1.5 text-xs">
+            Plans
           </a>
-          <FreeTrialCta
-            path="/login"
-            variant="ghost"
-            className="btn btn-ghost !px-3 !py-1.5 text-xs"
-          />
         </div>
         <p className="text-[10px] leading-relaxed text-white/40">
           Real generation and cross-device Library require sign-in. Please try

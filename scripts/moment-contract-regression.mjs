@@ -52,6 +52,9 @@ const stripe = read("lib/stripe.ts");
 const checkout = read("app/api/checkout/route.ts");
 const pricing = read("app/pricing/page.tsx");
 const pricingButton = read("components/PricingCheckoutButton.tsx");
+const softLaunch = read("lib/softLaunch.ts");
+const publicSample = read("components/PublicLaunchPackSample.tsx");
+const libraryPage = read("app/library/page.tsx");
 
 // 1. Moment CTA is a Moment path, never the legacy Seller Pack path.
 assertMatch(
@@ -61,6 +64,21 @@ assertMatch(
 );
 assertNoMomentSellerPackHref(momentStage, "MomentStage");
 assertNoMomentSellerPackHref(momentPreview, "MomentCreatePreview");
+assertMatch(
+  softLaunch,
+  /MOMENT_CREATE_HREF\s*=\s*[\s\S]{0,100}\/create\?mode=moment&effect=street-power-up/,
+  "primary Create navigation must use the fixed first-dollar Moment"
+);
+assertMatch(
+  publicSample,
+  /createHref\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=home-motion-archive`/,
+  "homepage create CTA must enter the fixed Moment, not generic Studio"
+);
+assertMatch(
+  libraryPage,
+  /href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}/,
+  "Library create CTA must return to the fixed Moment"
+);
 
 // 2. The client carries an explicit, typed contract rather than relying on
 // effect/model/aspect fields inferred from UI state.
@@ -73,6 +91,16 @@ assertMatch(
   studio,
   /productContract\s*:\s*(?:fixedMomentContract\s*\?\s*)?["']toy-moment-v1["']/,
   "CreateStudio must send productContract=toy-moment-v1"
+);
+assertMatch(
+  studio,
+  /!fixedMomentContract\s*\?\s*\([\s\S]{0,1800}create-advanced-options/,
+  "fixed Moment must hide model and prompt decisions"
+);
+assertMatch(
+  studio,
+  /data-fixed-moment-upgrade[\s\S]{0,180}9 Moments\/month · \$49/,
+  "fixed Moment result must expose the single Founding Studio upgrade"
 );
 
 // 3. Server receives and validates the same contract.  Keep these checks
@@ -152,6 +180,11 @@ assertMatch(
   checkout,
   /stripeLiveCheckoutAllowed\(\)/,
   "Checkout route must enforce the Stripe live gate"
+);
+assertMatch(
+  checkout,
+  /success_url[\s\S]{0,180}\/create\?mode=moment&effect=street-power-up&checkout=return/,
+  "successful Checkout must return to the fixed Moment workflow"
 );
 assertMatch(
   pricing,

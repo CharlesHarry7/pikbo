@@ -15,6 +15,7 @@ import {
 } from "@/lib/history";
 import { createLabSampleTryHref } from "@/lib/jobIntents";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const LIBRARY_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 import {
@@ -85,6 +86,12 @@ const SESSION_JOBS_UI_LIMIT = 50;
 
 /** Library sticky / empty Generate door — listing spin remix contract. */
 const LIBRARY_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const LIBRARY_STICKY_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=library-sticky` as const;
+const LIBRARY_EMPTY_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=library-empty` as const;
+const LIBRARY_PROJECT_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=library-project` as const;
 
 const EMPTY_BY_STATUS: SessionByStatus = {
   queued: 0,
@@ -1522,7 +1529,7 @@ export function LibraryGrid() {
         </button>
       ) : (
         <Link
-          href="/create?effect=street-power-up&source=library-sticky"
+          href={LIBRARY_STICKY_MOMENT_HREF}
           className="btn btn-primary w-full py-3 text-sm"
           data-library-action="moment"
         >
@@ -1606,7 +1613,7 @@ export function LibraryGrid() {
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
               <Link
-                href="/create?effect=street-power-up&source=library-empty"
+                href={LIBRARY_EMPTY_MOMENT_HREF}
                 className="btn btn-primary text-sm"
               >
                 Create one Moment
@@ -1792,7 +1799,7 @@ export function LibraryGrid() {
                   </Link>
                 ) : null}
                 <Link
-                  href="/create?effect=street-power-up&source=library-project"
+                  href={LIBRARY_PROJECT_MOMENT_HREF}
                   className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70 hover:border-white/30"
                 >
                   Create one Moment

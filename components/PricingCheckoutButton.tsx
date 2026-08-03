@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { PlanId } from "@/lib/pricing";
 import { stripeBillingAuthHeaders } from "@/lib/stripeBillingClient";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { Button } from "@/components/ui/button";
+
+const PRICING_FOUNDING_HREF =
+  `${MOMENT_CREATE_HREF}&source=pricing-founding` as const;
 
 /** Soft launch: paid checkout only when explicitly enabled + Stripe configured. */
 function paymentsLive(): boolean {
@@ -63,7 +67,7 @@ export function PricingCheckoutButton({
           size="lg"
           className="w-full"
         >
-          <Link href="/create?mode=moment&effect=street-power-up&source=pricing-founding">
+          <Link href={PRICING_FOUNDING_HREF}>
             Preview one Moment
           </Link>
         </Button>
