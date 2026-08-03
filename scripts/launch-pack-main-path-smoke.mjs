@@ -41,7 +41,19 @@ assert.match(homeHero, /PublicLaunchPackSample surface="home"/);
 assert.match(publicSample, /See how toys become launches\./);
 assert.match(publicSample, /Archive motion sample/);
 assert.match(homeSample, /data-home-upgrade="moment"/);
-assert.match(homeSample, /const createHref = `\/create\?effect=\$\{active\.effect\}/);
+assert.match(
+  publicSample,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+assert.match(
+  homeSample,
+  /const createHref = `\$\{MOMENT_CREATE_HREF\}&source=home-motion-archive`/
+);
+assert.doesNotMatch(
+  homeSample,
+  /const createHref = `\/create\?effect=\$\{active\.effect\}/
+);
+assert.doesNotMatch(homeSample, /\/create\?effect=/);
 assert.match(publicSample, /effect: "360-spin-showcase"/);
 assert.match(publicSample, /effect: "mystery-box-reveal"/);
 assert.match(publicSample, /effect: "street-power-up"/);
@@ -56,7 +68,7 @@ assert.match(createSample, /Pikbo Lab archive/);
 assert.match(createSample, /No sign-in · no upload/);
 assert.match(createSample, /No product upload in this public preview/);
 assert.match(createSample, /Request seller beta/);
-assert.match(createSample, /Sign in to create/);
+assert.match(createSample, /Sign in for Street Power-Up/);
 assert.equal((createSample.match(/<AutoPlayVideo/g) || []).length, 1);
 for (const formatContract of [
   /sample: "Scout"[\s\S]*actual: "Archive media · 16:9 · 6 sec"[\s\S]*target: "Target format · 1:1 · 5 sec"/,
@@ -139,7 +151,19 @@ assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
 assert.doesNotMatch(shell, /create\?mode=seller-pack/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
-assert.match(shell, /create\?mode=moment&effect=street-power-up/);
+assert.match(
+  shell,
+  /import\s*\{[\s\S]*MOMENT_CREATE_HREF[\s\S]*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+assert.match(
+  shell,
+  /const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`/
+);
+assert.match(
+  shell,
+  /const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`/
+);
+assert.doesNotMatch(shell, /\/create\?effect=street-power-up&source=primary-nav/);
 assert.match(shell, /Create a Moment/);
 assert.match(shell, /label: "Projects"/);
 assert.doesNotMatch(shell, /Motion archive/);
@@ -156,7 +180,16 @@ assert.doesNotMatch(
 );
 assert.match(
   pricingCheckout,
-  /href="\/create\?mode=moment&effect=street-power-up&source=pricing-founding"/
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+assert.match(
+  pricingCheckout,
+  /const PRICING_FOUNDING_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=pricing-founding`/
+);
+assert.match(pricingCheckout, /href=\{PRICING_FOUNDING_HREF\}/);
+assert.doesNotMatch(
+  pricingCheckout,
+  /href="\/create\?(?:mode=moment&)?effect=street-power-up&source=pricing-founding"/
 );
 assert.match(pricingCheckout, /Preview one Moment/);
 assert.match(pricingCheckout, /fetch\("\/api\/checkout"/);
