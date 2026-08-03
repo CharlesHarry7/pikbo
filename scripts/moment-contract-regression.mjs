@@ -87,7 +87,7 @@ assertMatch(
 );
 assertMatch(
   studio,
-  /fixedMomentContract\s*&&\s*!session\?\.signedIn\s*\?\s*\([\s\S]{0,600}data-public-single-preview-sign-in[\s\S]{0,120}Sign in for Street Power-Up/,
+  /fixedMomentContract\s*&&\s*!session\?\.signedIn\s*\?\s*\([\s\S]{0,600}data-public-single-preview-sign-in[\s\S]{0,120}Sign in to create with your toy/,
   "only anonymous fixed Moment visitors may receive the exact-path sign-in action"
 );
 assertMatch(
