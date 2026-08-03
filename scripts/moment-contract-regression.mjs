@@ -179,15 +179,14 @@ assertMatch(
   "provider budget must admit only the reviewed private-live model"
 );
 
-// A paid account may use a single clip only through the explicit Moment
-// contract.  Any arbitrary single request must still hit the existing
-// fail-closed rejection branch; Seller Pack children remain the other valid
-// private path.  The implementation can phrase the error differently, but it
-// must gate the founding_studio/non-pack branch on the fixed contract.
+// Every direct live account, including a private validation invite, may use a
+// single clip only through the explicit Moment contract. Any arbitrary single
+// request must still hit the fail-closed rejection branch; Seller Pack
+// children remain the other private compatibility path.
 assertMatch(
   generate,
-  /accessPlanId\s*===\s*["']founding_studio["'][\s\S]{0,240}!packChild[\s\S]{0,120}!fixedMomentRequest[\s\S]{0,320}LIVE_ACCESS_REQUIRED/,
-  "Founding Studio single generation must be gated by the fixed Moment contract"
+  /if\s*\(\s*!packChild\s*&&\s*!fixedMomentRequest\s*\)[\s\S]{0,320}LIVE_ACCESS_REQUIRED/,
+  "Every direct live generation must be gated by the fixed Moment contract"
 );
 
 // 4. Production Stripe must remain fail-closed.  Live keys require both the

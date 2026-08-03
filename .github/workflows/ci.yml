@@ -93,7 +93,9 @@ jobs:
         run: npm run t6-deliverable-proof
 
       - name: Recovery reconciliation (R1c lease + settlement replay)
-        run: npm run recovery-reconciliation
+        run: |
+          npm run recovery-reconciliation
+          npm run generation-reconciliation-worker-regression
 
       - name: Public capability copy source contract
         run: npm run live-copy-smoke

@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-04
 
-**Canonical code:** `main@dc40f4f` — single Street Power-Up Moment plus repository convergence
+**Canonical code:** `main@6816030` — single Street Power-Up Moment plus repository convergence
 
 **Production:** synchronized on Vercel deployment `dpl_AzjRBnZXyLrinUx47DV4coRYEX4f`
 
@@ -11,7 +11,7 @@ Git history and must not be treated as current work.
 
 | Priority | Outcome | GitHub | State | Done when |
 |---|---|---|---|---|
-| P0 | Owned photo produces the actual private Moment | #54 | active | authenticated upload → provider → private object → Library/download |
+| P0 | Owned photo produces the actual private Moment | #54 | hardening in review | authenticated upload → provider → private object → Library/download |
 | P1 | Stripe test subscription binds to the same durable account | #59 | blocked externally | replay-safe test Checkout, webhook, subscription and once-only credits |
 
 ## Completed in this convergence

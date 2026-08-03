@@ -308,6 +308,27 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(gen, /customerFacingGenerateVideoUrl/);
   assert.match(gen, /savePrivateGenerationResult/);
   assert.match(gen, /saved\.signedUrl/);
+  assert.match(gen, /PRIVATE_ASSET_ID_RE/);
+  assert.match(
+    gen,
+    /access\.kind === "live" && packBinding\.kind !== "pack"[\s\S]{0,700}ASSET_NOT_FOUND/,
+    "direct live must require a verified owner-scoped private asset"
+  );
+  assert.doesNotMatch(
+    gen,
+    /assetId\.startsWith\("asset_"\)/,
+    "legacy process-local assets must not enter direct live generation"
+  );
+  assert.doesNotMatch(
+    gen,
+    /directPrivateInput\?\.dataUrl[\s\S]{0,180}imageField\.startsWith\("data:image"\)/,
+    "direct live must not fall back to client inline image bytes"
+  );
+  assert.match(
+    gen,
+    /if \(!packChild && !fixedMomentRequest\)/,
+    "every direct live account must use the fixed Moment contract"
+  );
   assert.ok(
     gen.indexOf("savePrivateGenerationResult({") <
       gen.indexOf("reservationLife.settle("),
@@ -321,6 +342,20 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   const health = read("app/api/health/route.ts");
   assert.match(health, /privateLiveBeta/);
   assert.match(health, /privateResults/);
+
+  const client = read("lib/generateClient.ts");
+  assert.match(
+    client,
+    /result\.code === "ASSET_NOT_FOUND" &&\s*body\.allowProviderSpend !== true/,
+    "live clients must never retry by dropping the private asset id"
+  );
+  const create = read("components/CreateStudio.tsx");
+  assert.match(create, /image:\s*demoMode[\s\S]{0,220}: undefined/);
+  assert.match(
+    create,
+    /fallbackImage:\s*demoMode && useAsset \? fallbackStill : undefined/,
+    "live Create must not transmit an inline fallback still"
+  );
 }
 
 // ─── 11. Private owned-object + owner download contract ───────────────────
