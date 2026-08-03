@@ -28,6 +28,7 @@ import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { useI18n } from "@/components/LanguageProvider";
 import { site } from "@/lib/site";
+import { STUDIO_GENERATE_HREF } from "@/lib/softLaunch";
 
 function Clip({
   demo,
@@ -510,6 +511,27 @@ export function HfExploreHome({
           Remix the premiere recipe
         </Link>
       </section>
+
+      {/* HF-class always-on Generate — desktop; mobile uses bottom nav */}
+      {!toolFirstLayout ? (
+        <div className="pointer-events-none fixed bottom-8 right-5 z-40 hidden lg:block">
+          <Link
+            href={STUDIO_GENERATE_HREF}
+            onClick={() =>
+              track({
+                event: "landing_view",
+                path: "/",
+                meta: { cta: "home_floating_generate" },
+              })
+            }
+            className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-[#c8ff3d] px-5 py-3 text-sm font-black text-black shadow-[0_12px_40px_-8px_rgba(200,255,61,0.65)] transition hover:-translate-y-0.5 hover:brightness-110"
+            data-home-floating="generate"
+          >
+            Generate
+            <span aria-hidden>↗</span>
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }
