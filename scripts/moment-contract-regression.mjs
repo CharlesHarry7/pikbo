@@ -53,7 +53,8 @@ const checkout = read("app/api/checkout/route.ts");
 const pricing = read("app/pricing/page.tsx");
 const pricingButton = read("components/PricingCheckoutButton.tsx");
 const softLaunch = read("lib/softLaunch.ts");
-const publicSample = read("components/PublicLaunchPackSample.tsx");
+const homePage = read("app/page.tsx");
+const homeHero = read("components/HomeCinemaHero.tsx");
 const libraryPage = read("app/library/page.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 
@@ -71,9 +72,14 @@ assertMatch(
   "primary Create navigation must use the fixed first-dollar Moment"
 );
 assertMatch(
-  publicSample,
-  /createHref\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=home-motion-archive`/,
+  homeHero,
+  /href=\{MOMENT_CREATE_HREF\}/,
   "homepage create CTA must enter the fixed Moment, not generic Studio"
+);
+assertNoMatch(
+  homePage,
+  /PublicLaunchPackSample/,
+  "homepage must not restore the archived three-video Pack"
 );
 assertMatch(
   studio,
@@ -97,8 +103,8 @@ assertMatch(
 );
 assertMatch(
   libraryGrid,
-  /async function downloadClip\(item: HistoryItem\)[\s\S]{0,900}const headers = await privateDownloadHeaders\(\)[\s\S]{0,180}fetch\(gateUrl,\s*\{\s*method:\s*[\"']HEAD[\"'],\s*headers\s*\}\)/,
-  "Library device-history downloads must authenticate the private result HEAD gate"
+  /async function download\(job: GenerationJob\)[\s\S]{0,500}const headers = await privateDownloadHeaders\(\)[\s\S]{0,240}fetch\(gateUrl,\s*\{[\s\S]{0,100}method:\s*[\"']HEAD[\"'][\s\S]{0,100}headers/,
+  "Library account downloads must authenticate the private result HEAD gate"
 );
 
 // 2. The client carries an explicit, typed contract rather than relying on

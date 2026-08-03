@@ -214,11 +214,42 @@ assert.match(batch, /Validation · generation closed/);
 assert.match(status, /mine === "active"/);
 assert.match(status, /mine === "recent"/);
 assert.doesNotMatch(status, /\bobjectKey\s*:|\bproviderRequestId\s*:/);
-assert.match(library, /data-library-seller-packs="owner-scoped"/);
-assert.match(library, /getSellerPackDiscoveryClient\("recent"\)/);
-assert.match(library, /downloadVideoFile\(job\.resultUrl/);
-assert.match(library, /min-h-11/);
-assert.match(createPage, /initialRecoverPackRunId=\{recoverPackRunId\}/);
+// Library MVP: account-owned generations only. The retired Seller Pack,
+// device-history, and stills-shelf UI must not reappear here.
+assert.match(library, /fetchMe\(\)/);
+assert.match(library, /if \(!me\?\.signedIn\)/);
+assert.match(library, /href=["']\/login\?next=\/library["']/);
+assert.match(library, /fetch\(["']\/api\/generations["']/);
+assert.match(library, /body\.jobs\.filter\(visibleAccountJob\)/);
+assert.match(library, /if \(job\.demo\) return false/);
+assert.doesNotMatch(
+  library,
+  /data-library-seller-packs|Seller Pack|getSellerPackDiscoveryClient|Create new Pack|Try cached sample Pack|LibraryStorageBanner|Saved on this device|device-local|session-stills|\/api\/image/
+);
+// Downloads stay owner-gated: probe HEAD first, then fetch the approved video.
+assert.match(library, /privateDownloadHeaders/);
+assert.match(library, /\/api\/downloads\//);
+assert.match(library, /method:\s*["']HEAD["']/);
+assert.match(library, /interpretDownloadHead/);
+assert.match(library, /downloadVideoFile/);
+assert.match(library, /<video[\s\S]{0,500}controls[\s\S]{0,500}playsInline/);
+// Failed/canceled jobs retry through the ledger; queued/running jobs can cancel.
+assert.match(library, /isRetryable\(job\.status\)[\s\S]{0,350}void retry\(job\)/);
+assert.match(library, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}\/retry/);
+assert.match(library, /method:\s*["']POST["']/);
+assert.match(library, /function isOpen\(status[\s\S]{0,180}queued[\s\S]{0,80}running/);
+assert.match(library, /isOpen\(job\.status\)[\s\S]{0,350}void cancel\(job\)/);
+assert.match(library, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}/);
+assert.match(library, /method:\s*["']DELETE["']/);
+// Create ignores legacy Seller Pack/general route UI and always mounts the
+// fixed Street Power-Up Moment contract (apart from explicit local previews).
+assert.match(createPage, /<CreateStudio/);
+assert.match(createPage, /initialEffect=["']street-power-up["']/);
+assert.match(createPage, /fixedMomentContract/);
+assert.doesNotMatch(
+  createPage,
+  /BatchStudio|PrivateSellerPackGate|initialRecoverPackRunId|recoverPackRunId|sp\.mode\s*===/
+);
 assert.match(batch, /initialRecoverPackRunId[\s\S]*getSellerPackStatusClient\(initialRecoverPackRunId\)/);
 assert.match(batch, /sessionStorage\.removeItem\(SELLER_PACK_RECOVERY_KEY\)[\s\S]*getSellerPackDiscoveryClient\("active"\)/);
 

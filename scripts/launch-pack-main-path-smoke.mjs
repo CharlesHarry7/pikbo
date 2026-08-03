@@ -7,11 +7,8 @@ const read = (file) => readFileSync(join(root, file), "utf8");
 
 const home = read("app/page.tsx");
 const homeHero = read("components/HomeCinemaHero.tsx");
-const publicSample = read("components/PublicLaunchPackSample.tsx");
-const moments = read("lib/moments.ts");
 const homeWall = read("components/HomeViralWall.tsx");
 const create = read("app/create/page.tsx");
-const privateSellerPackGate = read("components/PrivateSellerPackGate.tsx");
 const createStudio = read("components/CreateStudio.tsx");
 const batch = read("components/BatchStudio.tsx");
 const steps = read("components/SellerPackSteps.tsx");
@@ -27,88 +24,34 @@ const pricingCards = read("components/PricingPlanCards.tsx");
 const paywall = read("components/PaywallCard.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
-const createSample = publicSample.slice(
-  publicSample.indexOf("function CreateSampleBrowser")
-);
-const homeSample = publicSample.slice(
-  publicSample.indexOf("function HomeDropArchive"),
-  publicSample.indexOf("function CreateSampleBrowser")
-);
 
-// The public homepage starts from a video-first archive, then routes to one
-// selected Moment. The old three-output Pack stays behind an authenticated
-// private-validation gate and is never a public product door.
-assert.match(homeHero, /PublicLaunchPackSample surface="home"/);
-assert.match(publicSample, /See how toys become launches\./);
-assert.match(publicSample, /Archive motion sample/);
-assert.match(homeSample, /data-home-upgrade="moment"/);
+// The public homepage is now one honest Street Power-Up Moment. Its media is a
+// cached Lab sample, clearly not a customer result, and the CTA uses the
+// shared Moment href rather than a Pack/archive route.
+assert.match(home, /<HomeCinemaHero \/>/);
+assert.doesNotMatch(home, /PublicLaunchPackSample|HomeViralWall/);
+assert.match(homeHero, /data-home-hero=["']street-power-up["']/);
 assert.match(
-  publicSample,
+  homeHero,
   /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
 );
-assert.match(
-  homeSample,
-  /const createHref = `\$\{MOMENT_CREATE_HREF\}&source=home-motion-archive`/
-);
-assert.doesNotMatch(
-  homeSample,
-  /const createHref = `\/create\?effect=\$\{active\.effect\}/
-);
-assert.doesNotMatch(homeSample, /\/create\?effect=/);
-assert.match(publicSample, /effect: "360-spin-showcase"/);
-assert.match(publicSample, /effect: "mystery-box-reveal"/);
-assert.match(publicSample, /effect: "street-power-up"/);
-assert.match(homeSample, /Pick one Moment for your toy\./);
-assert.match(homeSample, /one toy · one chosen Moment/);
-assert.doesNotMatch(homeSample, /one toy · three launch formats/);
-assert.match(publicSample, /import \{ MOMENTS \} from "@\/lib\/moments"/);
-assert.match(homeSample, /data-home-official-moments/);
-assert.match(homeSample, /Preview an Official Concept/);
-assert.match(homeSample, /href=\{momentPreviewHref\(moment\.id\)\}/);
-assert.match(homeSample, /No upload or\s+generation starts here/);
-assert.match(homeSample, /Private render available now · Street Power-Up only/);
-assert.match(moments, /evidence: "Official Concept"/);
-for (const momentId of [
-  "capsule-reveal",
-  "hangar-ignition",
-  "colorblock-pedestal",
-  "softroom-morning",
-  "gallery-spotlight",
-  "alley-drop-flash",
-]) {
-  assert.match(moments, new RegExp(`id: "${momentId}"`));
-}
-assert.match(createSample, /Three separate archived format prototypes/);
-assert.match(read("components/MomentCreatePreview.tsx"), /no upload · no generation · 0 credits/i);
-assert.doesNotMatch(home, /One toy photo\. Three launch-ready videos\./);
-assert.match(createSample, /data-public-pack-preview="instant-archived-samples"/);
-assert.match(createSample, /Pikbo Lab archive/);
-assert.match(createSample, /No sign-in · no upload/);
-assert.match(createSample, /No product upload in this public preview/);
-assert.match(createSample, /Request seller beta/);
-assert.match(createSample, /Sign in for Street Power-Up/);
-assert.equal((createSample.match(/<AutoPlayVideo/g) || []).length, 1);
-for (const formatContract of [
-  /sample: "Scout"[\s\S]*actual: "Archive media · 16:9 · 6 sec"[\s\S]*target: "Target format · 1:1 · 5 sec"/,
-  /sample: "Moon"[\s\S]*actual: "Archive media · 16:9 · 6 sec"[\s\S]*target: "Target format · 9:16 · 5 sec"/,
-  /sample: "Beatbot"[\s\S]*actual: "Archive media · 9:16 · 6 sec"[\s\S]*target: "Target format · 9:16 · 5 sec"/,
-]) {
-  assert.match(publicSample, formatContract);
-}
-for (const media of [
-  "/demos/scout-packshot-spin.mp4",
-  "/demos/moon-box-reveal.mp4",
-  "/demos/beatbot-viral-hook.mp4",
-]) {
-  assert.match(publicSample, new RegExp(media.replaceAll("/", "\\/")));
-}
+assert.match(homeHero, /href=\{MOMENT_CREATE_HREF\}/);
+assert.match(homeHero, /Try Street Power-Up/);
+assert.match(homeHero, /PIKBO Lab · cached prototype/);
+assert.match(homeHero, /Cached sample · 0 credits · no upload/);
+assert.match(homeHero, /Sample only/);
+assert.match(homeHero, /not your toy/);
+assert.match(homeHero, /not a completed customer deliverable/);
+assert.match(homeHero, /showControls/);
+assert.doesNotMatch(homeHero, /Launch Pack|three launch formats|PublicLaunchPackSample/);
 assert.doesNotMatch(create, /<PublicLaunchPackSample surface="create" \/>/);
-assert.match(create, /<PrivateSellerPackGate>/);
-assert.match(privateSellerPackGate, /canUsePrivateLaunch\(me\)/);
-assert.match(privateSellerPackGate, /router\.replace\(PUBLIC_MOMENT_HREF\)/);
-assert.match(privateSellerPackGate, /Create one Moment/);
-assert.match(privateSellerPackGate, /Request private beta/);
-assert.doesNotMatch(publicSample, /HeroUpload|fetchMe|canUsePrivateLaunch|credits/);
+assert.match(create, /<CreateStudio/);
+assert.match(create, /initialEffect=["']street-power-up["']/);
+assert.match(create, /fixedMomentContract/);
+assert.doesNotMatch(
+  create,
+  /BatchStudio|PrivateSellerPackGate|initialRecoverPackRunId|recoverPackRunId|sp\.mode\s*===/
+);
 assert.match(meClient, /export function canUsePrivateLaunch/);
 assert.match(
   meClient,
@@ -183,7 +126,8 @@ assert.match(
 );
 assert.doesNotMatch(shell, /\/create\?effect=street-power-up&source=primary-nav/);
 assert.match(shell, /Create a Moment/);
-assert.match(shell, /label: "Projects"/);
+assert.match(shell, /label: "Library"/);
+assert.match(shell, /label: "Sign in"/);
 assert.doesNotMatch(shell, /Motion archive/);
 assert.match(softLaunchStrip, /create\?effect=street-power-up&source=soft-launch/);
 assert.match(hfExploreHome, /create\?effect=street-power-up/);
@@ -219,11 +163,28 @@ assert.doesNotMatch(pricingCards, /PricingCheckoutButton|PLANS\.map|FreeTrialCta
 assert.match(paywall, /Founding Studio · coming soon/);
 assert.match(paywall, /No public price, monthly allowance, subscription, or checkout/);
 assert.doesNotMatch(paywall, /PLANS|priceMonthly|\$49|\/mo/);
-assert.match(libraryGrid, /Your Launch Packs/);
-assert.match(libraryGrid, /data-library-action="moment"/);
+// Library is an authenticated generations ledger, not a public Pack/demo grid.
+assert.match(libraryGrid, /fetchMe\(\)/);
+assert.match(libraryGrid, /if \(!me\?\.signedIn\)/);
+assert.match(libraryGrid, /href=["']\/login\?next=\/library["']/);
+assert.match(libraryGrid, /fetch\(["']\/api\/generations["']/);
+assert.match(libraryGrid, /body\.jobs\.filter\(visibleAccountJob\)/);
+assert.match(libraryGrid, /if \(job\.demo\) return false/);
+assert.match(libraryGrid, /MOMENT_CREATE_HREF/);
+assert.match(libraryGrid, /privateDownloadHeaders/);
+assert.match(libraryGrid, /\/api\/downloads\//);
+assert.match(libraryGrid, /method:\s*["']HEAD["']/);
+assert.match(libraryGrid, /interpretDownloadHead/);
+assert.match(libraryGrid, /downloadVideoFile/);
+assert.match(libraryGrid, /<video[\s\S]{0,500}controls[\s\S]{0,500}playsInline/);
+assert.match(libraryGrid, /isRetryable\(job\.status\)[\s\S]{0,350}void retry\(job\)/);
+assert.match(libraryGrid, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}\/retry/);
+assert.match(libraryGrid, /function isOpen\(status[\s\S]{0,180}queued[\s\S]{0,80}running/);
+assert.match(libraryGrid, /isOpen\(job\.status\)[\s\S]{0,350}void cancel\(job\)/);
+assert.match(libraryGrid, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}/);
 assert.doesNotMatch(
   libraryGrid,
-  /FreeTrialCta|Generate · upload toy photo|Compare plans|data-library-action="generate"/
+  /FreeTrialCta|Generate · upload toy photo|Compare plans|data-library-action="generate"|data-library-seller-packs|Your Launch Packs|Create new Pack|Try cached sample Pack|getSellerPackDiscoveryClient|Saved on this device|device-local|session-stills|\/api\/image/
 );
 assert.match(
   pricing,
@@ -241,7 +202,8 @@ assert.doesNotMatch(
   /#home-tool/
 );
 
-// The commercial contract is exactly three children, not a vague future pack.
+// The archived commercial contract still has exactly three children; keep its
+// backend/atomic/export assertions even though it is no longer a public door.
 assert.match(contract, /SELLER_PACK_CHILD_COUNT = 3/);
 for (const slug of [
   "360-spin-showcase",
@@ -250,9 +212,9 @@ for (const slug of [
 ]) {
   assert.match(contract, new RegExp(`"${slug}"`));
 }
-assert.match(create, /Prepare a private Launch Pack/);
-assert.match(create, /Public creation uses one selected Moment instead/);
-assert.match(create, /Access is confirmed before any private asset or credit action/);
+assert.match(create, /initialEffect=["']street-power-up["']/);
+assert.match(create, /fixedMomentContract/);
+assert.doesNotMatch(create, /Prepare a private Launch Pack|Public creation uses one selected Moment instead|Access is confirmed before any private asset or credit action/);
 assert.match(batch, /no product photo is accepted or processed/i);
 assert.match(batch, /data-private-input-review="original-only"/);
 assert.match(batch, /0 Pack jobs · 0 Library results · 0 credits reserved/);

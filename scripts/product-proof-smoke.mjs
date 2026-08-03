@@ -16,7 +16,6 @@ function assert(condition, message) {
 const home = read("app/page.tsx");
 const homeHero = read("components/HomeCinemaHero.tsx");
 const moments = read("lib/moments.ts");
-const publicSample = read("components/PublicLaunchPackSample.tsx");
 const softLaunch = read("lib/softLaunch.ts");
 const feed = read("lib/videoFeed.ts");
 const tile = read("components/VideoTile.tsx");
@@ -24,7 +23,7 @@ const presetPreview = read("components/PresetPreviewCard.tsx");
 const autoplay = read("components/AutoPlayVideo.tsx");
 const create = read("app/create/page.tsx");
 const batch = read("components/BatchStudio.tsx");
-const privateSellerPackGate = read("components/PrivateSellerPackGate.tsx");
+const library = read("components/LibraryGrid.tsx");
 
 const proofList =
   softLaunch.match(/HOME_PROOF_SLUGS\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] ??
@@ -34,11 +33,14 @@ const proofSlugs = [...proofList.matchAll(/"([^"]+)"/g)].map((match) => match[1]
 assert(proofSlugs.length === 8, "homepage proof whitelist must contain exactly 8 recipes");
 assert(
   home.includes("<HomeCinemaHero />") &&
-    homeHero.includes('<PublicLaunchPackSample surface="home" />') &&
+    homeHero.includes('data-home-hero="street-power-up"') &&
+    homeHero.includes("href={MOMENT_CREATE_HREF}") &&
+    homeHero.includes("PIKBO Lab · cached prototype") &&
+    homeHero.includes("Cached sample · 0 credits · no upload") &&
+    homeHero.includes("not a completed customer deliverable") &&
     !home.includes("<HomeViralWall") &&
-    publicSample.includes("Archive motion sample") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must lead with the video archive and retire proof-card walls"
+  "homepage must expose one honest Street Power-Up Moment and no Pack/demo wall"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),
@@ -72,16 +74,41 @@ assert(
   "featured video must expose controls and respect reduced motion"
 );
 assert(
-  create.includes("Prepare a private Launch Pack.") &&
-    create.includes("<PrivateSellerPackGate>") &&
-    privateSellerPackGate.includes("canUsePrivateLaunch(me)") &&
-    privateSellerPackGate.includes("router.replace(PUBLIC_MOMENT_HREF)") &&
+  create.includes("<CreateStudio") &&
+    create.includes('initialEffect="street-power-up"') &&
+    create.includes("fixedMomentContract") &&
+    !create.includes("BatchStudio") &&
+    !create.includes("PrivateSellerPackGate") &&
+    !create.includes("initialRecoverPackRunId") &&
     batch.includes("reserveSellerPackClient") &&
     batch.includes("parseExactSellerPackServerJobs") &&
     batch.includes("sellerPackQuoteLabel(packQuote)") &&
     !create.includes("Launch Pack — 12 recipes") &&
     !batch.includes("Launch Pack — 12 recipes"),
-  "the fixed three-child Pack engine must stay private while public creation remains one Moment"
+  "the fixed three-child Pack engine must stay private while Create remains one Moment"
+);
+assert(
+  library.includes("fetchMe()") &&
+    library.includes("if (!me?.signedIn)") &&
+    library.includes('fetch("/api/generations"') &&
+    library.includes("body.jobs.filter(visibleAccountJob)") &&
+    library.includes("if (job.demo) return false") &&
+    library.includes("privateDownloadHeaders") &&
+    library.includes("/api/downloads/") &&
+    library.includes('method: "HEAD"') &&
+    library.includes("interpretDownloadHead") &&
+    library.includes("downloadVideoFile") &&
+    library.includes("<video") &&
+    library.includes("controls") &&
+    library.includes("playsInline") &&
+    library.includes("isRetryable(job.status)") &&
+    library.includes("/api/generations/${encodeURIComponent(job.id)}/retry") &&
+    library.includes("isOpen(job.status)") &&
+    library.includes("/api/generations/${encodeURIComponent(job.id)}") &&
+    !/data-library-seller-packs|Create new Pack|Try cached sample Pack|getSellerPackDiscoveryClient|Saved on this device|device-local|session-stills|\/api\/image/.test(
+      library
+    ),
+  "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
 
 console.log(

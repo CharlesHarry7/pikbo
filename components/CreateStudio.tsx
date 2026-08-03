@@ -160,13 +160,6 @@ const MODELS = [
 ] as const;
 
 const FIXED_MOMENT_EFFECT = "street-power-up";
-const FIXED_MOMENT_LAB_SAMPLE = {
-  video: "/demos/beatbot-viral-hook.mp4",
-  poster: "/demos/beatbot-still.webp",
-  title: "Beatbot · Drop-day viral hook",
-  source: "Pikbo-owned archive motion study",
-  provenance: "Cached Lab sample · not your photo · 0 credits",
-} as const;
 const PRIVATE_BETA_MAILTO =
   "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
 
@@ -351,11 +344,6 @@ export function CreateStudio({
   /** Last failed live job restored credits (PRD §5 / W5 trust). */
   const [lastRefunded, setLastRefunded] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
-  // Fail closed until the media query resolves so reduced-motion users never
-  // get an autoplaying first render; the video remounts once the real setting
-  // is known for ordinary users.
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(true);
-  const [labSampleReady, setLabSampleReady] = useState(false);
   /** Successful retries/variants remain selectable; a new run never overwrites one. */
   const [versions, setVersions] = useState<ResultVersion[]>([]);
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
@@ -379,19 +367,6 @@ export function CreateStudio({
   /** Avoid duplicate quote-view events while React rerenders the same quote. */
   const quoteEventRef = useRef("");
   const toast = useToast();
-
-  useEffect(() => {
-    if (!fixedMomentContract) return;
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setPrefersReducedMotion(media.matches);
-    sync();
-    if (media.addEventListener) media.addEventListener("change", sync);
-    else media.addListener(sync);
-    return () => {
-      if (media.removeEventListener) media.removeEventListener("change", sync);
-      else media.removeListener(sync);
-    };
-  }, [fixedMomentContract]);
 
   useEffect(() => {
     generateMountedRef.current = true;
@@ -1849,6 +1824,10 @@ export function CreateStudio({
                   : activeVersion?.privateResult
                     ? "Private result ready"
                     : "Live result ready"
+                : fixedMomentContract
+                  ? privateUploadEnabled
+                    ? "Private Moment"
+                    : "Private beta"
                 : demoMode
                   ? PROVENANCE.cachedDemo
                   : isFree
@@ -1874,6 +1853,12 @@ export function CreateStudio({
                       </span>
                     ) : null}
                   </>
+                )
+              ) : fixedMomentContract ? (
+                privateUploadEnabled ? (
+                  <>Your owned photo · 9:16 · 5s · 720p · 10 credits</>
+                ) : (
+                  <>Sign in before any product photo is accepted or processed</>
                 )
               ) : demoMode ? (
                 <>
@@ -1932,7 +1917,9 @@ export function CreateStudio({
               </>
             ) : (
               <span className="font-semibold text-white/65">
-                Public Lab · cached 0 credits
+                {fixedMomentContract
+                  ? "Sign in required · private beta"
+                  : "Public Lab · cached 0 credits"}
               </span>
             )}
           </div>
@@ -1940,11 +1927,10 @@ export function CreateStudio({
       </div>
 
       {/* ── Remix context (from Home / project deep link) ── */}
-      {(remix.sourceLabel || remix.notices.length > 0 || remix.intent) && (
+      {!fixedMomentContract &&
+        (remix.sourceLabel || remix.notices.length > 0 || remix.intent) && (
         <div
-          className={`border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-3 ${
-            fixedMomentContract ? "lg:hidden" : ""
-          }`}
+          className="border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-3"
         >
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
             {remix.sourcePoster && (
@@ -2336,11 +2322,9 @@ export function CreateStudio({
           )}
 
           {/* Collapsed Lab path — after recipe so first-run stays upload→recipe→generate */}
-          {!image && (
+          {!image && !fixedMomentContract && (
             <div
-              className={`rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-3 ${
-                fixedMomentContract ? "lg:hidden" : ""
-              }`}
+              className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-3"
               data-first-run-lab="samples"
             >
               <p className="text-sm font-bold text-[var(--fg)]">
@@ -2396,10 +2380,8 @@ export function CreateStudio({
           )}
 
           {/* Active recipe summary + aspect (essential only) */}
-          <div
-            className={`rounded-xl border border-[var(--mint)]/20 bg-gradient-to-br from-[var(--mint)]/[0.07] to-black/40 p-3 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)] ${
-              fixedMomentContract ? "lg:hidden" : ""
-            }`}
+          {!fixedMomentContract ? <div
+            className="rounded-xl border border-[var(--mint)]/20 bg-gradient-to-br from-[var(--mint)]/[0.07] to-black/40 p-3 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -2417,7 +2399,7 @@ export function CreateStudio({
                 {effectiveDuration}s · {effectiveResolution}
               </span>
             </div>
-          </div>
+          </div> : null}
 
           {/* Fixed Moments remove model/prompt decisions. The general Studio
               keeps Advanced available for later exploration. */}
@@ -2823,6 +2805,8 @@ export function CreateStudio({
               </span>
               {showingCompletedResult
                 ? "Next generation quote"
+                : fixedMomentContract && !privateUploadEnabled
+                  ? "Sign in to create"
                 : "Review and generate"}
             </p>
             {image ? (
@@ -2845,7 +2829,7 @@ export function CreateStudio({
                 {privateUploadEnabled
                   ? "Upload one owned front photo to unlock the exact quote."
                   : fixedMomentContract
-                    ? "The cached Lab sample is already playing. Sign in to create with your toy."
+                    ? "Sign in to upload one owned toy photo and create this private Moment."
                   : "Choose one Pikbo Lab sample to preview this recipe at 0 credits."}
               </p>
             )}
@@ -2885,6 +2869,14 @@ export function CreateStudio({
                 toy or character. Pikbo grants no third-party IP rights.
               </span>
             </label>
+          ) : fixedMomentContract ? (
+            <div
+              id="create-ownership"
+              className="rounded-lg border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2.5 text-[11px] leading-snug text-[var(--fg-muted)]"
+            >
+              No product photo is accepted or processed until private access
+              is verified.
+            </div>
           ) : (
             <div
               id="create-ownership"
@@ -3534,102 +3526,52 @@ export function CreateStudio({
                       {t("create.retryGenerate")}
                     </button>
                   ) : null}
-                  <Link
-                    href="/effects"
-                    className="rounded-full border border-white/20 bg-white/[0.05] px-4 py-2.5 text-sm font-semibold text-white/85 hover:border-white/35"
-                  >
-                    {t("create.pickRecipe")}
-                  </Link>
-                  <button
-                    type="button"
-                    disabled={sampleLoading || busy}
-                    onClick={() => void loadSampleToy("scout", true)}
-                    className="rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/10 px-4 py-2.5 text-sm font-semibold text-[var(--mint)] hover:bg-[var(--mint)]/18 disabled:opacity-50"
-                  >
-                    {t("create.freeLabSample")}
-                  </button>
+                  {!fixedMomentContract ? (
+                    <>
+                      <Link
+                        href="/effects"
+                        className="rounded-full border border-white/20 bg-white/[0.05] px-4 py-2.5 text-sm font-semibold text-white/85 hover:border-white/35"
+                      >
+                        {t("create.pickRecipe")}
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={sampleLoading || busy}
+                        onClick={() => void loadSampleToy("scout", true)}
+                        className="rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/10 px-4 py-2.5 text-sm font-semibold text-[var(--mint)] hover:bg-[var(--mint)]/18 disabled:opacity-50"
+                      >
+                        {t("create.freeLabSample")}
+                      </button>
+                    </>
+                  ) : null}
                 </div>
               </div>
             )}
             {status === "idle" && !videoUrl && fixedMomentContract && (
               <div
-                className="w-full p-3 text-left"
-                data-fixed-moment-cached-sample
-                aria-label="Cached Lab sample preview"
+                className="flex min-h-[28rem] w-full items-center justify-center p-6 text-center"
+                data-fixed-moment-empty-result
               >
-                <div className="mx-auto grid w-full max-w-4xl items-center gap-4 rounded-3xl border border-[var(--mint)]/25 bg-gradient-to-br from-[var(--mint)]/[0.08] via-black/20 to-black/60 p-3 shadow-[0_0_60px_rgba(200,255,61,0.08)] sm:p-4 lg:grid-cols-[minmax(0,1.18fr)_minmax(16rem,0.82fr)]">
-                  <div className="relative mx-auto w-full max-w-[30rem] overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
-                    {/* Keep the owned poster visible while a Preview media request is pending. */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={FIXED_MOMENT_LAB_SAMPLE.poster}
-                      alt=""
-                      aria-hidden="true"
-                      className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ${
-                        labSampleReady ? "opacity-0" : "opacity-100"
-                      }`}
-                    />
-                    <video
-                      key={
-                        prefersReducedMotion
-                          ? "fixed-lab-reduced-motion"
-                          : "fixed-lab-autoplay"
-                      }
-                      src={FIXED_MOMENT_LAB_SAMPLE.video}
-                      poster={FIXED_MOMENT_LAB_SAMPLE.poster}
-                      autoPlay={!prefersReducedMotion}
-                      controls
-                      onLoadedData={() => setLabSampleReady(true)}
-                      loop
-                      muted
-                      playsInline
-                      preload="metadata"
-                      aria-label={`${FIXED_MOMENT_LAB_SAMPLE.title}, ${FIXED_MOMENT_LAB_SAMPLE.source}`}
-                      className={`relative z-[1] aspect-[9/16] max-h-[64vh] w-full object-cover transition-opacity duration-200 ${
-                        labSampleReady ? "opacity-100" : "opacity-0"
-                      }`}
-                    />
-                    <span className="pointer-events-none absolute left-3 top-3 rounded-full border border-white/20 bg-black/75 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
-                      {FIXED_MOMENT_LAB_SAMPLE.provenance}
-                    </span>
-                  </div>
-                  <div className="min-w-0 px-1 py-2 sm:px-2 lg:py-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--mint)]">
-                      {FIXED_MOMENT_LAB_SAMPLE.source}
-                    </p>
-                    <h3 className="mt-2 text-xl font-black tracking-tight text-white sm:text-2xl">
-                      See the motion before you upload.
-                    </h3>
-                    <p className="mt-2 text-sm font-semibold text-white/80">
-                      {FIXED_MOMENT_LAB_SAMPLE.title}
-                    </p>
-                    <p className="mt-2 text-xs leading-relaxed text-white/55">
-                      This archived Beatbot clip is a Pikbo Lab motion study —
-                      not a Street Power-Up result for your toy and never an
-                      upload from this page.
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-1.5 text-[10px] font-bold uppercase tracking-wide text-white/60">
-                      <span className="rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/[0.08] px-2.5 py-1 text-[var(--mint)]">
-                        Street Power-Up contract
-                      </span>
-                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
-                        9:16 · 5s · 720p
-                      </span>
-                    </div>
-                    <p className="mt-3 text-[11px] leading-relaxed text-white/45">
-                      Private render: one owned toy photo · Fast · 10 credits
-                      on completion.
-                    </p>
-                    {!privateUploadEnabled ? (
-                      <Link
-                        href={privateMomentLoginHref}
-                        data-fixed-moment-sign-in
-                        className="btn btn-primary mt-4 hidden w-full py-3 text-sm font-black tracking-tight lg:inline-flex"
-                      >
-                        Sign in to create with your toy
-                      </Link>
-                    ) : null}
-                  </div>
+                <div className="max-w-sm">
+                  <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] text-xl text-[var(--mint)]">
+                    ▶
+                  </span>
+                  <h3 className="mt-4 text-xl font-black tracking-tight text-white">
+                    Your result appears here.
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-white/50">
+                    Upload one toy photo you own. Pikbo creates one private
+                    Street Power-Up video and saves it to Library.
+                  </p>
+                  {!privateUploadEnabled ? (
+                    <Link
+                      href={privateMomentLoginHref}
+                      data-fixed-moment-sign-in
+                      className="btn btn-primary mt-5 inline-flex px-6 py-3 text-sm font-black"
+                    >
+                      Sign in to create
+                    </Link>
+                  ) : null}
                 </div>
               </div>
             )}
@@ -3709,6 +3651,14 @@ export function CreateStudio({
             >
               Upload owned toy photo
             </button>
+          ) : fixedMomentContract ? (
+            <Link
+              href={privateMomentLoginHref}
+              className="btn btn-primary w-full py-3 text-sm"
+              data-first-run-action="sign-in"
+            >
+              Sign in to create
+            </Link>
           ) : (
             <button
               type="button"
