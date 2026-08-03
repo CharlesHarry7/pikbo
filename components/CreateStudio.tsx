@@ -160,6 +160,13 @@ const MODELS = [
 ] as const;
 
 const FIXED_MOMENT_EFFECT = "street-power-up";
+const FIXED_MOMENT_LAB_SAMPLE = {
+  video: "/demos/beatbot-viral-hook.mp4",
+  poster: "/demos/beatbot-still.webp",
+  title: "Beatbot · Drop-day viral hook",
+  source: "Pikbo-owned archive motion study",
+  provenance: "Cached Lab sample · not your photo · 0 credits",
+} as const;
 const PRIVATE_BETA_MAILTO =
   "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
 
@@ -344,6 +351,10 @@ export function CreateStudio({
   /** Last failed live job restored credits (PRD §5 / W5 trust). */
   const [lastRefunded, setLastRefunded] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
+  // Fail closed until the media query resolves so reduced-motion users never
+  // get an autoplaying first render; the video remounts once the real setting
+  // is known for ordinary users.
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(true);
   /** Successful retries/variants remain selectable; a new run never overwrites one. */
   const [versions, setVersions] = useState<ResultVersion[]>([]);
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
@@ -367,6 +378,19 @@ export function CreateStudio({
   /** Avoid duplicate quote-view events while React rerenders the same quote. */
   const quoteEventRef = useRef("");
   const toast = useToast();
+
+  useEffect(() => {
+    if (!fixedMomentContract) return;
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setPrefersReducedMotion(media.matches);
+    sync();
+    if (media.addEventListener) media.addEventListener("change", sync);
+    else media.addListener(sync);
+    return () => {
+      if (media.removeEventListener) media.removeEventListener("change", sync);
+      else media.removeListener(sync);
+    };
+  }, [fixedMomentContract]);
 
   useEffect(() => {
     generateMountedRef.current = true;
@@ -1795,9 +1819,11 @@ export function CreateStudio({
   return (
     <div className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0">
       {/* Suite chrome: desktop only — mobile uses bottom nav + Modules shelf */}
-      <div className="hidden lg:block">
-        <GenerateSuiteChrome compact showSellerPack={privateUploadEnabled} />
-      </div>
+      {!fixedMomentContract && (
+        <div className="hidden lg:block">
+          <GenerateSuiteChrome compact showSellerPack={privateUploadEnabled} />
+        </div>
+      )}
       {/* ── Mode banner: demo vs live (W5) · tighter on phone ── */}
       <div
         role="status"
@@ -1914,7 +1940,11 @@ export function CreateStudio({
 
       {/* ── Remix context (from Home / project deep link) ── */}
       {(remix.sourceLabel || remix.notices.length > 0 || remix.intent) && (
-        <div className="border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-3">
+        <div
+          className={`border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-3 ${
+            fixedMomentContract ? "lg:hidden" : ""
+          }`}
+        >
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
             {remix.sourcePoster && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -2008,7 +2038,13 @@ export function CreateStudio({
       </div>
 
       {/* HF Generate: narrow recipe rail · controls · dominant result stage */}
-      <div className="grid flex-1 lg:min-h-0 lg:grid-cols-[minmax(320px,0.85fr)_minmax(0,1.4fr)]">
+      <div
+        className={`grid flex-1 lg:min-h-0 ${
+          fixedMomentContract
+            ? "lg:grid-cols-[minmax(250px,0.58fr)_minmax(0,1.8fr)]"
+            : "lg:grid-cols-[minmax(320px,0.85fr)_minmax(0,1.4fr)]"
+        }`}
+      >
         {/* Full recipe catalog is retained for future use but hidden from first run. */}
         <aside className="hidden">
           <p className="mb-0.5 px-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]/90">
@@ -2238,21 +2274,33 @@ export function CreateStudio({
               </p>
               {sessionResolved ? (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    href={PRIVATE_BETA_MAILTO}
-                    className="inline-flex min-h-10 items-center rounded-full bg-[var(--mint)] px-4 text-xs font-black text-black transition hover:brightness-110"
-                    aria-label="Email Pikbo to request private beta access"
-                    data-public-single-preview-beta
-                  >
-                    Request private beta
-                  </Link>
+                  {!fixedMomentContract ? (
+                    <Link
+                      href={PRIVATE_BETA_MAILTO}
+                      className="inline-flex min-h-10 items-center rounded-full bg-[var(--mint)] px-4 text-xs font-black text-black transition hover:brightness-110"
+                      aria-label="Email Pikbo to request private beta access"
+                      data-public-single-preview-beta
+                    >
+                      Request private beta
+                    </Link>
+                  ) : null}
                   {fixedMomentContract && !session?.signedIn ? (
                     <Link
                       href={privateMomentLoginHref}
-                      className="inline-flex min-h-10 items-center rounded-full border border-white/20 px-4 text-xs font-black text-white transition hover:border-white/45 hover:bg-white/[0.06]"
+                      className="inline-flex min-h-10 items-center rounded-full border border-white/20 px-4 text-xs font-black text-white transition hover:border-white/45 hover:bg-white/[0.06] lg:hidden"
                       data-public-single-preview-sign-in
                     >
-                      Sign in for Street Power-Up
+                      Sign in to create with your toy
+                    </Link>
+                  ) : null}
+                  {fixedMomentContract && session?.signedIn && !privateUploadEnabled ? (
+                    <Link
+                      href={PRIVATE_BETA_MAILTO}
+                      className="inline-flex min-h-10 items-center rounded-full border border-white/20 px-4 text-xs font-black text-white/85 transition hover:border-white/45 hover:bg-white/[0.06] lg:hidden"
+                      aria-label="Email Pikbo to request private beta access"
+                      data-public-single-preview-beta
+                    >
+                      Request private beta access
                     </Link>
                   ) : null}
                 </div>
@@ -2270,8 +2318,12 @@ export function CreateStudio({
               <p className="mt-1 text-sm font-bold text-white">
                 Street Power-Up · vertical drop-day launch moment
               </p>
-              <p className="mt-1 text-[11px] text-white/50">
-                The private check uses one recipe and one measured output contract.
+              <p className="mt-1 text-[11px] leading-relaxed text-white/55">
+                One owned toy photo · Fast · 9:16 · 5s · 720p ·{" "}
+                <span className="font-semibold text-[var(--mint)]">
+                  10 credits on completion
+                </span>
+                .
               </p>
             </div>
           ) : (
@@ -2285,7 +2337,9 @@ export function CreateStudio({
           {/* Collapsed Lab path — after recipe so first-run stays upload→recipe→generate */}
           {!image && (
             <div
-              className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-3"
+              className={`rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-3 ${
+                fixedMomentContract ? "lg:hidden" : ""
+              }`}
               data-first-run-lab="samples"
             >
               <p className="text-sm font-bold text-[var(--fg)]">
@@ -2341,7 +2395,11 @@ export function CreateStudio({
           )}
 
           {/* Active recipe summary + aspect (essential only) */}
-          <div className="rounded-xl border border-[var(--mint)]/20 bg-gradient-to-br from-[var(--mint)]/[0.07] to-black/40 p-3 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
+          <div
+            className={`rounded-xl border border-[var(--mint)]/20 bg-gradient-to-br from-[var(--mint)]/[0.07] to-black/40 p-3 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)] ${
+              fixedMomentContract ? "lg:hidden" : ""
+            }`}
+          >
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]/80">
@@ -2785,6 +2843,8 @@ export function CreateStudio({
               <p className="mt-2 text-xs text-[var(--fg-muted)]">
                 {privateUploadEnabled
                   ? "Upload one owned front photo to unlock the exact quote."
+                  : fixedMomentContract
+                    ? "The cached Lab sample is already playing. Sign in to create with your toy."
                   : "Choose one Pikbo Lab sample to preview this recipe at 0 credits."}
               </p>
             )}
@@ -2842,7 +2902,7 @@ export function CreateStudio({
             >
               Cancel request · {elapsed}s
             </button>
-          ) : (
+          ) : fixedMomentContract && !privateUploadEnabled ? null : (
             <button
               type="button"
               onClick={() => void generate()}
@@ -2916,9 +2976,11 @@ export function CreateStudio({
                 </span>
               ) : null}
               <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-semibold text-white/50">
-                {seedanceModelLabel(
-                  usedModel || MODELS.find((m) => m.id === modelId)?.label
-                )}
+                {fixedMomentContract
+                  ? "Fast · 9:16 · 5s · 720p"
+                  : seedanceModelLabel(
+                      usedModel || MODELS.find((m) => m.id === modelId)?.label
+                    )}
               </span>
             </div>
           </div>
@@ -3488,7 +3550,76 @@ export function CreateStudio({
                 </div>
               </div>
             )}
-            {status === "idle" && !videoUrl && (
+            {status === "idle" && !videoUrl && fixedMomentContract && (
+              <div
+                className="w-full p-3 text-left"
+                data-fixed-moment-cached-sample
+                aria-label="Cached Lab sample preview"
+              >
+                <div className="mx-auto grid w-full max-w-4xl items-center gap-4 rounded-3xl border border-[var(--mint)]/25 bg-gradient-to-br from-[var(--mint)]/[0.08] via-black/20 to-black/60 p-3 shadow-[0_0_60px_rgba(200,255,61,0.08)] sm:p-4 lg:grid-cols-[minmax(0,1.18fr)_minmax(16rem,0.82fr)]">
+                  <div className="relative mx-auto w-full max-w-[30rem] overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
+                    <video
+                      key={
+                        prefersReducedMotion
+                          ? "fixed-lab-reduced-motion"
+                          : "fixed-lab-autoplay"
+                      }
+                      src={FIXED_MOMENT_LAB_SAMPLE.video}
+                      poster={FIXED_MOMENT_LAB_SAMPLE.poster}
+                      autoPlay={!prefersReducedMotion}
+                      controls
+                      loop
+                      muted
+                      playsInline
+                      preload="metadata"
+                      aria-label={`${FIXED_MOMENT_LAB_SAMPLE.title}, ${FIXED_MOMENT_LAB_SAMPLE.source}`}
+                      className="aspect-[9/16] max-h-[64vh] w-full object-cover"
+                    />
+                    <span className="pointer-events-none absolute left-3 top-3 rounded-full border border-white/20 bg-black/75 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
+                      {FIXED_MOMENT_LAB_SAMPLE.provenance}
+                    </span>
+                  </div>
+                  <div className="min-w-0 px-1 py-2 sm:px-2 lg:py-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--mint)]">
+                      {FIXED_MOMENT_LAB_SAMPLE.source}
+                    </p>
+                    <h3 className="mt-2 text-xl font-black tracking-tight text-white sm:text-2xl">
+                      See the motion before you upload.
+                    </h3>
+                    <p className="mt-2 text-sm font-semibold text-white/80">
+                      {FIXED_MOMENT_LAB_SAMPLE.title}
+                    </p>
+                    <p className="mt-2 text-xs leading-relaxed text-white/55">
+                      This archived Beatbot clip is a Pikbo Lab motion study —
+                      not a Street Power-Up result for your toy and never an
+                      upload from this page.
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-1.5 text-[10px] font-bold uppercase tracking-wide text-white/60">
+                      <span className="rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/[0.08] px-2.5 py-1 text-[var(--mint)]">
+                        Street Power-Up contract
+                      </span>
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1">
+                        9:16 · 5s · 720p
+                      </span>
+                    </div>
+                    <p className="mt-3 text-[11px] leading-relaxed text-white/45">
+                      Private render: one owned toy photo · Fast · 10 credits
+                      on completion.
+                    </p>
+                    {!privateUploadEnabled ? (
+                      <Link
+                        href={privateMomentLoginHref}
+                        data-fixed-moment-sign-in
+                        className="btn btn-primary mt-4 hidden w-full py-3 text-sm font-black tracking-tight lg:inline-flex"
+                      >
+                        Sign in to create with your toy
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            )}
+            {status === "idle" && !videoUrl && !fixedMomentContract && (
               <div className="flex flex-col items-center p-8 text-center sm:p-10">
                 <span className="grid h-14 w-14 place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] text-[var(--mint)] sm:h-16 sm:w-16">
                   <svg
