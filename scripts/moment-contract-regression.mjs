@@ -55,6 +55,7 @@ const pricingButton = read("components/PricingCheckoutButton.tsx");
 const softLaunch = read("lib/softLaunch.ts");
 const publicSample = read("components/PublicLaunchPackSample.tsx");
 const libraryPage = read("app/library/page.tsx");
+const libraryGrid = read("components/LibraryGrid.tsx");
 
 // 1. Moment CTA is a Moment path, never the legacy Seller Pack path.
 assertMatch(
@@ -93,6 +94,11 @@ assertMatch(
   libraryPage,
   /href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}/,
   "Library create CTA must return to the fixed Moment"
+);
+assertMatch(
+  libraryGrid,
+  /async function downloadClip\(item: HistoryItem\)[\s\S]{0,900}const headers = await privateDownloadHeaders\(\)[\s\S]{0,180}fetch\(gateUrl,\s*\{\s*method:\s*[\"']HEAD[\"'],\s*headers\s*\}\)/,
+  "Library device-history downloads must authenticate the private result HEAD gate"
 );
 
 // 2. The client carries an explicit, typed contract rather than relying on
