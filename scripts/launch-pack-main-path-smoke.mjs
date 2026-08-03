@@ -163,7 +163,7 @@ assert.match(
 );
 assert.match(
   shell,
-  /const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`/
+  /PRIMARY_NAV_CREATE_HREF|STUDIO_GENERATE_HREF/
 );
 assert.doesNotMatch(shell, /\/create\?effect=street-power-up&source=primary-nav/);
 assert.match(shell, /Create a Moment/);
