@@ -932,6 +932,7 @@ export function CreateStudio({
     const result = await postGenerateWithRetry(
       {
         effect: fx,
+        productContract: fixedMomentContract ? "toy-moment-v1" : undefined,
         image: useAsset
           ? dualImageOk
             ? fallbackStill

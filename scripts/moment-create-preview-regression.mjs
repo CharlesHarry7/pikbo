@@ -35,7 +35,7 @@ assert.doesNotMatch(moments, /provider|modelId|prompt|generated result/i);
 assert.match(home, /One toy photo\. More ways to sell\./);
 assert.match(home, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(home, /Preview a Moment/);
-assert.match(home, /Three seller formats/);
+assert.match(home, /Three directions · choose one/);
 assert.match(home, /mailto:support@pikbo\.ai\?subject=Pikbo%20private%20beta%20request/);
 assert.match(home, /<MomentStage moment=\{active\}/);
 assert.match(home, /<MomentRail moments=\{MOMENTS\}/);
@@ -79,7 +79,15 @@ assert.match(createPreview, /canPreparePrivateInput/);
 assert.match(createPreview, /canUsePrivateLaunch/);
 assert.match(createPreview, /Sign in to continue/);
 assert.match(createPreview, /Verify private photo/);
-assert.match(createPreview, /Continue to private studio/);
+assert.match(createPreview, /Create my private Moment/);
+assert.match(
+  createPreview,
+  /create\?mode=moment&effect=street-power-up&source=moment-/
+);
+assert.doesNotMatch(
+  createPreview,
+  /create\?mode=seller-pack&source=moment-/
+);
 assert.match(createPreview, /Request private access/);
 assert.match(
   createPreview,

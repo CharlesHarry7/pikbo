@@ -33,9 +33,14 @@ export function PricingCheckoutButton({
       .then(async (response) => {
         if (!response.ok) return false;
         const data = (await response.json()) as {
-          acceptance?: { paid?: boolean };
+          acceptance?: { paid?: boolean; privatePreview?: boolean };
+          payments?: { readyForTestCheckout?: boolean };
         };
-        return data.acceptance?.paid === true;
+        return (
+          data.acceptance?.paid === true ||
+          (data.acceptance?.privatePreview === true &&
+            data.payments?.readyForTestCheckout === true)
+        );
       })
       .then((accepted) => {
         if (!canceled) setServerAccepted(accepted);
@@ -58,7 +63,7 @@ export function PricingCheckoutButton({
           size="lg"
           className="w-full"
         >
-          <Link href="/create?effect=street-power-up&source=pricing-founding">
+          <Link href="/create?mode=moment&effect=street-power-up&source=pricing-founding">
             Preview one Moment
           </Link>
         </Button>

@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PricingCheckoutButton } from "@/components/PricingCheckoutButton";
+import { getPlan } from "@/lib/pricing";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Founding Studio · Closed Beta",
+  title: "Founding Studio · Private Beta",
   description:
-    "Founding Studio is Pikbo's planned finite toy-video subscription for independent sellers. Private-beta applications are open; public pricing and checkout are closed.",
+    "Founding Studio is Pikbo's $49 monthly private-beta plan for nine directed toy-video Moments. Public live checkout remains gated until delivery and billing validation pass.",
   alternates: { canonical: "/pricing" },
   openGraph: {
-    title: `Pikbo Founding Studio · Closed Beta`,
+    title: `Pikbo Founding Studio · Private Beta`,
     description:
-      "A planned finite toy-video subscription for sellers. Private-beta applications are open; public pricing and checkout remain closed.",
+      "Nine directed toy-video Moments for $49/month. Public live checkout remains gated until private-beta delivery and billing validation pass.",
     url: `${site.url}/pricing`,
     siteName: site.name,
     type: "website",
@@ -19,15 +21,15 @@ export const metadata: Metadata = {
         url: site.socialImages.openGraph,
         width: site.socialImages.width,
         height: site.socialImages.height,
-        alt: "Pikbo Founding Studio closed beta",
+        alt: "Pikbo Founding Studio private beta",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: `Pikbo Founding Studio · Closed Beta`,
+    title: `Pikbo Founding Studio · Private Beta`,
     description:
-      "A planned finite toy-video subscription for sellers. Private-beta applications are open; public pricing and checkout remain closed.",
+      "Nine directed toy-video Moments for $49/month. Public live checkout remains gated until private-beta delivery and billing validation pass.",
     images: [site.socialImages.twitter],
   },
 };
@@ -42,17 +44,17 @@ const pricingFaqItems = [
   {
     question: "Can I subscribe to Founding Studio today?",
     answer:
-      "Not through public checkout. Pikbo is accepting applications for an invited private beta while validating delivery and recovery. Applying is free and is not a purchase.",
+      "Public live checkout is not open yet. Approved sellers can rehearse the exact checkout in a Stripe test Preview while Pikbo validates private delivery, recovery, and billing.",
   },
   {
     question: "What will Founding Studio include?",
     answer:
-      "A finite monthly allowance for directed toy-video Moments, private delivery, and Library recovery. The exact allowance will be published before checkout opens.",
+      "The founding offer is nine directed 5-second Fast 720p Moments each month, private delivery, and Library recovery for rights-owned toy photos.",
   },
   {
-    question: "When will pricing be announced?",
+    question: "What is the founding rate?",
     answer:
-      "The final Founding Studio price will be announced after the private beta validates delivery quality and cost. The complete paid offer will be shown before any charge.",
+      "The founding rate is $49 per month. A real card cannot be charged until the production billing, refund, private-delivery, and cost gates all pass.",
   },
   {
     question: "Will the subscription be unlimited?",
@@ -62,6 +64,7 @@ const pricingFaqItems = [
 ] as const;
 
 export default function PricingPage() {
+  const foundingStudio = getPlan("founding_studio");
   const faqLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -87,7 +90,7 @@ export default function PricingPage() {
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/44">
-            Founding Studio · closed beta
+            Founding Studio · private beta
           </p>
           <h1 className="mt-3 font-display text-[clamp(3rem,7vw,6.5rem)] font-black leading-[0.88] tracking-[-0.07em]">
             One plan for your next toy launch.
@@ -95,7 +98,9 @@ export default function PricingPage() {
           <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-6 text-black/54 sm:text-lg sm:leading-7">
             A finite subscription for independent toy sellers who want to pick
             one strong visual direction and create only the clip they need.
-            Private-beta applications are open; public payment is not.
+            The founding offer is nine directed Moments for $49/month. Public
+            payment remains locked until every private-delivery and billing
+            gate passes.
           </p>
         </div>
 
@@ -118,24 +123,31 @@ export default function PricingPage() {
                 </span>
               </div>
               <p className="mt-7 text-4xl font-black tracking-[-0.055em]">
-                Price pending
+                ${foundingStudio.priceMonthly}
+                <span className="ml-1 text-sm font-bold tracking-normal text-[#F7F4ED]/45">
+                  / month founding rate
+                </span>
               </p>
               <p className="mt-3 max-w-md text-sm leading-6 text-[#F7F4ED]/50">
-                The final monthly Moment allowance and paid price will be shown
-                before any charge. There is no public price or checkout today,
-                and no unlimited promise while the product remains in private
-                validation.
+                A finite allowance for directed toy-video Moments. Public live
+                checkout remains locked until private delivery, billing, and
+                refund gates pass; an approved test Preview can rehearse the
+                exact same checkout without charging a real card.
               </p>
 
+              <div className="mt-7 max-w-sm">
+                <PricingCheckoutButton
+                  planId="founding_studio"
+                  label={`Join Founding Studio · $${foundingStudio.priceMonthly}/month`}
+                  featured
+                />
+              </div>
               <Link
-                href="/contact"
-                className="mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#CBFF3D] px-6 text-sm font-black text-[#0A0A0A] transition hover:-translate-y-0.5 hover:bg-[#D4FF62] sm:w-auto"
+                href="/contact?source=pricing-private-beta"
+                className="mt-4 inline-block text-xs font-bold text-[#F7F4ED]/58 underline decoration-white/20 underline-offset-4 hover:text-[#CBFF3D]"
               >
-                Apply to the private beta
+                Request private beta access
               </Link>
-              <p className="mt-2 text-[10px] font-semibold text-[#F7F4ED]/34">
-                Free application · no card · no payment
-              </p>
               <Link
                 href="/create?effect=street-power-up&source=pricing-preview&try=1&sample=beatbot"
                 className="mt-4 inline-block text-xs font-bold text-[#F7F4ED]/58 underline decoration-white/20 underline-offset-4 hover:text-[#CBFF3D]"

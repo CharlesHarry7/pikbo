@@ -260,16 +260,16 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
     }
     if (canUsePrivateLaunch(me)) {
       return {
-        label: "Continue to private studio",
-        href: `/create?mode=seller-pack&source=moment-${moment.id}`,
-        note: "This Moment is still a concept. Private beta currently uses the supported Launch Pack formats.",
+        label: "Create my private Moment",
+        href: `/create?mode=moment&effect=street-power-up&source=moment-${moment.id}`,
+        note: "Private beta currently renders the supported Street Power-Up contract: one owned toy photo, one private clip.",
       };
     }
     if (canPreparePrivateInput(me)) {
       return {
         label: "Verify private photo",
-        href: `/create?mode=seller-pack&source=moment-input-${moment.id}`,
-        note: "Private photo verification is available. Generation and credit reservation remain closed.",
+        href: `/create?mode=moment&effect=street-power-up&source=moment-input-${moment.id}`,
+        note: "Private photo verification is available. Provider generation and credit reservation remain closed until this account is admitted.",
       };
     }
     return {
