@@ -6,15 +6,23 @@
  * Preview/Lab routes stay crawlable + noindex, but remain outside primary navigation.
  */
 
-/** First-dollar product: one fixed, private seller Moment. */
+/** First-dollar private Moment contract (invited Street Power-Up). */
 export const MOMENT_CREATE_HREF =
   "/create?mode=moment&effect=street-power-up" as const;
 
-/** Seller-first frontdoor: one clear path from promise to private assets. */
+/**
+ * Primary Generate door — full toy-video studio (Lab auto-preview).
+ * World-class AIGC entry: listing spin remix, not the narrow Moment shell.
+ */
+export const STUDIO_GENERATE_HREF =
+  "/create?effect=360-spin-showcase&source=primary-nav" as const;
+
+/** Suite frontdoor: Explore · Generate studio · Library · Pricing · Account. */
 export const PRIMARY_NAV = [
   { href: "/", label: "Explore" },
   {
-    href: `${MOMENT_CREATE_HREF}&source=primary-nav`,
+    // Inline path keeps soft-nav smokes + grep freezes aligned with STUDIO_GENERATE_HREF.
+    href: "/create?effect=360-spin-showcase&source=primary-nav",
     label: "Generate",
   },
   { href: "/library", label: "Library" },
@@ -28,7 +36,7 @@ export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
 export const MOBILE_NAV = [
   { href: "/", label: "Explore" },
   {
-    href: `${MOMENT_CREATE_HREF}&source=primary-nav`,
+    href: "/create?effect=360-spin-showcase&source=primary-nav",
     label: "Generate",
   },
   { href: "/library", label: "Library" },

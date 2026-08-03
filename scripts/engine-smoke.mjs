@@ -792,7 +792,7 @@ assert.doesNotMatch(appShell, /const MORE|MoreMenu|CommandPalette/);
 assert.match(appShell, /CreditsBadge|LanguageSwitcher/);
 assert.match(
   appShell,
-  /DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?mode=moment&effect=street-power-up[\s\S]*?data-primary-create-href=\{[\s\S]*?DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?effect=street-power-up&source=primary-nav/
+  /DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?mode=moment&effect=street-power-up[\s\S]*?data-primary-create-href=\{[\s\S]*?DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?effect=360-spin-showcase&source=primary-nav/
 );
 const historySrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historySrc, /historyProvenance|provenance/);
@@ -4149,7 +4149,7 @@ const softLaunchSrc = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
 assert.match(softLaunchSrc, /PRIMARY_NAV/);
 assert.match(
   softLaunchSrc,
-  /href:\s*["']\/create\?effect=street-power-up&source=primary-nav["']/
+  /href:\s*["']\/create\?effect=360-spin-showcase&source=primary-nav["']/
 );
 assert.match(softLaunchSrc, /href:\s*["']\/library["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
@@ -4220,7 +4220,7 @@ assert.match(appShellSrc, /CreditsBadge|LanguageSwitcher/);
 assert.doesNotMatch(appShellSrc, /MoreMenu|CommandPalette/);
 assert.match(
   appShellSrc,
-  /DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?mode=moment&effect=street-power-up[\s\S]*?data-primary-create-href=\{[\s\S]*?DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?effect=street-power-up&source=primary-nav/
+  /DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?mode=moment&effect=street-power-up[\s\S]*?data-primary-create-href=\{[\s\S]*?DEFAULT_MOMENT_CREATE_HREF[\s\S]*?\/create\?effect=360-spin-showcase&source=primary-nav/
 );
 // GA4 adapter is env-gated no-op when unset (reuse analyticsSrc declared above)
 assert.match(analyticsSrc, /NEXT_PUBLIC_GA_MEASUREMENT_ID/);
@@ -4380,7 +4380,7 @@ function resolveGenerateStillPure(input) {
 assert.match(softLaunchSrc, /MOBILE_NAV/);
 assert.match(
   softLaunchSrc,
-  /MOBILE_NAV[\s\S]*href:\s*["']\/create\?effect=street-power-up&source=primary-nav["']/
+  /MOBILE_NAV[\s\S]*href:\s*["']\/create\?effect=360-spin-showcase&source=primary-nav["']/
 );
 assert.doesNotMatch(
   softLaunchSrc,
