@@ -17,16 +17,16 @@ import { isSafeDeliverableUrl } from "@/lib/createTrust";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 export const metadata: Metadata = {
-  title: "PIKBO Lab Cached Toy Video Prototypes",
+  title: "Explore toy video projects · Lab",
   description:
-    "Browse cached Lab prototype Pikbo examples and toy-video recipes. These are product demonstrations, not customer posts or claimed community activity.",
+    "World-class designer-toy AIGC gallery: open Lab prototypes, inspect recipe + motion, remake with your figure. Real maker posts appear only when published — never fake UGC.",
   alternates: { canonical: "/community" },
   // 哥飞: Lab-only community — noindex (empty/false UGC hurts trust + crawl budget)
   robots: CONCEPT_ROBOTS,
   openGraph: {
-    title: `Cached AI Toy Video Prototypes | ${site.name}`,
+    title: `Explore toy video projects | ${site.name}`,
     description:
-      "PIKBO Lab cached prototypes — reference posters, distinct outputs, and honest evidence-pending labels. Not customer UGC.",
+      "Higgsfield-class project explore for designer toys — Lab demos you can remake, honest labels, no fake community counts.",
     url: `${site.url}/community`,
   },
 };
@@ -108,12 +108,12 @@ export default async function CommunityPage() {
             <p className="section-label">
               {realPosts.length > 0
                 ? `Community · ${realPosts.length} real posts + Lab`
-                : "Cached prototypes · Lab only"}
+                : "World-class toy AIGC · Lab projects"}
             </p>
             <h1 className="font-display text-lg font-black tracking-tight sm:text-xl">
               {realPosts.length > 0
                 ? "Real maker clips + PIKBO Lab prototype demos"
-                : "See what each toy-video recipe is designed to make"}
+                : "Explore inside every toy-video project"}
             </h1>
           </div>
           <div
