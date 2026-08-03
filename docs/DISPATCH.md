@@ -5,12 +5,15 @@ There is no general feature-expansion dispatch.
 Work only on an open item in `docs/STATUS.md`, from current `origin/main`, and
 within that issue's acceptance criteria. The order is fixed:
 
-1. Put `main@02ba045` on production after Vercel's 24-hour deployment limit
+1. Put current `main` on production after Vercel's 24-hour deployment limit
    resets, then verify the guest Street Power-Up proof and the hard-closed
    production health gate.
-2. Prepare a protected non-production Preview whose `/api/health` reports
+2. Merge the exact auth-origin change, advance `codex/private-validation` to
+   that merged commit, and only then request a fresh protected-branch
+   deployment. Require `/api/health` to report
    `privatePreviewReadiness.ready=true` with no missing requirements.
-3. Complete one authenticated owned-photo Street Power-Up result with private
+3. After the dedicated FAL account has enough balance for one job, complete one
+   authenticated owned-photo Street Power-Up result with private
    recovery and owner-only download, then prove one 10-credit settlement.
 4. Prove retry, accounting, and privacy behavior.
 5. Rehearse Stripe in test mode only after the product loop passes.

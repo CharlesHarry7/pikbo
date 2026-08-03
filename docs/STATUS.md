@@ -2,7 +2,9 @@
 
 **Updated:** 2026-08-04
 
-**Canonical code:** `main@02ba045` — single Street Power-Up Moment with owner-only live input, reconciliation hardening, and an honest guest Create proof
+**Canonical code:** `main@25b7f67` — single Street Power-Up Moment with
+owner-only live input, reconciliation hardening, and an honest guest Create
+proof
 
 **Production:** validation-only and behind canonical code while Vercel's
 daily deployment limit is active; no alias workaround or Provider gate change
@@ -13,7 +15,7 @@ Git history and must not be treated as current work.
 
 | Priority | Outcome | GitHub | State | Done when |
 |---|---|---|---|---|
-| P0 | Owned photo produces the actual private Moment | #54 | code merged; protected Preview proof pending | authenticated upload → provider → private object → Library/download |
+| P0 | Owned photo produces the actual private Moment | #54 | isolated branch, non-production backend, owner wallet and branch-only gates configured; redeploy + Provider funding pending | authenticated upload → provider → private object → Library/download |
 | P1 | Stripe test subscription binds to the same durable account | #59 | blocked externally | replay-safe test Checkout, webhook, subscription and once-only credits |
 
 ## Completed in this convergence
@@ -28,6 +30,12 @@ Git history and must not be treated as current work.
   credits, Generate, Provider, or Checkout controls.
 - #65: the Magic Link return-path implementation and regression landed before
   the convergence; its remaining real-user proof is part of #54.
+- `codex/private-validation`: branch-only Supabase credentials, private-live
+  allowlist, one-job budget, FAL key, durable gates and Stripe-off overrides
+  are configured. Operator-observed dashboard state shows the owner account
+  enabled with 10 non-production credits, the exact Supabase callback allowed,
+  and the GitHub-linked FAL balance at `$0.00`. These are not yet runtime
+  health proof, and no paid Provider request has been attempted.
 
 ## Frozen
 
@@ -39,6 +47,7 @@ Git history and must not be treated as current work.
 
 ## Branch policy
 
-Every new task starts from current `main`; the next protected Preview proof
-starts from `main@02ba045`. One active task gets one new branch and one PR. Closed
-historical PRs are reference material, not merge candidates.
+Every new task starts from current `main`; the protected Preview proof uses
+`codex/private-validation` and only branch-scoped secrets. One active task gets
+one new branch and one PR. Closed historical PRs are reference material, not
+merge candidates.

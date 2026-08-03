@@ -1,5 +1,7 @@
 const PRODUCTION_AUTH_ORIGIN = "https://pikbo.ai";
-const PREVIEW_AUTH_ORIGIN =
+const PRIVATE_VALIDATION_AUTH_ORIGIN =
+  "https://pikbo-git-codex-private-validation-pi-kbo.vercel.app";
+const PRIVATE_INPUT_PREVIEW_AUTH_ORIGIN =
   "https://pikbo-git-codex-private-input-pack-binding-pi-kbo.vercel.app";
 const LEGACY_PREVIEW_AUTH_ORIGIN =
   "https://pikbo-git-agent-gptp0-live-owned-toy-review-pi-kbo.vercel.app";
@@ -7,7 +9,8 @@ const LEGACY_PREVIEW_AUTH_ORIGIN =
 // Keep the current protected Preview and its previously-issued callback host
 // explicit. Never broaden this to an arbitrary *.vercel.app origin.
 const PREVIEW_AUTH_ORIGINS = [
-  PREVIEW_AUTH_ORIGIN,
+  PRIVATE_VALIDATION_AUTH_ORIGIN,
+  PRIVATE_INPUT_PREVIEW_AUTH_ORIGIN,
   LEGACY_PREVIEW_AUTH_ORIGIN,
 ] as const;
 
@@ -104,5 +107,5 @@ export function sanitizeInternalNextPath(
 
 export const AUTH_CALLBACK_URLS = {
   production: `${PRODUCTION_AUTH_ORIGIN}/auth/callback`,
-  preview: `${PREVIEW_AUTH_ORIGIN}/auth/callback`,
+  preview: `${PRIVATE_VALIDATION_AUTH_ORIGIN}/auth/callback`,
 } as const;
