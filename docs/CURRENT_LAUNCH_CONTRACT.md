@@ -1,6 +1,6 @@
 # Pikbo current launch contract
 
-**Effective:** 2026-07-29
+**Effective:** 2026-08-03
 **Code sources:** `lib/pricing.ts`, `lib/sellerPackContract.ts`,
 `app/api/generate/route.ts`, and the `20260729*` migrations
 **Runtime state:** validation; public live generation and production payments
@@ -14,22 +14,19 @@ Historical documents remain for decision history only.
 
 The paid candidate is one fixed product:
 
-- **Founding Studio** — candidate `$49/month`.
-- **3 Launch Packs / billing month**.
-- **90 credits / 9 fixed outputs**.
-- The planned four-Pack default is deliberately reduced to three: at the
-  recorded Fast 720p / 5-second rate, 12 fully used outputs cost about `$14.52`
-  before Storage, retries, support, or payment fees, which already misses the
-  required 70% gross-margin floor on a `$49` charge. The fourth Pack may return
-  only after measured p95 retry cost supports it.
-- One Pack atomically reserves 30 credits and contains:
-  - Listing Spin — `1:1`, Fast 720p, 5 seconds, 10 credits.
-  - Blind-box Reveal — `9:16`, Fast 720p, 5 seconds, 10 credits.
-  - Social Flash — `9:16`, Fast 720p, 5 seconds, 10 credits.
-- Confirmed failed children restore only their own 10 credits.
+- **Founding Studio** — founding rate `$49/month`.
+- **9 directed Moments / billing month**.
+- **90 credits; one completed Moment settles 10 credits**.
+- The first paid contract is Street Power-Up — `9:16`, Fast 720p, 5 seconds.
+  The client sends `toy-moment-v1`; the server independently verifies every
+  priced field and ignores client freeform prompt text for this contract.
+- A failed Moment releases its 10-credit reservation. Network replays keep the
+  same idempotency key and cannot double-charge.
+- The old three-child Seller Pack remains a private compatibility workflow; it
+  is not the public Founding Studio offer or the default Create path.
 - Credits roll over while the subscription remains active.
-- Paid credits cannot be used for arbitrary single clips, Flux stills, other
-  models, or longer durations.
+- Paid credits cannot be used for arbitrary clips, Flux stills, other models,
+  or longer durations.
 
 Free/public sessions receive labeled cached prototypes. Their upload is not
 processed and no provider call occurs.
