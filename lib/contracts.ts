@@ -9,6 +9,12 @@ import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 
 export type GenerateRequestBody = {
   effect?: string;
+  /**
+   * Server-validated commercial product contract. This is not spend authority:
+   * the API still verifies the exact effect, format, model, private input,
+   * durable balance, and Provider budget before accepting a paid request.
+   */
+  productContract?: "toy-moment-v1";
   /** data:image… URL (soft-launch default). Optional when assetId is set. */
   image?: string;
   /**

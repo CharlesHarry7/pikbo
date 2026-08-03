@@ -156,7 +156,7 @@ assert.doesNotMatch(
 );
 assert.match(
   pricingCheckout,
-  /href="\/create\?effect=street-power-up&source=pricing-founding"/
+  /href="\/create\?mode=moment&effect=street-power-up&source=pricing-founding"/
 );
 assert.match(pricingCheckout, /Preview one Moment/);
 assert.match(pricingCheckout, /fetch\("\/api\/checkout"/);
@@ -174,10 +174,16 @@ assert.doesNotMatch(
   libraryGrid,
   /FreeTrialCta|Generate · upload toy photo|Compare plans|data-library-action="generate"/
 );
-assert.match(pricing, /There is no public price or checkout today/);
+assert.match(
+  pricing,
+  /Public\s+payment remains locked until every private-delivery and billing/
+);
+assert.match(pricing, /PricingCheckoutButton/);
+assert.match(pricing, /\$49/);
+assert.match(pricing, /nine directed/);
 assert.doesNotMatch(
   [home, homeHero, pricing, pricingCards].join("\n"),
-  /\$49|\/mo(?:nth|\b)|Choose the volume/
+  /Choose the volume|unlimited credits/i
 );
 assert.doesNotMatch(
   [home, homeWall, shell].join("\n"),

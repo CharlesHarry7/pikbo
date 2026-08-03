@@ -1,12 +1,14 @@
-import { SELLER_PACK_LIVE_TOTAL_CREDITS } from "@/lib/sellerPackContract";
-
 /** Public launch plans. Legacy creator/shop values are never accepted here. */
 export type PlanId = "free" | "founding_studio";
 
 export const PAID_PLAN_ID = "founding_studio" as const;
+/** Flat price for the only admitted 5s / Fast / 720p Moment contract. */
+export const CREDITS_PER_VIDEO = 10;
+export const FOUNDING_STUDIO_MOMENTS = 9 as const;
+/** Legacy Pack capacity retained for the private compatibility workflow. */
 export const FOUNDING_STUDIO_PACKS = 3 as const;
 export const FOUNDING_STUDIO_CREDITS =
-  FOUNDING_STUDIO_PACKS * SELLER_PACK_LIVE_TOTAL_CREDITS;
+  FOUNDING_STUDIO_MOMENTS * CREDITS_PER_VIDEO;
 
 export function isPlanId(value: unknown): value is PlanId {
   return value === "free" || value === PAID_PLAN_ID;
@@ -34,14 +36,10 @@ export type Plan = {
   stripePriceEnv?: string;
 };
 
-/** Flat cost until server-side model×duration metering ships (Grok next). */
-export const CREDITS_PER_VIDEO = 10;
-
 /**
- * Founding Studio is deliberately three fixed 30-credit Launch Packs. Four
- * packs at $49 miss the plan's 70% baseline-margin gate at the currently
- * recorded 5s Fast rate, so the fourth pack remains gated on measured p95
- * retry cost. Checkout stays disabled until that validation is complete.
+ * Founding Studio is deliberately finite: nine directed Moments at the
+ * current fixed 5s Fast contract. Public Checkout stays disabled until the
+ * private delivery, billing, refund, and measured p95 cost gates pass.
  */
 export const PLANS: Plan[] = [
   {
@@ -69,11 +67,11 @@ export const PLANS: Plan[] = [
     priceMonthly: 49,
     credits: FOUNDING_STUDIO_CREDITS,
     blurb:
-      "For toy sellers validating a repeatable three-format launch workflow.",
+      "For toy sellers turning owned product photos into directed launch Moments.",
     perks: [
-      `${FOUNDING_STUDIO_PACKS} Launch Packs / billing month`,
-      `${FOUNDING_STUDIO_PACKS * 3} fixed 5s Fast 720p outputs`,
-      "Listing Spin 1:1 + Reveal 9:16 + Social Flash 9:16",
+      `${FOUNDING_STUDIO_MOMENTS} directed Moments / billing month`,
+      "Fixed 5s Fast 720p private outputs",
+      "Choose one visual direction per generation",
       "Private Library delivery and owner-only downloads",
       "Credits roll over while the subscription remains active",
       "Commercial use for rights-owned product photos",
