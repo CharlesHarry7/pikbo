@@ -32,15 +32,15 @@ export const TOOLS: Tool[] = [
     h1: "AI Toy Video Generator — Photo to Short Video for Designer Toys",
     seoTitle: "AI Toy Video Generator: One Photo to Toy Video | Pikbo",
     seoDescription:
-      "Turn one owned toy photo toward a fixed three-video Launch Pack: Listing Spin, Blind-box Reveal, and Social Flash. See verified limits before beta access.",
+      "Turn one owned toy photo into one directed product-video Moment for a listing, reveal, or social drop. See verified limits before beta access.",
     intro:
-      "Pikbo is a focused toy-video studio for sellers and independent brands. One rights-owned figure photo becomes a fixed product-video workflow instead of a maze of model menus and prompts.",
+      "Pikbo is a focused toy-video studio for sellers and independent brands. One rights-owned figure photo becomes one selected visual outcome instead of a maze of model menus and prompts.",
     body: [
-      "The fixed Launch Pack is one Listing Spin in 1:1, one Blind-box Reveal in 9:16, and one Social Flash in 9:16. Each beta format is fixed at five seconds and Fast 720p so quality, recovery, and cost can be measured before more choices are added.",
+      "Choose the one recipe you need now: Listing Spin for a product page, Blind-box Reveal for a drop, or Street Power-Up for social. Each beta format stays constrained so quality, recovery, and cost can be measured before more choices are added.",
       "Start with a full-product photo you own: front-facing, even light, plain background, and the complete figure in frame. Busy shelves, clipped accessories, and harsh shadows make identity drift more likely.",
       "Public visitors can inspect cached format previews; those previews do not process the uploaded image. Invited accounts use a private Library, short-lived owner download links, and ten credits per completed clip.",
       "Current technical evidence is deliberately narrow. An original unbranded synthetic still produced one private Listing Spin in about two minutes thirty-nine seconds; the 5.042-second 960×960 file reopened after refresh and downloaded twice with identical bytes. This is not a physical product or customer case.",
-      "A second internal run stopped before a video was made. Zero credits settled and ten credits were restored. The complete three-video Pack, seller reuse, and paid demand are still being validated.",
+      "A second internal run stopped before a video was made. Zero credits settled and ten credits were restored. Seller reuse and paid demand are still being validated.",
       "Generated side and back details are inferred. Compare sculpt, paint, logos, packaging, accessories, and proportions with the physical toy before a listing or launch post.",
     ],
     keywords: [
@@ -73,7 +73,7 @@ export const TOOLS: Tool[] = [
       },
       {
         q: "Where else should I go after this page?",
-        a: "Use the Launch Pack preview to inspect the fixed three-format workflow, then read pricing for the current beta limits.",
+        a: "Open a recipe, choose one directed Moment for the job you are doing now, then read pricing for the current beta limits.",
       },
     ],
   },
@@ -612,7 +612,7 @@ export const TOOLS: Tool[] = [
       },
       {
         q: "Has Pikbo verified this result end to end?",
-        a: "One private internal Listing Spin completed, reopened after refresh, and downloaded twice with identical bytes. The complete three-video Pack and customer use are not verified yet.",
+        a: "One private internal Listing Spin completed, reopened after refresh, and downloaded twice with identical bytes. Broader customer use is not verified yet.",
       },
     ],
   },
@@ -634,7 +634,7 @@ export const TOOLS: Tool[] = [
     intro:
       "A blind box AI video generator is for pull energy, not generic face filters. Start with one original or rights-owned blind-box photo and inspect the fixed vertical reveal workflow for TikTok, Reels, or restock posts.",
     body: [
-      "Blind-box Reveal is the vertical 9:16 format in Pikbo's fixed three-video Launch Pack. It is designed for drop announcements, restock posts, Reels, and Shorts from one rights-owned figure photo.",
+      "Blind-box Reveal is a vertical 9:16 Moment for drop announcements, restock posts, Reels, and Shorts from one rights-owned figure photo.",
       "Lead with the first second: box motion, a silhouette, or mystery light works better than a slow fade. The format stays five seconds and Fast 720p during private beta.",
       "The reveal shown publicly is a cached format preview and does not process your upload. Pikbo has not yet completed a verified private Blind-box Reveal output, so this page does not present the preview as customer proof.",
       "Generated packaging text, logos, paint, accessories, and hidden angles can drift. Compare the draft with the physical figure and box before publishing.",
@@ -755,7 +755,7 @@ export const TOOLS: Tool[] = [
     faq: [
       {
         q: "Can I batch a whole drop?",
-        a: "One photo per SKU per run. Seller Pack can fan out formats when you use that mode.",
+        a: "Start with one photo, one SKU, and one directed Moment per run. Reuse the same effect for the next SKU from Library when it proves useful.",
       },
     ],
   },

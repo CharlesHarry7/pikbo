@@ -51,10 +51,10 @@ export function MobileGenerateBar() {
       </Link>
       {onLibrary ? (
         <Link
-          href="/create?mode=seller-pack"
+          href="/create?effect=street-power-up"
           className="pointer-events-auto rounded-full border border-[var(--mint)]/40 bg-black/70 px-4 py-2.5 text-xs font-semibold text-[var(--mint)] backdrop-blur"
         >
-          Seller Starter Pack
+          Create one Moment
         </Link>
       ) : (
         <Link

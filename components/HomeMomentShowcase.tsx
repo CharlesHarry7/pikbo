@@ -25,7 +25,7 @@ export function HomeMomentShowcase() {
         <div className="mb-7 grid gap-5 lg:grid-cols-[minmax(0,820px)_minmax(360px,1fr)] lg:items-end">
           <div>
             <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-[#F04E30]">
-              Pikbo · AI Launch Pack for designer toys
+              Pikbo · AI video Moments for designer toys
             </p>
             <h1 className="max-w-[820px] font-display text-[clamp(3.4rem,6.1vw,5.55rem)] font-black leading-[0.84] tracking-[-0.07em]">
               One toy photo. More ways to sell.
@@ -34,8 +34,8 @@ export function HomeMomentShowcase() {
           <div className="border-l border-[#171719]/20 pl-5 lg:pb-1">
             <p className="max-w-[420px] text-lg font-semibold leading-7 text-[#4A4843]">
               Start with a photo you own. Preview a listing, reveal, or drop
-              direction, then continue to the private Launch Pack when access
-              is ready.
+              direction, then create only the Moment you choose when access is
+              ready.
             </p>
             <p className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-[#817D75]">
               Photo · purpose · preview · private creation is invitation-only
@@ -46,7 +46,7 @@ export function HomeMomentShowcase() {
         <div className="mb-6 flex flex-col gap-3 border-y border-[#171719]/20 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#F04E30]">
-              Three seller formats
+              Three directions · choose one
             </p>
             <p className="mt-1 text-sm font-semibold text-[#45433F]">
               Listing Spin · 1:1 · Blind-box Reveal · 9:16 · Social Flash · 9:16

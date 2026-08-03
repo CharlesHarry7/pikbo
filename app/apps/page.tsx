@@ -19,13 +19,13 @@ function posterForEffect(effect?: string): string | null {
 export const metadata: Metadata = {
   title: "Apps & Workflows · Toy video mini-apps",
   description:
-    "Pikbo toy-native workflows — listing spin, TikTok hook, blind-box drop, Seller Starter Pack. Same Create engine, job-first mini-apps (Yiha/lego-style shelf, legal IA only).",
+    "Pikbo toy-native workflows — listing spin, TikTok hook, blind-box drop, and shelf motion. One directed Moment through the same Create engine.",
   alternates: { canonical: "/apps" },
   robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `Apps & Workflows | ${site.name}`,
     description:
-      "Toy-native recipe doors for listing, social, drops, and Seller Starter Pack. Runtime access is checked in Generate.",
+      "Toy-native recipe doors for listings, social posts, drops, and shelf motion. Runtime access is checked in Generate.",
     url: `${site.url}/apps`,
   },
 };
@@ -41,7 +41,7 @@ const CATS = [
 const APPS_FAQ = [
   {
     q: "What are Pikbo Apps?",
-    a: "Recipe doors that open Generate with a prefilled toy-video job (listing spin, social hook, unbox, or Seller Starter Pack). Cached previews stay free; eligible Live access is checked at runtime.",
+    a: "Recipe doors that open Generate with one prefilled toy-video Moment, such as a listing spin, social hook, unbox, or shelf shot. Cached previews stay free; eligible Live access is checked at runtime.",
   },
   {
     q: "What does SOON mean?",
@@ -151,10 +151,10 @@ export default function AppsPage() {
             Open Generate
           </Link>
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up"
             className="btn btn-ghost text-sm"
           >
-            Seller Starter Pack
+            Create one Moment
           </Link>
           <Link href="/effects" className="btn btn-ghost text-sm">
             Recipe wall

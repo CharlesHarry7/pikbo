@@ -27,7 +27,7 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
           Sign-in is temporarily unavailable
         </p>
         <p className="text-xs leading-relaxed text-white/55">
-          You can still try Generate, Launch Pack previews, and Library on this
+          You can still try a cached Moment and Library on this
           device. Cached Lab previews cost 0 credits and do not process your
           upload.
         </p>
@@ -43,10 +43,10 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
             Generate
           </a>
           <a
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up&source=login-guest"
             className="btn btn-ghost !px-3 !py-1.5 text-xs"
           >
-            Launch Pack
+            Toy Moment
           </a>
           <a href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Library

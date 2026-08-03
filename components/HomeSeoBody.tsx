@@ -57,8 +57,8 @@ export function HomeSeoBody() {
           <div className="divide-y divide-black/10 lg:divide-white/10">
             {[
               ["01", "Add your toy", "Use one clean, authorized product photo."],
-              ["02", "Pikbo directs the motion", "The three seller formats are fixed for you."],
-              ["03", "Publish what passes review", "Download available clips and check every product detail."],
+              ["02", "Choose the sales Moment", "Pick the listing, reveal, or social direction you need now."],
+              ["03", "Publish what passes review", "Download the result and check every product detail."],
             ].map(([number, title, copy]) => (
               <div
                 key={number}

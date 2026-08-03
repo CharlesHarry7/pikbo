@@ -49,10 +49,10 @@ export default function ProfilePage() {
             Generate
           </Link>
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up&source=profile"
             className="btn btn-ghost !px-3 !py-1.5 text-xs"
           >
-            Launch Pack
+            Create one Moment
           </Link>
           <Link href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Library

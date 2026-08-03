@@ -28,9 +28,9 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
             One toy. More ways to move.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/48 sm:text-base">
-            The Launch Pack handles the three selling formats. These extra
-            recipes explore movement, atmosphere, and story without pretending
-            every concept is already a live product.
+            Choose the one recipe that fits the launch you are making now.
+            These studies explore movement, atmosphere, and story without
+            pretending every concept is already a live product.
           </p>
         </div>
         <Link

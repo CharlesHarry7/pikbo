@@ -454,10 +454,10 @@ export function ProfilePanel() {
           Library · {clips}
         </Link>
         <Link
-          href="/create?mode=seller-pack"
+          href="/create?effect=street-power-up&source=profile-panel"
           className="btn btn-ghost px-3 py-1.5 text-xs"
         >
-          Launch Pack
+          Create one Moment
         </Link>
         {!auth.signedIn ? (
           <Link href="/login" className="btn btn-ghost px-3 py-1.5 text-xs">
@@ -489,10 +489,10 @@ export function ProfilePanel() {
           data-profile-suite="product-first"
         >
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up&source=profile-panel"
             className="btn btn-ghost w-full text-sm"
           >
-            Launch Pack
+            Create one Moment
           </Link>
           <Link href="/library" className="btn btn-ghost w-full text-sm">
             Library

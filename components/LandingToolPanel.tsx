@@ -730,14 +730,14 @@ export function LandingToolPanel({
             <Link
               href={
                 toySku.trim()
-                  ? `/create?mode=seller-pack&sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
-                  : "/create?mode=seller-pack"
+                  ? `/create?effect=street-power-up&sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
+                  : "/create?effect=street-power-up"
               }
               className="text-[var(--mint)] hover:underline"
-              data-landing-studio="seller-pack"
+              data-landing-studio="single-moment"
               title="Listing spin + box reveal + social hook"
             >
-              Seller Starter Pack
+              Create one Moment
             </Link>
             {" · "}
             <Link

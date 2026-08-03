@@ -11,7 +11,7 @@ export type HomeLaunchAccess =
   | "private-short"
   | "private-ready";
 
-/** Homepage handoff into the fixed three-output Launch Pack path. */
+/** Legacy homepage handoff into the single preset-first Moment path. */
 export function HeroUpload({
   access,
   credits,
@@ -40,7 +40,7 @@ export function HeroUpload({
     }
     if (file.size > 2_000_000) {
       setErr(
-        "For this quick handoff, use a photo under 2 MB. Larger photos can be added inside Launch Pack."
+        "For this quick handoff, use a photo under 2 MB. Larger photos can be added inside Create."
       );
       return;
     }
@@ -51,16 +51,16 @@ export function HeroUpload({
       try {
         sessionStorage.setItem("pikbo_pending_still", reader.result as string);
       } catch {
-        setErr("This browser could not prepare the photo. Open Launch Pack instead.");
+        setErr("This browser could not prepare the photo. Open Create instead.");
         setBusy(false);
         return;
       }
       track({
         event: "upload_ready",
         path: "/",
-        meta: { destination: "launch-pack", outputs: 3 },
+        meta: { destination: "single-moment", outputs: 1 },
       });
-      router.push("/create?mode=seller-pack&source=home-launch-pack");
+      router.push("/create?effect=street-power-up&source=home-launch-pack");
     };
     reader.onerror = () => {
       setErr("Pikbo could not read that photo. Try another file.");
@@ -85,7 +85,7 @@ export function HeroUpload({
               meta: { source: "home_public_preview" },
             });
             router.push(
-              "/create?mode=seller-pack&source=home-preview&try=1&sample=scout"
+              "/create?effect=street-power-up&source=home-preview&try=1&sample=scout"
             );
           }}
           className="group flex min-h-[116px] w-full items-center gap-4 rounded-2xl bg-[#2457E6] p-4 text-left text-white shadow-[0_18px_45px_-28px_rgba(36,87,230,0.9)] transition hover:-translate-y-0.5 hover:bg-[#1F4FD5] disabled:cursor-wait disabled:opacity-70 sm:p-5"
@@ -101,7 +101,7 @@ export function HeroUpload({
             <span className="block text-base font-black tracking-[-0.025em] sm:text-lg">
               {access === "checking"
                 ? "Checking private beta access…"
-                : "Try a sample Launch Pack"}
+                : "Try a sample Moment"}
             </span>
             <span className="mt-1 block text-[11px] font-semibold leading-5 text-white/72">
               No photo upload · choose a Pikbo Lab sample
@@ -142,7 +142,7 @@ export function HeroUpload({
         <span className="min-w-0">
           <span className="block text-base font-black tracking-[-0.025em] text-[#15171B] sm:text-lg">
             {busy
-              ? "Opening your private Launch Pack…"
+              ? "Opening your private Moment…"
               : "Upload one rights-owned toy photo"}
           </span>
           <span className="mt-1 block text-[11px] font-semibold leading-5 text-[#69717E]">

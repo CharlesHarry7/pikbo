@@ -476,7 +476,7 @@ export const GUIDES: Guide[] = [
         h2: "Vertical recipes beat prompt chaos",
         paragraphs: [
           "Pikbo ships toy-native recipes: 360° spin for galleries, box reveal for pulls, floating hero for drop teasers, display glam for shelf posts. Each recipe maps to a job intent instead of a blank prompt box.",
-          "Seller Starter Pack bundles listing + reveal + social from one owned photo when you need three commercial formats. Partial failure keeps successful children — do not re-run the whole pack blindly.",
+          "Pikbo asks you to choose one directed Moment at a time: a 360° listing spin, a box reveal, or a drop-day hook. Start with the job you need now instead of paying for formats you may not use.",
         ],
       },
       {
@@ -496,7 +496,7 @@ export const GUIDES: Guide[] = [
       {
         h2: "Recommended path this week",
         paragraphs: [
-          "1) Clean packshot → 2) Open /tools/ai-toy-video-generator or Seller Starter Pack → 3) Generate once → 4) QC edges, paint splits, logos → 5) Post or list. For 360-only, use the figure 360 tool page. For pull energy, use blind box AI video generator.",
+          "1) Clean packshot → 2) Choose a directed Moment in the AI toy video generator → 3) Generate once → 4) QC edges, paint splits, and logos → 5) Post or list. For marketplace depth, choose figure spin. For pull energy, choose blind-box reveal.",
           "External links and GSC matter more than another thin tool URL. Keep the cold-start index lean; deepen guides and real demos instead of cloning near-duplicate pages.",
         ],
       },
@@ -526,27 +526,27 @@ export const GUIDES: Guide[] = [
   {
     slug: "seller-pack-workflow-listing-reveal-hook",
     emoji: "📦",
-    title: "Seller Starter Pack Workflow: Listing + Reveal + Hook From One Photo",
-    dek: "A practical commercial loop for Etsy, TikTok, and drop day — without three separate shoots.",
-    seoTitle: "Seller Starter Pack Workflow: Listing Reveal Hook | Pikbo",
+    title: "One-Photo Toy Video Workflow: Choose the Right Sales Moment",
+    dek: "A practical way to turn one toy photo into the exact listing, reveal, or social clip you need next.",
+    seoTitle: "One-Photo Toy Video Workflow for Sellers | Pikbo",
     seoDescription:
-      "Run Pikbo Seller Starter Pack: one owned toy photo → listing spin, box reveal, social hook. QC checklist, credit honesty, and next-SKU tips for sellers.",
+      "Choose a focused Pikbo Moment from one owned toy photo: listing spin, box reveal, or social hook. Includes a seller QC checklist and next-SKU workflow.",
     readMins: 5,
     intro:
-      "Seller Starter Pack is the commercial default: three recipes from one still. Cached previews cost 0 credits; when Live is enabled for an eligible account, the current configured quote is 30 credits total.",
+      "The public Pikbo workflow is intentionally focused: choose one sales Moment for one SKU, preview the direction, and generate only that clip when your account is eligible. Cached previews cost 0 credits and never process your upload.",
     sections: [
       {
-        h2: "When to use Seller Starter Pack vs single recipe",
+        h2: "Choose the sales job before the effect",
         paragraphs: [
-          "Use Seller Starter Pack when one SKU needs storefront + social the same day. Use a single recipe (spin only, reveal only) when you are testing Free Mini or iterating one channel.",
-          "Open /create?mode=seller-pack. Optional ?try=1 loads a PIKBO Lab prototype still for layout learning — it must not auto-fire three live debits.",
+          "Choose Listing Spin when buyers need product depth, Blind-box Reveal when the opening beat is the story, or a social hook when reach matters more than a full product tour.",
+          "Open Create from an effect card. Public samples are Pikbo Lab previews; they do not accept your photo or start a paid generation.",
         ],
       },
       {
         h2: "Step-by-step",
         paragraphs: [
-          "1) Upload a sharp owned photo (plain background if listing-critical). 2) Confirm rights. 3) Optional: set SKU / preserve notes in Toy Identity. 4) Review Launch Plan quote (three children). 5) Generate and wait with the tab open. 6) Download only children that pass HEAD/download gates.",
-          "If one child fails, keep successes. Retry only the failed job when credits and policy allow — do not assume silent multi-refunds.",
+          "1) Pick the Moment that matches the channel. 2) Upload a sharp owned photo. 3) Confirm rights. 4) Optional: add SKU and preserve notes. 5) Review the quote. 6) Generate and download only a result that passes your product-detail check.",
+          "If a job fails, retry that job only when the interface confirms credit state. Never assume a timeout has already been refunded.",
         ],
       },
       {
@@ -559,27 +559,27 @@ export const GUIDES: Guide[] = [
       {
         h2: "Next SKU without losing context",
         paragraphs: [
-          "After generate, use Next SKU / Remake links that carry job and SKU when set. Library Remake also preserves SKU for device-local bibles.",
-          "Batch another photo for the same commercial goal instead of re-explaining the workflow each time.",
+          "After generation, use Next SKU or Remake links that carry the selected effect and SKU when set. Library Remake also preserves SKU for device-local bibles.",
+          "Run another photo for the same commercial goal instead of rebuilding the direction each time.",
         ],
       },
     ],
     faq: [
       {
-        q: "How many credits is Seller Starter Pack?",
-        a: "When Live is enabled for an eligible account, the three-child configured quote is 30 credits total. Lab prototypes are cached, cost 0 credits, and do not process your upload.",
+        q: "Does previewing an effect use credits?",
+        a: "No. Pikbo Lab previews are cached, cost 0 credits, and do not process your upload. Eligible accounts see the live quote before a real generation starts.",
       },
       {
-        q: "Can I publish all three to every channel?",
-        a: "Match aspect and energy: 1:1 for many galleries, 9:16 for TikTok/Reels hooks. One export does not fit every placement.",
+        q: "Can one video fit every channel?",
+        a: "Usually not. Match aspect and energy to the placement: product galleries often favor a stable square view, while TikTok and Reels favor a vertical first-second hook.",
       },
     ],
     relatedEffects: ["360-spin-showcase", "blind-box-unboxing", "paparazzi-flash"],
     keywords: [
-      "seller pack toy video",
-      "listing reveal hook workflow",
-      "one photo three toy videos",
-      "etsy tiktok toy video pack",
+      "one photo toy video workflow",
+      "toy seller video workflow",
+      "listing reveal social video",
+      "etsy tiktok toy video maker",
     ],
   },
   {

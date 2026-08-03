@@ -285,10 +285,10 @@ export default async function GuidePage({
                 Toy Modules
               </Link>
               <Link
-                href="/create?mode=seller-pack"
+                href="/create?effect=street-power-up&source=guide"
                 className="btn border border-white/40 bg-transparent px-5 py-2.5 font-semibold text-white hover:bg-white/10"
               >
-                Seller Starter Pack
+                Create one Moment
               </Link>
             </div>
           </div>

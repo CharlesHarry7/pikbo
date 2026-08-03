@@ -260,6 +260,7 @@ export function canUsePrivateLaunch(
 ): boolean {
   return (
     me?.signedIn === true &&
+    me.canPreparePrivateInput === true &&
     me.canLiveGenerate === true &&
     me.durableCreditsActive === true &&
     me.mode === "live-generate"

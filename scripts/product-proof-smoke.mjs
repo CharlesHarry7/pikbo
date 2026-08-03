@@ -24,6 +24,7 @@ const presetPreview = read("components/PresetPreviewCard.tsx");
 const autoplay = read("components/AutoPlayVideo.tsx");
 const create = read("app/create/page.tsx");
 const batch = read("components/BatchStudio.tsx");
+const privateSellerPackGate = read("components/PrivateSellerPackGate.tsx");
 
 const proofList =
   softLaunch.match(/HOME_PROOF_SLUGS\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] ??
@@ -71,18 +72,16 @@ assert(
   "featured video must expose controls and respect reduced motion"
 );
 assert(
-  create.includes("Launch Pack · 3 fixed formats") &&
-    create.includes("Prepare or preview a Launch Pack.") &&
-    create.includes("Listing Spin") &&
-    create.includes("Blind-box Reveal") &&
-    create.includes("Social Flash") &&
+  create.includes("Prepare a private Launch Pack.") &&
+    create.includes("<PrivateSellerPackGate>") &&
+    privateSellerPackGate.includes("canUsePrivateLaunch(me)") &&
+    privateSellerPackGate.includes("router.replace(PUBLIC_MOMENT_HREF)") &&
     batch.includes("reserveSellerPackClient") &&
     batch.includes("parseExactSellerPackServerJobs") &&
     batch.includes("sellerPackQuoteLabel(packQuote)") &&
-    batch.includes('data-public-pack-preview="lab-only"') &&
     !create.includes("Launch Pack — 12 recipes") &&
     !batch.includes("Launch Pack — 12 recipes"),
-  "the primary Launch Pack must stay the fixed public-preview/private-generation three-asset path"
+  "the fixed three-child Pack engine must stay private while public creation remains one Moment"
 );
 
 console.log(

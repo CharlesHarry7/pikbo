@@ -19,9 +19,9 @@ import {
  */
 export function PricingPlanCards() {
   const measuredBeforeOpen = [
-    "One Launch Pack keeps the fixed Listing Spin, Blind-box Reveal, and Social Flash formats",
+    "Choose one directed Moment and create only the clip you need",
     "Private Library delivery and owner-only downloads",
-    "Price and monthly Pack count set only after p95 retry cost is measured",
+    "Price and monthly allowance set only after p95 retry cost is measured",
     "Checkout remains closed until quality, recovery, privacy, and margin gates pass",
   ];
 
@@ -45,7 +45,7 @@ export function PricingPlanCards() {
         </div>
         <CardDescription>
           One finite subscription for toy sellers, opened only after the
-          three-format Pack is proven reliable and economically sustainable.
+          single-Moment workflow is proven reliable and economically sustainable.
         </CardDescription>
       </CardHeader>
 
@@ -66,10 +66,10 @@ export function PricingPlanCards() {
 
       <CardFooter className="mt-auto flex-col items-stretch gap-2">
         <Link
-          href="/create?mode=seller-pack&source=pricing-preview&try=1&sample=scout"
+          href="/create?effect=street-power-up&source=pricing-preview&try=1&sample=beatbot"
           className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[var(--mint)] px-5 text-sm font-black text-black transition hover:opacity-95"
         >
-          Preview the 3 Launch Pack formats
+          Preview one toy Moment
         </Link>
         <p className="text-center text-[10px] leading-relaxed text-[var(--fg-dim)]">
           Pikbo Lab samples only · no product-photo upload · no payment

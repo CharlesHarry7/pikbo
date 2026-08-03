@@ -92,11 +92,11 @@ export function ModulesSuiteCtas() {
         Photo → Clip
       </Link>
       <Link
-        href="/create?mode=seller-pack"
+        href="/create?effect=street-power-up"
         className="rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/10 px-4 py-2 text-xs font-bold text-[var(--mint)]"
-        title="Listing + reveal + hook from one photo"
+        title="Choose one directed toy Moment"
       >
-        Seller Starter Pack
+        Create one Moment
       </Link>
       <Link
         href="/library"

@@ -153,10 +153,10 @@ export default async function ToolPage({
           {isHighIntentTool ? (
             <div className="mt-5 flex flex-wrap gap-2">
               <Link
-                href="/create?mode=seller-pack"
+                href="/create?effect=street-power-up&source=tool-page"
                 className="btn btn-primary !px-4 !py-2 text-xs font-black"
               >
-                Preview the fixed Launch Pack
+                Preview one toy Moment
               </Link>
               <Link
                 href="/pricing"

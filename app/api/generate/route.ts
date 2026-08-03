@@ -440,6 +440,20 @@ export async function POST(req: Request) {
       400
     );
   }
+  // A Seller Pack child is an invite-only private operation. Check the
+  // current allowlist before resolving its private input or reserving either
+  // provider spend or durable child credits. Ordinary single-Moment requests
+  // intentionally keep their existing access path.
+  if (packBinding.kind === "pack" && !privateLive.invite.invited) {
+    return err(
+      {
+        error: "Private seller Preview access is required for Launch Pack children",
+        code: "LIVE_ACCESS_REQUIRED",
+        session: publicSession(session),
+      },
+      403
+    );
+  }
   const boundPackInput =
     access.kind === "live" && packBinding.kind === "pack" && authUser
       ? await resolveBoundToyAssetDataUrl({

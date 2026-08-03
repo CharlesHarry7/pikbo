@@ -3,7 +3,7 @@ import Link from "next/link";
 /** Honest validation gate used when private access or allowance is unavailable. */
 export function PaywallCard({
   title = "Private beta allowance unavailable",
-  subtitle = "Founding Studio remains closed while Pikbo validates the complete three-format Pack, recovery, privacy, and real retry cost.",
+  subtitle = "Founding Studio remains closed while Pikbo validates the single-Moment workflow, recovery, privacy, and real retry cost.",
 }: {
   title?: string;
   subtitle?: string;
@@ -19,7 +19,7 @@ export function PaywallCard({
           Founding Studio · coming soon
         </p>
         <p className="mt-1 text-xs text-[var(--fg-muted)]">
-          No public price, Pack count, subscription, or checkout is available.
+          No public price, monthly allowance, subscription, or checkout is available.
           Pikbo Lab samples remain cached and use no visitor product photo.
         </p>
       </div>

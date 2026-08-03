@@ -86,10 +86,10 @@ export default async function LoginPage({
             Continue as guest → Generate
           </Link>
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up&source=login-guest"
             className="text-[var(--mint)] hover:underline"
           >
-            Launch Pack
+            Toy Moment
           </Link>
           <Link href="/library" className="text-[var(--mint)] hover:underline">
             Library

@@ -36,7 +36,7 @@ const MODE_DEFS = [
 
 export function GenerateSuiteChrome({
   compact,
-  showSellerPack = true,
+  showSellerPack = false,
 }: {
   compact?: boolean;
   showSellerPack?: boolean;
