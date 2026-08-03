@@ -663,12 +663,11 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     "Open Library only after awaiting_primary or 90s"
   );
 
-  const history = read("lib/history.ts");
   const library = read("components/LibraryGrid.tsx");
-  assert.match(history, /LIBRARY_HISTORY_CHANGED_EVENT/);
-  assert.match(history, /dispatchEvent\(new Event\(LIBRARY_HISTORY_CHANGED_EVENT\)\)/);
-  assert.match(library, /addEventListener\(\s*LIBRARY_HISTORY_CHANGED_EVENT/);
-  assert.match(library, /removeEventListener\(\s*LIBRARY_HISTORY_CHANGED_EVENT/);
+  assert.match(library, /fetch\(["']\/api\/generations["']/);
+  assert.match(library, /privateDownloadHeaders\(\)/);
+  assert.match(library, /function visibleAccountJob/);
+  assert.match(library, /if \(job\.demo\) return false/);
 }
 
 // ─── 13. Recovery read failures never cancel a still-live primary ─────────

@@ -125,12 +125,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         >
           {(momentSurface
             ? [
-                {
-                  href: "/#archive-selector",
-                  label: "Explore",
-                },
                 { href: DEFAULT_MOMENT_CREATE_HREF, label: "Create" },
-                { href: "/library", label: "Projects" },
+                { href: "/library", label: "Library" },
+                { href: "/pricing", label: "Pricing" },
                 { href: "/login", label: "Sign in" },
               ]
             : PRIMARY_NAV.filter(

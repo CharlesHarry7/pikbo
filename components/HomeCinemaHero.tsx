@@ -6,7 +6,7 @@ const STREET_POWER_UP_SAMPLE = {
   video: "/demos/beatbot-viral-hook.mp4",
   webm: "/demos/beatbot-viral-hook.webm",
   poster: "/demos/beatbot-still.webp",
-  title: "Street Power-Up",
+  title: "Beatbot Motion Study",
   source: "Pikbo-owned archive motion study",
 } as const;
 

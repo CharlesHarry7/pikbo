@@ -79,14 +79,15 @@ assert(
   "pricing must keep subscriptions closed until private-beta proof"
 );
 assert(
-  read("app/create/page.tsx").includes("<PrivateSellerPackGate>") &&
-    read("components/PrivateSellerPackGate.tsx").includes(
-      "canUsePrivateLaunch(me)"
+  read("app/create/page.tsx").includes("fixedMomentContract") &&
+    !read("app/create/page.tsx").includes("<BatchStudio") &&
+    /fixedMomentContract\s*&&\s*!session\?\.signedIn/.test(
+      read("components/CreateStudio.tsx")
     ) &&
-    /\{privateInputEnabled \? \([\s\S]*type="file"/.test(
-      read("components/BatchStudio.tsx")
+    /privateUploadEnabled\s*\?\s*\([\s\S]*type="file"/.test(
+      read("components/CreateStudio.tsx")
     ),
-  "Create must gate the Pack route and product-photo input behind private account capability"
+  "Create must expose only the fixed Moment and gate product-photo input behind private account capability"
 );
 assert(
   read("components/CreateStudio.tsx").includes(

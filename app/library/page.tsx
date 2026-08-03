@@ -5,13 +5,13 @@ import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 export const metadata: Metadata = {
-  title: "Library · Assets",
+  title: "Your Moments · Library",
   description:
-    "Your toy video assets — private account results and clips saved on this device.",
+    "Your private Pikbo toy video results — download, retry, or generate again.",
   robots: PRIVATE_ROBOTS,
 };
 
-/** Account results plus clearly labeled device-only imports. */
+/** Owner-only results. Public samples and device-cached demos stay out. */
 export default function LibraryPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#09090a] px-4 py-8 sm:px-8 sm:py-12">
@@ -24,15 +24,15 @@ export default function LibraryPage() {
           <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--mint)]">
-              Toy projects
+              Private Library
             </p>
             <h1 className="mt-3 max-w-3xl font-display text-4xl font-black tracking-[-0.055em] sm:text-6xl">
-              Your toy projects.
+              Your Moments.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--fg-muted)]">
-              Keep your generated clips together, then create the next Moment
-              from one owned toy photo. Private results return here after
-              refresh when your account is enabled.
+              Find every real toy video generated with your account. Download a
+              finished result, retry a failed render, or use the same Moment
+              again with your next product photo.
             </p>
           </div>
           <div>
@@ -40,15 +40,15 @@ export default function LibraryPage() {
               href={`${MOMENT_CREATE_HREF}&source=library-empty`}
               className="btn btn-primary text-sm"
             >
-              Create one Moment
+              Create new Moment
             </Link>
           </div>
         </div>
           <div className="mt-7 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-3">
             {[
-              ["Owner-only", "Private results use fresh download links"],
-              ["Recoverable", "Completed clips return after refresh"],
-              ["Review first", "Check product details before publishing"],
+              ["Private", "Only your account can access these results"],
+              ["Recoverable", "Finished videos return after refresh"],
+              ["Ready to use", "Download or generate the Moment again"],
             ].map(([label, value]) => (
               <div key={label} className="bg-black/25 px-4 py-3.5">
                 <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[#c8ff3d]">
