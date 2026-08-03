@@ -29,9 +29,11 @@ const FIRST_RUN_JOBS: JobIntentId[] = [
 export function JobIntentBar({
   activeId,
   onPick,
+  showSellerPack = true,
 }: {
   activeId?: JobIntentId | null;
   onPick: (id: JobIntentId) => void;
+  showSellerPack?: boolean;
 }) {
   const { t } = useI18n();
 
@@ -49,7 +51,11 @@ export function JobIntentBar({
         </p>
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2">
-          {JOB_INTENTS.filter((job) => FIRST_RUN_JOBS.includes(job.id)).map((job) => {
+          {JOB_INTENTS.filter(
+            (job) =>
+              FIRST_RUN_JOBS.includes(job.id) &&
+              (showSellerPack || job.id !== "seller-pack")
+          ).map((job) => {
             const i18n = JOB_I18N[job.id];
             const label = t(i18n.label);
             const blurb = t(i18n.blurb);

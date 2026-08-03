@@ -159,6 +159,8 @@ const MODELS = [
 ] as const;
 
 const FIXED_MOMENT_EFFECT = "street-power-up";
+const PRIVATE_BETA_MAILTO =
+  "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
 
 export function CreateStudio({
   initialEffect,
@@ -1786,7 +1788,7 @@ export function CreateStudio({
     <div className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0">
       {/* Suite chrome: desktop only — mobile uses bottom nav + Modules shelf */}
       <div className="hidden lg:block">
-        <GenerateSuiteChrome compact />
+        <GenerateSuiteChrome compact showSellerPack={privateUploadEnabled} />
       </div>
       {/* ── Mode banner: demo vs live (W5) · tighter on phone ── */}
       <div
@@ -2091,21 +2093,19 @@ export function CreateStudio({
               </button>
             )}
           </div>
-          <Link
-            href="/create?mode=seller-pack"
-            className="mt-3 block rounded-xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] px-3 py-2.5 text-[11px] leading-snug text-[var(--fg-muted)] transition hover:border-[var(--mint)]/50"
-          >
-            <span className="font-bold text-[var(--mint)]">
-              {demoMode
-                ? "Seller Starter Pack — 3 cached prototype previews"
-                : "Seller Starter Pack — 3 live clips / 30 credits"}
-            </span>
-            <span className="mt-0.5 block text-[10px] text-[var(--fg-dim)]">
-              {demoMode
-                ? "0 credits · your upload is not processed"
-                : "Eligible live account · review the quote before submission"}
-            </span>
-          </Link>
+          {privateUploadEnabled ? (
+            <Link
+              href="/create?mode=seller-pack"
+              className="mt-3 block rounded-xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] px-3 py-2.5 text-[11px] leading-snug text-[var(--fg-muted)] transition hover:border-[var(--mint)]/50"
+            >
+              <span className="font-bold text-[var(--mint)]">
+                Seller Starter Pack — 3 live clips / 30 credits
+              </span>
+              <span className="mt-0.5 block text-[10px] text-[var(--fg-dim)]">
+                Eligible live account · review the quote before submission
+              </span>
+            </Link>
+          ) : null}
         </aside>
 
         {/* ── Controls: upload → recipe → preflight ── */}
@@ -2228,6 +2228,16 @@ export function CreateStudio({
                 product photo. Invited signed-in accounts see a separate
                 owner-only upload control here.
               </p>
+              {sessionResolved ? (
+                <Link
+                  href={PRIVATE_BETA_MAILTO}
+                  className="mt-3 inline-flex min-h-10 items-center rounded-full bg-[var(--mint)] px-4 text-xs font-black text-black transition hover:brightness-110"
+                  aria-label="Email Pikbo to request private beta access"
+                  data-public-single-preview-beta
+                >
+                  Request private beta
+                </Link>
+              ) : null}
             </div>
           )}
 
@@ -2246,7 +2256,11 @@ export function CreateStudio({
               </p>
             </div>
           ) : (
-            <JobIntentBar activeId={activeSellingTask} onPick={applyJobIntent} />
+            <JobIntentBar
+              activeId={activeSellingTask}
+              onPick={applyJobIntent}
+              showSellerPack={privateUploadEnabled}
+            />
           )}
 
           {/* Collapsed Lab path — after recipe so first-run stays upload→recipe→generate */}
@@ -3246,12 +3260,14 @@ export function CreateStudio({
                   >
                     {t("create.savedLibrary")}
                   </Link>
-                  <Link
-                    href="/create?mode=seller-pack"
-                    className="btn btn-ghost px-3.5 py-2 text-xs"
-                  >
-                    {t("cta.sellerPack")}
-                  </Link>
+                  {privateUploadEnabled ? (
+                    <Link
+                      href="/create?mode=seller-pack"
+                      className="btn btn-ghost px-3.5 py-2 text-xs"
+                    >
+                      {t("cta.sellerPack")}
+                    </Link>
+                  ) : null}
                   </div>
                 </div>
 

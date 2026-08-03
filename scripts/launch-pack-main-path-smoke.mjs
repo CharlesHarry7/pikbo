@@ -28,13 +28,26 @@ const meClient = read("lib/meClient.ts");
 const createSample = publicSample.slice(
   publicSample.indexOf("function CreateSampleBrowser")
 );
+const homeSample = publicSample.slice(
+  publicSample.indexOf("function HomeDropArchive"),
+  publicSample.indexOf("function CreateSampleBrowser")
+);
 
-// The public homepage starts from a video-first archived Launch Pack browser.
-// Archived samples remain explicitly labeled and never imply a customer result.
+// The public homepage starts from a video-first archive, then routes to one
+// selected Moment. The old three-output Pack stays available only as a
+// separate truthful public sample browser.
 assert.match(homeHero, /PublicLaunchPackSample surface="home"/);
 assert.match(publicSample, /See how toys become launches\./);
 assert.match(publicSample, /Archive motion sample/);
-assert.match(publicSample, /Three separate archived format prototypes/);
+assert.match(homeSample, /data-home-upgrade="moment"/);
+assert.match(homeSample, /const createHref = `\/create\?effect=\$\{active\.effect\}/);
+assert.match(publicSample, /effect: "360-spin-showcase"/);
+assert.match(publicSample, /effect: "mystery-box-reveal"/);
+assert.match(publicSample, /effect: "street-power-up"/);
+assert.match(homeSample, /Pick one Moment for your toy\./);
+assert.match(homeSample, /one toy · one chosen Moment/);
+assert.doesNotMatch(homeSample, /one toy · three launch formats/);
+assert.match(createSample, /Three separate archived format prototypes/);
 assert.match(read("components/MomentCreatePreview.tsx"), /no upload · no generation · 0 credits/i);
 assert.doesNotMatch(home, /One toy photo\. Three launch-ready videos\./);
 assert.match(createSample, /data-public-pack-preview="instant-archived-samples"/);
@@ -97,8 +110,9 @@ assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
 assert.match(homeWall, /href=\{item\.href\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
 assert.match(shell, /create\?mode=seller-pack/);
-assert.match(shell, /create\?moment=capsule-reveal/);
-assert.match(shell, /Create with my toy/);
+assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
+assert.match(shell, /create\?mode=moment&effect=street-power-up/);
+assert.match(shell, /Create a Moment/);
 assert.match(shell, /label: "Projects"/);
 assert.doesNotMatch(shell, /Motion archive/);
 assert.match(softLaunchStrip, /: "\/create\?mode=seller-pack";/);

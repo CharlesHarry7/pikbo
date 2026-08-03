@@ -10,6 +10,7 @@ const FORMATS = [
     id: "listing-spin",
     archive: "001",
     name: "Listing Spin",
+    effect: "360-spin-showcase",
     shortName: "Spin",
     use: "Product page motion",
     sample: "Scout",
@@ -25,6 +26,7 @@ const FORMATS = [
     id: "blind-box-reveal",
     archive: "002",
     name: "Blind-box Reveal",
+    effect: "mystery-box-reveal",
     shortName: "Reveal",
     use: "Collector reveal direction",
     sample: "Moon",
@@ -40,6 +42,7 @@ const FORMATS = [
     id: "social-flash",
     archive: "003",
     name: "Social Flash",
+    effect: "street-power-up",
     shortName: "Flash",
     use: "Drop announcement motion",
     sample: "Beatbot",
@@ -90,6 +93,8 @@ function HomeDropArchive({
   active: Format;
   onSelect: (format: Format) => void;
 }) {
+  const createHref = `/create?effect=${active.effect}&source=home-motion-archive`;
+
   function moveSelection(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
@@ -109,9 +114,9 @@ function HomeDropArchive({
     <section
       id="home-create"
       data-home-hero="drop-archive"
-      data-home-upgrade="launch-pack"
+      data-home-upgrade="moment"
       className="overflow-hidden bg-[#F2EDE3] px-3 pb-12 pt-3 text-[#171717] sm:px-6 sm:pb-16 sm:pt-6 lg:min-h-[calc(100vh-4rem)] lg:bg-[#111111] lg:px-8 lg:pb-8 lg:pt-7 lg:text-[#F5F1E8]"
-      aria-label="Pikbo toy launch archive"
+      aria-label="Pikbo toy Moment archive"
     >
       <div className="mx-auto max-w-[1360px]">
         <div className="hidden lg:grid lg:grid-cols-[minmax(0,1fr)_390px] lg:items-end lg:gap-16">
@@ -129,15 +134,15 @@ function HomeDropArchive({
 
           <div className="mt-5 lg:mt-0 lg:pb-1">
             <p className="max-w-[390px] text-sm font-semibold leading-6 text-[#686159] lg:text-[15px] lg:text-[#A39C91]">
-              Pikbo creates product motion, collector reveals, and social drops
-              from your own toy.
+              Pick one directed Moment, then turn one owned toy photo into one
+              launch-ready clip.
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-4">
               <Link
-                href="/create?mode=seller-pack&preview=1&source=home-drop-archive"
+                href={createHref}
                 className="inline-flex min-h-12 items-center justify-between gap-6 rounded-[10px] bg-[#D84A35] px-5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-[#E25A43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F1E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]"
               >
-                Preview Launch Pack <span aria-hidden>↗</span>
+                Create {active.name} <span aria-hidden>↗</span>
               </Link>
               <a
                 href="#archive-selector"
@@ -270,11 +275,11 @@ function HomeDropArchive({
               aria-level={1}
               className="mt-3 max-w-[620px] font-display text-[clamp(2.35rem,5.2vw,5.1rem)] font-black leading-[0.9] tracking-[-0.065em]"
             >
-              Three video formats for your next toy launch.
+              Pick one Moment for your toy.
             </div>
             <p className="mt-4 max-w-[560px] text-[13px] font-semibold leading-5 text-white/58 sm:text-[15px] sm:leading-6">
-              Explore three separate Pikbo Lab prototypes for listing spin,
-              blind-box reveal, and social hook—without prompt or model setup.
+              Explore directed motion presets, choose one visual outcome, and
+              skip prompt writing, model hunting, and timeline setup.
             </p>
 
             <div className="mt-5 grid gap-2 sm:grid-cols-3" role="group" aria-label="Launch video format">
@@ -309,10 +314,10 @@ function HomeDropArchive({
 
             <div className="mt-6 flex flex-col gap-2 sm:flex-row">
               <Link
-                href="/create?mode=seller-pack&preview=1&source=home-result-browser"
+                href={createHref}
                 className="inline-flex min-h-14 items-center justify-between gap-4 rounded-full bg-[#C9FF45] px-6 text-sm font-black text-[#0A1700]"
               >
-                Try a sample Pack <span aria-hidden>↗</span>
+                Create {active.shortName} <span aria-hidden>↗</span>
               </Link>
               <Link
                 href={PRIVATE_BETA_MAILTO}
@@ -388,7 +393,7 @@ function HomeDropArchive({
         <div className="mt-3 flex flex-col justify-between gap-2 px-2 text-[10px] font-bold leading-4 text-[#69645C] sm:flex-row sm:items-center lg:mt-4 lg:border-t lg:border-white/10 lg:px-0 lg:pt-4 lg:text-[9px] lg:uppercase lg:tracking-[0.12em] lg:text-[#A39C91]">
           <p>
             <span className="lg:hidden">{active.target}</span>
-            <span className="hidden lg:inline">Product target · one toy · three launch formats</span>
+            <span className="hidden lg:inline">Product target · one toy · one chosen Moment</span>
           </p>
           <p className="hidden lg:block lg:normal-case lg:tracking-normal">
             Archive shown · three different Pikbo-owned prototypes · no product upload on this public page.
@@ -396,7 +401,7 @@ function HomeDropArchive({
         </div>
 
         <p className="mt-2 px-2 text-[10px] font-bold leading-4 text-[#69645C] lg:px-0 lg:text-right lg:text-[9px] lg:text-[#A39C91]">
-          Three separate archived format prototypes—not one completed customer Pack.
+          Each archive is a separate direction—choose one Moment for your toy.
         </p>
 
         <div className="mt-10 border-t border-black/15 pt-6 sm:mt-14 sm:pt-8 lg:hidden">

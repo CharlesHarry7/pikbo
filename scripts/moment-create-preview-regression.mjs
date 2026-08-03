@@ -96,7 +96,8 @@ assert.match(shell, /Toy moments/);
 assert.match(shell, /const momentValues = searchParams\.getAll\("moment"\)/);
 assert.match(shell, /momentValues\.length === 1/);
 assert.match(shell, /Boolean\(parseMomentId\(momentValues\[0\]\)\)/);
-assert.match(shell, /Create with my toy/);
+assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
+assert.match(shell, /Create a Moment/);
 assert.match(shell, /label: "Projects"/);
 assert.doesNotMatch(shell, /Motion archive/);
 
