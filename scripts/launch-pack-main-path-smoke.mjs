@@ -8,6 +8,7 @@ const read = (file) => readFileSync(join(root, file), "utf8");
 const home = read("app/page.tsx");
 const homeHero = read("components/HomeCinemaHero.tsx");
 const publicSample = read("components/PublicLaunchPackSample.tsx");
+const moments = read("lib/moments.ts");
 const homeWall = read("components/HomeViralWall.tsx");
 const create = read("app/create/page.tsx");
 const privateSellerPackGate = read("components/PrivateSellerPackGate.tsx");
@@ -60,6 +61,23 @@ assert.match(publicSample, /effect: "street-power-up"/);
 assert.match(homeSample, /Pick one Moment for your toy\./);
 assert.match(homeSample, /one toy · one chosen Moment/);
 assert.doesNotMatch(homeSample, /one toy · three launch formats/);
+assert.match(publicSample, /import \{ MOMENTS \} from "@\/lib\/moments"/);
+assert.match(homeSample, /data-home-official-moments/);
+assert.match(homeSample, /Preview an Official Concept/);
+assert.match(homeSample, /href=\{momentPreviewHref\(moment\.id\)\}/);
+assert.match(homeSample, /No upload or\s+generation starts here/);
+assert.match(homeSample, /Private render available now · Street Power-Up only/);
+assert.match(moments, /evidence: "Official Concept"/);
+for (const momentId of [
+  "capsule-reveal",
+  "hangar-ignition",
+  "colorblock-pedestal",
+  "softroom-morning",
+  "gallery-spotlight",
+  "alley-drop-flash",
+]) {
+  assert.match(moments, new RegExp(`id: "${momentId}"`));
+}
 assert.match(createSample, /Three separate archived format prototypes/);
 assert.match(read("components/MomentCreatePreview.tsx"), /no upload · no generation · 0 credits/i);
 assert.doesNotMatch(home, /One toy photo\. Three launch-ready videos\./);
