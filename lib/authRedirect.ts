@@ -1,10 +1,19 @@
 const PRODUCTION_AUTH_ORIGIN = "https://pikbo.ai";
 const PREVIEW_AUTH_ORIGIN =
+  "https://pikbo-git-codex-private-input-pack-binding-pi-kbo.vercel.app";
+const LEGACY_PREVIEW_AUTH_ORIGIN =
   "https://pikbo-git-agent-gptp0-live-owned-toy-review-pi-kbo.vercel.app";
+
+// Keep the current protected Preview and its previously-issued callback host
+// explicit. Never broaden this to an arbitrary *.vercel.app origin.
+const PREVIEW_AUTH_ORIGINS = [
+  PREVIEW_AUTH_ORIGIN,
+  LEGACY_PREVIEW_AUTH_ORIGIN,
+] as const;
 
 const DEPLOYED_AUTH_ORIGINS = new Set([
   PRODUCTION_AUTH_ORIGIN,
-  PREVIEW_AUTH_ORIGIN,
+  ...PREVIEW_AUTH_ORIGINS,
 ]);
 
 const LOCAL_AUTH_ORIGINS = new Set([

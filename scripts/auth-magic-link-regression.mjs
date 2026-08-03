@@ -12,7 +12,11 @@ const callback = await import(
 );
 
 const preview =
+  "https://pikbo-git-codex-private-input-pack-binding-pi-kbo.vercel.app";
+const legacyPreview =
   "https://pikbo-git-agent-gptp0-live-owned-toy-review-pi-kbo.vercel.app";
+const maliciousPreview =
+  "https://pikbo-git-untrusted-branch-pi-kbo.vercel.app";
 const production = "https://pikbo.ai";
 
 function request(url, origin) {
@@ -31,6 +35,13 @@ assert.equal(
 );
 assert.equal(
   redirect.resolveTrustedAuthOrigin(
+    request(`${legacyPreview}/api/auth/magic-link`, legacyPreview),
+    "production"
+  ),
+  legacyPreview
+);
+assert.equal(
+  redirect.resolveTrustedAuthOrigin(
     request(`${production}/api/auth/magic-link`, production),
     "production"
   ),
@@ -39,6 +50,10 @@ assert.equal(
 assert.equal(
   redirect.authCallbackUrl(preview),
   `${preview}/auth/callback`
+);
+assert.equal(
+  redirect.authCallbackUrl(legacyPreview),
+  `${legacyPreview}/auth/callback`
 );
 assert.equal(
   redirect.authCallbackUrl(production),
@@ -66,9 +81,7 @@ assert.equal(
 );
 assert.equal(
   redirect.resolveTrustedAuthOrigin(
-    request(
-      "https://pikbo-git-untrusted-branch.example.vercel.app/api/auth/magic-link"
-    ),
+    request(`${maliciousPreview}/api/auth/magic-link`, maliciousPreview),
     "production"
   ),
   null
