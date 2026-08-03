@@ -15,6 +15,12 @@ Provider responses.
   private-live, strict Provider-host, Preview-validation and one-job budget
   gates. `PIKBO_PROVIDER_VALIDATION_BUDGET_USD=2` is below the fixed US$20
   ceiling.
+- The non-secret validation switches are
+  `PIKBO_PREVIEW_PROVIDER_VALIDATION_ENABLED=1`,
+  `PIKBO_PROVIDER_VALIDATION_MODE=1`, and
+  `PIKBO_PROVIDER_OUTPUT_HOST_ALLOWLIST=fal.media`.
+- `PIKBO_SERVER_OWNED_JOBS`, `PIKBO_DEV_TOPUP`, and
+  `PIKBO_FORCE_GENERATE_FAIL` were not enabled.
 - Explicitly kept public payments, live payments, Stripe readiness, refund
   guard, development upgrade and the old T6 worker off on this branch.
 - Reused the existing non-production database objects proven by the recorded
@@ -30,9 +36,12 @@ Provider responses.
 
 ## Remaining hard gates
 
-1. The exact Preview origin must be merged into Pikbo's static auth allowlist.
-2. Vercel must produce a fresh deployment after the current daily deployment
-   quota clears; old deployments do not receive the new branch environment.
+1. The separate `codex/private-validation-auth` code change that adds the
+   exact Preview origin must be merged, then the protected
+   `codex/private-validation` branch must advance to that merged commit.
+2. Vercel must produce a fresh protected-branch deployment after the current
+   daily deployment quota clears; old deployments do not receive the new
+   branch environment.
 3. The FAL account reports a current balance of `$0.00`. No real Provider call
    was attempted. A real owned-photo proof remains blocked until that account
    has enough balance for one 5-second Fast 720p request.

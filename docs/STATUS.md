@@ -33,8 +33,8 @@ Git history and must not be treated as current work.
 - `codex/private-validation`: branch-only Supabase credentials, private-live
   allowlist, one-job budget, FAL key, durable gates and Stripe-off overrides
   are configured. The owner account is enabled with 10 non-production credits.
-  Supabase allows the exact callback origin. The new FAL account balance is
-  `$0.00`, so no paid Provider request has been attempted.
+  Supabase allows the exact callback origin. The GitHub-linked FAL account
+  balance is `$0.00`, so no paid Provider request has been attempted.
 
 ## Frozen
 
