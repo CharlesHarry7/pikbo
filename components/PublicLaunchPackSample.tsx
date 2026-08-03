@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, type KeyboardEvent } from "react";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { MOMENTS } from "@/lib/moments";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const FORMATS = [
@@ -64,6 +65,10 @@ const PRIVATE_MOMENT_LOGIN_HREF = `/login?next=${encodeURIComponent(
 )}`;
 
 type Format = (typeof FORMATS)[number];
+
+function momentPreviewHref(momentId: string) {
+  return `/create?moment=${momentId}&source=home-official-moment`;
+}
 
 export function PublicLaunchPackSample({
   surface,
@@ -147,6 +152,13 @@ function HomeDropArchive({
                 className="inline-flex min-h-12 items-center justify-between gap-6 rounded-[10px] bg-[#D84A35] px-5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-[#E25A43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F1E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]"
               >
                 Create Street Power-Up <span aria-hidden>↗</span>
+              </Link>
+              <Link
+                href={momentPreviewHref(MOMENTS[0].id)}
+                data-home-official-moment-cta
+                className="inline-flex min-h-12 items-center justify-between gap-4 rounded-[10px] border border-[#171717]/25 px-4 text-xs font-black text-[#171717] transition hover:-translate-y-0.5 hover:border-[#D84A35] hover:text-[#D84A35] lg:border-white/25 lg:text-[#F5F1E8] lg:hover:border-[#F5F1E8] lg:hover:text-white"
+              >
+                Preview an Official Concept <span aria-hidden>↗</span>
               </Link>
               <a
                 href="#archive-selector"
@@ -392,6 +404,61 @@ function HomeDropArchive({
               </button>
             );
           })}
+        </div>
+
+        <div
+          id="moment-stage"
+          data-home-official-moments
+          className="mt-6 border-t border-black/15 pt-5 lg:border-white/10"
+        >
+          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.19em] text-[#D84A35]">
+                Official concept Moments
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[#69645C] lg:text-[#C5BEB3]">
+                Pick a direction to preview with your toy locally. No upload or
+                generation starts here.
+              </p>
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#69645C] lg:text-[#A39C91]">
+              Private render available now · Street Power-Up only
+            </p>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {MOMENTS.map((moment) => (
+              <Link
+                key={moment.id}
+                href={momentPreviewHref(moment.id)}
+                data-home-official-moment={moment.id}
+                aria-label={`Preview ${moment.name} with your toy`}
+                className="group grid min-w-0 grid-rows-[72px_auto] overflow-hidden rounded-[12px] border border-black/12 bg-white/55 text-[#171717] transition hover:-translate-y-0.5 hover:border-black/30 lg:border-white/12 lg:bg-[#181818] lg:text-[#F5F1E8] lg:hover:border-white/30"
+              >
+                <span className="relative block overflow-hidden bg-[#D7D2C8] lg:bg-black">
+                  <Image
+                    src={moment.media}
+                    alt=""
+                    fill
+                    sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 16vw"
+                    className="object-cover transition duration-300 group-hover:scale-105"
+                    style={{ objectPosition: moment.objectPosition }}
+                  />
+                </span>
+                <span className="min-w-0 p-2">
+                  <span className="block truncate text-[8px] font-black uppercase tracking-[0.13em] text-[#D84A35]">
+                    {moment.index} · {moment.useLabel}
+                  </span>
+                  <span className="mt-1 block truncate text-[11px] font-black">
+                    {moment.name}
+                  </span>
+                  <span className="mt-0.5 block truncate text-[9px] font-semibold text-[#69645C] lg:text-white/45">
+                    {moment.toyType}
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
 
         <div className="mt-3 flex flex-col justify-between gap-2 px-2 text-[10px] font-bold leading-4 text-[#69645C] sm:flex-row sm:items-center lg:mt-4 lg:border-t lg:border-white/10 lg:px-0 lg:pt-4 lg:text-[9px] lg:uppercase lg:tracking-[0.12em] lg:text-[#A39C91]">
