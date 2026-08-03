@@ -171,7 +171,7 @@ assert.match(shell, /label: "Projects"/);
 assert.doesNotMatch(shell, /Motion archive/);
 assert.match(softLaunchStrip, /create\?effect=street-power-up&source=soft-launch/);
 assert.match(hfExploreHome, /create\?effect=street-power-up/);
-assert.match(freeTrialCta, /onHome\s*\? "\/create\?effect=street-power-up&source=free-trial"/);
+assert.match(freeTrialCta, /onHome\s*\? "\/create\?effect=360-spin-showcase&source=free-trial"/);
 assert.doesNotMatch(
   [shell, softLaunchStrip, hfExploreHome, freeTrialCta].join("\n"),
   /create\?mode=seller-pack/
