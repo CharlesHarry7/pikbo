@@ -10,7 +10,9 @@ import { pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import "./health-truth-contract.mjs";
-import "./p0-private-live-generation.mjs";
+// The private-live P0 suite runs independently via npm run p0-private-live-generation.
+// Keep this fast smoke focused on the current product surface and its own
+// fail-closed source assertions below.
 import "./auth-magic-link-regression.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -771,8 +773,37 @@ const landing = fs.readFileSync(
 );
 assert.match(landing, /resultProvenanceLabel/);
 const library = fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8");
-assert.match(library, /resultProvenanceLabel/);
 assert.match(gen, /RIGHTS_REQUIRED|UNKNOWN_EFFECT/);
+
+// Library MVP contract: account results only, one generations ledger, and
+// owner-gated video delivery. This replaces the retired device-history,
+// stills-shelf, and Pack-specific Library UI assertions below.
+const libraryPage = fs.readFileSync(join(root, "app/library/page.tsx"), "utf8");
+assert.match(library, /fetchMe\(\)/);
+assert.match(library, /if \(!me\?\.signedIn\)/);
+assert.match(library, /href=["']\/login\?next=\/library["']/);
+assert.match(library, /fetch\(["']\/api\/generations["']/);
+assert.doesNotMatch(library, /\/api\/image(?:\/|["'`])/);
+assert.match(library, /body\.jobs\.filter\(visibleAccountJob\)/);
+assert.match(library, /if \(job\.demo\) return false/);
+assert.match(library, /privateDownloadHeaders/);
+assert.match(library, /method:\s*["']HEAD["']/);
+assert.match(library, /interpretDownloadHead/);
+assert.match(library, /downloadVideoFile/);
+assert.match(library, /<video[\s\S]{0,500}controls[\s\S]{0,500}playsInline/);
+assert.match(library, /function isOpen\(status[\s\S]{0,180}queued[\s\S]{0,80}running/);
+assert.match(library, /isOpen\(job\.status\)[\s\S]{0,350}void cancel\(job\)/);
+assert.match(library, /isRetryable\(job\.status\)[\s\S]{0,350}void retry\(job\)/);
+assert.match(library, /status === ["']failed["'] \|\| status === ["']canceled["']/);
+assert.match(library, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}\/retry/);
+assert.match(library, /method:\s*["']POST["']/);
+assert.match(library, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}/);
+assert.match(library, /method:\s*["']DELETE["']/);
+assert.match(
+  library,
+  /const CREATE_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=library`/
+);
+assert.match(library, /href=\{CREATE_MOMENT_HREF\}/);
 
 const softlive = fs.readFileSync(
   join(root, "scripts/softlive-checklist.sh"),
@@ -905,12 +936,6 @@ const videoFeedSrc = fs.readFileSync(join(root, "lib/videoFeed.ts"), "utf8");
 assert.match(videoFeedSrc, /export function listCachedLabProjectSlugs/);
 assert.match(health, /forceGenerateFail/);
 assert.match(imgRoute, /PIKBO_FORCE_GENERATE_FAIL/);
-const libraryGrid = fs.readFileSync(
-  join(root, "components/LibraryGrid.tsx"),
-  "utf8"
-);
-assert.match(libraryGrid, /Remix again|createRemixHref/);
-assert.match(libraryGrid, /data-library-remake=["']sku-carry["']/);
 const remixIntentSrc = fs.readFileSync(join(root, "lib/remixIntent.ts"), "utf8");
 assert.match(remixIntentSrc, /sku\?:\s*string/);
 assert.match(remixIntentSrc, /sku=\$\{encodeURIComponent/);
@@ -936,10 +961,13 @@ assert.match(createStudio, /selectVersion|setVersions/);
 assert.match(createStudio, /sourceKey|sourceStore|internSourceImage/);
 assert.match(createStudio, /creditState/);
 
-// Wave A: Seller Pack canonical Create mode + legacy supercomputer redirect
+// MVP Create surface: one fixed Moment contract; the archived Seller Pack
+// workspace remains on the preview/supercomputer route instead of /create.
 const createPage = fs.readFileSync(join(root, "app/create/page.tsx"), "utf8");
-assert.match(createPage, /seller-pack/);
-assert.match(createPage, /BatchStudio/);
+assert.match(createPage, /<CreateStudio/);
+assert.match(createPage, /initialEffect=["']street-power-up["']/);
+assert.match(createPage, /fixedMomentContract/);
+assert.doesNotMatch(createPage, /BatchStudio|PrivateSellerPackGate/);
 const batchPage = fs.readFileSync(
   join(root, "app/supercomputer/page.tsx"),
   "utf8"
@@ -977,8 +1005,6 @@ for (const field of [
 }
 assert.match(showcase, /assertRegistryIntegrity/);
 assert.match(showcase, /output reused under another title/);
-assert.match(libraryGrid, /By project|groupMode|sourceProject/);
-assert.match(libraryGrid, /Saved on this\s*device/);
 
 const exploreGrid = fs.readFileSync(
   join(root, "components/ExploreProjectGrid.tsx"),
@@ -1667,35 +1693,8 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
   /exportAvailableCsv|Export CSV|Manifest JSON/
 );
-// Library honesty: HF Assets IA + device-local labels (banner, not raw page string)
-assert.match(
-  fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /LibraryStorageBanner|LibraryGrid|device-local|this browser|local storage|Saved on this device/i
-);
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryStorageBanner.tsx"), "utf8"),
-  /device-local|this browser|export JSON|no fake multi-device|Saved on this device/i
-);
-// Library MVP first-run: one directed Moment action + device-local honesty
-const libraryFirstRun = fs.readFileSync(
-  join(root, "components/LibraryGrid.tsx"),
-  "utf8"
-);
-assert.match(libraryFirstRun, /data-library-sticky="mobile"/);
-assert.match(libraryFirstRun, /data-library-action="moment"/);
-assert.match(libraryFirstRun, /Create one Moment/);
-assert.doesNotMatch(libraryFirstRun, /data-library-action="generate"/);
-assert.doesNotMatch(libraryFirstRun, /Export JSON|Import JSON|Clear all/);
-assert.match(libraryFirstRun, /data-library-state="empty"/);
-assert.match(libraryFirstRun, /data-library-state="filled"/);
-assert.match(libraryFirstRun, /data-library-label="device-local"/);
-assert.match(libraryFirstRun, /data-library-panel="session-jobs"/);
-// Library still session recovery (GET /api/image parity with video ledger)
-assert.match(libraryFirstRun, /data-library-panel=["']session-stills["']/);
-assert.match(libraryFirstRun, /createStillStudioHref|data-library-still-retry/);
-assert.match(libraryFirstRun, /\/api\/image\/\$\{|\/api\/image\/\`|\/api\/image\//);
-assert.match(libraryFirstRun, /cancelSessionStill|data-library-still-cancel/);
-assert.match(libraryFirstRun, /forkSessionStillRetry|ledger-fork/);
+// Image stills retain their own private route contract; they are not part of
+// the Library MVP surface and must not be asserted through LibraryGrid.
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /URLSearchParams|searchParams[\s\S]{0,80}prompt|get\(["']prompt["']\)/
@@ -1708,12 +1707,6 @@ assert.match(
 assert.match(
   fs.readFileSync(join(root, "app/api/image/[id]/retry/route.ts"), "utf8"),
   /forkRetryImageJob/
-);
-assert.match(libraryFirstRun, /saved on this device/i);
-assert.match(libraryFirstRun, /not durable cloud|not multi-device cloud/);
-assert.match(
-  fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /saved on this device/i
 );
 assert.match(
   fs.readFileSync(
@@ -2041,11 +2034,8 @@ assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /status === ["']queued["']|data-image-session-queued/
 );
-// Studio strip + Library both ledger-fork POST /api/image/[id]/retry.
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /data-library-still-retry=["']ledger-fork["']|\/api\/image\/.*\/retry/
-);
+// The Library MVP no longer exposes the image-stills shelf; image retry
+// coverage remains on the dedicated Image surface and API routes above.
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /data-image-session-retry-mode=["']ledger-fork["']|\/api\/image\/.*\/retry/
@@ -2553,10 +2543,8 @@ const historySrcLib = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historySrcLib, /historyItemDownloadAllowed/);
 assert.match(historySrcLib, /canDownloadResult/);
 assert.match(historySrcLib, /isSafeDeliverableUrl/);
-assert.match(library, /historyItemDownloadAllowed/);
-assert.match(library, /Download blocked|download blocked/i);
-assert.match(library, /Unsafe deliverable URL|unsafe/);
-assert.match(library, /isSafeDeliverableUrl/);
+// Library's MVP safety surface is the private generations ledger + download
+// gate; raw history/download policy helpers remain covered in lib/history.
 assert.match(library, /\/api\/downloads\//);
 assert.match(library, /method:\s*["']HEAD["']|X-Pikbo-Download-Code/);
 assert.match(createStudio, /\/api\/downloads\//);
@@ -2753,21 +2741,14 @@ assert.match(
 assert.match(durableCreditsIdx, /durableServerOwnedJobsStatus|durableServerOwnedJobsReady/);
 assert.match(health, /durableServerOwnedJobs/);
 assert.match(health, /durableCreditsBackendNote|single-node/);
-// Seller Pack + Library must not mount Free live as <video> (parity with Create)
+// Archived Seller Pack/Batch UI keeps its T6 gating; Library MVP may preview a
+// server-approved private result video after the authenticated download gate.
 assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
   /isPlayableResultVideoUrl/
 );
 assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
-  /Free live held for T6 bake/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /isPlayableResultVideoUrl/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
   /Free live held for T6 bake/
 );
 // Phase C auth guest path product-first: one fixed Moment preview, no legacy
@@ -3115,15 +3096,10 @@ assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
   /PROVIDER_TIMEOUT/
 );
-// Library session jobs: HEAD-gated download (not raw <a> to 403 JSON)
-assert.match(library, /data-session-download=["']gated["']/);
-// History "Open result" must not be a raw /api/downloads <a> (403 JSON tabs)
-assert.match(library, /data-history-open=["']gated["']/);
-assert.match(library, /downloadClip\(item\)|void downloadClip/);
-assert.doesNotMatch(
-  library,
-  /Open result[\s\S]{0,120}href=\{\s*item\.requestId/
-);
+// Library's private result button performs an authenticated HEAD probe before
+// fetching the gated video; no raw history/download anchor is exposed.
+assert.match(library, /privateDownloadHeaders[\s\S]{0,700}method:\s*["']HEAD["']/);
+assert.match(library, /interpretDownloadHead[\s\S]{0,900}downloadVideoFile/);
 // downloadVideoFile: HEAD block/JSON → blocked; HEAD allow + CORS may open gate
 const historyLibSrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historyLibSrc, /downloadVideoFile|classifyDownloadHead/);
@@ -3139,7 +3115,6 @@ assert.match(
   historyLibSrc,
   /application\/json|Content-Type/
 );
-assert.match(library, /downloadSessionJob|onDownload/);
 // Create / Library / Landing / Seller Pack: allow path uses blob helper — never
 // window.open(gateUrl) which dumps 403/409 JSON into a new tab.
 assert.match(createStudio, /downloadVideoFile/);
@@ -3147,12 +3122,11 @@ assert.match(library, /downloadVideoFile/);
 assert.match(landingTool, /downloadVideoFile/);
 assert.match(batchStudio, /downloadVideoFile/);
 assert.match(createStudio, /downloads_api_blob|downloadVideoFile\(gateUrl/);
-assert.match(library, /downloads_api_blob|downloadVideoFile\(gateUrl/);
+assert.match(library, /downloadVideoFile\(\s*gateUrl/);
 assert.match(landingTool, /downloads_api_blob|downloadVideoFile\(gateUrl/);
 // Copy/Share: never present session-gated /api/downloads as a public link
 assert.match(createStudio, /publicShareableVideoUrl/);
 assert.match(createStudio, /isSessionGatedDownloadUrl|Session download only/);
-assert.match(library, /publicShareableVideoUrl/);
 assert.doesNotMatch(
   createStudio,
   /window\.open\(\s*gateUrl/
@@ -3479,9 +3453,6 @@ assert.equal(
   true
 );
 
-// Library Assets-like SKU group
-assert.match(library, /By SKU|groupMode === "sku"|value="sku"/);
-
 // Client network honesty codes
 assert.match(gen, /REQUEST_CANCELED|NETWORK_ERROR/);
 assert.match(contracts, /NETWORK_ERROR/);
@@ -3569,7 +3540,8 @@ function ageMs(iso, now) {
   return Math.max(0, now - t);
 }
 assert.ok(ageMs(new Date(0).toISOString(), 60_000) >= 60_000);
-assert.equal(ageMs(new Date(Date.now()).toISOString(), Date.now()), 0);
+const ageNow = Date.now();
+assert.equal(ageMs(new Date(ageNow).toISOString(), ageNow), 0);
 
 // T6 honest blocked status (player overlay ≠ file bake)
 const t6 = fs.readFileSync(join(root, "lib/t6Watermark.ts"), "utf8");
@@ -3727,11 +3699,9 @@ assert.match(
   /registerLocalAsset/
 );
 assert.match(createStudio, /registerLocalAsset|assetId/);
-assert.match(library, /Session jobs|\/api\/generations/);
-// Empty device history must still mount SessionJobsPanel (Phase D recovery)
-assert.match(library, /SessionJobsPanel|No clips saved on this device yet/);
-assert.match(library, /byStatus|SessionJobsMeta|timedOutThisSweep/);
-assert.match(library, /applyGenerationsBody|jobTimeoutMs/);
+// Library now reads the authenticated generations ledger directly; detailed
+// ledger/recovery assertions remain on the API/store paths below.
+assert.match(library, /\/api\/generations/);
 assert.match(
   fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
   /PRIVATE_ROBOTS/
@@ -3744,8 +3714,6 @@ assert.match(
   fs.readFileSync(join(root, "app/login/page.tsx"), "utf8"),
   /PRIVATE_ROBOTS/
 );
-assert.match(library, /In-progress jobs above are temporary/);
-assert.match(library, /Cancel request|method:\s*[\"']DELETE[\"']/);
 // Failure next-actions live on shared GenerateFailPanel (Create/Batch/Landing/Image)
 const failPanel = fs.readFileSync(
   join(root, "components/GenerateFailPanel.tsx"),
@@ -3797,15 +3765,8 @@ assert.match(imageClientSrc, /PROVIDER_NETWORK/);
 assert.match(imageClientSrc, /PROVIDER_TIMEOUT/);
 assert.match(imageClientSrc, /refundUnconfirmed/);
 assert.match(imageClientSrc, /interpretImageResponse/);
-// Library session jobs: TIMEOUT ≠ confirmed refund
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /refund unconfirmed|errorCode === "TIMEOUT"/
-);
-assert.doesNotMatch(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /failed live jobs refund credits$/
-);
+// Library renders failure/retry state; refund-unconfirmed accounting remains
+// asserted on Generate/API/client sources rather than retired UI copy.
 assert.match(
   fs.readFileSync(join(root, "app/auth/callback/layout.tsx"), "utf8"),
   /PRIVATE_ROBOTS|index:\s*false/
@@ -3819,7 +3780,6 @@ assert.match(
 );
 assert.match(analyticsSrc, /NEXT_PUBLIC_ANALYTICS_URL|sendBeacon/);
 assert.match(createStudio, /upload_ready|export_click/);
-assert.match(library, /export_click/);
 assert.match(
   fs.readFileSync(join(root, "components/ExploreProjectGrid.tsx"), "utf8"),
   /project_open/
@@ -3960,7 +3920,9 @@ const publicSampleSrc = fs.readFileSync(
 const createSampleSrc = publicSampleSrc.slice(
   publicSampleSrc.indexOf("function CreateSampleBrowser")
 );
-assert.match(homeHeroSrc, /PublicLaunchPackSample surface="home"/);
+assert.match(homeHeroSrc, /data-home-hero=["']street-power-up["']/);
+assert.match(homeHeroSrc, /Try Street Power-Up/);
+assert.match(homeHeroSrc, /cached prototype|cached sample/);
 assert.match(homeMomentsSrc, /One toy photo\. More ways to sell\./);
 assert.match(homeMomentsSrc, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(momentStageSrc, /Official Concept/);
@@ -4084,11 +4046,9 @@ assert.match(
 assert.match(batchSkuSrc, /initialSku/);
 assert.match(batchSkuSrc, /hydrateToyIdentityFromQuery\(initialSku\)/);
 assert.match(batchSkuSrc, /sku:\s*toyIdentity\.sku/);
-// Multiline JSX props (initialSku + optional initialSample) — wide window.
-assert.match(
-  createPage,
-  /BatchStudio[\s\S]{0,200}pack=["']seller["'][\s\S]{0,200}initialSku/
-);
+// The fixed Moment Create page no longer mounts the archived Seller Pack
+// BatchStudio; SKU/sample hydration remains covered on BatchStudio itself.
+assert.doesNotMatch(createPage, /BatchStudio|pack=["']seller["']/);
 // AfterPath Next SKU ?try=1 → Lab still hydrate on Seller Pack (no auto 3× debit)
 assert.match(createPage, /initialSample=\{firstRunSample\}/);
 assert.match(batchSkuSrc, /initialSample/);
@@ -4164,7 +4124,6 @@ assert.match(
 );
 assert.doesNotMatch(createStudio, /<WorkflowShelf/);
 assert.match(historySrcLib, /sku\?:/);
-assert.match(library, /i\.sku|sku/);
 
 
 // MVP convergence: navigation exposes only the seller value loop.
@@ -4612,8 +4571,9 @@ assert.match(communityPublishSrc, /watermark/);
 assert.match(communityPublishSrc, /Free raw · no publish|T6/);
 assert.match(communityPublishSrc, /RATE_LIMITED/);
 assert.match(communityPublishSrc, /isSafeDeliverableUrl/);
-assert.match(library, /watermark:\s*Boolean\(item\.watermark\)/);
-assert.match(library, /item\.watermark && !item\.demo/);
+// Library filters demo rows and only renders server-approved private results;
+// watermark/public-share policy remains covered by the shared trust helpers.
+assert.match(library, /job\.downloadAllowed === true/);
 // Tools + Effects hubs: freeTrial-honest CTAs + Phase H FAQ (not thin shelves)
 const toolsIndexSrc = fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8");
 assert.match(toolsIndexSrc, /FreeTrialCta/);
@@ -4694,18 +4654,9 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "app/flow/page.tsx"), "utf8"),
   /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Generate free/
 );
-const libraryGridPublicCtaSrc = fs.readFileSync(
-  join(root, "components/LibraryGrid.tsx"),
-  "utf8"
-);
-assert.doesNotMatch(libraryGridPublicCtaSrc, /FreeTrialCta/);
-assert.match(libraryGridPublicCtaSrc, /Create one Moment/);
-assert.match(libraryGridPublicCtaSrc, /data-library-action="moment"/);
-assert.match(libraryGridPublicCtaSrc, /Create new Pack/);
-assert.doesNotMatch(
-  libraryGridPublicCtaSrc,
-  /10 seconds/
-);
+assert.doesNotMatch(library, /FreeTrialCta/);
+assert.match(library, /Create new Moment|Create Street Power-Up/);
+assert.doesNotMatch(library, /Create new Pack|10 seconds/);
 // Auth + home suite residual FreeTrial honesty (Phase C/F)
 assert.match(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
@@ -5087,15 +5038,8 @@ assert.match(
   fs.readFileSync(join(root, "app/cinema/page.tsx"), "utf8"),
   /GenerateAfterPath/
 );
-// Library session jobs: TIMEOUT / refund unconfirmed honesty + Retry recipe
-const libraryGridSrc = fs.readFileSync(
-  join(root, "components/LibraryGrid.tsx"),
-  "utf8"
-);
-assert.match(libraryGridSrc, /errorCode/);
-assert.match(libraryGridSrc, /refund unconfirmed|TIMEOUT/);
-assert.match(libraryGridSrc, /Retry recipe/);
-assert.match(libraryGridSrc, /Lab sample|try=1&sample=scout/);
+// Library keeps only the current account result states. Failure/retry and
+// sample/provider accounting are asserted on their owning API/client modules.
 // Mobile suite bar: hide image/cinema; Library shows one Moment
 const mobileBarSrc = fs.readFileSync(
   join(root, "components/MobileGenerateBar.tsx"),
@@ -5103,10 +5047,6 @@ const mobileBarSrc = fs.readFileSync(
 );
 assert.match(mobileBarSrc, /\/image|\/cinema/);
 assert.match(mobileBarSrc, /effect=street-power-up|Create one Moment/);
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryStorageBanner.tsx"), "utf8"),
-  /process-memory|Session jobs|Device/
-);
 assert.match(
   fs.readFileSync(join(root, "components/CommunityPublishButton.tsx"), "utf8"),
   /Lab only|demo/
@@ -5279,21 +5219,6 @@ const communityPublish = fs.readFileSync(
 assert.match(communityPublish, /isPublicCommunityVideoUrl/);
 assert.match(communityPublish, /isSessionGatedDownloadUrl/);
 assert.match(communityPublish, /\/demos\//);
-// Library session Retry uses remix contract (ratio/duration/channel from job)
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /data-session-remake=["']remix["']/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /remixOptsFromRecord|data-session-remake-params=["']job["']/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /data-library-remake-params=["']job["']/
-);
-
-
 // Landing remake + suite doors use createRemixHref (ratio/duration/channel)
 assert.match(
   fs.readFileSync(join(root, "components/LandingResults.tsx"), "utf8"),
@@ -5385,16 +5310,10 @@ assert.match(
 );
 
 
-// Library session: ledger fork retry posts /retry then createUi remix
-const libraryGridRetry = fs.readFileSync(
-  join(root, "components/LibraryGrid.tsx"),
-  "utf8"
-);
-assert.match(libraryGridRetry, /data-session-retry=["']ledger-fork["']/);
-assert.match(libraryGridRetry, /forkSessionRetry/);
-assert.match(libraryGridRetry, /\/retry/);
-assert.match(libraryGridRetry, /NOT_RETRYABLE|JOB_IN_FLIGHT/);
-assert.match(libraryGridRetry, /createUi/);
+// Library retry is a single failed/canceled Moment handoff to the guarded
+// generations retry route; the route/store keeps the one-time token contract.
+assert.match(library, /isRetryable\(job\.status\)/);
+assert.match(library, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}\/retry/);
 
 
 // Seller Pack UI: failed (incl. TIMEOUT unconfirmed) remains retryEligible
@@ -5547,14 +5466,8 @@ assert.equal(
   failedLedgerCreditsOutcomePure({ errorCode: "GENERATION_FAILED" }),
   undefined
 );
-// Library session jobs: broader unconfirmed codes + Lab sample door
-const librarySessionHonesty = fs.readFileSync(
-  join(root, "components/LibraryGrid.tsx"),
-  "utf8"
-);
-assert.match(librarySessionHonesty, /PROVIDER_NETWORK/);
-assert.match(librarySessionHonesty, /MODEL_EMPTY/);
-assert.match(librarySessionHonesty, /data-session-lab=["']sample["']/);
+// Provider failure codes and unconfirmed settlement remain owned by the
+// generation/image clients below, not by retired Library sample UI.
 // Clients: MODEL_EMPTY on typed error body (not only empty 200)
 assert.match(
   fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
@@ -5678,18 +5591,6 @@ assert.match(genJobsRouteHead, /SESSION_JOBS_LIST_LIMIT\s*=\s*50/);
 assert.match(genJobsRouteHead, /listLimit:\s*SESSION_JOBS_LIST_LIMIT|listLimit,/);
 assert.match(genJobsRouteHead, /countJobsForSession/);
 assert.doesNotMatch(genJobsRouteHead, /touchOpenJobsForSession/);
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /SESSION_JOBS_UI_LIMIT\s*=\s*50/
-);
-assert.doesNotMatch(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /body\.jobs\.slice\(0,\s*12\)/
-);
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /data-session-list-limit|data-session-listed/
-);
 // Modules Photo → Clip carries remix contract (not bare /create)
 assert.match(
   fs.readFileSync(join(root, "components/ModulesSuiteCtas.tsx"), "utf8"),
@@ -5776,27 +5677,8 @@ assert.doesNotMatch(
   genJobsGet,
   /export async function GET[\s\S]{0,800}for \(const j of raw\)/
 );
-// Library session panel: honor server page size (not silent slice 12)
-const librarySessionList = fs.readFileSync(
-  join(root, "components/LibraryGrid.tsx"),
-  "utf8"
-);
-assert.match(librarySessionList, /privateDownloadHeaders/);
-assert.match(
-  librarySessionList,
-  /hasDurablePrivate\s*\?\s*"Private results"\s*:\s*"Current session"/
-);
-assert.match(
-  librarySessionList,
-  /Completed clips persist in your account and download through a\s+fresh owner-only link/
-);
-assert.match(librarySessionList, /SESSION_JOBS_UI_LIMIT\s*=\s*50/);
-assert.match(librarySessionList, /data-session-list-limit/);
-assert.match(librarySessionList, /showing \{listed\}|showing \$\{listed\}/);
-assert.doesNotMatch(
-  librarySessionList,
-  /setSessionJobs\(body\.jobs\.slice\(0,\s*12\)\)/
-);
+// Library MVP keeps list sizing and full-session counts on the generations API;
+// the retired SessionJobsPanel pagination markers are intentionally absent.
 // Modules Photo→Clip uses remix contract (ratio/duration/channel)
 assert.match(
   fs.readFileSync(join(root, "components/ModulesSuiteCtas.tsx"), "utf8"),
@@ -5975,44 +5857,14 @@ assert.doesNotMatch(
   /\[["']\/create["'],\s*["']Generate["']\]/
 );
 assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /LIBRARY_GENERATE_HREF|data-library-empty=["']generate-remix["']/
-);
-assert.match(
   library,
   /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
 );
-for (const [name, source] of [
-  ["LIBRARY_STICKY_MOMENT_HREF", "library-sticky"],
-  ["LIBRARY_EMPTY_MOMENT_HREF", "library-empty"],
-  ["LIBRARY_PROJECT_MOMENT_HREF", "library-project"],
-]) {
-  assert.match(
-    library,
-    new RegExp(
-      "const " +
-        name +
-        "\\s*=\\s*`\\$\\{MOMENT_CREATE_HREF\\}&source=" +
-        source +
-        "`"
-    ),
-    `LibraryGrid must derive ${name} from MOMENT_CREATE_HREF`
-  );
-  assert.match(
-    library,
-    new RegExp("href=\\{" + name + "\\}"),
-    `LibraryGrid must use ${name}`
-  );
-}
-assert.doesNotMatch(
-  library,
-  /\/create\?effect=street-power-up/,
-  "LibraryGrid must not retain an old effect-only Moment entry"
-);
 assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /refundUnconfirmed|refund unconfirmed until balance/
+  library,
+  /const CREATE_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=library`/
 );
+assert.match(library, /href=\{CREATE_MOMENT_HREF\}/);
 assert.match(
   fs.readFileSync(join(root, "components/ProfilePanel.tsx"), "utf8"),
   /PROFILE_GENERATE_HREF|data-profile-generate=["']remix["']/
@@ -6050,7 +5902,7 @@ for (const [rel, re] of residualGenerateDoors) {
 }
 assert.match(
   fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}[\s\S]*Create one Moment/
+  /href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}[\s\S]*Create new Moment/
 );
 // Cinema director board compose → Generate carries remix + prompt (not bare effect=)
 const cinemaComposeSrc = fs.readFileSync(
@@ -6113,7 +5965,6 @@ const residualLabSampleDoors = [
   ["components/HomeFeatureCarousel.tsx", /createLabSampleTryHref|FEATURE_LAB_SAMPLE_HREF/],
   ["components/FreeTrialCta.tsx", /createLabSampleTryHref/],
   ["components/GenerateFailPanel.tsx", /createLabSampleTryHref/],
-  ["components/LibraryGrid.tsx", /createLabSampleTryHref|LIBRARY_LAB_SAMPLE_HREF/],
   ["components/CommandPalette.tsx", /createLabSampleTryHref|CMD_LAB_SAMPLE_HREF/],
 ];
 for (const [rel, re] of residualLabSampleDoors) {
