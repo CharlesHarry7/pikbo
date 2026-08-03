@@ -55,6 +55,7 @@ const pricingButton = read("components/PricingCheckoutButton.tsx");
 const softLaunch = read("lib/softLaunch.ts");
 const publicSample = read("components/PublicLaunchPackSample.tsx");
 const libraryPage = read("app/library/page.tsx");
+const libraryGrid = read("components/LibraryGrid.tsx");
 
 // 1. Moment CTA is a Moment path, never the legacy Seller Pack path.
 assertMatch(
@@ -75,9 +76,29 @@ assertMatch(
   "homepage create CTA must enter the fixed Moment, not generic Studio"
 );
 assertMatch(
+  studio,
+  /const fixedMomentNextPath\s*=\s*[\s\S]{0,220}MOMENT_CREATE_HREF/,
+  "fixed Moment gate must derive its sign-in return path from the shared Moment href"
+);
+assertMatch(
+  studio,
+  /const privateMomentLoginHref\s*=\s*`\/login\?next=\$\{encodeURIComponent\([\s\S]{0,120}fixedMomentNextPath[\s\S]{0,40}\)\}`/,
+  "fixed Moment gate must preserve the exact Moment path through login"
+);
+assertMatch(
+  studio,
+  /fixedMomentContract\s*&&\s*!session\?\.signedIn\s*\?\s*\([\s\S]{0,600}data-public-single-preview-sign-in[\s\S]{0,120}Sign in for Street Power-Up/,
+  "only anonymous fixed Moment visitors may receive the exact-path sign-in action"
+);
+assertMatch(
   libraryPage,
   /href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}/,
   "Library create CTA must return to the fixed Moment"
+);
+assertMatch(
+  libraryGrid,
+  /async function downloadClip\(item: HistoryItem\)[\s\S]{0,900}const headers = await privateDownloadHeaders\(\)[\s\S]{0,180}fetch\(gateUrl,\s*\{\s*method:\s*[\"']HEAD[\"'],\s*headers\s*\}\)/,
+  "Library device-history downloads must authenticate the private result HEAD gate"
 );
 
 // 2. The client carries an explicit, typed contract rather than relying on

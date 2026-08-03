@@ -1418,7 +1418,8 @@ export function LibraryGrid() {
     if (item.requestId) {
       const gateUrl = `/api/downloads/${encodeURIComponent(item.requestId)}`;
       try {
-        const head = await fetch(gateUrl, { method: "HEAD" });
+        const headers = await privateDownloadHeaders();
+        const head = await fetch(gateUrl, { method: "HEAD", headers });
         const decision = interpretDownloadHead({
           status: head.status,
           code: head.headers.get("X-Pikbo-Download-Code"),
