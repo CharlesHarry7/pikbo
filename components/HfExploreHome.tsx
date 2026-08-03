@@ -123,19 +123,14 @@ export function HfExploreHome({
     >
       {!toolFirstLayout ? <SoftLaunchStrip /> : null}
 
-      {/* HF promo campaign cards — free / flagship / presets / jobs */}
-      {!toolFirstLayout ? <HfPromoCampaignStrip /> : null}
-
-      {/* HF product entry rail — app shelf */}
-      <HfProductRail />
-
-      {/* HF Viral Presets wall — dense toy media */}
-      <HomeViralWall items={wallItems} />
-
-      <SeedanceCampaign />
-
-      {/* Premiere strip — H1 only when tool-first layout did not already emit H1 */}
-      <section className="relative min-h-[min(320px,45svh)] overflow-hidden border-b border-white/10 sm:min-h-[min(420px,55svh)]">
+      {/*
+        HF pattern: full-bleed media + H1 + Generate FIRST above the fold.
+        Promo rail / apps / viral wall follow — not a research landing.
+      */}
+      <section
+        data-hf-hero="premiere"
+        className="relative min-h-[min(72svh,640px)] overflow-hidden border-b border-white/10 sm:min-h-[min(78svh,720px)]"
+      >
         <div className="absolute inset-0">
           <Clip
             key={item.id}
@@ -143,37 +138,38 @@ export function HfExploreHome({
             eager
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/25" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
         </div>
 
-        <div className="relative mx-auto flex min-h-[min(420px,50svh)] max-w-6xl flex-col justify-end px-4 pb-8 pt-12 sm:min-h-[min(520px,55svh)] sm:px-6 sm:pb-12 sm:pt-16">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
-            {t("home.feelFirst")}
+        <div className="relative mx-auto flex min-h-[min(72svh,640px)] max-w-6xl flex-col justify-end px-4 pb-10 pt-16 sm:min-h-[min(78svh,720px)] sm:px-6 sm:pb-14 sm:pt-20">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#c8ff3d]">
+            Designer-toy creative suite
           </p>
-          <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#c8ff3d]/30 bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#c8ff3d] shadow-[0_0_24px_rgba(200,255,61,0.15)] backdrop-blur">
-            {item.badge ?? "PIKBO Lab · cached prototype"}
+          <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#c8ff3d]/35 bg-black/55 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#c8ff3d] shadow-[0_0_24px_rgba(200,255,61,0.15)] backdrop-blur">
+            Seedance · toy video
           </span>
           {toolFirstLayout ? (
-            <p className="font-display mt-3 max-w-xl text-2xl font-black uppercase leading-[1.02] tracking-tight text-white/90 sm:text-4xl">
+            <p className="font-display mt-4 max-w-2xl text-3xl font-black uppercase leading-[0.98] tracking-tight text-white/95 sm:text-5xl">
               {item.title}
             </p>
           ) : (
-            <h1 className="font-display mt-3 max-w-xl text-3xl font-black uppercase leading-[1.02] tracking-tight sm:text-5xl md:text-6xl">
+            <h1 className="font-display mt-4 max-w-3xl text-4xl font-black uppercase leading-[0.98] tracking-tight sm:text-6xl md:text-7xl">
               {site.homeH1}
             </h1>
           )}
           {!toolFirstLayout ? (
-            <p className="mt-2 max-w-md text-base font-semibold text-white/80 sm:text-lg">
-              {item.title}
+            <p className="mt-3 max-w-xl text-base font-semibold text-white/85 sm:text-lg">
+              {item.title} · one photo → sellable clip
             </p>
           ) : null}
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65 sm:text-[15px]">
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/65 sm:text-[15px]">
             {t("home.hero.sub")}
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="mt-7 flex flex-wrap items-center gap-3">
             <Link
               href="/create?effect=360-spin-showcase&source=home-hero-generate"
-              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
+              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-8 py-4 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
             >
               Generate
             </Link>
@@ -186,28 +182,21 @@ export function HfExploreHome({
                   recipe: item.recipeSlug,
                 })
               }
-              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-black/50 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50 hover:bg-black/60"
+              className="inline-flex items-center justify-center rounded-full border border-white/25 bg-black/50 px-6 py-4 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50 hover:bg-black/60"
             >
               {t("home.useRecipe")}
             </Link>
             <Link
               href="/effects"
-              className="text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
+              className="text-sm font-semibold text-white/60 underline-offset-4 hover:text-white hover:underline"
             >
-              All presets
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
-            >
-              Sign in for private live
+              Viral presets
             </Link>
           </div>
           <p className="mt-3 text-[11px] text-white/45">
-            Designer-toy creative suite · watch Lab free · private live for invited sellers
+            Watch Lab free · Generate with your figure when signed in
           </p>
 
-          {/* Progress rail */}
           <div className="mt-8 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
             {showcase.map((s, i) => (
               <button
@@ -237,6 +226,17 @@ export function HfExploreHome({
           </div>
         </div>
       </section>
+
+      {/* HF promo campaign cards — free / flagship / presets / jobs */}
+      {!toolFirstLayout ? <HfPromoCampaignStrip /> : null}
+
+      {/* HF product entry rail — app shelf */}
+      <HfProductRail />
+
+      {/* HF Viral Presets wall — dense toy media */}
+      <HomeViralWall items={wallItems} />
+
+      <SeedanceCampaign />
 
       {/* Suite doors — Generate + Modules + Seller Pack */}
       <SuiteEntryStrip />

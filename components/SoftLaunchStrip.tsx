@@ -66,21 +66,28 @@ export function SoftLaunchStrip() {
         ? `${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · refunds when confirmed`
         : "Continue with cached Lab · private live for invited sellers";
 
-  // Keep every public conversion on one preset-first Moment.
-  const primaryHref = trialDone
-    ? "/pricing"
-    : demo
-      ? `/create?effect=${SOFT_LAUNCH_GENERATE_EFFECT}&source=soft-launch`
+  // Demo/guest: always lead with Generate (HF free-hook energy).
+  // Signed-in exhausted trial may route to pricing as secondary path.
+  const primaryHref = demo
+    ? `/create?effect=${SOFT_LAUNCH_GENERATE_EFFECT}&source=soft-launch`
+    : trialDone
+      ? "/pricing"
       : "/create?effect=street-power-up&source=soft-launch";
-  const primaryLabel = trialDone
-    ? "Compare plans"
-    : demo
-      ? "Generate"
+  const primaryLabel = demo
+    ? "Generate"
+    : trialDone
+      ? "Compare plans"
       : `Generate · ${freeLiveModelLabel} 5s`;
   const secondaryHref = demo
     ? SOFT_LAUNCH_LAB_SAMPLE_HREF
-    : createRemixHref(SOFT_LAUNCH_GENERATE_EFFECT);
-  const secondaryLabel = demo ? "Watch Lab sample" : "Open studio";
+    : trialDone
+      ? createRemixHref(SOFT_LAUNCH_GENERATE_EFFECT)
+      : createRemixHref(SOFT_LAUNCH_GENERATE_EFFECT);
+  const secondaryLabel = demo
+    ? "Watch Lab sample"
+    : trialDone
+      ? "Keep exploring Lab"
+      : "Open studio";
 
   return (
     <div className="border-b border-[#c8ff3d]/30 bg-gradient-to-r from-[#c8ff3d]/[0.16] via-black to-black px-3 py-3 sm:px-5">
