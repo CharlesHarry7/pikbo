@@ -487,6 +487,10 @@ const checkoutRoute = readFileSync(
   join(root, "app/api/checkout/route.ts"),
   "utf8"
 );
+const pricingCheckoutButton = readFileSync(
+  join(root, "components/PricingCheckoutButton.tsx"),
+  "utf8"
+);
 assert.match(checkoutRoute, /getAuthUserFromRequest/);
 assert.match(checkoutRoute, /pikbo_user_id/);
 assert.match(checkoutRoute, /pikbo_account_id/);
@@ -518,6 +522,16 @@ assert.doesNotMatch(
   checkoutRoute,
   /headers\.get\(["']origin["']\)/i,
   "checkout must not trust request Origin"
+);
+assert.match(
+  pricingCheckoutButton,
+  /const PRICING_LOGIN_HREF = `\/login\?next=\$\{encodeURIComponent\(["']\/pricing["']\)\}`/,
+  "anonymous pricing checkout must preserve the pricing intent through login"
+);
+assert.match(
+  pricingCheckoutButton,
+  /data\.code === ["']AUTH_REQUIRED["'][\s\S]{0,120}window\.location\.assign\(PRICING_LOGIN_HREF\)/,
+  "server AUTH_REQUIRED checkout responses must hand off to auth instead of trapping on an inline error"
 );
 
 const confirmRoute = readFileSync(

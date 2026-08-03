@@ -62,8 +62,9 @@ for (const relativePath of publicPromiseFiles) {
 }
 
 assert(
-  read("lib/site.ts").includes("Preview cached Pikbo Lab prototypes"),
-  "site metadata must lead with the cached validation path"
+  read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
+    read("lib/site.ts").includes("AI product video studio for toy sellers"),
+  "site metadata must lead with concrete seller outcomes and the gated private workflow"
 );
 assert(
   /When private Live is enabled,\s+eligible invited accounts\s+can create private 5-second 720p results/.test(
@@ -78,10 +79,14 @@ assert(
   "pricing must keep subscriptions closed until private-beta proof"
 );
 assert(
-  /no product photo\s+is accepted or processed/.test(
-    read("app/create/page.tsx")
-  ),
-  "Create must not present public product-photo processing"
+  read("app/create/page.tsx").includes("<PrivateSellerPackGate>") &&
+    read("components/PrivateSellerPackGate.tsx").includes(
+      "canUsePrivateLaunch(me)"
+    ) &&
+    /\{privateInputEnabled \? \([\s\S]*type="file"/.test(
+      read("components/BatchStudio.tsx")
+    ),
+  "Create must gate the Pack route and product-photo input behind private account capability"
 );
 assert(
   read("components/CreateStudio.tsx").includes(

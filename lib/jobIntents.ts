@@ -23,7 +23,7 @@ export type JobIntent = {
   effect: string;
   aspectRatio: "9:16" | "16:9" | "1:1";
   channel: "etsy" | "tiktok" | "reels" | "whatnot" | "pdp";
-  /** Optional deep link into Seller Pack mode */
+  /** Optional deep link override for a legacy intent */
   href?: string;
 };
 
@@ -63,12 +63,11 @@ export const JOB_INTENTS: JobIntent[] = [
   },
   {
     id: "seller-pack",
-    label: "Starter Pack · 3 clips",
-    blurb: "Listing + unboxing + social hook · quote shown before run",
-    effect: "360-spin-showcase",
-    aspectRatio: "1:1",
-    channel: "etsy",
-    href: "/create?mode=seller-pack",
+    label: "Street Power-Up Moment",
+    blurb: "One directed 9:16 launch clip from one toy photo",
+    effect: "street-power-up",
+    aspectRatio: "9:16",
+    channel: "tiktok",
   },
 ];
 
@@ -79,7 +78,8 @@ export function getJobIntent(id: string): JobIntent | undefined {
 /**
  * Outcome-first Create deep link: remix contract (effect/ratio/duration/channel)
  * plus `job=` so CreateStudio can still highlight the commercial intent chip.
- * Seller Pack keeps mode=seller-pack.
+ * Legacy Seller Pack intents resolve to one public Moment; the private
+ * multi-output validation route is never emitted by this public helper.
  */
 export function createJobRemixHref(jobId: JobIntentId | string): string {
   const intent = getJobIntent(jobId);

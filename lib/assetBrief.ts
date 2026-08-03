@@ -177,7 +177,7 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
   const zh = locale === "zh";
   const shape = classifyShape(input.probe);
   const label = aspectLabel(input.probe, shape);
-  const sellerPackHref = "/create?mode=seller-pack";
+  const sellerPackHref = "/create?effect=street-power-up";
 
   if (!input.hasImage) {
     return {
@@ -300,8 +300,8 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
   bullets.push({
     id: "pack",
     text: zh
-      ? "商用默认：卖家三件套（上新包）= 上架旋转 + 开箱揭晓 + 社媒钩子，同一静图。"
-      : "Commercial default: Seller Starter Pack — listing spin + box reveal + social hook; the exact Live quote is shown only when eligible.",
+      ? "商用默认：先选一个最符合当下发布目的的动效，不强制一次生成三条。"
+      : "Commercial default: choose the one directed Moment that fits this launch; public creation never forces a three-clip bundle.",
     tone: "ok",
   });
 

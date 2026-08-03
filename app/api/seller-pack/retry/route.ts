@@ -3,6 +3,7 @@ import { ensureSession, publicSession } from "@/lib/session";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 import { durableCreditsActive } from "@/lib/durableCredits";
 import { retrySellerPackChildAtomic } from "@/lib/durableCredits/sellerPack";
+import { resolvePrivateLiveAccess } from "@/lib/privateLiveAccessServer";
 
 export const runtime = "nodejs";
 
@@ -47,6 +48,22 @@ export async function POST(req: Request) {
         session: publicSession(session),
       },
       { status: 503 }
+    );
+  }
+
+  // Retrying a failed child re-reserves 10 durable credits. Keep the same
+  // invite boundary as the initial Pack reserve so an invite revocation can
+  // never turn a stale owner link into a new credit hold/provider attempt.
+  const privateLive = resolvePrivateLiveAccess(auth);
+  if (!privateLive.invite.invited) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "PRIVATE_PREVIEW_REQUIRED",
+        error: "Private seller Preview access is required to retry this Pack",
+        session: publicSession(session),
+      },
+      { status: 403 }
     );
   }
 

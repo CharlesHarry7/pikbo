@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
 import { company } from "@/lib/company";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { Logo } from "@/components/Logo";
+
+const FOOTER_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=footer` as const;
 
 const FOOTER_GROUPS = [
   {
     label: "Product",
     links: [
-      ["/create?mode=seller-pack&source=footer&try=1&sample=scout", "Create"],
+      [FOOTER_CREATE_HREF, "Create"],
       ["/library", "Library"],
       ["/pricing", "Pricing"],
     ],
@@ -17,8 +20,8 @@ const FOOTER_GROUPS = [
     links: [
       ["/tools/ai-toy-video-generator", "AI toy video generator"],
       [
-        "/guides/seller-pack-workflow-listing-reveal-hook",
-        "Launch Pack guide",
+        "/guides/how-to-make-a-figure-spin-video",
+        "Figure spin guide",
       ],
     ],
   },
@@ -43,15 +46,15 @@ export function Footer() {
             <Logo size={30} />
 
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/45">
-              Turn one owned toy photo into a fixed Listing Spin, Blind-box
-              Reveal, and Social Flash.
+              Pick one directed Moment and turn one owned toy photo into one
+              launch-ready clip.
             </p>
             <Link
-              href="/create?mode=seller-pack&source=footer&try=1&sample=scout"
+              href={FOOTER_CREATE_HREF}
               className="btn btn-primary mt-5 !px-4 !py-2 text-xs"
               data-footer-path="product-first"
             >
-              Preview Launch Pack
+              Create a toy Moment
             </Link>
           </div>
           {FOOTER_GROUPS.map((group) => (

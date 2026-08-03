@@ -168,7 +168,7 @@ export function HfExploreHome({
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
-              href="/#home-create"
+              href="/create?effect=street-power-up"
               className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
             >
               Use tool on this page
@@ -329,7 +329,7 @@ export function HfExploreHome({
               {t("home.insideProject")}
             </Link>
             <Link
-              href="/create?mode=seller-pack"
+              href="/create?effect=street-power-up"
               className="inline-flex rounded-full border border-white/15 px-5 py-3.5 text-sm font-bold text-white/70 transition hover:border-white/30 hover:text-white"
             >
               {t("cta.sellerPack")}
@@ -439,9 +439,9 @@ export function HfExploreHome({
             </div>
             {[
               {
-                href: "/create?mode=seller-pack",
-                label: "Seller Starter Pack",
-                sub: "3 clips · 30 credits",
+                href: "/create?effect=street-power-up",
+                label: "Street Power-Up Moment",
+                sub: "one directed clip",
               },
               { href: "/modules", label: "Modules", sub: "Video jobs" },
               { href: "/effects", label: "Video presets", sub: "Viral recipes" },
@@ -462,27 +462,26 @@ export function HfExploreHome({
         </div>
       </section>
 
-      {/* Lower: three-output Seller Starter Pack; 12-output Launch Pack is later. */}
+      {/* Public path: one directed Moment at a time. */}
       <section className="px-3 pb-6 sm:px-5">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent p-5 sm:flex-row sm:items-center sm:p-6">
           <div>
             <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
-              Seller Starter Pack — 3 clips / 30 credits
+              One toy Moment — one directed result
             </p>
             <h3 className="mt-1 font-display text-lg font-bold uppercase tracking-tight sm:text-xl">
-              One photo → three commercial clips
+              One photo → one directed clip
             </h3>
             <p className="mt-1 max-w-md text-[12px] text-white/50">
-              Listing 360° + Box Reveal + Social Hook — launch-ready video for
-              shops and feeds. Own photos only. Lab free to watch; live per
-              clip.
+              Choose one preset for a listing, drop, or social post. Own photos
+              only. Lab is free to watch; private live access is gated.
             </p>
           </div>
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up"
             className="inline-flex shrink-0 items-center rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-sm font-bold text-[#c8ff3d] transition hover:bg-[#c8ff3d]/10"
           >
-            Open Seller Starter Pack →
+            Create one Moment →
           </Link>
         </div>
       </section>

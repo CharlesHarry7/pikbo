@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { site } from "@/lib/site";
 
 const HIGH_INTENT_PAGES = [
   ["/tools/ai-toy-video-generator", "AI toy video generator"],
@@ -9,16 +8,16 @@ const HIGH_INTENT_PAGES = [
 
 const FAQ = [
   {
-    q: "What does Pikbo make?",
-    a: "Pikbo turns one owned toy photo into a fixed Launch Pack: a square listing spin, a vertical blind-box reveal, and a vertical social hook.",
+    q: "What goes in?",
+    a: "One clear photo of a designer toy you own or are authorized to market.",
   },
   {
-    q: "Do public previews use my photo?",
-    a: "No. Public examples are labeled cached previews and do not process your upload. When private Live is enabled, only eligible invited, signed-in beta accounts can submit a real generation.",
+    q: "What comes out?",
+    a: "The product target is a listing spin, blind-box reveal, and social hook. Public visitors currently see separate archived format prototypes.",
   },
   {
-    q: "How are failed clips charged?",
-    a: "The three-format Pack reserves 30 credits. Each completed clip settles 10 credits; a confirmed failed format restores 10 credits.",
+    q: "Can I buy it now?",
+    a: "Not yet. Seller access is invite-only while output quality, private recovery, and cost are validated.",
   },
 ] as const;
 
@@ -34,35 +33,96 @@ export function HomeSeoBody() {
   };
 
   return (
-    <section className="border-t border-[#D4D8E0] bg-[#F7F8FA] px-5 py-16 text-[#15171B] sm:px-8 sm:py-22">
+    <section className="bg-[#F2EDE3] px-4 pb-20 text-[#171717] sm:px-7 sm:pb-28 lg:bg-[#111111] lg:px-8 lg:pb-24 lg:text-[#F5F1E8]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#2457E6]">
-              Built around the product
+      <div className="mx-auto max-w-[1440px]">
+        <div className="grid overflow-hidden rounded-[26px] border border-black/12 bg-[#FAF7F0] lg:grid-cols-[0.8fr_1.2fr] lg:rounded-[18px] lg:border-white/12 lg:bg-[#181818]">
+          <div className="border-b border-black/12 p-6 sm:p-9 lg:border-b-0 lg:border-r lg:border-white/12 lg:p-12">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF6846]">
+              One simple workflow
             </p>
-            <h2 className="mt-3 font-display text-4xl font-black leading-[0.96] tracking-[-0.055em] sm:text-5xl">
-              See the input, the output, and the limits.
+            <h2 className="mt-4 font-display text-4xl font-black leading-[0.94] tracking-[-0.055em] sm:text-5xl">
+              From shelf shot to launch set.
             </h2>
-            <p className="mt-6 max-w-xl text-sm font-semibold leading-6 text-[#626B78] sm:text-base">
-              {site.name} is for designer-toy sellers and studios that already
-              have clear product photos but need motion for listings, launches,
-              and social posts. Public prototypes stay labeled until Pikbo can
-              publish verified beta input-to-output evidence.
+            <p className="mt-5 max-w-md text-sm font-semibold leading-6 text-[#6D675E] lg:text-[#A39C91]">
+              No prompt engineering, model hunting, or editing timeline. The
+              invited private-beta workflow is designed to keep completed clips
+              private and reusable.
             </p>
-            <nav
-              aria-label="Focused toy video guides"
-              className="mt-7 flex flex-wrap gap-2"
+          </div>
+
+          <div className="divide-y divide-black/10 lg:divide-white/10">
+            {[
+              ["01", "Add your toy", "Use one clean, authorized product photo."],
+              ["02", "Choose the sales Moment", "Pick the listing, reveal, or social direction you need now."],
+              ["03", "Publish what passes review", "Download the result and check every product detail."],
+            ].map(([number, title, copy]) => (
+              <div
+                key={number}
+                className="grid grid-cols-[44px_1fr] gap-4 p-6 sm:grid-cols-[62px_1fr] sm:p-8"
+              >
+                <span className="font-display text-xl font-black text-[#2876FF] lg:text-[#D84A35]">
+                  {number}
+                </span>
+                <div>
+                  <h3 className="text-lg font-black tracking-[-0.025em]">
+                    {title}
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-[#6D675E] lg:text-[#A39C91]">{copy}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
+          <article className="rounded-[26px] bg-[#2876FF] p-7 text-white sm:p-10 lg:rounded-[18px] lg:border lg:border-white/12 lg:bg-[#181818] lg:text-[#F5F1E8]">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
+              Your working shelf
+            </p>
+            <h2 className="mt-12 max-w-2xl font-display text-3xl font-black leading-[0.96] tracking-[-0.045em] sm:mt-20 sm:text-5xl">
+              Private beta is built for private, reusable launches.
+            </h2>
+            <p className="mt-5 max-w-2xl text-sm leading-6 text-white/70 lg:text-[#A39C91]">
+              When private Live is enabled,
+              eligible invited accounts
+              can create private 5-second 720p results. Completed clips are
+              designed to return to the signed-in Library after refresh.
+            </p>
+          </article>
+
+          <article className="flex flex-col justify-between rounded-[26px] bg-[#FF6846] p-7 text-[#1B0B06] sm:p-10 lg:rounded-[18px] lg:bg-[#F5F1E8] lg:text-[#111111]">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/48">
+                Founding Studio
+              </p>
+              <h2 className="mt-4 font-display text-3xl font-black leading-[0.96] tracking-[-0.045em]">
+                Help shape the first seller-ready Pack.
+              </h2>
+            </div>
+            <Link
+              href="/contact?source=home-founding-studio"
+              className="mt-10 inline-flex min-h-14 items-center justify-between rounded-full bg-[#171717] px-6 text-sm font-black text-white hover:bg-black lg:rounded-[10px] lg:bg-[#D84A35] lg:hover:bg-[#E25A43]"
             >
+              Request seller beta <span aria-hidden>↗</span>
+            </Link>
+          </article>
+        </div>
+
+        <div className="mt-16 grid gap-10 border-t border-black/15 pt-8 lg:grid-cols-[0.7fr_1.3fr] lg:border-white/12">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6D675E] lg:text-[#A39C91]">
+              Focused tools
+            </p>
+            <nav className="mt-4 flex flex-col items-start gap-2" aria-label="Toy video guides">
               {HIGH_INTENT_PAGES.map(([href, label]) => (
                 <Link
                   key={href}
                   href={href}
-                  className="rounded-lg border border-[#CFD4DD] bg-white px-3 py-2 text-[11px] font-black text-[#5E6673] transition hover:border-[#2457E6] hover:text-[#2457E6]"
+                  className="text-sm font-black underline decoration-black/20 underline-offset-4 hover:decoration-[#FF6846] lg:decoration-white/20 lg:hover:decoration-[#D84A35]"
                 >
                   {label} ↗
                 </Link>
@@ -70,82 +130,12 @@ export function HomeSeoBody() {
             </nav>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {[
-              ["Input", "1 seller-owned toy photo"],
-              ["Output", "3 fixed 5-second formats"],
-              ["Credits", "10 per completed clip"],
-              ["Delivery", "Private signed-in Library"],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                className="rounded-2xl border border-[#D4D8E0] bg-white p-5"
-              >
-                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#7B8390]">
-                  {label}
-                </p>
-                <p className="mt-7 text-xl font-black tracking-[-0.03em]">
-                  {value}
-                </p>
-              </div>
-            ))}
-            <div className="rounded-2xl bg-[#151A24] p-5 text-white sm:col-span-2">
-              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#85A5FF]">
-                Private delivery, limited processing
-              </p>
-              <p className="mt-5 max-w-2xl text-sm leading-6 text-white/62">
-                Real beta photos are sent to the generation provider only for
-                the requested clips. Finished videos are copied to Pikbo&apos;s
-                private storage. Pikbo does not send your image, prompt, email,
-                or asset URL to analytics.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-18 grid gap-3 border-t border-black/15 pt-12 lg:grid-cols-2">
-          <article className="rounded-2xl border border-[#D4D8E0] bg-[#E9EDF7] p-6 sm:p-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#5F6774]">
-              Private beta · invite only
-            </p>
-            <h3 className="mt-4 text-2xl font-black tracking-[-0.035em]">
-              What is available now
-            </h3>
-            <p className="mt-4 text-sm leading-6 text-[#626B78]">
-              Public visitors can inspect cached examples without processing an
-              upload. When private Live is enabled, eligible invited accounts
-              can create private 5-second 720p results and recover completed
-              clips after refresh.
-              Subscriptions remain closed while quality, recovery, privacy, and
-              cost are tested.
-            </p>
-          </article>
-
-          <article className="rounded-2xl border border-[#D4D8E0] bg-white p-6 sm:p-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#5F6774]">
-              Before publishing
-            </p>
-            <h3 className="mt-4 text-2xl font-black tracking-[-0.035em]">
-              Treat every generated angle as a draft.
-            </h3>
-            <p className="mt-4 text-sm leading-6 text-[#626B78]">
-              Review sculpt, paint, logos, packaging, accessories, and
-              proportions against the physical product. Pikbo does not
-              guarantee exact unseen details, sales, reach, or rankings.
-            </p>
-          </article>
-        </div>
-
-        <div className="mt-18">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#2457E6]">
-            FAQ
-          </p>
-          <div className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-[#D4D8E0] bg-[#D4D8E0] md:grid-cols-3">
+          <div className="grid gap-px overflow-hidden rounded-2xl border border-black/12 bg-black/12 md:grid-cols-3 lg:rounded-[14px] lg:border-white/12 lg:bg-white/12">
             {FAQ.map((item) => (
-              <div key={item.q} className="bg-white p-6 sm:p-7">
-                <h3 className="text-base font-black">{item.q}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#626B78]">{item.a}</p>
-              </div>
+              <article key={item.q} className="bg-[#FAF7F0] p-6 lg:bg-[#181818]">
+                <h3 className="font-black">{item.q}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#6D675E] lg:text-[#A39C91]">{item.a}</p>
+              </article>
             ))}
           </div>
         </div>

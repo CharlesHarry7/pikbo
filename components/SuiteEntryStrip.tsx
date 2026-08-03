@@ -25,7 +25,7 @@ const ENTRY_DEFS = [
     tagKey: "suite.tag.flagship" as const,
   },
   {
-    href: "/create?mode=seller-pack",
+    href: "/create?effect=street-power-up",
     labelKey: "suite.seller",
     blurbKey: "suite.seller.blurb",
     emoji: "🛍️",

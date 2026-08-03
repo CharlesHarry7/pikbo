@@ -77,8 +77,8 @@ export default function AboutPage() {
           <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-white/55">
             <li>Toy identity: paint, sculpt, and packaging stay the reference</li>
             <li>
-              Commercial jobs: Listing Spin, Blind-box Reveal, Social Flash,
-              and the fixed three-video Launch Pack
+              Commercial jobs: choose one directed Moment for a listing,
+              reveal, drop, or social post
             </li>
             <li>
               Rights: live jobs require confirming you own the photo / rights

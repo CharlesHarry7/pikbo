@@ -93,7 +93,7 @@ export function deliveryItemsForJob(
       });
       items.push({
         id: "next",
-        label: "Same photo → TikTok hook or Seller Starter Pack",
+        label: "Same photo → TikTok hook",
         href: createJobRemixHref("tiktok-hook"),
       });
       break;
@@ -126,8 +126,8 @@ export function deliveryItemsForJob(
       });
       items.push({
         id: "next",
-        label: "Same photo → Seller Starter Pack (3 clips / 30 credits)",
-        href: "/create?mode=seller-pack",
+        label: "Same photo → Street Power-Up Moment",
+        href: "/create?effect=street-power-up",
       });
       break;
     case "seller-pack":
@@ -148,8 +148,8 @@ export function deliveryItemsForJob(
       });
       items.push({
         id: "next",
-        label: "Same photo → another job, or Seller Starter Pack ×3",
-        href: "/create?mode=seller-pack",
+        label: "Same photo → another toy Moment",
+        href: "/create?effect=street-power-up",
       });
   }
 

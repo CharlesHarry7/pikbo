@@ -80,17 +80,17 @@ export function ModulesMobileCta() {
           {primaryLabel}
         </Link>
         <Link
-          href="/create?mode=seller-pack"
+          href="/create?effect=street-power-up&source=modules-mobile"
           onClick={() =>
             track({
               event: "landing_view",
               path: "/modules",
-              meta: { cta: "seller_pack" },
+                meta: { cta: "single_moment" },
             })
           }
           className="btn btn-ghost shrink-0 border border-white/15 px-3 py-3 text-xs font-bold"
         >
-          {t("modules.mobile.pack")}
+          Create Moment
         </Link>
         <Link
           href="/library"

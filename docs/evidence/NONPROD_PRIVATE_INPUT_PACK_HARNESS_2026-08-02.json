@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-02T05:30:00Z",
+  "sourceBaseSha": "fb1f9204a88609e519255462eb5783554564c7c5",
+  "implementationCommit": "0c3eb687758d445883f4493cc26b22569b74e542",
+  "testKind": "nonprod-private-input-pack-reservation",
+  "verdict": "PASS",
+  "environment": {
+    "production": false,
+    "projectRef": "lpfvfybkggiugosugfcw"
+  },
+  "truthBoundary": {
+    "providerCalls": 0,
+    "stripeCalls": 0,
+    "aiGeneratedMedia": false,
+    "fixtureLabel": "PIKBO QA SYNTHETIC INPUT"
+  },
+  "input": {
+    "ready": true,
+    "ownerVisible": true,
+    "outsiderVisible": false,
+    "checksumVerified": true,
+    "ownerPackChildResolved": true,
+    "outsiderPackChildDenied": true,
+    "wrongChildDenied": true
+  },
+  "pack": {
+    "count": 1,
+    "quotedCredits": 30,
+    "jobs": 3,
+    "sameInputAsset": true,
+    "idempotentReserve": true
+  },
+  "recovery": {
+    "owner": true,
+    "outsiderVisible": false
+  },
+  "accounting": {
+    "available": 10,
+    "reserved": 30,
+    "settled": 0,
+    "providerAuthorizations": 0
+  },
+  "delivery": {
+    "tested": false,
+    "reason": "No fake generated result or settlement was created"
+  },
+  "network": {
+    "allowedOrigin": "https://lpfvfybkggiugosugfcw.supabase.co",
+    "thirdPartyRequests": 0,
+    "supabaseRequests": 109
+  },
+  "schemaCompatibility": {
+    "remoteStatusRpc": "pikbo_get_seller_pack_status_v2",
+    "canonicalApplicationStatusRpc": "pikbo_get_seller_pack_status_v2",
+    "canonicalReserveRpc": "pikbo_reserve_seller_pack_v2",
+    "privateInputRpcs": [
+      "pikbo_create_toy_asset_v1",
+      "pikbo_complete_toy_asset_v1",
+      "pikbo_resolve_seller_pack_input_v1"
+    ],
+    "adapterAligned": true
+  },
+  "productRuntimeGo": false,
+  "productRuntimeReason": "HTTP UI, Provider delivery, settlement, retry, and Stripe were not tested",
+  "cleanup": {
+    "passed": true,
+    "residue": 0
+  }
+}

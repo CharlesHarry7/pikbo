@@ -14,6 +14,9 @@ function assert(condition, message) {
 }
 
 const home = read("app/page.tsx");
+const homeHero = read("components/HomeCinemaHero.tsx");
+const moments = read("lib/moments.ts");
+const publicSample = read("components/PublicLaunchPackSample.tsx");
 const softLaunch = read("lib/softLaunch.ts");
 const feed = read("lib/videoFeed.ts");
 const tile = read("components/VideoTile.tsx");
@@ -21,6 +24,7 @@ const presetPreview = read("components/PresetPreviewCard.tsx");
 const autoplay = read("components/AutoPlayVideo.tsx");
 const create = read("app/create/page.tsx");
 const batch = read("components/BatchStudio.tsx");
+const privateSellerPackGate = read("components/PrivateSellerPackGate.tsx");
 
 const proofList =
   softLaunch.match(/HOME_PROOF_SLUGS\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] ??
@@ -29,9 +33,12 @@ const proofSlugs = [...proofList.matchAll(/"([^"]+)"/g)].map((match) => match[1]
 
 assert(proofSlugs.length === 8, "homepage proof whitelist must contain exactly 8 recipes");
 assert(
-  home.includes("<HomeCinemaHero items={showcase} />") &&
-    !home.includes("<HomeViralWall"),
-  "homepage must keep the three-format hero proof and retire the eight-card wall"
+  home.includes("<HomeCinemaHero />") &&
+    homeHero.includes('<PublicLaunchPackSample surface="home" />') &&
+    !home.includes("<HomeViralWall") &&
+    publicSample.includes("Archive motion sample") &&
+    (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
+  "homepage must lead with the video archive and retire proof-card walls"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),
@@ -65,18 +72,16 @@ assert(
   "featured video must expose controls and respect reduced motion"
 );
 assert(
-  create.includes("Launch Pack · 3 fixed formats") &&
-    create.includes("Preview a Launch Pack.") &&
-    create.includes("Listing Spin") &&
-    create.includes("Blind-box Reveal") &&
-    create.includes("Social Flash") &&
+  create.includes("Prepare a private Launch Pack.") &&
+    create.includes("<PrivateSellerPackGate>") &&
+    privateSellerPackGate.includes("canUsePrivateLaunch(me)") &&
+    privateSellerPackGate.includes("router.replace(PUBLIC_MOMENT_HREF)") &&
     batch.includes("reserveSellerPackClient") &&
     batch.includes("parseExactSellerPackServerJobs") &&
     batch.includes("sellerPackQuoteLabel(packQuote)") &&
-    batch.includes('data-public-pack-preview="lab-only"') &&
     !create.includes("Launch Pack — 12 recipes") &&
     !batch.includes("Launch Pack — 12 recipes"),
-  "the primary Launch Pack must stay the fixed public-preview/private-generation three-asset path"
+  "the fixed three-child Pack engine must stay private while public creation remains one Moment"
 );
 
 console.log(

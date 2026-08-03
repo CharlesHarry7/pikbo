@@ -7,14 +7,21 @@ import { CreditsBadge } from "@/components/CreditsBadge";
 import { Footer } from "@/components/Footer";
 import {
   LanguageProvider,
-  useI18n,
 } from "@/components/LanguageProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
 import { ToastProvider } from "@/components/Toast";
 import { trackPageView } from "@/lib/analytics";
-import { MOBILE_NAV, PRIMARY_NAV } from "@/lib/softLaunch";
+import { parseMomentId } from "@/lib/moments";
+import {
+  MOBILE_NAV,
+  MOMENT_CREATE_HREF,
+  PRIMARY_NAV,
+} from "@/lib/softLaunch";
 import { cn } from "@/lib/utils";
+
+const DEFAULT_MOMENT_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=moment-shell`;
+const PRIMARY_NAV_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=primary-nav`;
 
 function active(path: string, href: string) {
   const route = href.split("?")[0];
@@ -35,14 +42,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
-  const { t } = useI18n();
   const path = usePathname() || "/";
   const searchParams = useSearchParams();
   const home = path === "/";
   const create = path.startsWith("/create");
   const sellerPackCreate =
     create && ["seller-pack", "seller"].includes(searchParams.get("mode") || "");
-  const lightShell = home || sellerPackCreate;
+  const momentValues = searchParams.getAll("moment");
+  const momentCreate =
+    create &&
+    momentValues.length === 1 &&
+    Boolean(parseMomentId(momentValues[0]));
+  const momentSurface = home || momentCreate;
+  const lightShell = momentSurface || sellerPackCreate;
+  const resultShell = momentSurface;
   const hideFooter =
     home ||
     create ||
@@ -58,31 +71,72 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     <div
       className={cn(
         "flex min-h-screen min-w-0 flex-col",
-        lightShell
-          ? "bg-[#EEF0F4] text-[#15171B]"
-          : "bg-[#0A0A0A] text-[#F7F4ED]"
+        resultShell
+          ? "bg-[#F2EFE7] text-[#171719]"
+          : lightShell
+            ? "bg-[#EEF0F4] text-[#15171B]"
+            : "bg-[#0A0A0A] text-[#F7F4ED]"
       )}
     >
       <header
         className={cn(
-          "sticky top-0 z-50 hidden h-16 items-center border-b px-7 backdrop-blur-xl lg:flex",
-          lightShell
-            ? "border-[#D4D8E0] bg-[#F7F8FA]/92"
-            : "border-white/10 bg-[#0A0A0A]/92"
+          "sticky top-0 z-50 hidden items-center border-b px-7 backdrop-blur-xl lg:flex",
+          momentSurface ? "h-16" : "h-14",
+          resultShell
+            ? "border-[#171719]/15 bg-[#F2EFE7]/94 px-8"
+            : lightShell
+              ? "border-[#D4D8E0] bg-[#F7F8FA]/92"
+              : "border-white/10 bg-[#0A0A0A]/92"
         )}
       >
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
-          <Logo
-            size={30}
-            wordClassName={cn("text-[19px]", lightShell && "!text-[#15171B]")}
-          />
+          {momentSurface ? (
+            <span className="flex items-center gap-3 text-[#171719]">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-[#FF5A36] font-display text-sm font-black text-[#171719]">
+                P
+              </span>
+              <span>
+                <span className="block font-display text-base font-black leading-none tracking-[-0.04em]">
+                  Pikbo
+                </span>
+                <span className="mt-1 block text-[7px] font-black uppercase tracking-[0.2em] text-[#79756D]">
+                  Toy moments
+                </span>
+              </span>
+            </span>
+          ) : (
+            <Logo
+              size={30}
+              wordClassName={cn(
+                "text-[19px]",
+                lightShell && "!text-[#15171B]"
+              )}
+            />
+          )}
         </Link>
         <nav
           className="mx-auto flex items-center gap-9"
           aria-label="Primary navigation"
-          data-primary-create-href="/create?mode=seller-pack"
+          data-primary-create-href={
+            momentSurface
+              ? DEFAULT_MOMENT_CREATE_HREF
+              : PRIMARY_NAV_CREATE_HREF
+          }
         >
-          {PRIMARY_NAV.map((item) => {
+          {(momentSurface
+            ? [
+                {
+                  href: "/#archive-selector",
+                  label: "Explore",
+                },
+                { href: DEFAULT_MOMENT_CREATE_HREF, label: "Create" },
+                { href: "/library", label: "Projects" },
+                { href: "/login", label: "Sign in" },
+              ]
+            : PRIMARY_NAV.filter(
+                (item) => !resultShell || item.href !== "/"
+              )
+          ).map((item) => {
             const on = active(path, item.href);
             return (
               <Link
@@ -91,10 +145,18 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 aria-current={on ? "page" : undefined}
                 className={cn(
                   "relative py-5 text-[13px] font-bold transition-colors",
-                  lightShell
+                  momentSurface
+                    ? on
+                      ? "text-[#171719]"
+                      : "text-[#77736C] hover:text-[#171719]"
+                    : resultShell
                     ? on
                       ? "text-[#15171B]"
-                      : "text-[#6D7480] hover:text-[#15171B]"
+                      : "text-[#716C64] hover:text-[#15171B]"
+                    : lightShell
+                      ? on
+                        ? "text-[#15171B]"
+                        : "text-[#6D7480] hover:text-[#15171B]"
                     : on
                       ? "text-[#F7F4ED]"
                       : "text-[#F7F4ED]/46 hover:text-[#F7F4ED]"
@@ -105,7 +167,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                   <span
                     className={cn(
                       "absolute inset-x-0 bottom-0 h-0.5",
-                      lightShell ? "bg-[#2457E6]" : "bg-[#CBFF3D]"
+                      momentSurface
+                        ? "bg-[#FF5A36]"
+                        : resultShell
+                        ? "bg-[#FF6846]"
+                        : lightShell
+                          ? "bg-[#2457E6]"
+                          : "bg-[#CBFF3D]"
                     )}
                   />
                 ) : null}
@@ -114,17 +182,37 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="flex shrink-0 items-center gap-3">
-          <LanguageSwitcher tone={lightShell ? "light" : "dark"} />
-          <CreditsBadge tone={lightShell ? "light" : "dark"} />
+          {momentSurface ? (
+            <Link
+              href={DEFAULT_MOMENT_CREATE_HREF}
+              className="inline-flex min-h-10 items-center rounded-full bg-[#171719] px-5 text-xs font-black text-[#F5F1E8] transition hover:-translate-y-0.5 hover:bg-[#FF5A36] hover:text-[#171719]"
+            >
+              Create a Moment
+            </Link>
+          ) : resultShell ? (
+            <Link
+              href={DEFAULT_MOMENT_CREATE_HREF}
+              className="inline-flex min-h-10 items-center rounded-full bg-[#171717] px-5 text-xs font-black text-white transition hover:bg-[#FF6846]"
+            >
+              Create a Moment
+            </Link>
+          ) : (
+            <>
+              <LanguageSwitcher tone={lightShell ? "light" : "dark"} />
+              <CreditsBadge tone={lightShell ? "light" : "dark"} />
+            </>
+          )}
         </div>
       </header>
 
       <header
         className={cn(
           "sticky top-0 z-50 flex h-12 items-center justify-between border-b px-3 backdrop-blur-xl lg:hidden",
-          lightShell
-            ? "border-[#D4D8E0] bg-[#F7F8FA]/94"
-            : "border-white/10 bg-[#0A0A0A]/92"
+          resultShell
+            ? "border-black/10 bg-[#F2EFE7]/94"
+            : lightShell
+              ? "border-[#D4D8E0] bg-[#F7F8FA]/94"
+              : "border-white/10 bg-[#0A0A0A]/92"
         )}
       >
         <Link href="/" aria-label="Pikbo home">
@@ -134,16 +222,57 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           />
         </Link>
         <div className="flex items-center gap-2">
-          <LanguageSwitcher compact tone={lightShell ? "light" : "dark"} />
-          <CreditsBadge compact tone={lightShell ? "light" : "dark"} />
-          {create ? (
+          {momentSurface ? (
+            <Link
+              href={DEFAULT_MOMENT_CREATE_HREF}
+              className="inline-flex min-h-9 items-center rounded-full bg-[#171719] px-4 text-[10px] font-black text-[#F5F1E8]"
+            >
+              Create a Moment
+            </Link>
+          ) : resultShell ? (
+            <>
+              <Link
+                href={DEFAULT_MOMENT_CREATE_HREF}
+                className="inline-flex min-h-9 items-center rounded-full bg-[#171717] px-4 text-[10px] font-black text-white"
+              >
+                Create a Moment
+              </Link>
+              <details className="group relative">
+                <summary className="grid min-h-9 cursor-pointer list-none place-items-center rounded-full border border-black/15 bg-white/55 px-3 text-[10px] font-black text-[#171717] [&::-webkit-details-marker]:hidden">
+                  Menu
+                </summary>
+                <nav
+                  aria-label="Mobile product menu"
+                  className="absolute right-0 top-11 z-[70] w-44 overflow-hidden rounded-2xl border border-black/10 bg-[#FAF7F0] p-1.5 text-[#171717] shadow-[0_22px_60px_-24px_rgba(0,0,0,0.55)]"
+                >
+                  {PRIMARY_NAV.filter((item) => item.href !== "/").map(
+                    (item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="block rounded-xl px-3 py-2.5 text-xs font-black hover:bg-black/[0.06]"
+                      >
+                        {item.label}
+                      </Link>
+                    )
+                  )}
+                </nav>
+              </details>
+            </>
+          ) : (
+            <>
+              <LanguageSwitcher compact tone={lightShell ? "light" : "dark"} />
+              <CreditsBadge compact tone={lightShell ? "light" : "dark"} />
+            </>
+          )}
+          {create && !resultShell ? (
             <span
               className={cn(
                 "text-[10px] font-black uppercase tracking-[0.16em]",
                 lightShell ? "text-[#2457E6]" : "text-[#CBFF3D]"
               )}
             >
-              {t("cta.launchPack")}
+              Create
             </span>
           ) : null}
         </div>
@@ -153,7 +282,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <main
           className={cn(
             "min-w-0 flex-1",
-            lightShell ? "bg-[#EEF0F4]" : "bg-[#0A0A0A]"
+            resultShell
+              ? "bg-[#F2EFE7]"
+              : lightShell
+                ? "bg-[#EEF0F4]"
+                : "bg-[#0A0A0A]"
           )}
         >
           {children}
@@ -161,7 +294,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         {!hideFooter ? <Footer /> : null}
       </div>
 
-      {!sellerPackCreate ? <nav
+      {!resultShell && !sellerPackCreate ? <nav
         className={cn(
           "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
           home

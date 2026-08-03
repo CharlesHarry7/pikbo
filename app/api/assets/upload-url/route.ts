@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 import { resolvePrivateLiveAccess } from "@/lib/privateLiveAccessServer";
 import { probeSoftLiveReadiness } from "@/lib/liveReadinessServer";
+import { takeToken } from "@/lib/rateLimit";
 import {
   createPrivateToyAssetUpload,
   PRIVATE_TOY_INPUT_MAX_BYTES,
@@ -19,17 +20,32 @@ export async function POST(req: Request) {
     );
   }
   const access = resolvePrivateLiveAccess(auth);
-  if (!access.invite.invited || !access.budget.ok) {
+  if (!access.invite.invited) {
     return NextResponse.json(
-      { ok: false, code: "PRIVATE_PREVIEW_REQUIRED", error: "Private seller Preview access is required" },
+      { ok: false, code: "PRIVATE_INPUT_ACCESS_REQUIRED", error: "Private seller input access is required" },
       { status: 403 }
     );
   }
   const readiness = await probeSoftLiveReadiness();
-  if (!readiness.privatePreview.ready) {
+  if (!readiness.privateInputAdmission.ready) {
     return NextResponse.json(
-      { ok: false, code: "PRIVATE_PREVIEW_NOT_READY", error: "Private input delivery is not ready" },
+      { ok: false, code: "PRIVATE_INPUT_NOT_READY", error: "Private photo upload is temporarily unavailable" },
       { status: 503 }
+    );
+  }
+  const rateLimit = takeToken(`private-input-prepare:${auth.id}`, 12, 60_000);
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "RATE_LIMITED",
+        error: `Too many private photo attempts — try again in ${rateLimit.retryAfterSec}s`,
+        retryAfterSec: rateLimit.retryAfterSec,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSec) },
+      }
     );
   }
 
@@ -40,6 +56,7 @@ export async function POST(req: Request) {
     sizeBytes?: number;
     byteLength?: number;
     sha256?: string;
+    clientAssetKey?: string;
     skuLabel?: string;
   } = {};
   try {
@@ -52,11 +69,14 @@ export async function POST(req: Request) {
     mimeType: String(body.mimeType || body.contentType || ""),
     sizeBytes: Number(body.sizeBytes ?? body.byteLength),
     sha256: String(body.sha256 || "").toLowerCase(),
+    clientAssetKey: String(body.clientAssetKey || ""),
     skuLabel: typeof body.skuLabel === "string" ? body.skuLabel : null,
   });
   if (!prepared.ok) {
     const status =
       prepared.code === "IMAGE_TOO_LARGE" ? 413 :
+      prepared.code === "IDEMPOTENCY_CONFLICT" ? 409 :
+      prepared.code === "PRIVATE_INPUT_INVALID_RESPONSE" ? 503 :
       prepared.code === "PRIVATE_INPUTS_UNAVAILABLE" ? 503 : 400;
     return NextResponse.json(
       { ...prepared, maxBytes: PRIVATE_TOY_INPUT_MAX_BYTES },
@@ -67,13 +87,16 @@ export async function POST(req: Request) {
     {
       ok: true,
       assetId: prepared.assetId,
+      inputAssetId: prepared.assetId,
       uploadUrl: prepared.uploadUrl,
-      method: "PUT",
+      method: prepared.uploadUrl ? "PUT" : null,
       expiresAt: prepared.expiresAt,
       maxBytes: prepared.maxBytes,
+      state: prepared.state,
+      idempotent: prepared.idempotent,
       private: true,
       durable: true,
     },
-    { status: 201 }
+    { status: prepared.state === "ready" ? 200 : 201 }
   );
 }

@@ -60,11 +60,11 @@ const PROMOS: Promo[] = [
   },
   {
     id: "batch",
-    title: "Seller Starter Pack · 3 clips",
-    blurb: "Spin · unbox · social hook",
-    suiteHref: "/create?mode=seller-pack",
-    cta: "Open Seller Starter Pack",
-    badge: "Launch Pack · 3 formats",
+    title: "Street Power-Up Moment",
+    blurb: "One directed launch clip",
+    suiteHref: "/create?effect=street-power-up",
+    cta: "Create one Moment",
+    badge: "Toy Moment",
     demoIndex: 5,
     sellerPack: true,
   },
@@ -96,7 +96,7 @@ const PROMOS: Promo[] = [
 
 function promoHref(promo: Promo, demoId?: string): string {
   if (promo.sellerPack || promo.suiteHref) {
-    return promo.suiteHref || "/create?mode=seller-pack";
+    return promo.suiteHref || "/create?effect=street-power-up";
   }
   if (promo.recipeSlug) {
     return createRemixHref(promo.recipeSlug, demoId);

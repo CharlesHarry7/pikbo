@@ -15,6 +15,7 @@ import {
 } from "@/lib/history";
 import { createLabSampleTryHref } from "@/lib/jobIntents";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const LIBRARY_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 import {
@@ -85,6 +86,12 @@ const SESSION_JOBS_UI_LIMIT = 50;
 
 /** Library sticky / empty Generate door — listing spin remix contract. */
 const LIBRARY_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const LIBRARY_STICKY_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=library-sticky` as const;
+const LIBRARY_EMPTY_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=library-empty` as const;
+const LIBRARY_PROJECT_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=library-project` as const;
 
 const EMPTY_BY_STATUS: SessionByStatus = {
   queued: 0,
@@ -1411,7 +1418,8 @@ export function LibraryGrid() {
     if (item.requestId) {
       const gateUrl = `/api/downloads/${encodeURIComponent(item.requestId)}`;
       try {
-        const head = await fetch(gateUrl, { method: "HEAD" });
+        const headers = await privateDownloadHeaders();
+        const head = await fetch(gateUrl, { method: "HEAD", headers });
         const decision = interpretDownloadHead({
           status: head.status,
           code: head.headers.get("X-Pikbo-Download-Code"),
@@ -1505,7 +1513,7 @@ export function LibraryGrid() {
       <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
         {items.length > 0
           ? `${items.length} available clip${items.length === 1 ? "" : "s"}`
-          : "Your Launch Pack Library"}
+          : "Your toy projects"}
         {activeJobs > 0
           ? ` · ${activeJobs} active job${activeJobs === 1 ? "" : "s"}`
           : ""}
@@ -1522,11 +1530,11 @@ export function LibraryGrid() {
         </button>
       ) : (
         <Link
-          href="/create?mode=seller-pack"
+          href={LIBRARY_STICKY_MOMENT_HREF}
           className="btn btn-primary w-full py-3 text-sm"
-          data-library-action="seller-pack"
+          data-library-action="moment"
         >
-          Create new Pack
+          Create one Moment
         </Link>
       )}
     </div>
@@ -1576,7 +1584,7 @@ export function LibraryGrid() {
             <p className="mt-4 font-display text-base font-bold uppercase tracking-tight text-white sm:text-lg">
               {sessionJobs.length > 0 || sessionStills.length > 0
                 ? "No clips saved on this device yet"
-                : "Your first listing clip starts on Create"}
+                : "Your first toy clip starts on Create"}
             </p>
             <p className="mt-2 max-w-sm text-xs leading-relaxed text-[var(--fg-muted)]">
               {sessionJobs.length > 0 || sessionStills.length > 0 ? (
@@ -1606,10 +1614,10 @@ export function LibraryGrid() {
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
               <Link
-                href="/create?mode=seller-pack"
+                href={LIBRARY_EMPTY_MOMENT_HREF}
                 className="btn btn-primary text-sm"
               >
-                Create your first Pack
+                Create one Moment
               </Link>
             </div>
             <p className="mt-4 max-w-xs text-[10px] text-[var(--fg-dim)]">
@@ -1792,14 +1800,10 @@ export function LibraryGrid() {
                   </Link>
                 ) : null}
                 <Link
-                  href={
-                    group.items[0]?.sku
-                      ? `/create?mode=seller-pack&sku=${encodeURIComponent(group.items[0].sku)}`
-                      : "/create?mode=seller-pack"
-                  }
+                  href={LIBRARY_PROJECT_MOMENT_HREF}
                   className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold text-white/70 hover:border-white/30"
                 >
-                  Launch Pack
+                  Create one Moment
                 </Link>
                 <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[10px] font-bold uppercase text-[var(--fg-dim)]">
                   Local only

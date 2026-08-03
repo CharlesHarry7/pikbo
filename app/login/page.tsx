@@ -2,14 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { publicAuthStatus } from "@/lib/authConfig";
 import { site } from "@/lib/site";
-import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { LoginForm } from "@/components/LoginForm";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
-import { createRemixHref } from "@/lib/remixIntent";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { sanitizeInternalNextPath } from "@/lib/authRedirect";
 
-/** Guest Generate from login — listing spin remix (ratio/duration/channel). */
-const LOGIN_GUEST_GENERATE_HREF = createRemixHref("360-spin-showcase");
+/** Guest login fallback — preview the fixed Street Power-Up Moment. */
+const LOGIN_GUEST_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=login-guest`;
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -79,33 +78,17 @@ export default async function LoginPage({
           data-auth-guest-path="product-first"
         >
           <Link
-            href={LOGIN_GUEST_GENERATE_HREF}
+            href={LOGIN_GUEST_MOMENT_HREF}
             className="font-semibold text-[var(--mint)] hover:underline"
-            data-login-guest="generate-remix"
+            data-login-guest="moment-preview"
           >
-            Continue as guest → Generate
-          </Link>
-          <Link
-            href="/create?mode=seller-pack"
-            className="text-[var(--mint)] hover:underline"
-          >
-            Launch Pack
+            Preview Street Power-Up
           </Link>
           <Link href="/library" className="text-[var(--mint)] hover:underline">
             Library
           </Link>
-          <Link href="/modules" className="text-[var(--fg-muted)] hover:text-white">
-            Modules
-          </Link>
           <Link href="/#home-create" className="text-[var(--fg-muted)] hover:text-white">
-            Home tool
-          </Link>
-          <FreeTrialCta
-            path="/login"
-            className="text-[var(--fg-muted)] hover:text-white"
-          />
-          <Link href="/profile" className="text-[var(--fg-muted)] hover:text-white">
-            Profile
+            Home samples
           </Link>
           <Link href="/pricing" className="text-[var(--fg-muted)] hover:text-white">
             Plans

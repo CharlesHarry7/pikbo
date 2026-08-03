@@ -36,8 +36,10 @@ const MODE_DEFS = [
 
 export function GenerateSuiteChrome({
   compact,
+  showSellerPack = false,
 }: {
   compact?: boolean;
+  showSellerPack?: boolean;
 }) {
   const { t } = useI18n();
   const path = usePathname() || "";
@@ -99,7 +101,7 @@ export function GenerateSuiteChrome({
           aria-label="Suite modes"
           className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]"
         >
-          {MODE_DEFS.map((m) => {
+          {MODE_DEFS.filter((m) => showSellerPack || m.id !== "seller").map((m) => {
             const active = isActive(m.id);
             return (
               <Link

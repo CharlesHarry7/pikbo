@@ -19,7 +19,7 @@ const MODULES_PATH_GENERATE_HREF = createRemixHref("360-spin-showcase");
 export const metadata: Metadata = {
   title: "Modules · Toy workflow blocks",
   description:
-    "Modular toy video workflows — listing spin, TikTok hook, blind-box drop, shelf glam, Seller Starter Pack. Pick a block, upload one photo, generate. Designer-toy suite modules.",
+    "Directed toy-video Moments — listing spin, TikTok hook, blind-box drop, and shelf glam. Pick one recipe, use one owned photo, and create one clip.",
   alternates: { canonical: "/modules" },
   // 哥飞冷启动: suite 门 noindex，爬取预算留给首页 + 主词页
   robots: CONCEPT_ROBOTS,
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 const MODULES_FAQ = [
   {
     q: "What is a Pikbo Module?",
-    a: "A fixed video recipe — listing spin, social hook, unbox, or Seller Starter Pack — that opens Generate with a registered effect and aspect ratio. Generate then checks whether the account can use Cached or Live mode.",
+    a: "A fixed video recipe — listing spin, social hook, unbox, or shelf shot — that opens Generate with one registered effect and aspect ratio. Generate then checks whether the account can use Cached or Live mode.",
   },
   {
     q: "Are Lab posters my final video?",
@@ -40,8 +40,8 @@ const MODULES_FAQ = [
     a: "Cached Lab prototypes cost 0 credits and do not process your upload. The configured allowance is about one Mini job only when Live is enabled for an eligible account; protected Free delivery remains gated.",
   },
   {
-    q: "What is Seller Starter Pack?",
-    a: "One photo → three seller formats (Listing Spin 1:1, Blind-box Reveal 9:16, Social Flash 9:16). Partial failure keeps successful children; only downloadable clips export.",
+    q: "Do I need to create every format?",
+    a: "No. Choose the one Moment that fits the listing, drop, or social post you are making now. Public creation never forces a three-video bundle.",
   },
 ] as const;
 
@@ -178,7 +178,7 @@ export default function ModulesPage() {
     "@type": "ItemList",
     name: "Pikbo toy workflow modules",
     description:
-      "Modular toy video jobs that open Generate with a registered recipe — listing, social, unbox, Seller Starter Pack.",
+      "Directed toy-video jobs that open Generate with one registered recipe for a listing, social post, unbox, or shelf shot.",
     numberOfItems: live.length,
     itemListElement: live.map((w, i) => ({
       "@type": "ListItem",
@@ -274,10 +274,10 @@ export default function ModulesPage() {
               →
             </span>
             <Link
-              href="/create?mode=seller-pack"
+              href="/create?effect=street-power-up"
               className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
             >
-              Seller Starter Pack
+              Create one Moment
             </Link>
             <span aria-hidden className="text-white/25">
               →
@@ -373,7 +373,7 @@ export default function ModulesPage() {
           <section className="mt-10 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
             <h2 className="text-sm font-bold text-white">Modules FAQ</h2>
             <p className="mt-1 text-xs text-white/40">
-              Honest limits · Lab proof · Free Mini · Seller Starter Pack
+              Honest limits · Lab proof · one directed Moment
             </p>
             <dl className="mt-4 space-y-4">
               {MODULES_FAQ.map((f) => (

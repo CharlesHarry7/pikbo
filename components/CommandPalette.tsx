@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  createJobRemixHref,
   createLabSampleTryHref,
   createWorkbenchHref,
 } from "@/lib/jobIntents";
@@ -19,7 +18,7 @@ const CMD_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
  */
 const LINKS = [
   { href: "/", label: "Home · Explore" },
-  { href: "/#home-create", label: "Home · Launch Pack upload" },
+  { href: "/#home-create", label: "Home · Sample result browser" },
   { href: CMD_GENERATE_HREF, label: "Generate · Toy Studio" },
   { href: "/effects", label: "Effects · toy presets" },
   { href: "/pricing", label: "Pricing · Founding Studio" },
@@ -35,10 +34,6 @@ const LINKS = [
   {
     href: "/tools/blind-box-reveal-video-maker",
     label: "Blind-box reveal video",
-  },
-  {
-    href: createJobRemixHref("seller-pack"),
-    label: "Seller Starter Pack · 3 clips / 30 credits",
   },
   { href: "/library", label: "Library · private results" },
   {
@@ -106,7 +101,7 @@ export function CommandPalette() {
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Generate · Launch Pack · recipe… (⌘K)"
+            placeholder="Generate · Moment · recipe… (⌘K)"
             className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/35"
             onKeyDown={(e) => {
               if (e.key === "Enter" && items[0]) {
@@ -122,7 +117,7 @@ export function CommandPalette() {
         <ul className="max-h-72 overflow-y-auto py-2">
           {items.length === 0 ? (
             <li className="px-4 py-6 text-center text-xs text-white/40">
-              No match — try Flow, Seller Starter Pack, or a recipe name
+              No match — try Generate, Effects, or a recipe name
             </li>
           ) : null}
           {items.map((item) => (

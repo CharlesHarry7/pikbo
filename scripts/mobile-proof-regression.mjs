@@ -52,14 +52,15 @@ assert.doesNotMatch(
 
 assert.match(
   batch,
-  /const demoMode = !privateUploadEnabled \|\| labStill/,
+  /const demoMode = !privateLaunchEnabled \|\| labStill/,
   "Launch Workspace must keep the authoritative fail-closed public mode"
 );
 assert.match(
   createPage,
-  /Public sample · 0 credits[\s\S]*no product photo is accepted or processed/i,
-  "Launch Workspace must state the public no-upload, zero-credit contract"
+  /Access is confirmed before any private asset or credit action/i,
+  "Launch Workspace header must remain truthful before account capability resolves"
 );
+assert.match(batch, /Public Lab preview · no product photo is accepted or processed · 0\s*credits/);
 assert.doesNotMatch(
   batch,
   /SellerPackSteps/,
@@ -67,7 +68,7 @@ assert.doesNotMatch(
 );
 assert.match(
   shell,
-  /\{!sellerPackCreate \? <nav/,
+  /\{!resultShell && !sellerPackCreate \? <nav/,
   "Seller Pack Create must not stack the five-item mobile nav under its fixed primary action"
 );
 assert.doesNotMatch(

@@ -57,7 +57,7 @@ export default function RefundPage() {
           <h2 className="text-lg font-semibold text-[var(--fg)]">Seven-day first-purchase refund</h2>
           <p className="mt-2">
             We will refund a first subscription purchase requested within seven
-            calendar days if no paid Launch Pack or paid generation allowance
+            calendar days if no paid generation allowance
             has been used. Renewal charges are not covered by this voluntary
             first-purchase rule, but duplicate or incorrect charges are covered
             below.

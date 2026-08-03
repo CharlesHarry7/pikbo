@@ -4,7 +4,7 @@
  * Run: npm run seo-cold-start-smoke
  */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
@@ -119,7 +119,8 @@ assert.match(seoIndex, /PREVIEW_ROBOTS/);
 assert.match(seoIndex, /CONCEPT_ROBOTS/);
 
 // Social cards: centralized, resolvable static metadata routes (no extensionless 404).
-assert.match(siteSrc, /pikbo-launch-pack-og-v2\.png/);
+assert.match(siteSrc, /\/og\.jpg/);
+assert.ok(existsSync(join(root, "public/og.jpg")), "social card asset must exist");
 assert.match(siteSrc, /officialProfiles/);
 assert.doesNotMatch(siteSrc, /twitter:\s*["']@pikbo_ai/);
 assert.match(layoutSrc, /site\.socialImages\.openGraph/);
@@ -202,7 +203,7 @@ assert.match(guidePageSrc, /href="\/tools\/ai-toy-video-generator"/);
 assert.match(guidePageSrc, /href="\/tools\/blind-box-reveal-video-maker"/);
 assert.match(
   pricingHeroSrc,
-  /Founding Studio opens after the Pack is proven/
+  /Founding Studio opens after real Moments are proven/
 );
 
 // Trust/legal copy must distinguish 0-credit cached previews from gated Live jobs.

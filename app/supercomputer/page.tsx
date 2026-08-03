@@ -23,12 +23,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const sp = await searchParams;
   if (sp.pack === "seller") {
-    // Legacy entry — still resolve metadata before redirect to Create Seller Pack.
+    // Legacy entry resolves to the single public Moment before redirect.
     return {
-      title: "Seller Starter Pack · 3 clips / 30 credits",
+      title: "Street Power-Up toy Moment",
       description:
-        "One owned toy photo → listing spin, blind-box reveal, and social hook. Marketplace seller workflow on Pikbo.",
-      // Not a rank landing — canonical lives on /create?mode=seller-pack (also noindex).
+        "Choose one directed Street Power-Up toy-video Moment from one owned photo.",
+      // Not a rank landing — canonical lives on /create?effect=street-power-up (also noindex).
       robots: PREVIEW_ROBOTS,
     };
   }
@@ -54,9 +54,9 @@ export default async function SupercomputerPage({
   }>;
 }) {
   const sp = await searchParams;
-  // Wave A: Seller Pack canonical is /create?mode=seller-pack — keep sku/try/sample.
+  // Legacy Pack links now converge on one public preset-first Moment.
   if (sp.pack === "seller") {
-    const q = new URLSearchParams({ mode: "seller-pack" });
+    const q = new URLSearchParams({ effect: "street-power-up" });
     if (sp.sku?.trim()) q.set("sku", sp.sku.trim().slice(0, 64));
     if (sp.try?.trim()) q.set("try", sp.try.trim());
     if (sp.sample?.trim()) q.set("sample", sp.sample.trim());
@@ -80,18 +80,18 @@ export default async function SupercomputerPage({
               One photo · many clips
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
-              Shop workflow: upload a figure once, queue recipes, render with
-              Seedance. Fixed three-format seller path lives on Seller Pack —
-              this page is custom multi-preset batch Preview.
+              This archived lab explored multi-preset batch rendering. Pikbo&apos;s
+              public workflow now starts with one toy photo and one directed
+              Moment, so you can validate a useful clip before generating more.
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className="flex flex-wrap justify-end gap-2">
               <Link
-                href="/create?mode=seller-pack"
+                href="/create?effect=street-power-up"
                 className="btn btn-primary text-sm"
               >
-                Seller Starter Pack · 3 clips
+                Create one Moment
               </Link>
               <FreeTrialCta
                 path="/supercomputer"
@@ -124,10 +124,10 @@ export default async function SupercomputerPage({
             →
           </span>
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up"
             className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
           >
-            Seller Starter Pack
+            Create one Moment
           </Link>
           <span aria-hidden className="text-white/25">
             →

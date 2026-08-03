@@ -233,6 +233,7 @@ export async function POST(req: Request) {
 
   const {
     effect,
+    productContract,
     image: imageField,
     assetId,
     extra,
@@ -440,6 +441,20 @@ export async function POST(req: Request) {
       400
     );
   }
+  // A Seller Pack child is an invite-only private operation. Check the
+  // current allowlist before resolving its private input or reserving either
+  // provider spend or durable child credits. Ordinary single-Moment requests
+  // intentionally keep their existing access path.
+  if (packBinding.kind === "pack" && !privateLive.invite.invited) {
+    return err(
+      {
+        error: "Private seller Preview access is required for Launch Pack children",
+        code: "LIVE_ACCESS_REQUIRED",
+        session: publicSession(session),
+      },
+      403
+    );
+  }
   const boundPackInput =
     access.kind === "live" && packBinding.kind === "pack" && authUser
       ? await resolveBoundToyAssetDataUrl({
@@ -645,8 +660,24 @@ export async function POST(req: Request) {
       ? SELLER_PACK_LIVE_RESOLUTION
       : resolutionForTier(freeTier, resPref);
 
+    // Founding Studio sells directed Moments, not arbitrary access to a model
+    // or prompt box. The client names the product contract, then the server
+    // independently verifies every priced field. Extra prompt text is ignored
+    // for this contract below so a renamed request cannot become unpriced work.
+    const fixedMomentRequest =
+      !packChild &&
+      productContract === "toy-moment-v1" &&
+      effect === "street-power-up" &&
+      duration === 5 &&
+      aspectRatio === "9:16" &&
+      modelPref === "seedance-fast" &&
+      resPref === "720p";
+
     // Always keep preset template as base — freeform-only used to wipe toy prompts.
-    const prompt = buildGeneratePrompt(preset.promptTemplate, extra);
+    const prompt = buildGeneratePrompt(
+      preset.promptTemplate,
+      fixedMomentRequest ? undefined : extra
+    );
 
     // Cost gate: anonymous users and Free accounts always receive an official
     // cached clip, even when FAL_KEY exists. The upload is not processed.
@@ -803,14 +834,17 @@ export async function POST(req: Request) {
         400
       );
     }
-    // Founding Studio is a fixed three-video product, not a generic credit
-    // bucket. Keep arbitrary single clips on the explicitly invited Free P0
-    // validation path so paid credits cannot be redirected into unpriced work.
-    if (accessPlanId === "founding_studio" && !packChild) {
+    // Founding Studio may spend on one fixed, server-verified Moment or on an
+    // already-reserved Pack child. Arbitrary single clips remain fail-closed.
+    if (
+      accessPlanId === "founding_studio" &&
+      !packChild &&
+      !fixedMomentRequest
+    ) {
       return err(
         {
           error:
-            "Founding Studio generation starts from the fixed three-video Launch Pack",
+            "Founding Studio generation requires a supported fixed Moment contract",
           code: "LIVE_ACCESS_REQUIRED",
           session: publicSession(session),
         },

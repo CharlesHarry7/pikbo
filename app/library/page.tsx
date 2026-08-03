@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LibraryGrid } from "@/components/LibraryGrid";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 export const metadata: Metadata = {
   title: "Library · Assets",
@@ -23,22 +24,23 @@ export default function LibraryPage() {
           <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--mint)]">
-              Launch Pack Library
+              Toy projects
             </p>
             <h1 className="mt-3 max-w-3xl font-display text-4xl font-black tracking-[-0.055em] sm:text-6xl">
-              Your Launch Packs.
+              Your toy projects.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--fg-muted)]">
-              Completed clips return here after refresh with fresh owner-only
-              links. Start the next SKU from the same fixed three-format Pack.
+              Keep your generated clips together, then create the next Moment
+              from one owned toy photo. Private results return here after
+              refresh when your account is enabled.
             </p>
           </div>
           <div>
             <Link
-              href="/create?mode=seller-pack"
+              href={`${MOMENT_CREATE_HREF}&source=library-empty`}
               className="btn btn-primary text-sm"
             >
-              Create new Pack
+              Create one Moment
             </Link>
           </div>
         </div>

@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { PlanId } from "@/lib/pricing";
 import { stripeBillingAuthHeaders } from "@/lib/stripeBillingClient";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { Button } from "@/components/ui/button";
+
+const PRICING_FOUNDING_HREF =
+  `${MOMENT_CREATE_HREF}&source=pricing-founding` as const;
+const PRICING_LOGIN_HREF = `/login?next=${encodeURIComponent("/pricing")}` as const;
 
 /** Soft launch: paid checkout only when explicitly enabled + Stripe configured. */
 function paymentsLive(): boolean {
@@ -33,9 +38,14 @@ export function PricingCheckoutButton({
       .then(async (response) => {
         if (!response.ok) return false;
         const data = (await response.json()) as {
-          acceptance?: { paid?: boolean };
+          acceptance?: { paid?: boolean; privatePreview?: boolean };
+          payments?: { readyForTestCheckout?: boolean };
         };
-        return data.acceptance?.paid === true;
+        return (
+          data.acceptance?.paid === true ||
+          (data.acceptance?.privatePreview === true &&
+            data.payments?.readyForTestCheckout === true)
+        );
       })
       .then((accepted) => {
         if (!canceled) setServerAccepted(accepted);
@@ -58,13 +68,13 @@ export function PricingCheckoutButton({
           size="lg"
           className="w-full"
         >
-          <Link href="/create?mode=seller-pack&source=pricing-founding">
-            Preview the Founding Pack
+          <Link href={PRICING_FOUNDING_HREF}>
+            Preview one Moment
           </Link>
         </Button>
         <p className="mt-2 text-center text-[10px] leading-relaxed text-[var(--fg-dim)]">
           Checkout is closed while Stripe approval and private-beta quality
-          gates are unfinished. The Pack preview is open now.
+          gates are unfinished. The Moment preview is open now.
         </p>
       </div>
     );
@@ -80,7 +90,15 @@ export function PricingCheckoutButton({
         headers,
         body: JSON.stringify({ plan: planId }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as {
+        code?: string;
+        error?: string;
+        url?: string;
+      };
+      if (data.code === "AUTH_REQUIRED") {
+        window.location.assign(PRICING_LOGIN_HREF);
+        return;
+      }
       if (!res.ok) throw new Error(data.error || "Checkout failed");
       if (data.url) {
         window.location.href = data.url;
@@ -88,6 +106,13 @@ export function PricingCheckoutButton({
       }
       throw new Error("No checkout URL returned");
     } catch (err) {
+      if (
+        err instanceof Error &&
+        err.message === "Sign in before subscribing."
+      ) {
+        window.location.assign(PRICING_LOGIN_HREF);
+        return;
+      }
       setError(err instanceof Error ? err.message : "Checkout failed");
       setBusy(false);
     }

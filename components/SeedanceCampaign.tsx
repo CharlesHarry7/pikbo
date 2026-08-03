@@ -69,10 +69,10 @@ export function SeedanceCampaign() {
               Modules
             </Link>
             <Link
-              href="/create?mode=seller-pack"
+              href="/create?effect=street-power-up"
               className="rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:border-white/35"
             >
-              Seller Starter Pack
+              Create one Moment
             </Link>
             <Link
               href="/flow"

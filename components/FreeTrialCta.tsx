@@ -97,7 +97,7 @@ export function FreeTrialCta({
         : demo || !freeLiveOpen
           ? FREE_TRIAL_TRY_HREF
           : onHome
-            ? "/#home-create"
+            ? "/create?effect=street-power-up&source=free-trial"
             : FREE_TRIAL_TRY_HREF;
   const label =
     trialDone && !demo && freeLiveOpen

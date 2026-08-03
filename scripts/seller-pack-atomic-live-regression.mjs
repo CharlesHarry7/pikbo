@@ -224,7 +224,8 @@ assert.equal(
 
   const store = read("lib/durableCredits/supabaseStore.ts");
   assert.match(store, /supabaseReserveSellerPackAtomic/);
-  assert.match(store, /pikbo_reserve_seller_pack_with_asset_v1/);
+  assert.match(store, /pikbo_reserve_seller_pack_v2/);
+  assert.match(store, /pikbo_get_seller_pack_status_v2/);
   assert.match(store, /pikbo_authorize_seller_pack_child_with_asset_v1/);
   assert.match(store, /pikbo_settle_seller_pack_child_v2/);
   assert.match(store, /pikbo_release_seller_pack_child_v2/);

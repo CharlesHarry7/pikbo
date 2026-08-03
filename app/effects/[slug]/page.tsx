@@ -131,13 +131,13 @@ export default async function EffectPage({
               <Link
                 href={
                   isCoreListingSpin
-                    ? "/create?mode=seller-pack"
+                    ? "/create?effect=street-power-up"
                     : createRemixHref(preset.slug)
                 }
                 className="btn btn-primary !px-4 !py-2 text-xs font-black"
               >
                 {isCoreListingSpin
-                  ? "Preview the fixed Launch Pack"
+                    ? "Create one Moment"
                   : "Open Generate"}
               </Link>
               {isCoreListingSpin ? (
@@ -155,10 +155,10 @@ export default async function EffectPage({
                     className="btn btn-ghost !px-3 !py-2 text-xs"
                   />
                   <Link
-                    href="/create?mode=seller-pack"
+                    href="/create?effect=street-power-up"
                     className="btn btn-ghost !px-3 !py-2 text-xs"
                   >
-                    Launch Pack
+                    Create one Moment
                   </Link>
                   <Link
                     href="/modules"

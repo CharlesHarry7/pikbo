@@ -4,6 +4,87 @@ Newest first. One block per meaningful landing.
 
 ---
 
+### 2026-08-02 — [gpt/grok/workbuddy] media-first Launch Result Browser
+- Replaced the rejected explanatory homepage with one media-led Launch Result
+  Browser. The first viewport now contains a real cached video, a short
+  seller-facing value statement, three direct format selectors and one Sample
+  Pack action. The former style-study strip, static direction-card wall,
+  engineering metrics, credit badge and long first-screen status explanations
+  are no longer part of the public front door.
+- Added an explicit public Sample Create route behind
+  `?mode=seller-pack&preview=1`. It renders the same instant result browser and
+  never enters a simulated generation state. The ordinary invited/private
+  Seller Pack route still renders the existing `BatchStudio`; no private API,
+  upload, Provider, Storage, credit, Stripe or Library behavior changed.
+- The three cached clips remain separate Scout, Moon and Beatbot archive
+  prototypes. Each visibly distinguishes its actual 6-second aspect ratio from
+  the target 5-second Pack contract, and the page explicitly says they are not
+  one completed customer Pack. The false one-photo/one-Pack proof headline was
+  rejected during review and removed before release.
+- GPT Pro supplied the product hierarchy in persistent chat
+  `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`. Grok first blocked one headline truth
+  error plus public/private shell leakage, then returned **APPROVE**, P0=0/P1=0,
+  as `grok-home-result-browser-v2-frozen-20260802-v2`.
+- WorkBuddy inspected Home and public Sample Create at 1440×900 and 390×844,
+  exercised Reveal and Flash, and blocked the first desktop cut because its main
+  CTA was below the fold. After widening the copy column, WorkBuddy returned
+  **APPROVE** in browser session `019fbe82-8c49-7620-bd3f-ddb4cda78057`: both
+  sizes are media-first, both CTAs are fully visible, and both have zero
+  horizontal overflow.
+- GitHub inline review then caught two returning-seller navigation gaps: older
+  Live CTAs still targeted the public sample anchor, and the simplified mobile
+  header had no Library/Pricing/Account route. Live CTAs now open the existing
+  private Seller Pack workspace directly; the result-shell mobile header exposes
+  Create, Library, Pricing and Account in a compact menu without restoring the
+  old five-item bottom bar.
+- PASS: Launch Pack path, live-copy, SEO cold-start, engine, Seller Pack atomic,
+  recovery ledger/reconciliation, Stripe billing, TypeScript, ESLint and the
+  199-page production build. The build retains the pre-existing T6 dynamic NFT
+  tracing warning.
+- No production deploy, Provider call, Supabase mutation, Stripe action, DNS
+  change, public-generation enablement or payment enablement occurred. Full
+  evidence: `docs/evidence/HOME_RESULT_BROWSER_V2_2026-08-02.md`.
+
+---
+
+### 2026-08-02 — [gpt/grok/workbuddy] private input admission boundary
+- Split the first private seller proof from full Provider readiness. An
+  authenticated, explicitly allowlisted seller may verify one owned JPEG, PNG,
+  or WebP in Pikbo's private input bucket only when the input bucket, schema and
+  asset RPCs pass readiness. Public visitors still have no product-photo input.
+- Seller Pack reserve, all three generation jobs, credits, Provider, private
+  result delivery, reconciliation and Stripe remain behind the unchanged full
+  `privatePreview` gate. The input-only Create state says generation is
+  unavailable and records `0 credits reserved · 0 video jobs created`.
+- GPT Pro chose this boundary in persistent chat
+  `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`. Grok returned **APPROVE**, P0=0 and
+  blocking P1=0, in `/root/grok_code_audit`. WorkBuddy first blocked three
+  seller-truth defects, then returned **APPROVE** on the corrected delta in
+  `/root/workbuddy_visual_redteam`.
+- Input-only UI now shows one original-photo verification state, not three fake
+  outputs or a Library promise. Owner completion may finish an already admitted
+  signed PUT across invite/readiness drift, but cannot create an asset, Pack,
+  job, charge or Provider request.
+- GitHub review found two release gaps after the first green Preview: a fresh
+  canonical database did not yet receive the service-only create/complete
+  asset RPCs, and the input-only error button still retried Pack setup. The
+  forward migration now installs idempotent owner/client-key admission RPCs,
+  rejects NULL or mismatched verified identity fields, keeps execute authority
+  service-role-only, and the UI retries photo verification with input-only copy.
+  Grok and WorkBuddy both returned **APPROVE** on this corrected delta.
+- The focused route regression executes auth, invite, input-infrastructure,
+  rate-limit and upload/complete outcomes while full private Preview is false.
+  The complete launch-gate, accounting, recovery, Provider-budget, billing,
+  TypeScript, ESLint and 199-page production build gates pass.
+- No Provider request, credit mutation, Stripe action, environment change,
+  Supabase mutation, DNS change or public-live enablement occurred. A follow-up
+  remote harness attempt also stopped before fixture creation because the
+  branch-scoped Vercel service-role value is an invalid placeholder; that is
+  recorded as an external non-production configuration blocker, not a PASS. Full
+  evidence: `docs/evidence/PRIVATE_INPUT_ADMISSION_2026-08-02.md`.
+
+---
+
 ### 2026-08-01 — [gpt] Mercury reapplication website readiness
 - Added public Contact and Refund Policy routes and linked them from the global
   and homepage trust footers. The public operator is now consistently named as
@@ -2341,3 +2422,30 @@ Newest first. One block per meaningful landing.
   cards render without overflow, and the CTA opens the exact cached sample
   route. This is approval for the Home slice only, not proof of a completed
   same-input three-video Pack or a paid product loop.
+
+# 2026-08-02 — [gpt/grok/workbuddy] Desktop Pikbo Drop Archive
+
+- GPT Pro froze one desktop direction in persistent chat
+  `6a6b4960-4dcc-83e8-8404-b5cb6748abf6`: a designer-toy motion archive,
+  not another generic AI SaaS hero. The new front door uses exhibit black,
+  warm paper, terracotta red, one active media stage and three object selectors.
+- The public truth is explicit: the product target is one toy across three
+  launch formats, while the archive currently shows three different
+  Pikbo-owned prototypes and no customer Pack. Both desktop CTAs say
+  `Preview Launch Pack` and open the cached public preview.
+- Home mounts one `AutoPlayVideo`; Scout, Moon and Beatbot switch that single
+  stage. The existing public Create sample keeps no-upload, Lab badges, seller
+  beta and private sign-in behavior. Mobile layout remains frozen.
+- GPT Pro final verdict: **APPROVE**. Grok final frozen-diff verdict:
+  **APPROVE, P0=0/P1=0**, evidence
+  `grok-desktop-toy-desire-v3-frozen-20260802-v3`. WorkBuddy final desktop
+  runtime verdict: **APPROVE**, browser session
+  `019fbe82-8c49-7620-bd3f-ddb4cda78057`.
+- Full launch/accounting, SEO, product-proof and mobile source gates,
+  TypeScript, ESLint and the 199-page production build pass. No API, Provider,
+  Storage, Supabase, credits, Stripe, Library, production flag or real-model
+  spend changed.
+- PR #103 passed GitHub CI and Vercel Preview. The deployed Preview at
+  `https://pikbo-git-agent-gptdesktop-toy-desire-v3-pi-kbo.vercel.app/`
+  rendered one video, three working archive selectors, Preview-only CTAs,
+  truthful archive limits and no horizontal overflow.

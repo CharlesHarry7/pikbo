@@ -43,6 +43,30 @@
 - 禁止虚构美国办公室、客户、收入、合同或交易；不因银行审核而开放尚未通过质量门槛的支付或公开生成。
 - 生产发布、Mercury 协议接受与最终提交仍需老板本人明确确认。
 
+### 2026-08-02 owner override — visible product front door
+
+- 唯一任务：`HOME-RESULT-BROWSER-V2`，分支 `agent/gpt/home-result-browser-v2`。
+- 老板明确拒绝当前首页的视觉与第一屏价值表达；PR #101 已关闭，不再以后台质量规则替代可见产品改善。
+- GPT Pro 负责本切片的产品方向；Codex 为唯一实现者；Grok 与 WorkBuddy 只做独立代码、事实和视觉审查。
+- 本切片只允许重做 Home、公开 Sample Create 展示及其直接相关的轻量导航和回归测试；复用现有缓存视频。
+- 严禁修改 API、Provider、Prompt、Storage、Supabase、credits、Stripe、Library 恢复或生产门禁；严禁把三个不同素材原型冒充同一 SKU 的完整 Pack、客户结果或精确导出规格。
+
+### 2026-08-02 owner override — desktop toy desire
+
+- 唯一任务：`DESKTOP-TOY-DESIRE-V3`，分支 `agent/gpt/desktop-toy-desire-v3`。
+- 老板以 ChinaJoy 潮玩玩家视角否决当前首页；本轮只做 1440px 桌面首屏，移动端冻结且仅保持无灾难性溢出。
+- GPT Pro 冻结唯一方向 `Pikbo Drop Archive`；Codex 只重建桌面展柜舞台、archive selector、truth labels 与轻量 header。
+- 现有 Scout、Moon、Beatbot 必须继续标明为三个不同 archive prototypes，不得冒充同一 SKU Pack、客户案例或公开生成结果。
+- 生产改动只限 `components/AppShell.tsx`、`components/PublicLaunchPackSample.tsx` 与 `components/HomeSeoBody.tsx`；其中 `HomeSeoBody` 只允许桌面配色衔接，不改内容或行为。禁止修改 API、Provider、Storage、Supabase、credits、Stripe、Library、Create 私有流程和生产门禁。
+
+### 2026-08-02 owner override — Moment to Create bridge
+
+- 唯一任务：`MOMENT-CREATE-BRIDGE-V1`，分支 `agent/gpt/moment-create-preview-bridge-v1`。老板明确否决 Motion Archive 和固定三条视频作为首要产品交互；本轮以 Higgsfield 的真实产品循环为参考，改成一次选一个潮玩 Moment、放入一个自有玩具、然后继续创作。
+- GPT Pro 已在持久会话 `6a6b4960-4dcc-83e8-8404-b5cb6748abf6` 冻结 Home + Create 竖直切片；Codex 是唯一实现者，Grok 做工程/安全审查，WorkBuddy 做 ChinaJoy 潮玩审美和桌面实站审查。
+- Home 只展示六个原创潮玩 Moment：Capsule Reveal、Hangar Ignition、Colorblock Pedestal、Softroom Morning、Gallery Spotlight、Alley Drop Flash。六个均必须标记 `Official Concept`；旧的唯一真实输出只能作为独立 `Verified Technical Output`，不得绑定任何 Moment。
+- 匿名用户的玩具图片只保存于设备本地草稿，不上传、不生成、不消耗 Provider；Create 必须清楚区分未登录、已登录未受邀、仅允许私有输入准备、完整私测生成四个状态，并复用当前认证和私有生成路径。
+- 只做 1440px 桌面主体，手机版不重做。禁止修改 Provider、Storage、Supabase、credits、Stripe、Generation API、数据库、readiness 和生产付费门禁。
+
 ---
 
 ## 死序优先级（不可跳级）

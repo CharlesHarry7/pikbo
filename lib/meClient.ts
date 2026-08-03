@@ -63,6 +63,8 @@ export type MeResponse = PublicSession & {
   softLiveReady?: boolean;
   /** Server-authored account capability; cookie credits never make this true. */
   canLiveGenerate?: boolean;
+  /** Invite-only, zero-Provider capability to verify one private toy photo. */
+  canPreparePrivateInput?: boolean;
   auth?: { id: string; email: string | null } | null;
   durable?: MeDurableWallet | null;
   billing?: null | {
@@ -242,6 +244,12 @@ export function canLiveGenerate(
   return me?.canLiveGenerate === true;
 }
 
+export function canPreparePrivateInput(
+  me: MeResponse | null | undefined
+): boolean {
+  return me?.signedIn === true && me.canPreparePrivateInput === true;
+}
+
 /**
  * Client display boundary for the invited private-generation workbench.
  * This is never spend authority: reserve/generate still re-check auth,
@@ -252,6 +260,7 @@ export function canUsePrivateLaunch(
 ): boolean {
   return (
     me?.signedIn === true &&
+    me.canPreparePrivateInput === true &&
     me.canLiveGenerate === true &&
     me.durableCreditsActive === true &&
     me.mode === "live-generate"

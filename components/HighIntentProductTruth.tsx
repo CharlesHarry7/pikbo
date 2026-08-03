@@ -81,10 +81,10 @@ export function HighIntentProductTruth({
 
         <div className="mt-7 flex flex-wrap gap-2">
           <Link
-            href="/create?mode=seller-pack"
+            href="/create?effect=street-power-up"
             className="btn btn-primary !px-5 !py-3 text-xs font-black"
           >
-            Preview the fixed Launch Pack
+            Preview one toy Moment
           </Link>
           <Link
             href="/pricing"
