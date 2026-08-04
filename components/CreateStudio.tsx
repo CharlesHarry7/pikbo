@@ -381,6 +381,8 @@ export function CreateStudio({
   );
   const composerImage = recentReuseUi.effectiveSelectedImage;
   const composerAssetId = recentReuseUi.effectiveSelectedAssetId;
+  /** Fail-closed current-composer input presence (never raw stale recent image). */
+  const composerHasInput = Boolean(composerImage || composerAssetId);
   // Always track the render-time owner for async list/preview commit gates.
   liveOwnerKeyRef.current = recentOwnerKey;
   const fixedMomentNextPath = initialSource
@@ -1772,7 +1774,7 @@ export function CreateStudio({
     (activeVersion
       ? sourceStore[activeVersion.sourceKey] ||
         resolveSpecImage(activeVersion.spec, sourceStore)
-      : null) || image;
+      : null) || composerImage;
   const downloadAllowed = canDownloadResult({
     demo: Boolean(activeVersion?.demo ?? demo),
     watermark: Boolean(activeVersion?.watermark ?? watermark),
@@ -1893,10 +1895,10 @@ export function CreateStudio({
 
   const busy = status === "generating" || status === "uploading";
   const canGenerate =
-    !busy && mode === "i2v" && Boolean(composerImage || composerAssetId) && ownsRights;
+    !busy && mode === "i2v" && composerHasInput && ownsRights;
   const primaryLabel = busy
     ? t("create.generating")
-    : !(composerImage || composerAssetId)
+    : !composerHasInput
       ? t("create.addPhotoFirst")
       : !ownsRights
         ? t("create.confirmOwnership")
@@ -1914,7 +1916,7 @@ export function CreateStudio({
       ? 4
       : status === "generating"
         ? 3
-        : composerImage || composerAssetId
+        : composerHasInput
           ? 2
           : 1;
 
@@ -1931,7 +1933,7 @@ export function CreateStudio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     canGenerate,
-    image,
+    composerHasInput,
     effect,
     effectiveDuration,
     aspectRatio,
@@ -2005,7 +2007,7 @@ export function CreateStudio({
       window.location.href = job.href;
       return;
     }
-    if (!image) {
+    if (!composerHasInput) {
       toast("Add your toy photo first");
       return;
     }
@@ -2036,7 +2038,7 @@ export function CreateStudio({
   const assetBrief = useMemo(
     () =>
       buildAssetBrief({
-        hasImage: Boolean(image),
+        hasImage: composerHasInput,
         probe: imageProbe,
         effect,
         jobId: jobIntentId,
@@ -2047,7 +2049,7 @@ export function CreateStudio({
         hasSecondaryStill: Boolean(secondaryStill),
       }),
     [
-      image,
+      composerHasInput,
       imageProbe,
       effect,
       jobIntentId,
@@ -2062,7 +2064,7 @@ export function CreateStudio({
   // Phase B2: soft-apply shape-primary recipe once (skip deep-link / job / Lab sample).
   // Defer setState out of the effect body (react-hooks/set-state-in-effect).
   useEffect(() => {
-    if (!image || !imageProbe || !assetBrief.primaryRecipe) return;
+    if (!composerHasInput || !imageProbe || !assetBrief.primaryRecipe) return;
     if (briefAutoAppliedRef.current) return;
     if (labStill) return;
     if (initialEffect || initialJob) return;
@@ -2089,7 +2091,7 @@ export function CreateStudio({
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot soft apply on probe
   }, [
-    image,
+    composerHasInput,
     imageProbe,
     assetBrief.primaryRecipe?.slug,
     labStill,
@@ -2101,7 +2103,7 @@ export function CreateStudio({
   const directorPlan = useMemo(() => {
     const job = jobIntentId ? getJobIntent(jobIntentId) : undefined;
     return buildDirectorPlan({
-      hasImage: Boolean(image),
+      hasImage: composerHasInput,
       effect,
       effectName: preset.name,
       aspectRatio,
@@ -2119,7 +2121,7 @@ export function CreateStudio({
       jobLabel: job?.label ?? null,
     });
   }, [
-    image,
+    composerHasInput,
     effect,
     preset.name,
     aspectRatio,
@@ -2138,7 +2140,7 @@ export function CreateStudio({
   ]);
 
   useEffect(() => {
-    if (!image) return;
+    if (!composerHasInput) return;
     const credits = demoMode ? 0 : CREDITS_PER_VIDEO;
     const signature = `${effect}:${credits}:${effectiveDuration}:${aspectRatio}`;
     if (quoteEventRef.current === signature) return;
@@ -2155,7 +2157,7 @@ export function CreateStudio({
         aspect_ratio: aspectRatio,
       },
     });
-  }, [image, effect, demoMode, effectiveDuration, aspectRatio]);
+  }, [composerHasInput, effect, demoMode, effectiveDuration, aspectRatio]);
 
   return (
     <div className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0">
@@ -2543,7 +2545,7 @@ export function CreateStudio({
                   <span className="lg:hidden">Upload owned toy photo</span>
                   <span className="hidden lg:inline">{t("create.yourPhoto")}</span>
                 </label>
-                {(composerImage || composerAssetId) && (
+                {composerHasInput && (
                   <button
                     type="button"
                     className="text-[10px] font-semibold text-[var(--fg-dim)] hover:text-[var(--brand)]"
@@ -2756,7 +2758,7 @@ export function CreateStudio({
           )}
 
           {/* Collapsed Lab path — after recipe so first-run stays upload→recipe→generate */}
-          {!image && !fixedMomentContract && (
+          {!composerHasInput && !fixedMomentContract && (
             <div
               className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-3"
               data-first-run-lab="samples"
@@ -3191,7 +3193,7 @@ export function CreateStudio({
                   )}
                 </div>
 
-                {image && assetBrief.ready ? (
+                {composerHasInput && assetBrief.ready ? (
                   <AssetBriefPanel
                     brief={assetBrief}
                     identity={toyIdentity}
@@ -3222,7 +3224,9 @@ export function CreateStudio({
                   />
                 ) : null}
 
-                {image ? <DirectorPlanPanel plan={directorPlan} /> : null}
+                {composerHasInput ? (
+                  <DirectorPlanPanel plan={directorPlan} />
+                ) : null}
               </div>
             )}
           </div>
@@ -3243,7 +3247,7 @@ export function CreateStudio({
                   ? "Sign in to create"
                 : "Review and generate"}
             </p>
-            {image ? (
+            {composerHasInput ? (
               <div className="mt-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-white">
@@ -3267,7 +3271,7 @@ export function CreateStudio({
                   : "Choose one Pikbo Lab sample to preview this recipe at 0 credits."}
               </p>
             )}
-            {image && demoMode ? (
+            {composerHasInput && demoMode ? (
               <p className="mt-2 rounded-lg border border-white/10 bg-black/25 px-2.5 py-2 text-[10px] leading-snug text-white/55">
                 Cached Pikbo Lab prototype · no visitor product photo is sent
                 to a model or used in this preview.
@@ -3350,7 +3354,7 @@ export function CreateStudio({
               creditsRestored={lastRefunded}
               retryAfterSec={failRetryAfterSec}
               onRetry={
-                !lastUploadIgnored && image && !busy
+                !lastUploadIgnored && composerHasInput && !busy
                   ? () => {
                       setFailRetryAfterSec(null);
                       if (activeVersion) retryActiveVersion();
@@ -3363,7 +3367,7 @@ export function CreateStudio({
                   ? t("fail.retryVersion")
                   : t("fail.retryGenerate")
               }
-              showLabSample={lastUploadIgnored || !image}
+              showLabSample={lastUploadIgnored || !composerHasInput}
               showModules={!lastUploadIgnored}
             />
           )}
@@ -3416,7 +3420,7 @@ export function CreateStudio({
               <GenerateWaitStage
                 elapsed={elapsed}
                 demoMode={demoMode}
-                image={image}
+                image={composerImage}
                 effectLabel={viralName(preset.slug, preset.name)}
                 onCancel={cancelInFlightGenerate}
                 onLeaveToLibrary={leaveWaitingKeepBackground}
@@ -3623,7 +3627,7 @@ export function CreateStudio({
                 /> : null}
 
                 {/* Same photo · next job — accelerate cycle, no re-upload */}
-                {!fixedMomentContract && image && status === "done" && (
+                {!fixedMomentContract && composerHasInput && status === "done" && (
                   <div className="mx-auto mt-4 max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-black/40 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <div className="mb-2.5 flex flex-wrap items-end justify-between gap-2">
                       <div>
@@ -3950,7 +3954,7 @@ export function CreateStudio({
                     "Something blocked this run. Your still is still here — retry or switch recipe."}
                 </p>
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-                  {image ? (
+                  {composerHasInput ? (
                     <button
                       type="button"
                       disabled={busy}
@@ -4029,13 +4033,13 @@ export function CreateStudio({
                   {t("create.clipLands")}
                 </p>
                 <p className="mt-1.5 max-w-xs text-xs text-[var(--fg-muted)]">
-                  {image
+                  {composerHasInput
                     ? t("create.hitGenerate")
                     : demoMode
                       ? t("create.noPhotoCached")
                       : t("create.noPhotoLive")}
                 </p>
-                {!image && (
+                {!composerHasInput && (
                   <button
                     type="button"
                     disabled={sampleLoading || busy}
@@ -4062,7 +4066,7 @@ export function CreateStudio({
         className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
         data-create-sticky="mobile"
       >
-        {image ? (
+        {composerHasInput ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
             {preset.emoji} {viralName(preset.slug, preset.name)} · {aspectRatio}
             {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
@@ -4071,7 +4075,7 @@ export function CreateStudio({
               : `${CREDITS_PER_VIDEO} credits when Live`}
           </p>
         ) : null}
-        {!image ? (
+        {!composerHasInput ? (
           privateUploadEnabled ? (
             <button
               type="button"
@@ -4147,7 +4151,7 @@ export function CreateStudio({
                 .getElementById("create-result")
                 ?.scrollIntoView({ behavior: "smooth", block: "start" });
             }}
-            disabled={busy || !ownsRights || (mode === "i2v" && !image)}
+            disabled={busy || !ownsRights || (mode === "i2v" && !composerHasInput)}
             className="btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
             data-first-run-action="generate"
           >

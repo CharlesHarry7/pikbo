@@ -229,6 +229,7 @@ assert.match(createStudio, /session\?\.auth\?\.id/);
 assert.match(createStudio, /recentOwnerKey/);
 assert.match(createStudio, /recentListBoundOwnerKey/);
 assert.match(createStudio, /composerImage|composerAssetId/);
+assert.match(createStudio, /composerHasInput/);
 assert.match(createStudio, /canAdoptAssetId/);
 assert.match(createStudio, /setAssetId\(asset\.id\)/);
 assert.match(createStudio, /Use a recent verified photo/);
@@ -236,6 +237,20 @@ assert.match(createStudio, /data-recent-private-assets/);
 assert.match(createStudio, /no re-upload/);
 assert.match(createStudio, /recentReuseUi\.showRecentRail/);
 assert.match(createStudio, /recentReuseUi\.visibleAssets/);
+// Residual composer sinks must not re-bind raw `image` (A→B mid-transition leak).
+assert.match(createStudio, /GenerateWaitStage[\s\S]{0,220}image=\{composerImage\}/);
+assert.match(createStudio, /\|\| composerImage/);
+assert.doesNotMatch(createStudio, /\|\| image\s*;/);
+assert.match(createStudio, /showLabSample=\{lastUploadIgnored \|\| !composerHasInput\}/);
+assert.match(
+  createStudio,
+  /disabled=\{busy \|\| !ownsRights \|\| \(mode === "i2v" && !composerHasInput\)\}/
+);
+assert.match(createStudio, /composerHasInput \? \([\s\S]{0,80}<DirectorPlanPanel/);
+assert.match(createStudio, /composerHasInput && assetBrief\.ready/);
+// generate payload still uses fail-closed composer still
+assert.match(createStudio, /image: composerImage/);
+assert.match(createStudio, /assetId: composerAssetId/);
 // Selecting recent must not call registerLocalAsset / re-upload path.
 const adoptRecentSlice = createStudio.slice(
   createStudio.indexOf("adoptRecentPrivateAsset"),
