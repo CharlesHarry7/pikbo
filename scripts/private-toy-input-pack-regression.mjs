@@ -254,7 +254,7 @@ assert.match(createStudio, /assetId: composerAssetId/);
 // Selecting recent must not call registerLocalAsset / re-upload path.
 const adoptRecentSlice = createStudio.slice(
   createStudio.indexOf("adoptRecentPrivateAsset"),
-  createStudio.indexOf("adoptRecentPrivateAsset") + 2200
+  createStudio.indexOf("adoptRecentPrivateAsset") + 3200
 );
 assert.match(adoptRecentSlice, /setAssetId\(asset\.id\)/);
 assert.match(adoptRecentSlice, /applyRecentPreviewResolution/);
@@ -709,6 +709,249 @@ assert.equal(
   assert.equal(uploadKept.effectiveSelectedImage, "data:image/png;base64,AAA");
 }
 
+// --- AIT-14: owner-safe durable Create ?assetId= retry handoff ---
+const {
+  CREATE_RETRY_ASSET_ID_QUERY,
+  parseCreateRetryAssetIdQuery,
+  planCreateQueryAssetHandoff,
+} = clientModule;
+
+assert.equal(CREATE_RETRY_ASSET_ID_QUERY, "assetId");
+assert.equal(
+  parseCreateRetryAssetIdQuery(inputAssetId),
+  inputAssetId,
+  "durable UUID input_asset_id is accepted"
+);
+assert.equal(parseCreateRetryAssetIdQuery("asset_local_session"), null);
+assert.equal(parseCreateRetryAssetIdQuery("not-a-uuid"), null);
+assert.equal(parseCreateRetryAssetIdQuery(""), null);
+assert.equal(parseCreateRetryAssetIdQuery(null), null);
+assert.equal(
+  parseCreateRetryAssetIdQuery(`  ${inputAssetId}  `),
+  inputAssetId
+);
+
+// Create page wires optional query; CreateStudio defers auto-select.
+assert.match(createPage, /assetId\?:/);
+assert.match(createPage, /initialAssetId=\{sp\.assetId\}/);
+assert.match(createStudio, /initialAssetId/);
+assert.match(createStudio, /parseCreateRetryAssetIdQuery/);
+assert.match(createStudio, /planCreateQueryAssetHandoff/);
+assert.match(createStudio, /CREATE_RETRY_ASSET_ID_QUERY/);
+assert.match(createStudio, /fromQueryHandoff/);
+assert.match(createStudio, /userStillChoiceRef/);
+assert.match(createStudio, /queryAssetHandoffSettledRef/);
+// Never adopt query UUID without canAdopt / ready recent membership.
+assert.match(
+  createStudio,
+  /canAdoptAssetId\(asset\.id\)[\s\S]{0,200}fromQueryHandoff:\s*true/
+);
+// Explicit upload settles handoff so deferred query cannot override.
+const adoptImageSlice = createStudio.slice(
+  createStudio.indexOf("const adoptImage = useCallback"),
+  createStudio.indexOf("const adoptImage = useCallback") + 900
+);
+assert.match(adoptImageSlice, /userStillChoiceRef\.current = true/);
+assert.match(adoptImageSlice, /queryAssetHandoffSettledRef\.current = true/);
+
+const handoffTarget = inputAssetId;
+const otherOwnerAsset = "22222222-2222-4222-8222-222222222222";
+
+// Valid current-owner preselection once ready list includes the id.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    readyAssets: [{ id: handoffTarget }, { id: otherOwnerAsset }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, { action: "adopt", assetId: handoffTarget });
+}
+
+// Wait while recent list is still loading — no premature select/preview.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: null,
+    readyAssets: [],
+    listLoading: true,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, { action: "wait" });
+}
+
+// Arbitrary / cross-owner / not-ready: id absent from owner ready list → drop.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    readyAssets: [{ id: otherOwnerAsset }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, {
+    action: "drop",
+    reason: "not-in-ready-list",
+  });
+}
+
+// Public / capability-off: never adopt query UUID.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: null,
+    listOwnerKey: null,
+    readyAssets: [{ id: handoffTarget }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, { action: "drop", reason: "no-owner" });
+}
+
+// Owner switch A→B: list still tagged A mid-transition → wait (no A preview).
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-b",
+    listOwnerKey: "owner-a",
+    readyAssets: [{ id: handoffTarget }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, { action: "wait" });
+}
+
+// Owner B's ready list lacks the id → honest drop (no stale A selection).
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-b",
+    listOwnerKey: "owner-b",
+    readyAssets: [{ id: otherOwnerAsset }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, {
+    action: "drop",
+    reason: "not-in-ready-list",
+  });
+}
+
+// Stale list commit ordering: after A→B generation bump, only B list is adoptable
+// via canAdopt (existing race helpers) + handoff requires matching list owner.
+{
+  const mid = deriveRecentReuseUiState({
+    currentOwnerKey: "owner-b",
+    listOwnerKey: "owner-a",
+    assets: [{ id: handoffTarget }],
+    thumbs: { [handoffTarget]: "https://signed.example/a" },
+    selectionSource: null,
+    selectionOwnerKey: null,
+    selectedAssetId: null,
+    selectedImage: null,
+    loading: false,
+  });
+  assert.equal(mid.canAdoptAssetId(handoffTarget), false);
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-b",
+    listOwnerKey: "owner-a",
+    readyAssets: [{ id: handoffTarget }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.equal(plan.action, "wait");
+}
+
+// Explicit local upload wins over deferred query auto-selection.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: true,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    readyAssets: [{ id: handoffTarget }],
+    listLoading: false,
+    selectionSource: "upload",
+    selectedAssetId: "upload-asset",
+  });
+  assert.deepEqual(plan, { action: "drop", reason: "user-override" });
+}
+
+// Manual recent pick of a different asset wins over query target.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    readyAssets: [{ id: handoffTarget }, { id: otherOwnerAsset }],
+    listLoading: false,
+    selectionSource: "recent",
+    selectedAssetId: otherOwnerAsset,
+  });
+  assert.deepEqual(plan, { action: "drop", reason: "user-override" });
+}
+
+// Already applied / settled handoff does not re-adopt.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: true,
+    userOverride: false,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    readyAssets: [{ id: handoffTarget }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, { action: "drop", reason: "already-settled" });
+}
+
+// Invalid query never selects (parse already null; plan also drops).
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: null,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    readyAssets: [{ id: handoffTarget }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, { action: "drop", reason: "invalid" });
+}
+
 console.log(
-  "private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery · owner-switch + selection race · render-time fail-closed)"
+  "private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery · owner-switch + selection race · render-time fail-closed · durable ?assetId= handoff)"
 );

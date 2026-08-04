@@ -55,6 +55,11 @@ export default async function CreatePage({
     sku?: string;
     retryJobId?: string;
     retryToken?: string;
+    /**
+     * Durable failed-job input_asset_id retry handoff (`?assetId=`).
+     * CreateStudio auto-selects only after owner ready recent-list proof.
+     */
+    assetId?: string;
     /** Truthful device-local Moment preview; never enters generation by itself. */
     moment?: string | string[];
   }>;
@@ -105,6 +110,7 @@ export default async function CreatePage({
           initialSku={sp.sku}
           initialRetryJobId={sp.retryJobId}
           initialRetryToken={sp.retryToken}
+          initialAssetId={sp.assetId}
           fixedMomentContract
         />
       </div>

@@ -236,6 +236,118 @@ export async function applyRecentPreviewResolution(input: {
 }
 
 /**
+ * Stable Create query parameter for a failed job's durable `input_asset_id`.
+ * Handoff is owner-safe: Create auto-selects only after this id appears in the
+ * current owner's ready recent-assets list — never from the query string alone.
+ */
+export const CREATE_RETRY_ASSET_ID_QUERY = "assetId";
+
+const DURABLE_TOY_ASSET_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Parse Create `?assetId=` for durable retry handoff.
+ * Accepts only UUID-shaped durable ids; rejects empty, local `asset_*`, or junk.
+ */
+export function parseCreateRetryAssetIdQuery(
+  raw: string | null | undefined
+): string | null {
+  if (typeof raw !== "string") return null;
+  const value = raw.trim();
+  if (!value || !DURABLE_TOY_ASSET_ID_RE.test(value)) return null;
+  return value;
+}
+
+export type CreateQueryAssetHandoffPlan =
+  | { action: "wait" }
+  | { action: "adopt"; assetId: string }
+  | {
+      action: "drop";
+      reason:
+        | "invalid"
+        | "no-owner"
+        | "not-in-ready-list"
+        | "user-override"
+        | "already-settled"
+        | "already-selected";
+    };
+
+/**
+ * Decide whether Create may auto-select a durable query `assetId`.
+ *
+ * Fail-closed rules:
+ * - Never adopt a query id that is absent from the current owner's ready list.
+ * - Explicit upload / Lab / manual recent selection wins over deferred handoff.
+ * - Wait while the owner-bound recent list is still loading or mid owner-switch.
+ */
+export function planCreateQueryAssetHandoff(input: {
+  queryAssetId: string | null;
+  handoffSettled: boolean;
+  /** True once the user explicitly uploaded, chose Lab, or picked recent manually. */
+  userOverride: boolean;
+  currentOwnerKey: string | null;
+  listOwnerKey: string | null;
+  readyAssets: ReadonlyArray<{ id: string }>;
+  listLoading: boolean;
+  selectionSource: RecentSelectionSource | null;
+  selectedAssetId: string | null;
+}): CreateQueryAssetHandoffPlan {
+  if (input.handoffSettled) {
+    return { action: "drop", reason: "already-settled" };
+  }
+  if (!input.queryAssetId) {
+    return { action: "drop", reason: "invalid" };
+  }
+  if (input.userOverride) {
+    return { action: "drop", reason: "user-override" };
+  }
+  // Non-recent selection always outranks deferred query auto-select.
+  if (
+    input.selectionSource === "upload" ||
+    input.selectionSource === "lab" ||
+    input.selectionSource === "other"
+  ) {
+    return { action: "drop", reason: "user-override" };
+  }
+  if (
+    input.selectionSource === "recent" &&
+    typeof input.selectedAssetId === "string" &&
+    input.selectedAssetId.length > 0
+  ) {
+    if (
+      input.selectedAssetId.toLowerCase() === input.queryAssetId.toLowerCase()
+    ) {
+      return { action: "drop", reason: "already-selected" };
+    }
+    // Manual recent pick of a different asset wins.
+    return { action: "drop", reason: "user-override" };
+  }
+  if (!input.currentOwnerKey) {
+    return { action: "drop", reason: "no-owner" };
+  }
+  if (input.listLoading) {
+    return { action: "wait" };
+  }
+  // List not yet bound to this owner: wait while a transition may still load;
+  // if list is idle and unbound after load cycle, treat as not ready.
+  if (input.listOwnerKey !== input.currentOwnerKey) {
+    if (input.listOwnerKey == null) {
+      return { action: "drop", reason: "not-in-ready-list" };
+    }
+    return { action: "wait" };
+  }
+  const target = input.queryAssetId.toLowerCase();
+  const match = input.readyAssets.find(
+    (row) =>
+      typeof row?.id === "string" && row.id.toLowerCase() === target
+  );
+  if (!match) {
+    return { action: "drop", reason: "not-in-ready-list" };
+  }
+  return { action: "adopt", assetId: match.id };
+}
+
+/**
  * Load the signed-in owner's newest ready private toy photos.
  * Call only when private upload capability is already open on the client.
  */

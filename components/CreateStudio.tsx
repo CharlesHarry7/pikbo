@@ -95,7 +95,10 @@ import { DeliveryChecklist } from "@/components/DeliveryChecklist";
 import {
   applyRecentListLoad,
   applyRecentPreviewResolution,
+  CREATE_RETRY_ASSET_ID_QUERY,
   deriveRecentReuseUiState,
+  parseCreateRetryAssetIdQuery,
+  planCreateQueryAssetHandoff,
   privateRecentOwnerKey,
   planRecentOwnerTransition,
   type RecentPrivateToyAsset,
@@ -187,6 +190,7 @@ export function CreateStudio({
   initialSku,
   initialRetryJobId,
   initialRetryToken,
+  initialAssetId,
   fixedMomentContract = false,
 }: {
   initialEffect?: string;
@@ -208,6 +212,11 @@ export function CreateStudio({
   /** Exact process-ledger retry child + one-time token. */
   initialRetryJobId?: string;
   initialRetryToken?: string;
+  /**
+   * Durable failed-job `input_asset_id` via Create `?assetId=`.
+   * Auto-selected only after it appears in the current owner's ready recent list.
+   */
+  initialAssetId?: string;
   /** Hide catalog choices for a real, fixed Moment contract. */
   fixedMomentContract?: boolean;
 }) {
@@ -287,6 +296,16 @@ export function CreateStudio({
   const recentSelectionSourceRef = useRef<RecentSelectionSource | null>(null);
   /** Mirrors selected assetId for race-safe preview commits (avoids stale setState). */
   const recentSelectedAssetIdRef = useRef<string | null>(null);
+  /**
+   * Durable Create `?assetId=` handoff (failed-job input_asset_id).
+   * Never previewed/selected until the id is in the current owner's ready list.
+   */
+  const queryAssetHandoffIdRef = useRef<string | null>(
+    parseCreateRetryAssetIdQuery(initialAssetId)
+  );
+  const queryAssetHandoffSettledRef = useRef(false);
+  /** Explicit upload / Lab / manual recent wins over deferred query auto-select. */
+  const userStillChoiceRef = useRef(false);
   /** CD Phase B — natural size for rule-based Asset Brief */
   const [imageProbe, setImageProbe] = useState<ImageProbe | null>(null);
   /** True when still is PIKBO Lab prototype sample (not customer SKU) */
@@ -765,6 +784,9 @@ export function CreateStudio({
         );
         return;
       }
+      // Explicit local upload / Lab always beats deferred ?assetId= handoff.
+      userStillChoiceRef.current = true;
+      queryAssetHandoffSettledRef.current = true;
       // Local upload / Lab — not recent reuse (owner-switch must not wipe these).
       const source: RecentSelectionSource = opts?.labSample ? "lab" : "upload";
       recentSelectionSourceRef.current = source;
@@ -831,13 +853,27 @@ export function CreateStudio({
    * Does not re-upload, does not invent Base64 for generate, and never puts
    * signed URLs or object keys into the generate request.
    * Selection token blocks out-of-order A→B preview commits.
+   *
+   * @param opts.fromQueryHandoff — true only for deferred `?assetId=` auto-select
+   *   after the id appeared in the current owner's ready recent list.
    */
   const adoptRecentPrivateAsset = useCallback(
-    async (asset: RecentPrivateToyAsset) => {
+    async (
+      asset: RecentPrivateToyAsset,
+      opts?: { fromQueryHandoff?: boolean }
+    ) => {
       const ownerKey = recentOwnerKey;
       if (!ownerKey) return;
       // Interaction-time gate: never adopt a stale A row rendered under B.
       if (!recentReuseUi.canAdoptAssetId(asset.id)) return;
+      if (opts?.fromQueryHandoff) {
+        // Only the deferred owner-safe handoff path; never invent selection.
+        queryAssetHandoffSettledRef.current = true;
+      } else {
+        // Manual recent pick wins over any pending query handoff.
+        userStillChoiceRef.current = true;
+        queryAssetHandoffSettledRef.current = true;
+      }
       recentSelectionSourceRef.current = "recent";
       setRecentSelectionSource("recent");
       setRecentSelectionBoundOwnerKey(ownerKey);
@@ -1076,6 +1112,88 @@ export function CreateStudio({
       revokeRecentThumbUrls();
     };
   }, [revokeRecentThumbUrls]);
+
+  /**
+   * Owner-safe durable retry handoff: Create `?assetId=` auto-selects only after
+   * the id appears in GET /api/assets/recent for the current invited owner and is
+   * ready. Arbitrary/cross-owner/not-ready UUIDs never preview or select.
+   * Explicit upload or manual recent selection always wins.
+   */
+  useEffect(() => {
+    if (!sessionResolved) return;
+    const queryAssetId = queryAssetHandoffIdRef.current;
+    if (!queryAssetId) return;
+
+    const stripQueryAssetParam = () => {
+      if (typeof window === "undefined") return;
+      try {
+        const url = new URL(window.location.href);
+        if (!url.searchParams.has(CREATE_RETRY_ASSET_ID_QUERY)) return;
+        url.searchParams.delete(CREATE_RETRY_ASSET_ID_QUERY);
+        window.history.replaceState({}, "", url.pathname + url.search);
+      } catch {
+        /* Create remains usable without history rewrite. */
+      }
+    };
+
+    const plan = planCreateQueryAssetHandoff({
+      queryAssetId,
+      handoffSettled: queryAssetHandoffSettledRef.current,
+      userOverride: userStillChoiceRef.current,
+      currentOwnerKey: recentOwnerKey,
+      listOwnerKey: recentListBoundOwnerKey,
+      readyAssets: recentPrivateAssets,
+      listLoading: recentAssetsLoading,
+      selectionSource: recentSelectionSourceRef.current,
+      selectedAssetId: recentSelectedAssetIdRef.current,
+    });
+
+    if (plan.action === "wait") return;
+
+    if (plan.action === "drop") {
+      queryAssetHandoffSettledRef.current = true;
+      stripQueryAssetParam();
+      return;
+    }
+
+    // adopt — only when the row is in the owner-bound ready list (canAdopt).
+    const asset = recentPrivateAssets.find((row) => row.id === plan.assetId);
+    if (!asset || !recentReuseUi.canAdoptAssetId(asset.id)) {
+      queryAssetHandoffSettledRef.current = true;
+      stripQueryAssetParam();
+      return;
+    }
+
+    const t = window.setTimeout(() => {
+      // Re-check after deferral: explicit user choice wins; avoid double adopt.
+      if (
+        queryAssetHandoffSettledRef.current ||
+        userStillChoiceRef.current
+      ) {
+        stripQueryAssetParam();
+        return;
+      }
+      if (!recentReuseUi.canAdoptAssetId(asset.id)) {
+        queryAssetHandoffSettledRef.current = true;
+        stripQueryAssetParam();
+        return;
+      }
+      void adoptRecentPrivateAsset(asset, { fromQueryHandoff: true }).finally(
+        () => {
+          stripQueryAssetParam();
+        }
+      );
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [
+    sessionResolved,
+    recentOwnerKey,
+    recentListBoundOwnerKey,
+    recentPrivateAssets,
+    recentAssetsLoading,
+    recentReuseUi,
+    adoptRecentPrivateAsset,
+  ]);
 
   // Favorites + toy identity + optional still from Image studio (after adoptImage exists).
   // Query ?sku= wins over device bible so Next SKU / AfterPath carry survives mount.
