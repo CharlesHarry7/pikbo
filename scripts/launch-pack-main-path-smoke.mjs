@@ -36,10 +36,10 @@ assert.match(
   /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
 );
 assert.match(homeHero, /href=\{MOMENT_CREATE_HREF\}/);
-assert.match(homeHero, /Try Street Power-Up/);
-assert.match(homeHero, /PIKBO Lab · cached prototype/);
+assert.match(homeHero, /Use this motion/);
+assert.match(homeHero, /Sample · Beatbot/);
+assert.match(homeHero, /Archive sample · 6s/);
 assert.match(homeHero, /Cached sample · 0 credits · no upload/);
-assert.match(homeHero, /Sample only/);
 assert.match(homeHero, /not your toy/);
 assert.match(homeHero, /not a completed customer deliverable/);
 assert.match(homeHero, /showControls/);
