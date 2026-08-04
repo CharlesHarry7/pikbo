@@ -91,6 +91,17 @@ assertMatch(
   /const privateMomentLoginHref\s*=\s*`\/login\?next=\$\{encodeURIComponent\([\s\S]{0,120}fixedMomentNextPath[\s\S]{0,40}\)\}`/,
   "fixed Moment gate must preserve the exact Moment path through login"
 );
+const appShell = read("components/AppShell.tsx");
+assertMatch(
+  appShell,
+  /const HOME_SIGN_IN_HREF\s*=\s*`\/login\?next=\$\{encodeURIComponent\(\s*`\$\{MOMENT_CREATE_HREF\}&source=home-sign-in`\s*\)\}`/,
+  "homepage Sign in must preserve the fixed Moment return path"
+);
+assertMatch(
+  appShell,
+  /href: HOME_SIGN_IN_HREF,\s*label: "Sign in"/,
+  "homepage motion chrome must use the Moment-preserving Sign in href"
+);
 assertMatch(
   studio,
   /fixedMomentContract\s*&&\s*!session\?\.signedIn\s*\?\s*\([\s\S]{0,600}data-public-single-preview-sign-in[\s\S]{0,120}Sign in to create with your toy/,
