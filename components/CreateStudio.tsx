@@ -92,6 +92,7 @@ import {
 } from "@/lib/toyIdentity";
 import { deliveryItemsForJob } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
+import type { RecentPrivateToyAsset } from "@/lib/clientAssets";
 
 type Status = "idle" | "uploading" | "generating" | "done" | "error";
 type Mode = "i2v" | "t2v";
@@ -246,6 +247,15 @@ export function CreateStudio({
   const [image, setImage] = useState<string | null>(null);
   /** Phase D local asset id — generate prefers assetId over re-posting Base64. */
   const [assetId, setAssetId] = useState<string | null>(null);
+  /** Owner-only ready private toy photos for reuse (never shown to public guests). */
+  const [recentPrivateAssets, setRecentPrivateAssets] = useState<
+    RecentPrivateToyAsset[]
+  >([]);
+  const [recentAssetThumbs, setRecentAssetThumbs] = useState<
+    Record<string, string>
+  >({});
+  const [recentAssetsLoading, setRecentAssetsLoading] = useState(false);
+  const recentThumbUrlsRef = useRef<string[]>([]);
   /** CD Phase B — natural size for rule-based Asset Brief */
   const [imageProbe, setImageProbe] = useState<ImageProbe | null>(null);
   /** True when still is PIKBO Lab prototype sample (not customer SKU) */
@@ -719,6 +729,143 @@ export function CreateStudio({
     },
     [effect, privateUploadEnabled]
   );
+
+  /**
+   * Reuse an already-verified private toy photo by assetId.
+   * Does not re-upload, does not invent Base64 for generate, and never puts
+   * signed URLs or object keys into the generate request.
+   */
+  const adoptRecentPrivateAsset = useCallback(
+    async (asset: RecentPrivateToyAsset) => {
+      if (!privateUploadEnabled) return;
+      setError(null);
+      setLastUploadIgnored(false);
+      setStatus("idle");
+      setVideoUrl(null);
+      setDemo(false);
+      setUsedModel(null);
+      setResultDuration(null);
+      setResultAspect(null);
+      setResultResolution(null);
+      setVersions([]);
+      setActiveVersionId(null);
+      setLastRequestCreditState(null);
+      setLabStill(false);
+      setBriefCollapsed(true);
+      setFidelityAngles([]);
+      setSecondaryStill(null);
+      briefAutoAppliedRef.current = false;
+      setAssetId(asset.id);
+      if (asset.skuLabel) {
+        setToyIdentity((prev) => ({
+          ...prev,
+          sku: asset.skuLabel!.slice(0, 64),
+        }));
+      }
+      const cachedThumb = recentAssetThumbs[asset.id];
+      if (cachedThumb) {
+        setImage(cachedThumb);
+      } else {
+        setImage(null);
+      }
+      setImageProbe(null);
+      track({
+        event: "upload_ready",
+        path: "/create",
+        recipe: effect,
+        meta: { source: "recent_private_asset", reused: true },
+      });
+      try {
+        const { resolvePrivateToyAssetPreviewUrl } = await import(
+          "@/lib/clientAssets"
+        );
+        const previewUrl = await resolvePrivateToyAssetPreviewUrl(
+          asset.previewPath
+        );
+        if (previewUrl) {
+          setImage(previewUrl);
+          if (previewUrl.startsWith("blob:")) {
+            recentThumbUrlsRef.current.push(previewUrl);
+          }
+          void probeImageSize(previewUrl).then((meta) => {
+            if (meta) setImageProbe(meta);
+          });
+        }
+      } catch {
+        /* assetId alone is enough for live generate; preview is best-effort */
+      }
+      toast("Using a recent verified toy photo · no re-upload");
+    },
+    [effect, privateUploadEnabled, recentAssetThumbs, toast]
+  );
+
+  // Owner-only: load recent ready private photos when private upload is open.
+  // Public / anonymous guests never request this API.
+  useEffect(() => {
+    if (!privateUploadEnabled) return;
+    const ac = new AbortController();
+    let cancelled = false;
+    // Defer setState out of the effect body (same pattern as pending still hydrate).
+    const t = window.setTimeout(() => {
+      if (cancelled) return;
+      setRecentAssetsLoading(true);
+      void (async () => {
+        try {
+          const {
+            fetchRecentPrivateToyAssets,
+            resolvePrivateToyAssetPreviewUrl,
+          } = await import("@/lib/clientAssets");
+          const assets = await fetchRecentPrivateToyAssets({
+            limit: 8,
+            signal: ac.signal,
+          });
+          if (cancelled) return;
+          setRecentPrivateAssets(assets);
+          const thumbs: Record<string, string> = {};
+          await Promise.all(
+            assets.slice(0, 6).map(async (asset) => {
+              const url = await resolvePrivateToyAssetPreviewUrl(
+                asset.previewPath,
+                { signal: ac.signal }
+              );
+              if (url && !cancelled) {
+                thumbs[asset.id] = url;
+                if (url.startsWith("blob:")) {
+                  recentThumbUrlsRef.current.push(url);
+                }
+              }
+            })
+          );
+          if (!cancelled) setRecentAssetThumbs(thumbs);
+        } catch {
+          if (!cancelled) {
+            setRecentPrivateAssets([]);
+            setRecentAssetThumbs({});
+          }
+        } finally {
+          if (!cancelled) setRecentAssetsLoading(false);
+        }
+      })();
+    }, 0);
+    return () => {
+      cancelled = true;
+      ac.abort();
+      window.clearTimeout(t);
+    };
+  }, [privateUploadEnabled]);
+
+  useEffect(() => {
+    return () => {
+      for (const url of recentThumbUrlsRef.current) {
+        try {
+          if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+        } catch {
+          /* ignore */
+        }
+      }
+      recentThumbUrlsRef.current = [];
+    };
+  }, []);
 
   // Favorites + toy identity + optional still from Image studio (after adoptImage exists).
   // Query ?sku= wins over device bible so Next SKU / AfterPath carry survives mount.
@@ -2240,6 +2387,67 @@ export function CreateStudio({
                   onChange={onFile}
                 />
               </label>
+              {/* Reuse a recently verified private photo — no re-upload, no Base64. */}
+              {(recentAssetsLoading || recentPrivateAssets.length > 0) && (
+                <div
+                  className="mt-3"
+                  data-recent-private-assets
+                  data-testid="recent-private-assets"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--fg-muted)]">
+                    Use a recent verified photo
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-[var(--fg-dim)]">
+                    Pick a ready private toy photo you already verified — no
+                    re-upload.
+                  </p>
+                  {recentAssetsLoading && recentPrivateAssets.length === 0 ? (
+                    <p className="mt-2 text-[11px] text-[var(--fg-dim)]">
+                      Loading recent photos…
+                    </p>
+                  ) : (
+                    <ul className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                      {recentPrivateAssets.map((asset) => {
+                        const selected = assetId === asset.id;
+                        const thumb = recentAssetThumbs[asset.id];
+                        return (
+                          <li key={asset.id} className="shrink-0">
+                            <button
+                              type="button"
+                              data-recent-asset-id={asset.id}
+                              aria-pressed={selected}
+                              aria-label={
+                                asset.skuLabel
+                                  ? `Use recent photo ${asset.skuLabel}`
+                                  : "Use recent verified toy photo"
+                              }
+                              onClick={() => void adoptRecentPrivateAsset(asset)}
+                              className={`relative h-16 w-16 overflow-hidden rounded-xl border transition ${
+                                selected
+                                  ? "border-[var(--mint)] ring-2 ring-[var(--mint)]/40"
+                                  : "border-white/15 hover:border-[var(--mint)]/50"
+                              }`}
+                            >
+                              {thumb ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={thumb}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span className="grid h-full w-full place-items-center bg-black/50 text-[10px] text-white/50">
+                                  Photo
+                                </span>
+                              )}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div

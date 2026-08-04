@@ -133,8 +133,12 @@ assert.doesNotMatch(
 
 const upload = read("app/api/assets/upload-url/route.ts");
 const complete = read("app/api/assets/complete/route.ts");
+const recentRoute = read("app/api/assets/recent/route.ts");
+const contentRoute = read("app/api/assets/[id]/content/route.ts");
+const ownerRecent = read("lib/ownerRecentToyAssets.ts");
 const assets = read("lib/privateToyAssets.ts");
 const clientAssets = read("lib/clientAssets.ts");
+const createStudio = read("components/CreateStudio.tsx");
 const supabaseStore = read("lib/durableCredits/supabaseStore.ts");
 const reserve = read("app/api/seller-pack/reserve/route.ts");
 const status = read("app/api/seller-pack/status/route.ts");
@@ -178,6 +182,61 @@ assert.match(clientAssets, /headers: \{ "x-upsert": "false" \}/);
 assert.match(clientAssets, /lost upload response is ambiguous/);
 assert.doesNotMatch(clientAssets, /if \(!uploaded\.ok\) return null/);
 assert.doesNotMatch(clientAssets, /headers:\s*\{\s*"Content-Type": blob\.type/);
+
+// --- AIT-13: owner recent ready private photos + Create reuse ---
+assert.match(recentRoute, /getAuthUserFromRequest/);
+assert.match(recentRoute, /AUTH_REQUIRED/);
+assert.match(recentRoute, /PRIVATE_INPUT_ACCESS_REQUIRED/);
+assert.match(recentRoute, /listOwnerRecentReadyToyAssets/);
+assert.match(recentRoute, /Cache-Control": "private, no-store"/);
+assert.match(recentRoute, /private-input-recent/);
+// Response body must only expose the safe assets list (no storage secrets).
+assert.match(recentRoute, /ok: true,\s*assets,\s*limit,/);
+assert.doesNotMatch(recentRoute, /\bobjectKey\b|\bobject_key\b|\bsignedUrl\b|\bsha256\b/);
+assert.match(ownerRecent, /\.eq\("state", "ready"\)/);
+assert.match(ownerRecent, /order\("created_at", \{ ascending: false \}/);
+assert.match(ownerRecent, /previewPath/);
+assert.match(ownerRecent, /\/api\/assets\/\$\{encodeURIComponent\(assetId\)\}\/content/);
+assert.doesNotMatch(ownerRecent, /createSignedUrl|\bsignedUrl\b/);
+// DTO construction never spreads raw DB rows (would leak object_key/sha).
+assert.doesNotMatch(ownerRecent, /\.\.\.row|object_key:|sha256:/);
+// UUID content: re-auth owner + ready → short-lived signed redirect; asset_* preserved.
+assert.match(contentRoute, /isUuidAssetId|UUID_RE/);
+assert.match(contentRoute, /signedPrivateToyAssetPreview/);
+assert.match(contentRoute, /getAuthUserFromRequest/);
+assert.match(contentRoute, /status: 302/);
+assert.match(contentRoute, /Location: preview\.url/);
+assert.match(contentRoute, /Cache-Control": "private, no-store"/);
+assert.match(contentRoute, /code: "NOT_FOUND"/);
+assert.match(contentRoute, /getLocalAsset/);
+assert.match(contentRoute, /id\.startsWith\("asset_"\)/);
+assert.match(contentRoute, /mode: "local-memory"/);
+assert.match(contentRoute, /dataUrl: asset\.dataUrl/);
+// Client: list + preview helpers; generate reuses assetId without re-upload Base64.
+assert.match(clientAssets, /fetchRecentPrivateToyAssets/);
+assert.match(clientAssets, /\/api\/assets\/recent/);
+assert.match(clientAssets, /resolvePrivateToyAssetPreviewUrl/);
+assert.match(clientAssets, /previewPath\.startsWith\("\/api\/assets\/"\)/);
+// CreateStudio: only when privateUploadEnabled; public guests never request recent API.
+assert.match(createStudio, /fetchRecentPrivateToyAssets/);
+assert.match(createStudio, /adoptRecentPrivateAsset/);
+assert.match(createStudio, /privateUploadEnabled/);
+assert.match(createStudio, /if \(!privateUploadEnabled\)/);
+assert.match(createStudio, /setAssetId\(asset\.id\)/);
+assert.match(createStudio, /Use a recent verified photo/);
+assert.match(createStudio, /data-recent-private-assets/);
+assert.match(createStudio, /no re-upload/);
+// Selecting recent must not call registerLocalAsset / re-upload path.
+const adoptRecentSlice = createStudio.slice(
+  createStudio.indexOf("adoptRecentPrivateAsset"),
+  createStudio.indexOf("adoptRecentPrivateAsset") + 1800
+);
+assert.match(adoptRecentSlice, /setAssetId\(asset\.id\)/);
+assert.doesNotMatch(adoptRecentSlice, /registerLocalAsset|registerPrivateToyAsset/);
+assert.doesNotMatch(adoptRecentSlice, /upload-url|\/api\/assets\/complete/);
+// Public path still Lab-only (no recent selector outside privateUploadEnabled).
+assert.match(createStudio, /privateUploadEnabled \? \(/);
+assert.match(createStudio, /data-public-single-preview="lab-only"/);
 
 const reserveAdapter = functionSource(
   supabaseStore,

@@ -6,6 +6,95 @@ function hex(bytes: Uint8Array): string {
   return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
 }
 
+/** Safe recent-asset list row from GET /api/assets/recent. */
+export type RecentPrivateToyAsset = {
+  id: string;
+  skuLabel: string | null;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: string;
+  verifiedAt: string | null;
+  previewPath: string;
+};
+
+/**
+ * Load the signed-in owner's newest ready private toy photos.
+ * Call only when private upload capability is already open on the client.
+ */
+export async function fetchRecentPrivateToyAssets(opts?: {
+  limit?: number;
+  signal?: AbortSignal;
+}): Promise<RecentPrivateToyAsset[]> {
+  try {
+    const auth = await privateDownloadHeaders();
+    if (!auth.Authorization) return [];
+    const limit =
+      typeof opts?.limit === "number" && Number.isFinite(opts.limit)
+        ? Math.min(12, Math.max(1, Math.floor(opts.limit)))
+        : 8;
+    const res = await fetch(`/api/assets/recent?limit=${limit}`, {
+      method: "GET",
+      headers: { ...auth },
+      cache: "no-store",
+      signal: opts?.signal,
+    });
+    if (!res.ok) return [];
+    const body = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      assets?: RecentPrivateToyAsset[];
+    };
+    if (!body.ok || !Array.isArray(body.assets)) return [];
+    return body.assets.filter(
+      (row) =>
+        typeof row?.id === "string" &&
+        typeof row?.previewPath === "string" &&
+        row.previewPath.startsWith("/api/assets/") &&
+        !row.previewPath.includes("://")
+    );
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Resolve a controlled relative preview path into a short-lived display URL.
+ * Uses owner Bearer auth; does not re-upload or invent Base64 for generate.
+ * Caller should revokeObjectURL when replacing the still.
+ */
+export async function resolvePrivateToyAssetPreviewUrl(
+  previewPath: string,
+  opts?: { signal?: AbortSignal }
+): Promise<string | null> {
+  if (
+    typeof previewPath !== "string" ||
+    !previewPath.startsWith("/api/assets/") ||
+    previewPath.includes("://")
+  ) {
+    return null;
+  }
+  try {
+    const auth = await privateDownloadHeaders();
+    if (!auth.Authorization) return null;
+    const res = await fetch(previewPath, {
+      method: "GET",
+      headers: { ...auth },
+      redirect: "follow",
+      cache: "no-store",
+      signal: opts?.signal,
+    });
+    if (!res.ok) return null;
+    // Prefer the final signed Location after redirect; fall back to blob.
+    if (res.url && res.url.startsWith("https://") && res.url !== previewPath) {
+      return res.url;
+    }
+    const blob = await res.blob();
+    if (!blob.type.startsWith("image/")) return null;
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
+
 export async function registerPrivateToyAsset(
   dataUrl: string,
   skuLabel?: string
