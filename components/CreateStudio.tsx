@@ -1084,9 +1084,11 @@ export function CreateStudio({
             liveOwnerKeyRef.current === requestOwnerKey &&
             recentLoadGenerationRef.current === requestGeneration
           ) {
+            // Bind empty list to this owner so durable ?assetId= handoff can
+            // settle as not-in-ready-list instead of waiting forever.
             setRecentPrivateAssets([]);
             setRecentAssetThumbs({});
-            setRecentListBoundOwnerKey(null);
+            setRecentListBoundOwnerKey(requestOwnerKey);
           }
         } finally {
           if (

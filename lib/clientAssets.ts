@@ -278,7 +278,10 @@ export type CreateQueryAssetHandoffPlan =
  * Fail-closed rules:
  * - Never adopt a query id that is absent from the current owner's ready list.
  * - Explicit upload / Lab / manual recent selection wins over deferred handoff.
- * - Wait while the owner-bound recent list is still loading or mid owner-switch.
+ * - Wait until the recent list is explicitly bound to the current owner
+ *   (including first paint where owner is known but listOwnerKey is still null
+ *   and loading has not flipped true yet, and A→B while the old list remains).
+ * - Drop not-in-ready-list only after that owner-bound commit (empty or full).
  */
 export function planCreateQueryAssetHandoff(input: {
   queryAssetId: string | null;
@@ -328,12 +331,10 @@ export function planCreateQueryAssetHandoff(input: {
   if (input.listLoading) {
     return { action: "wait" };
   }
-  // List not yet bound to this owner: wait while a transition may still load;
-  // if list is idle and unbound after load cycle, treat as not ready.
+  // Current owner is known but the list is not yet bound to them — wait.
+  // Covers: initial null listOwner before first load commit, and A→B while the
+  // prior owner's list is still mounted. Never drop from unbound state alone.
   if (input.listOwnerKey !== input.currentOwnerKey) {
-    if (input.listOwnerKey == null) {
-      return { action: "drop", reason: "not-in-ready-list" };
-    }
     return { action: "wait" };
   }
   const target = input.queryAssetId.toLowerCase();

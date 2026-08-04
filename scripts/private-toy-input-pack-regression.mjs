@@ -757,20 +757,26 @@ assert.match(adoptImageSlice, /queryAssetHandoffSettledRef\.current = true/);
 const handoffTarget = inputAssetId;
 const otherOwnerAsset = "22222222-2222-4222-8222-222222222222";
 
-// Valid current-owner preselection once ready list includes the id.
+// --- AIT-14 race: first signed-in paint must not drop before list binds ---
+// 1) owner=current, listOwner=null, loading=false → wait (not not-in-ready-list).
 {
   const plan = planCreateQueryAssetHandoff({
     queryAssetId: handoffTarget,
     handoffSettled: false,
     userOverride: false,
     currentOwnerKey: "owner-a",
-    listOwnerKey: "owner-a",
-    readyAssets: [{ id: handoffTarget }, { id: otherOwnerAsset }],
+    listOwnerKey: null,
+    readyAssets: [],
     listLoading: false,
     selectionSource: null,
     selectedAssetId: null,
   });
-  assert.deepEqual(plan, { action: "adopt", assetId: handoffTarget });
+  assert.deepEqual(
+    plan,
+    { action: "wait" },
+    "first paint: owner known but list unbound must wait, not drop"
+  );
+  assert.notEqual(plan.action === "drop" && plan.reason, "not-in-ready-list");
 }
 
 // Wait while recent list is still loading — no premature select/preview.
@@ -789,42 +795,7 @@ const otherOwnerAsset = "22222222-2222-4222-8222-222222222222";
   assert.deepEqual(plan, { action: "wait" });
 }
 
-// Arbitrary / cross-owner / not-ready: id absent from owner ready list → drop.
-{
-  const plan = planCreateQueryAssetHandoff({
-    queryAssetId: handoffTarget,
-    handoffSettled: false,
-    userOverride: false,
-    currentOwnerKey: "owner-a",
-    listOwnerKey: "owner-a",
-    readyAssets: [{ id: otherOwnerAsset }],
-    listLoading: false,
-    selectionSource: null,
-    selectedAssetId: null,
-  });
-  assert.deepEqual(plan, {
-    action: "drop",
-    reason: "not-in-ready-list",
-  });
-}
-
-// Public / capability-off: never adopt query UUID.
-{
-  const plan = planCreateQueryAssetHandoff({
-    queryAssetId: handoffTarget,
-    handoffSettled: false,
-    userOverride: false,
-    currentOwnerKey: null,
-    listOwnerKey: null,
-    readyAssets: [{ id: handoffTarget }],
-    listLoading: false,
-    selectionSource: null,
-    selectedAssetId: null,
-  });
-  assert.deepEqual(plan, { action: "drop", reason: "no-owner" });
-}
-
-// Owner switch A→B: list still tagged A mid-transition → wait (no A preview).
+// 2) A→B: old list owner must not drop B handoff (wait until B binds).
 {
   const plan = planCreateQueryAssetHandoff({
     queryAssetId: handoffTarget,
@@ -837,30 +808,14 @@ const otherOwnerAsset = "22222222-2222-4222-8222-222222222222";
     selectionSource: null,
     selectedAssetId: null,
   });
-  assert.deepEqual(plan, { action: "wait" });
+  assert.deepEqual(
+    plan,
+    { action: "wait" },
+    "A→B mid-transition must wait; never drop B handoff from A's list"
+  );
 }
 
-// Owner B's ready list lacks the id → honest drop (no stale A selection).
-{
-  const plan = planCreateQueryAssetHandoff({
-    queryAssetId: handoffTarget,
-    handoffSettled: false,
-    userOverride: false,
-    currentOwnerKey: "owner-b",
-    listOwnerKey: "owner-b",
-    readyAssets: [{ id: otherOwnerAsset }],
-    listLoading: false,
-    selectionSource: null,
-    selectedAssetId: null,
-  });
-  assert.deepEqual(plan, {
-    action: "drop",
-    reason: "not-in-ready-list",
-  });
-}
-
-// Stale list commit ordering: after A→B generation bump, only B list is adoptable
-// via canAdopt (existing race helpers) + handoff requires matching list owner.
+// Stale list commit ordering: canAdopt false + handoff wait while list lagging.
 {
   const mid = deriveRecentReuseUiState({
     currentOwnerKey: "owner-b",
@@ -888,9 +843,98 @@ const otherOwnerAsset = "22222222-2222-4222-8222-222222222222";
   assert.equal(plan.action, "wait");
 }
 
-// Explicit local upload wins over deferred query auto-selection.
+// 3) current-owner empty list commit → drop not-in-ready-list (only after bind).
 {
   const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    readyAssets: [],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, {
+    action: "drop",
+    reason: "not-in-ready-list",
+  });
+}
+
+// Arbitrary / cross-owner / not-ready: id absent from owner-bound ready list → drop.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    readyAssets: [{ id: otherOwnerAsset }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, {
+    action: "drop",
+    reason: "not-in-ready-list",
+  });
+}
+
+// Owner B's ready list lacks the id → honest drop after B bind.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-b",
+    listOwnerKey: "owner-b",
+    readyAssets: [{ id: otherOwnerAsset }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, {
+    action: "drop",
+    reason: "not-in-ready-list",
+  });
+}
+
+// 4) Valid current-owner list commit including target → adopt.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    readyAssets: [{ id: handoffTarget }, { id: otherOwnerAsset }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, { action: "adopt", assetId: handoffTarget });
+}
+
+// Public / capability-off: never adopt query UUID.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: null,
+    listOwnerKey: null,
+    readyAssets: [{ id: handoffTarget }],
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, { action: "drop", reason: "no-owner" });
+}
+
+// 5) Explicit local upload / manual recent pick still wins over query handoff.
+{
+  const uploadPlan = planCreateQueryAssetHandoff({
     queryAssetId: handoffTarget,
     handoffSettled: false,
     userOverride: true,
@@ -901,12 +945,9 @@ const otherOwnerAsset = "22222222-2222-4222-8222-222222222222";
     selectionSource: "upload",
     selectedAssetId: "upload-asset",
   });
-  assert.deepEqual(plan, { action: "drop", reason: "user-override" });
-}
+  assert.deepEqual(uploadPlan, { action: "drop", reason: "user-override" });
 
-// Manual recent pick of a different asset wins over query target.
-{
-  const plan = planCreateQueryAssetHandoff({
+  const manualRecentPlan = planCreateQueryAssetHandoff({
     queryAssetId: handoffTarget,
     handoffSettled: false,
     userOverride: false,
@@ -917,8 +958,25 @@ const otherOwnerAsset = "22222222-2222-4222-8222-222222222222";
     selectionSource: "recent",
     selectedAssetId: otherOwnerAsset,
   });
-  assert.deepEqual(plan, { action: "drop", reason: "user-override" });
+  assert.deepEqual(manualRecentPlan, {
+    action: "drop",
+    reason: "user-override",
+  });
 }
+
+// Load failure path must bind empty list to current owner (not null), so handoff
+// can drop not-in-ready-list instead of waiting forever after a failed fetch.
+assert.match(
+  createStudio,
+  /setRecentPrivateAssets\(\[\]\)[\s\S]{0,120}setRecentListBoundOwnerKey\(requestOwnerKey\)/
+);
+assert.doesNotMatch(
+  createStudio.slice(
+    createStudio.indexOf("} catch {"),
+    createStudio.indexOf("} catch {") + 450
+  ),
+  /setRecentListBoundOwnerKey\(null\)/
+);
 
 // Already applied / settled handoff does not re-adopt.
 {
@@ -953,5 +1011,5 @@ const otherOwnerAsset = "22222222-2222-4222-8222-222222222222";
 }
 
 console.log(
-  "private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery · owner-switch + selection race · render-time fail-closed · durable ?assetId= handoff)"
+  "private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery · owner-switch + selection race · render-time fail-closed · durable ?assetId= handoff · unbound-list wait race)"
 );
