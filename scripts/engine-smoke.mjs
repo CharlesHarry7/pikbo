@@ -5660,20 +5660,39 @@ const genJobsGet = fs.readFileSync(
   "utf8"
 );
 assert.match(genJobsGet, /listPrivateGenerationResults/);
+assert.match(genJobsGet, /mergePrivateLibraryWithLocalLedger/);
 assert.match(genJobsGet, /getAuthUserFromRequest/);
 assert.match(genJobsGet, /supabase-private\+process-memory/);
-assert.match(genJobsGet, /\/api\/downloads\/\$\{encodeURIComponent\(result\.jobId\)\}/);
 assert.match(genJobsGet, /function controlledLocalJob/);
 assert.match(
   genJobsGet,
   /controlledLocalJob\(toPublicJob\(job,\s*session\.id\)\)/
 );
-assert.doesNotMatch(genJobsGet, /output_object_key|providerOutputUrl/);
+assert.doesNotMatch(genJobsGet, /providerOutputUrl|signedUrl/);
 assert.doesNotMatch(genJobsGet, /touchOpenJobsForSession\(session\.id\)/);
 assert.match(genJobsGet, /touchedOpen:\s*0|GET is read-only/);
 assert.match(genJobsGet, /full\.queued|counts\.queued/);
-assert.match(genJobsGet, /total:\s*full\.total|total:\s*counts\.total/);
+assert.match(
+  genJobsGet,
+  /total:\s*merged\.total|total:\s*full\.total|total:\s*counts\.total/
+);
 assert.match(genJobsGet, /listLimit:\s*SESSION_JOBS_LIST_LIMIT/);
+// Durable Library mapper: all statuses, controlled download only for successes.
+const privateLibraryPure = fs.readFileSync(
+  join(root, "lib/privateGenerationResultsPure.mjs"),
+  "utf8"
+);
+assert.match(privateLibraryPure, /privateLibraryJobFromRow/);
+assert.match(
+  privateLibraryPure,
+  /\/api\/downloads\/\$\{encodeURIComponent\(id\)\}/
+);
+assert.match(privateLibraryPure, /localRetry:\s*false/);
+assert.match(privateLibraryPure, /localCancel:\s*false/);
+assert.match(
+  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
+  /canLocalRetry|canLocalCancel|canNewAttempt/
+);
 assert.doesNotMatch(
   genJobsGet,
   /export async function GET[\s\S]{0,800}for \(const j of raw\)/

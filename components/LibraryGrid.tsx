@@ -9,6 +9,13 @@ import { fetchMe, type MeResponse } from "@/lib/meClient";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
+type JobCapabilities = {
+  localRetry?: boolean;
+  localCancel?: boolean;
+  newAttempt?: boolean;
+  refreshOnly?: boolean;
+};
+
 type GenerationJob = {
   id: string;
   requestId?: string;
@@ -23,6 +30,9 @@ type GenerationJob = {
   createdAt?: string;
   duration?: number;
   aspectRatio?: string;
+  durable?: boolean;
+  adapter?: string;
+  capabilities?: JobCapabilities;
 };
 
 type GenerationsResponse = {
@@ -39,6 +49,33 @@ function isOpen(status: string): boolean {
 
 function isRetryable(status: string): boolean {
   return status === "failed" || status === "canceled";
+}
+
+/** Process-memory Retry only — durable rows never call /api/generations/:id/retry. */
+function canLocalRetry(job: GenerationJob): boolean {
+  if (!isRetryable(job.status)) return false;
+  if (job.durable === true || job.adapter === "supabase-private") return false;
+  if (job.capabilities?.localRetry === false) return false;
+  return job.capabilities?.localRetry === true || job.capabilities == null;
+}
+
+/** Process-memory Cancel only — durable open rows stay refresh/poll-only. */
+function canLocalCancel(job: GenerationJob): boolean {
+  if (!isOpen(job.status)) return false;
+  if (job.durable === true || job.adapter === "supabase-private") return false;
+  if (job.capabilities?.localCancel === false) return false;
+  return job.capabilities?.localCancel === true || job.capabilities == null;
+}
+
+/** Durable terminal failure: honest Create/new-attempt, not same-photo retry. */
+function canNewAttempt(job: GenerationJob): boolean {
+  if (!isRetryable(job.status)) return false;
+  if (canLocalRetry(job)) return false;
+  return (
+    job.capabilities?.newAttempt === true ||
+    job.durable === true ||
+    job.adapter === "supabase-private"
+  );
 }
 
 function visibleAccountJob(job: GenerationJob): boolean {
@@ -112,12 +149,18 @@ function friendlyFailure(job: GenerationJob): string {
     job.errorCode === "PROVIDER_TIMEOUT" ||
     job.errorCode === "PROVIDER_NETWORK"
   ) {
-    return "The render did not finish. Your completed results are safe; retry this Moment.";
+    return job.durable || job.adapter === "supabase-private"
+      ? "The render did not finish. Your completed results are safe — start a new Moment when you are ready."
+      : "The render did not finish. Your completed results are safe; retry this Moment.";
   }
   if (job.status === "canceled") {
-    return "This attempt was canceled. Start it again when you are ready.";
+    return job.durable || job.adapter === "supabase-private"
+      ? "This attempt was canceled. Start a new Moment when you are ready."
+      : "This attempt was canceled. Start it again when you are ready.";
   }
-  return "This render needs another attempt. Your other completed results are unchanged.";
+  return job.durable || job.adapter === "supabase-private"
+    ? "This render did not complete. Start a new Moment — same-photo retry is not available yet."
+    : "This render needs another attempt. Your other completed results are unchanged.";
 }
 
 function formatDate(value?: string): string {
@@ -458,6 +501,18 @@ export function LibraryGrid() {
                     </p>
                   ) : null}
 
+                  {isOpen(job.status) &&
+                  (job.capabilities?.refreshOnly ||
+                    job.durable ||
+                    job.adapter === "supabase-private") &&
+                  !canLocalCancel(job) ? (
+                    <p className="mt-3 text-xs leading-5 text-sky-100/70">
+                      Still generating. Refresh keeps this durable status in
+                      sync — Cancel is only available for local in-progress
+                      jobs.
+                    </p>
+                  ) : null}
+
                   <div className="mt-4 flex flex-wrap gap-2">
                     {job.status === "succeeded" ? (
                       <button
@@ -468,7 +523,7 @@ export function LibraryGrid() {
                         Download video
                       </button>
                     ) : null}
-                    {isRetryable(job.status) ? (
+                    {isRetryable(job.status) && canLocalRetry(job) ? (
                       <button
                         type="button"
                         onClick={() => void retry(job)}
@@ -478,7 +533,16 @@ export function LibraryGrid() {
                         {forkingId === job.id ? "Preparing…" : "Retry Moment"}
                       </button>
                     ) : null}
-                    {isOpen(job.status) ? (
+                    {canNewAttempt(job) ? (
+                      <Link
+                        href={CREATE_MOMENT_HREF}
+                        className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
+                        data-library-action="new-attempt"
+                      >
+                        Create new Moment
+                      </Link>
+                    ) : null}
+                    {isOpen(job.status) && canLocalCancel(job) ? (
                       <button
                         type="button"
                         onClick={() => void cancel(job)}
@@ -488,7 +552,7 @@ export function LibraryGrid() {
                         {cancellingId === job.id ? "Canceling…" : "Cancel"}
                       </button>
                     ) : null}
-                    {!isOpen(job.status) ? (
+                    {!isOpen(job.status) && !canNewAttempt(job) ? (
                       <Link
                         href={remixHref}
                         className="btn btn-ghost min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
