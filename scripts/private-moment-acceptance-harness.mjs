@@ -76,6 +76,10 @@ export const MAX_GENERATE_CALLS = 1;
 export const MAX_UPLOAD_PREPARE_CALLS = 1;
 export const MAX_UPLOAD_PUT_CALLS = 1;
 export const MAX_UPLOAD_COMPLETE_CALLS = 1;
+/** Before + after Generate durable-wallet snapshots via GET /api/me. */
+export const MAX_ME_SNAPSHOT_CALLS = 2;
+/** Fixed Founding Studio Moment settlement (matches CREDITS_PER_VIDEO). */
+export const FIXED_MOMENT_CREDITS = 10;
 
 /**
  * Version tag for the operator acceptance idempotency key scheme.
@@ -89,7 +93,7 @@ export const MAX_OPERATOR_ATTEMPT_ID_LEN = 80;
 
 /** Keys that must never appear with real values in operator evidence. */
 const SENSITIVE_KEY_RE =
-  /^(?:cookie|cookies|authorization|auth|email|e-?mail|signedUrl|signed_url|uploadUrl|upload_url|objectKey|object_key|providerUrl|provider_url|providerModel|provider_model|providerId|provider_id|falKey|fal_key|token|accessToken|refreshToken|secret|password|sessionCookie|session_cookie|idempotencyKey|idempotency_key|attemptId|attempt_id|operatorAttemptId)$/i;
+  /^(?:cookie|cookies|authorization|auth|email|e-?mail|signedUrl|signed_url|uploadUrl|upload_url|objectKey|object_key|providerUrl|provider_url|providerModel|provider_model|providerId|provider_id|falKey|fal_key|token|accessToken|refreshToken|secret|password|sessionCookie|session_cookie|idempotencyKey|idempotency_key|attemptId|attempt_id|operatorAttemptId|accountId|account_id|userId|user_id|modelId)$/i;
 const SENSITIVE_VALUE_RE =
   /(?:^|[\s"'=])(?:sb-[a-z0-9-]*-auth-token|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]+\.|data:image\/|https?:\/\/[^\s"'<>]+(?:supabase|fal\.ai|storage)[^\s"'<>]*|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}|sk_[a-zA-Z0-9]{16,}|[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\/(?:inputs|outputs)\/)/i;
 const PROVIDER_URL_RE =
@@ -621,6 +625,8 @@ export function createNetworkAudit() {
     uploadComplete: 0,
     generate: 0,
     library: 0,
+    /** Owner GET /api/me durable-wallet snapshots (before + after generate). */
+    me: 0,
     /** Owner download HEAD (Preview cookie + Bearer). */
     downloadOwner: 0,
     /**
@@ -640,6 +646,7 @@ export function classifyApiPath(pathname) {
     return "uploadPut";
   }
   if (pathname === "/api/generate") return "generate";
+  if (pathname === "/api/me") return "me";
   if (pathname === "/api/generations" || pathname.startsWith("/api/generations/")) {
     return "library";
   }
@@ -687,6 +694,10 @@ export function assertOneCallBounds(audit) {
     (audit.downloadAnonymous || 0) <= 1,
     `anonymous download probes must be ≤ 1, got ${audit.downloadAnonymous}`
   );
+  assert.ok(
+    (audit.me || 0) <= MAX_ME_SNAPSHOT_CALLS,
+    `/api/me snapshots must be ≤ ${MAX_ME_SNAPSHOT_CALLS}, got ${audit.me}`
+  );
   return true;
 }
 
@@ -696,6 +707,7 @@ export function assertDryRunNoSpend(audit) {
   assert.equal(audit.uploadComplete, 0, "dry-run must not complete upload");
   assert.equal(audit.generate, 0, "dry-run must not call /api/generate");
   assert.equal(audit.library, 0, "dry-run must not call Library");
+  assert.equal(audit.me || 0, 0, "dry-run must not call /api/me");
   assert.equal(audit.downloadOwner || 0, 0, "dry-run must not probe owner download");
   assert.equal(
     audit.downloadAnonymous || 0,
@@ -705,6 +717,235 @@ export function assertDryRunNoSpend(audit) {
   assert.equal(audit.other, 0, "dry-run must not make other network calls");
   assert.equal(audit.total, 0, "dry-run network total must be 0");
   return true;
+}
+
+/**
+ * Parse GET /api/me into a safe durable-wallet snapshot.
+ * Never returns email, accountId, tokens, or raw response bodies.
+ */
+export function parseDurableWalletSnapshot(meBody, httpOk) {
+  if (!httpOk) {
+    return { ok: false, reason: "me_http_not_ok" };
+  }
+  if (!meBody || typeof meBody !== "object") {
+    return { ok: false, reason: "me_body_missing" };
+  }
+  if (meBody.signedIn !== true) {
+    return { ok: false, reason: "not_signed_in" };
+  }
+  const durable = meBody.durable;
+  if (!durable || typeof durable !== "object") {
+    return { ok: false, reason: "durable_wallet_missing" };
+  }
+  const availableCredits = Number(durable.availableCredits);
+  const reservedCredits = Number(durable.reservedCredits);
+  if (!Number.isFinite(availableCredits) || availableCredits < 0) {
+    return { ok: false, reason: "available_credits_invalid" };
+  }
+  if (!Number.isFinite(reservedCredits) || reservedCredits < 0) {
+    return { ok: false, reason: "reserved_credits_invalid" };
+  }
+  return {
+    ok: true,
+    signedIn: true,
+    durableWallet: true,
+    availableCredits,
+    reservedCredits,
+  };
+}
+
+/**
+ * Generate success must show fixed 10-credit settlement fields.
+ * costAudit: estimated/ceiling labeled amounts only; actual unknown unless
+ * explicitly provider-reported (never treat estimate as actual).
+ */
+export function assertGenerateSettlement(generated) {
+  if (!generated || typeof generated !== "object") {
+    return { ok: false, reason: "generate_body_missing" };
+  }
+  if (generated.costCredits !== FIXED_MOMENT_CREDITS) {
+    return {
+      ok: false,
+      reason: "cost_credits_not_fixed_10",
+      costCredits:
+        typeof generated.costCredits === "number" ? generated.costCredits : null,
+    };
+  }
+  if (generated.creditsOutcome !== "10 used") {
+    return {
+      ok: false,
+      reason: "credits_outcome_not_10_used",
+      creditsOutcome:
+        typeof generated.creditsOutcome === "string"
+          ? generated.creditsOutcome
+          : null,
+    };
+  }
+  const costAudit = extractSafeCostAudit(generated.costAudit);
+  if (!costAudit.ok) {
+    return { ok: false, reason: costAudit.reason || "cost_audit_invalid" };
+  }
+  return {
+    ok: true,
+    costCredits: FIXED_MOMENT_CREDITS,
+    creditsOutcome: "10 used",
+    costAudit: costAudit.safe,
+  };
+}
+
+/**
+ * Safe provider cost audit fragment for evidence — no model/provider IDs.
+ */
+export function extractSafeCostAudit(costAudit) {
+  if (costAudit == null) {
+    // Optional on some paths; still record unknown actual.
+    return {
+      ok: true,
+      safe: {
+        estimatedUsd: null,
+        ceilingRemainingUsd: null,
+        actualUsd: null,
+        actualKnown: false,
+        actualLabel: "unknown",
+      },
+    };
+  }
+  if (typeof costAudit !== "object") {
+    return { ok: false, reason: "cost_audit_not_object" };
+  }
+  const est = costAudit.estimatedUsd;
+  const ceil = costAudit.ceilingRemainingUsd;
+  const actual = costAudit.actualUsd;
+  let estimatedUsd = null;
+  if (est && typeof est === "object") {
+    if (est.kind !== "estimated" || est.label !== "estimated") {
+      return { ok: false, reason: "estimated_label_invalid" };
+    }
+    if (typeof est.amountUsd !== "number" || !Number.isFinite(est.amountUsd)) {
+      return { ok: false, reason: "estimated_amount_invalid" };
+    }
+    estimatedUsd = {
+      amountUsd: est.amountUsd,
+      kind: "estimated",
+      label: "estimated",
+    };
+  }
+  let ceilingRemainingUsd = null;
+  if (ceil && typeof ceil === "object") {
+    if (ceil.kind !== "ceiling" || ceil.label !== "ceiling") {
+      return { ok: false, reason: "ceiling_label_invalid" };
+    }
+    if (typeof ceil.amountUsd !== "number" || !Number.isFinite(ceil.amountUsd)) {
+      return { ok: false, reason: "ceiling_amount_invalid" };
+    }
+    ceilingRemainingUsd = {
+      amountUsd: ceil.amountUsd,
+      kind: "ceiling",
+      label: "ceiling",
+    };
+  }
+  // actual must be null/absent OR explicitly labeled actual — never estimated.
+  if (actual != null) {
+    if (typeof actual !== "object") {
+      return { ok: false, reason: "actual_not_object" };
+    }
+    if (actual.kind !== "actual" || actual.label !== "actual") {
+      return { ok: false, reason: "actual_label_invalid" };
+    }
+    if (
+      typeof actual.amountUsd !== "number" ||
+      !Number.isFinite(actual.amountUsd)
+    ) {
+      return { ok: false, reason: "actual_amount_invalid" };
+    }
+    return {
+      ok: true,
+      safe: {
+        estimatedUsd,
+        ceilingRemainingUsd,
+        actualUsd: {
+          amountUsd: actual.amountUsd,
+          kind: "actual",
+          label: "actual",
+        },
+        actualKnown: true,
+        actualLabel: "actual",
+      },
+    };
+  }
+  return {
+    ok: true,
+    safe: {
+      estimatedUsd,
+      ceilingRemainingUsd,
+      actualUsd: null,
+      actualKnown: false,
+      actualLabel: "unknown",
+    },
+  };
+}
+
+/**
+ * Compare before/after durable wallet for fresh (-10) or idempotent replay (0).
+ * Reserved credits must return to the pre-generate baseline (no drift).
+ */
+export function assertWalletSettlementDelta(before, after) {
+  if (!before?.ok || !after?.ok) {
+    return { ok: false, reason: "wallet_snapshot_incomplete" };
+  }
+  const availableDelta = after.availableCredits - before.availableCredits;
+  const reservedDelta = after.reservedCredits - before.reservedCredits;
+  if (reservedDelta !== 0) {
+    return {
+      ok: false,
+      reason: "reserved_credits_drift",
+      availableDelta,
+      reservedDelta,
+      availableBefore: before.availableCredits,
+      availableAfter: after.availableCredits,
+      reservedBefore: before.reservedCredits,
+      reservedAfter: after.reservedCredits,
+    };
+  }
+  if (
+    availableDelta === -FIXED_MOMENT_CREDITS &&
+    reservedDelta === 0
+  ) {
+    return {
+      ok: true,
+      idempotentReplay: false,
+      availableDelta: -FIXED_MOMENT_CREDITS,
+      reservedDelta: 0,
+      availableBefore: before.availableCredits,
+      availableAfter: after.availableCredits,
+      reservedBefore: before.reservedCredits,
+      reservedAfter: after.reservedCredits,
+      fixedTenCreditSettlement: true,
+    };
+  }
+  if (availableDelta === 0 && reservedDelta === 0) {
+    return {
+      ok: true,
+      idempotentReplay: true,
+      availableDelta: 0,
+      reservedDelta: 0,
+      availableBefore: before.availableCredits,
+      availableAfter: after.availableCredits,
+      reservedBefore: before.reservedCredits,
+      reservedAfter: after.reservedCredits,
+      fixedTenCreditSettlement: true,
+    };
+  }
+  return {
+    ok: false,
+    reason: "available_delta_invalid",
+    availableDelta,
+    reservedDelta,
+    availableBefore: before.availableCredits,
+    availableAfter: after.availableCredits,
+    reservedBefore: before.reservedCredits,
+    reservedAfter: after.reservedCredits,
+  };
 }
 
 function headerGet(response, name) {
@@ -926,6 +1167,11 @@ export function buildDryRunEvidence() {
       pikboAnonymousKeepsPreviewCookie: true,
       pikboAnonymousStripsBearer: true,
       storagePutStripsCookieAndAuthorization: true,
+      requiresDurableWalletSnapshots: true,
+      requiresFixedTenCreditSettlement: true,
+      requiresWalletDeltaFreshOrReplay: true,
+      fixedMomentCredits: FIXED_MOMENT_CREDITS,
+      maxMeSnapshots: MAX_ME_SNAPSHOT_CALLS,
       idempotencyKeyVersion: ACCEPTANCE_IDEMPOTENCY_KEY_VERSION,
       idempotencyKeyMaxLen: MAX_IDEMPOTENCY_KEY_LEN,
     },
@@ -1274,7 +1520,35 @@ export async function runRealAcceptance(options) {
     });
   }
 
-  // 4) Exactly one generate for fixed toy-moment-v1.
+  // 4) Durable wallet snapshot before generate (owner Bearer + Preview cookie).
+  const startedAt = Date.now();
+  const meBeforeRes = await track(`${baseUrl}/api/me`, {
+    method: "GET",
+    authMode: "owner",
+  });
+  const meBeforeBody = await readJsonSafe(meBeforeRes);
+  const walletBefore = parseDurableWalletSnapshot(meBeforeBody, meBeforeRes.ok);
+  if (!walletBefore.ok) {
+    return sanitizeEvidence({
+      schemaVersion: 1,
+      mode: "real",
+      stage: "wallet-before",
+      verdict: "FAIL",
+      code: "WALLET_SNAPSHOT_FAILED",
+      reason: walletBefore.reason,
+      spend: {
+        confirmed: true,
+        generateCalls: 0,
+        providerCalls: 0,
+      },
+      network: audit,
+      finishedAt: now(),
+    });
+  }
+  // Fresh Moment requires ≥10 available; low balance may only legally end as replay.
+  const preAllowsFresh = walletBefore.availableCredits >= FIXED_MOMENT_CREDITS;
+
+  // 5) Exactly one generate for fixed toy-moment-v1.
   // Stable operator attempt id + input/SKU/contract digest → replay-safe key.
   // Never put attemptId or the full key into evidence.
   const idempotencyKey = deriveAcceptanceIdempotencyKey({
@@ -1308,6 +1582,10 @@ export async function runRealAcceptance(options) {
         processedUpload: generated.processedUpload === true,
         privateResult: generated.privateResult === true,
       },
+      accounting: {
+        availableBefore: walletBefore.availableCredits,
+        reservedBefore: walletBefore.reservedCredits,
+      },
       spend: {
         confirmed: true,
         // One generate attempt may or may not have reached the provider;
@@ -1320,9 +1598,123 @@ export async function runRealAcceptance(options) {
     });
   }
 
-  const jobId = liveCheck.jobId;
+  const settlement = assertGenerateSettlement(generated);
+  if (!settlement.ok) {
+    return sanitizeEvidence({
+      schemaVersion: 1,
+      mode: "real",
+      stage: "generate-settlement",
+      verdict: "FAIL",
+      code: "SETTLEMENT_FIELDS_INVALID",
+      reason: settlement.reason,
+      productContract: FIXED_MOMENT_CONTRACT.productContract,
+      accounting: {
+        availableBefore: walletBefore.availableCredits,
+        reservedBefore: walletBefore.reservedCredits,
+        costCredits:
+          typeof settlement.costCredits === "number"
+            ? settlement.costCredits
+            : null,
+        creditsOutcome: settlement.creditsOutcome ?? null,
+      },
+      spend: {
+        confirmed: true,
+        generateCalls: audit.generate,
+        providerCallAttempted: audit.generate === 1,
+      },
+      network: audit,
+      finishedAt: now(),
+    });
+  }
 
-  // 5) Library refresh — durable owner row only.
+  // 6) Durable wallet snapshot after generate.
+  const meAfterRes = await track(`${baseUrl}/api/me`, {
+    method: "GET",
+    authMode: "owner",
+  });
+  const meAfterBody = await readJsonSafe(meAfterRes);
+  const walletAfter = parseDurableWalletSnapshot(meAfterBody, meAfterRes.ok);
+  if (!walletAfter.ok) {
+    return sanitizeEvidence({
+      schemaVersion: 1,
+      mode: "real",
+      stage: "wallet-after",
+      verdict: "FAIL",
+      code: "WALLET_SNAPSHOT_FAILED",
+      reason: walletAfter.reason,
+      accounting: {
+        availableBefore: walletBefore.availableCredits,
+        reservedBefore: walletBefore.reservedCredits,
+        costCredits: FIXED_MOMENT_CREDITS,
+        creditsOutcome: "10 used",
+      },
+      spend: {
+        confirmed: true,
+        generateCalls: audit.generate,
+        providerCallAttempted: true,
+      },
+      network: audit,
+      finishedAt: now(),
+    });
+  }
+
+  const walletDelta = assertWalletSettlementDelta(walletBefore, walletAfter);
+  if (!walletDelta.ok) {
+    return sanitizeEvidence({
+      schemaVersion: 1,
+      mode: "real",
+      stage: "wallet-settlement",
+      verdict: "FAIL",
+      code: "WALLET_DELTA_INVALID",
+      reason: walletDelta.reason,
+      accounting: {
+        availableBefore: walletDelta.availableBefore,
+        availableAfter: walletDelta.availableAfter,
+        availableDelta: walletDelta.availableDelta,
+        reservedBefore: walletDelta.reservedBefore,
+        reservedAfter: walletDelta.reservedAfter,
+        reservedDelta: walletDelta.reservedDelta,
+        costCredits: FIXED_MOMENT_CREDITS,
+        creditsOutcome: "10 used",
+        costAudit: settlement.costAudit,
+      },
+      spend: {
+        confirmed: true,
+        generateCalls: audit.generate,
+        providerCallAttempted: true,
+      },
+      network: audit,
+      finishedAt: now(),
+    });
+  }
+  if (!preAllowsFresh && walletDelta.idempotentReplay !== true) {
+    return sanitizeEvidence({
+      schemaVersion: 1,
+      mode: "real",
+      stage: "wallet-settlement",
+      verdict: "FAIL",
+      code: "INSUFFICIENT_CREDITS_FOR_FRESH",
+      reason: "available_below_10_and_not_replay",
+      accounting: {
+        availableBefore: walletBefore.availableCredits,
+        availableAfter: walletAfter.availableCredits,
+        availableDelta: walletDelta.availableDelta,
+        reservedBefore: walletBefore.reservedCredits,
+        reservedAfter: walletAfter.reservedCredits,
+        idempotentReplay: false,
+        costCredits: FIXED_MOMENT_CREDITS,
+        creditsOutcome: "10 used",
+        costAudit: settlement.costAudit,
+      },
+      network: audit,
+      finishedAt: now(),
+    });
+  }
+
+  const jobId = liveCheck.jobId;
+  const elapsedMs = Math.max(0, Date.now() - startedAt);
+
+  // 7) Library refresh — durable owner row only.
   const libraryRes = await track(`${baseUrl}/api/generations`, {
     method: "GET",
     headers: { "content-type": "application/json" },
@@ -1349,7 +1741,7 @@ export async function runRealAcceptance(options) {
     libraryRow.ok &&
     libraryModeOk;
 
-  // 6) Dual download HEAD probes:
+  // 8) Dual download HEAD probes:
   //    owner (cookie+Bearer) private markers + Pikbo-anonymous (cookie, no Bearer)
   //    application AUTH_REQUIRED. HEAD only — never follow redirects / Location.
   let ownerProbe = {
@@ -1393,8 +1785,9 @@ export async function runRealAcceptance(options) {
 
   const ownerOnlyProven =
     ownerProbe.ok === true && pikboAnonymousProbe.ok === true;
+  const accountingOk = walletDelta.ok === true && settlement.ok === true;
   const verdict =
-    libraryOk && ownerOnlyProven
+    libraryOk && ownerOnlyProven && accountingOk
       ? "PASS_ONE_SKU_REAL"
       : "FAIL_POST_GENERATE_CHECKS";
 
@@ -1430,6 +1823,22 @@ export async function runRealAcceptance(options) {
       idempotencyKeyDerived: true,
       idempotencyKeyVersion: ACCEPTANCE_IDEMPOTENCY_KEY_VERSION,
       idempotencyKeyLen: idempotencyKey.length,
+      costCredits: FIXED_MOMENT_CREDITS,
+      creditsOutcome: "10 used",
+    },
+    accounting: {
+      availableBefore: walletDelta.availableBefore,
+      availableAfter: walletDelta.availableAfter,
+      availableDelta: walletDelta.availableDelta,
+      reservedBefore: walletDelta.reservedBefore,
+      reservedAfter: walletDelta.reservedAfter,
+      reservedDelta: walletDelta.reservedDelta,
+      fixedTenCreditSettlement: true,
+      idempotentReplay: walletDelta.idempotentReplay === true,
+      costCredits: FIXED_MOMENT_CREDITS,
+      creditsOutcome: "10 used",
+      costAudit: settlement.costAudit,
+      elapsedMs,
     },
     library: {
       ok: libraryOk,
@@ -1473,6 +1882,7 @@ export async function runRealAcceptance(options) {
       uploadPrepareCalls: audit.uploadPrepare,
       uploadPutCalls: audit.uploadPut,
       uploadCompleteCalls: audit.uploadComplete,
+      meSnapshots: audit.me,
       providerCallAttempted: audit.generate === 1,
       stripeCalls: 0,
     },

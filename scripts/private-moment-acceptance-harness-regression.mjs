@@ -21,6 +21,8 @@ const {
   PROTECTED_PREVIEW_ORIGIN,
   FIXED_MOMENT_CONTRACT,
   MAX_GENERATE_CALLS,
+  MAX_ME_SNAPSHOT_CALLS,
+  FIXED_MOMENT_CREDITS,
   parseMode,
   resolveMode,
   assertRealModeGates,
@@ -52,6 +54,10 @@ const {
   classifyApiPath,
   classifyDownloadProbe,
   classifyNetworkRequest,
+  parseDurableWalletSnapshot,
+  assertGenerateSettlement,
+  extractSafeCostAudit,
+  assertWalletSettlementDelta,
   runRealAcceptance,
   main,
 } = await import(harnessPath);
@@ -104,6 +110,17 @@ assert.match(source, /authMode/);
 assert.match(source, /parseMode/);
 assert.match(source, /dry-run/);
 assert.match(source, /sanitizeEvidence/);
+assert.match(source, /parseDurableWalletSnapshot/);
+assert.match(source, /assertGenerateSettlement/);
+assert.match(source, /assertWalletSettlementDelta/);
+assert.match(source, /extractSafeCostAudit/);
+assert.match(source, /FIXED_MOMENT_CREDITS\s*=\s*10/);
+assert.match(source, /MAX_ME_SNAPSHOT_CALLS\s*=\s*2/);
+assert.match(source, /\/api\/me/);
+assert.match(source, /costCredits/);
+assert.match(source, /creditsOutcome/);
+assert.match(source, /idempotentReplay/);
+assert.match(source, /actualLabel/);
 assert.doesNotMatch(source, /STORAGE_HOST_RE/);
 assert.doesNotMatch(source, /@fal-ai\/client/);
 assert.doesNotMatch(source, /checkout\/sessions/);
@@ -623,6 +640,7 @@ assert.equal(classifyApiPath("/api/generate"), "generate");
 assert.equal(classifyApiPath("/api/assets/upload-url"), "uploadPrepare");
 assert.equal(classifyApiPath("/api/assets/complete"), "uploadComplete");
 assert.equal(classifyApiPath("/api/generations"), "library");
+assert.equal(classifyApiPath("/api/me"), "me");
 assert.equal(classifyApiPath("/api/downloads/abc"), "download");
 assert.equal(classifyDownloadProbe("/api/downloads/abc", "owner"), "downloadOwner");
 assert.equal(
@@ -630,6 +648,195 @@ assert.equal(
   "downloadAnonymous"
 );
 assert.equal(MAX_GENERATE_CALLS, 1);
+assert.equal(MAX_ME_SNAPSHOT_CALLS, 2);
+assert.equal(FIXED_MOMENT_CREDITS, 10);
+assert.throws(() =>
+  assertOneCallBounds({ ...createNetworkAudit(), me: 3 })
+);
+
+// ── Durable wallet parse + settlement + delta (unit) ──
+
+const MOCK_COST_AUDIT = {
+  modelId: "fal-ai/seedance/secret-model-id",
+  estimatedUsd: { amountUsd: 0.12, kind: "estimated", label: "estimated" },
+  ceilingRemainingUsd: { amountUsd: 5.0, kind: "ceiling", label: "ceiling" },
+  actualUsd: null,
+  note: "provider actual unknown",
+};
+
+assert.equal(
+  parseDurableWalletSnapshot(
+    {
+      signedIn: true,
+      durable: { availableCredits: 40, reservedCredits: 0 },
+      email: "owner@example.com",
+      accountId: "acct-secret-should-not-leak",
+    },
+    true
+  ).ok,
+  true
+);
+assert.equal(
+  parseDurableWalletSnapshot(
+    {
+      signedIn: true,
+      durable: { availableCredits: 40, reservedCredits: 0 },
+    },
+    true
+  ).availableCredits,
+  40
+);
+// Snapshot must never surface email / accountId.
+{
+  const snap = parseDurableWalletSnapshot(
+    {
+      signedIn: true,
+      email: "owner@example.com",
+      durable: {
+        availableCredits: 40,
+        reservedCredits: 2,
+        accountId: "acct-secret",
+      },
+    },
+    true
+  );
+  assert.equal(snap.ok, true);
+  assert.equal(Object.hasOwn(snap, "email"), false);
+  assert.equal(Object.hasOwn(snap, "accountId"), false);
+  assert.doesNotMatch(JSON.stringify(snap), /owner@example|acct-secret/);
+}
+assert.equal(
+  parseDurableWalletSnapshot({ signedIn: false }, true).reason,
+  "not_signed_in"
+);
+assert.equal(
+  parseDurableWalletSnapshot({ signedIn: true }, true).reason,
+  "durable_wallet_missing"
+);
+assert.equal(
+  parseDurableWalletSnapshot(
+    { signedIn: true, durable: { availableCredits: "x", reservedCredits: 0 } },
+    true
+  ).reason,
+  "available_credits_invalid"
+);
+assert.equal(
+  parseDurableWalletSnapshot(null, false).reason,
+  "me_http_not_ok"
+);
+
+{
+  const settleOk = assertGenerateSettlement({
+    costCredits: 10,
+    creditsOutcome: "10 used",
+    costAudit: MOCK_COST_AUDIT,
+  });
+  assert.equal(settleOk.ok, true);
+  assert.equal(settleOk.costCredits, 10);
+  assert.equal(settleOk.creditsOutcome, "10 used");
+  assert.equal(settleOk.costAudit.actualKnown, false);
+  assert.equal(settleOk.costAudit.actualLabel, "unknown");
+  assert.equal(settleOk.costAudit.actualUsd, null);
+  assert.equal(settleOk.costAudit.estimatedUsd.amountUsd, 0.12);
+  assert.equal(settleOk.costAudit.estimatedUsd.label, "estimated");
+  assert.doesNotMatch(JSON.stringify(settleOk), /secret-model|fal-ai/);
+}
+assert.equal(
+  assertGenerateSettlement({
+    costCredits: 5,
+    creditsOutcome: "10 used",
+  }).reason,
+  "cost_credits_not_fixed_10"
+);
+assert.equal(
+  assertGenerateSettlement({
+    costCredits: 10,
+    creditsOutcome: "0 cached",
+  }).reason,
+  "credits_outcome_not_10_used"
+);
+assert.equal(
+  assertGenerateSettlement({
+    creditsOutcome: "10 used",
+  }).reason,
+  "cost_credits_not_fixed_10"
+);
+assert.equal(
+  assertGenerateSettlement({
+    costCredits: 10,
+  }).reason,
+  "credits_outcome_not_10_used"
+);
+{
+  const safe = extractSafeCostAudit({
+    modelId: "must-not-leak",
+    estimatedUsd: { amountUsd: 0.2, kind: "estimated", label: "estimated" },
+    actualUsd: null,
+  });
+  assert.equal(safe.ok, true);
+  assert.equal(safe.safe.actualLabel, "unknown");
+  assert.doesNotMatch(JSON.stringify(safe), /must-not-leak/);
+}
+{
+  const badActual = extractSafeCostAudit({
+    estimatedUsd: { amountUsd: 0.2, kind: "estimated", label: "estimated" },
+    // Estimate mislabeled as actual — reject.
+    actualUsd: { amountUsd: 0.2, kind: "estimated", label: "estimated" },
+  });
+  assert.equal(badActual.ok, false);
+  assert.equal(badActual.reason, "actual_label_invalid");
+}
+
+{
+  const before = {
+    ok: true,
+    availableCredits: 40,
+    reservedCredits: 0,
+  };
+  const fresh = assertWalletSettlementDelta(before, {
+    ok: true,
+    availableCredits: 30,
+    reservedCredits: 0,
+  });
+  assert.equal(fresh.ok, true);
+  assert.equal(fresh.idempotentReplay, false);
+  assert.equal(fresh.availableDelta, -10);
+  assert.equal(fresh.reservedDelta, 0);
+  assert.equal(fresh.fixedTenCreditSettlement, true);
+
+  const replay = assertWalletSettlementDelta(before, {
+    ok: true,
+    availableCredits: 40,
+    reservedCredits: 0,
+  });
+  assert.equal(replay.ok, true);
+  assert.equal(replay.idempotentReplay, true);
+  assert.equal(replay.availableDelta, 0);
+
+  assert.equal(
+    assertWalletSettlementDelta(before, {
+      ok: true,
+      availableCredits: 35,
+      reservedCredits: 0,
+    }).reason,
+    "available_delta_invalid"
+  );
+  assert.equal(
+    assertWalletSettlementDelta(before, {
+      ok: true,
+      availableCredits: 30,
+      reservedCredits: 3,
+    }).reason,
+    "reserved_credits_drift"
+  );
+  assert.equal(
+    assertWalletSettlementDelta(
+      { ok: false, reason: "not_signed_in" },
+      { ok: true, availableCredits: 30, reservedCredits: 0 }
+    ).reason,
+    "wallet_snapshot_incomplete"
+  );
+}
 
 // ── Owner private HEAD + anonymous denial validators ──
 
@@ -849,11 +1056,48 @@ function assertPikboAnonymousCredentials(init, label) {
   );
 }
 
+/**
+ * Default mock cost audit: estimated/ceiling labeled; actual unknown.
+ * modelId is intentionally present on the wire and must not land in evidence.
+ */
+const MOCK_GENERATE_COST_AUDIT = {
+  modelId: "fal-ai/seedance/secret-model-id",
+  estimatedUsd: { amountUsd: 0.12, kind: "estimated", label: "estimated" },
+  ceilingRemainingUsd: { amountUsd: 4.88, kind: "ceiling", label: "ceiling" },
+  actualUsd: null,
+  note: "actual not provider-reported",
+};
+
+/**
+ * @param {object} [opts]
+ * @param {boolean} [opts.pendingUpload]
+ * @param {"ok"|"missingMarker"|"redirect"} [opts.ownerHead]
+ * @param {"deny"|"public200"|"public302"} [opts.anonymousHead]
+ * @param {string} [opts.pendingUploadUrl]
+ * @param {"fresh"|"replay"} [opts.walletMode] fresh: −10 available; replay: 0 delta
+ * @param {number} [opts.availableBefore]
+ * @param {number} [opts.reservedBefore]
+ * @param {number|null} [opts.availableAfter] override after available (null = derive)
+ * @param {number|null} [opts.reservedAfter] override after reserved (null = baseline)
+ * @param {"ok"|"missingCostCredits"|"wrongCostCredits"|"missingCreditsOutcome"|"wrongCreditsOutcome"|"omitCostAudit"} [opts.settlement]
+ * @param {"ok"|"signedOut"|"noDurable"|"invalidAvailable"|"httpFail"} [opts.meBefore]
+ * @param {"ok"|"signedOut"|"noDurable"|"invalidAvailable"|"httpFail"|"skip"} [opts.meAfter]
+ * @param {boolean} [opts.meIncludesSecrets] leak email/accountId on /api/me (must not reach evidence)
+ */
 function makePassingMock({
   pendingUpload = false,
   ownerHead = "ok",
   anonymousHead = "deny",
   pendingUploadUrl = MOCK_TRUSTED_UPLOAD_URL,
+  walletMode = "fresh",
+  availableBefore = 40,
+  reservedBefore = 0,
+  availableAfter = null,
+  reservedAfter = null,
+  settlement = "ok",
+  meBefore = "ok",
+  meAfter = "ok",
+  meIncludesSecrets = true,
 } = {}) {
   const counts = {
     uploadPrepare: 0,
@@ -861,6 +1105,7 @@ function makePassingMock({
     uploadComplete: 0,
     generate: 0,
     library: 0,
+    me: 0,
     downloadOwner: 0,
     downloadAnonymous: 0,
     anonymousHadCookie: false,
@@ -873,6 +1118,112 @@ function makePassingMock({
     ownerApiHadBearer: 0,
     idempotencyKeys: [],
   };
+
+  function deriveAfterAvailable() {
+    if (availableAfter != null) return availableAfter;
+    if (walletMode === "replay") return availableBefore;
+    return availableBefore - FIXED_MOMENT_CREDITS;
+  }
+  function deriveAfterReserved() {
+    if (reservedAfter != null) return reservedAfter;
+    return reservedBefore;
+  }
+
+  function meBodyFor(phase) {
+    const mode = phase === "before" ? meBefore : meAfter;
+    if (mode === "httpFail") return { httpOk: false, body: { error: "fail" } };
+    if (mode === "signedOut") {
+      return {
+        httpOk: true,
+        body: {
+          signedIn: false,
+          email: meIncludesSecrets ? "owner@example.com" : undefined,
+        },
+      };
+    }
+    if (mode === "noDurable") {
+      return {
+        httpOk: true,
+        body: {
+          signedIn: true,
+          email: meIncludesSecrets ? "owner@example.com" : undefined,
+        },
+      };
+    }
+    if (mode === "invalidAvailable") {
+      return {
+        httpOk: true,
+        body: {
+          signedIn: true,
+          durable: {
+            availableCredits: "not-a-number",
+            reservedCredits: 0,
+            accountId: meIncludesSecrets ? "acct-secret-me" : undefined,
+          },
+        },
+      };
+    }
+    const available =
+      phase === "before" ? availableBefore : deriveAfterAvailable();
+    const reserved =
+      phase === "before" ? reservedBefore : deriveAfterReserved();
+    return {
+      httpOk: true,
+      body: {
+        signedIn: true,
+        email: meIncludesSecrets ? "owner@example.com" : undefined,
+        durable: {
+          availableCredits: available,
+          reservedCredits: reserved,
+          accountId: meIncludesSecrets ? "acct-secret-me" : undefined,
+        },
+      },
+    };
+  }
+
+  function generateSettlementBody() {
+    const base = {
+      ok: true,
+      jobId,
+      requestId: jobId,
+      videoUrl: MOCK_SIGNED_DELIVERY_URL,
+      demo: false,
+      processedUpload: true,
+      privateResult: true,
+      cookie: "should-not-leak",
+      email: "owner@example.com",
+      providerUrl: "https://queue.fal.run/secret",
+      objectKey: "user/secret/out.mp4",
+      costAudit: MOCK_GENERATE_COST_AUDIT,
+    };
+    if (settlement === "missingCostCredits") {
+      return { ...base, creditsOutcome: "10 used" };
+    }
+    if (settlement === "wrongCostCredits") {
+      return { ...base, costCredits: 5, creditsOutcome: "10 used" };
+    }
+    if (settlement === "missingCreditsOutcome") {
+      return { ...base, costCredits: 10 };
+    }
+    if (settlement === "wrongCreditsOutcome") {
+      return { ...base, costCredits: 10, creditsOutcome: "0 cached" };
+    }
+    if (settlement === "omitCostAudit") {
+      return {
+        ...base,
+        costCredits: 10,
+        creditsOutcome: "10 used",
+        costAudit: undefined,
+      };
+    }
+    return {
+      ...base,
+      costCredits: 10,
+      creditsOutcome: "10 used",
+      idempotentReplay: walletMode === "replay",
+    };
+  }
+
   const mockFetch = async (url, init = {}) => {
     const target = new URL(String(url), PROTECTED_PREVIEW_ORIGIN);
     const method = String(init.method || "GET").toUpperCase();
@@ -929,6 +1280,22 @@ function makePassingMock({
         asset: { id: assetId, state: "ready" },
       });
     }
+    if (target.pathname === "/api/me" && method === "GET") {
+      counts.me += 1;
+      assertOwnerApiCredentials(init, "/api/me");
+      if (requestHasCookie(init)) counts.ownerApiHadCookie += 1;
+      if (requestHasBearer(init)) counts.ownerApiHadBearer += 1;
+      assert.ok(counts.me <= MAX_ME_SNAPSHOT_CALLS, "/api/me bound");
+      const phase = counts.me === 1 ? "before" : "after";
+      if (phase === "after" && meAfter === "skip") {
+        throw new Error("unexpected /api/me after when meAfter=skip");
+      }
+      const { httpOk, body } = meBodyFor(phase);
+      if (!httpOk) {
+        return jsonResponse(500, body);
+      }
+      return jsonResponse(200, body);
+    }
     if (target.pathname === "/api/generate" && method === "POST") {
       counts.generate += 1;
       assertOwnerApiCredentials(init, "generate");
@@ -951,20 +1318,7 @@ function makePassingMock({
       assert.ok(body.idempotencyKey.length <= MAX_IDEMPOTENCY_KEY_LEN);
       assert.match(body.idempotencyKey, /^accept-v1-[0-9a-f]{64}$/);
       counts.idempotencyKeys.push(body.idempotencyKey);
-      return jsonResponse(200, {
-        ok: true,
-        jobId,
-        requestId: jobId,
-        // Real generate contract: short-lived private Storage signed HTTPS URL.
-        videoUrl: MOCK_SIGNED_DELIVERY_URL,
-        demo: false,
-        processedUpload: true,
-        privateResult: true,
-        cookie: "should-not-leak",
-        email: "owner@example.com",
-        providerUrl: "https://queue.fal.run/secret",
-        objectKey: "user/secret/out.mp4",
-      });
+      return jsonResponse(200, generateSettlementBody());
     }
     if (target.pathname === "/api/generations" && method === "GET") {
       counts.library += 1;
@@ -1069,10 +1423,14 @@ function makePassingMock({
   return { mockFetch, counts };
 }
 
-// ── Mocked real path: exact non-demo private PASS ──
+// ── Mocked real path: fresh −10 credits PASS ──
 
 {
-  const { mockFetch, counts } = makePassingMock({ pendingUpload: false });
+  const { mockFetch, counts } = makePassingMock({
+    pendingUpload: false,
+    walletMode: "fresh",
+    availableBefore: 40,
+  });
   const realEvidence = await runRealAcceptance({
     baseUrl: PROTECTED_PREVIEW_ORIGIN,
     origin: PROTECTED_PREVIEW_ORIGIN,
@@ -1099,12 +1457,15 @@ function makePassingMock({
   assert.equal(realEvidence.spend.uploadPrepareCalls, 1);
   assert.equal(realEvidence.spend.uploadPutCalls, 0);
   assert.equal(realEvidence.spend.uploadCompleteCalls, 1);
+  assert.equal(realEvidence.spend.meSnapshots, 2);
   assert.equal(realEvidence.network.downloadOwner, 1);
   assert.equal(realEvidence.network.downloadAnonymous, 1);
+  assert.equal(realEvidence.network.me, 2);
   assert.equal(counts.generate, 1);
   assert.equal(counts.uploadPrepare, 1);
   assert.equal(counts.uploadPut, 0);
   assert.equal(counts.uploadComplete, 1);
+  assert.equal(counts.me, 2);
   assert.equal(counts.downloadOwner, 1);
   assert.equal(counts.downloadAnonymous, 1);
   assert.equal(counts.anonymousHadCookie, true);
@@ -1112,8 +1473,9 @@ function makePassingMock({
   assert.equal(counts.anonymousGatewayDenied, 0);
   assert.equal(counts.anonymousAppAuthRequired, 1);
   assert.equal(counts.uploadPutHadBearer, false);
-  assert.ok(counts.ownerApiHadCookie >= 4, "owner API paths must send cookie");
-  assert.ok(counts.ownerApiHadBearer >= 4, "owner API paths must send Bearer");
+  // upload-url + complete + me×2 + generate + generations + owner HEAD = 7
+  assert.ok(counts.ownerApiHadCookie >= 6, "owner API paths must send cookie");
+  assert.ok(counts.ownerApiHadBearer >= 6, "owner API paths must send Bearer");
   assert.equal(realEvidence.download.anonymous.meaning, "pikbo-anonymous-via-preview-gateway");
   assert.equal(realEvidence.download.anonymous.previewGatewayAdmitted, true);
   assert.equal(realEvidence.download.anonymous.pikboBearerAbsent, true);
@@ -1122,6 +1484,23 @@ function makePassingMock({
     realEvidence.generate.idempotencyKeyVersion,
     ACCEPTANCE_IDEMPOTENCY_KEY_VERSION
   );
+  assert.equal(realEvidence.generate.costCredits, 10);
+  assert.equal(realEvidence.generate.creditsOutcome, "10 used");
+  assert.equal(realEvidence.accounting.availableBefore, 40);
+  assert.equal(realEvidence.accounting.availableAfter, 30);
+  assert.equal(realEvidence.accounting.availableDelta, -10);
+  assert.equal(realEvidence.accounting.reservedBefore, 0);
+  assert.equal(realEvidence.accounting.reservedAfter, 0);
+  assert.equal(realEvidence.accounting.reservedDelta, 0);
+  assert.equal(realEvidence.accounting.fixedTenCreditSettlement, true);
+  assert.equal(realEvidence.accounting.idempotentReplay, false);
+  assert.equal(realEvidence.accounting.costCredits, 10);
+  assert.equal(realEvidence.accounting.creditsOutcome, "10 used");
+  assert.equal(realEvidence.accounting.costAudit.actualKnown, false);
+  assert.equal(realEvidence.accounting.costAudit.actualLabel, "unknown");
+  assert.equal(realEvidence.accounting.costAudit.actualUsd, null);
+  assert.equal(realEvidence.accounting.costAudit.estimatedUsd.label, "estimated");
+  assert.equal(typeof realEvidence.accounting.elapsedMs, "number");
   assert.equal(counts.idempotencyKeys.length, 1);
   const realJson = JSON.stringify(realEvidence);
   assert.doesNotMatch(realJson, /super-secret-session/);
@@ -1135,10 +1514,195 @@ function makePassingMock({
   assert.doesNotMatch(realJson, /attempt-default-001/);
   assert.doesNotMatch(realJson, /mock-owner-access-token-not-real/);
   assert.doesNotMatch(realJson, /super-secret-session-cookie/);
+  assert.doesNotMatch(realJson, /acct-secret/);
+  assert.doesNotMatch(realJson, /secret-model-id/);
   assert.ok(
     !realJson.includes(counts.idempotencyKeys[0]),
     "evidence must not contain the raw idempotency key"
   );
+}
+
+// ── Idempotent replay: available delta 0 PASS ──
+
+{
+  const { mockFetch, counts } = makePassingMock({
+    pendingUpload: false,
+    walletMode: "replay",
+    availableBefore: 30,
+  });
+  const replayEvidence = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: DEFAULT_PREVIEW_COOKIE,
+    accessToken: DEFAULT_ACCESS_TOKEN,
+    attemptId: "attempt-replay-once",
+    imagePath,
+    skuLabel: "mock-sku-replay",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(replayEvidence.verdict, "PASS_ONE_SKU_REAL");
+  assert.equal(replayEvidence.accounting.idempotentReplay, true);
+  assert.equal(replayEvidence.accounting.availableDelta, 0);
+  assert.equal(replayEvidence.accounting.availableBefore, 30);
+  assert.equal(replayEvidence.accounting.availableAfter, 30);
+  assert.equal(replayEvidence.accounting.reservedDelta, 0);
+  assert.equal(replayEvidence.accounting.fixedTenCreditSettlement, true);
+  assert.equal(replayEvidence.accounting.costCredits, 10);
+  assert.equal(replayEvidence.accounting.creditsOutcome, "10 used");
+  assert.equal(replayEvidence.network.me, 2);
+  assert.equal(counts.me, 2);
+  assert.equal(counts.generate, 1);
+  const replayJson = JSON.stringify(replayEvidence);
+  assert.doesNotMatch(replayJson, /owner@example|acct-secret|attempt-replay/);
+}
+
+// ── Settlement field failures block PASS ──
+
+for (const [label, settlement, expectedReason] of [
+  ["missing-costCredits", "missingCostCredits", "cost_credits_not_fixed_10"],
+  ["wrong-costCredits", "wrongCostCredits", "cost_credits_not_fixed_10"],
+  [
+    "missing-creditsOutcome",
+    "missingCreditsOutcome",
+    "credits_outcome_not_10_used",
+  ],
+  [
+    "wrong-creditsOutcome",
+    "wrongCreditsOutcome",
+    "credits_outcome_not_10_used",
+  ],
+]) {
+  const { mockFetch, counts } = makePassingMock({
+    pendingUpload: false,
+    settlement,
+  });
+  const bad = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: DEFAULT_PREVIEW_COOKIE,
+    accessToken: DEFAULT_ACCESS_TOKEN,
+    attemptId: DEFAULT_ATTEMPT_ID,
+    imagePath,
+    skuLabel: `settlement-${label}`,
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.notEqual(bad.verdict, "PASS_ONE_SKU_REAL", label);
+  assert.equal(bad.verdict, "FAIL", label);
+  assert.equal(bad.stage, "generate-settlement", label);
+  assert.equal(bad.code, "SETTLEMENT_FIELDS_INVALID", label);
+  assert.equal(bad.reason, expectedReason, label);
+  assert.equal(counts.generate, 1, label);
+  assert.equal(counts.me, 1, label); // only before; after not reached
+  assert.doesNotMatch(JSON.stringify(bad), /owner@example|acct-secret/);
+}
+
+// ── Available delta wrong / reserved drift ──
+
+{
+  const { mockFetch } = makePassingMock({
+    pendingUpload: false,
+    availableBefore: 40,
+    availableAfter: 35, // wrong: should be 30 for fresh
+  });
+  const badDelta = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: DEFAULT_PREVIEW_COOKIE,
+    accessToken: DEFAULT_ACCESS_TOKEN,
+    attemptId: DEFAULT_ATTEMPT_ID,
+    imagePath,
+    skuLabel: "delta-wrong",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(badDelta.verdict, "FAIL");
+  assert.equal(badDelta.stage, "wallet-settlement");
+  assert.equal(badDelta.code, "WALLET_DELTA_INVALID");
+  assert.equal(badDelta.reason, "available_delta_invalid");
+  assert.equal(badDelta.accounting.availableDelta, -5);
+}
+
+{
+  const { mockFetch } = makePassingMock({
+    pendingUpload: false,
+    availableBefore: 40,
+    reservedBefore: 0,
+    reservedAfter: 2, // reserved must return to baseline
+  });
+  const reservedDrift = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: DEFAULT_PREVIEW_COOKIE,
+    accessToken: DEFAULT_ACCESS_TOKEN,
+    attemptId: DEFAULT_ATTEMPT_ID,
+    imagePath,
+    skuLabel: "reserved-drift",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(reservedDrift.verdict, "FAIL");
+  assert.equal(reservedDrift.stage, "wallet-settlement");
+  assert.equal(reservedDrift.code, "WALLET_DELTA_INVALID");
+  assert.equal(reservedDrift.reason, "reserved_credits_drift");
+}
+
+// ── /api/me not signed-in / missing durable wallet ──
+
+for (const [label, meBefore, reason] of [
+  ["signed-out", "signedOut", "not_signed_in"],
+  ["no-durable", "noDurable", "durable_wallet_missing"],
+  ["invalid-available", "invalidAvailable", "available_credits_invalid"],
+  ["http-fail", "httpFail", "me_http_not_ok"],
+]) {
+  const { mockFetch, counts } = makePassingMock({
+    pendingUpload: false,
+    meBefore,
+  });
+  const badMe = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: DEFAULT_PREVIEW_COOKIE,
+    accessToken: DEFAULT_ACCESS_TOKEN,
+    attemptId: DEFAULT_ATTEMPT_ID,
+    imagePath,
+    skuLabel: `me-before-${label}`,
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(badMe.verdict, "FAIL", label);
+  assert.equal(badMe.stage, "wallet-before", label);
+  assert.equal(badMe.code, "WALLET_SNAPSHOT_FAILED", label);
+  assert.equal(badMe.reason, reason, label);
+  assert.equal(counts.generate, 0, label);
+  assert.equal(counts.me, 1, label);
+  assert.doesNotMatch(JSON.stringify(badMe), /owner@example|acct-secret/);
+}
+
+// ── Low pre-balance is legal only as idempotent replay (delta 0) ──
+
+{
+  const { mockFetch } = makePassingMock({
+    pendingUpload: false,
+    walletMode: "replay",
+    availableBefore: 5, // < 10 — cannot open a new fixed Moment charge
+  });
+  const lowReplay = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: DEFAULT_PREVIEW_COOKIE,
+    accessToken: DEFAULT_ACCESS_TOKEN,
+    attemptId: DEFAULT_ATTEMPT_ID,
+    imagePath,
+    skuLabel: "low-balance-replay",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(lowReplay.verdict, "PASS_ONE_SKU_REAL");
+  assert.equal(lowReplay.accounting.idempotentReplay, true);
+  assert.equal(lowReplay.accounting.availableDelta, 0);
+  assert.equal(lowReplay.accounting.availableBefore, 5);
 }
 
 // ── Same attempt id + same image/SKU reuses generate idempotency key ──
@@ -1400,6 +1964,7 @@ for (const [label, badUrl] of [
 // ── Cached/demo false-positive must NOT PASS ──
 
 {
+  let meCalls = 0;
   const mockFetch = async (url, init = {}) => {
     const target = new URL(String(url), PROTECTED_PREVIEW_ORIGIN);
     const method = String(init.method || "GET").toUpperCase();
@@ -1417,6 +1982,13 @@ for (const [label, badUrl] of [
         ok: true,
         inputAssetId: assetId,
         asset: { id: assetId, state: "ready" },
+      });
+    }
+    if (target.pathname === "/api/me" && method === "GET") {
+      meCalls += 1;
+      return jsonResponse(200, {
+        signedIn: true,
+        durable: { availableCredits: 40, reservedCredits: 0 },
       });
     }
     if (target.pathname === "/api/generate" && method === "POST") {
@@ -1448,6 +2020,7 @@ for (const [label, badUrl] of [
   assert.equal(demoEvidence.verdict, "FAIL");
   assert.equal(demoEvidence.stage, "generate");
   assert.equal(demoEvidence.code, "DEMO_RESULT_REJECTED");
+  assert.equal(meCalls, 1);
 }
 
 // ── Old /api/downloads generate body is NOT the live contract ──
@@ -1469,6 +2042,12 @@ for (const [label, badUrl] of [
         ok: true,
         inputAssetId: assetId,
         asset: { id: assetId, state: "ready" },
+      });
+    }
+    if (target.pathname === "/api/me" && method === "GET") {
+      return jsonResponse(200, {
+        signedIn: true,
+        durable: { availableCredits: 40, reservedCredits: 0 },
       });
     }
     if (target.pathname === "/api/generate" && method === "POST") {
@@ -1522,6 +2101,12 @@ for (const [label, badUrl] of [
         asset: { id: assetId, state: "ready" },
       });
     }
+    if (target.pathname === "/api/me" && method === "GET") {
+      return jsonResponse(200, {
+        signedIn: true,
+        durable: { availableCredits: 40, reservedCredits: 0 },
+      });
+    }
     if (target.pathname === "/api/generate" && method === "POST") {
       return jsonResponse(200, {
         ok: true,
@@ -1555,6 +2140,7 @@ for (const [label, badUrl] of [
 // ── Non-owned Library row must NOT PASS ──
 
 {
+  let meCalls = 0;
   const mockFetch = async (url, init = {}) => {
     const target = new URL(String(url), PROTECTED_PREVIEW_ORIGIN);
     const method = String(init.method || "GET").toUpperCase();
@@ -1573,6 +2159,14 @@ for (const [label, badUrl] of [
         asset: { id: assetId, state: "ready" },
       });
     }
+    if (target.pathname === "/api/me" && method === "GET") {
+      meCalls += 1;
+      const available = meCalls === 1 ? 40 : 30;
+      return jsonResponse(200, {
+        signedIn: true,
+        durable: { availableCredits: available, reservedCredits: 0 },
+      });
+    }
     if (target.pathname === "/api/generate" && method === "POST") {
       return jsonResponse(200, {
         ok: true,
@@ -1582,6 +2176,9 @@ for (const [label, badUrl] of [
         demo: false,
         processedUpload: true,
         privateResult: true,
+        costCredits: 10,
+        creditsOutcome: "10 used",
+        costAudit: MOCK_GENERATE_COST_AUDIT,
       });
     }
     if (target.pathname === "/api/generations") {
@@ -1766,5 +2363,5 @@ assert.equal(invalidMain.evidence.verdict, "FAIL_INVALID_MODE");
 rmSync(tmp, { recursive: true, force: true });
 
 console.log(
-  "private-moment-acceptance-harness-regression: PASS (Pikbo-anonymous keeps Preview cookie · gateway vs app 401 · dual download · sanitized evidence)"
+  "private-moment-acceptance-harness-regression: PASS (wallet −10/replay · settlement fields · dual download · sanitized evidence)"
 );

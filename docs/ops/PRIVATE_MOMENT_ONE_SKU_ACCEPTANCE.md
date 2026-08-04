@@ -33,7 +33,7 @@ Requires **all** of:
 | `PIKBO_ACCEPTANCE_MODE=real` | Enable real path |
 | `PIKBO_CONFIRM_PROVIDER_SPEND=I_UNDERSTAND_ONE_TOY_MOMENT_V1_SPEND` | Explicit spend confirmation |
 | `PIKBO_ACCEPTANCE_BASE_URL` | **Exact** protected Preview origin only: `https://pikbo-git-codex-private-validation-pi-kbo.vercel.app` (hostile hosts and `pikbo.ai` are rejected) |
-| `PIKBO_ACCEPTANCE_ACCESS_TOKEN` | **Required.** Supabase owner **access token** for `Authorization: Bearer …` on Pikbo APIs (`/api/assets/*`, `/api/generate`, `/api/generations`, owner download HEAD). Matches `getAuthUserFromRequest` — cookie alone is not enough. |
+| `PIKBO_ACCEPTANCE_ACCESS_TOKEN` | **Required.** Supabase owner **access token** for `Authorization: Bearer …` on Pikbo APIs (`/api/assets/*`, `/api/me`, `/api/generate`, `/api/generations`, owner download HEAD). Matches `getAuthUserFromRequest` — cookie alone is not enough. |
 | `PIKBO_ACCEPTANCE_PREVIEW_COOKIE` | Protected Preview **gateway** cookie (preferred). Legacy alias: `PIKBO_ACCEPTANCE_SESSION_COOKIE`. Sent with owner API calls for edge/auth-origin protection; **not** a substitute for Bearer. |
 | `PIKBO_ACCEPTANCE_SESSION_COOKIE` | Legacy alias for the Preview gateway cookie (still accepted if `PREVIEW_COOKIE` is unset). |
 | `PIKBO_ACCEPTANCE_IMAGE_PATH` | Local path to an **owned** toy photo (jpg/png/webp) |
@@ -55,7 +55,7 @@ npm run private-moment-acceptance
 
 | Request | Preview gateway cookie | `Authorization: Bearer` |
 |---|---|---|
-| Owner Pikbo API (`upload-url`, `complete`, `generate`, `generations`, owner download HEAD) | **Sent** (admits protected Preview) | **Required** Supabase access token |
+| Owner Pikbo API (`upload-url`, `complete`, `/api/me`, `generate`, `generations`, owner download HEAD) | **Sent** (admits protected Preview) | **Required** Supabase access token |
 | **Pikbo-anonymous** download HEAD | **Sent** (so Vercel Deployment Protection admits the request) | **Stripped** (proves app-level `401` + `X-Pikbo-Download-Code: AUTH_REQUIRED`) |
 | Private Storage signed PUT | **Stripped** | **Stripped** (signed upload URL is auth) |
 
@@ -88,7 +88,8 @@ booleans/version/length — never the attempt id or full key.
 ### Delivery contract (generate → Library → dual download probe)
 
 `PASS_ONE_SKU_REAL` requires all of the following, aligned with
-`app/api/generate/route.ts` and `app/api/downloads/[id]/route.ts`:
+`app/api/generate/route.ts`, `app/api/me/route.ts`, and
+`app/api/downloads/[id]/route.ts`:
 
 1. **Immediate generate success** (`POST /api/generate`) must be non-demo
    (`demo !== true`), `processedUpload === true`, `privateResult === true`,
@@ -97,18 +98,49 @@ booleans/version/length — never the attempt id or full key.
    private Storage (`*.supabase.co/storage/v1/object/sign/…/pikbo-private-results/…`).
    It is **not** `/api/downloads/{jobId}`. Raw provider hosts and demo catalog
    paths fail closed. The harness never writes the signed URL into evidence.
-2. **Library refresh** (`GET /api/generations`) must list a durable owner row:
+2. **Fixed 10-credit settlement fields** on that success body:
+   `costCredits === 10` and `creditsOutcome === "10 used"`. Any other value
+   (including missing fields or `"0 cached"`) blocks PASS.
+3. **Durable wallet accounting** via at most two owner `GET /api/me` snapshots
+   (before + after generate, Bearer + Preview cookie, same origin only):
+   - Pre: signed-in durable wallet with finite non-negative
+     `availableCredits` / `reservedCredits`. A **fresh** charge path needs
+     `availableCredits >= 10` before generate.
+   - Post: reserved credits return to the pre-generate baseline (no drift).
+   - **Two legal PASS conclusions:**
+     - **Fresh:** `availableDelta === -10`, `idempotentReplay === false`
+       (exactly one fixed Moment debit this run).
+     - **Replay:** `availableDelta === 0`, `idempotentReplay === true`
+       (same attempt idempotency key; server did not debit again).
+   - Any other delta, reserved drift, missing/malformed wallet, or missing
+     settlement fields blocks `PASS_ONE_SKU_REAL`.
+4. **Library refresh** (`GET /api/generations`) must list a durable owner row:
    `status=succeeded`, `owned=true`, `downloadAllowed=true`, non-demo, matching
    job id, and a controlled `videoUrl` of the form `/api/downloads/{jobId}`.
-3. **Owner download HEAD** (Preview cookie + Bearer, `redirect: manual`):
+5. **Owner download HEAD** (Preview cookie + Bearer, `redirect: manual`):
    HTTP **200**, `X-Pikbo-Download: allowed`, `X-Pikbo-Private-Result: 1`.
    Any 3xx is not PASS (do not follow or record signed Location).
-4. **Pikbo-anonymous download HEAD** (Preview cookie kept, **no** Authorization,
+6. **Pikbo-anonymous download HEAD** (Preview cookie kept, **no** Authorization,
    `redirect: manual`): HTTP **401** and `X-Pikbo-Download-Code: AUTH_REQUIRED`
    (application contract). Any 2xx/3xx fails the run. A 401 without the
    `X-Pikbo-Download-Code` header is treated as gateway/non-app failure, not PASS.
 
-Cached/demo responses never count as PASS. Both download probes are required.
+Cached/demo responses never count as PASS. Both download probes and wallet
+settlement are required.
+
+### Cost audit honesty (`costAudit`)
+
+Generate may include a labeled USD cost audit. Evidence keeps only **safe**
+fragments:
+
+| Field | Meaning in evidence |
+|---|---|
+| `estimatedUsd` | Planning estimate (`kind`/`label` = `estimated`) — not billed proof |
+| `ceilingRemainingUsd` | Remaining ceiling (`kind`/`label` = `ceiling`) |
+| `actualUsd` / `actualKnown` / `actualLabel` | **Actual provider cost** only when the server reports `kind`/`label` = `actual`. If the provider did not report a number, `actualUsd` is `null`, `actualKnown` is `false`, and `actualLabel` is **`unknown`**. |
+
+Never treat estimated or ceiling as actual cost. Model IDs, provider URLs, and
+notes that could leak vendor identifiers are stripped from evidence.
 
 ## Flow (bounded)
 
@@ -124,23 +156,29 @@ Cached/demo responses never count as PASS. Both download probes are required.
      and **zero** uploadPut/generate calls
    - storage PUT never attaches cookie/authorization (signed URL is auth)
 3. `POST /api/assets/complete` — at most once (Bearer + Preview cookie)
-4. `POST /api/generate` with `productContract=toy-moment-v1`, effect
+4. `GET /api/me` — durable wallet **before** generate (Bearer + Preview cookie;
+   at most two `/api/me` calls total for the run)
+5. `POST /api/generate` with `productContract=toy-moment-v1`, effect
    `street-power-up`, `9:16` / 5s / 720p / Seedance Fast, `ownsRights` +
    `allowProviderSpend` — **exactly one** attempt (Bearer + Preview cookie)
-5. `GET /api/generations` Library refresh (Bearer + Preview cookie)
-6. Owner `HEAD /api/downloads/{jobId}` (Bearer + Preview cookie)
-7. Pikbo-anonymous `HEAD /api/downloads/{jobId}` (Preview cookie, no Bearer)
-   — must be app-level 401 + `AUTH_REQUIRED`
+6. Assert settlement fields (`costCredits` / `creditsOutcome` / safe cost audit)
+7. `GET /api/me` — durable wallet **after** generate; assert fresh −10 or
+   replay 0 with reserved back to baseline
+8. `GET /api/generations` Library refresh (Bearer + Preview cookie)
+9. Owner `HEAD /api/downloads/{jobId}` (Bearer + Preview cookie)
+10. Pikbo-anonymous `HEAD /api/downloads/{jobId}` (Preview cookie, no Bearer)
+    — must be app-level 401 + `AUTH_REQUIRED`
 
 The harness never records signed upload URLs, tokens, cookies, attempt ids,
-or object keys in evidence.
+account IDs, emails, or object keys in evidence. No Stripe or third-party
+billing endpoints are called.
 
 ## Evidence rules
 
 Printed evidence is sanitized. It must **never** include:
 
 - cookies / authorization headers / access tokens
-- emails
+- emails / account IDs / user IDs
 - signed URLs (including generate `videoUrl` or download Location)
 - storage object keys
 - raw provider URLs or provider model identifiers
@@ -148,11 +186,19 @@ Printed evidence is sanitized. It must **never** include:
 
 Safe fields include counts, HTTP statuses, contract name, sha256 **prefix**,
 boolean shape markers (`hasPrivateSignedDeliveryUrl`, `ownerOnlyProven`,
-`privateResultMarker`, `idempotencyKeyDerived`), controlled download header enums
-(`allowed` / `AUTH_REQUIRED`), and pass/fail verdict.
+`privateResultMarker`, `idempotencyKeyDerived`, `idempotentReplay`,
+`fixedTenCreditSettlement`), controlled download header enums
+(`allowed` / `AUTH_REQUIRED`), wallet **balances and deltas only**
+(`availableBefore` / `availableAfter` / `availableDelta` / reserved
+baseline and after), fixed `costCredits` / `creditsOutcome`, labeled cost-audit
+amounts (or `actualLabel: "unknown"`), `elapsedMs`, and pass/fail verdict.
 
-Network audit distinguishes `downloadOwner` vs `downloadAnonymous` without
-recording credentials or URLs.
+**Operators must save the sanitized JSON evidence** from a real PASS run
+(stdout). That record is the durable proof of either a fresh −10 settlement or
+an idempotent replay — not a screenshot of the UI alone.
+
+Network audit distinguishes `downloadOwner`, `downloadAnonymous`, and `me`
+without recording credentials or URLs.
 
 ## Fail-closed checks (CI-safe)
 
@@ -163,7 +209,10 @@ npm run private-moment-acceptance-regression
 Proves dry-run no-spend, dual credential attach/strip, missing access-token
 fail-closed, real-mode gate refusal, signed generate URL vs Library path, dual
 download probe (owner private marker + anonymous denial), trusted upload URL,
-stable attempt idempotency, one generate call bound, and sanitizer redaction.
+stable attempt idempotency, one generate call bound, durable-wallet fresh −10
+and replay 0 PASS paths, bad/missing settlement fields, wrong available delta,
+reserved drift, unsigned-in / missing durable wallet, `/api/me` call bounds,
+and sanitizer redaction (no email/accountId/token/attempt id in evidence).
 Does not contact Provider, Stripe, or production.
 
 ## External blocker
