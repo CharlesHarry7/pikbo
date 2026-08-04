@@ -10,7 +10,10 @@ import {
 } from "@/lib/privateGenerationResultsPure.mjs";
 
 export {
+  acceptControlledLibraryNewAttemptUrl,
   controlledLibraryNewAttemptUrl,
+  libraryDurableTerminalFailureCopy,
+  libraryNewAttemptButtonLabel,
   mergePrivateLibraryWithLocalLedger,
   parseProviderOutputHostAllowlist,
   privateLibraryJobFromRow,

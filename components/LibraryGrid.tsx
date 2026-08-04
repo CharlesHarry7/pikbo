@@ -7,6 +7,11 @@ import { interpretDownloadHead } from "@/lib/createTrust";
 import { downloadVideoFile, privateDownloadHeaders } from "@/lib/history";
 import { fetchMe, type MeResponse } from "@/lib/meClient";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
+import {
+  acceptControlledLibraryNewAttemptUrl,
+  libraryDurableTerminalFailureCopy,
+  libraryNewAttemptButtonLabel,
+} from "@/lib/privateGenerationResultsPure.mjs";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 type JobCapabilities = {
@@ -45,9 +50,6 @@ type GenerationsResponse = {
 
 const CREATE_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=library` as const;
 
-/** Fixed Create path prefix the server is allowed to hand off. */
-const CONTROLLED_CREATE_PREFIX = "/create?mode=moment&effect=street-power-up";
-
 function isOpen(status: string): boolean {
   return status === "queued" || status === "running";
 }
@@ -84,41 +86,21 @@ function canNewAttempt(job: GenerationJob): boolean {
 }
 
 /**
- * Prefer the server-provided controlled Create link (asset-bound new attempt).
- * Invalid/missing values fall back to the honest generic Create path.
- * Never invent client-side asset ids or reuse old job idempotency keys.
+ * Prefer the server-provided controlled Create link (asset-bound new attempt)
+ * only after the strict client accept gate. Invalid/missing values fall back
+ * to the honest generic Create path. Never invent client-side asset ids or
+ * reuse old job idempotency keys.
  */
+function acceptedSamePhotoHandoff(job: GenerationJob): string | undefined {
+  return acceptControlledLibraryNewAttemptUrl(job.newAttemptUrl);
+}
+
 function newAttemptHref(job: GenerationJob): string {
-  const candidate =
-    typeof job.newAttemptUrl === "string" ? job.newAttemptUrl.trim() : "";
-  if (
-    candidate.startsWith(CONTROLLED_CREATE_PREFIX) &&
-    !candidate.includes("://") &&
-    !candidate.includes("\\") &&
-    candidate.length <= 220
-  ) {
-    try {
-      const url = new URL(candidate, "https://pikbo.local");
-      if (
-        url.pathname === "/create" &&
-        url.searchParams.get("mode") === "moment" &&
-        url.searchParams.get("effect") === "street-power-up"
-      ) {
-        const assetId = url.searchParams.get("assetId");
-        if (
-          assetId &&
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-            assetId
-          )
-        ) {
-          return candidate;
-        }
-      }
-    } catch {
-      // fall through to generic Create
-    }
-  }
-  return CREATE_MOMENT_HREF;
+  return acceptedSamePhotoHandoff(job) || CREATE_MOMENT_HREF;
+}
+
+function newAttemptLabel(job: GenerationJob): string {
+  return libraryNewAttemptButtonLabel(Boolean(acceptedSamePhotoHandoff(job)));
 }
 
 function visibleAccountJob(job: GenerationJob): boolean {
@@ -184,6 +166,15 @@ function effectName(effect: string): string {
 }
 
 function friendlyFailure(job: GenerationJob): string {
+  const durable = job.durable === true || job.adapter === "supabase-private";
+  if (durable) {
+    // Copy branches on the same client-accepted handoff URL as the CTA.
+    return libraryDurableTerminalFailureCopy({
+      status: job.status,
+      errorCode: job.errorCode,
+      samePhotoHandoff: Boolean(acceptedSamePhotoHandoff(job)),
+    });
+  }
   if (job.errorCode === "CONTENT_POLICY") {
     return "This image could not be processed. Try a clear product photo you own.";
   }
@@ -192,18 +183,12 @@ function friendlyFailure(job: GenerationJob): string {
     job.errorCode === "PROVIDER_TIMEOUT" ||
     job.errorCode === "PROVIDER_NETWORK"
   ) {
-    return job.durable || job.adapter === "supabase-private"
-      ? "The render did not finish. Your completed results are safe — start a new Moment when you are ready."
-      : "The render did not finish. Your completed results are safe; retry this Moment.";
+    return "The render did not finish. Your completed results are safe; retry this Moment.";
   }
   if (job.status === "canceled") {
-    return job.durable || job.adapter === "supabase-private"
-      ? "This attempt was canceled. Start a new Moment when you are ready."
-      : "This attempt was canceled. Start it again when you are ready.";
+    return "This attempt was canceled. Start it again when you are ready.";
   }
-  return job.durable || job.adapter === "supabase-private"
-    ? "This render did not complete. Start a new Moment — same-photo retry is not available yet."
-    : "This render needs another attempt. Your other completed results are unchanged.";
+  return "This render needs another attempt. Your other completed results are unchanged.";
 }
 
 function formatDate(value?: string): string {
@@ -581,8 +566,11 @@ export function LibraryGrid() {
                         href={newAttemptHref(job)}
                         className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
                         data-library-action="new-attempt"
+                        data-library-new-attempt={
+                          acceptedSamePhotoHandoff(job) ? "same-photo" : "generic"
+                        }
                       >
-                        Create new Moment
+                        {newAttemptLabel(job)}
                       </Link>
                     ) : null}
                     {isOpen(job.status) && canLocalCancel(job) ? (

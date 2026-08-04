@@ -13,7 +13,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  acceptControlledLibraryNewAttemptUrl,
   controlledLibraryNewAttemptUrl,
+  libraryDurableTerminalFailureCopy,
+  libraryNewAttemptButtonLabel,
   mergePrivateLibraryWithLocalLedger,
   privateLibraryJobFromRow,
   safeLibraryErrorCode,
@@ -65,11 +68,15 @@ assert.match(library, /function canLocalRetry/);
 assert.match(library, /function canLocalCancel/);
 assert.match(library, /function canNewAttempt/);
 assert.match(library, /function newAttemptHref/);
+assert.match(library, /function acceptedSamePhotoHandoff/);
+assert.match(library, /function newAttemptLabel/);
 assert.match(library, /isRetryable\(job\.status\) && canLocalRetry\(job\)/);
 assert.match(library, /isOpen\(job\.status\) && canLocalCancel\(job\)/);
 assert.match(library, /canNewAttempt\(job\)/);
 assert.match(library, /newAttemptHref\(job\)/);
+assert.match(library, /newAttemptLabel\(job\)/);
 assert.match(library, /data-library-action="new-attempt"/);
+assert.match(library, /data-library-new-attempt=\{/);
 assert.match(library, /void retry\(job\)/);
 assert.match(library, /void cancel\(job\)/);
 assert.match(
@@ -78,10 +85,32 @@ assert.match(
 );
 // Client must only use the server-controlled link (never invent asset ids).
 assert.match(library, /job\.newAttemptUrl/);
+assert.match(library, /acceptControlledLibraryNewAttemptUrl/);
+assert.match(library, /libraryDurableTerminalFailureCopy/);
+assert.match(library, /libraryNewAttemptButtonLabel/);
+// Copy + CTA both branch on the same client-accepted handoff.
+assert.match(
+  library,
+  /libraryDurableTerminalFailureCopy\(\{[\s\S]{0,200}samePhotoHandoff:\s*Boolean\(acceptedSamePhotoHandoff\(job\)\)/
+);
+assert.match(
+  library,
+  /libraryNewAttemptButtonLabel\(Boolean\(acceptedSamePhotoHandoff\(job\)\)\)/
+);
+assert.match(
+  library,
+  /acceptedSamePhotoHandoff\(job\)\s*\?\s*"same-photo"\s*:\s*"generic"/
+);
 assert.doesNotMatch(
   library,
   /input_asset_id|inputAssetId/,
   "LibraryGrid must not read raw input_asset_id"
+);
+// Stale fixed "not available yet" without handoff branch is a lie when URL is valid.
+assert.match(
+  library,
+  /libraryDurableTerminalFailureCopy/,
+  "durable failure copy must use handoff-aware helper"
 );
 
 assert.match(pkg, /"durable-library-statuses-regression"/);
@@ -280,6 +309,178 @@ assert.equal(
   "nil UUID version nibble is not v1–v5"
 );
 
+// Client accept gate: exact path/params; no extra keys/fragment/absolute URLs.
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(expectedNewAttemptUrl),
+  expectedNewAttemptUrl
+);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(
+    `/create?mode=moment&effect=street-power-up&source=library&assetId=${inputAssetId.toUpperCase()}`
+  ),
+  expectedNewAttemptUrl,
+  "accept normalizes assetId case"
+);
+assert.equal(acceptControlledLibraryNewAttemptUrl(undefined), undefined);
+assert.equal(acceptControlledLibraryNewAttemptUrl(""), undefined);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(
+    `/create?mode=moment&effect=street-power-up&source=library&assetId=${inputAssetId}&prompt=secret`
+  ),
+  undefined,
+  "extra query keys rejected"
+);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(
+    `/create?mode=moment&effect=street-power-up&source=library&assetId=${inputAssetId}&signedUrl=https://evil`
+  ),
+  undefined,
+  "signed URL smuggling rejected"
+);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(
+    `/create?mode=moment&effect=street-power-up&source=library&assetId=${inputAssetId}#frag`
+  ),
+  undefined,
+  "fragment rejected"
+);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(
+    `/create?mode=moment&effect=street-power-up&assetId=${inputAssetId}`
+  ),
+  undefined,
+  "missing source=library rejected"
+);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(
+    `/create?mode=moment&effect=street-power-up&source=library&assetId=not-a-uuid`
+  ),
+  undefined
+);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(
+    `https://pikbo.ai/create?mode=moment&effect=street-power-up&source=library&assetId=${inputAssetId}`
+  ),
+  undefined,
+  "absolute URL rejected"
+);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(
+    `/library?mode=moment&effect=street-power-up&source=library&assetId=${inputAssetId}`
+  ),
+  undefined,
+  "non-/create path rejected"
+);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(
+    `/create?mode=t2v&effect=street-power-up&source=library&assetId=${inputAssetId}`
+  ),
+  undefined,
+  "wrong mode rejected"
+);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(
+    `/create?mode=moment&effect=street-power-up&source=library&assetId=${inputAssetId}&assetId=${inputAssetId}`
+  ),
+  undefined,
+  "duplicate query keys rejected"
+);
+
+// ─── UI branch pure proofs (valid vs invalid handoff) ──────────────────────
+// Executable outcomes — not mere keyword presence.
+
+const CREATE_GENERIC = "/create?mode=moment&effect=street-power-up&source=library";
+
+function libraryUiBranch(jobLike) {
+  const accepted = acceptControlledLibraryNewAttemptUrl(jobLike?.newAttemptUrl);
+  return {
+    href: accepted || CREATE_GENERIC,
+    samePhoto: Boolean(accepted),
+    label: libraryNewAttemptButtonLabel(Boolean(accepted)),
+    failureCopy: libraryDurableTerminalFailureCopy({
+      status: jobLike?.status,
+      errorCode: jobLike?.errorCode,
+      samePhotoHandoff: Boolean(accepted),
+    }),
+    branch: accepted ? "same-photo" : "generic",
+  };
+}
+
+// Valid durable handoff: same-photo CTA + honest new-attempt copy.
+const validUi = libraryUiBranch(statuses.failed);
+assert.equal(validUi.branch, "same-photo");
+assert.equal(validUi.href, expectedNewAttemptUrl);
+assert.equal(validUi.label, "New attempt · same photo");
+assert.match(validUi.failureCopy, /same verified photo/i);
+assert.doesNotMatch(
+  validUi.failureCopy,
+  /same-photo retry is not available yet/i,
+  "valid handoff must not claim same-photo is unavailable"
+);
+assert.doesNotMatch(
+  validUi.failureCopy,
+  /idempotency|reuse the previous job key|retry the same job/i
+);
+assert.ok(
+  /new attempt/i.test(validUi.failureCopy),
+  "valid handoff copy describes a new attempt"
+);
+
+// Missing/invalid handoff: generic Create + honest no-same-photo note.
+const invalidUi = libraryUiBranch(failedNoAssetLike());
+assert.equal(invalidUi.branch, "generic");
+assert.equal(invalidUi.href, CREATE_GENERIC);
+assert.equal(invalidUi.label, "Create new Moment");
+assert.match(
+  invalidUi.failureCopy,
+  /same-photo retry is not available yet/i
+);
+assert.doesNotMatch(
+  invalidUi.failureCopy,
+  /same verified photo/i,
+  "generic branch must not claim same-photo handoff"
+);
+
+function failedNoAssetLike() {
+  const job = privateLibraryJobFromRow({
+    ...baseRow,
+    status: "failed",
+    error_code: "TIMEOUT",
+    input_asset_id: null,
+  });
+  assert.ok(job);
+  return job;
+}
+
+// Forged client payload with extra query keys falls to generic branch.
+const forgedUi = libraryUiBranch({
+  status: "failed",
+  errorCode: "TIMEOUT",
+  newAttemptUrl: `${expectedNewAttemptUrl}&prompt=leaked`,
+});
+assert.equal(forgedUi.branch, "generic");
+assert.equal(forgedUi.href, CREATE_GENERIC);
+assert.equal(forgedUi.label, "Create new Moment");
+assert.match(forgedUi.failureCopy, /same-photo retry is not available yet/i);
+
+// Default durable failure (no code) — both branches distinct.
+const defaultSamePhoto = libraryDurableTerminalFailureCopy({
+  status: "failed",
+  samePhotoHandoff: true,
+});
+const defaultGeneric = libraryDurableTerminalFailureCopy({
+  status: "failed",
+  samePhotoHandoff: false,
+});
+assert.notEqual(defaultSamePhoto, defaultGeneric);
+assert.match(defaultSamePhoto, /same verified photo/i);
+assert.doesNotMatch(defaultSamePhoto, /not available yet/i);
+assert.match(defaultGeneric, /not available yet/i);
+assert.doesNotMatch(defaultGeneric, /same verified photo/i);
+
+assert.equal(libraryNewAttemptButtonLabel(true), "New attempt · same photo");
+assert.equal(libraryNewAttemptButtonLabel(false), "Create new Moment");
+
 // Missing / invalid input asset keeps honest generic Create (no newAttemptUrl).
 const failedNoAsset = privateLibraryJobFromRow({
   ...baseRow,
@@ -290,6 +491,10 @@ const failedNoAsset = privateLibraryJobFromRow({
 assert.ok(failedNoAsset);
 assert.equal(failedNoAsset.capabilities.newAttempt, true);
 assert.equal(failedNoAsset.newAttemptUrl, undefined);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(failedNoAsset.newAttemptUrl),
+  undefined
+);
 
 const failedBadAsset = privateLibraryJobFromRow({
   ...baseRow,
@@ -482,16 +687,18 @@ assert.doesNotMatch(pure, /createSignedUrl/);
 
 // Controlled new-attempt URL for terminal rows with valid input_asset_id.
 assert.match(pure, /controlledLibraryNewAttemptUrl/);
+assert.match(pure, /acceptControlledLibraryNewAttemptUrl/);
 assert.match(
   pure,
   /\/create\?mode=moment&effect=street-power-up&source=library&assetId=/
 );
 assert.match(pure, /job\.newAttemptUrl\s*=/);
-// Must not put freeform error text, prompts, or idempotency into the URL.
-assert.doesNotMatch(
-  pure,
-  /newAttemptUrl[\s\S]{0,200}(prompt|idempotency|error_message|signed)/i
+// URL builder template carries only the fixed Create contract + assetId.
+const builderTemplate = pure.match(
+  /return\s+`(\/create\?mode=moment&effect=street-power-up&source=library&assetId=\$\{encodeURIComponent\(assetId\)\})`/
 );
+assert.ok(builderTemplate, "builder returns fixed Create template");
+assert.doesNotMatch(builderTemplate[1], /prompt|idempotency|signed|error/i);
 
 // Local process-memory retry path remains distinct (void retry still present).
 assert.match(library, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}\/retry/);
