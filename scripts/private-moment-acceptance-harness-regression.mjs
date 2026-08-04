@@ -306,6 +306,17 @@ assert.equal(
 
 // Dual credential attach/strip helper.
 {
+  assert.equal(
+    assertOwnerAccessToken(DEFAULT_ACCESS_TOKEN),
+    DEFAULT_ACCESS_TOKEN
+  );
+  assert.throws(() => assertOwnerAccessToken(""));
+  assert.throws(() => assertOwnerAccessToken("short"));
+  assert.equal(
+    assertPreviewGatewayCookie(DEFAULT_PREVIEW_COOKIE),
+    DEFAULT_PREVIEW_COOKIE
+  );
+  assert.throws(() => assertPreviewGatewayCookie(""));
   const ownerHeaders = applyRequestCredentials(
     { "x-noise": "1" },
     {
