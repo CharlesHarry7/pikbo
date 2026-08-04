@@ -43,6 +43,17 @@ export const SPEND_CONFIRMATION_PHRASE =
 export const PROTECTED_PREVIEW_ORIGIN =
   "https://pikbo-git-codex-private-validation-pi-kbo.vercel.app";
 
+/**
+ * Exact non-production Supabase project used for private toy inputs.
+ * Matches nonprod-seller-pack-harness and PRIVATE_INPUT_* evidence.
+ */
+export const PRIVATE_INPUT_STORAGE_ORIGIN =
+  "https://lpfvfybkggiugosugfcw.supabase.co";
+export const PRIVATE_INPUT_BUCKET = "pikbo-toy-inputs";
+/** Strict pathname prefix for Supabase createSignedUploadUrl contract. */
+export const PRIVATE_INPUT_SIGNED_UPLOAD_PATH_PREFIX =
+  "/storage/v1/object/upload/sign/pikbo-toy-inputs/";
+
 /** Fixed Founding Studio Moment contract — server re-verifies every field. */
 export const FIXED_MOMENT_CONTRACT = Object.freeze({
   productContract: "toy-moment-v1",
@@ -67,8 +78,6 @@ const SENSITIVE_VALUE_RE =
   /(?:^|[\s"'=])(?:sb-[a-z0-9-]*-auth-token|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]+\.|data:image\/|https?:\/\/[^\s"'<>]+(?:supabase|fal\.ai|storage)[^\s"'<>]*|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}|sk_[a-zA-Z0-9]{16,}|[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\/(?:inputs|outputs)\/)/i;
 const PROVIDER_URL_RE =
   /(?:fal\.ai|fal\.run|queue\.fal|storage\.googleapis\.com|supabase\.co\/storage)/i;
-const STORAGE_HOST_RE =
-  /(?:^|\.)supabase\.co$|(?:^|\.)fal\.ai$|(?:^|\.)fal\.run$|(?:^|\.)googleapis\.com$/i;
 
 /**
  * Resolve acceptance mode without throwing. Invalid values return
@@ -111,6 +120,88 @@ export function assertAllowedAcceptanceOrigin(rawUrl) {
     "Production host is forbidden for real acceptance"
   );
   return url;
+}
+
+/**
+ * Pending owned-photo PUT target must be the exact non-prod Pikbo private-input
+ * Supabase signed-upload URL. Validates before any image bytes are sent.
+ * Throws a sanitized Error (never embeds the raw URL/token).
+ *
+ * Contract:
+ * - origin === https://lpfvfybkggiugosugfcw.supabase.co
+ * - https, no credentials, default port only
+ * - pathname starts with /storage/v1/object/upload/sign/pikbo-toy-inputs/
+ * - remaining object-key segment present (no path traversal)
+ */
+export function assertTrustedPrivateInputSignedUploadUrl(rawUrl) {
+  if (typeof rawUrl !== "string" || !rawUrl.trim()) {
+    throw new Error("Private-input upload URL is missing");
+  }
+  let url;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    throw new Error("Private-input upload URL is not a valid absolute URL");
+  }
+  if (url.protocol !== "https:") {
+    throw new Error("Private-input upload URL must use https");
+  }
+  if (url.username || url.password) {
+    throw new Error("Private-input upload URL must not embed credentials");
+  }
+  // Default HTTPS port only (empty or explicit 443).
+  if (url.port && url.port !== "443") {
+    throw new Error("Private-input upload URL must not use a non-default port");
+  }
+  if (url.origin !== PRIVATE_INPUT_STORAGE_ORIGIN) {
+    throw new Error(
+      "Private-input upload URL origin is not the trusted Pikbo storage project"
+    );
+  }
+  const pathname = url.pathname || "";
+  if (!pathname.startsWith(PRIVATE_INPUT_SIGNED_UPLOAD_PATH_PREFIX)) {
+    throw new Error(
+      "Private-input upload URL path is not the signed upload/sign contract for pikbo-toy-inputs"
+    );
+  }
+  const segments = pathname.split("/").filter(Boolean);
+  // storage / v1 / object / upload / sign / pikbo-toy-inputs / <objectKey...>
+  if (segments.length < 7) {
+    throw new Error("Private-input upload URL is missing the object key segment");
+  }
+  if (
+    segments[0] !== "storage" ||
+    segments[1] !== "v1" ||
+    segments[2] !== "object" ||
+    segments[3] !== "upload" ||
+    segments[4] !== "sign" ||
+    segments[5] !== PRIVATE_INPUT_BUCKET
+  ) {
+    throw new Error("Private-input upload URL path segments do not match the signed-upload contract");
+  }
+  const objectKeyParts = segments.slice(6);
+  if (objectKeyParts.length === 0 || objectKeyParts.some((p) => p === ".." || p === ".")) {
+    throw new Error("Private-input upload URL object key is invalid");
+  }
+  // Reject lookalike buckets smuggled via encoding tricks in remaining path.
+  if (pathname.includes("..") || pathname.includes("//")) {
+    throw new Error("Private-input upload URL path is malformed");
+  }
+  return {
+    origin: PRIVATE_INPUT_STORAGE_ORIGIN,
+    bucket: PRIVATE_INPUT_BUCKET,
+    kind: "signed-upload",
+  };
+}
+
+/** Non-throwing predicate shared by fetch guards and tests. */
+export function isTrustedPrivateInputSignedUploadUrl(rawUrl) {
+  try {
+    assertTrustedPrivateInputSignedUploadUrl(rawUrl);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -382,8 +473,8 @@ export function classifyApiPath(pathname) {
   }
   // Generic download path; callers reclassify as downloadOwner/downloadAnonymous.
   if (pathname.startsWith("/api/downloads/")) return "download";
-  // Storage signed PUT targets are not Pikbo API paths; track as uploadPut.
-  if (pathname.includes("/storage/v1/object/")) return "uploadPut";
+  // Storage PUTs are never classified from path alone — only after
+  // assertTrustedPrivateInputSignedUploadUrl in the fetch guard.
   return "other";
 }
 
@@ -550,6 +641,20 @@ export function sanitizeEvidence(value, keyHint = "") {
   if (typeof value === "bigint") return Number(value);
   if (typeof value === "string") {
     if (SENSITIVE_KEY_RE.test(keyHint)) return "[redacted]";
+    // Exact allowlisted origins may appear as gate constants (no cookie/path/token).
+    // Must run before generic supabase/https redaction rules.
+    if (value === PROTECTED_PREVIEW_ORIGIN || value === `${PROTECTED_PREVIEW_ORIGIN}/`) {
+      return PROTECTED_PREVIEW_ORIGIN;
+    }
+    if (
+      value === PRIVATE_INPUT_STORAGE_ORIGIN ||
+      value === `${PRIVATE_INPUT_STORAGE_ORIGIN}/`
+    ) {
+      return PRIVATE_INPUT_STORAGE_ORIGIN;
+    }
+    if (value === PRIVATE_INPUT_BUCKET) {
+      return PRIVATE_INPUT_BUCKET;
+    }
     if (SENSITIVE_VALUE_RE.test(value) || PROVIDER_URL_RE.test(value)) {
       return "[redacted]";
     }
@@ -559,10 +664,6 @@ export function sanitizeEvidence(value, keyHint = "") {
       /^https?:\/\/[^/]+\/api\/downloads\//i.test(value)
     ) {
       return "/api/downloads/[job]";
-    }
-    // Exact allowlisted Preview origin may appear as a gate constant (no cookie/path).
-    if (value === PROTECTED_PREVIEW_ORIGIN || value === `${PROTECTED_PREVIEW_ORIGIN}/`) {
-      return PROTECTED_PREVIEW_ORIGIN;
     }
     // Absolute / data URLs are redacted to host-only markers (no signed query).
     if (
@@ -634,6 +735,9 @@ export function buildDryRunEvidence() {
       requiresOwnedDurableLibraryRow: true,
       requiresOwnerPrivateDownloadHead: true,
       requiresAnonymousDownloadDenied: true,
+      privateInputStorageOrigin: PRIVATE_INPUT_STORAGE_ORIGIN,
+      privateInputBucket: PRIVATE_INPUT_BUCKET,
+      requiresTrustedSignedUploadUrl: true,
     },
     verdict: "PASS_DRY_RUN_NO_SPEND",
     note:
@@ -654,6 +758,28 @@ function resolveImagePath(rawPath) {
   return absolute;
 }
 
+/**
+ * Classify a network target for audit. PUT is uploadPut only after the
+ * shared trusted signed-upload validator passes (never loose host regex).
+ */
+export function classifyNetworkRequest(rawUrl, method, authMode = "owner") {
+  const m = String(method || "GET").toUpperCase();
+  if (m === "PUT") {
+    // Validate before classifying — untrusted targets never become uploadPut.
+    assertTrustedPrivateInputSignedUploadUrl(rawUrl);
+    return "uploadPut";
+  }
+  const target = new URL(rawUrl, PROTECTED_PREVIEW_ORIGIN);
+  if (target.origin !== PROTECTED_PREVIEW_ORIGIN) {
+    throw new Error(`Third-party network request forbidden: ${target.hostname}`);
+  }
+  const baseKind = classifyApiPath(target.pathname);
+  if (baseKind === "download") {
+    return classifyDownloadProbe(target.pathname, authMode);
+  }
+  return baseKind;
+}
+
 function createGuardedFetch(allowedOrigin, cookie, audit) {
   return async (input, init = {}) => {
     const authMode = init.authMode === "anonymous" ? "anonymous" : "owner";
@@ -663,7 +789,6 @@ function createGuardedFetch(allowedOrigin, cookie, audit) {
       typeof input === "string" || input instanceof URL
         ? input.toString()
         : input.url;
-    const target = new URL(rawUrl);
     const method = String(
       restInit.method ||
         (typeof input === "object" && input && "method" in input
@@ -671,35 +796,26 @@ function createGuardedFetch(allowedOrigin, cookie, audit) {
           : "GET")
     ).toUpperCase();
 
-    // Only the operator host and its storage signed-PUT origin are allowed.
-    // Storage hosts must still be https; reject arbitrary third parties.
-    const isOperatorApi = target.origin === allowedOrigin;
-    const isStoragePut =
-      method === "PUT" &&
-      target.protocol === "https:" &&
-      (STORAGE_HOST_RE.test(target.hostname) ||
-        target.pathname.includes("/storage/v1/object/"));
-
-    if (!isOperatorApi && !isStoragePut) {
-      throw new Error(
-        `Third-party network request forbidden: ${target.hostname}`
-      );
+    // Shared validator: operator API host OR exact trusted signed-upload PUT.
+    // Never allow fal / googleapis / other Supabase projects / loose paths.
+    let kind;
+    try {
+      kind = classifyNetworkRequest(rawUrl, method, authMode);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Network target rejected";
+      throw new Error(message);
     }
-    if (
-      isStoragePut &&
-      !isOperatorApi &&
-      !STORAGE_HOST_RE.test(target.hostname)
-    ) {
-      throw new Error(`Storage host not allowed: ${target.hostname}`);
+    // Double-check operator API origin for non-PUT (classify already does this).
+    if (kind !== "uploadPut") {
+      const target = new URL(rawUrl);
+      if (target.origin !== allowedOrigin) {
+        throw new Error(
+          `Third-party network request forbidden: ${target.hostname}`
+        );
+      }
     }
 
-    const baseKind = isOperatorApi
-      ? classifyApiPath(target.pathname)
-      : "uploadPut";
-    const kind =
-      baseKind === "download"
-        ? classifyDownloadProbe(target.pathname, authMode)
-        : baseKind;
     audit[kind] = (audit[kind] || 0) + 1;
     audit.total += 1;
     assertOneCallBounds(audit);
@@ -711,14 +827,16 @@ function createGuardedFetch(allowedOrigin, cookie, audit) {
     headers.delete("authorization");
     headers.delete("Cookie");
     headers.delete("Authorization");
+    const isOperatorApi = kind !== "uploadPut";
     if (isOperatorApi && authMode === "owner") {
       headers.set("cookie", cookie);
       if (!headers.has("accept")) headers.set("accept", "application/json");
     } else if (isOperatorApi && authMode === "anonymous") {
       if (!headers.has("accept")) headers.set("accept", "application/json");
     }
+    // uploadPut: leave headers without cookie/authorization intentionally.
 
-    const response = await fetch(target, {
+    const response = await fetch(rawUrl, {
       ...restInit,
       headers,
       redirect: "manual",
@@ -768,40 +886,23 @@ export async function runRealAcceptance(options) {
   // If caller injects fetchImpl, still bound their counts when they use audit.
   // authMode: "owner" (default) attaches the operator cookie; "anonymous"
   // strips cookie/authorization and must never inherit session credentials.
+  // PUT targets share assertTrustedPrivateInputSignedUploadUrl with real fetch.
   const track = async (url, init = {}) => {
     const authMode = init.authMode === "anonymous" ? "anonymous" : "owner";
     const restInit = { ...init };
     delete restInit.authMode;
     if (fetchImpl) {
-      const target = new URL(url, PROTECTED_PREVIEW_ORIGIN);
-      // Mocks may only target the protected Preview API or storage PUT hosts.
       const method = String(restInit.method || "GET").toUpperCase();
-      const isStoragePut =
-        method === "PUT" &&
-        (STORAGE_HOST_RE.test(target.hostname) ||
-          target.pathname.includes("/storage/v1/object/"));
-      if (target.origin !== PROTECTED_PREVIEW_ORIGIN && !isStoragePut) {
-        throw new Error(
-          `Third-party network request forbidden: ${target.hostname}`
-        );
-      }
-      const baseKind =
-        method === "PUT" && !target.pathname.startsWith("/api/")
-          ? "uploadPut"
-          : classifyApiPath(target.pathname);
-      const finalKind =
-        baseKind === "download"
-          ? classifyDownloadProbe(target.pathname, authMode)
-          : baseKind;
+      const finalKind = classifyNetworkRequest(String(url), method, authMode);
       audit[finalKind] = (audit[finalKind] || 0) + 1;
       audit.total += 1;
       assertOneCallBounds(audit);
 
       const headers = new Headers(restInit.headers || {});
-      // Always strip first so anonymous never inherits caller cookie pollution.
+      // Always strip first so anonymous / storage never inherits cookies.
       headers.delete("cookie");
       headers.delete("authorization");
-      if (authMode === "owner") {
+      if (finalKind !== "uploadPut" && authMode === "owner") {
         headers.set("cookie", cookie);
       }
       return fetchImpl(url, {
@@ -865,11 +966,47 @@ export async function runRealAcceptance(options) {
   assert.ok(typeof assetId === "string" && assetId.length >= 8, "assetId missing");
 
   // 2) PUT bytes when state is pending (at most once).
+  // Validate the signed upload URL BEFORE constructing or sending image bytes.
   if (prep.state === "pending") {
-    assert.ok(
-      typeof prep.uploadUrl === "string" && prep.uploadUrl.startsWith("https:"),
-      "uploadUrl missing for pending asset"
-    );
+    if (typeof prep.uploadUrl !== "string" || !prep.uploadUrl.trim()) {
+      return sanitizeEvidence({
+        schemaVersion: 1,
+        mode: "real",
+        stage: "upload-put-url-gate",
+        verdict: "FAIL",
+        code: "UPLOAD_URL_MISSING",
+        spend: {
+          confirmed: true,
+          providerCalls: 0,
+          generateCalls: audit.generate,
+          uploadPutCalls: audit.uploadPut,
+        },
+        network: audit,
+        finishedAt: now(),
+      });
+    }
+    try {
+      assertTrustedPrivateInputSignedUploadUrl(prep.uploadUrl);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Untrusted upload URL";
+      return sanitizeEvidence({
+        schemaVersion: 1,
+        mode: "real",
+        stage: "upload-put-url-gate",
+        verdict: "FAIL",
+        code: "UNTRUSTED_UPLOAD_URL",
+        error: message.slice(0, 200),
+        spend: {
+          confirmed: true,
+          providerCalls: 0,
+          generateCalls: 0,
+          uploadPutCalls: audit.uploadPut,
+        },
+        network: audit,
+        finishedAt: now(),
+      });
+    }
     const form = new FormData();
     form.append("cacheControl", "3600");
     form.append(

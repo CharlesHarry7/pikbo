@@ -73,7 +73,16 @@ Cached/demo responses never count as PASS. Both download probes are required.
 ## Flow (bounded)
 
 1. `POST /api/assets/upload-url` — at most once
-2. Storage PUT of the owned image — at most once when pending
+2. If `state=pending`, validate `uploadUrl` **before any image bytes leave the
+   process**, then PUT at most once:
+   - origin must be exactly `https://lpfvfybkggiugosugfcw.supabase.co`
+     (HTTPS, no credentials, default port only)
+   - pathname must be the signed-upload contract
+     `/storage/v1/object/upload/sign/pikbo-toy-inputs/<objectKey…>`
+   - any other Supabase project, fal, Google Storage, HTTP, credential URL,
+     wrong bucket, or lookalike path fails closed with `UNTRUSTED_UPLOAD_URL`
+     and **zero** uploadPut/generate calls
+   - storage PUT never attaches cookie/authorization (signed URL is auth)
 3. `POST /api/assets/complete` — at most once
 4. `POST /api/generate` with `productContract=toy-moment-v1`, effect
    `street-power-up`, `9:16` / 5s / 720p / Seedance Fast, `ownsRights` +
@@ -81,6 +90,9 @@ Cached/demo responses never count as PASS. Both download probes are required.
 5. `GET /api/generations` Library refresh
 6. Owner `HEAD /api/downloads/{jobId}` (cookie) — private-result markers
 7. Anonymous `HEAD /api/downloads/{jobId}` (no credentials) — must be 401
+
+The harness never records signed upload URLs, tokens, or object keys in
+evidence.
 
 ## Evidence rules
 

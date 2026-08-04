@@ -29,7 +29,12 @@ const {
   assertDurableOwnedLibraryRow,
   assertOwnerPrivateDownloadHead,
   assertAnonymousDownloadDenied,
+  assertTrustedPrivateInputSignedUploadUrl,
+  isTrustedPrivateInputSignedUploadUrl,
   isPrivateStorageSignedDeliveryUrl,
+  PRIVATE_INPUT_STORAGE_ORIGIN,
+  PRIVATE_INPUT_BUCKET,
+  PRIVATE_INPUT_SIGNED_UPLOAD_PATH_PREFIX,
   buildFixedMomentPayload,
   sanitizeEvidence,
   createNetworkAudit,
@@ -38,6 +43,7 @@ const {
   buildDryRunEvidence,
   classifyApiPath,
   classifyDownloadProbe,
+  classifyNetworkRequest,
   runRealAcceptance,
   main,
 } = await import(harnessPath);
@@ -63,6 +69,11 @@ assert.match(source, /pikbo-private-results/);
 assert.match(source, /LIBRARY_DOWNLOAD_PATH_NOT_GENERATE_CONTRACT/);
 assert.match(source, /assertOwnerPrivateDownloadHead/);
 assert.match(source, /assertAnonymousDownloadDenied/);
+assert.match(source, /assertTrustedPrivateInputSignedUploadUrl/);
+assert.match(source, /PRIVATE_INPUT_STORAGE_ORIGIN/);
+assert.match(source, /lpfvfybkggiugosugfcw/);
+assert.match(source, /upload\/sign\/pikbo-toy-inputs/);
+assert.match(source, /UNTRUSTED_UPLOAD_URL/);
 assert.match(source, /X-Pikbo-Private-Result|x-pikbo-private-result/);
 assert.match(source, /AUTH_REQUIRED/);
 assert.match(source, /downloadOwner/);
@@ -71,6 +82,7 @@ assert.match(source, /authMode/);
 assert.match(source, /parseMode/);
 assert.match(source, /dry-run/);
 assert.match(source, /sanitizeEvidence/);
+assert.doesNotMatch(source, /STORAGE_HOST_RE/);
 assert.doesNotMatch(source, /@fal-ai\/client/);
 assert.doesNotMatch(source, /checkout\/sessions/);
 assert.doesNotMatch(source, /STRIPE_SECRET_KEY/);
@@ -499,6 +511,48 @@ assert.equal(
   "anonymous_code_not_auth_required"
 );
 
+// ── Trusted private-input signed upload URL gate ──
+
+assert.equal(
+  PRIVATE_INPUT_STORAGE_ORIGIN,
+  "https://lpfvfybkggiugosugfcw.supabase.co"
+);
+assert.equal(PRIVATE_INPUT_BUCKET, "pikbo-toy-inputs");
+assert.equal(
+  PRIVATE_INPUT_SIGNED_UPLOAD_PATH_PREFIX,
+  "/storage/v1/object/upload/sign/pikbo-toy-inputs/"
+);
+const trustedUploadUrl = `${PRIVATE_INPUT_STORAGE_ORIGIN}${PRIVATE_INPUT_SIGNED_UPLOAD_PATH_PREFIX}owner/key.webp`;
+assert.equal(
+  assertTrustedPrivateInputSignedUploadUrl(trustedUploadUrl).bucket,
+  "pikbo-toy-inputs"
+);
+assert.equal(isTrustedPrivateInputSignedUploadUrl(trustedUploadUrl), true);
+assert.equal(classifyNetworkRequest(trustedUploadUrl, "PUT"), "uploadPut");
+
+const rejectedUploadUrls = [
+  "https://otherproject.supabase.co/storage/v1/object/upload/sign/pikbo-toy-inputs/x",
+  "https://queue.fal.run/storage/v1/object/upload/sign/pikbo-toy-inputs/x",
+  "https://storage.googleapis.com/storage/v1/object/upload/sign/pikbo-toy-inputs/x",
+  "https://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/sign/pikbo-toy-inputs/x",
+  "https://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/upload/sign/pikbo-private-results/x",
+  "https://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/pikbo-toy-inputs/x",
+  "https://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/upload/sign/pikbo-toy-inputs-shadow/x",
+  "http://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/upload/sign/pikbo-toy-inputs/x",
+  "https://user:pass@lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/upload/sign/pikbo-toy-inputs/x",
+  "https://lpfvfybkggiugosugfcw.supabase.co:444/storage/v1/object/upload/sign/pikbo-toy-inputs/x",
+  "https://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/upload/sign/pikbo-toy-inputs/../evil",
+];
+for (const bad of rejectedUploadUrls) {
+  assert.equal(
+    isTrustedPrivateInputSignedUploadUrl(bad),
+    false,
+    `must reject untrusted upload URL`
+  );
+  assert.throws(() => assertTrustedPrivateInputSignedUploadUrl(bad));
+  assert.throws(() => classifyNetworkRequest(bad, "PUT"));
+}
+
 // ── Sanitizer ──
 
 const dirty = {
@@ -535,6 +589,11 @@ assert.equal(dryEvidence.mode, "dry-run");
 assert.equal(dryEvidence.spend.providerCalls, 0);
 assert.equal(dryEvidence.verdict, "PASS_DRY_RUN_NO_SPEND");
 assert.equal(dryEvidence.gates.allowedOrigin, PROTECTED_PREVIEW_ORIGIN);
+assert.equal(
+  dryEvidence.gates.privateInputStorageOrigin,
+  PRIVATE_INPUT_STORAGE_ORIGIN
+);
+assert.equal(dryEvidence.gates.privateInputBucket, PRIVATE_INPUT_BUCKET);
 assertDryRunNoSpend(dryEvidence.network);
 
 // ── Mock helpers ──
@@ -549,6 +608,7 @@ png[3] = 0x47;
 writeFileSync(imagePath, png);
 
 const assetId = "33333333-3333-4333-8333-333333333333";
+const MOCK_TRUSTED_UPLOAD_URL = `${PRIVATE_INPUT_STORAGE_ORIGIN}${PRIVATE_INPUT_SIGNED_UPLOAD_PATH_PREFIX}${assetId}/input.webp`;
 
 function jsonResponse(status, body) {
   return new Response(JSON.stringify(body), {
@@ -570,6 +630,7 @@ function makePassingMock({
   pendingUpload = false,
   ownerHead = "ok",
   anonymousHead = "deny",
+  pendingUploadUrl = MOCK_TRUSTED_UPLOAD_URL,
 } = {}) {
   const counts = {
     uploadPrepare: 0,
@@ -580,6 +641,7 @@ function makePassingMock({
     downloadOwner: 0,
     downloadAnonymous: 0,
     anonymousHadCookie: false,
+    uploadPutHadCookie: false,
   };
   const mockFetch = async (url, init = {}) => {
     const target = new URL(String(url), PROTECTED_PREVIEW_ORIGIN);
@@ -595,7 +657,7 @@ function makePassingMock({
           assetId,
           inputAssetId: assetId,
           state: "pending",
-          uploadUrl: `https://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/upload/sign/pikbo-toy-inputs/${assetId}`,
+          uploadUrl: pendingUploadUrl,
           idempotent: false,
         });
       }
@@ -608,12 +670,20 @@ function makePassingMock({
         idempotent: false,
       });
     }
-    if (
-      method === "PUT" &&
-      target.hostname.includes("supabase.co") &&
-      target.pathname.includes("/storage/v1/object/")
-    ) {
+    if (method === "PUT") {
+      // Only trusted signed-upload URLs should reach here (gate runs first).
+      assert.equal(
+        isTrustedPrivateInputSignedUploadUrl(String(url)),
+        true,
+        "PUT must only reach mock with trusted upload URL"
+      );
       counts.uploadPut += 1;
+      if (requestHasCookie(init)) counts.uploadPutHadCookie = true;
+      assert.equal(
+        requestHasCookie(init),
+        false,
+        "storage PUT must never carry cookie/authorization"
+      );
       assert.ok(counts.uploadPut <= 1, "upload PUT bound");
       return new Response(null, { status: 200 });
     }
@@ -817,6 +887,62 @@ function makePassingMock({
   assert.equal(counts.downloadOwner, 1);
   assert.equal(counts.downloadAnonymous, 1);
   assert.equal(counts.anonymousHadCookie, false);
+  assert.equal(counts.uploadPutHadCookie, false);
+}
+
+// ── Untrusted pending upload URL rejected before PUT/generate ──
+
+for (const [label, badUrl] of [
+  [
+    "other-supabase-project",
+    "https://otherproject.supabase.co/storage/v1/object/upload/sign/pikbo-toy-inputs/x",
+  ],
+  [
+    "fal-host",
+    "https://queue.fal.run/storage/v1/object/upload/sign/pikbo-toy-inputs/x",
+  ],
+  [
+    "googleapis-host",
+    "https://storage.googleapis.com/storage/v1/object/upload/sign/pikbo-toy-inputs/x",
+  ],
+  [
+    "lookalike-sign-path",
+    "https://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/sign/pikbo-toy-inputs/x",
+  ],
+  [
+    "wrong-bucket",
+    "https://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/upload/sign/pikbo-private-results/x",
+  ],
+  [
+    "http-scheme",
+    "http://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/upload/sign/pikbo-toy-inputs/x",
+  ],
+  [
+    "credential-url",
+    "https://user:pass@lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/upload/sign/pikbo-toy-inputs/x",
+  ],
+]) {
+  const { mockFetch, counts } = makePassingMock({
+    pendingUpload: true,
+    pendingUploadUrl: badUrl,
+  });
+  const rejected = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: "sb-auth-token=super-secret-session",
+    imagePath,
+    skuLabel: `untrusted-${label}`,
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(rejected.verdict, "FAIL", label);
+  assert.equal(rejected.stage, "upload-put-url-gate", label);
+  assert.equal(rejected.code, "UNTRUSTED_UPLOAD_URL", label);
+  assert.equal(rejected.spend.generateCalls, 0, label);
+  assert.equal(rejected.spend.uploadPutCalls, 0, label);
+  assert.equal(counts.uploadPut, 0, label);
+  assert.equal(counts.generate, 0, label);
+  assert.doesNotMatch(JSON.stringify(rejected), /token=|user:pass|queue\.fal/);
 }
 
 // ── Anonymous public 200 fails owner-only proof ──
@@ -1197,5 +1323,5 @@ assert.equal(invalidMain.evidence.verdict, "FAIL_INVALID_MODE");
 rmSync(tmp, { recursive: true, force: true });
 
 console.log(
-  "private-moment-acceptance-harness-regression: PASS (signed-generate-url · dual download probe · anonymous denial · demo/provider reject · one-call bounds · sanitized evidence)"
+  "private-moment-acceptance-harness-regression: PASS (trusted upload URL · dual download probe · anonymous denial · demo/provider reject · one-call bounds · sanitized evidence)"
 );
