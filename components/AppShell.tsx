@@ -53,6 +53,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     create &&
     momentValues.length === 1 &&
     Boolean(parseMomentId(momentValues[0]));
+  const fixedMomentEntry =
+    create &&
+    searchParams.get("mode") === "moment" &&
+    searchParams.get("effect") === "street-power-up";
+  const motionChrome = home;
+  const motionBrand = home || fixedMomentEntry;
   const momentSurface = home || momentCreate;
   const lightShell = momentSurface || sellerPackCreate;
   const resultShell = momentSurface;
@@ -71,7 +77,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     <div
       className={cn(
         "flex min-h-screen min-w-0 flex-col",
-        resultShell
+        home
+          ? "bg-[#08080A] text-[#F7F4ED]"
+          : resultShell
           ? "bg-[#F2EFE7] text-[#171719]"
           : lightShell
             ? "bg-[#EEF0F4] text-[#15171B]"
@@ -81,8 +89,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       <header
         className={cn(
           "sticky top-0 z-50 hidden items-center border-b px-7 backdrop-blur-xl lg:flex",
-          momentSurface ? "h-16" : "h-14",
-          resultShell
+          motionChrome ? "h-16" : "h-14",
+          motionChrome
+            ? "border-white/10 bg-[#08080A]/92 px-8"
+            : resultShell
             ? "border-[#171719]/15 bg-[#F2EFE7]/94 px-8"
             : lightShell
               ? "border-[#D4D8E0] bg-[#F7F8FA]/92"
@@ -90,16 +100,16 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         )}
       >
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
-          {momentSurface ? (
-            <span className="flex items-center gap-3 text-[#171719]">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-[#FF5A36] font-display text-sm font-black text-[#171719]">
+          {motionBrand ? (
+            <span className="flex items-center gap-3 text-[#F7F4ED]">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-[#FF4D2E] font-display text-sm font-black text-[#140806]">
                 P
               </span>
               <span>
                 <span className="block font-display text-base font-black leading-none tracking-[-0.04em]">
                   Pikbo
                 </span>
-                <span className="mt-1 block text-[7px] font-black uppercase tracking-[0.2em] text-[#79756D]">
+                <span className="mt-1 block text-[7px] font-black uppercase tracking-[0.2em] text-white/38">
                   Toy moments
                 </span>
               </span>
@@ -118,12 +128,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           className="mx-auto flex items-center gap-9"
           aria-label="Primary navigation"
           data-primary-create-href={
-            momentSurface
+            motionChrome
               ? DEFAULT_MOMENT_CREATE_HREF
               : PRIMARY_NAV_CREATE_HREF
           }
         >
-          {(momentSurface
+          {(motionChrome
             ? [
                 { href: DEFAULT_MOMENT_CREATE_HREF, label: "Create" },
                 { href: "/library", label: "Library" },
@@ -142,10 +152,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 aria-current={on ? "page" : undefined}
                 className={cn(
                   "relative py-5 text-[13px] font-bold transition-colors",
-                  momentSurface
+                  motionChrome
                     ? on
-                      ? "text-[#171719]"
-                      : "text-[#77736C] hover:text-[#171719]"
+                      ? "text-white"
+                      : "text-white/42 hover:text-white"
                     : resultShell
                     ? on
                       ? "text-[#15171B]"
@@ -164,8 +174,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                   <span
                     className={cn(
                       "absolute inset-x-0 bottom-0 h-0.5",
-                      momentSurface
-                        ? "bg-[#FF5A36]"
+                      motionBrand
+                        ? "bg-[#FF4D2E]"
                         : resultShell
                         ? "bg-[#FF6846]"
                         : lightShell
@@ -179,12 +189,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="flex shrink-0 items-center gap-3">
-          {momentSurface ? (
+          {motionChrome ? (
             <Link
-              href={DEFAULT_MOMENT_CREATE_HREF}
-              className="inline-flex min-h-10 items-center rounded-full bg-[#171719] px-5 text-xs font-black text-[#F5F1E8] transition hover:-translate-y-0.5 hover:bg-[#FF5A36] hover:text-[#171719]"
+              href={home ? DEFAULT_MOMENT_CREATE_HREF : "/library"}
+              className="inline-flex min-h-10 items-center rounded-full bg-[#FF4D2E] px-5 text-xs font-black text-[#140806] transition hover:-translate-y-0.5 hover:bg-[#FF6A4D]"
             >
-              Create a Moment
+              {home ? "Use this motion" : "Open Library"}
             </Link>
           ) : resultShell ? (
             <Link
@@ -205,7 +215,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       <header
         className={cn(
           "sticky top-0 z-50 flex h-12 items-center justify-between border-b px-3 backdrop-blur-xl lg:hidden",
-          resultShell
+          home
+            ? "border-white/10 bg-[#08080A]/92"
+            : resultShell
             ? "border-black/10 bg-[#F2EFE7]/94"
             : lightShell
               ? "border-[#D4D8E0] bg-[#F7F8FA]/94"
@@ -215,16 +227,22 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <Link href="/" aria-label="Pikbo home">
           <Logo
             size={26}
-            wordClassName={cn("text-base", lightShell && "!text-[#15171B]")}
+            wordClassName={cn(
+              "text-base",
+              home ? "!text-[#F7F4ED]" : lightShell && "!text-[#15171B]"
+            )}
           />
         </Link>
         <div className="flex items-center gap-2">
           {momentSurface ? (
             <Link
               href={DEFAULT_MOMENT_CREATE_HREF}
-              className="inline-flex min-h-9 items-center rounded-full bg-[#171719] px-4 text-[10px] font-black text-[#F5F1E8]"
+              className={cn(
+                "inline-flex min-h-9 items-center rounded-full px-4 text-[10px] font-black",
+                home ? "bg-[#FF4D2E] text-[#140806]" : "bg-[#171719] text-[#F5F1E8]"
+              )}
             >
-              Create a Moment
+              Use this motion
             </Link>
           ) : resultShell ? (
             <>
@@ -279,7 +297,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <main
           className={cn(
             "min-w-0 flex-1",
-            resultShell
+            home
+              ? "bg-[#08080A]"
+              : resultShell
               ? "bg-[#F2EFE7]"
               : lightShell
                 ? "bg-[#EEF0F4]"

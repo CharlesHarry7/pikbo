@@ -35,9 +35,11 @@ assert(
   home.includes("<HomeCinemaHero />") &&
     homeHero.includes('data-home-hero="street-power-up"') &&
     homeHero.includes("href={MOMENT_CREATE_HREF}") &&
-    homeHero.includes("PIKBO Lab · cached prototype") &&
-    homeHero.includes("Cached sample · 0 credits · no upload") &&
+    homeHero.includes("Sample · Beatbot") &&
+    homeHero.includes("Use this motion") &&
+    homeHero.includes("Sample shown: cached 6s archive") &&
     homeHero.includes("not a completed customer deliverable") &&
+    homeHero.includes("not your toy") &&
     !home.includes("<HomeViralWall") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
   "homepage must expose one honest Street Power-Up Moment and no Pack/demo wall"
