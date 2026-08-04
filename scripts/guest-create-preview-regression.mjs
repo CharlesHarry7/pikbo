@@ -17,6 +17,15 @@ assert.match(gate, /Street[\s\S]*Power-Up\./);
 assert.match(gate, /data-guest-create-title-line=["']power-up["']/);
 assert.match(gate, /xl:whitespace-nowrap/);
 assert.match(gate, /order-2 lg:order-3["'] data-guest-create-action/);
+assert.match(
+  gate,
+  /max-w-\[310px\] sm:max-w-\[370px\] lg:order-2 lg:max-w-\[400px\]/
+);
+assert.ok(
+  gate.indexOf("data-guest-create-sign-in") <
+    gate.indexOf("The invited path is fixed at 9:16"),
+  "mobile guest Create must surface sign-in before secondary contract detail"
+);
 assert.match(gate, /A neon, drop-day direction built for designer-toy reveals/);
 assert.match(gate, /data-guest-create-sample/);
 assert.match(gate, /AutoPlayVideo/);

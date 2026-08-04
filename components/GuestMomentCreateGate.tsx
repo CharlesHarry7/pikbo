@@ -63,7 +63,7 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
         </div>
 
         <section
-          className="order-1 mx-auto w-full max-w-[330px] sm:max-w-[370px] lg:order-2 lg:max-w-[400px]"
+          className="order-1 mx-auto w-full max-w-[310px] sm:max-w-[370px] lg:order-2 lg:max-w-[400px]"
           aria-label="Street Power-Up cached sample"
           data-guest-create-sample
         >
@@ -106,25 +106,21 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
         </section>
 
         <div className="order-2 lg:order-3" data-guest-create-action>
-          <div className="rounded-[26px] border border-white/14 bg-[#151519]/92 p-5 shadow-[0_28px_90px_-48px_rgba(255,77,46,0.42)] backdrop-blur-2xl lg:p-6">
+          <div className="rounded-[26px] border border-white/14 bg-[#151519]/92 p-4 shadow-[0_28px_90px_-48px_rgba(255,77,46,0.42)] backdrop-blur-2xl sm:p-5 lg:p-6">
             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/55">
               Make it yours
             </p>
-            <h2 className="mt-3 font-display text-3xl font-black leading-[0.95] tracking-[-0.055em] text-white">
+            <h2 className="mt-2 font-display text-[1.625rem] font-black leading-[0.95] tracking-[-0.055em] text-white sm:mt-3 sm:text-3xl">
               One photo in.
               <br />
               One private clip out.
             </h2>
-            <p className="mt-4 text-xs font-semibold leading-6 text-white/60">
-              The invited path is fixed at 9:16 · 5s · 720p. Your finished
-              result returns to your account Library.
-            </p>
-            <div className="mt-5 grid gap-3">
+            <div className="mt-3 grid gap-3 sm:mt-5">
               {!signedIn && (
                 <Link
                   href={guestSignInHref()}
                   data-guest-create-sign-in
-                  className="inline-flex min-h-14 items-center justify-between rounded-2xl bg-[#FF4D2E] px-5 text-xs font-black uppercase tracking-[0.12em] text-[#140806] transition hover:-translate-y-0.5 hover:bg-[#FF6A4D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#151519]"
+                  className="inline-flex min-h-12 items-center justify-between rounded-2xl bg-[#FF4D2E] px-5 text-xs font-black uppercase tracking-[0.12em] text-[#140806] transition hover:-translate-y-0.5 hover:bg-[#FF6A4D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#151519] sm:min-h-14"
                 >
                   Sign in to make yours
                   <span aria-hidden className="text-lg">→</span>
@@ -142,6 +138,10 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
                 Request private beta
               </a>
             </div>
+            <p className="mt-4 text-xs font-semibold leading-6 text-white/60">
+              The invited path is fixed at 9:16 · 5s · 720p. Your finished
+              result returns to your account Library.
+            </p>
             <p
               className="mt-4 text-[10px] font-semibold leading-5 text-white/50"
               data-guest-create-not-your-toy
