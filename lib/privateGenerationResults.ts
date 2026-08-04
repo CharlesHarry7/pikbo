@@ -10,6 +10,7 @@ import {
 } from "@/lib/privateGenerationResultsPure.mjs";
 
 export {
+  controlledLibraryNewAttemptUrl,
   mergePrivateLibraryWithLocalLedger,
   parseProviderOutputHostAllowlist,
   privateLibraryJobFromRow,
@@ -37,6 +38,12 @@ export type PrivateLibraryJob = {
   watermark: false;
   downloadAllowed: boolean;
   videoUrl?: string;
+  /**
+   * Controlled relative Create URL for a new attempt using the owner-validated
+   * durable input asset. Present only on failed|canceled rows with a
+   * UUID-shaped input_asset_id. Never reuses the old job's idempotency key.
+   */
+  newAttemptUrl?: string;
   errorCode?: string;
   model?: string;
   duration?: number;
@@ -354,6 +361,7 @@ const LIBRARY_COLUMNS = [
   "effect_slug",
   "status",
   "error_code",
+  "input_asset_id",
   "output_object_key",
   "output_content_type",
   "model_id",
@@ -367,10 +375,11 @@ const LIBRARY_COLUMNS = [
 
 /**
  * Owner-only durable Library rows across open + terminal statuses.
- * Object keys, signed URLs, provider IDs, prompts, hashes, and user identity
- * stay server-side. Callers expose only the controlled /api/downloads/{jobId}
- * gate for deliverable successes, and capability flags so the UI never posts
- * durable rows to process-memory Retry/Cancel endpoints.
+ * Object keys, signed URLs, provider IDs, prompts, hashes, raw input_asset_id,
+ * and user identity stay server-side. Callers expose only the controlled
+ * /api/downloads/{jobId} gate for deliverable successes, a narrow newAttemptUrl
+ * Create handoff when a terminal row has a UUID input binding, and capability
+ * flags so the UI never posts durable rows to process-memory Retry/Cancel.
  */
 export async function listPrivateGenerationResults(input: {
   userId: string;

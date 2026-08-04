@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 /**
- * AIT-12: durable Moment statuses in Library.
+ * AIT-12 / AIT-15: durable Moment statuses in Library + owner input-asset
+ * new-attempt handoff.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped mapping, all durable statuses, dedupe/counts, secret
- * field exclusion, controlled download URLs, and no local Retry/Cancel on
- * durable rows.
+ * field exclusion, controlled download URLs, input_asset_id → newAttemptUrl,
+ * generic Create fallback, and no local Retry/Cancel on durable rows.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  controlledLibraryNewAttemptUrl,
   mergePrivateLibraryWithLocalLedger,
   privateLibraryJobFromRow,
   safeLibraryErrorCode,
@@ -33,6 +35,11 @@ assert.match(results, /listPrivateGenerationResults/);
 assert.match(results, /\.in\("status",\s*\[\.\.\.PRIVATE_LIBRARY_STATUSES\]\)/);
 assert.match(results, /privateLibraryJobFromRow/);
 assert.match(results, /eq\("created_by",\s*input\.userId\)/);
+assert.match(
+  results,
+  /LIBRARY_COLUMNS[\s\S]{0,400}input_asset_id/,
+  "owner Library query must select input_asset_id server-side"
+);
 assert.doesNotMatch(
   results,
   /listPrivateGenerationResults[\s\S]{0,900}\.eq\("status",\s*"succeeded"\)/,
@@ -57,15 +64,24 @@ assert.doesNotMatch(
 assert.match(library, /function canLocalRetry/);
 assert.match(library, /function canLocalCancel/);
 assert.match(library, /function canNewAttempt/);
+assert.match(library, /function newAttemptHref/);
 assert.match(library, /isRetryable\(job\.status\) && canLocalRetry\(job\)/);
 assert.match(library, /isOpen\(job\.status\) && canLocalCancel\(job\)/);
 assert.match(library, /canNewAttempt\(job\)/);
+assert.match(library, /newAttemptHref\(job\)/);
 assert.match(library, /data-library-action="new-attempt"/);
 assert.match(library, /void retry\(job\)/);
 assert.match(library, /void cancel\(job\)/);
 assert.match(
   library,
   /durable === true \|\| job\.adapter === "supabase-private"/
+);
+// Client must only use the server-controlled link (never invent asset ids).
+assert.match(library, /job\.newAttemptUrl/);
+assert.doesNotMatch(
+  library,
+  /input_asset_id|inputAssetId/,
+  "LibraryGrid must not read raw input_asset_id"
 );
 
 assert.match(pkg, /"durable-library-statuses-regression"/);
@@ -82,9 +98,12 @@ for (const secret of [
   "signedUrl",
   "objectKey",
   "prompt",
+  "input_asset_id",
+  "inputAssetId",
 ]) {
-  // Mapping may *read* output_object_key / content type for deliverable checks;
-  // it must not assign them onto the returned job.
+  // Mapping may *read* output_object_key / content type / input_asset_id for
+  // deliverable checks and controlled URL build; it must not assign them onto
+  // the returned job as raw fields.
   assert.doesNotMatch(
     pure,
     new RegExp(`job\\.${secret}\\s*=`),
@@ -107,6 +126,10 @@ assert.deepEqual(
 const ownerId = "11111111-1111-4111-8111-111111111111";
 const jobId = "22222222-2222-4222-8222-222222222222";
 const otherJob = "33333333-3333-4333-8333-333333333333";
+const inputAssetId = "44444444-4444-4444-8444-444444444444";
+
+const expectedNewAttemptUrl =
+  `/create?mode=moment&effect=street-power-up&source=library&assetId=${inputAssetId}`;
 
 const baseRow = {
   id: jobId,
@@ -119,6 +142,7 @@ const baseRow = {
   resolution: "720p",
   // Secret / non-client fields present on the row — must not leak.
   created_by: ownerId,
+  input_asset_id: inputAssetId,
   output_object_key: `private-results/${ownerId}/${jobId}.mp4`,
   output_sha256: "a".repeat(64),
   provider_request_id: "prov_secret_should_not_leak",
@@ -172,6 +196,8 @@ for (const [status, job] of Object.entries(statuses)) {
   assert.equal("checksum" in job, false);
   assert.equal("signedUrl" in job, false);
   assert.equal("prompt" in job, false);
+  assert.equal("input_asset_id" in job, false);
+  assert.equal("inputAssetId" in job, false);
   const serialized = JSON.stringify(job);
   assert.doesNotMatch(serialized, /private-results\//);
   assert.doesNotMatch(serialized, /prov_secret/);
@@ -181,16 +207,25 @@ for (const [status, job] of Object.entries(statuses)) {
     !serialized.includes(ownerId),
     "must not leak created_by/user id"
   );
+  // Raw input binding must not appear as a field name or freeform leak.
+  assert.doesNotMatch(serialized, /"input_asset_id"/);
+  assert.doesNotMatch(serialized, /"inputAssetId"/);
 }
 
 assert.equal(statuses.queued.capabilities.refreshOnly, true);
 assert.equal(statuses.queued.capabilities.newAttempt, false);
 assert.equal(statuses.queued.downloadAllowed, false);
 assert.equal(statuses.queued.videoUrl, undefined);
+assert.equal(
+  statuses.queued.newAttemptUrl,
+  undefined,
+  "open rows must not get the retry handoff"
+);
 
 assert.equal(statuses.running.capabilities.refreshOnly, true);
 assert.equal(statuses.running.downloadAllowed, false);
 assert.equal(statuses.running.videoUrl, undefined);
+assert.equal(statuses.running.newAttemptUrl, undefined);
 
 assert.equal(statuses.succeeded.downloadAllowed, true);
 assert.equal(
@@ -200,16 +235,80 @@ assert.equal(
 assert.equal(statuses.succeeded.capabilities.newAttempt, false);
 assert.equal(statuses.succeeded.capabilities.refreshOnly, false);
 assert.equal(statuses.succeeded.creditsOutcome, "10 used");
+assert.equal(
+  statuses.succeeded.newAttemptUrl,
+  undefined,
+  "succeeded rows must not get the retry handoff"
+);
 
 assert.equal(statuses.failed.capabilities.newAttempt, true);
 assert.equal(statuses.failed.errorCode, "TIMEOUT");
 assert.equal(statuses.failed.downloadAllowed, false);
 assert.equal(statuses.failed.videoUrl, undefined);
 assert.equal(statuses.failed.creditsOutcome, "10 restored");
+assert.equal(statuses.failed.newAttemptUrl, expectedNewAttemptUrl);
 
 assert.equal(statuses.canceled.capabilities.newAttempt, true);
 assert.equal(statuses.canceled.errorCode, "CANCELED");
 assert.equal(statuses.canceled.creditsOutcome, "refund unconfirmed");
+assert.equal(statuses.canceled.newAttemptUrl, expectedNewAttemptUrl);
+
+// Controlled URL builder: valid UUID only; fixed Create path; no secrets.
+assert.equal(
+  controlledLibraryNewAttemptUrl(inputAssetId),
+  expectedNewAttemptUrl
+);
+assert.equal(
+  controlledLibraryNewAttemptUrl(inputAssetId.toUpperCase()),
+  expectedNewAttemptUrl,
+  "UUID is normalized to lowercase"
+);
+assert.equal(controlledLibraryNewAttemptUrl(null), undefined);
+assert.equal(controlledLibraryNewAttemptUrl(""), undefined);
+assert.equal(controlledLibraryNewAttemptUrl("not-a-uuid"), undefined);
+assert.equal(
+  controlledLibraryNewAttemptUrl("private-results/foo/bar.mp4"),
+  undefined
+);
+assert.equal(
+  controlledLibraryNewAttemptUrl("https://evil.example/x"),
+  undefined
+);
+assert.equal(
+  controlledLibraryNewAttemptUrl("00000000-0000-0000-0000-000000000000"),
+  undefined,
+  "nil UUID version nibble is not v1–v5"
+);
+
+// Missing / invalid input asset keeps honest generic Create (no newAttemptUrl).
+const failedNoAsset = privateLibraryJobFromRow({
+  ...baseRow,
+  status: "failed",
+  error_code: "TIMEOUT",
+  input_asset_id: null,
+});
+assert.ok(failedNoAsset);
+assert.equal(failedNoAsset.capabilities.newAttempt, true);
+assert.equal(failedNoAsset.newAttemptUrl, undefined);
+
+const failedBadAsset = privateLibraryJobFromRow({
+  ...baseRow,
+  status: "failed",
+  error_code: "TIMEOUT",
+  input_asset_id: "not-uuid",
+});
+assert.ok(failedBadAsset);
+assert.equal(failedBadAsset.newAttemptUrl, undefined);
+
+const failedObjectPath = privateLibraryJobFromRow({
+  ...baseRow,
+  status: "failed",
+  error_code: "TIMEOUT",
+  input_asset_id: `private-results/${ownerId}/secret.mp4`,
+});
+assert.ok(failedObjectPath);
+assert.equal(failedObjectPath.newAttemptUrl, undefined);
+assert.doesNotMatch(JSON.stringify(failedObjectPath), /private-results/);
 
 // Succeeded without a private object is not a deliverable download.
 const incompleteSuccess = privateLibraryJobFromRow({
@@ -380,5 +479,26 @@ assert.match(
   /videoUrl\s*=\s*`\/api\/downloads\/\$\{encodeURIComponent\(id\)\}`/
 );
 assert.doesNotMatch(pure, /createSignedUrl/);
+
+// Controlled new-attempt URL for terminal rows with valid input_asset_id.
+assert.match(pure, /controlledLibraryNewAttemptUrl/);
+assert.match(
+  pure,
+  /\/create\?mode=moment&effect=street-power-up&source=library&assetId=/
+);
+assert.match(pure, /job\.newAttemptUrl\s*=/);
+// Must not put freeform error text, prompts, or idempotency into the URL.
+assert.doesNotMatch(
+  pure,
+  /newAttemptUrl[\s\S]{0,200}(prompt|idempotency|error_message|signed)/i
+);
+
+// Local process-memory retry path remains distinct (void retry still present).
+assert.match(library, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}\/retry/);
+assert.match(
+  library,
+  /canLocalRetry/,
+  "local Retry remains for process-memory rows"
+);
 
 console.log("durable-library-statuses-regression: PASS");

@@ -25,6 +25,8 @@ type GenerationJob = {
   owned?: boolean;
   downloadAllowed?: boolean;
   videoUrl?: string;
+  /** Server-controlled relative Create URL for durable same-photo new attempt. */
+  newAttemptUrl?: string;
   errorCode?: string;
   error?: string;
   createdAt?: string;
@@ -42,6 +44,9 @@ type GenerationsResponse = {
 };
 
 const CREATE_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=library` as const;
+
+/** Fixed Create path prefix the server is allowed to hand off. */
+const CONTROLLED_CREATE_PREFIX = "/create?mode=moment&effect=street-power-up";
 
 function isOpen(status: string): boolean {
   return status === "queued" || status === "running";
@@ -67,7 +72,7 @@ function canLocalCancel(job: GenerationJob): boolean {
   return job.capabilities?.localCancel === true || job.capabilities == null;
 }
 
-/** Durable terminal failure: honest Create/new-attempt, not same-photo retry. */
+/** Durable terminal failure: honest Create/new-attempt, not process-memory Retry. */
 function canNewAttempt(job: GenerationJob): boolean {
   if (!isRetryable(job.status)) return false;
   if (canLocalRetry(job)) return false;
@@ -76,6 +81,44 @@ function canNewAttempt(job: GenerationJob): boolean {
     job.durable === true ||
     job.adapter === "supabase-private"
   );
+}
+
+/**
+ * Prefer the server-provided controlled Create link (asset-bound new attempt).
+ * Invalid/missing values fall back to the honest generic Create path.
+ * Never invent client-side asset ids or reuse old job idempotency keys.
+ */
+function newAttemptHref(job: GenerationJob): string {
+  const candidate =
+    typeof job.newAttemptUrl === "string" ? job.newAttemptUrl.trim() : "";
+  if (
+    candidate.startsWith(CONTROLLED_CREATE_PREFIX) &&
+    !candidate.includes("://") &&
+    !candidate.includes("\\") &&
+    candidate.length <= 220
+  ) {
+    try {
+      const url = new URL(candidate, "https://pikbo.local");
+      if (
+        url.pathname === "/create" &&
+        url.searchParams.get("mode") === "moment" &&
+        url.searchParams.get("effect") === "street-power-up"
+      ) {
+        const assetId = url.searchParams.get("assetId");
+        if (
+          assetId &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+            assetId
+          )
+        ) {
+          return candidate;
+        }
+      }
+    } catch {
+      // fall through to generic Create
+    }
+  }
+  return CREATE_MOMENT_HREF;
 }
 
 function visibleAccountJob(job: GenerationJob): boolean {
@@ -535,7 +578,7 @@ export function LibraryGrid() {
                     ) : null}
                     {canNewAttempt(job) ? (
                       <Link
-                        href={CREATE_MOMENT_HREF}
+                        href={newAttemptHref(job)}
                         className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
                         data-library-action="new-attempt"
                       >
