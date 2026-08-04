@@ -511,8 +511,15 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     generations,
     /listPrivateGenerationResults\(\{\s*userId: authUser\.id/
   );
-  assert.match(generations, /\/api\/downloads\/\$\{encodeURIComponent\(result\.jobId\)\}/);
-  assert.doesNotMatch(generations, /output_object_key|providerOutputUrl/);
+  assert.match(generations, /mergePrivateLibraryWithLocalLedger/);
+  // Controlled download URLs are built in the pure Library mapper (no secrets).
+  const libraryPure = read("lib/privateGenerationResultsPure.mjs");
+  assert.match(
+    libraryPure,
+    /\/api\/downloads\/\$\{encodeURIComponent\(id\)\}/
+  );
+  assert.match(libraryPure, /privateLibraryJobFromRow/);
+  assert.doesNotMatch(generations, /providerOutputUrl|signedUrl/);
 }
 
 // ─── 12. Slow-response recovery is read-only, owner-only, and idempotent ──

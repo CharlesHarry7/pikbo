@@ -51,6 +51,7 @@ jobs:
       - name: P0 private object settlement + provider budget
         run: |
           npm run p0-private-live-generation
+          npm run durable-library-statuses-regression
           npm run provider-budget-regression
           npm run capability-matrix
 
