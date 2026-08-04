@@ -139,6 +139,16 @@ assert.doesNotMatch(shell, /home[\s\S]{0,80}border-\[#D4D8E0\] bg-\[#F7F8FA\]/);
 assert.doesNotMatch(shell, /home[\s\S]{0,120}text-\[#2457E6\]/);
 assert.match(
   shell,
+  /const fixedMomentEntry\s*=\s*create\s*&&\s*searchParams\.get\(["']mode["']\)\s*===\s*["']moment["']\s*&&\s*searchParams\.get\(["']effect["']\)\s*===\s*["']street-power-up["']/
+);
+assert.match(
+  shell,
+  /const hideMobileNav\s*=\s*fixedMomentEntry\s*\|\|\s*momentCreate\s*\|\|\s*sellerPackCreate/
+);
+assert.match(shell, /\{!hideMobileNav \? \(/);
+assert.doesNotMatch(shell, /\{!momentCreate && !sellerPackCreate/);
+assert.match(
+  shell,
   /const HOME_SIGN_IN_HREF\s*=\s*`\/login\?next=\$\{encodeURIComponent\(\s*`\$\{MOMENT_CREATE_HREF\}&source=home-sign-in`\s*\)\}`/
 );
 assert.match(shell, /href: HOME_SIGN_IN_HREF,\s*label: "Sign in"/);
