@@ -14,6 +14,9 @@ assert.match(createPage, /description:[\s\S]{0,180}cached Street Power-Up sample
 
 assert.match(gate, /data-guest-create-first="street-power-up"/);
 assert.match(gate, /Street[\s\S]*Power-Up\./);
+assert.match(gate, /data-guest-create-title-line=["']power-up["']/);
+assert.match(gate, /xl:whitespace-nowrap/);
+assert.match(gate, /order-2 lg:order-3["'] data-guest-create-action/);
 assert.match(gate, /A neon, drop-day direction built for designer-toy reveals/);
 assert.match(gate, /data-guest-create-sample/);
 assert.match(gate, /AutoPlayVideo/);
