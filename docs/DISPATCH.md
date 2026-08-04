@@ -1,22 +1,30 @@
 # Current dispatch
 
-There is no general feature-expansion dispatch.
+There is no general feature-expansion dispatch. Work only on the open item in
+`docs/STATUS.md`, from current `origin/main`, and within that item's acceptance
+criteria.
 
-Work only on an open item in `docs/STATUS.md`, from current `origin/main`, and
-within that issue's acceptance criteria. The order is fixed:
+The deployed surfaces are:
 
-1. Put current `main` on production after Vercel's 24-hour deployment limit
-   resets, then verify the guest Street Power-Up proof and the hard-closed
-   production health gate.
-2. Merge the exact auth-origin change, advance `codex/private-validation` to
-   that merged commit, and only then request a fresh protected-branch
-   deployment. Require `/api/health` to report
-   `privatePreviewReadiness.ready=true` with no missing requirements.
-3. After the dedicated FAL account has enough balance for one job, complete one
-   authenticated owned-photo Street Power-Up result with private
-   recovery and owner-only download, then prove one 10-credit settlement.
+- Production: `https://pikbo.ai`, deployed and operator-verified.
+- Protected Preview: `https://pikbo-git-codex-private-validation-pi-kbo.vercel.app`,
+  deployed and operator-verified. Repeat `/api/health` probes are green with
+  `privatePreviewReadiness.ready=true` and no missing requirements.
+
+The order is fixed:
+
+1. Keep production hard-closed. Its deployed health contract remains
+   `validation`, `softLive=false`, and `paid=false`; public upload, Provider
+   spend, and Checkout stay disabled.
+2. Keep the protected Preview on the green health gate while the dedicated FAL
+   account is funded. The current FAL balance is `$0.00` (operator-observed),
+   and no Provider call, upload, or debit has occurred.
+3. After the balance gate clears, use the owner Magic Link and complete one
+   private Street Power-Up result at `9:16`, 5 seconds, and 720p. Verify
+   private recovery and owner-only download before considering any broader
+   generation or billing proof.
 4. Prove retry, accounting, and privacy behavior.
-5. Rehearse Stripe in test mode only after the product loop passes.
+5. Rehearse Stripe in test mode only after the single-Moment loop passes.
 
 Do not create a new surface, model catalog, Pack, growth lane, or architecture
 project while these items remain incomplete.
