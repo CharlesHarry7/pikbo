@@ -30,7 +30,7 @@ Requires **all** of:
 |---|---|
 | `PIKBO_ACCEPTANCE_MODE=real` | Enable real path |
 | `PIKBO_CONFIRM_PROVIDER_SPEND=I_UNDERSTAND_ONE_TOY_MOMENT_V1_SPEND` | Explicit spend confirmation |
-| `PIKBO_ACCEPTANCE_BASE_URL` | Private Preview `https://…` host (not `pikbo.ai`) |
+| `PIKBO_ACCEPTANCE_BASE_URL` | **Exact** protected Preview origin only: `https://pikbo-git-codex-private-validation-pi-kbo.vercel.app` (hostile hosts and `pikbo.ai` are rejected) |
 | `PIKBO_ACCEPTANCE_SESSION_COOKIE` | Operator browser session cookie for the invited owner |
 | `PIKBO_ACCEPTANCE_IMAGE_PATH` | Local path to an **owned** toy photo (jpg/png/webp) |
 | `PIKBO_ACCEPTANCE_SKU_LABEL` | Optional SKU label (default `operator-one-sku`) |
@@ -38,11 +38,17 @@ Requires **all** of:
 ```bash
 PIKBO_ACCEPTANCE_MODE=real \
 PIKBO_CONFIRM_PROVIDER_SPEND=I_UNDERSTAND_ONE_TOY_MOMENT_V1_SPEND \
-PIKBO_ACCEPTANCE_BASE_URL='https://pikbo-git-…vercel.app' \
+PIKBO_ACCEPTANCE_BASE_URL='https://pikbo-git-codex-private-validation-pi-kbo.vercel.app' \
 PIKBO_ACCEPTANCE_SESSION_COOKIE='…' \
 PIKBO_ACCEPTANCE_IMAGE_PATH='/path/to/owned-toy.jpg' \
 npm run private-moment-acceptance
 ```
+
+`PASS_ONE_SKU_REAL` requires the generate response to be non-demo
+(`demo !== true`), `processedUpload === true`, `privateResult === true`, with a
+controlled `/api/downloads/…` URL, plus a Library row that is `status=succeeded`,
+`owned=true`, `downloadAllowed=true`, and a durable private listing mode.
+Cached/demo responses never count as PASS.
 
 Flow (bounded):
 

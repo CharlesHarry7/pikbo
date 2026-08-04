@@ -38,6 +38,13 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const SPEND_CONFIRMATION_PHRASE =
   "I_UNDERSTAND_ONE_TOY_MOMENT_V1_SPEND";
 
+/**
+ * Only the documented protected Preview may receive the operator session cookie.
+ * Matches docs/STATUS.md and docs/evidence/PRIVATE_VALIDATION_ACTIVATION_*.
+ */
+export const PROTECTED_PREVIEW_ORIGIN =
+  "https://pikbo-git-codex-private-validation-pi-kbo.vercel.app";
+
 /** Fixed Founding Studio Moment contract — server re-verifies every field. */
 export const FIXED_MOMENT_CONTRACT = Object.freeze({
   productContract: "toy-moment-v1",
@@ -65,17 +72,154 @@ const PROVIDER_URL_RE =
 const STORAGE_HOST_RE =
   /(?:^|\.)supabase\.co$|(?:^|\.)fal\.ai$|(?:^|\.)fal\.run$|(?:^|\.)googleapis\.com$/i;
 
-export function resolveMode(env = process.env) {
+/**
+ * Resolve acceptance mode without throwing. Invalid values return
+ * `{ mode: "invalid", raw }` so CLI exception paths never re-parse env.
+ */
+export function parseMode(env = process.env) {
   const raw = String(env.PIKBO_ACCEPTANCE_MODE || "dry-run")
     .trim()
     .toLowerCase();
   if (raw === "" || raw === "dry-run" || raw === "default" || raw === "plan") {
-    return "dry-run";
+    return { mode: "dry-run", raw: raw || "dry-run" };
   }
-  if (raw === "real") return "real";
-  throw new Error(
-    `PIKBO_ACCEPTANCE_MODE must be dry-run (default) or real; got ${raw}`
+  if (raw === "real") return { mode: "real", raw };
+  return { mode: "invalid", raw };
+}
+
+export function resolveMode(env = process.env) {
+  const parsed = parseMode(env);
+  if (parsed.mode === "invalid") {
+    throw new Error(
+      `PIKBO_ACCEPTANCE_MODE must be dry-run (default) or real; got ${parsed.raw}`
+    );
+  }
+  return parsed.mode;
+}
+
+/** Exact protected Preview origin only — rejects production and hostile hosts. */
+export function assertAllowedAcceptanceOrigin(rawUrl) {
+  const url = new URL(rawUrl);
+  assert.equal(url.protocol, "https:", "Real mode requires https base URL");
+  assert.equal(url.username, "", "Base URL credentials are forbidden");
+  assert.equal(url.password, "", "Base URL credentials are forbidden");
+  assert.equal(
+    url.origin,
+    PROTECTED_PREVIEW_ORIGIN,
+    `Real mode allows only the protected Preview origin ${PROTECTED_PREVIEW_ORIGIN}`
   );
+  assert.ok(
+    url.hostname !== "pikbo.ai" && url.hostname !== "www.pikbo.ai",
+    "Production host is forbidden for real acceptance"
+  );
+  return url;
+}
+
+/**
+ * Live generate success must be non-demo, private, processed fixed-contract output.
+ * Cached/demo responses must never become PASS_ONE_SKU_REAL.
+ */
+export function assertLiveGenerateSuccess(generated, httpOk) {
+  if (!httpOk) {
+    return {
+      ok: false,
+      code:
+        typeof generated?.code === "string" ? generated.code : "GENERATE_FAILED",
+      reason: "http_not_ok",
+    };
+  }
+  if (!generated || typeof generated !== "object") {
+    return { ok: false, code: "GENERATE_EMPTY", reason: "empty_body" };
+  }
+  if (generated.demo === true) {
+    return { ok: false, code: "DEMO_RESULT_REJECTED", reason: "demo_true" };
+  }
+  if (generated.processedUpload !== true) {
+    return {
+      ok: false,
+      code: "UPLOAD_NOT_PROCESSED",
+      reason: "processedUpload_not_true",
+    };
+  }
+  if (generated.privateResult !== true) {
+    return {
+      ok: false,
+      code: "PRIVATE_RESULT_REQUIRED",
+      reason: "privateResult_not_true",
+    };
+  }
+  if (generated.uploadIgnored === true) {
+    return {
+      ok: false,
+      code: "UPLOAD_IGNORED",
+      reason: "uploadIgnored_true",
+    };
+  }
+  const videoUrl =
+    typeof generated.videoUrl === "string" ? generated.videoUrl : "";
+  if (!videoUrl.startsWith("/api/downloads/")) {
+    return {
+      ok: false,
+      code: "UNSAFE_OR_CACHED_VIDEO_URL",
+      reason: "videoUrl_not_owner_download",
+    };
+  }
+  // Reject demo catalog paths even if other flags were forged.
+  if (videoUrl.startsWith("/demos/") || /\/demos\//.test(videoUrl)) {
+    return {
+      ok: false,
+      code: "DEMO_CATALOG_URL",
+      reason: "demo_catalog_video",
+    };
+  }
+  const jobId =
+    (typeof generated.jobId === "string" && generated.jobId) ||
+    (typeof generated.requestId === "string" && generated.requestId) ||
+    null;
+  if (!jobId || jobId.length < 8) {
+    return { ok: false, code: "JOB_ID_MISSING", reason: "job_id_missing" };
+  }
+  return { ok: true, jobId, videoUrl };
+}
+
+/**
+ * Library row must be a durable owner result: succeeded, owned, downloadable,
+ * non-demo, controlled download path.
+ */
+export function assertDurableOwnedLibraryRow(listed, jobId) {
+  if (!listed || typeof listed !== "object") {
+    return { ok: false, reason: "not_listed" };
+  }
+  if (listed.status !== "succeeded") {
+    return { ok: false, reason: "status_not_succeeded" };
+  }
+  if (listed.owned !== true) {
+    return { ok: false, reason: "owned_not_true" };
+  }
+  if (listed.downloadAllowed !== true) {
+    return { ok: false, reason: "downloadAllowed_not_true" };
+  }
+  if (listed.demo === true) {
+    return { ok: false, reason: "demo_true" };
+  }
+  const videoUrl = typeof listed.videoUrl === "string" ? listed.videoUrl : "";
+  if (!videoUrl.startsWith("/api/downloads/")) {
+    return { ok: false, reason: "videoUrl_not_controlled" };
+  }
+  const matchesJob =
+    listed.id === jobId ||
+    listed.requestId === jobId ||
+    videoUrl.includes(encodeURIComponent(jobId)) ||
+    videoUrl.includes(jobId);
+  if (!matchesJob) {
+    return { ok: false, reason: "job_mismatch" };
+  }
+  // Durable private listing signals (Library route sets durable mode when
+  // private rows exist; row itself should not be process-memory-only demo).
+  if (listed.durable === false) {
+    return { ok: false, reason: "durable_false" };
+  }
+  return { ok: true, videoUrl };
 }
 
 export function assertRealModeGates(env = process.env) {
@@ -97,16 +241,7 @@ export function assertRealModeGates(env = process.env) {
 
   const baseUrl = String(env.PIKBO_ACCEPTANCE_BASE_URL || "").trim();
   assert.ok(baseUrl, "PIKBO_ACCEPTANCE_BASE_URL is required in real mode");
-  const url = new URL(baseUrl);
-  assert.equal(url.protocol, "https:", "Real mode requires https base URL");
-  assert.equal(url.username, "", "Base URL credentials are forbidden");
-  assert.equal(url.password, "", "Base URL credentials are forbidden");
-  // Production apex hard-block. Private Preview hosts (*.vercel.app) are the
-  // intended target; other https hosts remain operator responsibility.
-  assert.ok(
-    url.hostname !== "pikbo.ai" && url.hostname !== "www.pikbo.ai",
-    "Production host is forbidden for real acceptance"
-  );
+  const url = assertAllowedAcceptanceOrigin(baseUrl);
 
   const cookie = String(env.PIKBO_ACCEPTANCE_SESSION_COOKIE || "").trim();
   assert.ok(
@@ -121,7 +256,7 @@ export function assertRealModeGates(env = process.env) {
   );
 
   return {
-    baseUrl: url.origin + (url.pathname === "/" ? "" : url.pathname.replace(/\/$/, "")),
+    baseUrl: url.origin,
     origin: url.origin,
     cookie,
     imagePath,
@@ -233,6 +368,10 @@ export function sanitizeEvidence(value, keyHint = "") {
     ) {
       return "/api/downloads/[job]";
     }
+    // Exact allowlisted Preview origin may appear as a gate constant (no cookie/path).
+    if (value === PROTECTED_PREVIEW_ORIGIN || value === `${PROTECTED_PREVIEW_ORIGIN}/`) {
+      return PROTECTED_PREVIEW_ORIGIN;
+    }
     // Absolute / data URLs are redacted to host-only markers (no signed query).
     if (
       value.startsWith("http://") ||
@@ -298,6 +437,9 @@ export function buildDryRunEvidence() {
       requiresOwnedImagePath: true,
       maxGenerateCalls: MAX_GENERATE_CALLS,
       productionHostForbidden: true,
+      allowedOrigin: PROTECTED_PREVIEW_ORIGIN,
+      requiresNonDemoPrivateProcessed: true,
+      requiresOwnedDurableLibraryRow: true,
     },
     verdict: "PASS_DRY_RUN_NO_SPEND",
     note:
@@ -397,18 +539,36 @@ export async function runRealAcceptance(options) {
     now = () => new Date().toISOString(),
   } = options;
 
+  // Defense in depth: never attach a cookie to a non-allowlisted origin even if
+  // a caller constructs runRealAcceptance directly in tests or ops scripts.
+  assertAllowedAcceptanceOrigin(origin || baseUrl);
+  assert.equal(
+    new URL(baseUrl).origin,
+    PROTECTED_PREVIEW_ORIGIN,
+    `Real acceptance baseUrl must be ${PROTECTED_PREVIEW_ORIGIN}`
+  );
+
   const audit = createNetworkAudit();
   const guarded =
     fetchImpl ||
-    createGuardedFetch(origin, cookie, audit);
+    createGuardedFetch(PROTECTED_PREVIEW_ORIGIN, cookie, audit);
 
   // If caller injects fetchImpl, still bound their counts when they use audit.
   const track = async (url, init) => {
     if (fetchImpl) {
-      const target = new URL(url, origin);
-      const kind = classifyApiPath(target.pathname);
-      // Storage PUTs on non-operator hosts still count as uploadPut.
+      const target = new URL(url, PROTECTED_PREVIEW_ORIGIN);
+      // Mocks may only target the protected Preview API or storage PUT hosts.
       const method = String(init?.method || "GET").toUpperCase();
+      const isStoragePut =
+        method === "PUT" &&
+        (STORAGE_HOST_RE.test(target.hostname) ||
+          target.pathname.includes("/storage/v1/object/"));
+      if (target.origin !== PROTECTED_PREVIEW_ORIGIN && !isStoragePut) {
+        throw new Error(
+          `Third-party network request forbidden: ${target.hostname}`
+        );
+      }
+      const kind = classifyApiPath(target.pathname);
       const finalKind =
         method === "PUT" && !target.pathname.startsWith("/api/")
           ? "uploadPut"
@@ -550,25 +710,24 @@ export async function runRealAcceptance(options) {
     body: JSON.stringify(payload),
   });
   const generated = await readJsonSafe(generateRes);
-  const jobId =
-    (typeof generated.jobId === "string" && generated.jobId) ||
-    (typeof generated.requestId === "string" && generated.requestId) ||
-    null;
-  const generateOk =
-    generateRes.ok &&
-    typeof generated.videoUrl === "string" &&
-    generated.videoUrl.length > 0;
+  const liveCheck = assertLiveGenerateSuccess(generated, generateRes.ok);
 
-  if (!generateOk) {
+  if (!liveCheck.ok) {
     return sanitizeEvidence({
       schemaVersion: 1,
       mode: "real",
       stage: "generate",
       verdict: "FAIL",
       httpStatus: generateRes.status,
-      code:
-        typeof generated.code === "string" ? generated.code : "GENERATE_FAILED",
+      code: liveCheck.code,
+      reason: liveCheck.reason,
       productContract: FIXED_MOMENT_CONTRACT.productContract,
+      generate: {
+        ok: false,
+        demo: generated.demo === true,
+        processedUpload: generated.processedUpload === true,
+        privateResult: generated.privateResult === true,
+      },
       spend: {
         confirmed: true,
         // One generate attempt may or may not have reached the provider;
@@ -581,34 +740,39 @@ export async function runRealAcceptance(options) {
     });
   }
 
-  // 5) Library refresh — owner listing must include the job with controlled download path.
+  const jobId = liveCheck.jobId;
+
+  // 5) Library refresh — durable owner row only.
   const libraryRes = await track(`${baseUrl}/api/generations`, {
     method: "GET",
     headers: { "content-type": "application/json" },
   });
   const library = await readJsonSafe(libraryRes);
   const jobs = Array.isArray(library.jobs) ? library.jobs : [];
-  const listed = jobId
-    ? jobs.find(
-        (job) =>
-          job &&
-          (job.id === jobId ||
-            job.requestId === jobId ||
-            (typeof job.videoUrl === "string" &&
-              job.videoUrl.includes(encodeURIComponent(jobId))))
-      )
-    : null;
+  const listed = jobs.find(
+    (job) =>
+      job &&
+      (job.id === jobId ||
+        job.requestId === jobId ||
+        (typeof job.videoUrl === "string" &&
+          (job.videoUrl.includes(encodeURIComponent(jobId)) ||
+            job.videoUrl.includes(jobId))))
+  );
+  const libraryRow = assertDurableOwnedLibraryRow(listed, jobId);
+  const libraryModeOk =
+    library.durable === true ||
+    (typeof library.mode === "string" &&
+      library.mode.includes("supabase-private"));
   const libraryOk =
     libraryRes.ok &&
     library.ok === true &&
-    Boolean(listed) &&
-    typeof listed.videoUrl === "string" &&
-    listed.videoUrl.startsWith("/api/downloads/");
+    libraryRow.ok &&
+    libraryModeOk;
 
   // 6) Owner-only download check (HEAD preferred; fall back to GET without body log).
   let downloadOk = false;
   let downloadStatus = 0;
-  if (jobId) {
+  if (libraryOk) {
     const downloadUrl = `${baseUrl}/api/downloads/${encodeURIComponent(jobId)}`;
     let downloadRes = await track(downloadUrl, { method: "HEAD" });
     if (downloadRes.status === 405 || downloadRes.status === 501) {
@@ -653,18 +817,21 @@ export async function runRealAcceptance(options) {
     generate: {
       ok: true,
       httpStatus: generateRes.status,
-      demo: generated.demo === true,
-      processedUpload: generated.processedUpload === true,
-      hasControlledVideoUrl:
-        typeof generated.videoUrl === "string" &&
-        (generated.videoUrl.startsWith("/api/downloads/") ||
-          generated.videoUrl.startsWith("/demos/")),
+      demo: false,
+      processedUpload: true,
+      privateResult: true,
+      hasControlledVideoUrl: true,
     },
     library: {
       ok: libraryOk,
       listed: Boolean(listed),
-      downloadPathControlled: libraryOk,
+      owned: listed?.owned === true,
+      downloadAllowed: listed?.downloadAllowed === true,
+      statusSucceeded: listed?.status === "succeeded",
+      durableListing: libraryModeOk,
+      downloadPathControlled: libraryRow.ok === true,
       httpStatus: libraryRes.status,
+      reason: libraryRow.ok ? undefined : libraryRow.reason,
     },
     download: {
       ok: downloadOk,
@@ -685,8 +852,23 @@ export async function runRealAcceptance(options) {
   });
 }
 
+/**
+ * @returns {Promise<{ mode: string, evidence: object, ok: boolean }>}
+ * Does not set process.exitCode when imported (regression-safe).
+ */
 export async function main(env = process.env) {
-  const mode = resolveMode(env);
+  const parsed = parseMode(env);
+  if (parsed.mode === "invalid") {
+    const evidence = sanitizeEvidence({
+      schemaVersion: 1,
+      mode: "invalid",
+      verdict: "FAIL_INVALID_MODE",
+      error: "PIKBO_ACCEPTANCE_MODE must be dry-run (default) or real",
+    });
+    console.error(JSON.stringify(evidence, null, 2));
+    return { mode: "invalid", evidence, ok: false };
+  }
+  const mode = parsed.mode;
   if (mode === "dry-run") {
     const evidence = buildDryRunEvidence();
     assertDryRunNoSpend(evidence.network);
@@ -694,7 +876,7 @@ export async function main(env = process.env) {
     console.log(
       "private-moment-acceptance-harness: PASS (dry-run · zero network · zero spend)"
     );
-    return { mode, evidence };
+    return { mode, evidence, ok: true };
   }
 
   const gates = assertRealModeGates(env);
@@ -704,13 +886,12 @@ export async function main(env = process.env) {
     console.log(
       "private-moment-acceptance-harness: PASS (real · one toy-moment-v1 · sanitized evidence)"
     );
-    return { mode, evidence };
+    return { mode, evidence, ok: true };
   }
   console.error(
     `private-moment-acceptance-harness: FAIL (${evidence.stage || "unknown"} · ${evidence.verdict})`
   );
-  process.exitCode = 1;
-  return { mode, evidence };
+  return { mode, evidence, ok: false };
 }
 
 function isCliEntry() {
@@ -719,21 +900,27 @@ function isCliEntry() {
 }
 
 if (isCliEntry()) {
-  main().catch((error) => {
-    const message = error instanceof Error ? error.message : String(error);
-    // Never print raw env, cookies, or stack frames that might embed them.
-    console.error(
-      JSON.stringify(
-        sanitizeEvidence({
-          schemaVersion: 1,
-          mode: resolveMode(process.env),
-          verdict: "FAIL_EXCEPTION",
-          error: message.slice(0, 200),
-        }),
-        null,
-        2
-      )
-    );
-    process.exitCode = 1;
-  });
+  main()
+    .then((result) => {
+      if (!result.ok) process.exitCode = 1;
+    })
+    .catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      // Never re-invoke resolveMode here — invalid mode is handled in main(),
+      // and re-parsing can throw a second time and leak un-sanitized stacks.
+      const parsed = parseMode(process.env);
+      console.error(
+        JSON.stringify(
+          sanitizeEvidence({
+            schemaVersion: 1,
+            mode: parsed.mode === "invalid" ? "invalid" : parsed.mode,
+            verdict: "FAIL_EXCEPTION",
+            error: message.slice(0, 200),
+          }),
+          null,
+          2
+        )
+      );
+      process.exitCode = 1;
+    });
 }
