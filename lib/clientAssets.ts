@@ -18,6 +18,160 @@ export type RecentPrivateToyAsset = {
 };
 
 /**
+ * Stable key for owner-bound recent reuse. Null when private capability is
+ * closed or the session has no auth id — never load or keep recent state then.
+ */
+export function privateRecentOwnerKey(input: {
+  privateUploadEnabled: boolean;
+  ownerUserId?: string | null;
+}): string | null {
+  if (!input.privateUploadEnabled) return null;
+  const id =
+    typeof input.ownerUserId === "string" ? input.ownerUserId.trim() : "";
+  return id.length > 0 ? id : null;
+}
+
+/** How the current Create still was chosen (privacy clear only touches recent). */
+export type RecentSelectionSource = "recent" | "upload" | "lab" | "other";
+
+/**
+ * Plan state clear when the active owner key changes (A→B or capability off).
+ * Only recent-reuse selection is cleared; local new uploads are left alone.
+ */
+export function planRecentOwnerTransition(input: {
+  prevOwnerKey: string | null;
+  nextOwnerKey: string | null;
+  selectionSource: RecentSelectionSource | null;
+}): {
+  ownerChanged: boolean;
+  clearRecentList: boolean;
+  clearRecentThumbs: boolean;
+  revokeThumbUrls: boolean;
+  clearRecentSelection: boolean;
+  bumpLoadGeneration: boolean;
+  bumpSelectionToken: boolean;
+} {
+  const ownerChanged = input.prevOwnerKey !== input.nextOwnerKey;
+  if (!ownerChanged) {
+    return {
+      ownerChanged: false,
+      clearRecentList: false,
+      clearRecentThumbs: false,
+      revokeThumbUrls: false,
+      clearRecentSelection: false,
+      bumpLoadGeneration: false,
+      bumpSelectionToken: false,
+    };
+  }
+  return {
+    ownerChanged: true,
+    clearRecentList: true,
+    clearRecentThumbs: true,
+    revokeThumbUrls: true,
+    clearRecentSelection: input.selectionSource === "recent",
+    bumpLoadGeneration: true,
+    bumpSelectionToken: true,
+  };
+}
+
+/** Accept a recent-list async result only for the still-active owner + generation. */
+export function shouldCommitRecentList(input: {
+  requestOwnerKey: string;
+  currentOwnerKey: string | null;
+  requestGeneration: number;
+  currentGeneration: number;
+}): boolean {
+  return (
+    typeof input.requestOwnerKey === "string" &&
+    input.requestOwnerKey.length > 0 &&
+    input.currentOwnerKey === input.requestOwnerKey &&
+    input.requestGeneration === input.currentGeneration
+  );
+}
+
+/**
+ * Accept a selected-asset preview only when owner + assetId + selection token
+ * still match (blocks A→B out-of-order preview completion).
+ */
+export function shouldCommitRecentPreview(input: {
+  requestOwnerKey: string;
+  currentOwnerKey: string | null;
+  requestAssetId: string;
+  currentAssetId: string | null;
+  requestSelectionToken: number;
+  currentSelectionToken: number;
+}): boolean {
+  return (
+    typeof input.requestOwnerKey === "string" &&
+    input.requestOwnerKey.length > 0 &&
+    input.currentOwnerKey === input.requestOwnerKey &&
+    input.currentAssetId === input.requestAssetId &&
+    input.requestSelectionToken === input.currentSelectionToken
+  );
+}
+
+/**
+ * Load recent assets, then commit only if the owner/generation is still current.
+ * Used by Create and by executable race regressions.
+ */
+export async function applyRecentListLoad<T>(input: {
+  requestOwnerKey: string;
+  requestGeneration: number;
+  getCurrent: () => { ownerKey: string | null; generation: number };
+  load: () => Promise<T>;
+  onCommit: (assets: T) => void;
+}): Promise<"committed" | "stale"> {
+  const assets = await input.load();
+  const cur = input.getCurrent();
+  if (
+    !shouldCommitRecentList({
+      requestOwnerKey: input.requestOwnerKey,
+      currentOwnerKey: cur.ownerKey,
+      requestGeneration: input.requestGeneration,
+      currentGeneration: cur.generation,
+    })
+  ) {
+    return "stale";
+  }
+  input.onCommit(assets);
+  return "committed";
+}
+
+/**
+ * Resolve a recent-asset preview, then commit only if selection is still current.
+ */
+export async function applyRecentPreviewResolution(input: {
+  requestOwnerKey: string;
+  requestAssetId: string;
+  requestSelectionToken: number;
+  getCurrent: () => {
+    ownerKey: string | null;
+    assetId: string | null;
+    selectionToken: number;
+  };
+  resolvePreview: () => Promise<string | null>;
+  onCommit: (previewUrl: string) => void;
+}): Promise<"committed" | "stale" | "empty"> {
+  const previewUrl = await input.resolvePreview();
+  const cur = input.getCurrent();
+  if (
+    !shouldCommitRecentPreview({
+      requestOwnerKey: input.requestOwnerKey,
+      currentOwnerKey: cur.ownerKey,
+      requestAssetId: input.requestAssetId,
+      currentAssetId: cur.assetId,
+      requestSelectionToken: input.requestSelectionToken,
+      currentSelectionToken: cur.selectionToken,
+    })
+  ) {
+    return "stale";
+  }
+  if (!previewUrl) return "empty";
+  input.onCommit(previewUrl);
+  return "committed";
+}
+
+/**
  * Load the signed-in owner's newest ready private toy photos.
  * Call only when private upload capability is already open on the client.
  */

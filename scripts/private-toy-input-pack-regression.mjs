@@ -217,11 +217,15 @@ assert.match(clientAssets, /fetchRecentPrivateToyAssets/);
 assert.match(clientAssets, /\/api\/assets\/recent/);
 assert.match(clientAssets, /resolvePrivateToyAssetPreviewUrl/);
 assert.match(clientAssets, /previewPath\.startsWith\("\/api\/assets\/"\)/);
-// CreateStudio: only when privateUploadEnabled; public guests never request recent API.
+// CreateStudio: owner-key bound recent load; public guests never request recent API.
 assert.match(createStudio, /fetchRecentPrivateToyAssets/);
 assert.match(createStudio, /adoptRecentPrivateAsset/);
-assert.match(createStudio, /privateUploadEnabled/);
-assert.match(createStudio, /if \(!privateUploadEnabled\)/);
+assert.match(createStudio, /privateRecentOwnerKey/);
+assert.match(createStudio, /planRecentOwnerTransition/);
+assert.match(createStudio, /applyRecentListLoad/);
+assert.match(createStudio, /applyRecentPreviewResolution/);
+assert.match(createStudio, /session\?\.auth\?\.id/);
+assert.match(createStudio, /recentOwnerKey/);
 assert.match(createStudio, /setAssetId\(asset\.id\)/);
 assert.match(createStudio, /Use a recent verified photo/);
 assert.match(createStudio, /data-recent-private-assets/);
@@ -229,14 +233,18 @@ assert.match(createStudio, /no re-upload/);
 // Selecting recent must not call registerLocalAsset / re-upload path.
 const adoptRecentSlice = createStudio.slice(
   createStudio.indexOf("adoptRecentPrivateAsset"),
-  createStudio.indexOf("adoptRecentPrivateAsset") + 1800
+  createStudio.indexOf("adoptRecentPrivateAsset") + 2200
 );
 assert.match(adoptRecentSlice, /setAssetId\(asset\.id\)/);
+assert.match(adoptRecentSlice, /applyRecentPreviewResolution/);
 assert.doesNotMatch(adoptRecentSlice, /registerLocalAsset|registerPrivateToyAsset/);
 assert.doesNotMatch(adoptRecentSlice, /upload-url|\/api\/assets\/complete/);
 // Public path still Lab-only (no recent selector outside privateUploadEnabled).
 assert.match(createStudio, /privateUploadEnabled \? \(/);
 assert.match(createStudio, /data-public-single-preview="lab-only"/);
+// Owner-switch clears recent selection only; local upload source preserved by plan.
+assert.match(createStudio, /selectionSource: recentSelectionSourceRef\.current/);
+assert.match(createStudio, /clearRecentSelection/);
 
 const reserveAdapter = functionSource(
   supabaseStore,
@@ -391,4 +399,213 @@ assert.equal(completeAttempts, 4);
 assert.equal(new Set(clientKeys).size, 1, "same image + SKU must replay one clientAssetKey");
 assert.match(clientKeys[0], /^input:[0-9a-f]{64}$/);
 
-console.log("private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery)");
+// --- Executable privacy race contracts (not keyword-only) ---
+const {
+  privateRecentOwnerKey: ownerKeyOf,
+  planRecentOwnerTransition: planOwnerTransition,
+  shouldCommitRecentList,
+  shouldCommitRecentPreview,
+  applyRecentListLoad,
+  applyRecentPreviewResolution,
+} = clientModule;
+
+assert.equal(
+  ownerKeyOf({ privateUploadEnabled: false, ownerUserId: "owner-a" }),
+  null,
+  "public / capability-off never yields an owner key"
+);
+assert.equal(
+  ownerKeyOf({ privateUploadEnabled: true, ownerUserId: null }),
+  null
+);
+assert.equal(
+  ownerKeyOf({ privateUploadEnabled: true, ownerUserId: "owner-a" }),
+  "owner-a"
+);
+
+const staySame = planOwnerTransition({
+  prevOwnerKey: "owner-a",
+  nextOwnerKey: "owner-a",
+  selectionSource: "recent",
+});
+assert.equal(staySame.ownerChanged, false);
+assert.equal(staySame.clearRecentList, false);
+assert.equal(staySame.clearRecentSelection, false);
+
+const aToBRecent = planOwnerTransition({
+  prevOwnerKey: "owner-a",
+  nextOwnerKey: "owner-b",
+  selectionSource: "recent",
+});
+assert.equal(aToBRecent.ownerChanged, true);
+assert.equal(aToBRecent.clearRecentList, true);
+assert.equal(aToBRecent.clearRecentThumbs, true);
+assert.equal(aToBRecent.revokeThumbUrls, true);
+assert.equal(aToBRecent.clearRecentSelection, true);
+assert.equal(aToBRecent.bumpLoadGeneration, true);
+assert.equal(aToBRecent.bumpSelectionToken, true);
+
+const aToBUpload = planOwnerTransition({
+  prevOwnerKey: "owner-a",
+  nextOwnerKey: "owner-b",
+  selectionSource: "upload",
+});
+assert.equal(
+  aToBUpload.clearRecentSelection,
+  false,
+  "owner switch must not wipe local new-upload selection"
+);
+assert.equal(aToBUpload.clearRecentList, true);
+
+const capabilityOff = planOwnerTransition({
+  prevOwnerKey: "owner-a",
+  nextOwnerKey: null,
+  selectionSource: "recent",
+});
+assert.equal(capabilityOff.clearRecentSelection, true);
+assert.equal(capabilityOff.clearRecentList, true);
+
+// Owner A→B: stale list response from A must not commit over B.
+{
+  let currentOwner = "owner-a";
+  let generation = 1;
+  let committed = null;
+  let resolveA;
+  const loadA = new Promise((resolve) => {
+    resolveA = resolve;
+  });
+  const stalePromise = applyRecentListLoad({
+    requestOwnerKey: "owner-a",
+    requestGeneration: 1,
+    getCurrent: () => ({ ownerKey: currentOwner, generation }),
+    load: () => loadA,
+    onCommit: (assets) => {
+      committed = assets;
+    },
+  });
+  // Switch to B and bump generation before A resolves.
+  currentOwner = "owner-b";
+  generation = 2;
+  let committedB = null;
+  const bPromise = applyRecentListLoad({
+    requestOwnerKey: "owner-b",
+    requestGeneration: 2,
+    getCurrent: () => ({ ownerKey: currentOwner, generation }),
+    load: async () => [{ id: "asset-b" }],
+    onCommit: (assets) => {
+      committedB = assets;
+    },
+  });
+  resolveA([{ id: "asset-a-stale" }]);
+  assert.equal(await stalePromise, "stale");
+  assert.equal(committed, null, "owner A stale list must not write after A→B");
+  assert.equal(await bPromise, "committed");
+  assert.deepEqual(committedB, [{ id: "asset-b" }]);
+}
+
+assert.equal(
+  shouldCommitRecentList({
+    requestOwnerKey: "owner-a",
+    currentOwnerKey: "owner-b",
+    requestGeneration: 1,
+    currentGeneration: 1,
+  }),
+  false
+);
+assert.equal(
+  shouldCommitRecentList({
+    requestOwnerKey: "owner-b",
+    currentOwnerKey: "owner-b",
+    requestGeneration: 2,
+    currentGeneration: 2,
+  }),
+  true
+);
+
+// Fast select A then B: out-of-order preview completion must keep B only.
+{
+  let currentOwner = "owner-b";
+  let currentAssetId = null;
+  let selectionToken = 0;
+  let previewImage = null;
+  let resolvePreviewA;
+  const previewA = new Promise((resolve) => {
+    resolvePreviewA = resolve;
+  });
+
+  // Click A
+  selectionToken = 1;
+  currentAssetId = "asset-a";
+  const aPreviewJob = applyRecentPreviewResolution({
+    requestOwnerKey: "owner-b",
+    requestAssetId: "asset-a",
+    requestSelectionToken: 1,
+    getCurrent: () => ({
+      ownerKey: currentOwner,
+      assetId: currentAssetId,
+      selectionToken,
+    }),
+    resolvePreview: () => previewA,
+    onCommit: (url) => {
+      previewImage = url;
+    },
+  });
+
+  // Click B before A resolves
+  selectionToken = 2;
+  currentAssetId = "asset-b";
+  const bPreviewJob = applyRecentPreviewResolution({
+    requestOwnerKey: "owner-b",
+    requestAssetId: "asset-b",
+    requestSelectionToken: 2,
+    getCurrent: () => ({
+      ownerKey: currentOwner,
+      assetId: currentAssetId,
+      selectionToken,
+    }),
+    resolvePreview: async () => "preview-b",
+    onCommit: (url) => {
+      previewImage = url;
+    },
+  });
+
+  assert.equal(await bPreviewJob, "committed");
+  assert.equal(previewImage, "preview-b");
+  assert.equal(currentAssetId, "asset-b");
+
+  resolvePreviewA("preview-a-late");
+  assert.equal(await aPreviewJob, "stale");
+  assert.equal(
+    previewImage,
+    "preview-b",
+    "late A preview must not overwrite B"
+  );
+  assert.equal(currentAssetId, "asset-b");
+}
+
+assert.equal(
+  shouldCommitRecentPreview({
+    requestOwnerKey: "owner-b",
+    currentOwnerKey: "owner-b",
+    requestAssetId: "asset-a",
+    currentAssetId: "asset-b",
+    requestSelectionToken: 1,
+    currentSelectionToken: 2,
+  }),
+  false
+);
+assert.equal(
+  shouldCommitRecentPreview({
+    requestOwnerKey: "owner-b",
+    currentOwnerKey: "owner-b",
+    requestAssetId: "asset-b",
+    currentAssetId: "asset-b",
+    requestSelectionToken: 2,
+    currentSelectionToken: 2,
+  }),
+  true
+);
+
+console.log(
+  "private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery · owner-switch + selection race)"
+);

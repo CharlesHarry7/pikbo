@@ -92,7 +92,14 @@ import {
 } from "@/lib/toyIdentity";
 import { deliveryItemsForJob } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
-import type { RecentPrivateToyAsset } from "@/lib/clientAssets";
+import {
+  applyRecentListLoad,
+  applyRecentPreviewResolution,
+  privateRecentOwnerKey,
+  planRecentOwnerTransition,
+  type RecentPrivateToyAsset,
+  type RecentSelectionSource,
+} from "@/lib/clientAssets";
 
 type Status = "idle" | "uploading" | "generating" | "done" | "error";
 type Mode = "i2v" | "t2v";
@@ -256,6 +263,14 @@ export function CreateStudio({
   >({});
   const [recentAssetsLoading, setRecentAssetsLoading] = useState(false);
   const recentThumbUrlsRef = useRef<string[]>([]);
+  /** Bound to session.auth.id when private capability is open — never bool-only. */
+  const recentOwnerKeyRef = useRef<string | null>(null);
+  const recentLoadGenerationRef = useRef(0);
+  const recentSelectionTokenRef = useRef(0);
+  /** Tracks whether current still came from recent reuse (owner-switch clear only). */
+  const recentSelectionSourceRef = useRef<RecentSelectionSource | null>(null);
+  /** Mirrors selected assetId for race-safe preview commits (avoids stale setState). */
+  const recentSelectedAssetIdRef = useRef<string | null>(null);
   /** CD Phase B — natural size for rule-based Asset Brief */
   const [imageProbe, setImageProbe] = useState<ImageProbe | null>(null);
   /** True when still is PIKBO Lab prototype sample (not customer SKU) */
@@ -310,6 +325,15 @@ export function CreateStudio({
   const [session, setSession] = useState<MeResponse | null>(null);
   const [sessionResolved, setSessionResolved] = useState(false);
   const privateUploadEnabled = canUsePrivateLaunch(session);
+  /** Stable owner key for recent reuse; null for public / capability-closed. */
+  const recentOwnerKey = useMemo(
+    () =>
+      privateRecentOwnerKey({
+        privateUploadEnabled,
+        ownerUserId: session?.auth?.id ?? null,
+      }),
+    [privateUploadEnabled, session?.auth?.id]
+  );
   const fixedMomentNextPath = initialSource
     ? `${MOMENT_CREATE_HREF}&source=${encodeURIComponent(initialSource)}`
     : MOMENT_CREATE_HREF;
@@ -671,6 +695,17 @@ export function CreateStudio({
     window.history.replaceState({}, "", url.pathname + url.search);
   }, [initialRetryJobId, initialRetryToken]);
 
+  const revokeRecentThumbUrls = useCallback(() => {
+    for (const url of recentThumbUrlsRef.current) {
+      try {
+        if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+      } catch {
+        /* ignore */
+      }
+    }
+    recentThumbUrlsRef.current = [];
+  }, []);
+
   const adoptImage = useCallback(
     async (dataUrl: string, opts?: { labSample?: boolean }) => {
       if (!opts?.labSample && !privateUploadEnabled) {
@@ -679,6 +714,10 @@ export function CreateStudio({
         );
         return;
       }
+      // Local upload / Lab — not recent reuse (owner-switch must not wipe these).
+      recentSelectionSourceRef.current = opts?.labSample ? "lab" : "upload";
+      recentSelectionTokenRef.current += 1;
+      recentSelectedAssetIdRef.current = null;
       setImage(dataUrl);
       setAssetId(null);
       setImageProbe(null);
@@ -722,7 +761,10 @@ export function CreateStudio({
       try {
         const { registerLocalAsset } = await import("@/lib/clientAssets");
         const reg = await registerLocalAsset(dataUrl);
-        if (reg?.assetId) setAssetId(reg.assetId);
+        if (reg?.assetId) {
+          recentSelectedAssetIdRef.current = reg.assetId;
+          setAssetId(reg.assetId);
+        }
       } catch {
         /* generate still works with inline data URL */
       }
@@ -734,10 +776,16 @@ export function CreateStudio({
    * Reuse an already-verified private toy photo by assetId.
    * Does not re-upload, does not invent Base64 for generate, and never puts
    * signed URLs or object keys into the generate request.
+   * Selection token blocks out-of-order A→B preview commits.
    */
   const adoptRecentPrivateAsset = useCallback(
     async (asset: RecentPrivateToyAsset) => {
-      if (!privateUploadEnabled) return;
+      const ownerKey = recentOwnerKey;
+      if (!ownerKey) return;
+      recentSelectionSourceRef.current = "recent";
+      const selectionToken = recentSelectionTokenRef.current + 1;
+      recentSelectionTokenRef.current = selectionToken;
+      recentSelectedAssetIdRef.current = asset.id;
       setError(null);
       setLastUploadIgnored(false);
       setStatus("idle");
@@ -779,93 +827,192 @@ export function CreateStudio({
         const { resolvePrivateToyAssetPreviewUrl } = await import(
           "@/lib/clientAssets"
         );
-        const previewUrl = await resolvePrivateToyAssetPreviewUrl(
-          asset.previewPath
-        );
-        if (previewUrl) {
-          setImage(previewUrl);
-          if (previewUrl.startsWith("blob:")) {
-            recentThumbUrlsRef.current.push(previewUrl);
-          }
-          void probeImageSize(previewUrl).then((meta) => {
-            if (meta) setImageProbe(meta);
-          });
-        }
+        await applyRecentPreviewResolution({
+          requestOwnerKey: ownerKey,
+          requestAssetId: asset.id,
+          requestSelectionToken: selectionToken,
+          getCurrent: () => ({
+            ownerKey: recentOwnerKeyRef.current,
+            assetId: recentSelectedAssetIdRef.current,
+            selectionToken: recentSelectionTokenRef.current,
+          }),
+          resolvePreview: () =>
+            resolvePrivateToyAssetPreviewUrl(asset.previewPath),
+          onCommit: (previewUrl) => {
+            setImage(previewUrl);
+            if (previewUrl.startsWith("blob:")) {
+              recentThumbUrlsRef.current.push(previewUrl);
+            }
+            void probeImageSize(previewUrl).then((meta) => {
+              if (
+                recentOwnerKeyRef.current !== ownerKey ||
+                recentSelectedAssetIdRef.current !== asset.id ||
+                recentSelectionTokenRef.current !== selectionToken
+              ) {
+                return;
+              }
+              if (meta) setImageProbe(meta);
+            });
+          },
+        });
       } catch {
         /* assetId alone is enough for live generate; preview is best-effort */
       }
-      toast("Using a recent verified toy photo · no re-upload");
+      if (
+        recentOwnerKeyRef.current === ownerKey &&
+        recentSelectedAssetIdRef.current === asset.id &&
+        recentSelectionTokenRef.current === selectionToken
+      ) {
+        toast("Using a recent verified toy photo · no re-upload");
+      }
     },
-    [effect, privateUploadEnabled, recentAssetThumbs, toast]
+    [effect, recentAssetThumbs, recentOwnerKey, toast]
   );
 
-  // Owner-only: load recent ready private photos when private upload is open.
-  // Public / anonymous guests never request this API.
+  // Owner-key bound recent load: public never requests; A→B clears prior owner state.
   useEffect(() => {
-    if (!privateUploadEnabled) return;
+    const prevOwnerKey = recentOwnerKeyRef.current;
+    const nextOwnerKey = recentOwnerKey;
+    const plan = planRecentOwnerTransition({
+      prevOwnerKey,
+      nextOwnerKey,
+      selectionSource: recentSelectionSourceRef.current,
+    });
+
     const ac = new AbortController();
     let cancelled = false;
-    // Defer setState out of the effect body (same pattern as pending still hydrate).
+
+    // Defer setState (lint: no sync setState in effect body).
     const t = window.setTimeout(() => {
       if (cancelled) return;
+
+      if (plan.ownerChanged) {
+        recentOwnerKeyRef.current = nextOwnerKey;
+        if (plan.bumpLoadGeneration) {
+          recentLoadGenerationRef.current += 1;
+        }
+        if (plan.bumpSelectionToken) {
+          recentSelectionTokenRef.current += 1;
+        }
+        if (plan.revokeThumbUrls) {
+          revokeRecentThumbUrls();
+        }
+        if (plan.clearRecentList) {
+          setRecentPrivateAssets([]);
+        }
+        if (plan.clearRecentThumbs) {
+          setRecentAssetThumbs({});
+        }
+        setRecentAssetsLoading(false);
+        if (plan.clearRecentSelection) {
+          recentSelectionSourceRef.current = null;
+          recentSelectedAssetIdRef.current = null;
+          setAssetId(null);
+          setImage(null);
+          setImageProbe(null);
+        }
+      } else {
+        recentOwnerKeyRef.current = nextOwnerKey;
+      }
+
+      // Capability closed or no auth id — never request the recent API.
+      if (!nextOwnerKey) return;
+
+      const requestOwnerKey = nextOwnerKey;
+      const requestGeneration = recentLoadGenerationRef.current + 1;
+      recentLoadGenerationRef.current = requestGeneration;
       setRecentAssetsLoading(true);
+
       void (async () => {
         try {
           const {
             fetchRecentPrivateToyAssets,
             resolvePrivateToyAssetPreviewUrl,
           } = await import("@/lib/clientAssets");
-          const assets = await fetchRecentPrivateToyAssets({
-            limit: 8,
-            signal: ac.signal,
+
+          let loadedAssets: RecentPrivateToyAsset[] = [];
+          const commitStatus = await applyRecentListLoad({
+            requestOwnerKey,
+            requestGeneration,
+            getCurrent: () => ({
+              ownerKey: recentOwnerKeyRef.current,
+              generation: recentLoadGenerationRef.current,
+            }),
+            load: async () => {
+              loadedAssets = await fetchRecentPrivateToyAssets({
+                limit: 8,
+                signal: ac.signal,
+              });
+              return loadedAssets;
+            },
+            onCommit: (assets) => {
+              setRecentPrivateAssets(assets);
+            },
           });
-          if (cancelled) return;
-          setRecentPrivateAssets(assets);
+          if (commitStatus === "stale" || cancelled) return;
+
           const thumbs: Record<string, string> = {};
           await Promise.all(
-            assets.slice(0, 6).map(async (asset) => {
+            loadedAssets.slice(0, 6).map(async (asset) => {
               const url = await resolvePrivateToyAssetPreviewUrl(
                 asset.previewPath,
                 { signal: ac.signal }
               );
-              if (url && !cancelled) {
-                thumbs[asset.id] = url;
-                if (url.startsWith("blob:")) {
-                  recentThumbUrlsRef.current.push(url);
-                }
+              if (
+                !url ||
+                cancelled ||
+                recentOwnerKeyRef.current !== requestOwnerKey ||
+                recentLoadGenerationRef.current !== requestGeneration
+              ) {
+                return;
+              }
+              thumbs[asset.id] = url;
+              if (url.startsWith("blob:")) {
+                recentThumbUrlsRef.current.push(url);
               }
             })
           );
-          if (!cancelled) setRecentAssetThumbs(thumbs);
+          if (
+            cancelled ||
+            recentOwnerKeyRef.current !== requestOwnerKey ||
+            recentLoadGenerationRef.current !== requestGeneration
+          ) {
+            return;
+          }
+          setRecentAssetThumbs(thumbs);
         } catch {
-          if (!cancelled) {
+          if (
+            !cancelled &&
+            recentOwnerKeyRef.current === requestOwnerKey &&
+            recentLoadGenerationRef.current === requestGeneration
+          ) {
             setRecentPrivateAssets([]);
             setRecentAssetThumbs({});
           }
         } finally {
-          if (!cancelled) setRecentAssetsLoading(false);
+          if (
+            !cancelled &&
+            recentOwnerKeyRef.current === requestOwnerKey &&
+            recentLoadGenerationRef.current === requestGeneration
+          ) {
+            setRecentAssetsLoading(false);
+          }
         }
       })();
     }, 0);
+
     return () => {
       cancelled = true;
       ac.abort();
       window.clearTimeout(t);
     };
-  }, [privateUploadEnabled]);
+  }, [recentOwnerKey, revokeRecentThumbUrls]);
 
   useEffect(() => {
     return () => {
-      for (const url of recentThumbUrlsRef.current) {
-        try {
-          if (url.startsWith("blob:")) URL.revokeObjectURL(url);
-        } catch {
-          /* ignore */
-        }
-      }
-      recentThumbUrlsRef.current = [];
+      revokeRecentThumbUrls();
     };
-  }, []);
+  }, [revokeRecentThumbUrls]);
 
   // Favorites + toy identity + optional still from Image studio (after adoptImage exists).
   // Query ?sku= wins over device bible so Next SKU / AfterPath carry survives mount.
@@ -2333,6 +2480,9 @@ export function CreateStudio({
                     type="button"
                     className="text-[10px] font-semibold text-[var(--fg-dim)] hover:text-[var(--brand)]"
                     onClick={() => {
+                      recentSelectionSourceRef.current = null;
+                      recentSelectedAssetIdRef.current = null;
+                      recentSelectionTokenRef.current += 1;
                       setImage(null);
                       setAssetId(null);
                       setImageProbe(null);
