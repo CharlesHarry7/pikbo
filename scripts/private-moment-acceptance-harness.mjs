@@ -720,6 +720,26 @@ export function assertDryRunNoSpend(audit) {
 }
 
 /**
+ * Accept only a real JSON number that is finite, non-negative, and a safe integer.
+ * Rejects null, "", numeric strings, booleans — Number(null)===0 must not pass.
+ */
+export function parseCreditField(value) {
+  if (typeof value !== "number") {
+    return { ok: false, reason: "not_json_number" };
+  }
+  if (!Number.isFinite(value) || Number.isNaN(value)) {
+    return { ok: false, reason: "not_finite" };
+  }
+  if (value < 0) {
+    return { ok: false, reason: "negative" };
+  }
+  if (!Number.isSafeInteger(value)) {
+    return { ok: false, reason: "not_safe_integer" };
+  }
+  return { ok: true, value };
+}
+
+/**
  * Parse GET /api/me into a safe durable-wallet snapshot.
  * Never returns email, accountId, tokens, or raw response bodies.
  */
@@ -737,27 +757,38 @@ export function parseDurableWalletSnapshot(meBody, httpOk) {
   if (!durable || typeof durable !== "object") {
     return { ok: false, reason: "durable_wallet_missing" };
   }
-  const availableCredits = Number(durable.availableCredits);
-  const reservedCredits = Number(durable.reservedCredits);
-  if (!Number.isFinite(availableCredits) || availableCredits < 0) {
+  const available = parseCreditField(durable.availableCredits);
+  if (!available.ok) {
     return { ok: false, reason: "available_credits_invalid" };
   }
-  if (!Number.isFinite(reservedCredits) || reservedCredits < 0) {
+  const reserved = parseCreditField(durable.reservedCredits);
+  if (!reserved.ok) {
     return { ok: false, reason: "reserved_credits_invalid" };
   }
   return {
     ok: true,
     signedIn: true,
     durableWallet: true,
-    availableCredits,
-    reservedCredits,
+    availableCredits: available.value,
+    reservedCredits: reserved.value,
   };
 }
 
 /**
+ * Server-reported replay marker only — true solely when body.idempotentReplay === true.
+ * Missing / false / other types are treated as fresh (not replay).
+ */
+export function serverIdempotentReplayMarker(generated) {
+  return generated != null && generated.idempotentReplay === true;
+}
+
+/**
  * Generate success must show fixed 10-credit settlement fields.
- * costAudit: estimated/ceiling labeled amounts only; actual unknown unless
- * explicitly provider-reported (never treat estimate as actual).
+ * costAudit:
+ * - fresh (non-replay): require labeled estimatedUsd + ceilingRemainingUsd
+ *   (non-negative finite); actual may be null/unknown
+ * - replay: costAudit may be absent (route may omit); record unknown/null
+ * Never treat estimate as actual.
  */
 export function assertGenerateSettlement(generated) {
   if (!generated || typeof generated !== "object") {
@@ -781,7 +812,10 @@ export function assertGenerateSettlement(generated) {
           : null,
     };
   }
-  const costAudit = extractSafeCostAudit(generated.costAudit);
+  const serverReplay = serverIdempotentReplayMarker(generated);
+  const costAudit = extractSafeCostAudit(generated.costAudit, {
+    requireLabeledEstimates: !serverReplay,
+  });
   if (!costAudit.ok) {
     return { ok: false, reason: costAudit.reason || "cost_audit_invalid" };
   }
@@ -789,16 +823,25 @@ export function assertGenerateSettlement(generated) {
     ok: true,
     costCredits: FIXED_MOMENT_CREDITS,
     creditsOutcome: "10 used",
+    serverIdempotentReplay: serverReplay,
     costAudit: costAudit.safe,
   };
 }
 
 /**
  * Safe provider cost audit fragment for evidence — no model/provider IDs.
+ * @param {object|null|undefined} costAudit
+ * @param {{ requireLabeledEstimates?: boolean }} [opts]
+ *   When requireLabeledEstimates is true (fresh path), estimatedUsd and
+ *   ceilingRemainingUsd must both be present with labeled non-negative amounts.
+ *   When false (legal replay), missing costAudit records unknown/null.
  */
-export function extractSafeCostAudit(costAudit) {
+export function extractSafeCostAudit(costAudit, opts = {}) {
+  const requireLabeledEstimates = opts.requireLabeledEstimates === true;
   if (costAudit == null) {
-    // Optional on some paths; still record unknown actual.
+    if (requireLabeledEstimates) {
+      return { ok: false, reason: "fresh_cost_audit_missing" };
+    }
     return {
       ok: true,
       safe: {
@@ -821,7 +864,11 @@ export function extractSafeCostAudit(costAudit) {
     if (est.kind !== "estimated" || est.label !== "estimated") {
       return { ok: false, reason: "estimated_label_invalid" };
     }
-    if (typeof est.amountUsd !== "number" || !Number.isFinite(est.amountUsd)) {
+    if (
+      typeof est.amountUsd !== "number" ||
+      !Number.isFinite(est.amountUsd) ||
+      est.amountUsd < 0
+    ) {
       return { ok: false, reason: "estimated_amount_invalid" };
     }
     estimatedUsd = {
@@ -835,7 +882,11 @@ export function extractSafeCostAudit(costAudit) {
     if (ceil.kind !== "ceiling" || ceil.label !== "ceiling") {
       return { ok: false, reason: "ceiling_label_invalid" };
     }
-    if (typeof ceil.amountUsd !== "number" || !Number.isFinite(ceil.amountUsd)) {
+    if (
+      typeof ceil.amountUsd !== "number" ||
+      !Number.isFinite(ceil.amountUsd) ||
+      ceil.amountUsd < 0
+    ) {
       return { ok: false, reason: "ceiling_amount_invalid" };
     }
     ceilingRemainingUsd = {
@@ -843,6 +894,14 @@ export function extractSafeCostAudit(costAudit) {
       kind: "ceiling",
       label: "ceiling",
     };
+  }
+  if (requireLabeledEstimates) {
+    if (!estimatedUsd) {
+      return { ok: false, reason: "fresh_estimated_usd_missing" };
+    }
+    if (!ceilingRemainingUsd) {
+      return { ok: false, reason: "fresh_ceiling_usd_missing" };
+    }
   }
   // actual must be null/absent OR explicitly labeled actual — never estimated.
   if (actual != null) {
@@ -854,7 +913,8 @@ export function extractSafeCostAudit(costAudit) {
     }
     if (
       typeof actual.amountUsd !== "number" ||
-      !Number.isFinite(actual.amountUsd)
+      !Number.isFinite(actual.amountUsd) ||
+      actual.amountUsd < 0
     ) {
       return { ok: false, reason: "actual_amount_invalid" };
     }
@@ -886,44 +946,55 @@ export function extractSafeCostAudit(costAudit) {
 }
 
 /**
- * Compare before/after durable wallet for fresh (-10) or idempotent replay (0).
+ * Compare before/after durable wallet against the **server** replay marker.
+ * - serverIdempotentReplay === true → only availableDelta 0 (no second debit)
+ * - serverIdempotentReplay !== true (false/missing) → only availableDelta -10
  * Reserved credits must return to the pre-generate baseline (no drift).
+ * Evidence idempotentReplay is always the verified server marker, never inferred
+ * from balance alone.
+ *
+ * @param {object} before
+ * @param {object} after
+ * @param {boolean} serverIdempotentReplay  true only when generate body says so
  */
-export function assertWalletSettlementDelta(before, after) {
+export function assertWalletSettlementDelta(
+  before,
+  after,
+  serverIdempotentReplay
+) {
   if (!before?.ok || !after?.ok) {
     return { ok: false, reason: "wallet_snapshot_incomplete" };
   }
+  const serverReplay = serverIdempotentReplay === true;
   const availableDelta = after.availableCredits - before.availableCredits;
   const reservedDelta = after.reservedCredits - before.reservedCredits;
+  const base = {
+    availableDelta,
+    reservedDelta,
+    availableBefore: before.availableCredits,
+    availableAfter: after.availableCredits,
+    reservedBefore: before.reservedCredits,
+    reservedAfter: after.reservedCredits,
+    // Always echo the server marker (never reverse-inferred from delta).
+    serverIdempotentReplay: serverReplay,
+  };
   if (reservedDelta !== 0) {
     return {
       ok: false,
       reason: "reserved_credits_drift",
-      availableDelta,
-      reservedDelta,
-      availableBefore: before.availableCredits,
-      availableAfter: after.availableCredits,
-      reservedBefore: before.reservedCredits,
-      reservedAfter: after.reservedCredits,
+      ...base,
     };
   }
-  if (
-    availableDelta === -FIXED_MOMENT_CREDITS &&
-    reservedDelta === 0
-  ) {
-    return {
-      ok: true,
-      idempotentReplay: false,
-      availableDelta: -FIXED_MOMENT_CREDITS,
-      reservedDelta: 0,
-      availableBefore: before.availableCredits,
-      availableAfter: after.availableCredits,
-      reservedBefore: before.reservedCredits,
-      reservedAfter: after.reservedCredits,
-      fixedTenCreditSettlement: true,
-    };
-  }
-  if (availableDelta === 0 && reservedDelta === 0) {
+  if (serverReplay) {
+    // Marker true: only zero delta is legal (no second charge).
+    if (availableDelta !== 0) {
+      return {
+        ok: false,
+        reason: "replay_marker_delta_not_zero",
+        idempotentReplay: true,
+        ...base,
+      };
+    }
     return {
       ok: true,
       idempotentReplay: true,
@@ -933,18 +1004,39 @@ export function assertWalletSettlementDelta(before, after) {
       availableAfter: after.availableCredits,
       reservedBefore: before.reservedCredits,
       reservedAfter: after.reservedCredits,
+      serverIdempotentReplay: true,
       fixedTenCreditSettlement: true,
+    };
+  }
+  // Fresh (marker false or missing): must debit exactly 10.
+  if (availableDelta === -FIXED_MOMENT_CREDITS) {
+    return {
+      ok: true,
+      idempotentReplay: false,
+      availableDelta: -FIXED_MOMENT_CREDITS,
+      reservedDelta: 0,
+      availableBefore: before.availableCredits,
+      availableAfter: after.availableCredits,
+      reservedBefore: before.reservedCredits,
+      reservedAfter: after.reservedCredits,
+      serverIdempotentReplay: false,
+      fixedTenCreditSettlement: true,
+    };
+  }
+  if (availableDelta === 0) {
+    // Wallet looks like replay but server did not mark replay → fail-closed.
+    return {
+      ok: false,
+      reason: "fresh_marker_zero_delta",
+      idempotentReplay: false,
+      ...base,
     };
   }
   return {
     ok: false,
     reason: "available_delta_invalid",
-    availableDelta,
-    reservedDelta,
-    availableBefore: before.availableCredits,
-    availableAfter: after.availableCredits,
-    reservedBefore: before.reservedCredits,
-    reservedAfter: after.reservedCredits,
+    idempotentReplay: false,
+    ...base,
   };
 }
 
@@ -1306,6 +1398,8 @@ export async function runRealAcceptance(options) {
     attemptId,
     fetchImpl,
     now = () => new Date().toISOString(),
+    /** Injectable monotonic ms clock for time-to-downloadable (tests). */
+    clockMs = () => Date.now(),
   } = options;
   const operatorAttemptId = assertOperatorAttemptId(attemptId);
   const previewCookie = assertPreviewGatewayCookie(cookie);
@@ -1521,7 +1615,9 @@ export async function runRealAcceptance(options) {
   }
 
   // 4) Durable wallet snapshot before generate (owner Bearer + Preview cookie).
-  const startedAt = Date.now();
+  // Timing starts here; elapsedMs is finalized only after Library + dual download
+  // probes (time-to-downloadable), not at generate return.
+  const startedAtMs = clockMs();
   const meBeforeRes = await track(`${baseUrl}/api/me`, {
     method: "GET",
     authMode: "owner",
@@ -1658,7 +1754,12 @@ export async function runRealAcceptance(options) {
     });
   }
 
-  const walletDelta = assertWalletSettlementDelta(walletBefore, walletAfter);
+  // Bind wallet delta to server-reported idempotentReplay (not balance inference).
+  const walletDelta = assertWalletSettlementDelta(
+    walletBefore,
+    walletAfter,
+    settlement.serverIdempotentReplay === true
+  );
   if (!walletDelta.ok) {
     return sanitizeEvidence({
       schemaVersion: 1,
@@ -1674,6 +1775,8 @@ export async function runRealAcceptance(options) {
         reservedBefore: walletDelta.reservedBefore,
         reservedAfter: walletDelta.reservedAfter,
         reservedDelta: walletDelta.reservedDelta,
+        // Server marker even on failure (not inferred from delta).
+        idempotentReplay: settlement.serverIdempotentReplay === true,
         costCredits: FIXED_MOMENT_CREDITS,
         creditsOutcome: "10 used",
         costAudit: settlement.costAudit,
@@ -1712,7 +1815,6 @@ export async function runRealAcceptance(options) {
   }
 
   const jobId = liveCheck.jobId;
-  const elapsedMs = Math.max(0, Date.now() - startedAt);
 
   // 7) Library refresh — durable owner row only.
   const libraryRes = await track(`${baseUrl}/api/generations`, {
@@ -1791,6 +1893,9 @@ export async function runRealAcceptance(options) {
       ? "PASS_ONE_SKU_REAL"
       : "FAIL_POST_GENERATE_CHECKS";
 
+  // Time-to-downloadable: after Library + dual download probes complete.
+  const elapsedMs = Math.max(0, clockMs() - startedAtMs);
+
   return sanitizeEvidence({
     schemaVersion: 1,
     mode: "real",
@@ -1825,6 +1930,8 @@ export async function runRealAcceptance(options) {
       idempotencyKeyLen: idempotencyKey.length,
       costCredits: FIXED_MOMENT_CREDITS,
       creditsOutcome: "10 used",
+      // Server marker (verified against wallet delta above).
+      idempotentReplay: settlement.serverIdempotentReplay === true,
     },
     accounting: {
       availableBefore: walletDelta.availableBefore,
@@ -1834,11 +1941,14 @@ export async function runRealAcceptance(options) {
       reservedAfter: walletDelta.reservedAfter,
       reservedDelta: walletDelta.reservedDelta,
       fixedTenCreditSettlement: true,
-      idempotentReplay: walletDelta.idempotentReplay === true,
+      // From verified server marker — not reverse-inferred from balance.
+      idempotentReplay: settlement.serverIdempotentReplay === true,
       costCredits: FIXED_MOMENT_CREDITS,
       creditsOutcome: "10 used",
       costAudit: settlement.costAudit,
+      // Wall/clock ms from pre-generate wallet snapshot through dual download probes.
       elapsedMs,
+      elapsedMeaning: "time-to-downloadable",
     },
     library: {
       ok: libraryOk,

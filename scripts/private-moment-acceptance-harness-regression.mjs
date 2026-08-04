@@ -55,9 +55,11 @@ const {
   classifyDownloadProbe,
   classifyNetworkRequest,
   parseDurableWalletSnapshot,
+  parseCreditField,
   assertGenerateSettlement,
   extractSafeCostAudit,
   assertWalletSettlementDelta,
+  serverIdempotentReplayMarker,
   runRealAcceptance,
   main,
 } = await import(harnessPath);
@@ -111,8 +113,10 @@ assert.match(source, /parseMode/);
 assert.match(source, /dry-run/);
 assert.match(source, /sanitizeEvidence/);
 assert.match(source, /parseDurableWalletSnapshot/);
+assert.match(source, /parseCreditField/);
 assert.match(source, /assertGenerateSettlement/);
 assert.match(source, /assertWalletSettlementDelta/);
+assert.match(source, /serverIdempotentReplayMarker/);
 assert.match(source, /extractSafeCostAudit/);
 assert.match(source, /FIXED_MOMENT_CREDITS\s*=\s*10/);
 assert.match(source, /MAX_ME_SNAPSHOT_CALLS\s*=\s*2/);
@@ -121,6 +125,21 @@ assert.match(source, /costCredits/);
 assert.match(source, /creditsOutcome/);
 assert.match(source, /idempotentReplay/);
 assert.match(source, /actualLabel/);
+assert.match(source, /requireLabeledEstimates/);
+assert.match(source, /fresh_marker_zero_delta/);
+assert.match(source, /replay_marker_delta_not_zero/);
+assert.match(source, /time-to-downloadable/);
+assert.match(source, /clockMs/);
+// elapsedMs must be computed after download probes, not before Library.
+{
+  const libraryIdx = source.indexOf("// 7) Library refresh");
+  const downloadIdx = source.indexOf("// 8) Dual download HEAD");
+  assert.ok(libraryIdx > 0 && downloadIdx > libraryIdx, "flow order library then download");
+  // Final elapsed assignment must appear after dual-download section.
+  const elapsedAssign = source.indexOf("const elapsedMs = Math.max(0, clockMs()");
+  assert.ok(elapsedAssign > downloadIdx, "elapsedMs after download probes");
+  assert.match(source, /elapsedMeaning:\s*"time-to-downloadable"/);
+}
 assert.doesNotMatch(source, /STORAGE_HOST_RE/);
 assert.doesNotMatch(source, /@fal-ai\/client/);
 assert.doesNotMatch(source, /checkout\/sessions/);
@@ -664,6 +683,18 @@ const MOCK_COST_AUDIT = {
   note: "provider actual unknown",
 };
 
+// parseCreditField: only real JSON numbers (not Number(null)===0).
+assert.equal(parseCreditField(0).ok, true);
+assert.equal(parseCreditField(40).value, 40);
+assert.equal(parseCreditField(null).ok, false);
+assert.equal(parseCreditField("").ok, false);
+assert.equal(parseCreditField("40").ok, false);
+assert.equal(parseCreditField(true).ok, false);
+assert.equal(parseCreditField(NaN).ok, false);
+assert.equal(parseCreditField(-1).ok, false);
+assert.equal(parseCreditField(1.5).ok, false); // not safe integer
+assert.equal(parseCreditField(Number.MAX_SAFE_INTEGER + 1).ok, false);
+
 assert.equal(
   parseDurableWalletSnapshot(
     {
@@ -720,10 +751,50 @@ assert.equal(
   ).reason,
   "available_credits_invalid"
 );
+// null / "" / numeric string must not coerce to 0.
+assert.equal(
+  parseDurableWalletSnapshot(
+    { signedIn: true, durable: { availableCredits: null, reservedCredits: 0 } },
+    true
+  ).reason,
+  "available_credits_invalid"
+);
+assert.equal(
+  parseDurableWalletSnapshot(
+    { signedIn: true, durable: { availableCredits: "", reservedCredits: 0 } },
+    true
+  ).reason,
+  "available_credits_invalid"
+);
+assert.equal(
+  parseDurableWalletSnapshot(
+    {
+      signedIn: true,
+      durable: { availableCredits: "40", reservedCredits: 0 },
+    },
+    true
+  ).reason,
+  "available_credits_invalid"
+);
+assert.equal(
+  parseDurableWalletSnapshot(
+    {
+      signedIn: true,
+      durable: { availableCredits: 40, reservedCredits: null },
+    },
+    true
+  ).reason,
+  "reserved_credits_invalid"
+);
 assert.equal(
   parseDurableWalletSnapshot(null, false).reason,
   "me_http_not_ok"
 );
+
+assert.equal(serverIdempotentReplayMarker({ idempotentReplay: true }), true);
+assert.equal(serverIdempotentReplayMarker({ idempotentReplay: false }), false);
+assert.equal(serverIdempotentReplayMarker({}), false);
+assert.equal(serverIdempotentReplayMarker({ idempotentReplay: "true" }), false);
 
 {
   const settleOk = assertGenerateSettlement({
@@ -734,17 +805,41 @@ assert.equal(
   assert.equal(settleOk.ok, true);
   assert.equal(settleOk.costCredits, 10);
   assert.equal(settleOk.creditsOutcome, "10 used");
+  assert.equal(settleOk.serverIdempotentReplay, false);
   assert.equal(settleOk.costAudit.actualKnown, false);
   assert.equal(settleOk.costAudit.actualLabel, "unknown");
   assert.equal(settleOk.costAudit.actualUsd, null);
   assert.equal(settleOk.costAudit.estimatedUsd.amountUsd, 0.12);
   assert.equal(settleOk.costAudit.estimatedUsd.label, "estimated");
+  assert.equal(settleOk.costAudit.ceilingRemainingUsd.label, "ceiling");
   assert.doesNotMatch(JSON.stringify(settleOk), /secret-model|fal-ai/);
+}
+// Fresh path missing costAudit must fail (first-call cost evidence required).
+assert.equal(
+  assertGenerateSettlement({
+    costCredits: 10,
+    creditsOutcome: "10 used",
+  }).reason,
+  "fresh_cost_audit_missing"
+);
+// Legal replay may omit costAudit.
+{
+  const replaySettle = assertGenerateSettlement({
+    costCredits: 10,
+    creditsOutcome: "10 used",
+    idempotentReplay: true,
+  });
+  assert.equal(replaySettle.ok, true);
+  assert.equal(replaySettle.serverIdempotentReplay, true);
+  assert.equal(replaySettle.costAudit.actualLabel, "unknown");
+  assert.equal(replaySettle.costAudit.estimatedUsd, null);
+  assert.equal(replaySettle.costAudit.ceilingRemainingUsd, null);
 }
 assert.equal(
   assertGenerateSettlement({
     costCredits: 5,
     creditsOutcome: "10 used",
+    costAudit: MOCK_COST_AUDIT,
   }).reason,
   "cost_credits_not_fixed_10"
 );
@@ -752,30 +847,67 @@ assert.equal(
   assertGenerateSettlement({
     costCredits: 10,
     creditsOutcome: "0 cached",
+    costAudit: MOCK_COST_AUDIT,
   }).reason,
   "credits_outcome_not_10_used"
 );
 assert.equal(
   assertGenerateSettlement({
     creditsOutcome: "10 used",
+    costAudit: MOCK_COST_AUDIT,
   }).reason,
   "cost_credits_not_fixed_10"
 );
 assert.equal(
   assertGenerateSettlement({
     costCredits: 10,
+    costAudit: MOCK_COST_AUDIT,
   }).reason,
   "credits_outcome_not_10_used"
 );
+// Fresh with only estimated (no ceiling) fails.
+assert.equal(
+  assertGenerateSettlement({
+    costCredits: 10,
+    creditsOutcome: "10 used",
+    costAudit: {
+      estimatedUsd: { amountUsd: 0.1, kind: "estimated", label: "estimated" },
+      actualUsd: null,
+    },
+  }).reason,
+  "fresh_ceiling_usd_missing"
+);
 {
-  const safe = extractSafeCostAudit({
-    modelId: "must-not-leak",
-    estimatedUsd: { amountUsd: 0.2, kind: "estimated", label: "estimated" },
-    actualUsd: null,
-  });
+  const safe = extractSafeCostAudit(
+    {
+      modelId: "must-not-leak",
+      estimatedUsd: { amountUsd: 0.2, kind: "estimated", label: "estimated" },
+      ceilingRemainingUsd: {
+        amountUsd: 1,
+        kind: "ceiling",
+        label: "ceiling",
+      },
+      actualUsd: null,
+    },
+    { requireLabeledEstimates: true }
+  );
   assert.equal(safe.ok, true);
   assert.equal(safe.safe.actualLabel, "unknown");
   assert.doesNotMatch(JSON.stringify(safe), /must-not-leak/);
+}
+{
+  const missingFresh = extractSafeCostAudit(null, {
+    requireLabeledEstimates: true,
+  });
+  assert.equal(missingFresh.ok, false);
+  assert.equal(missingFresh.reason, "fresh_cost_audit_missing");
+}
+{
+  const missingReplay = extractSafeCostAudit(null, {
+    requireLabeledEstimates: false,
+  });
+  assert.equal(missingReplay.ok, true);
+  assert.equal(missingReplay.safe.actualLabel, "unknown");
 }
 {
   const badActual = extractSafeCostAudit({
@@ -793,46 +925,79 @@ assert.equal(
     availableCredits: 40,
     reservedCredits: 0,
   };
-  const fresh = assertWalletSettlementDelta(before, {
-    ok: true,
-    availableCredits: 30,
-    reservedCredits: 0,
-  });
+  // Fresh marker (false) + delta -10 → PASS
+  const fresh = assertWalletSettlementDelta(
+    before,
+    { ok: true, availableCredits: 30, reservedCredits: 0 },
+    false
+  );
   assert.equal(fresh.ok, true);
   assert.equal(fresh.idempotentReplay, false);
+  assert.equal(fresh.serverIdempotentReplay, false);
   assert.equal(fresh.availableDelta, -10);
   assert.equal(fresh.reservedDelta, 0);
   assert.equal(fresh.fixedTenCreditSettlement, true);
 
-  const replay = assertWalletSettlementDelta(before, {
-    ok: true,
-    availableCredits: 40,
-    reservedCredits: 0,
-  });
+  // Replay marker true + delta 0 → PASS
+  const replay = assertWalletSettlementDelta(
+    before,
+    { ok: true, availableCredits: 40, reservedCredits: 0 },
+    true
+  );
   assert.equal(replay.ok, true);
   assert.equal(replay.idempotentReplay, true);
+  assert.equal(replay.serverIdempotentReplay, true);
   assert.equal(replay.availableDelta, 0);
 
+  // Counter-example: fresh marker + delta 0 must FAIL (no balance inference).
+  assert.equal(
+    assertWalletSettlementDelta(
+      before,
+      { ok: true, availableCredits: 40, reservedCredits: 0 },
+      false
+    ).reason,
+    "fresh_marker_zero_delta"
+  );
+  // Counter-example: replay marker + delta -10 must FAIL.
+  assert.equal(
+    assertWalletSettlementDelta(
+      before,
+      { ok: true, availableCredits: 30, reservedCredits: 0 },
+      true
+    ).reason,
+    "replay_marker_delta_not_zero"
+  );
+  // Missing marker arg treated as fresh (not true).
   assert.equal(
     assertWalletSettlementDelta(before, {
       ok: true,
-      availableCredits: 35,
+      availableCredits: 40,
       reservedCredits: 0,
     }).reason,
+    "fresh_marker_zero_delta"
+  );
+
+  assert.equal(
+    assertWalletSettlementDelta(
+      before,
+      { ok: true, availableCredits: 35, reservedCredits: 0 },
+      false
+    ).reason,
     "available_delta_invalid"
   );
   assert.equal(
-    assertWalletSettlementDelta(before, {
-      ok: true,
-      availableCredits: 30,
-      reservedCredits: 3,
-    }).reason,
+    assertWalletSettlementDelta(
+      before,
+      { ok: true, availableCredits: 30, reservedCredits: 3 },
+      false
+    ).reason,
     "reserved_credits_drift"
   );
   assert.equal(
     assertWalletSettlementDelta(
       { ok: false, reason: "not_signed_in" },
-      { ok: true, availableCredits: 30, reservedCredits: 0 }
+      { ok: true, availableCredits: 30, reservedCredits: 0 },
+      false
     ).reason,
     "wallet_snapshot_incomplete"
   );
@@ -1075,6 +1240,8 @@ const MOCK_GENERATE_COST_AUDIT = {
  * @param {"deny"|"public200"|"public302"} [opts.anonymousHead]
  * @param {string} [opts.pendingUploadUrl]
  * @param {"fresh"|"replay"} [opts.walletMode] fresh: −10 available; replay: 0 delta
+ * @param {boolean|null} [opts.idempotentReplayMarker] override generate body marker
+ *   (null = follow walletMode; true/false force server marker independently of delta)
  * @param {number} [opts.availableBefore]
  * @param {number} [opts.reservedBefore]
  * @param {number|null} [opts.availableAfter] override after available (null = derive)
@@ -1090,6 +1257,7 @@ function makePassingMock({
   anonymousHead = "deny",
   pendingUploadUrl = MOCK_TRUSTED_UPLOAD_URL,
   walletMode = "fresh",
+  idempotentReplayMarker = null,
   availableBefore = 40,
   reservedBefore = 0,
   availableAfter = null,
@@ -1181,7 +1349,14 @@ function makePassingMock({
     };
   }
 
+  function resolveServerReplayMarker() {
+    if (idempotentReplayMarker === true) return true;
+    if (idempotentReplayMarker === false) return false;
+    return walletMode === "replay";
+  }
+
   function generateSettlementBody() {
+    const serverReplay = resolveServerReplayMarker();
     const base = {
       ok: true,
       jobId,
@@ -1195,6 +1370,8 @@ function makePassingMock({
       providerUrl: "https://queue.fal.run/secret",
       objectKey: "user/secret/out.mp4",
       costAudit: MOCK_GENERATE_COST_AUDIT,
+      // Only true when server marks replay; omit property for fresh false-path.
+      ...(serverReplay ? { idempotentReplay: true } : {}),
     };
     if (settlement === "missingCostCredits") {
       return { ...base, creditsOutcome: "10 used" };
@@ -1220,7 +1397,6 @@ function makePassingMock({
       ...base,
       costCredits: 10,
       creditsOutcome: "10 used",
-      idempotentReplay: walletMode === "replay",
     };
   }
 
@@ -1500,7 +1676,12 @@ function makePassingMock({
   assert.equal(realEvidence.accounting.costAudit.actualLabel, "unknown");
   assert.equal(realEvidence.accounting.costAudit.actualUsd, null);
   assert.equal(realEvidence.accounting.costAudit.estimatedUsd.label, "estimated");
+  assert.equal(realEvidence.accounting.costAudit.ceilingRemainingUsd.label, "ceiling");
+  assert.equal(realEvidence.accounting.idempotentReplay, false);
+  assert.equal(realEvidence.generate.idempotentReplay, false);
   assert.equal(typeof realEvidence.accounting.elapsedMs, "number");
+  assert.ok(realEvidence.accounting.elapsedMs >= 0);
+  assert.equal(realEvidence.accounting.elapsedMeaning, "time-to-downloadable");
   assert.equal(counts.idempotencyKeys.length, 1);
   const realJson = JSON.stringify(realEvidence);
   assert.doesNotMatch(realJson, /super-secret-session/);
@@ -1522,7 +1703,7 @@ function makePassingMock({
   );
 }
 
-// ── Idempotent replay: available delta 0 PASS ──
+// ── Idempotent replay: server marker true + available delta 0 PASS ──
 
 {
   const { mockFetch, counts } = makePassingMock({
@@ -1543,6 +1724,7 @@ function makePassingMock({
   });
   assert.equal(replayEvidence.verdict, "PASS_ONE_SKU_REAL");
   assert.equal(replayEvidence.accounting.idempotentReplay, true);
+  assert.equal(replayEvidence.generate.idempotentReplay, true);
   assert.equal(replayEvidence.accounting.availableDelta, 0);
   assert.equal(replayEvidence.accounting.availableBefore, 30);
   assert.equal(replayEvidence.accounting.availableAfter, 30);
@@ -1555,6 +1737,146 @@ function makePassingMock({
   assert.equal(counts.generate, 1);
   const replayJson = JSON.stringify(replayEvidence);
   assert.doesNotMatch(replayJson, /owner@example|acct-secret|attempt-replay/);
+}
+
+// ── Counter-example: fresh marker (missing) + delta 0 must FAIL ──
+
+{
+  const { mockFetch } = makePassingMock({
+    pendingUpload: false,
+    walletMode: "fresh",
+    idempotentReplayMarker: false,
+    availableBefore: 40,
+    availableAfter: 40, // zero debit without server replay marker
+  });
+  const fakeReplay = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: DEFAULT_PREVIEW_COOKIE,
+    accessToken: DEFAULT_ACCESS_TOKEN,
+    attemptId: DEFAULT_ATTEMPT_ID,
+    imagePath,
+    skuLabel: "fresh-marker-zero-delta",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(fakeReplay.verdict, "FAIL");
+  assert.equal(fakeReplay.stage, "wallet-settlement");
+  assert.equal(fakeReplay.code, "WALLET_DELTA_INVALID");
+  assert.equal(fakeReplay.reason, "fresh_marker_zero_delta");
+  assert.equal(fakeReplay.accounting.idempotentReplay, false);
+  assert.equal(fakeReplay.accounting.availableDelta, 0);
+}
+
+// ── Counter-example: replay marker true + delta -10 must FAIL ──
+
+{
+  const { mockFetch } = makePassingMock({
+    pendingUpload: false,
+    walletMode: "fresh", // wallet derives −10
+    idempotentReplayMarker: true, // but server claims replay
+    availableBefore: 40,
+  });
+  const badReplay = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: DEFAULT_PREVIEW_COOKIE,
+    accessToken: DEFAULT_ACCESS_TOKEN,
+    attemptId: DEFAULT_ATTEMPT_ID,
+    imagePath,
+    skuLabel: "replay-marker-minus-ten",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(badReplay.verdict, "FAIL");
+  assert.equal(badReplay.stage, "wallet-settlement");
+  assert.equal(badReplay.code, "WALLET_DELTA_INVALID");
+  assert.equal(badReplay.reason, "replay_marker_delta_not_zero");
+  assert.equal(badReplay.accounting.idempotentReplay, true);
+  assert.equal(badReplay.accounting.availableDelta, -10);
+}
+
+// ── Fresh missing costAudit FAIL; replay missing costAudit PASS ──
+
+{
+  const { mockFetch } = makePassingMock({
+    pendingUpload: false,
+    walletMode: "fresh",
+    settlement: "omitCostAudit",
+  });
+  const freshNoAudit = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: DEFAULT_PREVIEW_COOKIE,
+    accessToken: DEFAULT_ACCESS_TOKEN,
+    attemptId: DEFAULT_ATTEMPT_ID,
+    imagePath,
+    skuLabel: "fresh-no-cost-audit",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(freshNoAudit.verdict, "FAIL");
+  assert.equal(freshNoAudit.stage, "generate-settlement");
+  assert.equal(freshNoAudit.code, "SETTLEMENT_FIELDS_INVALID");
+  assert.equal(freshNoAudit.reason, "fresh_cost_audit_missing");
+}
+
+{
+  const { mockFetch } = makePassingMock({
+    pendingUpload: false,
+    walletMode: "replay",
+    settlement: "omitCostAudit",
+    availableBefore: 30,
+  });
+  const replayNoAudit = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: DEFAULT_PREVIEW_COOKIE,
+    accessToken: DEFAULT_ACCESS_TOKEN,
+    attemptId: DEFAULT_ATTEMPT_ID,
+    imagePath,
+    skuLabel: "replay-no-cost-audit",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(replayNoAudit.verdict, "PASS_ONE_SKU_REAL");
+  assert.equal(replayNoAudit.accounting.idempotentReplay, true);
+  assert.equal(replayNoAudit.accounting.costAudit.actualLabel, "unknown");
+  assert.equal(replayNoAudit.accounting.costAudit.estimatedUsd, null);
+  assert.equal(replayNoAudit.accounting.costAudit.ceilingRemainingUsd, null);
+}
+
+// ── time-to-downloadable via injectable clock (stable, not wall-clock) ──
+
+{
+  let tick = 1_000;
+  const clockMs = () => {
+    const v = tick;
+    tick += 250;
+    return v;
+  };
+  const { mockFetch } = makePassingMock({ pendingUpload: false });
+  const timed = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: DEFAULT_PREVIEW_COOKIE,
+    accessToken: DEFAULT_ACCESS_TOKEN,
+    attemptId: DEFAULT_ATTEMPT_ID,
+    imagePath,
+    skuLabel: "elapsed-clock",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+    clockMs,
+  });
+  assert.equal(timed.verdict, "PASS_ONE_SKU_REAL");
+  assert.equal(timed.accounting.elapsedMeaning, "time-to-downloadable");
+  assert.ok(timed.accounting.elapsedMs >= 0);
+  // startedAt + final clockMs after all stages: each call advances 250ms.
+  // Expect multiple advances after start (me×2, generate, library, downloads).
+  assert.ok(
+    timed.accounting.elapsedMs >= 250,
+    "elapsed covers post-start stages"
+  );
 }
 
 // ── Settlement field failures block PASS ──
@@ -1572,6 +1894,7 @@ for (const [label, settlement, expectedReason] of [
     "wrongCreditsOutcome",
     "credits_outcome_not_10_used",
   ],
+  ["omit-costAudit-fresh", "omitCostAudit", "fresh_cost_audit_missing"],
 ]) {
   const { mockFetch, counts } = makePassingMock({
     pendingUpload: false,
@@ -1622,6 +1945,8 @@ for (const [label, settlement, expectedReason] of [
   assert.equal(badDelta.code, "WALLET_DELTA_INVALID");
   assert.equal(badDelta.reason, "available_delta_invalid");
   assert.equal(badDelta.accounting.availableDelta, -5);
+  // Evidence still records server marker (fresh), not inferred replay.
+  assert.equal(badDelta.accounting.idempotentReplay, false);
 }
 
 {

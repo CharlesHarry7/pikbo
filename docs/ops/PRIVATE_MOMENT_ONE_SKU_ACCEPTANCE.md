@@ -101,26 +101,35 @@ booleans/version/length — never the attempt id or full key.
 2. **Fixed 10-credit settlement fields** on that success body:
    `costCredits === 10` and `creditsOutcome === "10 used"`. Any other value
    (including missing fields or `"0 cached"`) blocks PASS.
-3. **Durable wallet accounting** via at most two owner `GET /api/me` snapshots
+3. **Server `idempotentReplay` marker** on that body is the only source of truth
+   for fresh vs replay. Evidence `accounting.idempotentReplay` is copied from
+   the **verified** server marker (`generated.idempotentReplay === true`), never
+   reverse-inferred from wallet balances alone.
+4. **Durable wallet accounting** via at most two owner `GET /api/me` snapshots
    (before + after generate, Bearer + Preview cookie, same origin only):
-   - Pre: signed-in durable wallet with finite non-negative
-     `availableCredits` / `reservedCredits`. A **fresh** charge path needs
-     `availableCredits >= 10` before generate.
+   - Pre: signed-in durable wallet. Credit fields must be real JSON **numbers**
+     (finite, non-negative, safe integers). `null`, `""`, or numeric strings
+     fail closed (they must not coerce to 0).
+   - A **fresh** charge path needs `availableCredits >= 10` before generate.
    - Post: reserved credits return to the pre-generate baseline (no drift).
+   - **Marker ↔ delta binding (fail-closed):**
+     - Server marker **true** → only `availableDelta === 0` is legal (no second debit).
+     - Server marker **false/missing** → only `availableDelta === -10` is legal.
+     - Fresh marker + delta 0, or replay marker + delta −10 → **FAIL**.
    - **Two legal PASS conclusions:**
-     - **Fresh:** `availableDelta === -10`, `idempotentReplay === false`
-       (exactly one fixed Moment debit this run).
-     - **Replay:** `availableDelta === 0`, `idempotentReplay === true`
-       (same attempt idempotency key; server did not debit again).
+     - **Fresh:** server marker false/missing, `availableDelta === -10`,
+       evidence `idempotentReplay: false`.
+     - **Replay:** server marker true, `availableDelta === 0`,
+       evidence `idempotentReplay: true`.
    - Any other delta, reserved drift, missing/malformed wallet, or missing
      settlement fields blocks `PASS_ONE_SKU_REAL`.
-4. **Library refresh** (`GET /api/generations`) must list a durable owner row:
+5. **Library refresh** (`GET /api/generations`) must list a durable owner row:
    `status=succeeded`, `owned=true`, `downloadAllowed=true`, non-demo, matching
    job id, and a controlled `videoUrl` of the form `/api/downloads/{jobId}`.
-5. **Owner download HEAD** (Preview cookie + Bearer, `redirect: manual`):
+6. **Owner download HEAD** (Preview cookie + Bearer, `redirect: manual`):
    HTTP **200**, `X-Pikbo-Download: allowed`, `X-Pikbo-Private-Result: 1`.
    Any 3xx is not PASS (do not follow or record signed Location).
-6. **Pikbo-anonymous download HEAD** (Preview cookie kept, **no** Authorization,
+7. **Pikbo-anonymous download HEAD** (Preview cookie kept, **no** Authorization,
    `redirect: manual`): HTTP **401** and `X-Pikbo-Download-Code: AUTH_REQUIRED`
    (application contract). Any 2xx/3xx fails the run. A 401 without the
    `X-Pikbo-Download-Code` header is treated as gateway/non-app failure, not PASS.
@@ -130,8 +139,12 @@ settlement are required.
 
 ### Cost audit honesty (`costAudit`)
 
-Generate may include a labeled USD cost audit. Evidence keeps only **safe**
-fragments:
+| Path | Requirement |
+|---|---|
+| **Fresh** (server marker false/missing) | Response **must** include labeled `estimatedUsd` and `ceilingRemainingUsd` (non-negative finite amounts). Missing `costAudit` → FAIL (`fresh_cost_audit_missing`). |
+| **Replay** (server marker true) | Route may omit `costAudit`; evidence records estimated/ceiling as `null` and `actualLabel: "unknown"`. |
+
+Evidence keeps only **safe** fragments:
 
 | Field | Meaning in evidence |
 |---|---|
@@ -141,6 +154,14 @@ fragments:
 
 Never treat estimated or ceiling as actual cost. Model IDs, provider URLs, and
 notes that could leak vendor identifiers are stripped from evidence.
+
+### Time-to-downloadable (`elapsedMs`)
+
+On a complete PASS evidence object, `accounting.elapsedMs` is **time-to-downloadable**:
+milliseconds from the pre-generate wallet snapshot through Library refresh and
+**both** download HEAD probes. It is **not** “time until generate HTTP returns.”
+`accounting.elapsedMeaning` is the string `time-to-downloadable`. Operators should
+save this sanitized value with the rest of the PASS evidence.
 
 ## Flow (bounded)
 
@@ -186,12 +207,13 @@ Printed evidence is sanitized. It must **never** include:
 
 Safe fields include counts, HTTP statuses, contract name, sha256 **prefix**,
 boolean shape markers (`hasPrivateSignedDeliveryUrl`, `ownerOnlyProven`,
-`privateResultMarker`, `idempotencyKeyDerived`, `idempotentReplay`,
-`fixedTenCreditSettlement`), controlled download header enums
+`privateResultMarker`, `idempotencyKeyDerived`, `idempotentReplay` from the
+**server marker**, `fixedTenCreditSettlement`), controlled download header enums
 (`allowed` / `AUTH_REQUIRED`), wallet **balances and deltas only**
 (`availableBefore` / `availableAfter` / `availableDelta` / reserved
 baseline and after), fixed `costCredits` / `creditsOutcome`, labeled cost-audit
-amounts (or `actualLabel: "unknown"`), `elapsedMs`, and pass/fail verdict.
+amounts (or `actualLabel: "unknown"`), time-to-downloadable `elapsedMs` +
+`elapsedMeaning`, and pass/fail verdict.
 
 **Operators must save the sanitized JSON evidence** from a real PASS run
 (stdout). That record is the durable proof of either a fresh −10 settlement or
