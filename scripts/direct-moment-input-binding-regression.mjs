@@ -9,6 +9,8 @@
  * 4. TS store + liveReservation validate the with-asset contract strictly
  * 5. /api/generate wires verified assetId + rightsConfirmed before provider
  * 6. Flux /api/image remains on the no-asset reserve path
+ * 7. Soft-live readiness probes the new RPC; missing migration closes Preview
+ *    readiness (not zero-Provider input admission)
  *
  * Run: npm run direct-moment-input-binding-regression
  */
@@ -17,6 +19,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import {
+  evaluatePrivateInputAdmissionReadiness,
+  evaluatePrivatePreviewReadiness,
+} from "../lib/liveCapability.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
@@ -28,6 +34,9 @@ const storeSrc = read("lib/durableCredits/supabaseStore.ts");
 const liveSrc = read("lib/durableCredits/liveReservation.ts");
 const genRoute = read("app/api/generate/route.ts");
 const imgRoute = read("app/api/image/route.ts");
+const privateToyAssetsSrc = read("lib/privateToyAssets.ts");
+const liveCapabilitySrc = read("lib/liveCapability.ts");
+const liveReadinessSrc = read("lib/liveReadinessServer.ts");
 
 // ─── 1. Migration: service-role RPC contract ───────────────────────────────
 
@@ -165,6 +174,109 @@ assert.match(
   storeSrc,
   /must not return storage secrets/
 );
+
+// ─── 3b. Readiness: probe new RPC; Preview closed until migration applied ──
+
+assert.match(
+  privateToyAssetsSrc,
+  /admin\.rpc\("pikbo_reserve_generation_with_asset_v1",\s*\{[\s\S]*?p_user_id:\s*null[\s\S]*?p_idempotency_key:\s*null[\s\S]*?p_input_asset_id:\s*null[\s\S]*?p_rights_confirmed:\s*false/
+);
+assert.match(
+  privateToyAssetsSrc,
+  /directMomentReserveRpcReady:\s*!directMomentReserveRpc\.error\s*&&\s*directMomentPayload\?\.code === "AUTH_REQUIRED"/
+);
+assert.match(
+  liveCapabilitySrc,
+  /directMomentReserveRpcReady/
+);
+assert.match(
+  liveCapabilitySrc,
+  /"directMomentReserveRpcReady"/
+);
+{
+  const admissionTypeStart = liveCapabilitySrc.indexOf(
+    "export type PrivateInputAdmissionReadinessInput"
+  );
+  const admissionTypeEnd = liveCapabilitySrc.indexOf(
+    "export function evaluatePrivateInputAdmissionReadiness",
+    admissionTypeStart
+  );
+  assert.ok(admissionTypeStart >= 0 && admissionTypeEnd > admissionTypeStart);
+  const admissionType = liveCapabilitySrc.slice(
+    admissionTypeStart,
+    admissionTypeEnd
+  );
+  assert.doesNotMatch(
+    admissionType,
+    /directMomentReserveRpcReady/,
+    "input admission must stay independent of the Moment reserve RPC"
+  );
+  const admissionRequiredStart = liveCapabilitySrc.indexOf(
+    "const required: Array<keyof PrivateInputAdmissionReadinessInput>"
+  );
+  const admissionRequiredEnd = liveCapabilitySrc.indexOf(
+    "];",
+    admissionRequiredStart
+  );
+  const admissionRequired = liveCapabilitySrc.slice(
+    admissionRequiredStart,
+    admissionRequiredEnd
+  );
+  assert.doesNotMatch(admissionRequired, /directMomentReserveRpcReady/);
+}
+assert.match(
+  liveReadinessSrc,
+  /directMomentReserveRpcReady:\s*privateInputs\.directMomentReserveRpcReady/
+);
+
+{
+  const privatePreviewReady = {
+    authConfigured: true,
+    durableAtomicReservationConfigured: true,
+    durableReconciliationConfigured: true,
+    providerConfigured: true,
+    privateResultsBucketReady: true,
+    privateResultsSchemaReady: true,
+    privateResultsRpcReady: true,
+    privateInputsBucketReady: true,
+    privateInputsSchemaReady: true,
+    privateInputsReserveRpcReady: true,
+    directMomentReserveRpcReady: true,
+    privateInputsDiscoveryReady: true,
+    providerOutputAllowlistConfigured: true,
+    privateLiveEnabled: true,
+    privateLiveAllowlistConfigured: true,
+    privateLiveBudgetConfigured: true,
+    providerValidationEnvironmentAllowed: true,
+    providerValidationBudgetConfigured: true,
+    durableProviderBudgetSchemaReady: true,
+    durableProviderBudgetRpcReady: true,
+  };
+  assert.equal(
+    evaluatePrivatePreviewReadiness(privatePreviewReady).ready,
+    true
+  );
+  const closed = evaluatePrivatePreviewReadiness({
+    ...privatePreviewReady,
+    directMomentReserveRpcReady: false,
+  });
+  assert.equal(closed.ready, false);
+  assert.deepEqual(closed.missing, ["directMomentReserveRpcReady"]);
+
+  const admissionReady = {
+    authConfigured: true,
+    privateInputsBucketReady: true,
+    privateInputsSchemaReady: true,
+    privateInputsAssetRpcReady: true,
+    privateLiveEnabled: true,
+    privateLiveAllowlistConfigured: true,
+  };
+  assert.equal(
+    evaluatePrivateInputAdmissionReadiness(admissionReady).ready,
+    true,
+    "missing Moment reserve RPC must not block upload/complete admission"
+  );
+}
 
 // ─── 4. Behavioral unit tests for liveReservation mapping (no network) ────
 
@@ -506,5 +618,5 @@ rpcResponse = { ok: false, code: "LEGACY_JOB_INPUT_UNBOUND" };
 }
 
 console.log(
-  "direct-moment-input-binding-regression: PASS (RPC bind · route order · same-asset idempotency · conflict · legacy unbound · service-role · no leakage · Flux no-asset)"
+  "direct-moment-input-binding-regression: PASS (RPC bind · route order · same-asset idempotency · conflict · legacy unbound · service-role · no leakage · Flux no-asset · Preview readiness probe)"
 );

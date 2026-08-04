@@ -472,6 +472,8 @@ export async function probePrivateToyAssets(): Promise<{
   schemaReady: boolean;
   assetRpcReady: boolean;
   reserveRpcReady: boolean;
+  /** Direct Moment with-asset reserve RPC from 2026080501 migration. */
+  directMomentReserveRpcReady: boolean;
   discoveryReady: boolean;
 }> {
   const admin = getSupabaseAdmin();
@@ -481,10 +483,21 @@ export async function probePrivateToyAssets(): Promise<{
       schemaReady: false,
       assetRpcReady: false,
       reserveRpcReady: false,
+      directMomentReserveRpcReady: false,
       discoveryReady: false,
     };
   }
-  const [bucket, table, createRpc, completeRpc, reserveRpc, statusRpc, resolveRpc, discovery] = await Promise.all([
+  const [
+    bucket,
+    table,
+    createRpc,
+    completeRpc,
+    reserveRpc,
+    statusRpc,
+    resolveRpc,
+    directMomentReserveRpc,
+    discovery,
+  ] = await Promise.all([
     admin.storage.getBucket(PRIVATE_TOY_INPUTS_BUCKET),
     admin.from("toy_assets").select("id", { head: true, count: "exact" }).limit(1),
     admin.rpc("pikbo_create_toy_asset_v1", {
@@ -517,6 +530,17 @@ export async function probePrivateToyAssets(): Promise<{
       p_pack_run_id: null,
       p_job_id: null,
     }),
+    // Zero-mutation existence/shape probe: null identity must return the
+    // exact safe AUTH_REQUIRED code without opening Provider authorization
+    // or writing credits/jobs. Missing migration → rpc error → not ready.
+    admin.rpc("pikbo_reserve_generation_with_asset_v1", {
+      p_user_id: null,
+      p_idempotency_key: null,
+      p_effect_slug: null,
+      p_quoted_credits: null,
+      p_input_asset_id: null,
+      p_rights_confirmed: false,
+    }),
     admin.from("seller_pack_runs").select("id,input_asset_id,rights_confirmed_at").limit(1),
   ]);
   const createPayload = rpcPayload(createRpc.data);
@@ -524,6 +548,7 @@ export async function probePrivateToyAssets(): Promise<{
   const reservePayload = rpcPayload(reserveRpc.data);
   const statusPayload = rpcPayload(statusRpc.data);
   const resolvePayload = rpcPayload(resolveRpc.data);
+  const directMomentPayload = rpcPayload(directMomentReserveRpc.data);
   return {
     bucketReady: !bucket.error && bucket.data?.public === false,
     schemaReady: !table.error,
@@ -539,6 +564,9 @@ export async function probePrivateToyAssets(): Promise<{
       statusPayload?.code === "AUTH_REQUIRED" &&
       !resolveRpc.error &&
       resolvePayload?.code === "INVALID_IDENTITY",
+    directMomentReserveRpcReady:
+      !directMomentReserveRpc.error &&
+      directMomentPayload?.code === "AUTH_REQUIRED",
     discoveryReady: !discovery.error,
   };
 }
