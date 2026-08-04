@@ -333,55 +333,53 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         {!hideFooter ? <Footer /> : null}
       </div>
 
-      {!resultShell && !sellerPackCreate ? <nav
-        className={cn(
-          "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
-          home
-            ? "relative border-[#D4D8E0] bg-[#F7F8FA]/96"
-            : "sticky bottom-0 border-white/10 bg-[#0A0A0A]/96"
-        )}
-        aria-label="Mobile navigation"
-      >
-        {MOBILE_NAV.map((item) => {
-          const on = active(path, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={on ? "page" : undefined}
-              className={cn(
-                "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
-                home
-                  ? on
-                    ? "text-[#2457E6]"
-                    : "text-[#747B87]"
-                  : motionBrand
+      {/* Home keeps the five-door mobile nav; Moment Create and Seller Pack hide it. */}
+      {!momentCreate && !sellerPackCreate ? (
+        <nav
+          className={cn(
+            "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
+            home
+              ? "relative border-white/10 bg-[#08080A]/96"
+              : "sticky bottom-0 border-white/10 bg-[#0A0A0A]/96"
+          )}
+          aria-label="Mobile navigation"
+          data-mobile-nav={home ? "home-moment" : "default"}
+        >
+          {MOBILE_NAV.map((item) => {
+            const on = active(path, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={on ? "page" : undefined}
+                className={cn(
+                  "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
+                  motionBrand
                     ? on
                       ? "text-[#FF6A4D]"
                       : "text-[#F7F4ED]/44"
-                  : on
-                    ? "text-[#CBFF3D]"
-                    : "text-[#F7F4ED]/38"
-              )}
-            >
-              <span
-                className={cn(
-                  "mb-1 h-1 w-1 rounded-full",
-                  on
-                    ? home
-                      ? "bg-[#2457E6]"
-                      : motionBrand
+                    : on
+                      ? "text-[#CBFF3D]"
+                      : "text-[#F7F4ED]/38"
+                )}
+              >
+                <span
+                  className={cn(
+                    "mb-1 h-1 w-1 rounded-full",
+                    on
+                      ? motionBrand
                         ? "bg-[#FF4D2E]"
                         : "bg-[#CBFF3D]"
-                    : "bg-transparent"
-                )}
-                aria-hidden
-              />
-              <span className="truncate">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav> : null}
+                      : "bg-transparent"
+                  )}
+                  aria-hidden
+                />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      ) : null}
     </div>
   );
 }
