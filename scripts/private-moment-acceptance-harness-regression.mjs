@@ -27,6 +27,7 @@ const {
   assertAllowedAcceptanceOrigin,
   assertLiveGenerateSuccess,
   assertDurableOwnedLibraryRow,
+  isPrivateStorageSignedDeliveryUrl,
   buildFixedMomentPayload,
   sanitizeEvidence,
   createNetworkAudit,
@@ -37,6 +38,10 @@ const {
   runRealAcceptance,
   main,
 } = await import(harnessPath);
+
+/** Realistic short-lived private Storage signed delivery URL (generate body). */
+const MOCK_SIGNED_DELIVERY_URL =
+  "https://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/sign/pikbo-private-results/owner/job/result.mp4?token=mock-signed-token-do-not-log";
 
 // ── Source contract ──
 
@@ -50,6 +55,9 @@ assert.match(source, /PROTECTED_PREVIEW_ORIGIN/);
 assert.match(source, /pikbo-git-codex-private-validation-pi-kbo\.vercel\.app/);
 assert.match(source, /assertLiveGenerateSuccess/);
 assert.match(source, /assertDurableOwnedLibraryRow/);
+assert.match(source, /isPrivateStorageSignedDeliveryUrl/);
+assert.match(source, /pikbo-private-results/);
+assert.match(source, /LIBRARY_DOWNLOAD_PATH_NOT_GENERATE_CONTRACT/);
 assert.match(source, /parseMode/);
 assert.match(source, /dry-run/);
 assert.match(source, /sanitizeEvidence/);
@@ -213,16 +221,32 @@ assert.equal(payload.assetId, "asset-aaaaaaaa");
 assert.equal(payload.image, undefined);
 assert.equal(FIXED_MOMENT_CONTRACT.productContract, "toy-moment-v1");
 
-// ── Live generate / Library row validators (demo false-positive rejection) ──
+// ── Live generate / Library row validators (two-phase URL contract) ──
 
 const jobId = "22222222-2222-4222-8222-222222222222";
+
+assert.equal(isPrivateStorageSignedDeliveryUrl(MOCK_SIGNED_DELIVERY_URL), true);
+assert.equal(
+  isPrivateStorageSignedDeliveryUrl(`/api/downloads/${jobId}`),
+  false
+);
+assert.equal(
+  isPrivateStorageSignedDeliveryUrl("https://queue.fal.run/fal-ai/seedance/x"),
+  false
+);
+assert.equal(
+  isPrivateStorageSignedDeliveryUrl("http://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/sign/pikbo-private-results/x"),
+  false
+);
+
+// Demo / incomplete flags fail closed.
 assert.equal(
   assertLiveGenerateSuccess(
     {
       demo: true,
       processedUpload: false,
       privateResult: false,
-      videoUrl: `/api/downloads/${jobId}`,
+      videoUrl: MOCK_SIGNED_DELIVERY_URL,
       jobId,
     },
     true
@@ -235,7 +259,7 @@ assert.equal(
       demo: false,
       processedUpload: false,
       privateResult: true,
-      videoUrl: `/api/downloads/${jobId}`,
+      videoUrl: MOCK_SIGNED_DELIVERY_URL,
       jobId,
     },
     true
@@ -248,7 +272,7 @@ assert.equal(
       demo: false,
       processedUpload: true,
       privateResult: false,
-      videoUrl: `/api/downloads/${jobId}`,
+      videoUrl: MOCK_SIGNED_DELIVERY_URL,
       jobId,
     },
     true
@@ -268,6 +292,8 @@ assert.equal(
   ).ok,
   false
 );
+
+// Old Library-relative path is NOT the generate contract.
 assert.equal(
   assertLiveGenerateSuccess(
     {
@@ -278,10 +304,57 @@ assert.equal(
       jobId,
     },
     true
-  ).ok,
-  true
+  ).code,
+  "LIBRARY_DOWNLOAD_PATH_NOT_GENERATE_CONTRACT"
 );
 
+// Provider host and non-HTTPS fail closed.
+assert.equal(
+  assertLiveGenerateSuccess(
+    {
+      demo: false,
+      processedUpload: true,
+      privateResult: true,
+      videoUrl: "https://queue.fal.run/fal-ai/seedance/result/xyz",
+      jobId,
+    },
+    true
+  ).code,
+  "PROVIDER_URL_REJECTED"
+);
+assert.equal(
+  assertLiveGenerateSuccess(
+    {
+      demo: false,
+      processedUpload: true,
+      privateResult: true,
+      videoUrl:
+        "http://lpfvfybkggiugosugfcw.supabase.co/storage/v1/object/sign/pikbo-private-results/x.mp4?token=t",
+      jobId,
+    },
+    true
+  ).code,
+  "VIDEO_URL_NOT_HTTPS"
+);
+
+// Real signed private Storage URL passes; raw URL is not echoed.
+const liveOk = assertLiveGenerateSuccess(
+  {
+    demo: false,
+    processedUpload: true,
+    privateResult: true,
+    uploadIgnored: false,
+    videoUrl: MOCK_SIGNED_DELIVERY_URL,
+    jobId,
+  },
+  true
+);
+assert.equal(liveOk.ok, true);
+assert.equal(liveOk.jobId, jobId);
+assert.equal(liveOk.hasPrivateSignedDeliveryUrl, true);
+assert.equal(Object.hasOwn(liveOk, "videoUrl"), false);
+
+// Library row still requires controlled /api/downloads path.
 assert.equal(
   assertDurableOwnedLibraryRow(
     {
@@ -309,6 +382,20 @@ assert.equal(
     jobId
   ).ok,
   true
+);
+assert.equal(
+  assertDurableOwnedLibraryRow(
+    {
+      id: jobId,
+      status: "succeeded",
+      owned: true,
+      downloadAllowed: true,
+      demo: false,
+      videoUrl: MOCK_SIGNED_DELIVERY_URL,
+    },
+    jobId
+  ).reason,
+  "videoUrl_not_controlled"
 );
 
 // ── Call bounds ──
@@ -345,6 +432,7 @@ const dirty = {
   providerUrl: "https://queue.fal.run/fal-ai/seedance/result/xyz",
   providerModel: "fal-ai/bytedance/seedance/v1/pro",
   videoUrl: `/api/downloads/${jobId}`,
+  generateVideoUrl: MOCK_SIGNED_DELIVERY_URL,
   safeCount: 1,
   nested: { authorization: "Bearer secret", note: "ok" },
 };
@@ -356,6 +444,10 @@ assert.equal(clean.objectKey, "[redacted]");
 assert.equal(clean.providerUrl, "[redacted]");
 assert.equal(clean.providerModel, "[redacted]");
 assert.equal(clean.videoUrl, "/api/downloads/[job]");
+// Short-lived signed delivery URL must never appear verbatim in evidence.
+assert.notEqual(clean.generateVideoUrl, MOCK_SIGNED_DELIVERY_URL);
+assert.doesNotMatch(JSON.stringify(clean), /mock-signed-token-do-not-log/);
+assert.doesNotMatch(JSON.stringify(clean), /token=mock/);
 assert.equal(clean.safeCount, 1);
 assert.equal(clean.nested.authorization, "[redacted]");
 assert.equal(clean.nested.note, "ok");
@@ -458,7 +550,8 @@ function makePassingMock({ pendingUpload = false } = {}) {
         ok: true,
         jobId,
         requestId: jobId,
-        videoUrl: `/api/downloads/${jobId}`,
+        // Real generate contract: short-lived private Storage signed HTTPS URL.
+        videoUrl: MOCK_SIGNED_DELIVERY_URL,
         demo: false,
         processedUpload: true,
         privateResult: true,
@@ -511,6 +604,8 @@ function makePassingMock({ pendingUpload = false } = {}) {
   });
   assert.equal(realEvidence.verdict, "PASS_ONE_SKU_REAL");
   assert.equal(realEvidence.mode, "real");
+  assert.equal(realEvidence.generate.hasPrivateSignedDeliveryUrl, true);
+  assert.equal(realEvidence.library.downloadPathControlled, true);
   assert.equal(realEvidence.spend.generateCalls, 1);
   assert.equal(realEvidence.spend.uploadPrepareCalls, 1);
   assert.equal(realEvidence.spend.uploadPutCalls, 0);
@@ -525,6 +620,9 @@ function makePassingMock({ pendingUpload = false } = {}) {
   assert.doesNotMatch(realJson, /queue\.fal\.run/);
   assert.doesNotMatch(realJson, /user\/secret/);
   assert.doesNotMatch(realJson, /should-not-leak/);
+  assert.doesNotMatch(realJson, /mock-signed-token-do-not-log/);
+  assert.doesNotMatch(realJson, /token=mock/);
+  assert.doesNotMatch(realJson, /pikbo-private-results\/owner/);
 }
 
 // ── Pending upload path: prepare + PUT + complete each once ──
@@ -578,7 +676,7 @@ function makePassingMock({ pendingUpload = false } = {}) {
         ok: true,
         jobId,
         requestId: jobId,
-        videoUrl: `/api/downloads/${jobId}`,
+        videoUrl: MOCK_SIGNED_DELIVERY_URL,
         demo: true,
         processedUpload: false,
         privateResult: false,
@@ -600,6 +698,104 @@ function makePassingMock({ pendingUpload = false } = {}) {
   assert.equal(demoEvidence.verdict, "FAIL");
   assert.equal(demoEvidence.stage, "generate");
   assert.equal(demoEvidence.code, "DEMO_RESULT_REJECTED");
+}
+
+// ── Old /api/downloads generate body is NOT the live contract ──
+
+{
+  const mockFetch = async (url, init = {}) => {
+    const target = new URL(String(url), PROTECTED_PREVIEW_ORIGIN);
+    const method = String(init.method || "GET").toUpperCase();
+    if (target.pathname === "/api/assets/upload-url") {
+      return jsonResponse(201, {
+        ok: true,
+        assetId,
+        inputAssetId: assetId,
+        state: "ready",
+      });
+    }
+    if (target.pathname === "/api/assets/complete") {
+      return jsonResponse(200, {
+        ok: true,
+        inputAssetId: assetId,
+        asset: { id: assetId, state: "ready" },
+      });
+    }
+    if (target.pathname === "/api/generate" && method === "POST") {
+      return jsonResponse(200, {
+        ok: true,
+        jobId,
+        requestId: jobId,
+        // Legacy false immediate contract — must fail generate gate.
+        videoUrl: `/api/downloads/${jobId}`,
+        demo: false,
+        processedUpload: true,
+        privateResult: true,
+      });
+    }
+    throw new Error(`unexpected path in library-path generate mock: ${target.pathname}`);
+  };
+  const legacy = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: "sb-auth-token=super-secret-session",
+    imagePath,
+    skuLabel: "legacy-path-reject",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(legacy.verdict, "FAIL");
+  assert.equal(legacy.stage, "generate");
+  assert.equal(legacy.code, "LIBRARY_DOWNLOAD_PATH_NOT_GENERATE_CONTRACT");
+}
+
+// ── Provider host on generate videoUrl must NOT PASS ──
+
+{
+  const mockFetch = async (url, init = {}) => {
+    const target = new URL(String(url), PROTECTED_PREVIEW_ORIGIN);
+    const method = String(init.method || "GET").toUpperCase();
+    if (target.pathname === "/api/assets/upload-url") {
+      return jsonResponse(201, {
+        ok: true,
+        assetId,
+        inputAssetId: assetId,
+        state: "ready",
+      });
+    }
+    if (target.pathname === "/api/assets/complete") {
+      return jsonResponse(200, {
+        ok: true,
+        inputAssetId: assetId,
+        asset: { id: assetId, state: "ready" },
+      });
+    }
+    if (target.pathname === "/api/generate" && method === "POST") {
+      return jsonResponse(200, {
+        ok: true,
+        jobId,
+        requestId: jobId,
+        videoUrl: "https://queue.fal.run/fal-ai/seedance/result/xyz",
+        demo: false,
+        processedUpload: true,
+        privateResult: true,
+      });
+    }
+    throw new Error(`unexpected path in provider-url mock: ${target.pathname}`);
+  };
+  const providerLeak = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: "sb-auth-token=super-secret-session",
+    imagePath,
+    skuLabel: "provider-url-reject",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(providerLeak.verdict, "FAIL");
+  assert.equal(providerLeak.stage, "generate");
+  assert.equal(providerLeak.code, "PROVIDER_URL_REJECTED");
+  assert.doesNotMatch(JSON.stringify(providerLeak), /queue\.fal\.run/);
 }
 
 // ── Non-owned Library row must NOT PASS ──
@@ -628,7 +824,7 @@ function makePassingMock({ pendingUpload = false } = {}) {
         ok: true,
         jobId,
         requestId: jobId,
-        videoUrl: `/api/downloads/${jobId}`,
+        videoUrl: MOCK_SIGNED_DELIVERY_URL,
         demo: false,
         processedUpload: true,
         privateResult: true,
@@ -768,5 +964,5 @@ assert.equal(invalidMain.evidence.verdict, "FAIL_INVALID_MODE");
 rmSync(tmp, { recursive: true, force: true });
 
 console.log(
-  "private-moment-acceptance-harness-regression: PASS (protected-origin · demo-reject · pending-upload · one-call bounds · sanitized invalid-mode)"
+  "private-moment-acceptance-harness-regression: PASS (signed-generate-url · library-download-path · demo/provider reject · pending-upload · one-call bounds · sanitized evidence)"
 );

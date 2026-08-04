@@ -1,7 +1,9 @@
 # Private Moment one-SKU acceptance harness
 
-Status: operator runbook  
-Spend: **off by default**  
+Status: operator runbook
+
+Spend: **off by default**
+
 Production host: **forbidden**
 
 This harness is the code-side operator path for a single fixed Street Power-Up
@@ -44,35 +46,50 @@ PIKBO_ACCEPTANCE_IMAGE_PATH='/path/to/owned-toy.jpg' \
 npm run private-moment-acceptance
 ```
 
-`PASS_ONE_SKU_REAL` requires the generate response to be non-demo
-(`demo !== true`), `processedUpload === true`, `privateResult === true`, with a
-controlled `/api/downloads/…` URL, plus a Library row that is `status=succeeded`,
-`owned=true`, `downloadAllowed=true`, and a durable private listing mode.
+### Two-phase URL contract (matches generate + Library)
+
+`PASS_ONE_SKU_REAL` is a two-phase check aligned with
+`app/api/generate/route.ts` private delivery and Library recovery:
+
+1. **Immediate generate success** (`POST /api/generate`) must be non-demo
+   (`demo !== true`), `processedUpload === true`, `privateResult === true`,
+   `uploadIgnored !== true`, with a durable job id, and
+   `videoUrl` must be a **short-lived absolute HTTPS signed URL** for Pikbo
+   private Storage (`*.supabase.co/storage/v1/object/sign/…/pikbo-private-results/…`).
+   It is **not** `/api/downloads/{jobId}`. Raw provider hosts and demo catalog
+   paths fail closed. The harness never writes the signed URL into evidence.
+2. **Library refresh** (`GET /api/generations`) must list a durable owner row:
+   `status=succeeded`, `owned=true`, `downloadAllowed=true`, non-demo, matching
+   job id, and a controlled `videoUrl` of the form `/api/downloads/{jobId}`.
+3. **Owner download check** exercises `HEAD|GET /api/downloads/{jobId}` only
+   after the Library row passes.
+
 Cached/demo responses never count as PASS.
 
-Flow (bounded):
+## Flow (bounded)
 
-1. `POST /api/assets/upload-url` — at most once  
-2. Storage PUT of the owned image — at most once when pending  
-3. `POST /api/assets/complete` — at most once  
+1. `POST /api/assets/upload-url` — at most once
+2. Storage PUT of the owned image — at most once when pending
+3. `POST /api/assets/complete` — at most once
 4. `POST /api/generate` with `productContract=toy-moment-v1`, effect
    `street-power-up`, `9:16` / 5s / 720p / Seedance Fast, `ownsRights` +
-   `allowProviderSpend` — **exactly one** attempt  
-5. `GET /api/generations` Library refresh  
+   `allowProviderSpend` — **exactly one** attempt
+5. `GET /api/generations` Library refresh
 6. Owner-only `HEAD|GET /api/downloads/{jobId}`
 
 ## Evidence rules
 
 Printed evidence is sanitized. It must **never** include:
 
-- cookies / authorization headers  
-- emails  
-- signed URLs  
-- storage object keys  
-- raw provider URLs or provider model identifiers  
+- cookies / authorization headers
+- emails
+- signed URLs (including generate `videoUrl`)
+- storage object keys
+- raw provider URLs or provider model identifiers
 
 Safe fields include counts, HTTP statuses, contract name, sha256 **prefix**,
-controlled `/api/downloads/…` shape, and pass/fail verdict.
+boolean shape markers (`hasPrivateSignedDeliveryUrl`), controlled Library
+`/api/downloads/…` path shape, and pass/fail verdict.
 
 ## Fail-closed checks (CI-safe)
 
@@ -81,6 +98,7 @@ npm run private-moment-acceptance-regression
 ```
 
 Proves dry-run no-spend, real-mode gate refusal without confirmation/session/image,
+signed generate URL vs Library download path contract, demo/provider fail-closed,
 one-call generate bound with mocks, and sanitizer redaction. Does not contact
 Provider, Stripe, or production.
 

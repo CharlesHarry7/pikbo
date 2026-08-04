@@ -29,10 +29,8 @@
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Explicit operator phrase required before any real generate. */
 export const SPEND_CONFIRMATION_PHRASE =
@@ -116,8 +114,49 @@ export function assertAllowedAcceptanceOrigin(rawUrl) {
 }
 
 /**
- * Live generate success must be non-demo, private, processed fixed-contract output.
+ * Immediate live generate delivery is a short-lived absolute HTTPS signed URL
+ * for Pikbo private Storage (`pikbo-private-results`), matching
+ * app/api/generate/route.ts privateDeliveryUrl / GenerateSuccess.videoUrl.
+ * Controlled `/api/downloads/{jobId}` is Library-only, not the generate body.
+ * Never log or return the raw URL into evidence.
+ */
+export function isPrivateStorageSignedDeliveryUrl(videoUrl) {
+  if (typeof videoUrl !== "string" || !videoUrl.trim()) return false;
+  const t = videoUrl.trim();
+  // Relative app paths are not the live generate contract.
+  if (t.startsWith("/") || t.startsWith("//")) return false;
+  if (t.startsWith("data:")) return false;
+  try {
+    const u = new URL(t);
+    if (u.protocol !== "https:") return false;
+    if (!u.hostname || u.username || u.password) return false;
+    // Raw provider hosts never cross the generate boundary as delivery.
+    if (
+      /(?:^|\.)fal\.ai$/i.test(u.hostname) ||
+      /(?:^|\.)fal\.run$/i.test(u.hostname) ||
+      /^queue\.fal\./i.test(u.hostname) ||
+      PROVIDER_URL_RE.test(u.hostname)
+    ) {
+      return false;
+    }
+    // Supabase signed object URL for the private results bucket.
+    const path = u.pathname || "";
+    const isSupabase = /\.supabase\.co$/i.test(u.hostname);
+    const isSignedObject =
+      path.includes("/storage/v1/object/sign/") ||
+      path.includes("/storage/v1/object/authenticated/");
+    const isPrivateResultsBucket = path.includes("pikbo-private-results");
+    return isSupabase && isSignedObject && isPrivateResultsBucket;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Live generate success must be non-demo, private, processed fixed-contract output
+ * with a short-lived Pikbo private Storage signed HTTPS delivery URL.
  * Cached/demo responses must never become PASS_ONE_SKU_REAL.
+ * Does not echo the raw videoUrl (sanitizer / evidence must never see it).
  */
 export function assertLiveGenerateSuccess(generated, httpOk) {
   if (!httpOk) {
@@ -157,20 +196,49 @@ export function assertLiveGenerateSuccess(generated, httpOk) {
   }
   const videoUrl =
     typeof generated.videoUrl === "string" ? generated.videoUrl : "";
-  if (!videoUrl.startsWith("/api/downloads/")) {
-    return {
-      ok: false,
-      code: "UNSAFE_OR_CACHED_VIDEO_URL",
-      reason: "videoUrl_not_owner_download",
-    };
-  }
-  // Reject demo catalog paths even if other flags were forged.
+  // Reject demo catalog and Library-relative paths on the generate response.
   if (videoUrl.startsWith("/demos/") || /\/demos\//.test(videoUrl)) {
     return {
       ok: false,
       code: "DEMO_CATALOG_URL",
       reason: "demo_catalog_video",
     };
+  }
+  if (videoUrl.startsWith("/api/downloads/")) {
+    return {
+      ok: false,
+      code: "LIBRARY_DOWNLOAD_PATH_NOT_GENERATE_CONTRACT",
+      reason: "videoUrl_is_library_path_not_signed_storage",
+    };
+  }
+  if (!isPrivateStorageSignedDeliveryUrl(videoUrl)) {
+    // Classify common fail-closed cases without echoing the URL.
+    let reason = "videoUrl_not_private_storage_signed";
+    let code = "UNSAFE_OR_NON_PRIVATE_VIDEO_URL";
+    if (!videoUrl) {
+      reason = "videoUrl_missing";
+      code = "VIDEO_URL_MISSING";
+    } else if (/^https?:\/\//i.test(videoUrl)) {
+      try {
+        const u = new URL(videoUrl);
+        if (u.protocol !== "https:") {
+          reason = "videoUrl_not_https";
+          code = "VIDEO_URL_NOT_HTTPS";
+        } else if (
+          /fal\.ai|fal\.run|queue\.fal/i.test(u.hostname) ||
+          PROVIDER_URL_RE.test(u.hostname)
+        ) {
+          reason = "videoUrl_provider_host";
+          code = "PROVIDER_URL_REJECTED";
+        }
+      } catch {
+        reason = "videoUrl_unparseable";
+      }
+    } else if (videoUrl.startsWith("/")) {
+      reason = "videoUrl_relative_not_signed";
+      code = "RELATIVE_VIDEO_URL_REJECTED";
+    }
+    return { ok: false, code, reason };
   }
   const jobId =
     (typeof generated.jobId === "string" && generated.jobId) ||
@@ -179,7 +247,8 @@ export function assertLiveGenerateSuccess(generated, httpOk) {
   if (!jobId || jobId.length < 8) {
     return { ok: false, code: "JOB_ID_MISSING", reason: "job_id_missing" };
   }
-  return { ok: true, jobId, videoUrl };
+  // Intentionally omit videoUrl — callers must not log or embed the signed URL.
+  return { ok: true, jobId, hasPrivateSignedDeliveryUrl: true };
 }
 
 /**
@@ -820,7 +889,8 @@ export async function runRealAcceptance(options) {
       demo: false,
       processedUpload: true,
       privateResult: true,
-      hasControlledVideoUrl: true,
+      // Shape marker only — never the raw short-lived signed delivery URL.
+      hasPrivateSignedDeliveryUrl: liveCheck.hasPrivateSignedDeliveryUrl === true,
     },
     library: {
       ok: libraryOk,
