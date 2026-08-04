@@ -27,6 +27,8 @@ const {
   assertAllowedAcceptanceOrigin,
   assertLiveGenerateSuccess,
   assertDurableOwnedLibraryRow,
+  assertOwnerPrivateDownloadHead,
+  assertAnonymousDownloadDenied,
   isPrivateStorageSignedDeliveryUrl,
   buildFixedMomentPayload,
   sanitizeEvidence,
@@ -35,6 +37,7 @@ const {
   assertDryRunNoSpend,
   buildDryRunEvidence,
   classifyApiPath,
+  classifyDownloadProbe,
   runRealAcceptance,
   main,
 } = await import(harnessPath);
@@ -58,6 +61,13 @@ assert.match(source, /assertDurableOwnedLibraryRow/);
 assert.match(source, /isPrivateStorageSignedDeliveryUrl/);
 assert.match(source, /pikbo-private-results/);
 assert.match(source, /LIBRARY_DOWNLOAD_PATH_NOT_GENERATE_CONTRACT/);
+assert.match(source, /assertOwnerPrivateDownloadHead/);
+assert.match(source, /assertAnonymousDownloadDenied/);
+assert.match(source, /X-Pikbo-Private-Result|x-pikbo-private-result/);
+assert.match(source, /AUTH_REQUIRED/);
+assert.match(source, /downloadOwner/);
+assert.match(source, /downloadAnonymous/);
+assert.match(source, /authMode/);
 assert.match(source, /parseMode/);
 assert.match(source, /dry-run/);
 assert.match(source, /sanitizeEvidence/);
@@ -419,7 +429,75 @@ assert.equal(classifyApiPath("/api/assets/upload-url"), "uploadPrepare");
 assert.equal(classifyApiPath("/api/assets/complete"), "uploadComplete");
 assert.equal(classifyApiPath("/api/generations"), "library");
 assert.equal(classifyApiPath("/api/downloads/abc"), "download");
+assert.equal(classifyDownloadProbe("/api/downloads/abc", "owner"), "downloadOwner");
+assert.equal(
+  classifyDownloadProbe("/api/downloads/abc", "anonymous"),
+  "downloadAnonymous"
+);
 assert.equal(MAX_GENERATE_CALLS, 1);
+
+// ── Owner private HEAD + anonymous denial validators ──
+
+function mockHeadResponse(status, headers) {
+  return {
+    status,
+    headers: {
+      get(name) {
+        const key = Object.keys(headers).find(
+          (k) => k.toLowerCase() === name.toLowerCase()
+        );
+        return key ? headers[key] : null;
+      },
+    },
+  };
+}
+
+assert.equal(
+  assertOwnerPrivateDownloadHead(
+    mockHeadResponse(200, {
+      "X-Pikbo-Download": "allowed",
+      "X-Pikbo-Private-Result": "1",
+    })
+  ).ok,
+  true
+);
+assert.equal(
+  assertOwnerPrivateDownloadHead(
+    mockHeadResponse(200, { "X-Pikbo-Download": "allowed" })
+  ).reason,
+  "owner_private_result_marker_missing"
+);
+assert.equal(
+  assertOwnerPrivateDownloadHead(mockHeadResponse(302, {})).reason,
+  "owner_redirect_not_allowed"
+);
+assert.equal(
+  assertOwnerPrivateDownloadHead(
+    mockHeadResponse(200, { "X-Pikbo-Download": "blocked" })
+  ).reason,
+  "owner_download_not_allowed"
+);
+
+assert.equal(
+  assertAnonymousDownloadDenied(
+    mockHeadResponse(401, { "X-Pikbo-Download-Code": "AUTH_REQUIRED" })
+  ).ok,
+  true
+);
+assert.equal(
+  assertAnonymousDownloadDenied(mockHeadResponse(200, {})).reason,
+  "anonymous_public_access"
+);
+assert.equal(
+  assertAnonymousDownloadDenied(mockHeadResponse(302, {})).reason,
+  "anonymous_public_access"
+);
+assert.equal(
+  assertAnonymousDownloadDenied(
+    mockHeadResponse(401, { "X-Pikbo-Download-Code": "NOT_FOUND" })
+  ).reason,
+  "anonymous_code_not_auth_required"
+);
 
 // ── Sanitizer ──
 
@@ -479,18 +557,34 @@ function jsonResponse(status, body) {
   });
 }
 
-function makePassingMock({ pendingUpload = false } = {}) {
+function requestHasCookie(init) {
+  const headers = init?.headers;
+  if (!headers) return false;
+  if (typeof headers.get === "function") {
+    return Boolean(headers.get("cookie") || headers.get("Cookie"));
+  }
+  return Boolean(headers.cookie || headers.Cookie || headers.authorization);
+}
+
+function makePassingMock({
+  pendingUpload = false,
+  ownerHead = "ok",
+  anonymousHead = "deny",
+} = {}) {
   const counts = {
     uploadPrepare: 0,
     uploadPut: 0,
     uploadComplete: 0,
     generate: 0,
     library: 0,
-    download: 0,
+    downloadOwner: 0,
+    downloadAnonymous: 0,
+    anonymousHadCookie: false,
   };
   const mockFetch = async (url, init = {}) => {
     const target = new URL(String(url), PROTECTED_PREVIEW_ORIGIN);
     const method = String(init.method || "GET").toUpperCase();
+    const authMode = init.authMode === "anonymous" ? "anonymous" : "owner";
 
     if (target.pathname === "/api/assets/upload-url" && method === "POST") {
       counts.uploadPrepare += 1;
@@ -580,11 +674,71 @@ function makePassingMock({ pendingUpload = false } = {}) {
         ],
       });
     }
-    if (target.pathname === `/api/downloads/${jobId}`) {
-      counts.download += 1;
-      return new Response(null, { status: 200 });
+    if (target.pathname === `/api/downloads/${jobId}` && method === "HEAD") {
+      if (authMode === "anonymous") {
+        counts.downloadAnonymous += 1;
+        if (requestHasCookie(init)) counts.anonymousHadCookie = true;
+        assert.equal(
+          requestHasCookie(init),
+          false,
+          "anonymous download probe must not carry cookie"
+        );
+        if (anonymousHead === "public200") {
+          return new Response(null, {
+            status: 200,
+            headers: {
+              "X-Pikbo-Download": "allowed",
+              "X-Pikbo-Private-Result": "1",
+            },
+          });
+        }
+        if (anonymousHead === "public302") {
+          return new Response(null, {
+            status: 302,
+            headers: {
+              Location: MOCK_SIGNED_DELIVERY_URL,
+            },
+          });
+        }
+        return new Response(null, {
+          status: 401,
+          headers: {
+            "X-Pikbo-Download": "blocked",
+            "X-Pikbo-Download-Code": "AUTH_REQUIRED",
+            "Cache-Control": "private, no-store",
+          },
+        });
+      }
+      counts.downloadOwner += 1;
+      assert.equal(requestHasCookie(init), true, "owner HEAD needs cookie");
+      if (ownerHead === "missingMarker") {
+        return new Response(null, {
+          status: 200,
+          headers: {
+            "X-Pikbo-Download": "allowed",
+            // Missing X-Pikbo-Private-Result
+            "X-Pikbo-Demo": "0",
+          },
+        });
+      }
+      if (ownerHead === "redirect") {
+        return new Response(null, {
+          status: 302,
+          headers: { Location: MOCK_SIGNED_DELIVERY_URL },
+        });
+      }
+      return new Response(null, {
+        status: 200,
+        headers: {
+          "X-Pikbo-Download": "allowed",
+          "X-Pikbo-Demo": "0",
+          "X-Pikbo-Watermark": "0",
+          "X-Pikbo-Private-Result": "1",
+          "Cache-Control": "private, no-store",
+        },
+      });
     }
-    throw new Error(`unexpected mock URL ${target.pathname}`);
+    throw new Error(`unexpected mock URL ${target.pathname} ${method}`);
   };
   return { mockFetch, counts };
 }
@@ -606,14 +760,26 @@ function makePassingMock({ pendingUpload = false } = {}) {
   assert.equal(realEvidence.mode, "real");
   assert.equal(realEvidence.generate.hasPrivateSignedDeliveryUrl, true);
   assert.equal(realEvidence.library.downloadPathControlled, true);
+  assert.equal(realEvidence.download.ownerOnlyProven, true);
+  assert.equal(realEvidence.download.owner.ok, true);
+  assert.equal(realEvidence.download.owner.httpStatus, 200);
+  assert.equal(realEvidence.download.owner.privateResultMarker, true);
+  assert.equal(realEvidence.download.anonymous.ok, true);
+  assert.equal(realEvidence.download.anonymous.httpStatus, 401);
+  assert.equal(realEvidence.download.anonymous.downloadCode, "AUTH_REQUIRED");
   assert.equal(realEvidence.spend.generateCalls, 1);
   assert.equal(realEvidence.spend.uploadPrepareCalls, 1);
   assert.equal(realEvidence.spend.uploadPutCalls, 0);
   assert.equal(realEvidence.spend.uploadCompleteCalls, 1);
+  assert.equal(realEvidence.network.downloadOwner, 1);
+  assert.equal(realEvidence.network.downloadAnonymous, 1);
   assert.equal(counts.generate, 1);
   assert.equal(counts.uploadPrepare, 1);
   assert.equal(counts.uploadPut, 0);
   assert.equal(counts.uploadComplete, 1);
+  assert.equal(counts.downloadOwner, 1);
+  assert.equal(counts.downloadAnonymous, 1);
+  assert.equal(counts.anonymousHadCookie, false);
   const realJson = JSON.stringify(realEvidence);
   assert.doesNotMatch(realJson, /super-secret-session/);
   assert.doesNotMatch(realJson, /owner@example\.com/);
@@ -639,6 +805,7 @@ function makePassingMock({ pendingUpload = false } = {}) {
     now: () => "2026-08-05T00:00:00.000Z",
   });
   assert.equal(pendingEvidence.verdict, "PASS_ONE_SKU_REAL");
+  assert.equal(pendingEvidence.download.ownerOnlyProven, true);
   assert.equal(pendingEvidence.spend.uploadPrepareCalls, 1);
   assert.equal(pendingEvidence.spend.uploadPutCalls, 1);
   assert.equal(pendingEvidence.spend.uploadCompleteCalls, 1);
@@ -647,6 +814,72 @@ function makePassingMock({ pendingUpload = false } = {}) {
   assert.equal(counts.uploadPut, 1);
   assert.equal(counts.uploadComplete, 1);
   assert.equal(counts.generate, 1);
+  assert.equal(counts.downloadOwner, 1);
+  assert.equal(counts.downloadAnonymous, 1);
+  assert.equal(counts.anonymousHadCookie, false);
+}
+
+// ── Anonymous public 200 fails owner-only proof ──
+
+{
+  const { mockFetch, counts } = makePassingMock({ anonymousHead: "public200" });
+  const open = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: "sb-auth-token=super-secret-session",
+    imagePath,
+    skuLabel: "anon-open-200",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(open.verdict, "FAIL_POST_GENERATE_CHECKS");
+  assert.equal(open.download.owner.ok, true);
+  assert.equal(open.download.anonymous.ok, false);
+  assert.equal(open.download.anonymous.reason, "anonymous_public_access");
+  assert.equal(open.download.ownerOnlyProven, false);
+  assert.equal(counts.anonymousHadCookie, false);
+  assert.equal(counts.generate, 1);
+}
+
+// ── Anonymous public 302 fails owner-only proof ──
+
+{
+  const { mockFetch } = makePassingMock({ anonymousHead: "public302" });
+  const open = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: "sb-auth-token=super-secret-session",
+    imagePath,
+    skuLabel: "anon-open-302",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(open.verdict, "FAIL_POST_GENERATE_CHECKS");
+  assert.equal(open.download.anonymous.ok, false);
+  assert.equal(open.download.anonymous.reason, "anonymous_public_access");
+  assert.doesNotMatch(JSON.stringify(open), /mock-signed-token/);
+}
+
+// ── Owner HEAD missing private marker fails ──
+
+{
+  const { mockFetch } = makePassingMock({ ownerHead: "missingMarker" });
+  const missing = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: "sb-auth-token=super-secret-session",
+    imagePath,
+    skuLabel: "owner-marker-missing",
+    fetchImpl: mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(missing.verdict, "FAIL_POST_GENERATE_CHECKS");
+  assert.equal(missing.download.owner.ok, false);
+  assert.equal(
+    missing.download.owner.reason,
+    "owner_private_result_marker_missing"
+  );
+  assert.equal(missing.download.ownerOnlyProven, false);
 }
 
 // ── Cached/demo false-positive must NOT PASS ──
@@ -964,5 +1197,5 @@ assert.equal(invalidMain.evidence.verdict, "FAIL_INVALID_MODE");
 rmSync(tmp, { recursive: true, force: true });
 
 console.log(
-  "private-moment-acceptance-harness-regression: PASS (signed-generate-url · library-download-path · demo/provider reject · pending-upload · one-call bounds · sanitized evidence)"
+  "private-moment-acceptance-harness-regression: PASS (signed-generate-url · dual download probe · anonymous denial · demo/provider reject · one-call bounds · sanitized evidence)"
 );

@@ -361,7 +361,10 @@ export function createNetworkAudit() {
     uploadComplete: 0,
     generate: 0,
     library: 0,
-    download: 0,
+    /** Owner-cookie download HEAD probes. */
+    downloadOwner: 0,
+    /** Cookie-less anonymous download HEAD probes. */
+    downloadAnonymous: 0,
     other: 0,
     total: 0,
   };
@@ -377,10 +380,22 @@ export function classifyApiPath(pathname) {
   if (pathname === "/api/generations" || pathname.startsWith("/api/generations/")) {
     return "library";
   }
+  // Generic download path; callers reclassify as downloadOwner/downloadAnonymous.
   if (pathname.startsWith("/api/downloads/")) return "download";
   // Storage signed PUT targets are not Pikbo API paths; track as uploadPut.
   if (pathname.includes("/storage/v1/object/")) return "uploadPut";
   return "other";
+}
+
+/**
+ * @param {"owner" | "anonymous"} authMode
+ * @returns {"downloadOwner" | "downloadAnonymous" | string}
+ */
+export function classifyDownloadProbe(pathname, authMode) {
+  if (!pathname.startsWith("/api/downloads/")) {
+    return classifyApiPath(pathname);
+  }
+  return authMode === "anonymous" ? "downloadAnonymous" : "downloadOwner";
 }
 
 export function assertOneCallBounds(audit) {
@@ -401,6 +416,14 @@ export function assertOneCallBounds(audit) {
     audit.uploadComplete <= MAX_UPLOAD_COMPLETE_CALLS,
     `upload complete calls must be ≤ ${MAX_UPLOAD_COMPLETE_CALLS}, got ${audit.uploadComplete}`
   );
+  assert.ok(
+    (audit.downloadOwner || 0) <= 1,
+    `owner download probes must be ≤ 1, got ${audit.downloadOwner}`
+  );
+  assert.ok(
+    (audit.downloadAnonymous || 0) <= 1,
+    `anonymous download probes must be ≤ 1, got ${audit.downloadAnonymous}`
+  );
   return true;
 }
 
@@ -410,10 +433,110 @@ export function assertDryRunNoSpend(audit) {
   assert.equal(audit.uploadComplete, 0, "dry-run must not complete upload");
   assert.equal(audit.generate, 0, "dry-run must not call /api/generate");
   assert.equal(audit.library, 0, "dry-run must not call Library");
-  assert.equal(audit.download, 0, "dry-run must not call download");
+  assert.equal(audit.downloadOwner || 0, 0, "dry-run must not probe owner download");
+  assert.equal(
+    audit.downloadAnonymous || 0,
+    0,
+    "dry-run must not probe anonymous download"
+  );
   assert.equal(audit.other, 0, "dry-run must not make other network calls");
   assert.equal(audit.total, 0, "dry-run network total must be 0");
   return true;
+}
+
+function headerGet(response, name) {
+  if (!response || !response.headers) return "";
+  if (typeof response.headers.get === "function") {
+    return String(response.headers.get(name) || "");
+  }
+  const key = Object.keys(response.headers).find(
+    (k) => k.toLowerCase() === name.toLowerCase()
+  );
+  return key ? String(response.headers[key] || "") : "";
+}
+
+/**
+ * Owner HEAD for private UUID result must match downloads route contract:
+ * 200 + X-Pikbo-Download: allowed + X-Pikbo-Private-Result: 1.
+ * 3xx is not owner-only PASS (would leak signed Location if followed).
+ */
+export function assertOwnerPrivateDownloadHead(response) {
+  const status = Number(response?.status || 0);
+  const download = headerGet(response, "x-pikbo-download");
+  const privateResult = headerGet(response, "x-pikbo-private-result");
+  if (status !== 200) {
+    return {
+      ok: false,
+      reason: status >= 300 && status < 400
+        ? "owner_redirect_not_allowed"
+        : "owner_status_not_200",
+      status,
+      downloadHeader: download || null,
+      privateResultMarker: privateResult === "1",
+    };
+  }
+  if (download !== "allowed") {
+    return {
+      ok: false,
+      reason: "owner_download_not_allowed",
+      status,
+      downloadHeader: download || null,
+      privateResultMarker: privateResult === "1",
+    };
+  }
+  if (privateResult !== "1") {
+    return {
+      ok: false,
+      reason: "owner_private_result_marker_missing",
+      status,
+      downloadHeader: download,
+      privateResultMarker: false,
+    };
+  }
+  return {
+    ok: true,
+    status: 200,
+    downloadHeader: "allowed",
+    privateResultMarker: true,
+  };
+}
+
+/**
+ * Anonymous HEAD (no cookie) for private UUID must be 401 + AUTH_REQUIRED.
+ * Any 2xx/3xx means the route is publicly reachable — fail closed.
+ */
+export function assertAnonymousDownloadDenied(response) {
+  const status = Number(response?.status || 0);
+  const code = headerGet(response, "x-pikbo-download-code");
+  if (status >= 200 && status < 400) {
+    return {
+      ok: false,
+      reason: "anonymous_public_access",
+      status,
+      downloadCode: code || null,
+    };
+  }
+  if (status !== 401) {
+    return {
+      ok: false,
+      reason: "anonymous_status_not_401",
+      status,
+      downloadCode: code || null,
+    };
+  }
+  if (code !== "AUTH_REQUIRED") {
+    return {
+      ok: false,
+      reason: "anonymous_code_not_auth_required",
+      status,
+      downloadCode: code || null,
+    };
+  }
+  return {
+    ok: true,
+    status: 401,
+    downloadCode: "AUTH_REQUIRED",
+  };
 }
 
 /**
@@ -509,6 +632,8 @@ export function buildDryRunEvidence() {
       allowedOrigin: PROTECTED_PREVIEW_ORIGIN,
       requiresNonDemoPrivateProcessed: true,
       requiresOwnedDurableLibraryRow: true,
+      requiresOwnerPrivateDownloadHead: true,
+      requiresAnonymousDownloadDenied: true,
     },
     verdict: "PASS_DRY_RUN_NO_SPEND",
     note:
@@ -531,13 +656,15 @@ function resolveImagePath(rawPath) {
 
 function createGuardedFetch(allowedOrigin, cookie, audit) {
   return async (input, init = {}) => {
+    const authMode = init.authMode === "anonymous" ? "anonymous" : "owner";
+    const { authMode: _authMode, ...restInit } = init;
     const rawUrl =
       typeof input === "string" || input instanceof URL
         ? input.toString()
         : input.url;
     const target = new URL(rawUrl);
     const method = String(
-      init.method ||
+      restInit.method ||
         (typeof input === "object" && input && "method" in input
           ? input.method
           : "GET")
@@ -565,21 +692,36 @@ function createGuardedFetch(allowedOrigin, cookie, audit) {
       throw new Error(`Storage host not allowed: ${target.hostname}`);
     }
 
-    const kind = isOperatorApi
+    const baseKind = isOperatorApi
       ? classifyApiPath(target.pathname)
       : "uploadPut";
+    const kind =
+      baseKind === "download"
+        ? classifyDownloadProbe(target.pathname, authMode)
+        : baseKind;
     audit[kind] = (audit[kind] || 0) + 1;
     audit.total += 1;
     assertOneCallBounds(audit);
 
     // Never attach cookies to storage PUTs (signed URL is the auth).
-    const headers = new Headers(init.headers || {});
-    if (isOperatorApi) {
+    // Anonymous download probes must never inherit the operator session cookie.
+    const headers = new Headers(restInit.headers || {});
+    headers.delete("cookie");
+    headers.delete("authorization");
+    headers.delete("Cookie");
+    headers.delete("Authorization");
+    if (isOperatorApi && authMode === "owner") {
       headers.set("cookie", cookie);
+      if (!headers.has("accept")) headers.set("accept", "application/json");
+    } else if (isOperatorApi && authMode === "anonymous") {
       if (!headers.has("accept")) headers.set("accept", "application/json");
     }
 
-    const response = await fetch(target, { ...init, headers, redirect: "manual" });
+    const response = await fetch(target, {
+      ...restInit,
+      headers,
+      redirect: "manual",
+    });
     return response;
   };
 }
@@ -623,11 +765,15 @@ export async function runRealAcceptance(options) {
     createGuardedFetch(PROTECTED_PREVIEW_ORIGIN, cookie, audit);
 
   // If caller injects fetchImpl, still bound their counts when they use audit.
-  const track = async (url, init) => {
+  // authMode: "owner" (default) attaches the operator cookie; "anonymous"
+  // strips cookie/authorization and must never inherit session credentials.
+  const track = async (url, init = {}) => {
+    const authMode = init.authMode === "anonymous" ? "anonymous" : "owner";
+    const { authMode: _authMode, ...restInit } = init;
     if (fetchImpl) {
       const target = new URL(url, PROTECTED_PREVIEW_ORIGIN);
       // Mocks may only target the protected Preview API or storage PUT hosts.
-      const method = String(init?.method || "GET").toUpperCase();
+      const method = String(restInit.method || "GET").toUpperCase();
       const isStoragePut =
         method === "PUT" &&
         (STORAGE_HOST_RE.test(target.hostname) ||
@@ -637,17 +783,33 @@ export async function runRealAcceptance(options) {
           `Third-party network request forbidden: ${target.hostname}`
         );
       }
-      const kind = classifyApiPath(target.pathname);
-      const finalKind =
+      const baseKind =
         method === "PUT" && !target.pathname.startsWith("/api/")
           ? "uploadPut"
-          : kind;
+          : classifyApiPath(target.pathname);
+      const finalKind =
+        baseKind === "download"
+          ? classifyDownloadProbe(target.pathname, authMode)
+          : baseKind;
       audit[finalKind] = (audit[finalKind] || 0) + 1;
       audit.total += 1;
       assertOneCallBounds(audit);
-      return fetchImpl(url, init);
+
+      const headers = new Headers(restInit.headers || {});
+      // Always strip first so anonymous never inherits caller cookie pollution.
+      headers.delete("cookie");
+      headers.delete("authorization");
+      if (authMode === "owner") {
+        headers.set("cookie", cookie);
+      }
+      return fetchImpl(url, {
+        ...restInit,
+        headers,
+        authMode,
+        redirect: "manual",
+      });
     }
-    return guarded(url, init);
+    return guarded(url, { ...restInit, authMode });
   };
 
   const absoluteImage = resolveImagePath(imagePath);
@@ -838,30 +1000,52 @@ export async function runRealAcceptance(options) {
     libraryRow.ok &&
     libraryModeOk;
 
-  // 6) Owner-only download check (HEAD preferred; fall back to GET without body log).
-  let downloadOk = false;
-  let downloadStatus = 0;
+  // 6) Dual download HEAD probes: owner private marker + anonymous denial.
+  // HEAD only — never follow redirects / signed Location, never log bodies.
+  let ownerProbe = {
+    ok: false,
+    reason: "library_failed",
+    status: 0,
+    downloadHeader: null,
+    privateResultMarker: false,
+  };
+  let anonymousProbe = {
+    ok: false,
+    reason: "library_failed",
+    status: 0,
+    downloadCode: null,
+  };
   if (libraryOk) {
     const downloadUrl = `${baseUrl}/api/downloads/${encodeURIComponent(jobId)}`;
-    let downloadRes = await track(downloadUrl, { method: "HEAD" });
-    if (downloadRes.status === 405 || downloadRes.status === 501) {
-      downloadRes = await track(downloadUrl, {
-        method: "GET",
-        headers: { range: "bytes=0-0" },
-      });
-    }
-    downloadStatus = downloadRes.status;
-    downloadOk = downloadRes.status >= 200 && downloadRes.status < 400;
-    // Drain body so sockets close; never log it.
+    const ownerRes = await track(downloadUrl, {
+      method: "HEAD",
+      authMode: "owner",
+    });
+    ownerProbe = assertOwnerPrivateDownloadHead(ownerRes);
+    // Drain without reading Location or body contents into evidence.
     try {
-      await downloadRes.arrayBuffer();
+      await ownerRes.arrayBuffer();
+    } catch {
+      /* ignore */
+    }
+
+    const anonRes = await track(downloadUrl, {
+      method: "HEAD",
+      authMode: "anonymous",
+    });
+    anonymousProbe = assertAnonymousDownloadDenied(anonRes);
+    try {
+      await anonRes.arrayBuffer();
     } catch {
       /* ignore */
     }
   }
 
+  const ownerOnlyProven = ownerProbe.ok === true && anonymousProbe.ok === true;
   const verdict =
-    libraryOk && downloadOk ? "PASS_ONE_SKU_REAL" : "FAIL_POST_GENERATE_CHECKS";
+    libraryOk && ownerOnlyProven
+      ? "PASS_ONE_SKU_REAL"
+      : "FAIL_POST_GENERATE_CHECKS";
 
   return sanitizeEvidence({
     schemaVersion: 1,
@@ -904,9 +1088,20 @@ export async function runRealAcceptance(options) {
       reason: libraryRow.ok ? undefined : libraryRow.reason,
     },
     download: {
-      ok: downloadOk,
-      httpStatus: downloadStatus,
-      ownerOnlyRoute: true,
+      ownerOnlyProven,
+      owner: {
+        ok: ownerProbe.ok === true,
+        httpStatus: ownerProbe.status || 0,
+        downloadHeader: ownerProbe.downloadHeader || null,
+        privateResultMarker: ownerProbe.privateResultMarker === true,
+        reason: ownerProbe.ok ? undefined : ownerProbe.reason,
+      },
+      anonymous: {
+        ok: anonymousProbe.ok === true,
+        httpStatus: anonymousProbe.status || 0,
+        downloadCode: anonymousProbe.downloadCode || null,
+        reason: anonymousProbe.ok ? undefined : anonymousProbe.reason,
+      },
     },
     spend: {
       confirmed: true,

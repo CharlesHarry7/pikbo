@@ -46,10 +46,10 @@ PIKBO_ACCEPTANCE_IMAGE_PATH='/path/to/owned-toy.jpg' \
 npm run private-moment-acceptance
 ```
 
-### Two-phase URL contract (matches generate + Library)
+### Delivery contract (generate → Library → dual download probe)
 
-`PASS_ONE_SKU_REAL` is a two-phase check aligned with
-`app/api/generate/route.ts` private delivery and Library recovery:
+`PASS_ONE_SKU_REAL` requires all of the following, aligned with
+`app/api/generate/route.ts` and `app/api/downloads/[id]/route.ts`:
 
 1. **Immediate generate success** (`POST /api/generate`) must be non-demo
    (`demo !== true`), `processedUpload === true`, `privateResult === true`,
@@ -61,10 +61,14 @@ npm run private-moment-acceptance
 2. **Library refresh** (`GET /api/generations`) must list a durable owner row:
    `status=succeeded`, `owned=true`, `downloadAllowed=true`, non-demo, matching
    job id, and a controlled `videoUrl` of the form `/api/downloads/{jobId}`.
-3. **Owner download check** exercises `HEAD|GET /api/downloads/{jobId}` only
-   after the Library row passes.
+3. **Owner download HEAD** (with operator cookie, `redirect: manual`):
+   HTTP **200**, `X-Pikbo-Download: allowed`, `X-Pikbo-Private-Result: 1`.
+   Any 3xx is not PASS (do not follow or record signed Location).
+4. **Anonymous download HEAD** (no cookie, no Authorization, `redirect: manual`):
+   HTTP **401** and `X-Pikbo-Download-Code: AUTH_REQUIRED`.
+   Any anonymous 2xx/3xx fails the run (public download is not owner-only).
 
-Cached/demo responses never count as PASS.
+Cached/demo responses never count as PASS. Both download probes are required.
 
 ## Flow (bounded)
 
@@ -75,7 +79,8 @@ Cached/demo responses never count as PASS.
    `street-power-up`, `9:16` / 5s / 720p / Seedance Fast, `ownsRights` +
    `allowProviderSpend` — **exactly one** attempt
 5. `GET /api/generations` Library refresh
-6. Owner-only `HEAD|GET /api/downloads/{jobId}`
+6. Owner `HEAD /api/downloads/{jobId}` (cookie) — private-result markers
+7. Anonymous `HEAD /api/downloads/{jobId}` (no credentials) — must be 401
 
 ## Evidence rules
 
@@ -83,13 +88,17 @@ Printed evidence is sanitized. It must **never** include:
 
 - cookies / authorization headers
 - emails
-- signed URLs (including generate `videoUrl`)
+- signed URLs (including generate `videoUrl` or download Location)
 - storage object keys
 - raw provider URLs or provider model identifiers
 
 Safe fields include counts, HTTP statuses, contract name, sha256 **prefix**,
-boolean shape markers (`hasPrivateSignedDeliveryUrl`), controlled Library
-`/api/downloads/…` path shape, and pass/fail verdict.
+boolean shape markers (`hasPrivateSignedDeliveryUrl`, `ownerOnlyProven`,
+`privateResultMarker`), controlled download header enums
+(`allowed` / `AUTH_REQUIRED`), and pass/fail verdict.
+
+Network audit distinguishes `downloadOwner` vs `downloadAnonymous` without
+recording credentials or URLs.
 
 ## Fail-closed checks (CI-safe)
 
@@ -97,10 +106,10 @@ boolean shape markers (`hasPrivateSignedDeliveryUrl`), controlled Library
 npm run private-moment-acceptance-regression
 ```
 
-Proves dry-run no-spend, real-mode gate refusal without confirmation/session/image,
-signed generate URL vs Library download path contract, demo/provider fail-closed,
-one-call generate bound with mocks, and sanitizer redaction. Does not contact
-Provider, Stripe, or production.
+Proves dry-run no-spend, real-mode gate refusal, signed generate URL vs Library
+path, dual download probe (owner private marker + anonymous denial), anonymous
+public 200/302 rejection, missing private marker rejection, one generate call
+bound, and sanitizer redaction. Does not contact Provider, Stripe, or production.
 
 ## External blocker
 
