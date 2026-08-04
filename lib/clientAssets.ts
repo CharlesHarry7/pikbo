@@ -351,9 +351,16 @@ export function planCreateQueryAssetHandoff(input: {
 /**
  * Load the signed-in owner's newest ready private toy photos.
  * Call only when private upload capability is already open on the client.
+ *
+ * When `includeAssetId` is a durable UUID (e.g. Create `?assetId=` handoff),
+ * the server is asked to prove that exact owner-ready row in addition to the
+ * bounded newest list. Never treat the id as authorized until it appears in
+ * the response.
  */
 export async function fetchRecentPrivateToyAssets(opts?: {
   limit?: number;
+  /** Optional durable UUID to prove/pin beyond the recent window. */
+  includeAssetId?: string | null;
   signal?: AbortSignal;
 }): Promise<RecentPrivateToyAsset[]> {
   try {
@@ -363,7 +370,14 @@ export async function fetchRecentPrivateToyAssets(opts?: {
       typeof opts?.limit === "number" && Number.isFinite(opts.limit)
         ? Math.min(12, Math.max(1, Math.floor(opts.limit)))
         : 8;
-    const res = await fetch(`/api/assets/recent?limit=${limit}`, {
+    const params = new URLSearchParams();
+    params.set("limit", String(limit));
+    const includeRaw =
+      typeof opts?.includeAssetId === "string" ? opts.includeAssetId.trim() : "";
+    if (includeRaw && DURABLE_TOY_ASSET_ID_RE.test(includeRaw)) {
+      params.set("include", includeRaw);
+    }
+    const res = await fetch(`/api/assets/recent?${params.toString()}`, {
       method: "GET",
       headers: { ...auth },
       cache: "no-store",

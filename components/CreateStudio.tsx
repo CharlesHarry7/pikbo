@@ -1036,8 +1036,15 @@ export function CreateStudio({
               generation: recentLoadGenerationRef.current,
             }),
             load: async () => {
+              // Prove durable ?assetId= handoff target beyond the recent window
+              // (server still enforces exact owner + ready; client never trusts the query alone).
+              const includeAssetId =
+                !queryAssetHandoffSettledRef.current
+                  ? queryAssetHandoffIdRef.current
+                  : null;
               loadedAssets = await fetchRecentPrivateToyAssets({
                 limit: 8,
+                includeAssetId,
                 signal: ac.signal,
               });
               return loadedAssets;

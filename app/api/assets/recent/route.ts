@@ -4,6 +4,7 @@ import { resolvePrivateLiveAccess } from "@/lib/privateLiveAccessServer";
 import { takeToken } from "@/lib/rateLimit";
 import {
   listOwnerRecentReadyToyAssets,
+  parseRecentIncludeAssetId,
   RECENT_PRIVATE_TOY_ASSETS_DEFAULT_LIMIT,
   RECENT_PRIVATE_TOY_ASSETS_MAX_LIMIT,
 } from "@/lib/ownerRecentToyAssets";
@@ -17,6 +18,10 @@ const NO_STORE = {
 /**
  * Owner-only recent ready private toy photos for Create reuse.
  * Bearer auth required; never returns object keys, SHA, signed URLs, or owner PII.
+ *
+ * Optional `?include=<uuid>` asks the server to prove that exact owner-ready
+ * asset in addition to the bounded newest list. Cross-owner, missing, malformed,
+ * and not-ready values are silently omitted (no existence leak).
  */
 export async function GET(req: Request) {
   const auth = await getAuthUserFromRequest(req);
@@ -68,10 +73,15 @@ export async function GET(req: Request) {
         Math.max(1, Math.floor(rawLimit))
       )
     : RECENT_PRIVATE_TOY_ASSETS_DEFAULT_LIMIT;
+  // Malformed include is ignored; never used as an existence oracle.
+  const includeAssetId = parseRecentIncludeAssetId(
+    url.searchParams.get("include")
+  );
 
   const assets = await listOwnerRecentReadyToyAssets({
     ownerUserId: auth.id,
     limit,
+    includeAssetId,
   });
 
   return NextResponse.json(

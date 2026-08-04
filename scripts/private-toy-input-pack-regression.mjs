@@ -193,13 +193,27 @@ assert.match(recentRoute, /private-input-recent/);
 // Response body must only expose the safe assets list (no storage secrets).
 assert.match(recentRoute, /ok: true,\s*assets,\s*limit,/);
 assert.doesNotMatch(recentRoute, /\bobjectKey\b|\bobject_key\b|\bsignedUrl\b|\bsha256\b/);
+// Optional include pin for durable handoff beyond the recent window.
+assert.match(recentRoute, /parseRecentIncludeAssetId/);
+assert.match(recentRoute, /searchParams\.get\("include"\)/);
+assert.match(recentRoute, /includeAssetId/);
 assert.match(ownerRecent, /\.eq\("state", "ready"\)/);
 assert.match(ownerRecent, /order\("created_at", \{ ascending: false \}/);
 assert.match(ownerRecent, /previewPath/);
 assert.match(ownerRecent, /\/api\/assets\/\$\{encodeURIComponent\(assetId\)\}\/content/);
+assert.match(ownerRecent, /getOwnerReadyToyAssetById/);
+assert.match(ownerRecent, /mergeRecentAssetsWithOptionalPin/);
+assert.match(ownerRecent, /parseRecentIncludeAssetId/);
+// Exact pin proof: id + current owner + ready (cross-owner/missing/not-ready → null).
+assert.match(ownerRecent, /\.eq\("id", assetId\)/);
+assert.match(ownerRecent, /\.eq\("owner_user_id", input\.ownerUserId\)/);
+assert.match(ownerRecent, /\.eq\("state", "ready"\)/);
+assert.match(ownerRecent, /maybeSingle\(\)/);
 assert.doesNotMatch(ownerRecent, /createSignedUrl|\bsignedUrl\b/);
 // DTO construction never spreads raw DB rows (would leak object_key/sha).
 assert.doesNotMatch(ownerRecent, /\.\.\.row|object_key:|sha256:/);
+// Safe DTO never exposes storage secrets or owner identity fields as response keys.
+assert.doesNotMatch(ownerRecent, /object_key:|sha256:|signedUrl|email:/);
 // UUID content: re-auth owner + ready → short-lived signed redirect; asset_* preserved.
 assert.match(contentRoute, /isUuidAssetId|UUID_RE/);
 assert.match(contentRoute, /signedPrivateToyAssetPreview/);
@@ -215,10 +229,16 @@ assert.match(contentRoute, /dataUrl: asset\.dataUrl/);
 // Client: list + preview helpers; generate reuses assetId without re-upload Base64.
 assert.match(clientAssets, /fetchRecentPrivateToyAssets/);
 assert.match(clientAssets, /\/api\/assets\/recent/);
+assert.match(clientAssets, /includeAssetId/);
+assert.match(clientAssets, /params\.set\("include"/);
+assert.match(clientAssets, /DURABLE_TOY_ASSET_ID_RE\.test\(includeRaw\)/);
 assert.match(clientAssets, /resolvePrivateToyAssetPreviewUrl/);
 assert.match(clientAssets, /previewPath\.startsWith\("\/api\/assets\/"\)/);
 // CreateStudio: owner-key bound recent load; public guests never request recent API.
 assert.match(createStudio, /fetchRecentPrivateToyAssets/);
+assert.match(createStudio, /includeAssetId/);
+assert.match(createStudio, /queryAssetHandoffIdRef\.current/);
+assert.match(createStudio, /queryAssetHandoffSettledRef\.current/);
 assert.match(createStudio, /adoptRecentPrivateAsset/);
 assert.match(createStudio, /privateRecentOwnerKey/);
 assert.match(createStudio, /planRecentOwnerTransition/);
@@ -237,6 +257,8 @@ assert.match(createStudio, /data-recent-private-assets/);
 assert.match(createStudio, /no re-upload/);
 assert.match(createStudio, /recentReuseUi\.showRecentRail/);
 assert.match(createStudio, /recentReuseUi\.visibleAssets/);
+// Public guests must not request the private recent endpoint or mount CreateStudio.
+assert.match(createStudio, /if \(!nextOwnerKey\) return/);
 // Residual composer sinks must not re-bind raw `image` (A→B mid-transition leak).
 assert.match(createStudio, /GenerateWaitStage[\s\S]{0,220}image=\{composerImage\}/);
 assert.match(createStudio, /\|\| composerImage/);
@@ -1010,6 +1032,238 @@ assert.doesNotMatch(
   assert.deepEqual(plan, { action: "drop", reason: "invalid" });
 }
 
+// --- AIT-16: recover owner-bound photos beyond the recent list ---
+const ownerRecentModule = loadTypeScriptModule("lib/ownerRecentToyAssets.ts", {
+  "@/lib/supabase/server": {
+    getSupabaseAdmin: () => null,
+  },
+});
+const {
+  parseRecentIncludeAssetId,
+  mapToyAssetRowToRecentDto,
+  mergeRecentAssetsWithOptionalPin,
+  privateToyAssetPreviewPath,
+  RECENT_PRIVATE_TOY_ASSETS_DEFAULT_LIMIT,
+  RECENT_PRIVATE_TOY_ASSETS_MAX_LIMIT,
+} = ownerRecentModule;
+
+assert.equal(RECENT_PRIVATE_TOY_ASSETS_DEFAULT_LIMIT, 8);
+assert.equal(RECENT_PRIVATE_TOY_ASSETS_MAX_LIMIT, 12);
+assert.equal(parseRecentIncludeAssetId(handoffTarget), handoffTarget);
+assert.equal(parseRecentIncludeAssetId(`  ${handoffTarget}  `), handoffTarget);
+assert.equal(parseRecentIncludeAssetId("asset_local"), null);
+assert.equal(parseRecentIncludeAssetId("not-a-uuid"), null);
+assert.equal(parseRecentIncludeAssetId(""), null);
+assert.equal(parseRecentIncludeAssetId(null), null);
+assert.equal(parseRecentIncludeAssetId(undefined), null);
+
+const readyRow = {
+  id: handoffTarget,
+  sku_label: "SKU-OLD",
+  mime_type: "image/png",
+  size_bytes: 1024,
+  created_at: "2026-01-01T00:00:00.000Z",
+  verified_at: "2026-01-01T00:00:01.000Z",
+  state: "ready",
+};
+const mapped = mapToyAssetRowToRecentDto(readyRow);
+assert.deepEqual(mapped, {
+  id: handoffTarget,
+  skuLabel: "SKU-OLD",
+  mimeType: "image/png",
+  sizeBytes: 1024,
+  createdAt: "2026-01-01T00:00:00.000Z",
+  verifiedAt: "2026-01-01T00:00:01.000Z",
+  previewPath: privateToyAssetPreviewPath(handoffTarget),
+});
+// Forbidden fields never appear on the DTO.
+assert.equal("object_key" in mapped, false);
+assert.equal("sha256" in mapped, false);
+assert.equal("owner_user_id" in mapped, false);
+assert.doesNotMatch(mapped.previewPath, /https?:\/\//);
+// Not-ready / bad MIME / missing shape → null (indistinguishable reject).
+assert.equal(
+  mapToyAssetRowToRecentDto({ ...readyRow, state: "pending" }),
+  null
+);
+assert.equal(
+  mapToyAssetRowToRecentDto({ ...readyRow, mime_type: "image/gif" }),
+  null
+);
+assert.equal(mapToyAssetRowToRecentDto(null), null);
+
+// Newest window of 8; older pin outside window is appended once.
+const newestEight = Array.from({ length: 8 }, (_, i) => ({
+  id: `aaaaaaaa-aaaa-4aaa-8aaa-${String(i + 1).padStart(12, "0")}`,
+  skuLabel: null,
+  mimeType: "image/png",
+  sizeBytes: 100 + i,
+  createdAt: `2026-07-${String(31 - i).padStart(2, "0")}T00:00:00.000Z`,
+  verifiedAt: null,
+  previewPath: `/api/assets/aaaaaaaa-aaaa-4aaa-8aaa-${String(i + 1).padStart(12, "0")}/content`,
+}));
+const olderPin = {
+  id: handoffTarget,
+  skuLabel: "SKU-OLD",
+  mimeType: "image/png",
+  sizeBytes: 1024,
+  createdAt: "2026-01-01T00:00:00.000Z",
+  verifiedAt: "2026-01-01T00:00:01.000Z",
+  previewPath: privateToyAssetPreviewPath(handoffTarget),
+};
+const withPin = mergeRecentAssetsWithOptionalPin({
+  recent: newestEight,
+  pinned: olderPin,
+});
+assert.equal(withPin.length, 9, "older owner-ready pin is returned once beyond limit");
+assert.equal(withPin[0].id, newestEight[0].id, "newest-first order preserved");
+assert.equal(withPin[7].id, newestEight[7].id);
+assert.equal(withPin[8].id, handoffTarget, "pin appended after recent window");
+// Dedup when pin is already recent.
+const alreadyRecent = mergeRecentAssetsWithOptionalPin({
+  recent: [olderPin, ...newestEight.slice(0, 7)],
+  pinned: olderPin,
+});
+assert.equal(alreadyRecent.length, 8);
+assert.equal(
+  alreadyRecent.filter((r) => r.id === handoffTarget).length,
+  1,
+  "pinned target deduplicated when already in recent window"
+);
+// Cross-owner / missing / not-ready collapse to null pin → no leak.
+assert.deepEqual(
+  mergeRecentAssetsWithOptionalPin({ recent: newestEight, pinned: null }),
+  newestEight
+);
+
+// After owner-bound response includes the older pin, handoff may adopt.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    readyAssets: withPin,
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, { action: "adopt", assetId: handoffTarget });
+  const ui = deriveRecentReuseUiState({
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    assets: withPin,
+    thumbs: {},
+    selectionSource: null,
+    selectionOwnerKey: null,
+    selectedAssetId: null,
+    selectedImage: null,
+    loading: false,
+  });
+  assert.equal(ui.canAdoptAssetId(handoffTarget), true);
+}
+// Server omit (cross-owner / not-ready / missing) → not in list → drop, no adopt.
+{
+  const plan = planCreateQueryAssetHandoff({
+    queryAssetId: handoffTarget,
+    handoffSettled: false,
+    userOverride: false,
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    readyAssets: newestEight,
+    listLoading: false,
+    selectionSource: null,
+    selectedAssetId: null,
+  });
+  assert.deepEqual(plan, {
+    action: "drop",
+    reason: "not-in-ready-list",
+  });
+  const ui = deriveRecentReuseUiState({
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    assets: newestEight,
+    thumbs: {},
+    selectionSource: null,
+    selectionOwnerKey: null,
+    selectedAssetId: null,
+    selectedImage: null,
+    loading: false,
+  });
+  assert.equal(ui.canAdoptAssetId(handoffTarget), false);
+}
+
+// Client request: valid include UUID is sent; junk is not.
+{
+  const recentCalls = [];
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.startsWith("/api/assets/recent")) {
+      recentCalls.push(target);
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          assets: [
+            {
+              id: handoffTarget,
+              skuLabel: null,
+              mimeType: "image/png",
+              sizeBytes: 10,
+              createdAt: "2026-01-01T00:00:00.000Z",
+              verifiedAt: null,
+              previewPath: `/api/assets/${handoffTarget}/content`,
+            },
+          ],
+          limit: 8,
+        }),
+        { status: 200 }
+      );
+    }
+    throw new Error(`unexpected fetch in include-url test: ${target}`);
+  };
+  try {
+    const assets = await clientModule.fetchRecentPrivateToyAssets({
+      limit: 8,
+      includeAssetId: handoffTarget,
+    });
+    assert.equal(recentCalls.length, 1);
+    assert.match(
+      recentCalls[0],
+      /\/api\/assets\/recent\?limit=8&include=11111111-1111-4111-8111-111111111111/
+    );
+    assert.equal(assets.length, 1);
+    assert.equal(assets[0].id, handoffTarget);
+    assert.doesNotMatch(JSON.stringify(assets), /signedUrl|object_key|sha256|owner_user_id/);
+
+    recentCalls.length = 0;
+    await clientModule.fetchRecentPrivateToyAssets({
+      limit: 8,
+      includeAssetId: "not-a-uuid",
+    });
+    assert.equal(recentCalls.length, 1);
+    assert.equal(recentCalls[0], "/api/assets/recent?limit=8");
+    assert.doesNotMatch(recentCalls[0], /include=/);
+
+    recentCalls.length = 0;
+    await clientModule.fetchRecentPrivateToyAssets({ limit: 8 });
+    assert.equal(recentCalls[0], "/api/assets/recent?limit=8");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
+// CreateStudio still fails closed on A→B / explicit choice / public guests
+// while wiring include for unsettled handoff only.
+assert.match(
+  createStudio,
+  /includeAssetId[\s\S]{0,80}queryAssetHandoffIdRef\.current/
+);
+assert.match(
+  createStudio,
+  /!queryAssetHandoffSettledRef\.current[\s\S]{0,120}queryAssetHandoffIdRef\.current/
+);
+
 console.log(
-  "private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery · owner-switch + selection race · render-time fail-closed · durable ?assetId= handoff · unbound-list wait race)"
+  "private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery · owner-switch + selection race · render-time fail-closed · durable ?assetId= handoff · unbound-list wait race · beyond-recent pin include)"
 );
