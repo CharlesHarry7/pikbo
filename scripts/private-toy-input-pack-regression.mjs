@@ -222,14 +222,20 @@ assert.match(createStudio, /fetchRecentPrivateToyAssets/);
 assert.match(createStudio, /adoptRecentPrivateAsset/);
 assert.match(createStudio, /privateRecentOwnerKey/);
 assert.match(createStudio, /planRecentOwnerTransition/);
+assert.match(createStudio, /deriveRecentReuseUiState/);
 assert.match(createStudio, /applyRecentListLoad/);
 assert.match(createStudio, /applyRecentPreviewResolution/);
 assert.match(createStudio, /session\?\.auth\?\.id/);
 assert.match(createStudio, /recentOwnerKey/);
+assert.match(createStudio, /recentListBoundOwnerKey/);
+assert.match(createStudio, /composerImage|composerAssetId/);
+assert.match(createStudio, /canAdoptAssetId/);
 assert.match(createStudio, /setAssetId\(asset\.id\)/);
 assert.match(createStudio, /Use a recent verified photo/);
 assert.match(createStudio, /data-recent-private-assets/);
 assert.match(createStudio, /no re-upload/);
+assert.match(createStudio, /recentReuseUi\.showRecentRail/);
+assert.match(createStudio, /recentReuseUi\.visibleAssets/);
 // Selecting recent must not call registerLocalAsset / re-upload path.
 const adoptRecentSlice = createStudio.slice(
   createStudio.indexOf("adoptRecentPrivateAsset"),
@@ -403,6 +409,7 @@ assert.match(clientKeys[0], /^input:[0-9a-f]{64}$/);
 const {
   privateRecentOwnerKey: ownerKeyOf,
   planRecentOwnerTransition: planOwnerTransition,
+  deriveRecentReuseUiState,
   shouldCommitRecentList,
   shouldCommitRecentPreview,
   applyRecentListLoad,
@@ -606,6 +613,87 @@ assert.equal(
   true
 );
 
+// Render-time fail-closed: A→B before deferred cleanup — visible/clickable empty now.
+{
+  const midTransition = deriveRecentReuseUiState({
+    currentOwnerKey: "owner-b",
+    // Deferred cleanup has not run yet — list still tagged as A.
+    listOwnerKey: "owner-a",
+    assets: [
+      { id: "asset-a1", previewPath: "/api/assets/asset-a1/content" },
+      { id: "asset-a2", previewPath: "/api/assets/asset-a2/content" },
+    ],
+    thumbs: {
+      "asset-a1": "https://signed.example/a1",
+      "asset-a2": "https://signed.example/a2",
+    },
+    selectionSource: "recent",
+    selectionOwnerKey: "owner-a",
+    selectedAssetId: "asset-a1",
+    selectedImage: "https://signed.example/a1-preview",
+    loading: false,
+  });
+  assert.equal(midTransition.listMatchesCurrentOwner, false);
+  assert.deepEqual(midTransition.visibleAssets, []);
+  assert.deepEqual(midTransition.visibleThumbs, {});
+  assert.equal(midTransition.showRecentRail, false);
+  assert.equal(
+    midTransition.effectiveSelectedAssetId,
+    null,
+    "stale recent assetId must blank immediately at A→B"
+  );
+  assert.equal(
+    midTransition.effectiveSelectedImage,
+    null,
+    "stale recent preview must blank immediately at A→B"
+  );
+  assert.equal(
+    midTransition.canAdoptAssetId("asset-a1"),
+    false,
+    "B must not adopt A's rendered row before cleanup"
+  );
+  assert.equal(midTransition.canAdoptAssetId("asset-a2"), false);
+}
+
+// Same owner: list and recent selection remain visible.
+{
+  const sameOwner = deriveRecentReuseUiState({
+    currentOwnerKey: "owner-a",
+    listOwnerKey: "owner-a",
+    assets: [{ id: "asset-a1" }],
+    thumbs: { "asset-a1": "thumb-a1" },
+    selectionSource: "recent",
+    selectionOwnerKey: "owner-a",
+    selectedAssetId: "asset-a1",
+    selectedImage: "preview-a1",
+    loading: false,
+  });
+  assert.equal(sameOwner.showRecentRail, true);
+  assert.equal(sameOwner.visibleAssets.length, 1);
+  assert.equal(sameOwner.effectiveSelectedAssetId, "asset-a1");
+  assert.equal(sameOwner.effectiveSelectedImage, "preview-a1");
+  assert.equal(sameOwner.canAdoptAssetId("asset-a1"), true);
+}
+
+// Local upload under owner switch: do not blank non-recent selection.
+{
+  const uploadKept = deriveRecentReuseUiState({
+    currentOwnerKey: "owner-b",
+    listOwnerKey: "owner-a",
+    assets: [{ id: "asset-a1" }],
+    thumbs: { "asset-a1": "thumb-a1" },
+    selectionSource: "upload",
+    selectionOwnerKey: null,
+    selectedAssetId: "upload-asset",
+    selectedImage: "data:image/png;base64,AAA",
+    loading: false,
+  });
+  assert.deepEqual(uploadKept.visibleAssets, []);
+  assert.equal(uploadKept.showRecentRail, false);
+  assert.equal(uploadKept.effectiveSelectedAssetId, "upload-asset");
+  assert.equal(uploadKept.effectiveSelectedImage, "data:image/png;base64,AAA");
+}
+
 console.log(
-  "private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery · owner-switch + selection race)"
+  "private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery · owner-switch + selection race · render-time fail-closed)"
 );

@@ -74,6 +74,70 @@ export function planRecentOwnerTransition(input: {
   };
 }
 
+/**
+ * Render/interaction-time owner binding for recent reuse.
+ * Fail-closed: when list/selection owner keys lag behind the current session
+ * owner (e.g. A→B before deferred cleanup), no prior-owner assets are
+ * visible, clickable, or usable as generate input.
+ */
+export function deriveRecentReuseUiState<T extends { id: string }>(input: {
+  currentOwnerKey: string | null;
+  listOwnerKey: string | null;
+  assets: T[];
+  thumbs: Record<string, string>;
+  selectionSource: RecentSelectionSource | null;
+  selectionOwnerKey: string | null;
+  selectedAssetId: string | null;
+  selectedImage: string | null;
+  loading: boolean;
+}): {
+  listMatchesCurrentOwner: boolean;
+  visibleAssets: T[];
+  visibleThumbs: Record<string, string>;
+  showRecentRail: boolean;
+  /** Safe for display + generate; null when recent selection is from another owner. */
+  effectiveSelectedAssetId: string | null;
+  effectiveSelectedImage: string | null;
+  canAdoptAssetId: (assetId: string) => boolean;
+} {
+  const listMatchesCurrentOwner =
+    input.currentOwnerKey != null &&
+    input.listOwnerKey === input.currentOwnerKey;
+  const visibleAssets = listMatchesCurrentOwner ? input.assets : [];
+  const visibleThumbs = listMatchesCurrentOwner ? input.thumbs : {};
+  const showRecentRail =
+    listMatchesCurrentOwner &&
+    (input.loading || visibleAssets.length > 0);
+
+  const recentSelectionMatches =
+    input.selectionSource === "recent" &&
+    input.selectionOwnerKey != null &&
+    input.selectionOwnerKey === input.currentOwnerKey;
+
+  // Local upload / Lab pass through. Recent reuse is blanked while owner-mismatched.
+  let effectiveSelectedAssetId = input.selectedAssetId;
+  let effectiveSelectedImage = input.selectedImage;
+  if (input.selectionSource === "recent" && !recentSelectionMatches) {
+    effectiveSelectedAssetId = null;
+    effectiveSelectedImage = null;
+  }
+
+  const visibleIds = new Set(visibleAssets.map((a) => a.id));
+  return {
+    listMatchesCurrentOwner,
+    visibleAssets,
+    visibleThumbs,
+    showRecentRail,
+    effectiveSelectedAssetId,
+    effectiveSelectedImage,
+    canAdoptAssetId: (assetId: string) =>
+      listMatchesCurrentOwner &&
+      typeof assetId === "string" &&
+      assetId.length > 0 &&
+      visibleIds.has(assetId),
+  };
+}
+
 /** Accept a recent-list async result only for the still-active owner + generation. */
 export function shouldCommitRecentList(input: {
   requestOwnerKey: string;

@@ -95,6 +95,7 @@ import { DeliveryChecklist } from "@/components/DeliveryChecklist";
 import {
   applyRecentListLoad,
   applyRecentPreviewResolution,
+  deriveRecentReuseUiState,
   privateRecentOwnerKey,
   planRecentOwnerTransition,
   type RecentPrivateToyAsset,
@@ -262,9 +263,24 @@ export function CreateStudio({
     Record<string, string>
   >({});
   const [recentAssetsLoading, setRecentAssetsLoading] = useState(false);
+  /** Owner key the list/thumbs were loaded for (render-time fail-closed bind). */
+  const [recentListBoundOwnerKey, setRecentListBoundOwnerKey] = useState<
+    string | null
+  >(null);
+  /** Owner key for a recent-reuse selection (null when upload/lab/other). */
+  const [recentSelectionBoundOwnerKey, setRecentSelectionBoundOwnerKey] = useState<
+    string | null
+  >(null);
+  const [recentSelectionSource, setRecentSelectionSource] =
+    useState<RecentSelectionSource | null>(null);
   const recentThumbUrlsRef = useRef<string[]>([]);
-  /** Bound to session.auth.id when private capability is open — never bool-only. */
+  /**
+   * last-applied owner after deferred cleanup (transition planner).
+   * Distinct from liveOwnerKeyRef, which tracks the current render owner
+   * for async commit gates without waiting on setTimeout(0).
+   */
   const recentOwnerKeyRef = useRef<string | null>(null);
+  const liveOwnerKeyRef = useRef<string | null>(null);
   const recentLoadGenerationRef = useRef(0);
   const recentSelectionTokenRef = useRef(0);
   /** Tracks whether current still came from recent reuse (owner-switch clear only). */
@@ -334,6 +350,39 @@ export function CreateStudio({
       }),
     [privateUploadEnabled, session?.auth?.id]
   );
+  /**
+   * Fail-closed at render/interaction time: stale A list/selection never shows
+   * or is adoptable under B while deferred cleanup is still pending.
+   */
+  const recentReuseUi = useMemo(
+    () =>
+      deriveRecentReuseUiState({
+        currentOwnerKey: recentOwnerKey,
+        listOwnerKey: recentListBoundOwnerKey,
+        assets: recentPrivateAssets,
+        thumbs: recentAssetThumbs,
+        selectionSource: recentSelectionSource,
+        selectionOwnerKey: recentSelectionBoundOwnerKey,
+        selectedAssetId: assetId,
+        selectedImage: image,
+        loading: recentAssetsLoading,
+      }),
+    [
+      recentOwnerKey,
+      recentListBoundOwnerKey,
+      recentPrivateAssets,
+      recentAssetThumbs,
+      recentSelectionSource,
+      recentSelectionBoundOwnerKey,
+      assetId,
+      image,
+      recentAssetsLoading,
+    ]
+  );
+  const composerImage = recentReuseUi.effectiveSelectedImage;
+  const composerAssetId = recentReuseUi.effectiveSelectedAssetId;
+  // Always track the render-time owner for async list/preview commit gates.
+  liveOwnerKeyRef.current = recentOwnerKey;
   const fixedMomentNextPath = initialSource
     ? `${MOMENT_CREATE_HREF}&source=${encodeURIComponent(initialSource)}`
     : MOMENT_CREATE_HREF;
@@ -715,7 +764,10 @@ export function CreateStudio({
         return;
       }
       // Local upload / Lab — not recent reuse (owner-switch must not wipe these).
-      recentSelectionSourceRef.current = opts?.labSample ? "lab" : "upload";
+      const source: RecentSelectionSource = opts?.labSample ? "lab" : "upload";
+      recentSelectionSourceRef.current = source;
+      setRecentSelectionSource(source);
+      setRecentSelectionBoundOwnerKey(null);
       recentSelectionTokenRef.current += 1;
       recentSelectedAssetIdRef.current = null;
       setImage(dataUrl);
@@ -782,7 +834,11 @@ export function CreateStudio({
     async (asset: RecentPrivateToyAsset) => {
       const ownerKey = recentOwnerKey;
       if (!ownerKey) return;
+      // Interaction-time gate: never adopt a stale A row rendered under B.
+      if (!recentReuseUi.canAdoptAssetId(asset.id)) return;
       recentSelectionSourceRef.current = "recent";
+      setRecentSelectionSource("recent");
+      setRecentSelectionBoundOwnerKey(ownerKey);
       const selectionToken = recentSelectionTokenRef.current + 1;
       recentSelectionTokenRef.current = selectionToken;
       recentSelectedAssetIdRef.current = asset.id;
@@ -810,7 +866,7 @@ export function CreateStudio({
           sku: asset.skuLabel!.slice(0, 64),
         }));
       }
-      const cachedThumb = recentAssetThumbs[asset.id];
+      const cachedThumb = recentReuseUi.visibleThumbs[asset.id];
       if (cachedThumb) {
         setImage(cachedThumb);
       } else {
@@ -832,7 +888,7 @@ export function CreateStudio({
           requestAssetId: asset.id,
           requestSelectionToken: selectionToken,
           getCurrent: () => ({
-            ownerKey: recentOwnerKeyRef.current,
+            ownerKey: liveOwnerKeyRef.current,
             assetId: recentSelectedAssetIdRef.current,
             selectionToken: recentSelectionTokenRef.current,
           }),
@@ -845,7 +901,7 @@ export function CreateStudio({
             }
             void probeImageSize(previewUrl).then((meta) => {
               if (
-                recentOwnerKeyRef.current !== ownerKey ||
+                liveOwnerKeyRef.current !== ownerKey ||
                 recentSelectedAssetIdRef.current !== asset.id ||
                 recentSelectionTokenRef.current !== selectionToken
               ) {
@@ -859,14 +915,14 @@ export function CreateStudio({
         /* assetId alone is enough for live generate; preview is best-effort */
       }
       if (
-        recentOwnerKeyRef.current === ownerKey &&
+        liveOwnerKeyRef.current === ownerKey &&
         recentSelectedAssetIdRef.current === asset.id &&
         recentSelectionTokenRef.current === selectionToken
       ) {
         toast("Using a recent verified toy photo · no re-upload");
       }
     },
-    [effect, recentAssetThumbs, recentOwnerKey, toast]
+    [effect, recentOwnerKey, recentReuseUi, toast]
   );
 
   // Owner-key bound recent load: public never requests; A→B clears prior owner state.
@@ -899,6 +955,7 @@ export function CreateStudio({
         }
         if (plan.clearRecentList) {
           setRecentPrivateAssets([]);
+          setRecentListBoundOwnerKey(null);
         }
         if (plan.clearRecentThumbs) {
           setRecentAssetThumbs({});
@@ -907,6 +964,8 @@ export function CreateStudio({
         if (plan.clearRecentSelection) {
           recentSelectionSourceRef.current = null;
           recentSelectedAssetIdRef.current = null;
+          setRecentSelectionSource(null);
+          setRecentSelectionBoundOwnerKey(null);
           setAssetId(null);
           setImage(null);
           setImageProbe(null);
@@ -935,7 +994,7 @@ export function CreateStudio({
             requestOwnerKey,
             requestGeneration,
             getCurrent: () => ({
-              ownerKey: recentOwnerKeyRef.current,
+              ownerKey: liveOwnerKeyRef.current,
               generation: recentLoadGenerationRef.current,
             }),
             load: async () => {
@@ -947,6 +1006,7 @@ export function CreateStudio({
             },
             onCommit: (assets) => {
               setRecentPrivateAssets(assets);
+              setRecentListBoundOwnerKey(requestOwnerKey);
             },
           });
           if (commitStatus === "stale" || cancelled) return;
@@ -961,7 +1021,7 @@ export function CreateStudio({
               if (
                 !url ||
                 cancelled ||
-                recentOwnerKeyRef.current !== requestOwnerKey ||
+                liveOwnerKeyRef.current !== requestOwnerKey ||
                 recentLoadGenerationRef.current !== requestGeneration
               ) {
                 return;
@@ -974,7 +1034,7 @@ export function CreateStudio({
           );
           if (
             cancelled ||
-            recentOwnerKeyRef.current !== requestOwnerKey ||
+            liveOwnerKeyRef.current !== requestOwnerKey ||
             recentLoadGenerationRef.current !== requestGeneration
           ) {
             return;
@@ -983,16 +1043,17 @@ export function CreateStudio({
         } catch {
           if (
             !cancelled &&
-            recentOwnerKeyRef.current === requestOwnerKey &&
+            liveOwnerKeyRef.current === requestOwnerKey &&
             recentLoadGenerationRef.current === requestGeneration
           ) {
             setRecentPrivateAssets([]);
             setRecentAssetThumbs({});
+            setRecentListBoundOwnerKey(null);
           }
         } finally {
           if (
             !cancelled &&
-            recentOwnerKeyRef.current === requestOwnerKey &&
+            liveOwnerKeyRef.current === requestOwnerKey &&
             recentLoadGenerationRef.current === requestGeneration
           ) {
             setRecentAssetsLoading(false);
@@ -1135,12 +1196,13 @@ export function CreateStudio({
       return;
     }
     // Retry freezes the version still — never the composer's latest re-upload asset.
+    // composer* is fail-closed for stale recent reuse after owner switch.
     const still = resolveGenerateStill({
       retry,
       sourceStore,
       imageOverride: opts?.imageOverride,
-      image,
-      assetId,
+      image: composerImage,
+      assetId: composerAssetId,
     });
     const img = still.image ?? null;
     const postAssetId = still.assetId ?? undefined;
@@ -1224,7 +1286,9 @@ export function CreateStudio({
     // compatibility path and are never the fallback for live generation.
     const fallbackStill =
       (img && isValidImageDataUrl(img) ? img : null) ||
-      (image && isValidImageDataUrl(image) ? image : null) ||
+      (composerImage && isValidImageDataUrl(composerImage)
+        ? composerImage
+        : null) ||
       undefined;
     // Keep dual payload under rough Vercel body comfort (~3.5MB JSON).
     const dualImageOk =
@@ -1307,7 +1371,9 @@ export function CreateStudio({
           PRESETS.find((p) => p.slug === serverEffect) ?? preset;
         const stillForStore =
           (img && isValidImageDataUrl(img) ? img : null) ||
-          (image && isValidImageDataUrl(image) ? image : null) ||
+          (composerImage && isValidImageDataUrl(composerImage)
+            ? composerImage
+            : null) ||
           "";
         pushHistory(
           historyFieldsFromSuccess(data, {
@@ -1496,7 +1562,9 @@ export function CreateStudio({
     // Prefer the still we actually used (retry frozen / override / composer).
     const stillForStore =
       (img && isValidImageDataUrl(img) ? img : null) ||
-      (image && isValidImageDataUrl(image) ? image : null) ||
+      (composerImage && isValidImageDataUrl(composerImage)
+        ? composerImage
+        : null) ||
       "";
     const interned = stillForStore
       ? internSourceImage(sourceStore, stillForStore)
@@ -1510,7 +1578,7 @@ export function CreateStudio({
         ? postAssetId
         : still.mode === "retry-still"
           ? retry?.assetId
-          : postAssetId || assetId || undefined;
+          : postAssetId || composerAssetId || undefined;
     const spec = buildGenerationSpec({
       sourceKey: interned.key,
       assetId: specAssetId,
@@ -1825,10 +1893,10 @@ export function CreateStudio({
 
   const busy = status === "generating" || status === "uploading";
   const canGenerate =
-    !busy && mode === "i2v" && Boolean(image) && ownsRights;
+    !busy && mode === "i2v" && Boolean(composerImage || composerAssetId) && ownsRights;
   const primaryLabel = busy
     ? t("create.generating")
-    : !image
+    : !(composerImage || composerAssetId)
       ? t("create.addPhotoFirst")
       : !ownsRights
         ? t("create.confirmOwnership")
@@ -1846,7 +1914,7 @@ export function CreateStudio({
       ? 4
       : status === "generating"
         ? 3
-        : image
+        : composerImage || composerAssetId
           ? 2
           : 1;
 
@@ -2475,7 +2543,7 @@ export function CreateStudio({
                   <span className="lg:hidden">Upload owned toy photo</span>
                   <span className="hidden lg:inline">{t("create.yourPhoto")}</span>
                 </label>
-                {image && (
+                {(composerImage || composerAssetId) && (
                   <button
                     type="button"
                     className="text-[10px] font-semibold text-[var(--fg-dim)] hover:text-[var(--brand)]"
@@ -2483,6 +2551,8 @@ export function CreateStudio({
                       recentSelectionSourceRef.current = null;
                       recentSelectedAssetIdRef.current = null;
                       recentSelectionTokenRef.current += 1;
+                      setRecentSelectionSource(null);
+                      setRecentSelectionBoundOwnerKey(null);
                       setImage(null);
                       setAssetId(null);
                       setImageProbe(null);
@@ -2497,18 +2567,18 @@ export function CreateStudio({
               </div>
               <label
                 className={`group/drop relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
-                  image
+                  composerImage
                     ? "aspect-[16/10] border-[var(--mint)]/25 ring-1 ring-[var(--mint)]/15"
                     : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:aspect-video"
                 }`}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDrop}
               >
-                {image ? (
+                {composerImage ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={image}
+                      src={composerImage}
                       alt="your toy"
                       className="h-full w-full object-contain"
                     />
@@ -2537,12 +2607,14 @@ export function CreateStudio({
                   onChange={onFile}
                 />
               </label>
-              {/* Reuse a recently verified private photo — no re-upload, no Base64. */}
-              {(recentAssetsLoading || recentPrivateAssets.length > 0) && (
+              {/* Reuse a recently verified private photo — no re-upload, no Base64.
+                  Rail is owner-bound at render time (stale A rows never show under B). */}
+              {recentReuseUi.showRecentRail && (
                 <div
                   className="mt-3"
                   data-recent-private-assets
                   data-testid="recent-private-assets"
+                  data-recent-list-owner={recentListBoundOwnerKey ?? ""}
                 >
                   <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--fg-muted)]">
                     Use a recent verified photo
@@ -2551,15 +2623,16 @@ export function CreateStudio({
                     Pick a ready private toy photo you already verified — no
                     re-upload.
                   </p>
-                  {recentAssetsLoading && recentPrivateAssets.length === 0 ? (
+                  {recentAssetsLoading &&
+                  recentReuseUi.visibleAssets.length === 0 ? (
                     <p className="mt-2 text-[11px] text-[var(--fg-dim)]">
                       Loading recent photos…
                     </p>
                   ) : (
                     <ul className="mt-2 flex gap-2 overflow-x-auto pb-1">
-                      {recentPrivateAssets.map((asset) => {
-                        const selected = assetId === asset.id;
-                        const thumb = recentAssetThumbs[asset.id];
+                      {recentReuseUi.visibleAssets.map((asset) => {
+                        const selected = composerAssetId === asset.id;
+                        const thumb = recentReuseUi.visibleThumbs[asset.id];
                         return (
                           <li key={asset.id} className="shrink-0">
                             <button
