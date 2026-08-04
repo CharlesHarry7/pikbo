@@ -130,6 +130,13 @@ assert.match(shell, /Create a Moment/);
 assert.match(shell, /label: "Library"/);
 assert.match(shell, /label: "Sign in"/);
 assert.match(shell, /data-mobile-motion-brand/);
+assert.match(shell, /data-mobile-nav=\{home \? "home-moment" : "default"\}/);
+assert.match(
+  shell,
+  /home\s*\?\s*"relative border-white\/10 bg-\[#08080A\]\/96"/
+);
+assert.doesNotMatch(shell, /home[\s\S]{0,80}border-\[#D4D8E0\] bg-\[#F7F8FA\]/);
+assert.doesNotMatch(shell, /home[\s\S]{0,120}text-\[#2457E6\]/);
 assert.match(
   shell,
   /const HOME_SIGN_IN_HREF\s*=\s*`\/login\?next=\$\{encodeURIComponent\(\s*`\$\{MOMENT_CREATE_HREF\}&source=home-sign-in`\s*\)\}`/

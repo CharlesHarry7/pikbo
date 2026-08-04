@@ -73,8 +73,28 @@ assert.doesNotMatch(
 );
 assert.match(
   shell,
-  /\{!resultShell && !sellerPackCreate \? <nav/,
+  /\{!momentCreate && !sellerPackCreate \? \(/,
   "Seller Pack Create must not stack the five-item mobile nav under its fixed primary action"
+);
+assert.match(
+  shell,
+  /data-mobile-nav=\{home \? "home-moment" : "default"\}/,
+  "Home must keep a Moment-styled mobile bottom nav"
+);
+assert.match(
+  shell,
+  /home\s*\?\s*"relative border-white\/10 bg-\[#08080A\]\/96"/,
+  "Home mobile bottom nav must use dark Moment chrome, not light legacy chrome"
+);
+assert.doesNotMatch(
+  shell,
+  /home[\s\S]{0,80}border-\[#D4D8E0\] bg-\[#F7F8FA\]/,
+  "Home mobile bottom nav must not keep the light gray chrome residual"
+);
+assert.doesNotMatch(
+  shell,
+  /home[\s\S]{0,120}text-\[#2457E6\]/,
+  "Home mobile bottom nav must not keep the blue active residual"
 );
 assert.doesNotMatch(
   zh,
