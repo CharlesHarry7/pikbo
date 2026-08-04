@@ -35,6 +35,7 @@ Requires **all** of:
 | `PIKBO_ACCEPTANCE_BASE_URL` | **Exact** protected Preview origin only: `https://pikbo-git-codex-private-validation-pi-kbo.vercel.app` (hostile hosts and `pikbo.ai` are rejected) |
 | `PIKBO_ACCEPTANCE_SESSION_COOKIE` | Operator browser session cookie for the invited owner |
 | `PIKBO_ACCEPTANCE_IMAGE_PATH` | Local path to an **owned** toy photo (jpg/png/webp) |
+| `PIKBO_ACCEPTANCE_ATTEMPT_ID` | **Required.** Stable operator attempt identifier (8–80 chars, `A-Za-z0-9._:-`). Reusing the same id with the same photo/SKU reuses the generate idempotency key (server replay-safe). **Changing it authorizes a new possible Provider spend.** |
 | `PIKBO_ACCEPTANCE_SKU_LABEL` | Optional SKU label (default `operator-one-sku`) |
 
 ```bash
@@ -43,8 +44,25 @@ PIKBO_CONFIRM_PROVIDER_SPEND=I_UNDERSTAND_ONE_TOY_MOMENT_V1_SPEND \
 PIKBO_ACCEPTANCE_BASE_URL='https://pikbo-git-codex-private-validation-pi-kbo.vercel.app' \
 PIKBO_ACCEPTANCE_SESSION_COOKIE='…' \
 PIKBO_ACCEPTANCE_IMAGE_PATH='/path/to/owned-toy.jpg' \
+PIKBO_ACCEPTANCE_ATTEMPT_ID='sku01-run-2026-08-05-a' \
 npm run private-moment-acceptance
 ```
+
+### Generate idempotency (operator spend safety)
+
+Real mode does **not** mint a random idempotency key. It derives a versioned
+key (`accept-v1-<sha256>…`, ≤128 chars) from:
+
+- `PIKBO_ACCEPTANCE_ATTEMPT_ID`
+- fixed `toy-moment-v1` contract fields
+- owned-image SHA-256
+- SKU label
+
+Rerunning the harness with the **same** attempt id + same photo + same SKU
+sends the **same** `idempotencyKey` so the server can replay-protect after a
+post-provider/Library failure. Minting a **new** attempt id is an explicit
+operator action that can open a **new** paid generate. Evidence only records
+booleans/version/length — never the attempt id or full key.
 
 ### Delivery contract (generate → Library → dual download probe)
 

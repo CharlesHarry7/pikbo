@@ -27,7 +27,7 @@
  */
 
 import assert from "node:assert/strict";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { basename, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -71,9 +71,19 @@ export const MAX_UPLOAD_PREPARE_CALLS = 1;
 export const MAX_UPLOAD_PUT_CALLS = 1;
 export const MAX_UPLOAD_COMPLETE_CALLS = 1;
 
+/**
+ * Version tag for the operator acceptance idempotency key scheme.
+ * Changing this intentionally invalidates prior attempt keys (new spend risk).
+ */
+export const ACCEPTANCE_IDEMPOTENCY_KEY_VERSION = "v1";
+/** Server normalizeIdempotencyKey truncates at 128 chars. */
+export const MAX_IDEMPOTENCY_KEY_LEN = 128;
+export const MIN_OPERATOR_ATTEMPT_ID_LEN = 8;
+export const MAX_OPERATOR_ATTEMPT_ID_LEN = 80;
+
 /** Keys that must never appear with real values in operator evidence. */
 const SENSITIVE_KEY_RE =
-  /^(?:cookie|cookies|authorization|auth|email|e-?mail|signedUrl|signed_url|uploadUrl|upload_url|objectKey|object_key|providerUrl|provider_url|providerModel|provider_model|providerId|provider_id|falKey|fal_key|token|accessToken|refreshToken|secret|password|sessionCookie|session_cookie)$/i;
+  /^(?:cookie|cookies|authorization|auth|email|e-?mail|signedUrl|signed_url|uploadUrl|upload_url|objectKey|object_key|providerUrl|provider_url|providerModel|provider_model|providerId|provider_id|falKey|fal_key|token|accessToken|refreshToken|secret|password|sessionCookie|session_cookie|idempotencyKey|idempotency_key|attemptId|attempt_id|operatorAttemptId)$/i;
 const SENSITIVE_VALUE_RE =
   /(?:^|[\s"'=])(?:sb-[a-z0-9-]*-auth-token|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]+\.|data:image\/|https?:\/\/[^\s"'<>]+(?:supabase|fal\.ai|storage)[^\s"'<>]*|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}|sk_[a-zA-Z0-9]{16,}|[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\/(?:inputs|outputs)\/)/i;
 const PROVIDER_URL_RE =
@@ -382,6 +392,73 @@ export function assertDurableOwnedLibraryRow(listed, jobId) {
   return { ok: true, videoUrl };
 }
 
+/**
+ * Operator-supplied attempt id for real mode. Reusing the same id with the
+ * same image/SKU reuses the generate idempotency key (server replay-safe).
+ * Minting a new id authorizes a new possible Provider spend.
+ */
+export function assertOperatorAttemptId(raw) {
+  const attemptId = String(raw || "").trim();
+  assert.ok(
+    attemptId.length >= MIN_OPERATOR_ATTEMPT_ID_LEN,
+    `PIKBO_ACCEPTANCE_ATTEMPT_ID must be at least ${MIN_OPERATOR_ATTEMPT_ID_LEN} characters`
+  );
+  assert.ok(
+    attemptId.length <= MAX_OPERATOR_ATTEMPT_ID_LEN,
+    `PIKBO_ACCEPTANCE_ATTEMPT_ID must be ≤ ${MAX_OPERATOR_ATTEMPT_ID_LEN} characters`
+  );
+  // Printable, non-whitespace-control identifiers only (no newlines/cookies).
+  assert.match(
+    attemptId,
+    /^[A-Za-z0-9._:-]+$/,
+    "PIKBO_ACCEPTANCE_ATTEMPT_ID may only contain A-Z a-z 0-9 . _ : -"
+  );
+  return attemptId;
+}
+
+/**
+ * Derive a stable, versioned generate idempotency key (≤128 chars).
+ * Same attemptId + fixed contract + input sha256 + skuLabel → same key.
+ * Changing attemptId (or input/SKU/contract) produces a different key.
+ * Never log the returned key in evidence.
+ */
+export function deriveAcceptanceIdempotencyKey(input) {
+  const attemptId = assertOperatorAttemptId(input?.attemptId);
+  const inputSha256 = String(input?.inputSha256 || "")
+    .trim()
+    .toLowerCase();
+  assert.match(
+    inputSha256,
+    /^[0-9a-f]{64}$/,
+    "inputSha256 must be a 64-char lowercase hex digest"
+  );
+  const skuLabel = String(input?.skuLabel || "")
+    .trim()
+    .slice(0, 80);
+  const contract = input?.contract || FIXED_MOMENT_CONTRACT;
+  const material = JSON.stringify([
+    ACCEPTANCE_IDEMPOTENCY_KEY_VERSION,
+    attemptId,
+    contract.productContract,
+    contract.effect,
+    contract.duration,
+    contract.aspectRatio,
+    contract.model,
+    contract.resolution,
+    inputSha256,
+    skuLabel,
+  ]);
+  const digest = createHash("sha256").update(material).digest("hex");
+  // Prefix keeps the scheme readable for ops; digest provides uniqueness.
+  // Total length well under the server 128-char limit.
+  const key = `accept-${ACCEPTANCE_IDEMPOTENCY_KEY_VERSION}-${digest}`;
+  assert.ok(
+    key.length >= 8 && key.length <= MAX_IDEMPOTENCY_KEY_LEN,
+    `derived idempotency key length out of bounds: ${key.length}`
+  );
+  return key;
+}
+
 export function assertRealModeGates(env = process.env) {
   assert.equal(
     resolveMode(env),
@@ -415,6 +492,10 @@ export function assertRealModeGates(env = process.env) {
     "PIKBO_ACCEPTANCE_IMAGE_PATH (owned toy image) is required in real mode"
   );
 
+  const attemptId = assertOperatorAttemptId(
+    env.PIKBO_ACCEPTANCE_ATTEMPT_ID
+  );
+
   return {
     baseUrl: url.origin,
     origin: url.origin,
@@ -424,6 +505,7 @@ export function assertRealModeGates(env = process.env) {
       0,
       80
     ),
+    attemptId,
   };
 }
 
@@ -433,8 +515,10 @@ export function buildFixedMomentPayload(inputAssetId, idempotencyKey) {
     "inputAssetId required"
   );
   assert.ok(
-    typeof idempotencyKey === "string" && idempotencyKey.length >= 8,
-    "idempotencyKey required"
+    typeof idempotencyKey === "string" &&
+      idempotencyKey.length >= 8 &&
+      idempotencyKey.length <= MAX_IDEMPOTENCY_KEY_LEN,
+    "idempotencyKey required (8–128 chars)"
   );
   return {
     ...FIXED_MOMENT_CONTRACT,
@@ -738,6 +822,9 @@ export function buildDryRunEvidence() {
       privateInputStorageOrigin: PRIVATE_INPUT_STORAGE_ORIGIN,
       privateInputBucket: PRIVATE_INPUT_BUCKET,
       requiresTrustedSignedUploadUrl: true,
+      requiresOperatorAttemptId: true,
+      idempotencyKeyVersion: ACCEPTANCE_IDEMPOTENCY_KEY_VERSION,
+      idempotencyKeyMaxLen: MAX_IDEMPOTENCY_KEY_LEN,
     },
     verdict: "PASS_DRY_RUN_NO_SPEND",
     note:
@@ -865,9 +952,11 @@ export async function runRealAcceptance(options) {
     cookie,
     imagePath,
     skuLabel,
+    attemptId,
     fetchImpl,
     now = () => new Date().toISOString(),
   } = options;
+  const operatorAttemptId = assertOperatorAttemptId(attemptId);
 
   // Defense in depth: never attach a cookie to a non-allowlisted origin even if
   // a caller constructs runRealAcceptance directly in tests or ops scripts.
@@ -1072,7 +1161,14 @@ export async function runRealAcceptance(options) {
   }
 
   // 4) Exactly one generate for fixed toy-moment-v1.
-  const idempotencyKey = randomUUID();
+  // Stable operator attempt id + input/SKU/contract digest → replay-safe key.
+  // Never put attemptId or the full key into evidence.
+  const idempotencyKey = deriveAcceptanceIdempotencyKey({
+    attemptId: operatorAttemptId,
+    inputSha256: sha256,
+    skuLabel,
+    contract: FIXED_MOMENT_CONTRACT,
+  });
   const payload = buildFixedMomentPayload(assetId, idempotencyKey);
   const generateRes = await track(`${baseUrl}/api/generate`, {
     method: "POST",
@@ -1214,6 +1310,10 @@ export async function runRealAcceptance(options) {
       privateResult: true,
       // Shape marker only — never the raw short-lived signed delivery URL.
       hasPrivateSignedDeliveryUrl: liveCheck.hasPrivateSignedDeliveryUrl === true,
+      // Idempotency: stable derivation used; never emit attempt id or key.
+      idempotencyKeyDerived: true,
+      idempotencyKeyVersion: ACCEPTANCE_IDEMPOTENCY_KEY_VERSION,
+      idempotencyKeyLen: idempotencyKey.length,
     },
     library: {
       ok: libraryOk,

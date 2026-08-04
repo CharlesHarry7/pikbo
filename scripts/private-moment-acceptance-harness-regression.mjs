@@ -36,6 +36,10 @@ const {
   PRIVATE_INPUT_BUCKET,
   PRIVATE_INPUT_SIGNED_UPLOAD_PATH_PREFIX,
   buildFixedMomentPayload,
+  deriveAcceptanceIdempotencyKey,
+  assertOperatorAttemptId,
+  ACCEPTANCE_IDEMPOTENCY_KEY_VERSION,
+  MAX_IDEMPOTENCY_KEY_LEN,
   sanitizeEvidence,
   createNetworkAudit,
   assertOneCallBounds,
@@ -47,6 +51,8 @@ const {
   runRealAcceptance,
   main,
 } = await import(harnessPath);
+
+const DEFAULT_ATTEMPT_ID = "attempt-default-001";
 
 /** Realistic short-lived private Storage signed delivery URL (generate body). */
 const MOCK_SIGNED_DELIVERY_URL =
@@ -74,6 +80,11 @@ assert.match(source, /PRIVATE_INPUT_STORAGE_ORIGIN/);
 assert.match(source, /lpfvfybkggiugosugfcw/);
 assert.match(source, /upload\/sign\/pikbo-toy-inputs/);
 assert.match(source, /UNTRUSTED_UPLOAD_URL/);
+assert.match(source, /PIKBO_ACCEPTANCE_ATTEMPT_ID/);
+assert.match(source, /deriveAcceptanceIdempotencyKey/);
+assert.match(source, /ACCEPTANCE_IDEMPOTENCY_KEY_VERSION/);
+assert.match(source, /accept-\$\{ACCEPTANCE_IDEMPOTENCY_KEY_VERSION\}-/);
+assert.doesNotMatch(source, /randomUUID\s*\(/);
 assert.match(source, /X-Pikbo-Private-Result|x-pikbo-private-result/);
 assert.match(source, /AUTH_REQUIRED/);
 assert.match(source, /downloadOwner/);
@@ -212,6 +223,19 @@ assert.throws(
   /IMAGE_PATH/
 );
 
+assert.throws(
+  () =>
+    assertRealModeGates({
+      PIKBO_ACCEPTANCE_MODE: "real",
+      PIKBO_CONFIRM_PROVIDER_SPEND: SPEND_CONFIRMATION_PHRASE,
+      PIKBO_ACCEPTANCE_BASE_URL: PROTECTED_PREVIEW_ORIGIN,
+      PIKBO_ACCEPTANCE_SESSION_COOKIE: "sb-auth-token=secret-value-here",
+      PIKBO_ACCEPTANCE_IMAGE_PATH: "/tmp/owned-toy.jpg",
+      PIKBO_ACCEPTANCE_ATTEMPT_ID: "",
+    }),
+  /ATTEMPT_ID/
+);
+
 const allowedGates = assertRealModeGates({
   PIKBO_ACCEPTANCE_MODE: "real",
   PIKBO_CONFIRM_PROVIDER_SPEND: SPEND_CONFIRMATION_PHRASE,
@@ -219,12 +243,18 @@ const allowedGates = assertRealModeGates({
   PIKBO_ACCEPTANCE_SESSION_COOKIE: "sb-auth-token=secret-value-here",
   PIKBO_ACCEPTANCE_IMAGE_PATH: "/tmp/owned-toy.jpg",
   PIKBO_ACCEPTANCE_SKU_LABEL: "qa-sku-1",
+  PIKBO_ACCEPTANCE_ATTEMPT_ID: DEFAULT_ATTEMPT_ID,
 });
 assert.equal(allowedGates.origin, PROTECTED_PREVIEW_ORIGIN);
 assert.equal(allowedGates.baseUrl, PROTECTED_PREVIEW_ORIGIN);
 assert.equal(allowedGates.skuLabel, "qa-sku-1");
+assert.equal(allowedGates.attemptId, DEFAULT_ATTEMPT_ID);
 assert.equal(
   sanitizeEvidence({ cookie: allowedGates.cookie }).cookie,
+  "[redacted]"
+);
+assert.equal(
+  sanitizeEvidence({ attemptId: allowedGates.attemptId }).attemptId,
   "[redacted]"
 );
 
@@ -242,6 +272,43 @@ assert.equal(payload.allowProviderSpend, true);
 assert.equal(payload.assetId, "asset-aaaaaaaa");
 assert.equal(payload.image, undefined);
 assert.equal(FIXED_MOMENT_CONTRACT.productContract, "toy-moment-v1");
+
+// ── Stable operator attempt → versioned idempotency key ──
+
+const sampleSha =
+  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+const keyOnce = deriveAcceptanceIdempotencyKey({
+  attemptId: "attempt-stable-aaa",
+  inputSha256: sampleSha,
+  skuLabel: "sku-a",
+});
+const keyTwice = deriveAcceptanceIdempotencyKey({
+  attemptId: "attempt-stable-aaa",
+  inputSha256: sampleSha,
+  skuLabel: "sku-a",
+});
+const keyOtherAttempt = deriveAcceptanceIdempotencyKey({
+  attemptId: "attempt-stable-bbb",
+  inputSha256: sampleSha,
+  skuLabel: "sku-a",
+});
+const keyOtherSku = deriveAcceptanceIdempotencyKey({
+  attemptId: "attempt-stable-aaa",
+  inputSha256: sampleSha,
+  skuLabel: "sku-b",
+});
+assert.equal(keyOnce, keyTwice, "same attempt+input+sku must reuse the key");
+assert.notEqual(keyOnce, keyOtherAttempt, "new attempt id authorizes new spend key");
+assert.notEqual(keyOnce, keyOtherSku, "SKU change must change the key");
+assert.ok(keyOnce.startsWith(`accept-${ACCEPTANCE_IDEMPOTENCY_KEY_VERSION}-`));
+assert.ok(keyOnce.length <= MAX_IDEMPOTENCY_KEY_LEN);
+assert.equal(assertOperatorAttemptId("attempt-stable-aaa"), "attempt-stable-aaa");
+assert.throws(() => assertOperatorAttemptId("short"));
+assert.throws(() => assertOperatorAttemptId("bad key with spaces!!!"));
+assert.equal(
+  sanitizeEvidence({ idempotencyKey: keyOnce }).idempotencyKey,
+  "[redacted]"
+);
 
 // ── Live generate / Library row validators (two-phase URL contract) ──
 
@@ -642,6 +709,7 @@ function makePassingMock({
     downloadAnonymous: 0,
     anonymousHadCookie: false,
     uploadPutHadCookie: false,
+    idempotencyKeys: [],
   };
   const mockFetch = async (url, init = {}) => {
     const target = new URL(String(url), PROTECTED_PREVIEW_ORIGIN);
@@ -710,6 +778,11 @@ function makePassingMock({
       assert.equal(body.allowProviderSpend, true);
       assert.equal(body.assetId, assetId);
       assert.equal(body.image, undefined);
+      assert.equal(typeof body.idempotencyKey, "string");
+      assert.ok(body.idempotencyKey.length >= 8);
+      assert.ok(body.idempotencyKey.length <= MAX_IDEMPOTENCY_KEY_LEN);
+      assert.match(body.idempotencyKey, /^accept-v1-[0-9a-f]{64}$/);
+      counts.idempotencyKeys.push(body.idempotencyKey);
       return jsonResponse(200, {
         ok: true,
         jobId,
@@ -821,6 +894,7 @@ function makePassingMock({
     baseUrl: PROTECTED_PREVIEW_ORIGIN,
     origin: PROTECTED_PREVIEW_ORIGIN,
     cookie: "sb-auth-token=super-secret-session",
+    attemptId: DEFAULT_ATTEMPT_ID,
     imagePath,
     skuLabel: "mock-sku",
     fetchImpl: mockFetch,
@@ -850,6 +924,12 @@ function makePassingMock({
   assert.equal(counts.downloadOwner, 1);
   assert.equal(counts.downloadAnonymous, 1);
   assert.equal(counts.anonymousHadCookie, false);
+  assert.equal(realEvidence.generate.idempotencyKeyDerived, true);
+  assert.equal(
+    realEvidence.generate.idempotencyKeyVersion,
+    ACCEPTANCE_IDEMPOTENCY_KEY_VERSION
+  );
+  assert.equal(counts.idempotencyKeys.length, 1);
   const realJson = JSON.stringify(realEvidence);
   assert.doesNotMatch(realJson, /super-secret-session/);
   assert.doesNotMatch(realJson, /owner@example\.com/);
@@ -859,6 +939,69 @@ function makePassingMock({
   assert.doesNotMatch(realJson, /mock-signed-token-do-not-log/);
   assert.doesNotMatch(realJson, /token=mock/);
   assert.doesNotMatch(realJson, /pikbo-private-results\/owner/);
+  assert.doesNotMatch(realJson, /attempt-default-001/);
+  assert.ok(
+    !realJson.includes(counts.idempotencyKeys[0]),
+    "evidence must not contain the raw idempotency key"
+  );
+}
+
+// ── Same attempt id + same image/SKU reuses generate idempotency key ──
+
+{
+  const runA = makePassingMock({ pendingUpload: false });
+  const evidenceA = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: "sb-auth-token=super-secret-session",
+    attemptId: "attempt-rerun-stable",
+    imagePath,
+    skuLabel: "sku-stable",
+    fetchImpl: runA.mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  const runB = makePassingMock({ pendingUpload: false });
+  const evidenceB = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: "sb-auth-token=super-secret-session",
+    attemptId: "attempt-rerun-stable",
+    imagePath,
+    skuLabel: "sku-stable",
+    fetchImpl: runB.mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  const runC = makePassingMock({ pendingUpload: false });
+  const evidenceC = await runRealAcceptance({
+    baseUrl: PROTECTED_PREVIEW_ORIGIN,
+    origin: PROTECTED_PREVIEW_ORIGIN,
+    cookie: "sb-auth-token=super-secret-session",
+    attemptId: "attempt-rerun-new-spend",
+    imagePath,
+    skuLabel: "sku-stable",
+    fetchImpl: runC.mockFetch,
+    now: () => "2026-08-05T00:00:00.000Z",
+  });
+  assert.equal(evidenceA.verdict, "PASS_ONE_SKU_REAL");
+  assert.equal(evidenceB.verdict, "PASS_ONE_SKU_REAL");
+  assert.equal(evidenceC.verdict, "PASS_ONE_SKU_REAL");
+  assert.equal(runA.counts.idempotencyKeys.length, 1);
+  assert.equal(runB.counts.idempotencyKeys.length, 1);
+  assert.equal(runC.counts.idempotencyKeys.length, 1);
+  assert.equal(
+    runA.counts.idempotencyKeys[0],
+    runB.counts.idempotencyKeys[0],
+    "identical attempt+image+SKU must emit the same idempotency key"
+  );
+  assert.notEqual(
+    runA.counts.idempotencyKeys[0],
+    runC.counts.idempotencyKeys[0],
+    "changing attempt id must mint a different key (new spend authorization)"
+  );
+  assert.doesNotMatch(
+    JSON.stringify(evidenceA) + JSON.stringify(evidenceB),
+    /attempt-rerun-stable|accept-v1-[0-9a-f]{64}/
+  );
 }
 
 // ── Pending upload path: prepare + PUT + complete each once ──
@@ -869,6 +1012,7 @@ function makePassingMock({
     baseUrl: PROTECTED_PREVIEW_ORIGIN,
     origin: PROTECTED_PREVIEW_ORIGIN,
     cookie: "sb-auth-token=super-secret-session",
+    attemptId: DEFAULT_ATTEMPT_ID,
     imagePath,
     skuLabel: "mock-sku-pending",
     fetchImpl: mockFetch,
@@ -930,6 +1074,7 @@ for (const [label, badUrl] of [
     baseUrl: PROTECTED_PREVIEW_ORIGIN,
     origin: PROTECTED_PREVIEW_ORIGIN,
     cookie: "sb-auth-token=super-secret-session",
+    attemptId: DEFAULT_ATTEMPT_ID,
     imagePath,
     skuLabel: `untrusted-${label}`,
     fetchImpl: mockFetch,
@@ -953,6 +1098,7 @@ for (const [label, badUrl] of [
     baseUrl: PROTECTED_PREVIEW_ORIGIN,
     origin: PROTECTED_PREVIEW_ORIGIN,
     cookie: "sb-auth-token=super-secret-session",
+    attemptId: DEFAULT_ATTEMPT_ID,
     imagePath,
     skuLabel: "anon-open-200",
     fetchImpl: mockFetch,
@@ -975,6 +1121,7 @@ for (const [label, badUrl] of [
     baseUrl: PROTECTED_PREVIEW_ORIGIN,
     origin: PROTECTED_PREVIEW_ORIGIN,
     cookie: "sb-auth-token=super-secret-session",
+    attemptId: DEFAULT_ATTEMPT_ID,
     imagePath,
     skuLabel: "anon-open-302",
     fetchImpl: mockFetch,
@@ -994,6 +1141,7 @@ for (const [label, badUrl] of [
     baseUrl: PROTECTED_PREVIEW_ORIGIN,
     origin: PROTECTED_PREVIEW_ORIGIN,
     cookie: "sb-auth-token=super-secret-session",
+    attemptId: DEFAULT_ATTEMPT_ID,
     imagePath,
     skuLabel: "owner-marker-missing",
     fetchImpl: mockFetch,
@@ -1048,6 +1196,7 @@ for (const [label, badUrl] of [
     baseUrl: PROTECTED_PREVIEW_ORIGIN,
     origin: PROTECTED_PREVIEW_ORIGIN,
     cookie: "sb-auth-token=super-secret-session",
+    attemptId: DEFAULT_ATTEMPT_ID,
     imagePath,
     skuLabel: "demo-reject",
     fetchImpl: mockFetch,
@@ -1098,6 +1247,7 @@ for (const [label, badUrl] of [
     baseUrl: PROTECTED_PREVIEW_ORIGIN,
     origin: PROTECTED_PREVIEW_ORIGIN,
     cookie: "sb-auth-token=super-secret-session",
+    attemptId: DEFAULT_ATTEMPT_ID,
     imagePath,
     skuLabel: "legacy-path-reject",
     fetchImpl: mockFetch,
@@ -1146,6 +1296,7 @@ for (const [label, badUrl] of [
     baseUrl: PROTECTED_PREVIEW_ORIGIN,
     origin: PROTECTED_PREVIEW_ORIGIN,
     cookie: "sb-auth-token=super-secret-session",
+    attemptId: DEFAULT_ATTEMPT_ID,
     imagePath,
     skuLabel: "provider-url-reject",
     fetchImpl: mockFetch,
@@ -1212,6 +1363,7 @@ for (const [label, badUrl] of [
     baseUrl: PROTECTED_PREVIEW_ORIGIN,
     origin: PROTECTED_PREVIEW_ORIGIN,
     cookie: "sb-auth-token=super-secret-session",
+    attemptId: DEFAULT_ATTEMPT_ID,
     imagePath,
     skuLabel: "unowned-reject",
     fetchImpl: mockFetch,
@@ -1229,6 +1381,7 @@ await assert.rejects(
       baseUrl: "https://untrusted.example",
       origin: "https://untrusted.example",
       cookie: "sb-auth-token=super-secret-session",
+    attemptId: DEFAULT_ATTEMPT_ID,
       imagePath,
       skuLabel: "hostile",
       fetchImpl: async () => {
@@ -1281,6 +1434,7 @@ const hostileCli = runCli({
   PIKBO_ACCEPTANCE_BASE_URL: "https://untrusted.example",
   PIKBO_ACCEPTANCE_SESSION_COOKIE: "sb-auth-token=must-not-print",
   PIKBO_ACCEPTANCE_IMAGE_PATH: imagePath,
+  PIKBO_ACCEPTANCE_ATTEMPT_ID: DEFAULT_ATTEMPT_ID,
 });
 assert.notEqual(hostileCli.status, 0);
 assert.match(
@@ -1289,6 +1443,24 @@ assert.match(
 );
 assert.doesNotMatch(
   `${hostileCli.stdout}\n${hostileCli.stderr}`,
+  /must-not-print/
+);
+
+const missingAttemptCli = runCli({
+  PIKBO_ACCEPTANCE_MODE: "real",
+  PIKBO_CONFIRM_PROVIDER_SPEND: SPEND_CONFIRMATION_PHRASE,
+  PIKBO_ACCEPTANCE_BASE_URL: PROTECTED_PREVIEW_ORIGIN,
+  PIKBO_ACCEPTANCE_SESSION_COOKIE: "sb-auth-token=must-not-print",
+  PIKBO_ACCEPTANCE_IMAGE_PATH: imagePath,
+  PIKBO_ACCEPTANCE_ATTEMPT_ID: "",
+});
+assert.notEqual(missingAttemptCli.status, 0);
+assert.match(
+  `${missingAttemptCli.stdout}\n${missingAttemptCli.stderr}`,
+  /ATTEMPT_ID|FAIL_EXCEPTION/
+);
+assert.doesNotMatch(
+  `${missingAttemptCli.stdout}\n${missingAttemptCli.stderr}`,
   /must-not-print/
 );
 
@@ -1323,5 +1495,5 @@ assert.equal(invalidMain.evidence.verdict, "FAIL_INVALID_MODE");
 rmSync(tmp, { recursive: true, force: true });
 
 console.log(
-  "private-moment-acceptance-harness-regression: PASS (trusted upload URL · dual download probe · anonymous denial · demo/provider reject · one-call bounds · sanitized evidence)"
+  "private-moment-acceptance-harness-regression: PASS (stable attempt idempotency · trusted upload · dual download probe · one-call bounds · sanitized evidence)"
 );
