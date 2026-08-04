@@ -9,19 +9,23 @@
  *   - Emits only sanitized evidence.
  *
  * Real mode (operator-only):
- *   - Requires explicit spend confirmation plus operator-supplied session
- *     cookie and a local owned-image path.
- *   - Runs at most one fixed Street Power-Up upload → generate →
- *     Library-refresh → owner-only-download check against an operator host.
- *   - Never logs cookies, emails, signed URLs, object keys, raw provider URLs,
- *     or provider identifiers.
+ *   - Requires explicit spend confirmation, Preview gateway cookie,
+ *     Supabase owner access token (Bearer), attempt id, and owned-image path.
+ *   - Owner Pikbo API calls send Authorization: Bearer <access token>
+ *     (matches getAuthUserFromRequest) plus optional Preview cookie.
+ *   - Anonymous download HEAD and private Storage PUT strip both cookie and
+ *     Authorization.
+ *   - Never logs cookies, tokens, attempt ids, idempotency keys, signed URLs,
+ *     object keys, emails, or provider identifiers.
  *
  * Usage:
  *   node scripts/private-moment-acceptance-harness.mjs
  *   PIKBO_ACCEPTANCE_MODE=real \
  *     PIKBO_CONFIRM_PROVIDER_SPEND=I_UNDERSTAND_ONE_TOY_MOMENT_V1_SPEND \
  *     PIKBO_ACCEPTANCE_BASE_URL=https://… \
+ *     PIKBO_ACCEPTANCE_ACCESS_TOKEN='…' \
  *     PIKBO_ACCEPTANCE_SESSION_COOKIE='…' \
+ *     PIKBO_ACCEPTANCE_ATTEMPT_ID='…' \
  *     PIKBO_ACCEPTANCE_IMAGE_PATH=/path/to/owned-toy.jpg \
  *     node scripts/private-moment-acceptance-harness.mjs
  */
@@ -417,6 +421,78 @@ export function assertOperatorAttemptId(raw) {
 }
 
 /**
+ * Supabase owner access token for Authorization: Bearer on Pikbo API routes.
+ * Matches lib/supabase/user.ts getAuthUserFromRequest / bearerToken contract.
+ * Never log the returned value.
+ */
+export function assertOwnerAccessToken(raw) {
+  const token = String(raw || "").trim();
+  assert.ok(
+    token.length >= 32,
+    "PIKBO_ACCEPTANCE_ACCESS_TOKEN is required (≥32 chars Supabase access token)"
+  );
+  assert.ok(
+    !/\s/.test(token),
+    "PIKBO_ACCEPTANCE_ACCESS_TOKEN must not contain whitespace"
+  );
+  assert.ok(
+    !/^(null|undefined|cookie|session|bearer)$/i.test(token),
+    "PIKBO_ACCEPTANCE_ACCESS_TOKEN is not a valid access token"
+  );
+  return token;
+}
+
+/**
+ * Preview gateway cookie only — not a substitute for Bearer auth.
+ * Optional rename alias: PIKBO_ACCEPTANCE_PREVIEW_COOKIE (preferred) falls
+ * back to legacy PIKBO_ACCEPTANCE_SESSION_COOKIE.
+ */
+export function resolvePreviewGatewayCookie(env = process.env) {
+  const preferred = String(env.PIKBO_ACCEPTANCE_PREVIEW_COOKIE || "").trim();
+  if (preferred) return preferred;
+  return String(env.PIKBO_ACCEPTANCE_SESSION_COOKIE || "").trim();
+}
+
+export function assertPreviewGatewayCookie(raw) {
+  const cookie = String(raw || "").trim();
+  assert.ok(
+    cookie.length >= 16,
+    "PIKBO_ACCEPTANCE_PREVIEW_COOKIE (or legacy PIKBO_ACCEPTANCE_SESSION_COOKIE) is required for the protected Preview gateway"
+  );
+  return cookie;
+}
+
+/**
+ * Attach/strip dual credentials for a request kind.
+ * - owner API: Preview cookie + Authorization Bearer
+ * - anonymous: neither
+ * - uploadPut: neither (signed URL is the storage auth)
+ */
+export function applyRequestCredentials(headers, options) {
+  const h =
+    headers instanceof Headers ? headers : new Headers(headers || {});
+  h.delete("cookie");
+  h.delete("Cookie");
+  h.delete("authorization");
+  h.delete("Authorization");
+  const mode = options?.mode || "owner";
+  if (mode === "owner") {
+    const cookie = String(options?.cookie || "").trim();
+    const accessToken = String(options?.accessToken || "").trim();
+    assert.ok(cookie, "owner requests require a Preview gateway cookie");
+    assert.ok(accessToken, "owner requests require a Supabase access token");
+    h.set("cookie", cookie);
+    h.set("authorization", `Bearer ${accessToken}`);
+    if (!h.has("accept")) h.set("accept", "application/json");
+  } else if (mode === "anonymous" || mode === "uploadPut") {
+    if (!h.has("accept") && mode === "anonymous") {
+      h.set("accept", "application/json");
+    }
+  }
+  return h;
+}
+
+/**
  * Derive a stable, versioned generate idempotency key (≤128 chars).
  * Same attemptId + fixed contract + input sha256 + skuLabel → same key.
  * Changing attemptId (or input/SKU/contract) produces a different key.
@@ -480,11 +556,9 @@ export function assertRealModeGates(env = process.env) {
   assert.ok(baseUrl, "PIKBO_ACCEPTANCE_BASE_URL is required in real mode");
   const url = assertAllowedAcceptanceOrigin(baseUrl);
 
-  const cookie = String(env.PIKBO_ACCEPTANCE_SESSION_COOKIE || "").trim();
-  assert.ok(
-    cookie.length >= 16,
-    "PIKBO_ACCEPTANCE_SESSION_COOKIE (operator session) is required in real mode"
-  );
+  // Dual credentials: Bearer is the Pikbo auth contract; cookie is Preview gateway.
+  const accessToken = assertOwnerAccessToken(env.PIKBO_ACCEPTANCE_ACCESS_TOKEN);
+  const cookie = assertPreviewGatewayCookie(resolvePreviewGatewayCookie(env));
 
   const imagePath = String(env.PIKBO_ACCEPTANCE_IMAGE_PATH || "").trim();
   assert.ok(
@@ -500,6 +574,7 @@ export function assertRealModeGates(env = process.env) {
     baseUrl: url.origin,
     origin: url.origin,
     cookie,
+    accessToken,
     imagePath,
     skuLabel: String(env.PIKBO_ACCEPTANCE_SKU_LABEL || "operator-one-sku").slice(
       0,
@@ -823,6 +898,11 @@ export function buildDryRunEvidence() {
       privateInputBucket: PRIVATE_INPUT_BUCKET,
       requiresTrustedSignedUploadUrl: true,
       requiresOperatorAttemptId: true,
+      requiresOwnerAccessToken: true,
+      requiresPreviewGatewayCookie: true,
+      ownerApiUsesBearer: true,
+      anonymousStripsCookieAndAuthorization: true,
+      storagePutStripsCookieAndAuthorization: true,
       idempotencyKeyVersion: ACCEPTANCE_IDEMPOTENCY_KEY_VERSION,
       idempotencyKeyMaxLen: MAX_IDEMPOTENCY_KEY_LEN,
     },
@@ -867,7 +947,9 @@ export function classifyNetworkRequest(rawUrl, method, authMode = "owner") {
   return baseKind;
 }
 
-function createGuardedFetch(allowedOrigin, cookie, audit) {
+function createGuardedFetch(allowedOrigin, credentials, audit) {
+  const cookie = credentials.cookie;
+  const accessToken = credentials.accessToken;
   return async (input, init = {}) => {
     const authMode = init.authMode === "anonymous" ? "anonymous" : "owner";
     const restInit = { ...init };
@@ -907,21 +989,19 @@ function createGuardedFetch(allowedOrigin, cookie, audit) {
     audit.total += 1;
     assertOneCallBounds(audit);
 
-    // Never attach cookies to storage PUTs (signed URL is the auth).
-    // Anonymous download probes must never inherit the operator session cookie.
-    const headers = new Headers(restInit.headers || {});
-    headers.delete("cookie");
-    headers.delete("authorization");
-    headers.delete("Cookie");
-    headers.delete("Authorization");
-    const isOperatorApi = kind !== "uploadPut";
-    if (isOperatorApi && authMode === "owner") {
-      headers.set("cookie", cookie);
-      if (!headers.has("accept")) headers.set("accept", "application/json");
-    } else if (isOperatorApi && authMode === "anonymous") {
-      if (!headers.has("accept")) headers.set("accept", "application/json");
-    }
-    // uploadPut: leave headers without cookie/authorization intentionally.
+    // Dual credentials: owner API = Preview cookie + Bearer access token.
+    // Anonymous HEAD and storage PUT strip both (signed URL is storage auth).
+    const credMode =
+      kind === "uploadPut"
+        ? "uploadPut"
+        : authMode === "anonymous"
+          ? "anonymous"
+          : "owner";
+    const headers = applyRequestCredentials(restInit.headers || {}, {
+      mode: credMode,
+      cookie,
+      accessToken,
+    });
 
     const response = await fetch(rawUrl, {
       ...restInit,
@@ -950,6 +1030,7 @@ export async function runRealAcceptance(options) {
     baseUrl,
     origin,
     cookie,
+    accessToken,
     imagePath,
     skuLabel,
     attemptId,
@@ -957,9 +1038,11 @@ export async function runRealAcceptance(options) {
     now = () => new Date().toISOString(),
   } = options;
   const operatorAttemptId = assertOperatorAttemptId(attemptId);
+  const previewCookie = assertPreviewGatewayCookie(cookie);
+  const ownerAccessToken = assertOwnerAccessToken(accessToken);
 
-  // Defense in depth: never attach a cookie to a non-allowlisted origin even if
-  // a caller constructs runRealAcceptance directly in tests or ops scripts.
+  // Defense in depth: never attach credentials to a non-allowlisted origin even
+  // if a caller constructs runRealAcceptance directly in tests or ops scripts.
   assertAllowedAcceptanceOrigin(origin || baseUrl);
   assert.equal(
     new URL(baseUrl).origin,
@@ -968,13 +1051,16 @@ export async function runRealAcceptance(options) {
   );
 
   const audit = createNetworkAudit();
+  const credentials = {
+    cookie: previewCookie,
+    accessToken: ownerAccessToken,
+  };
   const guarded =
     fetchImpl ||
-    createGuardedFetch(PROTECTED_PREVIEW_ORIGIN, cookie, audit);
+    createGuardedFetch(PROTECTED_PREVIEW_ORIGIN, credentials, audit);
 
-  // If caller injects fetchImpl, still bound their counts when they use audit.
-  // authMode: "owner" (default) attaches the operator cookie; "anonymous"
-  // strips cookie/authorization and must never inherit session credentials.
+  // If caller injects fetchImpl, still apply the same credential attach/strip
+  // rules as global fetch (Bearer + Preview cookie for owner API only).
   // PUT targets share assertTrustedPrivateInputSignedUploadUrl with real fetch.
   const track = async (url, init = {}) => {
     const authMode = init.authMode === "anonymous" ? "anonymous" : "owner";
@@ -987,13 +1073,17 @@ export async function runRealAcceptance(options) {
       audit.total += 1;
       assertOneCallBounds(audit);
 
-      const headers = new Headers(restInit.headers || {});
-      // Always strip first so anonymous / storage never inherits cookies.
-      headers.delete("cookie");
-      headers.delete("authorization");
-      if (finalKind !== "uploadPut" && authMode === "owner") {
-        headers.set("cookie", cookie);
-      }
+      const credMode =
+        finalKind === "uploadPut"
+          ? "uploadPut"
+          : authMode === "anonymous"
+            ? "anonymous"
+            : "owner";
+      const headers = applyRequestCredentials(restInit.headers || {}, {
+        mode: credMode,
+        cookie: previewCookie,
+        accessToken: ownerAccessToken,
+      });
       return fetchImpl(url, {
         ...restInit,
         headers,
