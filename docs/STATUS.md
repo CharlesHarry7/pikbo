@@ -1,10 +1,11 @@
 # Pikbo active status
 
-**Updated:** 2026-08-04
+**Updated:** 2026-08-05
 
-**Canonical code:** `main@e50945c` — single Street Power-Up Moment with
-owner-only live input, reconciliation hardening, honest guest Create proof, and
-the exact private Preview auth origin.
+**Canonical code:** `main@d3ef284` plus in-flight operator acceptance harness work
+— single Street Power-Up Moment with owner-only live input, reconciliation
+hardening, honest guest Create proof, exact private Preview auth origin, and a
+fail-closed one-SKU acceptance script (default dry-run, zero spend).
 
 **Production:** `https://pikbo.ai` is deployed and operator-verified. It remains
 hard-closed: `/api/health` is `validation`, `softLive=false`, and `paid=false`;
@@ -20,7 +21,7 @@ Git history and must not be treated as current work.
 
 | Priority | Outcome | GitHub | State | Done when |
 |---|---|---|---|---|
-| P0 | Owned photo produces the actual private Moment | #54 | protected Preview health is green; blocked only on the dedicated FAL account's `$0.00` balance | owner Magic Link → owned photo → one `9:16` / 5s / 720p Street Power-Up → private object → Library/download |
+| P0 | Owned photo produces the actual private Moment | #54 | protected Preview health is green; code-side one-SKU harness ready (dry-run default); blocked only on the dedicated FAL account's `$0.00` balance | owner Magic Link → owned photo → one `9:16` / 5s / 720p Street Power-Up → private object → Library/download |
 | P1 | Stripe test subscription binds to the same durable account | #59 | blocked externally and remains closed | replay-safe test Checkout, webhook, subscription, and once-only credits |
 
 ## Completed in this convergence
@@ -36,6 +37,12 @@ Git history and must not be treated as current work.
 - #65: Magic Link callback handling now preserves the exact Street Power-Up
   next path and fails closed for hostile origins. The regression is covered by
   `npm run auth-magic-link-regression`.
+- Operator-safe one-SKU acceptance harness: `npm run private-moment-acceptance`
+  (default dry-run, zero network/spend) and
+  `npm run private-moment-acceptance-regression` (fail-closed gates + one-call
+  bound with mocks). Real mode requires explicit spend confirmation, operator
+  session cookie, and owned-image path; runbook:
+  `docs/ops/PRIVATE_MOMENT_ONE_SKU_ACCEPTANCE.md`.
 - `codex/private-validation`: branch-only Supabase credentials, private-live
   allowlist, one-job budget, FAL key, durable gates, and Stripe-off overrides
   are configured. The owner account, non-production wallet, Supabase callback,
@@ -44,7 +51,8 @@ Git history and must not be treated as current work.
 
 ## Next gate
 
-Fund the dedicated FAL account, then use the owner Magic Link to complete one
+Fund the dedicated FAL account, then use the owner Magic Link (or the real mode
+of the one-SKU acceptance harness with an operator session) to complete one
 private `9:16` / 5-second / 720p Street Power-Up result with private recovery
 and owner-only download. Until that proof exists, production generation and
 payments remain closed.
