@@ -13,9 +13,8 @@ assert.match(createPage, /<CreateStudio[\s\S]*initialEffect="street-power-up"[\s
 assert.match(createPage, /description:[\s\S]{0,180}cached Street Power-Up sample/);
 
 assert.match(gate, /data-guest-create-first="street-power-up"/);
-assert.match(gate, /See Street Power-Up\./);
-assert.match(gate, /Then make it yours\./);
-assert.match(gate, /a neon, drop-day direction for launch posts and reels/);
+assert.match(gate, /Street[\s\S]*Power-Up\./);
+assert.match(gate, /A neon, drop-day direction built for designer-toy reveals/);
 assert.match(gate, /data-guest-create-sample/);
 assert.match(gate, /AutoPlayVideo/);
 assert.match(gate, /beatbot-still\.webp/);
@@ -24,12 +23,12 @@ assert.match(gate, /beatbot-viral-hook\.webm/);
 assert.match(gate, /9:16/);
 assert.match(gate, /5s/);
 assert.match(gate, /720p/);
-assert.match(gate, /archive study runs 6 seconds/);
-assert.match(gate, /Archive study · 6s/);
-assert.match(gate, /Private target/);
+assert.match(gate, /Archive · 6s/);
+assert.match(gate, /One photo in\./);
+assert.match(gate, /One private clip out\./);
 assert.match(gate, /data-guest-create-sign-in/);
 assert.match(gate, /!signedIn/);
-assert.match(gate, /Sign in to animate your toy/);
+assert.match(gate, /Sign in to make yours/);
 assert.match(gate, /data-guest-create-private-beta/);
 assert.match(gate, /Request private beta/);
 assert.match(gate, /data-guest-create-not-your-toy/);

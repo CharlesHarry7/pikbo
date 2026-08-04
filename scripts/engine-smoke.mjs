@@ -822,7 +822,7 @@ assert.doesNotMatch(appShell, /const MORE|MoreMenu|CommandPalette/);
 assert.match(appShell, /CreditsBadge|LanguageSwitcher/);
 assert.match(
   appShell,
-  /MOMENT_CREATE_HREF[\s\S]*?const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`[\s\S]*?const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`[\s\S]*?data-primary-create-href=\{\s*momentSurface\s*\?\s*DEFAULT_MOMENT_CREATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF\s*\}/
+  /MOMENT_CREATE_HREF[\s\S]*?const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`[\s\S]*?const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`[\s\S]*?data-primary-create-href=\{\s*motionChrome\s*\?\s*DEFAULT_MOMENT_CREATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF\s*\}/
 );
 assert.doesNotMatch(
   appShell,
@@ -3920,8 +3920,10 @@ const createSampleSrc = publicSampleSrc.slice(
   publicSampleSrc.indexOf("function CreateSampleBrowser")
 );
 assert.match(homeHeroSrc, /data-home-hero=["']street-power-up["']/);
-assert.match(homeHeroSrc, /Try Street Power-Up/);
-assert.match(homeHeroSrc, /cached prototype|cached sample/);
+assert.match(homeHeroSrc, /Use this motion/);
+assert.match(homeHeroSrc, /Sample · Beatbot/);
+assert.match(homeHeroSrc, /Sample shown: cached 6s archive/);
+assert.match(homeHeroSrc, /not a completed customer deliverable/);
 assert.match(homeMomentsSrc, /One toy photo\. More ways to sell\./);
 assert.match(homeMomentsSrc, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(momentStageSrc, /Official Concept/);
@@ -4201,7 +4203,7 @@ assert.match(appShellSrc, /CreditsBadge|LanguageSwitcher/);
 assert.doesNotMatch(appShellSrc, /MoreMenu|CommandPalette/);
 assert.match(
   appShellSrc,
-  /MOMENT_CREATE_HREF[\s\S]*?const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`[\s\S]*?const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`[\s\S]*?data-primary-create-href=\{\s*momentSurface\s*\?\s*DEFAULT_MOMENT_CREATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF\s*\}/
+  /MOMENT_CREATE_HREF[\s\S]*?const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`[\s\S]*?const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`[\s\S]*?data-primary-create-href=\{\s*motionChrome\s*\?\s*DEFAULT_MOMENT_CREATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF\s*\}/
 );
 assert.doesNotMatch(
   appShellSrc,
