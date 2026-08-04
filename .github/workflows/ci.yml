@@ -61,6 +61,7 @@ jobs:
       - name: Private toy input · Pack discovery · auth return path
         run: |
           npm run private-toy-input-pack-regression
+          npm run direct-moment-input-binding-regression
           npm run auth-magic-link-regression
 
       - name: Stripe billing (paid binding · event ordering · credit idempotency)

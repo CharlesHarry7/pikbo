@@ -843,6 +843,12 @@ export type AtomicGenerationReservation = {
   providerAuthorized: boolean;
 };
 
+/** Direct Moment reserve: same ledger fields plus the bound owner photo id. */
+export type AtomicGenerationWithAssetReservation = AtomicGenerationReservation & {
+  inputAssetId: string;
+  rightsConfirmed: true;
+};
+
 export type AtomicGenerationSettlement = {
   reservationId: string;
   jobId: string;
@@ -975,6 +981,121 @@ export async function supabaseReserveGenerationAtomic(input: {
       reservedCredits,
       idempotent: payload.idempotent === true,
       providerAuthorized: payload.providerAuthorized === true,
+    },
+  };
+}
+
+/**
+ * Direct live Moment reserve with immutable owner-photo binding.
+ * Flux still path must keep using supabaseReserveGenerationAtomic (no asset).
+ */
+export async function supabaseReserveGenerationWithAssetAtomic(input: {
+  userId: string;
+  idempotencyKey: string;
+  effectSlug: string;
+  quotedCredits: number;
+  inputAssetId: string;
+  rightsConfirmed: true;
+}): Promise<
+  | { ok: true; data: AtomicGenerationWithAssetReservation }
+  | AtomicRpcFailure
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: "Supabase service role unavailable",
+    };
+  }
+  const { data, error } = await admin.rpc(
+    "pikbo_reserve_generation_with_asset_v1",
+    {
+      p_user_id: input.userId,
+      p_idempotency_key: input.idempotencyKey,
+      p_effect_slug: input.effectSlug,
+      p_quoted_credits: input.quotedCredits,
+      p_input_asset_id: input.inputAssetId,
+      p_rights_confirmed: input.rightsConfirmed,
+    }
+  );
+  if (error) {
+    return {
+      ok: false,
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      error: error.message.slice(0, 160),
+    };
+  }
+  const payload = rpcPayload(data);
+  if (!payload || payload.ok !== true) {
+    return rpcFailure(payload, "Atomic generation reservation with asset failed");
+  }
+
+  const planId = payload.planId;
+  const amount = numberField(payload, "amount");
+  const availableCredits = numberField(payload, "availableCredits");
+  const reservedCredits = numberField(payload, "reservedCredits");
+  // Reject leakage of storage secrets even if a future RPC regresses.
+  if (
+    payload.objectKey != null ||
+    payload.object_key != null ||
+    payload.signedUrl != null ||
+    payload.inputSha256 != null ||
+    payload.sha256 != null
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Direct Moment reserve must not return storage secrets",
+    };
+  }
+  if (
+    typeof payload.reservationId !== "string" ||
+    typeof payload.jobId !== "string" ||
+    typeof payload.userId !== "string" ||
+    typeof payload.accountId !== "string" ||
+    typeof payload.idempotencyKey !== "string" ||
+    typeof payload.expiresAt !== "string" ||
+    typeof payload.inputAssetId !== "string" ||
+    payload.inputAssetId !== input.inputAssetId ||
+    payload.rightsConfirmed !== true ||
+    payload.status !== "reserved" ||
+    typeof payload.idempotent !== "boolean" ||
+    typeof payload.providerAuthorized !== "boolean" ||
+    (planId !== "free" && planId !== "founding_studio") ||
+    amount == null ||
+    availableCredits == null ||
+    reservedCredits == null ||
+    payload.userId !== input.userId ||
+    payload.idempotencyKey !== input.idempotencyKey ||
+    amount !== input.quotedCredits ||
+    payload.providerAuthorized === payload.idempotent
+  ) {
+    return {
+      ok: false,
+      code: "ATOMIC_RPC_INVALID_RESPONSE",
+      error: "Atomic reservation with asset returned an invalid payload",
+    };
+  }
+
+  return {
+    ok: true,
+    data: {
+      reservationId: payload.reservationId,
+      jobId: payload.jobId,
+      userId: payload.userId,
+      accountId: payload.accountId,
+      amount,
+      status: "reserved",
+      idempotencyKey: payload.idempotencyKey,
+      expiresAt: payload.expiresAt,
+      planId,
+      availableCredits,
+      reservedCredits,
+      idempotent: payload.idempotent === true,
+      providerAuthorized: payload.providerAuthorized === true,
+      inputAssetId: payload.inputAssetId,
+      rightsConfirmed: true,
     },
   };
 }
