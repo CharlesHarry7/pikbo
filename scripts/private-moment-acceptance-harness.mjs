@@ -657,7 +657,8 @@ function resolveImagePath(rawPath) {
 function createGuardedFetch(allowedOrigin, cookie, audit) {
   return async (input, init = {}) => {
     const authMode = init.authMode === "anonymous" ? "anonymous" : "owner";
-    const { authMode: _authMode, ...restInit } = init;
+    const restInit = { ...init };
+    delete restInit.authMode;
     const rawUrl =
       typeof input === "string" || input instanceof URL
         ? input.toString()
@@ -769,7 +770,8 @@ export async function runRealAcceptance(options) {
   // strips cookie/authorization and must never inherit session credentials.
   const track = async (url, init = {}) => {
     const authMode = init.authMode === "anonymous" ? "anonymous" : "owner";
-    const { authMode: _authMode, ...restInit } = init;
+    const restInit = { ...init };
+    delete restInit.authMode;
     if (fetchImpl) {
       const target = new URL(url, PROTECTED_PREVIEW_ORIGIN);
       // Mocks may only target the protected Preview API or storage PUT hosts.
