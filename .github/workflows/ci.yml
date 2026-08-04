@@ -51,6 +51,7 @@ jobs:
       - name: P0 private object settlement + provider budget
         run: |
           npm run p0-private-live-generation
+          npm run durable-library-statuses-regression
           npm run provider-budget-regression
           npm run capability-matrix
 
@@ -60,6 +61,7 @@ jobs:
       - name: Private toy input · Pack discovery · auth return path
         run: |
           npm run private-toy-input-pack-regression
+          npm run direct-moment-input-binding-regression
           npm run auth-magic-link-regression
 
       - name: Stripe billing (paid binding · event ordering · credit idempotency)

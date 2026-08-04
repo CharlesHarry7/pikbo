@@ -57,6 +57,12 @@ export type PrivatePreviewReadinessInput = {
   privateInputsBucketReady: boolean;
   privateInputsSchemaReady: boolean;
   privateInputsReserveRpcReady: boolean;
+  /**
+   * Direct Moment with-asset reserve RPC
+   * (`pikbo_reserve_generation_with_asset_v1`). Missing migration keeps full
+   * private Preview readiness closed; does not gate zero-Provider upload.
+   */
+  directMomentReserveRpcReady: boolean;
   privateInputsDiscoveryReady: boolean;
   providerOutputAllowlistConfigured: boolean;
   privateLiveEnabled: boolean;
@@ -120,6 +126,7 @@ export function evaluatePrivatePreviewReadiness(
     "privateInputsBucketReady",
     "privateInputsSchemaReady",
     "privateInputsReserveRpcReady",
+    "directMomentReserveRpcReady",
     "privateInputsDiscoveryReady",
     "providerOutputAllowlistConfigured",
     "privateLiveEnabled",
