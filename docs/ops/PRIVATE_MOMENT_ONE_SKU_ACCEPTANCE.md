@@ -53,11 +53,18 @@ npm run private-moment-acceptance
 
 ### Dual credentials (Preview cookie ≠ Pikbo auth)
 
-| Request | Cookie | `Authorization: Bearer` |
+| Request | Preview gateway cookie | `Authorization: Bearer` |
 |---|---|---|
-| Owner Pikbo API (`upload-url`, `complete`, `generate`, `generations`, owner download HEAD) | Preview gateway cookie | **Required** Supabase access token |
-| Anonymous download HEAD | **Stripped** | **Stripped** |
+| Owner Pikbo API (`upload-url`, `complete`, `generate`, `generations`, owner download HEAD) | **Sent** (admits protected Preview) | **Required** Supabase access token |
+| **Pikbo-anonymous** download HEAD | **Sent** (so Vercel Deployment Protection admits the request) | **Stripped** (proves app-level `401` + `X-Pikbo-Download-Code: AUTH_REQUIRED`) |
 | Private Storage signed PUT | **Stripped** | **Stripped** (signed upload URL is auth) |
+
+“Anonymous” in this harness means **anonymous to Pikbo** (no Bearer / no Supabase
+user), **not** a fully unauthenticated request to Vercel. The Preview gateway
+cookie is still required on same-origin download probes so the request reaches
+the app. Without that cookie, Deployment Protection may return a non-app 401
+that lacks `X-Pikbo-Download-Code` — the harness treats that as fail-closed, not
+as owner-only proof.
 
 Missing or obviously invalid access tokens fail closed **before any network call**.
 Token, cookie, attempt id, and idempotency keys never appear in evidence, errors, or logs.
@@ -96,9 +103,10 @@ booleans/version/length — never the attempt id or full key.
 3. **Owner download HEAD** (Preview cookie + Bearer, `redirect: manual`):
    HTTP **200**, `X-Pikbo-Download: allowed`, `X-Pikbo-Private-Result: 1`.
    Any 3xx is not PASS (do not follow or record signed Location).
-4. **Anonymous download HEAD** (no cookie, no Authorization, `redirect: manual`):
-   HTTP **401** and `X-Pikbo-Download-Code: AUTH_REQUIRED`.
-   Any anonymous 2xx/3xx fails the run (public download is not owner-only).
+4. **Pikbo-anonymous download HEAD** (Preview cookie kept, **no** Authorization,
+   `redirect: manual`): HTTP **401** and `X-Pikbo-Download-Code: AUTH_REQUIRED`
+   (application contract). Any 2xx/3xx fails the run. A 401 without the
+   `X-Pikbo-Download-Code` header is treated as gateway/non-app failure, not PASS.
 
 Cached/demo responses never count as PASS. Both download probes are required.
 
@@ -121,7 +129,8 @@ Cached/demo responses never count as PASS. Both download probes are required.
    `allowProviderSpend` — **exactly one** attempt (Bearer + Preview cookie)
 5. `GET /api/generations` Library refresh (Bearer + Preview cookie)
 6. Owner `HEAD /api/downloads/{jobId}` (Bearer + Preview cookie)
-7. Anonymous `HEAD /api/downloads/{jobId}` (no credentials) — must be 401
+7. Pikbo-anonymous `HEAD /api/downloads/{jobId}` (Preview cookie, no Bearer)
+   — must be app-level 401 + `AUTH_REQUIRED`
 
 The harness never records signed upload URLs, tokens, cookies, attempt ids,
 or object keys in evidence.

@@ -12,9 +12,11 @@
  *   - Requires explicit spend confirmation, Preview gateway cookie,
  *     Supabase owner access token (Bearer), attempt id, and owned-image path.
  *   - Owner Pikbo API calls send Authorization: Bearer <access token>
- *     (matches getAuthUserFromRequest) plus optional Preview cookie.
- *   - Anonymous download HEAD and private Storage PUT strip both cookie and
- *     Authorization.
+ *     (matches getAuthUserFromRequest) plus the Preview gateway cookie.
+ *   - Pikbo-anonymous download HEAD keeps the Preview gateway cookie (so Vercel
+ *     Deployment Protection admits the request) but strips Authorization so
+ *     the app returns 401 + X-Pikbo-Download-Code: AUTH_REQUIRED.
+ *   - Private Storage signed PUT strips both cookie and Authorization.
  *   - Never logs cookies, tokens, attempt ids, idempotency keys, signed URLs,
  *     object keys, emails, or provider identifiers.
  *
@@ -464,8 +466,9 @@ export function assertPreviewGatewayCookie(raw) {
 
 /**
  * Attach/strip dual credentials for a request kind.
- * - owner API: Preview cookie + Authorization Bearer
- * - anonymous: neither
+ * - owner: Preview gateway cookie + Authorization Bearer
+ * - anonymous (Pikbo-anonymous): Preview gateway cookie kept, Bearer stripped
+ *   so Deployment Protection admits the request while the app sees no user
  * - uploadPut: neither (signed URL is the storage auth)
  */
 export function applyRequestCredentials(headers, options) {
@@ -476,18 +479,25 @@ export function applyRequestCredentials(headers, options) {
   h.delete("authorization");
   h.delete("Authorization");
   const mode = options?.mode || "owner";
+  const cookie = String(options?.cookie || "").trim();
+  const accessToken = String(options?.accessToken || "").trim();
   if (mode === "owner") {
-    const cookie = String(options?.cookie || "").trim();
-    const accessToken = String(options?.accessToken || "").trim();
     assert.ok(cookie, "owner requests require a Preview gateway cookie");
     assert.ok(accessToken, "owner requests require a Supabase access token");
     h.set("cookie", cookie);
     h.set("authorization", `Bearer ${accessToken}`);
     if (!h.has("accept")) h.set("accept", "application/json");
-  } else if (mode === "anonymous" || mode === "uploadPut") {
-    if (!h.has("accept") && mode === "anonymous") {
-      h.set("accept", "application/json");
-    }
+  } else if (mode === "anonymous") {
+    // Pikbo-anonymous: still admitted through the protected Preview gateway.
+    assert.ok(
+      cookie,
+      "Pikbo-anonymous probes require the Preview gateway cookie"
+    );
+    h.set("cookie", cookie);
+    // Authorization intentionally absent — proves app-level AUTH_REQUIRED.
+    if (!h.has("accept")) h.set("accept", "application/json");
+  } else if (mode === "uploadPut") {
+    // Signed upload URL is the only storage auth; never attach cookie/Bearer.
   }
   return h;
 }
@@ -611,9 +621,12 @@ export function createNetworkAudit() {
     uploadComplete: 0,
     generate: 0,
     library: 0,
-    /** Owner-cookie download HEAD probes. */
+    /** Owner download HEAD (Preview cookie + Bearer). */
     downloadOwner: 0,
-    /** Cookie-less anonymous download HEAD probes. */
+    /**
+     * Pikbo-anonymous download HEAD (Preview cookie kept, Bearer stripped).
+     * Named downloadAnonymous for audit continuity; not fully credential-less.
+     */
     downloadAnonymous: 0,
     other: 0,
     total: 0,
@@ -687,7 +700,7 @@ export function assertDryRunNoSpend(audit) {
   assert.equal(
     audit.downloadAnonymous || 0,
     0,
-    "dry-run must not probe anonymous download"
+    "dry-run must not probe Pikbo-anonymous download"
   );
   assert.equal(audit.other, 0, "dry-run must not make other network calls");
   assert.equal(audit.total, 0, "dry-run network total must be 0");
@@ -752,8 +765,11 @@ export function assertOwnerPrivateDownloadHead(response) {
 }
 
 /**
- * Anonymous HEAD (no cookie) for private UUID must be 401 + AUTH_REQUIRED.
- * Any 2xx/3xx means the route is publicly reachable — fail closed.
+ * Pikbo-anonymous download HEAD (Preview gateway cookie present, no Bearer)
+ * for a private UUID must return application-level 401 + AUTH_REQUIRED.
+ * Any 2xx/3xx means the route is publicly reachable without Pikbo auth —
+ * fail closed. Missing X-Pikbo-Download-Code after a 401 may indicate the
+ * request never reached the app (gateway rejection) — also fail closed.
  */
 export function assertAnonymousDownloadDenied(response) {
   const status = Number(response?.status || 0);
@@ -777,7 +793,10 @@ export function assertAnonymousDownloadDenied(response) {
   if (code !== "AUTH_REQUIRED") {
     return {
       ok: false,
-      reason: "anonymous_code_not_auth_required",
+      reason:
+        code
+          ? "anonymous_code_not_auth_required"
+          : "anonymous_gateway_or_non_app_response",
       status,
       downloadCode: code || null,
     };
@@ -786,6 +805,9 @@ export function assertAnonymousDownloadDenied(response) {
     ok: true,
     status: 401,
     downloadCode: "AUTH_REQUIRED",
+    // Shape markers only — never raw credentials.
+    previewGatewayAdmitted: true,
+    pikboBearerAbsent: true,
   };
 }
 
@@ -901,7 +923,8 @@ export function buildDryRunEvidence() {
       requiresOwnerAccessToken: true,
       requiresPreviewGatewayCookie: true,
       ownerApiUsesBearer: true,
-      anonymousStripsCookieAndAuthorization: true,
+      pikboAnonymousKeepsPreviewCookie: true,
+      pikboAnonymousStripsBearer: true,
       storagePutStripsCookieAndAuthorization: true,
       idempotencyKeyVersion: ACCEPTANCE_IDEMPOTENCY_KEY_VERSION,
       idempotencyKeyMaxLen: MAX_IDEMPOTENCY_KEY_LEN,
@@ -989,8 +1012,9 @@ function createGuardedFetch(allowedOrigin, credentials, audit) {
     audit.total += 1;
     assertOneCallBounds(audit);
 
-    // Dual credentials: owner API = Preview cookie + Bearer access token.
-    // Anonymous HEAD and storage PUT strip both (signed URL is storage auth).
+    // Owner: Preview cookie + Bearer.
+    // Pikbo-anonymous same-origin: Preview cookie kept, Bearer stripped.
+    // Storage PUT: strip both (signed URL is storage auth).
     const credMode =
       kind === "uploadPut"
         ? "uploadPut"
@@ -1060,7 +1084,7 @@ export async function runRealAcceptance(options) {
     createGuardedFetch(PROTECTED_PREVIEW_ORIGIN, credentials, audit);
 
   // If caller injects fetchImpl, still apply the same credential attach/strip
-  // rules as global fetch (Bearer + Preview cookie for owner API only).
+  // rules as global fetch (owner: cookie+Bearer; pikbo-anonymous: cookie only).
   // PUT targets share assertTrustedPrivateInputSignedUploadUrl with real fetch.
   const track = async (url, init = {}) => {
     const authMode = init.authMode === "anonymous" ? "anonymous" : "owner";
@@ -1325,8 +1349,9 @@ export async function runRealAcceptance(options) {
     libraryRow.ok &&
     libraryModeOk;
 
-  // 6) Dual download HEAD probes: owner private marker + anonymous denial.
-  // HEAD only — never follow redirects / signed Location, never log bodies.
+  // 6) Dual download HEAD probes:
+  //    owner (cookie+Bearer) private markers + Pikbo-anonymous (cookie, no Bearer)
+  //    application AUTH_REQUIRED. HEAD only — never follow redirects / Location.
   let ownerProbe = {
     ok: false,
     reason: "library_failed",
@@ -1334,7 +1359,7 @@ export async function runRealAcceptance(options) {
     downloadHeader: null,
     privateResultMarker: false,
   };
-  let anonymousProbe = {
+  let pikboAnonymousProbe = {
     ok: false,
     reason: "library_failed",
     status: 0,
@@ -1358,7 +1383,7 @@ export async function runRealAcceptance(options) {
       method: "HEAD",
       authMode: "anonymous",
     });
-    anonymousProbe = assertAnonymousDownloadDenied(anonRes);
+    pikboAnonymousProbe = assertAnonymousDownloadDenied(anonRes);
     try {
       await anonRes.arrayBuffer();
     } catch {
@@ -1366,7 +1391,8 @@ export async function runRealAcceptance(options) {
     }
   }
 
-  const ownerOnlyProven = ownerProbe.ok === true && anonymousProbe.ok === true;
+  const ownerOnlyProven =
+    ownerProbe.ok === true && pikboAnonymousProbe.ok === true;
   const verdict =
     libraryOk && ownerOnlyProven
       ? "PASS_ONE_SKU_REAL"
@@ -1425,11 +1451,20 @@ export async function runRealAcceptance(options) {
         privateResultMarker: ownerProbe.privateResultMarker === true,
         reason: ownerProbe.ok ? undefined : ownerProbe.reason,
       },
+      // Pikbo-anonymous: admitted via Preview gateway cookie, no Bearer.
+      // (Kept as `anonymous` key for continuity; see pikboAnonymous markers.)
       anonymous: {
-        ok: anonymousProbe.ok === true,
-        httpStatus: anonymousProbe.status || 0,
-        downloadCode: anonymousProbe.downloadCode || null,
-        reason: anonymousProbe.ok ? undefined : anonymousProbe.reason,
+        ok: pikboAnonymousProbe.ok === true,
+        httpStatus: pikboAnonymousProbe.status || 0,
+        downloadCode: pikboAnonymousProbe.downloadCode || null,
+        previewGatewayAdmitted:
+          pikboAnonymousProbe.previewGatewayAdmitted === true ||
+          pikboAnonymousProbe.ok === true,
+        pikboBearerAbsent: true,
+        meaning: "pikbo-anonymous-via-preview-gateway",
+        reason: pikboAnonymousProbe.ok
+          ? undefined
+          : pikboAnonymousProbe.reason,
       },
     },
     spend: {

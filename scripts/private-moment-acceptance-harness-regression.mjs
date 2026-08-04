@@ -330,15 +330,26 @@ assert.equal(
     ownerHeaders.get("authorization"),
     `Bearer ${DEFAULT_ACCESS_TOKEN}`
   );
+  // Pikbo-anonymous keeps Preview gateway cookie, strips Bearer only.
   const anonHeaders = applyRequestCredentials(
     {
       cookie: DEFAULT_PREVIEW_COOKIE,
       authorization: `Bearer ${DEFAULT_ACCESS_TOKEN}`,
     },
-    { mode: "anonymous" }
+    {
+      mode: "anonymous",
+      cookie: DEFAULT_PREVIEW_COOKIE,
+      accessToken: DEFAULT_ACCESS_TOKEN,
+    }
   );
-  assert.equal(anonHeaders.get("cookie"), null);
+  assert.equal(anonHeaders.get("cookie"), DEFAULT_PREVIEW_COOKIE);
   assert.equal(anonHeaders.get("authorization"), null);
+  assert.throws(() =>
+    applyRequestCredentials(
+      {},
+      { mode: "anonymous", cookie: "", accessToken: DEFAULT_ACCESS_TOKEN }
+    )
+  );
   const putHeaders = applyRequestCredentials(
     {
       cookie: DEFAULT_PREVIEW_COOKIE,
@@ -824,6 +835,20 @@ function assertNoCredentials(init, label) {
   assert.equal(requestHasBearer(init), false, `${label}: no Authorization`);
 }
 
+/** Pikbo-anonymous: Preview gateway cookie present, Bearer absent. */
+function assertPikboAnonymousCredentials(init, label) {
+  assert.equal(
+    requestHasCookie(init),
+    true,
+    `${label}: Preview gateway cookie required`
+  );
+  assert.equal(
+    requestHasBearer(init),
+    false,
+    `${label}: Bearer must be stripped for Pikbo-anonymous`
+  );
+}
+
 function makePassingMock({
   pendingUpload = false,
   ownerHead = "ok",
@@ -840,6 +865,8 @@ function makePassingMock({
     downloadAnonymous: 0,
     anonymousHadCookie: false,
     anonymousHadBearer: false,
+    anonymousGatewayDenied: 0,
+    anonymousAppAuthRequired: 0,
     uploadPutHadCookie: false,
     uploadPutHadBearer: false,
     ownerApiHadCookie: 0,
@@ -964,9 +991,20 @@ function makePassingMock({
     if (target.pathname === `/api/downloads/${jobId}` && method === "HEAD") {
       if (authMode === "anonymous") {
         counts.downloadAnonymous += 1;
+        // Without Preview gateway cookie, Deployment Protection fails before Pikbo.
+        if (!requestHasCookie(init)) {
+          counts.anonymousGatewayDenied += 1;
+          return new Response(null, {
+            status: 401,
+            headers: {
+              // No X-Pikbo-* headers — request never reached the app.
+              "x-vercel-id": "mock-deployment-protection",
+            },
+          });
+        }
         if (requestHasCookie(init)) counts.anonymousHadCookie = true;
         if (requestHasBearer(init)) counts.anonymousHadBearer = true;
-        assertNoCredentials(init, "anonymous download HEAD");
+        assertPikboAnonymousCredentials(init, "pikbo-anonymous download HEAD");
         if (anonymousHead === "public200") {
           return new Response(null, {
             status: 200,
@@ -984,6 +1022,8 @@ function makePassingMock({
             },
           });
         }
+        // Cookie present, Bearer absent → application-level AUTH_REQUIRED.
+        counts.anonymousAppAuthRequired += 1;
         return new Response(null, {
           status: 401,
           headers: {
@@ -1067,11 +1107,16 @@ function makePassingMock({
   assert.equal(counts.uploadComplete, 1);
   assert.equal(counts.downloadOwner, 1);
   assert.equal(counts.downloadAnonymous, 1);
-  assert.equal(counts.anonymousHadCookie, false);
+  assert.equal(counts.anonymousHadCookie, true);
   assert.equal(counts.anonymousHadBearer, false);
+  assert.equal(counts.anonymousGatewayDenied, 0);
+  assert.equal(counts.anonymousAppAuthRequired, 1);
   assert.equal(counts.uploadPutHadBearer, false);
   assert.ok(counts.ownerApiHadCookie >= 4, "owner API paths must send cookie");
   assert.ok(counts.ownerApiHadBearer >= 4, "owner API paths must send Bearer");
+  assert.equal(realEvidence.download.anonymous.meaning, "pikbo-anonymous-via-preview-gateway");
+  assert.equal(realEvidence.download.anonymous.previewGatewayAdmitted, true);
+  assert.equal(realEvidence.download.anonymous.pikboBearerAbsent, true);
   assert.equal(realEvidence.generate.idempotencyKeyDerived, true);
   assert.equal(
     realEvidence.generate.idempotencyKeyVersion,
@@ -1184,10 +1229,45 @@ function makePassingMock({
   assert.equal(counts.generate, 1);
   assert.equal(counts.downloadOwner, 1);
   assert.equal(counts.downloadAnonymous, 1);
-  assert.equal(counts.anonymousHadCookie, false);
+  assert.equal(counts.anonymousHadCookie, true);
+  assert.equal(counts.anonymousHadBearer, false);
+  assert.equal(counts.anonymousAppAuthRequired, 1);
   assert.equal(counts.uploadPutHadCookie, false);
   assert.equal(counts.uploadPutHadBearer, false);
-  assert.equal(counts.anonymousHadBearer, false);
+}
+
+// ── Gateway cookie absent never reaches Pikbo AUTH_REQUIRED contract ──
+
+{
+  // Force a probe path that strips cookie (misconfigured anonymous) by calling
+  // applyRequestCredentials wrongly — the mock gateway gate must not emit
+  // X-Pikbo-Download-Code without cookie.
+  const { mockFetch, counts } = makePassingMock({ pendingUpload: false });
+  // Direct mock call: no cookie, no bearer → gateway denial only.
+  const gatewayRes = await mockFetch(
+    `${PROTECTED_PREVIEW_ORIGIN}/api/downloads/${"22222222-2222-4222-8222-222222222222"}`,
+    { method: "HEAD", authMode: "anonymous", headers: {} }
+  );
+  assert.equal(gatewayRes.status, 401);
+  assert.equal(gatewayRes.headers.get("X-Pikbo-Download-Code"), null);
+  assert.equal(counts.anonymousGatewayDenied, 1);
+  // Cookie present, Bearer absent → app-level AUTH_REQUIRED.
+  const appRes = await mockFetch(
+    `${PROTECTED_PREVIEW_ORIGIN}/api/downloads/${"22222222-2222-4222-8222-222222222222"}`,
+    {
+      method: "HEAD",
+      authMode: "anonymous",
+      headers: { cookie: DEFAULT_PREVIEW_COOKIE },
+    }
+  );
+  assert.equal(appRes.status, 401);
+  assert.equal(appRes.headers.get("X-Pikbo-Download-Code"), "AUTH_REQUIRED");
+  assert.equal(counts.anonymousAppAuthRequired, 1);
+  assert.equal(
+    assertAnonymousDownloadDenied(gatewayRes).reason,
+    "anonymous_gateway_or_non_app_response"
+  );
+  assert.equal(assertAnonymousDownloadDenied(appRes).ok, true);
 }
 
 // ── Untrusted pending upload URL rejected before PUT/generate ──
@@ -1267,7 +1347,8 @@ for (const [label, badUrl] of [
   assert.equal(open.download.anonymous.ok, false);
   assert.equal(open.download.anonymous.reason, "anonymous_public_access");
   assert.equal(open.download.ownerOnlyProven, false);
-  assert.equal(counts.anonymousHadCookie, false);
+  assert.equal(counts.anonymousHadCookie, true);
+  assert.equal(counts.anonymousHadBearer, false);
   assert.equal(counts.generate, 1);
 }
 
@@ -1685,5 +1766,5 @@ assert.equal(invalidMain.evidence.verdict, "FAIL_INVALID_MODE");
 rmSync(tmp, { recursive: true, force: true });
 
 console.log(
-  "private-moment-acceptance-harness-regression: PASS (Bearer+Preview cookie dual auth · stable attempt · trusted upload · dual download · sanitized evidence)"
+  "private-moment-acceptance-harness-regression: PASS (Pikbo-anonymous keeps Preview cookie · gateway vs app 401 · dual download · sanitized evidence)"
 );
