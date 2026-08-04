@@ -192,14 +192,14 @@ assert.match(pe, /export function classifyProviderError/);
 const genRoute = fs.readFileSync(join(root, "app/api/generate/route.ts"), "utf8");
 const accessIdx = genRoute.indexOf("liveGenerationAccess({");
 const demoIdx = genRoute.indexOf('if (access.kind === "cached")');
-const reserveIdx = genRoute.indexOf("reserveStrictLiveGeneration({");
+const reserveIdx = genRoute.indexOf("reserveStrictLiveGenerationWithAsset({");
 const providerIdx = genRoute.indexOf("invokeReservedProvider(");
 assert.ok(
   accessIdx > 0 &&
     demoIdx > accessIdx &&
     reserveIdx > demoIdx &&
     providerIdx > reserveIdx,
-  "cached gate + durable reserve must precede provider invocation"
+  "cached gate + durable asset-bound reserve must precede provider invocation"
 );
 assert.doesNotMatch(
   genRoute,
