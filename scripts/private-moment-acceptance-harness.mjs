@@ -29,7 +29,7 @@
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { basename, dirname, isAbsolute, resolve } from "node:path";
+import { basename, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** Explicit operator phrase required before any real generate. */
