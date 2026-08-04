@@ -66,6 +66,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const momentSurface = home || momentCreate;
   const lightShell = momentSurface || sellerPackCreate;
   const resultShell = momentSurface;
+  // Real MOMENT_CREATE_HREF is mode=moment&effect=street-power-up (fixedMomentEntry),
+  // not only ?moment=… (momentCreate). Hide bottom nav so it cannot cover Create CTAs.
+  const hideMobileNav =
+    fixedMomentEntry || momentCreate || sellerPackCreate;
   const hideFooter =
     home ||
     create ||
@@ -333,8 +337,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         {!hideFooter ? <Footer /> : null}
       </div>
 
-      {/* Home keeps the five-door mobile nav; Moment Create and Seller Pack hide it. */}
-      {!momentCreate && !sellerPackCreate ? (
+      {/* Home keeps the five-door mobile nav; fixed Moment + Seller Pack hide it. */}
+      {!hideMobileNav ? (
         <nav
           className={cn(
             "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
