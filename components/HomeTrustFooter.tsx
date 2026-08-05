@@ -11,12 +11,12 @@ import { company } from "@/lib/company";
 export function HomeTrustFooter() {
   return (
     <footer
-      className="border-t border-white/10 bg-[#08080A] px-4 py-6 text-[#F7F4ED] sm:px-7 lg:px-10"
+      className="border-t border-[#FF4ECD]/15 bg-[var(--void)] px-4 py-6 text-[var(--cream)] sm:px-7 lg:px-10"
       data-home-trust-footer
     >
       <div className="mx-auto flex max-w-[1360px] flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FF6A4D]">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FF4ECD]">
             Pikbo · creative moments for designer toys
           </p>
           <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-white/52">
@@ -29,25 +29,25 @@ export function HomeTrustFooter() {
             aria-label="Pikbo trust and support"
             className="flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-black uppercase tracking-[0.12em] lg:justify-end"
           >
-            <Link href="/about" className="text-white/55 hover:text-[#FF6A4D]">
+            <Link href="/about" className="text-white/55 hover:text-[#00D9FF]">
               About
             </Link>
-            <Link href="/contact" className="text-white/55 hover:text-[#FF6A4D]">
+            <Link href="/contact" className="text-white/55 hover:text-[#00D9FF]">
               Contact
             </Link>
-            <Link href="/refund" className="text-white/55 hover:text-[#FF6A4D]">
+            <Link href="/refund" className="text-white/55 hover:text-[#00D9FF]">
               Refunds
             </Link>
             <Link
               href="/guides/how-to-photograph-toys-for-ai-video"
-              className="text-white/55 hover:text-[#FF6A4D]"
+              className="text-white/55 hover:text-[#00D9FF]"
             >
               Photo guide
             </Link>
-            <Link href="/privacy" className="text-white/55 hover:text-[#FF6A4D]">
+            <Link href="/privacy" className="text-white/55 hover:text-[#00D9FF]">
               Privacy
             </Link>
-            <Link href="/terms" className="text-white/55 hover:text-[#FF6A4D]">
+            <Link href="/terms" className="text-white/55 hover:text-[#00D9FF]">
               Terms
             </Link>
           </nav>
@@ -56,7 +56,7 @@ export function HomeTrustFooter() {
               Support:{" "}
               <a
                 href={`mailto:${site.contact.supportEmail}`}
-                className="underline decoration-white/20 underline-offset-2 hover:text-[#FF6A4D]"
+                className="underline decoration-white/20 underline-offset-2 hover:text-[#FF4ECD]"
               >
                 {site.contact.supportEmail}
               </a>
