@@ -584,12 +584,24 @@ function LibraryGridInner() {
         ok?: boolean;
         message?: string;
         code?: string;
+        durable?: boolean;
         next?: {
           createUi?: string;
           retryJobId?: string;
           retryToken?: string;
+          newAttempt?: boolean;
         };
       };
+      // Durable fail-closed: never invent process-memory retry — open Create.
+      if (
+        !response.ok &&
+        body.code === "DURABLE_USE_NEW_ATTEMPT" &&
+        typeof body.next?.createUi === "string" &&
+        body.next.createUi.startsWith("/")
+      ) {
+        window.location.href = body.next.createUi;
+        return;
+      }
       if (!response.ok || !body.ok) {
         toast(body.message || "This Moment could not be prepared for retry");
         return;
