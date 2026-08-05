@@ -187,6 +187,10 @@ export async function GET(req: Request) {
     },
     listLimit: SESSION_JOBS_LIST_LIMIT,
   });
+  // Fail-closed owner list: never ship owned:false stubs to the client body
+  // (toPublicJob already redacts foreign sessions; this is a second gate).
+  const ownerJobs = merged.jobs.filter((job) => job.owned !== false);
+
   return NextResponse.json({
     ok: true,
     mode:
@@ -204,7 +208,7 @@ export async function GET(req: Request) {
     touchedOpen: 0,
     /** Newest-first page size for `jobs` (histogram may count more). */
     listLimit: SESSION_JOBS_LIST_LIMIT,
-    listed: merged.jobs.length,
+    listed: ownerJobs.length,
     /** Full session + durable-only job count (jobs[] may be a newest page). */
     total: merged.total,
     /** Full histogram including durable open/failed/canceled — HEAD parity. */
@@ -220,7 +224,7 @@ export async function GET(req: Request) {
       download: "/api/downloads/[id]",
     },
     session: publicCachedSession(session),
-    jobs: merged.jobs,
+    jobs: ownerJobs,
   });
 }
 

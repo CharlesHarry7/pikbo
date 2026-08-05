@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { listReadyOwnerAssetIds } from "@/lib/privateToyAssets";
 import {
+  acceptControlledLibraryNewAttemptUrl,
   parseProviderOutputHostAllowlist,
   privateLibraryJobFromRow,
   privateResultObjectKey,
@@ -385,6 +387,71 @@ const LIBRARY_COLUMNS = [
 ].join(",");
 
 /**
+ * Same-photo Create handoff only when the bound toy asset is still ready and
+ * owned by this user. UUID-shaped input_asset_id alone is not enough — deleted,
+ * pending, rejected, or foreign assets must not mint a newAttemptUrl.
+ * inputBound stays true when the durable row carries a UUID binding (honest
+ * column truth); only the Create handoff is gated.
+ */
+async function gateLibrarySamePhotoHandoffs(input: {
+  userId: string;
+  jobs: PrivateLibraryJob[];
+}): Promise<PrivateLibraryJob[]> {
+  const jobs = input.jobs;
+  if (jobs.length === 0) return jobs;
+
+  const candidateAssetIds: string[] = [];
+  for (const job of jobs) {
+    if (!job.newAttemptUrl) continue;
+    const accepted = acceptControlledLibraryNewAttemptUrl(job.newAttemptUrl);
+    if (!accepted) continue;
+    try {
+      const assetId = new URL(accepted, "https://pikbo.local").searchParams
+        .get("assetId")
+        ?.trim()
+        .toLowerCase();
+      if (assetId) candidateAssetIds.push(assetId);
+    } catch {
+      /* ignore malformed */
+    }
+  }
+
+  const readyIds =
+    candidateAssetIds.length > 0
+      ? await listReadyOwnerAssetIds({
+          ownerUserId: input.userId,
+          assetIds: candidateAssetIds,
+        })
+      : new Set<string>();
+
+  return jobs.map((job) => {
+    if (!job.newAttemptUrl) return job;
+    const accepted = acceptControlledLibraryNewAttemptUrl(job.newAttemptUrl);
+    if (!accepted) {
+      const { newAttemptUrl: _drop, ...rest } = job;
+      void _drop;
+      return rest as PrivateLibraryJob;
+    }
+    let assetId = "";
+    try {
+      assetId =
+        new URL(accepted, "https://pikbo.local").searchParams
+          .get("assetId")
+          ?.trim()
+          .toLowerCase() || "";
+    } catch {
+      assetId = "";
+    }
+    if (!assetId || !readyIds.has(assetId)) {
+      const { newAttemptUrl: _drop, ...rest } = job;
+      void _drop;
+      return rest as PrivateLibraryJob;
+    }
+    return { ...job, newAttemptUrl: accepted };
+  });
+}
+
+/**
  * Owner-only durable Library rows across open + terminal statuses.
  * Object keys, signed URLs, provider IDs, prompts, hashes, raw input_asset_id,
  * and user identity stay server-side. Callers expose only the controlled
@@ -407,11 +474,15 @@ export async function listPrivateGenerationResults(input: {
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error || !Array.isArray(data)) return [];
-  return data
+  const mapped = data
     .map((row) =>
       privateLibraryJobFromRow(row as unknown as Record<string, unknown>)
     )
     .filter((row): row is PrivateLibraryJob => Boolean(row));
+  return gateLibrarySamePhotoHandoffs({
+    userId: input.userId,
+    jobs: mapped,
+  });
 }
 
 /**
@@ -446,9 +517,15 @@ export async function getPrivateLibraryJobForOwner(input: {
     .in("status", [...PRIVATE_LIBRARY_STATUSES])
     .maybeSingle();
   if (error || !data) return null;
-  return privateLibraryJobFromRow(
+  const mapped = privateLibraryJobFromRow(
     data as unknown as Record<string, unknown>
   ) as PrivateLibraryJob | null;
+  if (!mapped) return null;
+  const [gated] = await gateLibrarySamePhotoHandoffs({
+    userId,
+    jobs: [mapped],
+  });
+  return gated ?? null;
 }
 
 export async function signedPrivateResultUrl(
