@@ -286,6 +286,47 @@ export async function getReadyPrivateToyAsset(input: {
   return rowToAsset(data as unknown as Record<string, unknown>);
 }
 
+const TOY_ASSET_UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Batch owner-ready asset membership for Library same-photo handoff gates.
+ * Only assets that are ready and owned by this user are returned.
+ * Fail-closed: empty set when storage is unavailable or ids are invalid.
+ */
+export async function listReadyOwnerAssetIds(input: {
+  ownerUserId: string;
+  assetIds: string[];
+}): Promise<Set<string>> {
+  const ownerUserId =
+    typeof input.ownerUserId === "string" ? input.ownerUserId.trim() : "";
+  if (!TOY_ASSET_UUID.test(ownerUserId)) return new Set();
+  const unique = [
+    ...new Set(
+      (Array.isArray(input.assetIds) ? input.assetIds : [])
+        .map((id) => (typeof id === "string" ? id.trim().toLowerCase() : ""))
+        .filter((id) => TOY_ASSET_UUID.test(id))
+    ),
+  ];
+  if (unique.length === 0) return new Set();
+  const admin = getSupabaseAdmin();
+  if (!admin) return new Set();
+  const { data, error } = await admin
+    .from("toy_assets")
+    .select("id")
+    .eq("owner_user_id", ownerUserId)
+    .eq("state", "ready")
+    .in("id", unique);
+  if (error || !Array.isArray(data)) return new Set();
+  const ready = new Set<string>();
+  for (const row of data as Array<Record<string, unknown>>) {
+    if (typeof row.id === "string" && TOY_ASSET_UUID.test(row.id)) {
+      ready.add(row.id.trim().toLowerCase());
+    }
+  }
+  return ready;
+}
+
 export async function signedPrivateToyAssetPreview(input: {
   ownerUserId: string;
   assetId: string;
