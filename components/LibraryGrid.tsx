@@ -2,12 +2,23 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useToast } from "@/components/Toast";
 import { interpretDownloadHead } from "@/lib/createTrust";
 import { downloadVideoFile, privateDownloadHeaders } from "@/lib/history";
 import { fetchMe, type MeResponse } from "@/lib/meClient";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
+import {
+  libraryEmpty360Href,
+  libraryEmptyMomentHref,
+} from "@/lib/libraryEmpty";
 import {
   acceptControlledLibraryNewAttemptUrl,
   libraryDurableTerminalFailureCopy,
@@ -54,10 +65,19 @@ type GenerationsResponse = {
 };
 
 const CREATE_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=library` as const;
+const EMPTY_360_HREF = libraryEmpty360Href();
+const EMPTY_MOMENT_HREF = libraryEmptyMomentHref();
 
 /** UUID shape for deep-link job ids — reject freeform paths/secrets. */
 const LIBRARY_JOB_ID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Deep-link ownership resolve after list load.
+ * idle: no deep link · resolving: owner detail GET in flight ·
+ * owned: job on list or detail confirmed · not-yours: fail-closed.
+ */
+type DeepLinkResolve = "idle" | "resolving" | "owned" | "not-yours";
 
 function isOpen(status: string): boolean {
   return status === "queued" || status === "running";
@@ -334,6 +354,10 @@ function LibraryGridInner() {
   const [forkingId, setForkingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deepLinkResolve, setDeepLinkResolve] =
+    useState<DeepLinkResolve>("idle");
+  /** Prevents not-yours ↔ list-miss re-fetch loops for the same deep-link id. */
+  const deepLinkAttemptedRef = useRef<string | null>(null);
   const toast = useToast();
 
   const refreshJobs = useCallback(async () => {
@@ -408,15 +432,102 @@ function LibraryGridInner() {
   }, [sortedJobs, selectedId, deepLinkJobId]);
   const activeSelectedId = selectedJob?.id ?? null;
 
+  const listHasDeepLink =
+    Boolean(deepLinkJobId) &&
+    jobs.some((job) => job.id === deepLinkJobId);
+
   /**
-   * Deep-linked job id that is not on this owner's visible list after load.
-   * Fail-closed: no media, no effect metadata invent, not-your-toy copy only.
+   * Deep-link ownership resolve (AIT-103 / AIT-110).
+   * List hit → owned (derived). Miss → one-shot GET /api/generations/:id (owner-scoped).
+   * 200 + visible job merges into list; any other outcome → not-your-toy.
+   * `deepLinkAttemptedRef` stops re-fetch loops after not-yours.
+   * setState is deferred (setTimeout 0) so react-hooks/set-state-in-effect stays clean.
+   */
+  useEffect(() => {
+    if (!deepLinkJobId) {
+      deepLinkAttemptedRef.current = null;
+      // Defer: avoid synchronous setState in effect body.
+      const t = window.setTimeout(() => setDeepLinkResolve("idle"), 0);
+      return () => window.clearTimeout(t);
+    }
+    if (!me?.signedIn || !jobsReady) return;
+
+    // Owned via list membership — mark owned (async setState; UI also trusts listHasDeepLink).
+    if (listHasDeepLink) {
+      const t = window.setTimeout(() => setDeepLinkResolve("owned"), 0);
+      return () => window.clearTimeout(t);
+    }
+
+    if (deepLinkAttemptedRef.current === deepLinkJobId) {
+      // Already resolved this id as not-yours (or in-flight completed).
+      return;
+    }
+    deepLinkAttemptedRef.current = deepLinkJobId;
+
+    let cancelled = false;
+    const t = window.setTimeout(() => {
+      setDeepLinkResolve("resolving");
+      void (async () => {
+        try {
+          const headers = await privateDownloadHeaders();
+          const response = await fetch(
+            `/api/generations/${encodeURIComponent(deepLinkJobId)}`,
+            { headers, cache: "no-store" }
+          );
+          const body = (await response.json()) as {
+            ok?: boolean;
+            job?: GenerationJob;
+            code?: string;
+          };
+          if (cancelled) return;
+          const job = body.job;
+          // Fail-closed: require ok + visible account job (never owned:false / demo).
+          if (
+            response.ok &&
+            body.ok &&
+            job &&
+            job.id === deepLinkJobId &&
+            visibleAccountJob(job)
+          ) {
+            setJobs((prev) => {
+              if (prev.some((row) => row.id === job.id)) return prev;
+              return [job, ...prev];
+            });
+            setSelectedId(job.id);
+            setDeepLinkResolve("owned");
+            return;
+          }
+          setDeepLinkResolve("not-yours");
+        } catch {
+          if (!cancelled) setDeepLinkResolve("not-yours");
+        }
+      })();
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+    // deepLinkResolve intentionally omitted — including it would cancel in-flight resolve.
+  }, [me?.signedIn, jobsReady, deepLinkJobId, listHasDeepLink]);
+
+  /**
+   * Fail-closed not-your-toy only after resolve confirms foreign/missing.
+   * While resolving, keep loading — never flash media or invent metadata.
+   * List membership alone counts as owned (no media flash for foreign ids).
    */
   const notYourToy =
     Boolean(me?.signedIn) &&
     jobsReady &&
     Boolean(deepLinkJobId) &&
-    !sortedJobs.some((job) => job.id === deepLinkJobId);
+    !listHasDeepLink &&
+    deepLinkResolve === "not-yours";
+  const deepLinkPending =
+    Boolean(me?.signedIn) &&
+    jobsReady &&
+    Boolean(deepLinkJobId) &&
+    !listHasDeepLink &&
+    deepLinkResolve !== "not-yours";
 
   useEffect(() => {
     if (!me?.signedIn || openCount === 0) return;
@@ -535,9 +646,12 @@ function LibraryGridInner() {
     }
   }
 
-  if (!accountReady || !jobsReady) {
+  if (!accountReady || !jobsReady || deepLinkPending) {
     return (
-      <div className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]">
+      <div
+        className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]"
+        data-library-state={deepLinkPending ? "deep-link-resolving" : "loading"}
+      >
         <p className="text-sm font-semibold text-white/45">Loading your Library…</p>
       </div>
     );
@@ -646,7 +760,18 @@ function LibraryGridInner() {
           >
             {refreshing ? "Refreshing…" : "Refresh"}
           </button>
-          <Link href={CREATE_MOMENT_HREF} className="btn btn-primary min-h-11 !px-4 !py-2 text-xs">
+          <Link
+            href={EMPTY_360_HREF}
+            className="btn btn-primary min-h-11 !px-4 !py-2 text-xs"
+            data-library-header-cta="generate-360"
+          >
+            Generate 360° Spin
+          </Link>
+          <Link
+            href={EMPTY_MOMENT_HREF}
+            className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs"
+            data-library-header-cta="moment"
+          >
             Create new Moment
           </Link>
         </div>
@@ -665,9 +790,22 @@ function LibraryGridInner() {
               Generated results will return here after refresh. Only private,
               downloadable account results are kept in this view.
             </p>
-            <Link href={CREATE_MOMENT_HREF} className="btn btn-primary mt-7 text-sm">
-              Create Street Power-Up
-            </Link>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Link
+                href={EMPTY_360_HREF}
+                className="btn btn-primary text-sm"
+                data-library-empty-cta="generate-360"
+              >
+                Generate 360° Spin
+              </Link>
+              <Link
+                href={EMPTY_MOMENT_HREF}
+                className="btn btn-ghost text-sm"
+                data-library-empty-cta="moment"
+              >
+                Create Street Power-Up
+              </Link>
+            </div>
           </div>
         </div>
       ) : (
