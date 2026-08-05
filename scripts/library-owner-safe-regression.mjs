@@ -78,6 +78,26 @@ assert.match(library, /data-library-action="retry"/);
 assert.match(library, /data-library-action="new-attempt"/);
 assert.match(library, /canLocalRetry\(job\)/);
 assert.match(library, /canNewAttempt\(job\)/);
+// Durable rows never hit process-memory Retry (AIT-103 fail-closed).
+assert.match(
+  library,
+  /canLocalRetry[\s\S]{0,280}durable === true[\s\S]{0,120}return false/
+);
+assert.match(
+  library,
+  /canLocalRetry[\s\S]{0,280}adapter === ["']supabase-private["'][\s\S]{0,80}return false/
+);
+// Deep-link resolve uses owner detail API — never invent media for foreign ids.
+assert.match(
+  library,
+  /\/api\/generations\/\$\{encodeURIComponent\(deepLinkJobId\)\}/
+);
+assert.match(library, /data-library-state=\{deepLinkPending \? "deep-link-resolving"/);
+assert.match(library, /deepLinkResolve === "not-yours"/);
+assert.match(library, /visibleAccountJob\(job\)/);
+// Empty / header CTAs stay 360-first (libraryEmpty helpers).
+assert.match(library, /libraryEmpty360Href|EMPTY_360_HREF/);
+assert.match(library, /data-library-empty-cta="generate-360"/);
 // No fake progress bars / simulated percent.
 assert.doesNotMatch(library, /progress-bar|fakeProgress|percentComplete|Math\.random\(\)/i);
 
@@ -201,6 +221,24 @@ const boundFailed = privateLibraryJobFromRow({
 assert.ok(boundFailed);
 assert.equal(boundFailed.inputBound, true);
 assert.ok(boundFailed.newAttemptUrl?.includes(inputAssetId));
+// Durable fail-closed capabilities: no process-memory Retry/Cancel.
+assert.equal(boundFailed.capabilities.localRetry, false);
+assert.equal(boundFailed.capabilities.localCancel, false);
+assert.equal(boundFailed.capabilities.newAttempt, true);
+assert.equal(boundFailed.durable, true);
+assert.equal(boundFailed.adapter, "supabase-private");
+assert.equal(boundFailed.owned, true);
+
+const boundOpen = privateLibraryJobFromRow({
+  ...baseRow,
+  status: "running",
+  started_at: "2026-08-04T12:00:30.000Z",
+});
+assert.ok(boundOpen);
+assert.equal(boundOpen.capabilities.localRetry, false);
+assert.equal(boundOpen.capabilities.localCancel, false);
+assert.equal(boundOpen.capabilities.refreshOnly, true);
+assert.equal(boundOpen.capabilities.newAttempt, false);
 
 // ─── Pure: honest binding + not-your-toy copy ──────────────────────────────
 
