@@ -42,7 +42,8 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const lcpPoster = "/demos/beatbot-still.webp";
-  // Cap: HOME_PROOF_SLUGS (8, includes 360-spin-showcase). Lab cache only.
+  // AIT-87 / AIT-38 PR-1: Moment hero first (LCP), then ≤8 Lab proof cards.
+  // No full HfExploreHome remount, Seller Pack, or fake UGC.
   const proofWall = buildHomeShowcaseFeed();
 
   return (

@@ -5,8 +5,13 @@ import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
 import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
 import { getPreset } from "@/lib/presets";
-import { HOME_PROOF_BADGE, MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+import {
+  HOME_PROOF_BADGE,
+  HOME_PROOF_LIMIT,
+  MOMENT_CREATE_HREF,
+} from "@/lib/softLaunch";
 
+/** Analytics + guest-intent entry for the home Lab proof wall (AIT-87 / AIT-38 PR-1). */
 const HOME_PROOF_ENTRY = "home-proof-wall" as const;
 
 /** Append entry attribution without clobbering remix `source` (project slug). */
@@ -17,11 +22,12 @@ function withProofEntry(href: string): string {
 }
 
 /**
- * Below-fold Lab proof wall for Moment home: ≤8 cached recipes from
- * HOME_PROOF_SLUGS (includes 360-spin-showcase). Honest Lab badge only.
+ * Below-fold Lab proof wall for Moment home: ≤ HOME_PROOF_LIMIT cached recipes
+ * from HOME_PROOF_SLUGS (includes 360-spin-showcase). Honest Lab badge only —
+ * not a full HfExploreHome remount, Pack sample, or UGC wall.
  */
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
-  const wall = items.filter(hasFeedVideo).slice(0, 8);
+  const wall = items.filter(hasFeedVideo).slice(0, HOME_PROOF_LIMIT);
   const momentHref = `${MOMENT_CREATE_HREF}&source=${HOME_PROOF_ENTRY}`;
 
   return (

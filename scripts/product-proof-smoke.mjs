@@ -58,8 +58,9 @@ const homeWall = read("components/HomeViralWall.tsx");
 assert(
   homeWall.includes("HOME_PROOF_BADGE") &&
     homeWall.includes("home-proof-wall") &&
-    homeWall.includes('data-home-proof-360') &&
-    homeWall.includes(".slice(0, 8)"),
+    homeWall.includes("data-home-proof-360") &&
+    (homeWall.includes("HOME_PROOF_LIMIT") ||
+      homeWall.includes(".slice(0, 8)")),
   "Lab proof wall must badge honestly, tag 360, entry=home-proof-wall, cap ≤8"
 );
 assert(
