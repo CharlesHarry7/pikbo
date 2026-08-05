@@ -1821,7 +1821,18 @@ export function CreateStudio({
   }, [image, effect, demoMode, effectiveDuration, aspectRatio]);
 
   return (
-    <div className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0">
+    <div
+      className={
+        fixedMomentContract
+          ? // AIT-144: nav-less Moment — clear sticky chrome + safe-bottom only (no tab ghost)
+            "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--create-content-pad-safe)] lg:min-h-screen lg:pb-0"
+          : // Tab-sharing Create keeps prior pb-36 clearance under sticky + tab
+            "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0"
+      }
+      data-create-content-pad={
+        fixedMomentContract ? "safe-bottom" : "mobile-nav"
+      }
+    >
       {/* Suite chrome: desktop only — mobile uses bottom nav + Modules shelf */}
       {!fixedMomentContract && (
         <div className="hidden lg:block">

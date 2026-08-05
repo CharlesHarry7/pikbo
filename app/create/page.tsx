@@ -77,7 +77,13 @@ export default async function CreatePage({
   // remain harmless deep links, but no longer expose alternate product UIs.
   return (
     <GuestMomentCreateGate>
-      <div className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-24 text-[var(--cream)]">
+      {/* AIT-144: nav-less fixed Moment — no tab-ghost bottom pad; CreateStudio
+          content pad clears sticky chrome + --floating-cta-safe-bottom only. */}
+      <div
+        className="relative min-h-screen overflow-hidden bg-[var(--void)] text-[var(--cream)]"
+        data-create-shell="fixed-moment"
+        data-create-shell-pad="sticky-only"
+      >
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(177,78,255,0.22),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(255,78,205,0.16),transparent_65%)]"
           aria-hidden

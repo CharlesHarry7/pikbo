@@ -375,6 +375,49 @@ assert.doesNotMatch(
   "CreateStudio sticky must not hardcode bare bottom-[4.75rem]"
 );
 
+// 8b. AIT-144 — content bottom inset pairs with sticky clearance (no tab-ghost pad)
+assert.match(
+  globalsCss,
+  /--create-content-pad-safe:\s*calc\(/,
+  "globals must define --create-content-pad-safe = sticky chrome + floating-cta-safe-bottom"
+);
+assert.match(
+  globalsCss,
+  /--create-sticky-chrome-h:\s*5\.75rem/,
+  "globals must size Create sticky chrome for content pad calc"
+);
+assert.match(
+  createStudioSrc,
+  /fixedMomentContract\s*\?[\s\S]{0,280}pb-\[var\(--create-content-pad-safe\)\]/,
+  "fixed Moment CreateStudio content must use --create-content-pad-safe (sticky height only)"
+);
+assert.match(
+  createStudioSrc,
+  /:\s*[\s\S]{0,120}pb-36/,
+  "non-moment CreateStudio content must keep legacy pb-36 under sticky + tab"
+);
+assert.match(
+  createStudioSrc,
+  /data-create-content-pad=\{\s*fixedMomentContract\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+  "CreateStudio content pad branch must be smoke-visible (safe-bottom | mobile-nav)"
+);
+const createPageSrc = read("app/create/page.tsx");
+assert.match(
+  createPageSrc,
+  /data-create-shell=["']fixed-moment["']/,
+  "fixed Moment Create page must mark shell for smoke"
+);
+assert.match(
+  createPageSrc,
+  /data-create-shell-pad=["']sticky-only["']/,
+  "fixed Moment Create page shell pad must be sticky-only (no tab ghost)"
+);
+assert.doesNotMatch(
+  createPageSrc,
+  /className="[^"]*\bpb-24\b/,
+  "fixed Moment Create page className must not carry tab-era pb-24 under sticky"
+);
+
 // AppShell must hide mobile tab on fixed Moment entry (pairs with safe-bottom sticky)
 assert.match(
   appShellSrc,

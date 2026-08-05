@@ -138,6 +138,27 @@ assert.match(
   /data-create-sticky="mobile"/,
   "Create mobile sticky bar must remain for open/Lab CTA"
 );
+// AIT-144: content inset clears sticky only on nav-less Moment (no tab-ghost pad)
+assert.match(
+  studio,
+  /fixedMomentContract\s*\?[\s\S]{0,280}pb-\[var\(--create-content-pad-safe\)\]/,
+  "fixed Moment Create content pad must use --create-content-pad-safe"
+);
+assert.match(
+  studio,
+  /data-create-content-pad=\{\s*fixedMomentContract\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+  "Create content pad branch must be smoke-visible"
+);
+assert.match(
+  createPage,
+  /data-create-shell-pad=["']sticky-only["']/,
+  "fixed Moment Create page shell must drop tab-era bottom pad"
+);
+assert.doesNotMatch(
+  createPage,
+  /className="[^"]*\bpb-24\b/,
+  "fixed Moment Create page className must not keep pb-24 tab-ghost under sticky"
+);
 assert.match(
   studio,
   /data-lab-sample-retry|data-studio-open-retry/,

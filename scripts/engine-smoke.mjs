@@ -5838,6 +5838,19 @@ assert.match(
   fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
   /0 credits · cached prototype|credits when Live/
 );
+// AIT-144: nav-less Moment content pad pairs with AIT-141 sticky safe-bottom
+assert.match(
+  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
+  /pb-\[var\(--create-content-pad-safe\)\]/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/create/page.tsx"), "utf8"),
+  /data-create-shell-pad=["']sticky-only["']/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "app/create/page.tsx"), "utf8"),
+  /className="[^"]*\bpb-24\b/
+);
 // Header primary CTA + Library/Profile Generate doors use remix contract
 assert.match(
   fs.readFileSync(join(root, "components/Header.tsx"), "utf8"),
