@@ -3924,7 +3924,12 @@ assert.match(homeHeroSrc, /Use this motion/);
 assert.match(homeHeroSrc, /Sample · Beatbot/);
 assert.match(homeHeroSrc, /Sample shown: cached 6s archive/);
 assert.match(homeHeroSrc, /not a completed customer deliverable/);
-assert.match(homeMomentsSrc, /One toy photo\. More ways to sell\./);
+assert.match(homeMomentsSrc, /\{site\.homeH1\}/);
+assert.match(homeHeroSrc, /ToyHeroH1|\{site\.homeH1\}/);
+assert.match(
+  fs.readFileSync(join(root, "lib/site.ts"), "utf8"),
+  /homeH1:\s*"Turn one toy photo into a sellable video clip in 60 seconds\."/
+);
 assert.match(homeMomentsSrc, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(momentStageSrc, /Official Concept/);
 assert.match(momentStageSrc, /Preview with my toy/);

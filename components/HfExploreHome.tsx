@@ -26,7 +26,9 @@ import { SeedanceCampaign } from "@/components/SeedanceCampaign";
 import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { useI18n } from "@/components/LanguageProvider";
-import { site } from "@/lib/site";
+import { ToyHeroH1 } from "@/components/ToyHeroH1";
+import { HeroSocialProof } from "@/components/HeroSocialProof";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 function Clip({
   demo,
@@ -130,106 +132,136 @@ export function HfExploreHome({
 
       <SeedanceCampaign />
 
-      {/* Premiere strip — H1 only when tool-first layout did not already emit H1 */}
-      <section className="relative min-h-[min(320px,45svh)] overflow-hidden border-b border-white/10 sm:min-h-[min(420px,55svh)]">
-        <div className="absolute inset-0">
-          <Clip
-            key={item.id}
-            demo={item.demo}
-            eager
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
-        </div>
+      {/* Premiere strip — AIT-31 toy hero: segmented H1 + collection video + featured CTA */}
+      <section
+        data-hf-hero="premiere"
+        className="relative overflow-hidden border-b border-white/10 bg-[#0a0a0a]"
+      >
+        <div
+          className="pointer-events-none absolute inset-0 -z-0"
+          aria-hidden
+          style={{
+            background:
+              "radial-gradient(50% 40% at 80% 10%, rgba(199,125,255,0.14), transparent 60%), radial-gradient(40% 35% at 15% 80%, rgba(57,255,20,0.08), transparent 55%)",
+          }}
+        />
 
-        <div className="relative mx-auto flex min-h-[min(420px,50svh)] max-w-6xl flex-col justify-end px-4 pb-8 pt-12 sm:min-h-[min(520px,55svh)] sm:px-6 sm:pb-12 sm:pt-16">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
-            {t("home.feelFirst")}
-          </p>
-          <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#c8ff3d]/30 bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#c8ff3d] shadow-[0_0_24px_rgba(200,255,61,0.15)] backdrop-blur">
-            {item.badge ?? "PIKBO Lab · cached prototype"}
-          </span>
-          {toolFirstLayout ? (
-            <p className="font-display mt-3 max-w-xl text-2xl font-black uppercase leading-[1.02] tracking-tight text-white/90 sm:text-4xl">
-              {item.title}
+        <div className="relative mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,1.15fr)_minmax(240px,0.85fr)] lg:items-end lg:gap-10">
+          <div className="order-2 lg:order-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
+              {t("home.feelFirst")}
             </p>
-          ) : (
-            <h1 className="font-display mt-3 max-w-xl text-3xl font-black uppercase leading-[1.02] tracking-tight sm:text-5xl md:text-6xl">
-              {site.homeH1}
-            </h1>
-          )}
-          {!toolFirstLayout ? (
-            <p className="mt-2 max-w-md text-base font-semibold text-white/80 sm:text-lg">
-              {item.title}
+            <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[var(--fluo-yellow)]/35 bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--fluo-yellow)] shadow-[0_0_24px_rgba(245,255,64,0.18)] backdrop-blur">
+              {item.badge ?? "PIKBO Lab · cached prototype"}
+            </span>
+            {toolFirstLayout ? (
+              <p className="font-display mt-4 max-w-xl text-2xl font-black uppercase leading-[1.02] tracking-tight text-white/90 sm:text-4xl">
+                {item.title}
+              </p>
+            ) : (
+              <ToyHeroH1 className="mt-4 max-w-2xl" />
+            )}
+            {!toolFirstLayout ? (
+              <p className="mt-3 max-w-md text-base font-semibold text-white/80 sm:text-lg">
+                {item.title}
+              </p>
+            ) : null}
+            <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65 sm:text-[15px]">
+              {t("home.hero.sub")}
             </p>
-          ) : null}
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65 sm:text-[15px]">
-            {t("home.hero.sub")}
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link
-              href="/create?effect=street-power-up"
-              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
-            >
-              Use tool on this page
-            </Link>
-            <Link
-              href={item.href}
-              onClick={() =>
-                track({
-                  event: "recipe_use",
-                  path: "/",
-                  recipe: item.recipeSlug,
-                })
-              }
-              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-black/50 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50 hover:bg-black/60"
-            >
-              {t("home.useRecipe")}
-            </Link>
-            <Link
-              href="/tools/ai-toy-video-generator"
-              className="text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
-            >
-              Keyword tool page
-            </Link>
-            <Link
-              href="/for/photo-to-video-for-toys"
-              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
-            >
-              Photo → video use case
-            </Link>
-          </div>
-          <p className="mt-3 text-[11px] text-white/45">
-            Designer-toy suite · cached Lab prototypes · Live access gated
-          </p>
 
-          {/* Progress rail */}
-          <div className="mt-8 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-            {showcase.map((s, i) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setActive(i)}
-                className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ring-2 transition sm:h-16 sm:w-12 ${
-                  i === active
-                    ? "ring-[#c8ff3d]"
-                    : "ring-white/10 opacity-70 hover:opacity-100"
-                }`}
-                aria-label={`Show ${s.title}`}
+            <HeroSocialProof className="mt-5" />
+
+            {/* One primary CTA; secondary destinations are text links */}
+            <div className="mt-5 flex flex-col items-start gap-3">
+              <Link
+                href={item.href}
+                onClick={() =>
+                  track({
+                    event: "recipe_use",
+                    path: "/",
+                    recipe: item.recipeSlug,
+                  })
+                }
+                data-hf-hero-primary="generate-clip"
+                className="pricing-card-featured shine-sweep inline-flex w-full max-w-sm items-center justify-center px-7 py-3.5 text-sm font-black sm:w-auto"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={s.demo.poster}
-                  alt=""
-                  width={80}
-                  height={112}
+                Generate this clip
+              </Link>
+              <nav
+                aria-label="Secondary home paths"
+                className="flex flex-wrap items-center gap-x-5 gap-y-2"
+              >
+                <Link href={MOMENT_CREATE_HREF} className="link-underline-sweep text-sm font-semibold">
+                  <span aria-hidden className="text-[var(--electro-blue)]">
+                    ▸
+                  </span>
+                  Open studio
+                </Link>
+                <Link href="/effects" className="link-underline-sweep text-sm font-semibold">
+                  <span aria-hidden className="text-[var(--pastel-pop)]">
+                    ▸
+                  </span>
+                  Viral presets
+                </Link>
+                <Link href="/explore" className="link-underline-sweep text-sm font-semibold">
+                  <span aria-hidden className="text-[var(--toy-purple)]">
+                    ▸
+                  </span>
+                  Projects
+                </Link>
+              </nav>
+            </div>
+            <p className="mt-3 text-[11px] text-white/45">
+              Designer-toy suite · cached Lab prototypes · Live access gated
+            </p>
+
+            {/* Progress rail */}
+            <div className="mt-8 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+              {showcase.map((s, i) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setActive(i)}
+                  className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ring-2 transition sm:h-16 sm:w-12 ${
+                    i === active
+                      ? "ring-[var(--fluo-yellow)]"
+                      : "ring-white/10 opacity-70 hover:opacity-100"
+                  }`}
+                  aria-label={`Show ${s.title}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={s.demo.poster}
+                    alt=""
+                    width={80}
+                    height={112}
+                    className="h-full w-full object-cover"
+                    loading={i === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                    fetchPriority={i === 0 ? "high" : "low"}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Collection-card video frame */}
+          <div className="order-1 mx-auto w-full max-w-sm lg:order-2 lg:mx-0 lg:max-w-none">
+            <div className="collection-card shine-sweep p-2 sm:p-2.5">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[1.15rem] bg-black sm:aspect-[3/4]">
+                <Clip
+                  key={item.id}
+                  demo={item.demo}
+                  eager={false}
                   className="h-full w-full object-cover"
-                  loading={i === 0 ? "eager" : "lazy"}
-                  decoding="async"
-                  fetchPriority={i === 0 ? "high" : "low"}
                 />
-              </button>
-            ))}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+                <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-[var(--neon-green)] backdrop-blur">
+                  Lab preview
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
