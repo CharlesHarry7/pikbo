@@ -73,8 +73,43 @@ assert.doesNotMatch(
 );
 assert.match(
   shell,
-  /\{!resultShell && !sellerPackCreate \? <nav/,
-  "Seller Pack Create must not stack the five-item mobile nav under its fixed primary action"
+  /const fixedMomentEntry\s*=\s*create\s*&&\s*searchParams\.get\(["']mode["']\)\s*===\s*["']moment["']\s*&&\s*searchParams\.get\(["']effect["']\)\s*===\s*["']street-power-up["']/,
+  "fixed Moment entry must match real MOMENT_CREATE_HREF (mode=moment&effect=street-power-up)"
+);
+assert.match(
+  shell,
+  /const hideMobileNav\s*=\s*fixedMomentEntry\s*\|\|\s*momentCreate\s*\|\|\s*sellerPackCreate/,
+  "mobile nav must hide on fixed Moment entry, ?moment= Create, and Seller Pack"
+);
+assert.match(
+  shell,
+  /\{!hideMobileNav \? \(/,
+  "fixed Moment and Seller Pack Create must not stack the five-item mobile nav under their primary action"
+);
+assert.match(
+  shell,
+  /data-mobile-nav=\{home \? "home-moment" : "default"\}/,
+  "Home must keep a Moment-styled mobile bottom nav"
+);
+assert.match(
+  shell,
+  /home\s*\?\s*"relative border-white\/10 bg-\[#08080A\]\/96"/,
+  "Home mobile bottom nav must use dark Moment chrome, not light legacy chrome"
+);
+assert.doesNotMatch(
+  shell,
+  /home[\s\S]{0,80}border-\[#D4D8E0\] bg-\[#F7F8FA\]/,
+  "Home mobile bottom nav must not keep the light gray chrome residual"
+);
+assert.doesNotMatch(
+  shell,
+  /home[\s\S]{0,120}text-\[#2457E6\]/,
+  "Home mobile bottom nav must not keep the blue active residual"
+);
+assert.doesNotMatch(
+  shell,
+  /\{!momentCreate && !sellerPackCreate/,
+  "mobile nav hide condition must not omit fixedMomentEntry (real MOMENT_CREATE_HREF)"
 );
 assert.doesNotMatch(
   zh,

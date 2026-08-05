@@ -2566,7 +2566,11 @@ assert.match(createStudio, /create-photo-step/);
 assert.match(createStudio, /Download policy/);
 assert.match(batchStudio, /batch-ownership/);
 assert.match(batchStudio, /fixed inset-x-0 bottom-0/);
-assert.match(appShell, /!sellerPackCreate\s*\?\s*<nav/);
+assert.match(
+  appShell,
+  /const hideMobileNav\s*=\s*fixedMomentEntry\s*\|\|\s*momentCreate\s*\|\|\s*sellerPackCreate/
+);
+assert.match(appShell, /!hideMobileNav\s*\?\s*\(\s*<nav/);
 assert.match(batchStudio, /api\/downloads/);
 
 // Landing tool Free-download honesty (parity with Create/Library)

@@ -91,6 +91,27 @@ assertMatch(
   /const privateMomentLoginHref\s*=\s*`\/login\?next=\$\{encodeURIComponent\([\s\S]{0,120}fixedMomentNextPath[\s\S]{0,40}\)\}`/,
   "fixed Moment gate must preserve the exact Moment path through login"
 );
+const appShell = read("components/AppShell.tsx");
+assertMatch(
+  appShell,
+  /const HOME_SIGN_IN_HREF\s*=\s*`\/login\?next=\$\{encodeURIComponent\(\s*`\$\{MOMENT_CREATE_HREF\}&source=home-sign-in`\s*\)\}`/,
+  "homepage Sign in must preserve the fixed Moment return path"
+);
+assertMatch(
+  appShell,
+  /href: HOME_SIGN_IN_HREF,\s*label: "Sign in"/,
+  "homepage motion chrome must use the Moment-preserving Sign in href"
+);
+assertMatch(
+  appShell,
+  /const fixedMomentEntry\s*=\s*create\s*&&\s*searchParams\.get\(["']mode["']\)\s*===\s*["']moment["']\s*&&\s*searchParams\.get\(["']effect["']\)\s*===\s*["']street-power-up["']/,
+  "fixed Moment entry detection must follow real MOMENT_CREATE_HREF shape"
+);
+assertMatch(
+  appShell,
+  /const hideMobileNav\s*=\s*fixedMomentEntry\s*\|\|\s*momentCreate\s*\|\|\s*sellerPackCreate/,
+  "fixed Moment create path must hide mobile bottom nav so CTAs stay unobstructed"
+);
 assertMatch(
   studio,
   /fixedMomentContract\s*&&\s*!session\?\.signedIn\s*\?\s*\([\s\S]{0,600}data-public-single-preview-sign-in[\s\S]{0,120}Sign in to create with your toy/,

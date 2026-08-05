@@ -31,6 +31,7 @@ const meClient = read("lib/meClient.ts");
 assert.match(home, /<HomeCinemaHero \/>/);
 assert.doesNotMatch(home, /PublicLaunchPackSample|HomeViralWall/);
 assert.match(homeHero, /data-home-hero=["']street-power-up["']/);
+assert.match(homeHero, /data-home-title-line=["']motion["']/);
 assert.match(
   homeHero,
   /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
@@ -128,6 +129,29 @@ assert.doesNotMatch(shell, /\/create\?effect=street-power-up&source=primary-nav/
 assert.match(shell, /Create a Moment/);
 assert.match(shell, /label: "Library"/);
 assert.match(shell, /label: "Sign in"/);
+assert.match(shell, /data-mobile-motion-brand/);
+assert.match(shell, /data-mobile-nav=\{home \? "home-moment" : "default"\}/);
+assert.match(
+  shell,
+  /home\s*\?\s*"relative border-white\/10 bg-\[#08080A\]\/96"/
+);
+assert.doesNotMatch(shell, /home[\s\S]{0,80}border-\[#D4D8E0\] bg-\[#F7F8FA\]/);
+assert.doesNotMatch(shell, /home[\s\S]{0,120}text-\[#2457E6\]/);
+assert.match(
+  shell,
+  /const fixedMomentEntry\s*=\s*create\s*&&\s*searchParams\.get\(["']mode["']\)\s*===\s*["']moment["']\s*&&\s*searchParams\.get\(["']effect["']\)\s*===\s*["']street-power-up["']/
+);
+assert.match(
+  shell,
+  /const hideMobileNav\s*=\s*fixedMomentEntry\s*\|\|\s*momentCreate\s*\|\|\s*sellerPackCreate/
+);
+assert.match(shell, /\{!hideMobileNav \? \(/);
+assert.doesNotMatch(shell, /\{!momentCreate && !sellerPackCreate/);
+assert.match(
+  shell,
+  /const HOME_SIGN_IN_HREF\s*=\s*`\/login\?next=\$\{encodeURIComponent\(\s*`\$\{MOMENT_CREATE_HREF\}&source=home-sign-in`\s*\)\}`/
+);
+assert.match(shell, /href: HOME_SIGN_IN_HREF,\s*label: "Sign in"/);
 assert.doesNotMatch(shell, /Motion archive/);
 assert.match(softLaunchStrip, /create\?effect=street-power-up&source=soft-launch/);
 assert.match(hfExploreHome, /create\?effect=street-power-up/);
