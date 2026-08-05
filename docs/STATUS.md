@@ -1,10 +1,12 @@
 # Pikbo active status
 
-**Updated:** 2026-08-04
+**Updated:** 2026-08-05
 
-**Canonical code:** `main@e50945c` — single Street Power-Up Moment with
-owner-only live input, reconciliation hardening, honest guest Create proof, and
-the exact private Preview auth origin.
+**Canonical code:** `main@104b4ef` — durable Library statuses + input binding
+(#140/#141). Open reuse closeout: #142 (Create receiver), #159 (Library success
+reuse). Branch `agent/grok/toy-create-ritual-ui` extends the 潮玩 design system
+onto Create (guest study + owner chrome) atop Library collector work; no TDH
+edits and no Provider spend.
 
 **Production:** `https://pikbo.ai` is deployed and operator-verified. It remains
 hard-closed: `/api/health` is `validation`, `softLive=false`, and `paid=false`;
