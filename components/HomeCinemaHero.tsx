@@ -228,7 +228,7 @@ export function HomeCinemaHero() {
               data-home-moment-cta
               className="btn-press mt-5 inline-flex min-h-14 w-full items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(255,78,205,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14141E]"
             >
-              Use this motion
+              Create my drop clip
               <span aria-hidden className="text-lg">
                 →
               </span>

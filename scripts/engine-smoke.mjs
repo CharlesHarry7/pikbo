@@ -3920,7 +3920,15 @@ const createSampleSrc = publicSampleSrc.slice(
   publicSampleSrc.indexOf("function CreateSampleBrowser")
 );
 assert.match(homeHeroSrc, /data-home-hero=["']street-power-up["']/);
-assert.match(homeHeroSrc, /Use this motion/);
+// Result-first primary CTA (toy/drop outcome), not generic "motion" speak.
+assert.match(homeHeroSrc, /Create my drop clip/);
+assert.match(homeHeroSrc, /data-home-moment-cta/);
+assert.equal(
+  (homeHeroSrc.match(/data-home-moment-cta/g) || []).length,
+  1,
+  "home hero must expose exactly one primary Moment CTA"
+);
+assert.doesNotMatch(homeHeroSrc, /Use this motion/);
 assert.match(homeHeroSrc, /Sample · Beatbot/);
 assert.match(homeHeroSrc, /Sample shown: cached 6s archive/);
 assert.match(homeHeroSrc, /not a completed customer deliverable/);
