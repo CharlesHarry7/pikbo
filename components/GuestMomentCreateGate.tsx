@@ -53,16 +53,19 @@ function GuestMomentPreview({
       <div className="mx-auto grid max-w-[1360px] gap-7 lg:min-h-[calc(100vh-7rem)] lg:grid-cols-[minmax(220px,0.75fr)_minmax(330px,390px)_minmax(260px,0.78fr)] lg:items-center lg:gap-10 xl:gap-14">
         <div className="order-2 max-w-[380px] lg:order-1">
           <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
-            Current motion
+            Owned photo → private clip
           </p>
-          <h1 className="mt-4 font-display text-[clamp(3rem,4.6vw,5.25rem)] font-black leading-[0.87] tracking-[-0.07em]">
-            Street
+          <h1
+            className="mt-4 font-display text-[clamp(3rem,4.6vw,5.25rem)] font-black leading-[0.87] tracking-[-0.07em]"
+            data-create-entry-h1="result-first"
+          >
+            Your drop
             <br />
-            Power-Up.
+            clip.
           </h1>
           <p className="mt-5 max-w-[330px] text-base font-semibold leading-7 text-white/55">
-            A neon, drop-day direction built for designer-toy reveals and
-            vertical launch posts.
+            One owned toy photo becomes a private 9:16 clip ready to list, post,
+            or drop. Street Power-Up is the fixed direction.
           </p>
           <div className="mt-6 space-y-3 border-l border-white/10 pl-4 text-[10px] font-black uppercase tracking-[0.14em] text-white/36">
             <p><span className="text-white/72">01</span> Watch the real sample</p>

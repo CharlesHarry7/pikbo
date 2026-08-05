@@ -48,6 +48,14 @@ assert.equal(
   "home hero must expose exactly one primary Moment CTA"
 );
 assert.doesNotMatch(homeHero, /Use this motion/);
+// AIT-114: desktop home shell primary matches hero result-first label; single door.
+assert.match(shell, /data-home-shell-create-cta=\{home \? "true" : undefined\}/);
+assert.match(shell, /home \? "Create my drop clip" : "Open Library"/);
+assert.doesNotMatch(shell, /Try Street Power-Up/);
+// Create entry above-fold: owned photo → private drop/list/post clip.
+assert.match(create, /data-create-entry-h1=["']result-first["']/);
+assert.match(create, /Turn one owned photo into your drop clip\./);
+assert.match(create, /fixedMomentContract/);
 assert.match(homeHero, /Sample · Beatbot/);
 assert.match(homeHero, /Archive sample · 6s/);
 assert.match(homeHero, /Cached sample · 0 credits · no upload/);
