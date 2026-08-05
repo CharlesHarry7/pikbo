@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { DeferredWallVideo } from "@/components/DeferredWallVideo";
 import { track } from "@/lib/analytics";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import {
@@ -52,6 +52,8 @@ function pinListing360InFirstSlots(
  * from HOME_PROOF_SLUGS (360 pinned in first 4 for mobile). Honest Lab badge
  * only — not a full HfExploreHome remount, Pack sample, or UGC wall.
  * Listing 360° door goes through createGenerate360Href (AIT-108 / AIT-121).
+ * Media: DeferredWallVideo keeps posters low-priority until near viewport so
+ * the Moment hero LCP poster stays clean (AIT-77).
  */
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
   const wall = pinListing360InFirstSlots(
@@ -157,13 +159,10 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                     })
                   }
                 >
-                  <AutoPlayVideo
+                  <DeferredWallVideo
                     poster={item.demo.poster}
                     webm={item.demo.webm}
                     mp4={item.demo.mp4}
-                    lazySources
-                    wallDense
-                    focusable={false}
                     label={`${recipeName} cached demo`}
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045]"
                   />

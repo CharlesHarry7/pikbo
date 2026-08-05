@@ -76,7 +76,8 @@ function release(v: HTMLVideoElement) {
  * Viewport / interaction video.
  * - interaction + lazySources: posters until hover/tap (default wall)
  * - viewport + lazySources: load+play when card enters view (dense wall browse)
- * - eager: hero / LCP
+ * - eager: full sources on first paint (avoid on LCP hero)
+ * - lcpPosterFirst: hero LCP — poster only until after paint/idle, then play
  */
 export function AutoPlayVideo({
   poster,
@@ -96,6 +97,11 @@ export function AutoPlayVideo({
    * Only meaningful with desktopPlayMode="viewport".
    */
   wallDense = false,
+  /**
+   * Moment hero LCP (AIT-77): keep poster-only through first paint, then attach
+   * sources on idle and autoplay. Overrides eager source mount.
+   */
+  lcpPosterFirst = false,
   /** Visible controls for hero / featured players. Dense cards keep Link focus. */
   showControls = false,
   /**
@@ -117,12 +123,16 @@ export function AutoPlayVideo({
   label?: string;
   lazySources?: boolean;
   wallDense?: boolean;
+  lcpPosterFirst?: boolean;
   showControls?: boolean;
   errorRetry?: boolean;
   readyTimeoutMs?: number;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
-  const [sourcesOn, setSourcesOn] = useState(!lazySources || Boolean(eager));
+  // LCP hero and lazySources start poster-only; eager mounts sources immediately.
+  const [sourcesOn, setSourcesOn] = useState(
+    Boolean(eager) && !lcpPosterFirst ? true : !lazySources && !lcpPosterFirst
+  );
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   /** SSR + first paint: assume mobile so wall cards stay poster-first. */
@@ -131,6 +141,8 @@ export function AutoPlayVideo({
   const [retryNonce, setRetryNonce] = useState(0);
   const wantPlay = useRef(false);
   const readyRef = useRef(false);
+  /** After idle attach, treat as eager for preload + claim. */
+  const [heroArmed, setHeroArmed] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -139,6 +151,36 @@ export function AutoPlayVideo({
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  // AIT-77: hero LCP — defer mp4/webm until after first paint / idle.
+  useEffect(() => {
+    if (!lcpPosterFirst) return;
+    let cancelled = false;
+    const arm = () => {
+      if (cancelled) return;
+      setSourcesOn(true);
+      setHeroArmed(true);
+    };
+    const w = window as Window & {
+      requestIdleCallback?: (
+        cb: () => void,
+        opts?: { timeout: number }
+      ) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (typeof w.requestIdleCallback === "function") {
+      const id = w.requestIdleCallback(arm, { timeout: 450 });
+      return () => {
+        cancelled = true;
+        w.cancelIdleCallback?.(id);
+      };
+    }
+    const t = window.setTimeout(arm, 120);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [lcpPosterFirst]);
 
   // Honest Lab ready/timeout when this player is a Studio-facing preview.
   useEffect(() => {
@@ -192,9 +234,11 @@ export function AutoPlayVideo({
     };
   }, [errorRetry, sourcesOn, mp4, webm, retryNonce, readyTimeoutMs]);
 
-  // Desktop wallDense may warm metadata; mobile never preloads non-hero clips.
+  // Hero (eager / LCP-armed) and desktop wallDense may warm metadata;
+  // mobile non-hero stays poster-first until claim — Phase G 4G LCP.
+  const treatAsEager = Boolean(eager) || (lcpPosterFirst && heroArmed);
   const allowMetadataPreload =
-    Boolean(eager) || (Boolean(wallDense) && sourcesOn && !isNarrow);
+    treatAsEager || (Boolean(wallDense) && sourcesOn && !isNarrow);
 
   function retryMedia() {
     setMediaError(null);
@@ -208,7 +252,7 @@ export function AutoPlayVideo({
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     // Interaction-only: no viewport autoplay (hover/tap walls).
-    if (desktopPlayMode === "interaction" && !eager) {
+    if (desktopPlayMode === "interaction" && !treatAsEager) {
       if (sourcesOn && wantPlay.current) {
         if (allowMetadataPreload && v.preload === "none") v.preload = "metadata";
         claim(v);
@@ -219,7 +263,7 @@ export function AutoPlayVideo({
     }
 
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    if (eager && sourcesOn && (isMobile || desktopPlayMode === "viewport")) {
+    if (treatAsEager && sourcesOn && (isMobile || desktopPlayMode === "viewport")) {
       claim(v);
     }
 
@@ -258,9 +302,16 @@ export function AutoPlayVideo({
       io.disconnect();
       release(v);
     };
-  }, [desktopPlayMode, eager, mp4, sourcesOn, wallDense, allowMetadataPreload]);
+  }, [
+    desktopPlayMode,
+    treatAsEager,
+    mp4,
+    sourcesOn,
+    wallDense,
+    allowMetadataPreload,
+  ]);
 
-  // After lazy sources flip on from viewport, try play immediately.
+  // After lazy sources flip on from viewport / LCP arm, try play immediately.
   useEffect(() => {
     if (!sourcesOn || desktopPlayMode !== "viewport") return;
     const v = ref.current;
@@ -273,11 +324,18 @@ export function AutoPlayVideo({
       rect.bottom > 0 && rect.top < vh && rect.height > 0
         ? Math.min(rect.bottom, vh) - Math.max(rect.top, 0) >= rect.height * 0.28
         : false;
-    if (visible || eager) {
+    if (visible || treatAsEager) {
       if (allowMetadataPreload && v.preload === "none") v.preload = "metadata";
       claim(v);
     }
-  }, [sourcesOn, desktopPlayMode, eager, wallDense, mp4, allowMetadataPreload]);
+  }, [
+    sourcesOn,
+    desktopPlayMode,
+    treatAsEager,
+    wallDense,
+    mp4,
+    allowMetadataPreload,
+  ]);
 
   function playFromInteraction() {
     if (desktopPlayMode !== "interaction") return;
@@ -343,7 +401,10 @@ export function AutoPlayVideo({
         playsInline
         preload={allowMetadataPreload ? "metadata" : "none"}
         data-video-preload={allowMetadataPreload ? "metadata" : "none"}
-        data-video-mobile-poster-first={isNarrow && !eager ? "1" : "0"}
+        data-video-mobile-poster-first={
+          isNarrow && !treatAsEager ? "1" : "0"
+        }
+        data-lcp-poster-first={lcpPosterFirst ? "1" : "0"}
         data-lab-video-error={mediaError ? "1" : "0"}
         tabIndex={
           focusable && desktopPlayMode === "interaction" ? 0 : undefined

@@ -3191,11 +3191,26 @@ assert.match(autoPlaySrc, /lazySources/);
 assert.match(autoPlaySrc, /playbackBudget/);
 assert.match(
   fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /Hero owns LCP|lazySources/
+  /Hero owns LCP|DeferredWallVideo|lazySources/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
   /eager=\{i === 0\}/
+);
+// AIT-77: LCP poster-first hero + deferred below-fold wall media
+const homeHeroLcp = fs.readFileSync(
+  join(root, "components/HomeCinemaHero.tsx"),
+  "utf8"
+);
+assert.match(homeHeroLcp, /lcpPosterFirst/);
+assert.doesNotMatch(homeHeroLcp, /\beager\b/);
+assert.match(
+  fs.readFileSync(join(root, "components/DeferredWallVideo.tsx"), "utf8"),
+  /fetchPriority=["']low["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/AutoPlayVideo.tsx"), "utf8"),
+  /lcpPosterFirst|data-lcp-poster-first/
 );
 const projectPage = fs.readFileSync(
   join(root, "app/projects/[slug]/page.tsx"),

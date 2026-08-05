@@ -162,12 +162,19 @@ export function HomeCinemaHero() {
               }}
               aria-hidden
             />
-            <div className="relative aspect-[9/16] max-h-[calc(100vh-12rem)] overflow-hidden rounded-[26px] bg-black ring-2 ring-[#FF4ECD]/40">
+            <div
+              className="relative aspect-[9/16] max-h-[calc(100vh-12rem)] overflow-hidden rounded-[26px] bg-black ring-2 ring-[#FF4ECD]/40"
+              data-lcp-hero-stage
+            >
+              {/*
+                LCP contract (AIT-77): page preloads beatbot-still.webp high.
+                lcpPosterFirst keeps mp4/webm off first paint; arms after idle.
+              */}
               <AutoPlayVideo
                 poster={STREET_POWER_UP_SAMPLE.poster}
                 mp4={STREET_POWER_UP_SAMPLE.video}
                 webm={STREET_POWER_UP_SAMPLE.webm}
-                eager
+                lcpPosterFirst
                 showControls
                 label="Beatbot, the cached Street Power-Up sample"
                 className="h-full w-full object-cover"
