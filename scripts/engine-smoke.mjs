@@ -3928,7 +3928,7 @@ assert.match(homeMomentsSrc, /\{site\.homeH1\}/);
 assert.match(homeHeroSrc, /ToyHeroH1|\{site\.homeH1\}/);
 assert.match(
   fs.readFileSync(join(root, "lib/site.ts"), "utf8"),
-  /homeH1:\s*"Turn one toy photo into a sellable video clip in 60 seconds\."/
+  /homeH1:\s*"One toy photo\. More ways to sell\."/
 );
 assert.match(homeMomentsSrc, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(momentStageSrc, /Official Concept/);

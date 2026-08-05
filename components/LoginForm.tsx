@@ -22,14 +22,17 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
 
   if (!auth.configured) {
     return (
-      <div className="mt-6 space-y-3 rounded-2xl border border-dashed border-white/15 bg-black/40 p-5">
-        <p className="text-sm font-semibold text-white">
+      <div
+        className="status-card status-card--warn mt-5 space-y-3 p-5"
+        data-tone="warn"
+        data-login-form="unavailable"
+      >
+        <p className="text-sm font-black tracking-tight text-white">
           Sign-in is temporarily unavailable
         </p>
-        <p className="text-xs leading-relaxed text-white/55">
-          You can still try a cached Moment and Library on this
-          device. Cached Lab previews cost 0 credits and do not process your
-          upload.
+        <p className="text-xs font-semibold leading-relaxed text-white/55">
+          You can still try a cached Moment and Library on this device. Cached
+          Lab previews cost 0 credits and do not process your upload.
         </p>
         <div
           className="flex flex-wrap items-center gap-2 pt-1"
@@ -37,7 +40,7 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
         >
           <a
             href={LOGIN_GUEST_MOMENT_HREF}
-            className="btn btn-primary !px-3 !py-1.5 text-xs"
+            className="btn-pink !px-3 !py-1.5 text-xs"
             data-login-guest="moment-preview"
           >
             Preview Street Power-Up
@@ -45,7 +48,10 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
           <a href="/library" className="btn btn-ghost !px-3 !py-1.5 text-xs">
             Library
           </a>
-          <Link href="/#home-create" className="btn btn-ghost !px-3 !py-1.5 text-xs">
+          <Link
+            href="/#home-create"
+            className="btn btn-ghost !px-3 !py-1.5 text-xs"
+          >
             Home samples
           </Link>
           <a href="/pricing" className="btn btn-ghost !px-3 !py-1.5 text-xs">
@@ -110,7 +116,9 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
     try {
       const supabase = getSupabaseBrowser();
       if (!supabase) {
-        setErr("Google sign-in is temporarily unavailable. Try email sign-in instead.");
+        setErr(
+          "Google sign-in is temporarily unavailable. Try email sign-in instead."
+        );
         return;
       }
       const origin = window.location.origin;
@@ -122,20 +130,27 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
         },
       });
       if (error) {
-        setErr("Google sign-in is temporarily unavailable. Try email sign-in instead.");
+        setErr(
+          "Google sign-in is temporarily unavailable. Try email sign-in instead."
+        );
       }
       // Browser navigates to Google on success.
     } catch {
-      setErr("Google sign-in is temporarily unavailable. Try email sign-in instead.");
+      setErr(
+        "Google sign-in is temporarily unavailable. Try email sign-in instead."
+      );
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="mt-6 space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-      <form className="space-y-3" onSubmit={(e) => void onSubmit(e)}>
-        <label className="block text-xs font-semibold text-white/70">
+    <div
+      className="login-form-panel mt-5 space-y-4"
+      data-login-form="magic-link"
+    >
+      <form className="space-y-3.5" onSubmit={(e) => void onSubmit(e)}>
+        <label className="block text-[10px] font-black uppercase tracking-[0.16em] text-white/55">
           Email
           <input
             name="email"
@@ -145,13 +160,14 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@studio.com"
-            className="mt-1.5 w-full rounded-xl border border-white/15 bg-black/50 px-3 py-2.5 text-sm text-white outline-none focus:border-[var(--mint)]"
+            className="login-email-field mt-2 w-full rounded-xl border border-white/12 bg-black/45 px-3.5 py-3 text-sm font-semibold text-white outline-none placeholder:text-white/28 focus:border-[var(--toy-bubblegum)] focus:shadow-[0_0_0_3px_rgba(255,182,217,0.18)]"
           />
         </label>
         <button
           type="submit"
           disabled={busy}
-          className="btn btn-primary w-full py-2.5 text-sm disabled:opacity-50"
+          className="btn-pink w-full py-3 text-sm font-black disabled:opacity-50"
+          data-login-submit="magic-link"
         >
           {busy ? "Sending…" : "Email me a sign-in link"}
         </button>
@@ -159,7 +175,7 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
 
       {auth.providers.google ? (
         <>
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-wide text-white/30">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-white/30">
             <span className="h-px flex-1 bg-white/10" />
             or
             <span className="h-px flex-1 bg-white/10" />
@@ -168,7 +184,8 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
             type="button"
             disabled={busy}
             onClick={() => void onGoogle()}
-            className="btn btn-ghost w-full py-2.5 text-sm disabled:opacity-50"
+            className="btn-electric w-full py-3 text-sm font-black disabled:opacity-50"
+            data-login-submit="google"
           >
             Continue with Google
           </button>
@@ -180,17 +197,32 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
       )}
 
       {note && (
-        <p
-          className="text-xs leading-relaxed text-[var(--mint)]"
+        <div
+          className="status-card status-card--ok p-3.5"
+          data-tone="ready"
           data-auth-awaiting-email="true"
         >
-          {note}
-        </p>
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--mint)]">
+            Link sent
+          </p>
+          <p className="mt-1.5 text-xs font-semibold leading-relaxed text-white/80">
+            {note}
+          </p>
+        </div>
       )}
       {err && (
-        <p className="text-xs leading-relaxed text-amber-200" role="alert">
-          {err}
-        </p>
+        <div
+          className="status-card status-card--err p-3.5"
+          data-tone="warn"
+          role="alert"
+        >
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--toy-mango)]">
+            Try again
+          </p>
+          <p className="mt-1.5 text-xs font-semibold leading-relaxed text-amber-100">
+            {err}
+          </p>
+        </div>
       )}
       <p className="text-[10px] leading-relaxed text-white/40">
         We&apos;ll email a secure sign-in link. Open it in the same browser

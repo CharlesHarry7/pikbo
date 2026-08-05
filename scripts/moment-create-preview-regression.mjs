@@ -35,7 +35,7 @@ assert.doesNotMatch(moments, /provider|modelId|prompt|generated result/i);
 assert.match(home, /\{site\.homeH1\}/);
 assert.match(
   read("lib/site.ts"),
-  /homeH1:\s*"Turn one toy photo into a sellable video clip in 60 seconds\."/
+  /homeH1:\s*"One toy photo\. More ways to sell\."/
 );
 assert.match(home, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(home, /Preview a Moment/);

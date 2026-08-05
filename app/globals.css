@@ -1666,6 +1666,48 @@ a {
 }
 
 
+
+
+/* ---------- Login vault ritual (AIT-36) ----------
+   Sign-in is the private shelf gate: collection-card capsule + status steps.
+   Reuses create-ritual atmosphere; keeps product honesty for guests.
+---------------------------------------------------------------- */
+/* login-ritual AIT-36 */
+.login-ritual {
+  /* inherits create-ritual atmosphere via dual class on the page */
+}
+
+.login-vault-card {
+  box-shadow:
+    0 0 0 1px rgba(255, 182, 217, 0.14),
+    0 36px 100px -40px rgba(199, 125, 255, 0.5),
+    0 0 48px -18px rgba(57, 255, 20, 0.18);
+}
+
+.login-email-field {
+  transition:
+    border-color var(--motion-hover) var(--ease-out-soft),
+    box-shadow var(--motion-hover) var(--ease-out-soft),
+    background var(--motion-hover) var(--ease-out-soft);
+}
+
+.login-email-field:hover {
+  border-color: rgba(255, 182, 217, 0.28);
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.login-form-panel [data-login-submit="magic-link"]:active,
+.login-form-panel [data-login-submit="google"]:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-form-panel [data-login-submit="magic-link"]:active,
+  .login-form-panel [data-login-submit="google"]:active {
+    transform: none;
+  }
+}
+
 .toy-upload-zone {
   position: relative;
   overflow: hidden;

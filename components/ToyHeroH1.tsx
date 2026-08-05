@@ -3,7 +3,7 @@
 import { useId } from "react";
 import { site } from "@/lib/site";
 
-/** Small flame mark after “60 seconds” — SVG only, no emoji. */
+/** Small flame mark after the outcome clause — SVG only, no emoji. */
 function FlameMark({ className }: { className?: string }) {
   const gid = useId().replace(/:/g, "");
   return (
@@ -43,7 +43,8 @@ function FlameMark({ className }: { className?: string }) {
 }
 
 /**
- * Segmented display H1 for the frozen homeH1:
+ * Segmented display H1 for the frozen homeH1 (TDH 1–4 weeks):
+ * "One toy photo. More ways to sell."
  * white / fluo yellow / neon green + keyword chip + flame mark.
  * Falls back to plain text if copy drifts.
  */
@@ -57,9 +58,7 @@ export function ToyHeroH1({
   as?: "h1" | "p" | "span";
 }) {
   const copy = site.homeH1;
-  const match = copy.match(
-    /^(Turn one toy photo) (into a sellable video clip) (in 60 seconds\.)$/
-  );
+  const match = copy.match(/^(One toy photo\.) (More ways) (to sell\.)$/);
 
   if (!match) {
     return (
@@ -69,15 +68,14 @@ export function ToyHeroH1({
     );
   }
 
-  const [, lead, , tail] = match;
+  const [, lead, mid, tail] = match;
 
   return (
     <Tag id={id} className={`hero-h1-display ${className}`.trim()}>
       <span className="hero-h1-white">{lead} </span>
       <span className="hero-h1-fluo">
-        into a{" "}
-        <span className="hero-keyword-chip">sellable</span>
-        {" video clip "}
+        <span className="hero-keyword-chip">{mid}</span>
+        {" "}
       </span>
       <span className="hero-h1-neon inline-flex items-center gap-1.5">
         <span>{tail}</span>

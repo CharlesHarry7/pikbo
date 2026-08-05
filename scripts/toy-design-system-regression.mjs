@@ -28,6 +28,8 @@ const failPanel = readFileSync(
   join(root, "components/GenerateFailPanel.tsx"),
   "utf8"
 );
+const loginPage = readFileSync(join(root, "app/login/page.tsx"), "utf8");
+const loginForm = readFileSync(join(root, "components/LoginForm.tsx"), "utf8");
 
 const errors = [];
 
@@ -189,6 +191,32 @@ must(waitStage.includes("toy-wait-title"), "WaitStage missing display-weight tit
 must(failPanel.includes("toy-broken-card"), "FailPanel missing broken-card chrome");
 must(failPanel.includes("data-fail-retry"), "FailPanel missing obvious retry control");
 
+
+// AIT-36 Login vault ritual (sign-in gate for private shelf)
+must(css.includes(".login-ritual") || css.includes("login-ritual"), "missing login-ritual styles");
+must(css.includes(".login-vault-card"), "missing login-vault-card");
+must(css.includes(".login-email-field"), "missing login-email-field");
+must(loginPage.includes("login-ritual"), "Login page missing login-ritual");
+must(loginPage.includes("create-ritual"), "Login page missing create-ritual atmosphere");
+must(loginPage.includes("collection-card"), "Login page missing collection-card");
+must(loginPage.includes("status-card"), "Login page missing status-card");
+must(loginPage.includes("toy-sticker"), "Login page missing stickers");
+must(loginPage.includes("text-grad"), "Login page missing text-grad H1");
+must(loginPage.includes("data-login-ritual"), "Login page missing data-login-ritual");
+must(loginPage.includes("data-auth-guest-path"), "Login page must keep guest product-first path");
+must(loginPage.includes("Preview Street Power-Up"), "Login page must keep guest Moment preview");
+must(loginPage.includes("not your toy") || loginPage.includes("not-your-toy") || loginPage.includes("Cached Lab"), "Login must keep honest guest boundary");
+must(
+  !loginPage.includes("site.homeH1") && !loginPage.includes("titleDefault"),
+  "Login must not mutate frozen TDH from site.ts"
+);
+must(loginForm.includes("btn-pink"), "LoginForm missing pink primary CTA");
+must(loginForm.includes("data-auth-guest-path"), "LoginForm must keep guest product-first path");
+must(loginForm.includes("data-login-guest"), "LoginForm must keep guest Moment data hook");
+must(loginForm.includes("data-auth-awaiting-email"), "LoginForm must keep awaiting-email hook");
+must(loginForm.includes("JSON.stringify({ email: email.trim(), next })"), "LoginForm must keep magic-link payload");
+must(loginForm.includes("Continue with Google") || loginForm.includes("signInWithOAuth"), "LoginForm must keep Google path");
+
 if (errors.length) {
   console.error("toy-design-system-regression FAIL:");
   for (const e of errors) console.error(" -", e);
@@ -201,5 +229,6 @@ console.log(
     cards: 4,
     library: "collector",
     create: "ritual+loop",
+    login: "vault-ritual",
   })
 );

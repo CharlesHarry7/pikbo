@@ -8,6 +8,16 @@ reuse). Integration branch `agent/grok/ui-integration-2026-08-06` (#165) now
 includes AIT-33 Create ritual (guest study + owner upload/wait/result/broken)
 on top of design system + Hero + Pricing + Library. No Provider spend this round.
 
+
+## AIT-36 (this branch · login vault ritual)
+
+- `/login` uses 潮玩 vault ritual: create-ritual atmosphere, collection-card form
+  capsule, status-card honesty steps, pink magic-link CTA, electric Google CTA.
+- Guest path stays product-first: cached Street Power-Up preview · not-your-toy.
+- Frozen TDH restored: `site.homeH1` = `One toy photo. More ways to sell.`;
+  `ToyHeroH1` segments the frozen string (no AIT-25 copy rewrite).
+- Stack base: UI integration #165 tip (design system + Hero + Pricing + Library + Create).
+
 **Production:** `https://pikbo.ai` is deployed and operator-verified. It remains
 hard-closed: `/api/health` is `validation`, `softLive=false`, and `paid=false`;
 public upload, Provider spend, and Checkout are not enabled.
