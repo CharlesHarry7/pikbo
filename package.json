@@ -25,6 +25,7 @@
     "guest-create-preview-regression": "node scripts/guest-create-preview-regression.mjs",
     "studio-open-lab-preview-regression": "node scripts/studio-open-lab-preview-regression.mjs",
     "moment-contract-regression": "node scripts/moment-contract-regression.mjs",
+    "create-moment-coerce-smoke": "node --experimental-strip-types scripts/create-moment-coerce-smoke.mjs",
     "generate-360-cta-smoke": "node scripts/generate-360-cta-smoke.mjs",
     "recovery-cost-gate": "node scripts/recovery-cost-gate.mjs",
     "recovery-qa": "node scripts/recovery-qa.mjs",
