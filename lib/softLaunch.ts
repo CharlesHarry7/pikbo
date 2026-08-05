@@ -3,16 +3,19 @@
  * Code imports this so G1/G2 cannot drift from the product contract.
  *
  * 2026-07-26 GSC P0: PRIMARY = real indexable core only.
- * Preview/Lab routes stay crawlable + noindex, but remain outside primary navigation.
+ * Explore is a primary chrome peer for discovery (AIT-112 / PR-3) but stays
+ * crawlable + noindex (`CONCEPT_ROBOTS`) — not an SEO rank landing.
+ * Other Preview/Lab suite doors stay outside primary navigation.
  */
 
 /** First-dollar product: one fixed, private seller Moment. */
 export const MOMENT_CREATE_HREF =
   "/create?mode=moment&effect=street-power-up" as const;
 
-/** Seller-first frontdoor: one clear path from promise to private assets. */
+/** Seller-first frontdoor + Explore discovery (≤6 peers; no HF dump). */
 export const PRIMARY_NAV = [
   { href: "/", label: "Home" },
+  { href: "/explore", label: "Explore" },
   {
     href: `${MOMENT_CREATE_HREF}&source=primary-nav`,
     label: "Create",
@@ -24,9 +27,10 @@ export const PRIMARY_NAV = [
 
 export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
 
-/** Mobile mirrors the same five product doors; secondary routes stay hidden. */
+/** Mobile mirrors the same six product doors; secondary routes stay hidden. */
 export const MOBILE_NAV = [
   { href: "/", label: "Home" },
+  { href: "/explore", label: "Explore" },
   {
     href: `${MOMENT_CREATE_HREF}&source=primary-nav`,
     label: "Create",

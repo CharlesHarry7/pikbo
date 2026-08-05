@@ -4142,13 +4142,14 @@ assert.doesNotMatch(createStudio, /<WorkflowShelf/);
 assert.match(historySrcLib, /sku\?:/);
 
 
-// MVP convergence: navigation exposes only the seller value loop.
+// MVP convergence: seller value loop + Explore discovery (noindex Lab peer).
 const softLaunchSrc = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
 assert.match(softLaunchSrc, /PRIMARY_NAV/);
 assert.match(
   softLaunchSrc,
   /href:\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`/
 );
+assert.match(softLaunchSrc, /href:\s*["']\/explore["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/library["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/pricing["']/);
 assert.match(softLaunchSrc, /href:\s*["']\/profile["']/);
@@ -4162,11 +4163,13 @@ assert.match(softLaunchSrc, /href:\s*["']\/profile["']/);
   );
   assert.deepEqual(labels, [
     "Home",
+    "Explore",
     "Create",
     "Library",
     "Pricing",
     "Account",
   ]);
+  assert.ok(labels.length <= 6, "primary nav peers must stay ≤6");
 }
 // Cold-start: /create is a tool, not a rank landing — noindex,follow
 const createPageMeta = fs.readFileSync(
@@ -4378,12 +4381,13 @@ function resolveGenerateStillPure(input) {
   assert.equal(fresh.assetId, "asset_cur");
 }
 
-// Mobile mirrors Home · Create · Library · Pricing · Account.
+// Mobile mirrors Home · Explore · Create · Library · Pricing · Account.
 assert.match(softLaunchSrc, /MOBILE_NAV/);
 assert.match(
   softLaunchSrc,
   /MOBILE_NAV[\s\S]*href:\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`/
 );
+assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/explore["']/);
 assert.doesNotMatch(
   softLaunchSrc,
   /MOBILE_NAV[\s\S]*href:\s*["']\/(?:effects|community)["']/
@@ -4395,7 +4399,13 @@ assert.match(
   /MOBILE_NAV[\s\S]*href:\s*["']\/profile["']/
 );
 assert.match(appShellSrc, /MOBILE_NAV/);
+assert.match(appShellSrc, /grid-cols-6/);
 assert.match(appShellSrc, /item\.label/);
+// Home motion chrome includes Explore for one-click desktop discovery.
+assert.match(
+  appShellSrc,
+  /motionChrome[\s\S]*?href:\s*["']\/explore["'][\s\S]*?label:\s*["']Explore["']/
+);
 assert.match(
   fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8"),
   /\/modules/
