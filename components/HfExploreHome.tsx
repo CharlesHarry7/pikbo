@@ -166,7 +166,23 @@ export function HfExploreHome({
           <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65 sm:text-[15px]">
             {t("home.hero.sub")}
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          {/* Social proof above primary CTA (placeholder private-beta quote; swap for verified seller feedback later) */}
+          <p
+            className="mt-6 flex max-w-md items-start gap-1.5 text-[11px] leading-relaxed text-white/50"
+            data-hf-hero-social-proof="private-beta"
+          >
+            <span
+              className="mt-px shrink-0 text-[12px] leading-none text-[#c8ff3d]/75"
+              aria-hidden
+            >
+              ★
+            </span>
+            <span>
+              &ldquo;Finally, a video tool that actually understands designer
+              toys.&rdquo; — Private beta seller
+            </span>
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
             <Link
               href="/create?effect=street-power-up"
               className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
