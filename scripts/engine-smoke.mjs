@@ -2565,7 +2565,17 @@ assert.match(createStudio, /create-ownership/);
 assert.match(createStudio, /create-photo-step/);
 assert.match(createStudio, /Download policy/);
 assert.match(batchStudio, /batch-ownership/);
-assert.match(batchStudio, /fixed inset-x-0 bottom-0/);
+// AIT-137: Batch sticky clears AppShell tab + home indicator (shared tokens)
+assert.match(
+  batchStudio,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/
+);
+assert.match(
+  batchStudio,
+  /z-\[var\(--floating-generate-z\)\]/
+);
+assert.match(batchStudio, /data-floating-generate=["']batch-sticky["']/);
+assert.doesNotMatch(batchStudio, /fixed inset-x-0 bottom-0/);
 assert.match(appShell, /!sellerPackCreate\s*\?\s*<nav/);
 assert.match(batchStudio, /api\/downloads/);
 
