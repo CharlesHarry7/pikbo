@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import {
@@ -534,7 +535,7 @@ export default function ImageStudioPage() {
               Optional packaging mock before video — not the product. Free plan
               keeps the Mini trial for{" "}
               <Link
-                href={createRemixHref("360-spin-showcase")}
+                href={createGenerate360Href("image-page")}
                 className="text-[var(--mint)] underline-offset-2 hover:underline"
                 data-image-create-video="remix"
               >

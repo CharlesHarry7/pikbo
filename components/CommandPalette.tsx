@@ -9,7 +9,7 @@ import {
 } from "@/lib/jobIntents";
 import { PRESETS } from "@/lib/presets";
 
-const CMD_GENERATE_HREF = createWorkbenchHref();
+const CMD_GENERATE_HREF = createWorkbenchHref("cmdk");
 const CMD_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
 /**

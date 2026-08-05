@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/LanguageProvider";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 
 /**
  * Sticky generate CTA while browsing the video wall.
@@ -21,7 +21,7 @@ export function HomeBrowseCta() {
     // Prefetch listing-spin remix Create for faster jump
     const prefetch = document.createElement("link");
     prefetch.rel = "prefetch";
-    prefetch.href = createRemixHref("360-spin-showcase");
+    prefetch.href = createGenerate360Href("home-browse");
     prefetch.as = "document";
     document.head.appendChild(prefetch);
 

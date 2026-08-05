@@ -4,12 +4,12 @@ import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { WORKFLOWS } from "@/lib/workflows";
 import { APPS } from "@/lib/catalog";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 /** Apps Open Generate — listing spin remix (ratio/duration/channel). */
-const APPS_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const APPS_GENERATE_HREF = createGenerate360Href("apps");
 
 function posterForEffect(effect?: string): string | null {
   if (!effect) return null;
