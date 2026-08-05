@@ -2,21 +2,24 @@
  * Soft-launch freezes from docs/prd/SOFT_NAV_AND_PRESETS.md (+ suite Modules).
  * Code imports this so G1/G2 cannot drift from the product contract.
  *
- * 2026-07-26 GSC P0: PRIMARY = real indexable core only.
- * Preview/Lab routes stay crawlable + noindex, but remain outside primary navigation.
+ * 2026-07-26 GSC P0: indexable core stays tight (sitemap + robots).
+ * AIT-83: Explore is back on product chrome for one-click Lab browse, but stays
+ * noindex (CONCEPT_ROBOTS) — not a cold-start rank peer. Cap visible peers ≤6.
+ * Cinema/Models/Community stay out of primary.
  */
 
 /** First-dollar product: one fixed, private seller Moment. */
 export const MOMENT_CREATE_HREF =
   "/create?mode=moment&effect=street-power-up" as const;
 
-/** Seller-first frontdoor: one clear path from promise to private assets. */
+/** Seller-first frontdoor + Explore Lab wall (noindex). Max 6 peers. */
 export const PRIMARY_NAV = [
   { href: "/", label: "Home" },
   {
     href: `${MOMENT_CREATE_HREF}&source=primary-nav`,
     label: "Create",
   },
+  { href: "/explore", label: "Explore" },
   { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
   { href: "/profile", label: "Account" },
@@ -24,13 +27,14 @@ export const PRIMARY_NAV = [
 
 export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
 
-/** Mobile mirrors the same five product doors; secondary routes stay hidden. */
+/** Mobile mirrors desktop product doors (≤6); one-click Explore. */
 export const MOBILE_NAV = [
   { href: "/", label: "Home" },
   {
     href: `${MOMENT_CREATE_HREF}&source=primary-nav`,
     label: "Create",
   },
+  { href: "/explore", label: "Explore" },
   { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
   { href: "/profile", label: "Account" },
