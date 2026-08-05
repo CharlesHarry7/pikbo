@@ -4,42 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Toy Effect Studio — Pikbo</title>
-<meta name="description" content="Browse all 10+ AI toy effects. From unboxing reveals to glitch waves — transform your designer toys into stunning videos.">
+<meta name="description" content="Browse 10+ AI toy effects. From unboxing reveals to glitch waves — transform your designer toys into stunning videos.">
 <link rel="stylesheet" href="css/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-.page-hero {
-  padding: 9rem 2rem 4rem; text-align: center; position: relative; overflow: hidden;
-}
-.page-hero-bg {
-  position: absolute; inset: 0; z-index: 0;
-  background: radial-gradient(ellipse 60% 50% at 50% 30%, rgba(139,92,246,0.12) 0%, transparent 60%);
-}
-.page-hero h1 { position: relative; z-index: 1; }
-.page-hero p { position: relative; z-index: 1; max-width: 560px; margin: 1rem auto 0; }
-.effect-detail { display: none; }
-.effect-detail.active { display: block; }
-.before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
-.before-after > div {
-  aspect-ratio: 1; border-radius: var(--radius); background: var(--gradient-card);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  border: 1px solid var(--border);
-}
-.before-after-label {
-  font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;
-  letter-spacing: 0.1em; margin-top: 0.5rem;
-}
-.use-btn {
-  display: block; width: 100%; margin-top: 1.5rem;
-}
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <nav class="navbar">
-  <a href="index.html" class="nav-logo">Pikbo</a>
+  <a href="index.html" class="nav-logo"><span>P</span>ikbo</a>
   <ul class="nav-links">
-    <li><a href="effects.html" style="color:var(--text-primary)">Effects</a></li>
+    <li><a href="effects.html" style="color:var(--text)">Effects</a></li>
     <li><a href="community.html">Community</a></li>
     <li><a href="explore.html">Explore</a></li>
     <li><a href="index.html#pricing">Pricing</a></li>
@@ -51,100 +25,58 @@
 </nav>
 
 <section class="page-hero">
-  <div class="page-hero-bg"></div>
-  <h1>Toy Effect <span class="hero-gradient">Studio</span></h1>
-  <p>10+ AI-powered effects designed specifically for designer toys and collectible figures.</p>
+  <h1>Toy Effect <em style="font-style:normal;background:linear-gradient(135deg,var(--accent),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Studio</em></h1>
+  <p>10+ AI-powered effects designed for designer toys and collectible figures.</p>
 </section>
 
 <section class="section" style="padding-top:2rem;">
   <div class="effects-grid">
     <div class="effect-card fade-up" onclick="showEffect('unboxing')">
-      <div class="effect-thumb"><span class="effect-thumb-emoji">🎬</span><span class="effect-thumb-badge">POPULAR</span></div>
-      <div class="effect-info">
-        <h3>Unboxing Reveal</h3>
-        <p>Cinematic toy unboxing with dramatic lighting, confetti burst, and 3D spin reveal.</p>
-        <div class="effect-tags"><span class="tag tag-new">New</span><span class="tag">Cinematic</span><span class="tag">4K</span></div>
-      </div>
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-5"/></svg></div><span class="effect-badge">POPULAR</span></div>
+      <div class="effect-body"><h3>Unboxing Reveal</h3><p>Cinematic unboxing with dramatic lighting, confetti burst, and 3D spin reveal.</p><div class="effect-tags"><span class="tag tag-accent">New</span><span class="tag">Cinematic</span><span class="tag">4K</span></div></div>
     </div>
     <div class="effect-card fade-up" onclick="showEffect('dance')">
-      <div class="effect-thumb"><span class="effect-thumb-emoji">💃</span><span class="effect-thumb-badge">HOT</span></div>
-      <div class="effect-info">
-        <h3>Toy Dance</h3>
-        <p>Fluid dance animation synced to trending music. Perfect for social media.</p>
-        <div class="effect-tags"><span class="tag tag-hot">Hot</span><span class="tag">Motion</span><span class="tag">Music</span></div>
-      </div>
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></div><span class="effect-badge">HOT</span></div>
+      <div class="effect-body"><h3>Toy Dance</h3><p>Fluid dance animation synced to trending music. Perfect for social media.</p><div class="effect-tags"><span class="tag tag-hot">Hot</span><span class="tag">Motion</span><span class="tag">Music</span></div></div>
     </div>
     <div class="effect-card fade-up" onclick="showEffect('sparkle')">
-      <div class="effect-thumb"><span class="effect-thumb-emoji">✨</span></div>
-      <div class="effect-info">
-        <h3>Magic Sparkle</h3>
-        <p>Enchanting sparkle particles, lens flares, and ethereal glow effects.</p>
-        <div class="effect-tags"><span class="tag">Magical</span><span class="tag">Glow</span></div>
-      </div>
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 3l2 4 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z"/></svg></div></div>
+      <div class="effect-body"><h3>Magic Sparkle</h3><p>Enchanting sparkle particles, lens flares, and ethereal glow effects.</p><div class="effect-tags"><span class="tag">Magical</span><span class="tag">Glow</span></div></div>
     </div>
     <div class="effect-card fade-up" onclick="showEffect('portal')">
-      <div class="effect-thumb"><span class="effect-thumb-emoji">🌀</span></div>
-      <div class="effect-info">
-        <h3>Portal Arrival</h3>
-        <p>Your toy emerges from a swirling interdimensional portal with energy rings.</p>
-        <div class="effect-tags"><span class="tag">Sci-Fi</span><span class="tag">Portal</span><span class="tag">Epic</span></div>
-      </div>
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div></div>
+      <div class="effect-body"><h3>Portal Arrival</h3><p>Your toy emerges from a swirling interdimensional portal with energy rings.</p><div class="effect-tags"><span class="tag">Sci-Fi</span><span class="tag">Portal</span><span class="tag">Epic</span></div></div>
     </div>
     <div class="effect-card fade-up" onclick="showEffect('art')">
-      <div class="effect-thumb"><span class="effect-thumb-emoji">🎨</span></div>
-      <div class="effect-info">
-        <h3>Art Style Transfer</h3>
-        <p>Transform into pop art, anime, watercolor, oil painting, or sketch style.</p>
-        <div class="effect-tags"><span class="tag">Art</span><span class="tag">Style</span><span class="tag">Multiple</span></div>
-      </div>
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><path d="M8 14c1 1.5 3 2 4 0"/></svg></div></div>
+      <div class="effect-body"><h3>Art Style Transfer</h3><p>Transform into pop art, anime, watercolor, oil painting, or sketch style.</p><div class="effect-tags"><span class="tag">Art</span><span class="tag">Style</span><span class="tag">Multiple</span></div></div>
     </div>
     <div class="effect-card fade-up" onclick="showEffect('stopmotion')">
-      <div class="effect-thumb"><span class="effect-thumb-emoji">🎪</span></div>
-      <div class="effect-info">
-        <h3>Stop Motion</h3>
-        <p>Classic frame-by-frame animation style with clay textures and subtle wobble.</p>
-        <div class="effect-tags"><span class="tag">Classic</span><span class="tag">Nostalgia</span></div>
-      </div>
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="6" y="8" width="5" height="3"/><rect x="13" y="8" width="5" height="3"/><rect x="6" y="13" width="5" height="3"/><rect x="13" y="13" width="5" height="3"/></svg></div></div>
+      <div class="effect-body"><h3>Stop Motion</h3><p>Classic frame-by-frame animation with clay textures and subtle wobble.</p><div class="effect-tags"><span class="tag">Classic</span><span class="tag">Nostalgia</span></div></div>
     </div>
     <div class="effect-card fade-up" onclick="showEffect('water')">
-      <div class="effect-thumb"><span class="effect-thumb-emoji">🌊</span></div>
-      <div class="effect-info">
-        <h3>Water Reflection</h3>
-        <p>Dreamy water surface with realistic ripples, reflections, and ambient lighting.</p>
-        <div class="effect-tags"><span class="tag">Nature</span><span class="tag">Calm</span></div>
-      </div>
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M3 12c4-6 14-6 18 0"/><path d="M5 9c3-4 11-4 14 0"/></svg></div></div>
+      <div class="effect-body"><h3>Water Reflection</h3><p>Dreamy water surface with realistic ripples, reflections, and ambient lighting.</p><div class="effect-tags"><span class="tag">Nature</span><span class="tag">Calm</span></div></div>
     </div>
     <div class="effect-card fade-up" onclick="showEffect('glitch')">
-      <div class="effect-thumb"><span class="effect-thumb-emoji">👾</span></div>
-      <div class="effect-info">
-        <h3>Glitch Wave</h3>
-        <p>Cyberpunk glitch distortions, RGB split, scanlines, and neon overlays.</p>
-        <div class="effect-tags"><span class="tag">Cyberpunk</span><span class="tag">Glitch</span><span class="tag">Neon</span></div>
-      </div>
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></div></div>
+      <div class="effect-body"><h3>Glitch Wave</h3><p>Cyberpunk glitch distortions, RGB split, scanlines, and neon overlays.</p><div class="effect-tags"><span class="tag">Cyberpunk</span><span class="tag">Glitch</span><span class="tag">Neon</span></div></div>
     </div>
     <div class="effect-card fade-up" onclick="showEffect('floating')">
-      <div class="effect-thumb"><span class="effect-thumb-emoji">🫧</span></div>
-      <div class="effect-info">
-        <h3>Floating Dream</h3>
-        <p>Anti-gravity floating with bubbles, clouds, and soft pastel grading.</p>
-        <div class="effect-tags"><span class="tag">Dreamy</span><span class="tag">Pastel</span></div>
-      </div>
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 8c0-2 4-2 4 0s4 2 4 0"/></svg></div></div>
+      <div class="effect-body"><h3>Floating Dream</h3><p>Anti-gravity floating with bubbles, clouds, and soft pastel grading.</p><div class="effect-tags"><span class="tag">Dreamy</span><span class="tag">Pastel</span></div></div>
     </div>
     <div class="effect-card fade-up" onclick="showEffect('battle')">
-      <div class="effect-thumb"><span class="effect-thumb-emoji">⚔️</span></div>
-      <div class="effect-info">
-        <h3>Epic Battle</h3>
-        <p>Action-packed battle scene with particle impacts, speed lines, and dramatic zoom.</p>
-        <div class="effect-tags"><span class="tag">Action</span><span class="tag">Epic</span></div>
-      </div>
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 2l2 7h7l-5 4 2 7-6-4-6 4 2-7-5-4h7z"/></svg></div></div>
+      <div class="effect-body"><h3>Epic Battle</h3><p>Action-packed battle scene with particle impacts, speed lines, and dramatic zooms.</p><div class="effect-tags"><span class="tag">Action</span><span class="tag">Epic</span></div></div>
     </div>
   </div>
 </section>
 
-<!-- Effect Detail Modal -->
 <div class="modal-overlay" id="effectModal">
   <div class="modal-content" style="position:relative;">
-    <button class="modal-close" onclick="closeModal()" style="position:absolute;">&times;</button>
+    <button class="modal-close" onclick="closeModal()">&times;</button>
     <div id="modalContent"></div>
   </div>
 </div>
@@ -155,39 +87,32 @@
 
 <script>
 const effectData = {
-  unboxing: {name:'Unboxing Reveal', desc:'Cinematic unboxing with dramatic lighting, confetti burst, and a 360° 3D spin reveal of your toy. Perfect for showcasing new additions to your collection.', emoji:'🎬'},
-  dance: {name:'Toy Dance', desc:'Your figure comes alive with fluid dance moves synced to trending music. Choose from hip-hop, K-pop, or classic styles. Optimized for TikTok and Reels.', emoji:'💃'},
-  sparkle: {name:'Magic Sparkle', desc:'Enchanting particle effects with customizable sparkle colors, lens flares, and ethereal glow. Makes any toy look magical.', emoji:'✨'},
-  portal: {name:'Portal Arrival', desc:'Your toy emerges from a swirling interdimensional portal. Features energy rings, dimension-rip effects, and dramatic camera movement.', emoji:'🌀'},
-  art: {name:'Art Style Transfer', desc:'Transform your toy video into 5 art styles: Pop Art, Anime, Watercolor, Oil Painting, and Pencil Sketch. Each with unique texture and color grading.', emoji:'🎨'},
-  stopmotion: {name:'Stop Motion', desc:'Classic frame-by-frame stop motion animation style. Clay-like textures, subtle frame wobble, and nostalgic 12fps charm.', emoji:'🎪'},
-  water: {name:'Water Reflection', desc:'Place your toy in a serene water scene with realistic ripples, mirror reflections, and soft ambient lighting. Perfect for peaceful showcase videos.', emoji:'🌊'},
-  glitch: {name:'Glitch Wave', desc:'Cyberpunk-inspired glitch effects: RGB channel split, digital scanlines, pixel sorting, and neon color grading. Your toy enters the matrix.', emoji:'👾'},
-  floating: {name:'Floating Dream', desc:'Anti-gravity floating animation with ethereal bubbles, soft clouds, and pastel color grading. Dreamy and whimsical.', emoji:'🫧'},
-  battle: {name:'Epic Battle', desc:'Action-packed scene with particle impacts, speed lines, camera shake, and dramatic zoom. Turn your toy into an action hero.', emoji:'⚔️'}
+  unboxing: {name:'Unboxing Reveal', desc:'Cinematic unboxing with dramatic lighting, confetti burst, and a 360° 3D spin reveal of your toy. Perfect for showcasing new additions to your collection.', icon: '🎬'},
+  dance: {name:'Toy Dance', desc:'Your figure comes alive with fluid dance moves synced to trending music. Choose from hip-hop, K-pop, or classic styles. Optimized for TikTok and Reels.', icon: '💃'},
+  sparkle: {name:'Magic Sparkle', desc:'Enchanting particle effects with customizable sparkle colors, lens flares, and ethereal glow. Makes any toy look magical.', icon: '✨'},
+  portal: {name:'Portal Arrival', desc:'Your toy emerges from a swirling interdimensional portal. Features energy rings, dimension-rip effects, and dramatic camera movement.', icon: '🌀'},
+  art: {name:'Art Style Transfer', desc:'Transform your toy video into 5 art styles: Pop Art, Anime, Watercolor, Oil Painting, and Pencil Sketch. Each with unique texture and color grading.', icon: '🎨'},
+  stopmotion: {name:'Stop Motion', desc:'Classic frame-by-frame stop motion animation style. Clay-like textures, subtle frame wobble, and nostalgic 12fps charm.', icon: '🎪'},
+  water: {name:'Water Reflection', desc:'Place your toy in a serene water scene with realistic ripples, mirror reflections, and soft ambient lighting.', icon: '🌊'},
+  glitch: {name:'Glitch Wave', desc:'Cyberpunk-inspired glitch effects: RGB channel split, digital scanlines, pixel sorting, and neon color grading. Your toy enters the matrix.', icon: '👾'},
+  floating: {name:'Floating Dream', desc:'Anti-gravity floating animation with ethereal bubbles, soft clouds, and pastel color grading. Dreamy and whimsical.', icon: '🫧'},
+  battle: {name:'Epic Battle', desc:'Action-packed scene with particle impacts, speed lines, camera shake, and dramatic zoom. Turn your toy into an action hero.', icon: '⚔️'}
 };
-
 function showEffect(key) {
   const data = effectData[key];
   document.getElementById('modalContent').innerHTML = `
-    <h2 style="font-size:1.8rem;margin-bottom:1rem;">${data.emoji} ${data.name}</h2>
-    <p style="font-size:1.1rem;margin-bottom:2rem;">${data.desc}</p>
+    <h2 style="font-size:1.6rem;margin-bottom:1rem;">${data.icon} ${data.name}</h2>
+    <p style="font-size:1.05rem;margin-bottom:1.75rem;">${data.desc}</p>
     <div class="before-after">
-      <div><span style="font-size:2rem;">📸</span><span class="before-after-label">Your Photo</span></div>
-      <div><span style="font-size:2rem;">✨</span><span class="before-after-label">AI Result</span></div>
+      <div><span style="font-size:1.75rem;">📸</span><span class="ba-label">Your Photo</span></div>
+      <div><span style="font-size:1.75rem;">✨</span><span class="ba-label">AI Result</span></div>
     </div>
-    <a href="index.html#pricing" class="btn btn-primary use-btn">Get Started — $49/mo</a>
+    <a href="index.html#pricing" class="btn btn-primary" style="display:block;text-align:center;margin-top:1.5rem;">Get Started — $49/mo</a>
   `;
   document.getElementById('effectModal').classList.add('active');
 }
-
-function closeModal() {
-  document.getElementById('effectModal').classList.remove('active');
-}
-
-document.getElementById('effectModal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
+function closeModal() { document.getElementById('effectModal').classList.remove('active'); }
+document.getElementById('effectModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
 </script>
 <script src="js/main.js"></script>
 </body>

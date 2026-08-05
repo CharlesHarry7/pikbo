@@ -4,36 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Community Showcase — Pikbo</title>
-<meta name="description" content="Explore toy videos created by the Pikbo community. See how collectors showcase their Labubu, Dimoo, Skullpanda and more.">
+<meta name="description" content="Explore toy videos created by the Pikbo community. Labubu, Dimoo, Skullpanda and more.">
 <link rel="stylesheet" href="css/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-.page-hero {
-  padding: 9rem 2rem 4rem; text-align: center; position: relative; overflow: hidden;
-}
-.page-hero-bg {
-  position: absolute; inset: 0; z-index: 0;
-  background: radial-gradient(ellipse 60% 50% at 50% 30%, rgba(236,72,153,0.1) 0%, transparent 60%);
-}
-.page-hero h1, .page-hero p { position: relative; z-index: 1; }
-.page-hero p { max-width: 560px; margin: 1rem auto 0; }
-.trending { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; }
-.trending-tag {
-  padding: 0.3rem 1rem; border-radius: 100px; font-size: 0.8rem;
-  background: var(--bg-card); border: 1px solid var(--border);
-  color: var(--text-secondary); cursor: pointer; transition: var(--transition);
-}
-.trending-tag:hover { border-color: var(--accent-pink); color: var(--accent-pink); }
-.load-more { text-align: center; margin-top: 3rem; }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <nav class="navbar">
-  <a href="index.html" class="nav-logo">Pikbo</a>
+  <a href="index.html" class="nav-logo"><span>P</span>ikbo</a>
   <ul class="nav-links">
     <li><a href="effects.html">Effects</a></li>
-    <li><a href="community.html" style="color:var(--text-primary)">Community</a></li>
+    <li><a href="community.html" style="color:var(--text)">Community</a></li>
     <li><a href="explore.html">Explore</a></li>
     <li><a href="index.html#pricing">Pricing</a></li>
   </ul>
@@ -44,93 +25,72 @@
 </nav>
 
 <section class="page-hero">
-  <div class="page-hero-bg"></div>
-  <h1>Community <span class="hero-gradient">Showcase</span></h1>
+  <h1>Community <em style="font-style:normal;background:linear-gradient(135deg,var(--accent),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Showcase</em></h1>
   <p>Discover amazing toy videos created by collectors worldwide. Get inspired, share yours.</p>
 </section>
 
 <section class="section" style="padding-top:2rem;">
-  <div class="trending">
-    <span class="trending-tag">🔥 Trending</span>
-    <span class="trending-tag">Labubu</span>
-    <span class="trending-tag">Dimoo</span>
-    <span class="trending-tag">Skullpanda</span>
-    <span class="trending-tag">Molly</span>
-    <span class="trending-tag">Hirono</span>
-    <span class="trending-tag">Crybaby</span>
-    <span class="trending-tag">Pucky</span>
+  <div class="community-tags">
+    <span class="community-tag">🔥 Trending</span>
+    <span class="community-tag">Labubu</span>
+    <span class="community-tag">Dimoo</span>
+    <span class="community-tag">Skullpanda</span>
+    <span class="community-tag">Molly</span>
+    <span class="community-tag">Hirono</span>
+    <span class="community-tag">Crybaby</span>
+    <span class="community-tag">Pucky</span>
   </div>
   <div class="community-grid">
     <div class="community-card fade-up">
-      <div class="community-video" style="background:linear-gradient(135deg, #1a1a2e, #16213e);">
-        <span style="font-size:3rem;">🧸</span>
-        <div class="community-video-icon" style="position:absolute;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-      </div>
-      <div class="community-info">
-        <div class="community-creator"><div class="avatar">LL</div><span>LabubuLove</span><span class="effect-used">Magic Sparkle</span></div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">Labubu Exciting Macaron full set reveal ✨ Which one is your favorite?</p>
+      <div class="community-video"><div class="community-video-icon-large">🧸</div><div class="community-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+      <div class="community-body">
+        <div class="community-author"><div class="avatar avatar-p1">LL</div><span class="community-author-name">LabubuLove</span><span class="community-effect-badge">Sparkle</span></div>
+        <p style="font-size:0.8rem;color:var(--text3);">Labubu Exciting Macaron full set reveal ✨ Which one is your favorite?</p>
         <div class="community-stats"><span>12.4K views</span><span>892 likes</span><span>47 comments</span></div>
       </div>
     </div>
     <div class="community-card fade-up">
-      <div class="community-video" style="background:linear-gradient(135deg, #2d1b69, #1a1a2e);">
-        <span style="font-size:3rem;">🎭</span>
-        <div class="community-video-icon" style="position:absolute;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-      </div>
-      <div class="community-info">
-        <div class="community-creator"><div class="avatar">DS</div><span>DimooSpace</span><span class="effect-used">Toy Dance</span></div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">Dimoo Social University dance challenge 💃 Who did it better?</p>
+      <div class="community-video"><div class="community-video-icon-large">🎭</div><div class="community-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+      <div class="community-body">
+        <div class="community-author"><div class="avatar avatar-p2">DS</div><span class="community-author-name">DimooSpace</span><span class="community-effect-badge">Dance</span></div>
+        <p style="font-size:0.8rem;color:var(--text3);">Dimoo Social University dance challenge 💃 Who did it better?</p>
         <div class="community-stats"><span>8.9K views</span><span>654 likes</span><span>32 comments</span></div>
       </div>
     </div>
     <div class="community-card fade-up">
-      <div class="community-video" style="background:linear-gradient(135deg, #1a1a2e, #0f3460);">
-        <span style="font-size:3rem;">💀</span>
-        <div class="community-video-icon" style="position:absolute;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-      </div>
-      <div class="community-info">
-        <div class="community-creator"><div class="avatar">SP</div><span>SkullpandaHQ</span><span class="effect-used">Glitch Wave</span></div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">Skullpanda Warmth series — glitch remix 🔥 The neon hits different</p>
+      <div class="community-video"><div class="community-video-icon-large">💀</div><div class="community-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+      <div class="community-body">
+        <div class="community-author"><div class="avatar avatar-p3">SP</div><span class="community-author-name">SkullpandaHQ</span><span class="community-effect-badge">Glitch</span></div>
+        <p style="font-size:0.8rem;color:var(--text3);">Skullpanda Warmth series — glitch remix 🔥 The neon hits different</p>
         <div class="community-stats"><span>15.2K views</span><span>1.2K likes</span><span>89 comments</span></div>
       </div>
     </div>
     <div class="community-card fade-up">
-      <div class="community-video" style="background:linear-gradient(135deg, #16213e, #0f3460);">
-        <span style="font-size:3rem;">🐱</span>
-        <div class="community-video-icon" style="position:absolute;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-      </div>
-      <div class="community-info">
-        <div class="community-creator"><div class="avatar">MC</div><span>MollyCat</span><span class="effect-used">Portal Arrival</span></div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">Molly Space Adventure — she came through the portal! 🌀</p>
+      <div class="community-video"><div class="community-video-icon-large">🐱</div><div class="community-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+      <div class="community-body">
+        <div class="community-author"><div class="avatar avatar-p4">MC</div><span class="community-author-name">MollyCat</span><span class="community-effect-badge">Portal</span></div>
+        <p style="font-size:0.8rem;color:var(--text3);">Molly Space Adventure — she came through the portal! 🌀</p>
         <div class="community-stats"><span>6.7K views</span><span>423 likes</span><span>18 comments</span></div>
       </div>
     </div>
     <div class="community-card fade-up">
-      <div class="community-video" style="background:linear-gradient(135deg, #1a1a2e, #533483);">
-        <span style="font-size:3rem;">😢</span>
-        <div class="community-video-icon" style="position:absolute;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-      </div>
-      <div class="community-info">
-        <div class="community-creator"><div class="avatar">CB</div><span>CrybabyClub</span><span class="effect-used">Water Reflection</span></div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">Crybaby at sunset — the water effect is so calming 🌊</p>
+      <div class="community-video"><div class="community-video-icon-large">😢</div><div class="community-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+      <div class="community-body">
+        <div class="community-author"><div class="avatar avatar-p5">CB</div><span class="community-author-name">CrybabyClub</span><span class="community-effect-badge">Water</span></div>
+        <p style="font-size:0.8rem;color:var(--text3);">Crybaby at sunset — the water effect is so calming 🌊</p>
         <div class="community-stats"><span>4.3K views</span><span>298 likes</span><span>12 comments</span></div>
       </div>
     </div>
     <div class="community-card fade-up">
-      <div class="community-video" style="background:linear-gradient(135deg, #2d1b69, #16213e);">
-        <span style="font-size:3rem;">👶</span>
-        <div class="community-video-icon" style="position:absolute;"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-      </div>
-      <div class="community-info">
-        <div class="community-creator"><div class="avatar">HR</div><span>HironoLife</span><span class="effect-used">Art Style Transfer</span></div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">Hirono in anime style! The art transfer is insane 🎨</p>
+      <div class="community-video"><div class="community-video-icon-large">👶</div><div class="community-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+      <div class="community-body">
+        <div class="community-author"><div class="avatar avatar-p1">HR</div><span class="community-author-name">HironoLife</span><span class="community-effect-badge">Art</span></div>
+        <p style="font-size:0.8rem;color:var(--text3);">Hirono in anime style! The art transfer is insane 🎨</p>
         <div class="community-stats"><span>7.1K views</span><span>511 likes</span><span>23 comments</span></div>
       </div>
     </div>
   </div>
-  <div class="load-more">
-    <button class="btn btn-secondary">Load More Creations</button>
-  </div>
+  <div class="load-more"><button class="btn btn-secondary">Load More Creations</button></div>
 </section>
 
 <footer class="footer">
