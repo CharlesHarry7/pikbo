@@ -4,6 +4,7 @@ import { ProfilePanel } from "@/components/ProfilePanel";
 import { publicAuthStatus } from "@/lib/authConfig";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Page chrome Generate — listing spin remix (ratio/duration/channel). */
 const PROFILE_PAGE_GENERATE_HREF = createGenerate360Href("profile");
@@ -49,7 +50,7 @@ export default function ProfilePage() {
             Generate
           </Link>
           <Link
-            href="/create?effect=street-power-up&source=profile"
+            href={`${MOMENT_CREATE_HREF}&source=profile`}
             className="btn btn-ghost !px-3 !py-1.5 text-xs"
           >
             Create one Moment

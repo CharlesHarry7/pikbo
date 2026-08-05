@@ -46,6 +46,7 @@ import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { track } from "@/lib/analytics";
 import { loadToyIdentity } from "@/lib/toyIdentity";
 import { createRemixHref } from "@/lib/remixIntent";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 type Status = "idle" | "generating" | "done" | "error";
 
@@ -730,8 +731,8 @@ export function LandingToolPanel({
             <Link
               href={
                 toySku.trim()
-                  ? `/create?effect=street-power-up&sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
-                  : "/create?effect=street-power-up"
+                  ? `${MOMENT_CREATE_HREF}&source=landing-tool&sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
+                  : `${MOMENT_CREATE_HREF}&source=landing-tool`
               }
               className="text-[var(--mint)] hover:underline"
               data-landing-studio="single-moment"

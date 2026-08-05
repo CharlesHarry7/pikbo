@@ -13,6 +13,7 @@ import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const PROFILE_GENERATE_HREF = createGenerate360Href("profile-panel");
 
@@ -454,7 +455,7 @@ export function ProfilePanel() {
           Library · {clips}
         </Link>
         <Link
-          href="/create?effect=street-power-up&source=profile-panel"
+          href={`${MOMENT_CREATE_HREF}&source=profile-panel`}
           className="btn btn-ghost px-3 py-1.5 text-xs"
         >
           Create one Moment
@@ -489,7 +490,7 @@ export function ProfilePanel() {
           data-profile-suite="product-first"
         >
           <Link
-            href="/create?effect=street-power-up&source=profile-panel"
+            href={`${MOMENT_CREATE_HREF}&source=profile-panel`}
             className="btn btn-ghost w-full text-sm"
           >
             Create one Moment

@@ -5,6 +5,7 @@ import { GUIDES } from "@/lib/guides";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Guides hub Open Generate — listing spin remix (ratio/duration/channel). */
 const GUIDES_GENERATE_HREF = createGenerate360Href("guides");
@@ -105,7 +106,7 @@ export default function GuidesHub() {
           Toy Modules
         </Link>
         <Link
-          href="/create?effect=street-power-up&source=guides"
+          href={`${MOMENT_CREATE_HREF}&source=guides`}
           className="btn btn-ghost text-sm"
         >
           Create one Moment

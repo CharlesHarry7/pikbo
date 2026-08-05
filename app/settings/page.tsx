@@ -16,6 +16,7 @@ import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Settings chrome Generate — listing spin remix (ratio/duration/channel). */
 const SETTINGS_GENERATE_HREF = createGenerate360Href("settings");
@@ -232,7 +233,7 @@ export default function SettingsPage() {
             Generate
           </Link>
           <Link
-            href="/create?effect=street-power-up"
+            href={`${MOMENT_CREATE_HREF}&source=settings`}
             className="btn btn-ghost !px-3 !py-1.5 text-xs"
           >
             Create one Moment

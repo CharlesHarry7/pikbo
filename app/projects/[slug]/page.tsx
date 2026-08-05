@@ -16,6 +16,7 @@ import {
   isPromotedShowcaseProvenance,
   showcaseEvidenceChecklist,
 } from "@/lib/showcaseEvidence";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -112,7 +113,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
             </Link>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
               <Link
-                href="/create?effect=street-power-up"
+                href={`${MOMENT_CREATE_HREF}&source=projects`}
                 className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-[#c8ff3d]/40 hover:text-[#c8ff3d]"
               >
                 Create one Moment
@@ -353,7 +354,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               </Link>
               <div className="grid grid-cols-2 gap-2">
                 <Link
-                  href="/create?effect=street-power-up"
+                  href={`${MOMENT_CREATE_HREF}&source=projects`}
                   className="rounded-full border border-white/12 px-3 py-2 text-center text-[11px] font-semibold text-white/55 hover:text-white"
                 >
                   Create one Moment

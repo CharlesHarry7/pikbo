@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 export type PricingCopyVariant = "outcome" | "cost-control";
 
@@ -66,7 +67,7 @@ export function PricingHeroCopy({
 
         <div className="mt-8 flex flex-col justify-center gap-2 sm:flex-row">
           <Link
-            href="/create?effect=street-power-up&source=pricing-hero&try=1&sample=beatbot"
+            href={`${MOMENT_CREATE_HREF}&source=pricing-hero&try=1&sample=beatbot`}
             className="inline-flex min-h-13 items-center justify-center rounded-full bg-black px-7 text-sm font-black text-white transition hover:-translate-y-0.5"
           >
             Preview one Moment

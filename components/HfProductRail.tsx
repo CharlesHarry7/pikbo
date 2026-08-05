@@ -5,6 +5,7 @@ import { track } from "@/lib/analytics";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { createGenerate360Href } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Primary Generate door — listing spin remix (ratio/duration/channel). */
 const GENERATE_REMIX_HREF = createGenerate360Href("hf-product-rail");
@@ -32,7 +33,7 @@ const PRODUCTS: {
     demoIndex: 0,
   },
   {
-    href: "/create?effect=street-power-up",
+    href: `${MOMENT_CREATE_HREF}&source=hf-product-rail`,
     title: "Street Power-Up Moment",
     blurb: "1 directed video · one photo",
     tag: "Toy Moment",
