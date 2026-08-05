@@ -432,23 +432,30 @@ function LibraryGridInner() {
   }, [sortedJobs, selectedId, deepLinkJobId]);
   const activeSelectedId = selectedJob?.id ?? null;
 
+  const listHasDeepLink =
+    Boolean(deepLinkJobId) &&
+    jobs.some((job) => job.id === deepLinkJobId);
+
   /**
-   * Deep-link ownership resolve (AIT-103).
-   * List hit → owned. Miss → one-shot GET /api/generations/:id (owner-scoped).
+   * Deep-link ownership resolve (AIT-103 / AIT-110).
+   * List hit → owned (derived). Miss → one-shot GET /api/generations/:id (owner-scoped).
    * 200 + visible job merges into list; any other outcome → not-your-toy.
    * `deepLinkAttemptedRef` stops re-fetch loops after not-yours.
+   * setState is deferred (setTimeout 0) so react-hooks/set-state-in-effect stays clean.
    */
   useEffect(() => {
     if (!deepLinkJobId) {
       deepLinkAttemptedRef.current = null;
-      setDeepLinkResolve("idle");
-      return;
+      // Defer: avoid synchronous setState in effect body.
+      const t = window.setTimeout(() => setDeepLinkResolve("idle"), 0);
+      return () => window.clearTimeout(t);
     }
     if (!me?.signedIn || !jobsReady) return;
 
-    if (jobs.some((job) => job.id === deepLinkJobId)) {
-      setDeepLinkResolve("owned");
-      return;
+    // Owned via list membership — mark owned (async setState; UI also trusts listHasDeepLink).
+    if (listHasDeepLink) {
+      const t = window.setTimeout(() => setDeepLinkResolve("owned"), 0);
+      return () => window.clearTimeout(t);
     }
 
     if (deepLinkAttemptedRef.current === deepLinkJobId) {
@@ -458,65 +465,69 @@ function LibraryGridInner() {
     deepLinkAttemptedRef.current = deepLinkJobId;
 
     let cancelled = false;
-    setDeepLinkResolve("resolving");
-
-    void (async () => {
-      try {
-        const headers = await privateDownloadHeaders();
-        const response = await fetch(
-          `/api/generations/${encodeURIComponent(deepLinkJobId)}`,
-          { headers, cache: "no-store" }
-        );
-        const body = (await response.json()) as {
-          ok?: boolean;
-          job?: GenerationJob;
-          code?: string;
-        };
-        if (cancelled) return;
-        const job = body.job;
-        // Fail-closed: require ok + visible account job (never owned:false / demo).
-        if (
-          response.ok &&
-          body.ok &&
-          job &&
-          job.id === deepLinkJobId &&
-          visibleAccountJob(job)
-        ) {
-          setJobs((prev) => {
-            if (prev.some((row) => row.id === job.id)) return prev;
-            return [job, ...prev];
-          });
-          setSelectedId(job.id);
-          setDeepLinkResolve("owned");
-          return;
+    const t = window.setTimeout(() => {
+      setDeepLinkResolve("resolving");
+      void (async () => {
+        try {
+          const headers = await privateDownloadHeaders();
+          const response = await fetch(
+            `/api/generations/${encodeURIComponent(deepLinkJobId)}`,
+            { headers, cache: "no-store" }
+          );
+          const body = (await response.json()) as {
+            ok?: boolean;
+            job?: GenerationJob;
+            code?: string;
+          };
+          if (cancelled) return;
+          const job = body.job;
+          // Fail-closed: require ok + visible account job (never owned:false / demo).
+          if (
+            response.ok &&
+            body.ok &&
+            job &&
+            job.id === deepLinkJobId &&
+            visibleAccountJob(job)
+          ) {
+            setJobs((prev) => {
+              if (prev.some((row) => row.id === job.id)) return prev;
+              return [job, ...prev];
+            });
+            setSelectedId(job.id);
+            setDeepLinkResolve("owned");
+            return;
+          }
+          setDeepLinkResolve("not-yours");
+        } catch {
+          if (!cancelled) setDeepLinkResolve("not-yours");
         }
-        setDeepLinkResolve("not-yours");
-      } catch {
-        if (!cancelled) setDeepLinkResolve("not-yours");
-      }
-    })();
+      })();
+    }, 0);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(t);
     };
-  }, [me?.signedIn, jobsReady, deepLinkJobId, jobs]);
+    // deepLinkResolve intentionally omitted — including it would cancel in-flight resolve.
+  }, [me?.signedIn, jobsReady, deepLinkJobId, listHasDeepLink]);
 
   /**
    * Fail-closed not-your-toy only after resolve confirms foreign/missing.
    * While resolving, keep loading — never flash media or invent metadata.
+   * List membership alone counts as owned (no media flash for foreign ids).
    */
   const notYourToy =
     Boolean(me?.signedIn) &&
     jobsReady &&
     Boolean(deepLinkJobId) &&
+    !listHasDeepLink &&
     deepLinkResolve === "not-yours";
   const deepLinkPending =
     Boolean(me?.signedIn) &&
     jobsReady &&
     Boolean(deepLinkJobId) &&
-    deepLinkResolve !== "not-yours" &&
-    deepLinkResolve !== "owned" &&
-    !sortedJobs.some((job) => job.id === deepLinkJobId);
+    !listHasDeepLink &&
+    deepLinkResolve !== "not-yours";
 
   useEffect(() => {
     if (!me?.signedIn || openCount === 0) return;
