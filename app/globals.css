@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
-/* ---------- Pikbo seller studio ----------
-   Ink, warm paper, and one signal-lime action color.
+/* ---------- Pikbo toy design system (AIT-30/31) ----------
+   Designer-toy palette on ink black — not generic AI-SaaS blue.
+   next/font injects --font-display / --font-sans on <html>.
 ---------------------------------------------------------------- */
 :root {
-  /* Offline-safe faces — no Google Fonts network at build (Phase B). */
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
@@ -19,11 +19,23 @@
   --fg-muted: rgba(247, 244, 237, 0.62);
   --fg-dim: rgba(247, 244, 237, 0.38);
 
-  --paper: #f7f4ed;
+  --paper: #fff8e7;
   --brand: #cbff3d;
   --brand-2: #f7f4ed;
   --mint: #cbff3d;
   --lime: #cbff3d;
+
+  /* AIT-30 toy accents */
+  --pastel-pop: #ffb6d9;
+  --toy-purple: #c77dff;
+  --ink-navy: #1a1a2e;
+  --gold: #ffc857;
+  --neon-green: #39ff14;
+  --fluo-yellow: #f5ff40;
+  --electro-blue: #00f0ff;
+  --ink-black: #0e0e12;
+  --milk: #fff8e7;
+  --fog: #8b8b95;
 
   --grad: linear-gradient(135deg, #f7f4ed 0%, #cbff3d 58%, #cbff3d 100%);
   --grad-soft: linear-gradient(
@@ -37,6 +49,11 @@
   --shadow-md: 0 12px 40px -16px rgba(0, 0, 0, 0.75);
   --shadow-lg: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
   --radius: 1rem;
+
+  /* Micro-motion tokens */
+  --motion-hover: 200ms;
+  --motion-press: 80ms;
+  --motion-enter: 320ms;
 
   /* shadcn-compatible aliases (template kit) */
   --background: var(--bg);
@@ -62,10 +79,17 @@
   --color-brand2: var(--brand-2);
   --color-mint: var(--mint);
   --color-lime: var(--lime);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  --color-pastel-pop: var(--pastel-pop);
+  --color-toy-purple: var(--toy-purple);
+  --color-neon-green: var(--neon-green);
+  --color-fluo-yellow: var(--fluo-yellow);
+  --color-electro-blue: var(--electro-blue);
+  --color-gold: var(--gold);
+  --color-ink-black: var(--ink-black);
+  --color-milk: var(--milk);
+  --color-fog: var(--fog);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
 }
 
 * {
@@ -409,7 +433,288 @@ a {
     opacity 0.15s ease;
 }
 
+/* ---------- AIT-30/31 card system + shine ---------- */
+
+@keyframes toy-shine-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(220%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+.shine-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.shine-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.28) 48%,
+    transparent 62%
+  );
+  transform: translateX(-120%) skewX(-18deg);
+  pointer-events: none;
+  z-index: 2;
+}
+.shine-sweep:hover::after,
+.shine-sweep:focus-visible::after {
+  animation: toy-shine-sweep 0.7s ease-out;
+}
+
+/* Collection card — spots + glow for Lab media frames */
+.collection-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(120% 90% at 12% 8%, rgba(255, 182, 217, 0.18), transparent 42%),
+    radial-gradient(90% 70% at 92% 12%, rgba(199, 125, 255, 0.16), transparent 40%),
+    radial-gradient(70% 60% at 70% 95%, rgba(0, 240, 255, 0.1), transparent 45%),
+    linear-gradient(165deg, #16161c 0%, #0c0c10 55%, #08080c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(245, 255, 64, 0.06) inset,
+    0 28px 80px -36px rgba(199, 125, 255, 0.35),
+    0 18px 48px -28px rgba(0, 0, 0, 0.85);
+  transition:
+    transform var(--motion-hover) ease,
+    box-shadow var(--motion-hover) ease,
+    border-color var(--motion-hover) ease;
+}
+.collection-card::before {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  background: var(--fluo-yellow);
+  box-shadow:
+    0 0 18px rgba(245, 255, 64, 0.75),
+    42px 18px 0 -2px var(--pastel-pop),
+    42px 18px 16px -2px rgba(255, 182, 217, 0.45),
+    18px 48px 0 -3px var(--electro-blue),
+    18px 48px 14px -3px rgba(0, 240, 255, 0.4);
+  top: 14px;
+  right: 16px;
+  z-index: 3;
+  pointer-events: none;
+}
+.collection-card::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  bottom: 16px;
+  width: 36px;
+  height: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--neon-green), transparent);
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.55);
+  z-index: 3;
+  pointer-events: none;
+}
+.collection-card:hover {
+  transform: scale(1.02);
+  border-color: rgba(245, 255, 64, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(245, 255, 64, 0.1) inset,
+    0 32px 90px -32px rgba(199, 125, 255, 0.45),
+    0 22px 56px -24px rgba(0, 0, 0, 0.9);
+}
+
+/* Result card — preview with shine */
+.result-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.15rem;
+  background: #0c0c10;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition:
+    transform var(--motion-hover) ease,
+    box-shadow var(--motion-hover) ease;
+}
+.result-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 24px 60px -28px rgba(57, 255, 20, 0.25);
+}
+
+/* Featured pricing / primary CTA card */
+.pricing-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: linear-gradient(160deg, #1a1a24 0%, #101016 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-md);
+}
+.pricing-card-featured {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.35rem;
+  background: linear-gradient(
+    145deg,
+    rgba(245, 255, 64, 0.95) 0%,
+    #cbff3d 42%,
+    #39ff14 100%
+  );
+  color: #0e0e12;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.08) inset,
+    0 18px 48px -12px rgba(57, 255, 20, 0.45),
+    0 28px 70px -24px rgba(245, 255, 64, 0.35);
+  transition:
+    transform var(--motion-hover) ease,
+    box-shadow var(--motion-hover) ease;
+}
+.pricing-card-featured::before {
+  content: "";
+  position: absolute;
+  top: -18%;
+  right: 12%;
+  width: 18px;
+  height: 140%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0.05)
+  );
+  transform: rotate(18deg);
+  pointer-events: none;
+  z-index: 1;
+}
+.pricing-card-featured:hover {
+  transform: scale(1.04);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.1) inset,
+    0 22px 56px -10px rgba(57, 255, 20, 0.55),
+    0 34px 80px -20px rgba(245, 255, 64, 0.45);
+}
+.pricing-card-featured:active {
+  transform: scale(0.98);
+  transition-duration: var(--motion-press);
+}
+
+/* Status card */
+.status-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding-left: 1.1rem;
+}
+.status-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12%;
+  bottom: 12%;
+  width: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, var(--fluo-yellow), var(--neon-green));
+}
+
+/* Hero H1 segments + keyword chip */
+.hero-h1-display {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+  font-size: clamp(2.5rem, 7.2vw, 4.75rem); /* 40px+ mobile, 72px+ desktop */
+}
+.hero-h1-white {
+  color: #ffffff;
+}
+.hero-h1-fluo {
+  color: var(--fluo-yellow);
+  text-shadow: 0 0 28px rgba(245, 255, 64, 0.35);
+}
+.hero-h1-neon {
+  color: var(--neon-green);
+  text-shadow: 0 0 26px rgba(57, 255, 20, 0.4);
+}
+.hero-keyword-chip {
+  display: inline;
+  padding: 0.06em 0.22em;
+  border-radius: 0.28em;
+  background: linear-gradient(
+    120deg,
+    rgba(199, 125, 255, 0.42),
+    rgba(255, 182, 217, 0.38)
+  );
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Secondary text link with underline sweep */
+.link-underline-sweep {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: rgba(255, 255, 255, 0.58);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.link-underline-sweep::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1.5px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--fluo-yellow), var(--neon-green));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.22s ease;
+}
+.link-underline-sweep:hover {
+  color: #fff;
+}
+.link-underline-sweep:hover::after {
+  transform: scaleX(1);
+}
+
+/* Social proof card */
+.social-proof-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  max-width: 28rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(199, 125, 255, 0.06)
+  );
+  padding: 0.7rem 0.85rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .shine-sweep:hover::after,
+  .shine-sweep:focus-visible::after {
+    animation: none;
+  }
+  .collection-card:hover,
+  .result-card:hover,
+  .pricing-card-featured:hover,
+  .pricing-card-featured:active {
+    transform: none;
+  }
   *,
   *::before,
   *::after {
