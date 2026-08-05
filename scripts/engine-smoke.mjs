@@ -4656,7 +4656,10 @@ assert.doesNotMatch(
   /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Generate free/
 );
 assert.doesNotMatch(library, /FreeTrialCta/);
-assert.match(library, /Create new Moment|Create Street Power-Up/);
+assert.match(
+  library,
+  /Generate 360|Create new Moment|Create Street Power-Up/
+);
 assert.doesNotMatch(library, /Create new Pack|10 seconds/);
 // Auth + home suite residual FreeTrial honesty (Phase C/F)
 assert.match(
@@ -5920,10 +5923,25 @@ for (const [rel, re] of residualGenerateDoors) {
     `${rel} primary Generate door must use createRemixHref remix marker`
   );
 }
-assert.match(
-  fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}[\s\S]*Create new Moment/
-);
+// AIT-82: Library empty — one primary Generate 360 → soft-launch Moment.
+{
+  const libraryPageSrc = fs.readFileSync(
+    join(root, "app/library/page.tsx"),
+    "utf8"
+  );
+  const libraryEmptySrc = fs.readFileSync(
+    join(root, "lib/libraryEmpty.ts"),
+    "utf8"
+  );
+  assert.match(
+    libraryEmptySrc,
+    /LIBRARY_EMPTY_GENERATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=\$\{LIBRARY_EMPTY_SOURCE\}`/
+  );
+  assert.match(libraryPageSrc, /LIBRARY_EMPTY_GENERATE_HREF/);
+  assert.match(libraryPageSrc, /data-library-empty-cta=["']generate["']/);
+  assert.match(libraryPageSrc, /Generate 360/);
+  assert.doesNotMatch(libraryEmptySrc, /createRemixHref|360-spin-showcase/);
+}
 // Cinema director board compose → Generate carries remix + prompt (not bare effect=)
 const cinemaComposeSrc = fs.readFileSync(
   join(root, "app/cinema/page.tsx"),

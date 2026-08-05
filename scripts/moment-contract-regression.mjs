@@ -57,6 +57,7 @@ const homePage = read("app/page.tsx");
 const homeHero = read("components/HomeCinemaHero.tsx");
 const libraryPage = read("app/library/page.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
+const libraryEmpty = read("lib/libraryEmpty.ts");
 
 // 1. Moment CTA is a Moment path, never the legacy Seller Pack path.
 assertMatch(
@@ -96,10 +97,41 @@ assertMatch(
   /fixedMomentContract\s*&&\s*!session\?\.signedIn\s*\?\s*\([\s\S]{0,600}data-public-single-preview-sign-in[\s\S]{0,120}Sign in to create with your toy/,
   "only anonymous fixed Moment visitors may receive the exact-path sign-in action"
 );
+// AIT-82: Library empty primary Generate 360 → soft-launch Moment (not suite route).
 assertMatch(
   libraryPage,
-  /href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}/,
+  /LIBRARY_EMPTY_GENERATE_HREF|href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}/,
   "Library create CTA must return to the fixed Moment"
+);
+assertMatch(
+  libraryPage,
+  /data-library-empty-cta=["']generate["']/,
+  "Library page must expose a single primary empty Generate CTA marker"
+);
+assertMatch(
+  libraryPage,
+  /Generate 360/,
+  "Library empty primary label must match AIT-62 Generate 360 contract"
+);
+assertMatch(
+  libraryEmpty,
+  /LIBRARY_EMPTY_GENERATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=\$\{LIBRARY_EMPTY_SOURCE\}`/,
+  "libraryEmpty helper must deep-link soft-launch Moment with library-empty source"
+);
+assertNoMatch(
+  libraryEmpty,
+  /360-spin-showcase|createRemixHref/,
+  "Library empty primary must not use orphan suite 360 remix routes"
+);
+assertMatch(
+  libraryGrid,
+  /LIBRARY_EMPTY_GENERATE_HREF/,
+  "LibraryGrid empty/guest secondary path must reuse soft-launch Moment helper"
+);
+assertMatch(
+  libraryGrid,
+  /data-library-state=\{isEmpty \? ["']empty["'] : ["']filled["']\}|data-library-state=\{sortedJobs\.length \? ["']filled["'] : ["']empty["']\}/,
+  "LibraryGrid must retain empty/filled state markers"
 );
 assertMatch(
   libraryGrid,

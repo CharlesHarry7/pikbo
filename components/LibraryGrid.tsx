@@ -12,6 +12,10 @@ import {
   libraryDurableTerminalFailureCopy,
   libraryNewAttemptButtonLabel,
 } from "@/lib/privateGenerationResultsPure.mjs";
+import {
+  LIBRARY_EMPTY_GENERATE_HREF,
+  LIBRARY_EMPTY_GENERATE_LABEL,
+} from "@/lib/libraryEmpty";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 type JobCapabilities = {
@@ -398,30 +402,35 @@ export function LibraryGrid() {
   if (!me?.signedIn) {
     return (
       <section
-        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        className="mt-4 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113] sm:mt-6"
         data-library-state="guest"
       >
-        <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
+        <div className="grid place-items-center p-5 text-center sm:min-h-[18rem] sm:p-10">
           <div className="max-w-lg">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#c8ff3d]/30 bg-[#c8ff3d]/10 text-xl text-[#c8ff3d]">
-              ↗
-            </span>
-            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
               Private Library
             </p>
-            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+            <h2 className="mt-3 font-display text-2xl font-black tracking-[-0.04em] text-white sm:text-4xl">
               Sign in to see your generated Moments.
             </h2>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/52 sm:mt-3">
               Your real toy results belong to your account. Sample previews and
               browser-cached demos are not added to this Library.
             </p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3">
-              <Link href="/login?next=/library" className="btn btn-primary text-sm">
+            <div className="mt-5 flex flex-col items-center gap-3 sm:mt-7">
+              <Link
+                href="/login?next=/library"
+                className="btn btn-primary min-h-11 w-full max-w-xs justify-center text-sm sm:w-auto"
+                data-library-empty-cta="sign-in"
+              >
                 Sign in to Library
               </Link>
-              <Link href={CREATE_MOMENT_HREF} className="btn btn-ghost text-sm">
-                Preview Street Power-Up
+              <Link
+                href={LIBRARY_EMPTY_GENERATE_HREF}
+                className="text-[11px] font-semibold text-white/40 underline-offset-2 transition hover:text-white/65 hover:underline"
+                data-library-empty-cta="generate-secondary"
+              >
+                Preview {LIBRARY_EMPTY_GENERATE_LABEL}
               </Link>
             </div>
           </div>
@@ -430,9 +439,14 @@ export function LibraryGrid() {
     );
   }
 
+  const isEmpty = sortedJobs.length === 0;
+
   return (
-    <section className="mt-6" data-library-state={sortedJobs.length ? "filled" : "empty"}>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <section
+      className="mt-4 sm:mt-6"
+      data-library-state={isEmpty ? "empty" : "filled"}
+    >
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 sm:mb-4">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
             {openCount > 0
@@ -449,31 +463,56 @@ export function LibraryGrid() {
             onClick={() => void refreshJobs()}
             disabled={refreshing}
             className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs disabled:opacity-50"
+            data-library-action="refresh"
           >
             {refreshing ? "Refreshing…" : "Refresh"}
           </button>
-          <Link href={CREATE_MOMENT_HREF} className="btn btn-primary min-h-11 !px-4 !py-2 text-xs">
-            Create new Moment
-          </Link>
+          {/* Filled shelf only: empty keeps a single header Generate 360 above fold. */}
+          {!isEmpty ? (
+            <Link
+              href={CREATE_MOMENT_HREF}
+              className="btn btn-primary min-h-11 !px-4 !py-2 text-xs"
+              data-library-action="generate-moment"
+            >
+              {LIBRARY_EMPTY_GENERATE_LABEL}
+            </Link>
+          ) : null}
         </div>
       </div>
 
-      {sortedJobs.length === 0 ? (
-        <div className="grid min-h-[22rem] place-items-center rounded-[1.75rem] border border-white/10 bg-[#111113] p-6 text-center sm:p-10">
-          <div className="max-w-lg">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-xl text-white/65">
-              +
-            </span>
-            <h2 className="mt-5 font-display text-3xl font-black tracking-[-0.04em] text-white">
+      {isEmpty ? (
+        <div
+          className="rounded-[1.75rem] border border-white/10 bg-[#111113] p-5 text-center sm:min-h-[16rem] sm:p-10"
+          data-library-empty="signed-in"
+        >
+          <div className="mx-auto max-w-lg">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
+              Empty collector shelf
+            </p>
+            <h2 className="mt-2 font-display text-2xl font-black tracking-[-0.04em] text-white sm:mt-3 sm:text-3xl">
               Your first real Moment starts with one toy photo.
             </h2>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/50">
-              Generated results will return here after refresh. Only private,
-              downloadable account results are kept in this view.
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/50 sm:mt-3">
+              Generated results return here after refresh. Only private,
+              downloadable account results are kept — never sample demos.
             </p>
-            <Link href={CREATE_MOMENT_HREF} className="btn btn-primary mt-7 text-sm">
-              Create Street Power-Up
+            {/*
+              Mobile: header already exposes the sole primary Generate 360 CTA.
+              Keep a same-contract primary here for desktop/keyboard users only
+              (sm+), so ~390px never shows two competing primary buttons.
+            */}
+            <Link
+              href={LIBRARY_EMPTY_GENERATE_HREF}
+              className="btn btn-primary mt-5 hidden min-h-11 text-sm sm:inline-flex"
+              data-library-empty-cta="generate-panel"
+            >
+              {LIBRARY_EMPTY_GENERATE_LABEL}
             </Link>
+            <p className="mt-4 text-[11px] font-semibold text-white/38 sm:hidden">
+              Use{" "}
+              <span className="text-white/55">{LIBRARY_EMPTY_GENERATE_LABEL}</span>{" "}
+              above to start.
+            </p>
           </div>
         </div>
       ) : (
