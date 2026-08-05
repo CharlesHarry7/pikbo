@@ -24,12 +24,17 @@ export const PRIMARY_NAV = [
 
 export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
 
-/** Mobile mirrors the same five product doors; secondary routes stay hidden. */
+/**
+ * Mobile bottom nav: same five product doors as desktop.
+ * Exactly one primary Generate entry (Moment / 360 path) — UI elevates it;
+ * secondary doors stay de-emphasized peers, not equal CTAs.
+ */
 export const MOBILE_NAV = [
   { href: "/", label: "Home" },
   {
     href: `${MOMENT_CREATE_HREF}&source=primary-nav`,
-    label: "Create",
+    label: "Generate",
+    primary: true,
   },
   { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
