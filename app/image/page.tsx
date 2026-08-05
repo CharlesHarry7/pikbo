@@ -21,10 +21,18 @@ import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { loadToyIdentity } from "@/lib/toyIdentity";
-import { createRemixHref } from "@/lib/remixIntent";
 
 /** Default video recipe when handing a still into Generate (listing spin). */
 const IMAGE_HANDOFF_EFFECT = "360-spin-showcase";
+
+/** Generate→360 door with optional Toy Identity SKU carry. */
+function imageGenerate360Href(source: string, sku?: string): string {
+  const base = createGenerate360Href(source);
+  const tag = (sku || "").trim().slice(0, 64);
+  if (!tag) return base;
+  const joiner = base.includes("?") ? "&" : "?";
+  return `${base}${joiner}sku=${encodeURIComponent(tag)}`;
+}
 
 /** Process-memory still ledger row (GET /api/image — no multi-node claim). */
 type SessionStillJob = {
@@ -548,13 +556,13 @@ export default function ImageStudioPage() {
           </div>
           <div className="flex flex-col items-end gap-2">
             <Link
-              href={createRemixHref(
-                IMAGE_HANDOFF_EFFECT,
-                undefined,
-                toySku.trim() || null
+              href={imageGenerate360Href(
+                "image-header",
+                toySku.trim() || undefined
               )}
               className="btn btn-primary !px-3 !py-1.5 text-xs"
               data-image-handoff="create-header"
+              data-image-generate="remix"
             >
               Generate video
             </Link>
@@ -629,11 +637,12 @@ export default function ImageStudioPage() {
               <p className="mt-2 text-[11px] leading-relaxed text-[var(--fg-dim)]">
                 Free Mini trial is video-only. Open{" "}
                 <Link
-                  href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
+                  href={imageGenerate360Href("image-free-trial")}
                   className="text-[var(--mint)] underline-offset-2 hover:underline"
                   data-image-handoff="create-free-trial"
+                  data-image-generate="remix"
                 >
-                  Create
+                  Generate
                 </Link>{" "}
                 for your Seedance clip, or{" "}
                 <Link
@@ -693,13 +702,13 @@ export default function ImageStudioPage() {
                   Delivery · next job
                 </p>
                 <Link
-                  href={createRemixHref(
-                    IMAGE_HANDOFF_EFFECT,
-                    undefined,
-                    toySku.trim() || null
+                  href={imageGenerate360Href(
+                    "image-handoff",
+                    toySku.trim() || undefined
                   )}
                   className="btn btn-primary w-full text-sm"
                   data-image-handoff="create"
+                  data-image-generate="remix"
                   onClick={() => stashPendingStill(imageUrl)}
                 >
                   Animate in Generate →
@@ -955,9 +964,10 @@ export default function ImageStudioPage() {
         <p className="mt-6 text-sm text-[var(--fg-muted)]">
           Have a real figure photo?{" "}
           <Link
-            href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
+            href={imageGenerate360Href("image-footer")}
             className="font-semibold text-[var(--mint)] hover:underline"
             data-image-handoff="create-footer"
+            data-image-generate="remix"
           >
             Animate it with Seedance
           </Link>

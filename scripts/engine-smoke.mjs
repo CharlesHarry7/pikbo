@@ -4084,10 +4084,18 @@ const imageStudioSrc = fs.readFileSync(
 assert.match(imageStudioSrc, /stashPendingStill|pikbo_pending_still/);
 assert.match(imageStudioSrc, /data-image-handoff=["']single-moment["']/);
 assert.match(imageStudioSrc, /effect=street-power-up/);
-// Animate → Create carries remix contract (ratio/duration/channel), not bare /create
-assert.match(imageStudioSrc, /createRemixHref/);
+// Animate → Generate carries listing-spin via createGenerate360Href (not bare /create)
+assert.match(
+  imageStudioSrc,
+  /createGenerate360Href|imageGenerate360Href/
+);
 assert.match(imageStudioSrc, /data-image-handoff=["']create["']/);
+assert.match(imageStudioSrc, /data-image-generate=["']remix["']/);
 assert.match(imageStudioSrc, /360-spin-showcase|IMAGE_HANDOFF_EFFECT/);
+assert.doesNotMatch(
+  imageStudioSrc,
+  /createRemixHref\(\s*IMAGE_HANDOFF_EFFECT/
+);
 assert.doesNotMatch(
   imageStudioSrc,
   /data-image-handoff=["']create["'][\s\S]{0,120}href=\{\s*toySku/
@@ -4456,7 +4464,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
-  /Flow · Preview|Create one Moment/
+  /Create one Moment|MOMENT_CREATE_HREF|data-suite-door=["']single-moment["']/
 );
 assert.match(
   fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
@@ -4990,7 +4998,7 @@ assert.match(landingPathsSrc, /effect=street-power-up/);
 // SEO suite doors + LandingResults remake remix href
 assert.match(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
-  /createRemixHref/
+  /createGenerate360Href|createRemixHref|data-suite-door=["']generate["']/
 );
 assert.match(
   fs.readFileSync(join(root, "components/LandingResults.tsx"), "utf8"),
@@ -5235,14 +5243,14 @@ const communityPublish = fs.readFileSync(
 assert.match(communityPublish, /isPublicCommunityVideoUrl/);
 assert.match(communityPublish, /isSessionGatedDownloadUrl/);
 assert.match(communityPublish, /\/demos\//);
-// Landing remake + suite doors use createRemixHref (ratio/duration/channel)
+// Landing remake + suite doors: recipe remake + bare Generate→360 helper
 assert.match(
   fs.readFileSync(join(root, "components/LandingResults.tsx"), "utf8"),
   /createRemixHref|data-landing-remake/
 );
 assert.match(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
-  /createRemixHref|data-suite-door=["']generate["']/
+  /createGenerate360Href|createRemixHref|data-suite-door=["']generate["']/
 );
 // image + generate clients: PROVIDER_NETWORK/TIMEOUT set refundUnconfirmed flag
 assert.match(
@@ -5745,10 +5753,18 @@ assert.match(
   fs.readFileSync(join(root, "app/api/generate/route.ts"), "utf8"),
   /beginSyncGenerateJob\([\s\S]{0,500}duration:\s*secs/
 );
-// Suite doors default Generate uses remix contract (not bare /create)
+// Suite doors: bare Generate → createGenerate360Href; recipe keeps createRemixHref
 assert.match(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
-  /createRemixHref\(effectSlug \|\| ["']360-spin-showcase["']\)|createRemixHref\(effectSlug/
+  /createGenerate360Href\(\s*["']suite-doors["']\s*\)/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
+  /createRemixHref\(\s*effectSlug\s*\)/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
+  /createRemixHref\(\s*effectSlug\s*\|\|\s*["']360-spin-showcase["']/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),

@@ -69,6 +69,7 @@ const generateSurfaces = [
   ["components/CommandPalette.tsx", null],
   ["components/GenerateSuiteChrome.tsx", null],
   ["components/Header.tsx", "header"],
+  ["components/SuiteDoorLinks.tsx", "suite-doors"],
   ["components/HfProductRail.tsx", "hf-product-rail"],
   ["components/HfExploreHome.tsx", "hf-explore"],
   ["components/HeroVideoBanner.tsx", "hero-banner"],
@@ -78,6 +79,8 @@ const generateSurfaces = [
   ["app/explore/page.tsx", "explore"],
   ["app/modules/page.tsx", "modules"],
   ["app/community/page.tsx", "community"],
+  ["app/image/page.tsx", null],
+  ["app/effects/[slug]/page.tsx", "effect-360-spin"],
 ];
 
 for (const [file, source] of generateSurfaces) {
@@ -108,6 +111,66 @@ for (const [file, source] of generateSurfaces) {
       src,
       /createWorkbenchHref\(\s*["'][^"']+["']\s*\)/,
       `${file} must pass an honest source to createWorkbenchHref`
+    );
+    continue;
+  }
+  if (file === "components/SuiteDoorLinks.tsx") {
+    assert.match(
+      src,
+      /createGenerate360Href\(\s*["']suite-doors["']\s*\)/,
+      "SuiteDoorLinks bare Generate must use createGenerate360Href(\"suite-doors\")"
+    );
+    assert.doesNotMatch(
+      src,
+      /createRemixHref\(\s*effectSlug\s*\|\|\s*["']360-spin-showcase["']/,
+      "SuiteDoorLinks must not default bare Generate via createRemixHref(360)"
+    );
+    assert.doesNotMatch(
+      src,
+      /href=["']\/create\?effect=street-power-up/,
+      "SuiteDoorLinks Moment door must not hardcode bare street-power query"
+    );
+    continue;
+  }
+  if (file === "app/image/page.tsx") {
+    assert.match(
+      src,
+      /createGenerate360Href\(\s*["']image-header["']\s*\)|imageGenerate360Href\(\s*["']image-header["']/,
+      "Image header Generate video must use createGenerate360Href"
+    );
+    assert.match(
+      src,
+      /imageGenerate360Href\(\s*["']image-handoff["']|createGenerate360Href\(\s*["']image-handoff["']/,
+      "Image Animate in Generate must use createGenerate360Href"
+    );
+    assert.doesNotMatch(
+      src,
+      /createRemixHref\(\s*IMAGE_HANDOFF_EFFECT/,
+      "Image Generate doors must not call createRemixHref(IMAGE_HANDOFF_EFFECT)"
+    );
+    // Generate-labeled residual must not hardcode street-power
+    assert.doesNotMatch(
+      src,
+      /href=\{[^}]*street-power-up[^}]*\}[^>]*>\s*Generate/,
+      "Image must not label street-power as Generate"
+    );
+    continue;
+  }
+  if (file === "app/effects/[slug]/page.tsx") {
+    assert.match(
+      src,
+      /createGenerate360Href\(\s*["']effect-360-spin["']\s*\)/,
+      "Listing-spin effect page primary must use createGenerate360Href"
+    );
+    assert.match(
+      src,
+      /isCoreListingSpin[\s\S]{0,200}createGenerate360Href\(\s*["']effect-360-spin["']/,
+      "isCoreListingSpin primary door must be Generate→360"
+    );
+    assert.doesNotMatch(
+      src,
+      /isCoreListingSpin\s*\?\s*["']\/create\?effect=street-power-up["']/,
+      "Listing-spin effect primary must not hardcode street-power"
     );
     continue;
   }

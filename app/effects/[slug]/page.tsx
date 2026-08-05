@@ -10,6 +10,7 @@ import {
   LandingHowItWorks,
   photoRecipeDraftHowToJsonLd,
 } from "@/components/LandingHowItWorks";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
 import { LandingResults } from "@/components/LandingResults";
 import { site } from "@/lib/site";
@@ -20,6 +21,7 @@ import {
   workflowsForEffect,
 } from "@/lib/workflows";
 import { HighIntentProductTruth } from "@/components/HighIntentProductTruth";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 // Pre-render every effect page at build time. Concept recipes without unique
 // Lab proof are noindex (Phase H) but still reachable for Create deep-links.
@@ -131,22 +133,32 @@ export default async function EffectPage({
               <Link
                 href={
                   isCoreListingSpin
-                    ? "/create?effect=street-power-up"
+                    ? createGenerate360Href("effect-360-spin")
                     : createRemixHref(preset.slug)
                 }
                 className="btn btn-primary !px-4 !py-2 text-xs font-black"
+                data-effect-generate={
+                  isCoreListingSpin ? "listing-spin" : "remix"
+                }
               >
-                {isCoreListingSpin
-                    ? "Create one Moment"
-                  : "Open Generate"}
+                Open Generate
               </Link>
               {isCoreListingSpin ? (
-                <Link
-                  href="/pricing"
-                  className="btn btn-ghost !px-3 !py-2 text-xs"
-                >
-                  Beta limits
-                </Link>
+                <>
+                  <Link
+                    href={`${MOMENT_CREATE_HREF}&source=effect-360-spin`}
+                    className="btn btn-ghost !px-3 !py-2 text-xs"
+                    data-effect-moment="street-power-up"
+                  >
+                    Create one Moment
+                  </Link>
+                  <Link
+                    href="/pricing"
+                    className="btn btn-ghost !px-3 !py-2 text-xs"
+                  >
+                    Beta limits
+                  </Link>
+                </>
               ) : (
                 <>
                   <FreeTrialCta
@@ -155,7 +167,7 @@ export default async function EffectPage({
                     className="btn btn-ghost !px-3 !py-2 text-xs"
                   />
                   <Link
-                    href="/create?effect=street-power-up"
+                    href={`${MOMENT_CREATE_HREF}&source=effect-${preset.slug}`}
                     className="btn btn-ghost !px-3 !py-2 text-xs"
                   >
                     Create one Moment
