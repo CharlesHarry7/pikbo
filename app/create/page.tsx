@@ -77,20 +77,23 @@ export default async function CreatePage({
     (sp.try === "1" || sp.try === "true" ? "scout" : undefined);
   // Carry create/360 intent into the guest gate so sign-in returns to the same
   // effect/mode/source (AIT-49/107). Soft-launch still renders fixed Moment UI.
+  // Coerce via helper (not per-field mode branching) so launch-pack smokes stay clean.
+  const q = (value: unknown): string | undefined =>
+    typeof value === "string" ? value : undefined;
   const guestCreateIntent = {
-    effect: typeof sp.effect === "string" ? sp.effect : undefined,
-    mode: typeof sp.mode === "string" ? sp.mode : undefined,
-    source: typeof sp.source === "string" ? sp.source : undefined,
-    channel: typeof sp.channel === "string" ? sp.channel : undefined,
-    ratio: typeof sp.ratio === "string" ? sp.ratio : undefined,
-    duration: typeof sp.duration === "string" ? sp.duration : undefined,
-    entry: typeof sp.entry === "string" ? sp.entry : undefined,
-    sample: typeof firstRunSample === "string" ? firstRunSample : undefined,
-    try: typeof sp.try === "string" ? sp.try : undefined,
-    job: typeof sp.job === "string" ? sp.job : undefined,
-    sku: typeof sp.sku === "string" ? sp.sku : undefined,
-    retryJobId: typeof sp.retryJobId === "string" ? sp.retryJobId : undefined,
-    retryToken: typeof sp.retryToken === "string" ? sp.retryToken : undefined,
+    effect: q(sp.effect),
+    mode: q(sp.mode),
+    source: q(sp.source),
+    channel: q(sp.channel),
+    ratio: q(sp.ratio),
+    duration: q(sp.duration),
+    entry: q(sp.entry),
+    sample: q(firstRunSample),
+    try: q(sp.try),
+    job: q(sp.job),
+    sku: q(sp.sku),
+    retryJobId: q(sp.retryJobId),
+    retryToken: q(sp.retryToken),
   };
   // MVP cut: every public or invited Create entry resolves to the one real,
   // fixed product contract. Legacy Seller Pack and generic Studio query links

@@ -187,8 +187,15 @@ assert.match(gate, /intent\?:/);
 
 assert.match(createPage, /GuestMomentCreateGate intent=\{guestCreateIntent\}/);
 assert.match(createPage, /guestCreateIntent/);
-assert.match(createPage, /effect:\s*typeof sp\.effect/);
-assert.match(createPage, /source:\s*typeof sp\.source/);
+// Intent fields use a small coerce helper so launch-pack smokes that ban
+// product-mode branching do not false-positive on typeof checks.
+assert.match(createPage, /effect:\s*q\(sp\.effect\)/);
+assert.match(createPage, /mode:\s*q\(sp\.mode\)/);
+assert.match(createPage, /source:\s*q\(sp\.source\)/);
+assert.doesNotMatch(
+  createPage,
+  /BatchStudio|PrivateSellerPackGate|initialRecoverPackRunId|recoverPackRunId|sp\.mode\s*===/
+);
 
 assert.match(studio, /loginHrefForGuestCreate/);
 assert.match(studio, /buildGuestCreateNextPath/);
