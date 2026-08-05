@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /**
  * Compact suite doors for SEO landings (/for, /tools, /toys, guides).
- * Always real deep links — never fake multi-model.
- * Recipe doors use createRemixHref (ratio/duration/channel carry).
+ * Bare Generate → createGenerate360Href; recipe landings keep createRemixHref.
+ * Explicit Moment CTA stays on MOMENT_CREATE_HREF (not a Generate door).
  */
 export function SuiteDoorLinks({
   effectSlug,
@@ -15,8 +17,10 @@ export function SuiteDoorLinks({
   effectSlug?: string;
   className?: string;
 }) {
-  // Default listing spin when no recipe — remix contract (ratio/duration/channel).
-  const generateHref = createRemixHref(effectSlug || "360-spin-showcase");
+  // Recipe landings keep recipe deep link; bare surfaces use canonical 360 helper.
+  const generateHref = effectSlug
+    ? createRemixHref(effectSlug)
+    : createGenerate360Href("suite-doors");
 
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
@@ -33,20 +37,14 @@ export function SuiteDoorLinks({
         className="btn btn-ghost !px-3 !py-2 text-xs"
       />
       <Link
-        href="/create?effect=street-power-up"
+        href={`${MOMENT_CREATE_HREF}&source=suite-doors`}
         className="btn btn-ghost !px-3 !py-2 text-xs"
         data-suite-door="single-moment"
       >
         Create one Moment
       </Link>
-      <Link href="/modules" className="btn btn-ghost !px-3 !py-2 text-xs">
-        Modules
-      </Link>
       <Link href="/library" className="btn btn-ghost !px-3 !py-2 text-xs">
         Library
-      </Link>
-      <Link href="/flow" className="btn btn-ghost !px-3 !py-2 text-xs">
-        Flow · Preview
       </Link>
     </div>
   );
