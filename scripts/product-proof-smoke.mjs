@@ -43,13 +43,14 @@ assert(
     homeHero.includes("not a completed customer deliverable") &&
     homeHero.includes("not your toy") &&
     home.includes("<HomeViralWall") &&
+    home.includes("<HomeExploreRecipeRail") &&
     home.includes("<HfProductRail") &&
     home.includes("buildHomeShowcaseFeed") &&
     !home.includes("PublicLaunchPackSample") &&
     !home.includes('from "@/components/HfExploreHome"') &&
     !home.includes("<HfExploreHome") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must expose Moment hero + Lab proof wall + HF product rail (no Pack / full Explore remount)"
+  "homepage must expose Moment hero + Lab proof wall + explore recipe rail + HF product rail (no Pack / full Explore remount)"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),
@@ -75,12 +76,31 @@ assert(
       homeWall.includes(".slice(0, 8)")),
   "Lab proof wall must badge honestly, pin 360, use createGenerate360Href, cap ≤8"
 );
-// CTA hierarchy: Moment primary in hero, then wall, then suite rail (no dual hero Generate).
+// CTA hierarchy: Moment primary in hero → wall → thin explore rail → suite rail.
 assert(
   home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeViralWall") &&
-    home.indexOf("<HomeViralWall") < home.indexOf("<HfProductRail") &&
+    home.indexOf("<HomeViralWall") < home.indexOf("<HomeExploreRecipeRail") &&
+    home.indexOf("<HomeExploreRecipeRail") < home.indexOf("<HfProductRail") &&
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
-  "home order: Moment hero → proof wall → HF product rail → trust footer"
+  "home order: Moment hero → proof wall → explore recipe rail → HF product rail → trust footer"
+);
+
+// AIT-125: thin Lab recipe rail — secondary Remake/360 only, no second primary Moment CTA.
+const exploreRail = read("components/HomeExploreRecipeRail.tsx");
+assert(
+  exploreRail.includes('data-home-explore-rail="lab"') &&
+    exploreRail.includes('data-home-explore-rail="empty"') &&
+    exploreRail.includes("createGenerate360Href") &&
+    exploreRail.includes("HOME_PROOF_BADGE") &&
+    exploreRail.includes("home-explore-rail") &&
+    exploreRail.includes("home_explore_rail_remake") &&
+    exploreRail.includes("Lab recipe previews unavailable") &&
+    !exploreRail.includes("data-home-moment-cta") &&
+    !exploreRail.includes("MOMENT_CREATE_HREF") &&
+    !exploreRail.includes("Create my drop clip") &&
+    !exploreRail.includes("Create a Moment") &&
+    (exploreRail.includes("RAIL_LIMIT") || exploreRail.includes(".slice(0, 8)") || exploreRail.includes("HOME_PROOF_LIMIT")),
+  "explore recipe rail must be Lab-only, honest-empty, secondary Remake/360 (no Moment primary)"
 );
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
