@@ -104,7 +104,6 @@ async function computeSoftLiveReadiness() {
     privateInputsBucketReady: privateInputs.bucketReady,
     privateInputsSchemaReady: privateInputs.schemaReady,
     privateInputsReserveRpcReady: privateInputs.reserveRpcReady,
-    directMomentReserveRpcReady: privateInputs.directMomentReserveRpcReady,
     privateInputsDiscoveryReady: privateInputs.discoveryReady,
     providerOutputAllowlistConfigured:
       privateProviderOutputAllowlistConfigured(),

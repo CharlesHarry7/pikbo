@@ -371,14 +371,14 @@ function durableRelease(state, reservationId, credits, idem) {
 const route = readFileSync(join(root, "app/api/generate/route.ts"), "utf8");
 const accessIndex = route.indexOf("liveGenerationAccess({");
 const cachedIndex = route.indexOf('if (access.kind === "cached")');
-const reserveIndex = route.indexOf("reserveStrictLiveGenerationWithAsset({");
+const reserveIndex = route.indexOf("reserveStrictLiveGeneration({");
 const providerIndex = route.indexOf("invokeReservedProvider(");
 assert.ok(
   accessIndex > 0 &&
     cachedIndex > accessIndex &&
     reserveIndex > cachedIndex &&
     providerIndex > reserveIndex,
-  "production route must decide cached access, reserve durably with asset binding, then invoke provider"
+  "production route must decide cached access, reserve durably, then invoke provider"
 );
 assert.doesNotMatch(
   route,

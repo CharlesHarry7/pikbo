@@ -78,7 +78,7 @@ assert.doesNotMatch(generate, /pikbo_reserve_seedance2_cost_v1/);
 assert.doesNotMatch(generate, /PIKBO_SEEDANCE2_PAID_CEILING_USD/);
 assert.ok(
   generate.indexOf("reserveDurableProviderSpend({") <
-    generate.indexOf("reserveStrictLiveGenerationWithAsset({"),
+    generate.indexOf("reserveStrictLiveGeneration({"),
   "project-wide provider spend must reserve before per-account credits"
 );
 

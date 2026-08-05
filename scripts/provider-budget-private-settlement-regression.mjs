@@ -936,7 +936,7 @@ assert.match(
 );
 assert.ok(
   generate.indexOf("reserveDurableProviderSpend({") <
-    generate.indexOf("reserveStrictLiveGenerationWithAsset({"),
+    generate.indexOf("reserveStrictLiveGeneration({"),
   "provider USD reservation must precede credit reserve"
 );
 assert.ok(

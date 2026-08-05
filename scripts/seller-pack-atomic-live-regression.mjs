@@ -208,11 +208,11 @@ assert.equal(
   const gen = read("app/api/generate/route.ts");
   assert.match(gen, /parseSellerPackChildRequest|packRunId/);
   assert.match(gen, /authorizeSellerPackChildLive/);
-  assert.match(gen, /reserveStrictLiveGenerationWithAsset/);
+  assert.match(gen, /reserveStrictLiveGeneration/);
   // Pack path must not fall through to R1a when pack binding is active.
   assert.match(
     gen,
-    /if \(packChild\)[\s\S]{0,800}authorizeSellerPackChildLive[\s\S]{0,2000}else[\s\S]{0,1600}reserveStrictLiveGenerationWithAsset/
+    /if \(packChild\)[\s\S]{0,800}authorizeSellerPackChildLive[\s\S]{0,1200}else[\s\S]{0,200}reserveStrictLiveGeneration/
   );
   assert.ok(
     gen.indexOf("savePrivateGenerationResult({") <

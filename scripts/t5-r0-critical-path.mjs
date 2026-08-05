@@ -99,10 +99,10 @@ const gen = read("app/api/generate/route.ts");
 
 // Access decision before live reserve / fal
 const accessIdx = gen.indexOf("liveGenerationAccess({");
-const reserveIdx = gen.indexOf("reserveStrictLiveGenerationWithAsset({");
+const reserveIdx = gen.indexOf("reserveStrictLiveGeneration({");
 const falIdx = gen.indexOf("fal.config({");
 assert.ok(accessIdx > 0, "generate uses liveGenerationAccess");
-assert.ok(reserveIdx > accessIdx, "access before asset-bound reserve");
+assert.ok(reserveIdx > accessIdx, "access before reserve");
 assert.ok(falIdx > reserveIdx, "fal.config only after reserve path");
 assert.match(gen, /supabaseGetPersonalWallet\(authUser\.id\)/);
 assert.match(gen, /planId:\s*accessPlanId/);

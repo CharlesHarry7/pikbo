@@ -35,7 +35,6 @@ const privatePreviewReady = {
   privateInputsBucketReady: true,
   privateInputsSchemaReady: true,
   privateInputsReserveRpcReady: true,
-  directMomentReserveRpcReady: true,
   privateInputsDiscoveryReady: true,
   providerOutputAllowlistConfigured: true,
   privateLiveEnabled: true,
@@ -249,26 +248,7 @@ assert.match(freeCta, /canLiveGenerate\(me\)/);
 assert.match(liveReadiness, /evaluatePrivatePreviewReadiness/);
 assert.match(liveReadiness, /evaluatePrivateInputAdmissionReadiness/);
 assert.match(liveReadiness, /privateInputsAssetRpcReady/);
-assert.match(liveReadiness, /directMomentReserveRpcReady/);
-assert.match(
-  liveReadiness,
-  /directMomentReserveRpcReady:\s*privateInputs\.directMomentReserveRpcReady/
-);
 assert.match(liveReadiness, /providerValidationEnvironmentGate/);
-// Missing direct Moment with-asset RPC must close Preview, not input admission.
-{
-  const closed = evaluatePrivatePreviewReadiness({
-    ...privatePreviewReady,
-    directMomentReserveRpcReady: false,
-  });
-  assert.equal(closed.ready, false);
-  assert.deepEqual(closed.missing, ["directMomentReserveRpcReady"]);
-  assert.equal(
-    evaluatePrivateInputAdmissionReadiness(privateInputAdmissionReady).ready,
-    true,
-    "directMomentReserveRpcReady must not gate zero-Provider upload admission"
-  );
-}
 assert.match(
   liveReadiness,
   /providerValidationDeployment\.environmentAllowed/

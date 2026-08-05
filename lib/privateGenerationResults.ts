@@ -2,69 +2,17 @@ import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import {
   parseProviderOutputHostAllowlist,
-  privateLibraryJobFromRow,
   privateResultObjectKey,
   privateStoredObjectMatches,
-  PRIVATE_LIBRARY_STATUSES,
   providerOutputHostAllowed,
 } from "@/lib/privateGenerationResultsPure.mjs";
 
 export {
-  acceptControlledLibraryNewAttemptUrl,
-  controlledLibraryNewAttemptUrl,
-  libraryDurableTerminalFailureCopy,
-  libraryNewAttemptButtonLabel,
-  mergePrivateLibraryWithLocalLedger,
   parseProviderOutputHostAllowlist,
-  privateLibraryJobFromRow,
   privateResultObjectKey,
   privateStoredObjectMatches,
-  PRIVATE_LIBRARY_STATUSES,
   providerOutputHostAllowed,
-  safeLibraryErrorCode,
 } from "@/lib/privateGenerationResultsPure.mjs";
-
-export type PrivateLibraryJobStatus =
-  | "queued"
-  | "running"
-  | "succeeded"
-  | "failed"
-  | "canceled";
-
-/** Owner-safe durable Library DTO — never includes secrets or storage keys. */
-export type PrivateLibraryJob = {
-  id: string;
-  requestId: string;
-  status: PrivateLibraryJobStatus;
-  effect: string;
-  demo: false;
-  watermark: false;
-  downloadAllowed: boolean;
-  videoUrl?: string;
-  /**
-   * Controlled relative Create URL for a new attempt using the owner-validated
-   * durable input asset. Present only on failed|canceled rows with a
-   * UUID-shaped input_asset_id. Never reuses the old job's idempotency key.
-   */
-  newAttemptUrl?: string;
-  errorCode?: string;
-  model?: string;
-  duration?: number;
-  aspectRatio?: string;
-  resolution?: string;
-  creditsOutcome?: string;
-  createdAt: string;
-  updatedAt: string;
-  owned: true;
-  durable: true;
-  adapter: "supabase-private";
-  capabilities: {
-    localRetry: false;
-    localCancel: false;
-    newAttempt: boolean;
-    refreshOnly: boolean;
-  };
-};
 
 export const PRIVATE_RESULTS_BUCKET = "pikbo-private-results";
 export const PRIVATE_RESULT_MAX_BYTES = 64 * 1024 * 1024;
@@ -359,51 +307,31 @@ export async function getPrivateGenerationRecovery(input: {
   };
 }
 
-const LIBRARY_COLUMNS = [
-  "id",
-  "effect_slug",
-  "status",
-  "error_code",
-  "input_asset_id",
-  "output_object_key",
-  "output_content_type",
-  "model_id",
-  "duration_seconds",
-  "aspect_ratio",
-  "resolution",
-  "created_at",
-  "started_at",
-  "completed_at",
-].join(",");
-
 /**
- * Owner-only durable Library rows across open + terminal statuses.
- * Object keys, signed URLs, provider IDs, prompts, hashes, raw input_asset_id,
- * and user identity stay server-side. Callers expose only the controlled
- * /api/downloads/{jobId} gate for deliverable successes, a narrow newAttemptUrl
- * Create handoff when a terminal row has a UUID input binding, and capability
- * flags so the UI never posts durable rows to process-memory Retry/Cancel.
+ * Owner-only durable Library rows. Object keys and provider URLs stay
+ * server-side; callers expose only the controlled /api/downloads/{jobId} gate.
  */
 export async function listPrivateGenerationResults(input: {
   userId: string;
   limit?: number;
-}): Promise<PrivateLibraryJob[]> {
+}): Promise<PrivateGenerationResult[]> {
   const admin = getSupabaseAdmin();
   if (!admin) return [];
   const limit = Math.min(50, Math.max(1, Math.floor(input.limit ?? 50)));
   const { data, error } = await admin
     .from("generation_jobs")
-    .select(LIBRARY_COLUMNS)
+    .select(RESULT_COLUMNS)
     .eq("created_by", input.userId)
-    .in("status", [...PRIVATE_LIBRARY_STATUSES])
+    .eq("status", "succeeded")
+    .not("output_object_key", "is", null)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error || !Array.isArray(data)) return [];
   return data
     .map((row) =>
-      privateLibraryJobFromRow(row as unknown as Record<string, unknown>)
+      resultFromRow(row as unknown as Record<string, unknown>)
     )
-    .filter((row): row is PrivateLibraryJob => Boolean(row));
+    .filter((row): row is PrivateGenerationResult => Boolean(row));
 }
 
 export async function signedPrivateResultUrl(

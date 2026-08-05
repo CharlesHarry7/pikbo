@@ -9,10 +9,7 @@ import {
   sweepTimedOutJobs,
   toPublicJob,
 } from "@/lib/generationJobs";
-import {
-  listPrivateGenerationResults,
-  mergePrivateLibraryWithLocalLedger,
-} from "@/lib/privateGenerationResults";
+import { listPrivateGenerationResults } from "@/lib/privateGenerationResults";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 
 export const runtime = "nodejs";
@@ -26,24 +23,10 @@ const SESSION_JOBS_LIST_LIMIT = 50;
  * current process session before issuing a deliverable.
  */
 function controlledLocalJob(job: ReturnType<typeof toPublicJob>) {
-  const open = job.status === "queued" || job.status === "running";
-  const terminalFailure =
-    job.status === "failed" || job.status === "canceled";
-  const base = {
-    ...job,
-    durable: false as const,
-    adapter: "process-memory" as const,
-    capabilities: {
-      localRetry: terminalFailure,
-      localCancel: open,
-      newAttempt: terminalFailure,
-      refreshOnly: open,
-    },
-  };
-  if (job.demo || !job.videoUrl) return base;
+  if (job.demo || !job.videoUrl) return job;
   const downloadId = (job.requestId || job.id || "").trim();
   return {
-    ...base,
+    ...job,
     videoUrl: downloadId
       ? `/api/downloads/${encodeURIComponent(downloadId)}`
       : undefined,
@@ -157,34 +140,62 @@ export async function GET(req: Request) {
   const session = await ensureSession();
   const authUser = await getAuthUserFromRequest(req);
   const timedOut = sweepTimedOutJobs();
-  // Owner-scoped durable rows across queued|running|succeeded|failed|canceled.
-  // Anonymous / other accounts never receive these (authUser required).
-  const privateJobs = authUser
+  const privateResults = authUser
     ? await listPrivateGenerationResults({
         userId: authUser.id,
         limit: SESSION_JOBS_LIST_LIMIT,
       })
     : [];
+  const privateJobs = privateResults.map((result) => ({
+    id: result.jobId,
+    status: "succeeded",
+    effect: result.effect,
+    demo: false,
+    watermark: false,
+    downloadAllowed: true,
+    // Never return a storage object key or signed URL in a Library listing.
+    videoUrl: `/api/downloads/${encodeURIComponent(result.jobId)}`,
+    creditsOutcome: "10 used",
+    requestId: result.jobId,
+    model: result.model,
+    duration: result.duration,
+    aspectRatio: result.aspectRatio,
+    resolution: result.resolution,
+    createdAt: result.createdAt,
+    updatedAt: result.createdAt,
+    owned: true,
+  }));
+  const privateIds = new Set(privateJobs.map((job) => job.id));
   // The local store is capped at 200 rows. Read all of it so a current-process
   // mirror of a durable result can be de-duplicated before counts and listing.
   const localJobs = listJobsForSession(session.id, 200).map((job) =>
     controlledLocalJob(toPublicJob(job, session.id))
   );
+  const mirroredPrivateIds = new Set(
+    localJobs
+      .flatMap((job) => [job.id, job.requestId])
+      .filter((id): id is string => Boolean(id && privateIds.has(id)))
+  );
+  const allLocalJobs = localJobs.filter(
+    (job) =>
+      !privateIds.has(job.id) &&
+      !(job.requestId && privateIds.has(job.requestId))
+  );
+  const jobs = [...privateJobs, ...allLocalJobs]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, SESSION_JOBS_LIST_LIMIT);
+  // Full-session histogram (HEAD parity) — not only the newest list page.
   const full = countJobsForSession(session.id);
-  const merged = mergePrivateLibraryWithLocalLedger({
-    durableJobs: privateJobs,
-    localJobs,
-    localCounts: {
-      queued: full.queued,
-      running: full.running,
-      succeeded: full.succeeded,
-      failed: full.failed,
-      canceled: full.canceled,
-      open: full.open,
-      total: full.total,
-    },
-    listLimit: SESSION_JOBS_LIST_LIMIT,
-  });
+  const durableSucceeded = privateJobs.filter(
+    (job) => !mirroredPrivateIds.has(job.id)
+  ).length;
+  const byStatus = {
+    queued: full.queued,
+    running: full.running,
+    succeeded: full.succeeded + durableSucceeded,
+    failed: full.failed,
+    canceled: full.canceled,
+  };
   return NextResponse.json({
     ok: true,
     mode:
@@ -202,15 +213,15 @@ export async function GET(req: Request) {
     touchedOpen: 0,
     /** Newest-first page size for `jobs` (histogram may count more). */
     listLimit: SESSION_JOBS_LIST_LIMIT,
-    listed: merged.jobs.length,
-    /** Full session + durable-only job count (jobs[] may be a newest page). */
-    total: merged.total,
-    /** Full histogram including durable open/failed/canceled — HEAD parity. */
-    byStatus: merged.byStatus,
-    open: merged.open,
+    listed: jobs.length,
+    /** Full session job count (jobs[] may be a newest page only). */
+    total: full.total + durableSucceeded,
+    /** Full session-scoped histogram (Library recovery UI) — HEAD parity. */
+    byStatus,
+    open: full.open,
     note:
       privateJobs.length > 0
-        ? "Owner-gated Supabase durable Moment statuses plus the current process ledger. Queued/running/failed/canceled/succeeded private jobs survive refresh and cross-device sign-in; process-memory Retry/Cancel apply only to local-adapter rows."
+        ? "Owner-gated Supabase private results plus the current process ledger. Private results survive refresh and cross-device sign-in; open local jobs remain process-scoped."
         : "In-process ledger for soft-launch recovery. Not multi-node durable. Use POST /api/generate for work. Queued/running jobs fail at fixed deadlineAt; GET is read-only. byStatus/open/total are full-session.",
     compatibility: {
       syncGenerate: "/api/generate",
@@ -218,7 +229,7 @@ export async function GET(req: Request) {
       download: "/api/downloads/[id]",
     },
     session: publicCachedSession(session),
-    jobs: merged.jobs,
+    jobs,
   });
 }
 
