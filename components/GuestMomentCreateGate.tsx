@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { canUsePrivateLaunch, fetchMe, type MeResponse } from "@/lib/meClient";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
@@ -21,11 +25,20 @@ function guestSignInHref() {
   )}`;
 }
 
-function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
+function GuestMomentPreview({
+  signedIn = false,
+  sessionBoot,
+  onRetrySession,
+}: {
+  signedIn?: boolean;
+  sessionBoot: "checking" | "ready" | "timeout";
+  onRetrySession: () => void;
+}) {
   return (
     <section
       className="relative isolate min-h-[calc(100vh-56px)] overflow-hidden bg-[var(--void)] px-4 pb-10 pt-6 text-[var(--cream)] sm:px-7 lg:px-10 lg:py-7"
       data-guest-create-first="street-power-up"
+      data-studio-open-state={sessionBoot}
     >
       <div className="absolute inset-0 -z-20 bg-[var(--void)]" aria-hidden />
       <div
@@ -71,6 +84,7 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
                 webm={STREET_POWER_UP_SAMPLE.webm}
                 eager
                 showControls
+                errorRetry
                 label="Street Power-Up, the cached Beatbot sample, not your toy"
                 className="h-full w-full object-cover"
               />
@@ -115,6 +129,26 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
               The invited path is fixed at 9:16 · 5s · 720p. Your finished
               result returns to your account Library.
             </p>
+            {sessionBoot === "timeout" ? (
+              <div
+                className="mt-4 rounded-2xl border border-[#FF6B6B]/35 bg-[#FF6B6B]/10 px-4 py-3"
+                data-studio-open-error="session-timeout"
+                role="alert"
+              >
+                <p className="text-[11px] font-semibold leading-5 text-white/85">
+                  Could not verify private access in time. Lab preview still
+                  works — retry the check or sign in.
+                </p>
+                <button
+                  type="button"
+                  onClick={onRetrySession}
+                  data-studio-open-retry
+                  className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[#c8ff3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF]"
+                >
+                  Retry access check
+                </button>
+              </div>
+            ) : null}
             <div className="mt-5 grid gap-3">
               {!signedIn && (
                 <Link
@@ -159,25 +193,45 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
 export function GuestMomentCreateGate({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [sessionResolved, setSessionResolved] = useState(false);
+  const [sessionBoot, setSessionBoot] = useState<"checking" | "ready" | "timeout">(
+    "checking"
+  );
+  const [bootNonce, setBootNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    void fetchMe()
-      .then((next) => {
-        if (cancelled) return;
-        setMe(next);
-        setSessionResolved(true);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setMe(null);
-        setSessionResolved(true);
-      });
+    // Defer so setState is not synchronous inside the effect body.
+    const t = window.setTimeout(() => {
+      void (async () => {
+        setSessionResolved(false);
+        setSessionBoot("checking");
+        try {
+          const next = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
+          if (cancelled) return;
+          setMe(next);
+          setSessionResolved(true);
+          setSessionBoot("ready");
+        } catch (err) {
+          if (cancelled) return;
+          // Explicit ClientTimeoutError from 8s /api/me abort — Retry CTA, Lab still up.
+          setMe(null);
+          setSessionResolved(true);
+          setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+        }
+      })();
+    }, 0);
     return () => {
       cancelled = true;
+      window.clearTimeout(t);
     };
-  }, []);
+  }, [bootNonce]);
 
   if (sessionResolved && canUsePrivateLaunch(me)) return children;
-  return <GuestMomentPreview signedIn={sessionResolved && me?.signedIn === true} />;
+  return (
+    <GuestMomentPreview
+      signedIn={sessionResolved && me?.signedIn === true}
+      sessionBoot={sessionBoot}
+      onRetrySession={() => setBootNonce((n) => n + 1)}
+    />
+  );
 }

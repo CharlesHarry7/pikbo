@@ -24,6 +24,10 @@ import {
 } from "@/lib/meClient";
 import { isValidImageDataUrl } from "@/lib/providerError";
 import { SAMPLE_TOYS, sampleToDataUrl } from "@/lib/samples";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { PRESETS } from "@/lib/presets";
 import { viralName } from "@/lib/viralNames";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
@@ -299,6 +303,10 @@ export function CreateStudio({
   const [watermark, setWatermark] = useState(true);
   const [session, setSession] = useState<MeResponse | null>(null);
   const [sessionResolved, setSessionResolved] = useState(false);
+  /** Finite open state — never leave Studio on permanent "Opening…". */
+  const [sessionBoot, setSessionBoot] = useState<
+    "checking" | "ready" | "timeout"
+  >("checking");
   const privateUploadEnabled = canUsePrivateLaunch(session);
   const fixedMomentNextPath = initialSource
     ? `${MOMENT_CREATE_HREF}&source=${encodeURIComponent(initialSource)}`
@@ -344,6 +352,8 @@ export function CreateStudio({
   /** Last failed live job restored credits (PRD §5 / W5 trust). */
   const [lastRefunded, setLastRefunded] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
+  const [lastSampleId, setLastSampleId] = useState<string | null>(null);
+  const [sampleLoadError, setSampleLoadError] = useState<string | null>(null);
   /** Successful retries/variants remain selectable; a new run never overwrites one. */
   const [versions, setVersions] = useState<ResultVersion[]>([]);
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
@@ -471,8 +481,10 @@ export function CreateStudio({
   /** One-tap joy path: PIKBO Lab prototype still + matching recipe. Rights = Lab sample. */
   async function loadSampleToy(sampleId: string, autoGenerate = false) {
     const s = SAMPLE_TOYS.find((x) => x.id === sampleId) ?? SAMPLE_TOYS[0];
+    setLastSampleId(s.id);
     setSampleLoading(true);
     setError(null);
+    setSampleLoadError(null);
     try {
       const data = await sampleToDataUrl(s.path);
       await adoptImage(data, { labSample: true });
@@ -490,12 +502,17 @@ export function CreateStudio({
       } else {
         toast("PIKBO Lab prototype still ready — tap Generate when you want the clip");
       }
-    } catch {
-      setError(
-        privateUploadEnabled
+    } catch (err) {
+      const timedOut = isClientTimeoutError(err);
+      const message = timedOut
+        ? privateUploadEnabled
+          ? "Lab sample timed out — retry or upload your own photo"
+          : "Lab sample timed out — tap Retry or try another cached sample"
+        : privateUploadEnabled
           ? "Could not load sample photo — try another or upload your own"
-          : "Could not load that Lab sample — try another cached sample"
-      );
+          : "Could not load that Lab sample — try another cached sample";
+      setError(message);
+      setSampleLoadError(message);
     } finally {
       setSampleLoading(false);
     }
@@ -569,15 +586,23 @@ export function CreateStudio({
   }
 
   const refreshSession = useCallback(async () => {
-    const data = await fetchMe();
-    setSessionResolved(true);
-    if (!data) return;
-    setSession(data);
-    setWatermark(data.watermark);
-    // Free path: Mini (cheapest wool) + 480p
-    if (data.plan === "free" || data.watermark) {
-      setModelId("seedance-mini");
-      setResolution("480p");
+    setSessionBoot("checking");
+    try {
+      const data = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
+      setSessionResolved(true);
+      setSessionBoot("ready");
+      if (!data) return;
+      setSession(data);
+      setWatermark(data.watermark);
+      // Free path: Mini (cheapest wool) + 480p
+      if (data.plan === "free" || data.watermark) {
+        setModelId("seedance-mini");
+        setResolution("480p");
+      }
+    } catch (err) {
+      // 8s open contract: honest timeout + Retry, never permanent "Opening studio…"
+      setSessionResolved(true);
+      setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
     }
   }, []);
 
@@ -2167,6 +2192,28 @@ export function CreateStudio({
             </div>
           )}
 
+          {sampleLoadError && !sampleLoading ? (
+            <div
+              className="rounded-xl border border-[#FF6B6B]/40 bg-[#FF6B6B]/10 px-3 py-2.5"
+              data-lab-sample-error="banner"
+              role="alert"
+            >
+              <p className="text-[11px] font-semibold leading-5 text-white/90">
+                {sampleLoadError}
+              </p>
+              <button
+                type="button"
+                data-lab-sample-retry
+                onClick={() =>
+                  void loadSampleToy(lastSampleId || initialSample || "scout", true)
+                }
+                className="mt-2 inline-flex min-h-9 items-center rounded-full bg-white px-3 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[var(--mint)]"
+              >
+                Retry Lab sample
+              </button>
+            </div>
+          ) : null}
+
           {/* Step 1 — public Lab-only preview or invited private upload */}
           {privateUploadEnabled ? (
             <div id="create-photo-step" data-first-run-step="upload">
@@ -2247,15 +2294,22 @@ export function CreateStudio({
               data-public-single-preview="lab-only"
               className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-4"
             >
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-[var(--mint)]">
+              <p
+                className="text-xs font-black uppercase tracking-[0.12em] text-[var(--mint)]"
+                data-studio-open-state={sessionBoot}
+              >
                 {sessionResolved
-                  ? "Public Lab preview · no upload"
-                  : "Checking private-beta access…"}
+                  ? sessionBoot === "timeout"
+                    ? "Lab preview · access check timed out"
+                    : "Public Lab preview · no upload"
+                  : "Opening studio…"}
               </p>
               <p className="mt-2 text-sm font-bold text-white">
                 {sessionResolved
-                  ? "Choose a Pikbo Lab sample below."
-                  : "Real product-photo controls stay hidden until access is verified."}
+                  ? sessionBoot === "timeout"
+                    ? "Lab samples still work. Retry the access check or continue with a cached preview."
+                    : "Choose a Pikbo Lab sample below."
+                  : "Verifying private-beta access — Lab samples stay available if this fails."}
               </p>
               <p className="mt-1 text-[11px] leading-relaxed text-[var(--fg-muted)]">
                 Public preview does not accept, register, or process your
@@ -2264,6 +2318,16 @@ export function CreateStudio({
               </p>
               {sessionResolved ? (
                 <div className="mt-3 flex flex-wrap gap-2">
+                  {sessionBoot === "timeout" ? (
+                    <button
+                      type="button"
+                      onClick={() => void refreshSession()}
+                      data-studio-open-retry
+                      className="inline-flex min-h-10 items-center rounded-full border border-[#FF6B6B]/50 bg-[#FF6B6B]/15 px-4 text-xs font-black text-white transition hover:bg-[#FF6B6B]/25"
+                    >
+                      Retry access check
+                    </button>
+                  ) : null}
                   {!fixedMomentContract ? (
                     <Link
                       href={PRIVATE_BETA_MAILTO}
@@ -2375,10 +2439,31 @@ export function CreateStudio({
                 ))}
               </div>
               {sampleLoading && (
-                <p className="mt-2 text-[11px] text-[var(--mint)]">
+                <p className="mt-2 text-[11px] text-[var(--mint)]" data-lab-sample-loading>
                   Loading sample…
                 </p>
               )}
+              {sampleLoadError && !sampleLoading ? (
+                <div
+                  className="mt-2 rounded-xl border border-[#FF6B6B]/40 bg-[#FF6B6B]/10 px-3 py-2"
+                  data-lab-sample-error
+                  role="alert"
+                >
+                  <p className="text-[11px] font-semibold leading-5 text-white/90">
+                    {sampleLoadError}
+                  </p>
+                  <button
+                    type="button"
+                    data-lab-sample-retry
+                    onClick={() =>
+                      void loadSampleToy(lastSampleId || "scout", true)
+                    }
+                    className="mt-2 inline-flex min-h-9 items-center rounded-full bg-white px-3 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[var(--mint)]"
+                  >
+                    Retry Lab sample
+                  </button>
+                </div>
+              ) : null}
             </div>
           )}
 
