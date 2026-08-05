@@ -2576,7 +2576,11 @@ assert.match(
 );
 assert.match(batchStudio, /data-floating-generate=["']batch-sticky["']/);
 assert.doesNotMatch(batchStudio, /fixed inset-x-0 bottom-0/);
-assert.match(appShell, /!sellerPackCreate\s*\?\s*<nav/);
+assert.match(
+  appShell,
+  /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/
+);
+assert.match(appShell, /!hideMobileNav\s*\?\s*\(\s*\n\s*<nav/);
 assert.match(batchStudio, /api\/downloads/);
 
 // Landing tool Free-download honesty (parity with Create/Library)

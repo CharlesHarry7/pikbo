@@ -72,6 +72,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const momentSurface = home || momentCreate;
   const lightShell = momentSurface || sellerPackCreate;
   const resultShell = momentSurface;
+  // Home + Moment Create (?moment=) hide via resultShell; real MOMENT_CREATE_HREF
+  // is fixedMomentEntry (mode=moment&effect=street-power-up). Seller Pack also
+  // hides so sticky primaries are not parked over a ghost tab gap.
+  const hideMobileNav =
+    resultShell || fixedMomentEntry || sellerPackCreate;
   const hideFooter =
     home ||
     create ||
@@ -328,7 +333,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       {/* Sticky Generate→360 on browse surfaces (explore/library/pricing/models/flow…).
           Self-gates via showBar; clearance tokens from AIT-71. */}
       <MobileGenerateBar />
-      {!resultShell && !sellerPackCreate ? <nav
+      {!hideMobileNav ? (
+      <nav
         className={cn(
           "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
           home
@@ -336,6 +342,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             : "sticky bottom-0 border-white/10 bg-[rgba(10,10,15,0.96)]"
         )}
         aria-label="Mobile navigation"
+        data-mobile-nav="default"
       >
         {MOBILE_NAV.map((item) => {
           const on = active(path, item.href);
@@ -368,7 +375,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             </Link>
           );
         })}
-      </nav> : null}
+      </nav>
+      ) : null}
     </div>
   );
 }

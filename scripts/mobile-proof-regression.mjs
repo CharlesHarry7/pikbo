@@ -95,8 +95,13 @@ assert.doesNotMatch(
 );
 assert.match(
   shell,
-  /\{!resultShell && !sellerPackCreate \? <nav/,
-  "Seller Pack Create must not stack the five-item mobile nav under its fixed primary action"
+  /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/,
+  "mobile nav must hide on resultShell (home/?moment=), fixed Moment entry, and Seller Pack"
+);
+assert.match(
+  shell,
+  /\{!hideMobileNav\s*\?\s*\(\s*\n\s*<nav/,
+  "fixed Moment and Seller Pack Create must not stack the five-item mobile nav under their primary action"
 );
 assert.doesNotMatch(
   zh,
@@ -118,6 +123,16 @@ assert.match(
 // AIT-40: Studio open Lab path remains mobile-safe (sticky CTA + finite open)
 const studio = source("components/CreateStudio.tsx");
 const gate = source("components/GuestMomentCreateGate.tsx");
+assert.match(
+  studio,
+  /fixedMomentContract\s*\?\s*["'][^"']*bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "fixed Moment Create sticky must sit on --floating-cta-safe-bottom (no ghost tab gap)"
+);
+assert.match(
+  studio,
+  /data-create-sticky-clearance=\{\s*fixedMomentContract\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+  "Create sticky clearance branch must be smoke-visible"
+);
 assert.match(
   studio,
   /data-create-sticky="mobile"/,

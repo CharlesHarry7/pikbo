@@ -292,12 +292,6 @@ const batchStudioSrc = read("components/BatchStudio.tsx");
 
 const tabSurfaceStickies = [
   [
-    "CreateStudio sticky",
-    createStudioSrc,
-    /data-floating-generate=["']create-sticky["']/,
-    /data-create-sticky=["']mobile["']/,
-  ],
-  [
     "cinema sticky",
     cinemaPageSrc,
     /data-floating-generate=["']cinema["']/,
@@ -343,6 +337,65 @@ for (const [label, src, marker, secondary] of tabSurfaceStickies) {
     `${label} must not hardcode calc(4.75rem…) bottom offset`
   );
 }
+
+// 8. AIT-141 — CreateStudio sticky: nav-less Moment vs tab-sharing generic Create
+assert.match(
+  createStudioSrc,
+  /data-floating-generate=["']create-sticky["']/,
+  "CreateStudio sticky must carry data-floating-generate marker"
+);
+assert.match(
+  createStudioSrc,
+  /data-create-sticky=["']mobile["']/,
+  "CreateStudio sticky must keep data-create-sticky=mobile"
+);
+assert.match(
+  createStudioSrc,
+  /fixedMomentContract\s*\?\s*["'][^"']*bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "fixed Moment CreateStudio sticky must use --floating-cta-safe-bottom (no tab nav)"
+);
+assert.match(
+  createStudioSrc,
+  /:\s*["'][^"']*bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "non-moment CreateStudio sticky must still clear tab nav via --mobile-nav-clearance"
+);
+assert.match(
+  createStudioSrc,
+  /data-create-sticky-clearance=\{\s*fixedMomentContract\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+  "CreateStudio sticky must expose clearance branch for smoke (safe-bottom | mobile-nav)"
+);
+assert.match(
+  createStudioSrc,
+  /z-\[var\(--floating-generate-z\)\]/,
+  "CreateStudio sticky must use --floating-generate-z"
+);
+assert.doesNotMatch(
+  createStudioSrc,
+  /bottom-\[4\.75rem\]/,
+  "CreateStudio sticky must not hardcode bare bottom-[4.75rem]"
+);
+
+// AppShell must hide mobile tab on fixed Moment entry (pairs with safe-bottom sticky)
+assert.match(
+  appShellSrc,
+  /const fixedMomentEntry\s*=\s*create\s*&&\s*searchParams\.get\(["']mode["']\)\s*===\s*["']moment["']\s*&&\s*searchParams\.get\(["']effect["']\)\s*===\s*["']street-power-up["']/,
+  "AppShell fixedMomentEntry must match real MOMENT_CREATE_HREF"
+);
+assert.match(
+  appShellSrc,
+  /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/,
+  "AppShell must hide tab nav on resultShell, fixed Moment entry, and Seller Pack"
+);
+assert.match(
+  appShellSrc,
+  /\{!hideMobileNav\s*\?\s*\(\s*\n\s*<nav/,
+  "mobile tab nav must gate on hideMobileNav"
+);
+assert.match(
+  appShellSrc,
+  /data-mobile-nav=["']default["']/,
+  "AppShell tab nav must keep data-mobile-nav=default marker"
+);
 
 // Repo ban: no bare 4.75rem sticky bottom left on tool / generate chrome surfaces
 const residualHardcodedBottom = [
