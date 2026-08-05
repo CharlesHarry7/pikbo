@@ -93,4 +93,23 @@ assert.match(
   "autoplay budget must remain one mobile / two desktop"
 );
 
+// AIT-40: Studio open Lab path remains mobile-safe (sticky CTA + finite open)
+const studio = source("components/CreateStudio.tsx");
+const gate = source("components/GuestMomentCreateGate.tsx");
+assert.match(
+  studio,
+  /data-create-sticky="mobile"/,
+  "Create mobile sticky bar must remain for open/Lab CTA"
+);
+assert.match(
+  studio,
+  /data-lab-sample-retry|data-studio-open-retry/,
+  "Create must expose retry after Lab/open failure on mobile-capable UI"
+);
+assert.match(
+  gate,
+  /errorRetry/,
+  "Guest Create Lab video must enable errorRetry for honest mobile recovery"
+);
+
 console.log("mobile proof regression: source contracts PASS");
