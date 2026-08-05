@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import {
+  applyMarketingCors,
+  marketingCorsPreflight,
+} from "@/lib/cors";
 import { supabaseEnsurePersonalAccount } from "@/lib/durableCredits/supabaseStore";
 import { takeToken } from "@/lib/rateLimit";
 import { clientIp } from "@/lib/requestMeta";
@@ -20,6 +24,10 @@ import {
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 
 export const runtime = "nodejs";
+
+export async function OPTIONS(req: Request) {
+  return marketingCorsPreflight(req);
+}
 
 type StripeRecord = Record<string, unknown>;
 
@@ -48,8 +56,13 @@ function lineItemPriceId(session: StripeRecord): string | null {
  * The browser return is verification-only. It cannot mint an entitlement or
  * reset credits. A signed Stripe webhook must have already committed the
  * subscription and invoice grant in Postgres.
+ * CORS: allowed marketing origins may call this cross-origin.
  */
 export async function POST(req: Request) {
+  return applyMarketingCors(req, await postConfirm(req));
+}
+
+async function postConfirm(req: Request): Promise<NextResponse> {
   let body: { session_id?: string } = {};
   try {
     body = await req.json();

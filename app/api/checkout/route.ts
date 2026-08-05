@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import {
+  applyMarketingCors,
+  marketingCorsPreflight,
+} from "@/lib/cors";
+import {
   entitlementFixtureEnabled,
   upsertEntitlement,
 } from "@/lib/entitlements";
@@ -41,13 +45,23 @@ import {
 
 export const runtime = "nodejs";
 
+/** Browser preflight for the static marketing site → Stripe checkout. */
+export async function OPTIONS(req: Request) {
+  return marketingCorsPreflight(req);
+}
+
 /**
  * Start the single Founding Studio Stripe Checkout session.
  * Soft launch: requires NEXT_PUBLIC_PAYMENTS_ENABLED=1 (or PAYMENTS_ENABLED=1).
  * Live secrets require both production approval and the rehearsed
  * refund/dispute guard. Dev upgrade remains non-production fixture-only.
+ * CORS: allowed marketing origins (see lib/cors.ts) may call this cross-origin.
  */
 export async function POST(req: Request) {
+  return applyMarketingCors(req, await postCheckout(req));
+}
+
+async function postCheckout(req: Request): Promise<NextResponse> {
   let body: { plan?: string; dev?: boolean } = {};
   try {
     body = await req.json();
