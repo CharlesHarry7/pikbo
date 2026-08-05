@@ -113,6 +113,7 @@ assert(
   create.includes("<CreateStudio") &&
     create.includes('initialEffect="street-power-up"') &&
     create.includes("fixedMomentContract") &&
+    create.includes("<CreateSeoFooter") &&
     !create.includes("BatchStudio") &&
     !create.includes("PrivateSellerPackGate") &&
     !create.includes("initialRecoverPackRunId") &&
@@ -122,6 +123,13 @@ assert(
     !create.includes("Launch Pack — 12 recipes") &&
     !batch.includes("Launch Pack — 12 recipes"),
   "the fixed three-child Pack engine must stay private while Create remains one Moment"
+);
+const createSeoFooter = read("components/CreateSeoFooter.tsx");
+assert(
+  createSeoFooter.includes('data-create-seo-footer="collapsed-default"') &&
+    createSeoFooter.includes("<details") &&
+    createSeoFooter.includes('data-create-seo-primary="studio"'),
+  "Create SEO footer must default collapsed so Studio path is obvious on mobile"
 );
 assert(
   library.includes("fetchMe()") &&
