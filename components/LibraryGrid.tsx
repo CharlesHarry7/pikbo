@@ -7,19 +7,7 @@ import { interpretDownloadHead } from "@/lib/createTrust";
 import { downloadVideoFile, privateDownloadHeaders } from "@/lib/history";
 import { fetchMe, type MeResponse } from "@/lib/meClient";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
-import {
-  acceptControlledLibraryNewAttemptUrl,
-  libraryDurableTerminalFailureCopy,
-  libraryNewAttemptButtonLabel,
-} from "@/lib/privateGenerationResultsPure.mjs";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
-
-type JobCapabilities = {
-  localRetry?: boolean;
-  localCancel?: boolean;
-  newAttempt?: boolean;
-  refreshOnly?: boolean;
-};
 
 type GenerationJob = {
   id: string;
@@ -30,16 +18,11 @@ type GenerationJob = {
   owned?: boolean;
   downloadAllowed?: boolean;
   videoUrl?: string;
-  /** Server-controlled relative Create URL for durable same-photo new attempt. */
-  newAttemptUrl?: string;
   errorCode?: string;
   error?: string;
   createdAt?: string;
   duration?: number;
   aspectRatio?: string;
-  durable?: boolean;
-  adapter?: string;
-  capabilities?: JobCapabilities;
 };
 
 type GenerationsResponse = {
@@ -56,51 +39,6 @@ function isOpen(status: string): boolean {
 
 function isRetryable(status: string): boolean {
   return status === "failed" || status === "canceled";
-}
-
-/** Process-memory Retry only — durable rows never call /api/generations/:id/retry. */
-function canLocalRetry(job: GenerationJob): boolean {
-  if (!isRetryable(job.status)) return false;
-  if (job.durable === true || job.adapter === "supabase-private") return false;
-  if (job.capabilities?.localRetry === false) return false;
-  return job.capabilities?.localRetry === true || job.capabilities == null;
-}
-
-/** Process-memory Cancel only — durable open rows stay refresh/poll-only. */
-function canLocalCancel(job: GenerationJob): boolean {
-  if (!isOpen(job.status)) return false;
-  if (job.durable === true || job.adapter === "supabase-private") return false;
-  if (job.capabilities?.localCancel === false) return false;
-  return job.capabilities?.localCancel === true || job.capabilities == null;
-}
-
-/** Durable terminal failure: honest Create/new-attempt, not process-memory Retry. */
-function canNewAttempt(job: GenerationJob): boolean {
-  if (!isRetryable(job.status)) return false;
-  if (canLocalRetry(job)) return false;
-  return (
-    job.capabilities?.newAttempt === true ||
-    job.durable === true ||
-    job.adapter === "supabase-private"
-  );
-}
-
-/**
- * Prefer the server-provided controlled Create link (asset-bound new attempt)
- * only after the strict client accept gate. Invalid/missing values fall back
- * to the honest generic Create path. Never invent client-side asset ids or
- * reuse old job idempotency keys.
- */
-function acceptedSamePhotoHandoff(job: GenerationJob): string | undefined {
-  return acceptControlledLibraryNewAttemptUrl(job.newAttemptUrl);
-}
-
-function newAttemptHref(job: GenerationJob): string {
-  return acceptedSamePhotoHandoff(job) || CREATE_MOMENT_HREF;
-}
-
-function newAttemptLabel(job: GenerationJob): string {
-  return libraryNewAttemptButtonLabel(Boolean(acceptedSamePhotoHandoff(job)));
 }
 
 function visibleAccountJob(job: GenerationJob): boolean {
@@ -166,15 +104,6 @@ function effectName(effect: string): string {
 }
 
 function friendlyFailure(job: GenerationJob): string {
-  const durable = job.durable === true || job.adapter === "supabase-private";
-  if (durable) {
-    // Copy branches on the same client-accepted handoff URL as the CTA.
-    return libraryDurableTerminalFailureCopy({
-      status: job.status,
-      errorCode: job.errorCode,
-      samePhotoHandoff: Boolean(acceptedSamePhotoHandoff(job)),
-    });
-  }
   if (job.errorCode === "CONTENT_POLICY") {
     return "This image could not be processed. Try a clear product photo you own.";
   }
@@ -529,18 +458,6 @@ export function LibraryGrid() {
                     </p>
                   ) : null}
 
-                  {isOpen(job.status) &&
-                  (job.capabilities?.refreshOnly ||
-                    job.durable ||
-                    job.adapter === "supabase-private") &&
-                  !canLocalCancel(job) ? (
-                    <p className="mt-3 text-xs leading-5 text-sky-100/70">
-                      Still generating. Refresh keeps this durable status in
-                      sync — Cancel is only available for local in-progress
-                      jobs.
-                    </p>
-                  ) : null}
-
                   <div className="mt-4 flex flex-wrap gap-2">
                     {job.status === "succeeded" ? (
                       <button
@@ -551,7 +468,7 @@ export function LibraryGrid() {
                         Download video
                       </button>
                     ) : null}
-                    {isRetryable(job.status) && canLocalRetry(job) ? (
+                    {isRetryable(job.status) ? (
                       <button
                         type="button"
                         onClick={() => void retry(job)}
@@ -561,19 +478,7 @@ export function LibraryGrid() {
                         {forkingId === job.id ? "Preparing…" : "Retry Moment"}
                       </button>
                     ) : null}
-                    {canNewAttempt(job) ? (
-                      <Link
-                        href={newAttemptHref(job)}
-                        className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
-                        data-library-action="new-attempt"
-                        data-library-new-attempt={
-                          acceptedSamePhotoHandoff(job) ? "same-photo" : "generic"
-                        }
-                      >
-                        {newAttemptLabel(job)}
-                      </Link>
-                    ) : null}
-                    {isOpen(job.status) && canLocalCancel(job) ? (
+                    {isOpen(job.status) ? (
                       <button
                         type="button"
                         onClick={() => void cancel(job)}
@@ -583,7 +488,7 @@ export function LibraryGrid() {
                         {cancellingId === job.id ? "Canceling…" : "Cancel"}
                       </button>
                     ) : null}
-                    {!isOpen(job.status) && !canNewAttempt(job) ? (
+                    {!isOpen(job.status) ? (
                       <Link
                         href={remixHref}
                         className="btn btn-ghost min-h-11 flex-1 !px-4 !py-2 text-center text-xs"

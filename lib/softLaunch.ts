@@ -13,13 +13,14 @@ export const MOMENT_CREATE_HREF =
 /** Seller-first frontdoor: one clear path from promise to private assets. */
 export const PRIMARY_NAV = [
   { href: "/", label: "Home" },
+  { href: "/effects", label: "Effects" },
+  { href: "/community", label: "Community" },
+  { href: "/explore", label: "Explore" },
   {
     href: `${MOMENT_CREATE_HREF}&source=primary-nav`,
     label: "Create",
   },
-  { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/profile", label: "Account" },
 ] as const;
 
 export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
@@ -27,13 +28,13 @@ export const PRIMARY_NAV_HREFS = PRIMARY_NAV.map((item) => item.href);
 /** Mobile mirrors the same five product doors; secondary routes stay hidden. */
 export const MOBILE_NAV = [
   { href: "/", label: "Home" },
+  { href: "/effects", label: "Effects" },
+  { href: "/community", label: "Community" },
   {
     href: `${MOMENT_CREATE_HREF}&source=primary-nav`,
     label: "Create",
   },
-  { href: "/library", label: "Library" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/profile", label: "Account" },
 ] as const;
 
 export const MOBILE_NAV_HREFS = MOBILE_NAV.map((item) => item.href);

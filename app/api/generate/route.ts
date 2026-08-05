@@ -55,7 +55,7 @@ import type {
 } from "@/lib/contracts";
 import {
   releaseStrictLiveGeneration,
-  reserveStrictLiveGenerationWithAsset,
+  reserveStrictLiveGeneration,
   settleStrictLiveGeneration,
   type StrictLiveReservation,
 } from "@/lib/durableCredits/liveReservation";
@@ -999,31 +999,10 @@ export async function POST(req: Request) {
         };
       }
     } else {
-      // Direct Moment: durable reserve must bind the already-verified owner
-      // photo before invokeReservedProvider can run. Flux stills keep the
-      // no-asset reserveStrictLiveGeneration path on /api/image.
-      if (
-        typeof assetId !== "string" ||
-        !PRIVATE_ASSET_ID_RE.test(assetId) ||
-        !directPrivateInput
-      ) {
-        await releaseProviderSpendIfHeld();
-        return err(
-          {
-            error:
-              "Your private toy photo is missing or not ready. Upload it again before generating.",
-            code: "ASSET_NOT_FOUND",
-            session: publicSession(session),
-          },
-          404
-        );
-      }
-      reserved = await reserveStrictLiveGenerationWithAsset({
+      reserved = await reserveStrictLiveGeneration({
         userId: authUser.id,
         idempotencyKey,
         effectSlug: preset.slug,
-        inputAssetId: assetId,
-        rightsConfirmed: true,
       });
     }
     if (!reserved.ok) {
@@ -1031,21 +1010,14 @@ export async function POST(req: Request) {
       const status =
         reserved.code === "INSUFFICIENT_CREDITS"
           ? 402
-          : reserved.code === "JOB_IN_FLIGHT" ||
-              reserved.code === "IDEMPOTENCY_CONFLICT" ||
-              reserved.code === "LEGACY_JOB_INPUT_UNBOUND"
+          : reserved.code === "JOB_IN_FLIGHT"
             ? 409
-          : reserved.code === "INPUT_ASSET_NOT_FOUND" ||
-              reserved.code === "INPUT_ASSET_NOT_READY" ||
-              reserved.code === "INPUT_ASSET_REQUIRED"
-            ? 404
           : reserved.code === "LIVE_ACCESS_REQUIRED" ||
               reserved.code === "PACK_NOT_FOUND" ||
               reserved.code === "JOB_BINDING_MISMATCH" ||
               reserved.code === "CHILD_ALREADY_SUCCEEDED" ||
               reserved.code === "CHILD_REQUIRES_RETRY" ||
-              reserved.code === "PACK_CHILD_CONTRACT_MISMATCH" ||
-              reserved.code === "RIGHTS_CONFIRMATION_REQUIRED"
+              reserved.code === "PACK_CHILD_CONTRACT_MISMATCH"
             ? 403
             : 503;
       const code = (
@@ -1055,19 +1027,11 @@ export async function POST(req: Request) {
         reserved.code === "JOB_IN_FLIGHT" ||
         reserved.code === "RESERVATION_FAILED"
           ? reserved.code
-          : reserved.code === "INPUT_ASSET_NOT_FOUND" ||
-              reserved.code === "INPUT_ASSET_NOT_READY" ||
-              reserved.code === "INPUT_ASSET_REQUIRED"
-            ? "ASSET_NOT_FOUND"
-          : reserved.code === "RIGHTS_CONFIRMATION_REQUIRED"
-            ? "RIGHTS_REQUIRED"
           : reserved.code === "PACK_NOT_FOUND" ||
               reserved.code === "JOB_BINDING_MISMATCH" ||
               reserved.code === "CHILD_ALREADY_SUCCEEDED" ||
               reserved.code === "CHILD_REQUIRES_RETRY" ||
-              reserved.code === "PACK_CHILD_CONTRACT_MISMATCH" ||
-              reserved.code === "IDEMPOTENCY_CONFLICT" ||
-              reserved.code === "LEGACY_JOB_INPUT_UNBOUND"
+              reserved.code === "PACK_CHILD_CONTRACT_MISMATCH"
             ? "INVALID_REQUEST"
             : "RESERVATION_FAILED"
       ) as GenerateErrorBody["code"];

@@ -192,14 +192,14 @@ assert.match(pe, /export function classifyProviderError/);
 const genRoute = fs.readFileSync(join(root, "app/api/generate/route.ts"), "utf8");
 const accessIdx = genRoute.indexOf("liveGenerationAccess({");
 const demoIdx = genRoute.indexOf('if (access.kind === "cached")');
-const reserveIdx = genRoute.indexOf("reserveStrictLiveGenerationWithAsset({");
+const reserveIdx = genRoute.indexOf("reserveStrictLiveGeneration({");
 const providerIdx = genRoute.indexOf("invokeReservedProvider(");
 assert.ok(
   accessIdx > 0 &&
     demoIdx > accessIdx &&
     reserveIdx > demoIdx &&
     providerIdx > reserveIdx,
-  "cached gate + durable asset-bound reserve must precede provider invocation"
+  "cached gate + durable reserve must precede provider invocation"
 );
 assert.doesNotMatch(
   genRoute,
@@ -2566,7 +2566,11 @@ assert.match(createStudio, /create-photo-step/);
 assert.match(createStudio, /Download policy/);
 assert.match(batchStudio, /batch-ownership/);
 assert.match(batchStudio, /fixed inset-x-0 bottom-0/);
-assert.match(appShell, /!sellerPackCreate\s*\?\s*<nav/);
+assert.match(
+  appShell,
+  /const hideMobileNav\s*=\s*fixedMomentEntry\s*\|\|\s*momentCreate\s*\|\|\s*sellerPackCreate/
+);
+assert.match(appShell, /!hideMobileNav\s*\?\s*\(\s*<nav/);
 assert.match(batchStudio, /api\/downloads/);
 
 // Landing tool Free-download honesty (parity with Create/Library)
@@ -5660,39 +5664,20 @@ const genJobsGet = fs.readFileSync(
   "utf8"
 );
 assert.match(genJobsGet, /listPrivateGenerationResults/);
-assert.match(genJobsGet, /mergePrivateLibraryWithLocalLedger/);
 assert.match(genJobsGet, /getAuthUserFromRequest/);
 assert.match(genJobsGet, /supabase-private\+process-memory/);
+assert.match(genJobsGet, /\/api\/downloads\/\$\{encodeURIComponent\(result\.jobId\)\}/);
 assert.match(genJobsGet, /function controlledLocalJob/);
 assert.match(
   genJobsGet,
   /controlledLocalJob\(toPublicJob\(job,\s*session\.id\)\)/
 );
-assert.doesNotMatch(genJobsGet, /providerOutputUrl|signedUrl/);
+assert.doesNotMatch(genJobsGet, /output_object_key|providerOutputUrl/);
 assert.doesNotMatch(genJobsGet, /touchOpenJobsForSession\(session\.id\)/);
 assert.match(genJobsGet, /touchedOpen:\s*0|GET is read-only/);
 assert.match(genJobsGet, /full\.queued|counts\.queued/);
-assert.match(
-  genJobsGet,
-  /total:\s*merged\.total|total:\s*full\.total|total:\s*counts\.total/
-);
+assert.match(genJobsGet, /total:\s*full\.total|total:\s*counts\.total/);
 assert.match(genJobsGet, /listLimit:\s*SESSION_JOBS_LIST_LIMIT/);
-// Durable Library mapper: all statuses, controlled download only for successes.
-const privateLibraryPure = fs.readFileSync(
-  join(root, "lib/privateGenerationResultsPure.mjs"),
-  "utf8"
-);
-assert.match(privateLibraryPure, /privateLibraryJobFromRow/);
-assert.match(
-  privateLibraryPure,
-  /\/api\/downloads\/\$\{encodeURIComponent\(id\)\}/
-);
-assert.match(privateLibraryPure, /localRetry:\s*false/);
-assert.match(privateLibraryPure, /localCancel:\s*false/);
-assert.match(
-  fs.readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8"),
-  /canLocalRetry|canLocalCancel|canNewAttempt/
-);
 assert.doesNotMatch(
   genJobsGet,
   /export async function GET[\s\S]{0,800}for \(const j of raw\)/
