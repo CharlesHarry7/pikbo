@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PricingCheckoutButton } from "@/components/PricingCheckoutButton";
+import { JsonLd } from "@/components/JsonLd";
 import { getPlan } from "@/lib/pricing";
 import { site } from "@/lib/site";
+import { softwareApplicationJsonLd } from "@/lib/jsonLd";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const PRICING_PREVIEW_HREF =
@@ -87,9 +89,16 @@ export default function PricingPage() {
       className="min-h-[calc(100svh-4rem)] bg-[#F7F4ED] px-4 py-10 text-[#0A0A0A] sm:px-8 sm:py-16"
       data-pricing-path="product-first"
     >
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+      <JsonLd
+        data={[
+          faqLd,
+          softwareApplicationJsonLd({
+            name: `${site.name} Founding Studio`,
+            description:
+              "Founding Studio is Pikbo's $49 monthly private-beta plan for nine directed toy-video Moments. Public live checkout remains gated until delivery and billing validation pass.",
+            url: `${site.url}/pricing`,
+          }),
+        ]}
       />
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-3xl text-center">

@@ -121,11 +121,48 @@ assert.match(seoIndex, /CONCEPT_ROBOTS/);
 // Social cards: centralized, resolvable static metadata routes (no extensionless 404).
 assert.match(siteSrc, /\/og\.jpg/);
 assert.ok(existsSync(join(root, "public/og.jpg")), "social card asset must exist");
+// Prefer lean 1200×630 JPEG defaults — multi-MB PNG social cards hurt CWV.
+assert.ok(
+  existsSync(join(root, "app/opengraph-image.jpg")) ||
+    existsSync(join(root, "app/opengraph-image.png")),
+  "Next file-based opengraph image must exist"
+);
+assert.ok(
+  !existsSync(join(root, "app/opengraph-image.png")) ||
+    readFileSync(join(root, "app/opengraph-image.png")).byteLength < 400_000,
+  "opengraph-image.png must stay under ~400KB if present"
+);
 assert.match(siteSrc, /officialProfiles/);
 assert.doesNotMatch(siteSrc, /twitter:\s*["']@pikbo_ai/);
 assert.match(layoutSrc, /site\.socialImages\.openGraph/);
 assert.match(layoutSrc, /site\.socialImages\.twitter/);
 assert.doesNotMatch(layoutSrc, /url:\s*["']\/opengraph-image["']/);
+
+// Shared social meta helper + Create product surface completeness.
+const pageMetaSrc = readFileSync(join(root, "lib/pageMeta.ts"), "utf8");
+const createSrc = readFileSync(join(root, "app/create/page.tsx"), "utf8");
+assert.match(pageMetaSrc, /pageSocialMeta/);
+assert.match(pageMetaSrc, /summary_large_image/);
+assert.match(pageMetaSrc, /site\.socialImages\.openGraph/);
+assert.match(createSrc, /pageSocialMeta/);
+assert.match(createSrc, /softwareApplicationJsonLd/);
+assert.match(createSrc, /CREATE_TITLE/);
+assert.match(homeSrc, /softwareApplicationJsonLd/);
+assert.match(homeSrc, /pageSocialMeta/);
+assert.match(jsonLdSrc, /organizationJsonLd/);
+assert.match(jsonLdSrc, /websiteJsonLd/);
+assert.match(jsonLdSrc, /softwareApplicationJsonLd/);
+assert.match(jsonLdSrc, /logo:\s*site\.socialImages\.openGraph/);
+
+// robots.txt must not dual-block public marketing paths with Disallow.
+assert.match(robotsSrc, /sitemap:\s*`\$\{site\.url\}\/sitemap\.xml`/);
+assert.match(robotsSrc, /allow:\s*"\/"/);
+for (const path of ["/api/", "/library", "/login", "/auth/", "/generate"]) {
+  assert.match(robotsSrc, new RegExp(`"${path.replace(/\//g, "\\/")}"`));
+}
+assert.doesNotMatch(robotsSrc, /"\/create"/);
+assert.doesNotMatch(robotsSrc, /"\/pricing"/);
+assert.doesNotMatch(robotsSrc, /"\/tools"/);
 
 // Google-first metadata: do not emit the unsupported meta-keywords tag.
 for (const [name, src] of [

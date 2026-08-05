@@ -4,8 +4,10 @@ import { HomeTrustFooter } from "@/components/HomeTrustFooter";
 import { JsonLd } from "@/components/JsonLd";
 import {
   organizationJsonLd,
+  softwareApplicationJsonLd,
   websiteJsonLd,
 } from "@/lib/jsonLd";
+import { pageSocialMeta } from "@/lib/pageMeta";
 import { site } from "@/lib/site";
 
 const HOME_DESCRIPTION =
@@ -15,27 +17,11 @@ export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
   description: HOME_DESCRIPTION,
   alternates: { canonical: "/" },
-  openGraph: {
+  ...pageSocialMeta({
     title: site.titleDefault,
     description: HOME_DESCRIPTION,
-    url: site.url,
-    siteName: site.name,
-    type: "website",
-    images: [
-      {
-        url: site.socialImages.openGraph,
-        width: site.socialImages.width,
-        height: site.socialImages.height,
-        alt: site.socialImages.alt,
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: site.titleDefault,
-    description: HOME_DESCRIPTION,
-    images: [site.socialImages.twitter],
-  },
+    path: "/",
+  }),
 };
 
 export default function Home() {
@@ -48,6 +34,11 @@ export default function Home() {
         data={[
           { ...websiteJsonLd(), description: HOME_DESCRIPTION },
           { ...organizationJsonLd(), description: HOME_DESCRIPTION },
+          softwareApplicationJsonLd({
+            name: `${site.name} — Street Power-Up Moment`,
+            description: HOME_DESCRIPTION,
+            url: site.url,
+          }),
         ]}
       />
 
