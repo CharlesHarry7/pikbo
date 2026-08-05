@@ -1,25 +1,66 @@
 import type { Metadata } from "next";
-import { DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { site } from "@/lib/site";
 import { AppShell } from "@/components/AppShell";
 
 /**
- * Display + body faces via next/font (self-hosted at build, no runtime CLS).
- * CSS maps --font-plus-jakarta / --font-dm-sans into --font-display / --font-sans.
+ * AIT-30/31/35 toy faces via next/font/local (offline-safe; no fonts.googleapis.com).
+ * Display = collection-label geometry (Plus Jakarta Sans); body = DM Sans.
+ * CSS fallbacks keep ui-rounded / system stacks when files fail to load.
  */
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+const fontDisplay = localFont({
+  src: [
+    {
+      path: "../public/fonts/PlusJakartaSans-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/PlusJakartaSans-ExtraBold.woff2",
+      weight: "800",
+      style: "normal",
+    },
+  ],
   variable: "--font-plus-jakarta",
   display: "swap",
+  fallback: [
+    "Plus Jakarta Sans",
+    "ui-rounded",
+    "SF Pro Rounded",
+    "Nunito",
+    "ui-sans-serif",
+    "system-ui",
+    "sans-serif",
+  ],
 });
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const fontSans = localFont({
+  src: [
+    {
+      path: "../public/fonts/DMSans-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/DMSans-Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/DMSans-SemiBold.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/DMSans-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   variable: "--font-dm-sans",
   display: "swap",
+  fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
 });
 
 /** TDH frozen for soft launch — see lib/site.ts + docs/growth/GEFEI_LAUNCH_DECISION_2026-07-24.md */
@@ -68,7 +109,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`h-full ${plusJakarta.variable} ${dmSans.variable}`}
+      className={`h-full ${fontDisplay.variable} ${fontSans.variable}`}
       data-scroll-behavior="smooth"
     >
       <body className="min-h-full bg-[var(--bg)] font-sans text-[var(--fg)] antialiased">
