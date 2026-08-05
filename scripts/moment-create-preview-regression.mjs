@@ -32,7 +32,11 @@ for (const [id, name] of expectedMoments) {
 assert.equal((moments.match(/evidence: "Official Concept",/g) || []).length, 6);
 assert.doesNotMatch(moments, /provider|modelId|prompt|generated result/i);
 
-assert.match(home, /One toy photo\. More ways to sell\./);
+assert.match(home, /\{site\.homeH1\}/);
+assert.match(
+  read("lib/site.ts"),
+  /homeH1:\s*"Turn one toy photo into a sellable video clip in 60 seconds\."/
+);
 assert.match(home, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(home, /Preview a Moment/);
 assert.match(home, /Three directions · choose one/);

@@ -10,6 +10,7 @@ import {
   MOMENTS,
   type MomentId,
 } from "@/lib/moments";
+import { site } from "@/lib/site";
 
 export function HomeMomentShowcase() {
   const [activeId, setActiveId] = useState<MomentId>(DEFAULT_MOMENT_ID);
@@ -28,7 +29,7 @@ export function HomeMomentShowcase() {
               Pikbo · AI video Moments for designer toys
             </p>
             <h1 className="max-w-[820px] font-display text-[clamp(3.4rem,6.1vw,5.55rem)] font-black leading-[0.84] tracking-[-0.07em]">
-              One toy photo. More ways to sell.
+              {site.homeH1}
             </h1>
           </div>
           <div className="border-l border-[#171719]/20 pl-5 lg:pb-1">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { site } from "@/lib/site";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const STREET_POWER_UP_SAMPLE = {
@@ -41,7 +42,7 @@ export function HomeCinemaHero() {
             id="home-moment-title"
             className="mt-6 font-display text-[clamp(3.2rem,5.2vw,5.9rem)] font-black leading-[0.86] tracking-[-0.075em]"
           >
-            Put your toy in motion.
+            {site.homeH1}
           </h1>
           <p className="mt-6 max-w-[390px] text-base font-semibold leading-7 text-white/58 lg:text-lg">
             One directed effect. Your toy photo. A private vertical clip ready
