@@ -87,9 +87,8 @@ export default async function CreatePage({
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
               Pikbo Moment · private render
             </p>
-            <h1 className="mt-2 max-w-4xl font-display text-[clamp(2.45rem,4.2vw,4.5rem)] font-black leading-[0.9] tracking-[-0.06em]">
-              <span className="text-bling">Turn one toy photo</span>
-              <span className="text-[var(--cream)]"> into Street Power-Up.</span>
+            <h1 className="mt-2 max-w-4xl font-display text-[clamp(2.45rem,4.2vw,4.5rem)] font-black leading-[0.9] tracking-[-0.06em] text-bling">
+              Turn one toy photo into Street Power-Up.
             </h1>
           </div>
           <p className="border-l border-[#B14EFF]/50 pl-4 text-sm font-semibold leading-6 text-white/56">
