@@ -21,7 +21,7 @@ assert.match(contract, /ROLE_OPTIONS/);
 assert.match(route, /takeToken/);
 assert.match(route, /website/);
 assert.match(route, /createBetaRequest/);
-assert.match(form, /Request private beta/);
+assert.match(form, /Request 潮玩 private beta|Request private beta/);
 assert.match(form, /site\.contact\.supportEmail|support@pikbo\.ai/);
 assert.match(migration, /create table if not exists public\.beta_requests/);
 assert.match(migration, /enable row level security/);
@@ -30,14 +30,17 @@ assert.match(contact, /BetaRequestForm/);
 assert.match(contact, /Private beta/);
 assert.match(contact, /public checkout is closed/);
 assert.match(contact, /does not claim a US office or\s+storefront/);
+assert.match(contact, /潮玩/);
 assert.match(about, /Street Power-Up/);
 assert.match(about, /Founding Studio/);
 assert.match(about, /private Library/i);
 assert.match(about, /CONCEPT_ROBOTS/);
-assert.match(about, /AI video platform for designer toys/i);
-assert.match(about, /Higgsfield/);
-assert.match(about, /creators, sellers, and collectors/i);
+assert.match(about, /Bring your designer toys to life|designer toys/i);
+assert.match(about, /潮玩/);
 assert.match(about, /What ships today/i);
+// No lorem / generic placeholder copy on trust surfaces
+assert.doesNotMatch(about, /lorem ipsum|placeholder text|your company name/i);
+assert.doesNotMatch(contact, /lorem ipsum|placeholder text|your company name/i);
 assert.doesNotMatch(
   about,
   /Explore wall|Community feed|batch generation marketplace/i

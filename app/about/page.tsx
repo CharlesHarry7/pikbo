@@ -11,23 +11,22 @@ import {
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /**
- * Trust / E-E-A-T surface — short, honest, no fake team headcount.
+ * Trust / E-E-A-T surface — 潮玩 voice, honest stage, no fake team headcount.
  * Cold-start: noindex (follow) so crawl budget stays on rank URLs.
  *
- * Positioning follows docs/PRODUCT_VISION.md: Higgsfield-class AI video
- * platform playbook, purpose-built for designer toys — without claiming
- * frozen suite surfaces as live product.
+ * Positioning: designer-toy (潮玩) AI video studio — suite playbook,
+ * toy-native Moments — without claiming frozen suite surfaces as live product.
  */
 export const metadata: Metadata = {
-  title: { absolute: `About ${site.name} · AI video for designer toys` },
+  title: { absolute: `About ${site.name} · 潮玩 AI video for designer toys` },
   description:
-    `${company.legalName} builds Pikbo — the AI video platform for designer-toy creators, sellers, and collectors. Higgsfield-class creative suite mechanics, toy-native Moments, private beta.`,
+    `${company.legalName} builds Pikbo — AI video for designer-toy (潮玩) sellers, designers, and collectors. Shelf photos → listing spins, blind-box reveals, and social Moments. Invited private beta.`,
   alternates: { canonical: "/about" },
   robots: CONCEPT_ROBOTS,
   openGraph: {
     title: `About ${site.name}`,
     description:
-      "Pikbo is the AI video platform for designer toys — creators, sellers, and collectors. Toy-native Moments in private beta.",
+      "Pikbo turns owned designer-toy photos into short product and social video Moments. 潮玩-native, private beta.",
     url: `${site.url}/about`,
     siteName: site.name,
     type: "website",
@@ -37,27 +36,27 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `About ${site.name}`,
     description:
-      "Pikbo is the AI video platform for designer toys — creators, sellers, and collectors. Toy-native Moments in private beta.",
+      "Pikbo turns owned designer-toy photos into short product and social video Moments. 潮玩-native, private beta.",
     images: [site.socialImages.twitter],
   },
 };
 
 const AUDIENCES = [
   {
-    title: "Sellers & brands",
-    body: "Listing, drop, and social clips from product stills you already own — without a production crew.",
+    title: "Sellers & drop shops",
+    body: "Listing spins, restock heat, and social hooks from product stills you already own — without a mini film crew.",
   },
   {
-    title: "Designers",
-    body: "Prototype how a sculpt or paint-up moves before you commit to a shoot or stop-motion rig.",
+    title: "Toy designers",
+    body: "See how a sculpt or paint-up moves before you book a stop-motion rig or full product shoot.",
   },
   {
     title: "Collectors",
-    body: "Turn shelf photos into short showcases that keep paint, sculpt, and packaging identity intact.",
+    body: "Turn shelf and grail shots into short showcases that keep paint, sculpt, and packaging identity intact.",
   },
   {
     title: "Content creators",
-    body: "Directed toy Moments built for feeds — one clear visual recipe instead of prompt hunting.",
+    body: "Directed 潮玩 Moments for feeds — one clear recipe (spin, reveal, power-up) instead of prompt hunting.",
   },
 ] as const;
 
@@ -65,17 +64,17 @@ const LOOP_STEPS = [
   {
     step: "01",
     title: "Upload one owned toy photo",
-    body: "Use a rights-owned product still of a figure, plush, or blind-box SKU. Live jobs require confirming ownership and rights.",
+    body: "A clean, rights-owned still of a figure, plush, or blind-box SKU. Live jobs require confirming ownership and rights.",
   },
   {
     step: "02",
     title: "Create one Street Power-Up Moment",
-    body: "The first directed contract is Street Power-Up: vertical 9:16, 5 seconds, Fast 720p. The server owns the priced fields — no freeform prompt shopping.",
+    body: "First directed contract: vertical 9:16, 5 seconds, Fast 720p. The server owns the priced fields — no freeform prompt shopping.",
   },
   {
     step: "03",
     title: "Recover in your private Library",
-    body: "Completed results land in your owner-only Library for playback and download. Failed Moments release their credit reservation.",
+    body: "Completed clips land in your owner-only Library for playback and download. Failed Moments release their credit reservation.",
   },
 ] as const;
 
@@ -89,28 +88,27 @@ export default function AboutPage() {
     <div className="bg-black text-white">
       <div className="container-x max-w-3xl py-12 sm:py-16">
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]">
-          About
+          About · 潮玩 AI video
         </p>
         <h1 className="mt-2 font-display text-3xl font-black tracking-tight sm:text-4xl">
-          The AI video platform for designer toys
+          Bring your designer toys to life
         </h1>
         <p className="mt-4 text-base leading-relaxed text-white/60">
-          {site.name} is the go-to AI video platform for{" "}
-          <strong className="text-white/85">
-            designer-toy creators, sellers, and collectors
-          </strong>
-          . General AI video suites proved the playbook — one-click Motions,
-          a focused studio loop, credits, and private delivery. Pikbo applies
-          that{" "}
-          <strong className="text-white/85">Higgsfield-class product model</strong>{" "}
-          to the designer-toy (潮玩) niche: figures, blind boxes, plush, and art
-          toys — not face-swap memes or generic cinema tools.
+          {site.name} is an AI video studio built for the{" "}
+          <strong className="text-white/85">designer-toy (潮玩) world</strong> —
+          figures, blind boxes, plush, and art toys. One shelf shot becomes a
+          short clip for listings, drops, and social — paint, sculpt, and
+          packaging stay the reference. Not face-swap memes. Not generic cinema
+          tools.
         </p>
         <p className="mt-3 text-base leading-relaxed text-white/55">
           Built and operated by {company.legalName}, {company.entityDescription}.
-          The product is in an invited private beta: public visitors can inspect
-          labeled Pikbo Lab previews, but public product-photo generation and
-          public checkout stay closed until delivery gates pass.
+          We take the product shape of a full creative suite (presets, studio
+          loop, credits, private delivery) and rewrite every surface for toys.
+          The product is in an{" "}
+          <strong className="text-white/80">invited private beta</strong>: public
+          visitors can inspect labeled Lab previews; public product-photo
+          generation and public checkout stay closed until delivery gates pass.
         </p>
 
         <section
@@ -118,26 +116,26 @@ export default function AboutPage() {
           aria-labelledby="about-vision-title"
         >
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--mint)]">
-            Category vision
+            Why 潮玩-native
           </p>
           <h2
             id="about-vision-title"
             className="mt-2 text-lg font-bold text-white"
           >
-            Higgsfield.ai for designer toys
+            Suite playbook. Toy identity first.
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-white/55">
-            Higgsfield-class platforms showed how presets, a studio workspace,
-            and a credit plan can make AI video feel productized. Pikbo keeps
-            that structure and rewrites every surface for toys: Motions that
-            respect sculpt and paint, seller jobs (listing, reveal, drop), and a
-            private Library for rights-owned SKUs. We copy the{" "}
-            <em className="not-italic text-white/75">system</em>, not the skin —
-            no competitor branding, media, or trademarked copy.
+            Broad AI video platforms proved that Motions, a focused studio, and a
+            credit plan can feel productized. Pikbo keeps that{" "}
+            <em className="not-italic text-white/75">system</em> and aims it at
+            潮玩 work: Motions that respect sculpt and paint, seller jobs
+            (listing spin, blind-box reveal, drop heat), and a private Library
+            for rights-owned SKUs. We copy the playbook — never competitor
+            branding, media, or trademarked copy.
           </p>
           <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-relaxed text-white/55">
             <li>
-              <strong className="text-white/80">Toy-native Motions</strong> —
+              <strong className="text-white/80">Toy-native Moments</strong> —
               directed recipes for product motion, not open-ended film prompts
             </li>
             <li>
@@ -145,7 +143,7 @@ export default function AboutPage() {
               one clear Moment → private result → next SKU
             </li>
             <li>
-              <strong className="text-white/80">Premium plan shape</strong> —
+              <strong className="text-white/80">Honest plan shape</strong> —
               finite Founding Studio credits for serious sellers, not unlimited
               free provider spend
             </li>
@@ -154,7 +152,7 @@ export default function AboutPage() {
 
         <section className="mt-10" aria-labelledby="about-audience-title">
           <h2 id="about-audience-title" className="text-lg font-bold text-white">
-            Who Pikbo is for
+            Who it is for
           </h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {AUDIENCES.map((item) => (
@@ -176,10 +174,9 @@ export default function AboutPage() {
             What ships today: one honest Moment
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-white/55">
-            The long-term category is a designer-toy AI video platform. The
-            active path is deliberately narrow so quality, privacy, recovery, and
-            cost can be measured with real users before broader suite surfaces
-            open.
+            The long-term category is a full 潮玩 AI video studio. The active path
+            is deliberately narrow so quality, privacy, recovery, and cost can be
+            measured with real users before broader suite surfaces open.
           </p>
           <ol className="mt-5 space-y-3">
             {LOOP_STEPS.map((item) => (
@@ -263,9 +260,12 @@ export default function AboutPage() {
         </section>
 
         <section className="mt-10 space-y-4">
-          <h2 className="text-lg font-bold text-white">What we optimize for</h2>
+          <h2 className="text-lg font-bold text-white">What we protect</h2>
           <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-white/55">
-            <li>Toy identity: paint, sculpt, and packaging stay the reference</li>
+            <li>
+              Toy identity: paint, sculpt, and packaging stay the reference —
+              your SKU should still look like your SKU
+            </li>
             <li>
               One commercial job at a time: a single directed Moment for a
               listing, reveal, drop, or social post
@@ -287,16 +287,16 @@ export default function AboutPage() {
             <li>Public generation or payment before those gates are ready</li>
             <li>
               Customer UGC we do not have — Lab examples are cached Lab prototype
-              demos
+              demos, never fake community posts
             </li>
             <li>Franchise IP cloning from packaging you do not control</li>
             <li>
-              Feature parity with full creative suites today — Explore,
-              Community, batch tools, and model marketplaces stay frozen until
-              the single-Moment loop proves quality and margin
+              Full creative-suite parity today — Explore, Community, batch tools,
+              and model marketplaces stay frozen until the single-Moment loop
+              proves quality and margin
             </li>
             <li>
-              Competitor branding or media — Higgsfield is a product-class
+              Competitor branding or media — suite platforms are a product-class
               reference only
             </li>
           </ul>

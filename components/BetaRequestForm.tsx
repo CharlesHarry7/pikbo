@@ -38,8 +38,8 @@ export function BetaRequestForm() {
       setState("success");
       setMessage(
         result.duplicate
-          ? "You are already on the private-beta list."
-          : "Request received. We will reply by email."
+          ? "You are already on the private-beta list for Pikbo."
+          : "Request received. We will reply by email about 潮玩 beta access."
       );
       event.currentTarget.reset();
     } catch (error) {
@@ -58,7 +58,8 @@ export function BetaRequestForm() {
       >
         <p className="font-semibold">{message}</p>
         <p className="mt-1 text-xs text-[var(--fg-muted)]">
-          Private beta is invite-only. This is not a purchase.
+          Private beta is invite-only for designer-toy sellers and creators. This
+          is not a purchase.
         </p>
       </div>
     );
@@ -74,7 +75,7 @@ export function BetaRequestForm() {
           required
           autoComplete="email"
           className="mt-1.5 w-full rounded-lg border border-[var(--border)] bg-black/10 px-3 py-2.5 text-sm text-[var(--fg)] outline-none focus:border-[var(--mint)]"
-          placeholder="you@shop.com"
+          placeholder="you@toy-shop.com"
         />
       </label>
       <label className="block text-xs font-semibold text-[var(--fg-muted)]">
@@ -85,20 +86,20 @@ export function BetaRequestForm() {
           defaultValue="seller"
           className="mt-1.5 w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2.5 text-sm text-[var(--fg)] outline-none focus:border-[var(--mint)]"
         >
-          <option value="seller">Designer-toy seller</option>
-          <option value="studio">Toy studio / brand</option>
+          <option value="seller">Designer-toy / 潮玩 seller</option>
+          <option value="studio">Toy studio / blind-box brand</option>
           <option value="collector">Collector / creator</option>
           <option value="other">Other</option>
         </select>
       </label>
       <label className="block text-xs font-semibold text-[var(--fg-muted)]">
-        Shop link <span className="font-normal">(optional)</span>
+        Shop or portfolio link <span className="font-normal">(optional)</span>
         <input
           name="shopUrl"
           type="url"
           autoComplete="url"
           className="mt-1.5 w-full rounded-lg border border-[var(--border)] bg-black/10 px-3 py-2.5 text-sm text-[var(--fg)] outline-none focus:border-[var(--mint)]"
-          placeholder="https://"
+          placeholder="https://your-shop.example"
         />
       </label>
       {/* Honeypot — leave empty */}
@@ -117,8 +118,8 @@ export function BetaRequestForm() {
           className="mt-1 accent-[var(--mint)]"
         />
         <span>
-          I agree that Pikbo may use this information to review my beta request
-          and contact me about access.
+          I agree that Pikbo may use this information to review my 潮玩 beta
+          request and contact me about access.
         </span>
       </label>
       <button
@@ -126,7 +127,7 @@ export function BetaRequestForm() {
         disabled={state === "submitting"}
         className="inline-flex min-h-11 items-center rounded-full bg-[var(--mint)] px-5 text-xs font-black text-black transition hover:brightness-95 disabled:cursor-wait disabled:opacity-60"
       >
-        {state === "submitting" ? "Sending…" : "Request private beta"}
+        {state === "submitting" ? "Sending…" : "Request 潮玩 private beta"}
       </button>
       {state === "error" ? (
         <p className="text-xs text-[#E85C45]" role="alert">
