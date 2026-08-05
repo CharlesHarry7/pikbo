@@ -27,6 +27,7 @@ import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { useI18n } from "@/components/LanguageProvider";
 import { site } from "@/lib/site";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 function Clip({
   demo,
@@ -166,13 +167,8 @@ export function HfExploreHome({
           <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65 sm:text-[15px]">
             {t("home.hero.sub")}
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link
-              href="/create?effect=street-power-up"
-              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
-            >
-              Use tool on this page
-            </Link>
+          {/* One primary CTA row; secondary destinations are text links only */}
+          <div className="mt-6 flex flex-col items-start gap-3">
             <Link
               href={item.href}
               onClick={() =>
@@ -182,22 +178,34 @@ export function HfExploreHome({
                   recipe: item.recipeSlug,
                 })
               }
-              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-black/50 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50 hover:bg-black/60"
+              data-hf-hero-primary="generate-clip"
+              className="inline-flex w-full max-w-sm items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)] transition hover:-translate-y-0.5 hover:brightness-110 sm:w-auto"
             >
-              {t("home.useRecipe")}
+              Generate this clip
             </Link>
-            <Link
-              href="/tools/ai-toy-video-generator"
-              className="text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
+            <nav
+              aria-label="Secondary home paths"
+              className="flex flex-wrap items-center gap-x-4 gap-y-2"
             >
-              Keyword tool page
-            </Link>
-            <Link
-              href="/for/photo-to-video-for-toys"
-              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
-            >
-              Photo → video use case
-            </Link>
+              <Link
+                href={MOMENT_CREATE_HREF}
+                className="text-sm font-semibold text-white/55 underline-offset-4 transition hover:text-white hover:underline"
+              >
+                Open studio
+              </Link>
+              <Link
+                href="/effects"
+                className="text-sm font-semibold text-white/55 underline-offset-4 transition hover:text-white hover:underline"
+              >
+                Viral presets
+              </Link>
+              <Link
+                href="/explore"
+                className="text-sm font-semibold text-white/55 underline-offset-4 transition hover:text-white hover:underline"
+              >
+                Projects
+              </Link>
+            </nav>
           </div>
           <p className="mt-3 text-[11px] text-white/45">
             Designer-toy suite · cached Lab prototypes · Live access gated
