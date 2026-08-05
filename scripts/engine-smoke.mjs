@@ -967,6 +967,26 @@ assert.match(createPage, /<CreateStudio/);
 assert.match(createPage, /initialEffect=["']street-power-up["']/);
 assert.match(createPage, /fixedMomentContract/);
 assert.doesNotMatch(createPage, /BatchStudio|PrivateSellerPackGate/);
+// AIT-70: SEO footer remounted collapsed so mobile Studio path stays primary.
+assert.match(createPage, /<CreateSeoFooter/);
+assert.match(
+  createPage,
+  /CreateStudio[\s\S]*CreateSeoFooter|CreateSeoFooter[\s\S]*CreateStudio/
+);
+const createSeoFooterSrc = fs.readFileSync(
+  join(root, "components/CreateSeoFooter.tsx"),
+  "utf8"
+);
+assert.match(
+  createSeoFooterSrc,
+  /data-create-seo-footer=["']collapsed-default["']/
+);
+assert.match(createSeoFooterSrc, /<details\b/);
+assert.match(createSeoFooterSrc, /data-create-seo-primary=["']studio["']/);
+assert.doesNotMatch(
+  createSeoFooterSrc,
+  /<section className="container-x py-14">/
+);
 const batchPage = fs.readFileSync(
   join(root, "app/supercomputer/page.tsx"),
   "utf8"
