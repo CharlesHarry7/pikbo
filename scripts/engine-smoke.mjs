@@ -4762,11 +4762,24 @@ assert.doesNotMatch(
   /FreeTrialCta|PricingCheckoutButton|PLANS\.map/
 );
 // Settings Phase C/D honesty: durable authority, jobs HEAD, live T6, onboard v3
+// AIT-79: plain-language credits + closed billing (no buy/top-up store claim)
 const settingsPageSrc = fs.readFileSync(
   join(root, "app/settings/page.tsx"),
   "utf8"
 );
 assert.match(settingsPageSrc, /Credits authority|cookie display only|not live-spend/);
+assert.match(
+  settingsPageSrc,
+  /data-settings-billing=["']closed["']|Billing closed/
+);
+assert.match(
+  settingsPageSrc,
+  /cannot buy|cannot purchase|top up|checkout is closed|checkout stays closed/
+);
+assert.doesNotMatch(
+  settingsPageSrc,
+  /Buy credits|Top up now|Add payment method|Subscribe now/i
+);
 assert.match(settingsPageSrc, /X-Pikbo-Jobs-Open|\/api\/generations/);
 assert.match(settingsPageSrc, /health\.t6|freeLiveRawDownload|t6DownloadLabel/);
 assert.match(settingsPageSrc, /FreeTrialCta/);

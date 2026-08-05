@@ -215,10 +215,10 @@ export default function SettingsPage() {
         <span className="chip">Settings</span>
         <h1 className="mt-3 text-2xl font-bold">Settings</h1>
         <p className="mt-1 text-sm text-[var(--fg-muted)]">
-          Device data & session. Signed-in durable wallets use local file or
-          Supabase Postgres when the T5 migration is applied. Cookie is not
-          live-spend authority (R0) — live needs durable reserve or labeled
-          cached demos.
+          Device data and this session. Credit numbers below are for reference
+          only — public checkout is closed, so you cannot buy or top up credits
+          here. Cookie is cookie display only · not live-spend; real jobs need
+          an account ledger or free labeled Lab demos.
         </p>
         <div
           className="mt-4 flex flex-wrap items-center gap-2"
@@ -255,6 +255,23 @@ export default function SettingsPage() {
         </div>
 
         <div className="card mt-8 space-y-4 p-6 text-sm">
+          <div
+            className="rounded-xl border border-amber-400/30 bg-amber-400/[0.06] px-3 py-2.5 text-[11px] leading-relaxed text-amber-50/95"
+            data-settings-billing="closed"
+          >
+            <span className="font-semibold text-amber-100">Billing closed</span>
+            {" · "}
+            Self-serve top-ups and public checkout are not open during
+            soft-launch. These credit numbers are not a store. Cached Lab demos
+            stay free (0 credits).{" "}
+            <Link
+              href="/pricing"
+              className="font-semibold text-[var(--mint)] underline-offset-2 hover:underline"
+            >
+              See Pricing
+            </Link>{" "}
+            for Founding Studio (coming soon · no charge yet).
+          </div>
           <div className="flex justify-between">
             <span className="text-[var(--fg-muted)]">Sign-in</span>
             <span className="font-semibold">
@@ -274,20 +291,20 @@ export default function SettingsPage() {
             <span className="text-right text-xs font-semibold leading-snug">
               cookie display only · not live-spend
               {session?.signedIn
-                ? ` · durable ${durableBackend || "pending"} (${durableAuth || "shadow"})`
-                : ""}
+                ? ` · account ledger ${durableBackend || "pending"} (${durableAuth || "shadow"})`
+                : " · guest display balance only"}
             </span>
           </div>
           <div className="flex justify-between gap-4">
-            <span className="text-[var(--fg-muted)]">Durable ledger</span>
+            <span className="text-[var(--fg-muted)]">Account ledger</span>
             <span className="text-right font-semibold">
               {session?.durable?.backend
                 ? `${session.durable.backend} · ${session.durable.availableCredits} cr`
                 : session?.durableCreditsActive
-                  ? "shadow ready · no wallet yet"
-                  : "off"}
+                  ? "ready · no wallet yet"
+                  : "off · signed-in wallet not active"}
               {durableReserved !== null && durableReserved > 0
-                ? ` · ${durableReserved} reserved`
+                ? ` · ${durableReserved} held for open jobs`
                 : ""}
             </span>
           </div>
@@ -303,12 +320,16 @@ export default function SettingsPage() {
               {session?.credits ?? "—"}
             </span>
           </div>
+          <p className="text-[10px] leading-relaxed text-[var(--fg-dim)]">
+            The number above is a balance snapshot, not a buy button. You cannot
+            purchase credits while billing is closed.
+          </p>
           <div className="flex justify-between">
-            <span className="text-[var(--fg-muted)]">Live spend authority</span>
+            <span className="text-[var(--fg-muted)]">Who pays for real jobs</span>
             <span className="text-right text-xs font-semibold text-[var(--fg-dim)]">
               {session?.cookieIsLiveSpendAuthority === true
                 ? "cookie (legacy — unexpected)"
-                : "durable reserve or cached demo (R0)"}
+                : "account reserve or free cached demo · not live-spend from cookie"}
             </span>
           </div>
           <div className="flex justify-between">
@@ -325,12 +346,12 @@ export default function SettingsPage() {
                   : !isFreePlan
                     ? "paid path · not Free trial"
                     : trialDone
-                      ? "display exhausted · demos still free"
+                      ? "display exhausted · demos still free · cannot top up here"
                       : freeLive && freeLive.liveEnabled === false
                         ? `product caps ${freeLive.resolution} ${freeLive.durationSec}s · live blocked until T6`
                         : freeLive
                           ? `~${clipsLeft} left · ${freeLive.resolution} ${freeLive.durationSec}s when Live enabled`
-                          : `~${clipsLeft} display · live via durable reserve only`}
+                          : `~${clipsLeft} display · live via account reserve only`}
             </span>
           </div>
           <div className="flex justify-between">
@@ -480,12 +501,11 @@ export default function SettingsPage() {
             </span>
           </div>
           <p className="text-[11px] leading-relaxed text-[var(--fg-dim)]">
-            Soft-live needs <code className="text-[var(--fg-muted)]">SESSION_SECRET</code>{" "}
-            + <code className="text-[var(--fg-muted)]">FAL_KEY</code> on the
-            server. Paid needs durable entitlements + Stripe test keys (live off).
-            Free Mini trial state comes from{" "}
-            <code className="text-[var(--fg-muted)]">GET /api/me</code>{" "}
-            freeTrial — not a client guess. T6 from{" "}
+            Soft-launch honesty: credit numbers here never open a store. Public
+            checkout stays closed until private delivery and billing gates pass
+            (Stripe live off). Free Mini trial state comes from{" "}
+            <code className="text-[var(--fg-muted)]">GET /api/me</code> freeTrial
+            — not a client guess. T6 bake status from{" "}
             <code className="text-[var(--fg-muted)]">health.t6</code>.
           </p>
         </div>
