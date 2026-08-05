@@ -163,4 +163,73 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
+// 5. AIT-119 — HfExplore/Home hero Generate primary + honest Moment secondary
+const hfExplore = read("components/HfExploreHome.tsx");
+assert.match(
+  hfExplore,
+  /createGenerate360Href\(\s*["']hf-hero["']\s*\)/,
+  "HfExplore hero primary tags source=hf-hero"
+);
+assert.match(
+  hfExplore,
+  /data-hf-hero-primary=["']generate["']/,
+  "HfExplore hero primary carries generate marker"
+);
+assert.match(
+  hfExplore,
+  /href=\{createGenerate360Href\(\s*["']hf-hero["']\s*\)\}[\s\S]{0,200}data-hf-hero-primary=["']generate["']|data-hf-hero-primary=["']generate["'][\s\S]{0,200}href=\{createGenerate360Href\(\s*["']hf-hero["']\s*\)\}/,
+  "Hero primary Generate resolves through createGenerate360Href(hf-hero)"
+);
+assert.match(
+  hfExplore,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/,
+  "HfExplore imports MOMENT_CREATE_HREF for Moment secondary"
+);
+assert.match(
+  hfExplore,
+  /data-hf-hero-moment=["']create-one["']/,
+  "HfExplore keeps explicit Create one Moment secondary marker"
+);
+assert.match(
+  hfExplore,
+  /href=\{MOMENT_CREATE_HREF\}[\s\S]{0,160}data-hf-hero-moment=["']create-one["']|data-hf-hero-moment=["']create-one["'][\s\S]{0,160}href=\{MOMENT_CREATE_HREF\}/,
+  "Hero Moment secondary uses MOMENT_CREATE_HREF"
+);
+assert.doesNotMatch(
+  hfExplore,
+  /href=["']\/create\?effect=street-power-up["']/,
+  "HfExplore must not hardcode bare street-power-up Moment hrefs"
+);
+
+const mobileBar = read("components/MobileGenerateBar.tsx");
+assert.match(
+  mobileBar,
+  /data-mobile-bar-moment=["']create-one["']/,
+  "MobileGenerateBar marks Create one Moment honestly"
+);
+assert.match(
+  mobileBar,
+  /MOMENT_CREATE_HREF|MOBILE_MOMENT_HREF/,
+  "MobileGenerateBar Moment secondary uses MOMENT_CREATE_HREF"
+);
+
+const toolShelf = read("components/HomeToolShelf.tsx");
+assert.match(
+  toolShelf,
+  /SHELF_MOMENT_HREF|MOMENT_CREATE_HREF/,
+  "HomeToolShelf Moment chip uses MOMENT_CREATE_HREF"
+);
+
+const featureCarousel = read("components/HomeFeatureCarousel.tsx");
+assert.match(
+  featureCarousel,
+  /FEATURE_MOMENT_HREF\s*=\s*MOMENT_CREATE_HREF|suiteHref:\s*FEATURE_MOMENT_HREF/,
+  "HomeFeatureCarousel Moment promo uses MOMENT_CREATE_HREF"
+);
+assert.doesNotMatch(
+  featureCarousel,
+  /suiteHref:\s*["']\/create\?effect=street-power-up["']/,
+  "HomeFeatureCarousel must not hardcode bare street-power-up"
+);
+
 console.log("generate-360-cta-smoke: ok");

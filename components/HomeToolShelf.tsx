@@ -8,6 +8,7 @@ const SHELF_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=home-tool-shelf` as cons
 /**
  * Suite chips under home — product doors first (Generate / Modules / Pack).
  * Cinema & multi-model demoted: not the critical path.
+ * Generate → createGenerate360Href (360); Moment stays MOMENT_CREATE_HREF.
  */
 type ToolChip = {
   href: string;
