@@ -2566,7 +2566,7 @@ assert.match(createStudio, /create-photo-step/);
 assert.match(createStudio, /Download policy/);
 assert.match(batchStudio, /batch-ownership/);
 assert.match(batchStudio, /fixed inset-x-0 bottom-0/);
-assert.match(appShell, /!sellerPackCreate\s*\?\s*<nav/);
+assert.match(appShell, /!sellerPackCreate\s*\?\s*\(\s*<nav/);
 assert.match(batchStudio, /api\/downloads/);
 
 // Landing tool Free-download honesty (parity with Create/Library)
@@ -4363,11 +4363,15 @@ function resolveGenerateStillPure(input) {
   assert.equal(fresh.assetId, "asset_cur");
 }
 
-// Mobile mirrors Home · Create · Library · Pricing · Account.
+// Mobile mirrors Home · Generate (primary) · Library · Pricing · Account.
 assert.match(softLaunchSrc, /MOBILE_NAV/);
 assert.match(
   softLaunchSrc,
   /MOBILE_NAV[\s\S]*href:\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`/
+);
+assert.match(
+  softLaunchSrc,
+  /MOBILE_NAV[\s\S]*label:\s*["']Generate["'][\s\S]*primary:\s*true/
 );
 assert.doesNotMatch(
   softLaunchSrc,
@@ -4381,6 +4385,12 @@ assert.match(
 );
 assert.match(appShellSrc, /MOBILE_NAV/);
 assert.match(appShellSrc, /item\.label/);
+// AIT-62: one primary Generate/360 entry above fold; secondary de-emphasized.
+assert.match(appShellSrc, /data-mobile-header-cta=["']generate["']/);
+assert.match(appShellSrc, /data-mobile-nav-primary=["']generate["']/);
+assert.match(appShellSrc, /data-mobile-nav=["']primary-generate["']/);
+assert.match(appShellSrc, /Generate 360/);
+assert.match(appShellSrc, /Mobile secondary links/);
 assert.match(
   fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8"),
   /\/modules/

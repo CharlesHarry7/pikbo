@@ -245,55 +245,20 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           />
         </Link>
         <div className="flex items-center gap-2">
-          {momentSurface ? (
+          {/* One primary Generate/360 CTA above the fold on every mobile surface. */}
+          {!create ? (
             <Link
-              href={DEFAULT_MOMENT_CREATE_HREF}
-              className={cn(
-                "inline-flex min-h-9 items-center rounded-full px-4 text-[10px] font-black",
-                home
-                  ? "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
-                  : "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
-              )}
+              href={
+                home || momentSurface
+                  ? DEFAULT_MOMENT_CREATE_HREF
+                  : PRIMARY_NAV_CREATE_HREF
+              }
+              data-mobile-header-cta="generate"
+              className="btn-press inline-flex min-h-9 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-3.5 text-[10px] font-black text-white shadow-[0_0_18px_rgba(255,78,205,0.35)]"
             >
-              Use this motion
+              {home || momentSurface ? "Use this motion" : "Generate 360"}
             </Link>
-          ) : resultShell ? (
-            <>
-              <Link
-                href={DEFAULT_MOMENT_CREATE_HREF}
-                className="inline-flex min-h-9 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-4 text-[10px] font-black text-white"
-              >
-                Create a Moment
-              </Link>
-              <details className="group relative">
-                <summary className="grid min-h-9 cursor-pointer list-none place-items-center rounded-full border border-black/15 bg-white/55 px-3 text-[10px] font-black text-[#171717] [&::-webkit-details-marker]:hidden">
-                  Menu
-                </summary>
-                <nav
-                  aria-label="Mobile product menu"
-                  className="absolute right-0 top-11 z-[70] w-44 overflow-hidden rounded-2xl border border-black/10 bg-[#FAF7F0] p-1.5 text-[#171717] shadow-[0_22px_60px_-24px_rgba(0,0,0,0.55)]"
-                >
-                  {PRIMARY_NAV.filter((item) => item.href !== "/").map(
-                    (item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="block rounded-xl px-3 py-2.5 text-xs font-black hover:bg-black/[0.06]"
-                      >
-                        {item.label}
-                      </Link>
-                    )
-                  )}
-                </nav>
-              </details>
-            </>
           ) : (
-            <>
-              <LanguageSwitcher compact tone={lightShell ? "light" : "dark"} />
-              <CreditsBadge compact tone={lightShell ? "light" : "dark"} />
-            </>
-          )}
-          {create && !resultShell ? (
             <span
               className={cn(
                 "text-[10px] font-black uppercase tracking-[0.16em]",
@@ -302,7 +267,56 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             >
               Create
             </span>
-          ) : null}
+          )}
+          <CreditsBadge compact tone={lightShell || resultShell ? "light" : "dark"} />
+          <details className="group relative">
+            <summary
+              className={cn(
+                "grid min-h-9 cursor-pointer list-none place-items-center rounded-full border px-2.5 text-[10px] font-bold [&::-webkit-details-marker]:hidden",
+                home
+                  ? "border-white/20 bg-white/10 text-white/70"
+                  : lightShell || resultShell
+                    ? "border-black/12 bg-black/[0.04] text-[#5C5C5C]"
+                    : "border-white/15 bg-white/10 text-white/65"
+              )}
+            >
+              More
+            </summary>
+            <nav
+              aria-label="Mobile secondary links"
+              className={cn(
+                "absolute right-0 top-11 z-[70] w-44 overflow-hidden rounded-2xl border p-1.5 shadow-[0_22px_60px_-24px_rgba(0,0,0,0.55)]",
+                home || (!lightShell && !resultShell)
+                  ? "border-white/10 bg-[rgba(16,16,22,0.98)] text-white"
+                  : "border-black/10 bg-[#FAF7F0] text-[#171717]"
+              )}
+            >
+              {PRIMARY_NAV.filter(
+                (item) => item.href !== "/" && !item.href.startsWith(MOMENT_CREATE_HREF)
+              ).map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "block rounded-xl px-3 py-2.5 text-xs font-semibold opacity-80 transition hover:opacity-100",
+                    home || (!lightShell && !resultShell)
+                      ? "hover:bg-white/8"
+                      : "hover:bg-black/[0.06]"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <div className="mt-1 border-t border-current/10 px-2 py-2">
+                <LanguageSwitcher
+                  compact
+                  tone={
+                    home || (!lightShell && !resultShell) ? "dark" : "light"
+                  }
+                />
+              </div>
+            </nav>
+          </details>
         </div>
       </header>
 
@@ -324,47 +338,63 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         {!hideFooter ? <Footer /> : null}
       </div>
 
-      {!resultShell && !sellerPackCreate ? <nav
-        className={cn(
-          "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
-          home
-            ? "relative border-white/10 bg-[rgba(10,10,15,0.96)]"
-            : "sticky bottom-0 border-white/10 bg-[rgba(10,10,15,0.96)]"
-        )}
-        aria-label="Mobile navigation"
-      >
-        {MOBILE_NAV.map((item) => {
-          const on = active(path, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={on ? "page" : undefined}
-              className={cn(
-                "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
-                home
-                  ? on
-                    ? "text-[#FF4ECD]"
-                    : "text-white/45"
-                  : on
-                    ? "text-[#FF4ECD]"
-                    : "text-[var(--cream)]/38"
-              )}
-            >
-              <span
+      {!resultShell && !sellerPackCreate ? (
+        <nav
+          className="z-50 sticky bottom-0 grid grid-cols-5 items-end border-t border-white/10 bg-[rgba(10,10,15,0.96)] px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur-xl lg:hidden"
+          aria-label="Mobile navigation"
+          data-mobile-nav="primary-generate"
+        >
+          {MOBILE_NAV.map((item) => {
+            const on = active(path, item.href);
+            const isPrimary = "primary" in item && item.primary === true;
+            if (isPrimary) {
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={on ? "page" : undefined}
+                  data-mobile-nav-primary="generate"
+                  className="relative flex min-w-0 flex-col items-center justify-end px-0.5 pb-1.5 pt-0"
+                >
+                  <span
+                    className={cn(
+                      "btn-press -mt-4 inline-flex min-h-11 min-w-[4.75rem] items-center justify-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-3.5 text-[11px] font-black text-white shadow-[0_10px_28px_rgba(255,78,205,0.48)]",
+                      on && "ring-2 ring-white/35"
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                  <span className="mt-1 text-[8px] font-bold uppercase tracking-[0.14em] text-[#FF4ECD]/90">
+                    360
+                  </span>
+                </Link>
+              );
+            }
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={on ? "page" : undefined}
                 className={cn(
-                  "mb-1 h-1 w-1 rounded-full",
+                  "flex min-w-0 flex-col items-center justify-center px-1 py-2.5 text-[9px] font-semibold transition-colors",
                   on
-                    ? "bg-[#FF4ECD]"
-                    : "bg-transparent"
+                    ? "text-white/72"
+                    : "text-[var(--cream)]/32 hover:text-[var(--cream)]/50"
                 )}
-                aria-hidden
-              />
-              <span className="truncate">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav> : null}
+              >
+                <span
+                  className={cn(
+                    "mb-1 h-1 w-1 rounded-full",
+                    on ? "bg-white/55" : "bg-transparent"
+                  )}
+                  aria-hidden
+                />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      ) : null}
     </div>
   );
 }
