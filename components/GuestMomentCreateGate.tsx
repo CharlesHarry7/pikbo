@@ -1,14 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import {
   isClientTimeoutError,
   STUDIO_SESSION_BOOT_MS,
 } from "@/lib/clientTimeout";
+import {
+  buildGuestCreateNextPath,
+  type GuestCreateIntentFields,
+  loginHrefForGuestCreate,
+  stashGuestCreateIntent,
+} from "@/lib/guestCreateIntent";
 import { canUsePrivateLaunch, fetchMe, type MeResponse } from "@/lib/meClient";
-import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const PRIVATE_BETA_MAILTO =
   "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
@@ -19,21 +24,35 @@ const STREET_POWER_UP_SAMPLE = {
   webm: "/demos/beatbot-viral-hook.webm",
 } as const;
 
-function guestSignInHref() {
-  return `/login?next=${encodeURIComponent(
-    `${MOMENT_CREATE_HREF}&source=guest-create`
-  )}`;
-}
-
 function GuestMomentPreview({
   signedIn = false,
+  intent,
   sessionBoot,
   onRetrySession,
 }: {
   signedIn?: boolean;
+  intent?: GuestCreateIntentFields | null;
   sessionBoot: "checking" | "ready" | "timeout";
   onRetrySession: () => void;
 }) {
+  // Preserve create/360 query intent (effect/mode/source/…) through login.
+  // Soft-launch still lands Moment when the URL is empty or Moment-shaped.
+  const signInHref = useMemo(
+    () =>
+      loginHrefForGuestCreate(intent, {
+        fallbackSource: "guest-create",
+      }),
+    [intent]
+  );
+
+  const onGuestSignIn = () => {
+    stashGuestCreateIntent(
+      buildGuestCreateNextPath(intent, {
+        fallbackSource: "guest-create",
+      })
+    );
+  };
+
   return (
     <section
       className="relative isolate min-h-[calc(100vh-56px)] overflow-hidden bg-[var(--void)] px-4 pb-10 pt-6 text-[var(--cream)] sm:px-7 lg:px-10 lg:py-7"
@@ -152,8 +171,9 @@ function GuestMomentPreview({
             <div className="mt-5 grid gap-3">
               {!signedIn && (
                 <Link
-                  href={guestSignInHref()}
+                  href={signInHref}
                   data-guest-create-sign-in
+                  onClick={onGuestSignIn}
                   className="btn-press inline-flex min-h-14 items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(255,78,205,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#151519]"
                 >
                   Sign in to make yours
@@ -190,7 +210,14 @@ function GuestMomentPreview({
   );
 }
 
-export function GuestMomentCreateGate({ children }: { children: ReactNode }) {
+export function GuestMomentCreateGate({
+  children,
+  intent,
+}: {
+  children: ReactNode;
+  /** Incoming create query so guest→login keeps effect/mode/source/360. */
+  intent?: GuestCreateIntentFields | null;
+}) {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [sessionResolved, setSessionResolved] = useState(false);
   const [sessionBoot, setSessionBoot] = useState<"checking" | "ready" | "timeout">(
@@ -230,6 +257,7 @@ export function GuestMomentCreateGate({ children }: { children: ReactNode }) {
   return (
     <GuestMomentPreview
       signedIn={sessionResolved && me?.signedIn === true}
+      intent={intent}
       sessionBoot={sessionBoot}
       onRetrySession={() => setBootNonce((n) => n + 1)}
     />

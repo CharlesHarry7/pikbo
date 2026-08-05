@@ -1,9 +1,16 @@
 import Link from "next/link";
-import { createGenerate360Href } from "@/lib/jobIntents";
+import {
+  CHROME_GENERATE_SOURCE,
+  createGenerate360Href,
+} from "@/lib/jobIntents";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
-const SHELF_GENERATE_HREF = createGenerate360Href("home-tool-shelf");
-const SHELF_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=home-tool-shelf` as const;
+/** AIT-122: deep-link create only; frozen source for guestCreateIntent handoff. */
+const SHELF_GENERATE_HREF = createGenerate360Href(
+  CHROME_GENERATE_SOURCE.homeToolShelf
+);
+const SHELF_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=${CHROME_GENERATE_SOURCE.homeToolShelf}` as const;
 
 /**
  * Suite chips under home — product doors first (Generate / Modules / Pack).

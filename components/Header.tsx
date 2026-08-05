@@ -1,10 +1,19 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
 import { CreditsBadge } from "@/components/CreditsBadge";
-import { createGenerate360Href } from "@/lib/jobIntents";
+import {
+  CHROME_GENERATE_SOURCE,
+  createGenerate360Href,
+} from "@/lib/jobIntents";
 
-/** Primary header CTA — listing spin remix (ratio/duration/channel). */
-const HEADER_GENERATE_HREF = createGenerate360Href("header");
+/**
+ * Primary header CTA — listing spin remix (ratio/duration/channel).
+ * AIT-122: deep-links `/create` only (no bare `/login`). Guest sign-in on
+ * Create preserves effect/source via guestCreateIntent.
+ */
+const HEADER_GENERATE_HREF = createGenerate360Href(
+  CHROME_GENERATE_SOURCE.header
+);
 
 export function Header() {
   return (
@@ -38,6 +47,7 @@ export function Header() {
             href={HEADER_GENERATE_HREF}
             className="btn btn-primary text-sm"
             data-header-cta="generate-remix"
+            data-chrome-generate-source={CHROME_GENERATE_SOURCE.header}
           >
             Create a clip
           </Link>

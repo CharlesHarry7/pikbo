@@ -4,10 +4,18 @@ import Link from "next/link";
 import { track } from "@/lib/analytics";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
-import { createGenerate360Href } from "@/lib/jobIntents";
+import {
+  CHROME_GENERATE_SOURCE,
+  createGenerate360Href,
+} from "@/lib/jobIntents";
 
-/** Primary Generate door — listing spin remix (ratio/duration/channel). */
-const GENERATE_REMIX_HREF = createGenerate360Href("hf-product-rail");
+/**
+ * Primary Generate door — listing spin remix (ratio/duration/channel).
+ * AIT-122: deep-link create only; frozen source for guestCreateIntent.
+ */
+const GENERATE_REMIX_HREF = createGenerate360Href(
+  CHROME_GENERATE_SOURCE.hfProductRail
+);
 
 /**
  * HF homepage product entry strip — media-backed capability cards.

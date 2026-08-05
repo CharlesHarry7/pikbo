@@ -99,6 +99,20 @@ export function createJobRemixHref(jobId: JobIntentId | string): string {
 export const GENERATE_360_EFFECT = "360-spin-showcase" as const;
 
 /**
+ * Frozen chrome / home-secondary Generate source tags (AIT-122).
+ * Keep identical to `CHROME_GENERATE_SOURCE_TAGS` in guestCreateIntent.ts.
+ * Chrome doors deep-link create only; guest login uses guestCreateIntent.
+ */
+export const CHROME_GENERATE_SOURCE = {
+  header: "header",
+  mobileBar: "mobile-bar",
+  homeProofWall: "home-proof-wall",
+  homeToolShelf: "home-tool-shelf",
+  homeBrowse: "home-browse",
+  hfProductRail: "hf-product-rail",
+} as const;
+
+/**
  * Single Generate → 360° studio deep link.
  * Optional `source` tags the entry surface (nav, suite, library-empty, …)
  * via the remix `source` query so Create can keep honest intent.

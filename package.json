@@ -24,6 +24,8 @@
     "moment-create-preview-regression": "node scripts/moment-create-preview-regression.mjs",
     "guest-create-preview-regression": "node scripts/guest-create-preview-regression.mjs",
     "studio-open-lab-preview-regression": "node scripts/studio-open-lab-preview-regression.mjs",
+    "guest-login-intent-regression": "node --experimental-strip-types scripts/guest-login-intent-regression.mjs",
+    "chrome-generate-guest-intent-regression": "node --experimental-strip-types scripts/chrome-generate-guest-intent-regression.mjs",
     "moment-contract-regression": "node scripts/moment-contract-regression.mjs",
     "generate-360-cta-smoke": "node scripts/generate-360-cta-smoke.mjs",
     "recovery-cost-gate": "node scripts/recovery-cost-gate.mjs",
