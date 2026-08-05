@@ -43,10 +43,13 @@ assert(
     homeHero.includes("not a completed customer deliverable") &&
     homeHero.includes("not your toy") &&
     home.includes("<HomeViralWall") &&
+    home.includes("<HfProductRail") &&
     home.includes("buildHomeShowcaseFeed") &&
     !home.includes("PublicLaunchPackSample") &&
+    !home.includes('from "@/components/HfExploreHome"') &&
+    !home.includes("<HfExploreHome") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must expose Street Power-Up Moment hero + capped Lab proof wall (no Pack sample)"
+  "homepage must expose Moment hero + Lab proof wall + HF product rail (no Pack / full Explore remount)"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),
@@ -67,9 +70,17 @@ assert(
     homeWall.includes("data-home-proof-360") &&
     homeWall.includes("pinListing360InFirstSlots") &&
     homeWall.includes("data-home-proof-360-pinned") &&
+    homeWall.includes("createGenerate360Href") &&
     (homeWall.includes("HOME_PROOF_LIMIT") ||
       homeWall.includes(".slice(0, 8)")),
-  "Lab proof wall must badge honestly, pin 360 in first slots, entry=home-proof-wall, cap ≤8"
+  "Lab proof wall must badge honestly, pin 360, use createGenerate360Href, cap ≤8"
+);
+// CTA hierarchy: Moment primary in hero, then wall, then suite rail (no dual hero Generate).
+assert(
+  home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeViralWall") &&
+    home.indexOf("<HomeViralWall") < home.indexOf("<HfProductRail") &&
+    home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
+  "home order: Moment hero → proof wall → HF product rail → trust footer"
 );
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),

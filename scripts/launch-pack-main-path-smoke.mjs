@@ -29,6 +29,7 @@ const meClient = read("lib/meClient.ts");
 // Media is cached Lab sample only (not customer results / Pack archive).
 assert.match(home, /<HomeCinemaHero \/>/);
 assert.match(home, /<HomeViralWall/);
+assert.match(home, /<HfProductRail/);
 assert.match(home, /buildHomeShowcaseFeed/);
 assert.doesNotMatch(home, /PublicLaunchPackSample/);
 assert.match(homeHero, /data-home-hero=["']street-power-up["']/);
