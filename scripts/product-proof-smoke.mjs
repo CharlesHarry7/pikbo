@@ -35,6 +35,9 @@ assert(
   home.includes("<HomeCinemaHero />") &&
     homeHero.includes('data-home-hero="street-power-up"') &&
     homeHero.includes("href={MOMENT_CREATE_HREF}") &&
+    homeHero.includes("data-home-moment-cta") &&
+    (homeHero.match(/data-home-moment-cta/g) || []).length === 1 &&
+    homeHero.includes("data-home-result-h1") &&
     homeHero.includes("Sample · Beatbot") &&
     homeHero.includes("Use this motion") &&
     homeHero.includes("Sample shown: cached 6s archive") &&
