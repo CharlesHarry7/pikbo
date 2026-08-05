@@ -11,6 +11,7 @@ import {
   acceptControlledLibraryNewAttemptUrl,
   libraryDurableTerminalFailureCopy,
   libraryNewAttemptButtonLabel,
+  librarySuccessSamePhotoReuseLabel,
 } from "@/lib/privateGenerationResultsPure.mjs";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
@@ -18,6 +19,8 @@ type JobCapabilities = {
   localRetry?: boolean;
   localCancel?: boolean;
   newAttempt?: boolean;
+  /** Deliverable success may reuse the bound private photo for a new Moment. */
+  reuseSamePhoto?: boolean;
   refreshOnly?: boolean;
 };
 
@@ -101,6 +104,29 @@ function newAttemptHref(job: GenerationJob): string {
 
 function newAttemptLabel(job: GenerationJob): string {
   return libraryNewAttemptButtonLabel(Boolean(acceptedSamePhotoHandoff(job)));
+}
+
+/**
+ * Deliverable success: same verified photo for another Moment (not Retry).
+ * Requires a client-accepted controlled handoff URL — never invent asset ids.
+ */
+function canReuseSamePhoto(job: GenerationJob): boolean {
+  if (job.status !== "succeeded") return false;
+  if (!acceptedSamePhotoHandoff(job)) return false;
+  if (job.capabilities?.reuseSamePhoto === false) return false;
+  return (
+    job.capabilities?.reuseSamePhoto === true ||
+    job.durable === true ||
+    job.adapter === "supabase-private"
+  );
+}
+
+function samePhotoReuseHref(job: GenerationJob): string {
+  return acceptedSamePhotoHandoff(job) || CREATE_MOMENT_HREF;
+}
+
+function samePhotoReuseLabel(): string {
+  return librarySuccessSamePhotoReuseLabel();
 }
 
 function visibleAccountJob(job: GenerationJob): boolean {
@@ -573,6 +599,16 @@ export function LibraryGrid() {
                         {newAttemptLabel(job)}
                       </Link>
                     ) : null}
+                    {canReuseSamePhoto(job) ? (
+                      <Link
+                        href={samePhotoReuseHref(job)}
+                        className="btn btn-ghost min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
+                        data-library-action="reuse-same-photo"
+                        data-library-new-attempt="same-photo"
+                      >
+                        {samePhotoReuseLabel()}
+                      </Link>
+                    ) : null}
                     {isOpen(job.status) && canLocalCancel(job) ? (
                       <button
                         type="button"
@@ -583,7 +619,9 @@ export function LibraryGrid() {
                         {cancellingId === job.id ? "Canceling…" : "Cancel"}
                       </button>
                     ) : null}
-                    {!isOpen(job.status) && !canNewAttempt(job) ? (
+                    {!isOpen(job.status) &&
+                    !canNewAttempt(job) &&
+                    !canReuseSamePhoto(job) ? (
                       <Link
                         href={remixHref}
                         className="btn btn-ghost min-h-11 flex-1 !px-4 !py-2 text-center text-xs"

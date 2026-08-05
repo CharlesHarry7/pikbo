@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
- * AIT-12 / AIT-15: durable Moment statuses in Library + owner input-asset
- * new-attempt handoff.
+ * AIT-12 / AIT-15 / AIT-18: durable Moment statuses in Library + owner
+ * input-asset handoff for terminal failures (new attempt) and deliverable
+ * successes (same-photo reuse for another Moment).
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped mapping, all durable statuses, dedupe/counts, secret
  * field exclusion, controlled download URLs, input_asset_id → newAttemptUrl,
- * generic Create fallback, and no local Retry/Cancel on durable rows.
+ * success reuse CTA, generic Create fallback, and no local Retry/Cancel on
+ * durable rows.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -17,6 +19,7 @@ import {
   controlledLibraryNewAttemptUrl,
   libraryDurableTerminalFailureCopy,
   libraryNewAttemptButtonLabel,
+  librarySuccessSamePhotoReuseLabel,
   mergePrivateLibraryWithLocalLedger,
   privateLibraryJobFromRow,
   safeLibraryErrorCode,
@@ -58,6 +61,11 @@ assert.match(generations, /mergePrivateLibraryWithLocalLedger/);
 assert.match(generations, /adapter:\s*"process-memory"/);
 assert.match(generations, /localRetry:\s*terminalFailure/);
 assert.match(generations, /localCancel:\s*open/);
+assert.match(
+  generations,
+  /reuseSamePhoto:\s*false/,
+  "process-memory listings must not claim durable same-photo reuse"
+);
 assert.doesNotMatch(generations, /providerOutputUrl/);
 assert.doesNotMatch(
   generations,
@@ -67,15 +75,22 @@ assert.doesNotMatch(
 assert.match(library, /function canLocalRetry/);
 assert.match(library, /function canLocalCancel/);
 assert.match(library, /function canNewAttempt/);
+assert.match(library, /function canReuseSamePhoto/);
 assert.match(library, /function newAttemptHref/);
+assert.match(library, /function samePhotoReuseHref/);
 assert.match(library, /function acceptedSamePhotoHandoff/);
 assert.match(library, /function newAttemptLabel/);
+assert.match(library, /function samePhotoReuseLabel/);
 assert.match(library, /isRetryable\(job\.status\) && canLocalRetry\(job\)/);
 assert.match(library, /isOpen\(job\.status\) && canLocalCancel\(job\)/);
 assert.match(library, /canNewAttempt\(job\)/);
+assert.match(library, /canReuseSamePhoto\(job\)/);
 assert.match(library, /newAttemptHref\(job\)/);
 assert.match(library, /newAttemptLabel\(job\)/);
+assert.match(library, /samePhotoReuseHref\(job\)/);
+assert.match(library, /samePhotoReuseLabel\(\)/);
 assert.match(library, /data-library-action="new-attempt"/);
+assert.match(library, /data-library-action="reuse-same-photo"/);
 assert.match(library, /data-library-new-attempt=\{/);
 assert.match(library, /void retry\(job\)/);
 assert.match(library, /void cancel\(job\)/);
@@ -88,6 +103,7 @@ assert.match(library, /job\.newAttemptUrl/);
 assert.match(library, /acceptControlledLibraryNewAttemptUrl/);
 assert.match(library, /libraryDurableTerminalFailureCopy/);
 assert.match(library, /libraryNewAttemptButtonLabel/);
+assert.match(library, /librarySuccessSamePhotoReuseLabel/);
 // Copy + CTA both branch on the same client-accepted handoff.
 assert.match(
   library,
@@ -100,6 +116,11 @@ assert.match(
 assert.match(
   library,
   /acceptedSamePhotoHandoff\(job\)\s*\?\s*"same-photo"\s*:\s*"generic"/
+);
+// Success reuse CTA is gated on accepted handoff; generic remix only when absent.
+assert.match(
+  library,
+  /!canNewAttempt\(job\)\s*&&\s*!canReuseSamePhoto\(job\)/
 );
 assert.doesNotMatch(
   library,
@@ -243,15 +264,17 @@ for (const [status, job] of Object.entries(statuses)) {
 
 assert.equal(statuses.queued.capabilities.refreshOnly, true);
 assert.equal(statuses.queued.capabilities.newAttempt, false);
+assert.equal(statuses.queued.capabilities.reuseSamePhoto, false);
 assert.equal(statuses.queued.downloadAllowed, false);
 assert.equal(statuses.queued.videoUrl, undefined);
 assert.equal(
   statuses.queued.newAttemptUrl,
   undefined,
-  "open rows must not get the retry handoff"
+  "open rows must not get the photo handoff"
 );
 
 assert.equal(statuses.running.capabilities.refreshOnly, true);
+assert.equal(statuses.running.capabilities.reuseSamePhoto, false);
 assert.equal(statuses.running.downloadAllowed, false);
 assert.equal(statuses.running.videoUrl, undefined);
 assert.equal(statuses.running.newAttemptUrl, undefined);
@@ -262,15 +285,17 @@ assert.equal(
   `/api/downloads/${encodeURIComponent(jobId)}`
 );
 assert.equal(statuses.succeeded.capabilities.newAttempt, false);
+assert.equal(statuses.succeeded.capabilities.reuseSamePhoto, true);
 assert.equal(statuses.succeeded.capabilities.refreshOnly, false);
 assert.equal(statuses.succeeded.creditsOutcome, "10 used");
 assert.equal(
   statuses.succeeded.newAttemptUrl,
-  undefined,
-  "succeeded rows must not get the retry handoff"
+  expectedNewAttemptUrl,
+  "deliverable success with bound photo must emit same-photo reuse handoff"
 );
 
 assert.equal(statuses.failed.capabilities.newAttempt, true);
+assert.equal(statuses.failed.capabilities.reuseSamePhoto, false);
 assert.equal(statuses.failed.errorCode, "TIMEOUT");
 assert.equal(statuses.failed.downloadAllowed, false);
 assert.equal(statuses.failed.videoUrl, undefined);
@@ -278,6 +303,7 @@ assert.equal(statuses.failed.creditsOutcome, "10 restored");
 assert.equal(statuses.failed.newAttemptUrl, expectedNewAttemptUrl);
 
 assert.equal(statuses.canceled.capabilities.newAttempt, true);
+assert.equal(statuses.canceled.capabilities.reuseSamePhoto, false);
 assert.equal(statuses.canceled.errorCode, "CANCELED");
 assert.equal(statuses.canceled.creditsOutcome, "refund unconfirmed");
 assert.equal(statuses.canceled.newAttemptUrl, expectedNewAttemptUrl);
@@ -480,6 +506,10 @@ assert.doesNotMatch(defaultGeneric, /same verified photo/i);
 
 assert.equal(libraryNewAttemptButtonLabel(true), "New attempt · same photo");
 assert.equal(libraryNewAttemptButtonLabel(false), "Create new Moment");
+assert.equal(
+  librarySuccessSamePhotoReuseLabel(),
+  "Same photo · new Moment"
+);
 
 // Missing / invalid input asset keeps honest generic Create (no newAttemptUrl).
 const failedNoAsset = privateLibraryJobFromRow({
@@ -490,6 +520,7 @@ const failedNoAsset = privateLibraryJobFromRow({
 });
 assert.ok(failedNoAsset);
 assert.equal(failedNoAsset.capabilities.newAttempt, true);
+assert.equal(failedNoAsset.capabilities.reuseSamePhoto, false);
 assert.equal(failedNoAsset.newAttemptUrl, undefined);
 assert.equal(
   acceptControlledLibraryNewAttemptUrl(failedNoAsset.newAttemptUrl),
@@ -515,7 +546,7 @@ assert.ok(failedObjectPath);
 assert.equal(failedObjectPath.newAttemptUrl, undefined);
 assert.doesNotMatch(JSON.stringify(failedObjectPath), /private-results/);
 
-// Succeeded without a private object is not a deliverable download.
+// Succeeded without a private object is not a deliverable download or reuse.
 const incompleteSuccess = privateLibraryJobFromRow({
   ...baseRow,
   status: "succeeded",
@@ -525,6 +556,57 @@ const incompleteSuccess = privateLibraryJobFromRow({
 assert.ok(incompleteSuccess);
 assert.equal(incompleteSuccess.downloadAllowed, false);
 assert.equal(incompleteSuccess.videoUrl, undefined);
+assert.equal(incompleteSuccess.capabilities.reuseSamePhoto, false);
+assert.equal(
+  incompleteSuccess.newAttemptUrl,
+  undefined,
+  "non-deliverable success must not claim same-photo reuse"
+);
+
+// Deliverable success without a bound photo: download ok, no reuse handoff.
+const successNoAsset = privateLibraryJobFromRow({
+  ...baseRow,
+  status: "succeeded",
+  output_content_type: "video/mp4",
+  completed_at: "2026-08-04T12:01:00.000Z",
+  input_asset_id: null,
+});
+assert.ok(successNoAsset);
+assert.equal(successNoAsset.downloadAllowed, true);
+assert.equal(successNoAsset.capabilities.reuseSamePhoto, true);
+assert.equal(
+  successNoAsset.newAttemptUrl,
+  undefined,
+  "success without input_asset_id must not invent a photo handoff"
+);
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(successNoAsset.newAttemptUrl),
+  undefined
+);
+
+// Client success reuse gate mirrors failure accept: valid URL only.
+const successUi = {
+  canReuse: Boolean(
+    statuses.succeeded?.status === "succeeded" &&
+      acceptControlledLibraryNewAttemptUrl(statuses.succeeded?.newAttemptUrl)
+  ),
+  label: librarySuccessSamePhotoReuseLabel(),
+  href: acceptControlledLibraryNewAttemptUrl(statuses.succeeded?.newAttemptUrl),
+};
+assert.equal(successUi.canReuse, true);
+assert.equal(successUi.label, "Same photo · new Moment");
+assert.equal(successUi.href, expectedNewAttemptUrl);
+const successNoAssetUi = {
+  canReuse: Boolean(
+    successNoAsset.status === "succeeded" &&
+      acceptControlledLibraryNewAttemptUrl(successNoAsset.newAttemptUrl)
+  ),
+};
+assert.equal(
+  successNoAssetUi.canReuse,
+  false,
+  "Library must not show same-photo reuse without accepted handoff"
+);
 
 // Unknown / invalid rows are dropped (not owner-filterable client-side).
 assert.equal(

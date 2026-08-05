@@ -42,9 +42,10 @@ export type PrivateLibraryJob = {
   downloadAllowed: boolean;
   videoUrl?: string;
   /**
-   * Controlled relative Create URL for a new attempt using the owner-validated
-   * durable input asset. Present only on failed|canceled rows with a
-   * UUID-shaped input_asset_id. Never reuses the old job's idempotency key.
+   * Controlled relative Create URL using the owner-validated durable input
+   * asset. Present on failed|canceled (new attempt) and deliverable succeeded
+   * (same-photo reuse) rows with a UUID-shaped input_asset_id. Never reuses
+   * the old job's idempotency key.
    */
   newAttemptUrl?: string;
   errorCode?: string;
@@ -62,6 +63,8 @@ export type PrivateLibraryJob = {
     localRetry: false;
     localCancel: false;
     newAttempt: boolean;
+    /** Deliverable success may offer same-photo Create handoff (not Retry). */
+    reuseSamePhoto: boolean;
     refreshOnly: boolean;
   };
 };
