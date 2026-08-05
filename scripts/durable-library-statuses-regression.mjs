@@ -210,6 +210,7 @@ for (const [status, job] of Object.entries(statuses)) {
   assert.equal(job.durable, true);
   assert.equal(job.adapter, "supabase-private");
   assert.equal(job.owned, true);
+  assert.equal(job.inputBound, true);
   assert.equal(job.capabilities.localRetry, false);
   assert.equal(job.capabilities.localCancel, false);
   assert.equal(job.demo, false);

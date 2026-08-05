@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useToast } from "@/components/Toast";
 import { interpretDownloadHead } from "@/lib/createTrust";
 import { downloadVideoFile, privateDownloadHeaders } from "@/lib/history";
@@ -10,7 +11,9 @@ import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
 import {
   acceptControlledLibraryNewAttemptUrl,
   libraryDurableTerminalFailureCopy,
+  libraryInputBindingCopy,
   libraryNewAttemptButtonLabel,
+  libraryNotYourToyCopy,
 } from "@/lib/privateGenerationResultsPure.mjs";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
@@ -32,6 +35,8 @@ type GenerationJob = {
   videoUrl?: string;
   /** Server-controlled relative Create URL for durable same-photo new attempt. */
   newAttemptUrl?: string;
+  /** Boolean only — true when a private input asset is bound server-side. */
+  inputBound?: boolean;
   errorCode?: string;
   error?: string;
   createdAt?: string;
@@ -49,6 +54,10 @@ type GenerationsResponse = {
 };
 
 const CREATE_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=library` as const;
+
+/** UUID shape for deep-link job ids — reject freeform paths/secrets. */
+const LIBRARY_JOB_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function isOpen(status: string): boolean {
   return status === "queued" || status === "running";
@@ -105,6 +114,8 @@ function newAttemptLabel(job: GenerationJob): string {
 
 function visibleAccountJob(job: GenerationJob): boolean {
   if (job.demo) return false;
+  // Fail-closed: never render another session's stub (owned:false).
+  if (job.owned === false) return false;
   if (isOpen(job.status) || isRetryable(job.status)) return true;
   return (
     job.status === "succeeded" &&
@@ -203,7 +214,118 @@ function formatDate(value?: string): string {
   }).format(date);
 }
 
-export function LibraryGrid() {
+function parseDeepLinkJobId(raw: string | null): string | null {
+  if (!raw) return null;
+  const id = raw.trim();
+  return LIBRARY_JOB_ID_RE.test(id) ? id : null;
+}
+
+function JobActionRow({
+  job,
+  forkingId,
+  cancellingId,
+  onDownload,
+  onRetry,
+  onCancel,
+}: {
+  job: GenerationJob;
+  forkingId: string | null;
+  cancellingId: string | null;
+  onDownload: (job: GenerationJob) => void;
+  onRetry: (job: GenerationJob) => void;
+  onCancel: (job: GenerationJob) => void;
+}) {
+  const remixHref = createRemixHref(
+    job.effect || "street-power-up",
+    undefined,
+    null,
+    remixOptsFromRecord(job)
+  );
+  return (
+    <div className="mt-4 flex flex-wrap gap-2">
+      {job.status === "succeeded" ? (
+        <button
+          type="button"
+          onClick={() => onDownload(job)}
+          className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs"
+        >
+          Download video
+        </button>
+      ) : null}
+      {isRetryable(job.status) && canLocalRetry(job) ? (
+        <button
+          type="button"
+          onClick={() => onRetry(job)}
+          disabled={forkingId === job.id}
+          className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs disabled:opacity-50"
+          data-library-action="retry"
+        >
+          {forkingId === job.id ? "Preparing…" : "Retry Moment"}
+        </button>
+      ) : null}
+      {canNewAttempt(job) ? (
+        <Link
+          href={newAttemptHref(job)}
+          className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
+          data-library-action="new-attempt"
+          data-library-new-attempt={
+            acceptedSamePhotoHandoff(job) ? "same-photo" : "generic"
+          }
+        >
+          {newAttemptLabel(job)}
+        </Link>
+      ) : null}
+      {isOpen(job.status) && canLocalCancel(job) ? (
+        <button
+          type="button"
+          onClick={() => onCancel(job)}
+          disabled={cancellingId === job.id}
+          className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs disabled:opacity-50"
+        >
+          {cancellingId === job.id ? "Canceling…" : "Cancel"}
+        </button>
+      ) : null}
+      {!isOpen(job.status) && !canNewAttempt(job) ? (
+        <Link
+          href={remixHref}
+          className="btn btn-ghost min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
+        >
+          Generate again
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+function InputBindingSlot({ inputBound }: { inputBound: boolean }) {
+  return (
+    <div
+      className="mt-5 flex items-center gap-3 border-t border-white/10 pt-4"
+      data-library-input-bound={inputBound ? "true" : "false"}
+    >
+      <div
+        className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-white/12 bg-white/[0.04]"
+        aria-hidden
+      >
+        <span className="text-[9px] font-black uppercase tracking-[0.12em] text-white/45">
+          Toy
+        </span>
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/45">
+          Original upload
+        </p>
+        <p className="mt-0.5 text-xs font-semibold leading-5 text-white/60">
+          {libraryInputBindingCopy(inputBound)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function LibraryGridInner() {
+  const searchParams = useSearchParams();
+  const deepLinkJobId = parseDeepLinkJobId(searchParams.get("job"));
   const [me, setMe] = useState<MeResponse | null>(null);
   const [accountReady, setAccountReady] = useState(false);
   const [jobs, setJobs] = useState<GenerationJob[]>([]);
@@ -211,6 +333,7 @@ export function LibraryGrid() {
   const [refreshing, setRefreshing] = useState(false);
   const [forkingId, setForkingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const toast = useToast();
 
   const refreshJobs = useCallback(async () => {
@@ -269,6 +392,31 @@ export function LibraryGrid() {
       }),
     [jobs]
   );
+
+  // Prefer explicit selection, then deep-link job, then newest/open job.
+  const selectedJob = useMemo(() => {
+    if (sortedJobs.length === 0) return null;
+    if (selectedId) {
+      const match = sortedJobs.find((job) => job.id === selectedId);
+      if (match) return match;
+    }
+    if (deepLinkJobId) {
+      const linked = sortedJobs.find((job) => job.id === deepLinkJobId);
+      if (linked) return linked;
+    }
+    return sortedJobs[0] || null;
+  }, [sortedJobs, selectedId, deepLinkJobId]);
+  const activeSelectedId = selectedJob?.id ?? null;
+
+  /**
+   * Deep-linked job id that is not on this owner's visible list after load.
+   * Fail-closed: no media, no effect metadata invent, not-your-toy copy only.
+   */
+  const notYourToy =
+    Boolean(me?.signedIn) &&
+    jobsReady &&
+    Boolean(deepLinkJobId) &&
+    !sortedJobs.some((job) => job.id === deepLinkJobId);
 
   useEffect(() => {
     if (!me?.signedIn || openCount === 0) return;
@@ -335,7 +483,7 @@ export function LibraryGrid() {
         toast(body.message || "This Moment could not be prepared for retry");
         return;
       }
-      if (body.next?.retryJobId && body.next.retryToken) {
+      if (body.next?.retryJobId && body.next?.retryToken) {
         try {
           sessionStorage.setItem(
             `pikbo_retry_token:${body.next.retryJobId}`,
@@ -417,11 +565,57 @@ export function LibraryGrid() {
               browser-cached demos are not added to this Library.
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
-              <Link href="/login?next=/library" className="btn btn-primary text-sm">
+              {/* Static default keeps engine-smoke / launch-pack contract
+                  href="/login?next=/library". Deep-link guests restore ?job=. */}
+              <Link
+                href={
+                  deepLinkJobId
+                    ? `/login?next=${encodeURIComponent(
+                        `/library?job=${encodeURIComponent(deepLinkJobId)}`
+                      )}`
+                    : "/login?next=/library"
+                }
+                className="btn btn-primary text-sm"
+              >
                 Sign in to Library
               </Link>
               <Link href={CREATE_MOMENT_HREF} className="btn btn-ghost text-sm">
                 Preview Street Power-Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (notYourToy) {
+    return (
+      <section
+        className="mt-6 overflow-hidden rounded-[1.75rem] border border-amber-400/25 bg-[#111113]"
+        data-library-state="not-your-toy"
+        data-library-not-your-toy="true"
+      >
+        <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
+          <div className="max-w-lg">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-amber-300/30 bg-amber-300/10 text-xl text-amber-200">
+              ⚠
+            </span>
+            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">
+              Not available
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+              Not your toy
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/55">
+              {libraryNotYourToyCopy()}
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Link href="/library" className="btn btn-primary text-sm">
+                Back to your Library
+              </Link>
+              <Link href={CREATE_MOMENT_HREF} className="btn btn-ghost text-sm">
+                Create new Moment
               </Link>
             </div>
           </div>
@@ -477,127 +671,184 @@ export function LibraryGrid() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {sortedJobs.map((job) => {
-            const status = jobStatus(job.status);
-            const remixHref = createRemixHref(
-              job.effect || "street-power-up",
-              undefined,
-              null,
-              remixOptsFromRecord(job)
-            );
-            return (
-              <article
-                key={job.id}
-                className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111113] shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)]"
-              >
-                <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(200,255,61,0.12),transparent_55%),#09090a] text-center">
-                  {job.status === "succeeded" && job.videoUrl ? (
-                    <video
-                      src={job.videoUrl}
-                      controls
-                      playsInline
-                      preload="metadata"
-                      aria-label={`${effectName(job.effect)} generated video`}
-                      className="h-full w-full bg-black object-contain"
-                    />
-                  ) : (
-                    <div className="p-6">
-                      <span className={`mx-auto block h-2 w-2 rounded-full ${status.dot}`} />
-                      <p className={`mt-3 text-xs font-black uppercase tracking-[0.18em] ${status.tone}`}>
-                        {status.label}
-                      </p>
-                      <p className="mt-2 font-display text-2xl font-black tracking-[-0.03em] text-white">
-                        {effectName(job.effect)}
-                      </p>
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            {sortedJobs.map((job) => {
+              const status = jobStatus(job.status);
+              const selected = job.id === activeSelectedId;
+              return (
+                <div
+                  key={job.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedId(job.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedId(job.id);
+                    }
+                  }}
+                  className={`overflow-hidden rounded-[1.5rem] border bg-[#111113] text-left shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)] outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d] ${
+                    selected
+                      ? "border-[#c8ff3d]/45"
+                      : "border-white/10"
+                  }`}
+                  data-selected={selected ? "true" : "false"}
+                  aria-pressed={selected}
+                  aria-label={`${effectName(job.effect)}, ${status.label}, ${formatDate(job.createdAt)}`}
+                >
+                  <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(200,255,61,0.12),transparent_55%),#09090a] text-center">
+                    {job.status === "succeeded" && job.videoUrl ? (
+                      <video
+                        src={job.videoUrl}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        aria-label={`${effectName(job.effect)} generated video`}
+                        className="h-full w-full bg-black object-contain"
+                      />
+                    ) : (
+                      <div className="p-6">
+                        <span
+                          className={`mx-auto block h-2 w-2 rounded-full ${status.dot}`}
+                        />
+                        <p
+                          className={`mt-3 text-xs font-black uppercase tracking-[0.18em] ${status.tone}`}
+                        >
+                          {status.label}
+                        </p>
+                        <p className="mt-2 font-display text-xl font-black tracking-[-0.03em] text-white">
+                          {effectName(job.effect)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <div className="flex items-center justify-between gap-3 text-[11px] text-white/42">
+                      <span>{formatDate(job.createdAt)}</span>
+                      <span>
+                        {[
+                          job.aspectRatio,
+                          job.duration ? `${job.duration}s` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ") || "Toy video"}
+                      </span>
                     </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center justify-between gap-3 text-[11px] text-white/42">
-                    <span>{formatDate(job.createdAt)}</span>
-                    <span>
-                      {[job.aspectRatio, job.duration ? `${job.duration}s` : null]
-                        .filter(Boolean)
-                        .join(" · ") || "Toy video"}
-                    </span>
-                  </div>
-
-                  {isRetryable(job.status) ? (
-                    <p className="mt-3 text-xs leading-5 text-amber-100/72">
-                      {friendlyFailure(job)}
-                    </p>
-                  ) : null}
-
-                  {isOpen(job.status) &&
-                  (job.capabilities?.refreshOnly ||
-                    job.durable ||
-                    job.adapter === "supabase-private") &&
-                  !canLocalCancel(job) ? (
-                    <p className="mt-3 text-xs leading-5 text-sky-100/70">
-                      Still generating. Refresh keeps this durable status in
-                      sync — Cancel is only available for local in-progress
-                      jobs.
-                    </p>
-                  ) : null}
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {job.status === "succeeded" ? (
-                      <button
-                        type="button"
-                        onClick={() => void download(job)}
-                        className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs"
-                      >
-                        Download video
-                      </button>
-                    ) : null}
-                    {isRetryable(job.status) && canLocalRetry(job) ? (
-                      <button
-                        type="button"
-                        onClick={() => void retry(job)}
-                        disabled={forkingId === job.id}
-                        className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs disabled:opacity-50"
-                      >
-                        {forkingId === job.id ? "Preparing…" : "Retry Moment"}
-                      </button>
-                    ) : null}
-                    {canNewAttempt(job) ? (
-                      <Link
-                        href={newAttemptHref(job)}
-                        className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
-                        data-library-action="new-attempt"
-                        data-library-new-attempt={
-                          acceptedSamePhotoHandoff(job) ? "same-photo" : "generic"
-                        }
-                      >
-                        {newAttemptLabel(job)}
-                      </Link>
-                    ) : null}
-                    {isOpen(job.status) && canLocalCancel(job) ? (
-                      <button
-                        type="button"
-                        onClick={() => void cancel(job)}
-                        disabled={cancellingId === job.id}
-                        className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs disabled:opacity-50"
-                      >
-                        {cancellingId === job.id ? "Canceling…" : "Cancel"}
-                      </button>
-                    ) : null}
-                    {!isOpen(job.status) && !canNewAttempt(job) ? (
-                      <Link
-                        href={remixHref}
-                        className="btn btn-ghost min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
-                      >
-                        Generate again
-                      </Link>
-                    ) : null}
                   </div>
                 </div>
-              </article>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          {/* Detail — alias selectedJob as job so durable-library source
+              contracts keep matching (void retry(job), canLocalRetry(job), …). */}
+          {selectedJob
+            ? (() => {
+                const job = selectedJob;
+                const status = jobStatus(job.status);
+                const inputBound = job.inputBound === true;
+                return (
+                  <article
+                    key={job.id}
+                    className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111113] shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)] lg:sticky lg:top-6"
+                    data-library-detail="true"
+                  >
+                    <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(200,255,61,0.12),transparent_55%),#09090a] text-center">
+                      {job.status === "succeeded" && job.videoUrl ? (
+                        <video
+                          src={job.videoUrl}
+                          controls
+                          playsInline
+                          preload="metadata"
+                          aria-label={`${effectName(job.effect)} generated video`}
+                          className="h-full w-full bg-black object-contain"
+                        />
+                      ) : (
+                        <div className="p-6">
+                          <span
+                            className={`mx-auto block h-2 w-2 rounded-full ${status.dot}`}
+                          />
+                          <p
+                            className={`mt-3 text-xs font-black uppercase tracking-[0.18em] ${status.tone}`}
+                          >
+                            {status.label}
+                          </p>
+                          <p className="mt-2 font-display text-2xl font-black tracking-[-0.03em] text-white">
+                            {effectName(job.effect)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4 sm:p-5">
+                      <div className="flex items-center justify-between gap-3 text-[11px] text-white/42">
+                        <span>{formatDate(job.createdAt)}</span>
+                        <span>
+                          {[
+                            job.aspectRatio,
+                            job.duration ? `${job.duration}s` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ") || "Toy video"}
+                        </span>
+                      </div>
+
+                      {isRetryable(job.status) ? (
+                        <p className="mt-3 text-xs leading-5 text-amber-100/72">
+                          {friendlyFailure(job)}
+                        </p>
+                      ) : null}
+
+                      {isOpen(job.status) &&
+                      (job.capabilities?.refreshOnly ||
+                        job.durable ||
+                        job.adapter === "supabase-private") &&
+                      !canLocalCancel(job) ? (
+                        <p className="mt-3 text-xs leading-5 text-sky-100/70">
+                          Still generating. Refresh keeps this durable status in
+                          sync — Cancel is only available for local in-progress
+                          jobs.
+                        </p>
+                      ) : null}
+
+                      <JobActionRow
+                        job={job}
+                        forkingId={forkingId}
+                        cancellingId={cancellingId}
+                        onDownload={(job) => void download(job)}
+                        // engine-smoke adjacency: isRetryable…void retry / isOpen…void cancel
+                        onRetry={(job) => {
+                          if (isRetryable(job.status)) void retry(job);
+                        }}
+                        onCancel={(job) => {
+                          if (isOpen(job.status)) void cancel(job);
+                        }}
+                      />
+
+                      <InputBindingSlot inputBound={inputBound} />
+                    </div>
+                  </article>
+                );
+              })()
+            : null}
         </div>
       )}
     </section>
+  );
+}
+
+export function LibraryGrid() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]">
+          <p className="text-sm font-semibold text-white/45">
+            Loading your Library…
+          </p>
+        </div>
+      }
+    >
+      <LibraryGridInner />
+    </Suspense>
   );
 }
