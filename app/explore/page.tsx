@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ExploreProjectGrid } from "@/components/ExploreProjectGrid";
-import { FreeTrialCta } from "@/components/FreeTrialCta";
 import {
   SHOWCASE_CATEGORIES,
   listShowcaseProjects,
@@ -11,8 +10,10 @@ import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
-/** Explore Generate doors — listing spin remix (ratio/duration/channel). */
+/** Explore primary door — listing 360 spin remix into Studio (AIT-39). */
 const EXPLORE_GENERATE_HREF = createRemixHref("360-spin-showcase");
+/** One secondary path only — Library (not a competing Generate peer). */
+const EXPLORE_SECONDARY_HREF = "/library";
 
 export const metadata: Metadata = {
   title: "Explore PIKBO Lab Toy Video Prototypes",
@@ -113,47 +114,24 @@ export default async function ExplorePage({
             </p>
           </div>
           <div
-            className="flex flex-wrap items-center gap-2"
+            className="flex flex-wrap items-center gap-3"
             data-explore-path="product-first"
+            data-explore-cta-tier="1-primary-1-secondary"
           >
-            <FreeTrialCta path="/explore" variant="primary" />
             <Link
               href={EXPLORE_GENERATE_HREF}
-              className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-2.5 text-xs font-black text-[#c8ff3d] transition hover:bg-[#c8ff3d]/15"
+              className="btn-press rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 py-2.5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.35)] transition hover:brightness-110"
               data-explore-generate="remix"
+              data-explore-primary-cta="generate-360"
             >
-              Generate
+              Generate · 360
             </Link>
             <Link
-              href="/create?effect=street-power-up&source=explore"
-              className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/80 transition hover:border-white/30"
-            >
-              Create one Moment
-            </Link>
-            <Link
-              href="/modules"
-              className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/80 transition hover:border-white/30"
-            >
-              Modules
-            </Link>
-            <Link
-              href="/library"
-              className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/70 transition hover:border-white/30"
+              href={EXPLORE_SECONDARY_HREF}
+              className="text-xs font-bold text-white/55 underline-offset-4 transition hover:text-white hover:underline"
+              data-explore-secondary-cta="library"
             >
               Library
-            </Link>
-            <Link
-              href="/effects"
-              className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/70 transition hover:border-white/30"
-            >
-              Recipes
-            </Link>
-            <Link
-              href="/flow"
-              className="rounded-full border border-white/10 bg-white/[0.02] px-4 py-2.5 text-xs font-bold text-white/45 transition hover:border-white/20"
-              title="Preview media wall — not a live Seedance job"
-            >
-              Flow · Preview
             </Link>
           </div>
         </div>
@@ -216,10 +194,11 @@ export default async function ExplorePage({
             </p>
           </div>
           <Link
-            href="/create?effect=street-power-up&source=explore-seller-workflow"
-            className="shrink-0 rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-xs font-black text-[#c8ff3d]"
+            href={EXPLORE_GENERATE_HREF}
+            className="btn-press shrink-0 rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 py-2.5 text-xs font-black text-white"
+            data-explore-footer-cta="generate-360"
           >
-            Create one Moment →
+            Generate · 360 →
           </Link>
         </div>
       </section>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
+import { HomeFloatGenerate } from "@/components/HomeFloatGenerate";
 import { HomeTrustFooter } from "@/components/HomeTrustFooter";
 import { JsonLd } from "@/components/JsonLd";
 import {
@@ -52,6 +53,7 @@ export default function Home() {
       />
 
       <HomeCinemaHero />
+      <HomeFloatGenerate />
       <HomeTrustFooter />
     </>
   );

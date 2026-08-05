@@ -27,6 +27,10 @@ import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { useI18n } from "@/components/LanguageProvider";
 import { site } from "@/lib/site";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+
+/** Default Generate→360 Studio door when premiere recipe is unavailable. */
+const HF_GENERATE_360_HREF = createRemixHref("360-spin-showcase");
 
 function Clip({
   demo,
@@ -166,15 +170,10 @@ export function HfExploreHome({
           <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65 sm:text-[15px]">
             {t("home.hero.sub")}
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          {/* AIT-39: one primary Generate→360 path; at most one secondary */}
+          <div className="mt-6 flex flex-col items-start gap-3">
             <Link
-              href="/create?effect=street-power-up"
-              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
-            >
-              Use tool on this page
-            </Link>
-            <Link
-              href={item.href}
+              href={item.href || HF_GENERATE_360_HREF}
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -182,21 +181,17 @@ export function HfExploreHome({
                   recipe: item.recipeSlug,
                 })
               }
-              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-black/50 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50 hover:bg-black/60"
+              data-hf-hero-primary="generate-360"
+              className="inline-flex w-full max-w-sm items-center justify-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-7 py-3.5 text-sm font-black text-white shadow-[0_0_48px_-6px_rgba(255,78,205,0.45)] transition hover:-translate-y-0.5 hover:brightness-110 sm:w-auto"
             >
-              {t("home.useRecipe")}
+              Generate this clip
             </Link>
             <Link
-              href="/tools/ai-toy-video-generator"
-              className="text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
+              href={MOMENT_CREATE_HREF}
+              data-hf-hero-secondary="studio"
+              className="text-sm font-semibold text-white/55 underline-offset-4 transition hover:text-white hover:underline"
             >
-              Keyword tool page
-            </Link>
-            <Link
-              href="/for/photo-to-video-for-toys"
-              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
-            >
-              Photo → video use case
+              Open Studio
             </Link>
           </div>
           <p className="mt-3 text-[11px] text-white/45">
@@ -315,24 +310,20 @@ export function HfExploreHome({
               <dd className="inline">Provider task ID and formal QA pending</dd>
             </div>
           </dl>
-          <div className="mt-7 flex flex-wrap gap-2">
+          <div className="mt-7 flex flex-col items-start gap-3">
             <Link
-              href={item.href}
-              className="inline-flex rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_40px_-8px_rgba(200,255,61,0.5)] transition hover:-translate-y-0.5"
+              href={item.href || HF_GENERATE_360_HREF}
+              className="inline-flex rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-7 py-3.5 text-sm font-black text-white shadow-[0_0_40px_-8px_rgba(255,78,205,0.45)] transition hover:-translate-y-0.5"
+              data-hf-proof-primary="generate"
             >
               {t("home.replaceMine")}
             </Link>
             <Link
               href={item.projectHref || item.detailHref || "/explore"}
-              className="inline-flex rounded-full border border-white/20 bg-black/40 px-5 py-3.5 text-sm font-bold text-white/85 backdrop-blur transition hover:border-[#c8ff3d]/45"
+              className="text-sm font-semibold text-white/55 underline-offset-4 transition hover:text-white hover:underline"
+              data-hf-proof-secondary="project"
             >
               {t("home.insideProject")}
-            </Link>
-            <Link
-              href="/create?effect=street-power-up"
-              className="inline-flex rounded-full border border-white/15 px-5 py-3.5 text-sm font-bold text-white/70 transition hover:border-white/30 hover:text-white"
-            >
-              {t("cta.sellerPack")}
             </Link>
           </div>
         </div>
