@@ -82,6 +82,23 @@ assert(
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
   "home order: Moment hero → proof wall → HF product rail → trust footer"
 );
+const homeRail = read("components/HfProductRail.tsx");
+assert(
+  homeRail.includes("createGenerate360Href") &&
+    homeRail.includes('"hf-product-rail"') &&
+    homeRail.includes("MOMENT_CREATE_HREF") &&
+    homeRail.includes("source=hf-product-rail") &&
+    homeRail.includes('data-home-suite-rail="hf-product"') &&
+    homeRail.includes("data-home-suite-360") &&
+    !homeRail.includes('"/create?effect=street-power-up"') &&
+    !homeRail.includes('"/create"'),
+  "HF product rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF (no bare /create)"
+);
+assert(
+  homeWall.includes('createGenerate360Href("home-proof-wall")') ||
+    homeWall.includes("createGenerate360Href('home-proof-wall')"),
+  "proof wall Listing 360 must tag source=home-proof-wall"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"
