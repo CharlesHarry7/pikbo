@@ -17,7 +17,7 @@ const EXPLORE_GENERATE_HREF = createGenerate360Href("explore");
 export const metadata: Metadata = {
   title: "Explore PIKBO Lab Toy Video Prototypes",
   description:
-    "Open PIKBO Lab toy-video prototypes, inspect the reference poster and cached output, then reuse the recipe with a toy photo you own.",
+    "Lab Viewer free path: open cached PIKBO Lab toy-video prototypes only. Your upload is not processed, and no live provider runs without private beta.",
   alternates: { canonical: "/explore" },
   // Cold-start 2026-07-27: dropped from 13-URL sitemap (long-tail tools win crawl
   // budget). Stay crawlable + follow for deep links; noindex so Lab wall does
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: `Explore cached toy video prototypes | ${site.name}`,
     description:
-      "Evidence-pending Lab prototypes with a reference poster, cached output, and recipe remix into Generate.",
+      "Lab Viewer free path — labeled cached demos only. No upload processed. No live provider without private beta.",
     url: `${site.url}/explore`,
   },
 };
@@ -38,12 +38,16 @@ const EXPLORE_FAQ = [
     a: "No. Every card is a PIKBO Lab cached prototype with a reference poster, a distinct cached output, and a registered recipe. It is not community UGC, and the poster is not claimed as the provider input.",
   },
   {
-    q: "What does Remix do?",
-    a: "Opens Generate with that recipe so you can run it on a toy photo you own. Lab stills are style references only — not your deliverable.",
+    q: "Is Lab Viewer free generation of my photo?",
+    a: "No. The public free path is cached demos only. Your upload is not processed on Explore, and no live provider call runs without private-beta access.",
+  },
+  {
+    q: "What does Remix / Generate do?",
+    a: "Primary Generate doors open the Generate→360 helper with an honest source tag. Recipe remakes open that project’s registered preset. Lab stills are style references only — not your deliverable, and not free live generation.",
   },
   {
     q: "Do cached demos cost credits?",
-    a: "No. Cached Lab playback costs 0 credits. Live Seedance Mini uses Free Mini (about one 5s 480p clip with on-player mark) or paid credits.",
+    a: "No. Cached Lab playback costs 0 credits. Live Seedance Mini uses Free Mini (about one 5s 480p clip with on-player mark) or paid credits when live is enabled for an eligible account.",
   },
 ] as const;
 
@@ -89,7 +93,12 @@ export default async function ExplorePage({
   };
 
   return (
-    <main className="min-h-screen bg-black pb-24 text-white">
+    <main
+      className="min-h-screen min-w-0 overflow-x-clip bg-black pb-24 text-white"
+      data-explore-lab-viewer="free-path"
+      data-explore-honesty="cached-only"
+      data-explore-mobile="390-safe"
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
@@ -98,25 +107,31 @@ export default async function ExplorePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-black/90 px-4 py-4 backdrop-blur sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4">
-          <div>
+      <header className="sticky top-0 z-20 min-w-0 border-b border-white/10 bg-black/90 px-4 py-4 backdrop-blur sm:px-6">
+        <div className="mx-auto flex min-w-0 max-w-7xl flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0 max-w-2xl">
             <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]">
-              PIKBO Lab · evidence pending
+              Lab Viewer · free path · cached demos only
             </p>
             <h1 className="font-display mt-1 text-2xl font-black uppercase tracking-tight sm:text-3xl">
               Open the project, not just the clip
             </h1>
-            <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/45 sm:text-sm">
-              Every card has a reference poster, a distinct cached output, and
-              a registered recipe. Provider task evidence is still pending.
+            <p className="mt-1 text-xs leading-relaxed text-white/45 sm:text-sm">
+              Every card is a labeled Pikbo Lab cached prototype — reference
+              poster, distinct output, registered recipe. Your upload is not
+              processed here. No live provider call without private beta.
+              Provider task evidence is still pending.
             </p>
           </div>
           <div
-            className="flex flex-wrap items-center gap-2"
+            className="flex min-w-0 max-w-full flex-wrap items-center gap-2"
             data-explore-path="product-first"
           >
-            <FreeTrialCta path="/explore" variant="primary" />
+            <FreeTrialCta
+              path="/explore"
+              variant="primary"
+              labelDemo="Try cached sample"
+            />
             <Link
               href={EXPLORE_GENERATE_HREF}
               className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-2.5 text-xs font-black text-[#c8ff3d] transition hover:bg-[#c8ff3d]/15"
@@ -157,7 +172,26 @@ export default async function ExplorePage({
             </Link>
           </div>
         </div>
-        <div className="mx-auto mt-3 flex max-w-7xl flex-wrap items-center gap-2 text-[11px] font-semibold text-white/45">
+        {/* Free-path honesty chips — guests from pricing Lab Viewer CTA land here */}
+        <div
+          className="mx-auto mt-3 flex min-w-0 max-w-7xl flex-wrap items-center gap-1.5"
+          data-explore-free-path="honesty-chips"
+          aria-label="Lab Viewer free path honesty"
+        >
+          <span className="rounded-full border border-[#c8ff3d]/25 bg-[#c8ff3d]/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#c8ff3d]">
+            Cached demos only
+          </span>
+          <span className="rounded-full border border-white/12 bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold text-white/55">
+            0 credits
+          </span>
+          <span className="rounded-full border border-white/12 bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold text-white/55">
+            Upload not processed
+          </span>
+          <span className="rounded-full border border-white/12 bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold text-white/55">
+            No live provider without private beta
+          </span>
+        </div>
+        <div className="mx-auto mt-2 flex min-w-0 max-w-7xl flex-wrap items-center gap-2 text-[11px] font-semibold text-white/45">
           <span className="text-[10px] font-normal text-white/30">
             Path ·
           </span>
