@@ -38,13 +38,17 @@ export const MOBILE_NAV = [
 
 export const MOBILE_NAV_HREFS = MOBILE_NAV.map((item) => item.href);
 
-/** At most these eight registered recipes may appear on the homepage proof wall. */
+/**
+ * At most these eight registered recipes may appear on the homepage proof wall.
+ * Order is render order: 360 listing spin is pinned in the first 4 slots so the
+ * mobile 2-col wall shows it in the first 2×2 without deep scroll (AIT-60 / AIT-99).
+ */
 export const HOME_PROOF_SLUGS = [
+  "360-spin-showcase",
   "floating-hero",
   "blind-box-unboxing",
   "miniature-scene",
   "paparazzi-flash",
-  "360-spin-showcase",
   "mystery-box-reveal",
   "make-figure-dance",
   "display-case-glam",

@@ -3,130 +3,242 @@
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
-import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
+import { createRemixHref } from "@/lib/remixIntent";
+import {
+  hasFeedVideo,
+  type FeedItem,
+  type FeedVideoItem,
+} from "@/lib/videoFeed";
 import { getPreset } from "@/lib/presets";
+import {
+  HOME_PROOF_BADGE,
+  HOME_PROOF_LIMIT,
+  MOMENT_CREATE_HREF,
+} from "@/lib/softLaunch";
 
+/** Analytics + guest-intent entry for the home Lab proof wall (AIT-87 / AIT-38 PR-1). */
+const HOME_PROOF_ENTRY = "home-proof-wall" as const;
+const LISTING_360_SLUG = "360-spin-showcase" as const;
+/** Mobile 2-col wall shows first 4 cards in a 2×2 above deep scroll. */
+const MOBILE_FIRST_ROW_SLOTS = 4;
+
+/** Append entry attribution without clobbering remix `source` (project slug). */
+function withProofEntry(href: string): string {
+  if (href.includes(`entry=${HOME_PROOF_ENTRY}`)) return href;
+  const joiner = href.includes("?") ? "&" : "?";
+  return `${href}${joiner}entry=${HOME_PROOF_ENTRY}`;
+}
+
+/**
+ * Keep 360 listing spin inside the first mobile 2×2 even if feed order drifts.
+ * Does not invent cards — only reorders existing Lab media.
+ */
+function pinListing360InFirstSlots(
+  items: FeedVideoItem[],
+  slots = MOBILE_FIRST_ROW_SLOTS
+): FeedVideoItem[] {
+  const idx = items.findIndex(
+    (item) => (item.recipeSlug ?? item.demo.preset) === LISTING_360_SLUG
+  );
+  if (idx < 0 || idx < slots) return items;
+  const next = items.slice();
+  const [spin] = next.splice(idx, 1);
+  next.unshift(spin);
+  return next;
+}
+
+/**
+ * Below-fold Lab proof wall for Moment home: ≤ HOME_PROOF_LIMIT cached recipes
+ * from HOME_PROOF_SLUGS (360 pinned in first 4 for mobile). Honest Lab badge
+ * only — not a full HfExploreHome remount, Pack sample, or UGC wall.
+ */
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
-  const wall = items.filter(hasFeedVideo).slice(0, 8);
+  const wall = pinListing360InFirstSlots(
+    items.filter(hasFeedVideo).slice(0, HOME_PROOF_LIMIT)
+  );
+  const momentHref = `${MOMENT_CREATE_HREF}&source=${HOME_PROOF_ENTRY}`;
+  // entry= attribution only — createRemixHref `source` is the Lab project id.
+  const listing360Href = withProofEntry(createRemixHref(LISTING_360_SLUG));
 
   return (
     <section
       id="toy-wall"
-      data-home-wall="recipe-gallery"
-      className="scroll-mt-14 overflow-hidden bg-[#080809] px-2 py-16 sm:px-4 sm:py-20 lg:px-6 lg:py-28"
+      data-home-wall="lab-proof"
+      data-home-proof-wall="true"
+      data-home-proof-360-pinned="true"
+      className="scroll-mt-14 overflow-hidden bg-[var(--void)] px-2 py-12 sm:px-4 sm:py-14 lg:px-6 lg:py-20"
       aria-labelledby="recipe-wall-title"
     >
-      <div className="mx-auto mb-8 flex max-w-[1600px] items-end justify-between gap-6 px-2 sm:mb-11">
+      <div className="mx-auto mb-7 flex max-w-[1600px] items-end justify-between gap-6 px-2 sm:mb-9">
         <div className="max-w-3xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#c8ff3d]">
-            Pikbo Lab · 8 cached previews
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#FF4ECD]">
+            {HOME_PROOF_BADGE}
           </p>
           <h2
             id="recipe-wall-title"
-            className="mt-3 font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-6xl"
+            className="mt-3 font-display text-4xl font-black tracking-[-0.055em] text-[var(--cream)] sm:text-6xl"
           >
             One toy. More ways to move.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/48 sm:text-base">
-            Choose the one recipe that fits the launch you are making now.
-            These studies explore movement, atmosphere, and story without
-            pretending every concept is already a live product.
+            Eight cached Lab prototypes — including a 360 listing spin in the
+            first row. Archive previews only, not customer results. Pick a
+            recipe and remake it with your own figure.
           </p>
         </div>
-        <Link
-          href="/effects"
-          className="hidden shrink-0 rounded-full border border-white/15 px-5 py-2.5 text-xs font-black text-white/60 transition hover:border-[#c8ff3d]/50 hover:text-[#c8ff3d] sm:block"
-        >
-          Browse recipe notes ↗
-        </Link>
+        <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
+          <Link
+            href={momentHref}
+            className="rounded-full border border-[#FF4ECD]/35 bg-[rgba(255,78,205,0.1)] px-5 py-2.5 text-xs font-black text-[#FF4ECD] transition hover:border-[#00D9FF]/50 hover:text-[#00D9FF]"
+          >
+            Create a Moment ↗
+          </Link>
+          <Link
+            href={listing360Href}
+            data-home-proof-360-cta
+            className="rounded-full border border-[#00D9FF]/35 bg-[rgba(0,217,255,0.08)] px-5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#00D9FF] transition hover:border-[#00D9FF]/60"
+            onClick={() =>
+              track({
+                event: "recipe_use",
+                path: "/",
+                recipe: LISTING_360_SLUG,
+                meta: {
+                  source: "home_proof_wall_360_door",
+                  entry: HOME_PROOF_ENTRY,
+                },
+              })
+            }
+          >
+            Listing 360° · Lab
+          </Link>
+        </div>
       </div>
 
-      <div className="mx-auto grid max-w-[1600px] grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
-        {wall.map((item) => {
+      <div className="mx-auto grid max-w-[1600px] grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
+        {wall.map((item, index) => {
           const recipeSlug = item.recipeSlug ?? item.demo.preset;
           const recipeName =
             getPreset(recipeSlug)?.name || item.demo.title || item.title;
+          const projectHref = item.projectHref
+            ? withProofEntry(item.projectHref)
+            : undefined;
+          const remakeHref = withProofEntry(item.href);
+          const cardHref = projectHref || remakeHref;
+          const badge = item.badge || HOME_PROOF_BADGE;
+          const is360 = recipeSlug === LISTING_360_SLUG;
 
           return (
             <article
               key={item.id}
               data-recipe-card={recipeSlug}
-              className="group relative isolate aspect-[4/5] min-w-0 overflow-hidden rounded-[1.2rem] border border-white/[0.1] bg-[#111114] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d] sm:rounded-[1.6rem]"
+              data-home-proof-card={recipeSlug}
+              data-home-proof-slot={index}
+              className="toy-card group relative isolate aspect-[4/5] min-w-0 overflow-hidden p-1.5 transition duration-200 hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#00D9FF]"
             >
-              <Link
-                href={item.projectHref || item.href}
-                prefetch
-                aria-label={`Explore inside ${recipeName}`}
-                className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#c8ff3d]"
-                onClick={() =>
-                  track({
-                    event: item.projectHref ? "project_open" : "recipe_use",
-                    path: "/",
-                    recipe: recipeSlug,
-                    meta: {
-                      source: "home_recipe_card",
-                      project: item.projectHref || null,
-                    },
-                  })
-                }
-              >
-                <AutoPlayVideo
-                  poster={item.demo.poster}
-                  webm={item.demo.webm}
-                  mp4={item.demo.mp4}
-                  lazySources
-                  wallDense
-                  focusable={false}
-                  label={`${recipeName} cached demo`}
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045]"
-                />
-                <div
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/5 to-black/10"
-                  aria-hidden
-                />
-                <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/55 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.14em] text-white/72 backdrop-blur sm:left-3 sm:top-3 sm:text-[9px]">
-                  Cached preview
-                </span>
-                <span className="absolute inset-x-0 bottom-0 p-3 pb-12 sm:p-4 sm:pb-14">
-                  <span className="block text-sm font-black leading-tight text-white sm:text-lg">
-                    {recipeName}
+              <div className="relative h-full w-full overflow-hidden rounded-[1.35rem] bg-[#0A0A0F]">
+                <Link
+                  href={cardHref}
+                  prefetch
+                  aria-label={`Explore inside ${recipeName}`}
+                  className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#00D9FF]"
+                  onClick={() =>
+                    track({
+                      event: item.projectHref ? "project_open" : "recipe_use",
+                      path: "/",
+                      recipe: recipeSlug,
+                      meta: {
+                        source: "home_recipe_card",
+                        entry: HOME_PROOF_ENTRY,
+                        project: item.projectHref || null,
+                      },
+                    })
+                  }
+                >
+                  <AutoPlayVideo
+                    poster={item.demo.poster}
+                    webm={item.demo.webm}
+                    mp4={item.demo.mp4}
+                    lazySources
+                    wallDense
+                    focusable={false}
+                    label={`${recipeName} cached demo`}
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045]"
+                  />
+                  <div
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/5 to-black/10"
+                    aria-hidden
+                  />
+                  <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/55 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.14em] text-white/72 backdrop-blur sm:left-3 sm:top-3 sm:text-[9px]">
+                    {badge}
                   </span>
-                  <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-white/50 sm:text-[10px]">
-                    Open recipe proof →
+                  {is360 ? (
+                    <span
+                      data-home-proof-360
+                      className="absolute right-2 top-2 rounded-full border border-[#00D9FF]/40 bg-[#00D9FF]/15 px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-[#00D9FF] backdrop-blur sm:right-3 sm:top-3 sm:text-[9px]"
+                    >
+                      360 spin
+                    </span>
+                  ) : null}
+                  <span className="absolute inset-x-0 bottom-0 p-3 pb-12 sm:p-4 sm:pb-14">
+                    <span className="block text-sm font-black leading-tight text-white sm:text-lg">
+                      {recipeName}
+                    </span>
+                    <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-white/50 sm:text-[10px]">
+                      Open recipe proof →
+                    </span>
                   </span>
-                </span>
-              </Link>
-              <Link
-                href={item.href}
-                prefetch
-                aria-label={`Use the ${recipeName} recipe`}
-                className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-black shadow-[0_0_18px_rgba(200,255,61,0.3)] transition hover:bg-[#d5ff6b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:bottom-4 sm:left-4 sm:text-[10px]"
-                onClick={() =>
-                  track({
-                    event: "recipe_use",
-                    path: "/",
-                    recipe: recipeSlug,
-                    meta: {
-                      source: "home_recipe_remake",
-                      project: item.projectHref || null,
-                    },
-                  })
-                }
-              >
-                Try this recipe
-                <span aria-hidden>↗</span>
-              </Link>
+                </Link>
+                <Link
+                  href={remakeHref}
+                  prefetch
+                  aria-label={`Use the ${recipeName} recipe`}
+                  className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white shadow-[0_0_18px_rgba(255,78,205,0.35)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] sm:bottom-4 sm:left-4 sm:text-[10px]"
+                  onClick={() =>
+                    track({
+                      event: "recipe_use",
+                      path: "/",
+                      recipe: recipeSlug,
+                      meta: {
+                        source: "home_recipe_remake",
+                        entry: HOME_PROOF_ENTRY,
+                        project: item.projectHref || null,
+                      },
+                    })
+                  }
+                >
+                  Try this recipe
+                  <span aria-hidden>↗</span>
+                </Link>
+              </div>
             </article>
           );
         })}
       </div>
 
-      <div className="mt-7 flex justify-center sm:hidden">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:hidden">
         <Link
-          href="/effects"
-          className="rounded-full border border-white/15 px-5 py-2.5 text-xs font-bold text-white/70"
+          href={momentHref}
+          className="rounded-full border border-[#FF4ECD]/35 px-5 py-2.5 text-xs font-bold text-[#FF4ECD]"
         >
-          Browse recipe notes
+          Create a Moment
+        </Link>
+        <Link
+          href={listing360Href}
+          data-home-proof-360-cta
+          className="rounded-full border border-[#00D9FF]/35 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#00D9FF]"
+          onClick={() =>
+            track({
+              event: "recipe_use",
+              path: "/",
+              recipe: LISTING_360_SLUG,
+              meta: {
+                source: "home_proof_wall_360_door_mobile",
+                entry: HOME_PROOF_ENTRY,
+              },
+            })
+          }
+        >
+          Listing 360°
         </Link>
       </div>
     </section>

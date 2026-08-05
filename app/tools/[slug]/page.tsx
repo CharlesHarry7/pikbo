@@ -10,7 +10,7 @@ import {
   photoRecipeDraftHowToJsonLd,
 } from "@/components/LandingHowItWorks";
 import { LandingResults } from "@/components/LandingResults";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { robotsForToolSlug } from "@/lib/seoIndex";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
@@ -250,7 +250,7 @@ export default async function ToolPage({
               </Link>
               . Full studio:{" "}
               <Link
-                href={createRemixHref("360-spin-showcase")}
+                href={createGenerate360Href("tool-page")}
                 className="text-[var(--mint)] hover:underline"
                 data-tool-full-studio="remix"
               >

@@ -9,14 +9,19 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
-import { createLabSampleTryHref } from "@/lib/jobIntents";
-import { createRemixHref } from "@/lib/remixIntent";
+import {
+  createGenerate360Href,
+  createLabSampleTryHref,
+} from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
 /** Default listing spin when opening Generate from Modules (remix contract). */
-const MODULES_PHOTO_CLIP_EFFECT = "360-spin-showcase";
+const MODULES_PHOTO_CLIP_HREF = createGenerate360Href("modules-photo-clip");
 /** Lab sample try — remix + try/sample (not bare /create?try=1). */
 const MODULES_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
+const MODULES_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=modules-suite` as const;
 
 /**
  * Modules sticky header CTAs — freeTrial honesty (Phase F).
@@ -84,7 +89,7 @@ export function ModulesSuiteCtas() {
         {primaryLabel}
       </Link>
       <Link
-        href={createRemixHref(MODULES_PHOTO_CLIP_EFFECT)}
+        href={MODULES_PHOTO_CLIP_HREF}
         className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"
         title="One owned toy photo → short listing or social clip"
         data-modules-path="photo-clip"
@@ -92,7 +97,7 @@ export function ModulesSuiteCtas() {
         Photo → Clip
       </Link>
       <Link
-        href="/create?effect=street-power-up"
+        href={MODULES_MOMENT_HREF}
         className="rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/10 px-4 py-2 text-xs font-bold text-[var(--mint)]"
         title="Choose one directed toy Moment"
       >

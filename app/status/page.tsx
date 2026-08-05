@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StatusProbe } from "@/components/StatusProbe";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
 
 /** Status Generate door — listing spin remix (ratio/duration/channel). */
-const STATUS_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const STATUS_GENERATE_HREF = createGenerate360Href("status");
 
 export const metadata: Metadata = {
   title: "System status",

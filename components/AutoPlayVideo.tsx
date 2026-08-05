@@ -2,6 +2,7 @@
 
 import { Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { LAB_VIDEO_READY_MS } from "@/lib/clientTimeout";
 
 const playing = new Set<HTMLVideoElement>();
 let visibilityHooked = false;
@@ -97,6 +98,13 @@ export function AutoPlayVideo({
   wallDense = false,
   /** Visible controls for hero / featured players. Dense cards keep Link focus. */
   showControls = false,
+  /**
+   * Studio / guest Lab path: surface load failure + timeout with an honest
+   * Retry control instead of a silent poster forever.
+   */
+  errorRetry = false,
+  /** Override ready timeout when errorRetry is on (default LAB_VIDEO_READY_MS). */
+  readyTimeoutMs = LAB_VIDEO_READY_MS,
 }: {
   poster: string;
   webm?: string;
@@ -110,6 +118,8 @@ export function AutoPlayVideo({
   lazySources?: boolean;
   wallDense?: boolean;
   showControls?: boolean;
+  errorRetry?: boolean;
+  readyTimeoutMs?: number;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [sourcesOn, setSourcesOn] = useState(!lazySources || Boolean(eager));
@@ -117,7 +127,10 @@ export function AutoPlayVideo({
   const [isMuted, setIsMuted] = useState(true);
   /** SSR + first paint: assume mobile so wall cards stay poster-first. */
   const [isNarrow, setIsNarrow] = useState(true);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
   const wantPlay = useRef(false);
+  const readyRef = useRef(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -127,9 +140,67 @@ export function AutoPlayVideo({
     return () => mq.removeEventListener("change", sync);
   }, []);
 
+  // Honest Lab ready/timeout when this player is a Studio-facing preview.
+  useEffect(() => {
+    if (!errorRetry || !sourcesOn) return;
+    readyRef.current = false;
+    const v = ref.current;
+    if (!v) return;
+
+    const markReady = () => {
+      readyRef.current = true;
+      setMediaError((prev) => (prev ? null : prev));
+    };
+    const markError = () => {
+      if (readyRef.current) return;
+      setMediaError(
+        "Lab preview failed to load. Check your connection and retry."
+      );
+    };
+
+    v.addEventListener("loadeddata", markReady);
+    v.addEventListener("canplay", markReady);
+    v.addEventListener("error", markError);
+
+    const timer = window.setTimeout(() => {
+      if (readyRef.current) return;
+      // Already have dimensions → treat as ready (poster-only reduced motion etc.).
+      if (v.readyState >= 2) {
+        markReady();
+        return;
+      }
+      setMediaError(
+        "Lab preview timed out. Tap Retry — this is a cached sample, not your toy."
+      );
+    }, readyTimeoutMs);
+
+    // Kick load after remount / retry (async to stay off the effect body path).
+    const loadTimer = window.setTimeout(() => {
+      try {
+        v.load();
+      } catch {
+        /* ignore */
+      }
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(loadTimer);
+      v.removeEventListener("loadeddata", markReady);
+      v.removeEventListener("canplay", markReady);
+      v.removeEventListener("error", markError);
+    };
+  }, [errorRetry, sourcesOn, mp4, webm, retryNonce, readyTimeoutMs]);
+
   // Desktop wallDense may warm metadata; mobile never preloads non-hero clips.
   const allowMetadataPreload =
     Boolean(eager) || (Boolean(wallDense) && sourcesOn && !isNarrow);
+
+  function retryMedia() {
+    setMediaError(null);
+    readyRef.current = false;
+    setRetryNonce((n) => n + 1);
+  }
 
   useEffect(() => {
     const v = ref.current;
@@ -273,6 +344,7 @@ export function AutoPlayVideo({
         preload={allowMetadataPreload ? "metadata" : "none"}
         data-video-preload={allowMetadataPreload ? "metadata" : "none"}
         data-video-mobile-poster-first={isNarrow && !eager ? "1" : "0"}
+        data-lab-video-error={mediaError ? "1" : "0"}
         tabIndex={
           focusable && desktopPlayMode === "interaction" ? 0 : undefined
         }
@@ -309,6 +381,25 @@ export function AutoPlayVideo({
             aria-label={isMuted ? "Unmute example video" : "Mute example video"}
           >
             {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+        </div>
+      ) : null}
+      {errorRetry && mediaError ? (
+        <div
+          className="absolute inset-x-3 bottom-3 z-30 rounded-2xl border border-[#FF6B6B]/45 bg-black/82 p-3 text-left shadow-xl backdrop-blur-md sm:inset-x-4 sm:bottom-4 sm:p-4"
+          data-lab-preview-error="1"
+          role="alert"
+        >
+          <p className="text-[11px] font-semibold leading-5 text-white/90 sm:text-xs">
+            {mediaError}
+          </p>
+          <button
+            type="button"
+            onClick={retryMedia}
+            data-lab-preview-retry
+            className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[#c8ff3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+          >
+            Retry Lab preview
           </button>
         </div>
       ) : null}

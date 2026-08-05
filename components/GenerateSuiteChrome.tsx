@@ -10,7 +10,7 @@ import { useI18n } from "@/components/LanguageProvider";
 const MODE_DEFS = [
   {
     id: "generate" as const,
-    href: createWorkbenchHref(),
+    href: createWorkbenchHref("suite-chrome"),
     labelKey: "suite.mode.generate",
     blurbKey: "suite.mode.generate.blurb",
   },
