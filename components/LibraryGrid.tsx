@@ -117,32 +117,37 @@ function jobStatus(status: string): {
   label: string;
   tone: string;
   dot: string;
+  sticker: string;
 } {
   if (status === "succeeded") {
     return {
       label: "Ready",
-      tone: "text-[#c8ff3d]",
-      dot: "bg-[#c8ff3d]",
+      tone: "text-[var(--toy-lime)]",
+      dot: "toy-dot-ready",
+      sticker: "toy-sticker-lime",
     };
   }
   if (status === "running") {
     return {
       label: "Generating",
-      tone: "text-sky-200",
-      dot: "animate-pulse bg-sky-300",
+      tone: "text-[var(--toy-aqua)]",
+      dot: "toy-dot-progress",
+      sticker: "toy-sticker-aqua",
     };
   }
   if (status === "queued") {
     return {
       label: "Preparing",
-      tone: "text-sky-200",
-      dot: "animate-pulse bg-sky-300",
+      tone: "text-[var(--toy-grape)]",
+      dot: "toy-dot-progress",
+      sticker: "toy-sticker-grape",
     };
   }
   return {
     label: "Needs retry",
-    tone: "text-amber-200",
-    dot: "bg-amber-300",
+    tone: "text-[var(--toy-mango)]",
+    dot: "toy-dot-warn",
+    sticker: "toy-sticker-mango",
   };
 }
 
@@ -389,8 +394,10 @@ export function LibraryGrid() {
 
   if (!accountReady || !jobsReady) {
     return (
-      <div className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]">
-        <p className="text-sm font-semibold text-white/45">Loading your Library…</p>
+      <div className="collection-card mt-6 grid min-h-64 place-items-center">
+        <p className="text-sm font-semibold text-white/45">
+          Opening your collector shelf…
+        </p>
       </div>
     );
   }
@@ -398,23 +405,29 @@ export function LibraryGrid() {
   if (!me?.signedIn) {
     return (
       <section
-        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        className="collection-card relative mt-6"
         data-library-state="guest"
       >
+        <span className="toy-corner-mark toy-corner-mark-tl" aria-hidden />
+        <span className="toy-corner-mark toy-corner-mark-br" aria-hidden />
         <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
           <div className="max-w-lg">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#c8ff3d]/30 bg-[#c8ff3d]/10 text-xl text-[#c8ff3d]">
-              ↗
+            <span
+              className="toy-sticker-enter mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-[var(--toy-lime)]/35 bg-[var(--toy-lime)]/10 text-2xl shadow-[0_0_28px_rgba(200,255,61,0.22)]"
+              aria-hidden
+            >
+              🧸
             </span>
-            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
-              Private Library
-            </p>
-            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
-              Sign in to see your generated Moments.
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <span className="toy-sticker toy-sticker-lime">Private Library</span>
+              <span className="toy-sticker toy-sticker-bubblegum">Sign in</span>
+            </div>
+            <h2 className="mt-4 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+              Sign in to open your toy vault.
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
-              Your real toy results belong to your account. Sample previews and
-              browser-cached demos are not added to this Library.
+              Real Moments belong to your account only. Sample previews and
+              browser-cached demos never land on this shelf.
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               <Link href="/login?next=/library" className="btn btn-primary text-sm">
@@ -434,12 +447,19 @@ export function LibraryGrid() {
     <section className="mt-6" data-library-state={sortedJobs.length ? "filled" : "empty"}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
-            {openCount > 0
-              ? `${openCount} Moment${openCount === 1 ? "" : "s"} in progress`
-              : `${sortedJobs.length} saved Moment${sortedJobs.length === 1 ? "" : "s"}`}
-          </p>
-          <p className="mt-1 text-xs text-white/45">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`toy-sticker ${
+                openCount > 0 ? "toy-sticker-aqua" : "toy-sticker-lime"
+              }`}
+            >
+              {openCount > 0
+                ? `${openCount} in progress`
+                : `${sortedJobs.length} saved`}
+            </span>
+            <span className="toy-sticker toy-sticker-outline">Collector shelf</span>
+          </div>
+          <p className="mt-2 text-xs text-white/45">
             Signed in as {me.auth?.email || "your Pikbo account"}
           </p>
         </div>
@@ -459,17 +479,26 @@ export function LibraryGrid() {
       </div>
 
       {sortedJobs.length === 0 ? (
-        <div className="grid min-h-[22rem] place-items-center rounded-[1.75rem] border border-white/10 bg-[#111113] p-6 text-center sm:p-10">
+        <div className="collection-card relative grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
+          <span className="toy-corner-mark toy-corner-mark-tl" aria-hidden />
+          <span className="toy-corner-mark toy-corner-mark-br" aria-hidden />
           <div className="max-w-lg">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-xl text-white/65">
+            <span
+              className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-[var(--toy-bubblegum)]/30 bg-[var(--toy-bubblegum)]/10 text-2xl"
+              aria-hidden
+            >
               +
             </span>
-            <h2 className="mt-5 font-display text-3xl font-black tracking-[-0.04em] text-white">
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <span className="toy-sticker toy-sticker-mango">Empty shelf</span>
+              <span className="toy-sticker toy-sticker-outline">One photo to start</span>
+            </div>
+            <h2 className="mt-4 font-display text-3xl font-black tracking-[-0.04em] text-white">
               Your first real Moment starts with one toy photo.
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/50">
-              Generated results will return here after refresh. Only private,
-              downloadable account results are kept in this view.
+              Generated results return here after refresh. Only private,
+              downloadable account results stay on this shelf.
             </p>
             <Link href={CREATE_MOMENT_HREF} className="btn btn-primary mt-7 text-sm">
               Create Street Power-Up
@@ -487,11 +516,8 @@ export function LibraryGrid() {
               remixOptsFromRecord(job)
             );
             return (
-              <article
-                key={job.id}
-                className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111113] shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)]"
-              >
-                <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(200,255,61,0.12),transparent_55%),#09090a] text-center">
+              <article key={job.id} className="result-card">
+                <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_12%,rgba(200,255,61,0.14),transparent_52%),radial-gradient(circle_at_100%_0%,rgba(155,107,255,0.12),transparent_45%),#0a0614] text-center">
                   {job.status === "succeeded" && job.videoUrl ? (
                     <video
                       src={job.videoUrl}
@@ -503,11 +529,13 @@ export function LibraryGrid() {
                     />
                   ) : (
                     <div className="p-6">
-                      <span className={`mx-auto block h-2 w-2 rounded-full ${status.dot}`} />
-                      <p className={`mt-3 text-xs font-black uppercase tracking-[0.18em] ${status.tone}`}>
+                      <span
+                        className={`mx-auto block h-2.5 w-2.5 rounded-full ${status.dot}`}
+                      />
+                      <span className={`toy-sticker ${status.sticker} mx-auto mt-3`}>
                         {status.label}
-                      </p>
-                      <p className="mt-2 font-display text-2xl font-black tracking-[-0.03em] text-white">
+                      </span>
+                      <p className="mt-3 font-display text-2xl font-black tracking-[-0.03em] text-white">
                         {effectName(job.effect)}
                       </p>
                     </div>
@@ -524,7 +552,7 @@ export function LibraryGrid() {
                   </div>
 
                   {isRetryable(job.status) ? (
-                    <p className="mt-3 text-xs leading-5 text-amber-100/72">
+                    <p className="mt-3 text-xs leading-5 text-[var(--toy-mango)]/85">
                       {friendlyFailure(job)}
                     </p>
                   ) : null}
@@ -534,7 +562,7 @@ export function LibraryGrid() {
                     job.durable ||
                     job.adapter === "supabase-private") &&
                   !canLocalCancel(job) ? (
-                    <p className="mt-3 text-xs leading-5 text-sky-100/70">
+                    <p className="mt-3 text-xs leading-5 text-[var(--toy-aqua)]/80">
                       Still generating. Refresh keeps this durable status in
                       sync — Cancel is only available for local in-progress
                       jobs.
