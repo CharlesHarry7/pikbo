@@ -6,6 +6,7 @@ import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Supercomputer Generate doors — listing spin remix (ratio/duration/channel). */
 const BATCH_GENERATE_HREF = createGenerate360Href("supercomputer");
@@ -28,7 +29,7 @@ export async function generateMetadata({
       title: "Street Power-Up toy Moment",
       description:
         "Choose one directed Street Power-Up toy-video Moment from one owned photo.",
-      // Not a rank landing — canonical lives on /create?effect=street-power-up (also noindex).
+      // Not a rank landing — canonical lives on MOMENT_CREATE_HREF (also noindex).
       robots: PREVIEW_ROBOTS,
     };
   }
@@ -56,7 +57,10 @@ export default async function SupercomputerPage({
   const sp = await searchParams;
   // Legacy Pack links now converge on one public preset-first Moment.
   if (sp.pack === "seller") {
-    const q = new URLSearchParams({ effect: "street-power-up" });
+    const q = new URLSearchParams({
+      mode: "moment",
+      effect: "street-power-up",
+    });
     if (sp.sku?.trim()) q.set("sku", sp.sku.trim().slice(0, 64));
     if (sp.try?.trim()) q.set("try", sp.try.trim());
     if (sp.sample?.trim()) q.set("sample", sp.sample.trim());
@@ -88,7 +92,7 @@ export default async function SupercomputerPage({
           <div className="flex flex-col items-end gap-2">
             <div className="flex flex-wrap justify-end gap-2">
               <Link
-                href="/create?effect=street-power-up"
+                href={`${MOMENT_CREATE_HREF}&source=supercomputer`}
                 className="btn btn-primary text-sm"
               >
                 Create one Moment
@@ -124,7 +128,7 @@ export default async function SupercomputerPage({
             →
           </span>
           <Link
-            href="/create?effect=street-power-up"
+            href={`${MOMENT_CREATE_HREF}&source=supercomputer`}
             className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
           >
             Create one Moment

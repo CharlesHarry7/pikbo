@@ -28,6 +28,7 @@ import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { useI18n } from "@/components/LanguageProvider";
 import { site } from "@/lib/site";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 function Clip({
   demo,
@@ -166,7 +167,7 @@ export function HfExploreHome({
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
-              href="/create?effect=street-power-up"
+              href={`${MOMENT_CREATE_HREF}&source=hf-explore`}
               className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
             >
               Use tool on this page
@@ -326,7 +327,7 @@ export function HfExploreHome({
               {t("home.insideProject")}
             </Link>
             <Link
-              href="/create?effect=street-power-up"
+              href={`${MOMENT_CREATE_HREF}&source=hf-explore`}
               className="inline-flex rounded-full border border-white/15 px-5 py-3.5 text-sm font-bold text-white/70 transition hover:border-white/30 hover:text-white"
             >
               {t("cta.sellerPack")}
@@ -436,7 +437,7 @@ export function HfExploreHome({
             </div>
             {[
               {
-                href: "/create?effect=street-power-up",
+                href: `${MOMENT_CREATE_HREF}&source=hf-explore`,
                 label: "Street Power-Up Moment",
                 sub: "one directed clip"},
               { href: "/modules", label: "Modules", sub: "Video jobs" },
@@ -474,7 +475,7 @@ export function HfExploreHome({
             </p>
           </div>
           <Link
-            href="/create?effect=street-power-up"
+            href={`${MOMENT_CREATE_HREF}&source=hf-explore`}
             className="inline-flex shrink-0 items-center rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-sm font-bold text-[#c8ff3d] transition hover:bg-[#c8ff3d]/10"
           >
             Create one Moment →

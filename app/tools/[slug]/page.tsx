@@ -21,6 +21,7 @@ import {
 } from "@/lib/jsonLd";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { HighIntentProductTruth } from "@/components/HighIntentProductTruth";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** 哥飞：排名主战场 slug — On Page 火力集中 */
 const PRIMARY_RANK_SLUG = "ai-toy-video-generator";
@@ -153,7 +154,7 @@ export default async function ToolPage({
           {isHighIntentTool ? (
             <div className="mt-5 flex flex-wrap gap-2">
               <Link
-                href="/create?effect=street-power-up&source=tool-page"
+                href={`${MOMENT_CREATE_HREF}&source=tool-page`}
                 className="btn btn-primary !px-4 !py-2 text-xs font-black"
               >
                 Preview one toy Moment

@@ -9,6 +9,7 @@ import { FlowMediaCard } from "@/components/FlowMediaCard";
 import { createWorkbenchHref } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Flow Generate doors — listing spin remix (ratio/duration/channel). */
 const FLOW_GENERATE_HREF = createWorkbenchHref();
@@ -93,7 +94,7 @@ export default function FlowPage() {
       id: "core-pack",
       title: "Street Power-Up Moment",
       blurb: "One directed launch clip from one owned toy photo.",
-      href: "/create?effect=street-power-up",
+      href: `${MOMENT_CREATE_HREF}&source=flow`,
       badge: "Toy Moment",
       tier: "core",
       demoId: "beatbot-unboxed",
@@ -295,7 +296,7 @@ export default function FlowPage() {
             →
           </span>
           <Link
-            href="/create?effect=street-power-up"
+            href={`${MOMENT_CREATE_HREF}&source=flow`}
             className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
           >
             Create one Moment

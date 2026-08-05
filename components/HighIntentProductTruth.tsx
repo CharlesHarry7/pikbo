@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 type HighIntentFocus = "generator" | "listing-spin" | "blind-box";
 
@@ -81,7 +82,7 @@ export function HighIntentProductTruth({
 
         <div className="mt-7 flex flex-wrap gap-2">
           <Link
-            href="/create?effect=street-power-up"
+            href={`${MOMENT_CREATE_HREF}&source=high-intent`}
             className="btn btn-primary !px-5 !py-3 text-xs font-black"
           >
             Preview one toy Moment

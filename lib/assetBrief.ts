@@ -7,6 +7,7 @@
 
 import type { JobIntentId } from "@/lib/jobIntents";
 import type { ToyIdentity } from "@/lib/toyIdentity";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 export type ImageProbe = {
   width: number;
@@ -177,7 +178,7 @@ export function buildAssetBrief(input: AssetBriefInput): AssetBrief {
   const zh = locale === "zh";
   const shape = classifyShape(input.probe);
   const label = aspectLabel(input.probe, shape);
-  const sellerPackHref = "/create?effect=street-power-up";
+  const sellerPackHref = `${MOMENT_CREATE_HREF}&source=asset-brief`;
 
   if (!input.hasImage) {
     return {

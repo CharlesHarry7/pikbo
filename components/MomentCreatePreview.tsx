@@ -25,6 +25,7 @@ import {
   type MeResponse,
 } from "@/lib/meClient";
 import { STUDIO_SESSION_BOOT_MS } from "@/lib/clientTimeout";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { cn } from "@/lib/utils";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 
@@ -269,14 +270,14 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
     if (canUsePrivateLaunch(me)) {
       return {
         label: "Create my private Moment",
-        href: `/create?mode=moment&effect=street-power-up&source=moment-${moment.id}`,
+        href: `${MOMENT_CREATE_HREF}&source=moment-${moment.id}`,
         note: "Private beta currently renders the supported Street Power-Up contract: one owned toy photo, one private clip.",
       };
     }
     if (canPreparePrivateInput(me)) {
       return {
         label: "Verify private photo",
-        href: `/create?mode=moment&effect=street-power-up&source=moment-input-${moment.id}`,
+        href: `${MOMENT_CREATE_HREF}&source=moment-input-${moment.id}`,
         note: "Private photo verification is available. Provider generation and credit reservation remain closed until this account is admitted.",
       };
     }

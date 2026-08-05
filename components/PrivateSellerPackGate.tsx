@@ -7,9 +7,10 @@ import {
   canUsePrivateLaunch,
   fetchMe,
 } from "@/lib/meClient";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const PUBLIC_MOMENT_HREF =
-  "/create?effect=street-power-up&source=seller-pack-gate";
+  `${MOMENT_CREATE_HREF}&source=seller-pack-gate`;
 const PRIVATE_BETA_MAILTO =
   "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
 
