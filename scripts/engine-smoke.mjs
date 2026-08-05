@@ -2797,7 +2797,7 @@ assert.doesNotMatch(
 );
 assert.match(
   fs.readFileSync(join(root, "components/MobileGenerateBar.tsx"), "utf8"),
-  /createRemixHref|data-mobile-bar=["']generate-remix["']/
+  /createGenerate360Href|data-mobile-bar=["']generate-remix["']/
 );
 assert.match(
   genRoute,
@@ -3955,11 +3955,11 @@ const homeWallSrc = fs.readFileSync(
 );
 assert.match(
   homeWallSrc,
-  /data-home-wall|data-recipe-card|wallDense|Try this recipe|Cached preview/
+  /data-home-wall|data-recipe-card|wallDense|Try this recipe|HOME_PROOF_BADGE|cached prototype|Cached preview/
 );
-assert.match(homeWallSrc, /href=\{item\.projectHref \|\| item\.href\}/);
-assert.match(homeWallSrc, /href=\{item\.href\}/);
+assert.match(homeWallSrc, /cardHref|projectHref|remakeHref|item\.href/);
 assert.match(homeWallSrc, /project_open|recipe_use/);
+assert.match(homeWallSrc, /home-proof-wall|data-home-proof-wall/);
 assert.match(
   [homePageSrc, publicSampleSrc].join("\n"),
   /HomeCinemaHero items=|data-home-upgrade="moment"/
@@ -4012,7 +4012,7 @@ assert.match(
 // Soft-launch Open Generate carries remix contract (ratio/duration/channel)
 assert.match(
   fs.readFileSync(join(root, "components/SoftLaunchStrip.tsx"), "utf8"),
-  /createRemixHref|data-soft-launch=["']generate-remix["']/
+  /createGenerate360Href|data-soft-launch=["']generate-remix["']/
 );
 // Refund honesty: never bare "failed jobs refund" (TIMEOUT/cancel stay unconfirmed)
 assert.match(
@@ -4433,19 +4433,19 @@ const suiteEntrySrc = fs.readFileSync(
 );
 assert.match(suiteEntrySrc, /suite\.tag\.preview|tagKey:\s*["']suite\.tag\.preview/);
 // Suite Generate door uses remix contract (not bare /create)
-assert.match(suiteEntrySrc, /createRemixHref|SUITE_GENERATE_HREF/);
+assert.match(suiteEntrySrc, /createGenerate360Href|SUITE_GENERATE_HREF/);
 assert.match(suiteEntrySrc, /data-suite-entry=["']generate-remix["']/);
 assert.ok(
   suiteEntrySrc.indexOf("SUITE_GENERATE_HREF") <
     suiteEntrySrc.indexOf('href: "/flow"') ||
-    suiteEntrySrc.indexOf("createRemixHref") <
+    suiteEntrySrc.indexOf("createGenerate360Href") <
       suiteEntrySrc.indexOf('href: "/flow"'),
   "Generate remix door before Flow on home suite rail"
 );
 // How it works Open Generate carries remix contract
 assert.match(
   fs.readFileSync(join(root, "components/HowItWorks.tsx"), "utf8"),
-  /createRemixHref|data-how-it-works=["']generate-remix["']/
+  /createGenerate360Href|data-how-it-works=["']generate-remix["']/
 );
 assert.match(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
@@ -4462,12 +4462,12 @@ const hfRailSrc = fs.readFileSync(
   "utf8"
 );
 // Seedance Video door uses remix contract (not bare /create)
-assert.match(hfRailSrc, /createRemixHref|GENERATE_REMIX_HREF/);
+assert.match(hfRailSrc, /createGenerate360Href|GENERATE_REMIX_HREF/);
 assert.match(hfRailSrc, /data-hf-rail-generate=["']remix["']/);
 assert.ok(
   (hfRailSrc.indexOf("GENERATE_REMIX_HREF") >= 0
     ? hfRailSrc.indexOf("GENERATE_REMIX_HREF")
-    : hfRailSrc.indexOf("createRemixHref")) <
+    : hfRailSrc.indexOf("createGenerate360Href")) <
     hfRailSrc.indexOf('href: "/flow"'),
   "Generate remix before Flow on HfProductRail"
 );
@@ -4483,7 +4483,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
-  /data-hf-flow-generate=["']remix["']|createRemixHref/
+  /data-hf-flow-generate=["']remix["']|createGenerate360Href/
 );
 
 assert.match(
@@ -5603,7 +5603,7 @@ assert.doesNotMatch(genJobsRouteHead, /touchOpenJobsForSession/);
 // Modules Photo → Clip carries remix contract (not bare /create)
 assert.match(
   fs.readFileSync(join(root, "components/ModulesSuiteCtas.tsx"), "utf8"),
-  /createRemixHref|data-modules-path=["']photo-clip["']/
+  /createGenerate360Href|data-modules-path=["']photo-clip["']/
 );
 assert.doesNotMatch(
   genJobsRouteHead,
@@ -5710,7 +5710,7 @@ assert.doesNotMatch(
 // Modules Photo→Clip uses remix contract (ratio/duration/channel)
 assert.match(
   fs.readFileSync(join(root, "components/ModulesSuiteCtas.tsx"), "utf8"),
-  /createRemixHref\(MODULES_PHOTO_CLIP_EFFECT\)|createRemixHref\(["']360-spin/
+  /createGenerate360Href\(["']modules-photo-clip["']\)|MODULES_PHOTO_CLIP_HREF|createGenerate360Href\(["']360-spin/
 );
 assert.match(
   fs.readFileSync(join(root, "components/ModulesSuiteCtas.tsx"), "utf8"),
@@ -5787,7 +5787,7 @@ assert.match(
 // Mobile sticky Generate also remix (product-first)
 assert.match(
   fs.readFileSync(join(root, "components/MobileGenerateBar.tsx"), "utf8"),
-  /createRemixHref|data-mobile-bar=["']generate-remix["']/
+  /createGenerate360Href|data-mobile-bar=["']generate-remix["']/
 );
 assert.match(
   fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
@@ -5820,7 +5820,7 @@ assert.match(
 // Header primary CTA + Library/Profile Generate doors use remix contract
 assert.match(
   fs.readFileSync(join(root, "components/Header.tsx"), "utf8"),
-  /createRemixHref|data-header-cta=["']generate-remix["']/
+  /createGenerate360Href|data-header-cta=["']generate-remix["']/
 );
 // AppShell routes the public Moment shell to one fixed private validation clip.
 assert.match(
@@ -5918,19 +5918,27 @@ const residualGenerateDoors = [
   ["components/LandingSeoMesh.tsx", /data-seo-mesh-generate=["']remix["']/],
   ["components/HeroVideoBanner.tsx", /data-hero-try-photo=["']remix["']/],
   ["components/BatchStudio.tsx", /data-batch-single-generate=["']remix["']/],
-  ["components/HomeToolShelf.tsx", /SHELF_GENERATE_HREF|createRemixHref\(["']360-spin-showcase["']\)/],
-  ["components/CommandPalette.tsx", /CMD_GENERATE_HREF|createRemixHref\(["']360-spin-showcase["']\)/],
+  ["components/HomeToolShelf.tsx", /SHELF_GENERATE_HREF|createGenerate360Href\(["']home-tool-shelf["']\)/],
+  ["components/CommandPalette.tsx", /CMD_GENERATE_HREF|createWorkbenchHref\(["']cmdk["']\)/],
 ];
 for (const [rel, re] of residualGenerateDoors) {
   assert.match(
     fs.readFileSync(join(root, rel), "utf8"),
     re,
-    `${rel} primary Generate door must use createRemixHref remix marker`
+    `${rel} primary Generate door must use createGenerate360Href / workbench helper`
   );
 }
 assert.match(
   fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
-  /href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}[\s\S]*Create new Moment/
+  /libraryEmpty360Href[\s\S]*Generate 360|data-library-header-cta=["']generate-360["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/library/page.tsx"), "utf8"),
+  /libraryEmptyMomentHref[\s\S]*Create new Moment|data-library-header-cta=["']moment["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/jobIntents.ts"), "utf8"),
+  /export function createGenerate360Href/
 );
 // Cinema director board compose → Generate carries remix + prompt (not bare effect=)
 const cinemaComposeSrc = fs.readFileSync(
@@ -5949,7 +5957,7 @@ const generateAliasSrc = fs.readFileSync(
   join(root, "app/generate/page.tsx"),
   "utf8"
 );
-assert.match(generateAliasSrc, /createRemixHref\(["']360-spin-showcase["']\)/);
+assert.match(generateAliasSrc, /createGenerate360Href\(["']generate-alias["']\)/);
 assert.doesNotMatch(
   generateAliasSrc,
   /redirect\(s \? `\/create\?\$\{s\}` : ["']\/create["']\)/

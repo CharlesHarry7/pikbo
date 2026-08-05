@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Sticky mobile CTA when not already on Generate / Seller Pack */
-const MOBILE_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const MOBILE_GENERATE_HREF = createGenerate360Href("mobile-bar");
+const MOBILE_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=mobile-bar` as const;
 
 export function MobileGenerateBar() {
   const path = usePathname() || "/";
@@ -51,7 +53,7 @@ export function MobileGenerateBar() {
       </Link>
       {onLibrary ? (
         <Link
-          href="/create?effect=street-power-up"
+          href={MOBILE_MOMENT_HREF}
           className="pointer-events-auto rounded-full border border-[var(--mint)]/40 bg-black/70 px-4 py-2.5 text-xs font-semibold text-[var(--mint)] backdrop-blur"
         >
           Create one Moment

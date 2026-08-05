@@ -25,12 +25,16 @@ const paywall = read("components/PaywallCard.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
 
-// The public homepage is now one honest Street Power-Up Moment. Its media is a
-// cached Lab sample, clearly not a customer result, and the CTA uses the
-// shared Moment href rather than a Pack/archive route.
+// Public homepage: honest Street Power-Up Moment hero + capped Lab proof wall.
+// Media is cached Lab sample only (not customer results / Pack archive).
 assert.match(home, /<HomeCinemaHero \/>/);
-assert.doesNotMatch(home, /PublicLaunchPackSample|HomeViralWall/);
+assert.match(home, /<HomeViralWall/);
+assert.match(home, /buildHomeShowcaseFeed/);
+assert.doesNotMatch(home, /PublicLaunchPackSample/);
 assert.match(homeHero, /data-home-hero=["']street-power-up["']/);
+assert.match(homeWall, /data-home-wall=["']lab-proof["']/);
+assert.match(homeWall, /HOME_PROOF_BADGE|home-proof-wall/);
+assert.match(homeWall, /360-spin-showcase|data-home-proof-360/);
 assert.match(
   homeHero,
   /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
@@ -114,9 +118,10 @@ assert.match(
   /privateUploadEnabled \? \(\s*<div id="create-photo-step" data-first-run-step="upload">/
 );
 assert.match(homeWall, /Try this recipe/);
-assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
-assert.match(homeWall, /href=\{item\.href\}/);
+assert.match(homeWall, /href=\{cardHref\}|projectHref \|\| remakeHref/);
+assert.match(homeWall, /href=\{remakeHref\}|withProofEntry\(item\.href\)/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
+assert.match(homeWall, /home-proof-wall/);
 assert.doesNotMatch(shell, /create\?mode=seller-pack/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.match(
@@ -136,9 +141,19 @@ assert.match(shell, /Create a Moment/);
 assert.match(shell, /label: "Library"/);
 assert.match(shell, /label: "Sign in"/);
 assert.doesNotMatch(shell, /Motion archive/);
-assert.match(softLaunchStrip, /create\?effect=street-power-up&source=soft-launch/);
-assert.match(hfExploreHome, /create\?effect=street-power-up/);
-assert.match(freeTrialCta, /onHome\s*\? "\/create\?effect=street-power-up&source=free-trial"/);
+assert.match(
+  softLaunchStrip,
+  /SOFT_LAUNCH_MOMENT_HREF|MOMENT_CREATE_HREF.*source=soft-launch|`\$\{MOMENT_CREATE_HREF\}&source=soft-launch`/
+);
+assert.match(
+  softLaunchStrip,
+  /createGenerate360Href\(\s*["']soft-launch["']\)|data-soft-launch=["']generate-remix["']/
+);
+assert.match(hfExploreHome, /create\?effect=street-power-up|MOMENT_CREATE_HREF|street-power-up/);
+assert.match(
+  freeTrialCta,
+  /createGenerate360Href\(\s*["']free-trial["']\)|onHome\s*\?\s*createGenerate360Href/
+);
 assert.doesNotMatch(
   [shell, softLaunchStrip, hfExploreHome, freeTrialCta].join("\n"),
   /create\?mode=seller-pack/

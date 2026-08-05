@@ -42,13 +42,34 @@ assert(
     homeHero.includes("Sample shown: cached 6s archive") &&
     homeHero.includes("not a completed customer deliverable") &&
     homeHero.includes("not your toy") &&
-    !home.includes("<HomeViralWall") &&
+    home.includes("<HomeViralWall") &&
+    home.includes("buildHomeShowcaseFeed") &&
+    !home.includes("PublicLaunchPackSample") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must expose one honest Street Power-Up Moment and no Pack/demo wall"
+  "homepage must expose Street Power-Up Moment hero + capped Lab proof wall (no Pack sample)"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),
   "homepage must not rebuild a larger demo wall outside the Showcase registry"
+);
+assert(
+  proofSlugs.includes("360-spin-showcase"),
+  "homepage proof whitelist must include 360-spin-showcase"
+);
+assert(
+  proofSlugs.slice(0, 4).includes("360-spin-showcase"),
+  "360-spin-showcase must sit in the first 4 home proof slots (mobile 2×2 above fold)"
+);
+const homeWall = read("components/HomeViralWall.tsx");
+assert(
+  homeWall.includes("HOME_PROOF_BADGE") &&
+    homeWall.includes("home-proof-wall") &&
+    homeWall.includes("data-home-proof-360") &&
+    homeWall.includes("pinListing360InFirstSlots") &&
+    homeWall.includes("data-home-proof-360-pinned") &&
+    (homeWall.includes("HOME_PROOF_LIMIT") ||
+      homeWall.includes(".slice(0, 8)")),
+  "Lab proof wall must badge honestly, pin 360 in first slots, entry=home-proof-wall, cap ≤8"
 );
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),

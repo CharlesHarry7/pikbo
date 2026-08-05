@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
-const SHELF_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const SHELF_GENERATE_HREF = createGenerate360Href("home-tool-shelf");
+const SHELF_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=home-tool-shelf` as const;
 
 /**
  * Suite chips under home — product doors first (Generate / Modules / Pack).
@@ -19,7 +21,7 @@ const TOOLS: ToolChip[] = [
   { href: SHELF_GENERATE_HREF, label: "Generate", sub: "Workbench", emoji: "✦", hot: true },
   { href: "/modules", label: "Modules", sub: "Job blocks", emoji: "▦", hot: true },
   {
-    href: "/create?effect=street-power-up",
+    href: SHELF_MOMENT_HREF,
     label: "Create one Moment",
     sub: "1 directed clip",
     emoji: "🛍️",

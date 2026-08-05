@@ -84,7 +84,7 @@ export function getJobIntent(id: string): JobIntent | undefined {
 export function createJobRemixHref(jobId: JobIntentId | string): string {
   const intent = getJobIntent(jobId);
   if (!intent) {
-    return createRemixHref("360-spin-showcase");
+    return createGenerate360Href();
   }
   if (intent.href) return intent.href;
   const base = createRemixHref(intent.effect, undefined, null, {
@@ -93,6 +93,20 @@ export function createJobRemixHref(jobId: JobIntentId | string): string {
   });
   const joiner = base.includes("?") ? "&" : "?";
   return `${base}${joiner}job=${encodeURIComponent(intent.id)}`;
+}
+
+/** Canonical listing-spin recipe for every Generate door. */
+export const GENERATE_360_EFFECT = "360-spin-showcase" as const;
+
+/**
+ * Single Generate → 360° studio deep link.
+ * Optional `source` tags the entry surface (nav, suite, library-empty, …)
+ * via the remix `source` query so Create can keep honest intent.
+ * Never emits bare `/create`.
+ */
+export function createGenerate360Href(source?: string): string {
+  const tag = (source || "").trim().slice(0, 64);
+  return createRemixHref(GENERATE_360_EFFECT, tag || undefined);
 }
 
 /** Lab sample first-run path — remix + try/sample flags CreateStudio hydrates. */
@@ -105,12 +119,15 @@ export function createLabSampleTryHref(sampleId = "scout"): string {
         : sampleId === "moon"
           ? "moon-reveal"
           : undefined;
-  const base = createRemixHref("360-spin-showcase", source);
+  const base = createGenerate360Href(source);
   const joiner = base.includes("?") ? "&" : "?";
   return `${base}${joiner}try=1&sample=${encodeURIComponent(sampleId)}`;
 }
 
-/** Workbench Generate door with listing-spin remix (not bare /create). */
-export function createWorkbenchHref(): string {
-  return createRemixHref("360-spin-showcase");
+/**
+ * Workbench Generate door — alias of createGenerate360Href.
+ * Prefer createGenerate360Href for new call sites.
+ */
+export function createWorkbenchHref(source?: string): string {
+  return createGenerate360Href(source);
 }

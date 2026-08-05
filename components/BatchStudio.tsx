@@ -1,6 +1,7 @@
 "use client";
 
 import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AssetBriefPanel } from "@/components/AssetBriefPanel";
@@ -2557,7 +2558,7 @@ export function BatchStudio({
                   className="rounded-full border border-[var(--mint)]/35 px-3 py-1.5 text-[11px] font-bold text-[var(--mint)]"
                 />
                 <Link
-                  href={createRemixHref("360-spin-showcase")}
+                  href={createGenerate360Href("batch-studio")}
                   className="rounded-full border border-white/15 px-3 py-1.5 text-[11px] font-bold text-white/70"
                   data-batch-single-generate="remix"
                 >
