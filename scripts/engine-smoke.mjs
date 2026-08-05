@@ -4163,10 +4163,19 @@ assert.match(softLaunchSrc, /href:\s*["']\/profile["']/);
   assert.deepEqual(labels, [
     "Home",
     "Create",
+    "Explore",
     "Library",
     "Pricing",
     "Account",
   ]);
+  assert.ok(
+    labels.length <= 6,
+    "PRIMARY_NAV peers must stay ≤6 (no HF dump)"
+  );
+  assert.ok(
+    primaryBlock.includes('href: "/explore"'),
+    "Explore must sit on product chrome (AIT-83)"
+  );
 }
 // Cold-start: /create is a tool, not a rank landing — noindex,follow
 const createPageMeta = fs.readFileSync(
@@ -4378,15 +4387,16 @@ function resolveGenerateStillPure(input) {
   assert.equal(fresh.assetId, "asset_cur");
 }
 
-// Mobile mirrors Home · Create · Library · Pricing · Account.
+// Mobile mirrors Home · Create · Explore · Library · Pricing · Account (≤6).
 assert.match(softLaunchSrc, /MOBILE_NAV/);
 assert.match(
   softLaunchSrc,
   /MOBILE_NAV[\s\S]*href:\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`/
 );
+assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/explore["']/);
 assert.doesNotMatch(
   softLaunchSrc,
-  /MOBILE_NAV[\s\S]*href:\s*["']\/(?:effects|community)["']/
+  /MOBILE_NAV[\s\S]*href:\s*["']\/(?:effects|community|cinema|models)["']/
 );
 assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/library["']/);
 assert.match(softLaunchSrc, /MOBILE_NAV[\s\S]*href:\s*["']\/pricing["']/);
@@ -4395,7 +4405,15 @@ assert.match(
   /MOBILE_NAV[\s\S]*href:\s*["']\/profile["']/
 );
 assert.match(appShellSrc, /MOBILE_NAV/);
+assert.match(appShellSrc, /grid-cols-6/);
 assert.match(appShellSrc, /item\.label/);
+// Home motion chrome: one-click Explore (desktop) without dumping suite doors
+assert.match(
+  appShellSrc,
+  /motionChrome[\s\S]*?href:\s*["']\/explore["'][\s\S]*?label:\s*["']Explore["']/
+);
+// Create primary stays Moment (street-power-up), not suite dump
+assert.match(softLaunchSrc, /mode=moment&effect=street-power-up/);
 assert.match(
   fs.readFileSync(join(root, "app/tools/page.tsx"), "utf8"),
   /\/modules/

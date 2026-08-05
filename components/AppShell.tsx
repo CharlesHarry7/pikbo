@@ -146,6 +146,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           {(motionChrome
             ? [
                 { href: DEFAULT_MOMENT_CREATE_HREF, label: "Create" },
+                { href: "/explore", label: "Explore" },
                 { href: "/library", label: "Library" },
                 { href: "/pricing", label: "Pricing" },
                 { href: "/login", label: "Sign in" },
@@ -326,7 +327,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
       {!resultShell && !sellerPackCreate ? <nav
         className={cn(
-          "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
+          "z-50 grid grid-cols-6 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
           home
             ? "relative border-white/10 bg-[rgba(10,10,15,0.96)]"
             : "sticky bottom-0 border-white/10 bg-[rgba(10,10,15,0.96)]"
