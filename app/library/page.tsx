@@ -46,8 +46,9 @@ export default function LibraryPage() {
                 href={empty360Href}
                 className="btn btn-primary text-sm"
                 data-library-header-cta="generate-360"
+                data-library-empty-cta="generate"
               >
-                Generate 360° Spin
+                Generate 360
               </Link>
               <Link
                 href={emptyMomentHref}

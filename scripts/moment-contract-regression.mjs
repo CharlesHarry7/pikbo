@@ -107,9 +107,42 @@ assertMatch(
   "Library primary Generate CTA must use libraryEmpty360Href (360 remix)"
 );
 assertMatch(
+  libraryPage,
+  /Generate 360/,
+  "Library empty primary label must match AIT-62 Generate 360 contract"
+);
+assertMatch(
+  libraryGrid,
+  /data-library-empty-cta=["']360["'][\s\S]{0,160}360/,
+  "Library empty/guest states must CTA into Create 360° Spin"
+);
+assertMatch(
+  libraryGrid,
+  /data-library-empty-art=["']shelf["']/,
+  "Library empty states must render 潮玩 empty-shelf art (not fake UGC media)"
+);
+assertMatch(
   libraryGrid,
   /async function download\(job: GenerationJob\)[\s\S]{0,500}const headers = await privateDownloadHeaders\(\)[\s\S]{0,240}fetch\(gateUrl,\s*\{[\s\S]{0,100}method:\s*[\"']HEAD[\"'][\s\S]{0,100}headers/,
   "Library account downloads must authenticate the private result HEAD gate"
+);
+
+// Empty shelf helper: Generate 360 via createGenerate360Href + Moment keep library-empty
+const libraryEmpty = read("lib/libraryEmpty.ts");
+assertMatch(
+  libraryEmpty,
+  /LIBRARY_EMPTY_SOURCE\s*=\s*["']library-empty["']/,
+  "Library empty source token must stay library-empty for intent preservation"
+);
+assertMatch(
+  libraryEmpty,
+  /createGenerate360Href\(\s*LIBRARY_EMPTY_SOURCE\s*\)/,
+  "Library empty primary CTA must deep-link Create 360 via createGenerate360Href"
+);
+assertMatch(
+  libraryEmpty,
+  /MOMENT_CREATE_HREF.*source=\$\{LIBRARY_EMPTY_SOURCE\}|MOMENT_CREATE_HREF.*library-empty/,
+  "Library empty secondary CTA must keep the fixed Moment path"
 );
 
 // 2. The client carries an explicit, typed contract rather than relying on

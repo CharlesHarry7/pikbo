@@ -7,6 +7,10 @@ import { useToast } from "@/components/Toast";
 import { interpretDownloadHead } from "@/lib/createTrust";
 import { downloadVideoFile, privateDownloadHeaders } from "@/lib/history";
 import { fetchMe, type MeResponse } from "@/lib/meClient";
+import {
+  libraryEmpty360Href,
+  libraryEmptyMomentHref,
+} from "@/lib/libraryEmpty";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
 import {
   acceptControlledLibraryNewAttemptUrl,
@@ -54,6 +58,32 @@ type GenerationsResponse = {
 };
 
 const CREATE_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=library` as const;
+const EMPTY_360_HREF = libraryEmpty360Href();
+const EMPTY_MOMENT_HREF = libraryEmptyMomentHref();
+
+/** Decorative empty shelf — CSS only, never presents as real UGC. */
+function LibraryEmptyShelfArt() {
+  return (
+    <div
+      className="relative mx-auto mb-2 h-28 w-full max-w-[16rem]"
+      aria-hidden
+      data-library-empty-art="shelf"
+    >
+      <div className="absolute inset-x-6 bottom-2 h-3 rounded-full bg-gradient-to-r from-[#B14EFF]/40 via-[#FF4ECD]/55 to-[#00D9FF]/35 blur-[1px]" />
+      <div className="absolute inset-x-4 bottom-4 h-2 rounded-full bg-white/10" />
+      <div className="absolute left-1/2 top-2 h-20 w-16 -translate-x-1/2">
+        <div className="absolute inset-x-2 top-0 h-14 rounded-[1.25rem] border border-white/15 bg-[linear-gradient(160deg,rgba(177,78,255,0.35),rgba(15,15,20,0.9)_55%,rgba(255,78,205,0.2))] shadow-[0_0_28px_rgba(177,78,255,0.35)]" />
+        <div className="absolute left-1/2 top-3 h-7 w-7 -translate-x-1/2 rounded-full border border-[#c8ff3d]/35 bg-[#c8ff3d]/15" />
+        <div className="absolute bottom-0 left-1/2 h-6 w-12 -translate-x-1/2 rounded-t-full border border-white/10 bg-white/[0.06]" />
+      </div>
+      <span className="absolute left-3 top-4 h-8 w-8 rotate-[-12deg] rounded-2xl border border-[#00D9FF]/30 bg-[#00D9FF]/10 opacity-80" />
+      <span className="absolute right-2 top-6 h-7 w-7 rotate-[14deg] rounded-full border border-[#FF4ECD]/35 bg-[#FF4ECD]/12 opacity-80" />
+      <span className="absolute right-8 bottom-10 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+        empty shelf
+      </span>
+    </div>
+  );
+}
 
 /** UUID shape for deep-link job ids — reject freeform paths/secrets. */
 const LIBRARY_JOB_ID_RE =
@@ -551,14 +581,12 @@ function LibraryGridInner() {
       >
         <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
           <div className="max-w-lg">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#c8ff3d]/30 bg-[#c8ff3d]/10 text-xl text-[#c8ff3d]">
-              ↗
-            </span>
-            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+            <LibraryEmptyShelfArt />
+            <p className="mt-3 text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
               Private Library
             </p>
             <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
-              Sign in to see your generated Moments.
+              Sign in to open your collectible shelf.
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
               Your real toy results belong to your account. Sample previews and
@@ -576,10 +604,22 @@ function LibraryGridInner() {
                     : "/login?next=/library"
                 }
                 className="btn btn-primary text-sm"
+                data-library-empty-cta="sign-in"
               >
                 Sign in to Library
               </Link>
-              <Link href={CREATE_MOMENT_HREF} className="btn btn-ghost text-sm">
+              <Link
+                href={EMPTY_360_HREF}
+                className="btn btn-ghost text-sm"
+                data-library-empty-cta="360"
+              >
+                Preview 360° Spin
+              </Link>
+              <Link
+                href={EMPTY_MOMENT_HREF}
+                className="btn btn-ghost text-sm"
+                data-library-empty-cta="moment"
+              >
                 Preview Street Power-Up
               </Link>
             </div>
@@ -646,28 +686,55 @@ function LibraryGridInner() {
           >
             {refreshing ? "Refreshing…" : "Refresh"}
           </button>
-          <Link href={CREATE_MOMENT_HREF} className="btn btn-primary min-h-11 !px-4 !py-2 text-xs">
-            Create new Moment
-          </Link>
+          {/* Filled shelf only: empty keeps a single header Generate 360 above fold. */}
+          {sortedJobs.length > 0 ? (
+            <Link
+              href={CREATE_MOMENT_HREF}
+              className="btn btn-primary min-h-11 !px-4 !py-2 text-xs"
+            >
+              Create new Moment
+            </Link>
+          ) : null}
         </div>
       </div>
 
       {sortedJobs.length === 0 ? (
-        <div className="grid min-h-[22rem] place-items-center rounded-[1.75rem] border border-white/10 bg-[#111113] p-6 text-center sm:p-10">
+        <div
+          className="grid min-h-[22rem] place-items-center rounded-[1.75rem] border border-white/10 bg-[radial-gradient(ellipse_at_50%_0%,rgba(177,78,255,0.12),transparent_55%),#111113] p-6 text-center sm:p-10"
+          data-library-empty="signed-in"
+        >
           <div className="max-w-lg">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-xl text-white/65">
-              +
-            </span>
-            <h2 className="mt-5 font-display text-3xl font-black tracking-[-0.04em] text-white">
+            <LibraryEmptyShelfArt />
+            <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
+              Empty collector shelf
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white">
               Your first real Moment starts with one toy photo.
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/50">
-              Generated results will return here after refresh. Only private,
-              downloadable account results are kept in this view.
+              Start with a listing-grade 360° spin from the header Generate 360
+              door, or open Street Power-Up below. Finished private results
+              return here after refresh — never sample demos or browser-only
+              previews.
             </p>
-            <Link href={CREATE_MOMENT_HREF} className="btn btn-primary mt-7 text-sm">
-              Create Street Power-Up
-            </Link>
+            {/* Mobile: header already exposes the sole primary Generate 360 CTA.
+                Desktop keeps a same-contract panel button for above-fold parity. */}
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Link
+                href={EMPTY_360_HREF}
+                className="btn btn-primary text-sm max-sm:hidden"
+                data-library-empty-cta="360"
+              >
+                Generate 360
+              </Link>
+              <Link
+                href={EMPTY_MOMENT_HREF}
+                className="btn btn-ghost text-sm"
+                data-library-empty-cta="moment"
+              >
+                Create Street Power-Up
+              </Link>
+            </div>
           </div>
         </div>
       ) : (
