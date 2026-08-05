@@ -164,4 +164,51 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
+// 5. AIT-146 home friction: one primary Generate→360 on proof wall
+const homeWall = read("components/HomeViralWall.tsx");
+assert.match(
+  homeWall,
+  /data-home-primary-generate=["']360["']/,
+  "home proof wall must mark primary Generate as 360"
+);
+assert.match(
+  homeWall,
+  /data-home-primary-generate-cta/,
+  "home proof wall must expose primary Generate CTA marker"
+);
+assert.match(
+  homeWall,
+  /createGenerate360Href\(\s*["']home-proof-wall["']\s*\)/,
+  "home primary Generate must use createGenerate360Href(home-proof-wall)"
+);
+assert.match(
+  homeWall,
+  /is360\s*\?\s*listing360Href/,
+  "360 proof card must deep-link Generate workbench (1-click, no project hop)"
+);
+assert.match(
+  homeWall,
+  /Generate 360°/,
+  "primary Generate CTA label must say Generate 360°"
+);
+
+// 6. Create route must honor 360 (AIT-142) so home→360 is not a dead Moment force
+const createRoute = read("lib/createRouteContract.ts");
+const createPage = read("app/create/page.tsx");
+assert.match(
+  createRoute,
+  /export function resolveCreateRouteContract/,
+  "createRouteContract must resolve generate-workbench vs fixed-moment"
+);
+assert.match(
+  createPage,
+  /resolveCreateRouteContract/,
+  "create page must use resolveCreateRouteContract"
+);
+assert.match(
+  createPage,
+  /data-create-contract=["']generate-workbench["']|data-generate-360/,
+  "create page must mount honest Generate workbench markers"
+);
+
 console.log("generate-360-cta-smoke: ok");
