@@ -24,10 +24,10 @@ function guestSignInHref() {
 function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
   return (
     <section
-      className="relative isolate min-h-[calc(100vh-56px)] overflow-hidden bg-[#08080A] px-4 pb-10 pt-6 text-[#F7F4ED] sm:px-7 lg:px-10 lg:py-7"
+      className="relative isolate min-h-[calc(100vh-56px)] overflow-hidden bg-[var(--void)] px-4 pb-10 pt-6 text-[var(--cream)] sm:px-7 lg:px-10 lg:py-7"
       data-guest-create-first="street-power-up"
     >
-      <div className="absolute inset-0 -z-20 bg-[#08080A]" aria-hidden />
+      <div className="absolute inset-0 -z-20 bg-[var(--void)]" aria-hidden />
       <div
         className="absolute inset-[-18%] -z-20 scale-110 bg-[url('/demos/beatbot-still.webp')] bg-cover bg-center opacity-20 blur-[92px] saturate-150"
         aria-hidden
@@ -39,7 +39,7 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
 
       <div className="mx-auto grid max-w-[1360px] gap-7 lg:min-h-[calc(100vh-7rem)] lg:grid-cols-[minmax(220px,0.75fr)_minmax(330px,390px)_minmax(260px,0.78fr)] lg:items-center lg:gap-10 xl:gap-14">
         <div className="order-2 max-w-[380px] lg:order-1">
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF6A4D]">
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
             Current motion
           </p>
           <h1 className="mt-4 font-display text-[clamp(3rem,4.6vw,5.25rem)] font-black leading-[0.87] tracking-[-0.07em]">
@@ -63,7 +63,7 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
           aria-label="Street Power-Up cached sample"
           data-guest-create-sample
         >
-          <div className="relative rounded-[30px] border border-white/12 bg-[#151519] p-2 shadow-[0_42px_120px_-42px_rgba(255,32,122,0.62)]">
+          <div className="relative rounded-[30px] border border-white/12 bg-[var(--card)] p-2 shadow-[0_42px_120px_-42px_rgba(255,32,122,0.62)]">
             <div className="relative aspect-[9/16] max-h-[calc(100vh-11rem)] overflow-hidden rounded-[23px] bg-black">
               <AutoPlayVideo
                 poster={STREET_POWER_UP_SAMPLE.poster}
@@ -83,7 +83,7 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
                 </span>
               </div>
               <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/55 to-transparent px-5 pb-5 pt-24">
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF6A4D]">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
                   Street Power-Up
                 </p>
                 <div className="mt-1.5 flex items-end justify-between gap-5">
@@ -102,7 +102,7 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
         </section>
 
         <div className="order-3">
-          <div className="rounded-[26px] border border-white/10 bg-[#151519]/88 p-5 backdrop-blur-2xl lg:p-6">
+          <div className="rounded-[26px] border border-white/10 bg-[var(--card)]/88 p-5 backdrop-blur-2xl lg:p-6">
             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/42">
               Make it yours
             </p>
@@ -120,7 +120,7 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
                 <Link
                   href={guestSignInHref()}
                   data-guest-create-sign-in
-                  className="inline-flex min-h-14 items-center justify-between rounded-2xl bg-[#FF4D2E] px-5 text-xs font-black uppercase tracking-[0.12em] text-[#140806] transition hover:-translate-y-0.5 hover:bg-[#FF6A4D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#151519]"
+                  className="btn-press inline-flex min-h-14 items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(255,78,205,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#151519]"
                 >
                   Sign in to make yours
                   <span aria-hidden className="text-lg">→</span>
@@ -131,7 +131,7 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
                 data-guest-create-private-beta
                 className={`inline-flex min-h-12 items-center justify-center rounded-2xl border px-5 text-[10px] font-black uppercase tracking-[0.14em] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                   signedIn
-                    ? "border-[#FF4D2E] bg-[#FF4D2E] text-[#140806]"
+                    ? "border-[#FF4ECD] bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
                     : "border-white/12 text-white/62 hover:border-white/28 hover:text-white"
                 }`}
               >

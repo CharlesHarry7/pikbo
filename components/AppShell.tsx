@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { CreditsBadge } from "@/components/CreditsBadge";
 import { Footer } from "@/components/Footer";
 import {
@@ -43,6 +43,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const path = usePathname() || "/";
+  const [navScrolled, setNavScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setNavScrolled(window.scrollY > window.innerHeight * 0.5);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const searchParams = useSearchParams();
   const home = path === "/";
   const create = path.startsWith("/create");
@@ -78,38 +87,39 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       className={cn(
         "flex min-h-screen min-w-0 flex-col",
         home
-          ? "bg-[#08080A] text-[#F7F4ED]"
+          ? "bg-[var(--void)] text-[var(--cream)]"
           : resultShell
-          ? "bg-[#F2EFE7] text-[#171719]"
+          ? "bg-[#FAF7F2] text-[#0A0A0F]"
           : lightShell
-            ? "bg-[#EEF0F4] text-[#15171B]"
-            : "bg-[#0A0A0A] text-[#F7F4ED]"
+            ? "bg-[#FAF7F2] text-[#0A0A0F]"
+            : "bg-[var(--void)] text-[var(--cream)]"
       )}
     >
       <header
+        data-scrolled={navScrolled ? "true" : "false"}
         className={cn(
-          "sticky top-0 z-50 hidden items-center border-b px-7 backdrop-blur-xl lg:flex",
+          "nav-shell sticky top-0 z-50 hidden items-center border-b px-7 backdrop-blur-xl lg:flex",
           motionChrome ? "h-16" : "h-14",
           motionChrome
-            ? "border-white/10 bg-[#08080A]/92 px-8"
+            ? "border-white/10 bg-[rgba(10,10,15,0.45)] px-8"
             : resultShell
-            ? "border-[#171719]/15 bg-[#F2EFE7]/94 px-8"
+            ? "border-black/10 bg-[#FAF7F2]/94 px-8"
             : lightShell
-              ? "border-[#D4D8E0] bg-[#F7F8FA]/92"
-              : "border-white/10 bg-[#0A0A0A]/92"
+              ? "border-black/10 bg-[#FAF7F2]/92"
+              : "border-white/10 bg-[rgba(10,10,15,0.92)]"
         )}
       >
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
           {motionBrand ? (
-            <span className="flex items-center gap-3 text-[#F7F4ED]">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-[#FF4D2E] font-display text-sm font-black text-[#140806]">
-                P
+            <span className="flex items-center gap-3 text-[var(--cream)]">
+              <span className="grid h-9 w-9 place-items-center rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] font-display text-sm font-black text-white shadow-[0_0_18px_rgba(255,78,205,0.45)]">
+                🧸
               </span>
               <span>
                 <span className="block font-display text-base font-black leading-none tracking-[-0.04em]">
                   Pikbo
                 </span>
-                <span className="mt-1 block text-[7px] font-black uppercase tracking-[0.2em] text-white/38">
+                <span className="mt-1 block text-[7px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]/80">
                   Toy moments
                 </span>
               </span>
@@ -175,12 +185,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "absolute inset-x-0 bottom-0 h-0.5",
                       motionBrand
-                        ? "bg-[#FF4D2E]"
+                        ? "bg-[linear-gradient(90deg,#B14EFF,#FF4ECD)]"
                         : resultShell
-                        ? "bg-[#FF6846]"
+                        ? "bg-[#FF4ECD]"
                         : lightShell
-                          ? "bg-[#2457E6]"
-                          : "bg-[#CBFF3D]"
+                          ? "bg-[#B14EFF]"
+                          : "bg-[#FF4ECD]"
                     )}
                   />
                 ) : null}
@@ -192,14 +202,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           {motionChrome ? (
             <Link
               href={home ? DEFAULT_MOMENT_CREATE_HREF : "/library"}
-              className="inline-flex min-h-10 items-center rounded-full bg-[#FF4D2E] px-5 text-xs font-black text-[#140806] transition hover:-translate-y-0.5 hover:bg-[#FF6A4D]"
+              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.35)]"
             >
-              {home ? "Use this motion" : "Open Library"}
+              {home ? "Try Street Power-Up" : "Open Library"}
             </Link>
           ) : resultShell ? (
             <Link
               href={DEFAULT_MOMENT_CREATE_HREF}
-              className="inline-flex min-h-10 items-center rounded-full bg-[#171717] px-5 text-xs font-black text-white transition hover:bg-[#FF6846]"
+              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black text-white"
             >
               Create a Moment
             </Link>
@@ -213,15 +223,16 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       </header>
 
       <header
+        data-scrolled={navScrolled ? "true" : "false"}
         className={cn(
-          "sticky top-0 z-50 flex h-12 items-center justify-between border-b px-3 backdrop-blur-xl lg:hidden",
+          "nav-shell sticky top-0 z-50 flex h-12 items-center justify-between border-b px-3 backdrop-blur-xl lg:hidden",
           home
-            ? "border-white/10 bg-[#08080A]/92"
+            ? "border-white/10 bg-[rgba(10,10,15,0.55)]"
             : resultShell
-            ? "border-black/10 bg-[#F2EFE7]/94"
+            ? "border-black/10 bg-[#FAF7F2]/94"
             : lightShell
-              ? "border-[#D4D8E0] bg-[#F7F8FA]/94"
-              : "border-white/10 bg-[#0A0A0A]/92"
+              ? "border-black/10 bg-[#FAF7F2]/94"
+              : "border-white/10 bg-[rgba(10,10,15,0.92)]"
         )}
       >
         <Link href="/" aria-label="Pikbo home">
@@ -229,7 +240,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             size={26}
             wordClassName={cn(
               "text-base",
-              home ? "!text-[#F7F4ED]" : lightShell && "!text-[#15171B]"
+              home ? "!text-[var(--cream)]" : lightShell && "!text-[#0A0A0F]"
             )}
           />
         </Link>
@@ -239,7 +250,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               href={DEFAULT_MOMENT_CREATE_HREF}
               className={cn(
                 "inline-flex min-h-9 items-center rounded-full px-4 text-[10px] font-black",
-                home ? "bg-[#FF4D2E] text-[#140806]" : "bg-[#171719] text-[#F5F1E8]"
+                home
+                  ? "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
+                  : "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
               )}
             >
               Use this motion
@@ -248,7 +261,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <>
               <Link
                 href={DEFAULT_MOMENT_CREATE_HREF}
-                className="inline-flex min-h-9 items-center rounded-full bg-[#171717] px-4 text-[10px] font-black text-white"
+                className="inline-flex min-h-9 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-4 text-[10px] font-black text-white"
               >
                 Create a Moment
               </Link>
@@ -284,7 +297,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <span
               className={cn(
                 "text-[10px] font-black uppercase tracking-[0.16em]",
-                lightShell ? "text-[#2457E6]" : "text-[#CBFF3D]"
+                lightShell ? "text-[#B14EFF]" : "text-[#FF4ECD]"
               )}
             >
               Create
@@ -298,12 +311,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           className={cn(
             "min-w-0 flex-1",
             home
-              ? "bg-[#08080A]"
+              ? "bg-[var(--void)]"
               : resultShell
-              ? "bg-[#F2EFE7]"
+              ? "bg-[#FAF7F2]"
               : lightShell
-                ? "bg-[#EEF0F4]"
-                : "bg-[#0A0A0A]"
+                ? "bg-[#FAF7F2]"
+                : "bg-[var(--void)]"
           )}
         >
           {children}
@@ -315,8 +328,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         className={cn(
           "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
           home
-            ? "relative border-[#D4D8E0] bg-[#F7F8FA]/96"
-            : "sticky bottom-0 border-white/10 bg-[#0A0A0A]/96"
+            ? "relative border-white/10 bg-[rgba(10,10,15,0.96)]"
+            : "sticky bottom-0 border-white/10 bg-[rgba(10,10,15,0.96)]"
         )}
         aria-label="Mobile navigation"
       >
@@ -331,20 +344,18 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
                 home
                   ? on
-                    ? "text-[#2457E6]"
-                    : "text-[#747B87]"
+                    ? "text-[#FF4ECD]"
+                    : "text-white/45"
                   : on
-                    ? "text-[#CBFF3D]"
-                    : "text-[#F7F4ED]/38"
+                    ? "text-[#FF4ECD]"
+                    : "text-[var(--cream)]/38"
               )}
             >
               <span
                 className={cn(
                   "mb-1 h-1 w-1 rounded-full",
                   on
-                    ? home
-                      ? "bg-[#2457E6]"
-                      : "bg-[#CBFF3D]"
+                    ? "bg-[#FF4ECD]"
                     : "bg-transparent"
                 )}
                 aria-hidden

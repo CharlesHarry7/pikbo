@@ -84,22 +84,26 @@ export default function PricingPage() {
 
   return (
     <div
-      className="min-h-[calc(100svh-4rem)] bg-[#F7F4ED] px-4 py-10 text-[#0A0A0A] sm:px-8 sm:py-16"
+      className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-[var(--void)] px-4 py-10 text-[var(--cream)] sm:px-8 sm:py-16"
       data-pricing-path="product-first"
     >
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(48%_80%_at_50%_0%,rgba(177,78,255,0.28),transparent_70%),radial-gradient(36%_60%_at_80%_10%,rgba(255,78,205,0.16),transparent_65%)]"
+        aria-hidden
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <div className="mx-auto max-w-6xl">
+      <div className="relative mx-auto max-w-6xl">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/44">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
             Founding Studio · private beta
           </p>
           <h1 className="mt-3 font-display text-[clamp(3rem,7vw,6.5rem)] font-black leading-[0.88] tracking-[-0.07em]">
-            One plan for your next toy launch.
+            <span className="text-bling">One plan</span> for your next toy launch.
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-6 text-black/54 sm:text-lg sm:leading-7">
+          <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-6 text-white/55 sm:text-lg sm:leading-7">
             A finite subscription for independent toy sellers who want to pick
             one strong visual direction and create only the clip they need.
             The founding offer is nine directed Moments for $49/month. Public
@@ -109,11 +113,11 @@ export default function PricingPage() {
         </div>
 
         <article
-          className="relative mx-auto mt-9 max-w-4xl overflow-hidden rounded-[2rem] border border-black/15 bg-[#0A0A0A] p-5 text-[#F7F4ED] shadow-[0_30px_90px_-45px_rgba(0,0,0,0.7)] sm:mt-12 sm:p-8"
+          className="effect-card relative mx-auto mt-9 max-w-4xl overflow-hidden bg-[rgba(20,20,30,0.92)] p-5 text-[var(--cream)] sm:mt-12 sm:p-8"
           data-pricing-state="closed-beta"
         >
           <div
-            className="absolute inset-x-0 top-0 h-1 bg-[#CBFF3D]"
+            className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#B14EFF,#FF4ECD,#00D9FF)]"
             aria-hidden
           />
           <div className="grid gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:items-start">
@@ -122,17 +126,17 @@ export default function PricingPage() {
                 <h2 className="text-2xl font-black tracking-[-0.04em] sm:text-3xl">
                   Founding Studio
                 </h2>
-                <span className="rounded-full bg-[#CBFF3D] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-[#0A0A0A]">
+                <span className="rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white">
                   Closed beta
                 </span>
               </div>
               <p className="mt-7 text-4xl font-black tracking-[-0.055em]">
                 ${foundingStudio.priceMonthly}
-                <span className="ml-1 text-sm font-bold tracking-normal text-[#F7F4ED]/45">
+                <span className="ml-1 text-sm font-bold tracking-normal text-white/45">
                   / month founding rate
                 </span>
               </p>
-              <p className="mt-3 max-w-md text-sm leading-6 text-[#F7F4ED]/50">
+              <p className="mt-3 max-w-md text-sm leading-6 text-white/50">
                 A finite allowance for directed toy-video Moments. Public live
                 checkout remains locked until private delivery, billing, and
                 refund gates pass; an approved test Preview can rehearse the
@@ -148,13 +152,13 @@ export default function PricingPage() {
               </div>
               <Link
                 href="/contact?source=pricing-private-beta"
-                className="mt-4 inline-block text-xs font-bold text-[#F7F4ED]/58 underline decoration-white/20 underline-offset-4 hover:text-[#CBFF3D]"
+                className="mt-4 inline-block text-xs font-bold text-white/58 underline decoration-white/20 underline-offset-4 hover:text-[#00D9FF]"
               >
                 Request private beta access
               </Link>
               <Link
                 href={PRICING_PREVIEW_HREF}
-                className="mt-4 inline-block text-xs font-bold text-[#F7F4ED]/58 underline decoration-white/20 underline-offset-4 hover:text-[#CBFF3D]"
+                className="mt-4 inline-block text-xs font-bold text-white/58 underline decoration-white/20 underline-offset-4 hover:text-[#00D9FF]"
               >
                 Preview one Pikbo Lab Moment
               </Link>
@@ -162,7 +166,7 @@ export default function PricingPage() {
 
             <div className="overflow-hidden rounded-[1.4rem] border border-white/12">
               <div className="border-b border-white/12 bg-white/[0.045] px-4 py-3">
-                <p className="text-[9px] font-black uppercase tracking-[0.17em] text-[#CBFF3D]">
+                <p className="text-[9px] font-black uppercase tracking-[0.17em] text-[#00D9FF]">
                   The product promise
                 </p>
               </div>
@@ -175,16 +179,16 @@ export default function PricingPage() {
                 >
                   <div>
                     <p className="text-sm font-black">{name}</p>
-                    <p className="mt-1 text-[10px] font-semibold text-[#F7F4ED]/38">
+                    <p className="mt-1 text-[10px] font-semibold text-white/38">
                       {note}
                     </p>
                   </div>
-                  <span className="self-center rounded-full border border-white/14 px-2.5 py-1 text-[10px] font-black text-[#CBFF3D]">
+                  <span className="self-center rounded-full border border-[#FF4ECD]/35 bg-[#FF4ECD]/10 px-2.5 py-1 text-[10px] font-black text-[#FF4ECD]">
                     {value}
                   </span>
                 </div>
               ))}
-              <div className="border-t border-white/10 bg-white/[0.03] px-4 py-4 text-xs font-semibold leading-5 text-[#F7F4ED]/48">
+              <div className="border-t border-white/10 bg-white/[0.03] px-4 py-4 text-xs font-semibold leading-5 text-white/48">
                 Private Library delivery, owner-only downloads, and a finite
                 monthly allowance when Founding Studio opens.
               </div>
@@ -193,7 +197,7 @@ export default function PricingPage() {
         </article>
 
         <section
-          className="mx-auto mt-12 max-w-4xl border-t border-black/12 pt-8 sm:mt-16 sm:pt-10"
+          className="mx-auto mt-12 max-w-4xl border-t border-white/10 pt-8 sm:mt-16 sm:pt-10"
           aria-labelledby="pricing-faq-title"
         >
           <h2
@@ -202,13 +206,13 @@ export default function PricingPage() {
           >
             Before Founding Studio opens
           </h2>
-          <div className="mt-5 grid gap-px overflow-hidden rounded-[1.4rem] border border-black/12 bg-black/12 md:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             {pricingFaqItems.map((item) => (
-              <article key={item.question} className="bg-[#F7F4ED] p-5">
-                <h3 className="text-sm font-black leading-5">
+              <article key={item.question} className="stat-card p-5">
+                <h3 className="text-sm font-black leading-5 text-[var(--cream)]">
                   {item.question}
                 </h3>
-                <p className="mt-3 text-xs font-semibold leading-5 text-black/52">
+                <p className="mt-3 text-xs font-semibold leading-5 text-white/52">
                   {item.answer}
                 </p>
               </article>
@@ -217,5 +221,6 @@ export default function PricingPage() {
         </section>
       </div>
     </div>
+
   );
 }
