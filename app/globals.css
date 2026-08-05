@@ -124,6 +124,18 @@
   --fog-800: #3a3a42;
   --fog-900: #1e1e24;
 
+  /* Friendly aliases used by Hero / Library PRs (map onto 8-color scales) */
+  --pastel-pop: var(--pink-400);
+  --toy-purple: var(--purple-400);
+  --ink-navy: var(--noir);
+  --gold: var(--gold-400);
+  --neon-green: var(--neon-400);
+  --fluo-yellow: var(--flash-400);
+  --electro-blue: var(--electric-400);
+  --ink-black: var(--ink-800);
+  --milk: var(--cream);
+  --fog: var(--fog-400);
+
   /* Motion tokens */
   --motion-hover: 200ms;
   --motion-press: 80ms;
@@ -904,10 +916,164 @@ a {
   --stagger-index: 11;
 }
 
+/* ---------- Hero / CTA utilities (AIT-31 integration) ----------
+   Kept on design-system tokens; class names match Hero PR components.
+---------------------------------------------------------------- */
+
+@keyframes toy-shine-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(220%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+.shine-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.shine-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.28) 48%,
+    transparent 62%
+  );
+  transform: translateX(-120%) skewX(-18deg);
+  pointer-events: none;
+  z-index: 2;
+}
+.shine-sweep:hover::after,
+.shine-sweep:focus-visible::after {
+  animation: toy-shine-sweep 0.7s ease-out;
+}
+
+/* Solid neon primary CTA (Hero) — distinct from pricing-card--featured ribbon */
+.pricing-card-featured {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.35rem;
+  background: linear-gradient(
+    145deg,
+    rgba(245, 255, 64, 0.95) 0%,
+    var(--neon-400) 42%,
+    var(--neon-400) 100%
+  );
+  color: var(--ink-800);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.08) inset,
+    0 18px 48px -12px rgba(57, 255, 20, 0.45),
+    0 28px 70px -24px rgba(245, 255, 64, 0.35);
+  transition:
+    transform var(--motion-hover) var(--ease-out-soft),
+    box-shadow var(--motion-hover) ease;
+}
+.pricing-card-featured:hover {
+  transform: scale(1.04);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.1) inset,
+    0 22px 56px -10px rgba(57, 255, 20, 0.55),
+    0 34px 80px -20px rgba(245, 255, 64, 0.45);
+}
+.pricing-card-featured:active {
+  transform: scale(0.98);
+  transition-duration: var(--motion-press);
+}
+
+/* Hero H1 segments + keyword chip */
+.hero-h1-display {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+  font-size: clamp(2.5rem, 7.2vw, 4.75rem);
+}
+.hero-h1-white {
+  color: #ffffff;
+}
+.hero-h1-fluo {
+  color: var(--fluo-yellow);
+  text-shadow: 0 0 28px rgba(245, 255, 64, 0.35);
+}
+.hero-h1-neon {
+  color: var(--neon-green);
+  text-shadow: 0 0 26px rgba(57, 255, 20, 0.4);
+}
+.hero-keyword-chip {
+  display: inline;
+  padding: 0.06em 0.22em;
+  border-radius: 0.28em;
+  background: linear-gradient(
+    120deg,
+    rgba(199, 125, 255, 0.42),
+    rgba(255, 182, 217, 0.38)
+  );
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Secondary text link with underline sweep */
+.link-underline-sweep {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: rgba(255, 255, 255, 0.58);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.link-underline-sweep::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1.5px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--fluo-yellow), var(--neon-green));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.22s ease;
+}
+.link-underline-sweep:hover {
+  color: #fff;
+}
+.link-underline-sweep:hover::after {
+  transform: scaleX(1);
+}
+
+/* Social proof card */
+.social-proof-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  max-width: 28rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(199, 125, 255, 0.06)
+  );
+  padding: 0.7rem 0.85rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .collection-card,
   .result-card,
   .pricing-card,
+  .pricing-card-featured,
   .status-card,
   .motion-hover {
     transition: none;
@@ -915,6 +1081,8 @@ a {
   .collection-card:hover,
   .result-card:hover,
   .pricing-card:hover,
+  .pricing-card-featured:hover,
+  .pricing-card-featured:active,
   .status-card:hover,
   .motion-hover:hover,
   .collection-card:active,
@@ -925,6 +1093,10 @@ a {
   }
   .result-card::after {
     display: none;
+  }
+  .shine-sweep:hover::after,
+  .shine-sweep:focus-visible::after {
+    animation: none;
   }
   .motion-state-in,
   .motion-enter,
