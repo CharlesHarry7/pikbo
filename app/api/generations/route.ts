@@ -37,6 +37,8 @@ function controlledLocalJob(job: ReturnType<typeof toPublicJob>) {
       localRetry: terminalFailure,
       localCancel: open,
       newAttempt: terminalFailure,
+      // Process-memory rows have no durable input_asset_id binding for reuse.
+      reuseSamePhoto: false,
       refreshOnly: open,
     },
   };
