@@ -107,11 +107,18 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
 
   useEffect(() => {
     let cancelled = false;
-    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS }).then((next) => {
-      if (cancelled) return;
-      setMe(next);
-      setMeResolved(true);
-    });
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+      .then((next) => {
+        if (cancelled) return;
+        setMe(next);
+        setMeResolved(true);
+      })
+      .catch(() => {
+        // Timeout or soft failure: resolve empty so preview never hangs on open.
+        if (cancelled) return;
+        setMe(null);
+        setMeResolved(true);
+      });
     return () => {
       cancelled = true;
     };

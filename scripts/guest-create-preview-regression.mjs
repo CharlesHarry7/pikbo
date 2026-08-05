@@ -38,6 +38,8 @@ assert.match(gate, /sessionResolved && canUsePrivateLaunch\(me\)/);
 assert.match(gate, /me\?\.signedIn === true/);
 assert.match(gate, /STUDIO_SESSION_BOOT_MS/);
 assert.match(gate, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
+assert.match(gate, /isClientTimeoutError/);
+assert.match(gate, /sessionBoot === "timeout"|setSessionBoot\(isClientTimeoutError/);
 assert.match(gate, /data-studio-open-state/);
 assert.match(gate, /errorRetry/);
 assert.match(gate, /data-lab-preview-retry|Retry Lab preview|errorRetry/);

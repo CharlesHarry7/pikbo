@@ -587,19 +587,22 @@ export function CreateStudio({
 
   const refreshSession = useCallback(async () => {
     setSessionBoot("checking");
-    const started = Date.now();
-    const data = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
-    const elapsed = Date.now() - started;
-    const timedOut = !data && elapsed >= STUDIO_SESSION_BOOT_MS - 50;
-    setSessionResolved(true);
-    setSessionBoot(timedOut ? "timeout" : "ready");
-    if (!data) return;
-    setSession(data);
-    setWatermark(data.watermark);
-    // Free path: Mini (cheapest wool) + 480p
-    if (data.plan === "free" || data.watermark) {
-      setModelId("seedance-mini");
-      setResolution("480p");
+    try {
+      const data = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
+      setSessionResolved(true);
+      setSessionBoot("ready");
+      if (!data) return;
+      setSession(data);
+      setWatermark(data.watermark);
+      // Free path: Mini (cheapest wool) + 480p
+      if (data.plan === "free" || data.watermark) {
+        setModelId("seedance-mini");
+        setResolution("480p");
+      }
+    } catch (err) {
+      // 8s open contract: honest timeout + Retry, never permanent "Opening studio…"
+      setSessionResolved(true);
+      setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
     }
   }, []);
 

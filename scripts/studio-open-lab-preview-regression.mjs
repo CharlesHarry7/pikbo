@@ -27,10 +27,13 @@ assert.match(timeout, /STUDIO_NAV_OPEN_MS\s*=\s*12_000/);
 assert.match(timeout, /class ClientTimeoutError/);
 assert.match(timeout, /export function withTimeout/);
 
-// Session + sample load must accept timeouts
+// Session + sample load must accept timeouts (explicit ClientTimeoutError on abort)
 assert.match(meClient, /timeoutMs\?: number/);
 assert.match(meClient, /AbortController/);
 assert.match(meClient, /controller\.abort\(\)/);
+assert.match(meClient, /ClientTimeoutError/);
+assert.match(meClient, /isClientTimeoutError/);
+assert.match(meClient, /throw new ClientTimeoutError/);
 assert.match(samples, /LAB_SAMPLE_LOAD_MS/);
 assert.match(samples, /withTimeout\(load\(\), timeoutMs/);
 
@@ -51,6 +54,7 @@ assert.match(gate, /data-studio-open-error="session-timeout"/);
 assert.match(gate, /data-studio-open-retry/);
 assert.match(gate, /STUDIO_SESSION_BOOT_MS/);
 assert.match(gate, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
+assert.match(gate, /isClientTimeoutError/);
 assert.match(gate, /sessionBoot === "timeout"/);
 assert.match(gate, /Could not verify private access in time/);
 // Must not permanently trap users: timeout state always offers retry
@@ -69,9 +73,12 @@ assert.match(studio, /Lab sample timed out/);
 assert.match(studio, /data-lab-sample-error/);
 assert.match(studio, /data-lab-sample-retry/);
 assert.match(studio, /Retry Lab sample/);
-assert.match(studio, /isClientTimeoutError/);
+assert.match(studio, /isClientTimeoutError\(err\)/);
 assert.match(studio, /STUDIO_SESSION_BOOT_MS/);
 assert.match(studio, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
+// No fragile wall-clock heuristic for session timeout detection
+assert.doesNotMatch(studio, /elapsed\s*>=\s*STUDIO_SESSION_BOOT_MS/);
+assert.doesNotMatch(gate, /elapsed\s*>=\s*STUDIO_SESSION_BOOT_MS/);
 // Auto Lab on first-run sample/try deep link
 assert.match(studio, /loadSampleToy\(id,\s*true\)/);
 assert.match(studio, /initialSample/);

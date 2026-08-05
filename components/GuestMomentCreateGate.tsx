@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
-import { STUDIO_SESSION_BOOT_MS } from "@/lib/clientTimeout";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { canUsePrivateLaunch, fetchMe, type MeResponse } from "@/lib/meClient";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
@@ -202,16 +205,19 @@ export function GuestMomentCreateGate({ children }: { children: ReactNode }) {
       void (async () => {
         setSessionResolved(false);
         setSessionBoot("checking");
-        const started = Date.now();
-        const next = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
-        if (cancelled) return;
-        const elapsed = Date.now() - started;
-        // fetchMe returns null on abort/timeout/network — if we hit the wall
-        // clock, surface an honest retry instead of a permanent Opening state.
-        const timedOut = !next && elapsed >= STUDIO_SESSION_BOOT_MS - 50;
-        setMe(next);
-        setSessionResolved(true);
-        setSessionBoot(timedOut ? "timeout" : "ready");
+        try {
+          const next = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
+          if (cancelled) return;
+          setMe(next);
+          setSessionResolved(true);
+          setSessionBoot("ready");
+        } catch (err) {
+          if (cancelled) return;
+          // Explicit ClientTimeoutError from 8s /api/me abort — Retry CTA, Lab still up.
+          setMe(null);
+          setSessionResolved(true);
+          setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+        }
       })();
     }, 0);
     return () => {

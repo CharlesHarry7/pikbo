@@ -2,6 +2,10 @@
  * Shared /api/me response shape for Studio, badge, settings, batch.
  */
 
+import {
+  ClientTimeoutError,
+  isClientTimeoutError,
+} from "@/lib/clientTimeout";
 import type { PublicSession } from "@/lib/session";
 
 export type GenerateMode = "live-generate" | "demo-cached";
@@ -303,23 +307,27 @@ async function authHeaders(): Promise<HeadersInit> {
 }
 
 export async function fetchMe(opts?: {
-  /** Abort hanging /api/me so Studio never stays on "Opening…" forever. */
+  /**
+   * Abort hanging /api/me so Studio never stays on "Opening…" forever.
+   * On wall-clock timeout, rejects with ClientTimeoutError (honest retry path).
+   * Other network/auth failures still resolve null (soft public Lab fallback).
+   */
   timeoutMs?: number;
 }): Promise<MeResponse | null> {
+  const timeoutMs =
+    typeof opts?.timeoutMs === "number" && opts.timeoutMs > 0
+      ? opts.timeoutMs
+      : undefined;
+  const controller =
+    typeof timeoutMs === "number" && typeof AbortController !== "undefined"
+      ? new AbortController()
+      : null;
+  const timer =
+    controller && timeoutMs
+      ? setTimeout(() => controller.abort(), timeoutMs)
+      : null;
   try {
     const headers = await authHeaders();
-    const timeoutMs =
-      typeof opts?.timeoutMs === "number" && opts.timeoutMs > 0
-        ? opts.timeoutMs
-        : undefined;
-    const controller =
-      typeof timeoutMs === "number" && typeof AbortController !== "undefined"
-        ? new AbortController()
-        : null;
-    const timer =
-      controller && timeoutMs
-        ? setTimeout(() => controller.abort(), timeoutMs)
-        : null;
     try {
       const res = await fetch("/api/me", {
         headers,
@@ -331,7 +339,18 @@ export async function fetchMe(opts?: {
     } finally {
       if (timer) clearTimeout(timer);
     }
-  } catch {
+  } catch (err) {
+    if (timer) clearTimeout(timer);
+    // Explicit 8s Studio open contract: surface timeout, never swallow into null.
+    const aborted =
+      Boolean(controller?.signal.aborted) ||
+      (err instanceof Error && err.name === "AbortError");
+    if (aborted && timeoutMs) {
+      throw new ClientTimeoutError(
+        "Could not verify private access in time"
+      );
+    }
+    if (isClientTimeoutError(err)) throw err;
     return null;
   }
 }
