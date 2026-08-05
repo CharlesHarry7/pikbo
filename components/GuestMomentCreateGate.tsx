@@ -5,6 +5,12 @@ import { useEffect, useState, type ReactNode } from "react";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { canUsePrivateLaunch, fetchMe, type MeResponse } from "@/lib/meClient";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+import {
+  STUDIO_SESSION_RESOLVE_MS,
+  STUDIO_SESSION_TIMEOUT_COPY,
+  studioSessionTimeoutError,
+  withTimeout,
+} from "@/lib/studioOpenState";
 
 const PRIVATE_BETA_MAILTO =
   "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
@@ -159,25 +165,81 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
 export function GuestMomentCreateGate({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [sessionResolved, setSessionResolved] = useState(false);
+  const [accessError, setAccessError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    void fetchMe()
-      .then((next) => {
+    void (async () => {
+      try {
+        const next = await withTimeout(
+          fetchMe(),
+          STUDIO_SESSION_RESOLVE_MS,
+          studioSessionTimeoutError()
+        );
         if (cancelled) return;
         setMe(next);
-        setSessionResolved(true);
-      })
-      .catch(() => {
+        setAccessError(null);
+      } catch (err) {
         if (cancelled) return;
         setMe(null);
-        setSessionResolved(true);
-      });
+        setAccessError(
+          err instanceof Error ? err.message : STUDIO_SESSION_TIMEOUT_COPY
+        );
+      } finally {
+        if (!cancelled) setSessionResolved(true);
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [retryKey]);
 
   if (sessionResolved && canUsePrivateLaunch(me)) return children;
-  return <GuestMomentPreview signedIn={sessionResolved && me?.signedIn === true} />;
+
+  return (
+    <div data-studio-open="guest-lab-preview">
+      {/* Lab sample is the open-state preview while access resolves or fails. */}
+      <GuestMomentPreview
+        signedIn={sessionResolved && me?.signedIn === true}
+      />
+      {!sessionResolved ? (
+        <p
+          className="sr-only"
+          data-studio-open-status="checking"
+          role="status"
+        >
+          Checking private-beta access
+        </p>
+      ) : null}
+      {sessionResolved && accessError ? (
+        <div
+          className="fixed inset-x-0 bottom-[5.5rem] z-40 mx-auto max-w-lg px-4 lg:bottom-6"
+          data-studio-open-status="access-timeout"
+          role="alert"
+        >
+          <div className="rounded-2xl border border-[#FF4ECD]/35 bg-[var(--card)]/95 p-4 shadow-[0_16px_48px_-20px_rgba(0,0,0,0.75)] backdrop-blur-xl">
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#FF4ECD]">
+              Access check timed out
+            </p>
+            <p className="mt-1.5 text-xs font-semibold leading-5 text-white/70">
+              {accessError}
+            </p>
+            <button
+              type="button"
+              data-studio-open-retry="access"
+              className="btn-press mt-3 inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-4 text-[10px] font-black uppercase tracking-[0.12em] text-white"
+              onClick={() => {
+                setSessionResolved(false);
+                setAccessError(null);
+                setRetryKey((k) => k + 1);
+              }}
+            >
+              Retry access check
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
 }

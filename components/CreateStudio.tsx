@@ -92,6 +92,16 @@ import {
 } from "@/lib/toyIdentity";
 import { deliveryItemsForJob } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
+import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import {
+  STUDIO_LAB_SAMPLE_LOAD_MS,
+  STUDIO_OPEN_LAB_SAMPLE,
+  STUDIO_SESSION_RESOLVE_MS,
+  STUDIO_SESSION_TIMEOUT_COPY,
+  studioLabSampleTimeoutError,
+  studioSessionTimeoutError,
+  withTimeout,
+} from "@/lib/studioOpenState";
 
 type Status = "idle" | "uploading" | "generating" | "done" | "error";
 type Mode = "i2v" | "t2v";
@@ -344,6 +354,10 @@ export function CreateStudio({
   /** Last failed live job restored credits (PRD §5 / W5 trust). */
   const [lastRefunded, setLastRefunded] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
+  /** Honest access-check failure (timeout / network) — never permanent spinner. */
+  const [sessionAccessError, setSessionAccessError] = useState<string | null>(
+    null
+  );
   /** Successful retries/variants remain selectable; a new run never overwrites one. */
   const [versions, setVersions] = useState<ResultVersion[]>([]);
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
@@ -474,7 +488,11 @@ export function CreateStudio({
     setSampleLoading(true);
     setError(null);
     try {
-      const data = await sampleToDataUrl(s.path);
+      const data = await withTimeout(
+        sampleToDataUrl(s.path),
+        STUDIO_LAB_SAMPLE_LOAD_MS,
+        studioLabSampleTimeoutError()
+      );
       await adoptImage(data, { labSample: true });
       selectEffect(s.effect);
       // PIKBO Lab reference stills — not a visitor upload or verified provider input.
@@ -490,11 +508,18 @@ export function CreateStudio({
       } else {
         toast("PIKBO Lab prototype still ready — tap Generate when you want the clip");
       }
-    } catch {
+    } catch (err) {
+      const timeout =
+        err instanceof Error &&
+        (err.name === "TimeoutError" || /timed out|timeout/i.test(err.message));
       setError(
-        privateUploadEnabled
-          ? "Could not load sample photo — try another or upload your own"
-          : "Could not load that Lab sample — try another cached sample"
+        timeout
+          ? err instanceof Error
+            ? err.message
+            : "Lab sample took too long to load. Retry a cached still."
+          : privateUploadEnabled
+            ? "Could not load sample photo — try another or upload your own"
+            : "Could not load that Lab sample — try another cached sample"
       );
     } finally {
       setSampleLoading(false);
@@ -569,15 +594,29 @@ export function CreateStudio({
   }
 
   const refreshSession = useCallback(async () => {
-    const data = await fetchMe();
-    setSessionResolved(true);
-    if (!data) return;
-    setSession(data);
-    setWatermark(data.watermark);
-    // Free path: Mini (cheapest wool) + 480p
-    if (data.plan === "free" || data.watermark) {
-      setModelId("seedance-mini");
-      setResolution("480p");
+    try {
+      const data = await withTimeout(
+        fetchMe(),
+        STUDIO_SESSION_RESOLVE_MS,
+        studioSessionTimeoutError()
+      );
+      setSessionAccessError(null);
+      setSessionResolved(true);
+      if (!data) return;
+      setSession(data);
+      setWatermark(data.watermark);
+      // Free path: Mini (cheapest wool) + 480p
+      if (data.plan === "free" || data.watermark) {
+        setModelId("seedance-mini");
+        setResolution("480p");
+      }
+    } catch (err) {
+      // Never leave Create stuck on "Checking private-beta access…".
+      setSession(null);
+      setSessionAccessError(
+        err instanceof Error ? err.message : STUDIO_SESSION_TIMEOUT_COPY
+      );
+      setSessionResolved(true);
     }
   }, []);
 
@@ -2245,25 +2284,46 @@ export function CreateStudio({
             <div
               id="create-photo-step"
               data-public-single-preview="lab-only"
+              data-studio-open={
+                sessionResolved
+                  ? sessionAccessError
+                    ? "access-timeout"
+                    : "lab-ready"
+                  : "checking"
+              }
               className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-4"
             >
               <p className="text-xs font-black uppercase tracking-[0.12em] text-[var(--mint)]">
                 {sessionResolved
-                  ? "Public Lab preview · no upload"
+                  ? sessionAccessError
+                    ? "Access check timed out"
+                    : "Public Lab preview · no upload"
                   : "Checking private-beta access…"}
               </p>
               <p className="mt-2 text-sm font-bold text-white">
                 {sessionResolved
-                  ? "Choose a Pikbo Lab sample below."
+                  ? sessionAccessError
+                    ? "Lab preview stays available — retry access or use a cached sample."
+                    : "Choose a Pikbo Lab sample below."
                   : "Real product-photo controls stay hidden until access is verified."}
               </p>
               <p className="mt-1 text-[11px] leading-relaxed text-[var(--fg-muted)]">
-                Public preview does not accept, register, or process your
-                product photo. Invited signed-in accounts see a separate
-                owner-only upload control here.
+                {sessionAccessError
+                  ? sessionAccessError
+                  : "Public preview does not accept, register, or process your product photo. Invited signed-in accounts see a separate owner-only upload control here."}
               </p>
               {sessionResolved ? (
                 <div className="mt-3 flex flex-wrap gap-2">
+                  {sessionAccessError ? (
+                    <button
+                      type="button"
+                      data-studio-open-retry="access"
+                      onClick={() => void refreshSession()}
+                      className="inline-flex min-h-10 items-center rounded-full bg-[var(--mint)] px-4 text-xs font-black text-black transition hover:brightness-110"
+                    >
+                      Retry access check
+                    </button>
+                  ) : null}
                   {!fixedMomentContract ? (
                     <Link
                       href={PRIVATE_BETA_MAILTO}
@@ -2375,10 +2435,34 @@ export function CreateStudio({
                 ))}
               </div>
               {sampleLoading && (
-                <p className="mt-2 text-[11px] text-[var(--mint)]">
-                  Loading sample…
+                <p
+                  className="mt-2 text-[11px] text-[var(--mint)]"
+                  data-studio-open-status="sample-loading"
+                  role="status"
+                >
+                  Loading Lab sample…
                 </p>
               )}
+              {error && !busy && !sampleLoading ? (
+                <div
+                  className="mt-3 rounded-xl border border-[#FF4ECD]/30 bg-black/30 p-3"
+                  data-studio-open-status="sample-error"
+                  role="alert"
+                >
+                  <p className="text-[11px] font-semibold leading-5 text-white/70">
+                    {error}
+                  </p>
+                  <button
+                    type="button"
+                    data-studio-open-retry="lab-sample"
+                    disabled={sampleLoading || busy}
+                    onClick={() => void loadSampleToy("scout", true)}
+                    className="mt-2 inline-flex min-h-9 items-center rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 text-[11px] font-black text-[var(--mint)] disabled:opacity-50"
+                  >
+                    Retry Lab sample
+                  </button>
+                </div>
+              ) : null}
             </div>
           )}
 
@@ -3552,25 +3636,48 @@ export function CreateStudio({
             )}
             {status === "idle" && !videoUrl && fixedMomentContract && (
               <div
-                className="flex min-h-[28rem] w-full items-center justify-center p-6 text-center"
+                className="relative flex min-h-[28rem] w-full flex-col overflow-hidden"
                 data-fixed-moment-empty-result
+                data-studio-open-lab-preview="street-power-up"
               >
-                <div className="max-w-sm">
-                  <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] text-xl text-[var(--mint)]">
-                    ▶
-                  </span>
-                  <h3 className="mt-4 text-xl font-black tracking-tight text-white">
-                    Your result appears here.
+                {/* Auto Lab preview on Studio open — archive sample, not customer result. */}
+                <div className="relative min-h-[18rem] flex-1 bg-black sm:min-h-[22rem]">
+                  <AutoPlayVideo
+                    poster={STUDIO_OPEN_LAB_SAMPLE.poster}
+                    mp4={STUDIO_OPEN_LAB_SAMPLE.mp4}
+                    webm={STUDIO_OPEN_LAB_SAMPLE.webm}
+                    eager
+                    lazySources={false}
+                    showControls
+                    label={`${STUDIO_OPEN_LAB_SAMPLE.title} cached Lab sample, not your toy`}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3 sm:p-4">
+                    <span className="rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white backdrop-blur">
+                      {STUDIO_OPEN_LAB_SAMPLE.badge}
+                    </span>
+                    <span className="rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-white/65 backdrop-blur">
+                      Archive · not your result
+                    </span>
+                  </div>
+                </div>
+                <div className="border-t border-white/10 bg-[var(--card)]/90 px-5 py-4 text-center backdrop-blur-xl sm:px-6 sm:py-5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#FF4ECD]">
+                    {STUDIO_OPEN_LAB_SAMPLE.title} · {STUDIO_OPEN_LAB_SAMPLE.character}
+                  </p>
+                  <h3 className="mt-2 font-display text-xl font-black tracking-tight text-white sm:text-2xl">
+                    Your private result appears here.
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-white/50">
-                    Upload one toy photo you own. Pikbo creates one private
-                    Street Power-Up video and saves it to Library.
+                  <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/50">
+                    {privateUploadEnabled
+                      ? "Upload one toy photo you own. Pikbo creates one private Street Power-Up video and saves it to Library."
+                      : "Sign in for private access. The clip above is a cached Lab prototype — not a customer deliverable."}
                   </p>
                   {!privateUploadEnabled ? (
                     <Link
                       href={privateMomentLoginHref}
                       data-fixed-moment-sign-in
-                      className="btn btn-primary mt-5 inline-flex px-6 py-3 text-sm font-black"
+                      className="btn btn-primary mt-4 inline-flex px-6 py-3 text-sm font-black"
                     >
                       Sign in to create
                     </Link>

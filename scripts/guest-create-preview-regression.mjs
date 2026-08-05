@@ -36,7 +36,8 @@ assert.match(gate, /not your toy/);
 assert.match(gate, /canUsePrivateLaunch\(me\)/);
 assert.match(gate, /sessionResolved && canUsePrivateLaunch\(me\)/);
 assert.match(gate, /me\?\.signedIn === true/);
-assert.match(gate, /\.catch\(\(\) =>/);
+assert.match(gate, /withTimeout|\.catch\(\(\) =>/);
+assert.match(gate, /STUDIO_SESSION_RESOLVE_MS|sessionResolved/);
 
 // Guest-first copy must not expose the private workbench's price-bearing or
 // submit language. The authenticated children remain unchanged in page.tsx.
