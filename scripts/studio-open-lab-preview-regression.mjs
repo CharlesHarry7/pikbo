@@ -62,6 +62,37 @@ assert.match(gate, /Retry access check/);
 // Auto Lab assets still present
 assert.match(gate, /beatbot-viral-hook\.mp4/);
 assert.match(gate, /AutoPlayVideo/);
+// AIT-132: Studio Lab sample is poster-first (no eager mp4 on first paint)
+assert.match(
+  gate,
+  /lcpPosterFirst/,
+  "guest Studio Lab sample must use lcpPosterFirst (not eager sources)"
+);
+assert.match(
+  gate,
+  /data-studio-lab-lcp=["']poster-first["']/,
+  "guest Studio Lab stage must advertise poster-first LCP contract"
+);
+assert.doesNotMatch(
+  gate,
+  /\beager\b/,
+  "guest Studio Lab sample must not mount mp4/webm eagerly on first paint"
+);
+assert.match(
+  createPage,
+  /beatbot-still\.webp/,
+  "create page must reference Lab sample poster for LCP preload"
+);
+assert.match(
+  createPage,
+  /rel=["']preload["'][\s\S]*fetchPriority=["']high["']/,
+  "create page must preload Lab sample poster with high priority"
+);
+assert.match(
+  video,
+  /lcpPosterFirst|data-lcp-poster-first/,
+  "AutoPlayVideo must support poster-first LCP arming"
+);
 
 // CreateStudio: finite "Opening studio…" + timeout retry; sample timeout retry
 assert.match(studio, /Opening studio…/);

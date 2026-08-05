@@ -77,12 +77,20 @@ function GuestMomentPreview({
           data-guest-create-sample
         >
           <div className="relative rounded-[30px] border border-white/12 bg-[var(--card)] p-2 shadow-[0_42px_120px_-42px_rgba(255,32,122,0.62)]">
-            <div className="relative aspect-[9/16] max-h-[calc(100vh-11rem)] overflow-hidden rounded-[23px] bg-black">
+            {/*
+              LCP contract (AIT-132): create page preloads beatbot-still.webp.
+              lcpPosterFirst keeps mp4/webm off first paint so the Moment CTA /
+              create shell win; sources arm after idle (same as home hero).
+            */}
+            <div
+              className="relative aspect-[9/16] max-h-[calc(100vh-11rem)] overflow-hidden rounded-[23px] bg-black"
+              data-studio-lab-lcp="poster-first"
+            >
               <AutoPlayVideo
                 poster={STREET_POWER_UP_SAMPLE.poster}
                 mp4={STREET_POWER_UP_SAMPLE.mp4}
                 webm={STREET_POWER_UP_SAMPLE.webm}
-                eager
+                lcpPosterFirst
                 showControls
                 errorRetry
                 label="Street Power-Up, the cached Beatbot sample, not your toy"
