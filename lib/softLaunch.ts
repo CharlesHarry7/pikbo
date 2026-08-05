@@ -3,8 +3,20 @@
  * Code imports this so G1/G2 cannot drift from the product contract.
  *
  * 2026-07-26 GSC P0: PRIMARY = real indexable core only.
- * Preview/Lab routes stay crawlable + noindex, but remain outside primary navigation.
+ * 2026-08-05 AIT-17: frozen suite routes redirect to `/` via segment layout
+ * (`app/<route>/layout.tsx`). Page implementations stay on disk for reference.
  */
+
+/** Public paths frozen for launch — segment layouts call redirect("/"). */
+export const FROZEN_PUBLIC_ROUTES = [
+  "/community",
+  "/explore",
+  "/modules",
+  "/cinema",
+  "/effects",
+  "/models",
+  "/supercomputer",
+] as const;
 
 /** First-dollar product: one fixed, private seller Moment. */
 export const MOMENT_CREATE_HREF =

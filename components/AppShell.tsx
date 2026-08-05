@@ -62,12 +62,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const momentSurface = home || momentCreate;
   const lightShell = momentSurface || sellerPackCreate;
   const resultShell = momentSurface;
-  const hideFooter =
-    home ||
-    create ||
-    path.startsWith("/supercomputer") ||
-    path.startsWith("/explore") ||
-    path.startsWith("/community");
+  // Frozen suite routes redirect home (AIT-17); only active product chrome remains.
+  const hideFooter = home || create;
 
   useEffect(() => {
     trackPageView(path);

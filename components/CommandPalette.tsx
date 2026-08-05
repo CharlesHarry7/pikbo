@@ -3,26 +3,21 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  createLabSampleTryHref,
-  createWorkbenchHref,
-} from "@/lib/jobIntents";
-import { PRESETS } from "@/lib/presets";
+import { createLabSampleTryHref } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
-const CMD_GENERATE_HREF = createWorkbenchHref();
+const CMD_GENERATE_HREF = `${MOMENT_CREATE_HREF}&source=command-palette`;
 const CMD_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
 /**
- * Critical path first (GSC P0).
- * Preview/Lab doors labeled honestly — not PRIMARY nav peers.
+ * Active launch path only (AIT-17).
+ * Frozen suite routes stay out of jump nav.
  */
 const LINKS = [
-  { href: "/", label: "Home · Explore" },
-  { href: "/#home-create", label: "Home · Sample result browser" },
-  { href: CMD_GENERATE_HREF, label: "Generate · Toy Studio" },
-  { href: "/effects", label: "Effects · toy presets" },
+  { href: "/", label: "Home" },
+  { href: CMD_GENERATE_HREF, label: "Create · Street Power-Up" },
+  { href: "/library", label: "Library · private results" },
   { href: "/pricing", label: "Pricing · Founding Studio" },
-  { href: "/explore", label: "Explore Lab projects" },
   {
     href: "/tools/ai-toy-video-generator",
     label: "AI toy video generator · rank page",
@@ -35,7 +30,6 @@ const LINKS = [
     href: "/tools/blind-box-reveal-video-maker",
     label: "Blind-box reveal video",
   },
-  { href: "/library", label: "Library · private results" },
   {
     href: CMD_LAB_SAMPLE_HREF,
     label: "Lab sample · 0 credits (cached)",
@@ -64,22 +58,9 @@ export function CommandPalette() {
 
   const items = useMemo(() => {
     const query = q.trim().toLowerCase();
-    const pages = LINKS.filter((l) =>
+    return LINKS.filter((l) =>
       !query ? true : l.label.toLowerCase().includes(query)
     ).map((l) => ({ ...l, kind: "page" as const }));
-    const presets = PRESETS.filter(
-      (p) =>
-        !query ||
-        p.name.toLowerCase().includes(query) ||
-        p.tagline.toLowerCase().includes(query)
-    )
-      .slice(0, 8)
-      .map((p) => ({
-        href: `/effects/${p.slug}`,
-        label: `${p.emoji} ${p.name}`,
-        kind: "preset" as const,
-      }));
-    return [...pages, ...presets];
   }, [q]);
 
   if (!open) return null;

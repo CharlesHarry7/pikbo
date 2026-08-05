@@ -4214,10 +4214,34 @@ assert.match(analyticsSrc, /NEXT_PUBLIC_GA_MEASUREMENT_ID/);
 assert.match(analyticsSrc, /PRIVACY_FUNNEL_EVENTS/);
 assert.match(analyticsSrc, /DOWNLOAD_VIA_ALLOWLIST|toPrivacyEnvelope/);
 assert.doesNotMatch(analyticsSrc, /function sanitizeMeta/);
-// Modules remains a real product surface (not necessarily primary-nav peer)
+// Modules page implementation retained for reference, but AIT-17 freezes the route.
 assert.match(
   fs.readFileSync(join(root, "app/modules/page.tsx"), "utf8"),
   /Modules|modules/
+);
+// AIT-17: frozen suite routes must redirect home via segment layouts
+for (const route of [
+  "community",
+  "explore",
+  "modules",
+  "cinema",
+  "effects",
+  "models",
+  "supercomputer",
+]) {
+  const layoutSrc = fs.readFileSync(
+    join(root, `app/${route}/layout.tsx`),
+    "utf8"
+  );
+  assert.match(
+    layoutSrc,
+    /redirect\(\s*["']\/["']\s*\)/,
+    `${route} layout must redirect to home`
+  );
+}
+assert.match(
+  fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8"),
+  /FROZEN_PUBLIC_ROUTES/
 );
 
 const workflowsSrc = fs.readFileSync(join(root, "lib/workflows.ts"), "utf8");
