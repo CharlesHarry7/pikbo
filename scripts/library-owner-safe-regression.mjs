@@ -94,7 +94,8 @@ assert.match(library, /data-library-input-bound=/);
 assert.match(library, /data-library-state="not-your-toy"/);
 assert.match(library, /data-library-not-your-toy="true"/);
 assert.match(library, /data-library-detail="true"/);
-assert.match(library, /parseDeepLinkJobId|deepLinkJobId/);
+assert.match(library, /parseLibraryJobId|deepLinkJobId|parseDeepLinkJobId/);
+assert.match(library, /libraryLoginHref|login\?next=\/library/);
 assert.match(library, /useSearchParams/);
 assert.match(library, /job\.owned === false/);
 assert.doesNotMatch(
