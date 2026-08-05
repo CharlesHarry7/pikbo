@@ -51,6 +51,7 @@
     "seller-pack-atomic-regression": "node --experimental-strip-types scripts/seller-pack-atomic-live-regression.mjs",
     "provider-budget-regression": "node --experimental-strip-types scripts/provider-budget-private-settlement-regression.mjs",
     "auth-magic-link-regression": "node --experimental-strip-types scripts/auth-magic-link-regression.mjs",
+    "login-vault-ritual-regression": "node scripts/login-vault-ritual-regression.mjs",
     "private-toy-input-pack-regression": "node scripts/private-toy-input-pack-regression.mjs",
     "direct-moment-input-binding-regression": "node scripts/direct-moment-input-binding-regression.mjs",
     "private-input-admission-regression": "node --experimental-strip-types scripts/private-input-admission-regression.mjs",
