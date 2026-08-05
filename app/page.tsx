@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
 import { HomeTrustFooter } from "@/components/HomeTrustFooter";
+import { HomeViralWall } from "@/components/HomeViralWall";
 import { JsonLd } from "@/components/JsonLd";
 import {
   organizationJsonLd,
   websiteJsonLd,
 } from "@/lib/jsonLd";
 import { site } from "@/lib/site";
+import { buildHomeShowcaseFeed } from "@/lib/videoFeed";
 
 const HOME_DESCRIPTION =
   "Preview one Street Power-Up Moment for designer toys. Pikbo's public sample is cached and costs 0 credits; invited private beta sellers can submit one owned toy photo for one private result.";
@@ -40,6 +42,8 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const lcpPoster = "/demos/beatbot-still.webp";
+  // Cap: HOME_PROOF_SLUGS (8, includes 360-spin-showcase). Lab cache only.
+  const proofWall = buildHomeShowcaseFeed();
 
   return (
     <>
@@ -52,6 +56,7 @@ export default function Home() {
       />
 
       <HomeCinemaHero />
+      <HomeViralWall items={proofWall} />
       <HomeTrustFooter />
     </>
   );

@@ -15,13 +15,18 @@ const zh = source("lib/i18n.ts");
 
 assert.match(
   wall,
-  /href=\{item\.projectHref \|\| item\.href\}/,
+  /cardHref|projectHref|item\.projectHref/,
   "home Recipe cards must open the registered Inside Project proof"
 );
 assert.match(
   wall,
-  /href=\{item\.href\}[\s\S]*Try this recipe/,
+  /remakeHref|item\.href[\s\S]*Try this recipe|Try this recipe[\s\S]*remakeHref/,
   "home Recipe cards must expose a separate one-click Remix contract"
+);
+assert.match(
+  wall,
+  /home-proof-wall/,
+  "home Recipe remake links must carry home-proof-wall entry attribution"
 );
 assert.match(
   wall,

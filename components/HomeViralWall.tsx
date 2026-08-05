@@ -5,39 +5,55 @@ import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
 import { hasFeedVideo, type FeedItem } from "@/lib/videoFeed";
 import { getPreset } from "@/lib/presets";
+import { HOME_PROOF_BADGE, MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
+const HOME_PROOF_ENTRY = "home-proof-wall" as const;
+
+/** Append entry attribution without clobbering remix `source` (project slug). */
+function withProofEntry(href: string): string {
+  if (href.includes(`entry=${HOME_PROOF_ENTRY}`)) return href;
+  const joiner = href.includes("?") ? "&" : "?";
+  return `${href}${joiner}entry=${HOME_PROOF_ENTRY}`;
+}
+
+/**
+ * Below-fold Lab proof wall for Moment home: ≤8 cached recipes from
+ * HOME_PROOF_SLUGS (includes 360-spin-showcase). Honest Lab badge only.
+ */
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
   const wall = items.filter(hasFeedVideo).slice(0, 8);
+  const momentHref = `${MOMENT_CREATE_HREF}&source=${HOME_PROOF_ENTRY}`;
 
   return (
     <section
       id="toy-wall"
-      data-home-wall="recipe-gallery"
-      className="scroll-mt-14 overflow-hidden bg-[#080809] px-2 py-16 sm:px-4 sm:py-20 lg:px-6 lg:py-28"
+      data-home-wall="lab-proof"
+      data-home-proof-wall="true"
+      className="scroll-mt-14 overflow-hidden bg-[var(--void)] px-2 py-14 sm:px-4 sm:py-16 lg:px-6 lg:py-24"
       aria-labelledby="recipe-wall-title"
     >
       <div className="mx-auto mb-8 flex max-w-[1600px] items-end justify-between gap-6 px-2 sm:mb-11">
         <div className="max-w-3xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#c8ff3d]">
-            Pikbo Lab · 8 cached previews
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#FF4ECD]">
+            {HOME_PROOF_BADGE}
           </p>
           <h2
             id="recipe-wall-title"
-            className="mt-3 font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-6xl"
+            className="mt-3 font-display text-4xl font-black tracking-[-0.055em] text-[var(--cream)] sm:text-6xl"
           >
             One toy. More ways to move.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/48 sm:text-base">
-            Choose the one recipe that fits the launch you are making now.
-            These studies explore movement, atmosphere, and story without
-            pretending every concept is already a live product.
+            Eight cached Lab prototypes — including a 360 spin. These are
+            archive previews, not customer results. Pick a recipe and remake it
+            with your own figure.
           </p>
         </div>
         <Link
-          href="/effects"
-          className="hidden shrink-0 rounded-full border border-white/15 px-5 py-2.5 text-xs font-black text-white/60 transition hover:border-[#c8ff3d]/50 hover:text-[#c8ff3d] sm:block"
+          href={momentHref}
+          className="hidden shrink-0 rounded-full border border-[#FF4ECD]/35 bg-[rgba(255,78,205,0.1)] px-5 py-2.5 text-xs font-black text-[#FF4ECD] transition hover:border-[#00D9FF]/50 hover:text-[#00D9FF] sm:block"
         >
-          Browse recipe notes ↗
+          Create a Moment ↗
         </Link>
       </div>
 
@@ -46,76 +62,95 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
           const recipeSlug = item.recipeSlug ?? item.demo.preset;
           const recipeName =
             getPreset(recipeSlug)?.name || item.demo.title || item.title;
+          const projectHref = item.projectHref
+            ? withProofEntry(item.projectHref)
+            : undefined;
+          const remakeHref = withProofEntry(item.href);
+          const cardHref = projectHref || remakeHref;
+          const badge = item.badge || HOME_PROOF_BADGE;
 
           return (
             <article
               key={item.id}
               data-recipe-card={recipeSlug}
-              className="group relative isolate aspect-[4/5] min-w-0 overflow-hidden rounded-[1.2rem] border border-white/[0.1] bg-[#111114] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d] sm:rounded-[1.6rem]"
+              data-home-proof-card={recipeSlug}
+              className="toy-card group relative isolate aspect-[4/5] min-w-0 overflow-hidden p-1.5 transition duration-200 hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#00D9FF]"
             >
-              <Link
-                href={item.projectHref || item.href}
-                prefetch
-                aria-label={`Explore inside ${recipeName}`}
-                className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#c8ff3d]"
-                onClick={() =>
-                  track({
-                    event: item.projectHref ? "project_open" : "recipe_use",
-                    path: "/",
-                    recipe: recipeSlug,
-                    meta: {
-                      source: "home_recipe_card",
-                      project: item.projectHref || null,
-                    },
-                  })
-                }
-              >
-                <AutoPlayVideo
-                  poster={item.demo.poster}
-                  webm={item.demo.webm}
-                  mp4={item.demo.mp4}
-                  lazySources
-                  wallDense
-                  focusable={false}
-                  label={`${recipeName} cached demo`}
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045]"
-                />
-                <div
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/5 to-black/10"
-                  aria-hidden
-                />
-                <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/55 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.14em] text-white/72 backdrop-blur sm:left-3 sm:top-3 sm:text-[9px]">
-                  Cached preview
-                </span>
-                <span className="absolute inset-x-0 bottom-0 p-3 pb-12 sm:p-4 sm:pb-14">
-                  <span className="block text-sm font-black leading-tight text-white sm:text-lg">
-                    {recipeName}
+              <div className="relative h-full w-full overflow-hidden rounded-[1.35rem] bg-[#0A0A0F]">
+                <Link
+                  href={cardHref}
+                  prefetch
+                  aria-label={`Explore inside ${recipeName}`}
+                  className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#00D9FF]"
+                  onClick={() =>
+                    track({
+                      event: item.projectHref ? "project_open" : "recipe_use",
+                      path: "/",
+                      recipe: recipeSlug,
+                      meta: {
+                        source: "home_recipe_card",
+                        entry: HOME_PROOF_ENTRY,
+                        project: item.projectHref || null,
+                      },
+                    })
+                  }
+                >
+                  <AutoPlayVideo
+                    poster={item.demo.poster}
+                    webm={item.demo.webm}
+                    mp4={item.demo.mp4}
+                    lazySources
+                    wallDense
+                    focusable={false}
+                    label={`${recipeName} cached demo`}
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045]"
+                  />
+                  <div
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/5 to-black/10"
+                    aria-hidden
+                  />
+                  <span className="absolute left-2 top-2 rounded-full border border-white/15 bg-black/55 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.14em] text-white/72 backdrop-blur sm:left-3 sm:top-3 sm:text-[9px]">
+                    {badge}
                   </span>
-                  <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-white/50 sm:text-[10px]">
-                    Open recipe proof →
+                  {recipeSlug === "360-spin-showcase" ? (
+                    <span
+                      data-home-proof-360
+                      className="absolute right-2 top-2 rounded-full border border-[#00D9FF]/40 bg-[#00D9FF]/15 px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-[#00D9FF] backdrop-blur sm:right-3 sm:top-3 sm:text-[9px]"
+                    >
+                      360 spin
+                    </span>
+                  ) : null}
+                  <span className="absolute inset-x-0 bottom-0 p-3 pb-12 sm:p-4 sm:pb-14">
+                    <span className="block text-sm font-black leading-tight text-white sm:text-lg">
+                      {recipeName}
+                    </span>
+                    <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-white/50 sm:text-[10px]">
+                      Open recipe proof →
+                    </span>
                   </span>
-                </span>
-              </Link>
-              <Link
-                href={item.href}
-                prefetch
-                aria-label={`Use the ${recipeName} recipe`}
-                className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[#c8ff3d] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-black shadow-[0_0_18px_rgba(200,255,61,0.3)] transition hover:bg-[#d5ff6b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:bottom-4 sm:left-4 sm:text-[10px]"
-                onClick={() =>
-                  track({
-                    event: "recipe_use",
-                    path: "/",
-                    recipe: recipeSlug,
-                    meta: {
-                      source: "home_recipe_remake",
-                      project: item.projectHref || null,
-                    },
-                  })
-                }
-              >
-                Try this recipe
-                <span aria-hidden>↗</span>
-              </Link>
+                </Link>
+                <Link
+                  href={remakeHref}
+                  prefetch
+                  aria-label={`Use the ${recipeName} recipe`}
+                  className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white shadow-[0_0_18px_rgba(255,78,205,0.35)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] sm:bottom-4 sm:left-4 sm:text-[10px]"
+                  onClick={() =>
+                    track({
+                      event: "recipe_use",
+                      path: "/",
+                      recipe: recipeSlug,
+                      meta: {
+                        source: "home_recipe_remake",
+                        entry: HOME_PROOF_ENTRY,
+                        project: item.projectHref || null,
+                      },
+                    })
+                  }
+                >
+                  Try this recipe
+                  <span aria-hidden>↗</span>
+                </Link>
+              </div>
             </article>
           );
         })}
@@ -123,10 +158,10 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
 
       <div className="mt-7 flex justify-center sm:hidden">
         <Link
-          href="/effects"
-          className="rounded-full border border-white/15 px-5 py-2.5 text-xs font-bold text-white/70"
+          href={momentHref}
+          className="rounded-full border border-[#FF4ECD]/35 px-5 py-2.5 text-xs font-bold text-[#FF4ECD]"
         >
-          Browse recipe notes
+          Create a Moment
         </Link>
       </div>
     </section>
