@@ -48,6 +48,9 @@ export default async function CreatePage({
     mode?: string;
     source?: string;
     channel?: string;
+    ratio?: string;
+    duration?: string;
+    entry?: string;
     /** One-click first-run sample: orbit | moon | scout | beatbot */
     sample?: string;
     try?: string;
@@ -72,11 +75,28 @@ export default async function CreatePage({
   const firstRunSample =
     sp.sample ||
     (sp.try === "1" || sp.try === "true" ? "scout" : undefined);
+  // Carry create/360 intent into the guest gate so sign-in returns to the same
+  // effect/mode/source (AIT-49/107). Soft-launch still renders fixed Moment UI.
+  const guestCreateIntent = {
+    effect: typeof sp.effect === "string" ? sp.effect : undefined,
+    mode: typeof sp.mode === "string" ? sp.mode : undefined,
+    source: typeof sp.source === "string" ? sp.source : undefined,
+    channel: typeof sp.channel === "string" ? sp.channel : undefined,
+    ratio: typeof sp.ratio === "string" ? sp.ratio : undefined,
+    duration: typeof sp.duration === "string" ? sp.duration : undefined,
+    entry: typeof sp.entry === "string" ? sp.entry : undefined,
+    sample: typeof firstRunSample === "string" ? firstRunSample : undefined,
+    try: typeof sp.try === "string" ? sp.try : undefined,
+    job: typeof sp.job === "string" ? sp.job : undefined,
+    sku: typeof sp.sku === "string" ? sp.sku : undefined,
+    retryJobId: typeof sp.retryJobId === "string" ? sp.retryJobId : undefined,
+    retryToken: typeof sp.retryToken === "string" ? sp.retryToken : undefined,
+  };
   // MVP cut: every public or invited Create entry resolves to the one real,
   // fixed product contract. Legacy Seller Pack and generic Studio query links
   // remain harmless deep links, but no longer expose alternate product UIs.
   return (
-    <GuestMomentCreateGate>
+    <GuestMomentCreateGate intent={guestCreateIntent}>
       <div className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-24 text-[var(--cream)]">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(177,78,255,0.22),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(255,78,205,0.16),transparent_65%)]"

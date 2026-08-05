@@ -32,7 +32,11 @@ import { PRESETS } from "@/lib/presets";
 import { viralName } from "@/lib/viralNames";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { site } from "@/lib/site";
-import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+import {
+  buildGuestCreateNextPath,
+  loginHrefForGuestCreate,
+  stashGuestCreateIntent,
+} from "@/lib/guestCreateIntent";
 import { stripeBillingAuthHeaders } from "@/lib/stripeBillingClient";
 import { useToast } from "@/components/Toast";
 import { PaywallCard } from "@/components/PaywallCard";
@@ -308,12 +312,26 @@ export function CreateStudio({
     "checking" | "ready" | "timeout"
   >("checking");
   const privateUploadEnabled = canUsePrivateLaunch(session);
-  const fixedMomentNextPath = initialSource
-    ? `${MOMENT_CREATE_HREF}&source=${encodeURIComponent(initialSource)}`
-    : MOMENT_CREATE_HREF;
-  const privateMomentLoginHref = `/login?next=${encodeURIComponent(
-    fixedMomentNextPath
-  )}`;
+  // Guest→login must keep Moment (and optional source) so auth returns here.
+  const fixedMomentNextPath = buildGuestCreateNextPath(
+    {
+      mode: "moment",
+      effect: "street-power-up",
+      source: initialSource || undefined,
+    },
+    { fallbackSource: "create-studio" }
+  );
+  const privateMomentLoginHref = loginHrefForGuestCreate(
+    {
+      mode: "moment",
+      effect: "street-power-up",
+      source: initialSource || undefined,
+    },
+    { fallbackSource: "create-studio" }
+  );
+  const onPrivateMomentLogin = () => {
+    stashGuestCreateIntent(fixedMomentNextPath);
+  };
   const [showPaywall, setShowPaywall] = useState(false);
   const [upgradedBanner, setUpgradedBanner] = useState(false);
   const [usedModel, setUsedModel] = useState<string | null>(null);
@@ -2341,6 +2359,7 @@ export function CreateStudio({
                   {fixedMomentContract && !session?.signedIn ? (
                     <Link
                       href={privateMomentLoginHref}
+                      onClick={onPrivateMomentLogin}
                       className="inline-flex min-h-10 items-center rounded-full border border-white/20 px-4 text-xs font-black text-white transition hover:border-white/45 hover:bg-white/[0.06] lg:hidden"
                       data-public-single-preview-sign-in
                     >
@@ -3654,6 +3673,7 @@ export function CreateStudio({
                   {!privateUploadEnabled ? (
                     <Link
                       href={privateMomentLoginHref}
+                      onClick={onPrivateMomentLogin}
                       data-fixed-moment-sign-in
                       className="btn btn-primary mt-5 inline-flex px-6 py-3 text-sm font-black"
                     >
@@ -3742,6 +3762,7 @@ export function CreateStudio({
           ) : fixedMomentContract ? (
             <Link
               href={privateMomentLoginHref}
+              onClick={onPrivateMomentLogin}
               className="btn btn-primary w-full py-3 text-sm"
               data-first-run-action="sign-in"
             >
