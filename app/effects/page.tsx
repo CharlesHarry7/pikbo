@@ -1,85 +1,75 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
-import { FreeTrialCta } from "@/components/FreeTrialCta";
-import { PRESETS } from "@/lib/presets";
-import { allCategoryFeeds } from "@/lib/videoFeed";
-import { VideoTile } from "@/components/VideoTile";
-import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
-import { listCreateShelfWorkflows } from "@/lib/workflows";
-import { createRemixHref } from "@/lib/remixIntent";
-import { proofBackedRecipeSlugs } from "@/lib/seoIndex";
+import { EffectStudioCard } from "@/components/EffectStudioCard";
+import {
+  EFFECT_CATEGORIES,
+  liveToyEffects,
+  listToyEffects,
+  type EffectCategory,
+} from "@/lib/effects";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
-/** Effects wall Generate doors — listing spin remix (ratio/duration/channel). */
-const EFFECTS_GENERATE_HREF = createRemixHref("360-spin-showcase");
-
 export const metadata: Metadata = {
-  title: "Toy video presets · Recipes",
+  title: "Toy Effect Studio · 潮玩特效工坊",
   description:
-    "Verified Pikbo effects use their own cached clip. Unverified toy-video recipes stay static concepts until proof exists.",
+    "Toy-native one-click effects for designer toys. Street Power-Up is live in private beta; more Moments are Coming Soon.",
   alternates: { canonical: "/effects" },
   robots: CONCEPT_ROBOTS,
   openGraph: {
-    title: `Toy video presets · Recipes | ${site.name}`,
+    title: `Toy Effect Studio | ${site.name}`,
     description:
-      "Verified Lab clips and clearly labeled static concept recipes for designer toys.",
+      "Higgsfield-style effect wall for designer toys — Street Power-Up live, more Coming Soon.",
     url: `${site.url}/effects`,
   },
 };
 
-/** Phase H: FAQ so /effects is not a thin recipe wall. */
-const EFFECTS_FAQ = [
+const STUDIO_FAQ = [
   {
-    q: "What is a Lab recipe vs a concept recipe?",
-    a: "Lab recipes have a unique cached demo clip and open Generate with that effect. Concept recipes are reachable for SEO/IA but stay labeled concept and may be noindex until proof exists.",
+    q: "Which effect works today?",
+    a: "Street Power-Up is the only live Moment contract in private beta: one owned toy photo becomes one private 9:16, 5-second clip. Everything else on this wall is Coming Soon.",
   },
   {
-    q: "Does remaking a preset cost credits?",
-    a: "Watching Lab demos costs 0. Live Seedance Mini uses Free Mini (about one 5s 480p clip with on-player mark) or paid credits. Exhausted trial CTAs go to plans — Lab still free.",
+    q: "Are Coming Soon cards real generation?",
+    a: "No. They are catalog concepts with mock or cached Lab previews so you can browse the roadmap. They do not start a provider job.",
   },
   {
-    q: "Is every card a guaranteed viral look?",
-    a: "No. Recipes are motion templates for toys you own. Marketplace or social performance is not guaranteed.",
+    q: "Does watching previews cost credits?",
+    a: "No. Studio previews are static or cached. Live generation only runs on the authenticated Create path for Street Power-Up under private-beta rules.",
   },
 ] as const;
 
-/** HF viral-presets wall + suite chrome (toy vertical) */
-export default function EffectsHub() {
-  const groups = allCategoryFeeds();
-  const jobBlocks = listCreateShelfWorkflows().filter(
-    (w) => w.id !== "photo-to-clip"
-  );
-  // Phase H: ItemList only proof-backed recipes (concept walls stay reachable/noindex).
-  const proofSlugs = new Set(proofBackedRecipeSlugs());
-  const proofPresets = PRESETS.filter((p) => proofSlugs.has(p.slug));
+export default function EffectsStudioPage() {
+  const effects = listToyEffects();
+  const live = liveToyEffects();
+  const byCategory = EFFECT_CATEGORIES.map((cat) => ({
+    ...cat,
+    items: effects.filter((e) => e.category === cat.id),
+  })).filter((g) => g.items.length > 0);
+
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Pikbo Lab toy video recipes with proof",
+    name: "Pikbo Toy Effect Studio",
     description:
-      "Effect landings that have a unique Lab cached demo. Concept recipes without proof are omitted.",
-    numberOfItems: proofPresets.length,
-    itemListElement: proofPresets.map((p, i) => ({
+      "Toy-specific video effects. Street Power-Up is live; other effects are Coming Soon concepts.",
+    numberOfItems: effects.length,
+    itemListElement: effects.map((e, i) => ({
       "@type": "ListItem",
       position: i + 1,
-      name: p.name,
-      url: `${site.url}/effects/${p.slug}`,
-      description: p.seoDescription,
+      name: e.name,
+      url: `${site.url}/effects/${e.slug}`,
+      description: e.description,
     })),
   };
 
   const faqLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: EFFECTS_FAQ.map((f) => ({
+    mainEntity: STUDIO_FAQ.map((f) => ({
       "@type": "Question",
       name: f.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: f.a,
-      },
+      acceptedAnswer: { "@type": "Answer", text: f.a },
     })),
   };
 
@@ -93,128 +83,135 @@ export default function EffectsHub() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <Suspense
-        fallback={
-          <div className="border-b border-white/10 px-4 py-3 text-sm text-white/40">
-            Generate · Recipes
-          </div>
-        }
-      >
-        <GenerateSuiteChrome compact />
-      </Suspense>
 
-      <div className="sticky top-0 z-20 overflow-hidden border-b border-white/[0.07] bg-black/85 px-4 py-3.5 backdrop-blur-xl sm:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0 max-w-full">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
-              Viral presets · {PRESETS.length} · {proofPresets.length} with Lab video
-            </p>
-            <h1 className="font-display break-words text-lg font-black uppercase tracking-tight sm:text-2xl">
-              Big-budget motion · remake as video
-            </h1>
-            <p className="mt-0.5 text-[11px] text-white/45">
-              Pixel-parity with suite viral walls — tap any card to Generate video ·{" "}
+      {/* Hero */}
+      <section className="relative overflow-hidden border-b border-white/[0.07]">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 60% at 20% -10%, rgba(200,255,61,0.18), transparent 55%), radial-gradient(ellipse 60% 50% at 90% 20%, rgba(34,211,238,0.12), transparent 50%)",
+          }}
+          aria-hidden
+        />
+        <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--mint)]">
+            Toy Effect Studio · 潮玩特效工坊
+          </p>
+          <h1 className="mt-2 max-w-3xl font-display text-3xl font-black uppercase tracking-tight text-white sm:text-4xl md:text-5xl">
+            One-click effects built for designer toys
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/55 sm:text-base">
+            A Higgsfield-style preset wall — but toy-native.{" "}
+            <strong className="font-semibold text-white/85">
+              {live.length} live
+            </strong>
+            {" · "}
+            <span className="text-white/50">
+              {effects.length - live.length} coming soon
+            </span>
+            . Previews are cached or mock stills; only Street Power-Up starts a
+            real private Moment today.
+          </p>
+
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            {live[0]?.tryHref ? (
               <Link
-                href={EFFECTS_GENERATE_HREF}
-                className="font-semibold text-[#c8ff3d] hover:underline"
-                data-effects-generate="remix"
+                href={live[0].tryHref}
+                className="btn btn-primary !px-5 !py-2.5 text-xs font-black"
+                data-effects-studio-primary="street-power-up"
               >
-                Open Generate →
+                Try Street Power-Up
               </Link>
-            </p>
-          </div>
-          <div className="flex max-w-full flex-wrap items-center gap-2">
-            <FreeTrialCta
-              path="/effects"
-              variant="mint"
-              labelTry="Try free"
-              className="btn btn-primary !px-4 !py-2 text-xs font-black"
-            />
-            <Link
-              href={EFFECTS_GENERATE_HREF}
-              className="btn btn-ghost !px-3 !py-2 text-xs"
-              data-effects-video="remix"
+            ) : null}
+            <a
+              href="#studio-grid"
+              className="btn btn-ghost !px-4 !py-2.5 text-xs"
             >
-              Video
-            </Link>
+              Browse all effects
+            </a>
             <Link
               href="/create?effect=street-power-up"
-              className="btn btn-ghost !px-3 !py-2 text-xs"
+              className="btn btn-ghost !px-4 !py-2.5 text-xs text-white/50"
             >
               Create one Moment
             </Link>
-            <Link
-              href="/modules"
-              className="btn btn-ghost !px-3 !py-2 text-xs"
-            >
-              Modules
-            </Link>
-            <Link
-              href="/flow"
-              className="btn btn-ghost !px-3 !py-2 text-xs text-white/50"
-              title="Preview media wall — not a live Seedance job"
-            >
-              Flow · Preview
-            </Link>
           </div>
-        </div>
 
-        {/* Job-first chips — suite modules on the recipe wall */}
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-          {jobBlocks.map((w) => (
-            <Link
-              key={w.id}
-              href={w.href}
-              className="shrink-0 rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/[0.1] px-3 py-1.5 text-[11px] font-semibold text-[var(--mint)] shadow-[0_0_20px_rgba(200,255,61,0.08)] transition hover:border-[var(--mint)] hover:bg-[var(--mint)]/15"
-            >
-              {w.emoji} {w.label}
-            </Link>
-          ))}
-          {groups.map(({ category }) => (
-            <a
-              key={category.id}
-              href={`#cat-${category.id}`}
-              className="shrink-0 rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/55 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
-            >
-              {category.label}
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {groups.map(({ category, items }) => (
-        <section
-          key={category.id}
-          id={`cat-${category.id}`}
-          className="scroll-mt-40 border-b border-white/[0.06] px-3 py-8 sm:px-5"
-        >
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-2 px-1">
-            <div>
-              <h2 className="font-display text-base font-bold tracking-tight sm:text-lg">
-                {category.label}
-              </h2>
-              <p className="mt-0.5 text-xs text-white/40">{category.blurb}</p>
-            </div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30">
-              {items.length} looks
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
-            {items.map((item) => (
-              <VideoTile key={item.id} item={item} compact />
+          {/* Category chips */}
+          <div className="mt-6 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {byCategory.map((cat) => (
+              <a
+                key={cat.id}
+                href={`#cat-${cat.id}`}
+                className="shrink-0 rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/60 transition hover:border-[var(--mint)]/40 hover:text-[var(--mint)]"
+              >
+                {cat.label}
+                <span className="ml-1.5 text-white/30">{cat.items.length}</span>
+              </a>
             ))}
           </div>
-        </section>
-      ))}
+        </div>
+      </section>
 
+      {/* Live callout */}
+      {live.length > 0 ? (
+        <section className="border-b border-white/[0.06] bg-[var(--mint)]/[0.04] px-4 py-4 sm:px-6">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-white/70 sm:text-sm">
+              <span className="font-bold text-[var(--mint)]">Live now:</span>{" "}
+              {live.map((e) => e.name).join(", ")} — private beta · owned photo
+              · 9:16 · 5s · 720p
+            </p>
+            {live[0]?.tryHref ? (
+              <Link
+                href={live[0].tryHref}
+                className="text-[11px] font-bold uppercase tracking-wide text-[var(--mint)] hover:underline"
+              >
+                Open Create →
+              </Link>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {/* Studio grid by category */}
+      <div id="studio-grid" className="mx-auto max-w-7xl scroll-mt-24">
+        {byCategory.map((cat) => (
+          <section
+            key={cat.id}
+            id={`cat-${cat.id as EffectCategory}`}
+            className="scroll-mt-28 border-b border-white/[0.06] px-3 py-8 sm:px-5"
+          >
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-2 px-1">
+              <div>
+                <h2 className="font-display text-base font-bold tracking-tight sm:text-lg">
+                  {cat.label}
+                </h2>
+                <p className="mt-0.5 text-xs text-white/40">{cat.blurb}</p>
+              </div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30">
+                {cat.items.length} effects
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3.5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {cat.items.map((effect) => (
+                <EffectStudioCard key={effect.slug} effect={effect} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      {/* FAQ */}
       <section className="mx-auto max-w-7xl px-3 pb-10 pt-6 sm:px-5">
         <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
-          <h2 className="text-sm font-bold text-white">Recipes FAQ</h2>
+          <h2 className="text-sm font-bold text-white">Effect Studio FAQ</h2>
           <p className="mt-1 text-xs text-white/40">
-            Lab vs concept · Free Mini · no viral guarantee
+            Live vs Coming Soon · credits · private beta
           </p>
           <dl className="mt-4 space-y-4">
-            {EFFECTS_FAQ.map((f) => (
+            {STUDIO_FAQ.map((f) => (
               <div key={f.q}>
                 <dt className="text-sm font-semibold text-white/90">{f.q}</dt>
                 <dd className="mt-1 text-xs leading-relaxed text-white/55">
