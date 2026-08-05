@@ -82,6 +82,26 @@ assert(
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
   "home order: Moment hero → proof wall → HF product rail → trust footer"
 );
+// AIT-146: proof wall one primary Generate→360 (not Moment-first on the wall).
+assert(
+  homeWall.includes('data-home-primary-generate="360"') &&
+    homeWall.includes("data-home-primary-generate-cta") &&
+    homeWall.includes("data-home-proof-360-direct") &&
+    homeWall.includes("Generate 360°") &&
+    homeWall.includes('createGenerate360Href("home-proof-wall")') &&
+    homeWall.includes("listing360Href") &&
+    /is360\s*\?\s*listing360Href/.test(homeWall),
+  "home proof wall must expose one primary Generate→360 door and 1-click 360 card"
+);
+// Wall primary Generate CTA before secondary Moment (desktop header block).
+{
+  const genIdx = homeWall.indexOf("data-home-primary-generate-cta");
+  const momentLabelIdx = homeWall.indexOf("Create a Moment");
+  assert(
+    genIdx > 0 && momentLabelIdx > genIdx,
+    "proof wall must render primary Generate CTA before secondary Moment label"
+  );
+}
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"
