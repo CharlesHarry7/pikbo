@@ -23,8 +23,10 @@ export default async function LoginPage({
 }) {
   const auth = publicAuthStatus();
   const params = await searchParams;
+  // Default next keeps guest→Studio intent when Sign in had no next (AIT-39).
   const next = sanitizeInternalNextPath(
-    typeof params?.next === "string" ? params.next : null
+    typeof params?.next === "string" ? params.next : null,
+    LOGIN_GUEST_MOMENT_HREF
   );
 
   return (

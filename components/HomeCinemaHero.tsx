@@ -9,6 +9,11 @@ const STREET_POWER_UP_SAMPLE = {
   title: "Beatbot",
 } as const;
 
+/** Single Home generate path — Studio / Moment door (AIT-39). */
+const HOME_SIGN_IN_HREF = `/login?next=${encodeURIComponent(
+  `${MOMENT_CREATE_HREF}&source=home-hero-signin`
+)}`;
+
 /** Tiny SVG mascot — Pikbo "Pikko" toy-bot IP mark for the hero. */
 function PikkoMascot({ className = "" }: { className?: string }) {
   return (
@@ -147,6 +152,28 @@ export function HomeCinemaHero() {
             <span className="stat-card px-3 py-2 text-[#FFE600]">9:16 · 5 sec</span>
             <span className="stat-card px-3 py-2 text-[#00FFA3]">720p</span>
           </div>
+
+          {/* AIT-39: one primary generate CTA above the fold; at most one secondary */}
+          <div className="fade-up fade-up-d3 mt-8 flex flex-col items-start gap-3">
+            <Link
+              href={MOMENT_CREATE_HREF}
+              data-home-primary-cta="generate"
+              data-home-moment-cta
+              className="btn-press inline-flex min-h-14 w-full max-w-sm items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(255,78,205,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
+            >
+              Use this motion
+              <span aria-hidden className="text-lg">
+                →
+              </span>
+            </Link>
+            <Link
+              href={HOME_SIGN_IN_HREF}
+              data-home-secondary-cta="sign-in"
+              className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/45 underline-offset-4 transition hover:text-white hover:underline"
+            >
+              Sign in to keep results
+            </Link>
+          </div>
         </div>
 
         {/* Video stage — toy display case, not a plain phone bezel */}
@@ -223,18 +250,11 @@ export function HomeCinemaHero() {
                 </div>
               </div>
             </div>
-            <Link
-              href={MOMENT_CREATE_HREF}
-              data-home-moment-cta
-              className="btn-press mt-5 inline-flex min-h-14 w-full items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(255,78,205,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14141E]"
-            >
-              Use this motion
-              <span aria-hidden className="text-lg">
-                →
-              </span>
-            </Link>
-            <p className="mt-4 text-[10px] font-semibold leading-5 text-white/40">
+            <p className="mt-5 text-[10px] font-semibold leading-5 text-white/40">
               Sample shown: cached 6s archive, not a completed customer deliverable. Private target: 9:16 · 5s · 720p.
+            </p>
+            <p className="mt-3 text-[10px] font-black uppercase tracking-[0.14em] text-[#FF4ECD]/90">
+              Generate path · one Studio door
             </p>
           </div>
 

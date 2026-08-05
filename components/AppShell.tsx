@@ -22,6 +22,11 @@ import { cn } from "@/lib/utils";
 
 const DEFAULT_MOMENT_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=moment-shell`;
 const PRIMARY_NAV_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=primary-nav`;
+/** Guest Sign in preserves Studio/Moment intent (AIT-39). */
+const HOME_SIGN_IN_HREF = `/login?next=${encodeURIComponent(
+  `${MOMENT_CREATE_HREF}&source=home-nav-signin`
+)}`;
+const HOME_GENERATE_HREF = `${MOMENT_CREATE_HREF}&source=home-nav-generate`;
 
 function active(path: string, href: string) {
   const route = href.split("?")[0];
@@ -139,16 +144,16 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           aria-label="Primary navigation"
           data-primary-create-href={
             motionChrome
-              ? DEFAULT_MOMENT_CREATE_HREF
+              ? HOME_GENERATE_HREF
               : PRIMARY_NAV_CREATE_HREF
           }
         >
           {(motionChrome
             ? [
-                { href: DEFAULT_MOMENT_CREATE_HREF, label: "Create" },
+                // AIT-39: nav is secondary; one Generate primary lives in the header button
                 { href: "/library", label: "Library" },
                 { href: "/pricing", label: "Pricing" },
-                { href: "/login", label: "Sign in" },
+                { href: HOME_SIGN_IN_HREF, label: "Sign in" },
               ]
             : PRIMARY_NAV.filter(
                 (item) => !resultShell || item.href !== "/"
@@ -201,10 +206,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <div className="flex shrink-0 items-center gap-3">
           {motionChrome ? (
             <Link
-              href={home ? DEFAULT_MOMENT_CREATE_HREF : "/library"}
+              href={home ? HOME_GENERATE_HREF : "/library"}
+              data-shell-primary-generate={home ? "true" : undefined}
               className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.35)]"
             >
-              {home ? "Try Street Power-Up" : "Open Library"}
+              {home ? "Generate" : "Open Library"}
             </Link>
           ) : resultShell ? (
             <Link
@@ -247,7 +253,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-2">
           {momentSurface ? (
             <Link
-              href={DEFAULT_MOMENT_CREATE_HREF}
+              href={home ? HOME_GENERATE_HREF : DEFAULT_MOMENT_CREATE_HREF}
+              data-shell-primary-generate={home ? "true" : undefined}
               className={cn(
                 "inline-flex min-h-9 items-center rounded-full px-4 text-[10px] font-black",
                 home
@@ -255,7 +262,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                   : "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
               )}
             >
-              Use this motion
+              {home ? "Generate" : "Use this motion"}
             </Link>
           ) : resultShell ? (
             <>

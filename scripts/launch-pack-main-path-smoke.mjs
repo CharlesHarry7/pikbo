@@ -130,7 +130,7 @@ assert.match(shell, /label: "Library"/);
 assert.match(shell, /label: "Sign in"/);
 assert.doesNotMatch(shell, /Motion archive/);
 assert.match(softLaunchStrip, /create\?effect=street-power-up&source=soft-launch/);
-assert.match(hfExploreHome, /create\?effect=street-power-up/);
+assert.match(hfExploreHome, /MOMENT_CREATE_HREF|data-hf-hero-primary=["']generate-360["']/);
 assert.match(freeTrialCta, /onHome\s*\? "\/create\?effect=street-power-up&source=free-trial"/);
 assert.doesNotMatch(
   [shell, softLaunchStrip, hfExploreHome, freeTrialCta].join("\n"),
