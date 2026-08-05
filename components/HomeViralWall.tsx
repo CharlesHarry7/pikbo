@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
-import { createGenerate360Href } from "@/lib/jobIntents";
+import {
+  CHROME_GENERATE_SOURCE,
+  createGenerate360Href,
+} from "@/lib/jobIntents";
 import {
   hasFeedVideo,
   type FeedItem,
@@ -16,8 +19,8 @@ import {
   MOMENT_CREATE_HREF,
 } from "@/lib/softLaunch";
 
-/** Analytics + guest-intent entry for the home Lab proof wall (AIT-87 / AIT-38 PR-1). */
-const HOME_PROOF_ENTRY = "home-proof-wall" as const;
+/** Analytics + guest-intent entry for the home Lab proof wall (AIT-87 / AIT-122). */
+const HOME_PROOF_ENTRY = CHROME_GENERATE_SOURCE.homeProofWall;
 const LISTING_360_SLUG = "360-spin-showcase" as const;
 /** Mobile 2-col wall shows first 4 cards in a 2×2 above deep scroll. */
 const MOBILE_FIRST_ROW_SLOTS = 4;
@@ -58,9 +61,9 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
     items.filter(hasFeedVideo).slice(0, HOME_PROOF_LIMIT)
   );
   const momentHref = `${MOMENT_CREATE_HREF}&source=${HOME_PROOF_ENTRY}`;
-  // entry= for guest-intent; remix source tags the Generate door surface.
+  // Deep-link create only (AIT-122). entry= for guest-intent; remix source tags surface.
   const listing360Href = withProofEntry(
-    createGenerate360Href("home-proof-wall")
+    createGenerate360Href(CHROME_GENERATE_SOURCE.homeProofWall)
   );
 
   return (

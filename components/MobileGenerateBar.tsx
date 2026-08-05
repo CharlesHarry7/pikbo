@@ -2,12 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createGenerate360Href } from "@/lib/jobIntents";
+import {
+  CHROME_GENERATE_SOURCE,
+  createGenerate360Href,
+} from "@/lib/jobIntents";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
-/** Sticky mobile CTA when not already on Generate / Seller Pack */
-const MOBILE_GENERATE_HREF = createGenerate360Href("mobile-bar");
-const MOBILE_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=mobile-bar` as const;
+/**
+ * Sticky mobile CTA when not already on Generate / Seller Pack.
+ * AIT-122: deep-links `/create` only (no bare `/login`). Guest sign-in on
+ * Create preserves effect/source via guestCreateIntent.
+ */
+const MOBILE_GENERATE_HREF = createGenerate360Href(
+  CHROME_GENERATE_SOURCE.mobileBar
+);
+const MOBILE_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=${CHROME_GENERATE_SOURCE.mobileBar}` as const;
 
 export function MobileGenerateBar() {
   const path = usePathname() || "/";
@@ -48,6 +58,7 @@ export function MobileGenerateBar() {
         href={MOBILE_GENERATE_HREF}
         className="pointer-events-auto btn btn-primary px-5 py-2.5 text-xs shadow-[0_0_30px_rgba(200,255,61,0.35)]"
         data-mobile-bar="generate-remix"
+        data-chrome-generate-source={CHROME_GENERATE_SOURCE.mobileBar}
       >
         Generate
       </Link>

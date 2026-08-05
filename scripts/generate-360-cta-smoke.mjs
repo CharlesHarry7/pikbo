@@ -57,30 +57,31 @@ assert.match(
 );
 
 // 2. Key Generate surfaces import / call the helper
+// source may be a string literal or CHROME_GENERATE_SOURCE.* (AIT-122 freeze).
 const generateSurfaces = [
-  ["components/HomeToolShelf.tsx", "home-tool-shelf"],
-  ["components/HomeViralWall.tsx", "home-proof-wall"],
-  ["components/SuiteEntryStrip.tsx", "suite-entry"],
-  ["components/HowItWorks.tsx", "how-it-works"],
-  ["components/MobileGenerateBar.tsx", "mobile-bar"],
-  ["components/SoftLaunchStrip.tsx", "soft-launch"],
-  ["components/LandingSeoMesh.tsx", "seo-mesh"],
-  ["components/ModulesSuiteCtas.tsx", "modules-photo-clip"],
-  ["components/CommandPalette.tsx", null],
-  ["components/GenerateSuiteChrome.tsx", null],
-  ["components/Header.tsx", "header"],
-  ["components/HfProductRail.tsx", "hf-product-rail"],
-  ["components/HfExploreHome.tsx", "hf-explore"],
-  ["components/HeroVideoBanner.tsx", "hero-banner"],
-  ["components/FreeTrialCta.tsx", "free-trial"],
-  ["app/library/page.tsx", "library"],
-  ["app/generate/page.tsx", "generate-alias"],
-  ["app/explore/page.tsx", "explore"],
-  ["app/modules/page.tsx", "modules"],
-  ["app/community/page.tsx", "community"],
+  ["components/HomeToolShelf.tsx", "home-tool-shelf", "homeToolShelf"],
+  ["components/HomeViralWall.tsx", "home-proof-wall", "homeProofWall"],
+  ["components/SuiteEntryStrip.tsx", "suite-entry", null],
+  ["components/HowItWorks.tsx", "how-it-works", null],
+  ["components/MobileGenerateBar.tsx", "mobile-bar", "mobileBar"],
+  ["components/SoftLaunchStrip.tsx", "soft-launch", null],
+  ["components/LandingSeoMesh.tsx", "seo-mesh", null],
+  ["components/ModulesSuiteCtas.tsx", "modules-photo-clip", null],
+  ["components/CommandPalette.tsx", null, null],
+  ["components/GenerateSuiteChrome.tsx", null, null],
+  ["components/Header.tsx", "header", "header"],
+  ["components/HfProductRail.tsx", "hf-product-rail", "hfProductRail"],
+  ["components/HfExploreHome.tsx", "hf-explore", null],
+  ["components/HeroVideoBanner.tsx", "hero-banner", null],
+  ["components/FreeTrialCta.tsx", "free-trial", null],
+  ["app/library/page.tsx", "library", null],
+  ["app/generate/page.tsx", "generate-alias", null],
+  ["app/explore/page.tsx", "explore", null],
+  ["app/modules/page.tsx", "modules", null],
+  ["app/community/page.tsx", "community", null],
 ];
 
-for (const [file, source] of generateSurfaces) {
+for (const [file, source, chromeKey] of generateSurfaces) {
   const src = read(file);
   assert.match(
     src,
@@ -111,14 +112,32 @@ for (const [file, source] of generateSurfaces) {
     );
     continue;
   }
-  assert.match(
-    src,
+  const lit = source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const literalOk = new RegExp(
+    `createGenerate360Href\\(\\s*["']${lit}["']`
+  ).test(src);
+  const chromeOk =
+    chromeKey &&
     new RegExp(
-      `createGenerate360Href\\(\\s*["']${source.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}["']`
-    ),
-    `${file} must tag source=${source}`
+      `createGenerate360Href\\(\\s*CHROME_GENERATE_SOURCE\\.${chromeKey}\\s*\\)`
+    ).test(src);
+  assert.ok(
+    literalOk || chromeOk,
+    `${file} must tag source=${source} (literal or CHROME_GENERATE_SOURCE.${chromeKey || "…"})`
   );
 }
+
+// Frozen chrome source map stays honest (AIT-122).
+assert.match(
+  jobIntents,
+  /export const CHROME_GENERATE_SOURCE\s*=\s*\{[\s\S]*header:\s*["']header["']/,
+  "CHROME_GENERATE_SOURCE.header must freeze to header"
+);
+assert.match(
+  jobIntents,
+  /mobileBar:\s*["']mobile-bar["']/,
+  "CHROME_GENERATE_SOURCE.mobileBar must freeze to mobile-bar"
+);
 
 // 3. No residual direct 360 createRemixHref in app/components
 const residual = [];

@@ -1,10 +1,16 @@
 /**
- * Guest → login → Create intent handoff (AIT-49 / AIT-90 / AIT-107).
+ * Guest → login → Create intent handoff (AIT-49 / AIT-90 / AIT-107 / AIT-122).
  *
  * Query `next=` is the primary carrier. sessionStorage is a same-browser backup
  * when the magic-link / OAuth callback drops or strips `next`. Soft-launch keeps
  * Moment as the default create door; 360/remix deep links stay as create query
  * shapes so source/effect survive auth.
+ *
+ * Chrome Generate doors (Header, MobileGenerateBar, Home secondary 360) honestly
+ * deep-link `/create?...` only — they do not open bare `/login`. Guest sign-in
+ * is forced on Create (`GuestMomentCreateGate` / CreateStudio) via
+ * `loginHrefForGuestCreate`, so frozen `source` / `effect` tags must survive
+ * that handoff. Never invent a second intent store.
  *
  * Pure module (no path-alias imports) so node --experimental-strip-types
  * regressions can import it without a bundler.
@@ -13,6 +19,23 @@
 /** Keep in lockstep with `MOMENT_CREATE_HREF` in softLaunch.ts. */
 export const GUEST_MOMENT_CREATE_HREF =
   "/create?mode=moment&effect=street-power-up" as const;
+
+/**
+ * Frozen chrome / home-secondary Generate `source` tags (AIT-122).
+ * Keep in lockstep with createGenerate360Href("…") call sites.
+ * Rename only with chrome-generate-guest-intent-regression + generate-360-cta-smoke.
+ */
+export const CHROME_GENERATE_SOURCE_TAGS = [
+  "header",
+  "mobile-bar",
+  "home-proof-wall",
+  "home-tool-shelf",
+  "home-browse",
+  "hf-product-rail",
+] as const;
+
+export type ChromeGenerateSourceTag =
+  (typeof CHROME_GENERATE_SOURCE_TAGS)[number];
 
 /** sessionStorage key — device-local only, never sent to the server. */
 export const GUEST_CREATE_INTENT_STORAGE_KEY = "pikbo_guest_create_intent_v1";
