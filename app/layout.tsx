@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { site } from "@/lib/site";
 import { AppShell } from "@/components/AppShell";
@@ -9,6 +9,14 @@ import { AppShell } from "@/components/AppShell";
  * Stack is system + generic display; premium webfonts can return later as local files.
  */
 /** TDH frozen for soft launch — see lib/site.ts + docs/growth/GEFEI_LAUNCH_DECISION_2026-07-24.md */
+
+/** AIT-71: viewport-fit=cover so env(safe-area-inset-*) resolves on notched phones. */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
