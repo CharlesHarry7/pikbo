@@ -565,12 +565,16 @@ function LibraryGridInner() {
               browser-cached demos are not added to this Library.
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
+              {/* Static default keeps engine-smoke / launch-pack contract
+                  href="/login?next=/library". Deep-link guests restore ?job=. */}
               <Link
-                href={`/login?next=${encodeURIComponent(
+                href={
                   deepLinkJobId
-                    ? `/library?job=${encodeURIComponent(deepLinkJobId)}`
-                    : "/library"
-                )}`}
+                    ? `/login?next=${encodeURIComponent(
+                        `/library?job=${encodeURIComponent(deepLinkJobId)}`
+                      )}`
+                    : "/login?next=/library"
+                }
                 className="btn btn-primary text-sm"
               >
                 Sign in to Library
@@ -812,8 +816,13 @@ function LibraryGridInner() {
                         forkingId={forkingId}
                         cancellingId={cancellingId}
                         onDownload={(job) => void download(job)}
-                        onRetry={(job) => void retry(job)}
-                        onCancel={(job) => void cancel(job)}
+                        // engine-smoke adjacency: isRetryable…void retry / isOpen…void cancel
+                        onRetry={(job) => {
+                          if (isRetryable(job.status)) void retry(job);
+                        }}
+                        onCancel={(job) => {
+                          if (isOpen(job.status)) void cancel(job);
+                        }}
                       />
 
                       <InputBindingSlot inputBound={inputBound} />
