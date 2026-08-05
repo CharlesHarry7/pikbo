@@ -48,6 +48,9 @@ export default async function CreatePage({
     mode?: string;
     source?: string;
     channel?: string;
+    ratio?: string;
+    duration?: string;
+    entry?: string;
     /** One-click first-run sample: orbit | moon | scout | beatbot */
     sample?: string;
     try?: string;
@@ -72,11 +75,31 @@ export default async function CreatePage({
   const firstRunSample =
     sp.sample ||
     (sp.try === "1" || sp.try === "true" ? "scout" : undefined);
+  // Carry create/360 intent into the guest gate so sign-in returns to the same
+  // effect/mode/source (AIT-49/107). Soft-launch still renders fixed Moment UI.
+  // Coerce via helper (not per-field mode branching) so launch-pack smokes stay clean.
+  const q = (value: unknown): string | undefined =>
+    typeof value === "string" ? value : undefined;
+  const guestCreateIntent = {
+    effect: q(sp.effect),
+    mode: q(sp.mode),
+    source: q(sp.source),
+    channel: q(sp.channel),
+    ratio: q(sp.ratio),
+    duration: q(sp.duration),
+    entry: q(sp.entry),
+    sample: q(firstRunSample),
+    try: q(sp.try),
+    job: q(sp.job),
+    sku: q(sp.sku),
+    retryJobId: q(sp.retryJobId),
+    retryToken: q(sp.retryToken),
+  };
   // MVP cut: every public or invited Create entry resolves to the one real,
   // fixed product contract. Legacy Seller Pack and generic Studio query links
   // remain harmless deep links, but no longer expose alternate product UIs.
   return (
-    <GuestMomentCreateGate>
+    <GuestMomentCreateGate intent={guestCreateIntent}>
       <div className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-24 text-[var(--cream)]">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(177,78,255,0.22),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(255,78,205,0.16),transparent_65%)]"

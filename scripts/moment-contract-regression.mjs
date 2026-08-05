@@ -83,13 +83,18 @@ assertNoMatch(
 );
 assertMatch(
   studio,
-  /const fixedMomentNextPath\s*=\s*[\s\S]{0,220}MOMENT_CREATE_HREF/,
-  "fixed Moment gate must derive its sign-in return path from the shared Moment href"
+  /const fixedMomentNextPath\s*=\s*buildGuestCreateNextPath\([\s\S]{0,220}mode:\s*["']moment["'][\s\S]{0,120}effect:\s*["']street-power-up["']/,
+  "fixed Moment gate must derive its sign-in return path via guestCreateIntent (Moment)"
 );
 assertMatch(
   studio,
-  /const privateMomentLoginHref\s*=\s*`\/login\?next=\$\{encodeURIComponent\([\s\S]{0,120}fixedMomentNextPath[\s\S]{0,40}\)\}`/,
-  "fixed Moment gate must preserve the exact Moment path through login"
+  /const privateMomentLoginHref\s*=\s*loginHrefForGuestCreate\([\s\S]{0,220}mode:\s*["']moment["'][\s\S]{0,120}effect:\s*["']street-power-up["']/,
+  "fixed Moment gate must preserve the exact Moment path through login via loginHrefForGuestCreate"
+);
+assertMatch(
+  studio,
+  /stashGuestCreateIntent\(fixedMomentNextPath\)/,
+  "fixed Moment sign-in must stash create intent as auth-callback backup"
 );
 assertMatch(
   studio,

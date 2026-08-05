@@ -90,6 +90,7 @@ jobs:
           npm run launch-pack-main-path-smoke
           npm run product-proof-smoke
           npm run guest-create-preview-regression
+          npm run guest-login-intent-regression
           npm run studio-open-lab-preview-regression
           npm run mobile-proof-regression
 

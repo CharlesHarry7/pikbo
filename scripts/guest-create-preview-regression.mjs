@@ -8,7 +8,7 @@ const read = (file) => readFileSync(join(root, file), "utf8");
 const createPage = read("app/create/page.tsx");
 const gate = read("components/GuestMomentCreateGate.tsx");
 
-assert.match(createPage, /<GuestMomentCreateGate>/);
+assert.match(createPage, /<GuestMomentCreateGate(?:\s[^>]*)?>/);
 assert.match(createPage, /<CreateStudio[\s\S]*initialEffect="street-power-up"[\s\S]*fixedMomentContract/);
 assert.match(createPage, /description:[\s\S]{0,180}cached Street Power-Up sample/);
 
