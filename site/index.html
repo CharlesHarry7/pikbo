@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pikbo — AI Toy Video Platform</title>
+<meta name="description" content="Pikbo brings designer toys to life with AI-powered video effects. Create, share, and discover stunning toy videos.">
+<link rel="stylesheet" href="css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo"><span>P</span>ikbo</a>
+  <ul class="nav-links">
+    <li><a href="effects.html">Effects</a></li>
+    <li><a href="community.html">Community</a></li>
+    <li><a href="explore.html">Explore</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <button class="mobile-toggle" onclick="toggleMobileNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <a href="#pricing" class="nav-cta">Get Started</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      AI Toy Video Platform
+    </div>
+    <h1>Bring <em>Designer Toys</em> to Life</h1>
+    <p>Create stunning AI-powered videos of your collectible figures. No editing skills needed.</p>
+    <div class="hero-actions">
+      <a href="effects.html" class="btn btn-primary">Try Effect Studio</a>
+      <a href="community.html" class="btn btn-secondary">Explore Community</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-frame">
+      <div class="hero-frame-content">
+        <div class="hero-frame-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <p style="font-size:0.85rem;color:var(--text3);">How Pikbo works</p>
+      </div>
+      <div class="float-chip">Labubu Dance</div>
+      <div class="float-chip">Dimoo Unbox</div>
+      <div class="float-chip">Skullpanda Glitch</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="effects">
+  <div class="section-header fade-up">
+    <div class="section-label">Effect Studio</div>
+    <h2>10+ AI Effects for Toys</h2>
+    <p>Purpose-built for collectible figures. Upload a photo, pick an effect, get a video in seconds.</p>
+  </div>
+  <div class="effects-grid">
+    <div class="effect-card fade-up">
+      <div class="effect-visual">
+        <div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-5"/></svg></div>
+        <span class="effect-badge">NEW</span>
+      </div>
+      <div class="effect-body">
+        <h3>Unboxing Reveal</h3>
+        <p>Cinematic unboxing with dramatic lighting and particle effects.</p>
+        <div class="effect-tags"><span class="tag tag-accent">New</span><span class="tag">Cinematic</span></div>
+      </div>
+    </div>
+    <div class="effect-card fade-up">
+      <div class="effect-visual">
+        <div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></div>
+        <span class="effect-badge">HOT</span>
+      </div>
+      <div class="effect-body">
+        <h3>Toy Dance</h3>
+        <p>Fluid dance moves synced to trending music.</p>
+        <div class="effect-tags"><span class="tag tag-hot">Hot</span><span class="tag">Motion</span></div>
+      </div>
+    </div>
+    <div class="effect-card fade-up">
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 3l2 4 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z"/></svg></div></div>
+      <div class="effect-body"><h3>Magic Sparkle</h3><p>Enchanting glow and shimmer effects.</p><div class="effect-tags"><span class="tag">Magical</span><span class="tag">Glow</span></div></div>
+    </div>
+    <div class="effect-card fade-up">
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div></div>
+      <div class="effect-body"><h3>Portal Arrival</h3><p>Your toy emerges from an interdimensional portal.</p><div class="effect-tags"><span class="tag">Sci-Fi</span><span class="tag">Epic</span></div></div>
+    </div>
+    <div class="effect-card fade-up">
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><path d="M8 14c1 1.5 3 2 4 0"/></svg></div></div>
+      <div class="effect-body"><h3>Art Style Transfer</h3><p>Transform into anime, oil painting, pop art styles.</p><div class="effect-tags"><span class="tag">Art</span><span class="tag">Style</span></div></div>
+    </div>
+    <div class="effect-card fade-up">
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="6" y="8" width="5" height="3"/><rect x="13" y="8" width="5" height="3"/><rect x="6" y="13" width="5" height="3"/><rect x="13" y="13" width="5" height="3"/></svg></div></div>
+      <div class="effect-body"><h3>Stop Motion</h3><p>Classic frame-by-frame with clay textures.</p><div class="effect-tags"><span class="tag">Classic</span><span class="tag">Nostalgia</span></div></div>
+    </div>
+    <div class="effect-card fade-up">
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M3 12c4-6 14-6 18 0"/><path d="M5 9c3-4 11-4 14 0"/></svg></div></div>
+      <div class="effect-body"><h3>Water Reflection</h3><p>Dreamy water surface with ripples and reflections.</p><div class="effect-tags"><span class="tag">Nature</span><span class="tag">Calm</span></div></div>
+    </div>
+    <div class="effect-card fade-up">
+      <div class="effect-visual"><div class="effect-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></div></div>
+      <div class="effect-body"><h3>Glitch Wave</h3><p>Cyberpunk glitch with neon colors and scanlines.</p><div class="effect-tags"><span class="tag">Cyberpunk</span><span class="tag">Neon</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="community-preview">
+  <div class="section-header fade-up">
+    <div class="section-label">Community</div>
+    <h2>See What Others Create</h2>
+    <p>Toy collectors worldwide use Pikbo to showcase their collections.</p>
+  </div>
+  <div class="community-grid">
+    <div class="community-card fade-up">
+      <div class="community-video">
+        <div class="community-video-icon-large">🧸</div>
+        <div class="community-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+      </div>
+      <div class="community-body">
+        <div class="community-author">
+          <div class="avatar avatar-p1">TC</div>
+          <span class="community-author-name">ToyCollector</span>
+          <span class="community-effect-badge">Unboxing</span>
+        </div>
+        <p style="font-size:0.8rem;color:var(--text3);">Labubu Exciting Macaron unboxing</p>
+        <div class="community-stats"><span>2.4K views</span><span>128 likes</span></div>
+      </div>
+    </div>
+    <div class="community-card fade-up">
+      <div class="community-video">
+        <div class="community-video-icon-large">🎭</div>
+        <div class="community-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+      </div>
+      <div class="community-body">
+        <div class="community-author">
+          <div class="avatar avatar-p2">DD</div>
+          <span class="community-author-name">DimooDaily</span>
+          <span class="community-effect-badge">Dance</span>
+        </div>
+        <p style="font-size:0.8rem;color:var(--text3);">Dimoo Social University dance party</p>
+        <div class="community-stats"><span>5.1K views</span><span>342 likes</span></div>
+      </div>
+    </div>
+    <div class="community-card fade-up">
+      <div class="community-video">
+        <div class="community-video-icon-large">💀</div>
+        <div class="community-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+      </div>
+      <div class="community-body">
+        <div class="community-author">
+          <div class="avatar avatar-p3">SP</div>
+          <span class="community-author-name">SkullpandaFan</span>
+          <span class="community-effect-badge">Glitch</span>
+        </div>
+        <p style="font-size:0.8rem;color:var(--text3);">Skullpanda Warmth — glitch remix</p>
+        <div class="community-stats"><span>8.7K views</span><span>601 likes</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:3rem;">
+    <a href="community.html" class="btn btn-secondary">View Full Community</a>
+  </div>
+</section>
+
+<section class="section" id="pricing">
+  <div class="section-header fade-up">
+    <div class="section-label">Pricing</div>
+    <h2>Start Creating Today</h2>
+    <p>One plan, everything included. No hidden fees.</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="pricing-card fade-up">
+      <div class="pricing-name">Free</div>
+      <div class="pricing-price">$0</div>
+      <div class="pricing-period">forever</div>
+      <ul class="pricing-features">
+        <li>3 directed Moments / month</li>
+        <li>5 basic effects</li>
+        <li>720p export</li>
+        <li>Community access</li>
+      </ul>
+      <a href="#" class="btn btn-secondary">Start Free</a>
+    </div>
+    <div class="pricing-card featured fade-up">
+      <div class="pricing-badge">Most Popular</div>
+      <div class="pricing-name">Founding Studio</div>
+      <div class="pricing-price">$49</div>
+      <div class="pricing-period">per month</div>
+      <ul class="pricing-features">
+        <li>9 directed Moments / month</li>
+        <li>All 10+ premium effects</li>
+        <li>4K video export</li>
+        <li>Priority processing</li>
+        <li>Commercial license</li>
+        <li>Early access to new effects</li>
+      </ul>
+      <a href="#" class="btn btn-primary">Get Started</a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h4>Product</h4>
+      <a href="effects.html">Effects</a>
+      <a href="community.html">Community</a>
+      <a href="explore.html">Explore</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="#">About</a>
+      <a href="#">Blog</a>
+      <a href="#">Careers</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Cookies</a>
+    </div>
+    <div class="footer-col">
+      <h4>Social</h4>
+      <a href="#">Twitter</a>
+      <a href="#">Instagram</a>
+      <a href="#">Discord</a>
+      <a href="#">TikTok</a>
+    </div>
+  </div>
+  <div class="footer-bottom">&copy; 2026 Pikbo. All rights reserved.</div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

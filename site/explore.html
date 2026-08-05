@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore — Pikbo</title>
+<meta name="description" content="Discover trending effects, top creators, and popular toys on Pikbo.">
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo"><span>P</span>ikbo</a>
+  <ul class="nav-links">
+    <li><a href="effects.html">Effects</a></li>
+    <li><a href="community.html">Community</a></li>
+    <li><a href="explore.html" style="color:var(--text)">Explore</a></li>
+    <li><a href="index.html#pricing">Pricing</a></li>
+  </ul>
+  <button class="mobile-toggle" onclick="toggleMobileNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <a href="index.html#pricing" class="nav-cta">Get Started</a>
+</nav>
+
+<section class="page-hero">
+  <h1><em style="font-style:normal;background:linear-gradient(135deg,var(--accent),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Explore</em> Pikbo</h1>
+  <p>Discover trending effects, top creators, and the hottest toys in the community.</p>
+</section>
+
+<section class="section" style="padding-top:2rem;">
+  <div class="explore-tabs fade-up">
+    <button class="explore-tab active" onclick="switchTab(this,'trending')">Trending</button>
+    <button class="explore-tab" onclick="switchTab(this,'creators')">Top Creators</button>
+    <button class="explore-tab" onclick="switchTab(this,'toys')">Popular Toys</button>
+    <button class="explore-tab" onclick="switchTab(this,'effects-tab')">Effect Rankings</button>
+  </div>
+
+  <!-- Trending Videos -->
+  <div class="tab-content" id="tab-trending">
+    <div class="trending-grid">
+      <div class="trending-card fade-up">
+        <span class="trending-emoji">🧸</span>
+        <div class="trending-overlay"><h3>Labubu Macaron Unbox</h3><p>12.4K views · ToyCollector</p></div>
+      </div>
+      <div class="trending-card fade-up">
+        <span class="trending-emoji">💀</span>
+        <div class="trending-overlay"><h3>Skullpanda Glitch Mix</h3><p>15.2K views · SkullpandaHQ</p></div>
+      </div>
+      <div class="trending-card fade-up">
+        <span class="trending-emoji">🎭</span>
+        <div class="trending-overlay"><h3>Dimoo Dance Challenge</h3><p>8.9K views · DimooSpace</p></div>
+      </div>
+      <div class="trending-card fade-up">
+        <span class="trending-emoji">😢</span>
+        <div class="trending-overlay"><h3>Crybaby Sunset Vibe</h3><p>4.3K views · CrybabyClub</p></div>
+      </div>
+      <div class="trending-card fade-up">
+        <span class="trending-emoji">👶</span>
+        <div class="trending-overlay"><h3>Hirono Anime Style</h3><p>7.1K views · HironoLife</p></div>
+      </div>
+      <div class="trending-card fade-up">
+        <span class="trending-emoji">🐱</span>
+        <div class="trending-overlay"><h3>Molly Portal Drop</h3><p>6.7K views · MollyCat</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Creators -->
+  <div class="tab-content" id="tab-creators" style="display:none;">
+    <div style="max-width:640px;margin:0 auto;">
+      <div class="creator-card fade-up">
+        <div class="creator-avatar-lg avatar-p3">SP</div>
+        <div class="creator-info"><h3>SkullpandaHQ</h3><p>Cyberpunk & glitch specialist · 45 creations</p></div>
+        <div class="creator-stat"><div class="val">15.2K</div><div class="lbl">top video</div></div>
+      </div>
+      <div class="creator-card fade-up">
+        <div class="creator-avatar-lg avatar-p1">LL</div>
+        <div class="creator-info"><h3>LabubuLove</h3><p>Labubu collector & unboxing expert · 38 creations</p></div>
+        <div class="creator-stat"><div class="val">12.4K</div><div class="lbl">top video</div></div>
+      </div>
+      <div class="creator-card fade-up">
+        <div class="creator-avatar-lg avatar-p2">DS</div>
+        <div class="creator-info"><h3>DimooSpace</h3><p>Dance effect pro · 31 creations</p></div>
+        <div class="creator-stat"><div class="val">8.9K</div><div class="lbl">top video</div></div>
+      </div>
+      <div class="creator-card fade-up">
+        <div class="creator-avatar-lg avatar-p1">HR</div>
+        <div class="creator-info"><h3>HironoLife</h3><p>Art style transfer master · 27 creations</p></div>
+        <div class="creator-stat"><div class="val">7.1K</div><div class="lbl">top video</div></div>
+      </div>
+      <div class="creator-card fade-up">
+        <div class="creator-avatar-lg avatar-p4">MC</div>
+        <div class="creator-info"><h3>MollyCat</h3><p>Portal effect expert · 22 creations</p></div>
+        <div class="creator-stat"><div class="val">6.7K</div><div class="lbl">top video</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popular Toys -->
+  <div class="tab-content" id="tab-toys" style="display:none;">
+    <div class="toy-grid">
+      <div class="toy-card fade-up"><div class="toy-card-emoji">🧸</div><h3>Labubu</h3><p>1,240 videos</p></div>
+      <div class="toy-card fade-up"><div class="toy-card-emoji">💀</div><h3>Skullpanda</h3><p>892 videos</p></div>
+      <div class="toy-card fade-up"><div class="toy-card-emoji">🎭</div><h3>Dimoo</h3><p>756 videos</p></div>
+      <div class="toy-card fade-up"><div class="toy-card-emoji">🐱</div><h3>Molly</h3><p>623 videos</p></div>
+      <div class="toy-card fade-up"><div class="toy-card-emoji">👶</div><h3>Hirono</h3><p>489 videos</p></div>
+      <div class="toy-card fade-up"><div class="toy-card-emoji">😢</div><h3>Crybaby</h3><p>412 videos</p></div>
+      <div class="toy-card fade-up"><div class="toy-card-emoji">🐰</div><h3>Pucky</h3><p>378 videos</p></div>
+      <div class="toy-card fade-up"><div class="toy-card-emoji">🦊</div><h3>Zsiga</h3><p>245 videos</p></div>
+      <div class="toy-card fade-up"><div class="toy-card-emoji">🐻</div><h3>Kubo</h3><p>198 videos</p></div>
+      <div class="toy-card fade-up"><div class="toy-card-emoji">🦄</div><h3>Sweet Bean</h3><p>156 videos</p></div>
+    </div>
+  </div>
+
+  <!-- Effect Rankings -->
+  <div class="tab-content" id="tab-effects-tab" style="display:none;">
+    <div style="max-width:640px;margin:0 auto;">
+      <div class="creator-card fade-up">
+        <span style="font-size:1.75rem;margin-right:0.25rem;">💃</span>
+        <div class="creator-info"><h3>Toy Dance</h3><p>Most viral effect · 3,200+ uses</p></div>
+        <div class="creator-stat"><div class="val">🔥 #1</div></div>
+      </div>
+      <div class="creator-card fade-up">
+        <span style="font-size:1.75rem;margin-right:0.25rem;">🎬</span>
+        <div class="creator-info"><h3>Unboxing Reveal</h3><p>2,800+ uses</p></div>
+        <div class="creator-stat"><div class="val">#2</div></div>
+      </div>
+      <div class="creator-card fade-up">
+        <span style="font-size:1.75rem;margin-right:0.25rem;">👾</span>
+        <div class="creator-info"><h3>Glitch Wave</h3><p>2,400+ uses</p></div>
+        <div class="creator-stat"><div class="val">#3</div></div>
+      </div>
+      <div class="creator-card fade-up">
+        <span style="font-size:1.75rem;margin-right:0.25rem;">✨</span>
+        <div class="creator-info"><h3>Magic Sparkle</h3><p>2,100+ uses</p></div>
+        <div class="creator-stat"><div class="val">#4</div></div>
+      </div>
+      <div class="creator-card fade-up">
+        <span style="font-size:1.75rem;margin-right:0.25rem;">🌀</span>
+        <div class="creator-info"><h3>Portal Arrival</h3><p>1,800+ uses</p></div>
+        <div class="creator-stat"><div class="val">#5</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-bottom">&copy; 2026 Pikbo. All rights reserved.</div>
+</footer>
+
+<script>
+function switchTab(btn, tabId) {
+  document.querySelectorAll('.explore-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  document.getElementById('tab-' + tabId).style.display = 'block';
+}
+</script>
+<script src="js/main.js"></script>
+</body>
+</html>

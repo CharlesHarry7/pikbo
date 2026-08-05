@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
 import { HomeTrustFooter } from "@/components/HomeTrustFooter";
+import { HomeEffectsGrid } from "@/components/HomeSections";
+import { HomeCommunityHighlights } from "@/components/HomeSections";
+import { HomePricing } from "@/components/HomeSections";
 import { JsonLd } from "@/components/JsonLd";
 import {
   organizationJsonLd,
@@ -9,7 +12,7 @@ import {
 import { site } from "@/lib/site";
 
 const HOME_DESCRIPTION =
-  "Preview one Street Power-Up Moment for designer toys. Pikbo's public sample is cached and costs 0 credits; invited private beta sellers can submit one owned toy photo for one private result.";
+  "Pikbo is the AI video platform for designer toys. Turn your collectible figures into stunning videos with 10+ toy-specific effects. Labubu, Dimoo, Skullpanda — bring them to life.";
 
 export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
@@ -52,6 +55,9 @@ export default function Home() {
       />
 
       <HomeCinemaHero />
+      <HomeEffectsGrid />
+      <HomeCommunityHighlights />
+      <HomePricing />
       <HomeTrustFooter />
     </>
   );
