@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { TOOLS } from "@/lib/tools";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
 import { itemListJsonLd } from "@/lib/jsonLd";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 /** Tools hub Open Generate — listing spin remix (ratio/duration/channel). */
-const TOOLS_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const TOOLS_GENERATE_HREF = createWorkbenchHref();
 
 export const metadata: Metadata = {
   title: "Toy Video Tools",

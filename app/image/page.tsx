@@ -21,6 +21,7 @@ import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { loadToyIdentity } from "@/lib/toyIdentity";
 import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 
 /** Default video recipe when handing a still into Generate (listing spin). */
 const IMAGE_HANDOFF_EFFECT = "360-spin-showcase";
@@ -534,7 +535,7 @@ export default function ImageStudioPage() {
               Optional packaging mock before video — not the product. Free plan
               keeps the Mini trial for{" "}
               <Link
-                href={createRemixHref("360-spin-showcase")}
+                href={createWorkbenchHref()}
                 className="text-[var(--mint)] underline-offset-2 hover:underline"
                 data-image-create-video="remix"
               >

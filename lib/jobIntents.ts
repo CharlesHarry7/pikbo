@@ -6,7 +6,16 @@
  * Etsy/TikTok seller workflows, empty-state primary CTA research.
  */
 
-import { createRemixHref } from "@/lib/remixIntent";
+import {
+  createRemixHref,
+  type RemixHrefOpts,
+} from "@/lib/remixIntent";
+
+/**
+ * Canonical listing-spin recipe for every product-shell "Generate" door.
+ * Do not hardcode this slug in CTAs — use createWorkbenchHref / createRemixHref.
+ */
+export const DEFAULT_GENERATE_EFFECT = "360-spin-showcase" as const;
 
 export type JobIntentId =
   | "etsy-listing"
@@ -84,7 +93,7 @@ export function getJobIntent(id: string): JobIntent | undefined {
 export function createJobRemixHref(jobId: JobIntentId | string): string {
   const intent = getJobIntent(jobId);
   if (!intent) {
-    return createRemixHref("360-spin-showcase");
+    return createWorkbenchHref();
   }
   if (intent.href) return intent.href;
   const base = createRemixHref(intent.effect, undefined, null, {
@@ -105,12 +114,20 @@ export function createLabSampleTryHref(sampleId = "scout"): string {
         : sampleId === "moon"
           ? "moon-reveal"
           : undefined;
-  const base = createRemixHref("360-spin-showcase", source);
+  const base = createWorkbenchHref(source);
   const joiner = base.includes("?") ? "&" : "?";
   return `${base}${joiner}try=1&sample=${encodeURIComponent(sampleId)}`;
 }
 
-/** Workbench Generate door with listing-spin remix (not bare /create). */
-export function createWorkbenchHref(): string {
-  return createRemixHref("360-spin-showcase");
+/**
+ * Single Generate→360 door helper (AIT-75/88/100).
+ * Always carries the full remix contract (effect/ratio/duration/channel).
+ * Optional sourceId / sku / opts match createRemixHref for provenance carry.
+ */
+export function createWorkbenchHref(
+  sourceId?: string,
+  sku?: string | null,
+  opts?: RemixHrefOpts
+): string {
+  return createRemixHref(DEFAULT_GENERATE_EFFECT, sourceId, sku, opts);
 }

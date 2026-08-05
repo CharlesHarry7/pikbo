@@ -1,6 +1,7 @@
 "use client";
 
 import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
@@ -71,7 +72,7 @@ export function HeroVideoBanner() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href={createRemixHref("360-spin-showcase")}
+              href={createWorkbenchHref()}
               className="btn btn-primary px-6 py-3 text-sm"
               data-hero-try-photo="remix"
             >

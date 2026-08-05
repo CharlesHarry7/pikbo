@@ -10,11 +10,11 @@ import {
   type MeResponse,
 } from "@/lib/meClient";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 
-const PROFILE_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const PROFILE_GENERATE_HREF = createWorkbenchHref();
 
 type DurableClaim = {
   signedIn: boolean;

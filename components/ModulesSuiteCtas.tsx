@@ -9,12 +9,14 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
-import { createLabSampleTryHref } from "@/lib/jobIntents";
-import { createRemixHref } from "@/lib/remixIntent";
+import {
+  createLabSampleTryHref,
+  createWorkbenchHref,
+} from "@/lib/jobIntents";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
-/** Default listing spin when opening Generate from Modules (remix contract). */
-const MODULES_PHOTO_CLIP_EFFECT = "360-spin-showcase";
+/** Photo → Clip Generate door — single 360 remix helper. */
+const MODULES_PHOTO_CLIP_HREF = createWorkbenchHref();
 /** Lab sample try — remix + try/sample (not bare /create?try=1). */
 const MODULES_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
@@ -84,7 +86,7 @@ export function ModulesSuiteCtas() {
         {primaryLabel}
       </Link>
       <Link
-        href={createRemixHref(MODULES_PHOTO_CLIP_EFFECT)}
+        href={MODULES_PHOTO_CLIP_HREF}
         className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"
         title="One owned toy photo → short listing or social clip"
         data-modules-path="photo-clip"

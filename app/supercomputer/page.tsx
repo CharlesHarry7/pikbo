@@ -4,11 +4,11 @@ import { redirect } from "next/navigation";
 import { BatchStudio } from "@/components/BatchStudio";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
 
 /** Supercomputer Generate doors — listing spin remix (ratio/duration/channel). */
-const BATCH_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const BATCH_GENERATE_HREF = createWorkbenchHref();
 
 export async function generateMetadata({
   searchParams,

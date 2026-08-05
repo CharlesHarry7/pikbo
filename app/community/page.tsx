@@ -7,6 +7,7 @@ import {
   suiteRail,
 } from "@/lib/videoFeed";
 import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { VideoTile } from "@/components/VideoTile";
 import { VideoRail } from "@/components/VideoRail";
@@ -122,7 +123,7 @@ export default async function CommunityPage() {
           >
             <FreeTrialCta path="/community" variant="mint" />
             <Link
-              href={createRemixHref("360-spin-showcase")}
+              href={createWorkbenchHref()}
               className="btn btn-ghost !px-3 !py-2 text-xs"
               data-community-generate="remix"
             >
@@ -233,7 +234,7 @@ export default async function CommunityPage() {
                       href={
                         p.effectSlug
                           ? createRemixHref(p.effectSlug)
-                          : createRemixHref("360-spin-showcase")
+                          : createWorkbenchHref()
                       }
                       className="text-[11px] font-bold text-[var(--mint)]"
                     >
@@ -280,7 +281,7 @@ export default async function CommunityPage() {
                   Sign in
                 </Link>
                 <Link
-                  href={createRemixHref("360-spin-showcase")}
+                  href={createWorkbenchHref()}
                   className="btn btn-ghost !px-3 !py-2 text-xs"
                   data-community-empty-generate="remix"
                 >

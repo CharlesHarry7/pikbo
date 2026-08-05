@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
-import { createLabSampleTryHref } from "@/lib/jobIntents";
+import {
+  createLabSampleTryHref,
+  createWorkbenchHref,
+} from "@/lib/jobIntents";
 import {
   canLiveGenerate,
   fetchMe,
@@ -15,6 +18,8 @@ import { SESSION_EVENT } from "@/lib/sessionEvents";
 
 /** Cached sample try path — remix + try=1&sample=scout. */
 const FREE_TRIAL_TRY_HREF = createLabSampleTryHref("scout");
+/** Live free-trial Generate door — single 360 remix helper (not bare street-power). */
+const FREE_TRIAL_GENERATE_HREF = createWorkbenchHref("free-trial");
 
 type Variant = "primary" | "ghost" | "mint";
 
@@ -89,6 +94,7 @@ export function FreeTrialCta({
     path.includes("product-rail") ||
     path.includes("seedance");
   // Prefer the cached sample when public generation is blocked.
+  // Live home path uses createWorkbenchHref(360) — Generate CTAs share one helper.
   const href =
     trialDone && !demo && freeLiveOpen
       ? "/pricing"
@@ -97,7 +103,7 @@ export function FreeTrialCta({
         : demo || !freeLiveOpen
           ? FREE_TRIAL_TRY_HREF
           : onHome
-            ? "/create?effect=street-power-up&source=free-trial"
+            ? FREE_TRIAL_GENERATE_HREF
             : FREE_TRIAL_TRY_HREF;
   const label =
     trialDone && !demo && freeLiveOpen

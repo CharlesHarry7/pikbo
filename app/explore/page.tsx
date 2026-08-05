@@ -7,12 +7,12 @@ import {
   listShowcaseProjects,
   type ShowcaseCategory,
 } from "@/lib/showcaseProjects";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 /** Explore Generate doors — listing spin remix (ratio/duration/channel). */
-const EXPLORE_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const EXPLORE_GENERATE_HREF = createWorkbenchHref();
 
 export const metadata: Metadata = {
   title: "Explore PIKBO Lab Toy Video Prototypes",

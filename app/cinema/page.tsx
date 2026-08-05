@@ -7,11 +7,12 @@ import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { PRESETS } from "@/lib/presets";
 import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 import { viralName } from "@/lib/viralNames";
 import { loadToyIdentity } from "@/lib/toyIdentity";
 
 /** Cinema Generate door — listing spin remix (ratio/duration/channel). */
-const CINEMA_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const CINEMA_GENERATE_HREF = createWorkbenchHref();
 
 const LENSES = ["24mm", "35mm", "50mm", "85mm", "100mm macro"] as const;
 const MOVES = [

@@ -1,6 +1,7 @@
 "use client";
 
 import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 import Link from "next/link";
 import { useState } from "react";
 import type { DemoVideo } from "@/lib/demoVideos";
@@ -104,7 +105,7 @@ export function HfExploreHome({
       <div className="min-h-screen bg-black px-4 py-20 text-center text-white">
         <p className="text-white/50">No cached Lab prototypes yet.</p>
         <Link
-          href={createRemixHref("360-spin-showcase")}
+          href={createWorkbenchHref()}
           className="mt-4 inline-block text-[#c8ff3d]"
           data-hf-empty-generate="remix"
         >
@@ -419,7 +420,7 @@ export function HfExploreHome({
               </h2>
             </div>
             <Link
-              href={createRemixHref("360-spin-showcase")}
+              href={createWorkbenchHref()}
               className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
               data-hf-flow-generate="remix"
             >

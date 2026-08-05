@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 
 /**
  * Alias used by big AI video apps.
@@ -21,5 +21,5 @@ export default async function GenerateAliasPage({
   if (s) {
     redirect(`/create?${s}`);
   }
-  redirect(createRemixHref("360-spin-showcase"));
+  redirect(createWorkbenchHref());
 }

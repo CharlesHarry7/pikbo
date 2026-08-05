@@ -12,6 +12,7 @@
     "link-check": "bash scripts/link-check.sh",
     "g6-api-smoke": "node scripts/g6-api-smoke.mjs",
     "engine-smoke": "node scripts/engine-smoke.mjs",
+    "generate-360-href-audit-smoke": "node scripts/generate-360-href-audit-smoke.mjs",
     "product-proof-smoke": "node scripts/product-proof-smoke.mjs",
     "mobile-proof-regression": "node scripts/mobile-proof-regression.mjs",
     "capability-matrix": "node --experimental-strip-types scripts/capability-matrix-regression.mjs",

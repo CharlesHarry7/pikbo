@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 
 /** Sticky mobile CTA when not already on Generate / Seller Pack */
-const MOBILE_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const MOBILE_GENERATE_HREF = createWorkbenchHref();
 
 export function MobileGenerateBar() {
   const path = usePathname() || "/";

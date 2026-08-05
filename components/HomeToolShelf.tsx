@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 
-const SHELF_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const SHELF_GENERATE_HREF = createWorkbenchHref();
 
 /**
  * Suite chips under home — product doors first (Generate / Modules / Pack).

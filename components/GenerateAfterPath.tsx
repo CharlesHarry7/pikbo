@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { JobIntentId } from "@/lib/jobIntents";
-import { getJobIntent } from "@/lib/jobIntents";
+import { createWorkbenchHref, getJobIntent } from "@/lib/jobIntents";
 import { loadToyIdentity } from "@/lib/toyIdentity";
 import {
   createRemixHref,
@@ -103,9 +103,8 @@ export function GenerateAfterPath({
           createRemixHref(carry.effect, undefined, carry.sku, remixOpts),
           { job: carry.job }
         )
-      : withQuery("/create", {
+      : withQuery(createWorkbenchHref(undefined, carry.sku), {
           job: carry.job,
-          sku: carry.sku,
         });
   const nextSkuHref = intent?.href
     ? withQuery(intent.href, { sku: carry.sku, try: "1" })
@@ -114,9 +113,8 @@ export function GenerateAfterPath({
           createRemixHref(carry.effect, undefined, carry.sku, remixOpts),
           { job: carry.job, try: "1" }
         )
-      : withQuery("/create", {
+      : withQuery(createWorkbenchHref(undefined, carry.sku), {
           job: carry.job,
-          sku: carry.sku,
           try: "1",
         });
   const nextMomentHref = withQuery("/create", {

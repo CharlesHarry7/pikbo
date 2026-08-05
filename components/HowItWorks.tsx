@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 
-/** Default listing recipe when leaving How it works → Generate. */
-const HOW_IT_WORKS_GENERATE_EFFECT = "360-spin-showcase";
+/** Default listing-spin Generate door (single helper). */
+const HOW_IT_WORKS_GENERATE_HREF = createWorkbenchHref();
 
 const STEPS = [
   {
@@ -64,7 +64,7 @@ export function HowItWorks() {
             labelTry="Try free · Mini 5s"
           />
           <Link
-            href={createRemixHref(HOW_IT_WORKS_GENERATE_EFFECT)}
+            href={HOW_IT_WORKS_GENERATE_HREF}
             className="btn btn-ghost text-sm"
             data-how-it-works="generate-remix"
           >

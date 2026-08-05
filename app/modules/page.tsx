@@ -12,9 +12,9 @@ import {
 } from "@/lib/workflows";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 
-const MODULES_PATH_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const MODULES_PATH_GENERATE_HREF = createWorkbenchHref();
 
 export const metadata: Metadata = {
   title: "Modules · Toy workflow blocks",

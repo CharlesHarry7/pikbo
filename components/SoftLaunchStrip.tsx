@@ -9,12 +9,14 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
-import { createLabSampleTryHref } from "@/lib/jobIntents";
-import { createRemixHref } from "@/lib/remixIntent";
+import {
+  createLabSampleTryHref,
+  createWorkbenchHref,
+} from "@/lib/jobIntents";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
-/** Default listing recipe when opening full studio from the soft-launch strip. */
-const SOFT_LAUNCH_GENERATE_EFFECT = "360-spin-showcase";
+/** Live Generate door — single 360 remix helper (ratio/duration/channel). */
+const SOFT_LAUNCH_GENERATE_HREF = createWorkbenchHref("soft-launch");
 /** Demo Lab sample — remix + try/sample (not bare /create?try=1). */
 const SOFT_LAUNCH_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
@@ -58,12 +60,13 @@ export function SoftLaunchStrip() {
         ? `${freeLiveModelLabel} · ${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · refunds when confirmed`
         : "Live access is not confirmed · continue with cached Lab prototypes";
 
-  // Keep every public conversion on one preset-first Moment.
+  // Generate CTAs use createWorkbenchHref(360) remix contract (AIT-75/88/100).
+  // Moment remains a secondary product door elsewhere; live Generate is listing spin.
   const primaryHref = trialDone
     ? "/pricing"
     : demo
       ? SOFT_LAUNCH_LAB_SAMPLE_HREF
-      : "/create?effect=street-power-up&source=soft-launch";
+      : SOFT_LAUNCH_GENERATE_HREF;
   const primaryLabel = trialDone
     ? "Compare plans"
     : demo
@@ -104,13 +107,17 @@ export function SoftLaunchStrip() {
             }
             className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[12px] font-black text-black shadow-[0_0_20px_rgba(200,255,61,0.25)]"
             data-soft-launch-try={
-              trialDone ? "pricing" : demo ? "lab-sample-remix" : "single-moment"
+              trialDone
+                ? "pricing"
+                : demo
+                  ? "lab-sample-remix"
+                  : "generate-remix"
             }
           >
             {primaryLabel}
           </Link>
           <Link
-            href={createRemixHref(SOFT_LAUNCH_GENERATE_EFFECT)}
+            href={SOFT_LAUNCH_GENERATE_HREF}
             onClick={() =>
               track({
                 event: "landing_view",

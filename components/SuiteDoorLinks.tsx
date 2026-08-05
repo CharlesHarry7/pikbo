@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
+import { createWorkbenchHref } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
 
 /**
  * Compact suite doors for SEO landings (/for, /tools, /toys, guides).
  * Always real deep links — never fake multi-model.
- * Recipe doors use createRemixHref (ratio/duration/channel carry).
+ * Recipe doors use createRemixHref; default Generate uses createWorkbenchHref(360).
  */
 export function SuiteDoorLinks({
   effectSlug,
@@ -15,8 +16,10 @@ export function SuiteDoorLinks({
   effectSlug?: string;
   className?: string;
 }) {
-  // Default listing spin when no recipe — remix contract (ratio/duration/channel).
-  const generateHref = createRemixHref(effectSlug || "360-spin-showcase");
+  // Default listing spin when no recipe — single Generate→360 helper.
+  const generateHref = effectSlug
+    ? createRemixHref(effectSlug)
+    : createWorkbenchHref();
 
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
