@@ -1557,19 +1557,27 @@ export function CreateStudio({
   const busy = status === "generating" || status === "uploading";
   const canGenerate =
     !busy && mode === "i2v" && Boolean(image) && ownsRights;
+  // AIT-124: fixed Moment sticky/desktop primary stays result-first (drop clip),
+  // not pure "Generate · Street Power-Up" feature speak.
   const primaryLabel = busy
-    ? t("create.generating")
+    ? fixedMomentContract
+      ? "Creating your drop clip…"
+      : t("create.generating")
     : !image
-      ? t("create.addPhotoFirst")
+      ? fixedMomentContract
+        ? "Upload owned photo for your drop clip"
+        : t("create.addPhotoFirst")
       : !ownsRights
         ? t("create.confirmOwnership")
         : demoMode
           ? t("create.genCached")
           : !canAfford || trialDone
             ? t("create.needsCredits", { n: CREDITS_PER_VIDEO })
-            : isFree
-              ? t("create.genMini", { n: CREDITS_PER_VIDEO })
-              : t("create.genPaid", { n: CREDITS_PER_VIDEO });
+            : fixedMomentContract
+              ? `Create my drop clip · ${CREDITS_PER_VIDEO} credits`
+              : isFree
+                ? t("create.genMini", { n: CREDITS_PER_VIDEO })
+                : t("create.genPaid", { n: CREDITS_PER_VIDEO });
 
   // Path clarity for mobile: 1 photo → 2 recipe → 3 run → 4 result
   const pathStep: 1 | 2 | 3 | 4 =
@@ -1884,7 +1892,10 @@ export function CreateStudio({
                 )
               ) : fixedMomentContract ? (
                 privateUploadEnabled ? (
-                  <>Your owned photo · 9:16 · 5s · 720p · 10 credits</>
+                  <>
+                    Owned photo → private drop clip · 9:16 · 5s · 720p · 10
+                    credits
+                  </>
                 ) : (
                   <>Sign in before any product photo is accepted or processed</>
                 )
@@ -2365,15 +2376,21 @@ export function CreateStudio({
           {/* Moment validation has one measured outcome; the general studio keeps
               its job rail for later exploration. */}
           {fixedMomentContract ? (
-            <div className="rounded-xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] px-3 py-2.5">
+            <div
+              className="rounded-xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] px-3 py-2.5"
+              data-fixed-moment-contract-lead="result-first"
+            >
               <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]/80">
-                Fixed validation format
+                Owned photo → private drop clip
               </p>
               <p className="mt-1 text-sm font-bold text-white">
-                Street Power-Up · vertical drop-day launch moment
+                Your list, post, or drop clip
               </p>
               <p className="mt-1 text-[11px] leading-relaxed text-white/55">
-                One owned toy photo · Fast · 9:16 · 5s · 720p ·{" "}
+                <span className="font-semibold text-[var(--mint)]">
+                  Street Power-Up
+                </span>{" "}
+                direction · Fast · 9:16 · 5s · 720p ·{" "}
                 <span className="font-semibold text-[var(--mint)]">
                   10 credits on completion
                 </span>
@@ -3644,12 +3661,18 @@ export function CreateStudio({
                   <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.06] text-xl text-[var(--mint)]">
                     ▶
                   </span>
-                  <h3 className="mt-4 text-xl font-black tracking-tight text-white">
-                    Your result appears here.
+                  <h3
+                    className="mt-4 text-xl font-black tracking-tight text-white"
+                    data-fixed-moment-stage-lead="result-first"
+                  >
+                    Your drop clip appears here.
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-white/50">
-                    Upload one toy photo you own. Pikbo creates one private
-                    Street Power-Up video and saves it to Library.
+                    Upload one owned toy photo. Pikbo creates one private list,
+                    post, or drop clip and saves it to Library.
+                  </p>
+                  <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">
+                    Street Power-Up · fixed direction
                   </p>
                   {!privateUploadEnabled ? (
                     <Link
@@ -3657,7 +3680,7 @@ export function CreateStudio({
                       data-fixed-moment-sign-in
                       className="btn btn-primary mt-5 inline-flex px-6 py-3 text-sm font-black"
                     >
-                      Sign in to create
+                      Sign in to create your drop clip
                     </Link>
                   ) : null}
                 </div>
@@ -3718,11 +3741,24 @@ export function CreateStudio({
       >
         {image ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
-            {preset.emoji} {viralName(preset.slug, preset.name)} · {aspectRatio}
-            {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
-            {demoMode
-              ? "0 credits · cached prototype"
-              : `${CREDITS_PER_VIDEO} credits when Live`}
+            {fixedMomentContract ? (
+              <>
+                Drop clip · Street Power-Up · {aspectRatio}
+                {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
+                {demoMode
+                  ? "0 credits · cached prototype"
+                  : `${CREDITS_PER_VIDEO} credits when Live`}
+              </>
+            ) : (
+              <>
+                {preset.emoji} {viralName(preset.slug, preset.name)} ·{" "}
+                {aspectRatio}
+                {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
+                {demoMode
+                  ? "0 credits · cached prototype"
+                  : `${CREDITS_PER_VIDEO} credits when Live`}
+              </>
+            )}
           </p>
         ) : null}
         {!image ? (
@@ -3736,16 +3772,22 @@ export function CreateStudio({
               }
               className="btn btn-primary w-full py-3 text-sm"
               data-first-run-action="upload"
+              data-sticky-primary={
+                fixedMomentContract ? "drop-clip-upload" : undefined
+              }
             >
-              Upload owned toy photo
+              {fixedMomentContract
+                ? "Upload owned photo for your drop clip"
+                : "Upload owned toy photo"}
             </button>
           ) : fixedMomentContract ? (
             <Link
               href={privateMomentLoginHref}
               className="btn btn-primary w-full py-3 text-sm"
               data-first-run-action="sign-in"
+              data-sticky-primary="drop-clip-sign-in"
             >
-              Sign in to create
+              Sign in to create your drop clip
             </Link>
           ) : (
             <button
@@ -3783,8 +3825,13 @@ export function CreateStudio({
             }}
             disabled={!ownsRights}
             className="btn btn-primary w-full py-3 text-sm disabled:opacity-50"
+            data-sticky-primary={
+              fixedMomentContract ? "drop-clip-again" : undefined
+            }
           >
-            Generate again
+            {fixedMomentContract
+              ? "Create another drop clip"
+              : "Generate again"}
           </button>
         ) : (
           <button
@@ -3804,6 +3851,9 @@ export function CreateStudio({
             disabled={busy || !ownsRights || (mode === "i2v" && !image)}
             className="btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
             data-first-run-action="generate"
+            data-sticky-primary={
+              fixedMomentContract ? "drop-clip-generate" : undefined
+            }
           >
             {primaryLabel}
           </button>

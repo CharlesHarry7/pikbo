@@ -135,6 +135,50 @@ assertMatch(
   "fixed Moment result must expose the single Founding Studio upgrade"
 );
 
+// AIT-124: signed-in workbench sticky + stage stay result-first (drop clip),
+// not pure Street Power-Up / motion as the primary verb. Effect brand remains
+// contract badge / direction identity only.
+assertMatch(
+  studio,
+  /data-fixed-moment-contract-lead=["']result-first["']/,
+  "fixed Moment contract lead must stay result-first"
+);
+assertMatch(
+  studio,
+  /Owned photo → private drop clip/,
+  "fixed Moment header/contract must frame owned photo → private drop clip"
+);
+assertMatch(
+  studio,
+  /data-fixed-moment-stage-lead=["']result-first["']/,
+  "fixed Moment empty stage lead must stay result-first"
+);
+assertMatch(
+  studio,
+  /Your drop clip appears here/,
+  "fixed Moment stage must lead with drop clip outcome"
+);
+assertMatch(
+  studio,
+  /private list,\s*post, or drop clip/,
+  "fixed Moment stage must keep list/post/drop outcome language"
+);
+assertMatch(
+  studio,
+  /Create my drop clip · \$\{CREDITS_PER_VIDEO\} credits/,
+  "fixed Moment primary CTA label must be Create my drop clip (result-first)"
+);
+assertMatch(
+  studio,
+  /data-sticky-primary=\{[\s\S]{0,120}drop-clip-generate/,
+  "mobile sticky generate path must tag fixed Moment drop-clip primary"
+);
+assertMatch(
+  studio,
+  /Street Power-Up · fixed direction/,
+  "Street Power-Up remains effect/direction identity on stage, not sole H1 lead"
+);
+
 // 3. Server receives and validates the same contract.  Keep these checks
 // source-level so this regression never needs credentials or provider spend.
 assertMatch(
