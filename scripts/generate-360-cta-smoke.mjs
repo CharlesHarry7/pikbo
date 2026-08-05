@@ -60,6 +60,7 @@ assert.match(
 const generateSurfaces = [
   ["components/HomeToolShelf.tsx", "home-tool-shelf"],
   ["components/HomeViralWall.tsx", "home-proof-wall"],
+  ["components/HomeBrowseCta.tsx", "home-browse"],
   ["components/SuiteEntryStrip.tsx", "suite-entry"],
   ["components/HowItWorks.tsx", "how-it-works"],
   ["components/MobileGenerateBar.tsx", "mobile-bar"],
@@ -163,5 +164,74 @@ assert.match(sample, /^\/create\?/);
 assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
+
+// 5. AIT-71 — floating Generate never under home indicator/nav; correct z-index
+const globalsCss = read("app/globals.css");
+const layoutSrc = read("app/layout.tsx");
+const homePage = read("app/page.tsx");
+const browseCta = read("components/HomeBrowseCta.tsx");
+const mobileBar = read("components/MobileGenerateBar.tsx");
+const modulesCta = read("components/ModulesMobileCta.tsx");
+
+assert.match(
+  globalsCss,
+  /--mobile-nav-clearance:\s*calc\(/,
+  "globals must define --mobile-nav-clearance = tab content + safe-area"
+);
+assert.match(
+  globalsCss,
+  /--floating-cta-safe-bottom:\s*max\(/,
+  "globals must define --floating-cta-safe-bottom for nav-less Moment home"
+);
+assert.match(
+  globalsCss,
+  /--floating-generate-z:\s*40/,
+  "floating Generate z-index token must sit under sticky header/nav (50)"
+);
+assert.match(
+  layoutSrc,
+  /viewportFit:\s*["']cover["']/,
+  "root viewport must use viewport-fit=cover so safe-area env() resolves"
+);
+assert.match(
+  homePage,
+  /HomeBrowseCta/,
+  "Moment home must mount the floating Generate browse CTA"
+);
+assert.match(
+  browseCta,
+  /bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "home floating Generate must use safe-area bottom (no tab nav on home)"
+);
+assert.match(
+  browseCta,
+  /z-\[var\(--floating-generate-z\)\]/,
+  "home floating Generate must use --floating-generate-z"
+);
+assert.match(
+  browseCta,
+  /createGenerate360Href\(["']home-browse["']\)/,
+  "home browse CTA must deep-link Generate→360 via home-browse source"
+);
+assert.doesNotMatch(
+  browseCta,
+  /bottom-\[4\.75rem\]/,
+  "home floating Generate must not hardcode bare 4.75rem (double-counts nav when home has none)"
+);
+assert.match(
+  mobileBar,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "MobileGenerateBar must clear tab nav + home indicator"
+);
+assert.match(
+  mobileBar,
+  /z-\[var\(--floating-generate-z\)\]/,
+  "MobileGenerateBar must use floating Generate z token"
+);
+assert.match(
+  modulesCta,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "ModulesMobileCta must clear tab nav + home indicator"
+);
 
 console.log("generate-360-cta-smoke: ok");

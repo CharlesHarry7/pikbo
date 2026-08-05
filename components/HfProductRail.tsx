@@ -80,7 +80,11 @@ const PRODUCTS: {
 
 export function HfProductRail() {
   return (
-    <section className="border-b border-white/10 bg-black px-3 py-5 sm:px-5">
+    <section
+      id="hf-product-rail"
+      data-hf-product-rail="true"
+      className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
+    >
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-3 flex items-end justify-between gap-2">
           <div>

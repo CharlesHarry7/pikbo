@@ -348,8 +348,11 @@ export default function CinemaPage() {
         </div>
       </div>
 
-      {/* Mobile sticky primary — above AppShell tab */}
-      <div className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 backdrop-blur-xl lg:hidden">
+      {/* Mobile sticky primary — above AppShell tab + home indicator (AIT-71) */}
+      <div
+        data-floating-generate="cinema"
+        className="fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 backdrop-blur-xl lg:hidden"
+      >
         <Link
           href={href}
           className="btn btn-primary flex w-full items-center justify-center py-3.5 text-[15px] font-black"
