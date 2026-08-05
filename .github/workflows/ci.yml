@@ -36,6 +36,9 @@ jobs:
       - name: Engine smoke
         run: npm run engine-smoke
 
+      - name: Generate → 360 CTA contract (home/login/create HF doors)
+        run: npm run generate-360-cta-smoke
+
       - name: Recovery QA (R0–R3 cost · ledger · CI honesty)
         run: npm run recovery-qa
 

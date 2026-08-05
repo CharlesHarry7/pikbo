@@ -6008,5 +6008,167 @@ for (const [rel, re] of residualLabSampleDoors) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// AIT-111 / AIT-78: live Home · Login · Create HF nav contracts stay green.
+// Locks the Moment-first frontdoor (not archive-only components off the page).
+// ---------------------------------------------------------------------------
+{
+  const homeLive = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
+  const heroLive = fs.readFileSync(
+    join(root, "components/HomeCinemaHero.tsx"),
+    "utf8"
+  );
+  const wallLive = fs.readFileSync(
+    join(root, "components/HomeViralWall.tsx"),
+    "utf8"
+  );
+  const loginFormLive = fs.readFileSync(
+    join(root, "components/LoginForm.tsx"),
+    "utf8"
+  );
+  const loginPageLive = fs.readFileSync(
+    join(root, "app/login/page.tsx"),
+    "utf8"
+  );
+  const createPageLive = fs.readFileSync(
+    join(root, "app/create/page.tsx"),
+    "utf8"
+  );
+  const softNavLive = fs.readFileSync(join(root, "lib/softLaunch.ts"), "utf8");
+  const shellLive = fs.readFileSync(
+    join(root, "components/AppShell.tsx"),
+    "utf8"
+  );
+  const headerLive = fs.readFileSync(
+    join(root, "components/Header.tsx"),
+    "utf8"
+  );
+  const jobIntentsLive = fs.readFileSync(
+    join(root, "lib/jobIntents.ts"),
+    "utf8"
+  );
+
+  // Home: Moment hero + Lab proof wall only (no full HfExplore remount).
+  assert.match(homeLive, /HomeCinemaHero/);
+  assert.match(homeLive, /HomeViralWall/);
+  assert.match(homeLive, /HomeTrustFooter/);
+  assert.doesNotMatch(
+    homeLive,
+    /import\s*\{[^}]*HfExploreHome|from\s*["']@\/components\/HfExploreHome["']|<\s*HfExploreHome\b/
+  );
+  assert.doesNotMatch(homeLive, /<\s*SellerPack|import\s*\{[^}]*SellerPack\b/);
+  assert.match(
+    heroLive,
+    /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+  );
+  assert.match(heroLive, /data-home-hero=["']street-power-up["']/);
+  assert.match(heroLive, /data-home-moment-cta/);
+  assert.match(
+    heroLive,
+    /href=\{MOMENT_CREATE_HREF\}[\s\S]{0,120}data-home-moment-cta|data-home-moment-cta[\s\S]{0,120}href=\{MOMENT_CREATE_HREF\}/
+  );
+  assert.match(heroLive, /Use this motion/);
+  assert.match(heroLive, /not a completed customer deliverable/);
+  assert.doesNotMatch(
+    heroLive,
+    /createGenerate360Href|createRemixHref\(|360-spin-showcase/
+  );
+  assert.doesNotMatch(
+    heroLive,
+    /href=["']\/create["']|href=["']\/create\?effect=/
+  );
+  assert.match(wallLive, /home-proof-wall|data-home-proof-wall|HOME_PROOF/);
+  assert.match(
+    softNavLive,
+    /HOME_PROOF_SLUGS[\s\S]*?360-spin-showcase[\s\S]*?HOME_PROOF_LIMIT/
+  );
+
+  // Primary nav Create = fixed Moment (not bare /create, not Generate 360).
+  assert.match(
+    softNavLive,
+    /MOMENT_CREATE_HREF\s*=\s*["']\/create\?mode=moment&effect=street-power-up["']/
+  );
+  assert.match(
+    softNavLive,
+    /PRIMARY_NAV[\s\S]*?href:\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`/
+  );
+  assert.match(
+    softNavLive,
+    /MOBILE_NAV[\s\S]*?href:\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`/
+  );
+  assert.match(
+    shellLive,
+    /PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`/
+  );
+  assert.doesNotMatch(
+    shellLive,
+    /\/create\?effect=street-power-up&source=primary-nav/
+  );
+
+  // Header Generate door stays 360 remix helper (distinct from Moment Create).
+  assert.match(
+    headerLive,
+    /createGenerate360Href\(\s*["']header["']\s*\)|HEADER_GENERATE_HREF/
+  );
+  assert.match(headerLive, /data-header-cta=["']generate-remix["']/);
+  assert.match(
+    jobIntentsLive,
+    /export function createGenerate360Href[\s\S]*?createRemixHref\(\s*GENERATE_360_EFFECT/
+  );
+
+  // Login guest path: one Moment preview only (no Generate remix / bare create).
+  assert.match(
+    loginFormLive,
+    /const LOGIN_GUEST_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=login-guest`/
+  );
+  assert.match(
+    loginPageLive,
+    /const LOGIN_GUEST_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=login-guest`/
+  );
+  assert.match(loginFormLive, /data-login-guest=["']moment-preview["']/);
+  assert.match(loginPageLive, /data-login-guest=["']moment-preview["']/);
+  assert.match(loginFormLive, /data-auth-guest-path=["']product-first["']/);
+  assert.match(loginPageLive, /data-auth-guest-path=["']product-first["']/);
+  assert.doesNotMatch(
+    loginFormLive,
+    /createGenerate360Href|createRemixHref|360-spin-showcase/
+  );
+  assert.doesNotMatch(
+    loginPageLive,
+    /createGenerate360Href|createRemixHref|360-spin-showcase/
+  );
+  assert.doesNotMatch(
+    loginFormLive,
+    /\/create\?effect=street-power-up&source=login-guest/
+  );
+  assert.doesNotMatch(
+    loginPageLive,
+    /\/create\?effect=street-power-up&source=login-guest/
+  );
+  assert.doesNotMatch(
+    loginFormLive,
+    /data-login-guest=["']generate-remix["']/
+  );
+  assert.doesNotMatch(
+    loginPageLive,
+    /data-login-guest=["']generate-remix["']/
+  );
+
+  // Create: fail-closed Moment query + fixed Street Power-Up private contract.
+  assert.match(createPageLive, /GuestMomentCreateGate/);
+  assert.match(createPageLive, /fixedMomentContract/);
+  assert.match(createPageLive, /initialEffect=["']street-power-up["']/);
+  assert.match(createPageLive, /MomentCreatePreview|InvalidMomentNotice/);
+  assert.match(
+    createPageLive,
+    /sp\.moment !== undefined[\s\S]*?InvalidMomentNotice|MomentCreatePreview/
+  );
+  assert.match(createPageLive, /CreateStudio/);
+  assert.doesNotMatch(
+    createPageLive,
+    /createGenerate360Href|fake UGC|Seller Pack UI/i
+  );
+}
+
 console.log("engine-smoke: PASS");
 void pathToFileURL; // keep import used on older node
