@@ -24,6 +24,7 @@ import {
   fetchMe,
   type MeResponse,
 } from "@/lib/meClient";
+import { STUDIO_SESSION_BOOT_MS } from "@/lib/clientTimeout";
 import { cn } from "@/lib/utils";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 
@@ -106,7 +107,7 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
 
   useEffect(() => {
     let cancelled = false;
-    void fetchMe().then((next) => {
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS }).then((next) => {
       if (cancelled) return;
       setMe(next);
       setMeResolved(true);

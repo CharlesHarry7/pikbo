@@ -2,8 +2,9 @@
 
 import { ArrowUpRight, ImagePlus, Play } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
+import { STUDIO_NAV_OPEN_MS } from "@/lib/clientTimeout";
 
 export type HomeLaunchAccess =
   | "checking"
@@ -23,8 +24,34 @@ export function HeroUpload({
   const [hover, setHover] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const openTimerRef = useRef<number | null>(null);
   const privateAccess =
     access === "private-short" || access === "private-ready";
+
+  useEffect(() => {
+    return () => {
+      if (openTimerRef.current) window.clearTimeout(openTimerRef.current);
+    };
+  }, []);
+
+  function clearOpenTimer() {
+    if (openTimerRef.current) {
+      window.clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
+    }
+  }
+
+  /** Never leave the hero on permanent "Opening…" if navigation stalls. */
+  function armOpenTimeout() {
+    clearOpenTimer();
+    openTimerRef.current = window.setTimeout(() => {
+      setBusy(false);
+      setErr(
+        "Opening Create timed out. Retry, or open Create from the nav."
+      );
+      openTimerRef.current = null;
+    }, STUDIO_NAV_OPEN_MS);
+  }
 
   function goWithFile(file: File | undefined | null) {
     if (!privateAccess) {
@@ -46,11 +73,13 @@ export function HeroUpload({
     }
     setBusy(true);
     setErr(null);
+    armOpenTimeout();
     const reader = new FileReader();
     reader.onload = () => {
       try {
         sessionStorage.setItem("pikbo_pending_still", reader.result as string);
       } catch {
+        clearOpenTimer();
         setErr("This browser could not prepare the photo. Open Create instead.");
         setBusy(false);
         return;
@@ -63,6 +92,7 @@ export function HeroUpload({
       router.push("/create?effect=street-power-up&source=home-launch-pack");
     };
     reader.onerror = () => {
+      clearOpenTimer();
       setErr("Pikbo could not read that photo. Try another file.");
       setBusy(false);
     };
@@ -140,7 +170,10 @@ export function HeroUpload({
           <ImagePlus className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} />
         </span>
         <span className="min-w-0">
-          <span className="block text-base font-black tracking-[-0.025em] text-[#15171B] sm:text-lg">
+          <span
+            className="block text-base font-black tracking-[-0.025em] text-[#15171B] sm:text-lg"
+            data-studio-open-state={busy ? "opening" : "idle"}
+          >
             {busy
               ? "Opening your private Moment…"
               : "Upload one rights-owned toy photo"}
@@ -163,7 +196,21 @@ export function HeroUpload({
         />
       </label>
       {err ? (
-        <p className="mt-2 text-xs font-semibold text-[#B3402D]">{err}</p>
+        <div className="mt-2" data-studio-open-error role="alert">
+          <p className="text-xs font-semibold text-[#B3402D]">{err}</p>
+          <button
+            type="button"
+            data-studio-open-retry
+            onClick={() => {
+              setErr(null);
+              setBusy(false);
+              clearOpenTimer();
+            }}
+            className="mt-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-[#2457E6] underline underline-offset-2"
+          >
+            Dismiss · try again
+          </button>
+        </div>
       ) : null}
     </div>
   );

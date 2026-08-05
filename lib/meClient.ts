@@ -302,13 +302,35 @@ async function authHeaders(): Promise<HeadersInit> {
   }
 }
 
-export async function fetchMe(): Promise<MeResponse | null> {
+export async function fetchMe(opts?: {
+  /** Abort hanging /api/me so Studio never stays on "Opening…" forever. */
+  timeoutMs?: number;
+}): Promise<MeResponse | null> {
   try {
     const headers = await authHeaders();
-    const res = await fetch("/api/me", { headers });
-    if (!res.ok) return null;
-    const data = (await res.json()) as MeResponse;
-    return rehydrateFreeTrial(data);
+    const timeoutMs =
+      typeof opts?.timeoutMs === "number" && opts.timeoutMs > 0
+        ? opts.timeoutMs
+        : undefined;
+    const controller =
+      typeof timeoutMs === "number" && typeof AbortController !== "undefined"
+        ? new AbortController()
+        : null;
+    const timer =
+      controller && timeoutMs
+        ? setTimeout(() => controller.abort(), timeoutMs)
+        : null;
+    try {
+      const res = await fetch("/api/me", {
+        headers,
+        signal: controller?.signal,
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as MeResponse;
+      return rehydrateFreeTrial(data);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   } catch {
     return null;
   }
