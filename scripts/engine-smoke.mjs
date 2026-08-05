@@ -3189,6 +3189,7 @@ assert.match(
 assert.match(autoPlaySrc, /preload=\{allowMetadataPreload \? "metadata" : "none"\}/);
 assert.match(autoPlaySrc, /lazySources/);
 assert.match(autoPlaySrc, /playbackBudget/);
+assert.match(autoPlaySrc, /lcpPosterFirst|data-lcp-poster-first/);
 assert.match(
   fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
   /Hero owns LCP|lazySources/
@@ -3196,6 +3197,18 @@ assert.match(
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
   /eager=\{i === 0\}/
+);
+// AIT-132: Create Studio guest Lab sample is poster-first (not eager demo video)
+const guestStudioGate = fs.readFileSync(
+  join(root, "components/GuestMomentCreateGate.tsx"),
+  "utf8"
+);
+assert.match(guestStudioGate, /lcpPosterFirst/);
+assert.match(guestStudioGate, /data-studio-lab-lcp=["']poster-first["']/);
+assert.doesNotMatch(guestStudioGate, /\beager\b/);
+assert.match(
+  fs.readFileSync(join(root, "app/create/page.tsx"), "utf8"),
+  /rel=["']preload["'][\s\S]*fetchPriority=["']high["']/
 );
 const projectPage = fs.readFileSync(
   join(root, "app/projects/[slug]/page.tsx"),

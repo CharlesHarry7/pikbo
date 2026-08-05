@@ -20,6 +20,15 @@ assert.match(gate, /AutoPlayVideo/);
 assert.match(gate, /beatbot-still\.webp/);
 assert.match(gate, /beatbot-viral-hook\.mp4/);
 assert.match(gate, /beatbot-viral-hook\.webm/);
+// AIT-132: poster-first Lab sample — CTA/shell win first paint over demo video
+assert.match(gate, /lcpPosterFirst/);
+assert.match(gate, /data-studio-lab-lcp=["']poster-first["']/);
+assert.doesNotMatch(gate, /\beager\b/);
+assert.match(createPage, /beatbot-still\.webp/);
+assert.match(
+  createPage,
+  /rel=["']preload["'][\s\S]*fetchPriority=["']high["']/
+);
 assert.match(gate, /9:16/);
 assert.match(gate, /5s/);
 assert.match(gate, /720p/);

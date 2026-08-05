@@ -133,5 +133,26 @@ assert.match(
   /errorRetry/,
   "Guest Create Lab video must enable errorRetry for honest mobile recovery"
 );
+// AIT-132: Studio Lab sample poster-first on mobile (no eager demo video LCP steal)
+assert.match(
+  gate,
+  /lcpPosterFirst/,
+  "guest Studio Lab sample must stay poster-first on mobile first paint"
+);
+assert.doesNotMatch(
+  gate,
+  /\beager\b/,
+  "guest Studio Lab must not eager-load mp4/webm against Moment CTA"
+);
+assert.match(
+  source("app/create/page.tsx"),
+  /rel=["']preload["'][\s\S]*fetchPriority=["']high["']/,
+  "create page must high-priority preload Lab sample poster"
+);
+assert.match(
+  video,
+  /lcpPosterFirst|data-lcp-poster-first/,
+  "AutoPlayVideo must expose poster-first LCP mode for Studio sample"
+);
 
 console.log("mobile proof regression: source contracts PASS");
