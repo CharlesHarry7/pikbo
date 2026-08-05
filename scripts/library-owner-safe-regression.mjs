@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * AIT-41: Library owner-safe recovery — list, retry, input bind, not-your-toy.
+ * AIT-41 / AIT-103 / AIT-148: Library owner-safe recovery hardening.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped list/detail, non-owner deny (no metadata leak),
- * retry / new-attempt paths, honest inputBound placeholder, and deep-link
+ * retry / new-attempt paths, owner-ready asset bind gate, and deep-link
  * fail-closed copy.
  */
 import assert from "node:assert/strict";
@@ -28,6 +28,7 @@ const generationsList = read("app/api/generations/route.ts");
 const generationsDetail = read("app/api/generations/[id]/route.ts");
 const library = read("components/LibraryGrid.tsx");
 const retryRoute = read("app/api/generations/[id]/retry/route.ts");
+const privateToyAssets = read("lib/privateToyAssets.ts");
 const pkg = read("package.json");
 
 // ─── Source contracts: owner list ──────────────────────────────────────────
@@ -51,6 +52,9 @@ assert.doesNotMatch(
   "list must not accept a cross-user userId query/body"
 );
 assert.match(generationsList, /inputBound:\s*false/);
+// AIT-148: list body never ships owned:false stubs.
+assert.match(generationsList, /owned !== false/);
+assert.match(generationsList, /ownerJobs/);
 
 // ─── Source contracts: detail fail-closed ──────────────────────────────────
 
@@ -69,6 +73,12 @@ assert.match(retryRoute, /forkRetryJob/);
 assert.match(retryRoute, /NOT_OWNED/);
 assert.match(retryRoute, /createUi/);
 assert.match(retryRoute, /retryToken/);
+// AIT-148: durable Moments never fork process-memory Retry.
+assert.match(retryRoute, /DURABLE_USE_NEW_ATTEMPT/);
+assert.match(retryRoute, /DURABLE_IN_FLIGHT/);
+assert.match(retryRoute, /DURABLE_ALREADY_SUCCEEDED/);
+assert.match(retryRoute, /getPrivateLibraryJobForOwner/);
+assert.match(retryRoute, /getAuthUserFromRequest/);
 assert.match(library, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}\/retry/);
 assert.match(library, /void retry\(job\)/);
 assert.match(library, /isRetryable\(job\.status\)[\s\S]{0,350}void retry\(job\)/);
@@ -78,6 +88,7 @@ assert.match(library, /data-library-action="retry"/);
 assert.match(library, /data-library-action="new-attempt"/);
 assert.match(library, /canLocalRetry\(job\)/);
 assert.match(library, /canNewAttempt\(job\)/);
+assert.match(library, /DURABLE_USE_NEW_ATTEMPT/);
 // Durable rows never hit process-memory Retry (AIT-103 fail-closed).
 assert.match(
   library,
@@ -108,6 +119,12 @@ assert.match(pure, /libraryInputBindingCopy/);
 assert.match(pure, /libraryNotYourToyCopy/);
 assert.match(pure, /inputBound/);
 assert.match(results, /inputBound:\s*boolean/);
+// AIT-148: same-photo handoff only after owner-ready asset membership.
+assert.match(results, /gateLibrarySamePhotoHandoffs/);
+assert.match(results, /listReadyOwnerAssetIds/);
+assert.match(privateToyAssets, /listReadyOwnerAssetIds/);
+assert.match(privateToyAssets, /\.eq\("owner_user_id"/);
+assert.match(privateToyAssets, /\.eq\("state",\s*"ready"\)/);
 assert.match(library, /libraryInputBindingCopy/);
 assert.match(library, /libraryNotYourToyCopy/);
 assert.match(library, /data-library-input-bound=/);
