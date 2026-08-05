@@ -2,6 +2,7 @@
 
 import { createRemixHref } from "@/lib/remixIntent";
 import { createGenerate360Href } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import Link from "next/link";
 import { useState } from "react";
 import type { DemoVideo } from "@/lib/demoVideos";
@@ -164,37 +165,54 @@ export function HfExploreHome({
           <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65 sm:text-[15px]">
             {t("home.hero.sub")}
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link
-              href="/create?effect=street-power-up"
-              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
+          {/* Generate primary → createGenerate360Href (360 remix); Moment is explicit secondary */}
+          <div className="mt-6 flex flex-col items-start gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href={createGenerate360Href("hf-hero")}
+                data-hf-hero-primary="generate"
+                className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)] transition hover:-translate-y-0.5 hover:brightness-110"
+              >
+                {t("cta.generate")}
+              </Link>
+              <Link
+                href={MOMENT_CREATE_HREF}
+                data-hf-hero-moment="create-one"
+                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-black/50 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50 hover:bg-black/60"
+              >
+                Create one Moment
+              </Link>
+            </div>
+            <nav
+              aria-label="Secondary home paths"
+              className="flex flex-wrap items-center gap-x-4 gap-y-2"
             >
-              Use tool on this page
-            </Link>
-            <Link
-              href={item.href}
-              onClick={() =>
-                track({
-                  event: "recipe_use",
-                  path: "/",
-                  recipe: item.recipeSlug})
-              }
-              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-black/50 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50 hover:bg-black/60"
-            >
-              {t("home.useRecipe")}
-            </Link>
-            <Link
-              href="/tools/ai-toy-video-generator"
-              className="text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
-            >
-              Keyword tool page
-            </Link>
-            <Link
-              href="/for/photo-to-video-for-toys"
-              className="text-sm font-semibold text-white/45 underline-offset-4 hover:text-white/80 hover:underline"
-            >
-              Photo → video use case
-            </Link>
+              <Link
+                href={item.href}
+                onClick={() =>
+                  track({
+                    event: "recipe_use",
+                    path: "/",
+                    recipe: item.recipeSlug,
+                  })
+                }
+                className="text-sm font-semibold text-white/55 underline-offset-4 transition hover:text-white hover:underline"
+              >
+                {t("home.useRecipe")}
+              </Link>
+              <Link
+                href="/tools/ai-toy-video-generator"
+                className="text-sm font-semibold text-white/55 underline-offset-4 transition hover:text-white hover:underline"
+              >
+                Keyword tool page
+              </Link>
+              <Link
+                href="/for/photo-to-video-for-toys"
+                className="text-sm font-semibold text-white/45 underline-offset-4 transition hover:text-white/80 hover:underline"
+              >
+                Photo → video use case
+              </Link>
+            </nav>
           </div>
           <p className="mt-3 text-[11px] text-white/45">
             Designer-toy suite · cached Lab prototypes · Live access gated
@@ -326,7 +344,8 @@ export function HfExploreHome({
               {t("home.insideProject")}
             </Link>
             <Link
-              href="/create?effect=street-power-up"
+              href={MOMENT_CREATE_HREF}
+              data-hf-seller-moment="create-one"
               className="inline-flex rounded-full border border-white/15 px-5 py-3.5 text-sm font-bold text-white/70 transition hover:border-white/30 hover:text-white"
             >
               {t("cta.sellerPack")}
@@ -436,9 +455,11 @@ export function HfExploreHome({
             </div>
             {[
               {
-                href: "/create?effect=street-power-up",
+                href: MOMENT_CREATE_HREF,
                 label: "Street Power-Up Moment",
-                sub: "one directed clip"},
+                sub: "one directed clip",
+                moment: true as const,
+              },
               { href: "/modules", label: "Modules", sub: "Video jobs" },
               { href: "/effects", label: "Video presets", sub: "Viral recipes" },
               { href: "/library", label: "Library", sub: "This device" },
@@ -448,6 +469,9 @@ export function HfExploreHome({
               <Link
                 key={c.href}
                 href={c.href}
+                {...("moment" in c && c.moment
+                  ? { "data-hf-flow-moment": "create-one" as const }
+                  : {})}
                 className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:border-[#c8ff3d]/40 hover:bg-[#c8ff3d]/5"
               >
                 <p className="text-sm font-bold text-white">{c.label}</p>
@@ -474,7 +498,8 @@ export function HfExploreHome({
             </p>
           </div>
           <Link
-            href="/create?effect=street-power-up"
+            href={MOMENT_CREATE_HREF}
+            data-hf-hero-moment="create-one"
             className="inline-flex shrink-0 items-center rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-sm font-bold text-[#c8ff3d] transition hover:bg-[#c8ff3d]/10"
           >
             Create one Moment →

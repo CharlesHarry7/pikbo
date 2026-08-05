@@ -4477,6 +4477,36 @@ assert.match(
   fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
   /data-hf-flow-generate=["']remix["']|createGenerate360Href/
 );
+// AIT-119: hero primary Generate → createGenerate360Href; Moment secondary honest
+const hfExploreHeroSrc = fs.readFileSync(
+  join(root, "components/HfExploreHome.tsx"),
+  "utf8"
+);
+assert.match(
+  hfExploreHeroSrc,
+  /data-hf-hero-primary=["']generate["']/,
+  "HfExplore hero primary must be Generate (data-hf-hero-primary)"
+);
+assert.match(
+  hfExploreHeroSrc,
+  /createGenerate360Href\(\s*["']hf-hero["']\s*\)/,
+  "HfExplore hero primary must use createGenerate360Href(hf-hero)"
+);
+assert.match(
+  hfExploreHeroSrc,
+  /data-hf-hero-moment=["']create-one["']/,
+  "HfExplore hero keeps Create one Moment secondary marker"
+);
+assert.match(
+  hfExploreHeroSrc,
+  /MOMENT_CREATE_HREF/,
+  "HfExplore Moment doors resolve through MOMENT_CREATE_HREF"
+);
+assert.doesNotMatch(
+  hfExploreHeroSrc,
+  /href=["']\/create\?effect=street-power-up["']/,
+  "HfExplore must not hardcode bare street-power-up"
+);
 
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
