@@ -55,6 +55,7 @@ import {
   mergeMeSession,
   type MeResponse,
 } from "@/lib/meClient";
+import { STUDIO_SESSION_BOOT_MS } from "@/lib/clientTimeout";
 import { emitSessionRefresh } from "@/lib/sessionEvents";
 import {
   canExportSellerPack,
@@ -341,10 +342,16 @@ export function BatchStudio({
 
   useEffect(() => {
     const t = window.setTimeout(() => {
-      void fetchMe().then((next) => {
-        setMe(next);
-        setMeResolved(true);
-      });
+      // Finite session boot (Create Studio parity) — never leave meResolved false forever.
+      void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+        .then((next) => {
+          setMe(next);
+          setMeResolved(true);
+        })
+        .catch(() => {
+          setMe(null);
+          setMeResolved(true);
+        });
       // Query ?sku= wins so Seller Pack AfterPath carry is not wiped by localStorage.
       setToyIdentity(hydrateToyIdentityFromQuery(initialSku));
     }, 0);
