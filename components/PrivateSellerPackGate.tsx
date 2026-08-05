@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { isClientTimeoutError, STUDIO_SESSION_BOOT_MS } from "@/lib/clientTimeout";
 import {
   canUsePrivateLaunch,
   fetchMe,
@@ -23,27 +24,52 @@ export function PrivateSellerPackGate({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
   const [resolved, setResolved] = useState(false);
+  const [sessionBoot, setSessionBoot] = useState<
+    "checking" | "ready" | "timeout"
+  >("checking");
+  const [bootNonce, setBootNonce] = useState(0);
 
   useEffect(() => {
     let active = true;
-    void fetchMe().then((me) => {
-      if (!active) return;
-      const nextAllowed = canUsePrivateLaunch(me);
-      setAllowed(nextAllowed);
-      setResolved(true);
-      if (!nextAllowed) router.replace(PUBLIC_MOMENT_HREF);
-    });
+    setSessionBoot("checking");
+    setResolved(false);
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+      .then((me) => {
+        if (!active) return;
+        const nextAllowed = canUsePrivateLaunch(me);
+        setAllowed(nextAllowed);
+        setResolved(true);
+        setSessionBoot("ready");
+        if (!nextAllowed) router.replace(PUBLIC_MOMENT_HREF);
+      })
+      .catch((err) => {
+        if (!active) return;
+        // 8s open contract: never stick on gate "checking".
+        setAllowed(false);
+        setResolved(true);
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+        if (!isClientTimeoutError(err)) {
+          router.replace(PUBLIC_MOMENT_HREF);
+        }
+      });
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [router, bootNonce]);
 
   if (allowed) return children;
 
   return (
     <main
       className="grid min-h-[calc(100vh-3.5rem)] place-items-center bg-[#0A0A0A] px-6 text-[#F7F4ED]"
-      data-private-seller-pack-gate={resolved ? "redirecting" : "checking"}
+      data-private-seller-pack-gate={
+        resolved
+          ? sessionBoot === "timeout"
+            ? "timeout"
+            : "redirecting"
+          : "checking"
+      }
+      data-studio-open-state={sessionBoot}
     >
       <div className="max-w-xl text-center">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF6846]">
@@ -53,10 +79,30 @@ export function PrivateSellerPackGate({ children }: { children: ReactNode }) {
           Choose one toy Moment.
         </h1>
         <p className="mx-auto mt-5 max-w-md text-sm font-semibold leading-6 text-white/55">
-          The multi-output Seller Pack is available only to invited validation
-          accounts. Public creation starts with one directed preset and one
-          launch-ready clip.
+          {sessionBoot === "timeout"
+            ? "Could not verify private access in time. Retry the check, open one Moment, or request private beta."
+            : "The multi-output Seller Pack is available only to invited validation accounts. Public creation starts with one directed preset and one launch-ready clip."}
         </p>
+        {sessionBoot === "timeout" ? (
+          <div
+            className="mx-auto mt-5 max-w-md rounded-2xl border border-[#FF6B6B]/35 bg-[#FF6B6B]/10 px-4 py-3 text-left"
+            data-studio-open-error="session-timeout"
+            role="alert"
+          >
+            <p className="text-[11px] font-semibold leading-5 text-white/85">
+              Access check timed out — Pack UI stays closed until verification
+              succeeds.
+            </p>
+            <button
+              type="button"
+              onClick={() => setBootNonce((n) => n + 1)}
+              data-studio-open-retry
+              className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[#c8ff3d]"
+            >
+              Retry access check
+            </button>
+          </div>
+        ) : null}
         <div className="mt-7 flex flex-wrap justify-center gap-3">
           <Link
             href={PUBLIC_MOMENT_HREF}
