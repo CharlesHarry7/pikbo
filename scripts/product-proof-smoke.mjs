@@ -72,6 +72,15 @@ assert(
   "Lab proof wall must badge honestly, pin 360 in first slots, entry=home-proof-wall, cap ≤8"
 );
 assert(
+  homeWall.includes('data-home-proof-empty="true"') &&
+    homeWall.includes("data-home-proof-retry") &&
+    homeWall.includes("HomeProofWallEmpty") &&
+    homeWall.includes("Lab previews unavailable") &&
+    homeWall.includes("do not invent community clips") &&
+    homeWall.includes("window.location.reload()"),
+  "Lab proof wall must expose honest empty + retry (no blank grid / fake UGC fill)"
+);
+assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"
 );
