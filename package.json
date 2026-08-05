@@ -53,6 +53,7 @@
     "direct-moment-input-binding-regression": "node scripts/direct-moment-input-binding-regression.mjs",
     "private-input-admission-regression": "node --experimental-strip-types scripts/private-input-admission-regression.mjs",
     "durable-library-statuses-regression": "node scripts/durable-library-statuses-regression.mjs",
+    "library-owner-safe-regression": "node scripts/library-owner-safe-regression.mjs",
     "nonprod-seller-pack-harness": "node scripts/nonprod-seller-pack-harness.mjs",
     "nonprod-seller-pack-harness-regression": "node scripts/nonprod-seller-pack-harness-regression.mjs",
     "stripe-billing-regression": "node --experimental-strip-types scripts/stripe-billing-regression.mjs",

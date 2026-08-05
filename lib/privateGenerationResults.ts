@@ -13,7 +13,10 @@ export {
   acceptControlledLibraryNewAttemptUrl,
   controlledLibraryNewAttemptUrl,
   libraryDurableTerminalFailureCopy,
+  libraryInputBindingCopy,
+  libraryInputBoundFromAssetId,
   libraryNewAttemptButtonLabel,
+  libraryNotYourToyCopy,
   mergePrivateLibraryWithLocalLedger,
   parseProviderOutputHostAllowlist,
   privateLibraryJobFromRow,
@@ -47,6 +50,11 @@ export type PrivateLibraryJob = {
    * UUID-shaped input_asset_id. Never reuses the old job's idempotency key.
    */
   newAttemptUrl?: string;
+  /**
+   * True when the durable row has a UUID-shaped input_asset_id binding.
+   * Boolean only — the raw asset id never leaves the server on this DTO.
+   */
+  inputBound: boolean;
   errorCode?: string;
   model?: string;
   duration?: number;
@@ -404,6 +412,43 @@ export async function listPrivateGenerationResults(input: {
       privateLibraryJobFromRow(row as unknown as Record<string, unknown>)
     )
     .filter((row): row is PrivateLibraryJob => Boolean(row));
+}
+
+/**
+ * Owner-only durable Library detail by job id.
+ * Always filters created_by = userId so a foreign job id cannot leak status,
+ * effect, video, or input metadata. Returns null for missing, non-owned, or
+ * unavailable storage — callers map that to a uniform 404.
+ */
+export async function getPrivateLibraryJobForOwner(input: {
+  jobId: string;
+  userId: string;
+}): Promise<PrivateLibraryJob | null> {
+  const jobId = typeof input.jobId === "string" ? input.jobId.trim() : "";
+  const userId = typeof input.userId === "string" ? input.userId.trim() : "";
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      jobId
+    ) ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      userId
+    )
+  ) {
+    return null;
+  }
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+  const { data, error } = await admin
+    .from("generation_jobs")
+    .select(LIBRARY_COLUMNS)
+    .eq("id", jobId)
+    .eq("created_by", userId)
+    .in("status", [...PRIVATE_LIBRARY_STATUSES])
+    .maybeSingle();
+  if (error || !data) return null;
+  return privateLibraryJobFromRow(
+    data as unknown as Record<string, unknown>
+  ) as PrivateLibraryJob | null;
 }
 
 export async function signedPrivateResultUrl(
