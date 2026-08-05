@@ -4,12 +4,17 @@ import Link from "next/link";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { track } from "@/lib/analytics";
 import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { useI18n } from "@/components/LanguageProvider";
 
+/** Thin HF density strip Generate door — listing 360 remix, not bare /create. */
+const DENSITY_GENERATE_HREF = createGenerate360Href("home-viral-rail");
+
 /**
  * HF Viral Presets pattern — dense horizontal rail of unique Lab clips.
- * One card = one recipe deep link. No shared-loop masquerade.
+ * One card = one recipe deep link. No shared-loop masquerade / no fake UGC.
+ * AIT-126: remounted under Moment hero + proof wall + suite rail as thin density.
  */
 export function HomeViralPresetRail() {
   const { t } = useI18n();
@@ -22,7 +27,11 @@ export function HomeViralPresetRail() {
   }).slice(0, 12);
 
   return (
-    <section className="border-b border-white/10 px-3 py-10 sm:px-5">
+    <section
+      data-home-hf-density="viral-preset"
+      className="border-b border-white/10 px-3 py-10 sm:px-5"
+      aria-label="Lab recipe density"
+    >
       <div className="mx-auto max-w-6xl">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
           <div>
@@ -36,12 +45,29 @@ export function HomeViralPresetRail() {
               {t("home.viral.sub")}
             </p>
           </div>
-          <Link
-            href="/effects"
-            className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
-          >
-            {t("home.viral.allRecipes")}
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={DENSITY_GENERATE_HREF}
+              className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
+              data-home-density-360
+              onClick={() =>
+                track({
+                  event: "recipe_use",
+                  path: "/",
+                  recipe: "360-spin-showcase",
+                  meta: { surface: "home_viral_rail_360_door" },
+                })
+              }
+            >
+              Generate 360° →
+            </Link>
+            <Link
+              href="/effects"
+              className="text-[12px] font-semibold text-white/55 hover:text-[#c8ff3d] hover:underline"
+            >
+              {t("home.viral.allRecipes")}
+            </Link>
+          </div>
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {clips.map((d) => (
@@ -65,6 +91,7 @@ export function HomeViralPresetRail() {
                   mp4={d.mp4}
                   focusable={false}
                   desktopPlayMode="interaction"
+                  lazySources
                   className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out will-change-transform group-hover:scale-[1.07]"
                 />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
