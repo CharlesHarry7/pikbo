@@ -8,7 +8,8 @@ const read = (file) => readFileSync(join(root, file), "utf8");
 const createPage = read("app/create/page.tsx");
 const gate = read("components/GuestMomentCreateGate.tsx");
 
-assert.match(createPage, /<GuestMomentCreateGate>/);
+assert.match(createPage, /<GuestMomentCreateGate[\s>]/);
+assert.match(createPage, /signInNextPath=\{guestSignInNextPath\}/);
 assert.match(createPage, /<CreateStudio[\s\S]*initialEffect="street-power-up"[\s\S]*fixedMomentContract/);
 assert.match(createPage, /description:[\s\S]{0,180}cached Street Power-Up sample/);
 
@@ -37,6 +38,19 @@ assert.match(gate, /canUsePrivateLaunch\(me\)/);
 assert.match(gate, /sessionResolved && canUsePrivateLaunch\(me\)/);
 assert.match(gate, /me\?\.signedIn === true/);
 assert.match(gate, /\.catch\(\(\) =>/);
+// AIT-17: guest sign-in preserves durable Create return path (incl. assetId).
+assert.match(gate, /guestMomentSignInHref/);
+assert.match(gate, /fixedMomentCreateReturnPath/);
+assert.match(gate, /signInNextPath/);
+assert.match(gate, /signInHref/);
+assert.match(createPage, /fixedMomentCreateReturnPath/);
+assert.match(createPage, /signInNextPath=\{guestSignInNextPath\}/);
+assert.match(createPage, /assetId: sp\.assetId/);
+// Must not hardcode a guest-create next that drops Library ?assetId= handoff.
+assert.doesNotMatch(
+  gate,
+  /MOMENT_CREATE_HREF\}&source=guest-create/
+);
 
 // Guest-first copy must not expose the private workbench's price-bearing or
 // submit language. The authenticated children remain unchanged in page.tsx.
@@ -51,5 +65,5 @@ for (const asset of [
 }
 
 console.log(
-  "guest-create-preview-regression: PASS (guest-first 6s archive study; honest 9:16/5s/720p private target; sign-in/request-beta CTAs; no upload/credits/Generate copy)"
+  "guest-create-preview-regression: PASS (guest-first 6s archive study; honest 9:16/5s/720p private target; sign-in preserves Create return path; no upload/credits/Generate copy)"
 );

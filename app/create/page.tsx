@@ -7,6 +7,7 @@ import {
   MomentCreatePreview,
 } from "@/components/MomentCreatePreview";
 import { GuestMomentCreateGate } from "@/components/GuestMomentCreateGate";
+import { fixedMomentCreateReturnPath } from "@/lib/clientAssets";
 import { getMoment, parseMomentId } from "@/lib/moments";
 
 export async function generateMetadata({
@@ -77,11 +78,17 @@ export default async function CreatePage({
   const firstRunSample =
     sp.sample ||
     (sp.try === "1" || sp.try === "true" ? "scout" : undefined);
+  // Preserve durable Library same-photo handoff across guest sign-in / Magic Link.
+  // Without this, an expired session on /create?assetId=… forced re-upload.
+  const guestSignInNextPath = fixedMomentCreateReturnPath({
+    source: sp.source || (sp.assetId ? "library" : "guest-create"),
+    assetId: sp.assetId,
+  });
   // MVP cut: every public or invited Create entry resolves to the one real,
   // fixed product contract. Legacy Seller Pack and generic Studio query links
   // remain harmless deep links, but no longer expose alternate product UIs.
   return (
-    <GuestMomentCreateGate>
+    <GuestMomentCreateGate signInNextPath={guestSignInNextPath}>
       <div className="min-h-screen bg-[#0A0A0A] pb-24 text-[#F7F4ED]">
         <div className="mx-auto grid max-w-[1480px] gap-4 border-b border-white/10 px-5 py-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:px-12">
           <div>

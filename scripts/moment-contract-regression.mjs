@@ -83,8 +83,8 @@ assertNoMatch(
 );
 assertMatch(
   studio,
-  /const fixedMomentNextPath\s*=\s*[\s\S]{0,220}MOMENT_CREATE_HREF/,
-  "fixed Moment gate must derive its sign-in return path from the shared Moment href"
+  /const fixedMomentNextPath\s*=\s*fixedMomentCreateReturnPath\(\{[\s\S]{0,160}assetId:\s*initialAssetId/,
+  "fixed Moment gate must derive sign-in return path via fixedMomentCreateReturnPath (preserves durable assetId)"
 );
 assertMatch(
   studio,

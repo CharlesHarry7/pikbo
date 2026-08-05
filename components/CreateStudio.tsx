@@ -28,7 +28,6 @@ import { PRESETS } from "@/lib/presets";
 import { viralName } from "@/lib/viralNames";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { site } from "@/lib/site";
-import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { stripeBillingAuthHeaders } from "@/lib/stripeBillingClient";
 import { useToast } from "@/components/Toast";
 import { PaywallCard } from "@/components/PaywallCard";
@@ -97,6 +96,7 @@ import {
   applyRecentPreviewResolution,
   CREATE_RETRY_ASSET_ID_QUERY,
   deriveRecentReuseUiState,
+  fixedMomentCreateReturnPath,
   parseCreateRetryAssetIdQuery,
   planCreateQueryAssetHandoff,
   privateRecentOwnerKey,
@@ -404,9 +404,12 @@ export function CreateStudio({
   const composerHasInput = Boolean(composerImage || composerAssetId);
   // Always track the render-time owner for async list/preview commit gates.
   liveOwnerKeyRef.current = recentOwnerKey;
-  const fixedMomentNextPath = initialSource
-    ? `${MOMENT_CREATE_HREF}&source=${encodeURIComponent(initialSource)}`
-    : MOMENT_CREATE_HREF;
+  // Preserve durable Library `?assetId=` through Create sign-in so a mid-recovery
+  // session expiry does not force re-upload of the same private toy photo.
+  const fixedMomentNextPath = fixedMomentCreateReturnPath({
+    source: initialSource || undefined,
+    assetId: initialAssetId,
+  });
   const privateMomentLoginHref = `/login?next=${encodeURIComponent(
     fixedMomentNextPath
   )}`;

@@ -736,6 +736,9 @@ const {
   CREATE_RETRY_ASSET_ID_QUERY,
   parseCreateRetryAssetIdQuery,
   planCreateQueryAssetHandoff,
+  fixedMomentCreateReturnPath,
+  fixedMomentReturnPathFromLocation,
+  guestMomentSignInHref,
 } = clientModule;
 
 assert.equal(CREATE_RETRY_ASSET_ID_QUERY, "assetId");
@@ -768,6 +771,80 @@ assert.match(
   createStudio,
   /canAdoptAssetId\(asset\.id\)[\s\S]{0,200}fromQueryHandoff:\s*true/
 );
+
+// --- AIT-17: Library newAttemptUrl ↔ Create/login return path preserves assetId ---
+const {
+  controlledLibraryNewAttemptUrl,
+  acceptControlledLibraryNewAttemptUrl,
+} = await import("../lib/privateGenerationResultsPure.mjs");
+
+const libraryHandoffUrl = controlledLibraryNewAttemptUrl(inputAssetId);
+assert.ok(libraryHandoffUrl, "Library emits controlled same-photo Create URL");
+assert.equal(
+  acceptControlledLibraryNewAttemptUrl(libraryHandoffUrl),
+  libraryHandoffUrl
+);
+
+const loginReturnPath = fixedMomentReturnPathFromLocation(libraryHandoffUrl);
+assert.match(
+  loginReturnPath,
+  new RegExp(
+    `assetId=${inputAssetId.replace(/-/g, "\\-")}`,
+    "i"
+  ),
+  "login next path must keep durable assetId from Library handoff"
+);
+assert.match(loginReturnPath, /mode=moment/);
+assert.match(loginReturnPath, /effect=street-power-up/);
+assert.match(loginReturnPath, /source=library/);
+
+const signInHref = guestMomentSignInHref({ pathWithSearch: libraryHandoffUrl });
+assert.match(signInHref, /^\/login\?next=/);
+const decodedNext = decodeURIComponent(signInHref.replace(/^\/login\?next=/, ""));
+assert.match(
+  decodedNext,
+  new RegExp(`assetId=${inputAssetId.replace(/-/g, "\\-")}`, "i")
+);
+
+// Default guest path still works and never invents an assetId.
+assert.equal(
+  fixedMomentCreateReturnPath({ source: "guest-create" }),
+  "/create?mode=moment&effect=street-power-up&source=guest-create"
+);
+assert.doesNotMatch(
+  fixedMomentCreateReturnPath({ source: "guest-create" }),
+  /assetId=/
+);
+// Hostile location fails closed to guest Create (no open redirect, no junk asset).
+assert.equal(
+  fixedMomentReturnPathFromLocation("https://evil.example/steal"),
+  "/create?mode=moment&effect=street-power-up&source=guest-create"
+);
+assert.equal(
+  fixedMomentReturnPathFromLocation("/create?mode=moment&effect=street-power-up&assetId=not-a-uuid"),
+  "/create?mode=moment&effect=street-power-up&source=guest-create"
+);
+assert.equal(
+  fixedMomentReturnPathFromLocation(
+    `/create?mode=moment&effect=street-power-up&source=library&assetId=${inputAssetId}&prompt=steal`
+  ),
+  // Extra freeform keys are dropped; durable assetId is kept.
+  `/create?mode=moment&effect=street-power-up&source=library&assetId=${inputAssetId.toLowerCase()}`
+);
+
+// Create page + gate + CreateStudio all wire the preservable return path.
+assert.match(createPage, /fixedMomentCreateReturnPath/);
+assert.match(createPage, /signInNextPath=\{guestSignInNextPath\}/);
+assert.match(createPage, /assetId: sp\.assetId/);
+assert.match(createStudio, /fixedMomentCreateReturnPath/);
+assert.match(
+  createStudio,
+  /fixedMomentCreateReturnPath\(\{[\s\S]{0,120}assetId:\s*initialAssetId/
+);
+const gateSource = read("components/GuestMomentCreateGate.tsx");
+assert.match(gateSource, /guestMomentSignInHref/);
+assert.match(gateSource, /signInNextPath/);
+assert.match(gateSource, /signInHref/);
 // Explicit upload settles handoff so deferred query cannot override.
 const adoptImageSlice = createStudio.slice(
   createStudio.indexOf("const adoptImage = useCallback"),
@@ -1265,5 +1342,5 @@ assert.match(
 );
 
 console.log(
-  "private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery · owner-switch + selection race · render-time fail-closed · durable ?assetId= handoff · unbound-list wait race · beyond-recent pin include)"
+  "private-toy-input-pack-regression: PASS (v2 private input adapters · signed multipart upload · immutable 3-child binding · owner recovery · owner-switch + selection race · render-time fail-closed · durable ?assetId= handoff · unbound-list wait race · beyond-recent pin include · AIT-17 login return preserves Library assetId)"
 );

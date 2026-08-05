@@ -258,6 +258,94 @@ export function parseCreateRetryAssetIdQuery(
   return value;
 }
 
+const SAFE_CREATE_SOURCE_RE = /^[A-Za-z0-9._-]{1,48}$/;
+
+/**
+ * Safe fixed Street Power-Up Create return path for login / Magic Link `next`.
+ * Preserves a durable Library same-photo `assetId` handoff when present so a
+ * mid-recovery session expiry does not force re-upload. Never embeds prompts,
+ * object keys, signed URLs, emails, or freeform text.
+ */
+export function fixedMomentCreateReturnPath(input?: {
+  source?: string | null;
+  assetId?: string | null;
+}): string {
+  const params = new URLSearchParams();
+  params.set("mode", "moment");
+  params.set("effect", "street-power-up");
+
+  const assetId = parseCreateRetryAssetIdQuery(input?.assetId ?? null);
+  const rawSource =
+    typeof input?.source === "string" ? input.source.trim() : "";
+  const safeSource =
+    rawSource && SAFE_CREATE_SOURCE_RE.test(rawSource) ? rawSource : "";
+
+  if (assetId) {
+    params.set("source", safeSource || "library");
+    params.set(CREATE_RETRY_ASSET_ID_QUERY, assetId);
+  } else if (safeSource) {
+    params.set("source", safeSource);
+  } else {
+    params.set("source", "guest-create");
+  }
+
+  return `/create?${params.toString()}`;
+}
+
+/**
+ * Fail-closed extract of a fixed-Moment Create return path from an arbitrary
+ * relative location (pathname + search). Hostile or non-Moment paths fall back
+ * to the guest Create entry.
+ */
+export function fixedMomentReturnPathFromLocation(
+  pathWithSearch: string | null | undefined
+): string {
+  const fallback = fixedMomentCreateReturnPath({ source: "guest-create" });
+  if (typeof pathWithSearch !== "string" || !pathWithSearch.startsWith("/")) {
+    return fallback;
+  }
+  if (
+    pathWithSearch.startsWith("//") ||
+    pathWithSearch.includes("\\") ||
+    pathWithSearch.includes("://") ||
+    /[\u0000-\u001f\u007f]/.test(pathWithSearch)
+  ) {
+    return fallback;
+  }
+  try {
+    const url = new URL(pathWithSearch, "https://pikbo.local");
+    if (url.origin !== "https://pikbo.local") return fallback;
+    if (url.pathname !== "/create") return fallback;
+    if (url.hash) return fallback;
+    if (url.username || url.password) return fallback;
+    if (url.searchParams.get("mode") !== "moment") return fallback;
+    if (url.searchParams.get("effect") !== "street-power-up") return fallback;
+    return fixedMomentCreateReturnPath({
+      source: url.searchParams.get("source"),
+      assetId: url.searchParams.get(CREATE_RETRY_ASSET_ID_QUERY),
+    });
+  } catch {
+    return fallback;
+  }
+}
+
+/** Login deep-link that returns to a safe fixed-Moment Create path. */
+export function guestMomentSignInHref(input?: {
+  source?: string | null;
+  assetId?: string | null;
+  /** Prefer a full relative location when available (pathname + search). */
+  pathWithSearch?: string | null;
+}): string {
+  const next =
+    typeof input?.pathWithSearch === "string" && input.pathWithSearch
+      ? fixedMomentReturnPathFromLocation(input.pathWithSearch)
+      : fixedMomentCreateReturnPath({
+          source: input?.source,
+          assetId: input?.assetId,
+        });
+  return `/login?next=${encodeURIComponent(next)}`;
+}
+
 export type CreateQueryAssetHandoffPlan =
   | { action: "wait" }
   | { action: "adopt"; assetId: string }
