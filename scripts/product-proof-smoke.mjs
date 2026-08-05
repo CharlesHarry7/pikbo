@@ -44,12 +44,13 @@ assert(
     homeHero.includes("not your toy") &&
     home.includes("<HomeViralWall") &&
     home.includes("<HfProductRail") &&
+    home.includes("<HomeViralPresetRail") &&
     home.includes("buildHomeShowcaseFeed") &&
     !home.includes("PublicLaunchPackSample") &&
     !home.includes('from "@/components/HfExploreHome"') &&
     !home.includes("<HfExploreHome") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must expose Moment hero + Lab proof wall + HF product rail (no Pack / full Explore remount)"
+  "homepage must expose Moment hero + Lab proof wall + suite rail + thin HF density (no Pack / full Explore remount)"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),
@@ -75,12 +76,43 @@ assert(
       homeWall.includes(".slice(0, 8)")),
   "Lab proof wall must badge honestly, pin 360, use createGenerate360Href, cap ≤8"
 );
-// CTA hierarchy: Moment primary in hero, then wall, then suite rail (no dual hero Generate).
+// CTA hierarchy: Moment primary in hero, then wall, suite rail, thin density (no dual hero Generate).
 assert(
   home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeViralWall") &&
     home.indexOf("<HomeViralWall") < home.indexOf("<HfProductRail") &&
-    home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
-  "home order: Moment hero → proof wall → HF product rail → trust footer"
+    home.indexOf("<HfProductRail") < home.indexOf("<HomeViralPresetRail") &&
+    home.indexOf("<HomeViralPresetRail") < home.indexOf("<HomeTrustFooter"),
+  "home order: Moment hero → proof wall → suite rail → HF density rail → trust footer"
+);
+const homeRail = read("components/HfProductRail.tsx");
+assert(
+  homeRail.includes("createGenerate360Href") &&
+    homeRail.includes('"hf-product-rail"') &&
+    homeRail.includes("MOMENT_CREATE_HREF") &&
+    homeRail.includes("source=hf-product-rail") &&
+    homeRail.includes('data-home-suite-rail="hf-product"') &&
+    homeRail.includes("data-home-suite-360") &&
+    !homeRail.includes('"/create?effect=street-power-up"') &&
+    !homeRail.includes('"/create"'),
+  "HF product rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF (no bare /create)"
+);
+assert(
+  homeWall.includes('createGenerate360Href("home-proof-wall")') ||
+    homeWall.includes("createGenerate360Href('home-proof-wall')"),
+  "proof wall Listing 360 must tag source=home-proof-wall"
+);
+const homeDensity = read("components/HomeViralPresetRail.tsx");
+assert(
+  homeDensity.includes("createGenerate360Href") &&
+    homeDensity.includes('"home-viral-rail"') &&
+    homeDensity.includes('data-home-hf-density="viral-preset"') &&
+    homeDensity.includes("data-home-density-360") &&
+    homeDensity.includes("Lab · cached prototype") &&
+    homeDensity.includes("DEMO_VIDEOS") &&
+    !homeDensity.includes("PublicLaunchPackSample") &&
+    !homeDensity.includes("community") &&
+    !homeDensity.includes("/api/community"),
+  "HF density rail: Lab DEMO_VIDEOS only + createGenerate360Href (no Pack / community UGC)"
 );
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),

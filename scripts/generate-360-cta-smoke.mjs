@@ -60,6 +60,7 @@ assert.match(
 const generateSurfaces = [
   ["components/HomeToolShelf.tsx", "home-tool-shelf"],
   ["components/HomeViralWall.tsx", "home-proof-wall"],
+  ["components/HomeViralPresetRail.tsx", "home-viral-rail"],
   ["components/SuiteEntryStrip.tsx", "suite-entry"],
   ["components/HowItWorks.tsx", "how-it-works"],
   ["components/MobileGenerateBar.tsx", "mobile-bar"],

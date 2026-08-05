@@ -3902,10 +3902,36 @@ const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero/);
 assert.match(homePageSrc, /HomeViralWall/);
 assert.match(homePageSrc, /HfProductRail/);
+assert.match(homePageSrc, /HomeViralPresetRail/);
 assert.ok(
   homePageSrc.indexOf("<HomeCinemaHero") < homePageSrc.indexOf("<HomeViralWall") &&
-    homePageSrc.indexOf("<HomeViralWall") < homePageSrc.indexOf("<HfProductRail"),
-  "home CTA stack: Moment hero → proof wall → HF product rail"
+    homePageSrc.indexOf("<HomeViralWall") < homePageSrc.indexOf("<HfProductRail") &&
+    homePageSrc.indexOf("<HfProductRail") < homePageSrc.indexOf("<HomeViralPresetRail"),
+  "home CTA stack: Moment hero → proof wall → suite rail → HF density rail"
+);
+const homeDensityRailSrc = fs.readFileSync(
+  join(root, "components/HomeViralPresetRail.tsx"),
+  "utf8"
+);
+assert.match(
+  homeDensityRailSrc,
+  /data-home-hf-density=["']viral-preset["']/
+);
+assert.match(
+  homeDensityRailSrc,
+  /createGenerate360Href\(\s*["']home-viral-rail["']\)/
+);
+assert.match(homeDensityRailSrc, /data-home-density-360/);
+const homeSuiteRailSrc = fs.readFileSync(
+  join(root, "components/HfProductRail.tsx"),
+  "utf8"
+);
+assert.match(homeSuiteRailSrc, /data-home-suite-rail=["']hf-product["']/);
+assert.match(homeSuiteRailSrc, /MOMENT_CREATE_HREF/);
+assert.match(homeSuiteRailSrc, /data-home-suite-360/);
+assert.doesNotMatch(
+  homeSuiteRailSrc,
+  /href:\s*["']\/create\?effect=street-power-up["']/
 );
 const homeHeroSrc = fs.readFileSync(
   join(root, "components/HomeCinemaHero.tsx"),

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
 import { HomeTrustFooter } from "@/components/HomeTrustFooter";
 import { HomeViralWall } from "@/components/HomeViralWall";
+import { HomeViralPresetRail } from "@/components/HomeViralPresetRail";
 import { HfProductRail } from "@/components/HfProductRail";
 import { JsonLd } from "@/components/JsonLd";
 import {
@@ -43,9 +44,9 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const lcpPoster = "/demos/beatbot-still.webp";
-  // AIT-121: Moment hero primary (LCP) → Lab proof wall → HF product rail suite.
-  // Generate doors use createGenerate360Href; no second competing primary above fold.
-  // No full Explore remount, Seller Pack, or fake UGC.
+  // AIT-126: Moment hero (LCP) → Lab proof wall → suite rail → thin HF density
+  // rail (Lab clips only). Generate doors use createGenerate360Href.
+  // No full HfExploreHome remount, Seller Pack, or fake UGC.
   const proofWall = buildHomeShowcaseFeed();
 
   return (
@@ -61,6 +62,7 @@ export default function Home() {
       <HomeCinemaHero />
       <HomeViralWall items={proofWall} />
       <HfProductRail />
+      <HomeViralPresetRail />
       <HomeTrustFooter />
     </>
   );
