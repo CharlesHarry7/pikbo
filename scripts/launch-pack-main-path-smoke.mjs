@@ -134,9 +134,19 @@ assert.match(shell, /Create a Moment/);
 assert.match(shell, /label: "Library"/);
 assert.match(shell, /label: "Sign in"/);
 assert.doesNotMatch(shell, /Motion archive/);
-assert.match(softLaunchStrip, /create\?effect=street-power-up&source=soft-launch/);
-assert.match(hfExploreHome, /create\?effect=street-power-up/);
-assert.match(freeTrialCta, /onHome\s*\? "\/create\?effect=street-power-up&source=free-trial"/);
+assert.match(
+  softLaunchStrip,
+  /SOFT_LAUNCH_MOMENT_HREF|MOMENT_CREATE_HREF.*source=soft-launch|`\$\{MOMENT_CREATE_HREF\}&source=soft-launch`/
+);
+assert.match(
+  softLaunchStrip,
+  /createGenerate360Href\(\s*["']soft-launch["']\)|data-soft-launch=["']generate-remix["']/
+);
+assert.match(hfExploreHome, /create\?effect=street-power-up|MOMENT_CREATE_HREF|street-power-up/);
+assert.match(
+  freeTrialCta,
+  /createGenerate360Href\(\s*["']free-trial["']\)|onHome\s*\?\s*createGenerate360Href/
+);
 assert.doesNotMatch(
   [shell, softLaunchStrip, hfExploreHome, freeTrialCta].join("\n"),
   /create\?mode=seller-pack/

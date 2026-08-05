@@ -3,11 +3,11 @@ import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { MODELS } from "@/lib/catalog";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
 
 /** Models Generate doors — listing spin remix (ratio/duration/channel). */
-const MODELS_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const MODELS_GENERATE_HREF = createGenerate360Href("models");
 
 export const metadata: Metadata = {
   title: "Models · Preview",

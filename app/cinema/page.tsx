@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { useEffect, useMemo, useState } from "react";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
@@ -11,7 +12,7 @@ import { viralName } from "@/lib/viralNames";
 import { loadToyIdentity } from "@/lib/toyIdentity";
 
 /** Cinema Generate door — listing spin remix (ratio/duration/channel). */
-const CINEMA_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const CINEMA_GENERATE_HREF = createGenerate360Href("cinema");
 
 const LENSES = ["24mm", "35mm", "50mm", "85mm", "100mm macro"] as const;
 const MOVES = [

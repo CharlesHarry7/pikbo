@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LibraryGrid } from "@/components/LibraryGrid";
+import {
+  libraryEmpty360Href,
+  libraryEmptyMomentHref,
+} from "@/lib/libraryEmpty";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
-import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 export const metadata: Metadata = {
   title: "Your Moments · Library",
@@ -13,6 +16,9 @@ export const metadata: Metadata = {
 
 /** Owner-only results. Public samples and device-cached demos stay out. */
 export default function LibraryPage() {
+  const empty360Href = libraryEmpty360Href();
+  const emptyMomentHref = libraryEmptyMomentHref();
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[var(--void)] px-4 py-8 text-[var(--cream)] sm:px-8 sm:py-12">
       <div
@@ -35,10 +41,18 @@ export default function LibraryPage() {
                 again with your next product photo.
               </p>
             </div>
-            <div>
+            <div className="flex flex-wrap gap-2">
               <Link
-                href={`${MOMENT_CREATE_HREF}&source=library-empty`}
+                href={empty360Href}
                 className="btn btn-primary text-sm"
+                data-library-header-cta="generate-360"
+              >
+                Generate 360° Spin
+              </Link>
+              <Link
+                href={emptyMomentHref}
+                className="btn btn-ghost text-sm"
+                data-library-header-cta="moment"
               >
                 Create new Moment
               </Link>

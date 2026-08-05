@@ -7,13 +7,13 @@ import { allCategoryFeeds } from "@/lib/videoFeed";
 import { VideoTile } from "@/components/VideoTile";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { listCreateShelfWorkflows } from "@/lib/workflows";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { proofBackedRecipeSlugs } from "@/lib/seoIndex";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 /** Effects wall Generate doors — listing spin remix (ratio/duration/channel). */
-const EFFECTS_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const EFFECTS_GENERATE_HREF = createGenerate360Href("effects");
 
 export const metadata: Metadata = {
   title: "Toy video presets · Recipes",

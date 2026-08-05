@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import Link from "next/link";
 import {
   buildVideoFeed,
@@ -122,7 +123,7 @@ export default async function CommunityPage() {
           >
             <FreeTrialCta path="/community" variant="mint" />
             <Link
-              href={createRemixHref("360-spin-showcase")}
+              href={createGenerate360Href("community")}
               className="btn btn-ghost !px-3 !py-2 text-xs"
               data-community-generate="remix"
             >
@@ -233,7 +234,7 @@ export default async function CommunityPage() {
                       href={
                         p.effectSlug
                           ? createRemixHref(p.effectSlug)
-                          : createRemixHref("360-spin-showcase")
+                          : createGenerate360Href("community")
                       }
                       className="text-[11px] font-bold text-[var(--mint)]"
                     >
@@ -280,7 +281,7 @@ export default async function CommunityPage() {
                   Sign in
                 </Link>
                 <Link
-                  href={createRemixHref("360-spin-showcase")}
+                  href={createGenerate360Href("community")}
                   className="btn btn-ghost !px-3 !py-2 text-xs"
                   data-community-empty-generate="remix"
                 >
