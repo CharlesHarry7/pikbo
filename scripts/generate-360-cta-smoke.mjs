@@ -285,4 +285,80 @@ assert.match(
   "MobileGenerateBar root must carry floating-generate marker for clearance smoke"
 );
 
+// 7. AIT-137 — residual tool stickies on AppShell tab surfaces use shared clearance/z tokens
+const createStudioSrc = read("components/CreateStudio.tsx");
+const cinemaPageSrc = read("app/cinema/page.tsx");
+const batchStudioSrc = read("components/BatchStudio.tsx");
+
+const tabSurfaceStickies = [
+  [
+    "CreateStudio sticky",
+    createStudioSrc,
+    /data-floating-generate=["']create-sticky["']/,
+    /data-create-sticky=["']mobile["']/,
+  ],
+  [
+    "cinema sticky",
+    cinemaPageSrc,
+    /data-floating-generate=["']cinema["']/,
+    null,
+  ],
+  [
+    "ModulesMobileCta sticky",
+    modulesCta,
+    /data-floating-generate=["']modules["']/,
+    null,
+  ],
+  [
+    "BatchStudio sticky",
+    batchStudioSrc,
+    /data-floating-generate=["']batch-sticky["']/,
+    /data-seller-pack-sticky=["']mobile["']/,
+  ],
+];
+
+for (const [label, src, marker, secondary] of tabSurfaceStickies) {
+  assert.match(src, marker, `${label} must carry data-floating-generate marker`);
+  if (secondary) {
+    assert.match(src, secondary, `${label} must keep surface sticky marker`);
+  }
+  assert.match(
+    src,
+    /bottom-\[var\(--mobile-nav-clearance\)\]/,
+    `${label} must use --mobile-nav-clearance (tab nav + home indicator)`
+  );
+  assert.match(
+    src,
+    /z-\[var\(--floating-generate-z\)\]/,
+    `${label} must use --floating-generate-z`
+  );
+  assert.doesNotMatch(
+    src,
+    /bottom-\[4\.75rem\]/,
+    `${label} must not hardcode bare bottom-[4.75rem]`
+  );
+  assert.doesNotMatch(
+    src,
+    /bottom-\[calc\(4\.75rem/,
+    `${label} must not hardcode calc(4.75rem…) bottom offset`
+  );
+}
+
+// Repo ban: no bare 4.75rem sticky bottom left on tool / generate chrome surfaces
+const residualHardcodedBottom = [
+  ["components/CreateStudio.tsx", createStudioSrc],
+  ["app/cinema/page.tsx", cinemaPageSrc],
+  ["components/ModulesMobileCta.tsx", modulesCta],
+  ["components/BatchStudio.tsx", batchStudioSrc],
+  ["components/MobileGenerateBar.tsx", mobileBar],
+  ["components/HomeBrowseCta.tsx", browseCta],
+];
+for (const [rel, src] of residualHardcodedBottom) {
+  assert.doesNotMatch(
+    src,
+    /bottom-\[4\.75rem\]/,
+    `${rel} must not use bare bottom-[4.75rem] after AIT-71/137 token collapse`
+  );
+}
+
 console.log("generate-360-cta-smoke: ok");
