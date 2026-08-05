@@ -36,6 +36,13 @@ assert.match(
   /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
 );
 assert.match(homeHero, /href=\{MOMENT_CREATE_HREF\}/);
+assert.match(homeHero, /data-home-moment-cta/);
+assert.equal(
+  (homeHero.match(/data-home-moment-cta/g) || []).length,
+  1,
+  "home hero must expose exactly one primary Moment CTA"
+);
+assert.match(homeHero, /data-home-result-h1/);
 assert.match(homeHero, /Use this motion/);
 assert.match(homeHero, /Sample · Beatbot/);
 assert.match(homeHero, /Archive sample · 6s/);

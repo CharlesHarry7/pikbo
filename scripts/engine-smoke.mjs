@@ -3920,11 +3920,28 @@ const createSampleSrc = publicSampleSrc.slice(
   publicSampleSrc.indexOf("function CreateSampleBrowser")
 );
 assert.match(homeHeroSrc, /data-home-hero=["']street-power-up["']/);
+// Result-first H1 (site.homeH1) + exactly one primary Moment CTA.
+const siteHomeSrc = fs.readFileSync(join(root, "lib/site.ts"), "utf8");
+assert.match(
+  siteHomeSrc,
+  /homeH1:\s*["']One toy photo\. A clip ready to list or post\.["']/
+);
+assert.match(homeHeroSrc, /import\s*\{\s*site\s*\}\s*from\s*["']@\/lib\/site["']/);
+assert.match(homeHeroSrc, /data-home-result-h1/);
+assert.match(homeHeroSrc, /site\.homeH1|HOME_H1_LEAD|homeH1Lines/);
+assert.doesNotMatch(homeHeroSrc, /Put your toy|in motion\./);
+assert.match(homeHeroSrc, /href=\{MOMENT_CREATE_HREF\}/);
+assert.match(homeHeroSrc, /data-home-moment-cta/);
+assert.equal(
+  (homeHeroSrc.match(/data-home-moment-cta/g) || []).length,
+  1,
+  "home hero must expose exactly one primary Moment CTA"
+);
 assert.match(homeHeroSrc, /Use this motion/);
 assert.match(homeHeroSrc, /Sample · Beatbot/);
 assert.match(homeHeroSrc, /Sample shown: cached 6s archive/);
 assert.match(homeHeroSrc, /not a completed customer deliverable/);
-assert.match(homeMomentsSrc, /One toy photo\. More ways to sell\./);
+assert.match(homeMomentsSrc, /site\.homeH1|One toy photo\. A clip ready to list or post\./);
 assert.match(homeMomentsSrc, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(momentStageSrc, /Official Concept/);
 assert.match(momentStageSrc, /Preview with my toy/);

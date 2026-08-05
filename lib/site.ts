@@ -28,10 +28,11 @@ export const site = {
    */
   titleDefault: "Pikbo — AI Product Video Studio for Toy Sellers",
   /**
-   * Homepage H1 — brand + scene, not the full primary keyword phrase.
-   * Rank H1 stays on /tools/ai-toy-video-generator.
+   * Homepage H1 — result-first 潮玩 outcome (input → sellable clip).
+   * Not feature/category copy; rank H1 stays on /tools/ai-toy-video-generator.
+   * Canonical line also frozen in docs/prd/RETENTION_REMIX_LOOP.md.
    */
-  homeH1: "One toy photo. More ways to sell.",
+  homeH1: "One toy photo. A clip ready to list or post.",
   /** Primary rank keyword — tools page only; not homepage Title/H1 */
   keyword: "AI toy video generator",
   /** Rank battlefield URL for internal links */

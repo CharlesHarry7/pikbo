@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { site } from "@/lib/site";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const STREET_POWER_UP_SAMPLE = {
@@ -8,6 +9,15 @@ const STREET_POWER_UP_SAMPLE = {
   poster: "/demos/beatbot-still.webp",
   title: "Beatbot",
 } as const;
+
+/** Split result-first H1 into two display lines at the first sentence. */
+function homeH1Lines(h1: string): [string, string | null] {
+  const match = h1.match(/^(.+?\.)\s+(.+)$/);
+  if (match) return [match[1], match[2]];
+  return [h1, null];
+}
+
+const [HOME_H1_LEAD, HOME_H1_RESULT] = homeH1Lines(site.homeH1);
 
 /** Tiny SVG mascot — Pikbo "Pikko" toy-bot IP mark for the hero. */
 function PikkoMascot({ className = "" }: { className?: string }) {
@@ -130,16 +140,21 @@ export function HomeCinemaHero() {
 
           <h1
             id="home-moment-title"
+            data-home-result-h1
             className="fade-up fade-up-d1 mt-6 font-display text-[clamp(3.2rem,5.4vw,5.9rem)] font-black leading-[0.86] tracking-[-0.075em]"
           >
-            <span className="text-bling">Put your toy</span>
-            <br />
-            <span className="text-[var(--cream)]">in motion.</span>
+            <span className="text-bling">{HOME_H1_LEAD}</span>
+            {HOME_H1_RESULT ? (
+              <>
+                <br />
+                <span className="text-[var(--cream)]">{HOME_H1_RESULT}</span>
+              </>
+            ) : null}
           </h1>
 
           <p className="fade-up fade-up-d2 mt-6 max-w-[390px] text-base font-semibold leading-7 text-white/60 lg:text-lg">
             One directed effect. Your toy photo. A private vertical clip ready
-            for launch day.
+            to list, post, or drop.
           </p>
 
           <div className="fade-up fade-up-d3 mt-7 flex flex-wrap gap-2 text-[9px] font-black uppercase tracking-[0.15em] text-white/55">
