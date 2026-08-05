@@ -12,7 +12,7 @@ import {
 } from "@/lib/seoIndex";
 import { site } from "@/lib/site";
 import { getWorkflow, WORKFLOWS, type Workflow } from "@/lib/workflows";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -108,7 +108,7 @@ export default async function AppDetailPage({ params }: Props) {
   const name = workflow?.label ?? app?.name ?? "App";
   const blurb = workflow?.blurb ?? app?.blurb ?? "";
   const href =
-    workflow?.href ?? app?.href ?? createRemixHref("360-spin-showcase");
+    workflow?.href ?? app?.href ?? createGenerate360Href("app-detail");
   const live = workflow?.live ?? app?.live ?? false;
   const indexable = appDetailIndexable(workflow);
   const effect = workflow?.effect;

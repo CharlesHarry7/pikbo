@@ -1,6 +1,7 @@
 "use client";
 
 import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import Link from "next/link";
 import { useState } from "react";
 import type { DemoVideo } from "@/lib/demoVideos";
@@ -31,8 +32,7 @@ import { site } from "@/lib/site";
 function Clip({
   demo,
   className,
-  eager,
-}: {
+  eager}: {
   demo: DemoVideo;
   className?: string;
   eager?: boolean;
@@ -64,8 +64,7 @@ export function HfExploreHome({
   feed,
   viralWall,
   /** 哥飞: tool already on page — skip strip + demote hero H1 */
-  toolFirstLayout = false,
-}: {
+  toolFirstLayout = false}: {
   demos: DemoVideo[];
   projects: ShowcaseProject[];
   feed: FeedItem[];
@@ -88,8 +87,7 @@ export function HfExploreHome({
         ratio: d.ratio as FeedItem["ratio"],
         demo: d,
         kind: "demo" as const,
-        recipeSlug: d.preset,
-      }));
+        recipeSlug: d.preset}));
 
   const wallItems = viralWall?.filter(hasFeedVideo).length
     ? viralWall.filter(hasFeedVideo)
@@ -104,7 +102,7 @@ export function HfExploreHome({
       <div className="min-h-screen bg-black px-4 py-20 text-center text-white">
         <p className="text-white/50">No cached Lab prototypes yet.</p>
         <Link
-          href={createRemixHref("360-spin-showcase")}
+          href={createGenerate360Href("hf-explore")}
           className="mt-4 inline-block text-[#c8ff3d]"
           data-hf-empty-generate="remix"
         >
@@ -179,8 +177,7 @@ export function HfExploreHome({
                 track({
                   event: "recipe_use",
                   path: "/",
-                  recipe: item.recipeSlug,
-                })
+                  recipe: item.recipeSlug})
               }
               className="inline-flex items-center justify-center rounded-full border border-white/20 bg-black/50 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50 hover:bg-black/60"
             >
@@ -419,7 +416,7 @@ export function HfExploreHome({
               </h2>
             </div>
             <Link
-              href={createRemixHref("360-spin-showcase")}
+              href={createGenerate360Href("hf-explore")}
               className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
               data-hf-flow-generate="remix"
             >
@@ -441,8 +438,7 @@ export function HfExploreHome({
               {
                 href: "/create?effect=street-power-up",
                 label: "Street Power-Up Moment",
-                sub: "one directed clip",
-              },
+                sub: "one directed clip"},
               { href: "/modules", label: "Modules", sub: "Video jobs" },
               { href: "/effects", label: "Video presets", sub: "Viral recipes" },
               { href: "/library", label: "Library", sub: "This device" },

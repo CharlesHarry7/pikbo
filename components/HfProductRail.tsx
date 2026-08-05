@@ -4,10 +4,10 @@ import Link from "next/link";
 import { track } from "@/lib/analytics";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 
 /** Primary Generate door — listing spin remix (ratio/duration/channel). */
-const GENERATE_REMIX_HREF = createRemixHref("360-spin-showcase");
+const GENERATE_REMIX_HREF = createGenerate360Href("hf-product-rail");
 
 /**
  * HF homepage product entry strip — media-backed capability cards.

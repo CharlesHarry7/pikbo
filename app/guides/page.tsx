@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { GUIDES } from "@/lib/guides";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 /** Guides hub Open Generate — listing spin remix (ratio/duration/channel). */
-const GUIDES_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const GUIDES_GENERATE_HREF = createGenerate360Href("guides");
 
 export const metadata: Metadata = {
   title: "Guides",

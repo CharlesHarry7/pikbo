@@ -31,6 +31,8 @@ function controlledLocalJob(job: ReturnType<typeof toPublicJob>) {
     job.status === "failed" || job.status === "canceled";
   const base = {
     ...job,
+    // Process-memory ledger has no durable input_asset_id binding.
+    inputBound: false as const,
     durable: false as const,
     adapter: "process-memory" as const,
     capabilities: {

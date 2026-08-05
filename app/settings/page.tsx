@@ -14,11 +14,11 @@ import {
 } from "@/lib/meClient";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
 /** Settings chrome Generate — listing spin remix (ratio/duration/channel). */
-const SETTINGS_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const SETTINGS_GENERATE_HREF = createGenerate360Href("settings");
 
 type SessionJobsProbe = {
   open: number;

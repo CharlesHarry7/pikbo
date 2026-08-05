@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
-import { createLabSampleTryHref } from "@/lib/jobIntents";
+import { createLabSampleTryHref, createGenerate360Href } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
 
 /** Seedance Mini trial door — Lab sample remix + try/sample flags. */
@@ -102,7 +102,7 @@ function promoHref(promo: Promo, demoId?: string): string {
     return createRemixHref(promo.recipeSlug, demoId);
   }
   // Fallback Generate door — same listing-spin remix contract as shell CTAs
-  return createRemixHref("360-spin-showcase");
+  return createGenerate360Href("home-feature");
 }
 
 /** HF top: large full-bleed video cards, almost no chrome */

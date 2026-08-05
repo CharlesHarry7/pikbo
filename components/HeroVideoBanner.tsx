@@ -1,5 +1,6 @@
 "use client";
 
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -71,7 +72,7 @@ export function HeroVideoBanner() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href={createRemixHref("360-spin-showcase")}
+              href={createGenerate360Href("hero-banner")}
               className="btn btn-primary px-6 py-3 text-sm"
               data-hero-try-photo="remix"
             >

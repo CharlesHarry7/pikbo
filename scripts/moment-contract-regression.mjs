@@ -98,8 +98,13 @@ assertMatch(
 );
 assertMatch(
   libraryPage,
-  /href=\{`\$\{MOMENT_CREATE_HREF\}&source=library-empty`\}/,
-  "Library create CTA must return to the fixed Moment"
+  /libraryEmptyMomentHref|data-library-header-cta=["']moment["']/,
+  "Library secondary CTA must return to the fixed Moment via libraryEmptyMomentHref"
+);
+assertMatch(
+  libraryPage,
+  /libraryEmpty360Href|data-library-header-cta=["']generate-360["']/,
+  "Library primary Generate CTA must use libraryEmpty360Href (360 remix)"
 );
 assertMatch(
   libraryGrid,

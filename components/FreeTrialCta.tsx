@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
-import { createLabSampleTryHref } from "@/lib/jobIntents";
+import {
+  createGenerate360Href,
+  createLabSampleTryHref,
+} from "@/lib/jobIntents";
 import {
   canLiveGenerate,
   fetchMe,
@@ -97,7 +100,7 @@ export function FreeTrialCta({
         : demo || !freeLiveOpen
           ? FREE_TRIAL_TRY_HREF
           : onHome
-            ? "/create?effect=street-power-up&source=free-trial"
+            ? createGenerate360Href("free-trial")
             : FREE_TRIAL_TRY_HREF;
   const label =
     trialDone && !demo && freeLiveOpen

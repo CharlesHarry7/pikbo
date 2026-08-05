@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ProfilePanel } from "@/components/ProfilePanel";
 import { publicAuthStatus } from "@/lib/authConfig";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
 
 /** Page chrome Generate — listing spin remix (ratio/duration/channel). */
-const PROFILE_PAGE_GENERATE_HREF = createRemixHref("360-spin-showcase");
+const PROFILE_PAGE_GENERATE_HREF = createGenerate360Href("profile");
 
 export const metadata: Metadata = {
   title: "Profile",
