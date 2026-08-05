@@ -234,8 +234,7 @@ export function HomeCinemaHero() {
               </span>
             </Link>
             <p className="mt-4 text-[10px] font-semibold leading-5 text-white/40">
-              Sample shown: cached 6s archive, not a completed customer
-              deliverable. Private target: 9:16 · 5s · 720p.
+              Sample shown: cached 6s archive, not a completed customer deliverable. Private target: 9:16 · 5s · 720p.
             </p>
           </div>
 
