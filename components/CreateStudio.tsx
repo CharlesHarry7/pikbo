@@ -2199,10 +2199,12 @@ export function CreateStudio({
                 )}
               </div>
               <label
-                className={`group/drop relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
+                data-create-upload="dropzone"
+                data-filled={image ? "true" : "false"}
+                className={`toy-upload-zone group/drop relative flex cursor-pointer flex-col items-center justify-center ${
                   image
-                    ? "aspect-[16/10] border-[var(--mint)]/25 ring-1 ring-[var(--mint)]/15"
-                    : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:aspect-video"
+                    ? "aspect-[16/10]"
+                    : "min-h-[160px] sm:aspect-video"
                 }`}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDrop}
@@ -2221,7 +2223,7 @@ export function CreateStudio({
                   </>
                 ) : (
                   <span className="px-6 text-center text-sm text-[var(--fg-dim)]">
-                    <span className="mb-2 mx-auto grid h-12 w-12 place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.08] text-2xl" aria-hidden>
+                    <span className="toy-upload-icon mx-auto mb-2" aria-hidden>
                       🧸
                     </span>
                     <span className="block font-semibold text-white/80">
@@ -2980,7 +2982,20 @@ export function CreateStudio({
               </span>
             </div>
           </div>
-          <div className="media-stage relative flex min-h-[280px] flex-1 items-center justify-center overflow-hidden sm:min-h-[420px]">
+          <div
+            className={`media-stage relative flex min-h-[280px] flex-1 items-center justify-center overflow-hidden sm:min-h-[420px] ${
+              status === "done" && videoUrl ? "toy-result-frame" : ""
+            } ${status === "error" && !videoUrl ? "toy-broken-card border-0" : ""}`}
+            data-create-stage={
+              status === "generating" || status === "uploading"
+                ? "wait"
+                : status === "done" && videoUrl
+                  ? "result"
+                  : status === "error"
+                    ? "error"
+                    : "idle"
+            }
+          >
             {(status === "generating" || status === "uploading") && (
               <GenerateWaitStage
                 elapsed={elapsed}
@@ -3257,7 +3272,7 @@ export function CreateStudio({
                     <button
                       type="button"
                       data-create-download="gated"
-                      className="btn btn-primary w-full max-w-sm px-6 py-3.5 text-sm font-black tracking-tight sm:w-auto sm:min-w-[14rem]"
+                      className="btn-electric w-full max-w-sm px-6 py-3.5 text-sm tracking-tight sm:w-auto sm:min-w-[14rem]"
                       onClick={() => void downloadActiveResult()}
                     >
                       {t("create.download")}
@@ -3267,7 +3282,7 @@ export function CreateStudio({
                       type="button"
                       disabled
                       title="Unsafe deliverable URL — download blocked"
-                      className="btn btn-primary w-full max-w-sm cursor-not-allowed px-6 py-3.5 text-sm font-black opacity-50 sm:w-auto sm:min-w-[14rem]"
+                      className="btn-electric w-full max-w-sm cursor-not-allowed px-6 py-3.5 text-sm opacity-50 sm:w-auto sm:min-w-[14rem]"
                     >
                       {downloadBlockedCtaLabel({
                         downloadAllowed: true,
@@ -3279,7 +3294,7 @@ export function CreateStudio({
                       type="button"
                       disabled
                       title={freeLiveDownloadBlockReason()}
-                      className="btn btn-primary w-full max-w-sm cursor-not-allowed px-6 py-3.5 text-sm font-black opacity-50 sm:w-auto sm:min-w-[14rem]"
+                      className="btn-electric w-full max-w-sm cursor-not-allowed px-6 py-3.5 text-sm opacity-50 sm:w-auto sm:min-w-[14rem]"
                     >
                       {downloadBlockedCtaLabel({ downloadAllowed: false })}
                     </button>
@@ -3292,7 +3307,8 @@ export function CreateStudio({
                       <button
                         type="button"
                         onClick={retryActiveVersion}
-                        className="btn btn-ghost px-3.5 py-2 text-xs"
+                        data-create-regenerate
+                        className="btn-pink px-3.5 py-2 text-xs"
                       >
                         Retry this Moment
                       </button>
@@ -3329,16 +3345,18 @@ export function CreateStudio({
                   <button
                     type="button"
                     onClick={retryActiveVersion}
+                    data-create-regenerate
                     title="Reuse this version's exact recipe, still, duration, aspect, model, and seed. Appends a new version."
-                    className="btn btn-ghost px-3.5 py-2 text-xs"
+                    className="btn-pink px-3.5 py-2 text-xs"
                   >
                     {t("create.retrySame")}
                   </button>
                   <button
                     type="button"
                     onClick={makeVariant}
+                    data-create-regenerate="variant"
                     title="Uses your current Composer settings (recipe, duration, aspect, model) — not the frozen version."
-                    className="btn btn-ghost px-3.5 py-2 text-xs"
+                    className="btn-pink px-3.5 py-2 text-xs"
                   >
                     {t("create.makeVariant")}
                   </button>
@@ -3493,8 +3511,11 @@ export function CreateStudio({
               </div>
             )}
             {status === "error" && !videoUrl && (
-              <div className="relative z-[2] flex flex-col items-center p-8 text-center sm:p-10">
-                <span className="grid h-14 w-14 place-items-center rounded-2xl border border-[var(--brand)]/35 bg-[var(--brand)]/[0.08] text-[var(--brand)] sm:h-16 sm:w-16">
+              <div
+                className="relative z-[2] flex flex-col items-center p-8 text-center sm:p-10"
+                data-create-error="broken-card"
+              >
+                <span className="grid h-14 w-14 place-items-center rounded-2xl border border-[#FF5A6A]/50 bg-[#FF5A6A]/12 text-[#FF8A96] shadow-[0_0_24px_rgba(255,90,106,0.25)] sm:h-16 sm:w-16">
                   <svg
                     width="26"
                     height="26"
@@ -3506,9 +3527,9 @@ export function CreateStudio({
                     strokeLinejoin="round"
                     aria-hidden
                   >
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M12 8v5" />
-                    <path d="M12 16h.01" />
+                    <path d="M4 7l4-3h8l4 3v10l-4 3H8l-4-3V7z" />
+                    <path d="M9 9l6 6" />
+                    <path d="M15 9l-6 6" />
                   </svg>
                 </span>
                 <p className="mt-4 font-display text-base font-bold uppercase tracking-tight text-white sm:text-lg">
@@ -3524,7 +3545,8 @@ export function CreateStudio({
                       type="button"
                       disabled={busy}
                       onClick={() => void generate()}
-                      className="btn btn-primary px-6 py-2.5 text-sm disabled:opacity-50"
+                      data-create-retry
+                      className="btn-pink px-6 py-2.5 text-sm font-black text-[#0c0618] !bg-[var(--toy-pink-soft)] !border-[var(--toy-pink-soft)] disabled:opacity-50"
                     >
                       {t("create.retryGenerate")}
                     </button>

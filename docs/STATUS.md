@@ -4,8 +4,9 @@
 
 **Canonical code:** `main@104b4ef` — durable Library statuses + input binding
 (#140/#141). Open reuse closeout: #142 (Create receiver), #159 (Library success
-reuse). Branch `agent/grok/toy-library-collector-ui` adds the 潮玩 design system
-and Library collector shelf; no TDH edits and no Provider spend.
+reuse). Integration branch `agent/grok/ui-integration-2026-08-06` (#165) now
+includes AIT-33 Create ritual (guest study + owner upload/wait/result/broken)
+on top of design system + Hero + Pricing + Library. No Provider spend this round.
 
 **Production:** `https://pikbo.ai` is deployed and operator-verified. It remains
 hard-closed: `/api/health` is `validation`, `softLive=false`, and `paid=false`;

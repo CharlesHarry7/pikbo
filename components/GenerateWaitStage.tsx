@@ -141,24 +141,17 @@ export function GenerateWaitStage({
 
   return (
     <div
-      className={`relative flex w-full flex-col items-center justify-center text-center ${
+      className={`toy-wait-stage status-card relative flex w-full flex-col items-center justify-center text-center ${
         compact ? "p-5" : "p-7 sm:p-10"
       } ${className}`}
       role="status"
       aria-live="polite"
       aria-busy="true"
+      data-tone="progress"
       data-awaiting-primary={awaitingPrimary ? "true" : "false"}
       data-long-wait={longWait ? "true" : "false"}
+      data-create-wait="status-card"
     >
-      {/* Soft stage glow */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-40"
-        style={{
-          background:
-            "radial-gradient(ellipse 70% 50% at 50% 40%, rgba(200,255,61,0.12), transparent 70%)",
-        }}
-      />
-
       {image ? (
         <div className="relative mb-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -167,31 +160,42 @@ export function GenerateWaitStage({
             alt=""
             width={compact ? 64 : 88}
             height={compact ? 64 : 88}
-            className={`rounded-2xl object-cover ring-2 ring-[var(--mint)]/40 shadow-[0_0_32px_rgba(200,255,61,0.2)] ${
+            className={`rounded-2xl object-cover ring-2 ring-[var(--toy-neon)]/45 shadow-[0_0_32px_rgba(57,255,20,0.22)] ${
               compact ? "h-16 w-16" : "h-[5.5rem] w-[5.5rem]"
             }`}
           />
-          <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-[var(--mint)] text-[10px] font-black text-black shadow-[0_0_12px_rgba(200,255,61,0.5)]">
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-black/20 border-t-black" />
+          <span className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border border-[var(--toy-neon)]/50 bg-black/80 shadow-[0_0_12px_rgba(57,255,20,0.45)]">
+            <span className="toy-shard-loader scale-[0.45]" aria-hidden>
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+            </span>
           </span>
         </div>
       ) : (
         <div
-          className={`mx-auto mb-4 animate-spin rounded-full border-2 border-white/15 border-t-[var(--mint)] ${
-            compact ? "h-9 w-9" : "h-11 w-11"
-          }`}
-        />
+          className={`toy-shard-loader mx-auto mb-4 ${compact ? "scale-90" : ""}`}
+          aria-hidden
+        >
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
       )}
 
       <p
-        className={`relative font-black tracking-tight text-white ${
+        className={`toy-wait-title relative tracking-tight text-white ${
           compact ? "text-sm" : "text-base sm:text-lg"
         }`}
       >
         {title}
       </p>
       {effectLabel ? (
-        <p className="relative mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--mint)]/90">
+        <p className="relative mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--toy-neon)]/90">
           {effectLabel}
         </p>
       ) : null}
@@ -213,16 +217,16 @@ export function GenerateWaitStage({
               {i > 0 ? (
                 <span
                   className={`h-px w-4 sm:w-6 ${
-                    done || on ? "bg-[var(--mint)]/50" : "bg-white/15"
+                    done || on ? "bg-[var(--toy-neon)]/55" : "bg-white/15"
                   }`}
                 />
               ) : null}
               <span
                 className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${
                   on
-                    ? "bg-[var(--mint)] text-black"
+                    ? "bg-[var(--toy-neon)] text-black"
                     : done
-                      ? "border border-[var(--mint)]/40 text-[var(--mint)]"
+                      ? "border border-[var(--toy-neon)]/40 text-[var(--toy-neon)]"
                       : "border border-white/10 text-white/35"
                 }`}
               >
@@ -234,16 +238,14 @@ export function GenerateWaitStage({
       </div>
 
       <div
-        className={`relative mx-auto mt-4 overflow-hidden rounded-full bg-white/10 ${
+        className={`toy-progress-track relative mx-auto mt-4 ${
           compact ? "h-1.5 w-44" : "h-2 w-52 sm:w-64"
         }`}
+        data-create-progress
       >
         <div
-          className="h-full rounded-full transition-all duration-500 ease-out"
-          style={{
-            width: `${pct}%`,
-            background: "var(--grad, linear-gradient(90deg,#c8ff3d,#7dffb3))",
-          }}
+          className="toy-progress-fill"
+          style={{ width: `${pct}%` }}
         />
       </div>
 
@@ -352,14 +354,8 @@ export function GenerateWaitMobileStrip({
           {awaitingPrimary ? "No second job" : "Keep tab open"}
         </span>
       </div>
-      <div className="mb-2 h-1 overflow-hidden rounded-full bg-white/10">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{
-            width: `${pct}%`,
-            background: "var(--grad, #c8ff3d)",
-          }}
-        />
+      <div className="toy-progress-track mb-2 h-1" data-create-progress="mobile">
+        <div className="toy-progress-fill" style={{ width: `${pct}%` }} />
       </div>
       <div className="flex flex-col gap-1.5">
         {showLeaveToLibrary ? (

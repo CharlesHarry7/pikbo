@@ -77,36 +77,57 @@ export default async function CreatePage({
   // remain harmless deep links, but no longer expose alternate product UIs.
   return (
     <GuestMomentCreateGate>
-      <div className="min-h-screen bg-[#0A0A0A] pb-24 text-[#F7F4ED]">
-        <div className="mx-auto grid max-w-[1480px] gap-4 border-b border-white/10 px-5 py-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:px-12">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#CBFF3D]">
-              Pikbo Moment · private render
-            </p>
-            <h1 className="mt-2 max-w-4xl font-display text-[clamp(2.45rem,4.2vw,4.5rem)] font-black leading-[0.9] tracking-[-0.06em]">
-              Turn one toy photo into Street Power-Up.
-            </h1>
+      <div className="create-ritual min-h-screen pb-24 text-[var(--fg)]">
+        <div className="create-ritual-grid" aria-hidden />
+        <header className="relative z-[1] mx-auto max-w-[1480px] px-5 py-5 sm:px-8 lg:px-12">
+          <div className="collection-card toy-sticker-enter grid gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] lg:items-end">
+            <span className="toy-corner-mark toy-corner-mark-tl" aria-hidden />
+            <span className="toy-corner-mark toy-corner-mark-br" aria-hidden />
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="toy-sticker toy-sticker-lime">
+                  Pikbo Moment
+                </span>
+                <span className="toy-sticker toy-sticker-grape">
+                  Private render
+                </span>
+                <span className="toy-sticker toy-sticker-outline">
+                  Owner photo only
+                </span>
+              </div>
+              <h1 className="mt-4 max-w-4xl font-display text-[clamp(2.35rem,4vw,4.25rem)] font-black leading-[0.9] tracking-[-0.06em]">
+                Turn one toy photo into{" "}
+                <span className="text-grad">Street Power-Up.</span>
+              </h1>
+            </div>
+            <div className="status-card" data-tone="progress">
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aqua)]">
+                Fixed contract
+              </p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-white/58">
+                One fixed 9:16 · 5s · 720p video. Upload privately, pay 10
+                credits only when it completes, then recover and download it
+                from Library.
+              </p>
+            </div>
           </div>
-          <p className="border-l border-[#CBFF3D]/35 pl-4 text-sm font-semibold leading-6 text-white/56">
-            One fixed 9:16 · 5s · 720p video. Upload privately, pay 10
-            credits only when it completes, then recover and download it from
-            Library.
-          </p>
+        </header>
+        <div className="relative z-[1]">
+          <CreateStudio
+            initialEffect="street-power-up"
+            initialMode="i2v"
+            initialSource={sp.source}
+            initialRatio="9:16"
+            initialDuration="5"
+            initialChannel={sp.channel}
+            initialSample={firstRunSample}
+            initialJob={sp.job}
+            initialSku={sp.sku}
+            initialRetryJobId={sp.retryJobId}
+            initialRetryToken={sp.retryToken}
+            fixedMomentContract
+          />
         </div>
-        <CreateStudio
-          initialEffect="street-power-up"
-          initialMode="i2v"
-          initialSource={sp.source}
-          initialRatio="9:16"
-          initialDuration="5"
-          initialChannel={sp.channel}
-          initialSample={firstRunSample}
-          initialJob={sp.job}
-          initialSku={sp.sku}
-          initialRetryJobId={sp.retryJobId}
-          initialRetryToken={sp.retryToken}
-          fixedMomentContract
-        />
       </div>
     </GuestMomentCreateGate>
   );
