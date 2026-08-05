@@ -134,4 +134,31 @@ assert.match(
   "Guest Create Lab video must enable errorRetry for honest mobile recovery"
 );
 
+// AIT-124: fixed Moment sticky primary stays result-first (owned photo → drop clip).
+assert.match(
+  studio,
+  /data-sticky-primary="drop-clip-sign-in"/,
+  "fixed Moment sticky sign-in must be tagged drop-clip"
+);
+assert.match(
+  studio,
+  /Sign in to create your drop clip/,
+  "fixed Moment sticky/stage sign-in must read drop clip"
+);
+assert.match(
+  studio,
+  /Upload owned photo for your drop clip/,
+  "fixed Moment sticky upload must read drop clip"
+);
+assert.match(
+  studio,
+  /Create my drop clip · \$\{CREDITS_PER_VIDEO\} credits/,
+  "fixed Moment sticky/desktop generate label stays Create my drop clip"
+);
+assert.match(
+  studio,
+  /data-fixed-moment-stage-lead=["']result-first["']/,
+  "fixed Moment stage lead freezes result-first on mobile proof path"
+);
+
 console.log("mobile proof regression: source contracts PASS");
