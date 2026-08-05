@@ -818,7 +818,7 @@ a {
   transform: rotate(2deg);
 }
 
-/* Fluorescent diagonal stripe + Most Popular chip */
+/* Fluorescent diagonal stripe + Most Popular chip (clipped by card overflow) */
 .pricing-card__stripe {
   position: absolute;
   top: 1.15rem;
@@ -828,6 +828,7 @@ a {
   align-items: center;
   justify-content: center;
   width: 11.5rem;
+  max-width: none;
   padding: 0.42rem 0;
   background: var(--toy-fluo);
   color: var(--toy-ink);
@@ -839,6 +840,44 @@ a {
   box-shadow: 0 6px 18px -8px rgba(245, 255, 64, 0.75);
   transition: transform 0.2s ease;
   pointer-events: none;
+}
+
+/* AIT-128 · 390px free/paid shelf: no hover scale bleed, compare table fits */
+.pricing-compare {
+  max-width: 100%;
+}
+.pricing-compare__table {
+  table-layout: fixed;
+  width: 100%;
+}
+.pricing-compare__table th,
+.pricing-compare__table td {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 419px) {
+  .pricing-free-card:hover,
+  .pricing-card--featured:hover {
+    transform: none;
+  }
+  .pricing-card--featured:hover .pricing-card__stripe {
+    transform: rotate(32deg);
+  }
+  .pricing-card__stripe {
+    top: 0.95rem;
+    right: -2.75rem;
+    width: 10.25rem;
+    font-size: 0.52rem;
+    letter-spacing: 0.12em;
+    padding: 0.36rem 0;
+  }
+  .pricing-free-card,
+  .pricing-card--featured {
+    max-width: 100%;
+  }
+  .pricing-free-card .toy-sticker {
+    max-width: 100%;
+  }
 }
 
 /* Featured CTA: ink plate + fluorescent type + gloss sweep */

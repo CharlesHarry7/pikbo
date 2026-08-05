@@ -183,12 +183,13 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="mt-9 grid gap-5 lg:mt-12 lg:grid-cols-2 lg:items-stretch">
-          {/* Lab Viewer — free tier polish (toy tokens only) */}
+        <div className="mt-9 grid min-w-0 gap-5 lg:mt-12 lg:grid-cols-2 lg:items-stretch">
+          {/* Lab Viewer — free tier polish (toy tokens only); min-w-0 keeps 390px shelf in-flow */}
           <article
-            className="pricing-free-card toy-sticker-enter relative flex flex-col p-5 sm:p-8"
+            className="pricing-free-card toy-sticker-enter relative flex min-w-0 flex-col overflow-hidden p-5 sm:p-8"
             data-pricing-plan="lab-viewer"
             data-pricing-tier="free"
+            data-pricing-mobile="390-safe"
           >
             <span className="toy-corner-mark toy-corner-mark-tl" aria-hidden />
             <span className="toy-corner-mark toy-corner-mark-br" aria-hidden />
@@ -266,9 +267,10 @@ export default function PricingPage() {
 
           {/* Founding Studio — featured pricing-card; paid CTA closed without Stripe */}
           <article
-            className="pricing-card pricing-card--featured flex flex-col p-5 sm:p-8"
+            className="pricing-card pricing-card--featured flex min-w-0 flex-col overflow-hidden p-5 sm:p-8"
             data-pricing-state="closed-beta"
             data-pricing-plan="founding-studio"
+            data-pricing-mobile="390-safe"
           >
             <div className="pricing-card__stripe" aria-hidden>
               Most Popular
@@ -369,8 +371,8 @@ export default function PricingPage() {
             </p>
           </div>
 
-          <div className="status-card pricing-compare mt-6 overflow-hidden">
-            <table className="w-full border-collapse text-left text-sm">
+          <div className="status-card pricing-compare mt-6 min-w-0 overflow-x-auto overscroll-x-contain p-0 sm:p-0">
+            <table className="pricing-compare__table w-full min-w-0 border-collapse text-left text-sm">
               <caption className="sr-only">
                 Feature comparison between free Lab Viewer and Founding Studio
               </caption>
@@ -378,19 +380,19 @@ export default function PricingPage() {
                 <tr className="status-card__head">
                   <th
                     scope="col"
-                    className="px-4 py-3.5 font-display text-[10px] font-black uppercase tracking-[0.14em] text-white/70 sm:px-5"
+                    className="px-3 py-3 font-display text-[9px] font-black uppercase tracking-[0.12em] text-white/70 sm:px-5 sm:py-3.5 sm:text-[10px] sm:tracking-[0.14em]"
                   >
                     Feature
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3.5 font-display text-[10px] font-black uppercase tracking-[0.14em] text-[var(--toy-pink)] sm:px-5"
+                    className="px-2 py-3 font-display text-[9px] font-black uppercase tracking-[0.12em] text-[var(--toy-pink)] sm:px-5 sm:py-3.5 sm:text-[10px] sm:tracking-[0.14em]"
                   >
                     Lab Viewer
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3.5 font-display text-[10px] font-black uppercase tracking-[0.14em] text-[var(--toy-neon)] sm:px-5"
+                    className="px-2 py-3 font-display text-[9px] font-black uppercase tracking-[0.12em] text-[var(--toy-neon)] sm:px-5 sm:py-3.5 sm:text-[10px] sm:tracking-[0.14em]"
                   >
                     Founding Studio
                   </th>
@@ -408,17 +410,17 @@ export default function PricingPage() {
                   >
                     <th
                       scope="row"
-                      className="px-4 py-3.5 pl-5 text-sm font-black text-white sm:px-5 sm:pl-6"
+                      className="max-w-[7.5rem] px-3 py-3 pl-4 text-xs font-black leading-snug text-white sm:max-w-none sm:px-5 sm:py-3.5 sm:pl-6 sm:text-sm"
                     >
                       {row.feature}
                     </th>
                     <td
-                      className={`px-4 py-3.5 text-xs sm:px-5 sm:text-sm ${cellClass(row.freeTone)}`}
+                      className={`break-words px-2 py-3 text-[11px] leading-snug sm:px-5 sm:py-3.5 sm:text-sm ${cellClass(row.freeTone)}`}
                     >
                       {row.free}
                     </td>
                     <td
-                      className={`px-4 py-3.5 text-xs sm:px-5 sm:text-sm ${cellClass(row.studioTone)}`}
+                      className={`break-words px-2 py-3 text-[11px] leading-snug sm:px-5 sm:py-3.5 sm:text-sm ${cellClass(row.studioTone)}`}
                     >
                       {row.studio}
                     </td>
