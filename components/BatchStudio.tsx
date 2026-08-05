@@ -1662,11 +1662,16 @@ export function BatchStudio({
   return (
     <div
       className={
-        sellerPackActive
-          ? "mt-4 grid gap-4 pb-32 text-[#111827] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-5 lg:pb-0"
-          : "mt-8 grid gap-6 pb-36 lg:grid-cols-[1fr_1.1fr] lg:pb-0"
+        // AIT-145: nav-less Seller Pack (pack=seller) — sticky chrome + safe-bottom only
+        // (pairs with AppShell hideMobileNav). Tab-sharing batch keeps prior pb pad.
+        isSellerPack
+          ? "mt-4 grid gap-4 pb-[var(--create-content-pad-safe)] text-[#111827] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-5 lg:pb-0"
+          : sellerPackActive
+            ? "mt-4 grid gap-4 pb-32 text-[#111827] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-5 lg:pb-0"
+            : "mt-8 grid gap-6 pb-36 lg:grid-cols-[1fr_1.1fr] lg:pb-0"
       }
       data-launch-workspace={sellerPackActive ? "seller-pack" : undefined}
+      data-batch-content-pad={isSellerPack ? "safe-bottom" : "mobile-nav"}
     >
       <div className="space-y-4">
         {sellerPackActive && meResolved && !privateLaunchEnabled ? (
@@ -2774,15 +2779,22 @@ export function BatchStudio({
         ))}
       </div>
 
-      {/* Phase F: sticky mobile Seller Pack / Batch CTA — clears AppShell tab + home indicator (AIT-137) */}
+      {/* Phase F: sticky mobile Seller Pack / Batch CTA
+          Nav-less Seller Pack (pack=seller) hides AppShell tab → safe-area only (AIT-145 / AIT-141 parity).
+          Tab-sharing custom batch still clears tab + home indicator (AIT-137). */}
       <div
         className={
-          sellerPackActive
-            ? "fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-[#D5D9E1] bg-white/96 px-4 py-2.5 shadow-[0_-12px_36px_rgba(22,32,51,0.12)] backdrop-blur-xl lg:hidden"
-            : "fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+          isSellerPack
+            ? "fixed inset-x-0 bottom-[var(--floating-cta-safe-bottom)] z-[var(--floating-generate-z)] border-t border-[#D5D9E1] bg-white/96 px-4 py-2.5 shadow-[0_-12px_36px_rgba(22,32,51,0.12)] backdrop-blur-xl lg:hidden"
+            : sellerPackActive
+              ? "fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-[#D5D9E1] bg-white/96 px-4 py-2.5 shadow-[0_-12px_36px_rgba(22,32,51,0.12)] backdrop-blur-xl lg:hidden"
+              : "fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
         }
         data-seller-pack-sticky="mobile"
         data-floating-generate="batch-sticky"
+        data-batch-sticky-clearance={
+          isSellerPack ? "safe-bottom" : "mobile-nav"
+        }
       >
         {image ? (
           <p className={sellerPackActive ? "mb-1.5 truncate text-center text-[10px] font-bold text-[#667085]" : "mb-1.5 truncate text-center text-[10px] font-medium text-white/55"}>

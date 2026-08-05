@@ -338,6 +338,33 @@ for (const [label, src, marker, secondary] of tabSurfaceStickies) {
   );
 }
 
+// 7b. AIT-145 — BatchStudio sticky: nav-less Seller Pack vs tab-sharing batch
+assert.match(
+  batchStudioSrc,
+  /isSellerPack\s*\?\s*["'][^"']*bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "nav-less Seller Pack sticky must use --floating-cta-safe-bottom (no ghost tab gap)"
+);
+assert.match(
+  batchStudioSrc,
+  /data-batch-sticky-clearance=\{\s*isSellerPack\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+  "BatchStudio sticky must expose clearance branch for smoke (safe-bottom | mobile-nav)"
+);
+assert.match(
+  batchStudioSrc,
+  /isSellerPack\s*\?[\s\S]{0,280}pb-\[var\(--create-content-pad-safe\)\]/,
+  "nav-less Seller Pack content pad must use --create-content-pad-safe (sticky height only)"
+);
+assert.match(
+  batchStudioSrc,
+  /data-batch-content-pad=\{\s*isSellerPack\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+  "BatchStudio content pad branch must be smoke-visible (safe-bottom | mobile-nav)"
+);
+assert.match(
+  batchStudioSrc,
+  /:\s*["'][^"']*bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "non-seller-pack BatchStudio sticky must still clear tab nav via --mobile-nav-clearance"
+);
+
 // 8. AIT-141 — CreateStudio sticky: nav-less Moment vs tab-sharing generic Create
 assert.match(
   createStudioSrc,

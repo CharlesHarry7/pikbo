@@ -2576,6 +2576,23 @@ assert.match(
 );
 assert.match(batchStudio, /data-floating-generate=["']batch-sticky["']/);
 assert.doesNotMatch(batchStudio, /fixed inset-x-0 bottom-0/);
+// AIT-145: nav-less Seller Pack sticky/content pad pair with AIT-141/144 safe-bottom
+assert.match(
+  batchStudio,
+  /isSellerPack\s*\?\s*["'][^"']*bottom-\[var\(--floating-cta-safe-bottom\)\]/
+);
+assert.match(
+  batchStudio,
+  /data-batch-sticky-clearance=\{\s*isSellerPack\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/
+);
+assert.match(
+  batchStudio,
+  /pb-\[var\(--create-content-pad-safe\)\]/
+);
+assert.match(
+  batchStudio,
+  /data-batch-content-pad=\{\s*isSellerPack\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/
+);
 assert.match(
   appShell,
   /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/

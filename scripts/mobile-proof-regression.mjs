@@ -93,6 +93,27 @@ assert.doesNotMatch(
   /SellerPackSteps/,
   "Launch Workspace must not restore the rejected mobile SaaS stepper"
 );
+// AIT-145: BatchStudio nav-less Seller Pack sticky/content pad (AIT-141/144 parity)
+assert.match(
+  batch,
+  /isSellerPack\s*\?\s*["'][^"']*bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "nav-less Seller Pack sticky must sit on --floating-cta-safe-bottom (no ghost tab gap)"
+);
+assert.match(
+  batch,
+  /data-batch-sticky-clearance=\{\s*isSellerPack\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+  "Batch sticky clearance branch must be smoke-visible"
+);
+assert.match(
+  batch,
+  /isSellerPack\s*\?[\s\S]{0,280}pb-\[var\(--create-content-pad-safe\)\]/,
+  "nav-less Seller Pack content pad must use --create-content-pad-safe"
+);
+assert.match(
+  batch,
+  /data-batch-content-pad=\{\s*isSellerPack\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+  "Batch content pad branch must be smoke-visible"
+);
 assert.match(
   shell,
   /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/,
