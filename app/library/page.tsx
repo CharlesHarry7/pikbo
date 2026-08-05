@@ -14,56 +14,68 @@ export const metadata: Metadata = {
 /** Owner-only results. Public samples and device-cached demos stay out. */
 export default function LibraryPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[var(--void)] px-4 py-8 text-[var(--cream)] sm:px-8 sm:py-12">
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(42%_80%_at_8%_0%,rgba(177,78,255,0.2),transparent_72%),radial-gradient(36%_70%_at_92%_0%,rgba(255,78,205,0.14),transparent_68%)]"
-        aria-hidden
-      />
-      <div className="relative mx-auto max-w-7xl">
-        <section className="toy-card mb-8 p-5 sm:p-8">
+    <div className="library-cabinet px-4 py-8 sm:px-8 sm:py-12">
+      <div className="relative z-[1] mx-auto max-w-7xl">
+        <section className="collection-card motion-enter mb-8 p-5 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FF4ECD]">
-                Private Library
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#a84578]">
+                Private collector shelf
               </p>
-              <h1 className="mt-3 max-w-3xl font-display text-4xl font-black tracking-[-0.055em] sm:text-6xl">
-                <span className="text-bling">Your Moments.</span>
+              <h1 className="mt-3 max-w-3xl font-display text-4xl font-black tracking-[-0.055em] text-[#0e0e12] sm:text-6xl">
+                Your Moments.
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--fg-muted)]">
-                Find every real toy video generated with your account. Download a
-                finished result, retry a failed render, or use the same Moment
-                again with your next product photo.
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#0e0e12]/72">
+                Every real toy video on your account lives here. Download a
+                finished clip, retry a failed render, or run the same Moment
+                with your next product photo.
               </p>
             </div>
-            <div>
+            <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
               <Link
                 href={`${MOMENT_CREATE_HREF}&source=library-empty`}
                 className="btn btn-primary text-sm"
               >
                 Create new Moment
               </Link>
+              <p className="text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-[#0e0e12]/45 sm:text-right">
+                One photo · private delivery
+              </p>
             </div>
           </div>
+
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
-            {[
-              ["Private", "Only your account can access these results", "#B14EFF"],
-              ["Recoverable", "Finished videos return after refresh", "#00D9FF"],
-              ["Ready to use", "Download or generate the Moment again", "#00FFA3"],
-            ].map(([label, value, accent]) => (
-              <div key={label} className="stat-card px-4 py-3.5">
-                <p
-                  className="text-[9px] font-black uppercase tracking-[0.15em]"
-                  style={{ color: accent }}
-                >
-                  {label}
+            {(
+              [
+                {
+                  label: "Private",
+                  value: "Only your account can open these results",
+                  tone: "status-card--private" as const,
+                },
+                {
+                  label: "Recoverable",
+                  value: "Finished videos return after refresh",
+                  tone: "status-card--ok" as const,
+                },
+                {
+                  label: "Ready to use",
+                  value: "Download or generate the Moment again",
+                  tone: "status-card--info" as const,
+                },
+              ] as const
+            ).map((item) => (
+              <div key={item.label} className={`status-card ${item.tone}`}>
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/80">
+                  {item.label}
                 </p>
-                <p className="mt-1 text-xs font-semibold text-white/48">
-                  {value}
+                <p className="mt-1.5 text-xs font-semibold leading-5 text-white/55">
+                  {item.value}
                 </p>
               </div>
             ))}
           </div>
         </section>
+
         <LibraryGrid />
       </div>
     </div>

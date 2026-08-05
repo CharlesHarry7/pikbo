@@ -27,7 +27,12 @@ jobs:
 
       - name: Conflict markers
         run: |
-          if git grep -nE '^(<<<<<<<|>>>>>>>|=======)' -- app lib components scripts docs 2>/dev/null; then
+          # -I skips binary files (docs/evidence PNGs can contain byte sequences
+          # matching ======= and otherwise print "Binary file … matches").
+          # Also exclude the evidence tree so screenshots never trip the gate.
+          if git grep -nI -E '^(<<<<<<<|>>>>>>>|=======)' -- \
+            app lib components scripts docs \
+            ':(exclude)docs/evidence' 2>/dev/null; then
             echo "Conflict markers found"
             exit 1
           fi
