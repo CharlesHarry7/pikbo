@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HomeBrowseCta } from "@/components/HomeBrowseCta";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
 import { HomeTrustFooter } from "@/components/HomeTrustFooter";
 import { HomeViralWall } from "@/components/HomeViralWall";
@@ -60,6 +61,8 @@ export default function Home() {
 
       <HomeCinemaHero />
       <HomeViralWall items={proofWall} />
+      {/* AIT-71: floating Generate clears home indicator; z below sticky header */}
+      <HomeBrowseCta />
       <HfProductRail />
       <HomeTrustFooter />
     </>
