@@ -1,11 +1,13 @@
 # Pikbo active status
 
-**Updated:** 2026-08-05
+**Updated:** 2026-08-06
 
-**Canonical code:** `main@d3ef284` plus in-flight operator acceptance harness work
-— single Street Power-Up Moment with owner-only live input, reconciliation
-hardening, honest guest Create proof, exact private Preview auth origin, and a
-fail-closed one-SKU acceptance script (default dry-run, zero spend).
+**Canonical code:** `main@104b4ef` plus this PR's operator acceptance harness —
+single Street Power-Up Moment with owner-only live input, direct Moment
+`input_asset_id` binding (#140), durable Library statuses + same-photo handoff
+(#141), reconciliation hardening, honest guest Create proof, exact private
+Preview auth origin, and a fail-closed one-SKU acceptance script (default
+dry-run, zero spend). Create photo reuse receiver is PR #142.
 
 **Production:** `https://pikbo.ai` is deployed and operator-verified. It remains
 hard-closed: `/api/health` is `validation`, `softLive=false`, and `paid=false`;
@@ -14,14 +16,15 @@ public upload, Provider spend, and Checkout are not enabled.
 **Protected Preview:**
 `https://pikbo-git-codex-private-validation-pi-kbo.vercel.app` is deployed and
 operator-verified. Repeat `/api/health` probes are green with
-`privatePreviewReadiness.ready=true` and no missing requirements.
+`privatePreviewReadiness.ready=true` and no missing requirements. Apply
+`20260805010000_direct_moment_input_binding.sql` before real one-SKU validation.
 
 This is the entire active queue. Historical task boards remain available in
 Git history and must not be treated as current work.
 
 | Priority | Outcome | GitHub | State | Done when |
 |---|---|---|---|---|
-| P0 | Owned photo produces the actual private Moment | #54 | protected Preview health is green; code-side one-SKU harness ready (dry-run default); blocked only on the dedicated FAL account's `$0.00` balance | owner Magic Link → owned photo → one `9:16` / 5s / 720p Street Power-Up → private object → Library/download |
+| P0 | Owned photo produces the actual private Moment | #54 | protected Preview health green; harness dry-run ready; blocked on FAL `$0.00`, #140 migration apply, merge #142/#139 | owner Magic Link → owned photo → one `9:16` / 5s / 720p Street Power-Up → private object → Library/download |
 | P1 | Stripe test subscription binds to the same durable account | #59 | blocked externally and remains closed | replay-safe test Checkout, webhook, subscription, and once-only credits |
 
 ## Completed in this convergence
