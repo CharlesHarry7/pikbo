@@ -12,6 +12,7 @@ import {
 } from "@/lib/meClient";
 import { createLabSampleTryHref } from "@/lib/jobIntents";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Lab sample try — remix + try/sample (not bare /create?try=1). */
 const MODULES_MOBILE_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
@@ -80,7 +81,7 @@ export function ModulesMobileCta() {
           {primaryLabel}
         </Link>
         <Link
-          href="/create?effect=street-power-up&source=modules-mobile"
+          href={`${MOMENT_CREATE_HREF}&source=modules-mobile`}
           onClick={() =>
             track({
               event: "landing_view",

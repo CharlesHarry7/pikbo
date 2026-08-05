@@ -11,6 +11,7 @@ import { createGenerate360Href } from "@/lib/jobIntents";
 import { proofBackedRecipeSlugs } from "@/lib/seoIndex";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Effects wall Generate doors — listing spin remix (ratio/duration/channel). */
 const EFFECTS_GENERATE_HREF = createGenerate360Href("effects");
@@ -138,7 +139,7 @@ export default function EffectsHub() {
               Video
             </Link>
             <Link
-              href="/create?effect=street-power-up"
+              href={`${MOMENT_CREATE_HREF}&source=effects`}
               className="btn btn-ghost !px-3 !py-2 text-xs"
             >
               Create one Moment

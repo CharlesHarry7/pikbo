@@ -5,6 +5,7 @@ import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { createLabSampleTryHref, createGenerate360Href } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Seedance Mini trial door — Lab sample remix + try/sample flags. */
 const FEATURE_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
@@ -62,7 +63,7 @@ const PROMOS: Promo[] = [
     id: "batch",
     title: "Street Power-Up Moment",
     blurb: "One directed launch clip",
-    suiteHref: "/create?effect=street-power-up",
+    suiteHref: `${MOMENT_CREATE_HREF}&source=home-feature`,
     cta: "Create one Moment",
     badge: "Toy Moment",
     demoIndex: 5,
@@ -96,7 +97,7 @@ const PROMOS: Promo[] = [
 
 function promoHref(promo: Promo, demoId?: string): string {
   if (promo.sellerPack || promo.suiteHref) {
-    return promo.suiteHref || "/create?effect=street-power-up";
+    return promo.suiteHref || `${MOMENT_CREATE_HREF}&source=home-feature`;
   }
   if (promo.recipeSlug) {
     return createRemixHref(promo.recipeSlug, demoId);

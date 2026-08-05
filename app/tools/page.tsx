@@ -7,6 +7,7 @@ import { site } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
 import { itemListJsonLd } from "@/lib/jsonLd";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Tools hub Open Generate — listing spin remix (ratio/duration/channel). */
 const TOOLS_GENERATE_HREF = createGenerate360Href("tools");
@@ -106,7 +107,7 @@ export default function ToolsIndexPage() {
             Modules
           </Link>
           <Link
-            href="/create?effect=street-power-up"
+            href={`${MOMENT_CREATE_HREF}&source=tools`}
             className="btn btn-ghost text-sm"
           >
             Create one Moment
@@ -158,7 +159,7 @@ export default function ToolsIndexPage() {
             Toy Modules
           </Link>
           <Link
-            href="/create?effect=street-power-up"
+            href={`${MOMENT_CREATE_HREF}&source=tools`}
             className="btn btn-ghost text-sm"
           >
             Create one Moment

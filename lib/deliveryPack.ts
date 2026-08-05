@@ -11,6 +11,7 @@ import {
   createWorkbenchHref,
   type JobIntentId,
 } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 export type DeliveryItem = {
   id: string;
@@ -127,7 +128,7 @@ export function deliveryItemsForJob(
       items.push({
         id: "next",
         label: "Same photo → Street Power-Up Moment",
-        href: "/create?effect=street-power-up",
+        href: `${MOMENT_CREATE_HREF}&source=delivery-pack`,
       });
       break;
     case "seller-pack":
@@ -149,7 +150,7 @@ export function deliveryItemsForJob(
       items.push({
         id: "next",
         label: "Same photo → another toy Moment",
-        href: "/create?effect=street-power-up",
+        href: `${MOMENT_CREATE_HREF}&source=delivery-pack`,
       });
   }
 

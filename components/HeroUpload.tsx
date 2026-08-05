@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
 import { STUDIO_NAV_OPEN_MS } from "@/lib/clientTimeout";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 export type HomeLaunchAccess =
   | "checking"
@@ -89,7 +90,7 @@ export function HeroUpload({
         path: "/",
         meta: { destination: "single-moment", outputs: 1 },
       });
-      router.push("/create?effect=street-power-up&source=home-launch-pack");
+      router.push(`${MOMENT_CREATE_HREF}&source=home-launch-pack`);
     };
     reader.onerror = () => {
       clearOpenTimer();
@@ -115,7 +116,7 @@ export function HeroUpload({
               meta: { source: "home_public_preview" },
             });
             router.push(
-              "/create?effect=street-power-up&source=home-preview&try=1&sample=scout"
+              `${MOMENT_CREATE_HREF}&source=home-preview&try=1&sample=scout`
             );
           }}
           className="group flex min-h-[116px] w-full items-center gap-4 rounded-2xl bg-[#2457E6] p-4 text-left text-white shadow-[0_18px_45px_-28px_rgba(36,87,230,0.9)] transition hover:-translate-y-0.5 hover:bg-[#1F4FD5] disabled:cursor-wait disabled:opacity-70 sm:p-5"

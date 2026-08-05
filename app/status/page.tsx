@@ -3,6 +3,7 @@ import Link from "next/link";
 import { StatusProbe } from "@/components/StatusProbe";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { PRIVATE_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Status Generate door — listing spin remix (ratio/duration/channel). */
 const STATUS_GENERATE_HREF = createGenerate360Href("status");
@@ -51,7 +52,7 @@ export default function StatusPage() {
           Modules
         </Link>
         <Link
-          href="/create?effect=street-power-up&source=status"
+          href={`${MOMENT_CREATE_HREF}&source=status`}
           className="text-[var(--fg-muted)] hover:text-white"
         >
           Create one Moment

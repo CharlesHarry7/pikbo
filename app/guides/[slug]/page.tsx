@@ -9,6 +9,7 @@ import { site } from "@/lib/site";
 import { SuiteDoorLinks } from "@/components/SuiteDoorLinks";
 import { LandingSeoMesh } from "@/components/LandingSeoMesh";
 import { robotsForGuideSlug } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 export function generateStaticParams() {
   return GUIDES.map((g) => ({ slug: g.slug }));
@@ -285,7 +286,7 @@ export default async function GuidePage({
                 Toy Modules
               </Link>
               <Link
-                href="/create?effect=street-power-up&source=guide"
+                href={`${MOMENT_CREATE_HREF}&source=guide`}
                 className="btn border border-white/40 bg-transparent px-5 py-2.5 font-semibold text-white hover:bg-white/10"
               >
                 Create one Moment

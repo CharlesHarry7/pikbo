@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { createRemixHref } from "@/lib/remixIntent";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /**
  * Compact suite doors for SEO landings (/for, /tools, /toys, guides).
@@ -33,7 +34,7 @@ export function SuiteDoorLinks({
         className="btn btn-ghost !px-3 !py-2 text-xs"
       />
       <Link
-        href="/create?effect=street-power-up"
+        href={`${MOMENT_CREATE_HREF}&source=suite-doors`}
         className="btn btn-ghost !px-3 !py-2 text-xs"
         data-suite-door="single-moment"
       >
