@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import {
+  fixedMomentCreateReturnPath,
+  guestMomentSignInHref,
+} from "@/lib/clientAssets";
 import { canUsePrivateLaunch, fetchMe, type MeResponse } from "@/lib/meClient";
-import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const PRIVATE_BETA_MAILTO =
   "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
@@ -15,13 +18,18 @@ const STREET_POWER_UP_SAMPLE = {
   webm: "/demos/beatbot-viral-hook.webm",
 } as const;
 
-function guestSignInHref() {
-  return `/login?next=${encodeURIComponent(
-    `${MOMENT_CREATE_HREF}&source=guest-create`
-  )}`;
-}
+const DEFAULT_GUEST_SIGN_IN_HREF = guestMomentSignInHref({
+  source: "guest-create",
+});
 
-function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
+function GuestMomentPreview({
+  signedIn = false,
+  signInHref = DEFAULT_GUEST_SIGN_IN_HREF,
+}: {
+  signedIn?: boolean;
+  /** Login next path; may preserve durable Library `?assetId=` handoff. */
+  signInHref?: string;
+}) {
   return (
     <section
       className="relative isolate min-h-[calc(100vh-56px)] overflow-hidden bg-[#08080A] px-4 pb-10 pt-6 text-[#F7F4ED] sm:px-7 lg:px-10 lg:py-7"
@@ -118,7 +126,7 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
             <div className="mt-5 grid gap-3">
               {!signedIn && (
                 <Link
-                  href={guestSignInHref()}
+                  href={signInHref}
                   data-guest-create-sign-in
                   className="inline-flex min-h-14 items-center justify-between rounded-2xl bg-[#FF4D2E] px-5 text-xs font-black uppercase tracking-[0.12em] text-[#140806] transition hover:-translate-y-0.5 hover:bg-[#FF6A4D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#151519]"
                 >
@@ -156,9 +164,25 @@ function GuestMomentPreview({ signedIn = false }: { signedIn?: boolean }) {
   );
 }
 
-export function GuestMomentCreateGate({ children }: { children: ReactNode }) {
+export function GuestMomentCreateGate({
+  children,
+  /**
+   * Safe Create return path for guest sign-in. Prefer the server-built fixed
+   * Moment path so Library `?assetId=` same-photo recovery survives Magic Link.
+   */
+  signInNextPath,
+}: {
+  children: ReactNode;
+  signInNextPath?: string | null;
+}) {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [sessionResolved, setSessionResolved] = useState(false);
+  const signInHref = guestMomentSignInHref({
+    pathWithSearch:
+      typeof signInNextPath === "string" && signInNextPath
+        ? signInNextPath
+        : fixedMomentCreateReturnPath({ source: "guest-create" }),
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -179,5 +203,10 @@ export function GuestMomentCreateGate({ children }: { children: ReactNode }) {
   }, []);
 
   if (sessionResolved && canUsePrivateLaunch(me)) return children;
-  return <GuestMomentPreview signedIn={sessionResolved && me?.signedIn === true} />;
+  return (
+    <GuestMomentPreview
+      signedIn={sessionResolved && me?.signedIn === true}
+      signInHref={signInHref}
+    />
+  );
 }

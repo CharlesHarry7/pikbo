@@ -701,7 +701,10 @@ assert.match(createStudio, /resultProvenanceLabel/);
 assert.match(createStudio, /PROVENANCE\.onPlayerMark|onPlayerMark/);
 assert.match(createStudio, /ignoredOwnedUpload/);
 assert.match(createStudio, /Your photo was not processed/);
-assert.match(createStudio, /showLabSample=\{lastUploadIgnored \|\| !image\}/);
+assert.match(
+  createStudio,
+  /showLabSample=\{lastUploadIgnored \|\| !composerHasInput\}/
+);
 const ignoredUploadGateAt = createStudio.indexOf(
   "const ignoredOwnedUpload = isIgnoredOwnedUploadResult"
 );

@@ -5,14 +5,39 @@ import {
   localAssetMaxBytes,
   putLocalAsset,
 } from "@/lib/localAssets";
+import { getAuthUserFromRequest } from "@/lib/supabase/user";
+import { signedPrivateToyAssetPreview } from "@/lib/privateToyAssets";
 
 export const runtime = "nodejs";
 
 type Props = { params: Promise<{ id: string }> };
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const NO_STORE = {
+  "Cache-Control": "private, no-store",
+} as const;
+
+function isUuidAssetId(id: string): boolean {
+  return UUID_RE.test(id);
+}
+
+function notFoundPrivate(): NextResponse {
+  return NextResponse.json(
+    {
+      ok: false,
+      code: "NOT_FOUND",
+      error: "Asset missing, expired, or not owned by this session",
+    },
+    { status: 404, headers: NO_STORE }
+  );
+}
+
 /**
  * Phase D local asset body — PUT bytes after POST /api/assets/upload-url.
  * GET returns the stored data URL for the owning session (soft-launch only).
+ * UUID private toy assets: owner Bearer auth → short-lived signed redirect.
  */
 export async function PUT(req: Request, { params }: Props) {
   const { id } = await params;
@@ -68,9 +93,47 @@ export async function PUT(req: Request, { params }: Props) {
 /**
  * Meta-only probe — Create/Seller Pack can confirm the still still exists
  * without downloading multi-MB dataUrl (multi-instance / TTL recovery).
+ * UUID private assets: owner + ready only (indistinguishable 404 otherwise).
  */
-export async function HEAD(_req: Request, { params }: Props) {
+export async function HEAD(req: Request, { params }: Props) {
   const { id } = await params;
+  if (isUuidAssetId(id)) {
+    const auth = await getAuthUserFromRequest(req);
+    if (!auth?.id) {
+      return new NextResponse(null, {
+        status: 401,
+        headers: {
+          ...NO_STORE,
+          "X-Pikbo-Asset": "auth-required",
+        },
+      });
+    }
+    const preview = await signedPrivateToyAssetPreview({
+      ownerUserId: auth.id,
+      assetId: id,
+    });
+    if (!preview) {
+      return new NextResponse(null, {
+        status: 404,
+        headers: {
+          ...NO_STORE,
+          "X-Pikbo-Asset": "missing",
+        },
+      });
+    }
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        ...NO_STORE,
+        "X-Pikbo-Asset": "ok",
+        "X-Pikbo-Asset-Id": preview.asset.id,
+        "X-Pikbo-Asset-Bytes": String(preview.asset.sizeBytes),
+        "X-Pikbo-Asset-Type": preview.asset.mimeType.slice(0, 64),
+        "X-Pikbo-Asset-Mode": "private-ready",
+      },
+    });
+  }
+
   const session = await ensureSession();
   const asset = getLocalAsset(id, session.id);
   if (!asset) {
@@ -95,8 +158,42 @@ export async function HEAD(_req: Request, { params }: Props) {
   });
 }
 
-export async function GET(_req: Request, { params }: Props) {
+export async function GET(req: Request, { params }: Props) {
   const { id } = await params;
+
+  // Durable private toy input (UUID): re-auth owner + ready, then short-lived
+  // signed redirect. Cross-owner and missing are both 404 (no ownership leak).
+  if (isUuidAssetId(id)) {
+    const auth = await getAuthUserFromRequest(req);
+    if (!auth?.id) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "AUTH_REQUIRED",
+          error: "Sign in to view this private toy photo",
+        },
+        { status: 401, headers: NO_STORE }
+      );
+    }
+    const preview = await signedPrivateToyAssetPreview({
+      ownerUserId: auth.id,
+      assetId: id,
+    });
+    if (!preview) {
+      return notFoundPrivate();
+    }
+    // Absolute Location + no-store; never embed signed URL in a JSON body.
+    return new NextResponse(null, {
+      status: 302,
+      headers: {
+        Location: preview.url,
+        ...NO_STORE,
+        "X-Pikbo-Asset": "private-ready",
+        "X-Pikbo-Asset-Id": preview.asset.id,
+      },
+    });
+  }
+
   const session = await ensureSession();
   const asset = getLocalAsset(id, session.id);
   if (!asset) {
