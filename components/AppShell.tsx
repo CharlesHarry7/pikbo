@@ -10,6 +10,7 @@ import {
 } from "@/components/LanguageProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
+import { MobileGenerateBar } from "@/components/MobileGenerateBar";
 import { ToastProvider } from "@/components/Toast";
 import { trackPageView } from "@/lib/analytics";
 import { parseMomentId } from "@/lib/moments";
@@ -324,6 +325,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         {!hideFooter ? <Footer /> : null}
       </div>
 
+      {/* Sticky Generate→360 on browse surfaces (explore/library/pricing/models/flow…).
+          Self-gates via showBar; clearance tokens from AIT-71. */}
+      <MobileGenerateBar />
       {!resultShell && !sellerPackCreate ? <nav
         className={cn(
           "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
