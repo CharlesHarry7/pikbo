@@ -5,9 +5,13 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/components/LanguageProvider";
 import { createGenerate360Href } from "@/lib/jobIntents";
 
+const BROWSE_GENERATE_HREF = createGenerate360Href("home-browse");
+
 /**
- * Sticky generate CTA while browsing the video wall.
- * Shows after leaving hero, hides when generate section is in view.
+ * Sticky Generate CTA while browsing the Lab proof wall (HF Explore density).
+ * Moment-first home hides the tab nav — only clear the home indicator.
+ * z-index sits above page content and below sticky header (z-50).
+ * Shows after leaving the hero; hides when the product-rail Generate suite is near.
  */
 export function HomeBrowseCta() {
   const { t } = useI18n();
@@ -15,21 +19,28 @@ export function HomeBrowseCta() {
 
   useEffect(() => {
     const wall = document.getElementById("toy-wall");
-    const create = document.getElementById("home-create");
     if (!wall) return;
 
-    // Prefetch listing-spin remix Create for faster jump
+    // Prefetch listing-spin Generate for faster jump
     const prefetch = document.createElement("link");
     prefetch.rel = "prefetch";
-    prefetch.href = createGenerate360Href("home-browse");
+    prefetch.href = BROWSE_GENERATE_HREF;
     prefetch.as = "document";
     document.head.appendChild(prefetch);
 
     const onScroll = () => {
       const pastHero = window.scrollY > window.innerHeight * 0.55;
-      const createTop = create?.getBoundingClientRect().top ?? Infinity;
-      const nearCreate = createTop < window.innerHeight * 0.75;
-      setVisible(pastHero && !nearCreate);
+      // Prefer product rail (suite doors under the wall); fall back to wall bottom.
+      const hideTarget =
+        document.getElementById("hf-product-rail") ??
+        document.getElementById("toy-wall");
+      const hideTop = hideTarget?.getBoundingClientRect().bottom ?? Infinity;
+      // Hide once the suite / wall bottom is well into view
+      const nearSuite =
+        hideTarget?.id === "hf-product-rail"
+          ? hideTarget.getBoundingClientRect().top < window.innerHeight * 0.78
+          : hideTop < window.innerHeight * 0.55;
+      setVisible(pastHero && !nearSuite);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
@@ -43,7 +54,8 @@ export function HomeBrowseCta() {
   return (
     <div
       data-home-browse-cta={visible ? "on" : "off"}
-      className={`pointer-events-none fixed inset-x-0 z-[35] flex justify-center px-3 pt-2 transition duration-300 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-0 lg:pb-[max(0.85rem,env(safe-area-inset-bottom))] ${
+      data-floating-generate="home-browse"
+      className={`pointer-events-none fixed inset-x-0 z-[var(--floating-generate-z)] flex justify-center px-3 pt-2 transition duration-300 bottom-[var(--floating-cta-safe-bottom)] lg:bottom-[var(--floating-cta-safe-bottom)] ${
         visible
           ? "translate-y-0 opacity-100"
           : "pointer-events-none translate-y-3 opacity-0"
@@ -51,9 +63,10 @@ export function HomeBrowseCta() {
       aria-hidden={!visible}
     >
       <Link
-        href="#home-create"
+        href={BROWSE_GENERATE_HREF}
         prefetch={false}
         tabIndex={visible ? 0 : -1}
+        data-home-browse-generate="360"
         className={`pointer-events-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl border border-[#c8ff3d]/50 bg-black/92 px-4 py-3 shadow-[0_0_40px_rgba(200,255,61,0.22),0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl transition hover:border-[#c8ff3d] hover:bg-black sm:max-w-lg ${
           visible ? "" : "pointer-events-none"
         }`}
