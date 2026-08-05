@@ -34,6 +34,18 @@ assert.match(about, /Street Power-Up/);
 assert.match(about, /Founding Studio/);
 assert.match(about, /private Library/i);
 assert.match(about, /CONCEPT_ROBOTS/);
-assert.doesNotMatch(about, /Explore wall|Community feed|batch generation marketplace/i);
+assert.match(about, /AI video platform for designer toys/i);
+assert.match(about, /Higgsfield/);
+assert.match(about, /creators, sellers, and collectors/i);
+assert.match(about, /What ships today/i);
+assert.doesNotMatch(
+  about,
+  /Explore wall|Community feed|batch generation marketplace/i
+);
+// Vision may name frozen surfaces as future/not-now — must not claim they are live.
+assert.doesNotMatch(
+  about,
+  /Community is live|Explore is open|public community by default/i
+);
 
 console.log("beta-request-regression: PASS");
