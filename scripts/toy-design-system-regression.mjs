@@ -11,6 +11,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const css = readFileSync(join(root, "app/globals.css"), "utf8");
 const libraryPage = readFileSync(join(root, "app/library/page.tsx"), "utf8");
 const libraryGrid = readFileSync(join(root, "components/LibraryGrid.tsx"), "utf8");
+const createPage = readFileSync(join(root, "app/create/page.tsx"), "utf8");
+const guestGate = readFileSync(
+  join(root, "components/GuestMomentCreateGate.tsx"),
+  "utf8"
+);
 
 const errors = [];
 
@@ -90,6 +95,41 @@ must(
   "LibraryGrid must keep new-attempt handoff surface"
 );
 
+// Create ritual surface (guest study + owner chrome)
+must(css.includes(".create-ritual"), "missing create-ritual shell");
+must(css.includes(".create-sample-capsule"), "missing create sample capsule");
+must(createPage.includes("create-ritual"), "Create page missing create-ritual");
+must(createPage.includes("collection-card"), "Create page missing collection-card");
+must(createPage.includes("status-card"), "Create page missing status-card");
+must(createPage.includes("toy-sticker"), "Create page missing stickers");
+must(
+  createPage.includes("Street Power-Up") &&
+    createPage.includes("fixedMomentContract"),
+  "Create must keep fixed Street Power-Up contract"
+);
+must(
+  !createPage.includes("site.homeH1") && !createPage.includes("titleDefault"),
+  "Create must not mutate frozen TDH from site.ts"
+);
+
+must(guestGate.includes("create-ritual"), "Guest gate missing create-ritual");
+must(guestGate.includes("collection-card"), "Guest gate missing collection-card");
+must(guestGate.includes("result-card"), "Guest gate missing result-card");
+must(guestGate.includes("status-card"), "Guest gate missing status-card");
+must(guestGate.includes("toy-sticker"), "Guest gate missing stickers");
+must(guestGate.includes("text-grad"), "Guest gate missing text-grad H1 treatment");
+must(
+  guestGate.includes("data-guest-create-first") &&
+    guestGate.includes("not your toy"),
+  "Guest gate must keep honest not-your-toy boundary"
+);
+must(
+  !/\bupload\b|\bcredits\b|\bGenerate\b/.test(
+    guestGate.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "")
+  ),
+  "Guest gate must not expose upload/credits/Generate in UI copy"
+);
+
 if (errors.length) {
   console.error("toy-design-system-regression FAIL:");
   for (const e of errors) console.error(" -", e);
@@ -101,5 +141,6 @@ console.log(
     palette: palette.length,
     cards: 4,
     library: "collector",
+    create: "ritual",
   })
 );

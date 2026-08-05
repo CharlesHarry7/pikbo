@@ -535,6 +535,42 @@ h1,
   mask-image: radial-gradient(ellipse at 50% 20%, black 10%, transparent 72%);
 }
 
+/* Create ritual — private Moment entry / guest study (潮玩 drop-day stage) */
+.create-ritual {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(46% 42% at 12% 8%, rgba(255, 91, 168, 0.16), transparent 68%),
+    radial-gradient(40% 36% at 88% 6%, rgba(155, 107, 255, 0.18), transparent 66%),
+    radial-gradient(52% 38% at 50% 100%, rgba(200, 255, 61, 0.08), transparent 72%),
+    radial-gradient(30% 28% at 70% 40%, rgba(62, 224, 198, 0.07), transparent 70%),
+    var(--toy-ink);
+}
+.create-ritual-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.04;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 244, 232, 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 244, 232, 0.6) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 12%, transparent 74%);
+}
+.create-sample-capsule {
+  box-shadow:
+    0 0 0 1px rgba(255, 91, 168, 0.18),
+    0 42px 120px -42px rgba(255, 32, 122, 0.55),
+    0 0 60px -20px rgba(155, 107, 255, 0.35);
+  animation: capsule-float 5.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .create-sample-capsule {
+    animation: none;
+  }
+}
+
 /* Cinematic result stage — Create / landing after generate */
 .media-stage {
   position: relative;
