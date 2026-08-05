@@ -106,8 +106,20 @@ assert.doesNotMatch(
 
 assert.match(
   createPage,
+  /data-create-header=["']compact-mobile["']/,
+  "Create mobile page chrome must mark compact-mobile so Studio upload stays above the fold"
+);
+assert.match(
+  createPage,
   /<h1\b[\s\S]*Turn one toy photo into Street Power-Up\./,
   "single Create needs an accessible Moment page heading"
+);
+// Honest fixed Moment contract remains visible on the compact mobile band
+// (full prose restores from sm+; mobile keeps the same numbers, shorter line).
+assert.match(
+  createPage,
+  /9:16 · 5s · 720p · 10 credits/,
+  "compact Create header must keep honest 9:16 · 5s · 720p · 10 credits contract"
 );
 assert.match(
   video,
