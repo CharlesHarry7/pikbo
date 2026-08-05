@@ -15,14 +15,36 @@ const zh = source("lib/i18n.ts");
 
 assert.match(
   wall,
-  /href=\{item\.projectHref \|\| item\.href\}/,
+  /cardHref|projectHref|item\.projectHref/,
   "home Recipe cards must open the registered Inside Project proof"
 );
 assert.match(
   wall,
-  /href=\{item\.href\}[\s\S]*Try this recipe/,
+  /remakeHref|item\.href[\s\S]*Try this recipe|Try this recipe[\s\S]*remakeHref/,
   "home Recipe cards must expose a separate one-click Remix contract"
 );
+assert.match(
+  wall,
+  /home-proof-wall/,
+  "home Recipe remake links must carry home-proof-wall entry attribution"
+);
+assert.match(
+  wall,
+  /data-home-proof-360/,
+  "home proof wall must mark the 360 listing spin card for mobile visibility"
+);
+{
+  const softLaunch = source("lib/softLaunch.ts");
+  const proofList =
+    softLaunch.match(/HOME_PROOF_SLUGS\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] ??
+    "";
+  const proofSlugs = [...proofList.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(proofSlugs.length, 8, "home proof wall stays capped at 8 Lab clips");
+  assert.ok(
+    proofSlugs.slice(0, 4).includes("360-spin-showcase"),
+    "360-spin-showcase must be in the first 4 mobile wall slots"
+  );
+}
 assert.match(
   wall,
   /event:\s*item\.projectHref \? "project_open" : "recipe_use"[\s\S]*source:\s*"home_recipe_card"/,
