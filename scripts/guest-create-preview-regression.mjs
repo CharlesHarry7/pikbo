@@ -13,6 +13,8 @@ assert.match(createPage, /<CreateStudio[\s\S]*initialEffect="street-power-up"[\s
 assert.match(createPage, /description:[\s\S]{0,180}cached Street Power-Up sample/);
 
 assert.match(gate, /data-guest-create-first="street-power-up"/);
+// AIT-134: mobile (≤640px) compact chrome — sample + Sign-in above fold on ~390px
+assert.match(gate, /data-guest-create-compact="mobile"/);
 assert.match(gate, /Street[\s\S]*Power-Up\./);
 assert.match(gate, /A neon, drop-day direction built for designer-toy reveals/);
 assert.match(gate, /data-guest-create-sample/);
