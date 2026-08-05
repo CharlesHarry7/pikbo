@@ -8,7 +8,7 @@ import {
   completeAuthCallback,
   parseAuthCallbackUrl,
 } from "@/lib/authCallback";
-import { sanitizeInternalNextPath } from "@/lib/authRedirect";
+import { resolvePostAuthNext } from "@/lib/guestCreateIntent";
 
 /**
  * Email magic-link lands here with ?code=...
@@ -79,7 +79,8 @@ export default function AuthCallbackPage() {
 
       emitSessionRefresh();
       if (!cancelled) {
-        const next = sanitizeInternalNextPath(
+        // Prefer ?next= create intent; sessionStorage backup when callback drops it.
+        const next = resolvePostAuthNext(
           new URL(window.location.href).searchParams.get("next")
         );
         setStatus("ok");
