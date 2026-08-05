@@ -43,5 +43,20 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+    // Also close mobile nav on Escape
+    const links = document.querySelector('.nav-links');
+    const toggle = document.querySelector('.mobile-toggle');
+    if (links && links.classList.contains('active')) {
+      links.classList.remove('active');
+      if (toggle) toggle.classList.remove('active');
+    }
   }
 });
+
+// Mobile nav toggle
+function toggleMobileNav() {
+  const links = document.querySelector('.nav-links');
+  const toggle = document.querySelector('.mobile-toggle');
+  links.classList.toggle('active');
+  toggle.classList.toggle('active');
+}
