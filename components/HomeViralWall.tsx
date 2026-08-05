@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { track } from "@/lib/analytics";
-import { createRemixHref } from "@/lib/remixIntent";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import {
   hasFeedVideo,
   type FeedItem,
@@ -51,14 +51,17 @@ function pinListing360InFirstSlots(
  * Below-fold Lab proof wall for Moment home: ≤ HOME_PROOF_LIMIT cached recipes
  * from HOME_PROOF_SLUGS (360 pinned in first 4 for mobile). Honest Lab badge
  * only — not a full HfExploreHome remount, Pack sample, or UGC wall.
+ * Listing 360° door goes through createGenerate360Href (AIT-108 / AIT-121).
  */
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
   const wall = pinListing360InFirstSlots(
     items.filter(hasFeedVideo).slice(0, HOME_PROOF_LIMIT)
   );
   const momentHref = `${MOMENT_CREATE_HREF}&source=${HOME_PROOF_ENTRY}`;
-  // entry= attribution only — createRemixHref `source` is the Lab project id.
-  const listing360Href = withProofEntry(createRemixHref(LISTING_360_SLUG));
+  // entry= for guest-intent; remix source tags the Generate door surface.
+  const listing360Href = withProofEntry(
+    createGenerate360Href("home-proof-wall")
+  );
 
   return (
     <section
