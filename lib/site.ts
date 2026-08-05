@@ -28,10 +28,10 @@ export const site = {
    */
   titleDefault: "Pikbo — AI Product Video Studio for Toy Sellers",
   /**
-   * Homepage H1 — brand + scene, not the full primary keyword phrase.
+   * Homepage H1 — concrete seller outcome (not feature/category).
    * Rank H1 stays on /tools/ai-toy-video-generator.
    */
-  homeH1: "One toy photo. More ways to sell.",
+  homeH1: "Turn one toy photo into a sellable video clip in 60 seconds.",
   /** Primary rank keyword — tools page only; not homepage Title/H1 */
   keyword: "AI toy video generator",
   /** Rank battlefield URL for internal links */
