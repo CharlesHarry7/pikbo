@@ -409,6 +409,261 @@ a {
     opacity 0.15s ease;
 }
 
+/* ---------- Toy design cards (AIT-30 tokens / AIT-32 pricing) ----------
+   Cream, pastel pink, neon green, fluorescent yellow — collectible shelf feel.
+   Compatible with ink #0a0a0a stage backgrounds.
+---------------------------------------------------------------- */
+:root {
+  --toy-cream: #fff8e7;
+  --toy-pink: #ffb6d9;
+  --toy-pink-soft: rgba(255, 182, 217, 0.22);
+  --toy-neon: #39ff14;
+  --toy-neon-glow: rgba(57, 255, 20, 0.35);
+  --toy-fluo: #f5ff40;
+  --toy-ink: #0e0e12;
+  --toy-fog: #8b8b95;
+  --toy-violet: #c77dff;
+}
+
+/* Collection card — cream shelf tile with soft pink confetti */
+.collection-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.75rem;
+  border: 1px solid rgba(14, 14, 18, 0.1);
+  background-color: var(--toy-cream);
+  background-image:
+    radial-gradient(circle at 12% 18%, var(--toy-pink-soft) 0 3px, transparent 4px),
+    radial-gradient(circle at 78% 22%, var(--toy-pink-soft) 0 2.5px, transparent 3.5px),
+    radial-gradient(circle at 34% 72%, var(--toy-pink-soft) 0 2px, transparent 3px),
+    radial-gradient(circle at 88% 68%, var(--toy-pink-soft) 0 3px, transparent 4px),
+    radial-gradient(circle at 52% 40%, var(--toy-pink-soft) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 18% 88%, var(--toy-pink-soft) 0 2px, transparent 3px);
+  background-size: 100% 100%;
+  color: var(--toy-ink);
+  box-shadow:
+    0 18px 50px -36px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.collection-card:hover {
+  transform: scale(1.01);
+  box-shadow:
+    0 28px 70px -32px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+/* Pricing card — dark collectible with optional featured chrome */
+.pricing-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.04) 0%, transparent 42%),
+    var(--toy-ink);
+  color: var(--toy-cream);
+  box-shadow: 0 30px 90px -48px rgba(0, 0, 0, 0.85);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+.pricing-card--featured {
+  border: 2px solid var(--toy-neon);
+  box-shadow:
+    0 0 0 1px rgba(57, 255, 20, 0.18),
+    0 0 42px -8px var(--toy-neon-glow),
+    0 34px 90px -42px rgba(0, 0, 0, 0.9);
+}
+.pricing-card--featured:hover {
+  transform: scale(1.02);
+  box-shadow:
+    0 0 0 1px rgba(57, 255, 20, 0.28),
+    0 0 56px -4px var(--toy-neon-glow),
+    0 40px 100px -36px rgba(0, 0, 0, 0.95);
+}
+.pricing-card--featured:hover .pricing-card__stripe {
+  transform: rotate(2deg);
+}
+
+/* Fluorescent diagonal stripe + Most Popular chip */
+.pricing-card__stripe {
+  position: absolute;
+  top: 1.15rem;
+  right: -2.4rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 11.5rem;
+  padding: 0.42rem 0;
+  background: var(--toy-fluo);
+  color: var(--toy-ink);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transform: rotate(32deg);
+  box-shadow: 0 6px 18px -8px rgba(245, 255, 64, 0.75);
+  transition: transform 0.2s ease;
+  pointer-events: none;
+}
+
+/* Featured CTA: ink plate + fluorescent type + gloss sweep */
+.pricing-card__cta {
+  position: relative;
+  overflow: hidden;
+}
+.pricing-card__cta a,
+.pricing-card__cta button {
+  position: relative;
+  overflow: hidden;
+  background: var(--toy-ink) !important;
+  color: var(--toy-fluo) !important;
+  border: 1px solid rgba(245, 255, 64, 0.45) !important;
+  box-shadow:
+    0 0 0 1px rgba(245, 255, 64, 0.12) inset,
+    0 12px 36px -18px rgba(0, 0, 0, 0.75) !important;
+  transform: none !important;
+}
+.pricing-card__cta a::after,
+.pricing-card__cta button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(245, 255, 64, 0.22) 48%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.45s ease;
+  pointer-events: none;
+}
+.pricing-card__cta a:hover,
+.pricing-card__cta button:hover {
+  background: #16161c !important;
+  color: var(--toy-fluo) !important;
+  box-shadow:
+    0 0 0 1px rgba(245, 255, 64, 0.22) inset,
+    0 0 28px -6px rgba(245, 255, 64, 0.35),
+    0 14px 40px -16px rgba(0, 0, 0, 0.8) !important;
+}
+.pricing-card__cta a:hover::after,
+.pricing-card__cta button:hover::after {
+  transform: translateX(120%);
+}
+
+/* Underline sweep on ink links (Lab Viewer CTA) */
+.link-sweep {
+  position: relative;
+  display: inline-flex;
+  color: var(--toy-ink);
+  font-weight: 800;
+  text-decoration: none;
+  background-image: linear-gradient(var(--toy-ink), var(--toy-ink));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 2px;
+  transition:
+    background-size 0.2s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
+}
+.link-sweep:hover {
+  background-size: 100% 2px;
+  color: var(--toy-ink);
+}
+
+/* Status / comparison rows — left color rail + hover wash */
+.status-card {
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+.status-card__head {
+  background: linear-gradient(
+    90deg,
+    rgba(57, 255, 20, 0.16),
+    rgba(255, 182, 217, 0.1) 55%,
+    rgba(245, 255, 64, 0.08)
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.status-card__row {
+  position: relative;
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.status-card__row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  bottom: 0.55rem;
+  width: 3px;
+  border-radius: 9999px;
+  background: var(--row-rail, var(--toy-fog));
+  transition: width 0.18s ease;
+}
+.status-card__row:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+.status-card__row:hover::before {
+  width: 5px;
+}
+.status-card__row--pink {
+  --row-rail: var(--toy-pink);
+}
+.status-card__row--neon {
+  --row-rail: var(--toy-neon);
+}
+.status-card__check {
+  color: var(--toy-neon);
+  font-weight: 900;
+}
+.status-card__dash {
+  color: var(--toy-fog);
+  font-weight: 700;
+}
+
+/* FAQ accordion on dark pricing stage */
+.pricing-faq details {
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.95rem 1.1rem;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.pricing-faq details[open] {
+  border-color: rgba(57, 255, 20, 0.28);
+  background: rgba(57, 255, 20, 0.04);
+}
+.pricing-faq summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 800;
+  color: var(--toy-cream);
+}
+.pricing-faq summary::-webkit-details-marker {
+  display: none;
+}
+.pricing-faq summary::after {
+  content: "+";
+  float: right;
+  color: var(--toy-fluo);
+  font-weight: 900;
+}
+.pricing-faq details[open] summary::after {
+  content: "–";
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -417,5 +672,12 @@ a {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+  .collection-card:hover,
+  .pricing-card--featured:hover {
+    transform: none;
+  }
+  .pricing-card--featured:hover .pricing-card__stripe {
+    transform: rotate(32deg);
   }
 }
