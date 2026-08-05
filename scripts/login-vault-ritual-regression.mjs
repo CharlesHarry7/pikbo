@@ -69,6 +69,24 @@ must(css.includes(".create-ritual"), "missing .create-ritual atmosphere");
 
 // Login page structure
 must(loginPage.includes('data-login-ritual="vault"'), "Login missing vault marker");
+// AIT-138: mobile (≤640px) compact vault — email + submit above fold on ~390px
+must(
+  loginPage.includes('data-login-compact="mobile"'),
+  "Login missing mobile compact marker"
+);
+must(
+  loginPage.includes("order-1") && loginPage.includes("lg:order-2"),
+  "Login form capsule must lead on mobile (order-1 → lg:order-2)"
+);
+must(
+  loginPage.includes("order-2") && loginPage.includes("lg:order-1"),
+  "Login story column must follow form on mobile (order-2 → lg:order-1)"
+);
+must(
+  loginPage.includes("hidden sm:block") ||
+    loginPage.includes("hidden space-y-3 sm:mt-8 sm:block"),
+  "Login multi-step story list must collapse on mobile"
+);
 must(loginPage.includes("login-ritual"), "Login missing login-ritual class");
 must(loginPage.includes("create-ritual"), "Login missing create-ritual class");
 must(loginPage.includes("collection-card"), "Login missing collection-card vault");
@@ -86,6 +104,10 @@ must(
 must(
   loginPage.includes('data-login-guest="moment-preview"'),
   "Login missing guest moment preview CTA"
+);
+must(
+  loginPage.includes("sanitizeInternalNextPath"),
+  "Login must preserve guest Create/360 next via sanitizeInternalNextPath"
 );
 must(
   loginPage.includes("not-your-toy") ||
@@ -135,6 +157,6 @@ if (errors.length) {
 }
 
 console.log("login-vault-ritual-regression PASS");
-console.log("  login: vault-ritual");
+console.log("  login: vault-ritual + mobile compact");
 console.log("  cards: collection/result/pricing/status");
 console.log("  frozen TDH: homeH1 untouched");
