@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { CreateStudio } from "@/components/CreateStudio";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
@@ -8,6 +9,7 @@ import {
 } from "@/components/MomentCreatePreview";
 import { GuestMomentCreateGate } from "@/components/GuestMomentCreateGate";
 import { getMoment, parseMomentId } from "@/lib/moments";
+import { coerceBareStreetPowerUpToMomentHref } from "@/lib/createMomentCoerce";
 
 export async function generateMetadata({
   searchParams,
@@ -67,6 +69,15 @@ export default async function CreatePage({
     const momentId = Array.isArray(sp.moment) ? null : parseMomentId(sp.moment);
     if (!momentId) return <InvalidMomentNotice />;
     return <MomentCreatePreview moment={getMoment(momentId)} />;
+  }
+
+  // Legacy / external deep links may still hit bare effect=street-power-up
+  // without mode=moment. Soft-redirect into the fixed Moment contract so
+  // honesty does not depend on every residual CTA. Generate→360 remixes
+  // (effect=360-spin-showcase, …) are never rewritten.
+  const coercedMomentHref = coerceBareStreetPowerUpToMomentHref(sp);
+  if (coercedMomentHref) {
+    redirect(coercedMomentHref);
   }
 
   const firstRunSample =
