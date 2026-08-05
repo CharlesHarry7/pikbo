@@ -43,7 +43,10 @@ export function MobileGenerateBar() {
   const onLibrary = path === "/library" || path.startsWith("/library/");
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[4.75rem] z-30 flex justify-center gap-2 px-4 lg:hidden">
+    <div
+      data-floating-generate="mobile-bar"
+      className="pointer-events-none fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] flex justify-center gap-2 px-4 lg:hidden"
+    >
       <Link
         href={MOBILE_GENERATE_HREF}
         className="pointer-events-auto btn btn-primary px-5 py-2.5 text-xs shadow-[0_0_30px_rgba(200,255,61,0.35)]"

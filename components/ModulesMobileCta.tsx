@@ -58,7 +58,10 @@ export function ModulesMobileCta() {
         : t("modules.mobile.hint");
 
   return (
-    <div className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-3 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden">
+    <div
+      data-floating-generate="modules"
+      className="fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-3 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+    >
       <p className="mb-1.5 text-center text-[10px] font-medium text-white/45">
         {hint}
       </p>
