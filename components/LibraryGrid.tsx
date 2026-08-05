@@ -115,34 +115,39 @@ function visibleAccountJob(job: GenerationJob): boolean {
 
 function jobStatus(status: string): {
   label: string;
-  tone: string;
-  dot: string;
+  badge: string;
+  statusCard: string;
+  railLabel: string;
 } {
   if (status === "succeeded") {
     return {
       label: "Ready",
-      tone: "text-[#c8ff3d]",
-      dot: "bg-[#c8ff3d]",
+      badge: "library-badge--ok",
+      statusCard: "status-card--ok",
+      railLabel: "Downloadable",
     };
   }
   if (status === "running") {
     return {
       label: "Generating",
-      tone: "text-sky-200",
-      dot: "animate-pulse bg-sky-300",
+      badge: "library-badge--progress",
+      statusCard: "status-card--info",
+      railLabel: "In progress",
     };
   }
   if (status === "queued") {
     return {
       label: "Preparing",
-      tone: "text-sky-200",
-      dot: "animate-pulse bg-sky-300",
+      badge: "library-badge--progress",
+      statusCard: "status-card--info",
+      railLabel: "Queued",
     };
   }
   return {
     label: "Needs retry",
-    tone: "text-amber-200",
-    dot: "bg-amber-300",
+    badge: "library-badge--err",
+    statusCard: "status-card--err",
+    railLabel: "Failed",
   };
 }
 
@@ -203,6 +208,16 @@ function formatDate(value?: string): string {
   }).format(date);
 }
 
+function ShelfIllustration() {
+  return (
+    <div className="library-shelf-illustration" aria-hidden>
+      <span className="library-shelf-illustration__slot" />
+      <span className="library-shelf-illustration__slot" />
+      <span className="library-shelf-illustration__slot" />
+    </div>
+  );
+}
+
 export function LibraryGrid() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [accountReady, setAccountReady] = useState(false);
@@ -211,6 +226,7 @@ export function LibraryGrid() {
   const [refreshing, setRefreshing] = useState(false);
   const [forkingId, setForkingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const toast = useToast();
 
   const refreshJobs = useCallback(async () => {
@@ -275,6 +291,16 @@ export function LibraryGrid() {
     const timer = window.setInterval(() => void refreshJobs(), 8000);
     return () => window.clearInterval(timer);
   }, [me?.signedIn, openCount, refreshJobs]);
+
+  // Keep selection valid as the list changes; default to the newest/open job.
+  // Derived — avoid setState-in-effect cascading renders (react-hooks lint).
+  const selectedJob = useMemo(() => {
+    if (sortedJobs.length === 0) return null;
+    return (
+      sortedJobs.find((job) => job.id === selectedId) || sortedJobs[0] || null
+    );
+  }, [sortedJobs, selectedId]);
+  const activeSelectedId = selectedJob?.id ?? null;
 
   async function download(job: GenerationJob) {
     const id = (job.requestId || job.id || "").trim();
@@ -389,8 +415,10 @@ export function LibraryGrid() {
 
   if (!accountReady || !jobsReady) {
     return (
-      <div className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]">
-        <p className="text-sm font-semibold text-white/45">Loading your Library…</p>
+      <div className="collection-card mt-6 grid min-h-64 place-items-center">
+        <p className="text-sm font-semibold text-[#0e0e12]/55">
+          Opening your collector shelf…
+        </p>
       </div>
     );
   }
@@ -398,23 +426,21 @@ export function LibraryGrid() {
   if (!me?.signedIn) {
     return (
       <section
-        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        className="collection-card relative mt-6"
         data-library-state="guest"
       >
         <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
           <div className="max-w-lg">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#c8ff3d]/30 bg-[#c8ff3d]/10 text-xl text-[#c8ff3d]">
-              ↗
-            </span>
-            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+            <ShelfIllustration />
+            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.2em] text-[#a84578]">
               Private Library
             </p>
-            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
-              Sign in to see your generated Moments.
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-[#0e0e12] sm:text-4xl">
+              Sign in to open your toy vault.
             </h2>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
-              Your real toy results belong to your account. Sample previews and
-              browser-cached demos are not added to this Library.
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#0e0e12]/65">
+              Real Moments belong to your account only. Sample previews and
+              browser-cached demos never land on this shelf.
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               <Link href="/login?next=/library" className="btn btn-primary text-sm">
@@ -431,15 +457,27 @@ export function LibraryGrid() {
   }
 
   return (
-    <section className="mt-6" data-library-state={sortedJobs.length ? "filled" : "empty"}>
+    <section
+      className="mt-6"
+      data-library-state={sortedJobs.length ? "filled" : "empty"}
+    >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
-            {openCount > 0
-              ? `${openCount} Moment${openCount === 1 ? "" : "s"} in progress`
-              : `${sortedJobs.length} saved Moment${sortedJobs.length === 1 ? "" : "s"}`}
-          </p>
-          <p className="mt-1 text-xs text-white/45">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`library-badge ${
+                openCount > 0 ? "library-badge--progress" : "library-badge--ok"
+              }`}
+            >
+              {openCount > 0
+                ? `${openCount} in progress`
+                : `${sortedJobs.length} saved`}
+            </span>
+            <span className="library-badge library-badge--muted">
+              Collector shelf
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-white/45">
             Signed in as {me.auth?.email || "your Pikbo account"}
           </p>
         </div>
@@ -452,24 +490,33 @@ export function LibraryGrid() {
           >
             {refreshing ? "Refreshing…" : "Refresh"}
           </button>
-          <Link href={CREATE_MOMENT_HREF} className="btn btn-primary min-h-11 !px-4 !py-2 text-xs">
+          <Link
+            href={CREATE_MOMENT_HREF}
+            className="btn btn-primary min-h-11 !px-4 !py-2 text-xs"
+          >
             Create new Moment
           </Link>
         </div>
       </div>
 
       {sortedJobs.length === 0 ? (
-        <div className="grid min-h-[22rem] place-items-center rounded-[1.75rem] border border-white/10 bg-[#111113] p-6 text-center sm:p-10">
+        <div className="collection-card relative grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
           <div className="max-w-lg">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-xl text-white/65">
-              +
-            </span>
-            <h2 className="mt-5 font-display text-3xl font-black tracking-[-0.04em] text-white">
+            <ShelfIllustration />
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <span className="library-badge library-badge--muted">
+                Empty shelf
+              </span>
+              <span className="library-badge library-badge--muted">
+                One photo to start
+              </span>
+            </div>
+            <h2 className="mt-4 font-display text-3xl font-black tracking-[-0.04em] text-[#0e0e12]">
               Your first real Moment starts with one toy photo.
             </h2>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/50">
-              Generated results will return here after refresh. Only private,
-              downloadable account results are kept in this view.
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#0e0e12]/62">
+              Generated results return here after refresh. Only private,
+              downloadable account results stay on this shelf.
             </p>
             <Link href={CREATE_MOMENT_HREF} className="btn btn-primary mt-7 text-sm">
               Create Street Power-Up
@@ -477,125 +524,243 @@ export function LibraryGrid() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {sortedJobs.map((job) => {
-            const status = jobStatus(job.status);
-            const remixHref = createRemixHref(
-              job.effect || "street-power-up",
-              undefined,
-              null,
-              remixOptsFromRecord(job)
-            );
-            return (
-              <article
-                key={job.id}
-                className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111113] shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)]"
-              >
-                <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(200,255,61,0.12),transparent_55%),#09090a] text-center">
-                  {job.status === "succeeded" && job.videoUrl ? (
-                    <video
-                      src={job.videoUrl}
-                      controls
-                      playsInline
-                      preload="metadata"
-                      aria-label={`${effectName(job.effect)} generated video`}
-                      className="h-full w-full bg-black object-contain"
-                    />
-                  ) : (
-                    <div className="p-6">
-                      <span className={`mx-auto block h-2 w-2 rounded-full ${status.dot}`} />
-                      <p className={`mt-3 text-xs font-black uppercase tracking-[0.18em] ${status.tone}`}>
-                        {status.label}
-                      </p>
-                      <p className="mt-2 font-display text-2xl font-black tracking-[-0.03em] text-white">
-                        {effectName(job.effect)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center justify-between gap-3 text-[11px] text-white/42">
-                    <span>{formatDate(job.createdAt)}</span>
-                    <span>
-                      {[job.aspectRatio, job.duration ? `${job.duration}s` : null]
-                        .filter(Boolean)
-                        .join(" · ") || "Toy video"}
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start">
+          {/* List — collection-card tiles */}
+          <div className="motion-stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            {sortedJobs.map((job) => {
+              const status = jobStatus(job.status);
+              const selected = job.id === activeSelectedId;
+              return (
+                <div
+                  key={job.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedId(job.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedId(job.id);
+                    }
+                  }}
+                  className="collection-card w-full cursor-pointer p-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#39ff14]"
+                  data-selected={selected ? "true" : "false"}
+                  aria-pressed={selected}
+                  aria-label={`${effectName(job.effect)}, ${status.label}, ${formatDate(job.createdAt)}`}
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden border-b border-[#ffb6d9]/50 bg-[#0e0e12]">
+                    {job.status === "succeeded" && job.videoUrl ? (
+                      <video
+                        src={job.videoUrl}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        tabIndex={-1}
+                        aria-hidden
+                        className="pointer-events-none h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="grid h-full place-items-center bg-[radial-gradient(circle_at_50%_20%,rgba(0,240,255,0.12),transparent_55%),#0e0e12]" />
+                    )}
+                    <span
+                      className={`library-badge absolute left-2.5 top-2.5 ${status.badge} motion-state-in`}
+                    >
+                      {status.label}
                     </span>
                   </div>
-
-                  {isRetryable(job.status) ? (
-                    <p className="mt-3 text-xs leading-5 text-amber-100/72">
-                      {friendlyFailure(job)}
+                  <div className="p-3.5">
+                    <p className="font-display text-base font-black tracking-[-0.03em] text-[#0e0e12]">
+                      {effectName(job.effect)}
                     </p>
-                  ) : null}
-
-                  {isOpen(job.status) &&
-                  (job.capabilities?.refreshOnly ||
-                    job.durable ||
-                    job.adapter === "supabase-private") &&
-                  !canLocalCancel(job) ? (
-                    <p className="mt-3 text-xs leading-5 text-sky-100/70">
-                      Still generating. Refresh keeps this durable status in
-                      sync — Cancel is only available for local in-progress
-                      jobs.
-                    </p>
-                  ) : null}
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {job.status === "succeeded" ? (
-                      <button
-                        type="button"
-                        onClick={() => void download(job)}
-                        className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs"
-                      >
-                        Download video
-                      </button>
-                    ) : null}
-                    {isRetryable(job.status) && canLocalRetry(job) ? (
-                      <button
-                        type="button"
-                        onClick={() => void retry(job)}
-                        disabled={forkingId === job.id}
-                        className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs disabled:opacity-50"
-                      >
-                        {forkingId === job.id ? "Preparing…" : "Retry Moment"}
-                      </button>
-                    ) : null}
-                    {canNewAttempt(job) ? (
-                      <Link
-                        href={newAttemptHref(job)}
-                        className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
-                        data-library-action="new-attempt"
-                        data-library-new-attempt={
-                          acceptedSamePhotoHandoff(job) ? "same-photo" : "generic"
-                        }
-                      >
-                        {newAttemptLabel(job)}
-                      </Link>
-                    ) : null}
-                    {isOpen(job.status) && canLocalCancel(job) ? (
-                      <button
-                        type="button"
-                        onClick={() => void cancel(job)}
-                        disabled={cancellingId === job.id}
-                        className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs disabled:opacity-50"
-                      >
-                        {cancellingId === job.id ? "Canceling…" : "Cancel"}
-                      </button>
-                    ) : null}
-                    {!isOpen(job.status) && !canNewAttempt(job) ? (
-                      <Link
-                        href={remixHref}
-                        className="btn btn-ghost min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
-                      >
-                        Generate again
-                      </Link>
-                    ) : null}
+                    <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] font-semibold text-[#0e0e12]/55">
+                      <time dateTime={job.createdAt || undefined}>
+                        {formatDate(job.createdAt)}
+                      </time>
+                      <span>
+                        {[
+                          job.aspectRatio,
+                          job.duration ? `${job.duration}s` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ") || "Toy video"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </article>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          {/* Detail — result-card. Alias selectedJob as job so durable-library
+              source contracts keep matching (void retry(job), canLocalRetry(job), …). */}
+          {selectedJob
+            ? (() => {
+                const job = selectedJob;
+                const status = jobStatus(job.status);
+                const remixHref = createRemixHref(
+                  job.effect || "street-power-up",
+                  undefined,
+                  null,
+                  remixOptsFromRecord(job)
+                );
+                return (
+                  <article
+                    key={job.id}
+                    className="result-card motion-state-in lg:sticky lg:top-6"
+                    data-library-detail="true"
+                  >
+                    <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_12%,rgba(57,255,20,0.12),transparent_52%),radial-gradient(circle_at_100%_0%,rgba(0,240,255,0.1),transparent_45%),#0a0614] text-center">
+                      {job.status === "succeeded" && job.videoUrl ? (
+                        <video
+                          src={job.videoUrl}
+                          controls
+                          playsInline
+                          preload="metadata"
+                          aria-label={`${effectName(job.effect)} generated video`}
+                          className="h-full w-full bg-black object-contain"
+                        />
+                      ) : (
+                        <div className="p-6">
+                          <span
+                            className={`library-badge mx-auto ${status.badge} motion-state-in`}
+                          >
+                            {status.label}
+                          </span>
+                          <p className="mt-3 font-display text-2xl font-black tracking-[-0.03em] text-white">
+                            {effectName(job.effect)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4 sm:p-5">
+                      <div
+                        className={`status-card ${status.statusCard} motion-state-in`}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/70">
+                              {status.railLabel}
+                            </p>
+                            <p className="mt-1 font-display text-lg font-black tracking-[-0.03em] text-white">
+                              {effectName(job.effect)}
+                            </p>
+                          </div>
+                          <p className="text-[11px] font-semibold text-white/45">
+                            {formatDate(job.createdAt)}
+                            {job.aspectRatio || job.duration
+                              ? ` · ${[
+                                  job.aspectRatio,
+                                  job.duration ? `${job.duration}s` : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}`
+                              : ""}
+                          </p>
+                        </div>
+                      </div>
+
+                      {isRetryable(job.status) ? (
+                        <p className="mt-3 text-xs leading-5 text-[#ff4757]/90">
+                          {friendlyFailure(job)}
+                        </p>
+                      ) : null}
+
+                      {isOpen(job.status) &&
+                      (job.capabilities?.refreshOnly ||
+                        job.durable ||
+                        job.adapter === "supabase-private") &&
+                      !canLocalCancel(job) ? (
+                        <p className="mt-3 text-xs leading-5 text-[#00f0ff]/85">
+                          Still generating. Refresh keeps this durable status in
+                          sync — Cancel is only available for local in-progress
+                          jobs.
+                        </p>
+                      ) : null}
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {job.status === "succeeded" ? (
+                          <button
+                            type="button"
+                            onClick={() => void download(job)}
+                            className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs"
+                          >
+                            Download video
+                          </button>
+                        ) : null}
+                        {isRetryable(job.status) && canLocalRetry(job) ? (
+                          <button
+                            type="button"
+                            onClick={() => void retry(job)}
+                            disabled={forkingId === job.id}
+                            className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs disabled:opacity-50"
+                          >
+                            {forkingId === job.id
+                              ? "Preparing…"
+                              : "Retry Moment"}
+                          </button>
+                        ) : null}
+                        {canNewAttempt(job) ? (
+                          <Link
+                            href={newAttemptHref(job)}
+                            className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
+                            data-library-action="new-attempt"
+                            data-library-new-attempt={
+                              acceptedSamePhotoHandoff(job)
+                                ? "same-photo"
+                                : "generic"
+                            }
+                          >
+                            {newAttemptLabel(job)}
+                          </Link>
+                        ) : null}
+                        {isOpen(job.status) && canLocalCancel(job) ? (
+                          <button
+                            type="button"
+                            onClick={() => void cancel(job)}
+                            disabled={cancellingId === job.id}
+                            className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs disabled:opacity-50"
+                          >
+                            {cancellingId === job.id
+                              ? "Canceling…"
+                              : "Cancel"}
+                          </button>
+                        ) : null}
+                        {!isOpen(job.status) && !canNewAttempt(job) ? (
+                          <Link
+                            href={remixHref}
+                            className="btn btn-ghost min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
+                          >
+                            Generate again
+                          </Link>
+                        ) : null}
+                      </div>
+
+                      {/* Source photo slot — private inputs are not listed as URLs;
+                          honest shelf frame until a controlled owner preview exists. */}
+                      <div className="mt-5 flex items-center gap-3 border-t border-white/10 pt-4">
+                        <div
+                          className="library-source-thumb grid place-items-center"
+                          aria-hidden
+                        >
+                          <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#ffb6d9]/90">
+                            Toy
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/45">
+                            Original upload
+                          </p>
+                          <p className="mt-0.5 text-xs font-semibold leading-5 text-white/60">
+                            Source photo stays private on your account — not
+                            shown as a public URL.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })()
+            : null}
         </div>
       )}
     </section>
