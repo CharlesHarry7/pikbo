@@ -146,10 +146,10 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
 
   return (
     <div
-      className="login-form-panel mt-5 space-y-4"
+      className="login-form-panel mt-3 space-y-3 sm:mt-5 sm:space-y-4"
       data-login-form="magic-link"
     >
-      <form className="space-y-3.5" onSubmit={(e) => void onSubmit(e)}>
+      <form className="space-y-2.5 sm:space-y-3.5" onSubmit={(e) => void onSubmit(e)}>
         <label className="block text-[10px] font-black uppercase tracking-[0.16em] text-white/55">
           Email
           <input
@@ -160,13 +160,13 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@studio.com"
-            className="login-email-field mt-2 w-full rounded-xl border border-white/12 bg-black/45 px-3.5 py-3 text-sm font-semibold text-white outline-none placeholder:text-white/28 focus:border-[var(--neon-pink)] focus:shadow-[0_0_0_3px_rgba(255,78,205,0.18)]"
+            className="login-email-field mt-1.5 w-full rounded-xl border border-white/12 bg-black/45 px-3 py-2.5 text-sm font-semibold text-white outline-none placeholder:text-white/28 focus:border-[var(--neon-pink)] focus:shadow-[0_0_0_3px_rgba(255,78,205,0.18)] sm:mt-2 sm:px-3.5 sm:py-3"
           />
         </label>
         <button
           type="submit"
           disabled={busy}
-          className="btn btn-primary w-full py-3 text-sm font-black disabled:opacity-50"
+          className="btn btn-primary w-full py-2.5 text-sm font-black disabled:opacity-50 sm:py-3"
           data-login-submit="magic-link"
         >
           {busy ? "Sending…" : "Email me a sign-in link"}
@@ -184,7 +184,7 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
             type="button"
             disabled={busy}
             onClick={() => void onGoogle()}
-            className="btn-electric w-full py-3 text-sm font-black disabled:opacity-50"
+            className="btn-electric w-full py-2.5 text-sm font-black disabled:opacity-50 sm:py-3"
             data-login-submit="google"
           >
             Continue with Google
