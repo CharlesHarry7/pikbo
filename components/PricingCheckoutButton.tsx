@@ -58,10 +58,11 @@ export function PricingCheckoutButton({
     };
   }, [clientEnabled]);
 
-  // Validation mode: both the public flag and server acceptance must pass.
+  // Closed billing: no keys / no acceptance → never create a Checkout Session.
+  // Intent path only (preview or waitlist); live Stripe stays hard-gated.
   if (!live && planId !== "free") {
     return (
-      <div className="w-full">
+      <div className="w-full" data-billing-cta="closed-intent">
         <Button
           asChild
           variant={featured ? "default" : "secondary"}
@@ -73,8 +74,8 @@ export function PricingCheckoutButton({
           </Link>
         </Button>
         <p className="mt-2 text-center text-[10px] leading-relaxed text-[var(--fg-dim)]">
-          Checkout is closed while Stripe approval and private-beta quality
-          gates are unfinished. The Moment preview is open now.
+          Checkout is closed — no live Stripe charge without keys and gates.
+          Preview a Moment now, or leave founding intent on Contact.
         </p>
       </div>
     );
