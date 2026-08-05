@@ -16,6 +16,10 @@ import {
   libraryNotYourToyCopy,
 } from "@/lib/privateGenerationResultsPure.mjs";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+import {
+  libraryLoginHref,
+  parseLibraryJobId,
+} from "@/lib/libraryLoginDeepLink";
 
 type JobCapabilities = {
   localRetry?: boolean;
@@ -54,10 +58,6 @@ type GenerationsResponse = {
 };
 
 const CREATE_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=library` as const;
-
-/** UUID shape for deep-link job ids — reject freeform paths/secrets. */
-const LIBRARY_JOB_ID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function isOpen(status: string): boolean {
   return status === "queued" || status === "running";
@@ -214,12 +214,6 @@ function formatDate(value?: string): string {
   }).format(date);
 }
 
-function parseDeepLinkJobId(raw: string | null): string | null {
-  if (!raw) return null;
-  const id = raw.trim();
-  return LIBRARY_JOB_ID_RE.test(id) ? id : null;
-}
-
 function JobActionRow({
   job,
   forkingId,
@@ -325,7 +319,7 @@ function InputBindingSlot({ inputBound }: { inputBound: boolean }) {
 
 function LibraryGridInner() {
   const searchParams = useSearchParams();
-  const deepLinkJobId = parseDeepLinkJobId(searchParams.get("job"));
+  const deepLinkJobId = parseLibraryJobId(searchParams.get("job"));
   const [me, setMe] = useState<MeResponse | null>(null);
   const [accountReady, setAccountReady] = useState(false);
   const [jobs, setJobs] = useState<GenerationJob[]>([]);
@@ -565,17 +559,12 @@ function LibraryGridInner() {
               browser-cached demos are not added to this Library.
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
-              {/* Static default keeps engine-smoke / launch-pack contract
-                  href="/login?next=/library". Deep-link guests restore ?job=. */}
+              {/* Guest-without-job keeps static href="/login?next=/library".
+                  Deep-link guests restore ?job= via libraryLoginHref. */}
               <Link
-                href={
-                  deepLinkJobId
-                    ? `/login?next=${encodeURIComponent(
-                        `/library?job=${encodeURIComponent(deepLinkJobId)}`
-                      )}`
-                    : "/login?next=/library"
-                }
+                href={libraryLoginHref(deepLinkJobId)}
                 className="btn btn-primary text-sm"
+                data-library-login="guest"
               >
                 Sign in to Library
               </Link>

@@ -85,6 +85,19 @@ assert.equal(
   redirect.authCallbackUrl(privateValidationPreview, "production", momentNext),
   `${privateValidationPreview}/auth/callback?next=%2Fcreate%3Fmode%3Dmoment%26effect%3Dstreet-power-up`
 );
+// AIT-115: Library deep-link restore after login (job UUID only in next).
+const libraryJobNext =
+  "/library?job=22222222-2222-4222-8222-222222222222";
+assert.equal(redirect.sanitizeInternalNextPath(libraryJobNext), libraryJobNext);
+assert.equal(redirect.sanitizeInternalNextPath("/library"), "/library");
+assert.equal(
+  redirect.authCallbackUrl(production, "production", libraryJobNext),
+  `${production}/auth/callback?next=${encodeURIComponent(libraryJobNext)}`
+);
+assert.equal(
+  redirect.authCallbackUrl(production, "production", "/library"),
+  `${production}/auth/callback?next=%2Flibrary`
+);
 assert.equal(
   redirect.sanitizeInternalNextPath("//evil.example/steal"),
   "/profile"
