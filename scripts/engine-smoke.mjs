@@ -3929,6 +3929,22 @@ assert.equal(
   "home hero must expose exactly one primary Moment CTA"
 );
 assert.doesNotMatch(homeHeroSrc, /Use this motion/);
+// AIT-114: home shell + Create entry stay result-first after the Moment door.
+{
+  const appShellSrc = fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8");
+  const createPageSrc = fs.readFileSync(join(root, "app/create/page.tsx"), "utf8");
+  const guestGateSrc = fs.readFileSync(
+    join(root, "components/GuestMomentCreateGate.tsx"),
+    "utf8"
+  );
+  assert.match(appShellSrc, /home \? "Create my drop clip" : "Open Library"/);
+  assert.doesNotMatch(appShellSrc, /Try Street Power-Up/);
+  assert.match(createPageSrc, /data-create-entry-h1=["']result-first["']/);
+  assert.match(createPageSrc, /Turn one owned photo into your drop clip\./);
+  assert.match(guestGateSrc, /data-create-entry-h1=["']result-first["']/);
+  assert.match(guestGateSrc, /Your drop[\s\S]*clip\./);
+  assert.match(guestGateSrc, /list, post,\s*or drop/);
+}
 assert.match(homeHeroSrc, /Sample · Beatbot/);
 assert.match(homeHeroSrc, /Sample shown: cached 6s archive/);
 assert.match(homeHeroSrc, /not a completed customer deliverable/);

@@ -32,9 +32,9 @@ export async function generateMetadata({
     };
   }
   return {
-    title: { absolute: `Street Power-Up · Private Moment | ${site.name}` },
+    title: { absolute: `Your drop clip · Private Moment | ${site.name}` },
     description:
-      "Preview Pikbo's cached Street Power-Up sample, then request the owner-only private beta path.",
+      "Preview Pikbo's cached Street Power-Up sample, then turn one owned toy photo into a private drop, list, or post clip.",
     alternates: { canonical: "/create?mode=moment&effect=street-power-up" },
     robots: CONCEPT_ROBOTS,
   };
@@ -85,16 +85,19 @@ export default async function CreatePage({
         <div className="relative mx-auto grid max-w-[1480px] gap-4 border-b border-[#FF4ECD]/15 px-5 py-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:px-12">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
-              Pikbo Moment · private render
+              Owned photo → private drop clip
             </p>
-            <h1 className="mt-2 max-w-4xl font-display text-[clamp(2.45rem,4.2vw,4.5rem)] font-black leading-[0.9] tracking-[-0.06em] text-bling">
-              Turn one toy photo into Street Power-Up.
+            <h1
+              className="mt-2 max-w-4xl font-display text-[clamp(2.45rem,4.2vw,4.5rem)] font-black leading-[0.9] tracking-[-0.06em] text-bling"
+              data-create-entry-h1="result-first"
+            >
+              Turn one owned photo into your drop clip.
             </h1>
           </div>
           <p className="border-l border-[#B14EFF]/50 pl-4 text-sm font-semibold leading-6 text-white/56">
-            One fixed 9:16 · 5s · 720p video. Upload privately, pay 10
-            credits only when it completes, then recover and download it from
-            Library.
+            One fixed Street Power-Up path: 9:16 · 5s · 720p. Upload privately,
+            pay 10 credits only when it completes, then recover and download a
+            list/post-ready clip from Library.
           </p>
         </div>
         <CreateStudio

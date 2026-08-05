@@ -203,8 +203,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <Link
               href={home ? DEFAULT_MOMENT_CREATE_HREF : "/library"}
               className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.35)]"
+              // Home desktop primary matches hero result-first label (AIT-86/114).
+              // Same single Moment door — not a second home hero CTA.
+              data-home-shell-create-cta={home ? "true" : undefined}
             >
-              {home ? "Try Street Power-Up" : "Open Library"}
+              {home ? "Create my drop clip" : "Open Library"}
             </Link>
           ) : resultShell ? (
             <Link

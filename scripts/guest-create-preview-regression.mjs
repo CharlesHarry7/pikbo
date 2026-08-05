@@ -11,10 +11,21 @@ const gate = read("components/GuestMomentCreateGate.tsx");
 assert.match(createPage, /<GuestMomentCreateGate>/);
 assert.match(createPage, /<CreateStudio[\s\S]*initialEffect="street-power-up"[\s\S]*fixedMomentContract/);
 assert.match(createPage, /description:[\s\S]{0,180}cached Street Power-Up sample/);
+// AIT-114: authenticated Create entry above-fold is result-first (drop clip), not only effect brand.
+assert.match(createPage, /data-create-entry-h1=["']result-first["']/);
+assert.match(createPage, /Turn one owned photo into your drop clip\./);
+assert.match(createPage, /list\/post-ready clip from Library/);
 
 assert.match(gate, /data-guest-create-first="street-power-up"/);
-assert.match(gate, /Street[\s\S]*Power-Up\./);
-assert.match(gate, /A neon, drop-day direction built for designer-toy reveals/);
+// AIT-114: guest Create above-fold frames owned photo → private drop/list/post clip.
+assert.match(gate, /data-create-entry-h1=["']result-first["']/);
+assert.match(gate, /Your drop[\s\S]*clip\./);
+assert.match(gate, /Owned photo → private clip/);
+assert.match(
+  gate,
+  /private 9:16 clip ready to list, post,\s*or drop/
+);
+assert.match(gate, /Street Power-Up is the fixed direction/);
 assert.match(gate, /data-guest-create-sample/);
 assert.match(gate, /AutoPlayVideo/);
 assert.match(gate, /beatbot-still\.webp/);
@@ -57,5 +68,5 @@ for (const asset of [
 }
 
 console.log(
-  "guest-create-preview-regression: PASS (guest-first 6s archive study; honest 9:16/5s/720p private target; sign-in/request-beta CTAs; no upload/credits/Generate copy)"
+  "guest-create-preview-regression: PASS (result-first create entry; guest 6s archive; 9:16/5s/720p private target; sign-in/request-beta; no upload/credits/Generate copy)"
 );

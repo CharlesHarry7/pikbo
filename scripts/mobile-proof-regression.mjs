@@ -106,8 +106,13 @@ assert.doesNotMatch(
 
 assert.match(
   createPage,
-  /<h1\b[\s\S]*Turn one toy photo into Street Power-Up\./,
-  "single Create needs an accessible Moment page heading"
+  /<h1\b[\s\S]*Turn one owned photo into your drop clip\./,
+  "single Create needs an accessible result-first Moment page heading"
+);
+assert.match(
+  createPage,
+  /data-create-entry-h1=["']result-first["']/,
+  "Create entry H1 must stay result-first (AIT-114)"
 );
 assert.match(
   video,
