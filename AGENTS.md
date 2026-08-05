@@ -14,8 +14,9 @@ work end to end for a real seller and become safe to charge for.
 
 1. `docs/CURRENT_LAUNCH_CONTRACT.md`
 2. `docs/STATUS.md`
-3. `README.md`
-4. Current `main` code and tests
+3. `docs/PRODUCTION_SHIP_CHECKLIST.md` — ship + Vercel budget + health softLive truth
+4. `README.md`
+5. Current `main` code and tests
 
 Older roadmaps, agent prompts, growth reports, screenshots, and product audits
 are historical evidence only. If they conflict with the files above, they do
@@ -46,9 +47,43 @@ loop is reliable and useful to target sellers.
   contract and its tests explicitly allow them.
 - Do not add code that only simulates progress, empty product surfaces, fake
   customers, fake results, or unsupported claims.
+- **Batch commits → one git push per session** so Vercel Git previews do not
+  burn the daily deploy quota.
+
+## Vercel budget + production ship (HARD)
+
+Agents **must** call the budget gate before any deploy:
+
+```bash
+npm run vercel-budget -- check    # exit 1 → do NOT deploy; PR only
+npm run vercel-budget -- status
+# after a successful deploy only:
+npm run vercel-budget -- add
+```
+
+Ship checklist (no auto-deploy; probes health softLive honesty):
+
+```bash
+npm run production-ship-checklist
+# offline:
+SKIP_REMOTE=1 npm run production-ship-checklist
+```
+
+Rules:
+
+- Usable max ≈ **8 deploys / UTC day**. Prefer merge-to-main over `vercel --prod`.
+- If `vercel-budget check` fails: open/update the PR only — never force a
+  production deploy.
+- Public `/api/health` must stay honest: `ready.softLive` is all-five AND;
+  `billing.freeTrial.*` tracks softLive. Closed production (`softLive=false`,
+  `paid=false`, cached-demo-only) is a valid ship state.
+- Optional one production deploy only when budget allows **and** the change is
+  a main-worthy Moment/HF path. Never burn quota on throwaway previews.
 
 ## Definition of done
 
 Every change must state the seller outcome, keep scope small, run the relevant
-tests, and include a GitHub PR plus reproducible evidence. A merged change is
-not released until its production deployment and public behavior are verified.
+tests (at least `SKIP_REMOTE=1 npm run production-ship-checklist` for ship-facing
+work), and include a GitHub PR plus reproducible evidence. A merged change is
+not released until its production deployment and public behavior are verified —
+and only after `vercel-budget check` allows that deploy.

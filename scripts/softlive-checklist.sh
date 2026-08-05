@@ -34,7 +34,7 @@ check_opt() {
 }
 
 echo "== Pikbo soft-live checklist =="
-echo "Live needs auth + Supabase atomic reserve + provider + server-owned deliverable."
+echo "Live needs all five: auth + Supabase atomic reserve + durable reconciliation + provider + server-owned deliverable."
 echo
 check_req "Supabase public auth config" "$([[ -n "${SUPABASE_URL:-}${NEXT_PUBLIC_SUPABASE_URL:-}" && -n "${SUPABASE_ANON_KEY:-}${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" ]] && echo 1 || echo 0)"
 check_req "Supabase atomic reserve (service role + reviewed R1 flag)" "$([[ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" && "${REQUIRE_DURABLE_CREDITS:-0}" == "1" && "${PIKBO_R1_ATOMIC_RESERVATION_READY:-0}" == "1" ]] && echo 1 || echo 0)"
@@ -112,7 +112,7 @@ if demos.get("ok") is False:
 if ready.get("softLive"):
     print("softLive ready= true")
 elif ready.get("demo"):
-    print("softLive ready= false (validation/cached only — complete all four live requirements)")
+    print("softLive ready= false (validation/cached only — complete all five live requirements)")
 PY
     fi
   else
