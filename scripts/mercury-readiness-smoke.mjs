@@ -65,6 +65,9 @@ assert.match(terms, /Refund Policy/);
 assert.match(privacy, /Public paid checkout is currently closed/);
 assert.match(footer, /\/contact/);
 assert.match(footer, /\/refund/);
+// AIT-67: footer product Create matches primary Generate→360 (not street-power Moment)
+assert.match(footer, /createGenerate360Href\(\s*["']footer["']\s*\)/);
+assert.doesNotMatch(footer, /street-power-up|MOMENT_CREATE_HREF/);
 assert.match(homeTrust, /Pikbo Labs LLC|company\.legalName/);
 
 for (const source of publicBusinessSources) {

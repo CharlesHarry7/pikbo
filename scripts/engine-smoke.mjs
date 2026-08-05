@@ -4192,8 +4192,9 @@ const footerCoreSrc = fs.readFileSync(
   join(root, "components/Footer.tsx"),
   "utf8"
 );
-assert.match(footerCoreSrc, /Create a toy Moment/);
-assert.doesNotMatch(footerCoreSrc, /Launch Pack|Seller Pack|seller-pack/);
+// AIT-67: footer product Create is Generate→360, not street-power Moment
+assert.match(footerCoreSrc, /Generate 360° spin|createGenerate360Href\(\s*["']footer["']\s*\)/);
+assert.doesNotMatch(footerCoreSrc, /Launch Pack|Seller Pack|seller-pack|street-power-up|MOMENT_CREATE_HREF/);
 assert.match(footerCoreSrc, /AI toy video generator/);
 assert.doesNotMatch(
   footerCoreSrc,
@@ -4454,10 +4455,21 @@ assert.match(
   fs.readFileSync(join(root, "components/HowItWorks.tsx"), "utf8"),
   /createGenerate360Href|data-how-it-works=["']generate-remix["']/
 );
-assert.match(
-  fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
-  /Flow · Preview|Create one Moment/
-);
+// AIT-67: suite doors drop frozen Modules/Flow + street-power Moment dual door
+{
+  const suiteDoorsSrc = fs.readFileSync(
+    join(root, "components/SuiteDoorLinks.tsx"),
+    "utf8"
+  );
+  assert.match(
+    suiteDoorsSrc,
+    /createGenerate360Href\(\s*["']suite-doors["']\s*\)|data-suite-door=["']generate["']/
+  );
+  assert.doesNotMatch(
+    suiteDoorsSrc,
+    /href=["']\/modules["']|href=["']\/flow["']|effect=street-power-up|data-suite-door=["']single-moment["']/
+  );
+}
 assert.match(
   fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
   /suite\.preview["']:\s*["']Preview["']|suite\.tag\.preview/
@@ -4928,9 +4940,18 @@ assert.match(createStudioSmoke, /GenerateAfterPath/);
 assert.match(createStudioSmoke, /jobIntentId=\{jobIntentId\}/);
 assert.match(createStudioSmoke, /sku=\{toyIdentity\.sku/);
 // Footer / Profile / Explore / Community product-first suite exits
+// AIT-67: Footer Create matches primary Generate→360 (not street-power Moment)
 assert.match(
   fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
-  /data-footer-path=["']product-first["']/
+  /data-footer-path=["']generate-360["']/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
+  /createGenerate360Href\(\s*["']footer["']\s*\)/
+);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
+  /street-power-up|MOMENT_CREATE_HREF/
 );
 // profilePanelSrc already loaded above (account and job status)
 assert.match(profilePanelSrc, /data-profile-path=["']product-first["']/);
@@ -5745,10 +5766,10 @@ assert.match(
   fs.readFileSync(join(root, "app/api/generate/route.ts"), "utf8"),
   /beginSyncGenerateJob\([\s\S]{0,500}duration:\s*secs/
 );
-// Suite doors default Generate uses remix contract (not bare /create)
+// Suite doors: recipe remix when slug set; bare → createGenerate360Href (AIT-67)
 assert.match(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
-  /createRemixHref\(effectSlug \|\| ["']360-spin-showcase["']\)|createRemixHref\(effectSlug/
+  /createRemixHref\(effectSlug\)|createGenerate360Href\(\s*["']suite-doors["']\s*\)/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
@@ -5838,9 +5859,8 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "components/AppShell.tsx"), "utf8"),
   /\/create\?effect=street-power-up&source=primary-nav/
 );
-// Pricing, closed checkout, and Footer all derive their public Moment doors
-// from one frozen base path.  Keep source/try/sample attribution local to the
-// surface so a future base-path change cannot silently split this funnel.
+// Pricing + closed checkout derive public Moment doors from one frozen base.
+// Footer Create is Generate→360 (AIT-67) and is asserted separately below.
 const pricingCheckoutButtonSrc = fs.readFileSync(
   join(root, "components/PricingCheckoutButton.tsx"),
   "utf8"
@@ -5848,7 +5868,6 @@ const pricingCheckoutButtonSrc = fs.readFileSync(
 const pricingMomentSurfaceSources = [
   ["app/pricing/page.tsx", pricingPage],
   ["components/PricingCheckoutButton.tsx", pricingCheckoutButtonSrc],
-  ["components/Footer.tsx", footerSrc],
 ];
 for (const [rel, source] of pricingMomentSurfaceSources) {
   assert.match(
@@ -5874,11 +5893,11 @@ assert.match(
 assert.match(pricingCheckoutButtonSrc, /href=\{PRICING_FOUNDING_HREF\}/);
 assert.match(
   footerSrc,
-  /const FOOTER_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=footer`/
+  /const FOOTER_CREATE_HREF\s*=\s*createGenerate360Href\(\s*["']footer["']\s*\)/
 );
-assert.match(footerSrc, /\[FOOTER_CREATE_HREF,\s*["']Create["']\]/);
-assert.match(footerSrc, /<Link\s+href=\{FOOTER_CREATE_HREF\}/);
-// Pricing and Footer still preserve their existing product-first assertions.
+assert.match(footerSrc, /\[FOOTER_CREATE_HREF,\s*["']Generate 360°["']\]/);
+assert.match(footerSrc, /href=\{FOOTER_CREATE_HREF\}/);
+// Pricing Moment preview stays product-first; Footer Create is Generate→360 (AIT-67).
 assert.match(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
   /href=["']\/create\?effect=street-power-up&source=pricing-hero&try=1&sample=beatbot["']/

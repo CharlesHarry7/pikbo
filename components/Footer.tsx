@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
 import { company } from "@/lib/company";
-import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { Logo } from "@/components/Logo";
 
-const FOOTER_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=footer` as const;
+/** Product footer Create — same Generate→360 deep link as primary nav CTAs. */
+const FOOTER_CREATE_HREF = createGenerate360Href("footer");
 
 const FOOTER_GROUPS = [
   {
     label: "Product",
     links: [
-      [FOOTER_CREATE_HREF, "Create"],
+      [FOOTER_CREATE_HREF, "Generate 360°"],
       ["/library", "Library"],
       ["/pricing", "Pricing"],
     ],
@@ -46,15 +47,16 @@ export function Footer() {
             <Logo size={30} />
 
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/45">
-              Pick one directed Moment and turn one owned toy photo into one
-              launch-ready clip.
+              Turn one owned toy photo into a listing-ready 360° spin — same
+              Generate path as primary nav.
             </p>
             <Link
               href={FOOTER_CREATE_HREF}
               className="btn btn-primary mt-5 !px-4 !py-2 text-xs"
-              data-footer-path="product-first"
+              data-footer-path="generate-360"
+              data-footer-cta="generate-360"
             >
-              Create a toy Moment
+              Generate 360° spin
             </Link>
           </div>
           {FOOTER_GROUPS.map((group) => (

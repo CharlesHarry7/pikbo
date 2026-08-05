@@ -69,6 +69,8 @@ const generateSurfaces = [
   ["components/CommandPalette.tsx", null],
   ["components/GenerateSuiteChrome.tsx", null],
   ["components/Header.tsx", "header"],
+  ["components/Footer.tsx", "footer"],
+  ["components/SuiteDoorLinks.tsx", "suite-doors"],
   ["components/HfProductRail.tsx", "hf-product-rail"],
   ["components/HfExploreHome.tsx", "hf-explore"],
   ["components/HeroVideoBanner.tsx", "hero-banner"],
@@ -108,6 +110,37 @@ for (const [file, source] of generateSurfaces) {
       src,
       /createWorkbenchHref\(\s*["'][^"']+["']\s*\)/,
       `${file} must pass an honest source to createWorkbenchHref`
+    );
+    continue;
+  }
+  if (file === "components/Footer.tsx") {
+    assert.match(
+      src,
+      /createGenerate360Href\(\s*["']footer["']\s*\)/,
+      "Footer Create must use createGenerate360Href(\"footer\")"
+    );
+    assert.doesNotMatch(
+      src,
+      /MOMENT_CREATE_HREF|street-power-up/,
+      "Footer must not ship street-power Moment as the primary Create door"
+    );
+    assert.match(
+      src,
+      /data-footer-path=["']generate-360["']/,
+      "Footer CTA must mark generate-360 path"
+    );
+    continue;
+  }
+  if (file === "components/SuiteDoorLinks.tsx") {
+    assert.match(
+      src,
+      /createGenerate360Href\(\s*["']suite-doors["']\s*\)/,
+      "SuiteDoorLinks bare Generate must use createGenerate360Href(\"suite-doors\")"
+    );
+    assert.doesNotMatch(
+      src,
+      /href=["']\/modules["']|href=["']\/flow["']|effect=street-power-up|data-suite-door=["']single-moment["']/,
+      "SuiteDoorLinks must drop frozen Modules/Flow and street-power Moment doors"
     );
     continue;
   }
