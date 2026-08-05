@@ -255,7 +255,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                   : "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
               )}
             >
-              Use this motion
+              {home ? "Create my drop clip" : "Use this motion"}
             </Link>
           ) : resultShell ? (
             <>
