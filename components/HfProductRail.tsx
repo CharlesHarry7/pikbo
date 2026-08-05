@@ -155,6 +155,8 @@ export function HfProductRail() {
                   className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   loading="lazy"
                   decoding="async"
+                  fetchPriority="low"
+                  data-hf-rail-poster
                 />
                 <div
                   className={`absolute inset-0 bg-gradient-to-t ${

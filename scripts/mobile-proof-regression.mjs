@@ -115,6 +115,67 @@ assert.match(
   "autoplay budget must remain one mobile / two desktop"
 );
 
+// AIT-77: defer below-fold home media; keep Moment hero LCP poster clean
+const homePage = source("app/page.tsx");
+const homeHero = source("components/HomeCinemaHero.tsx");
+const deferred = source("components/DeferredWallVideo.tsx");
+const productRail = source("components/HfProductRail.tsx");
+assert.match(
+  homePage,
+  /beatbot-still\.webp/,
+  "home LCP poster must remain the Beatbot still"
+);
+assert.match(
+  homePage,
+  /rel=["']preload["'][\s\S]*fetchPriority=["']high["']/,
+  "home must preload the Moment hero LCP poster with high priority"
+);
+assert.match(
+  homeHero,
+  /lcpPosterFirst/,
+  "home hero video must arm after paint (poster-first LCP), not eager mp4"
+);
+assert.doesNotMatch(
+  homeHero,
+  /\beager\b/,
+  "home hero must not use eager video sources on first paint"
+);
+assert.match(
+  wall,
+  /DeferredWallVideo/,
+  "home proof wall must use deferred wall media (not eager video posters)"
+);
+assert.doesNotMatch(
+  wall,
+  /eager=\{i === 0\}/,
+  "home proof wall must not mark the first card as LCP-eager"
+);
+assert.match(
+  deferred,
+  /loading=["']lazy["']/,
+  "deferred wall poster must use loading=lazy until near viewport"
+);
+assert.match(
+  deferred,
+  /fetchPriority=["']low["']/,
+  "deferred wall poster must stay low priority vs hero LCP"
+);
+assert.match(
+  deferred,
+  /lazySources/,
+  "deferred wall must still use AutoPlayVideo lazySources after mount"
+);
+assert.match(
+  productRail,
+  /loading=["']lazy["']/,
+  "below-fold product rail posters must stay lazy"
+);
+assert.match(
+  productRail,
+  /fetchPriority=["']low["']/,
+  "product rail posters must not compete with hero LCP"
+);
+
 // AIT-40: Studio open Lab path remains mobile-safe (sticky CTA + finite open)
 const studio = source("components/CreateStudio.tsx");
 const gate = source("components/GuestMomentCreateGate.tsx");
