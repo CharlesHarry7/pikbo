@@ -5,11 +5,11 @@ import { company } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: `How ${site.name} handles photos, generations, and billing data.`,
+  description: `How ${site.name} handles designer-toy photos, private-beta accounts, and billing data.`,
   alternates: { canonical: "/privacy" },
   openGraph: {
     title: `Privacy Policy | ${site.name}`,
-    description: `How ${site.name} handles photos, generations, analytics, and billing data.`,
+    description: `How ${site.name} handles designer-toy photos, private-beta accounts, analytics, and billing data.`,
     url: `${site.url}/privacy`,
     siteName: site.name,
     type: "website",
@@ -18,17 +18,40 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: `Privacy Policy | ${site.name}`,
-    description: `How ${site.name} handles photos, generations, analytics, and billing data.`,
+    description: `How ${site.name} handles designer-toy photos, private-beta accounts, analytics, and billing data.`,
     images: [site.socialImages.twitter],
   },
 };
 
 export default function PrivacyPage() {
   return (
-    <div className="container-x py-16 prose-invert max-w-3xl">
-      <h1 className="text-4xl font-bold">Privacy Policy</h1>
+    <div className="container-x max-w-3xl py-16">
+      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]">
+        Privacy
+      </p>
+      <h1 className="mt-2 text-4xl font-bold">Privacy Policy</h1>
       <p className="mt-2 text-sm text-[var(--fg-dim)]">
         Effective August 1, 2026 · {company.legalName}
+      </p>
+      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
+        {site.name} is AI product-video software for independent designer-toy
+        (潮玩) sellers, operated by {company.legalName}. This policy explains how
+        we handle owned toy photos, private-beta accounts, and (when billing
+        opens) payment metadata. We are in an {company.stage.toLowerCase()};
+        public checkout is closed, and we do not invent customer galleries or
+        social proof. Company facts live on{" "}
+        <Link href="/about" className="underline underline-offset-4 hover:text-[var(--mint)]">
+          About
+        </Link>
+        ; privacy or deletion requests go through{" "}
+        <Link href="/contact" className="underline underline-offset-4 hover:text-[var(--mint)]">
+          Contact
+        </Link>
+        ; planned paid access is described under{" "}
+        <Link href="/pricing" className="underline underline-offset-4 hover:text-[var(--mint)]">
+          Founding Studio
+        </Link>
+        .
       </p>
 
       <div className="mt-10 space-y-8 text-sm leading-relaxed text-[var(--fg-muted)]">
@@ -58,7 +81,9 @@ export default function PrivacyPage() {
             video generation provider solely to produce that clip. Cached Lab
             prototypes never send your photo to the provider. Do not upload
             images of people or products you do not have rights to use. Prefer
-            photos of toys you own.
+            photos of designer toys you own. We do not train public social feeds
+            from your private jobs, and site demos are labeled Lab prototypes—not
+            other sellers&apos; UGC.
           </p>
         </section>
 
@@ -88,9 +113,17 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold text-[var(--fg)]">Payments</h2>
           <p className="mt-2">
-            Public paid checkout is currently closed. If subscriptions open,
-            Stripe will process payment details and its privacy policy will
-            apply to payment data.
+            Public paid checkout is currently closed. If Founding Studio
+            subscriptions open, Stripe will process payment details and its
+            privacy policy will apply to payment data. See{" "}
+            <Link href="/pricing" className="underline hover:text-[var(--mint)]">
+              pricing
+            </Link>{" "}
+            for the planned offer and{" "}
+            <Link href="/refund" className="underline hover:text-[var(--mint)]">
+              refunds
+            </Link>{" "}
+            for charge handling.
           </p>
         </section>
 
@@ -103,7 +136,8 @@ export default function PrivacyPage() {
             with your account. We may retain limited records when required for
             security, dispute handling, accounting, or law. Operational logs
             and provider records are kept only as long as reasonably needed for
-            those purposes.
+            those purposes. Support and privacy requests are handled by our
+            founder-operated desk ({company.operatingModel.toLowerCase()}).
           </p>
         </section>
 
@@ -125,6 +159,24 @@ export default function PrivacyPage() {
           </p>
         </section>
       </div>
+
+      <nav className="mt-10 flex flex-wrap gap-3 border-t border-[var(--border)] pt-8 text-xs font-semibold">
+        <Link href="/about" className="underline underline-offset-4">
+          About
+        </Link>
+        <Link href="/contact" className="underline underline-offset-4">
+          Contact
+        </Link>
+        <Link href="/pricing" className="underline underline-offset-4">
+          Founding Studio
+        </Link>
+        <Link href="/terms" className="underline underline-offset-4">
+          Terms
+        </Link>
+        <Link href="/refund" className="underline underline-offset-4">
+          Refunds
+        </Link>
+      </nav>
     </div>
   );
 }

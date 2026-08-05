@@ -5,12 +5,12 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Refund Policy",
-  description: `Cancellation, refund, duplicate-charge, and failed-generation policy for ${site.name}.`,
+  description: `Cancellation, refund, duplicate-charge, and failed-generation policy for ${site.name} (private beta; public checkout closed).`,
   alternates: { canonical: "/refund" },
   openGraph: {
     title: `Refund Policy | ${site.name}`,
     description:
-      "Cancellation, refund, duplicate-charge, and failed-generation rules for Pikbo.",
+      "Cancellation, refund, duplicate-charge, and failed-generation rules for Pikbo designer-toy video software.",
     url: `${site.url}/refund`,
     siteName: site.name,
     type: "website",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `Refund Policy | ${site.name}`,
     description:
-      "Cancellation, refund, duplicate-charge, and failed-generation rules for Pikbo.",
+      "Cancellation, refund, duplicate-charge, and failed-generation rules for Pikbo designer-toy video software.",
     images: [site.socialImages.twitter],
   },
 };
@@ -28,19 +28,43 @@ export const metadata: Metadata = {
 export default function RefundPage() {
   return (
     <div className="container-x max-w-3xl py-16">
-      <h1 className="text-4xl font-bold">Refund Policy</h1>
+      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]">
+        Refunds
+      </p>
+      <h1 className="mt-2 text-4xl font-bold">Refund Policy</h1>
       <p className="mt-2 text-sm text-[var(--fg-dim)]">
         Effective August 1, 2026 · {company.legalName}
+      </p>
+      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
+        {site.name} is founder-operated AI video software for independent
+        designer-toy (潮玩) sellers. {company.stage}; public checkout is closed
+        today, so visitors cannot buy a subscription on this site. The rules
+        below describe how Founding Studio billing, first-purchase refunds, and
+        failed paid generations will work when charges open. Product context:{" "}
+        <Link href="/about" className="underline underline-offset-4 hover:text-[var(--mint)]">
+          About
+        </Link>
+        . Support:{" "}
+        <Link href="/contact" className="underline underline-offset-4 hover:text-[var(--mint)]">
+          Contact
+        </Link>
+        . Planned offer:{" "}
+        <Link href="/pricing" className="underline underline-offset-4 hover:text-[var(--mint)]">
+          Founding Studio pricing
+        </Link>
+        .
       </p>
 
       <div className="mt-10 space-y-8 text-sm leading-relaxed text-[var(--fg-muted)]">
         <section className="rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/5 p-5">
           <h2 className="text-lg font-semibold text-[var(--fg)]">Current beta status</h2>
           <p className="mt-2">
-            Pikbo does not currently offer public paid checkout, so visitors
-            cannot buy a subscription on this website today. The rules below
-            apply when Founding Studio billing opens and will be shown again
-            before the first charge.
+            Pikbo does not currently offer public paid checkout.{" "}
+            {company.operatingModel}. When Founding Studio billing opens
+            ({company.plannedOffer.launchPacksPerMonth} launch packs/month
+            planned), these rules will be shown again before the first charge.
+            Until then, no subscription purchase can be completed on{" "}
+            {site.domain}.
           </p>
         </section>
 
@@ -113,6 +137,24 @@ export default function RefundPage() {
           </p>
         </section>
       </div>
+
+      <nav className="mt-10 flex flex-wrap gap-3 border-t border-[var(--border)] pt-8 text-xs font-semibold">
+        <Link href="/about" className="underline underline-offset-4">
+          About
+        </Link>
+        <Link href="/contact" className="underline underline-offset-4">
+          Contact
+        </Link>
+        <Link href="/pricing" className="underline underline-offset-4">
+          Founding Studio
+        </Link>
+        <Link href="/terms" className="underline underline-offset-4">
+          Terms
+        </Link>
+        <Link href="/privacy" className="underline underline-offset-4">
+          Privacy
+        </Link>
+      </nav>
     </div>
   );
 }
