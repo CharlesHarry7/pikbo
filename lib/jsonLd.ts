@@ -34,6 +34,9 @@ export function organizationJsonLd() {
     url: site.url,
     description: site.description,
     slogan: site.tagline,
+    logo: site.socialImages.openGraph,
+    image: site.socialImages.openGraph,
+    email: site.contact.supportEmail,
     ...(site.officialProfiles.length > 0
       ? { sameAs: [...site.officialProfiles] }
       : {}),
@@ -52,11 +55,12 @@ export function websiteJsonLd() {
       "@type": "Organization",
       name: site.name,
       url: site.url,
+      logo: site.socialImages.openGraph,
     },
   };
 }
 
-/** Soft-launch product schema for Generate / tool surfaces. */
+/** Soft-launch product schema for Create / tool surfaces. */
 export function softwareApplicationJsonLd(opts?: {
   name?: string;
   description?: string;
@@ -71,12 +75,22 @@ export function softwareApplicationJsonLd(opts?: {
     operatingSystem: "Web",
     url: opts?.url ?? `${site.url}/create`,
     description: opts?.description ?? site.description,
+    image: site.socialImages.openGraph,
     featureList: [
-      "Photo to short toy video",
-      "Cached recipe previews and private beta generation",
-      "Listing and social aspect ratios",
-      "Explicit beta limits and credit quotes",
+      "Owned toy photo to short product video",
+      "Cached Street Power-Up preview and invited private beta",
+      "Fixed 9:16 · 5s · Fast 720p Moment contract",
+      "Owner-only Library delivery and download",
     ],
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+      description:
+        "Public cached previews cost 0 credits. Founding Studio paid Moments remain private-beta gated.",
+      availability: "https://schema.org/OnlineOnly",
+      url: `${site.url}/pricing`,
+    },
     publisher: {
       "@type": "Organization",
       name: site.name,

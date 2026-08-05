@@ -6,24 +6,28 @@ import { createRemixHref } from "@/lib/remixIntent";
 import { site } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
 import { itemListJsonLd } from "@/lib/jsonLd";
+import { pageSocialMeta } from "@/lib/pageMeta";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 
 /** Tools hub Open Generate — listing spin remix (ratio/duration/channel). */
 const TOOLS_GENERATE_HREF = createRemixHref("360-spin-showcase");
 
+const TOOLS_HUB_TITLE = `Toy Video Tools | ${site.name}`;
+const TOOLS_HUB_DESCRIPTION =
+  "Search-intent toy video tools: image-to-video, listing clips, unboxing hooks, and seller demos. Each page deep-links to a real Create recipe with honest Free Mini limits.";
+
 export const metadata: Metadata = {
   title: "Toy Video Tools",
-  description:
-    "Search-intent toy video tools: image-to-video, listing clips, unboxing hooks, and seller demos. Each page deep-links to a real Create recipe with honest Free Mini limits.",
+  description: TOOLS_HUB_DESCRIPTION,
   alternates: { canonical: "/tools" },
   // Hub is thin vs primary rank slug — noindex during cold start
   robots: CONCEPT_ROBOTS,
-  openGraph: {
-    title: `Toy Video Tools | ${site.name}`,
+  ...pageSocialMeta({
+    title: TOOLS_HUB_TITLE,
     description:
       "One search job per page — upload a toy photo, pick a recipe, generate a short clip.",
-    url: `${site.url}/tools`,
-  },
+    path: "/tools",
+  }),
 };
 
 /** Phase H: FAQ so /tools hub is not a thin card grid. */
