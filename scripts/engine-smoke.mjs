@@ -3947,10 +3947,11 @@ const homeWallSrc = fs.readFileSync(
 );
 assert.match(
   homeWallSrc,
-  /data-home-wall|data-recipe-card|wallDense|Try this recipe|Cached preview/
+  /data-home-wall|data-recipe-card|wallDense|Try this recipe|HOME_PROOF_BADGE|cached prototype/i
 );
-assert.match(homeWallSrc, /href=\{item\.projectHref \|\| item\.href\}/);
-assert.match(homeWallSrc, /href=\{item\.href\}/);
+assert.match(homeWallSrc, /href=\{item\.projectHref \|\| remakeHref\}/);
+assert.match(homeWallSrc, /href=\{remakeHref\}/);
+assert.match(homeWallSrc, /home-proof-wall/);
 assert.match(homeWallSrc, /project_open|recipe_use/);
 assert.match(
   [homePageSrc, publicSampleSrc].join("\n"),

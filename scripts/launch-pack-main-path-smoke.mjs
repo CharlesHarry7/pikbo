@@ -25,11 +25,16 @@ const paywall = read("components/PaywallCard.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
 
-// The public homepage is now one honest Street Power-Up Moment. Its media is a
-// cached Lab sample, clearly not a customer result, and the CTA uses the
-// shared Moment href rather than a Pack/archive route.
+// Public homepage: Street Power-Up Moment hero, then ≤8 cached Lab proof cards.
+// No Seller Pack sample, no full HfExploreHome remount.
 assert.match(home, /<HomeCinemaHero \/>/);
-assert.doesNotMatch(home, /PublicLaunchPackSample|HomeViralWall/);
+assert.match(home, /<HomeViralWall/);
+assert.match(home, /buildHomeShowcaseFeed/);
+assert.doesNotMatch(home, /PublicLaunchPackSample|<HfExploreHome/);
+assert.match(homeWall, /home-proof-wall/);
+assert.match(homeWall, /HOME_PROOF_BADGE|PIKBO Lab · cached prototype/);
+assert.match(homeWall, /createRemixHref/);
+assert.match(homeWall, /data-home-wall=["']lab-proof["']/);
 assert.match(homeHero, /data-home-hero=["']street-power-up["']/);
 assert.match(
   homeHero,
@@ -107,8 +112,8 @@ assert.match(
   /privateUploadEnabled \? \(\s*<div id="create-photo-step" data-first-run-step="upload">/
 );
 assert.match(homeWall, /Try this recipe/);
-assert.match(homeWall, /href=\{item\.projectHref \|\| item\.href\}/);
-assert.match(homeWall, /href=\{item\.href\}/);
+assert.match(homeWall, /href=\{item\.projectHref \|\| remakeHref\}/);
+assert.match(homeWall, /href=\{remakeHref\}/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
 assert.doesNotMatch(shell, /create\?mode=seller-pack/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);

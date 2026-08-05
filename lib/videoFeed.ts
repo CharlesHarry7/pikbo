@@ -92,7 +92,8 @@ export function buildHomeShowcaseFeed(
         id: `home-${project.slug}`,
         title: viralName(project.recipeSlug, project.title),
         subtitle: project.character,
-        href: showcaseRecipeHref(project),
+        // AIT-55: wall CTAs use stable analytics/intent source (guest-safe).
+        href: createRemixHref(project.recipeSlug, "home-proof-wall"),
         detailHref: `/effects/${project.recipeSlug}`,
         projectHref: showcaseProjectHref(project),
         badge: HOME_PROOF_BADGE,

@@ -40,13 +40,28 @@ assert(
     homeHero.includes("Sample shown: cached 6s archive") &&
     homeHero.includes("not a completed customer deliverable") &&
     homeHero.includes("not your toy") &&
-    !home.includes("<HomeViralWall") &&
+    home.includes("<HomeViralWall") &&
+    home.includes("buildHomeShowcaseFeed") &&
+    !home.includes("<HfExploreHome") &&
+    !home.includes("PublicLaunchPackSample") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must expose one honest Street Power-Up Moment and no Pack/demo wall"
+  "homepage must expose Moment hero + capped Lab proof wall (no Pack/HF explore remount)"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),
   "homepage must not rebuild a larger demo wall outside the Showcase registry"
+);
+assert(
+  proofSlugs.includes("360-spin-showcase"),
+  "homepage proof whitelist must include 360-spin-showcase"
+);
+const homeWall = read("components/HomeViralWall.tsx");
+assert(
+  homeWall.includes("home-proof-wall") &&
+    homeWall.includes("HOME_PROOF_BADGE") &&
+    homeWall.includes("createRemixHref") &&
+    homeWall.includes("HOME_PROOF_LIMIT"),
+  "Lab proof wall must badge honestly and deep-link Create with source=home-proof-wall"
 );
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
