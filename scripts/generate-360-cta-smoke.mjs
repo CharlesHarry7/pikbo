@@ -235,4 +235,55 @@ assert.match(
   "ModulesMobileCta must clear tab nav + home indicator"
 );
 
+// 6. AIT-131 — MobileGenerateBar mounted in AppShell on browse surfaces
+const appShellSrc = read("components/AppShell.tsx");
+assert.match(
+  appShellSrc,
+  /import\s+\{\s*MobileGenerateBar\s*\}\s+from\s+["']@\/components\/MobileGenerateBar["']/,
+  "AppShell must import MobileGenerateBar"
+);
+assert.match(
+  appShellSrc,
+  /<MobileGenerateBar\s*\/>/,
+  "AppShell must mount MobileGenerateBar so showBar paths render"
+);
+// Browse surfaces that keep AppShell tab nav must be in showBar
+for (const route of [
+  "/explore",
+  "/library",
+  "/pricing",
+  "/models",
+  "/flow",
+]) {
+  assert.match(
+    mobileBar,
+    new RegExp(
+      route === "/explore"
+        ? String.raw`path\.startsWith\(["']\/explore["']\)`
+        : String.raw`path\s*===\s*["']${route}["']`
+    ),
+    `MobileGenerateBar showBar must include ${route}`
+  );
+}
+assert.match(
+  mobileBar,
+  /createGenerate360Href\(["']mobile-bar["']\)/,
+  "MobileGenerateBar Generate door must use createGenerate360Href(mobile-bar)"
+);
+assert.doesNotMatch(
+  mobileBar,
+  /href=\{["']\/create["']\}|href=["']\/create["']/,
+  "MobileGenerateBar must not bare-link /create"
+);
+assert.match(
+  mobileBar,
+  /data-mobile-bar=["']generate-remix["']/,
+  "MobileGenerateBar Generate link must keep data-mobile-bar marker"
+);
+assert.match(
+  mobileBar,
+  /data-floating-generate=["']mobile-bar["']/,
+  "MobileGenerateBar root must carry floating-generate marker for clearance smoke"
+);
+
 console.log("generate-360-cta-smoke: ok");
