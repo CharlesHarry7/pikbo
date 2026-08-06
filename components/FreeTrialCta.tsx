@@ -16,8 +16,14 @@ import {
 } from "@/lib/meClient";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
-/** Cached sample try path — remix + try=1&sample=scout. */
+/** Cached Lab sample try path — remix + try=1&sample=scout. */
 const FREE_TRIAL_TRY_HREF = createLabSampleTryHref("scout");
+
+/** Demo / Live-closed default — Lab sample honesty (not generic "cached sample" only). */
+const DEFAULT_LABEL_DEMO = "Try Lab sample";
+/** Live free path open — short try label; call sites may specialize. */
+const DEFAULT_LABEL_TRY = "Try free";
+const DEFAULT_LABEL_PLANS = "Compare plans";
 
 type Variant = "primary" | "ghost" | "mint";
 
@@ -31,7 +37,8 @@ const VARIANT_CLASS: Record<Variant, string> = {
 
 /**
  * Soft-launch primary CTA — never claims public generation when it is closed.
- * The sample path stays cached; exhausted private access → plans.
+ * The sample path stays cached Lab; exhausted private access → plans.
+ * Default demo label is Lab-first so call sites that omit labelDemo stay honest.
  */
 export function FreeTrialCta({
   path,
@@ -104,10 +111,10 @@ export function FreeTrialCta({
             : FREE_TRIAL_TRY_HREF;
   const label =
     trialDone && !demo && freeLiveOpen
-      ? labelPlans ?? "Compare plans"
+      ? labelPlans ?? DEFAULT_LABEL_PLANS
       : demo || !freeLiveOpen
-        ? labelDemo ?? "Try cached sample"
-        : labelTry ?? "Try free";
+        ? labelDemo ?? DEFAULT_LABEL_DEMO
+        : labelTry ?? DEFAULT_LABEL_TRY;
 
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
