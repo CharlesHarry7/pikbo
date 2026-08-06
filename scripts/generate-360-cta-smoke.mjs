@@ -62,6 +62,7 @@ const generateSurfaces = [
   ["components/HomeCinemaHero.tsx", "home-hero"],
   ["components/HomeViralWall.tsx", "home-proof-wall"],
   ["components/HomeExploreRecipeRail.tsx", "home-explore-rail"],
+  ["components/AppShell.tsx", "app-shell-home"],
   ["components/SuiteEntryStrip.tsx", "suite-entry"],
   ["components/HowItWorks.tsx", "how-it-works"],
   ["components/MobileGenerateBar.tsx", "mobile-bar"],
@@ -224,6 +225,29 @@ assert.match(
   homeHero,
   /GENERATE_360_CTA_CLASS[\s\S]*#FF4ECD|data-home-hero-360-cta[\s\S]*#FF4ECD/,
   "home hero 360 secondary CTA must use neon-pink board token"
+);
+
+// AIT-355: sticky shell on Home is one primary Generate→360 (not Moment-only).
+const appShell = read("components/AppShell.tsx");
+assert.match(
+  appShell,
+  /createGenerate360Href\(\s*["']app-shell-home["']\s*\)/,
+  "AppShell home sticky CTA must use createGenerate360Href(app-shell-home)"
+);
+assert.match(
+  appShell,
+  /data-app-shell-home-generate=\{home \? ["']360["']/,
+  "AppShell must mark home sticky Generate as 360"
+);
+assert.match(
+  appShell,
+  /home \? HOME_SHELL_GENERATE_HREF/,
+  "AppShell home filled CTA must deep-link Generate workbench"
+);
+assert.doesNotMatch(
+  appShell,
+  /home \? ["']Try Street Power-Up["']|home \? ["']Create my drop clip["']/,
+  "AppShell home sticky must not remain Moment-only copy"
 );
 
 const proofWall = read("components/HomeViralWall.tsx");
