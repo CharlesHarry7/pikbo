@@ -28,7 +28,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastCtx.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-20 right-4 z-[120] flex max-w-[min(22rem,calc(100vw-2rem))] flex-col gap-2 lg:bottom-6">
+      {/* Clear tab nav + home indicator on mobile; desktop keeps a simple inset. */}
+      <div
+        data-toast-stack="safe"
+        className="pointer-events-none fixed bottom-[calc(var(--mobile-nav-clearance)+0.5rem)] right-4 z-[120] flex max-w-[min(22rem,calc(100vw-2rem))] flex-col gap-2 lg:bottom-6"
+      >
         {items.map((t) => (
           <div
             key={t.id}
