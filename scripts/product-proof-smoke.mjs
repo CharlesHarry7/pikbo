@@ -82,6 +82,17 @@ assert(
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
   "home order: Moment hero → proof wall → HF product rail → trust footer"
 );
+// AIT-218: Seedance campaign — one primary Generate→360 (not FreeTrial mint dual door)
+const seedanceCampaign = read("components/SeedanceCampaign.tsx");
+assert(
+  seedanceCampaign.includes('data-seedance-primary-generate="360"') &&
+    seedanceCampaign.includes("data-seedance-primary-generate-cta") &&
+    seedanceCampaign.includes('createGenerate360Href("seedance-campaign")') &&
+    seedanceCampaign.includes("Generate 360°") &&
+    seedanceCampaign.includes('data-seedance-generate="remix"') &&
+    seedanceCampaign.includes("border border-white/20"),
+  "SeedanceCampaign must expose one primary Generate→360 door with secondary FreeTrial outline"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"
