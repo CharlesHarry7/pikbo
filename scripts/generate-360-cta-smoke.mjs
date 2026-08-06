@@ -410,8 +410,8 @@ assert.match(
 );
 assert.match(
   globalsCss,
-  /--create-sticky-chrome-h:\s*5\.75rem/,
-  "globals must size Create sticky chrome for content pad calc"
+  /--create-sticky-chrome-h:\s*5\.5rem/,
+  "globals must size Create sticky chrome for content pad calc (AIT-159 re-measure)"
 );
 assert.match(
   createStudioSrc,
