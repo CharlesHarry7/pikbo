@@ -67,7 +67,7 @@ export function t6Report(): T6Report {
     playerOverlayIsNotFileWatermark: true,
     freeLiveRawDownload: "blocked",
     reason:
-      "No verified server-owned baked derivative exists. Free Mini live raw provider URLs must not be exposed or downloaded; player overlay is not a file watermark.",
+      "No verified server-owned baked derivative exists. Free-plan live raw provider URLs must not be exposed or downloaded; player overlay is not a file watermark.",
     tooling: {
       ...tooling,
       serverOwnedWorkerReady: worker.effective,

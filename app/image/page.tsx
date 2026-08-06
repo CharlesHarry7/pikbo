@@ -627,7 +627,7 @@ export default function ImageStudioPage() {
             )}
             {freeStillsDemoOnly ? (
               <p className="mt-2 text-[11px] leading-relaxed text-[var(--fg-dim)]">
-                Free Mini trial is video-only. Open{" "}
+                Free stills stay labeled demo. Open{" "}
                 <Link
                   href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
                   className="text-[var(--mint)] underline-offset-2 hover:underline"
@@ -635,14 +635,14 @@ export default function ImageStudioPage() {
                 >
                   Create
                 </Link>{" "}
-                for your Seedance clip, or{" "}
+                for a video Lab sample, or{" "}
                 <Link
                   href="/pricing"
                   className="text-[var(--mint)] underline-offset-2 hover:underline"
                 >
-                  upgrade
+                  compare plans
                 </Link>{" "}
-                for live Flux stills.
+                when Live Flux stills open.
               </p>
             ) : null}
             {error ? (
@@ -671,7 +671,7 @@ export default function ImageStudioPage() {
               <p className="mt-2 text-xs text-[var(--fg-dim)]">
                 {demoReason === "free_trial_video_only" ||
                 demoReason === "free_live_delivery_blocked"
-                  ? "Labeled demo — Free trial credits stay reserved for Create video Mini."
+                  ? "Labeled demo — free credits stay reserved for Create video when Live is open."
                   : demoReason === "anonymous_cached_only"
                     ? "Labeled demo — sign in with a paid plan for live Flux stills."
                     : demoReason === "no_provider_key"

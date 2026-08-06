@@ -110,7 +110,8 @@ export function LandingSeoMesh({
         <FreeTrialCta
           path={`/${kind}/${currentSlug}`}
           variant="mint"
-          labelTry="Try free Mini"
+          labelTry="Try free · Lab"
+          labelDemo="Try free · Lab"
         />
         <Link
           href={SEO_MESH_GENERATE_HREF}

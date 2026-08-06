@@ -570,6 +570,120 @@ assert(
   "HomeFeatureCarousel seedance promo must use Cached Lab · 0 credits / Live gated honesty"
 );
 
+// AIT-419: residual SEO / hub Free Mini product-cap promises (public free path is Lab).
+const residualSeoContentFiles = [
+  "lib/tools.ts",
+  "lib/usecases.ts",
+  "lib/guides.ts",
+  "app/effects/page.tsx",
+  "app/community/page.tsx",
+  "app/explore/page.tsx",
+  "app/apps/page.tsx",
+  "app/apps/[slug]/page.tsx",
+  "components/LandingSeoMesh.tsx",
+];
+const forbiddenResidualSeoFreeMini = [
+  /Free Mini caps apply/i,
+  /Soft launch Free Mini/i,
+  /Free Mini clips are 5 seconds/i,
+  /Free Mini teasers are 5 seconds/i,
+  /Free Mini is for one live Seedance Mini/i,
+  /Live Seedance Mini uses Free Mini/i,
+  /Does launching cost Free Mini credits\?/i,
+  /Can Free Mini raw files be downloaded\?/i,
+  /Do Lab demos use Free Mini credits\?/i,
+  /What Free Mini Actually Includes/i,
+  /seoTitle:[\s\S]{0,80}Free Mini/i,
+  /labelTry="Try free Mini"/,
+  /LIVE vs SOON · Free Mini/i,
+  /Lab only · not UGC · Remix · Free Mini/i,
+  /Lab vs concept · Free Mini/i,
+];
+for (const relativePath of residualSeoContentFiles) {
+  const source = read(relativePath);
+  for (const pattern of forbiddenResidualSeoFreeMini) {
+    assert(
+      !pattern.test(source),
+      `${relativePath} contains residual Free Mini SEO/hub promise ${pattern}`
+    );
+  }
+}
+assert(
+  read("components/LandingSeoMesh.tsx").includes('labelTry="Try free · Lab"') &&
+    read("components/LandingSeoMesh.tsx").includes('labelDemo="Try free · Lab"'),
+  "LandingSeoMesh must use Lab-first try labels (not Try free Mini)"
+);
+assert(
+  read("lib/tools.ts").includes("Public path is a labeled cached Lab prototype") &&
+    read("lib/guides.ts").includes("What the public free path is") &&
+    read("app/effects/page.tsx").includes("Live remains gated") &&
+    read("app/community/page.tsx").includes("Live remains gated") &&
+    read("app/explore/page.tsx").includes("Live remains gated"),
+  "SEO residual pass must keep Lab public path + Live gated language"
+);
+assert(
+  read("lib/i18n.ts").includes("Try free · Lab →") &&
+    !read("lib/i18n.ts").includes("Try Mini free →"),
+  "i18n cta.tryMiniFree must prefer Lab-first free path, not Mini product-cap"
+);
+
+// AIT-437: residual public Free Mini product-brand / open-trial promises.
+assert(
+  !read("lib/presets.ts").includes("Seedance Mini 5-second 480p live trial") &&
+    !read("lib/presets.ts").includes("Free includes one Seedance Mini") &&
+    read("lib/presets.ts").includes(
+      "public free path is a labeled cached Lab prototype"
+    ),
+  "presets FAQ must sell Lab public free path, not unconditional Free Mini live trial"
+);
+assert(
+  read("app/guides/[slug]/page.tsx").includes('labelTry="Try free · Lab →"') &&
+    !read("app/guides/[slug]/page.tsx").includes("Try free · Mini 5s"),
+  "guides/[slug] FreeTrialCta must be Lab-first (not Mini 5s product-cap)"
+);
+assert(
+  !read("lib/createTrust.ts").includes("Free Mini live clips cannot") &&
+    !read("lib/createTrust.ts").includes("Free Mini needs watermark bake") &&
+    read("lib/createTrust.ts").includes("Free-plan live raw"),
+  "createTrust download-block copy must use free-plan live raw (not Free Mini brand)"
+);
+assert(
+  !read("lib/t6Watermark.ts").includes("Free Mini live raw provider") &&
+    read("lib/t6Watermark.ts").includes("Free-plan live raw provider"),
+  "t6Watermark blocked reason must use free-plan live raw (not Free Mini brand)"
+);
+assert(
+  !read("components/CommunityPublishButton.tsx").includes(
+    "Free Mini live raw is not a public deliverable"
+  ) &&
+    read("components/CommunityPublishButton.tsx").includes(
+      "Free-plan live raw is not a public deliverable"
+    ) &&
+    read("components/CommunityPublishButton.tsx").includes(
+      "Free raw · no publish"
+    ),
+  "CommunityPublish must block free-plan raw as public UGC without Free Mini brand"
+);
+
+// AIT-467: residual HF home + i18n marketing still selling Mini 5s as open public trial.
+assert(
+  read("components/HfExploreHome.tsx").includes("Lab sample · 0 credits") &&
+    !read("components/HfExploreHome.tsx").includes("Mini 5s · Sample ready"),
+  "HfExploreHome free-path caption must be Lab sample · 0 credits (not Mini 5s open trial)"
+);
+assert(
+  i18nSource.includes('"home.tryFree10s": "Try free video · Lab sample"') &&
+    !i18nSource.includes("Try free video · Mini 5s") &&
+    !i18nSource.includes("免费试视频 · Mini 5 秒") &&
+    !i18nSource.includes("免费：一次 Mini 5 秒 480p 试用") &&
+    !i18nSource.includes("免费 Mini 试用，无需绑卡") &&
+    !i18nSource.includes("AI 视频 · 免费 Mini 试用") &&
+    !i18nSource.includes("实时开通后免费 Mini 5 秒") &&
+    i18nSource.includes("免费：缓存 Lab 样片 · 0 积分") &&
+    i18nSource.includes("When Live is open: free plan · 5s · 480p"),
+  "i18n home/onboard marketing must not sell Free Mini 5s as unconditional public trial"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
