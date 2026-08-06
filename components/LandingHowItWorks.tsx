@@ -42,7 +42,7 @@ export function LandingHowItWorks({
       aria-label="How it works: Photo, Recipe, Video draft"
       data-landing-hiw-cap="lab-gated"
     >
-      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]">
+      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--neon-pink)]">
         How it works
       </p>
       <h2
@@ -70,7 +70,7 @@ export function LandingHowItWorks({
             key={s.n}
             className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-black/40 p-4 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] sm:p-5"
           >
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--mint)] text-sm font-black text-black shadow-[0_0_16px_rgba(200,255,61,0.3)]">
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--neon-pink)] text-sm font-black text-[var(--void)] shadow-[0_0_16px_rgba(255,78,205,0.3)]">
               {s.n}
             </span>
             <h3 className="mt-3 font-semibold text-white">{s.t}</h3>
