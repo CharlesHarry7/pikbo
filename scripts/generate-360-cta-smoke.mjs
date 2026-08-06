@@ -166,7 +166,7 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
-// 5. AIT-198 home→360 friction cut: hero secondary + proof primary + suite filled
+// 5. AIT-198 / AIT-353 home→360 friction cut: hero dual doors + proof primary + suite filled
 const homeHero = read("components/HomeCinemaHero.tsx");
 assert.match(
   homeHero,
@@ -192,6 +192,38 @@ assert.equal(
   (homeHero.match(/data-home-moment-cta/g) || []).length,
   1,
   "home hero must keep exactly one Moment primary CTA"
+);
+assert.equal(
+  (homeHero.match(/data-home-hero-360-cta/g) || []).length,
+  1,
+  "home hero must keep exactly one Generate 360 secondary CTA"
+);
+// AIT-353: dual doors live in the mobile-leading fold column (order-1), not
+// under the 9:16 sample stage alone.
+assert.match(
+  homeHero,
+  /data-home-hero-doors=["']fold["']/,
+  "home hero must mark the mobile-leading dual-door fold column"
+);
+assert.match(
+  homeHero,
+  /data-home-hero-doors=["']fold["'][\s\S]*data-home-moment-cta[\s\S]*data-home-hero-360-cta/,
+  "Moment primary + Generate 360 secondary must sit together in the fold column"
+);
+assert.match(
+  homeHero,
+  /order-1[\s\S]*data-home-moment-cta[\s\S]*data-home-hero-360-cta/,
+  "dual doors must be in order-1 so they lead the mobile fold"
+);
+assert.doesNotMatch(
+  homeHero,
+  /#C8FF3D|rgba\(200,\s*255,\s*61/i,
+  "home hero must not use competitor lime (board neon-pink / void / cyan only)"
+);
+assert.match(
+  homeHero,
+  /GENERATE_360_CTA_CLASS[\s\S]*#FF4ECD|data-home-hero-360-cta[\s\S]*#FF4ECD/,
+  "home hero 360 secondary CTA must use neon-pink board token"
 );
 
 const proofWall = read("components/HomeViralWall.tsx");

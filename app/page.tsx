@@ -44,7 +44,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const lcpPoster = "/demos/beatbot-still.webp";
-  // AIT-332 / AIT-241: Moment hero (primary LCP + above-fold Generate→360 secondary)
+  // AIT-353 / AIT-332 / AIT-241: Moment hero (order-1 dual doors + sample stage)
   // → Lab proof wall (one primary Generate 360) → Explore rail (360 pinned + 1-tap)
   // → HF suite rail (filled Generate 360). /create dual-path honors
   // effect=360-spin-showcase as workbench (not forced Moment). Density without

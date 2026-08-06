@@ -154,8 +154,12 @@ assert(
 assert(
   homeHero.includes('createGenerate360Href("home-hero")') &&
     homeHero.includes("data-home-hero-360-cta") &&
-    homeHero.includes("data-home-moment-cta"),
-  "hero keeps Moment primary and exposes above-fold Generate→360 secondary"
+    homeHero.includes("data-home-moment-cta") &&
+    homeHero.includes('data-home-hero-doors="fold"') &&
+    /data-home-hero-doors=["']fold["'][\s\S]*data-home-moment-cta[\s\S]*data-home-hero-360-cta/.test(
+      homeHero
+    ),
+  "hero keeps Moment primary + above-fold Generate→360 secondary in fold column (AIT-353)"
 );
 assert(
   create.includes("resolveCreateRouteContract") &&
