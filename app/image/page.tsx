@@ -13,6 +13,8 @@ import {
 } from "@/lib/imageHistory";
 import { fetchMe, mergeMeSession, type MeResponse } from "@/lib/meClient";
 import {
+  acceptImageRetryNavigation,
+  forkRetryImageLedger,
   mintImageIdempotencyKey,
   postImageWithRetry,
 } from "@/lib/imageClient";
@@ -316,6 +318,10 @@ export default function ImageStudioPage() {
    * Retry terminal still: fork process-memory ledger child (POST /api/image/[id]/retry)
    * then re-fill prompt/aspect and re-POST Flux with a new idempotency key.
    * Fork is tracking only — does not re-run provider by itself.
+   *
+   * AIT-477: durable owner UUIDs never invent process-memory fork success —
+   * honest Create/Image new-attempt handoff only; IN_FLIGHT / SUCCEEDED /
+   * DETAIL_UNAVAILABLE stay fail-closed with no silent re-POST.
    */
   async function retrySessionStill(j: SessionStillJob) {
     const nextPrompt = j.prompt?.trim() || prompt;
@@ -325,64 +331,93 @@ export default function ImageStudioPage() {
     setError(null);
     setFailCreditState(null);
     setFailRetryAfterSec(null);
-    try {
-      const res = await fetch(
-        `/api/image/${encodeURIComponent(j.id)}/retry`,
-        { method: "POST", cache: "no-store" }
-      );
-      const body = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        code?: string;
-        message?: string;
-        parent?: { prompt?: string; aspect?: string };
-      };
-      if (res.ok && body.ok) {
-        // Prefer server parent echo when present.
-        const p = body.parent?.prompt?.trim() || nextPrompt;
-        const a = body.parent?.aspect?.trim() || nextAspect;
-        if (p) setPrompt(p);
-        if (a) setAspect(a);
-        void generate({ prompt: p, aspect: a });
-        // Refresh process-memory strip so queued fork appears.
+    const body = await forkRetryImageLedger(j.id);
+    if (body.ok) {
+      // Prefer server parent echo when present.
+      const p = body.parent?.prompt?.trim() || nextPrompt;
+      const a = body.parent?.aspect?.trim() || nextAspect;
+      if (p) setPrompt(p);
+      if (a) setAspect(a);
+      // R1b: stash one-time bearer when server minted a child (sessionStorage).
+      if (body.next?.retryJobId && body.next?.retryToken) {
         try {
-          const listRes = await fetch("/api/image", {
-            method: "GET",
-            cache: "no-store",
-          });
-          if (listRes.ok) {
-            const data = (await listRes.json()) as {
-              jobs?: SessionStillJob[];
-              open?: number;
-              total?: number;
-              byStatus?: { failed?: number; canceled?: number };
-            };
-            const jobs = Array.isArray(data.jobs) ? data.jobs : [];
-            setSessionStillJobs(jobs.slice(0, 8));
-            setSessionStillMeta({
-              open: typeof data.open === "number" ? data.open : 0,
-              total: typeof data.total === "number" ? data.total : jobs.length,
-              failed: data.byStatus?.failed ?? 0,
-              canceled: data.byStatus?.canceled ?? 0,
-            });
-          }
+          sessionStorage.setItem(
+            `pikbo_retry_token:${body.next.retryJobId}`,
+            body.next.retryToken
+          );
+          retryHandoffRef.current = {
+            retryJobId: body.next.retryJobId,
+            retryToken: body.next.retryToken,
+          };
         } catch {
-          /* ignore list refresh */
+          /* private mode — Generate stays a new attempt */
         }
-        return;
       }
-      // Fork failed (e.g. NOT_RETRYABLE) — still allow client re-POST of prompt.
-      if (body.code === "JOB_IN_FLIGHT") {
-        setError(
-          typeof body.message === "string"
-            ? body.message
-            : "Still job still open — wait or cancel before retry"
-        );
-        return;
+      void generate({ prompt: p, aspect: a });
+      // Refresh process-memory strip so queued fork appears.
+      try {
+        const listRes = await fetch("/api/image", {
+          method: "GET",
+          cache: "no-store",
+        });
+        if (listRes.ok) {
+          const data = (await listRes.json()) as {
+            jobs?: SessionStillJob[];
+            open?: number;
+            total?: number;
+            byStatus?: { failed?: number; canceled?: number };
+          };
+          const jobs = Array.isArray(data.jobs) ? data.jobs : [];
+          setSessionStillJobs(jobs.slice(0, 8));
+          setSessionStillMeta({
+            open: typeof data.open === "number" ? data.open : 0,
+            total: typeof data.total === "number" ? data.total : jobs.length,
+            failed: data.byStatus?.failed ?? 0,
+            canceled: data.byStatus?.canceled ?? 0,
+          });
+        }
+      } catch {
+        /* ignore list refresh */
       }
-    } catch {
-      /* network — fall through to client re-POST */
+      return;
     }
-    // Pass overrides — setState is async; do not wait a tick that may still see old prompt.
+
+    // Durable fail-closed — never invent process-memory re-POST.
+    if (body.code === "DURABLE_USE_NEW_ATTEMPT") {
+      const href = acceptImageRetryNavigation(
+        body.next?.createUi ?? body.next?.imageUi,
+        "/image"
+      );
+      window.location.href = href;
+      return;
+    }
+    if (
+      body.code === "DURABLE_IN_FLIGHT" ||
+      body.code === "DURABLE_ALREADY_SUCCEEDED" ||
+      body.code === "DURABLE_DETAIL_UNAVAILABLE"
+    ) {
+      setError(
+        typeof body.message === "string"
+          ? body.message
+          : body.code === "DURABLE_IN_FLIGHT"
+            ? "Durable still still open — refresh, process-memory Retry does not apply"
+            : body.code === "DURABLE_DETAIL_UNAVAILABLE"
+              ? "Private Library could not verify this still — try again when storage is ready"
+              : "Durable still already succeeded — open Create or Image for a new attempt"
+      );
+      return;
+    }
+    if (body.code === "JOB_IN_FLIGHT") {
+      setError(
+        typeof body.message === "string"
+          ? body.message
+          : "Still job still open — wait or cancel before retry"
+      );
+      return;
+    }
+    // Local process-memory fork failed (e.g. NOT_RETRYABLE / NOT_FOUND for
+    // non-durable session rows) — honest client re-POST of prompt as new attempt.
+    // Network errors also fall through: user Retry still re-POSTs Flux.
     void generate({ prompt: nextPrompt, aspect: nextAspect });
   }
 
