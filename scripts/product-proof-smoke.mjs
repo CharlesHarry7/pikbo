@@ -175,7 +175,7 @@ assert(
   "the fixed three-child Pack engine must stay private while Create remains one Moment"
 );
 assert(
-  library.includes("fetchMe()") &&
+  library.includes("fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })") &&
     library.includes("if (!me?.signedIn)") &&
     library.includes('fetch("/api/generations"') &&
     library.includes("body.jobs.filter(visibleAccountJob)") &&

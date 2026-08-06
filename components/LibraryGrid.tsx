@@ -11,6 +11,11 @@ import {
   useState,
 } from "react";
 import { useToast } from "@/components/Toast";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+  withTimeout,
+} from "@/lib/clientTimeout";
 import { interpretDownloadHead } from "@/lib/createTrust";
 import { downloadVideoFile, privateDownloadHeaders } from "@/lib/history";
 import { fetchMe, type MeResponse } from "@/lib/meClient";
@@ -78,6 +83,13 @@ const LIBRARY_JOB_ID_RE =
  * owned: job on list or detail confirmed · not-yours: fail-closed.
  */
 type DeepLinkResolve = "idle" | "resolving" | "owned" | "not-yours";
+
+/**
+ * Owner list load honesty (AIT-311 residual).
+ * ok: private list returned · error: non-ok/network · timeout: 8s wall-clock.
+ * Never invent demo/public rows; never treat list failure as an empty shelf.
+ */
+type ListLoadState = "idle" | "loading" | "ok" | "error" | "timeout";
 
 function isOpen(status: string): boolean {
   return status === "queued" || status === "running";
@@ -383,6 +395,15 @@ function LibraryGridInner() {
   const [accountReady, setAccountReady] = useState(false);
   const [jobs, setJobs] = useState<GenerationJob[]>([]);
   const [jobsReady, setJobsReady] = useState(false);
+  /** 8s session boot — never permanent Loading when getSession hangs. */
+  const [sessionBoot, setSessionBoot] = useState<
+    "checking" | "ready" | "timeout"
+  >("checking");
+  /**
+   * Owner list load honesty — fail-closed: list error/timeout is not empty.
+   * Never invent demo/public clips when private list access fails.
+   */
+  const [listLoad, setListLoad] = useState<ListLoadState>("idle");
   const [refreshing, setRefreshing] = useState(false);
   const [forkingId, setForkingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -391,48 +412,109 @@ function LibraryGridInner() {
     useState<DeepLinkResolve>("idle");
   /** Prevents not-yours ↔ list-miss re-fetch loops for the same deep-link id. */
   const deepLinkAttemptedRef = useRef<string | null>(null);
+  /** True after at least one successful owner list body. Soft refresh keeps rows. */
+  const listSucceededRef = useRef(false);
   const toast = useToast();
 
   const refreshJobs = useCallback(async () => {
     setRefreshing(true);
+    setListLoad((prev) => (prev === "ok" ? "ok" : "loading"));
     try {
-      const headers = await privateDownloadHeaders();
-      const response = await fetch("/api/generations", {
-        headers,
-        cache: "no-store",
-      });
-      const body = (await response.json()) as GenerationsResponse;
+      // Wall-clock covers getSession hang inside privateDownloadHeaders + list fetch.
+      const result = await withTimeout(
+        (async () => {
+          const headers = await privateDownloadHeaders();
+          const controller =
+            typeof AbortController !== "undefined"
+              ? new AbortController()
+              : null;
+          const timer = controller
+            ? setTimeout(() => controller.abort(), STUDIO_SESSION_BOOT_MS)
+            : null;
+          try {
+            const response = await fetch("/api/generations", {
+              headers,
+              cache: "no-store",
+              signal: controller?.signal,
+            });
+            const body = (await response.json()) as GenerationsResponse;
+            return { response, body };
+          } finally {
+            if (timer) clearTimeout(timer);
+          }
+        })(),
+        STUDIO_SESSION_BOOT_MS,
+        "Could not load your Library in time"
+      );
+      const { response, body } = result;
       if (response.ok && body.ok && Array.isArray(body.jobs)) {
+        // Owner-only visible rows — never demo / owned:false stubs.
         setJobs(body.jobs.filter(visibleAccountJob));
+        setListLoad("ok");
+        listSucceededRef.current = true;
+      } else {
+        // Fail-closed: do not invent public/demo clips; do not claim empty shelf.
+        if (!listSucceededRef.current) {
+          setJobs([]);
+          setListLoad("error");
+        } else {
+          toast("Could not refresh your results");
+        }
       }
-    } catch {
-      toast("Could not refresh your results");
+    } catch (err) {
+      const timedOut =
+        isClientTimeoutError(err) ||
+        (err instanceof Error && err.name === "AbortError");
+      if (!listSucceededRef.current) {
+        setJobs([]);
+        setListLoad(timedOut ? "timeout" : "error");
+      } else {
+        toast(
+          timedOut
+            ? "Library refresh timed out. Your saved results are unchanged."
+            : "Could not refresh your results"
+        );
+      }
     } finally {
       setRefreshing(false);
       setJobsReady(true);
     }
   }, [toast]);
 
-  useEffect(() => {
-    let cancelled = false;
-    void fetchMe()
+  const loadAccount = useCallback(() => {
+    setAccountReady(false);
+    setJobsReady(false);
+    setSessionBoot("checking");
+    setMe(null);
+    setJobs([]);
+    setListLoad("idle");
+    listSucceededRef.current = false;
+    deepLinkAttemptedRef.current = null;
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
       .then((result) => {
-        if (cancelled) return;
         setMe(result);
         setAccountReady(true);
+        setSessionBoot("ready");
         if (result?.signedIn) void refreshJobs();
-        else setJobsReady(true);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setAccountReady(true);
+        else {
           setJobsReady(true);
+          setListLoad("idle");
         }
+      })
+      .catch((err) => {
+        setMe(null);
+        // Always release loaders — no permanent Loading your Library…
+        setAccountReady(true);
+        setJobsReady(true);
+        setListLoad("idle");
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
       });
-    return () => {
-      cancelled = true;
-    };
   }, [refreshJobs]);
+
+  useEffect(() => {
+    const t = window.setTimeout(loadAccount, 0);
+    return () => window.clearTimeout(t);
+  }, [loadAccount]);
 
   const openCount = useMemo(
     () => jobs.filter((job) => isOpen(job.status)).length,
@@ -732,9 +814,59 @@ function LibraryGridInner() {
       <div
         className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]"
         data-library-state={deepLinkPending ? "deep-link-resolving" : "loading"}
+        data-library-boot="checking"
       >
         <p className="text-sm font-semibold text-white/45">Loading your Library…</p>
       </div>
+    );
+  }
+
+  // Access check timed out — fail-closed: no guest claim, no owner jobs, no demos.
+  if (sessionBoot === "timeout") {
+    return (
+      <section
+        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        data-library-state="session-timeout"
+        data-library-boot="timeout"
+      >
+        <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
+          <div className="max-w-lg">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/45">
+              Private Library
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+              Could not verify access in time.
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
+              Session lookup timed out. We will not load private jobs, claim
+              guest status, or show public sample clips until access is checked
+              again.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => loadAccount()}
+                data-library-boot-retry
+                className="btn btn-primary text-sm"
+              >
+                Retry access check
+              </button>
+              <Link
+                href={
+                  deepLinkJobId
+                    ? `/login?next=${encodeURIComponent(
+                        `/library?job=${encodeURIComponent(deepLinkJobId)}`
+                      )}`
+                    : "/login?next=/library"
+                }
+                className="btn btn-ghost text-sm"
+              >
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     );
   }
 
@@ -743,6 +875,7 @@ function LibraryGridInner() {
       <section
         className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
         data-library-state="guest"
+        data-library-boot="ready"
       >
         <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
           <div className="max-w-lg">
@@ -776,6 +909,51 @@ function LibraryGridInner() {
               </Link>
               <Link href={CREATE_MOMENT_HREF} className="btn btn-ghost text-sm">
                 Preview Street Power-Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Owner list failed/timed out before any successful body — honest retry, not empty shelf.
+  if (listLoad === "error" || listLoad === "timeout") {
+    const isTimeout = listLoad === "timeout";
+    return (
+      <section
+        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        data-library-state={isTimeout ? "list-timeout" : "list-error"}
+        data-library-list-load={listLoad}
+        data-library-boot="ready"
+      >
+        <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
+          <div className="max-w-lg">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">
+              Private Library
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+              {isTimeout
+                ? "Could not load your Library in time."
+                : "Could not load your private results."}
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
+              {isTimeout
+                ? "The owner list timed out. We will not invent public sample clips or treat this as an empty shelf."
+                : "Private list access failed. Your account Moments are not shown as empty — retry when the network is ready."}
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => void refreshJobs()}
+                disabled={refreshing}
+                data-library-list-retry
+                className="btn btn-primary text-sm disabled:opacity-50"
+              >
+                {refreshing ? "Retrying…" : "Retry Library"}
+              </button>
+              <Link href={EMPTY_360_HREF} className="btn btn-ghost text-sm">
+                Generate 360° Spin
               </Link>
             </div>
           </div>
@@ -820,7 +998,12 @@ function LibraryGridInner() {
   }
 
   return (
-    <section className="mt-6" data-library-state={sortedJobs.length ? "filled" : "empty"}>
+    <section
+      className="mt-6"
+      data-library-state={sortedJobs.length ? "filled" : "empty"}
+      data-library-list-load={listLoad}
+      data-library-boot="ready"
+    >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--neon-pink)]">
@@ -838,6 +1021,7 @@ function LibraryGridInner() {
             onClick={() => void refreshJobs()}
             disabled={refreshing}
             className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs disabled:opacity-50"
+            data-library-list-refresh
           >
             {refreshing ? "Refreshing…" : "Refresh"}
           </button>
