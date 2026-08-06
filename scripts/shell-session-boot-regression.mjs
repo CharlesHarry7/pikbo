@@ -1,6 +1,7 @@
 /**
- * AIT-446 — Shell session finite boot:
- * CreditsBadge + ProfilePanel + Settings no permanent hang on bare fetchMe().
+ * AIT-515 / AIT-446 — Shell session finite boot:
+ * CreditsBadge + ProfilePanel + Settings + SoftLaunchStrip / FreeTrialCta /
+ * Modules CTAs no permanent hang on bare fetchMe().
  * Mirror Studio open honesty: 8s wall-clock, checking/timeout, Retry, Lab fail-closed.
  */
 import assert from "node:assert/strict";
@@ -14,6 +15,10 @@ const timeout = read("lib/clientTimeout.ts");
 const badge = read("components/CreditsBadge.tsx");
 const profile = read("components/ProfilePanel.tsx");
 const settings = read("app/settings/page.tsx");
+const softLaunch = read("components/SoftLaunchStrip.tsx");
+const freeTrialCta = read("components/FreeTrialCta.tsx");
+const modulesSuiteCtas = read("components/ModulesSuiteCtas.tsx");
+const modulesMobileCta = read("components/ModulesMobileCta.tsx");
 const packageJson = read("package.json");
 
 // Shared 8s contract
@@ -60,6 +65,35 @@ assert.match(settings, /sessionBoot === "timeout"/);
 assert.match(settings, /timed out · unknown/);
 assert.doesNotMatch(settings, /void fetchMe\(\)/);
 assert.doesNotMatch(settings, /fetchMe\(\)\.then/);
+
+// SoftLaunchStrip + FreeTrialCta + Modules CTAs — residual chrome (AIT-515)
+for (const [name, src] of [
+  ["SoftLaunchStrip", softLaunch],
+  ["FreeTrialCta", freeTrialCta],
+  ["ModulesSuiteCtas", modulesSuiteCtas],
+  ["ModulesMobileCta", modulesMobileCta],
+]) {
+  assert.match(src, /STUDIO_SESSION_BOOT_MS/, `${name} must boot-bound`);
+  assert.match(
+    src,
+    /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/,
+    `${name} must pass timeoutMs`
+  );
+  assert.match(src, /isClientTimeoutError/, `${name} must detect timeout`);
+  assert.match(src, /sessionBoot === "timeout"/, `${name} timeout branch`);
+  assert.doesNotMatch(src, /void fetchMe\(\)\.then/, `${name} no bare fetchMe`);
+  assert.doesNotMatch(src, /void fetchMe\(\)/, `${name} no bare void fetchMe()`);
+}
+
+assert.match(softLaunch, /data-soft-launch-boot=\{sessionBoot\}/);
+assert.match(softLaunch, /data-soft-launch-boot-retry/);
+assert.match(softLaunch, /Retry/);
+assert.match(freeTrialCta, /data-free-trial-boot=\{sessionBoot\}/);
+assert.match(freeTrialCta, /data-free-trial-boot-retry/);
+assert.match(modulesSuiteCtas, /data-modules-suite-boot=\{sessionBoot\}/);
+assert.match(modulesSuiteCtas, /data-modules-suite-boot-retry/);
+assert.match(modulesMobileCta, /data-modules-mobile-boot=\{sessionBoot\}/);
+assert.match(modulesMobileCta, /data-modules-mobile-boot-retry/);
 
 // npm script wired
 assert.match(
