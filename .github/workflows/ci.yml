@@ -52,6 +52,7 @@ jobs:
         run: |
           npm run p0-private-live-generation
           npm run generate-wait-honesty-regression
+          npm run image-studio-fail-retry-regression
           npm run durable-library-statuses-regression
           npm run provider-budget-regression
           npm run capability-matrix

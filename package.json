@@ -53,6 +53,7 @@
     "r0-safety-net": "node --experimental-strip-types scripts/r0-safety-net.mjs",
     "p0-private-live-generation": "node --experimental-strip-types scripts/p0-private-live-generation.mjs",
     "generate-wait-honesty-regression": "node --experimental-strip-types scripts/generate-wait-honesty-regression.mjs",
+    "image-studio-fail-retry-regression": "node --experimental-strip-types scripts/image-studio-fail-retry-regression.mjs",
     "seller-pack-atomic-regression": "node --experimental-strip-types scripts/seller-pack-atomic-live-regression.mjs",
     "provider-budget-regression": "node --experimental-strip-types scripts/provider-budget-private-settlement-regression.mjs",
     "auth-magic-link-regression": "node --experimental-strip-types scripts/auth-magic-link-regression.mjs",

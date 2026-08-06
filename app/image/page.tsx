@@ -17,6 +17,7 @@ import {
   postImageWithRetry,
 } from "@/lib/imageClient";
 import { requestCreditStateFromFailure } from "@/lib/createTrust";
+import { canRetryGenerateFailure } from "@/lib/generateRecoveryPolicy";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
@@ -67,6 +68,14 @@ export default function ImageStudioPage() {
   const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
     null
   );
+  /**
+   * Last fail code + flags — Image Fail panel Retry is server-gated
+   * (auth/paywall/fatal/durable-hold never invent a retriable path).
+   * Same pure gate as Create / Landing / Batch after AIT-334.
+   */
+  const [lastFailCode, setLastFailCode] = useState<string | null>(null);
+  const [lastFailFatal, setLastFailFatal] = useState(false);
+  const [lastFailPaywall, setLastFailPaywall] = useState(false);
   /** Settlement honesty for FailPanel (restored vs unconfirmed). */
   const [failCreditState, setFailCreditState] = useState<
     null | "10 restored" | "refund unconfirmed"
@@ -317,6 +326,29 @@ export default function ImageStudioPage() {
    * then re-fill prompt/aspect and re-POST Flux with a new idempotency key.
    * Fork is tracking only — does not re-run provider by itself.
    */
+  function clearFailGate() {
+    setLastFailCode(null);
+    setLastFailFatal(false);
+    setLastFailPaywall(false);
+    setFailRetryAfterSec(null);
+  }
+
+  function recordFailGate(opts: {
+    code?: string | null;
+    fatal?: boolean;
+    paywall?: boolean;
+    retryAfterSec?: number | null;
+  }) {
+    setLastFailCode(opts.code || null);
+    setLastFailFatal(Boolean(opts.fatal));
+    setLastFailPaywall(Boolean(opts.paywall));
+    setFailRetryAfterSec(
+      typeof opts.retryAfterSec === "number" && opts.retryAfterSec > 0
+        ? opts.retryAfterSec
+        : null
+    );
+  }
+
   async function retrySessionStill(j: SessionStillJob) {
     const nextPrompt = j.prompt?.trim() || prompt;
     const nextAspect = j.aspect?.trim() || aspect;
@@ -324,7 +356,7 @@ export default function ImageStudioPage() {
     if (j.aspect) setAspect(j.aspect);
     setError(null);
     setFailCreditState(null);
-    setFailRetryAfterSec(null);
+    clearFailGate();
     try {
       const res = await fetch(
         `/api/image/${encodeURIComponent(j.id)}/retry`,
@@ -372,6 +404,7 @@ export default function ImageStudioPage() {
       }
       // Fork failed (e.g. NOT_RETRYABLE) — still allow client re-POST of prompt.
       if (body.code === "JOB_IN_FLIGHT") {
+        recordFailGate({ code: body.code, fatal: false, paywall: false });
         setError(
           typeof body.message === "string"
             ? body.message
@@ -412,7 +445,7 @@ export default function ImageStudioPage() {
     const idempotencyKey = mintImageIdempotencyKey();
     setBusy(true);
     setError(null);
-    setFailRetryAfterSec(null);
+    clearFailGate();
     setFailCreditState(null);
     try {
       const ledgerRetry = retryHandoffRef.current;
@@ -432,13 +465,17 @@ export default function ImageStudioPage() {
         { signal: abortCtrl.signal }
       );
       if (!result.ok) {
-        const retryAfter =
-          typeof result.retryAfterSec === "number" && result.retryAfterSec > 0
-            ? result.retryAfterSec
-            : null;
-        setFailRetryAfterSec(retryAfter);
+        // Track gate inputs so Fail panel never invents Retry under
+        // auth / paywall / fatal / durable-hold (Create/Landing/Batch parity).
+        recordFailGate({
+          code: result.code,
+          fatal: Boolean(result.fatal),
+          paywall: Boolean(result.paywall),
+          retryAfterSec: result.retryAfterSec,
+        });
         // Shared settlement map (Create/Landing parity) — CONTENT_POLICY ·
         // PROVIDER_NETWORK · MODEL_EMPTY · TIMEOUT · cancel never invent restore.
+        // Only creditsRefunded === true may claim restore (never invent).
         const settlement = requestCreditStateFromFailure({
           creditsRefunded: result.creditsRefunded,
           refundUnconfirmed: result.refundUnconfirmed,
@@ -503,7 +540,12 @@ export default function ImageStudioPage() {
         );
       }
     } catch (e) {
-      setFailRetryAfterSec(null);
+      // Unexpected throw — refund unconfirmed; Retry still allowed after gate clear.
+      recordFailGate({
+        code: "NETWORK_ERROR",
+        fatal: false,
+        paywall: false,
+      });
       setFailCreditState("refund unconfirmed");
       setError(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -654,9 +696,16 @@ export default function ImageStudioPage() {
                 retryAfterSec={failRetryAfterSec}
                 compact
                 onRetry={
-                  !busy
+                  canRetryGenerateFailure({
+                    code: lastFailCode,
+                    fatal: lastFailFatal,
+                    paywall: lastFailPaywall,
+                    busy,
+                    hasInput: prompt.trim().length >= 4,
+                  })
                     ? () => {
-                        setFailRetryAfterSec(null);
+                        clearFailGate();
+                        setFailCreditState(null);
                         void generate();
                       }
                     : undefined

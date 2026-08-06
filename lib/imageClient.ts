@@ -51,6 +51,10 @@ export type ImageFail = {
   retryAfterSec?: number;
   creditsRefunded?: boolean;
   refundUnconfirmed?: boolean;
+  /** Stop inventing Retry when provider balance / allowance is closed. */
+  fatal?: boolean;
+  /** User allowance paywall — not a process-memory Retry. */
+  paywall?: boolean;
 };
 
 export type ImageOk = {
@@ -186,6 +190,10 @@ export function interpretImageResponse(
       ? body.retryAfterSec
       : undefined;
   const creditsRefunded = body.creditsRefunded === true;
+  // generateClient parity — fail-panel Retry gate reads these flags.
+  const paywall = code === "INSUFFICIENT_CREDITS";
+  const fatal =
+    code === "INSUFFICIENT_CREDITS" || code === "PROVIDER_BALANCE";
 
   // R1a capture ambiguity parity with generateClient — withhold, no invented refund.
   if (code === "DURABLE_CREDITS_UNAVAILABLE") {
@@ -200,6 +208,9 @@ export function interpretImageResponse(
       retryAfterSec,
       creditsRefunded: undefined,
       refundUnconfirmed: undefined,
+      // Hold open — never invent process-memory Retry (code gate also blocks).
+      fatal: false,
+      paywall: false,
     };
   }
 
@@ -264,6 +275,8 @@ export function interpretImageResponse(
     retryAfterSec,
     creditsRefunded,
     refundUnconfirmed: refundUnconfirmed || undefined,
+    fatal,
+    paywall,
   };
 }
 
@@ -338,6 +351,8 @@ export async function postImage(
           : "Network error — check connection and balance (refund unconfirmed until server confirms)",
       // Client never saw a typed body — do not claim restore (parity with generateClient).
       refundUnconfirmed: true,
+      fatal: false,
+      paywall: false,
     };
   }
 }
@@ -402,6 +417,8 @@ export async function postImageWithRetry(
           error:
             "Request canceled — if credits were debited, check balance or retry (refund unconfirmed until server confirms)",
           refundUnconfirmed: true,
+          fatal: false,
+          paywall: false,
         };
       }
       throw e;
