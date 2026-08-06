@@ -60,6 +60,30 @@ assert.equal(
   "GuestMomentCreateGate retry hover chrome uses var(--mint) / var(--void) board tokens"
 );
 
+// AIT-588: authenticated Create page chrome residual carnival pink → copper
+// (gate wrap honesty unchanged; page.tsx color-only lock)
+{
+  const carnival =
+    /#B14EFF|#FF4ECD|#00D9FF|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|0\s*,\s*217\s*,\s*255/i;
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  assert.equal(
+    carnival.test(createPage),
+    false,
+    "app/create/page.tsx must not hard-code carnival pink/cyan RGB"
+  );
+  assert.equal(
+    lime.test(createPage),
+    false,
+    "app/create/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert.equal(
+    createPage.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(createPage),
+    true,
+    "Create page radial wash + eyebrows use --brand + copper rgba(196,165,116)"
+  );
+}
+
 for (const asset of [
   "public/demos/beatbot-still.webp",
   "public/demos/beatbot-viral-hook.mp4",

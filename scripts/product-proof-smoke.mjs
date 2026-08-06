@@ -299,6 +299,26 @@ assert(
   );
 }
 
+// AIT-588: Create page residual carnival pink chrome → gallery-calm copper
+{
+  const carnival =
+    /#B14EFF|#FF4ECD|#00D9FF|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|0\s*,\s*217\s*,\s*255/i;
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  assert(
+    !carnival.test(create),
+    "app/create/page.tsx must not hard-code carnival pink/cyan RGB"
+  );
+  assert(
+    !lime.test(create),
+    "app/create/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    create.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(create),
+    "Create page radial wash + eyebrows use --brand + copper rgba(196,165,116)"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );

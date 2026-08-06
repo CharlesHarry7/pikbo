@@ -237,4 +237,32 @@ assert.ok(
   "workbench registry must never include fixed Moment effect"
 );
 
+// AIT-588: Create page residual carnival pink chrome → gallery-calm copper
+// (color only; route contract markers above stay authoritative)
+{
+  const carnival =
+    /#B14EFF|#FF4ECD|#00D9FF|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|0\s*,\s*217\s*,\s*255/i;
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  assert.equal(
+    carnival.test(createPage),
+    false,
+    "app/create/page.tsx must not hard-code carnival pink/cyan RGB"
+  );
+  assert.equal(
+    lime.test(createPage),
+    false,
+    "app/create/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert.match(
+    createPage,
+    /var\(--brand\)/,
+    "Create page eyebrows/border accents use --brand copper"
+  );
+  assert.match(
+    createPage,
+    /rgba\(196\s*,\s*165\s*,\s*116/,
+    "Create page radial wash uses copper board rgba(196,165,116)"
+  );
+}
+
 console.log("create-route-360-smoke: ok");
