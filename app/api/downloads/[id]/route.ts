@@ -27,14 +27,20 @@ function isUuid(value: string): boolean {
   );
 }
 
+/**
+ * Durable UUID jobs: require auth owner (created_by). Missing, foreign, and
+ * unauthenticated share one fail-closed deny — no AUTH_REQUIRED status split
+ * that would distinguish existence, and no media/provider/signed metadata.
+ * Non-UUID ids fall through to process-memory session gate only.
+ */
 async function privateResultForRequest(req: Request, id: string) {
   if (!isUuid(id)) return { kind: "not-private" as const };
   const user = await getAuthUserFromRequest(req);
   if (!user) {
     return {
       kind: "error" as const,
-      status: 401,
-      code: "AUTH_REQUIRED",
+      status: 404,
+      code: "NOT_FOUND" as const,
     };
   }
   const result = await getPrivateGenerationResult({
@@ -45,10 +51,19 @@ async function privateResultForRequest(req: Request, id: string) {
     return {
       kind: "error" as const,
       status: 404,
-      code: "NOT_FOUND",
+      code: "NOT_FOUND" as const,
     };
   }
   return { kind: "private" as const, result };
+}
+
+/** Uniform body for durable UUID deny — never effect/status/signed/object keys. */
+function durableDownloadDenyBody() {
+  return {
+    ok: false as const,
+    code: "NOT_FOUND" as const,
+    error: "Download not found for this account",
+  };
 }
 
 /**
@@ -260,19 +275,14 @@ export async function GET(req: Request, { params }: Props) {
   const { id } = await params;
   const privateResult = await privateResultForRequest(req, id);
   if (privateResult.kind === "error") {
-    return NextResponse.json(
-      {
-        ok: false,
-        code: privateResult.code,
-        error:
-          privateResult.code === "AUTH_REQUIRED"
-            ? "Sign in to download this private result"
-            : "Private result not found for this account",
-      },
-      { status: privateResult.status }
-    );
+    // Uniform fail-closed: unauth / foreign / missing share status + body.
+    return NextResponse.json(durableDownloadDenyBody(), {
+      status: privateResult.status,
+      headers: { "Cache-Control": "private, no-store" },
+    });
   }
   if (privateResult.kind === "private") {
+    // Ownership already proven via created_by — only then mint a short-lived signed URL.
     const signed = await signedPrivateResultUrl(
       privateResult.result.objectKey,
       60,
@@ -285,15 +295,23 @@ export async function GET(req: Request, { params }: Props) {
           code: "PRIVATE_RESULT_SIGN_FAILED",
           error: "Could not create a private download link",
         },
-        { status: 503 }
+        {
+          status: 503,
+          headers: { "Cache-Control": "private, no-store" },
+        }
       );
     }
+    // Redirect only — never put the signed URL or object key in a JSON body.
     return NextResponse.redirect(signed, 302);
   }
+  // Process-memory path: session-bound only (non-UUID ids).
   const session = await ensureSession();
   const gate = gateDownload(session.id, id);
   if (!gate.ok) {
-    return NextResponse.json(gate.body, { status: gate.status });
+    return NextResponse.json(gate.body, {
+      status: gate.status,
+      headers: { "Cache-Control": "private, no-store" },
+    });
   }
 
   // Absolute URL so relative /demos/* never fail as open redirects / invalid Location.
@@ -310,11 +328,12 @@ export async function HEAD(req: Request, { params }: Props) {
   const { id } = await params;
   const privateResult = await privateResultForRequest(req, id);
   if (privateResult.kind === "error") {
+    // Same code as GET deny — no private markers, checksum, or T6 on fail.
     return new NextResponse(null, {
       status: privateResult.status,
       headers: {
         "X-Pikbo-Download": "blocked",
-        "X-Pikbo-Download-Code": privateResult.code,
+        "X-Pikbo-Download-Code": "NOT_FOUND",
         "Cache-Control": "private, no-store",
       },
     });
@@ -333,6 +352,7 @@ export async function HEAD(req: Request, { params }: Props) {
       },
     });
   }
+  // Process-memory path: session-bound only.
   const session = await ensureSession();
   const gate = gateDownload(session.id, id);
   const t6 = t6Report();
@@ -355,7 +375,7 @@ export async function HEAD(req: Request, { params }: Props) {
           ? { "X-Pikbo-Credits-Outcome": creditsOutcome }
           : {}),
         "X-Pikbo-T6": t6.freeLiveRawDownload,
-        "Cache-Control": "no-store",
+        "Cache-Control": "private, no-store",
       },
     });
   }
@@ -367,7 +387,7 @@ export async function HEAD(req: Request, { params }: Props) {
       "X-Pikbo-Watermark": gate.watermark ? "1" : "0",
       "X-Pikbo-T6": t6.freeLiveRawDownload,
       "X-Pikbo-Bake": "0",
-      "Cache-Control": "no-store",
+      "Cache-Control": "private, no-store",
     },
   });
 }
