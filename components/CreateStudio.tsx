@@ -2644,7 +2644,7 @@ export function CreateStudio({
                     <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
                       {liveEntitled
                         ? "Invited validation is fixed to Fast · 5s · 720p · private delivery"
-                        : "Free cached prototype · Mini · 5s · 480p · on-player mark"}
+                        : "Cached Lab prototype · 0 credits · Live gated"}
                     </p>
                   )}
                 </div>

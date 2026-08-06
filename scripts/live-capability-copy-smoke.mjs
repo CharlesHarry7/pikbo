@@ -421,6 +421,80 @@ assert(
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
 );
 
+// AIT-304: residual SEO mesh / guide CTAs + longform Free Mini public-path claims.
+const landingSeoMeshSource = read("components/LandingSeoMesh.tsx");
+assert(
+  !/labelTry=["']Try free Mini["']/.test(landingSeoMeshSource) &&
+    landingSeoMeshSource.includes('labelTry="Try free · Lab"') &&
+    landingSeoMeshSource.includes('labelDemo="Try Lab sample"'),
+  "LandingSeoMesh must Lab-first FreeTrialCta labels (no Try free Mini)"
+);
+const guideSlugSource = read("app/guides/[slug]/page.tsx");
+assert(
+  !/Try free · Mini 5s/.test(guideSlugSource) &&
+    guideSlugSource.includes('labelTry="Try free · Lab →"') &&
+    guideSlugSource.includes('labelDemo="Try Lab sample →"'),
+  "guide detail CTA must not sell Mini 5s as public free trial"
+);
+const createStudioSource = read("components/CreateStudio.tsx");
+assert(
+  !/Free cached prototype · Mini · 5s · 480p/.test(createStudioSource) &&
+    createStudioSource.includes(
+      "Cached Lab prototype · 0 credits · Live gated"
+    ),
+  "CreateStudio free duration chip must prefer Cached Lab / Live gated honesty"
+);
+
+const toolsSource = read("lib/tools.ts");
+const forbiddenToolsFreeMiniPublic = [
+  /Free Mini clips are 5 seconds at 480p/i,
+  /Free Mini teasers are 5 seconds at 480p/i,
+  /Soft launch Free Mini is enough/i,
+  /Free Mini validates one hero SKU/i,
+  /Seedance Mini on Free Mini/i,
+  /Free Mini caps apply on soft launch/i,
+  /Free Mini \| Pikbo/,
+];
+for (const pattern of forbiddenToolsFreeMiniPublic) {
+  assert(
+    !pattern.test(toolsSource),
+    `lib/tools.ts residual Free Mini public promise ${pattern}`
+  );
+}
+assert(
+  toolsSource.includes("Public path is cached Lab") ||
+    toolsSource.includes("cached Lab · 0 credits"),
+  "lib/tools.ts must keep Lab public-path honesty"
+);
+
+const usecasesSource = read("lib/usecases.ts");
+const forbiddenUsecasesFreeMiniPublic = [
+  /Soft launch Free Mini is capped/i,
+  /Soft launch Free Mini is enough for a few/i,
+  /Free Mini caps apply\. Lab demos/i,
+  /honest Free Mini limits/i,
+  /Keep Free Mini caps in mind/i,
+  /, Free Mini \| Pikbo/,
+];
+for (const pattern of forbiddenUsecasesFreeMiniPublic) {
+  assert(
+    !pattern.test(usecasesSource),
+    `lib/usecases.ts residual Free Mini public promise ${pattern}`
+  );
+}
+
+const guidesLibSource = read("lib/guides.ts");
+assert(
+  !/Soft launch Free Mini is 5s · 480p/i.test(guidesLibSource) &&
+    !/Run Free Mini or a live job/i.test(guidesLibSource),
+  "lib/guides.ts must not sell Free Mini 5s as the open public path"
+);
+assert(
+  guidesLibSource.includes("cached Lab · 0 credits") ||
+    guidesLibSource.includes("cached Lab preview"),
+  "lib/guides.ts must keep Lab public-path honesty"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
