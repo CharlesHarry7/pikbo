@@ -96,6 +96,33 @@ assert.match(hero, /data-studio-open-error/);
 assert.match(hero, /data-studio-open-retry/);
 assert.match(hero, /data-studio-open-state=\{busy \? "opening" : "idle"\}/);
 
+// AIT-246: residual chrome CTAs — wall-clock fetchMe (FreeTrial + Modules)
+const freeTrialCta = read("components/FreeTrialCta.tsx");
+const modulesSuiteCtas = read("components/ModulesSuiteCtas.tsx");
+const modulesMobileCta = read("components/ModulesMobileCta.tsx");
+for (const [name, src] of [
+  ["FreeTrialCta", freeTrialCta],
+  ["ModulesSuiteCtas", modulesSuiteCtas],
+  ["ModulesMobileCta", modulesMobileCta],
+]) {
+  assert.match(src, /STUDIO_SESSION_BOOT_MS/, `${name} must boot-bound`);
+  assert.match(
+    src,
+    /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/,
+    `${name} must pass timeoutMs`
+  );
+  assert.match(src, /isClientTimeoutError/, `${name} must detect timeout`);
+  assert.match(src, /sessionBoot === "timeout"/, `${name} timeout branch`);
+  // Never bare untimed mount hydrate
+  assert.doesNotMatch(src, /void fetchMe\(\)\.then/, `${name} no bare fetchMe`);
+}
+assert.match(freeTrialCta, /data-free-trial-boot=\{sessionBoot\}/);
+assert.match(freeTrialCta, /data-free-trial-boot-retry/);
+assert.match(modulesSuiteCtas, /data-modules-suite-boot=\{sessionBoot\}/);
+assert.match(modulesSuiteCtas, /data-modules-suite-boot-retry/);
+assert.match(modulesMobileCta, /data-modules-mobile-boot=\{sessionBoot\}/);
+assert.match(modulesMobileCta, /data-modules-mobile-boot-retry/);
+
 // Package + CI script wiring
 assert.match(
   packageJson,
@@ -112,5 +139,5 @@ for (const asset of [
 }
 
 console.log(
-  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; timeout/error + retry; mobile sticky Lab CTA)"
+  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; FreeTrialCta+Modules CTAs 8s boot; timeout/error + retry; mobile sticky Lab CTA)"
 );
