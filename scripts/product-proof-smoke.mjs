@@ -229,12 +229,25 @@ assert(
   assert(
     fourSurface["components/HfProductRail.tsx"].includes("var(--neon-pink)") &&
       fourSurface["components/LibraryGrid.tsx"].includes("var(--neon-pink)") &&
-      fourSurface["components/HomeBrowseCta.tsx"].includes("var(--neon-pink)") &&
       fourSurface["components/HomeExploreRecipeRail.tsx"].includes(
         "var(--neon-pink)"
       ),
-    "Home rails + Library + browse CTA use neon-pink board tokens"
+    "Home rails + Library use neon-pink board tokens"
   );
+  // AIT-556: browse sticky money-path CTA is copper board (not neon-pink naming)
+  {
+    const browse = fourSurface["components/HomeBrowseCta.tsx"];
+    const carnival =
+      /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i;
+    assert(
+      !carnival.test(browse) &&
+        !/var\(--neon-pink\)/.test(browse) &&
+        browse.includes("var(--brand)") &&
+        /rgba\(196\s*,\s*165\s*,\s*116/.test(browse) &&
+        browse.includes("var(--primary-foreground)"),
+      "HomeBrowseCta uses gallery-calm copper board (--brand + copper glow + void text)"
+    );
+  }
   assert(
     fourSurface["components/CreateStudio.tsx"].includes("rgba(255,78,205") &&
       fourSurface["components/PricingPlanCards.tsx"].includes(
@@ -282,6 +295,29 @@ assert(
     softLaunch.includes("var(--brand)") &&
       /rgba\(196\s*,\s*165\s*,\s*116/.test(softLaunch),
     "SoftLaunchStrip chips/CTAs use --brand + copper glow"
+  );
+}
+
+// AIT-556: HomeBrowseCta residual carnival pink → gallery-calm copper board
+{
+  const carnival =
+    /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i;
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const browse = read("components/HomeBrowseCta.tsx");
+  assert(
+    !carnival.test(browse),
+    "HomeBrowseCta must not hard-code carnival pink RGB"
+  );
+  assert(
+    !lime.test(browse),
+    "HomeBrowseCta must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    !/var\(--neon-pink\)/.test(browse) &&
+      browse.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(browse) &&
+      browse.includes("var(--primary-foreground)"),
+    "HomeBrowseCta sticky CTA uses --brand + copper glow + primary-foreground (void)"
   );
 }
 
