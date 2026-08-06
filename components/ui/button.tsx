@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white shadow-[0_0_24px_rgba(255,78,205,0.35)] hover:scale-[1.03] hover:shadow-[0_0_36px_rgba(177,78,255,0.45)] active:scale-95",
+          "cta-brand shadow-[0_0_24px_color-mix(in_srgb,var(--neon-pink)_35%,transparent)] hover:scale-[1.03] hover:shadow-[0_0_36px_color-mix(in_srgb,var(--electric-purple)_45%,transparent)] active:scale-95",
         secondary:
           "bg-white/[0.06] text-[var(--fg)] border border-[var(--border)] hover:bg-white/10",
         outline:
