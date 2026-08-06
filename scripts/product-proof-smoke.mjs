@@ -199,6 +199,38 @@ assert(
   "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
 
+// AIT-528: HomeViralWall residual carnival → gallery-calm copper board
+{
+  const viralWall = read("components/HomeViralWall.tsx");
+  const carnival =
+    /#FF4ECD|#00D9FF|#B14EFF|FF4ECD|00D9FF|B14EFF|rgba\(255,\s*78,\s*205|rgba\(0,\s*217,\s*255|rgba\(177,\s*78,\s*255/i;
+  assert(
+    !carnival.test(viralWall),
+    "HomeViralWall must not hard-code carnival pink/cyan/purple hex accents"
+  );
+  assert(
+    viralWall.includes("var(--brand)") &&
+      viralWall.includes("var(--brand-2)") &&
+      viralWall.includes("var(--grad-cta)"),
+    "HomeViralWall accents use gallery-calm copper board tokens"
+  );
+  assert(
+    viralWall.includes("Try this recipe") &&
+      viralWall.includes("Listing 360") &&
+      viralWall.includes("home-proof-wall") &&
+      /Archive previews only|not customer results/i.test(viralWall),
+    "HomeViralWall keeps Lab proof honesty + remake / 360 doors"
+  );
+  assert(
+    !read("app/page.tsx").includes("HomeViralWall") &&
+      !read("app/page.tsx").includes("HfExploreHome") &&
+      !read("app/page.tsx").includes("PublicLaunchPackSample") &&
+      !read("app/page.tsx").includes("HomeSeoBody") &&
+      !read("app/page.tsx").includes("HomeBrowseCta"),
+    "gallery-calm home must not remount HomeViralWall / HfExploreHome / pack sample / HomeSeoBody / browse CTA"
+  );
+}
+
 // AIT-320: four-surface money path off residual competitor lime (board tokens)
 {
   const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
