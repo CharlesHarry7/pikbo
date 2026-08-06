@@ -211,6 +211,21 @@ assert(
   );
 }
 
+// AIT-409: Flow hub page residual lime → neon-pink board tokens
+{
+  const flowPage = read("app/flow/page.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(flowPage),
+    "Flow hub page must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    flowPage.includes("var(--neon-pink)") &&
+      flowPage.includes("var(--void)") &&
+      flowPage.includes("rgba(255,78,205"),
+    "Flow hub primary chrome uses neon-pink / void board tokens"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
