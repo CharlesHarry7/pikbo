@@ -2,10 +2,22 @@ import { NextResponse } from "next/server";
 import { ensureSession } from "@/lib/session";
 import { forkRetryJob, toPublicJob } from "@/lib/generationJobs";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
+import { getPrivateLibraryJobForOwner } from "@/lib/privateGenerationResults";
+import { acceptControlledLibraryNewAttemptUrl } from "@/lib/privateGenerationResultsPure.mjs";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+import { getAuthUserFromRequest } from "@/lib/supabase/user";
 
 export const runtime = "nodejs";
 
 type Props = { params: Promise<{ id: string }> };
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
+const GENERIC_LIBRARY_CREATE = `${MOMENT_CREATE_HREF}&source=library` as const;
 
 /**
  * Phase D local retry handoff.
@@ -13,12 +25,99 @@ type Props = { params: Promise<{ id: string }> };
  * (still image is not stored server-side). Soft-launch clients re-submit
  * POST /api/generate with the same photo + effect. Seller Pack retries
  * only the failed child — siblings stay playable.
+ *
+ * AIT-148/AIT-162: durable private Moments never fork process-memory Retry.
+ * Owner terminal rows return DURABLE_USE_NEW_ATTEMPT with a Create handoff
+ * (same-photo only after acceptControlledLibraryNewAttemptUrl); missing/foreign
+ * ids stay uniform NOT_FOUND (no ownership leak).
  */
-export async function POST(_req: Request, { params }: Props) {
+export async function POST(req: Request, { params }: Props) {
   const { id } = await params;
   const session = await ensureSession();
   const result = forkRetryJob({ sessionId: session.id, parentId: id });
   if (!result.ok) {
+    // Durable owner path — never invent a process-memory retry fork.
+    if (result.code === "NOT_FOUND" && isUuid(id)) {
+      const authUser = await getAuthUserFromRequest(req);
+      if (authUser) {
+        const privateLookup = await getPrivateLibraryJobForOwner({
+          jobId: id,
+          userId: authUser.id,
+        });
+        // AIT-357: storage down → 503, not local 404 (never fork, never claim missing).
+        if (!privateLookup.ok) {
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_DETAIL_UNAVAILABLE",
+              id,
+              message:
+                "Private Library could not verify this Moment for Retry. Retry when storage is ready — process-memory fork was not created.",
+              mode: "supabase-private",
+              durable: true,
+            },
+            { status: 503 }
+          );
+        }
+        const privateJob = privateLookup.job;
+        if (privateJob) {
+          if (
+            privateJob.status === "queued" ||
+            privateJob.status === "running"
+          ) {
+            return NextResponse.json(
+              {
+                ok: false,
+                code: "DURABLE_IN_FLIGHT",
+                id,
+                message:
+                  "This Moment is still rendering. Refresh Library — process-memory Retry does not apply to durable jobs.",
+                mode: "supabase-private",
+                durable: true,
+              },
+              { status: 409 }
+            );
+          }
+          if (privateJob.status === "succeeded") {
+            return NextResponse.json(
+              {
+                ok: false,
+                code: "DURABLE_ALREADY_SUCCEEDED",
+                id,
+                message:
+                  "This Moment already succeeded. Open Create for a new attempt — process-memory Retry does not apply.",
+                mode: "supabase-private",
+                durable: true,
+              },
+              { status: 422 }
+            );
+          }
+          // failed | canceled — same-photo only when the controlled accept gate
+          // passes (owner-ready asset already applied in getPrivateLibraryJobForOwner).
+          // Loose startsWith("/create?") is not enough — reject forged handoffs.
+          const createUi =
+            acceptControlledLibraryNewAttemptUrl(privateJob.newAttemptUrl) ??
+            GENERIC_LIBRARY_CREATE;
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_USE_NEW_ATTEMPT",
+              id,
+              message:
+                "This durable Moment cannot use process-memory Retry. Start a new attempt from Create.",
+              mode: "supabase-private",
+              durable: true,
+              next: {
+                createUi,
+                newAttempt: true,
+              },
+            },
+            { status: 422 }
+          );
+        }
+      }
+    }
+
     const status =
       result.code === "NOT_FOUND"
         ? 404

@@ -2,12 +2,28 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useToast } from "@/components/Toast";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+  withTimeout,
+} from "@/lib/clientTimeout";
 import { interpretDownloadHead } from "@/lib/createTrust";
 import { downloadVideoFile, privateDownloadHeaders } from "@/lib/history";
 import { fetchMe, type MeResponse } from "@/lib/meClient";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
+import {
+  libraryEmpty360Href,
+  libraryEmptyMomentHref,
+} from "@/lib/libraryEmpty";
 import {
   acceptControlledLibraryNewAttemptUrl,
   libraryDurableTerminalFailureCopy,
@@ -49,15 +65,39 @@ type GenerationJob = {
 
 type GenerationsResponse = {
   ok?: boolean;
+  code?: string;
+  message?: string;
   jobs?: GenerationJob[];
   open?: number;
 };
 
 const CREATE_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=library` as const;
+const EMPTY_360_HREF = libraryEmpty360Href();
+const EMPTY_MOMENT_HREF = libraryEmptyMomentHref();
 
 /** UUID shape for deep-link job ids — reject freeform paths/secrets. */
 const LIBRARY_JOB_ID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Deep-link ownership resolve after list load.
+ * idle: no deep link · resolving: owner detail GET in flight ·
+ * owned: job on list or detail confirmed · not-yours: fail-closed foreign/missing ·
+ * unavailable: network/5xx verify failure (never invent not-your-toy on transport fail).
+ */
+type DeepLinkResolve =
+  | "idle"
+  | "resolving"
+  | "owned"
+  | "not-yours"
+  | "unavailable";
+
+/**
+ * Owner list load honesty (AIT-311 residual).
+ * ok: private list returned · error: non-ok/network · timeout: 8s wall-clock.
+ * Never invent demo/public rows; never treat list failure as an empty shelf.
+ */
+type ListLoadState = "idle" | "loading" | "ok" | "error" | "timeout";
 
 function isOpen(status: string): boolean {
   return status === "queued" || status === "running";
@@ -102,6 +142,39 @@ function canNewAttempt(job: GenerationJob): boolean {
  */
 function acceptedSamePhotoHandoff(job: GenerationJob): string | undefined {
   return acceptControlledLibraryNewAttemptUrl(job.newAttemptUrl);
+}
+
+/**
+ * Fail-closed client navigation for Create handoffs from Retry / durable
+ * responses. Same-photo controlled URLs first; otherwise only a relative
+ * `/create` path (no protocol, fragment, or open redirect).
+ */
+function acceptLibraryCreateNavigation(
+  value: unknown,
+  fallback: string = CREATE_MOMENT_HREF
+): string {
+  const samePhoto = acceptControlledLibraryNewAttemptUrl(value);
+  if (samePhoto) return samePhoto;
+  if (typeof value !== "string") return fallback;
+  const candidate = value.trim();
+  if (!candidate.startsWith("/create")) return fallback;
+  if (
+    candidate.includes("://") ||
+    candidate.includes("\\") ||
+    candidate.includes("#") ||
+    candidate.length > 280
+  ) {
+    return fallback;
+  }
+  try {
+    const url = new URL(candidate, "https://pikbo.local");
+    if (url.origin !== "https://pikbo.local") return fallback;
+    if (url.pathname !== "/create") return fallback;
+    if (url.hash || url.username || url.password) return fallback;
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return fallback;
+  }
 }
 
 function newAttemptHref(job: GenerationJob): string {
@@ -330,52 +403,132 @@ function LibraryGridInner() {
   const [accountReady, setAccountReady] = useState(false);
   const [jobs, setJobs] = useState<GenerationJob[]>([]);
   const [jobsReady, setJobsReady] = useState(false);
+  /** 8s session boot — never permanent Loading when getSession hangs. */
+  const [sessionBoot, setSessionBoot] = useState<
+    "checking" | "ready" | "timeout"
+  >("checking");
+  /**
+   * Owner list load honesty — fail-closed: list error/timeout is not empty.
+   * Never invent demo/public clips when private list access fails.
+   */
+  const [listLoad, setListLoad] = useState<ListLoadState>("idle");
   const [refreshing, setRefreshing] = useState(false);
   const [forkingId, setForkingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deepLinkResolve, setDeepLinkResolve] =
+    useState<DeepLinkResolve>("idle");
+  /** Prevents not-yours ↔ list-miss re-fetch loops for the same deep-link id. */
+  const deepLinkAttemptedRef = useRef<string | null>(null);
+  /** True after at least one successful owner list body. Soft refresh keeps rows. */
+  const listSucceededRef = useRef(false);
   const toast = useToast();
 
   const refreshJobs = useCallback(async () => {
     setRefreshing(true);
+    setListLoad((prev) => (prev === "ok" ? "ok" : "loading"));
     try {
-      const headers = await privateDownloadHeaders();
-      const response = await fetch("/api/generations", {
-        headers,
-        cache: "no-store",
-      });
-      const body = (await response.json()) as GenerationsResponse;
+      // Wall-clock covers getSession hang inside privateDownloadHeaders + list fetch.
+      const result = await withTimeout(
+        (async () => {
+          const headers = await privateDownloadHeaders();
+          const controller =
+            typeof AbortController !== "undefined"
+              ? new AbortController()
+              : null;
+          const timer = controller
+            ? setTimeout(() => controller.abort(), STUDIO_SESSION_BOOT_MS)
+            : null;
+          try {
+            const response = await fetch("/api/generations", {
+              headers,
+              cache: "no-store",
+              signal: controller?.signal,
+            });
+            const body = (await response.json()) as GenerationsResponse;
+            return { response, body };
+          } finally {
+            if (timer) clearTimeout(timer);
+          }
+        })(),
+        STUDIO_SESSION_BOOT_MS,
+        "Could not load your Library in time"
+      );
+      const { response, body } = result;
       if (response.ok && body.ok && Array.isArray(body.jobs)) {
+        // Owner-only visible rows — never demo / owned:false stubs.
         setJobs(body.jobs.filter(visibleAccountJob));
+        setListLoad("ok");
+        listSucceededRef.current = true;
+      } else {
+        // Fail-closed: do not invent public/demo clips; do not claim empty shelf.
+        // AIT-319: DURABLE_LIST_UNAVAILABLE (503) is an explicit private list fail.
+        if (!listSucceededRef.current) {
+          setJobs([]);
+          setListLoad("error");
+        } else {
+          toast(
+            body.code === "DURABLE_LIST_UNAVAILABLE"
+              ? body.message ||
+                  "Private Library could not be refreshed. Saved Moments are unchanged."
+              : "Could not refresh your results"
+          );
+        }
       }
-    } catch {
-      toast("Could not refresh your results");
+    } catch (err) {
+      const timedOut =
+        isClientTimeoutError(err) ||
+        (err instanceof Error && err.name === "AbortError");
+      if (!listSucceededRef.current) {
+        setJobs([]);
+        setListLoad(timedOut ? "timeout" : "error");
+      } else {
+        toast(
+          timedOut
+            ? "Library refresh timed out. Your saved results are unchanged."
+            : "Could not refresh your results"
+        );
+      }
     } finally {
       setRefreshing(false);
       setJobsReady(true);
     }
   }, [toast]);
 
-  useEffect(() => {
-    let cancelled = false;
-    void fetchMe()
+  const loadAccount = useCallback(() => {
+    setAccountReady(false);
+    setJobsReady(false);
+    setSessionBoot("checking");
+    setMe(null);
+    setJobs([]);
+    setListLoad("idle");
+    listSucceededRef.current = false;
+    deepLinkAttemptedRef.current = null;
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
       .then((result) => {
-        if (cancelled) return;
         setMe(result);
         setAccountReady(true);
+        setSessionBoot("ready");
         if (result?.signedIn) void refreshJobs();
-        else setJobsReady(true);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setAccountReady(true);
+        else {
           setJobsReady(true);
+          setListLoad("idle");
         }
+      })
+      .catch((err) => {
+        setMe(null);
+        // Always release loaders — no permanent Loading your Library…
+        setAccountReady(true);
+        setJobsReady(true);
+        setListLoad("idle");
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
       });
-    return () => {
-      cancelled = true;
-    };
   }, [refreshJobs]);
+
+  useEffect(() => {
+    const t = window.setTimeout(loadAccount, 0);
+    return () => window.clearTimeout(t);
+  }, [loadAccount]);
 
   const openCount = useMemo(
     () => jobs.filter((job) => isOpen(job.status)).length,
@@ -408,15 +561,135 @@ function LibraryGridInner() {
   }, [sortedJobs, selectedId, deepLinkJobId]);
   const activeSelectedId = selectedJob?.id ?? null;
 
+  const listHasDeepLink =
+    Boolean(deepLinkJobId) &&
+    jobs.some((job) => job.id === deepLinkJobId);
+
   /**
-   * Deep-linked job id that is not on this owner's visible list after load.
-   * Fail-closed: no media, no effect metadata invent, not-your-toy copy only.
+   * Deep-link ownership resolve (AIT-103 / AIT-110 / AIT-319).
+   * List hit → owned (derived). Miss → one-shot GET /api/generations/:id (owner-scoped).
+   * 200 + visible job merges into list; 404-class → not-your-toy;
+   * network/5xx → unavailable (never invent not-your-toy on transport fail).
+   * Skip resolve while owner list is error/timeout — list surface owns honesty.
+   * `deepLinkAttemptedRef` stops re-fetch loops after terminal resolve.
+   * setState is deferred (setTimeout 0) so react-hooks/set-state-in-effect stays clean.
+   */
+  useEffect(() => {
+    if (!deepLinkJobId) {
+      deepLinkAttemptedRef.current = null;
+      // Defer: avoid synchronous setState in effect body.
+      const t = window.setTimeout(() => setDeepLinkResolve("idle"), 0);
+      return () => window.clearTimeout(t);
+    }
+    if (!me?.signedIn || !jobsReady) return;
+    // AIT-319: list fail already owns the UI — do not resolve to not-your-toy.
+    if (listLoad === "error" || listLoad === "timeout") {
+      const t = window.setTimeout(() => setDeepLinkResolve("unavailable"), 0);
+      return () => window.clearTimeout(t);
+    }
+
+    // Owned via list membership — mark owned (async setState; UI also trusts listHasDeepLink).
+    if (listHasDeepLink) {
+      const t = window.setTimeout(() => setDeepLinkResolve("owned"), 0);
+      return () => window.clearTimeout(t);
+    }
+
+    if (deepLinkAttemptedRef.current === deepLinkJobId) {
+      // Already resolved this id as not-yours/unavailable (or in-flight completed).
+      return;
+    }
+    deepLinkAttemptedRef.current = deepLinkJobId;
+
+    let cancelled = false;
+    const t = window.setTimeout(() => {
+      setDeepLinkResolve("resolving");
+      void (async () => {
+        try {
+          const headers = await privateDownloadHeaders();
+          const response = await fetch(
+            `/api/generations/${encodeURIComponent(deepLinkJobId)}`,
+            { headers, cache: "no-store" }
+          );
+          const body = (await response.json()) as {
+            ok?: boolean;
+            job?: GenerationJob;
+            code?: string;
+          };
+          if (cancelled) return;
+          const job = body.job;
+          // Fail-closed: require ok + visible account job (never owned:false / demo).
+          if (
+            response.ok &&
+            body.ok &&
+            job &&
+            job.id === deepLinkJobId &&
+            visibleAccountJob(job)
+          ) {
+            setJobs((prev) => {
+              if (prev.some((row) => row.id === job.id)) return prev;
+              return [job, ...prev];
+            });
+            setSelectedId(job.id);
+            setDeepLinkResolve("owned");
+            return;
+          }
+          // Transport / durable unavailable — never invent not-your-toy.
+          // AIT-357: detail 503 DURABLE_DETAIL_UNAVAILABLE shares the honesty path.
+          if (
+            response.status >= 500 ||
+            body.code === "DURABLE_LIST_UNAVAILABLE" ||
+            body.code === "DURABLE_DETAIL_UNAVAILABLE" ||
+            body.code === "DELIVERY_PIPELINE_UNAVAILABLE"
+          ) {
+            setDeepLinkResolve("unavailable");
+            return;
+          }
+          setDeepLinkResolve("not-yours");
+        } catch {
+          if (!cancelled) setDeepLinkResolve("unavailable");
+        }
+      })();
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+    // deepLinkResolve intentionally omitted — including it would cancel in-flight resolve.
+  }, [me?.signedIn, jobsReady, deepLinkJobId, listHasDeepLink, listLoad]);
+
+  /**
+   * Fail-closed not-your-toy only after resolve confirms foreign/missing.
+   * While resolving, keep loading — never flash media or invent metadata.
+   * List membership alone counts as owned (no media flash for foreign ids).
+   * AIT-319: unavailable is not not-your-toy (honest retry, no ownership claim).
    */
   const notYourToy =
     Boolean(me?.signedIn) &&
     jobsReady &&
     Boolean(deepLinkJobId) &&
-    !sortedJobs.some((job) => job.id === deepLinkJobId);
+    !listHasDeepLink &&
+    deepLinkResolve === "not-yours" &&
+    listLoad !== "error" &&
+    listLoad !== "timeout";
+  const deepLinkUnavailable =
+    Boolean(me?.signedIn) &&
+    jobsReady &&
+    Boolean(deepLinkJobId) &&
+    !listHasDeepLink &&
+    deepLinkResolve === "unavailable" &&
+    listLoad !== "error" &&
+    listLoad !== "timeout";
+  const deepLinkPending =
+    Boolean(me?.signedIn) &&
+    jobsReady &&
+    Boolean(deepLinkJobId) &&
+    !listHasDeepLink &&
+    listLoad !== "error" &&
+    listLoad !== "timeout" &&
+    deepLinkResolve !== "not-yours" &&
+    deepLinkResolve !== "unavailable" &&
+    deepLinkResolve !== "owned";
 
   useEffect(() => {
     if (!me?.signedIn || openCount === 0) return;
@@ -465,20 +738,47 @@ function LibraryGridInner() {
   async function retry(job: GenerationJob) {
     setForkingId(job.id);
     try {
+      // Bearer required so durable owner path can emit DURABLE_* (not bare NOT_FOUND).
+      const headers = await privateDownloadHeaders();
       const response = await fetch(
         `/api/generations/${encodeURIComponent(job.id)}/retry`,
-        { method: "POST" }
+        { method: "POST", headers, cache: "no-store" }
       );
       const body = (await response.json()) as {
         ok?: boolean;
         message?: string;
         code?: string;
+        durable?: boolean;
         next?: {
           createUi?: string;
           retryJobId?: string;
           retryToken?: string;
+          newAttempt?: boolean;
         };
       };
+      // Durable fail-closed: never invent process-memory retry — open Create.
+      // Navigate only through acceptLibraryCreateNavigation (no open redirect).
+      if (!response.ok && body.code === "DURABLE_USE_NEW_ATTEMPT") {
+        window.location.href = acceptLibraryCreateNavigation(
+          body.next?.createUi
+        );
+        return;
+      }
+      // AIT-254: in-flight / already-succeeded durable — honest toast + refresh.
+      if (
+        !response.ok &&
+        (body.code === "DURABLE_IN_FLIGHT" ||
+          body.code === "DURABLE_ALREADY_SUCCEEDED")
+      ) {
+        toast(
+          body.message ||
+            (body.code === "DURABLE_IN_FLIGHT"
+              ? "This Moment is still rendering. Refresh Library."
+              : "This Moment already succeeded. Open Create for a new attempt.")
+        );
+        await refreshJobs();
+        return;
+      }
       if (!response.ok || !body.ok) {
         toast(body.message || "This Moment could not be prepared for retry");
         return;
@@ -494,16 +794,16 @@ function LibraryGridInner() {
           return;
         }
       }
-      const createUi =
-        body.next?.createUi?.startsWith("/")
-          ? body.next.createUi
-          : createRemixHref(
-              job.effect || "street-power-up",
-              undefined,
-              null,
-              remixOptsFromRecord(job)
-            );
-      window.location.href = createUi;
+      const remixFallback = createRemixHref(
+        job.effect || "street-power-up",
+        undefined,
+        null,
+        remixOptsFromRecord(job)
+      );
+      window.location.href = acceptLibraryCreateNavigation(
+        body.next?.createUi,
+        remixFallback.startsWith("/create") ? remixFallback : CREATE_MOMENT_HREF
+      );
     } catch {
       toast("Retry could not be prepared. Please try again.");
     } finally {
@@ -512,16 +812,37 @@ function LibraryGridInner() {
   }
 
   async function cancel(job: GenerationJob) {
+    // Fail-closed: durable rows never post process-memory Cancel.
+    if (!canLocalCancel(job)) {
+      toast(
+        "This Moment cannot be canceled from process memory. Refresh Library."
+      );
+      return;
+    }
     setCancellingId(job.id);
     try {
+      // Bearer so owner durable UUID can return DURABLE_NO_CANCEL (parity with
+      // cancelGenerateLedger / list+detail owner gates).
+      const headers = await privateDownloadHeaders();
       const response = await fetch(
         `/api/generations/${encodeURIComponent(job.id)}`,
-        { method: "DELETE" }
+        { method: "DELETE", headers, cache: "no-store" }
       );
       const body = (await response.json()) as {
         ok?: boolean;
         message?: string;
+        code?: string;
+        durable?: boolean;
       };
+      // AIT-183: durable Cancel is server-gated — refresh, never invent cancel success.
+      if (!response.ok && body.code === "DURABLE_NO_CANCEL") {
+        toast(
+          body.message ||
+            "This durable Moment cannot use process-memory Cancel. Refresh Library."
+        );
+        await refreshJobs();
+        return;
+      }
       if (!response.ok || !body.ok) {
         toast(body.message || "Could not cancel this render");
         return;
@@ -535,11 +856,64 @@ function LibraryGridInner() {
     }
   }
 
-  if (!accountReady || !jobsReady) {
+  if (!accountReady || !jobsReady || deepLinkPending) {
     return (
-      <div className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]">
+      <div
+        className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]"
+        data-library-state={deepLinkPending ? "deep-link-resolving" : "loading"}
+        data-library-boot="checking"
+      >
         <p className="text-sm font-semibold text-white/45">Loading your Library…</p>
       </div>
+    );
+  }
+
+  // Access check timed out — fail-closed: no guest claim, no owner jobs, no demos.
+  if (sessionBoot === "timeout") {
+    return (
+      <section
+        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        data-library-state="session-timeout"
+        data-library-boot="timeout"
+      >
+        <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
+          <div className="max-w-lg">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/45">
+              Private Library
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+              Could not verify access in time.
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
+              Session lookup timed out. We will not load private jobs, claim
+              guest status, or show public sample clips until access is checked
+              again.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => loadAccount()}
+                data-library-boot-retry
+                className="btn btn-primary text-sm"
+              >
+                Retry access check
+              </button>
+              <Link
+                href={
+                  deepLinkJobId
+                    ? `/login?next=${encodeURIComponent(
+                        `/library?job=${encodeURIComponent(deepLinkJobId)}`
+                      )}`
+                    : "/login?next=/library"
+                }
+                className="btn btn-ghost text-sm"
+              >
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     );
   }
 
@@ -548,6 +922,7 @@ function LibraryGridInner() {
       <section
         className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
         data-library-state="guest"
+        data-library-boot="ready"
       >
         <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
           <div className="max-w-lg">
@@ -581,6 +956,96 @@ function LibraryGridInner() {
               </Link>
               <Link href={CREATE_MOMENT_HREF} className="btn btn-ghost text-sm">
                 Preview Street Power-Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Owner list failed/timed out before any successful body — honest retry, not empty shelf.
+  if (listLoad === "error" || listLoad === "timeout") {
+    const isTimeout = listLoad === "timeout";
+    return (
+      <section
+        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        data-library-state={isTimeout ? "list-timeout" : "list-error"}
+        data-library-list-load={listLoad}
+        data-library-boot="ready"
+      >
+        <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
+          <div className="max-w-lg">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">
+              Private Library
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+              {isTimeout
+                ? "Could not load your Library in time."
+                : "Could not load your private results."}
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
+              {isTimeout
+                ? "The owner list timed out. We will not invent public sample clips or treat this as an empty shelf."
+                : "Private list access failed. Your account Moments are not shown as empty — retry when the network is ready."}
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => void refreshJobs()}
+                disabled={refreshing}
+                data-library-list-retry
+                className="btn btn-primary text-sm disabled:opacity-50"
+              >
+                {refreshing ? "Retrying…" : "Retry Library"}
+              </button>
+              <Link href={EMPTY_360_HREF} className="btn btn-ghost text-sm">
+                Generate 360° Spin
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // AIT-319: deep-link verify transport/5xx — honest retry, never "not your toy".
+  if (deepLinkUnavailable) {
+    return (
+      <section
+        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        data-library-state="deep-link-unavailable"
+        data-library-deep-link="unavailable"
+      >
+        <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
+          <div className="max-w-lg">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">
+              Private Library
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+              Could not verify this Moment.
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
+              Ownership check failed due to a network or private storage error.
+              We will not claim this is not your toy — retry when the connection
+              is ready.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  deepLinkAttemptedRef.current = null;
+                  setDeepLinkResolve("idle");
+                  void refreshJobs();
+                }}
+                disabled={refreshing}
+                data-library-deep-link-retry
+                className="btn btn-primary text-sm disabled:opacity-50"
+              >
+                {refreshing ? "Retrying…" : "Retry verify"}
+              </button>
+              <Link href="/library" className="btn btn-ghost text-sm">
+                Open Library
               </Link>
             </div>
           </div>
@@ -625,7 +1090,12 @@ function LibraryGridInner() {
   }
 
   return (
-    <section className="mt-6" data-library-state={sortedJobs.length ? "filled" : "empty"}>
+    <section
+      className="mt-6"
+      data-library-state={sortedJobs.length ? "filled" : "empty"}
+      data-library-list-load={listLoad}
+      data-library-boot="ready"
+    >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--neon-pink)]">
@@ -643,10 +1113,22 @@ function LibraryGridInner() {
             onClick={() => void refreshJobs()}
             disabled={refreshing}
             className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs disabled:opacity-50"
+            data-library-list-refresh
           >
             {refreshing ? "Refreshing…" : "Refresh"}
           </button>
-          <Link href={CREATE_MOMENT_HREF} className="btn btn-primary min-h-11 !px-4 !py-2 text-xs">
+          <Link
+            href={EMPTY_360_HREF}
+            className="btn btn-primary min-h-11 !px-4 !py-2 text-xs"
+            data-library-header-cta="generate-360"
+          >
+            Generate 360° Spin
+          </Link>
+          <Link
+            href={EMPTY_MOMENT_HREF}
+            className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs"
+            data-library-header-cta="moment"
+          >
             Create new Moment
           </Link>
         </div>
@@ -665,9 +1147,22 @@ function LibraryGridInner() {
               Generated results will return here after refresh. Only private,
               downloadable account results are kept in this view.
             </p>
-            <Link href={CREATE_MOMENT_HREF} className="btn btn-primary mt-7 text-sm">
-              Create Street Power-Up
-            </Link>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Link
+                href={EMPTY_360_HREF}
+                className="btn btn-primary text-sm"
+                data-library-empty-cta="generate-360"
+              >
+                Generate 360° Spin
+              </Link>
+              <Link
+                href={EMPTY_MOMENT_HREF}
+                className="btn btn-ghost text-sm"
+                data-library-empty-cta="moment"
+              >
+                Create Street Power-Up
+              </Link>
+            </div>
           </div>
         </div>
       ) : (

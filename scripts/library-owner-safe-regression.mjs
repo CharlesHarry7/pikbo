@@ -1,17 +1,21 @@
 #!/usr/bin/env node
 /**
- * AIT-41: Library owner-safe recovery — list, retry, input bind, not-your-toy.
+ * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-254 / AIT-274:
+ * Library owner-safe recovery.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped list/detail, non-owner deny (no metadata leak),
- * retry / new-attempt paths, honest inputBound placeholder, and deep-link
- * fail-closed copy.
+ * retry / cancel (item + collection) / new-attempt paths, owner-ready asset
+ * bind gate, guest deep-link login next, deep-link fail-closed copy,
+ * client Bearer on retry/cancel so durable DURABLE_* codes can resolve, and
+ * pure merge dropping owned:false before page slice (AIT-274).
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  isOwnerVisibleLibraryJob,
   libraryInputBindingCopy,
   libraryInputBoundFromAssetId,
   libraryNotYourToyCopy,
@@ -28,6 +32,7 @@ const generationsList = read("app/api/generations/route.ts");
 const generationsDetail = read("app/api/generations/[id]/route.ts");
 const library = read("components/LibraryGrid.tsx");
 const retryRoute = read("app/api/generations/[id]/retry/route.ts");
+const privateToyAssets = read("lib/privateToyAssets.ts");
 const pkg = read("package.json");
 
 // ─── Source contracts: owner list ──────────────────────────────────────────
@@ -51,6 +56,12 @@ assert.doesNotMatch(
   "list must not accept a cross-user userId query/body"
 );
 assert.match(generationsList, /inputBound:\s*false/);
+// AIT-148 / AIT-274: list body never ships owned:false stubs (route + pure merge).
+assert.match(generationsList, /isOwnerVisibleLibraryJob/);
+assert.match(generationsList, /ownerJobs/);
+assert.match(pure, /isOwnerVisibleLibraryJob/);
+assert.match(pure, /ownerDurableJobs|isOwnerVisibleLibraryJob\(job\)/);
+assert.match(results, /isOwnerVisibleLibraryJob/);
 
 // ─── Source contracts: detail fail-closed ──────────────────────────────────
 
@@ -58,6 +69,30 @@ assert.match(generationsDetail, /getPrivateLibraryJobForOwner/);
 assert.match(generationsDetail, /getAuthUserFromRequest/);
 assert.match(generationsDetail, /sessionId === session\.id/);
 assert.match(generationsDetail, /code:\s*"NOT_FOUND"/);
+// AIT-183: durable Moments never use process-memory Cancel (item DELETE).
+assert.match(generationsDetail, /DURABLE_NO_CANCEL/);
+assert.match(
+  generationsDetail,
+  /export async function DELETE\(req: Request/
+);
+// AIT-193: collection DELETE /api/generations same durable cancel codes.
+assert.match(generationsList, /DURABLE_NO_CANCEL/);
+assert.match(
+  generationsList,
+  /export async function DELETE\(req: Request/
+);
+assert.match(generationsList, /getPrivateLibraryJobForOwner/);
+assert.match(
+  generationsList,
+  /result\.code === "NOT_FOUND" && id && isUuid\(id\)/
+);
+assert.match(
+  generationsList,
+  /code:\s*"DURABLE_NO_CANCEL"/
+);
+// Missing/foreign stay uniform NOT_FOUND (no ownership leak on either surface).
+assert.match(generationsList, /code:\s*result\.code/);
+assert.match(generationsDetail, /code:\s*result\.code/);
 // Detail response must not invent foreign-owner metadata fields.
 assert.doesNotMatch(generationsDetail, /created_by\s*:/);
 // No provider / signed URL leakage on detail.
@@ -69,15 +104,85 @@ assert.match(retryRoute, /forkRetryJob/);
 assert.match(retryRoute, /NOT_OWNED/);
 assert.match(retryRoute, /createUi/);
 assert.match(retryRoute, /retryToken/);
+// AIT-148/AIT-162: durable Moments never fork process-memory Retry.
+assert.match(retryRoute, /DURABLE_USE_NEW_ATTEMPT/);
+assert.match(retryRoute, /DURABLE_IN_FLIGHT/);
+assert.match(retryRoute, /DURABLE_ALREADY_SUCCEEDED/);
+assert.match(retryRoute, /getPrivateLibraryJobForOwner/);
+assert.match(retryRoute, /getAuthUserFromRequest/);
+// AIT-162: retry Create handoff must pass acceptControlled — not loose startsWith.
+assert.match(retryRoute, /acceptControlledLibraryNewAttemptUrl/);
+assert.doesNotMatch(
+  retryRoute,
+  /newAttemptUrl\.startsWith\(/,
+  "retry must not use loose startsWith on newAttemptUrl"
+);
 assert.match(library, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}\/retry/);
 assert.match(library, /void retry\(job\)/);
 assert.match(library, /isRetryable\(job\.status\)[\s\S]{0,350}void retry\(job\)/);
 assert.match(library, /isOpen\(job\.status\)[\s\S]{0,350}void cancel\(job\)/);
+// AIT-183: client Cancel fail-closed for durable rows.
+assert.match(library, /DURABLE_NO_CANCEL/);
+assert.match(
+  library,
+  /canLocalCancel[\s\S]{0,280}durable === true[\s\S]{0,120}return false/
+);
+assert.match(
+  library,
+  /async function cancel[\s\S]{0,200}canLocalCancel\(job\)/
+);
+// Static guest login keeps engine-smoke / launch-pack contract.
 assert.match(library, /href=["']\/login\?next=\/library["']/);
+// AIT-193: guest deep-link preserves /library?job=<uuid> through login next.
+assert.match(
+  library,
+  /\/login\?next=\$\{encodeURIComponent\(\s*`\/library\?job=\$\{encodeURIComponent\(deepLinkJobId\)\}`\s*\)\}/
+);
+assert.match(library, /deepLinkJobId[\s\S]{0,120}\/login\?next=/);
 assert.match(library, /data-library-action="retry"/);
 assert.match(library, /data-library-action="new-attempt"/);
 assert.match(library, /canLocalRetry\(job\)/);
 assert.match(library, /canNewAttempt\(job\)/);
+assert.match(library, /DURABLE_USE_NEW_ATTEMPT/);
+// AIT-254: client Retry attaches Bearer so durable owner path can resolve.
+assert.match(
+  library,
+  /async function retry[\s\S]{0,400}privateDownloadHeaders\(\)[\s\S]{0,240}method:\s*["']POST["']/
+);
+assert.match(library, /DURABLE_IN_FLIGHT/);
+assert.match(library, /DURABLE_ALREADY_SUCCEEDED/);
+// AIT-254: client Cancel attaches Bearer (item DELETE durable code parity).
+assert.match(
+  library,
+  /async function cancel[\s\S]{0,600}privateDownloadHeaders\(\)[\s\S]{0,240}method:\s*["']DELETE["']/
+);
+// AIT-162: client Retry navigation fail-closed (no open redirect via startsWith("/")).
+assert.match(library, /acceptLibraryCreateNavigation/);
+assert.doesNotMatch(
+  library,
+  /body\.next\?\.createUi\.startsWith\(["']\/["']\)/,
+  "LibraryGrid must not navigate on bare startsWith('/')"
+);
+// Durable rows never hit process-memory Retry (AIT-103 fail-closed).
+assert.match(
+  library,
+  /canLocalRetry[\s\S]{0,280}durable === true[\s\S]{0,120}return false/
+);
+assert.match(
+  library,
+  /canLocalRetry[\s\S]{0,280}adapter === ["']supabase-private["'][\s\S]{0,80}return false/
+);
+// Deep-link resolve uses owner detail API — never invent media for foreign ids.
+assert.match(
+  library,
+  /\/api\/generations\/\$\{encodeURIComponent\(deepLinkJobId\)\}/
+);
+assert.match(library, /data-library-state=\{deepLinkPending \? "deep-link-resolving"/);
+assert.match(library, /deepLinkResolve === "not-yours"/);
+assert.match(library, /visibleAccountJob\(job\)/);
+// Empty / header CTAs stay 360-first (libraryEmpty helpers).
+assert.match(library, /libraryEmpty360Href|EMPTY_360_HREF/);
+assert.match(library, /data-library-empty-cta="generate-360"/);
 // No fake progress bars / simulated percent.
 assert.doesNotMatch(library, /progress-bar|fakeProgress|percentComplete|Math\.random\(\)/i);
 
@@ -88,6 +193,12 @@ assert.match(pure, /libraryInputBindingCopy/);
 assert.match(pure, /libraryNotYourToyCopy/);
 assert.match(pure, /inputBound/);
 assert.match(results, /inputBound:\s*boolean/);
+// AIT-148: same-photo handoff only after owner-ready asset membership.
+assert.match(results, /gateLibrarySamePhotoHandoffs/);
+assert.match(results, /listReadyOwnerAssetIds/);
+assert.match(privateToyAssets, /listReadyOwnerAssetIds/);
+assert.match(privateToyAssets, /\.eq\("owner_user_id"/);
+assert.match(privateToyAssets, /\.eq\("state",\s*"ready"\)/);
 assert.match(library, /libraryInputBindingCopy/);
 assert.match(library, /libraryNotYourToyCopy/);
 assert.match(library, /data-library-input-bound=/);
@@ -201,6 +312,24 @@ const boundFailed = privateLibraryJobFromRow({
 assert.ok(boundFailed);
 assert.equal(boundFailed.inputBound, true);
 assert.ok(boundFailed.newAttemptUrl?.includes(inputAssetId));
+// Durable fail-closed capabilities: no process-memory Retry/Cancel.
+assert.equal(boundFailed.capabilities.localRetry, false);
+assert.equal(boundFailed.capabilities.localCancel, false);
+assert.equal(boundFailed.capabilities.newAttempt, true);
+assert.equal(boundFailed.durable, true);
+assert.equal(boundFailed.adapter, "supabase-private");
+assert.equal(boundFailed.owned, true);
+
+const boundOpen = privateLibraryJobFromRow({
+  ...baseRow,
+  status: "running",
+  started_at: "2026-08-04T12:00:30.000Z",
+});
+assert.ok(boundOpen);
+assert.equal(boundOpen.capabilities.localRetry, false);
+assert.equal(boundOpen.capabilities.localCancel, false);
+assert.equal(boundOpen.capabilities.refreshOnly, true);
+assert.equal(boundOpen.capabilities.newAttempt, false);
 
 // ─── Pure: honest binding + not-your-toy copy ──────────────────────────────
 
@@ -220,7 +349,12 @@ assert.doesNotMatch(notYours, /videoUrl|provider|signed/i);
 assert.doesNotMatch(notYours, new RegExp(foreignJobId));
 assert.doesNotMatch(notYours, /preview|thumbnail|stream/i);
 
-// ─── Pure: owner list merge never mixes foreign owned:false stubs ──────────
+// ─── Pure: owner list merge never ships foreign owned:false stubs ──────────
+
+assert.equal(isOwnerVisibleLibraryJob({ owned: false }), false);
+assert.equal(isOwnerVisibleLibraryJob({ owned: true }), true);
+assert.equal(isOwnerVisibleLibraryJob({ id: "x" }), true);
+assert.equal(isOwnerVisibleLibraryJob(null), false);
 
 const localForeignStub = {
   id: foreignJobId,
@@ -246,14 +380,206 @@ const merged = mergePrivateLibraryWithLocalLedger({
   },
   listLimit: 50,
 });
-// Merge keeps local rows for counts but owner UI filters owned===false.
+// AIT-274: pure merge drops owned:false before page — jobs body is owner-only.
 assert.ok(Array.isArray(merged.jobs));
-const ownerOnlyVisible = merged.jobs.filter(
-  (j) => j.owned !== false && j.demo !== true
+assert.equal(
+  merged.jobs.some((j) => j.owned === false),
+  false,
+  "merge must not include owned:false stubs in jobs[]"
 );
-assert.ok(ownerOnlyVisible.some((j) => j.id === jobId));
+assert.equal(
+  merged.jobs.some((j) => j.id === foreignJobId),
+  false,
+  "foreign stub must not appear in owner list body"
+);
+assert.ok(merged.jobs.some((j) => j.id === jobId));
 // Durable owner job must carry inputBound truth.
-const listed = ownerOnlyVisible.find((j) => j.id === jobId);
+const listed = merged.jobs.find((j) => j.id === jobId);
 assert.equal(listed.inputBound, true);
+// Histogram may still reflect localCounts (ledger truth) even when stubs are
+// stripped from the page body.
+assert.equal(merged.byStatus.failed, 1);
+
+// AIT-274: owned:false stubs must not crowd owner jobs out of the page window.
+const crowdStubs = Array.from({ length: 50 }, (_, i) => ({
+  id: `aaaaaaaa-aaaa-4aaa-8aaa-${String(i).padStart(12, "0")}`,
+  status: "failed",
+  effect: "street-power-up",
+  owned: false,
+  downloadAllowed: false,
+  demo: false,
+  createdAt: `2026-08-04T13:${String(i).padStart(2, "0")}:00.000Z`,
+}));
+const crowded = mergePrivateLibraryWithLocalLedger({
+  durableJobs: [
+    {
+      ...boundSucceeded,
+      createdAt: "2026-08-04T10:00:00.000Z",
+    },
+  ],
+  localJobs: crowdStubs,
+  localCounts: {
+    queued: 0,
+    running: 0,
+    succeeded: 0,
+    failed: 50,
+    canceled: 0,
+    open: 0,
+    total: 50,
+  },
+  listLimit: 50,
+});
+assert.equal(crowded.jobs.length, 1);
+assert.equal(crowded.jobs[0].id, jobId);
+assert.equal(
+  crowded.jobs.every((j) => j.owned !== false),
+  true
+);
+
+// ─── AIT-311 residual: session boot 8s + list error/timeout honesty ────────
+
+const meClient = read("lib/meClient.ts");
+assert.match(library, /STUDIO_SESSION_BOOT_MS/);
+assert.match(
+  library,
+  /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/,
+  "LibraryGrid must bound session boot like Studio open"
+);
+assert.match(library, /isClientTimeoutError/);
+assert.match(library, /sessionBoot === "timeout"/);
+assert.match(library, /data-library-boot="timeout"/);
+assert.match(library, /data-library-boot-retry/);
+assert.match(library, /Retry access check/);
+assert.doesNotMatch(
+  library,
+  /void fetchMe\(\)\.then/,
+  "LibraryGrid must not use bare unbounded fetchMe()"
+);
+// List load: error/timeout surfaces — never invent empty shelf or public demos.
+assert.match(
+  library,
+  /isTimeout \? "list-timeout" : "list-error"/,
+  "list fail surfaces honest list-timeout / list-error states"
+);
+assert.match(library, /data-library-list-load=\{listLoad\}/);
+assert.match(library, /data-library-list-retry/);
+assert.match(library, /listLoad === "error" \|\| listLoad === "timeout"/);
+assert.match(library, /withTimeout/);
+assert.match(library, /will not invent public sample clips/i);
+assert.match(library, /not shown as empty/i);
+assert.doesNotMatch(
+  library,
+  /demoClips|demoVideos/,
+  "LibraryGrid must never invent public/demo clip rows on list failure"
+);
+// meClient wall-clock must cover getSession hang (authHeaders), not only /api/me abort.
+assert.match(meClient, /withTimeout/);
+assert.match(meClient, /Outer withTimeout covers authHeaders hang/);
+
+// ─── AIT-319 residual: durable list availability + deep-link verify honesty ─
+
+// listPrivateGenerationResults must surface unavailable — never silent [].
+assert.match(results, /ListPrivateGenerationResultsResult/);
+assert.match(results, /DURABLE_LIST_UNAVAILABLE/);
+assert.match(
+  results,
+  /listPrivateGenerationResults[\s\S]{0,1200}ok:\s*false,\s*code:\s*"DURABLE_LIST_UNAVAILABLE"/,
+  "durable list must return Result unavailable, not silent empty array"
+);
+assert.match(
+  results,
+  /return \{\s*ok:\s*true,\s*jobs/,
+  "legitimate empty shelf remains ok:true jobs"
+);
+// Signed-in GET must fail closed when durable list is unavailable.
+assert.match(generationsList, /DURABLE_LIST_UNAVAILABLE/);
+assert.match(generationsList, /status:\s*503/);
+assert.match(
+  generationsList,
+  /!durableList\.ok/,
+  "GET must branch on durable list Result.ok"
+);
+assert.match(
+  generationsList,
+  /Your Moments are not shown as empty/i,
+  "503 copy must refuse empty-shelf invention"
+);
+// Client: deep-link transport fail is unavailable, never not-your-toy.
+assert.match(library, /deepLinkUnavailable/);
+assert.match(library, /deep-link-unavailable/);
+assert.match(library, /data-library-deep-link="unavailable"/);
+assert.match(library, /data-library-deep-link-retry/);
+assert.match(library, /setDeepLinkResolve\("unavailable"\)/);
+assert.match(
+  library,
+  /listLoad === "error" \|\| listLoad === "timeout"/,
+  "deep-link must skip resolve while list fail owns honesty"
+);
+assert.match(
+  library,
+  /body\.code === "DURABLE_LIST_UNAVAILABLE"/,
+  "client must recognize durable list unavailable on refresh + resolve"
+);
+assert.doesNotMatch(
+  library,
+  /catch \{\s*if \(!cancelled\) setDeepLinkResolve\("not-yours"\)/,
+  "deep-link catch must not invent not-your-toy on network fail"
+);
+
+// ─── AIT-357 residual: durable detail availability (list/retry/asset bind) ──
+
+// getPrivateLibraryJobForOwner Result: found | null | unavailable (not null-only).
+assert.match(results, /GetPrivateLibraryJobForOwnerResult/);
+assert.match(results, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(
+  results,
+  /getPrivateLibraryJobForOwner[\s\S]{0,1600}ok:\s*false,\s*code:\s*"DURABLE_DETAIL_UNAVAILABLE"/,
+  "detail lookup must surface unavailable when admin/query fails"
+);
+assert.match(
+  results,
+  /if \(error\) return \{ ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" \}/,
+  "query error must not collapse to missing/not-owned"
+);
+assert.match(
+  results,
+  /if \(!admin\) return \{ ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" \}/,
+  "missing admin must be unavailable, not silent null"
+);
+// Detail GET: 503 on unavailable — deep-link never invents not-your-toy.
+assert.match(generationsDetail, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(
+  generationsDetail,
+  /!privateLookup\.ok[\s\S]{0,900}status:\s*503/,
+  "GET detail must 503 when durable verify is down"
+);
+assert.match(
+  generationsDetail,
+  /ownership is not denied/i,
+  "detail 503 copy must refuse ownership denial claim"
+);
+// Retry + item cancel + collection cancel: 503 when verify unavailable.
+assert.match(retryRoute, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(
+  retryRoute,
+  /!privateLookup\.ok[\s\S]{0,900}status:\s*503/,
+  "retry must 503 when durable verify is down — never process-memory fork"
+);
+assert.match(
+  generationsDetail,
+  /export async function DELETE[\s\S]*!privateLookup\.ok[\s\S]{0,900}status:\s*503/,
+  "item cancel must 503 when durable verify is down"
+);
+assert.match(
+  generationsList,
+  /!privateLookup\.ok[\s\S]{0,900}status:\s*503/,
+  "collection cancel must 503 when durable verify is down"
+);
+// Client deep-link: recognize detail unavailable code.
+assert.match(
+  library,
+  /body\.code === "DURABLE_DETAIL_UNAVAILABLE"/,
+  "deep-link resolve must treat DURABLE_DETAIL_UNAVAILABLE as unavailable"
+);
 
 console.log("library-owner-safe-regression: ok");

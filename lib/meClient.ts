@@ -309,9 +309,10 @@ async function authHeaders(): Promise<HeadersInit> {
 
 export async function fetchMe(opts?: {
   /**
-   * Wall-clock bound for Studio open so we never stay on "Opening…" forever.
-   * Covers BOTH supabase getSession (authHeaders) and /api/me — a hanging
-   * session lookup used to leave Opening stuck even when fetch had AbortController.
+   * Wall-clock bound for Studio / Library open so we never stay on "Opening…"
+   * or permanent "Loading your Library…" forever. Covers BOTH supabase
+   * getSession (authHeaders) and /api/me — a hanging session lookup used to
+   * leave chrome stuck even when fetch had AbortController.
    * On timeout, rejects with ClientTimeoutError (honest retry path).
    * Other network/auth failures still resolve null (soft public Lab fallback).
    */
@@ -356,7 +357,7 @@ export async function fetchMe(opts?: {
     }
     return await load();
   } catch (err) {
-    // Explicit Studio open contract: surface timeout, never swallow into null.
+    // Explicit Studio / Library open contract: surface timeout, never swallow into null.
     if (isClientTimeoutError(err)) throw err;
     const aborted =
       (err instanceof Error && err.name === "AbortError") ||

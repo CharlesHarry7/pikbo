@@ -778,7 +778,7 @@ assert.match(gen, /RIGHTS_REQUIRED|UNKNOWN_EFFECT/);
 // Library MVP contract: account results only, one generations ledger, and
 // owner-gated video delivery. This replaces the retired device-history,
 // stills-shelf, and Pack-specific Library UI assertions below.
-assert.match(library, /fetchMe\(\)/);
+assert.match(library, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
 assert.match(library, /if \(!me\?\.signedIn\)/);
 assert.match(library, /href=["']\/login\?next=\/library["']/);
 assert.match(library, /fetch\(["']\/api\/generations["']/);

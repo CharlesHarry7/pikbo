@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { listReadyOwnerAssetIds } from "@/lib/privateToyAssets";
 import {
+  acceptControlledLibraryNewAttemptUrl,
   parseProviderOutputHostAllowlist,
   privateLibraryJobFromRow,
   privateResultObjectKey,
@@ -12,6 +14,7 @@ import {
 export {
   acceptControlledLibraryNewAttemptUrl,
   controlledLibraryNewAttemptUrl,
+  isOwnerVisibleLibraryJob,
   libraryDurableTerminalFailureCopy,
   libraryInputBindingCopy,
   libraryInputBoundFromAssetId,
@@ -385,19 +388,98 @@ const LIBRARY_COLUMNS = [
 ].join(",");
 
 /**
+ * Same-photo Create handoff only when the bound toy asset is still ready and
+ * owned by this user. UUID-shaped input_asset_id alone is not enough — deleted,
+ * pending, rejected, or foreign assets must not mint a newAttemptUrl.
+ * inputBound stays true when the durable row carries a UUID binding (honest
+ * column truth); only the Create handoff is gated.
+ */
+async function gateLibrarySamePhotoHandoffs(input: {
+  userId: string;
+  jobs: PrivateLibraryJob[];
+}): Promise<PrivateLibraryJob[]> {
+  const jobs = input.jobs;
+  if (jobs.length === 0) return jobs;
+
+  const candidateAssetIds: string[] = [];
+  for (const job of jobs) {
+    if (!job.newAttemptUrl) continue;
+    const accepted = acceptControlledLibraryNewAttemptUrl(job.newAttemptUrl);
+    if (!accepted) continue;
+    try {
+      const assetId = new URL(accepted, "https://pikbo.local").searchParams
+        .get("assetId")
+        ?.trim()
+        .toLowerCase();
+      if (assetId) candidateAssetIds.push(assetId);
+    } catch {
+      /* ignore malformed */
+    }
+  }
+
+  const readyIds =
+    candidateAssetIds.length > 0
+      ? await listReadyOwnerAssetIds({
+          ownerUserId: input.userId,
+          assetIds: candidateAssetIds,
+        })
+      : new Set<string>();
+
+  return jobs.map((job) => {
+    if (!job.newAttemptUrl) return job;
+    const accepted = acceptControlledLibraryNewAttemptUrl(job.newAttemptUrl);
+    if (!accepted) {
+      const { newAttemptUrl: _drop, ...rest } = job;
+      void _drop;
+      return rest as PrivateLibraryJob;
+    }
+    let assetId = "";
+    try {
+      assetId =
+        new URL(accepted, "https://pikbo.local").searchParams
+          .get("assetId")
+          ?.trim()
+          .toLowerCase() || "";
+    } catch {
+      assetId = "";
+    }
+    if (!assetId || !readyIds.has(assetId)) {
+      const { newAttemptUrl: _drop, ...rest } = job;
+      void _drop;
+      return rest as PrivateLibraryJob;
+    }
+    return { ...job, newAttemptUrl: accepted };
+  });
+}
+
+/**
+ * Owner-only durable Library list outcome.
+ * AIT-319: distinguish a true empty shelf from durable storage/query failure.
+ * Callers must not map unavailable → ok:true jobs:[] (that invents an empty
+ * Library for signed-in owners when private rows could not be read).
+ */
+export type ListPrivateGenerationResultsResult =
+  | { ok: true; jobs: PrivateLibraryJob[] }
+  | { ok: false; code: "DURABLE_LIST_UNAVAILABLE" };
+
+/**
  * Owner-only durable Library rows across open + terminal statuses.
  * Object keys, signed URLs, provider IDs, prompts, hashes, raw input_asset_id,
  * and user identity stay server-side. Callers expose only the controlled
  * /api/downloads/{jobId} gate for deliverable successes, a narrow newAttemptUrl
  * Create handoff when a terminal row has a UUID input binding, and capability
  * flags so the UI never posts durable rows to process-memory Retry/Cancel.
+ *
+ * Fail-closed availability (AIT-319): missing admin client or query error
+ * returns `{ ok: false, code: "DURABLE_LIST_UNAVAILABLE" }` — never a silent
+ * empty array. Legitimate zero rows remain `{ ok: true, jobs: [] }`.
  */
 export async function listPrivateGenerationResults(input: {
   userId: string;
   limit?: number;
-}): Promise<PrivateLibraryJob[]> {
+}): Promise<ListPrivateGenerationResultsResult> {
   const admin = getSupabaseAdmin();
-  if (!admin) return [];
+  if (!admin) return { ok: false, code: "DURABLE_LIST_UNAVAILABLE" };
   const limit = Math.min(50, Math.max(1, Math.floor(input.limit ?? 50)));
   const { data, error } = await admin
     .from("generation_jobs")
@@ -406,24 +488,47 @@ export async function listPrivateGenerationResults(input: {
     .in("status", [...PRIVATE_LIBRARY_STATUSES])
     .order("created_at", { ascending: false })
     .limit(limit);
-  if (error || !Array.isArray(data)) return [];
-  return data
+  if (error || !Array.isArray(data)) {
+    return { ok: false, code: "DURABLE_LIST_UNAVAILABLE" };
+  }
+  const mapped = data
     .map((row) =>
       privateLibraryJobFromRow(row as unknown as Record<string, unknown>)
     )
     .filter((row): row is PrivateLibraryJob => Boolean(row));
+  const jobs = await gateLibrarySamePhotoHandoffs({
+    userId: input.userId,
+    jobs: mapped,
+  });
+  return { ok: true, jobs };
 }
+
+/**
+ * Owner-only durable Library detail outcome.
+ * AIT-357: distinguish missing/foreign (job: null) from storage/query failure
+ * so deep-link + retry never invent not-your-toy / process-memory 404 when
+ * private storage is simply down.
+ */
+export type GetPrivateLibraryJobForOwnerResult =
+  | { ok: true; job: PrivateLibraryJob }
+  | { ok: true; job: null }
+  | { ok: false; code: "DURABLE_DETAIL_UNAVAILABLE" };
 
 /**
  * Owner-only durable Library detail by job id.
  * Always filters created_by = userId so a foreign job id cannot leak status,
- * effect, video, or input metadata. Returns null for missing, non-owned, or
- * unavailable storage — callers map that to a uniform 404.
+ * effect, video, or input metadata.
+ *
+ * - `{ ok: true, job }` — owned durable row
+ * - `{ ok: true, job: null }` — missing, non-owned, invalid ids, or unmapped row
+ *   (callers map to uniform 404; no existence leak)
+ * - `{ ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" }` — admin/query down
+ *   (callers map to 503; never invent not-your-toy)
  */
 export async function getPrivateLibraryJobForOwner(input: {
   jobId: string;
   userId: string;
-}): Promise<PrivateLibraryJob | null> {
+}): Promise<GetPrivateLibraryJobForOwnerResult> {
   const jobId = typeof input.jobId === "string" ? input.jobId.trim() : "";
   const userId = typeof input.userId === "string" ? input.userId.trim() : "";
   if (
@@ -434,10 +539,10 @@ export async function getPrivateLibraryJobForOwner(input: {
       userId
     )
   ) {
-    return null;
+    return { ok: true, job: null };
   }
   const admin = getSupabaseAdmin();
-  if (!admin) return null;
+  if (!admin) return { ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" };
   const { data, error } = await admin
     .from("generation_jobs")
     .select(LIBRARY_COLUMNS)
@@ -445,10 +550,18 @@ export async function getPrivateLibraryJobForOwner(input: {
     .eq("created_by", userId)
     .in("status", [...PRIVATE_LIBRARY_STATUSES])
     .maybeSingle();
-  if (error || !data) return null;
-  return privateLibraryJobFromRow(
+  // Query failure ≠ missing row — fail closed as unavailable.
+  if (error) return { ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" };
+  if (!data) return { ok: true, job: null };
+  const mapped = privateLibraryJobFromRow(
     data as unknown as Record<string, unknown>
   ) as PrivateLibraryJob | null;
+  if (!mapped) return { ok: true, job: null };
+  const [gated] = await gateLibrarySamePhotoHandoffs({
+    userId,
+    jobs: [mapped],
+  });
+  return gated ? { ok: true, job: gated } : { ok: true, job: null };
 }
 
 export async function signedPrivateResultUrl(
