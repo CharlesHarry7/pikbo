@@ -666,6 +666,13 @@ function LibraryGridInner() {
   }
 
   async function cancel(job: GenerationJob) {
+    // Fail-closed: durable rows never post process-memory Cancel.
+    if (!canLocalCancel(job)) {
+      toast(
+        "This Moment cannot be canceled from process memory. Refresh Library."
+      );
+      return;
+    }
     setCancellingId(job.id);
     try {
       const response = await fetch(
@@ -675,7 +682,18 @@ function LibraryGridInner() {
       const body = (await response.json()) as {
         ok?: boolean;
         message?: string;
+        code?: string;
+        durable?: boolean;
       };
+      // AIT-183: durable Cancel is server-gated — refresh, never invent cancel success.
+      if (!response.ok && body.code === "DURABLE_NO_CANCEL") {
+        toast(
+          body.message ||
+            "This durable Moment cannot use process-memory Cancel. Refresh Library."
+        );
+        await refreshJobs();
+        return;
+      }
       if (!response.ok || !body.ok) {
         toast(body.message || "Could not cancel this render");
         return;
