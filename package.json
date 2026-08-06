@@ -61,6 +61,7 @@
     "private-input-admission-regression": "node --experimental-strip-types scripts/private-input-admission-regression.mjs",
     "durable-library-statuses-regression": "node scripts/durable-library-statuses-regression.mjs",
     "create-same-photo-handoff-regression": "node scripts/create-same-photo-handoff-regression.mjs",
+    "create-generate-assetid-regression": "node scripts/create-generate-assetid-regression.mjs",
     "library-owner-safe-regression": "node scripts/library-owner-safe-regression.mjs",
     "nonprod-seller-pack-harness": "node scripts/nonprod-seller-pack-harness.mjs",
     "nonprod-seller-pack-harness-regression": "node scripts/nonprod-seller-pack-harness-regression.mjs",
