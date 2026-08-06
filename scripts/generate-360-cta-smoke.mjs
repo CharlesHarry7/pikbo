@@ -930,4 +930,21 @@ assert.match(
   "FreeTrialCta primary text uses --primary-foreground (void) on copper fill"
 );
 
+// AIT-559: CreateStudio residual carnival pink rgba → gallery-calm copper
+assert.doesNotMatch(
+  createStudio,
+  /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i,
+  "CreateStudio must not hard-code carnival pink RGB (#FF4ECD / rgba 255,78,205)"
+);
+assert.doesNotMatch(
+  createStudio,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "CreateStudio must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  createStudio,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "CreateStudio focus/selection/drop/recipe/post-gen glows use copper rgba(196,165,116)"
+);
+
 console.log("generate-360-cta-smoke: ok");
