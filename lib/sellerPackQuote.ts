@@ -74,18 +74,25 @@ export function sellerPackShortfall(
 /**
  * Preflight for starting a live multi-child pack.
  * Cached demos always ok. Unknown balance does not hard-block.
- * Free Mini (10 credits) cannot start a 30-credit full pack — PRD §6.
+ * Free Mini (10 credits) cannot start a 30-credit full pack — PRD §6 —
+ * but Free Mini product-cap copy only when freeLiveOpen (fail-closed).
+ * While Live is closed: Live gated / Cached Lab honesty — no invented Free Mini pack credits.
  */
 export function sellerPackLiveStartAllowed(opts: {
   demo: boolean;
   balance: number | undefined;
   childCount: number;
   creditsPerChild?: number;
+  /**
+   * Free Mini product-cap shortfall (`FREE_MINI_FULL_PACK`) only when Live is open.
+   * Fail-closed when omitted or false — prefer Live gated · Launch Pack copy.
+   */
+  freeLiveOpen?: boolean;
 }):
   | { ok: true }
   | {
       ok: false;
-      code: "INSUFFICIENT_CREDITS" | "FREE_MINI_FULL_PACK";
+      code: "INSUFFICIENT_CREDITS" | "FREE_MINI_FULL_PACK" | "LIVE_GATED_FULL_PACK";
       need: number;
       have: number;
       message: string;
@@ -96,15 +103,27 @@ export function sellerPackLiveStartAllowed(opts: {
   const need = Math.max(1, opts.childCount) * per;
   const have = opts.balance;
   if (have >= need) return { ok: true };
-  // Exactly or at most one live child on Free Mini — never sell a full pack start.
+  const freeLiveOpen = opts.freeLiveOpen === true;
+  // Exactly or at most one live child worth of balance — never sell a full pack start.
   if (have < need && have < SELLER_PACK_QUOTE_CREDITS && need >= SELLER_PACK_QUOTE_CREDITS) {
+    if (freeLiveOpen) {
+      return {
+        ok: false,
+        code: "FREE_MINI_FULL_PACK",
+        need,
+        have,
+        message:
+          "Full Seller Starter Pack needs 30 live credits. Free Mini covers one 10-credit child — open single Generate for that recipe, or use cached previews at 0 credits.",
+      };
+    }
+    // Soft-launch honesty: do not invent Free Mini pack credits while Live is closed.
     return {
       ok: false,
-      code: "FREE_MINI_FULL_PACK",
+      code: "LIVE_GATED_FULL_PACK",
       need,
       have,
       message:
-        "Full Seller Starter Pack needs 30 live credits. Free Mini covers one 10-credit child — open single Generate for that recipe, or use cached previews at 0 credits.",
+        "Live gated · Launch Pack needs 30 live credits when Live opens. Cached Lab previews stay free at 0 credits.",
     };
   }
   return {
@@ -112,7 +131,9 @@ export function sellerPackLiveStartAllowed(opts: {
     code: "INSUFFICIENT_CREDITS",
     need,
     have,
-    message: `Need ${need} credits for this pack, session has ${have}. Failed children refund 10 when confirmed.`,
+    message: freeLiveOpen
+      ? `Need ${need} credits for this pack, session has ${have}. Failed children refund 10 when confirmed.`
+      : `Live gated · Launch Pack needs ${need} live credits when Live opens (session has ${have}). Cached Lab previews stay free at 0 credits.`,
   };
 }
 

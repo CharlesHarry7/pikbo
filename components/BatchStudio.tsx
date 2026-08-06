@@ -987,11 +987,13 @@ export function BatchStudio({
     }
 
     // Phase F / PRD §6: never start a live full pack on Free Mini (10 < 30).
+    // Free Mini product-cap copy only when freeLiveOpen; else Live gated honesty.
     // Cached demos stay free. Live children use generate cost gate (not cookie).
     const liveStart = sellerPackLiveStartAllowed({
       demo: demoMode,
       balance: typeof me?.credits === "number" ? me.credits : undefined,
       childCount: selected.length,
+      freeLiveOpen,
     });
     if (!liveStart.ok) {
       setError(liveStart.message);
