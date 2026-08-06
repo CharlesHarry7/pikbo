@@ -326,49 +326,45 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Sticky Generate→360 on browse surfaces (explore/library/pricing/models/flow…).
-          Self-gates via showBar; clearance tokens from AIT-71. */}
+          Self-gates via showBar; clearance uses --mobile-nav-clearance (AIT-150 / AIT-71). */}
       <MobileGenerateBar />
-      {!resultShell && !sellerPackCreate ? <nav
-        className={cn(
-          "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
-          home
-            ? "relative border-white/10 bg-[rgba(10,10,15,0.96)]"
-            : "sticky bottom-0 border-white/10 bg-[rgba(10,10,15,0.96)]"
-        )}
-        aria-label="Mobile navigation"
-      >
-        {MOBILE_NAV.map((item) => {
-          const on = active(path, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={on ? "page" : undefined}
-              className={cn(
-                "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
-                home
-                  ? on
-                    ? "text-[#FF4ECD]"
-                    : "text-white/45"
-                  : on
-                    ? "text-[#FF4ECD]"
-                    : "text-[var(--cream)]/38"
-              )}
-            >
-              <span
+      {!resultShell && !sellerPackCreate ? (
+        <nav
+          data-mobile-nav="primary"
+          className={cn(
+            // Tab content ≈ --mobile-nav-content-h; floating CTAs clear
+            // content-h + safe-area via --mobile-nav-clearance (AIT-150).
+            "z-50 grid grid-cols-5 border-t border-white/10 bg-[rgba(10,10,15,0.96)] px-1 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl lg:hidden",
+            home ? "relative" : "sticky bottom-0"
+          )}
+          aria-label="Mobile navigation"
+        >
+          {MOBILE_NAV.map((item) => {
+            const on = active(path, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={on ? "page" : undefined}
                 className={cn(
-                  "mb-1 h-1 w-1 rounded-full",
-                  on
-                    ? "bg-[#FF4ECD]"
-                    : "bg-transparent"
+                  // 44px min touch target; truncate labels so 5-up still fits 390px
+                  "flex min-h-11 min-w-0 flex-col items-center justify-center px-1 py-2.5 text-[10px] font-bold transition-colors",
+                  on ? "text-[#FF4ECD]" : "text-white/45"
                 )}
-                aria-hidden
-              />
-              <span className="truncate">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav> : null}
+              >
+                <span
+                  className={cn(
+                    "mb-1 h-1 w-1 rounded-full",
+                    on ? "bg-[#FF4ECD]" : "bg-transparent"
+                  )}
+                  aria-hidden
+                />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      ) : null}
     </div>
   );
 }
