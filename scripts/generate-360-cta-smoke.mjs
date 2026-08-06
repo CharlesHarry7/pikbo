@@ -165,4 +165,54 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
+// 5. AIT-232 Modules suite sticky CTAs: one primary Generate→360
+const modulesSuiteCtas = read("components/ModulesSuiteCtas.tsx");
+assert.match(
+  modulesSuiteCtas,
+  /data-modules-primary-generate=["']360["']/,
+  "ModulesSuiteCtas must mark primary Generate as 360"
+);
+assert.match(
+  modulesSuiteCtas,
+  /data-modules-primary-generate-cta/,
+  "ModulesSuiteCtas must expose primary Generate CTA marker"
+);
+assert.match(
+  modulesSuiteCtas,
+  /data-modules-path=["']photo-clip["']/,
+  "ModulesSuiteCtas primary door keeps photo-clip path marker"
+);
+assert.match(
+  modulesSuiteCtas,
+  /createGenerate360Href\(\s*["']modules-photo-clip["']\s*\)/,
+  "ModulesSuiteCtas primary Generate must use createGenerate360Href(modules-photo-clip)"
+);
+assert.match(
+  modulesSuiteCtas,
+  /Generate 360°/,
+  "ModulesSuiteCtas primary CTA label must say Generate 360°"
+);
+// Free / Lab / plans must not be a filled primary competing with Generate
+assert.match(
+  modulesSuiteCtas,
+  /border border-white\/20/,
+  "ModulesSuiteCtas Free/Lab/plans strip must be secondary outline"
+);
+assert.match(
+  modulesSuiteCtas,
+  /createLabSampleTryHref|data-modules-lab-sample=["']remix["']/,
+  "ModulesSuiteCtas keeps Lab sample remix contract as secondary"
+);
+// Tertiary suite doors stay outline (not filled primaries)
+assert.doesNotMatch(
+  modulesSuiteCtas,
+  /href=["']\/library["'][\s\S]{0,120}bg-\[(?:var\(--mint\)|#c8ff3d)\]/,
+  "ModulesSuiteCtas Library must not be a filled primary"
+);
+assert.doesNotMatch(
+  modulesSuiteCtas,
+  /href=["']\/flow["'][\s\S]{0,120}bg-\[(?:var\(--mint\)|#c8ff3d)\]/,
+  "ModulesSuiteCtas Flow must not be a filled primary"
+);
+
 console.log("generate-360-cta-smoke: ok");
