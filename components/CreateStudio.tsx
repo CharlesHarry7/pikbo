@@ -493,6 +493,7 @@ export function CreateStudio({
       // PIKBO Lab reference stills — not a visitor upload or verified provider input.
       setOwnsRights(true);
       if (autoGenerate) {
+        // Lab sample path is always cached 0 credits (never Free Mini Live spend).
         toast("Previewing PIKBO Lab prototype sample · cached · 0 credits…");
         await generate({
           imageOverride: data,
@@ -501,7 +502,9 @@ export function CreateStudio({
           labSampleId: s.id,
         });
       } else {
-        toast("PIKBO Lab prototype still ready — tap Generate when you want the clip");
+        toast(
+          "PIKBO Lab prototype still ready · 0 credits · tap Generate for cached preview"
+        );
       }
     } catch (err) {
       const timedOut = isClientTimeoutError(err);
@@ -2422,20 +2425,25 @@ export function CreateStudio({
                 prototypes cost 0 credits and never process your photo. One
                 tap loads the recipe and opens the preview path.
               </p>
-              <p className="mt-1 text-[10px] font-semibold text-[var(--mint)]">
-                Preview a Lab sample · cached prototype, not your upload.
+              <p
+                className="mt-1 text-[10px] font-semibold text-[var(--mint)]"
+                data-lab-sample-cost="0"
+              >
+                {freeLiveOpen
+                  ? "Lab sample · 0 credits · not Free Mini Live"
+                  : "Lab sample · private Live gated · 0 credits"}
               </p>
               <button
                 type="button"
                 disabled={sampleLoading || busy}
                 onClick={() => void loadSampleToy("scout", true)}
                 className="btn btn-primary mt-3 w-full py-3 text-sm disabled:opacity-50"
+                data-workbench-lab-cta="primary"
+                data-lab-sample-cta="free"
               >
                 {sampleLoading || busy
                   ? t("create.generating")
-                  : demoMode
-                    ? t("create.oneTapCached")
-                    : t("create.oneTapMini")}
+                  : t("create.oneTapCached")}
               </button>
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {SAMPLE_TOYS.map((s) => (
@@ -2930,8 +2938,15 @@ export function CreateStudio({
                     {effectiveResolution}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-full border border-[var(--mint)]/30 bg-black/35 px-2.5 py-1 text-[11px] font-black text-[var(--mint)]">
-                  {demoMode ? "0 credits" : `${CREDITS_PER_VIDEO} credits`}
+                <span
+                  className="shrink-0 rounded-full border border-[var(--mint)]/30 bg-black/35 px-2.5 py-1 text-[11px] font-black text-[var(--mint)]"
+                  data-quote-credits={demoMode || labStill ? "0" : String(CREDITS_PER_VIDEO)}
+                >
+                  {demoMode || labStill
+                    ? "0 credits"
+                    : freeLiveOpen || !isFree
+                      ? `${CREDITS_PER_VIDEO} credits`
+                      : "0 credits · Live gated"}
                 </span>
               </div>
             ) : (
@@ -3707,7 +3722,7 @@ export function CreateStudio({
                 <p className="mt-1.5 max-w-xs text-xs text-[var(--fg-muted)]">
                   {image
                     ? t("create.hitGenerate")
-                    : demoMode
+                    : demoMode || !freeLiveOpen
                       ? t("create.noPhotoCached")
                       : t("create.noPhotoLive")}
                 </p>
@@ -3717,10 +3732,10 @@ export function CreateStudio({
                     disabled={sampleLoading || busy}
                     onClick={() => void loadSampleToy("scout", true)}
                     className="btn btn-primary mt-5 px-6 py-2.5 text-sm disabled:opacity-50"
+                    data-lab-sample-cta="free"
                   >
-                    {demoMode
-                      ? t("create.labSampleFree")
-                      : t("create.labSampleMini")}
+                    {/* Lab sample path is always cached 0 credits — never Mini trial. */}
+                    {t("create.labSampleFree")}
                   </button>
                 )}
                 <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[var(--mint)]/25 bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]">
@@ -3749,12 +3764,17 @@ export function CreateStudio({
         }
       >
         {image ? (
-          <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
+          <p
+            className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55"
+            data-sticky-credits={demoMode || labStill ? "0" : "live"}
+          >
             {preset.emoji} {viralName(preset.slug, preset.name)} · {aspectRatio}
             {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
-            {demoMode
-              ? "0 credits · cached prototype"
-              : `${CREDITS_PER_VIDEO} credits when Live`}
+            {demoMode || labStill
+              ? "0 credits · Lab sample / Live gated"
+              : freeLiveOpen
+                ? `${CREDITS_PER_VIDEO} credits when Live`
+                : "0 credits · Live gated"}
           </p>
         ) : null}
         {!image ? (

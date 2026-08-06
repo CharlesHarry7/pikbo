@@ -4901,11 +4901,13 @@ const createStudioSmoke = fs.readFileSync(
   "utf8"
 );
 assert.match(createStudioSmoke, /GenerateWaitStage/);
-// Mobile sticky Lab sample is explicitly cached and not a Free Mini live claim.
+// Lab sample is always 0 credits — never Free Mini Live / Mini trial claim.
 assert.match(
   createStudioSmoke,
-  /Preview a Lab sample · cached prototype, not your upload/
+  /Lab sample · private Live gated · 0 credits|Lab sample · 0 credits · not Free Mini Live/
 );
+assert.match(createStudioSmoke, /data-lab-sample-cta=["']free["']/);
+assert.match(createStudioSmoke, /Preview a Lab sample · 0 credits/);
 // Device Library stills: path samples or tiny previews only (no multi-MB Base64).
 assert.match(createStudioSmoke, /stillForStore\.startsWith\(["']\/["']\)|8_000/);
 // HF post-generate path chips live in shared GenerateAfterPath (not inlined)
