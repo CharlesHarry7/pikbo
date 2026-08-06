@@ -107,7 +107,6 @@ import {
 import {
   getPrivateGenerationResultByIdempotency,
   savePrivateGenerationResult,
-  signedPrivateResultUrl,
 } from "@/lib/privateGenerationResults";
 
 export const runtime = "nodejs";
@@ -302,35 +301,40 @@ export async function POST(req: Request) {
       idempotencyKey,
     });
     if (durablePrior) {
-      const signedUrl = await signedPrivateResultUrl(durablePrior.objectKey);
-      if (signedUrl) {
-        // The private Free allowance is one clip. Do not downgrade a paid
-        // cookie on cross-device replay; its durable wallet remains authority.
-        if (session.plan === "free" && session.credits !== 0) {
-          session = { ...session, credits: 0 };
-          await saveSession(session);
-        }
-        return NextResponse.json<GenerateSuccess>({
-          videoUrl: signedUrl,
-          demo: false,
-          watermark: false,
-          model: durablePrior.model,
-          duration: durablePrior.duration,
-          aspectRatio: durablePrior.aspectRatio,
-          resolution: durablePrior.resolution,
-          session: publicSession(session),
-          requestId: durablePrior.jobId,
-          jobId: durablePrior.jobId,
-          providerRequestId: durablePrior.providerRequestId,
-          provider: "bytedance-seedance",
-          effect: durablePrior.effect,
-          costCredits: 10,
-          creditsOutcome: "10 used",
-          idempotentReplay: true,
-          processedUpload: true,
-          privateResult: true,
-        });
+      // Controlled owner-gated download — never embed a short-lived storage
+      // signed URL in the success body (mint happens only at /api/downloads).
+      const controlledUrl = customerFacingGenerateVideoUrl({
+        demo: false,
+        watermark: false,
+        jobId: durablePrior.jobId,
+        videoUrl: "",
+      });
+      // The private Free allowance is one clip. Do not downgrade a paid
+      // cookie on cross-device replay; its durable wallet remains authority.
+      if (session.plan === "free" && session.credits !== 0) {
+        session = { ...session, credits: 0 };
+        await saveSession(session);
       }
+      return NextResponse.json<GenerateSuccess>({
+        videoUrl: controlledUrl,
+        demo: false,
+        watermark: false,
+        model: durablePrior.model,
+        duration: durablePrior.duration,
+        aspectRatio: durablePrior.aspectRatio,
+        resolution: durablePrior.resolution,
+        session: publicSession(session),
+        requestId: durablePrior.jobId,
+        jobId: durablePrior.jobId,
+        providerRequestId: durablePrior.providerRequestId,
+        provider: "bytedance-seedance",
+        effect: durablePrior.effect,
+        costCredits: 10,
+        creditsOutcome: "10 used",
+        idempotentReplay: true,
+        processedUpload: true,
+        privateResult: true,
+      });
     }
   }
   const hasRetryHandoff = Boolean(retryJobId || retryToken);
@@ -1582,23 +1586,15 @@ export async function POST(req: Request) {
         };
         return err(failBody, 503);
       }
-      const privateDeliveryUrl =
-        saved.signedUrl ||
-        (await signedPrivateResultUrl(saved.result.objectKey));
-      if (!privateDeliveryUrl) {
-        // The private object and settlement are already durable. Never refund
-        // or invoke the provider again because a short-lived URL could not be
-        // minted. Library/download recovery can sign the same object later.
-        const failBody: GenerateErrorBody = {
-          error:
-            "Your private video is saved and the generation is complete, but the download link is temporarily unavailable. Refresh Library to recover it; do not start a new generation.",
-          code: "DELIVERY_PIPELINE_UNAVAILABLE",
-          model,
-          jobId: reserved.reservation.jobId,
-          session: publicSession(session),
-        };
-        return err(failBody, 503);
-      }
+      // Object + settlement are durable. Customer-facing success always uses
+      // the owner-gated download path — short-lived storage signed URLs are
+      // minted only inside GET /api/downloads (never embedded in JSON).
+      const privateDeliveryUrl = customerFacingGenerateVideoUrl({
+        demo: false,
+        watermark: privateResultWatermark,
+        jobId: reserved.reservation.jobId,
+        videoUrl: "",
+      });
       try {
         completeSyncGenerateJob({
           jobId: liveJobId,
@@ -1620,8 +1616,8 @@ export async function POST(req: Request) {
         /* best-effort */
       }
       const payload: GenerateSuccess = {
-        // Private Preview returns only the short-lived URL for Pikbo-owned
-        // storage. The raw provider URL never crosses the response boundary.
+        // Private Preview returns only the controlled owner download path.
+        // The raw provider URL and storage signed URLs never cross this boundary.
         videoUrl: privateDeliveryUrl,
         demo: false,
         watermark: privateResultWatermark,

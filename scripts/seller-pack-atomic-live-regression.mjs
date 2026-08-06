@@ -377,7 +377,12 @@ assert.equal(
 
   const statusRoute = read("app/api/seller-pack/status/route.ts");
   assert.match(statusRoute, /getSellerPackStatusAtomic|getAtomicSellerPackStatus/);
-  assert.match(statusRoute, /signedPrivateResultUrl/);
+  assert.match(statusRoute, /\/api\/downloads\/\$\{encodeURIComponent\(job\.jobId\)\}/);
+  assert.doesNotMatch(
+    statusRoute,
+    /signedPrivateResultUrl/,
+    "seller-pack status must return controlled download paths, not storage signed URLs"
+  );
   assert.match(statusRoute, /getAuthUserFromRequest/);
 
   const retryRoute = read("app/api/seller-pack/retry/route.ts");
