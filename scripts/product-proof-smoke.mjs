@@ -82,6 +82,17 @@ assert(
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
   "home order: Moment hero → proof wall → HF product rail → trust footer"
 );
+// AIT-232: Modules sticky CTAs — one primary Generate→360 (not Free/Lab filled dual door)
+const modulesSuiteCtas = read("components/ModulesSuiteCtas.tsx");
+assert(
+  modulesSuiteCtas.includes('data-modules-primary-generate="360"') &&
+    modulesSuiteCtas.includes("data-modules-primary-generate-cta") &&
+    modulesSuiteCtas.includes('createGenerate360Href("modules-photo-clip")') &&
+    modulesSuiteCtas.includes("Generate 360°") &&
+    modulesSuiteCtas.includes('data-modules-path="photo-clip"') &&
+    modulesSuiteCtas.includes("border border-white/20"),
+  "ModulesSuiteCtas must expose one primary Generate→360 door with secondary Free/Lab outline"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"

@@ -16,7 +16,7 @@ import {
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
-/** Default listing spin when opening Generate from Modules (remix contract). */
+/** Primary Generate door — listing spin remix (ratio/duration/channel). */
 const MODULES_PHOTO_CLIP_HREF = createGenerate360Href("modules-photo-clip");
 /** Lab sample try — remix + try/sample (not bare /create?try=1). */
 const MODULES_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
@@ -24,8 +24,10 @@ const MODULES_MOMENT_HREF =
   `${MOMENT_CREATE_HREF}&source=modules-suite` as const;
 
 /**
- * Modules sticky header CTAs — freeTrial honesty (Phase F).
- * Trial exhausted → Lab still free + plans; never claim free live when spent.
+ * Modules sticky header CTAs — freeTrial honesty (Phase F) + one primary Generate.
+ *
+ * AIT-232 friction cut: one filled primary Generate→360 CTA.
+ * Free / Lab sample / plans stay secondary outline — no second filled primary.
  */
 export function ModulesSuiteCtas() {
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -51,9 +53,10 @@ export function ModulesSuiteCtas() {
       ? me.freeTrial.clipsLeft
       : null;
 
-  const primaryHref =
+  // Secondary Free / Lab / plans (outline only — honest exhaustion → pricing).
+  const secondaryHref =
     trialDone && !demo ? "/pricing" : MODULES_LAB_SAMPLE_HREF;
-  const primaryLabel =
+  const secondaryLabel =
     trialDone && !demo
       ? "Compare plans"
       : demo
@@ -61,7 +64,10 @@ export function ModulesSuiteCtas() {
         : "Try free · Lab";
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div
+      className="flex flex-wrap items-center gap-2"
+      data-modules-primary-generate="360"
+    >
       {clipsLeft !== null && !demo && !trialDone ? (
         <span className="hidden text-[10px] text-white/40 sm:inline">
           ~{clipsLeft} Free Mini left
@@ -72,8 +78,26 @@ export function ModulesSuiteCtas() {
           Free Mini used · Lab demos still free
         </span>
       ) : null}
+      {/* One primary Generate → 360 (AIT-232). */}
       <Link
-        href={primaryHref}
+        href={MODULES_PHOTO_CLIP_HREF}
+        onClick={() =>
+          track({
+            event: "landing_view",
+            path: "/modules",
+            meta: { cta: "modules_primary_generate_360" },
+          })
+        }
+        className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(200,255,61,0.4)]"
+        title="One owned toy photo → short listing or social clip"
+        data-modules-path="photo-clip"
+        data-modules-primary-generate-cta
+      >
+        Generate 360° →
+      </Link>
+      {/* Secondary Free / Lab sample / plans — outline only, not a filled primary. */}
+      <Link
+        href={secondaryHref}
         onClick={() =>
           track({
             event: "landing_view",
@@ -83,18 +107,10 @@ export function ModulesSuiteCtas() {
             },
           })
         }
-        className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
+        className="rounded-full border border-white/20 bg-transparent px-4 py-2 text-xs font-semibold text-white/70 transition hover:border-white/40 hover:text-white"
         data-modules-lab-sample="remix"
       >
-        {primaryLabel}
-      </Link>
-      <Link
-        href={MODULES_PHOTO_CLIP_HREF}
-        className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white/80"
-        title="One owned toy photo → short listing or social clip"
-        data-modules-path="photo-clip"
-      >
-        Photo → Clip
+        {secondaryLabel}
       </Link>
       <Link
         href={MODULES_MOMENT_HREF}

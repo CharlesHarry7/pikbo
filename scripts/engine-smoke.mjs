@@ -4514,12 +4514,32 @@ assert.doesNotMatch(
   modulesPageSrc,
   /Official · cached|provisionalLabQualityLabel|Lab\s*≥\s*4/
 );
+// Modules suite CTAs: one primary Generate→360 (AIT-232) + Free/Lab secondary outline
 const modulesSuiteCtasSrc = fs.readFileSync(
   join(root, "components/ModulesSuiteCtas.tsx"),
   "utf8"
 );
 assert.match(modulesSuiteCtasSrc, /freeTrialExhausted/);
 assert.match(modulesSuiteCtasSrc, /Compare plans|Try free/);
+assert.match(
+  modulesSuiteCtasSrc,
+  /createGenerate360Href|data-modules-path=["']photo-clip["']/
+);
+assert.match(
+  modulesSuiteCtasSrc,
+  /data-modules-primary-generate=["']360["']/
+);
+assert.match(modulesSuiteCtasSrc, /data-modules-primary-generate-cta/);
+assert.match(
+  modulesSuiteCtasSrc,
+  /createGenerate360Href\(\s*["']modules-photo-clip["']\s*\)/
+);
+assert.match(modulesSuiteCtasSrc, /Generate 360°/);
+assert.match(modulesSuiteCtasSrc, /border border-white\/20/);
+assert.match(
+  modulesSuiteCtasSrc,
+  /createLabSampleTryHref|data-modules-lab-sample=["']remix["']/
+);
 const modulesMobileCtaSrc = fs.readFileSync(
   join(root, "components/ModulesMobileCta.tsx"),
   "utf8"
@@ -5607,10 +5627,10 @@ assert.match(genJobsRouteHead, /SESSION_JOBS_LIST_LIMIT\s*=\s*50/);
 assert.match(genJobsRouteHead, /listLimit:\s*SESSION_JOBS_LIST_LIMIT|listLimit,/);
 assert.match(genJobsRouteHead, /countJobsForSession/);
 assert.doesNotMatch(genJobsRouteHead, /touchOpenJobsForSession/);
-// Modules Photo → Clip carries remix contract (not bare /create)
+// Modules Photo → Clip carries remix contract (not bare /create) — AIT-232 primary
 assert.match(
   fs.readFileSync(join(root, "components/ModulesSuiteCtas.tsx"), "utf8"),
-  /createGenerate360Href|data-modules-path=["']photo-clip["']/
+  /createGenerate360Href|data-modules-path=["']photo-clip["']|data-modules-primary-generate=["']360["']/
 );
 assert.doesNotMatch(
   genJobsRouteHead,
