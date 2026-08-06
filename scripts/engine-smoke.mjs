@@ -521,7 +521,7 @@ const freeTrialCtaR0 = fs.readFileSync(
   join(root, "components/FreeTrialCta.tsx"),
   "utf8"
 );
-assert.match(freeTrialCtaR0, /liveEnabled|Cached preview|Try cached sample/);
+assert.match(freeTrialCtaR0, /liveEnabled|Cached preview|Try Lab sample/);
 assert.match(
   fs.readFileSync(join(root, "app/settings/page.tsx"), "utf8"),
   /cookieIsLiveSpendAuthority|Display credits \(not live authority\)|blocked until T6/

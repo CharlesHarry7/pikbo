@@ -421,6 +421,79 @@ assert(
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
 );
 
+// AIT-307: FreeTrialCta default is Lab sample; global call-site lock.
+const freeTrialCtaSource = read("components/FreeTrialCta.tsx");
+assert(
+  /DEFAULT_LABEL_DEMO\s*=\s*["']Try Lab sample["']/.test(freeTrialCtaSource) ||
+    /labelDemo\s*\?\?\s*["']Try Lab sample["']/.test(freeTrialCtaSource) ||
+    /labelDemo\s*\?\?\s*DEFAULT_LABEL_DEMO/.test(freeTrialCtaSource),
+  "FreeTrialCta default labelDemo must be Lab sample honesty"
+);
+assert(
+  !/labelDemo\s*\?\?\s*["']Try cached sample["']/.test(freeTrialCtaSource) &&
+    !/DEFAULT_LABEL_DEMO\s*=\s*["']Try cached sample["']/.test(
+      freeTrialCtaSource
+    ),
+  "FreeTrialCta must not default demo label to generic Try cached sample"
+);
+assert(
+  freeTrialCtaSource.includes("freeLiveOpen") &&
+    /liveEnabled\s*!==\s*false/.test(freeTrialCtaSource),
+  "FreeTrialCta freeLiveOpen gating must stay intact"
+);
+
+function walkSourceFiles(directory, acc = []) {
+  if (!fs.existsSync(directory)) return acc;
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (entry.name === "node_modules" || entry.name === ".next") continue;
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) walkSourceFiles(absolute, acc);
+    else if (/\.(tsx|ts|jsx|js)$/.test(entry.name)) acc.push(absolute);
+  }
+  return acc;
+}
+
+const freeTrialCtaCallSiteFiles = walkSourceFiles(path.join(root, "app"))
+  .concat(walkSourceFiles(path.join(root, "components")))
+  .map((absolute) => path.relative(root, absolute))
+  .filter((relativePath) => {
+    if (relativePath === "components/FreeTrialCta.tsx") return false;
+    return /<FreeTrialCta[\s>]/.test(read(relativePath));
+  });
+
+assert(
+  freeTrialCtaCallSiteFiles.length > 0,
+  "expected at least one FreeTrialCta call site under app/ or components/"
+);
+
+/** Unconditional Mini free hardcodes on FreeTrialCta labelTry (gated ternaries OK). */
+const forbiddenFreeTrialLabelTry = [
+  /labelTry=["']Try free Mini["']/,
+  /labelTry=["']Try Mini free["']/,
+  /labelTry=["'][^"']*Mini 5s[^"']*["']/,
+  /labelTry=\{`\$\{t\("cta\.tryFree"\)\} · Mini 5s`\}/,
+];
+
+for (const relativePath of freeTrialCtaCallSiteFiles) {
+  const source = read(relativePath);
+  // Coverage: explicit labelDemo preferred; component default is Lab sample when omitted.
+  const hasLabelDemo = /labelDemo=/.test(source);
+  const componentDefaultIsLab =
+    /DEFAULT_LABEL_DEMO\s*=\s*["']Try Lab sample["']/.test(freeTrialCtaSource) ||
+    /labelDemo\s*\?\?\s*["']Try Lab sample["']/.test(freeTrialCtaSource) ||
+    /labelDemo\s*\?\?\s*DEFAULT_LABEL_DEMO/.test(freeTrialCtaSource);
+  assert(
+    hasLabelDemo || componentDefaultIsLab,
+    `${relativePath}: FreeTrialCta must pass labelDemo= or component default must be Lab sample`
+  );
+  for (const pattern of forbiddenFreeTrialLabelTry) {
+    assert(
+      !pattern.test(source),
+      `${relativePath} FreeTrialCta must not hardcode Mini free as unconditional labelTry (${pattern})`
+    );
+  }
+}
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
