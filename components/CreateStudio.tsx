@@ -15,6 +15,7 @@ import {
   pushHistory,
 } from "@/lib/history";
 import {
+  canLiveGenerate,
   canUsePrivateLaunch,
   fetchMe,
   freeTrialExhausted,
@@ -814,10 +815,16 @@ export function CreateStudio({
   const demoMode = !privateUploadEnabled || labStill;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
+  /** R0/T6: Free Mini product-cap / trial-used only when Live is actually open. */
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(session) &&
+      freeLive &&
+      freeLive.liveEnabled !== false
+  );
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
       ? session.freeTrial.clipsLeft
-      : creditsLeft !== null
+      : creditsLeft !== null && freeLiveOpen
         ? Math.floor(creditsLeft / CREDITS_PER_VIDEO)
         : null;
   // Private validation is one measured Fast 720p / 5s cost envelope. Cached
@@ -1774,6 +1781,7 @@ export function CreateStudio({
       demoMode,
       isFree: Boolean(isFree),
       trialDone,
+      freeLiveOpen,
       creditsLeft,
       clipsLeft,
       identity: toyIdentity,
@@ -1792,6 +1800,7 @@ export function CreateStudio({
     isFree,
     demoMode,
     trialDone,
+    freeLiveOpen,
     creditsLeft,
     clipsLeft,
     toyIdentity,
@@ -1893,9 +1902,16 @@ export function CreateStudio({
                   Lab example · <b className="text-[var(--fg)]">not your photo</b>
                   <span className="hidden sm:inline"> · 0 credits</span>
                 </>
-              ) : trialDone && isFree ? (
+              ) : trialDone && isFree && freeLiveOpen ? (
                 <>
                   Free Mini trial used · cached Lab demos still free ·{" "}
+                  <Link href="/pricing" className="font-semibold text-[var(--mint)] hover:underline">
+                    compare plans
+                  </Link>
+                </>
+              ) : !freeLiveOpen && isFree ? (
+                <>
+                  Cached Lab · 0 credits · Live gated ·{" "}
                   <Link href="/pricing" className="font-semibold text-[var(--mint)] hover:underline">
                     compare plans
                   </Link>
@@ -1903,15 +1919,19 @@ export function CreateStudio({
               ) : (
                 <>
                   Your photo ·{" "}
-                  {isFree && freeLive
+                  {isFree && freeLive && freeLiveOpen
                     ? `${effectiveModelLabel} ${freeLive.durationSec}s ${freeLive.resolution}`
-                    : isFree
+                    : isFree && freeLiveOpen
                       ? `${effectiveModelLabel} 5s ${effectiveResolution}`
-                      : `${effectiveDuration}s · ${effectiveResolution}`}{" "}
-                  · {CREDITS_PER_VIDEO} cr
-                  {clipsLeft !== null
+                      : isFree
+                        ? "Cached Lab · Live gated"
+                        : `${effectiveDuration}s · ${effectiveResolution}`}{" "}
+                  {isFree && !freeLiveOpen
+                    ? null
+                    : `· ${CREDITS_PER_VIDEO} cr`}
+                  {clipsLeft !== null && freeLiveOpen && !trialDone
                     ? ` · ~${clipsLeft} live left`
-                    : creditsLeft !== null
+                    : creditsLeft !== null && freeLiveOpen
                       ? ` · ${creditsLeft} cr left`
                       : ""}
                   <span className="hidden sm:inline">
@@ -2644,7 +2664,9 @@ export function CreateStudio({
                     <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
                       {liveEntitled
                         ? "Invited validation is fixed to Fast · 5s · 720p · private delivery"
-                        : "Free cached prototype · Mini · 5s · 480p · on-player mark"}
+                        : freeLiveOpen
+                          ? "Free cached prototype · Mini · 5s · 480p · on-player mark"
+                          : "Cached Lab · 0 credits · Live gated"}
                     </p>
                   )}
                 </div>

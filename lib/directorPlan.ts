@@ -25,6 +25,12 @@ export type DirectorPlanInput = {
   demoMode: boolean;
   isFree: boolean;
   trialDone: boolean;
+  /**
+   * R0/T6 soft-launch honesty: Free Mini product-cap / trial-used / ~N live left
+   * only when Live is actually open (parity FreeTrialCta / BatchStudio).
+   * Fail-closed when omitted or false.
+   */
+  freeLiveOpen?: boolean;
   creditsLeft: number | null;
   clipsLeft: number | null;
   identity: ToyIdentity;
@@ -61,6 +67,8 @@ export function buildDirectorPlan(input: DirectorPlanInput): DirectorPlan {
   const blockers: string[] = [];
   const freeModelLabel =
     input.modelClass === "seedance-fast" ? "Fast" : "Mini";
+  /** Fail-closed: omit/false → no Free Mini product-cap copy. */
+  const freeLiveOpen = input.freeLiveOpen === true;
 
   if (!input.hasImage) {
     blockers.push("Add a toy photo first");
@@ -68,16 +76,17 @@ export function buildDirectorPlan(input: DirectorPlanInput): DirectorPlan {
   if (!input.ownsRights && !input.demoMode) {
     blockers.push("Confirm photo ownership before live generate");
   }
-  if (!input.demoMode && input.trialDone && input.isFree) {
+  // Free Mini trial-exhausted only when Free Mini Live is open (not invited Fast).
+  if (!input.demoMode && input.trialDone && input.isFree && freeLiveOpen) {
     blockers.push("Free Mini trial exhausted — Lab demos stay free");
   }
   if (
     !input.demoMode &&
     input.creditsLeft !== null &&
     input.creditsLeft < credits &&
-    !(input.trialDone && input.isFree)
+    !(input.trialDone && input.isFree && freeLiveOpen)
   ) {
-    // When trial done we already blocked; otherwise credit gate
+    // When Free Mini trial done we already blocked; otherwise credit gate
     if (input.creditsLeft < credits) {
       blockers.push(`Need ${credits} credits (have ${input.creditsLeft})`);
     }
@@ -104,9 +113,13 @@ export function buildDirectorPlan(input: DirectorPlanInput): DirectorPlan {
     label: "Format",
     value: input.demoMode
       ? "Lab demo · 0 credits · not your photo motion"
-      : input.isFree
+      : input.isFree && freeLiveOpen
         ? `${freeModelLabel} · ${input.durationSec}s · ${input.resolution} · ${input.aspectRatio} · on-player mark`
-        : `${input.durationSec}s · ${input.resolution} · ${input.aspectRatio}`,
+        : input.isFree && !freeLiveOpen
+          ? input.modelClass === "seedance-fast"
+            ? `Private Fast · ${input.durationSec}s · ${input.resolution} · ${input.aspectRatio}`
+            : "Cached Lab · 0 credits · Live gated"
+          : `${input.durationSec}s · ${input.resolution} · ${input.aspectRatio}`,
     tone: input.demoMode ? "muted" : "ok",
   });
 
@@ -150,11 +163,17 @@ export function buildDirectorPlan(input: DirectorPlanInput): DirectorPlan {
   let costLabel: string;
   if (input.demoMode) {
     costLabel = "0 credits · cached Lab demo";
-  } else if (input.trialDone && input.isFree) {
+  } else if (input.trialDone && input.isFree && freeLiveOpen) {
     costLabel = "Live blocked · trial used";
+  } else if (input.isFree && !freeLiveOpen) {
+    // No Free Mini left/used copy while public Free Mini Live is closed.
+    costLabel =
+      input.modelClass === "seedance-fast"
+        ? `${credits} credits this clip · Private Fast · refunds when confirmed`
+        : "Cached Lab · 0 credits · Live gated";
   } else {
     const left =
-      input.clipsLeft !== null
+      input.clipsLeft !== null && freeLiveOpen
         ? ` · ~${input.clipsLeft} live left`
         : input.creditsLeft !== null
           ? ` · ${input.creditsLeft} cr left`
@@ -164,11 +183,15 @@ export function buildDirectorPlan(input: DirectorPlanInput): DirectorPlan {
 
   const modeLabel = input.demoMode
     ? "Lab preview"
-    : input.isFree
+    : input.isFree && freeLiveOpen
       ? input.modelClass === "seedance-fast"
         ? "Private Fast validation"
         : "Live Mini trial"
-      : "Live generation";
+      : input.isFree && !freeLiveOpen
+        ? input.modelClass === "seedance-fast"
+          ? "Private Fast validation"
+          : "Cached Lab · Live gated"
+        : "Live generation";
 
   const ready = input.hasImage;
   // Generate button still enforces rights; plan.canGenerate is advisory for UI emphasis
@@ -216,6 +239,11 @@ export type SellerPackDirectorPlanInput = {
   demoMode: boolean;
   isFree: boolean;
   trialDone: boolean;
+  /**
+   * R0/T6: Free Mini pack / trial blockers only when Live is open.
+   * Fail-closed when omitted or false.
+   */
+  freeLiveOpen?: boolean;
   creditsLeft: number | null;
   clipsLeft: number | null;
   ownsRights: boolean;
@@ -239,6 +267,7 @@ export function buildSellerPackDirectorPlan(
   });
   const rows: DirectorPlanRow[] = [];
   const blockers: string[] = [];
+  const freeLiveOpen = input.freeLiveOpen === true;
 
   if (!input.hasImage) {
     blockers.push("Add a toy photo first");
@@ -246,15 +275,30 @@ export function buildSellerPackDirectorPlan(
   if (!input.ownsRights && !input.demoMode) {
     blockers.push("Confirm photo ownership before live pack");
   }
-  if (!input.demoMode && input.trialDone && input.isFree) {
+  // Free Mini product-cap pack blocker only when Free Mini Live is open.
+  if (!input.demoMode && input.trialDone && input.isFree && freeLiveOpen) {
     blockers.push(
       "Free Mini covers one 10-credit job — Seller Starter Pack needs 30 live credits"
+    );
+  } else if (
+    !input.demoMode &&
+    input.isFree &&
+    !freeLiveOpen &&
+    (input.trialDone ||
+      input.creditsLeft === null ||
+      input.creditsLeft < quote.totalCredits)
+  ) {
+    // No Free Mini pack fiction while Live is closed.
+    blockers.push(
+      "Live gated · Launch Pack needs 30 live credits when Live opens"
     );
   }
   if (
     !input.demoMode &&
     input.creditsLeft !== null &&
-    input.creditsLeft < quote.totalCredits
+    input.creditsLeft < quote.totalCredits &&
+    !(input.trialDone && input.isFree && freeLiveOpen) &&
+    !(input.isFree && !freeLiveOpen)
   ) {
     const short = sellerPackShortfall(quote, input.creditsLeft);
     blockers.push(
@@ -283,9 +327,11 @@ export function buildSellerPackDirectorPlan(
     label: "Format",
     value: input.demoMode
       ? "3 Lab demos · 0 credits · not your photo motion"
-      : input.isFree
+      : input.isFree && freeLiveOpen
         ? `Mini · ${input.durationSec}s · ${input.resolution} · on-player mark per child`
-        : `${input.durationSec}s · ${input.resolution} · sequential Seedance`,
+        : input.isFree && !freeLiveOpen
+          ? "Cached Lab · 0 credits · Live gated"
+          : `${input.durationSec}s · ${input.resolution} · sequential Seedance`,
     tone: input.demoMode ? "muted" : "ok",
   });
 
@@ -331,11 +377,18 @@ export function buildSellerPackDirectorPlan(
   let costLabel: string;
   if (input.demoMode) {
     costLabel = "0 credits · 3 cached Lab demos";
-  } else if (blockers.some((b) => b.includes("Need") || b.includes("Free Mini"))) {
+  } else if (
+    blockers.some(
+      (b) =>
+        b.includes("Need") ||
+        b.includes("Free Mini") ||
+        b.includes("Live gated")
+    )
+  ) {
     costLabel = blockers[0];
   } else {
     const left =
-      input.clipsLeft !== null
+      input.clipsLeft !== null && freeLiveOpen
         ? ` · ~${input.clipsLeft} single live left`
         : input.creditsLeft !== null
           ? ` · ${input.creditsLeft} cr left`
@@ -345,9 +398,11 @@ export function buildSellerPackDirectorPlan(
 
   const modeLabel = input.demoMode
     ? "Lab pack preview"
-    : input.isFree
+    : input.isFree && freeLiveOpen
       ? "Live Mini · pack quote"
-      : "Live Seller Starter Pack";
+      : input.isFree && !freeLiveOpen
+        ? "Cached Lab · Live gated"
+        : "Live Seller Starter Pack";
 
   const ready = input.hasImage;
   const canGenerate =

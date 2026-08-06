@@ -247,6 +247,8 @@ const residualSessionUi = [
   "components/FreeTrialCta.tsx",
   // AIT-330: BatchStudio product-cap / trial-used / pack-credit residual
   "components/BatchStudio.tsx",
+  // AIT-343: CreateStudio product-cap / trial-used residual
+  "components/CreateStudio.tsx",
 ];
 for (const relativePath of residualSessionUi) {
   const source = read(relativePath);
@@ -334,6 +336,78 @@ assert(
       "Live pack credits are not available while Live is closed"
     ),
   "BatchStudio closed Live path must not invent free pack credits"
+);
+
+// AIT-343: CreateStudio + directorPlan residual Free Mini honesty (freeLiveOpen).
+const createStudioSource = read("components/CreateStudio.tsx");
+assert(
+  /canLiveGenerate\s*\(/.test(createStudioSource) &&
+    /freeLiveOpen/.test(createStudioSource) &&
+    /liveEnabled\s*!==\s*false/.test(createStudioSource),
+  "CreateStudio must define freeLiveOpen (Live gate truth)"
+);
+assert(
+  createStudioSource.includes("Cached Lab · 0 credits · Live gated"),
+  "CreateStudio must prefer Cached Lab · 0 credits · Live gated when Live is closed"
+);
+assert(
+  /trialDone && isFree && freeLiveOpen|freeLiveOpen && trialDone && isFree/.test(
+    createStudioSource
+  ) ||
+    /trialDone && isFree && freeLiveOpen[\s\S]{0,120}Free Mini trial used/.test(
+      createStudioSource
+    ),
+  "CreateStudio Free Mini trial-used must sit behind freeLiveOpen"
+);
+assert(
+  /clipsLeft !== null && freeLiveOpen && !trialDone|freeLiveOpen && !trialDone[\s\S]{0,40}clipsLeft/.test(
+    createStudioSource
+  ),
+  "CreateStudio ~N live left must be gated by freeLiveOpen"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,80}buildDirectorPlan|freeLiveOpen,/.test(
+    createStudioSource
+  ),
+  "CreateStudio must pass freeLiveOpen into buildDirectorPlan"
+);
+
+const directorPlanSource = read("lib/directorPlan.ts");
+assert(
+  /freeLiveOpen\??:\s*boolean|freeLiveOpen\s*===\s*true|input\.freeLiveOpen/.test(
+    directorPlanSource
+  ),
+  "directorPlan must accept freeLiveOpen for Free Mini honesty"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,200}Free Mini trial exhausted|input\.trialDone && input\.isFree && freeLiveOpen/.test(
+    directorPlanSource
+  ),
+  "directorPlan Free Mini trial-exhausted blocker must sit behind freeLiveOpen"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,200}Free Mini covers one 10-credit job|input\.trialDone && input\.isFree && freeLiveOpen[\s\S]{0,120}Free Mini covers/.test(
+    directorPlanSource
+  ),
+  "directorPlan Free Mini pack blocker must sit behind freeLiveOpen"
+);
+assert(
+  directorPlanSource.includes("Cached Lab · 0 credits · Live gated") ||
+    directorPlanSource.includes(
+      "Live gated · Launch Pack needs 30 live credits when Live opens"
+    ),
+  "directorPlan closed Live path must prefer Cached Lab / Live gated honesty"
+);
+assert(
+  /clipsLeft !== null && freeLiveOpen|freeLiveOpen[\s\S]{0,80}clipsLeft/.test(
+    directorPlanSource
+  ),
+  "directorPlan ~N live left cost labels must be gated by freeLiveOpen"
+);
+assert(
+  /freeLiveOpen/.test(batchStudioSource) &&
+    /freeLiveOpen,/.test(batchStudioSource),
+  "BatchStudio must pass freeLiveOpen into buildSellerPackDirectorPlan"
 );
 
 // Community must stay fail-closed on fake UGC (no invented posts/likes).
