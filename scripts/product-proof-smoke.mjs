@@ -246,6 +246,24 @@ assert(
   );
 }
 
+// AIT-391: DeliveryChecklist residual lime → neon-pink board tokens
+{
+  const deliveryChecklist = read("components/DeliveryChecklist.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(deliveryChecklist),
+    "DeliveryChecklist must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    deliveryChecklist.includes("var(--neon-pink)") &&
+      deliveryChecklist.includes("rgba(255,78,205"),
+    "DeliveryChecklist selected steps use neon-pink board tokens"
+  );
+  assert(
+    !deliveryChecklist.includes("var(--mint)"),
+    "DeliveryChecklist must not use mint alias for step chrome"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
