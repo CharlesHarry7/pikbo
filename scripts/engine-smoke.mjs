@@ -4564,6 +4564,23 @@ assert.doesNotMatch(
   appsPageSrc,
   /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Try free/
 );
+// AIT-297: Apps Moment door honest (mode=moment + source); Generate stays 360 helper
+assert.match(
+  appsPageSrc,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+assert.match(
+  appsPageSrc,
+  /APPS_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=apps`/
+);
+assert.match(appsPageSrc, /href=\{APPS_MOMENT_HREF\}/);
+assert.match(appsPageSrc, /data-apps-moment=["']honest["']/);
+assert.match(appsPageSrc, /createGenerate360Href\(\s*["']apps["']\s*\)/);
+assert.match(appsPageSrc, /data-apps-generate=["']remix["']/);
+assert.doesNotMatch(
+  appsPageSrc,
+  /href=["']\/create\?effect=street-power-up/
+);
 const explorePageSrc = fs.readFileSync(
   join(root, "app/explore/page.tsx"),
   "utf8"
@@ -4595,6 +4612,26 @@ assert.match(communityPageSrc, /FreeTrialCta/);
 assert.match(communityPageSrc, /COMMUNITY_FAQ|Community FAQ/);
 assert.match(communityPageSrc, /FAQPage/);
 assert.match(communityPageSrc, /isSafeDeliverableUrl/);
+// AIT-297: Community Moment door honest (mode=moment + source); Generate stays 360 helper
+assert.match(
+  communityPageSrc,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+assert.match(
+  communityPageSrc,
+  /COMMUNITY_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=community`/
+);
+assert.match(communityPageSrc, /href=\{COMMUNITY_MOMENT_HREF\}/);
+assert.match(communityPageSrc, /data-community-moment=["']honest["']/);
+assert.match(
+  communityPageSrc,
+  /createGenerate360Href\(\s*["']community["']\s*\)/
+);
+assert.match(communityPageSrc, /data-community-generate=["']remix["']/);
+assert.doesNotMatch(
+  communityPageSrc,
+  /href=["']\/create\?effect=street-power-up/
+);
 // Free Mini raw must not publish as public UGC (T6 honesty)
 const communityPublishSrc = fs.readFileSync(
   join(root, "components/CommunityPublishButton.tsx"),
@@ -4624,6 +4661,45 @@ assert.match(effectsHubSrc, /FreeTrialCta/);
 assert.match(effectsHubSrc, /EFFECTS_FAQ|Recipes FAQ/);
 assert.match(effectsHubSrc, /FAQPage/);
 assert.doesNotMatch(effectsHubSrc, /Generate free/);
+// AIT-297: Effects hub Moment door honest (mode=moment + source); Generate stays 360 helper
+assert.match(
+  effectsHubSrc,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+assert.match(
+  effectsHubSrc,
+  /EFFECTS_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=effects`/
+);
+assert.match(effectsHubSrc, /href=\{EFFECTS_MOMENT_HREF\}/);
+assert.match(effectsHubSrc, /data-effects-moment=["']honest["']/);
+assert.match(effectsHubSrc, /createGenerate360Href\(\s*["']effects["']\s*\)/);
+assert.match(effectsHubSrc, /data-effects-generate=["']remix["']/);
+assert.doesNotMatch(
+  effectsHubSrc,
+  /href=["']\/create\?effect=street-power-up/
+);
+// AIT-297: Effect detail Moment doors honest (mode=moment + source=effect-detail)
+const effectDetailPageSrc = fs.readFileSync(
+  join(root, "app/effects/[slug]/page.tsx"),
+  "utf8"
+);
+assert.match(
+  effectDetailPageSrc,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+assert.match(
+  effectDetailPageSrc,
+  /EFFECT_DETAIL_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=effect-detail`/
+);
+assert.match(effectDetailPageSrc, /href=\{EFFECT_DETAIL_MOMENT_HREF\}/);
+assert.match(
+  effectDetailPageSrc,
+  /data-effect-detail-moment=["']honest["']/
+);
+assert.doesNotMatch(
+  effectDetailPageSrc,
+  /href=["']\/create\?effect=street-power-up/
+);
 // SEO hubs /for /toys /guides — Phase H FAQ + FreeTrial honesty
 const forHubSrc = fs.readFileSync(join(root, "app/for/page.tsx"), "utf8");
 assert.match(forHubSrc, /FreeTrialCta/);
