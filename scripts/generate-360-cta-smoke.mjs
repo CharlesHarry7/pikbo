@@ -930,4 +930,27 @@ assert.match(
   "FreeTrialCta primary text uses --primary-foreground (void) on copper fill"
 );
 
+// AIT-621: GenerateFailPanel residual competitor lime → gallery-calm copper
+const generateFailPanelSrc = read("components/GenerateFailPanel.tsx");
+assert.doesNotMatch(
+  generateFailPanelSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "GenerateFailPanel must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  generateFailPanelSrc,
+  /var\(--brand\)/,
+  "GenerateFailPanel recovery CTA uses --brand copper fill/border"
+);
+assert.match(
+  generateFailPanelSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "GenerateFailPanel recovery CTA glow uses copper board rgba(196,165,116)"
+);
+assert.match(
+  generateFailPanelSrc,
+  /var\(--primary-foreground\)/,
+  "GenerateFailPanel Retry CTA text uses --primary-foreground (void) on copper fill"
+);
+
 console.log("generate-360-cta-smoke: ok");
