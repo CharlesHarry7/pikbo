@@ -160,7 +160,7 @@ export function LoginForm({ auth, next }: { auth: AuthPublic; next: string }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@studio.com"
-            className="login-email-field mt-2 w-full rounded-xl border border-white/12 bg-black/45 px-3.5 py-3 text-sm font-semibold text-white outline-none placeholder:text-white/28 focus:border-[var(--neon-pink)] focus:shadow-[0_0_0_3px_rgba(255,78,205,0.18)]"
+            className="login-email-field mt-2 w-full rounded-xl border border-white/12 bg-black/45 px-3.5 py-3 text-sm font-semibold text-white outline-none placeholder:text-white/28 focus:border-[var(--neon-pink)] focus:shadow-[0_0_0_3px_rgba(196,165,116,0.18)]"
           />
         </label>
         <button
