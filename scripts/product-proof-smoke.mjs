@@ -246,6 +246,20 @@ assert(
   );
 }
 
+// AIT-350: JobIntentBar residual lime → neon-pink board tokens (Generate intent rail)
+{
+  const jobIntentBar = read("components/JobIntentBar.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(jobIntentBar),
+    "JobIntentBar must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    jobIntentBar.includes("var(--neon-pink)") &&
+      jobIntentBar.includes("rgba(255,78,205"),
+    "JobIntentBar selected/hover chip chrome uses neon-pink board tokens"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );

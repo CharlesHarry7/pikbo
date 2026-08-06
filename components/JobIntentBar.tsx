@@ -65,9 +65,9 @@ export function JobIntentBar({
                   key={job.id}
                   href={job.href}
                   onClick={() => onPick(job.id)}
-                  className="min-w-0 rounded-xl border border-[var(--mint)]/45 bg-[var(--mint)]/[0.12] px-3 py-2.5 text-left shadow-[0_0_20px_rgba(200,255,61,0.1)] transition hover:border-[var(--mint)] hover:bg-[var(--mint)]/20"
+                  className="min-w-0 rounded-xl border border-[var(--neon-pink)]/45 bg-[var(--neon-pink)]/[0.12] px-3 py-2.5 text-left shadow-[0_0_20px_rgba(255,78,205,0.1)] transition hover:border-[var(--neon-pink)] hover:bg-[var(--neon-pink)]/20"
                 >
-                  <span className="block text-[11px] font-bold leading-tight text-[var(--mint)]">
+                  <span className="block text-[11px] font-bold leading-tight text-[var(--neon-pink)]">
                     {label}
                   </span>
                   <span className="mt-1 block text-[9px] leading-snug text-white/50">
@@ -84,7 +84,7 @@ export function JobIntentBar({
                 onClick={() => onPick(job.id)}
                 className={`min-w-0 rounded-xl border px-3 py-2.5 text-left transition ${
                   active
-                    ? "border-[var(--mint)] bg-[var(--mint)]/15 text-[var(--mint)] shadow-[0_0_22px_rgba(200,255,61,0.12)]"
+                    ? "border-[var(--neon-pink)] bg-[var(--neon-pink)]/15 text-[var(--neon-pink)] shadow-[0_0_22px_rgba(255,78,205,0.12)]"
                     : "border-white/12 bg-black/30 text-white/75 hover:border-white/30 hover:bg-black/45"
                 }`}
               >
