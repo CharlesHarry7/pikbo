@@ -29,6 +29,10 @@ const publicPromiseFiles = [
   "app/modules/page.tsx",
   "app/flow/page.tsx",
   "app/cinema/page.tsx",
+  "app/tools/page.tsx",
+  "app/for/page.tsx",
+  "app/guides/page.tsx",
+  "app/toys/page.tsx",
   "components/HomeSeoBody.tsx",
   "components/HomeCinemaHero.tsx",
   "components/HeroUpload.tsx",
@@ -38,6 +42,14 @@ const publicPromiseFiles = [
   "components/PricingPlanCards.tsx",
   "components/HfExploreHome.tsx",
   "components/SoftLaunchStrip.tsx",
+];
+
+/** SEO hub FAQs/chips (tools / for / guides / toys) — no public Free Mini live trial. */
+const seoHubFiles = [
+  "app/tools/page.tsx",
+  "app/for/page.tsx",
+  "app/guides/page.tsx",
+  "app/toys/page.tsx",
 ];
 
 const forbiddenUnconditional = [
@@ -51,6 +63,18 @@ const forbiddenUnconditional = [
   /Free Mini trial(?:\s*[—·,:-]|\s+with|\s+for|\s*$)/i,
 ];
 
+/** Residual hub chips/FAQ claims that sold Free Mini as an unconditional live trial. */
+const forbiddenSeoHubFreeMini = [
+  /Free Mini live is about one Seedance Mini/i,
+  /Free Mini limits \(5s · 480p/i,
+  /Free Mini 5s · 480p/i,
+  /One job per page · Free Mini ·/i,
+  /How-tos · Free Mini 5s ·/i,
+  /Subject landings · Free Mini 5s ·/i,
+  /Free Mini caps apply/i,
+  /labelTry="Try free Mini"/,
+];
+
 for (const relativePath of publicPromiseFiles) {
   const source = read(relativePath);
   for (const pattern of forbiddenUnconditional) {
@@ -60,6 +84,53 @@ for (const relativePath of publicPromiseFiles) {
     );
   }
 }
+
+for (const relativePath of seoHubFiles) {
+  const source = read(relativePath);
+  for (const pattern of forbiddenSeoHubFreeMini) {
+    assert(
+      !pattern.test(source),
+      `${relativePath} contains residual Free Mini hub promise ${pattern}`
+    );
+  }
+  assert(
+    source.includes("cached Lab") ||
+      source.includes("Lab prototype") ||
+      source.includes("Lab preview"),
+    `${relativePath} must keep Lab public-path honesty language`
+  );
+}
+
+assert(
+  read("app/tools/page.tsx").includes("Live remains gated") &&
+    read("app/tools/page.tsx").includes(
+      "When Live is enabled for an eligible account"
+    ) &&
+    !read("app/tools/page.tsx").includes(
+      "Free Mini live is about one Seedance Mini"
+    ),
+  "tools hub must sell Lab public path + conditional Live, not Free Mini live trial"
+);
+assert(
+  read("app/for/page.tsx").includes("cached Lab") &&
+    !read("app/for/page.tsx").includes("One job per page · Free Mini ·"),
+  "for hub must not chip Free Mini as the public free trial"
+);
+assert(
+  read("app/guides/page.tsx").includes(
+    "When Live is enabled for an eligible account"
+  ) &&
+    read("app/guides/page.tsx").includes("labeled cached Lab prototype") &&
+    !read("app/guides/page.tsx").includes("How-tos · Free Mini 5s ·"),
+  "guides hub FAQ must keep Lab public path and conditional Live quotes"
+);
+assert(
+  read("app/toys/page.tsx").includes("Public path is cached Lab") &&
+    read("app/toys/page.tsx").includes("Live remains gated") &&
+    !read("app/toys/page.tsx").includes('labelTry="Try free Mini"') &&
+    !read("app/toys/page.tsx").includes("Subject landings · Free Mini 5s ·"),
+  "toys hub must drop Free Mini chip and keep Lab public path"
+);
 
 assert(
   read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
