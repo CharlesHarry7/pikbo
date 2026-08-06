@@ -839,4 +839,27 @@ assert.match(
   "Effects page job-chip glow uses copper board rgba(196,165,116)"
 );
 
+// AIT-547 / AIT-615: FreeTrialCta residual competitor lime → gallery-calm copper
+const freeTrialCtaSrc = read("components/FreeTrialCta.tsx");
+assert.doesNotMatch(
+  freeTrialCtaSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "FreeTrialCta must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  freeTrialCtaSrc,
+  /var\(--brand\)/,
+  "FreeTrialCta primary fill uses --brand copper accent"
+);
+assert.match(
+  freeTrialCtaSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "FreeTrialCta primary glow uses copper board rgba(196,165,116)"
+);
+assert.match(
+  freeTrialCtaSrc,
+  /var\(--primary-foreground\)/,
+  "FreeTrialCta primary text uses --primary-foreground (void) on copper fill"
+);
+
 console.log("generate-360-cta-smoke: ok");

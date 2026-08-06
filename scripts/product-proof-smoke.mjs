@@ -325,6 +325,22 @@ assert(
   );
 }
 
+// AIT-547 / AIT-615: FreeTrialCta residual competitor lime → gallery-calm copper board
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const freeTrial = read("components/FreeTrialCta.tsx");
+  assert(
+    !lime.test(freeTrial),
+    "FreeTrialCta must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    freeTrial.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(freeTrial) &&
+      freeTrial.includes("var(--primary-foreground)"),
+    "FreeTrialCta primary uses --brand + copper glow + primary-foreground (void)"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
