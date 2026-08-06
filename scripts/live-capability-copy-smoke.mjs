@@ -433,7 +433,7 @@ for (const relativePath of residualStaticTrust) {
   const source = read(relativePath);
   assert(
     /canLiveGenerate\s*\(/.test(source),
-    `${relativePath} must gate Free Mini / product caps on canLiveGenerate`
+    `${relativePath} must gate free-plan live / product caps on canLiveGenerate`
   );
   assert(
     /freeLiveOpen/.test(source),
@@ -444,6 +444,7 @@ for (const relativePath of residualStaticTrust) {
     `${relativePath} must require freeLive.liveEnabled !== false`
   );
 }
+// AIT-421: TrustStrip freeLiveModelLabel + productCapLine — no Free Mini product brand.
 const trustStripSource = read("components/TrustStrip.tsx");
 assert(
   trustStripSource.includes("Live gated · Cached Lab") &&
@@ -451,8 +452,27 @@ assert(
   "TrustStrip must prefer Live gated / Cached Lab honesty when Live is closed"
 );
 assert(
-  /freeLiveOpen[\s\S]{0,500}Free Mini/.test(trustStripSource),
-  "TrustStrip Free Mini product caps must sit behind freeLiveOpen"
+  !trustStripSource.includes("Free Mini"),
+  "TrustStrip must not hardcode Free Mini product brand chips"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,500}free-plan live/.test(trustStripSource) &&
+    trustStripSource.includes(
+      "free-plan live · 5s · 480p · on-player mark · refunds when confirmed"
+    ),
+  "TrustStrip free-plan live product caps must sit behind freeLiveOpen"
+);
+assert(
+  /seedance-fast[\s\S]{0,40}Private Fast/.test(trustStripSource),
+  "TrustStrip Private Fast invited path may stay"
+);
+assert(
+  /data-trust-cap=\{freeLiveOpen \? "free-live" : "lab-gated"\}/.test(
+    trustStripSource
+  ) || /data-trust-cap=\{freeLiveOpen \? ['"]free-live['"] : ['"]lab-gated['"]\}/.test(
+    trustStripSource
+  ),
+  "TrustStrip must expose data-trust-cap free-live vs lab-gated"
 );
 const profilePanelSource = read("components/ProfilePanel.tsx");
 assert(

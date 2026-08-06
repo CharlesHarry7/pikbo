@@ -10,9 +10,10 @@ import {
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
 /**
- * Marketing trust strip. Free Mini product caps only when freeLiveOpen
+ * Marketing trust strip. Free-plan live product caps only when freeLiveOpen
  * (canLiveGenerate + freeLive.liveEnabled) — fail-closed to Live gated /
  * Cached Lab honesty while public Live is closed or /api/me is loading.
+ * Open path uses free-plan live wording (parity AIT-411 Lab sample / free-plan).
  */
 export function TrustStrip() {
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -32,17 +33,18 @@ export function TrustStrip() {
   }, []);
 
   const freeLive = me?.freeTrial?.freeLive;
-  /** R0/T6: never hardcode Free Mini as if public trial is open. */
+  /** R0/T6: free-plan live only when Live is open (fail-closed while /api/me loading). */
   const freeLiveOpen = Boolean(
     canLiveGenerate(me) && freeLive && freeLive.liveEnabled !== false
   );
+  /** Private Fast invited path may stay; default open path uses free-plan live. */
   const freeLiveModelLabel =
-    freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "Free Mini";
+    freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "free-plan live";
 
   const productCapLine = freeLiveOpen
     ? freeLive
       ? `${freeLiveModelLabel} · ${freeLive.durationSec}s · ${freeLive.resolution} · on-player mark · refunds when confirmed`
-      : "Free Mini · 5s · 480p · on-player mark · refunds when confirmed"
+      : "free-plan live · 5s · 480p · on-player mark · refunds when confirmed"
     : "Live gated · Cached Lab · refunds when confirmed";
 
   return (
