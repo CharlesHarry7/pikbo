@@ -304,6 +304,34 @@ assert.match(packExport, /status === "succeeded"/);
 assert.match(packExport, /i\.downloadable/);
 assert.match(packExport, /Failed siblings and Free raw URLs are omitted/);
 
+// AIT-327: SuiteEntryStrip + CommandPalette residual competitor lime → neon-pink board
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const suiteEntry = read("components/SuiteEntryStrip.tsx");
+  const commandPalette = read("components/CommandPalette.tsx");
+  const chrome = {
+    "components/SuiteEntryStrip.tsx": suiteEntry,
+    "components/CommandPalette.tsx": commandPalette,
+  };
+  for (const [rel, src] of Object.entries(chrome)) {
+    assert.ok(
+      !lime.test(src),
+      `${rel} must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)`
+    );
+  }
+  assert.ok(
+    suiteEntry.includes("var(--neon-pink)") &&
+      commandPalette.includes("var(--neon-pink)") &&
+      commandPalette.includes("var(--void)"),
+    "SuiteEntryStrip + CommandPalette use neon-pink / void board tokens"
+  );
+  assert.ok(
+    suiteEntry.includes("rgba(255,78,205") &&
+      commandPalette.includes("rgba(255,78,205"),
+    "Suite entry + command residual glows use neon-pink rgba board tokens"
+  );
+}
+
 console.log(
   "launch-pack-main-path-smoke: PASS (public Moment entry + private fixed trio + downloadable-only seller handoff)"
 );
