@@ -240,6 +240,36 @@ assert.match(modulesSuiteCtas, /data-modules-suite-boot-retry/);
 assert.match(modulesMobileCta, /data-modules-mobile-boot=\{sessionBoot\}/);
 assert.match(modulesMobileCta, /data-modules-mobile-boot-retry/);
 
+// AIT-536 / AIT-530: TrustStrip / HfProductRail / LibraryStorageBanner residual
+const trustStrip = read("components/TrustStrip.tsx");
+const hfProductRail = read("components/HfProductRail.tsx");
+const libraryStorageBanner = read("components/LibraryStorageBanner.tsx");
+for (const [name, src] of [
+  ["TrustStrip", trustStrip],
+  ["HfProductRail", hfProductRail],
+  ["LibraryStorageBanner", libraryStorageBanner],
+]) {
+  assert.match(src, /STUDIO_SESSION_BOOT_MS/, `${name} must boot-bound`);
+  assert.match(
+    src,
+    /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/,
+    `${name} must pass timeoutMs`
+  );
+  assert.match(src, /isClientTimeoutError/, `${name} must detect timeout`);
+  assert.match(src, /sessionBoot === "timeout"/, `${name} timeout branch`);
+  assert.doesNotMatch(src, /void fetchMe\(\)\.then/, `${name} no bare fetchMe`);
+  assert.doesNotMatch(src, /void fetchMe\(\)/, `${name} no bare void fetchMe()`);
+}
+assert.match(trustStrip, /data-trust-boot=\{sessionBoot\}/);
+assert.match(trustStrip, /data-trust-boot-retry/);
+assert.match(trustStrip, /sessionKnown/);
+assert.match(hfProductRail, /data-hf-rail-boot=\{sessionBoot\}/);
+assert.match(hfProductRail, /data-hf-rail-boot-retry/);
+assert.match(hfProductRail, /sessionKnown/);
+assert.match(libraryStorageBanner, /data-library-storage-boot=\{sessionBoot\}/);
+assert.match(libraryStorageBanner, /data-library-storage-boot-retry/);
+assert.match(libraryStorageBanner, /Access check timed out/);
+
 // Package + CI script wiring
 assert.match(
   packageJson,
@@ -256,5 +286,5 @@ for (const asset of [
 }
 
 console.log(
-  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing/moment-preview + SoftLaunch/FreeTrial/Modules boot; timeout/error + retry; mobile sticky Lab CTA)"
+  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing/moment-preview + SoftLaunch/FreeTrial/Modules + TrustStrip/HfProductRail/LibraryStorageBanner boot; timeout/error + retry; mobile sticky Lab CTA)"
 );
