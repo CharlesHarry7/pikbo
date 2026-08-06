@@ -78,7 +78,7 @@ export function LanguageSwitcher({
                   setOpen(false);
                 }}
                 className={`flex w-full items-center justify-between px-3 py-2 text-left text-[13px] transition-colors hover:bg-white/[0.06] ${
-                  l === locale ? "text-[#c8ff3d]" : "text-white/80"
+                  l === locale ? "text-neon-pink" : "text-white/80"
                 }`}
               >
                 {LOCALE_LABELS[l]}
