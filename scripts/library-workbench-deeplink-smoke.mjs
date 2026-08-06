@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * AIT-529 / AIT-392 / AIT-546 / AIT-568 / AIT-576: Workbench + AfterPath +
- * WaitStage + residual CreateStudio chips + Image residual Library chrome →
- * requestId deep-link (owner-safe).
+ * AIT-529 / AIT-392 / AIT-546 / AIT-568 / AIT-576 / AIT-558: Workbench +
+ * AfterPath + WaitStage + residual CreateStudio chips + Image residual Library
+ * chrome + BatchStudio/Seller Pack done → requestId deep-link (owner-safe).
  *
  * Source + pure-logic contract:
  * - libraryWorkbenchHandoffHref only deep-links live private + UUID requestId
@@ -14,6 +14,7 @@
  * - GenerateAfterPath Library chips use helper (fail-closed)
  * - GenerateWaitStage leave exposes libraryHref / handoff markers
  * - Image Studio residual Library chrome uses helper; Lab/missing fail-closed
+ * - BatchStudio / Seller Pack post-pack Library CTAs reuse same helper
  * - LibraryGrid matches deep-link by id or requestId; missing/foreign → not-your-toy
  *
  * Run: node scripts/library-workbench-deeplink-smoke.mjs
@@ -34,6 +35,7 @@ const afterPath = read("components/GenerateAfterPath.tsx");
 const waitStage = read("components/GenerateWaitStage.tsx");
 const landingPanel = read("components/LandingToolPanel.tsx");
 const generateClient = read("lib/generateClient.ts");
+const batchStudio = read("components/BatchStudio.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 const imageStudio = read("app/image/page.tsx");
 const imageRoute = read("app/api/image/route.ts");
@@ -270,6 +272,71 @@ assert.match(
   landingPanel,
   /privateResult=\{privateResult\}/,
   "LandingToolPanel AfterPath must pass privateResult"
+);
+
+
+// ── BatchStudio / Seller Pack Library handoff (AIT-558) ───────────────────
+assert.match(
+  batchStudio,
+  /libraryWorkbenchHandoffHref/,
+  "BatchStudio must import/use libraryWorkbenchHandoffHref"
+);
+assert.match(
+  batchStudio,
+  /from ["']@\/lib\/workbenchResultFold["']/,
+  "BatchStudio must import workbenchResultFold"
+);
+assert.match(
+  batchStudio,
+  /function packLibraryHandoffHref/,
+  "BatchStudio must keep packLibraryHandoffHref helper"
+);
+assert.match(
+  batchStudio,
+  /batchLibraryHref/,
+  "BatchStudio must compute batchLibraryHref"
+);
+assert.match(
+  batchStudio,
+  /href=\{batchLibraryHref\}/,
+  "Batch pack-done Library CTAs must bind batchLibraryHref"
+);
+assert.match(
+  batchStudio,
+  /data-library-handoff=/,
+  "Batch Library CTAs must expose handoff kind marker"
+);
+assert.match(
+  batchStudio,
+  /data-seller-pack-action=["']library["']/,
+  "seller-pack library action marker remains for first-run smoke"
+);
+assert.match(
+  batchStudio,
+  /privateResult:\s*data\.privateResult === true/,
+  "BatchStudio must capture privateResult from generate response"
+);
+assert.match(
+  batchStudio,
+  /privateResult:\s*job\.status === ["']succeeded["'] && Boolean\(job\.requestId\)/,
+  "BatchStudio recovery must mark privateResult on owner success"
+);
+assert.match(
+  batchStudio,
+  /router\.push\(packLibraryHandoffHref\(jobs\)\)/,
+  "leave-wait keep-background must hand off owner-safe Library href"
+);
+// Fail-closed residual: never hardcode inventing private ?job= outside helper.
+assert.doesNotMatch(
+  batchStudio,
+  /href=["']\/library\?job=/,
+  "BatchStudio must never hardcode /library?job= (use helper)"
+);
+// Pack-done primary paths must not leave a bare plain href="/library" CTA.
+assert.doesNotMatch(
+  batchStudio,
+  /href=["']\/library["']/,
+  "BatchStudio pack Library CTAs must not hardcode plain /library"
 );
 
 // ── Image Studio residual Library handoff (AIT-576) ───────────────────────

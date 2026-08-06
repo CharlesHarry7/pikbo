@@ -145,6 +145,27 @@ type Job = {
   retryCount: number;
 };
 
+/**
+ * AIT-558: owner-safe Library href for BatchStudio / Seller Pack done paths.
+ * Prefer private + durable UUID requestId → `/library?job=`; Lab / live-local /
+ * missing id fail-closed to plain `/library` (never invent private owned).
+ */
+function packLibraryHandoffHref(jobs: Job[]): string {
+  const succeeded = jobs.filter((j) => j.status === "succeeded");
+  const demo =
+    succeeded.length > 0 && succeeded.every((j) => Boolean(j.demo));
+  const privateResult = succeeded.some((j) => j.privateResult === true);
+  const requestId =
+    succeeded.find((j) => j.privateResult === true && j.requestId)?.requestId ??
+    succeeded.find((j) => !j.demo && j.requestId)?.requestId ??
+    null;
+  return libraryWorkbenchHandoffHref({
+    demo,
+    privateResult,
+    requestId,
+  });
+}
+
 function selectedMatchesSellerPack(slugs: string[]): boolean {
   return isExactSellerPackSelection(slugs);
 }
@@ -677,6 +698,7 @@ export function BatchStudio({
   /**
    * Stop waiting on Batch/Pack without aborting the in-flight child POST or
    * canceling the ledger. Finished clips stay; open Library for private truth.
+   * Owner-safe: deep-link first durable private finished child when present.
    */
   function leaveWaitingKeepBackground() {
     const plan = planGenerateWaitLeave("detach");
@@ -691,7 +713,7 @@ export function BatchStudio({
     setPackElapsed(0);
     setRunning(false);
     setError(null);
-    router.push("/library");
+    router.push(packLibraryHandoffHref(jobs));
   }
 
   function recordFailGate(opts: {
@@ -1597,11 +1619,6 @@ export function BatchStudio({
     })
   );
   const batchDownloadReady = availableDownloads.length > 0;
-  const batchLibraryRequestId =
-    succeededJobs.find((j) => j.privateResult === true && j.requestId)
-      ?.requestId ??
-    succeededJobs.find((j) => !j.demo && j.requestId)?.requestId ??
-    null;
   const batchResultPrimary =
     !running && doneCount > 0
       ? resolveWorkbenchResultPrimary({
@@ -1613,11 +1630,14 @@ export function BatchStudio({
           listing360: false,
         })
       : null;
-  const batchLibraryHref = libraryWorkbenchHandoffHref({
-    demo: batchResultDemo,
-    privateResult: batchResultPrivate,
-    requestId: batchLibraryRequestId,
-  });
+  /** AIT-558: pack-done Library CTAs — owner deep-link or plain list. */
+  const batchLibraryHref = useMemo(
+    () => packLibraryHandoffHref(jobs),
+    [jobs]
+  );
+  const batchLibraryHandoffKind = batchLibraryHref.includes("job=")
+    ? "request-id"
+    : "list";
   const batchNextSkuHref = demoMode
     ? "/create?mode=seller-pack&try=1&source=next-sample"
     : "/create?mode=seller-pack&source=next-sku";
@@ -2766,7 +2786,11 @@ export function BatchStudio({
                 : " (private 720p)"
               : null}
             . Finished clips land in{" "}
-            <Link href="/library" className={sellerPackActive ? "text-[#2457E6] hover:underline" : "text-[var(--brand)] hover:underline"}>
+            <Link
+              href={batchLibraryHref}
+              className={sellerPackActive ? "text-[#2457E6] hover:underline" : "text-[var(--brand)] hover:underline"}
+              data-library-handoff={batchLibraryHandoffKind}
+            >
               Library
             </Link>
             .
@@ -3010,9 +3034,7 @@ export function BatchStudio({
                 }
                 data-result-fold-action="library"
                 data-seller-pack-action="library"
-                data-library-handoff={
-                  batchLibraryHref.includes("job=") ? "request-id" : "list"
-                }
+                data-library-handoff={batchLibraryHandoffKind}
               >
                 {batchResultPrimary.label}
               </Link>
@@ -3517,9 +3539,10 @@ export function BatchStudio({
         ) : jobs.length > 0 ? (
           <div className="flex gap-2">
             <Link
-              href="/library"
+              href={batchLibraryHref}
               className="min-w-0 flex-1 rounded-xl bg-[#2457E6] px-4 py-3 text-center text-sm font-black text-white"
               data-seller-pack-action="library"
+              data-library-handoff={batchLibraryHandoffKind}
             >
               Library
             </Link>
