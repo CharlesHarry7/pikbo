@@ -13,6 +13,7 @@ import {
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 import { createGenerate360Href } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const MODULES_PATH_GENERATE_HREF = createGenerate360Href("modules");
 
@@ -274,7 +275,7 @@ export default function ModulesPage() {
               →
             </span>
             <Link
-              href="/create?effect=street-power-up"
+              href={`${MOMENT_CREATE_HREF}&source=modules`}
               className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
             >
               Create one Moment

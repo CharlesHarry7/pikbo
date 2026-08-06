@@ -10,6 +10,7 @@ import {
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Explore Generate doors — listing spin remix (ratio/duration/channel). */
 const EXPLORE_GENERATE_HREF = createGenerate360Href("explore");
@@ -125,7 +126,7 @@ export default async function ExplorePage({
               Generate
             </Link>
             <Link
-              href="/create?effect=street-power-up&source=explore"
+              href={`${MOMENT_CREATE_HREF}&source=explore`}
               className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/80 transition hover:border-white/30"
             >
               Create one Moment
@@ -216,7 +217,7 @@ export default async function ExplorePage({
             </p>
           </div>
           <Link
-            href="/create?effect=street-power-up&source=explore-seller-workflow"
+            href={`${MOMENT_CREATE_HREF}&source=explore-seller-workflow`}
             className="shrink-0 rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-xs font-black text-[#c8ff3d]"
           >
             Create one Moment →

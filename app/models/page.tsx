@@ -5,6 +5,7 @@ import { MODELS } from "@/lib/catalog";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Models Generate doors — listing spin remix (ratio/duration/channel). */
 const MODELS_GENERATE_HREF = createGenerate360Href("models");
@@ -71,7 +72,7 @@ export default function ModelsPage() {
             Toy Modules
           </Link>
           <Link
-            href="/create?effect=street-power-up&source=models"
+            href={`${MOMENT_CREATE_HREF}&source=models`}
             className="btn btn-ghost text-sm"
           >
             Create one Moment

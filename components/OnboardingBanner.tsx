@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { useI18n } from "@/components/LanguageProvider";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const KEY = "pikbo_onboard_v3";
 
@@ -51,7 +52,7 @@ export function OnboardingBanner() {
             className="btn btn-primary px-3.5 py-1.5 text-xs font-black"
           />
           <Link
-            href="/create?effect=street-power-up"
+            href={`${MOMENT_CREATE_HREF}&source=onboarding`}
             onClick={dismiss}
             className="btn btn-ghost px-3 py-1.5 text-xs"
           >

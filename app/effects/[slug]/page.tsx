@@ -20,6 +20,7 @@ import {
   workflowsForEffect,
 } from "@/lib/workflows";
 import { HighIntentProductTruth } from "@/components/HighIntentProductTruth";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 // Pre-render every effect page at build time. Concept recipes without unique
 // Lab proof are noindex (Phase H) but still reachable for Create deep-links.
@@ -131,7 +132,7 @@ export default async function EffectPage({
               <Link
                 href={
                   isCoreListingSpin
-                    ? "/create?effect=street-power-up"
+                    ? `${MOMENT_CREATE_HREF}&source=effects-detail`
                     : createRemixHref(preset.slug)
                 }
                 className="btn btn-primary !px-4 !py-2 text-xs font-black"
@@ -155,7 +156,7 @@ export default async function EffectPage({
                     className="btn btn-ghost !px-3 !py-2 text-xs"
                   />
                   <Link
-                    href="/create?effect=street-power-up"
+                    href={`${MOMENT_CREATE_HREF}&source=effects-detail`}
                     className="btn btn-ghost !px-3 !py-2 text-xs"
                   >
                     Create one Moment

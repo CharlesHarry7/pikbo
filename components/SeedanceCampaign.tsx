@@ -4,6 +4,7 @@ import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { createRemixHref } from "@/lib/remixIntent";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Full-bleed flagship banner — HF Seedance battle pattern (H1). */
 export function SeedanceCampaign() {
@@ -70,7 +71,7 @@ export function SeedanceCampaign() {
               Modules
             </Link>
             <Link
-              href="/create?effect=street-power-up"
+              href={`${MOMENT_CREATE_HREF}&source=seedance-campaign`}
               className="rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:border-white/35"
             >
               Create one Moment

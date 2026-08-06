@@ -22,6 +22,7 @@ import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { loadToyIdentity } from "@/lib/toyIdentity";
 import { createRemixHref } from "@/lib/remixIntent";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Default video recipe when handing a still into Generate (listing spin). */
 const IMAGE_HANDOFF_EFFECT = "360-spin-showcase";
@@ -707,8 +708,8 @@ export default function ImageStudioPage() {
                 <Link
                   href={
                     toySku.trim()
-                      ? `/create?effect=street-power-up&sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
-                      : "/create?effect=street-power-up"
+                      ? `${MOMENT_CREATE_HREF}&source=image-page&sku=${encodeURIComponent(toySku.trim().slice(0, 64))}`
+                      : `${MOMENT_CREATE_HREF}&source=image-page`
                   }
                   className="btn btn-ghost w-full text-sm"
                   data-image-handoff="single-moment"

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/LanguageProvider";
 import { createLabSampleTryHref } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const FAIL_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
@@ -172,7 +173,7 @@ export function GenerateFailPanel({
           </Link>
         ) : null}
         <Link
-          href="/create?effect=street-power-up"
+          href={`${MOMENT_CREATE_HREF}&source=fail-panel`}
           className="rounded-full border border-[var(--mint)]/30 bg-[var(--mint)]/10 px-3 py-1 text-[11px] font-semibold text-[var(--mint)] transition hover:bg-[var(--mint)]/20"
           data-fail-path="single-moment"
           title="Try one directed toy Moment"

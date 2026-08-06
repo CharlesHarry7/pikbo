@@ -2609,12 +2609,12 @@ assert.match(projectPageSrc, /CONCEPT_ROBOTS/);
 assert.match(projectPageSrc, /data-project-path="product-first"/);
 assert.match(projectPageSrc, /data-project-cta="product-first"/);
 assert.match(projectPageSrc, /data-project-footer="product-first"/);
-assert.match(projectPageSrc, /effect=street-power-up/);
+assert.match(projectPageSrc, /MOMENT_CREATE_HREF/);
 assert.match(projectPageSrc, /Create one Moment/);
 assert.ok(
-  projectPageSrc.indexOf("effect=street-power-up") <
+  projectPageSrc.indexOf("MOMENT_CREATE_HREF") <
     projectPageSrc.indexOf('href="/modules"') ||
-    projectPageSrc.indexOf("effect=street-power-up") <
+    projectPageSrc.indexOf("MOMENT_CREATE_HREF") <
       projectPageSrc.indexOf("Modules"),
   "Project page: one Moment before Modules"
 );
@@ -4083,7 +4083,7 @@ const imageStudioSrc = fs.readFileSync(
 );
 assert.match(imageStudioSrc, /stashPendingStill|pikbo_pending_still/);
 assert.match(imageStudioSrc, /data-image-handoff=["']single-moment["']/);
-assert.match(imageStudioSrc, /effect=street-power-up/);
+assert.match(imageStudioSrc, /MOMENT_CREATE_HREF/);
 // Animate → Create carries remix contract (ratio/duration/channel), not bare /create
 assert.match(imageStudioSrc, /createRemixHref/);
 assert.match(imageStudioSrc, /data-image-handoff=["']create["']/);
@@ -4479,10 +4479,13 @@ assert.ok(
   "Generate remix before Flow on HfProductRail"
 );
 assert.ok(
-  hfRailSrc.indexOf('href: "/create?effect=street-power-up"') <
+  (hfRailSrc.indexOf("MOMENT_CREATE_HREF") >= 0
+    ? hfRailSrc.indexOf("MOMENT_CREATE_HREF")
+    : hfRailSrc.indexOf('href: "/create?effect=street-power-up"')) <
     hfRailSrc.indexOf('href: "/flow"'),
   "Moment before Flow on HfProductRail"
 );
+assert.match(hfRailSrc, /MOMENT_CREATE_HREF.*source=hf-product-rail|source=hf-product-rail/);
 assert.match(hfRailSrc, /tag:\s*["']Preview["']/);
 assert.match(
   fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
@@ -4935,7 +4938,7 @@ assert.match(
 // profilePanelSrc already loaded above (account and job status)
 assert.match(profilePanelSrc, /data-profile-path=["']product-first["']/);
 assert.match(profilePanelSrc, /data-profile-suite=["']product-first["']/);
-assert.match(profilePanelSrc, /effect=street-power-up/);
+assert.match(profilePanelSrc, /MOMENT_CREATE_HREF/);
 assert.match(profilePanelSrc, /Create one Moment/);
 assert.match(profilePanelSrc, /href=["']\/library["']/);
 assert.doesNotMatch(profilePanelSrc, /Flow · Preview/);
@@ -4957,7 +4960,9 @@ assert.match(
 );
 // Modules suite CTAs: one Moment + Library before Flow Preview
 assert.ok(
-  modulesSuiteCtasSrc.indexOf("effect=street-power-up") <
+  (modulesSuiteCtasSrc.indexOf("MOMENT_CREATE_HREF") >= 0
+    ? modulesSuiteCtasSrc.indexOf("MOMENT_CREATE_HREF")
+    : modulesSuiteCtasSrc.indexOf("effect=street-power-up")) <
     modulesSuiteCtasSrc.indexOf('href="/flow"'),
   "ModulesSuiteCtas: one Moment before Flow"
 );
@@ -4985,7 +4990,7 @@ const landingPathsSrc = fs.readFileSync(
 assert.match(landingPathsSrc, /createRemixHref/);
 assert.match(landingPathsSrc, /data-landing-paths=["']product-first["']/);
 assert.match(landingPathsSrc, /data-landing-studio=["']single-moment["']/);
-assert.match(landingPathsSrc, /effect=street-power-up/);
+assert.match(landingPathsSrc, /MOMENT_CREATE_HREF/);
 
 // SEO suite doors + LandingResults remake remix href
 assert.match(
@@ -5216,7 +5221,10 @@ const featureCarousel = fs.readFileSync(
   "utf8"
 );
 assert.match(featureCarousel, /createRemixHref/);
-assert.match(featureCarousel, /effect=street-power-up|data-home-promo-path=["']seller-pack["']/);
+assert.match(
+  featureCarousel,
+  /MOMENT_CREATE_HREF|data-home-promo-path=["']seller-pack["']/
+);
 assert.doesNotMatch(featureCarousel, /href:\s*["']\/supercomputer["']/);
 assert.match(featureCarousel, /Lab · cached prototype/);
 assert.doesNotMatch(
@@ -5225,7 +5233,7 @@ assert.doesNotMatch(
 );
 assert.match(
   fs.readFileSync(join(root, "components/HeroUpload.tsx"), "utf8"),
-  /effect=street-power-up&source=home-launch-pack/
+  /MOMENT_CREATE_HREF[^`\n]*source=home-launch-pack/
 );
 // Community: never promote session gate / Lab demos to absolute UGC
 const communityPublish = fs.readFileSync(
@@ -5306,7 +5314,7 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "components/GenerateFailPanel.tsx"), "utf8"),
-  /data-fail-path=["']single-moment["']|effect=street-power-up/
+  /data-fail-path=["']single-moment["']|MOMENT_CREATE_HREF/
 );
 assert.match(
   fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
@@ -5881,7 +5889,7 @@ assert.match(footerSrc, /<Link\s+href=\{FOOTER_CREATE_HREF\}/);
 // Pricing and Footer still preserve their existing product-first assertions.
 assert.match(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
-  /href=["']\/create\?effect=street-power-up&source=pricing-hero&try=1&sample=beatbot["']/
+  /MOMENT_CREATE_HREF[^`\n]*source=pricing-hero&try=1&sample=beatbot/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),

@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /**
  * Public pricing stays a single closed Founding Studio proposition.
@@ -66,7 +67,7 @@ export function PricingPlanCards() {
 
       <CardFooter className="mt-auto flex-col items-stretch gap-2">
         <Link
-          href="/create?effect=street-power-up&source=pricing-preview&try=1&sample=beatbot"
+          href={`${MOMENT_CREATE_HREF}&source=pricing-preview&try=1&sample=beatbot`}
           className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[var(--mint)] px-5 text-sm font-black text-black transition hover:opacity-95"
         >
           Preview one toy Moment
