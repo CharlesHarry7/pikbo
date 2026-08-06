@@ -43,6 +43,7 @@ assert(
     homeHero.includes('createGenerate360Href("home-hero")') &&
     homeHero.includes("data-home-hero-360-cta") &&
     homeHero.includes('data-home-primary-generate="360"') &&
+    homeHero.includes('data-home-hero-still-generate="360"') &&
     homeHero.includes("Generate 360° listing spin") &&
     homeHero.includes("art-vinyl-guardian") &&
     homeHero.includes("Style study") &&
@@ -88,9 +89,32 @@ assert(
     galleryLib.includes("DESIGNER_TOY_GALLERY") &&
     galleryLib.includes("/style-studies/") &&
     galleryLib.includes("art-vinyl-guardian") &&
+    galleryLib.includes('createGenerate360Href("home-gallery-pedestal")') &&
+    !galleryLib.includes('href: "/effects/360-spin-showcase"') &&
     !galleryLib.includes("/demos/beatbot") &&
     !galleryLib.includes("/demos/orbit"),
   "designer gallery must use 潮玩 style-studies stills, not cartoon demo loops"
+);
+const homeTrust = read("components/HomeTrustFooter.tsx");
+assert(
+  homeTrust.includes('createGenerate360Href("home-trust")') &&
+    homeTrust.includes('data-home-trust-generate="360"') &&
+    homeTrust.includes("Generate 360° listing spin"),
+  "home trust footer must expose one primary Generate→360 last-fold door"
+);
+const appShellProof = read("components/AppShell.tsx");
+assert(
+  appShellProof.includes('createGenerate360Href("app-shell-home")') &&
+    appShellProof.includes('data-home-primary-nav={motionChrome ? "generate-360"') &&
+    appShellProof.includes("href: HOME_SHELL_GENERATE_HREF") &&
+    appShellProof.includes('label: "Generate"') &&
+    /motionChrome\s*\?\s*HOME_SHELL_GENERATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF/.test(
+      appShellProof
+    ) &&
+    !/motionChrome\s*\?\s*DEFAULT_MOMENT_CREATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF/.test(
+      appShellProof
+    ),
+  "home shell primary nav must be Generate→360 (not Moment Create)"
 );
 assert(
   home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeDesignerGallery") &&

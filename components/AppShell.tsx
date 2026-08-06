@@ -148,13 +148,19 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           aria-label="Primary navigation"
           data-primary-create-href={
             motionChrome
-              ? DEFAULT_MOMENT_CREATE_HREF
+              ? HOME_SHELL_GENERATE_HREF
               : PRIMARY_NAV_CREATE_HREF
           }
+          data-home-primary-nav={motionChrome ? "generate-360" : undefined}
         >
           {(motionChrome
             ? [
-                { href: DEFAULT_MOMENT_CREATE_HREF, label: "Create" },
+                // AIT-462: one primary money door — Generate→360 (not Moment Create)
+                {
+                  href: HOME_SHELL_GENERATE_HREF,
+                  label: "Generate",
+                  marker: "home-nav-generate-360" as const,
+                },
                 { href: "/library", label: "Library" },
                 { href: "/pricing", label: "Pricing" },
                 { href: "/login", label: "Sign in" },
@@ -169,6 +175,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 aria-current={on ? "page" : undefined}
+                {...("marker" in item && item.marker
+                  ? { "data-home-nav-generate": "360" as const }
+                  : {})}
                 className={cn(
                   "relative py-5 text-[13px] font-bold transition-colors",
                   motionChrome
