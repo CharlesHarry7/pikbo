@@ -235,16 +235,25 @@ assert(
       ),
     "Home rails + Library + browse CTA use neon-pink board tokens"
   );
+  // CreateStudio residual pink remains a separate atomic (AIT-559)
   assert(
-    fourSurface["components/CreateStudio.tsx"].includes("rgba(255,78,205") &&
-      fourSurface["components/PricingPlanCards.tsx"].includes(
-        "rgba(255,78,205"
-      ) &&
-      fourSurface["components/PricingUsageEstimator.tsx"].includes(
-        "rgba(255,78,205"
-      ),
-    "Create + Pricing glows use neon-pink rgba board tokens"
+    fourSurface["components/CreateStudio.tsx"].includes("rgba(255,78,205"),
+    "CreateStudio glows still use neon-pink rgba board tokens (separate copper wave)"
   );
+  // AIT-566: Pricing money-path residual carnival pink rgba → gallery-calm copper
+  {
+    const carnival =
+      /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i;
+    const planCards = fourSurface["components/PricingPlanCards.tsx"];
+    const estimator = fourSurface["components/PricingUsageEstimator.tsx"];
+    assert(
+      !carnival.test(planCards) &&
+        !carnival.test(estimator) &&
+        /rgba\(196\s*,\s*165\s*,\s*116/.test(planCards) &&
+        /rgba\(196\s*,\s*165\s*,\s*116/.test(estimator),
+      "PricingPlanCards + PricingUsageEstimator glows use gallery-calm copper rgba(196,165,116) (no carnival pink)"
+    );
+  }
 }
 
 // AIT-517: shell chrome residual carnival/lime → gallery-calm copper board
