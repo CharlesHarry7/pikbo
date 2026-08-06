@@ -246,6 +246,27 @@ assert(
   );
 }
 
+// AIT-341: FlowMediaCard residual lime → neon-pink / void board tokens
+{
+  const flowCard = read("components/FlowMediaCard.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(flowCard),
+    "FlowMediaCard must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    flowCard.includes("var(--neon-pink)") &&
+      flowCard.includes("var(--void)") &&
+      flowCard.includes("rgba(255,78,205"),
+    "FlowMediaCard labels/hovers/CTA use neon-pink + void board tokens"
+  );
+  assert(
+    flowCard.includes("Lab · cached prototype") &&
+      flowCard.includes("Lab media") &&
+      flowCard.includes('data-flow-card={isPreview ? "preview" : "live-path"}'),
+    "FlowMediaCard keeps fail-closed Lab/sample provenance badges"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
