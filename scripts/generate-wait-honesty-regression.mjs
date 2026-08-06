@@ -1,6 +1,7 @@
 /**
- * AIT-533 / AIT-545 / AIT-554 — Studio generate-wait recovery fail-closed
- * residual (recovery exit + server-gated Retry + Batch/Image busy-leave).
+ * AIT-533 / AIT-545 / AIT-554 / AIT-563 — Studio generate-wait recovery
+ * fail-closed residual (recovery exit + server-gated Retry + Batch/Image/
+ * Create form/Landing busy-leave).
  *
  * Source contract (no network, no provider):
  * 1. Recovery checking/waiting always unlocks a non-destructive detach exit
@@ -12,6 +13,7 @@
  * 7. Image Studio Fail panel uses the same pure canRetryGenerateFailure gate
  * 8. CreateStudio form-side busy-leave (AIT-571) next to Cancel
  * 9. Image Studio mid-still busy-leave: pure detach (no abort / no refund invent)
+ * 10. LandingToolPanel mid-generate busy-leave: pure detach (no abort / no refund invent)
  *
  * Run: npm run generate-wait-honesty-regression
  */
@@ -590,6 +592,86 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
 }
 
 
+// ─── 11. AIT-563 LandingToolPanel busy-leave — non-destructive keep-generating ─
+
+{
+  const landing = read("components/LandingToolPanel.tsx");
+  assert.match(landing, /leaveWaitingKeepBackground/);
+  assert.match(landing, /planGenerateWaitLeave\("detach"\)/);
+  assert.match(landing, /planGenerateWaitLeave\("cancel"\)/);
+  assert.match(landing, /shouldShowGenerateWaitDetach/);
+  assert.match(landing, /detachedWaitRef/);
+  assert.match(landing, /landingMountedRef/);
+  assert.match(landing, /data-generate-leave="detach"/);
+  assert.match(landing, /data-generate-leave="cancel"/);
+  assert.match(landing, /data-landing-leave="detach"/);
+  assert.match(landing, /Open Library · keep generating/);
+  assert.match(landing, /router\.push\(["']\/library["']\)/);
+  assert.match(landing, /recoveringSavedResult/);
+  assert.match(landing, /awaitingPrimaryAfterRecovery/);
+  assert.match(landing, /onRecoveryState/);
+  assert.match(
+    landing,
+    /GenerateWaitStage[\s\S]{0,600}onLeaveToLibrary=\{leaveWaitingKeepBackground\}/
+  );
+  assert.match(
+    landing,
+    /GenerateWaitStage[\s\S]{0,800}recoveryChecking=\{recoveringSavedResult\}/
+  );
+  // Detach function never aborts primary, cancels ledger, or invents restore.
+  {
+    const leaveFn = landing.match(
+      /function leaveWaitingKeepBackground\(\) \{[\s\S]*?\n  \}/
+    )?.[0];
+    assert.ok(
+      leaveFn,
+      "leaveWaitingKeepBackground must exist on LandingToolPanel"
+    );
+    assert.match(leaveFn, /planGenerateWaitLeave\("detach"\)/);
+    assert.match(leaveFn, /generateAbortRef\.current = null/);
+    assert.match(leaveFn, /detachedWaitRef\.current = true/);
+    assert.match(leaveFn, /router\.push\(["']\/library["']\)/);
+    assert.doesNotMatch(leaveFn, /\.abort\s*\(/);
+    assert.doesNotMatch(leaveFn, /setFailCreditState/);
+    assert.doesNotMatch(leaveFn, /10 restored|credits restored/i);
+  }
+  // Explicit cancel remains abort + refund unconfirmed (never invent restore).
+  {
+    const cancelFn = landing.match(
+      /function cancelInFlightGenerate\(\) \{[\s\S]*?\n  \}/
+    )?.[0];
+    assert.ok(cancelFn, "cancelInFlightGenerate must exist on LandingToolPanel");
+    assert.match(cancelFn, /planGenerateWaitLeave\("cancel"\)/);
+    assert.match(cancelFn, /ctrl\.abort\(\)/);
+    assert.match(cancelFn, /setFailCreditState\(["']refund unconfirmed["']\)/);
+    assert.doesNotMatch(cancelFn, /10 restored/);
+  }
+  // Detached settle path persists history without inventing fail/refund UI.
+  assert.match(
+    landing,
+    /detachedWaitRef\.current \|\| !landingMountedRef\.current/
+  );
+  assert.match(
+    landing,
+    /if \(detachedWaitRef\.current \|\| !landingMountedRef\.current\) \{[\s\S]{0,500}pushHistory/
+  );
+  // Unmount must not auto-abort (would kill detach leave).
+  assert.doesNotMatch(
+    landing,
+    /return \(\) => \{[\s\S]{0,220}generateAbortRef\.current\?\.abort\(\)/,
+    "Landing unmount must not abort in-flight generate POST (detach semantics)"
+  );
+  // AIT-545 Retry gate retained — AUTH / paywall / fatal / durable hold blocked.
+  assert.match(landing, /canRetryGenerateFailure/);
+  assert.match(landing, /lastFailCode/);
+  assert.match(landing, /lastFailFatal/);
+  assert.match(landing, /lastFailPaywall/);
+  assert.match(
+    landing,
+    /canRetryGenerateFailure\(\{[\s\S]{0,220}code: lastFailCode[\s\S]{0,120}fatal: lastFailFatal[\s\S]{0,120}paywall:[\s\S]{0,100}busy[\s\S]{0,80}hasInput:/
+  );
+}
+
 console.log(
-  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · AIT-237 Create/Landing gate · fail-closed refund copy · Batch wiring · AIT-545 Image Studio gate · AIT-571 Create form busy-leave · AIT-554 Image busy-leave)"
+  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · AIT-237 Create/Landing gate · fail-closed refund copy · Batch wiring · AIT-545 Image Studio gate · AIT-571 Create form busy-leave · AIT-554 Image busy-leave · AIT-563 Landing busy-leave)"
 );
