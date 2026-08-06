@@ -443,7 +443,7 @@ assert.doesNotMatch(
   /bottom-20/,
   "Toast stack must not hardcode bottom-20 (misses notched safe-area)"
 );
-// AIT-374: Toast residual competitor lime → neon-pink / void board tokens
+// AIT-374 / AIT-489: Toast residual competitor lime → copper board tokens
 assert.doesNotMatch(
   toastSrc,
   /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/,
@@ -452,7 +452,7 @@ assert.doesNotMatch(
 assert.match(
   toastSrc,
   /var\(--neon-pink\)/,
-  "Toast chrome uses neon-pink board token"
+  "Toast chrome uses neon-pink board token (copper alias)"
 );
 assert.match(
   toastSrc,
@@ -461,8 +461,8 @@ assert.match(
 );
 assert.match(
   toastSrc,
-  /rgba\(255,\s*78,\s*205/,
-  "Toast glow uses neon-pink board rgba"
+  /rgba\(196,\s*165,\s*116/,
+  "Toast glow uses gallery-calm copper board rgba"
 );
 
 console.log("generate-360-cta-smoke: ok");

@@ -28,7 +28,7 @@ export function PricingPlanCards() {
   return (
     <Card
       id="plan-founding_studio"
-      className="relative mx-auto flex max-w-2xl scroll-mt-24 flex-col overflow-hidden border-[var(--mint)]/40 shadow-[0_0_0_1px_rgba(255,78,205,0.2),0_24px_60px_-24px_rgba(0,0,0,0.85)]"
+      className="relative mx-auto flex max-w-2xl scroll-mt-24 flex-col overflow-hidden border-[var(--mint)]/40 shadow-[0_0_0_1px_rgba(196,165,116,0.2),0_24px_60px_-24px_rgba(0,0,0,0.85)]"
       data-pricing-state="coming-soon"
     >
       <div className="absolute inset-x-0 top-0 h-1 [background:var(--grad)]" />

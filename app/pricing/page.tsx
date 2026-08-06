@@ -88,7 +88,7 @@ export default function PricingPage() {
       data-pricing-path="product-first"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(48%_80%_at_50%_0%,rgba(177,78,255,0.28),transparent_70%),radial-gradient(36%_60%_at_80%_10%,rgba(255,78,205,0.16),transparent_65%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(48%_80%_at_50%_0%,rgba(196,165,116,0.28),transparent_70%),radial-gradient(36%_60%_at_80%_10%,rgba(196,165,116,0.16),transparent_65%)]"
         aria-hidden
       />
       <script
@@ -97,7 +97,7 @@ export default function PricingPage() {
       />
       <div className="relative mx-auto max-w-6xl">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--brand)]">
             Founding Studio · private beta
           </p>
           <h1 className="mt-3 font-display text-[clamp(3rem,7vw,6.5rem)] font-black leading-[0.88] tracking-[-0.07em]">
@@ -117,7 +117,7 @@ export default function PricingPage() {
           data-pricing-state="closed-beta"
         >
           <div
-            className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#B14EFF,#FF4ECD,#00D9FF)]"
+            className="absolute inset-x-0 top-0 h-1 bg-[var(--grad)]"
             aria-hidden
           />
           <div className="grid gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:items-start">
@@ -126,7 +126,7 @@ export default function PricingPage() {
                 <h2 className="text-2xl font-black tracking-[-0.04em] sm:text-3xl">
                   Founding Studio
                 </h2>
-                <span className="rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white">
+                <span className="rounded-full bg-[var(--grad-cta)] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white">
                   Closed beta
                 </span>
               </div>
@@ -152,13 +152,13 @@ export default function PricingPage() {
               </div>
               <Link
                 href="/contact?source=pricing-private-beta"
-                className="mt-4 inline-block text-xs font-bold text-white/58 underline decoration-white/20 underline-offset-4 hover:text-[#00D9FF]"
+                className="mt-4 inline-block text-xs font-bold text-white/58 underline decoration-white/20 underline-offset-4 hover:text-[var(--brand)]"
               >
                 Request private beta access
               </Link>
               <Link
                 href={PRICING_PREVIEW_HREF}
-                className="mt-4 inline-block text-xs font-bold text-white/58 underline decoration-white/20 underline-offset-4 hover:text-[#00D9FF]"
+                className="mt-4 inline-block text-xs font-bold text-white/58 underline decoration-white/20 underline-offset-4 hover:text-[var(--brand)]"
               >
                 Preview one Pikbo Lab Moment
               </Link>
@@ -166,7 +166,7 @@ export default function PricingPage() {
 
             <div className="overflow-hidden rounded-[1.4rem] border border-white/12">
               <div className="border-b border-white/12 bg-white/[0.045] px-4 py-3">
-                <p className="text-[9px] font-black uppercase tracking-[0.17em] text-[#00D9FF]">
+                <p className="text-[9px] font-black uppercase tracking-[0.17em] text-[var(--brand)]">
                   The product promise
                 </p>
               </div>
@@ -183,7 +183,7 @@ export default function PricingPage() {
                       {note}
                     </p>
                   </div>
-                  <span className="self-center rounded-full border border-[#FF4ECD]/35 bg-[#FF4ECD]/10 px-2.5 py-1 text-[10px] font-black text-[#FF4ECD]">
+                  <span className="self-center rounded-full border border-[var(--brand)]/35 bg-[var(--brand)]/10 px-2.5 py-1 text-[10px] font-black text-[var(--brand)]">
                     {value}
                   </span>
                 </div>

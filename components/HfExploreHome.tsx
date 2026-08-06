@@ -144,7 +144,7 @@ export function HfExploreHome({
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
             {t("home.feelFirst")}
           </p>
-          <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[var(--neon-pink)]/30 bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--neon-pink)] shadow-[0_0_24px_rgba(255,78,205,0.15)] backdrop-blur">
+          <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[var(--neon-pink)]/30 bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--neon-pink)] shadow-[0_0_24px_rgba(196,165,116,0.15)] backdrop-blur">
             {item.badge ?? "PIKBO Lab · cached prototype"}
           </span>
           {toolFirstLayout ? (
@@ -167,7 +167,7 @@ export function HfExploreHome({
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
               href="/create?effect=street-power-up"
-              className="inline-flex items-center justify-center rounded-full bg-[var(--neon-pink)] px-7 py-3.5 text-sm font-black text-[var(--void)] shadow-[0_0_48px_-6px_rgba(255,78,205,0.55)]"
+              className="inline-flex items-center justify-center rounded-full bg-[var(--neon-pink)] px-7 py-3.5 text-sm font-black text-[var(--void)] shadow-[0_0_48px_-6px_rgba(196,165,116,0.55)]"
             >
               Use tool on this page
             </Link>
@@ -269,13 +269,13 @@ export function HfExploreHome({
                 Reference poster · not verified input
               </p>
             </div>
-            <div className="overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-[var(--neon-pink)]/25 shadow-[0_24px_60px_-24px_rgba(255,78,205,0.2)]">
+            <div className="overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-[var(--neon-pink)]/25 shadow-[0_24px_60px_-24px_rgba(196,165,116,0.2)]">
               <div className="relative aspect-[4/5]">
                 <Clip
                   demo={item.demo}
                   className="absolute inset-0 h-full w-full object-cover"
                 />
-                <span className="absolute left-3 top-3 rounded-full bg-[var(--neon-pink)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--void)] shadow-[0_0_16px_rgba(255,78,205,0.4)]">
+                <span className="absolute left-3 top-3 rounded-full bg-[var(--neon-pink)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--void)] shadow-[0_0_16px_rgba(196,165,116,0.4)]">
                   Preview
                 </span>
               </div>
@@ -315,7 +315,7 @@ export function HfExploreHome({
           <div className="mt-7 flex flex-wrap gap-2">
             <Link
               href={item.href}
-              className="inline-flex rounded-full bg-[var(--neon-pink)] px-7 py-3.5 text-sm font-black text-[var(--void)] shadow-[0_0_40px_-8px_rgba(255,78,205,0.5)] transition hover:-translate-y-0.5"
+              className="inline-flex rounded-full bg-[var(--neon-pink)] px-7 py-3.5 text-sm font-black text-[var(--void)] shadow-[0_0_40px_-8px_rgba(196,165,116,0.5)] transition hover:-translate-y-0.5"
             >
               {t("home.replaceMine")}
             </Link>
@@ -359,7 +359,7 @@ export function HfExploreHome({
             {projects.slice(0, 8).map((project, i) => (
               <div
                 key={project.slug}
-                className="group relative overflow-hidden rounded-xl bg-neutral-900 ring-1 ring-white/10 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.85)] transition duration-300 hover:-translate-y-1 hover:ring-[var(--neon-pink)]/45 hover:shadow-[0_20px_40px_-20px_rgba(255,78,205,0.12)]"
+                className="group relative overflow-hidden rounded-xl bg-neutral-900 ring-1 ring-white/10 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.85)] transition duration-300 hover:-translate-y-1 hover:ring-[var(--neon-pink)]/45 hover:shadow-[0_20px_40px_-20px_rgba(196,165,116,0.12)]"
               >
                 <button
                   type="button"
@@ -386,7 +386,7 @@ export function HfExploreHome({
                 <div className="absolute inset-x-0 bottom-0 flex gap-1 p-2">
                   <Link
                     href={showcaseRecipeHref(project)}
-                    className="flex-1 rounded-full bg-[var(--neon-pink)] py-1.5 text-center text-[10px] font-black text-black shadow-[0_0_16px_rgba(255,78,205,0.25)] transition hover:brightness-110"
+                    className="flex-1 rounded-full bg-[var(--neon-pink)] py-1.5 text-center text-[10px] font-black text-black shadow-[0_0_16px_rgba(196,165,116,0.25)] transition hover:brightness-110"
                   >
                     {t("home.remake")}
                   </Link>
