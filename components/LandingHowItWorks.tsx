@@ -1,6 +1,10 @@
 /**
  * 哥飞 V2 — 落地三步：Photo → Recipe → Video draft
  * 必须与页面真实 UI 一致；仅在页内有工具时挂 HowTo JSON-LD。
+ *
+ * Soft-launch honesty (AIT-243): do not brand Free Mini / Seedance Mini product
+ * caps while public Live is closed. Prefer Live-gated / Cached Lab copy so SSR
+ * landings stay fail-closed (JSON-LD helper stays server-safe in this module).
  */
 export function LandingHowItWorks({
   productLabel = "video draft",
@@ -19,12 +23,12 @@ export function LandingHowItWorks({
     {
       n: "2",
       t: "Recipe",
-      d: "Pick a toy-native recipe (spin, float, unbox energy). Soft launch uses Seedance Mini with honest Free Mini caps.",
+      d: "Pick a toy-native recipe (spin, float, unbox energy). Soft launch: cached Lab previews first; Live generation stays gated for eligible invited accounts.",
     },
     {
       n: "3",
       t: "Video draft",
-      d: `Review the ${productLabel} before posting. Free Mini: ~5s · 480p · on-player mark. Failed live jobs refund when confirmed.`,
+      d: `Review the ${productLabel} before posting. Cached Lab · Live gated · refunds when confirmed. Real generation opens only when Live is enabled for eligible accounts.`,
     },
   ];
 
@@ -36,6 +40,7 @@ export function LandingHowItWorks({
           : "container-x py-12"
       }
       aria-label="How it works: Photo, Recipe, Video draft"
+      data-landing-hiw-cap="lab-gated"
     >
       <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]">
         How it works
