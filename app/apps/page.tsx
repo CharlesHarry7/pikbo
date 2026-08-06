@@ -121,7 +121,7 @@ export default function AppsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[radial-gradient(50%_80%_at_0%_0%,rgba(200,255,61,0.07),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[radial-gradient(50%_80%_at_0%_0%,rgba(255,78,205,0.07),transparent_70%)]"
         aria-hidden
       />
       <div className="relative mx-auto max-w-6xl">
@@ -133,7 +133,7 @@ export default function AppsPage() {
           Recipe doors for one photo of a toy you own — listing, social, drop,
           and batch. Each card prefills the same Generate workbench; runtime
           access is checked there. Canonical modular wall:{" "}
-          <Link href="/modules" className="text-[var(--mint)] hover:underline">
+          <Link href="/modules" className="text-[var(--neon-pink)] hover:underline">
             /modules
           </Link>
           .
@@ -169,7 +169,7 @@ export default function AppsPage() {
         </div>
 
         <section className="mt-10">
-          <h2 className="mb-1 text-xs font-bold uppercase tracking-wider text-[var(--mint)]">
+          <h2 className="mb-1 text-xs font-bold uppercase tracking-wider text-[var(--neon-pink)]">
             Ready recipes · {liveWorkflows.length}
           </h2>
           <p className="mb-4 text-[11px] text-[var(--fg-dim)]">
@@ -182,7 +182,7 @@ export default function AppsPage() {
                 <Link
                   key={app.id}
                   href={app.href}
-                  className="group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--mint)]/40 hover:shadow-[0_20px_48px_-24px_rgba(200,255,61,0.12)]"
+                  className="group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--neon-pink)]/40 hover:shadow-[0_20px_48px_-24px_rgba(255,78,205,0.12)]"
                 >
                   <div className="relative aspect-[3/4] bg-black/50">
                     {poster ? (
@@ -199,14 +199,14 @@ export default function AppsPage() {
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                    <span className="absolute left-2 top-2 rounded-full bg-[var(--mint)] px-1.5 py-0.5 text-[9px] font-black text-black">
+                    <span className="absolute left-2 top-2 rounded-full bg-[var(--neon-pink)] px-1.5 py-0.5 text-[9px] font-black text-[var(--void)]">
                       READY
                     </span>
-                    <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-[var(--mint)] px-2 py-0.5 text-[9px] font-black uppercase text-black opacity-0 transition group-hover:opacity-100">
+                    <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-[var(--neon-pink)] px-2 py-0.5 text-[9px] font-black uppercase text-[var(--void)] opacity-0 transition group-hover:opacity-100">
                       Launch
                     </span>
                     <div className="absolute inset-x-0 bottom-0 p-3">
-                      <p className="text-sm font-bold text-white group-hover:text-[var(--mint)]">
+                      <p className="text-sm font-bold text-white group-hover:text-[var(--neon-pink)]">
                         {app.emoji} {app.label}
                       </p>
                       <p className="mt-0.5 line-clamp-2 text-[11px] text-white/55">
@@ -228,7 +228,7 @@ export default function AppsPage() {
 
         {extraLive.length > 0 && (
           <section className="mt-10">
-            <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-[var(--mint)]">
+            <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-[var(--neon-pink)]">
               More prefilled · {extraLive.length}
             </h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -243,10 +243,10 @@ export default function AppsPage() {
                   </span>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-semibold group-hover:text-[var(--mint)]">
+                      <h3 className="font-semibold group-hover:text-[var(--neon-pink)]">
                         {app.name}
                       </h3>
-                      <span className="rounded-full bg-[var(--mint)]/15 px-1.5 py-0.5 text-[9px] font-bold text-[var(--mint)]">
+                      <span className="rounded-full bg-[var(--neon-pink)]/15 px-1.5 py-0.5 text-[9px] font-bold text-[var(--neon-pink)]">
                         PREFILLED
                       </span>
                     </div>
