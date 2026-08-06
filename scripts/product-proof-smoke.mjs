@@ -285,6 +285,22 @@ assert(
   );
 }
 
+// AIT-560: discovery video tiles residual competitor lime → gallery-calm copper
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const videoTile = read("components/VideoTile.tsx");
+  assert(
+    !lime.test(videoTile),
+    "VideoTile must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    videoTile.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(videoTile) &&
+      videoTile.includes("var(--primary-foreground)"),
+    "VideoTile hover/hairline/badges/pills use --brand + copper glow + primary-foreground"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
