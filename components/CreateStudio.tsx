@@ -96,13 +96,19 @@ import {
 import { deliveryItemsForJob } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
 import {
+  applyRecentListLoad,
+  applyRecentPreviewResolution,
   CREATE_RETRY_ASSET_ID_QUERY,
+  deriveRecentReuseUiState,
   fetchRecentPrivateToyAssets,
   fixedMomentCreateReturnPath,
   parseCreateRetryAssetIdQuery,
   planCreateQueryAssetHandoff,
+  planRecentOwnerTransition,
+  privateRecentOwnerKey,
   resolvePrivateToyAssetPreviewUrl,
   type RecentPrivateToyAsset,
+  type RecentSelectionSource,
 } from "@/lib/clientAssets";
 
 type Status = "idle" | "uploading" | "generating" | "done" | "error";
@@ -264,6 +270,38 @@ export function CreateStudio({
   const [image, setImage] = useState<string | null>(null);
   /** Phase D local asset id — generate prefers assetId over re-posting Base64. */
   const [assetId, setAssetId] = useState<string | null>(null);
+  /** Owner-only ready private toy photos for reuse (never shown to public guests). */
+  const [recentPrivateAssets, setRecentPrivateAssets] = useState<
+    RecentPrivateToyAsset[]
+  >([]);
+  const [recentAssetThumbs, setRecentAssetThumbs] = useState<
+    Record<string, string>
+  >({});
+  const [recentAssetsLoading, setRecentAssetsLoading] = useState(false);
+  /** Owner key the list/thumbs were loaded for (render-time fail-closed bind). */
+  const [recentListBoundOwnerKey, setRecentListBoundOwnerKey] = useState<
+    string | null
+  >(null);
+  /** Owner key for a recent-reuse selection (null when upload/lab/other). */
+  const [recentSelectionBoundOwnerKey, setRecentSelectionBoundOwnerKey] = useState<
+    string | null
+  >(null);
+  const [recentSelectionSource, setRecentSelectionSource] =
+    useState<RecentSelectionSource | null>(null);
+  const recentThumbUrlsRef = useRef<string[]>([]);
+  /**
+   * last-applied owner after deferred cleanup (transition planner).
+   * Distinct from liveOwnerKeyRef, which tracks the current render owner
+   * for async commit gates without waiting on setTimeout(0).
+   */
+  const recentOwnerKeyRef = useRef<string | null>(null);
+  const liveOwnerKeyRef = useRef<string | null>(null);
+  const recentLoadGenerationRef = useRef(0);
+  const recentSelectionTokenRef = useRef(0);
+  /** Tracks whether current still came from recent reuse (owner-switch clear only). */
+  const recentSelectionSourceRef = useRef<RecentSelectionSource | null>(null);
+  /** Mirrors selected assetId for race-safe preview commits (avoids stale setState). */
+  const recentSelectedAssetIdRef = useRef<string | null>(null);
   /**
    * Durable Create `?assetId=` same-photo handoff (Library new attempt).
    * Never previewed/selected until the id is in the current owner's ready list.
@@ -272,7 +310,7 @@ export function CreateStudio({
     parseCreateRetryAssetIdQuery(initialAssetId)
   );
   const queryAssetHandoffSettledRef = useRef(false);
-  /** Explicit upload / Lab / pending-still wins over deferred query auto-select. */
+  /** Explicit upload / Lab / manual recent wins over deferred query auto-select. */
   const userStillChoiceRef = useRef(false);
   const samePhotoPreviewBlobRef = useRef<string | null>(null);
   const [samePhotoHandoffLoading, setSamePhotoHandoffLoading] = useState(
@@ -339,6 +377,50 @@ export function CreateStudio({
     "checking" | "ready" | "timeout"
   >("checking");
   const privateUploadEnabled = canUsePrivateLaunch(session);
+  /** Stable owner key for recent reuse; null for public / capability-closed. */
+  const recentOwnerKey = useMemo(
+    () =>
+      privateRecentOwnerKey({
+        privateUploadEnabled,
+        ownerUserId: session?.auth?.id ?? null,
+      }),
+    [privateUploadEnabled, session?.auth?.id]
+  );
+  /**
+   * Fail-closed at render/interaction time: stale A list/selection never shows
+   * or is adoptable under B while deferred cleanup is still pending.
+   */
+  const recentReuseUi = useMemo(
+    () =>
+      deriveRecentReuseUiState({
+        currentOwnerKey: recentOwnerKey,
+        listOwnerKey: recentListBoundOwnerKey,
+        assets: recentPrivateAssets,
+        thumbs: recentAssetThumbs,
+        selectionSource: recentSelectionSource,
+        selectionOwnerKey: recentSelectionBoundOwnerKey,
+        selectedAssetId: assetId,
+        selectedImage: image,
+        loading: recentAssetsLoading,
+      }),
+    [
+      recentOwnerKey,
+      recentListBoundOwnerKey,
+      recentPrivateAssets,
+      recentAssetThumbs,
+      recentSelectionSource,
+      recentSelectionBoundOwnerKey,
+      assetId,
+      image,
+      recentAssetsLoading,
+    ]
+  );
+  const composerImage = recentReuseUi.effectiveSelectedImage;
+  const composerAssetId = recentReuseUi.effectiveSelectedAssetId;
+  /** Fail-closed current-composer input presence (never raw stale recent image). */
+  const composerHasInput = Boolean(composerImage || composerAssetId);
+  // Always track the render-time owner for async list/preview commit gates.
+  liveOwnerKeyRef.current = recentOwnerKey;
   const fixedMomentNextPath = fixedMomentCreateReturnPath({
     source: initialSource || (initialAssetId ? "library" : "guest-create"),
     assetId: initialAssetId,
@@ -732,6 +814,17 @@ export function CreateStudio({
     samePhotoPreviewBlobRef.current = null;
   }, []);
 
+  const revokeRecentThumbUrls = useCallback(() => {
+    for (const url of recentThumbUrlsRef.current) {
+      try {
+        if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+      } catch {
+        /* ignore */
+      }
+    }
+    recentThumbUrlsRef.current = [];
+  }, []);
+
   const adoptImage = useCallback(
     async (dataUrl: string, opts?: { labSample?: boolean }) => {
       if (!opts?.labSample && !privateUploadEnabled) {
@@ -746,6 +839,13 @@ export function CreateStudio({
       setSamePhotoHandoffLoading(false);
       setSamePhotoHandoffNote(null);
       revokeSamePhotoPreviewBlob();
+      // Local upload / Lab — not recent reuse (owner-switch must not wipe these).
+      const source: RecentSelectionSource = opts?.labSample ? "lab" : "upload";
+      recentSelectionSourceRef.current = source;
+      setRecentSelectionSource(source);
+      setRecentSelectionBoundOwnerKey(null);
+      recentSelectionTokenRef.current += 1;
+      recentSelectedAssetIdRef.current = null;
       setImage(dataUrl);
       setAssetId(null);
       setImageProbe(null);
@@ -789,7 +889,10 @@ export function CreateStudio({
       try {
         const { registerLocalAsset } = await import("@/lib/clientAssets");
         const reg = await registerLocalAsset(dataUrl);
-        if (reg?.assetId) setAssetId(reg.assetId);
+        if (reg?.assetId) {
+          recentSelectedAssetIdRef.current = reg.assetId;
+          setAssetId(reg.assetId);
+        }
       } catch {
         /* generate still works with inline data URL */
       }
@@ -798,10 +901,296 @@ export function CreateStudio({
   );
 
   /**
+   * Reuse an already-verified private toy photo by assetId.
+   * Does not re-upload, does not invent Base64 for generate, and never puts
+   * signed URLs or object keys into the generate request.
+   * Selection token blocks out-of-order A→B preview commits.
+   *
+   * @param opts.fromQueryHandoff — true only for deferred `?assetId=` auto-select
+   *   after the id appeared in the current owner's ready recent list.
+   */
+  const adoptRecentPrivateAsset = useCallback(
+    async (
+      asset: RecentPrivateToyAsset,
+      opts?: { fromQueryHandoff?: boolean }
+    ) => {
+      const ownerKey = recentOwnerKey;
+      if (!ownerKey) return;
+      // Interaction-time gate: never adopt a stale A row rendered under B.
+      if (!recentReuseUi.canAdoptAssetId(asset.id)) return;
+      if (opts?.fromQueryHandoff) {
+        // Only the deferred owner-safe handoff path; never invent selection.
+        queryAssetHandoffSettledRef.current = true;
+      } else {
+        // Manual recent pick wins over any pending query handoff.
+        userStillChoiceRef.current = true;
+        queryAssetHandoffSettledRef.current = true;
+      }
+      setSamePhotoHandoffLoading(false);
+      setSamePhotoHandoffNote(null);
+      revokeSamePhotoPreviewBlob();
+      recentSelectionSourceRef.current = "recent";
+      setRecentSelectionSource("recent");
+      setRecentSelectionBoundOwnerKey(ownerKey);
+      const selectionToken = recentSelectionTokenRef.current + 1;
+      recentSelectionTokenRef.current = selectionToken;
+      recentSelectedAssetIdRef.current = asset.id;
+      setError(null);
+      setLastUploadIgnored(false);
+      setStatus("idle");
+      setVideoUrl(null);
+      setDemo(false);
+      setUsedModel(null);
+      setResultDuration(null);
+      setResultAspect(null);
+      setResultResolution(null);
+      setVersions([]);
+      setActiveVersionId(null);
+      setLastRequestCreditState(null);
+      setLabStill(false);
+      setBriefCollapsed(true);
+      setFidelityAngles([]);
+      setSecondaryStill(null);
+      briefAutoAppliedRef.current = false;
+      setAssetId(asset.id);
+      if (asset.skuLabel) {
+        setToyIdentity((prev) => ({
+          ...prev,
+          sku: asset.skuLabel!.slice(0, 64),
+        }));
+      }
+      const cachedThumb = recentReuseUi.visibleThumbs[asset.id];
+      if (cachedThumb) {
+        setImage(cachedThumb);
+      } else {
+        setImage(null);
+      }
+      setImageProbe(null);
+      track({
+        event: "upload_ready",
+        path: "/create",
+        recipe: effect,
+        meta: { source: "recent_private_asset", reused: true },
+      });
+      try {
+        await applyRecentPreviewResolution({
+          requestOwnerKey: ownerKey,
+          requestAssetId: asset.id,
+          requestSelectionToken: selectionToken,
+          getCurrent: () => ({
+            ownerKey: liveOwnerKeyRef.current,
+            assetId: recentSelectedAssetIdRef.current,
+            selectionToken: recentSelectionTokenRef.current,
+          }),
+          resolvePreview: () =>
+            resolvePrivateToyAssetPreviewUrl(asset.previewPath),
+          onCommit: (previewUrl) => {
+            setImage(previewUrl);
+            if (previewUrl.startsWith("blob:")) {
+              recentThumbUrlsRef.current.push(previewUrl);
+            }
+            void probeImageSize(previewUrl).then((meta) => {
+              if (
+                liveOwnerKeyRef.current !== ownerKey ||
+                recentSelectedAssetIdRef.current !== asset.id ||
+                recentSelectionTokenRef.current !== selectionToken
+              ) {
+                return;
+              }
+              if (meta) setImageProbe(meta);
+            });
+          },
+        });
+      } catch {
+        /* assetId alone is enough for live generate; preview is best-effort */
+      }
+      if (
+        liveOwnerKeyRef.current === ownerKey &&
+        recentSelectedAssetIdRef.current === asset.id &&
+        recentSelectionTokenRef.current === selectionToken
+      ) {
+        toast("Using a recent verified toy photo · no re-upload");
+        if (opts?.fromQueryHandoff) {
+          setSamePhotoHandoffNote(null);
+        }
+      }
+    },
+    [effect, recentOwnerKey, recentReuseUi, revokeSamePhotoPreviewBlob, toast]
+  );
+
+  // Owner-key bound recent load: public never requests; A→B clears prior owner state.
+  useEffect(() => {
+    const prevOwnerKey = recentOwnerKeyRef.current;
+    const nextOwnerKey = recentOwnerKey;
+    const plan = planRecentOwnerTransition({
+      prevOwnerKey,
+      nextOwnerKey,
+      selectionSource: recentSelectionSourceRef.current,
+    });
+
+    const ac = new AbortController();
+    let cancelled = false;
+
+    // Defer setState (lint: no sync setState in effect body).
+    const t = window.setTimeout(() => {
+      if (cancelled) return;
+
+      if (plan.ownerChanged) {
+        recentOwnerKeyRef.current = nextOwnerKey;
+        if (plan.bumpLoadGeneration) {
+          recentLoadGenerationRef.current += 1;
+        }
+        if (plan.bumpSelectionToken) {
+          recentSelectionTokenRef.current += 1;
+        }
+        if (plan.revokeThumbUrls) {
+          revokeRecentThumbUrls();
+        }
+        if (plan.clearRecentList) {
+          setRecentPrivateAssets([]);
+          setRecentListBoundOwnerKey(null);
+        }
+        if (plan.clearRecentThumbs) {
+          setRecentAssetThumbs({});
+        }
+        setRecentAssetsLoading(false);
+        if (plan.clearRecentSelection) {
+          recentSelectionSourceRef.current = null;
+          recentSelectedAssetIdRef.current = null;
+          setRecentSelectionSource(null);
+          setRecentSelectionBoundOwnerKey(null);
+          setAssetId(null);
+          setImage(null);
+          setImageProbe(null);
+          revokeSamePhotoPreviewBlob();
+          setSamePhotoHandoffNote(null);
+        }
+      } else {
+        recentOwnerKeyRef.current = nextOwnerKey;
+      }
+
+      // Capability closed or no auth id — never request the recent API.
+      if (!nextOwnerKey) {
+        setSamePhotoHandoffLoading(false);
+        return;
+      }
+
+      const requestOwnerKey = nextOwnerKey;
+      const requestGeneration = recentLoadGenerationRef.current + 1;
+      recentLoadGenerationRef.current = requestGeneration;
+      setRecentAssetsLoading(true);
+      // Keep same-photo handoff spinner only while query handoff is still open.
+      if (
+        queryAssetHandoffIdRef.current &&
+        !queryAssetHandoffSettledRef.current &&
+        !userStillChoiceRef.current
+      ) {
+        setSamePhotoHandoffLoading(true);
+      }
+
+      void (async () => {
+        try {
+          let loadedAssets: RecentPrivateToyAsset[] = [];
+          const commitStatus = await applyRecentListLoad({
+            requestOwnerKey,
+            requestGeneration,
+            getCurrent: () => ({
+              ownerKey: liveOwnerKeyRef.current,
+              generation: recentLoadGenerationRef.current,
+            }),
+            load: async () => {
+              // Prove durable ?assetId= handoff target beyond the recent window
+              // (server still enforces exact owner + ready; client never trusts the query alone).
+              const includeAssetId =
+                !queryAssetHandoffSettledRef.current
+                  ? queryAssetHandoffIdRef.current
+                  : null;
+              loadedAssets = await fetchRecentPrivateToyAssets({
+                limit: 8,
+                includeAssetId,
+                signal: ac.signal,
+              });
+              return loadedAssets;
+            },
+            onCommit: (assets) => {
+              setRecentPrivateAssets(assets);
+              setRecentListBoundOwnerKey(requestOwnerKey);
+            },
+          });
+          if (commitStatus === "stale" || cancelled) return;
+
+          const thumbs: Record<string, string> = {};
+          await Promise.all(
+            loadedAssets.slice(0, 6).map(async (asset) => {
+              const url = await resolvePrivateToyAssetPreviewUrl(
+                asset.previewPath,
+                { signal: ac.signal }
+              );
+              if (
+                !url ||
+                cancelled ||
+                liveOwnerKeyRef.current !== requestOwnerKey ||
+                recentLoadGenerationRef.current !== requestGeneration
+              ) {
+                return;
+              }
+              thumbs[asset.id] = url;
+              if (url.startsWith("blob:")) {
+                recentThumbUrlsRef.current.push(url);
+              }
+            })
+          );
+          if (
+            cancelled ||
+            liveOwnerKeyRef.current !== requestOwnerKey ||
+            recentLoadGenerationRef.current !== requestGeneration
+          ) {
+            return;
+          }
+          if (Object.keys(thumbs).length > 0) {
+            setRecentAssetThumbs((prev) => ({ ...prev, ...thumbs }));
+          }
+        } catch {
+          if (
+            !cancelled &&
+            liveOwnerKeyRef.current === requestOwnerKey &&
+            recentLoadGenerationRef.current === requestGeneration
+          ) {
+            setRecentPrivateAssets([]);
+            setRecentAssetThumbs({});
+            setRecentListBoundOwnerKey(requestOwnerKey);
+          }
+        } finally {
+          if (
+            !cancelled &&
+            liveOwnerKeyRef.current === requestOwnerKey &&
+            recentLoadGenerationRef.current === requestGeneration
+          ) {
+            setRecentAssetsLoading(false);
+          }
+        }
+      })();
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      ac.abort();
+      window.clearTimeout(t);
+    };
+  }, [recentOwnerKey, revokeRecentThumbUrls, revokeSamePhotoPreviewBlob]);
+
+  useEffect(() => {
+    return () => {
+      revokeRecentThumbUrls();
+      revokeSamePhotoPreviewBlob();
+    };
+  }, [revokeRecentThumbUrls, revokeSamePhotoPreviewBlob]);
+
+  /**
    * Owner-safe durable same-photo handoff: Create `?assetId=` auto-selects only
-   * after GET /api/assets/recent?include= proves owner + ready. Missing / foreign
-   * / pending / rejected / deleted → honest empty upload slot (no fake preview).
-   * Explicit upload or Lab always wins.
+   * after GET /api/assets/recent proves owner + ready for the current invited
+   * owner. Arbitrary/cross-owner/not-ready UUIDs never preview or select.
+   * Explicit upload, Lab, or manual recent pick always wins.
    */
   useEffect(() => {
     if (!sessionResolved) return;
@@ -840,66 +1229,40 @@ export function CreateStudio({
       return;
     }
 
-    const ownerKey =
-      privateUploadEnabled && session?.auth?.id
-        ? session.auth.id.trim()
-        : null;
+    const plan = planCreateQueryAssetHandoff({
+      queryAssetId,
+      handoffSettled: queryAssetHandoffSettledRef.current,
+      userOverride: userStillChoiceRef.current,
+      currentOwnerKey: recentOwnerKey,
+      listOwnerKey: recentListBoundOwnerKey,
+      readyAssets: recentPrivateAssets,
+      listLoading: recentAssetsLoading,
+      selectionSource: recentSelectionSourceRef.current,
+      selectedAssetId: recentSelectedAssetIdRef.current,
+    });
 
-    if (!ownerKey) {
-      // Invited owner proof required — leave empty (no foreign metadata).
-      dropHandoff(Boolean(queryAssetId));
+    if (plan.action === "wait") {
+      // Keep spinner while owner-bound list is still loading / binding.
+      if (recentOwnerKey) setSamePhotoHandoffLoading(true);
       return;
     }
 
-    let cancelled = false;
-    const ac = new AbortController();
-    setSamePhotoHandoffLoading(true);
-
-    void (async () => {
-      const readyAssets = await fetchRecentPrivateToyAssets({
-        limit: 8,
-        includeAssetId: queryAssetId,
-        signal: ac.signal,
-      });
-      if (cancelled) return;
-
-      const plan = planCreateQueryAssetHandoff({
-        queryAssetId,
-        handoffSettled: queryAssetHandoffSettledRef.current,
-        userOverride: userStillChoiceRef.current,
-        currentOwnerKey: ownerKey,
-        listOwnerKey: ownerKey,
-        readyAssets,
-        listLoading: false,
-        selectionSource: null,
-        selectedAssetId: null,
-      });
-
-      if (plan.action === "wait") {
-        // Should not loop forever after a finished fetch — treat as drop.
-        dropHandoff(true);
-        return;
-      }
-
-      if (plan.action === "drop") {
-        dropHandoff(plan.reason === "not-in-ready-list" || plan.reason === "invalid");
-        return;
-      }
-
-      const asset: RecentPrivateToyAsset | undefined = readyAssets.find(
-        (row) => row.id === plan.assetId
+    if (plan.action === "drop") {
+      dropHandoff(
+        plan.reason === "not-in-ready-list" || plan.reason === "invalid"
       );
-      if (!asset) {
-        dropHandoff(true);
-        return;
-      }
+      return;
+    }
 
-      const previewUrl = await resolvePrivateToyAssetPreviewUrl(
-        asset.previewPath,
-        { signal: ac.signal }
-      );
-      if (cancelled) return;
+    // adopt — only when the row is in the owner-bound ready list (canAdopt).
+    const asset = recentPrivateAssets.find((row) => row.id === plan.assetId);
+    if (!asset || !recentReuseUi.canAdoptAssetId(asset.id)) {
+      dropHandoff(true);
+      return;
+    }
 
+    const t = window.setTimeout(() => {
+      // Re-check after deferral: explicit user choice wins; avoid double adopt.
       if (
         queryAssetHandoffSettledRef.current ||
         userStillChoiceRef.current
@@ -908,48 +1271,26 @@ export function CreateStudio({
         setSamePhotoHandoffLoading(false);
         return;
       }
-
-      // Prefer durable assetId for generate even if preview fails — empty
-      // preview still means no fake foreign still; user can re-upload.
-      queryAssetHandoffSettledRef.current = true;
-      setSamePhotoHandoffNote(null);
-      setSamePhotoHandoffLoading(false);
-      setLabStill(false);
-      setAssetId(asset.id);
-      if (previewUrl) {
-        if (previewUrl.startsWith("blob:")) {
-          revokeSamePhotoPreviewBlob();
-          samePhotoPreviewBlobRef.current = previewUrl;
+      if (!recentReuseUi.canAdoptAssetId(asset.id)) {
+        dropHandoff(true);
+        return;
+      }
+      void adoptRecentPrivateAsset(asset, { fromQueryHandoff: true }).finally(
+        () => {
+          stripQueryAssetParam();
+          setSamePhotoHandoffLoading(false);
         }
-        setImage(previewUrl);
-        void probeImageSize(previewUrl).then((meta) => {
-          if (!cancelled && meta) setImageProbe(meta);
-        });
-      } else {
-        // Ready owner asset proven; keep assetId, leave upload slot visually empty
-        // only if preview fetch failed (honest, no fake still).
-        setSamePhotoHandoffNote(
-          "Same photo ready for a new Moment. Preview unavailable — generate uses your verified photo, or upload again."
-        );
-      }
-      if (asset.skuLabel) {
-        setToyIdentity((prev) => ({
-          ...prev,
-          sku: asset.skuLabel!.slice(0, 64),
-        }));
-      }
-      stripQueryAssetParam();
-    })();
-
-    return () => {
-      cancelled = true;
-      ac.abort();
-    };
+      );
+    }, 0);
+    return () => window.clearTimeout(t);
   }, [
     sessionResolved,
-    privateUploadEnabled,
-    session?.auth?.id,
-    revokeSamePhotoPreviewBlob,
+    recentOwnerKey,
+    recentListBoundOwnerKey,
+    recentPrivateAssets,
+    recentAssetsLoading,
+    recentReuseUi,
+    adoptRecentPrivateAsset,
   ]);
 
   // Favorites + toy identity + optional still from Image studio (after adoptImage exists).
@@ -1077,8 +1418,8 @@ export function CreateStudio({
       retry,
       sourceStore,
       imageOverride: opts?.imageOverride,
-      image,
-      assetId,
+      image: composerImage,
+      assetId: composerAssetId,
     });
     const img = still.image ?? null;
     const postAssetId = still.assetId ?? undefined;
@@ -1245,7 +1586,9 @@ export function CreateStudio({
           PRESETS.find((p) => p.slug === serverEffect) ?? preset;
         const stillForStore =
           (img && isValidImageDataUrl(img) ? img : null) ||
-          (image && isValidImageDataUrl(image) ? image : null) ||
+          (composerImage && isValidImageDataUrl(composerImage)
+            ? composerImage
+            : null) ||
           "";
         pushHistory(
           historyFieldsFromSuccess(data, {
@@ -1434,7 +1777,9 @@ export function CreateStudio({
     // Prefer the still we actually used (retry frozen / override / composer).
     const stillForStore =
       (img && isValidImageDataUrl(img) ? img : null) ||
-      (image && isValidImageDataUrl(image) ? image : null) ||
+      (composerImage && isValidImageDataUrl(composerImage)
+        ? composerImage
+        : null) ||
       "";
     const interned = stillForStore
       ? internSourceImage(sourceStore, stillForStore)
@@ -1448,7 +1793,7 @@ export function CreateStudio({
         ? postAssetId
         : still.mode === "retry-still"
           ? retry?.assetId
-          : postAssetId || assetId || undefined;
+          : postAssetId || composerAssetId || undefined;
     const spec = buildGenerationSpec({
       sourceKey: interned.key,
       assetId: specAssetId,
@@ -1642,7 +1987,7 @@ export function CreateStudio({
     (activeVersion
       ? sourceStore[activeVersion.sourceKey] ||
         resolveSpecImage(activeVersion.spec, sourceStore)
-      : null) || image;
+      : null) || composerImage;
   const downloadAllowed = canDownloadResult({
     demo: Boolean(activeVersion?.demo ?? demo),
     watermark: Boolean(activeVersion?.watermark ?? watermark),
@@ -1763,7 +2108,7 @@ export function CreateStudio({
 
   const busy = status === "generating" || status === "uploading";
   /** Composer has a usable still — local data URL or proven durable assetId. */
-  const hasToyInput = Boolean(image || assetId);
+  const hasToyInput = composerHasInput;
   const canGenerate =
     !busy && mode === "i2v" && hasToyInput && ownsRights;
   const primaryLabel = busy
@@ -1877,7 +2222,7 @@ export function CreateStudio({
       window.location.href = job.href;
       return;
     }
-    if (!image && !assetId) {
+    if (!composerHasInput) {
       toast("Add your toy photo first");
       return;
     }
@@ -1908,7 +2253,7 @@ export function CreateStudio({
   const assetBrief = useMemo(
     () =>
       buildAssetBrief({
-        hasImage: Boolean(image),
+        hasImage: Boolean(composerHasInput),
         probe: imageProbe,
         effect,
         jobId: jobIntentId,
@@ -1934,7 +2279,7 @@ export function CreateStudio({
   // Phase B2: soft-apply shape-primary recipe once (skip deep-link / job / Lab sample).
   // Defer setState out of the effect body (react-hooks/set-state-in-effect).
   useEffect(() => {
-    if (!image || !imageProbe || !assetBrief.primaryRecipe) return;
+    if (!composerHasInput || !imageProbe || !assetBrief.primaryRecipe) return;
     if (briefAutoAppliedRef.current) return;
     if (labStill) return;
     if (initialEffect || initialJob) return;
@@ -1973,7 +2318,7 @@ export function CreateStudio({
   const directorPlan = useMemo(() => {
     const job = jobIntentId ? getJobIntent(jobIntentId) : undefined;
     return buildDirectorPlan({
-      hasImage: Boolean(image),
+      hasImage: Boolean(composerHasInput),
       effect,
       effectName: preset.name,
       aspectRatio,
@@ -2010,7 +2355,7 @@ export function CreateStudio({
   ]);
 
   useEffect(() => {
-    if (!image) return;
+    if (!composerHasInput) return;
     const credits = demoMode ? 0 : CREDITS_PER_VIDEO;
     const signature = `${effect}:${credits}:${effectiveDuration}:${aspectRatio}`;
     if (quoteEventRef.current === signature) return;
@@ -2027,7 +2372,7 @@ export function CreateStudio({
         aspect_ratio: aspectRatio,
       },
     });
-  }, [image, effect, demoMode, effectiveDuration, aspectRatio]);
+  }, [composerHasInput, effect, demoMode, effectiveDuration, aspectRatio]);
 
   return (
     <div className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0">
@@ -2437,13 +2782,18 @@ export function CreateStudio({
                   <span className="lg:hidden">Upload owned toy photo</span>
                   <span className="hidden lg:inline">{t("create.yourPhoto")}</span>
                 </label>
-                {(image || assetId) && (
+                {composerHasInput && (
                   <button
                     type="button"
                     className="text-[10px] font-semibold text-[var(--fg-dim)] hover:text-[var(--brand)]"
                     onClick={() => {
                       userStillChoiceRef.current = true;
                       queryAssetHandoffSettledRef.current = true;
+                      recentSelectionSourceRef.current = null;
+                      recentSelectedAssetIdRef.current = null;
+                      recentSelectionTokenRef.current += 1;
+                      setRecentSelectionSource(null);
+                      setRecentSelectionBoundOwnerKey(null);
                       revokeSamePhotoPreviewBlob();
                       setImage(null);
                       setAssetId(null);
@@ -2467,7 +2817,7 @@ export function CreateStudio({
                   {samePhotoHandoffNote}
                 </p>
               ) : null}
-              {samePhotoHandoffLoading && !image ? (
+              {samePhotoHandoffLoading && !composerImage ? (
                 <p
                   className="mb-2 text-[11px] font-semibold leading-5 text-white/45"
                   data-same-photo-handoff-loading
@@ -2477,25 +2827,25 @@ export function CreateStudio({
               ) : null}
               <label
                 className={`group/drop relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
-                  image
+                  composerImage
                     ? "aspect-[16/10] border-[var(--mint)]/25 ring-1 ring-[var(--mint)]/15"
                     : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:aspect-video"
                 }`}
                 data-same-photo-slot={
-                  assetId && image
+                  composerAssetId && composerImage
                     ? "prefilled"
-                    : assetId && !image
+                    : composerAssetId && !composerImage
                       ? "asset-only"
                       : "empty"
                 }
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDrop}
               >
-                {image ? (
+                {composerImage ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={image}
+                      src={composerImage}
                       alt="your toy"
                       className="h-full w-full object-contain"
                     />
@@ -2524,6 +2874,70 @@ export function CreateStudio({
                   onChange={onFile}
                 />
               </label>
+              {/* Reuse a recently verified private photo — no re-upload, no Base64.
+                  Rail is owner-bound at render time (stale A rows never show under B). */}
+              {recentReuseUi.showRecentRail && (
+                <div
+                  className="mt-3"
+                  data-recent-private-assets
+                  data-testid="recent-private-assets"
+                  data-recent-list-owner={recentListBoundOwnerKey ?? ""}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--fg-muted)]">
+                    Use a recent verified photo
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-[var(--fg-dim)]">
+                    Pick a ready private toy photo you already verified — no
+                    re-upload.
+                  </p>
+                  {recentAssetsLoading &&
+                  recentReuseUi.visibleAssets.length === 0 ? (
+                    <p className="mt-2 text-[11px] text-[var(--fg-dim)]">
+                      Loading recent photos…
+                    </p>
+                  ) : (
+                    <ul className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                      {recentReuseUi.visibleAssets.map((asset) => {
+                        const selected = composerAssetId === asset.id;
+                        const thumb = recentReuseUi.visibleThumbs[asset.id];
+                        return (
+                          <li key={asset.id} className="shrink-0">
+                            <button
+                              type="button"
+                              data-recent-asset-id={asset.id}
+                              aria-pressed={selected}
+                              aria-label={
+                                asset.skuLabel
+                                  ? `Use recent photo ${asset.skuLabel}`
+                                  : "Use recent verified toy photo"
+                              }
+                              onClick={() => void adoptRecentPrivateAsset(asset)}
+                              className={`relative h-16 w-16 overflow-hidden rounded-xl border transition ${
+                                selected
+                                  ? "border-[var(--mint)] ring-2 ring-[var(--mint)]/40"
+                                  : "border-white/15 hover:border-[var(--mint)]/50"
+                              }`}
+                            >
+                              {thumb ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={thumb}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span className="grid h-full w-full place-items-center bg-black/50 text-[10px] text-white/50">
+                                  Photo
+                                </span>
+                              )}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div
@@ -2626,7 +3040,7 @@ export function CreateStudio({
           )}
 
           {/* Collapsed Lab path — after recipe so first-run stays upload→recipe→generate */}
-          {!image && !fixedMomentContract && (
+          {!composerHasInput && !fixedMomentContract && (
             <div
               className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-3"
               data-first-run-lab="samples"
@@ -3082,7 +3496,7 @@ export function CreateStudio({
                   )}
                 </div>
 
-                {image && assetBrief.ready ? (
+                {composerHasInput && assetBrief.ready ? (
                   <AssetBriefPanel
                     brief={assetBrief}
                     identity={toyIdentity}
@@ -3113,7 +3527,7 @@ export function CreateStudio({
                   />
                 ) : null}
 
-                {image ? <DirectorPlanPanel plan={directorPlan} /> : null}
+                {composerHasInput ? <DirectorPlanPanel plan={directorPlan} /> : null}
               </div>
             )}
           </div>
@@ -3134,7 +3548,7 @@ export function CreateStudio({
                   ? "Sign in to create"
                 : "Review and generate"}
             </p>
-            {image ? (
+            {composerHasInput ? (
               <div className="mt-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-white">
@@ -3158,7 +3572,7 @@ export function CreateStudio({
                   : "Choose one Pikbo Lab sample to preview this recipe at 0 credits."}
               </p>
             )}
-            {image && demoMode ? (
+            {composerHasInput && demoMode ? (
               <p className="mt-2 rounded-lg border border-white/10 bg-black/25 px-2.5 py-2 text-[10px] leading-snug text-white/55">
                 Cached Pikbo Lab prototype · no visitor product photo is sent
                 to a model or used in this preview.
@@ -3241,7 +3655,7 @@ export function CreateStudio({
               creditsRestored={lastRefunded}
               retryAfterSec={failRetryAfterSec}
               onRetry={
-                !lastUploadIgnored && image && !busy
+                !lastUploadIgnored && composerHasInput && !busy
                   ? () => {
                       setFailRetryAfterSec(null);
                       if (activeVersion) retryActiveVersion();
@@ -3254,7 +3668,7 @@ export function CreateStudio({
                   ? t("fail.retryVersion")
                   : t("fail.retryGenerate")
               }
-              showLabSample={lastUploadIgnored || !image}
+              showLabSample={lastUploadIgnored || !composerHasInput}
               showModules={!lastUploadIgnored}
             />
           )}
@@ -3307,7 +3721,7 @@ export function CreateStudio({
               <GenerateWaitStage
                 elapsed={elapsed}
                 demoMode={demoMode}
-                image={image}
+                image={composerImage}
                 effectLabel={viralName(preset.slug, preset.name)}
                 onCancel={cancelInFlightGenerate}
                 onLeaveToLibrary={leaveWaitingKeepBackground}
@@ -3514,7 +3928,7 @@ export function CreateStudio({
                 /> : null}
 
                 {/* Same photo · next job — accelerate cycle, no re-upload */}
-                {!fixedMomentContract && image && status === "done" && (
+                {!fixedMomentContract && composerHasInput && status === "done" && (
                   <div className="mx-auto mt-4 max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-black/40 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <div className="mb-2.5 flex flex-wrap items-end justify-between gap-2">
                       <div>
@@ -3841,7 +4255,7 @@ export function CreateStudio({
                     "Something blocked this run. Your still is still here — retry or switch recipe."}
                 </p>
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-                  {image ? (
+                  {composerHasInput ? (
                     <button
                       type="button"
                       disabled={busy}
@@ -3920,13 +4334,13 @@ export function CreateStudio({
                   {t("create.clipLands")}
                 </p>
                 <p className="mt-1.5 max-w-xs text-xs text-[var(--fg-muted)]">
-                  {image
+                  {composerHasInput
                     ? t("create.hitGenerate")
                     : demoMode
                       ? t("create.noPhotoCached")
                       : t("create.noPhotoLive")}
                 </p>
-                {!image && (
+                {!composerHasInput && (
                   <button
                     type="button"
                     disabled={sampleLoading || busy}
@@ -3953,7 +4367,7 @@ export function CreateStudio({
         className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
         data-create-sticky="mobile"
       >
-        {image ? (
+        {composerHasInput ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
             {preset.emoji} {viralName(preset.slug, preset.name)} · {aspectRatio}
             {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
@@ -3962,7 +4376,7 @@ export function CreateStudio({
               : `${CREDITS_PER_VIDEO} credits when Live`}
           </p>
         ) : null}
-        {!image ? (
+        {!composerHasInput ? (
           privateUploadEnabled ? (
             <button
               type="button"
@@ -4039,7 +4453,7 @@ export function CreateStudio({
                 ?.scrollIntoView({ behavior: "smooth", block: "start" });
             }}
             disabled={
-              busy || !ownsRights || (mode === "i2v" && !image && !assetId)
+              busy || !ownsRights || (mode === "i2v" && !composerHasInput)
             }
             className="btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
             data-first-run-action="generate"

@@ -479,6 +479,306 @@ assert.deepEqual(
 
 assert.match(ownerRecent, /ownerRecentToyAssetsPure\.mjs/);
 
+// --- AIT-167: Create owner-ready recent photo rail ---
+assert.match(clientAssets, /export function privateRecentOwnerKey/);
+assert.match(clientAssets, /export function planRecentOwnerTransition/);
+assert.match(clientAssets, /export function deriveRecentReuseUiState/);
+assert.match(clientAssets, /export function shouldCommitRecentList/);
+assert.match(clientAssets, /export function shouldCommitRecentPreview/);
+assert.match(clientAssets, /export async function applyRecentListLoad/);
+assert.match(clientAssets, /export async function applyRecentPreviewResolution/);
+
+// CreateStudio: owner-key bound recent load + rail UI; public never requests.
+assert.match(studio, /privateRecentOwnerKey/);
+assert.match(studio, /planRecentOwnerTransition/);
+assert.match(studio, /deriveRecentReuseUiState/);
+assert.match(studio, /applyRecentListLoad/);
+assert.match(studio, /applyRecentPreviewResolution/);
+assert.match(studio, /adoptRecentPrivateAsset/);
+assert.match(studio, /recentOwnerKey/);
+assert.match(studio, /recentListBoundOwnerKey/);
+assert.match(studio, /composerImage|composerAssetId/);
+assert.match(studio, /composerHasInput/);
+assert.match(studio, /canAdoptAssetId/);
+assert.match(studio, /Use a recent verified photo/);
+assert.match(studio, /data-recent-private-assets/);
+assert.match(studio, /no re-upload/);
+assert.match(studio, /recentReuseUi\.showRecentRail/);
+assert.match(studio, /recentReuseUi\.visibleAssets/);
+assert.match(studio, /if \(!nextOwnerKey\)/);
+// Manual recent pick + upload/Lab settle deferred ?assetId= handoff.
+assert.match(studio, /userStillChoiceRef\.current = true/);
+assert.match(studio, /fromQueryHandoff/);
+// Generate + sinks use fail-closed composer still (never raw stale recent).
+assert.match(studio, /image: composerImage/);
+assert.match(studio, /assetId: composerAssetId/);
+assert.match(
+  studio,
+  /<GenerateWaitStage[\s\S]{0,220}image=\{composerImage\}/
+);
+assert.match(
+  studio,
+  /disabled=\{\s*busy \|\| !ownsRights \|\| \(mode === "i2v" && !composerHasInput\)\s*\}/
+);
+assert.match(studio, /showLabSample=\{lastUploadIgnored \|\| !composerHasInput\}/);
+// Selecting recent must not re-upload / registerLocalAsset.
+const adoptRecentSlice = studio.slice(
+  studio.indexOf("adoptRecentPrivateAsset"),
+  studio.indexOf("adoptRecentPrivateAsset") + 3200
+);
+assert.match(adoptRecentSlice, /setAssetId\(asset\.id\)/);
+assert.match(adoptRecentSlice, /applyRecentPreviewResolution/);
+assert.doesNotMatch(
+  adoptRecentSlice,
+  /registerLocalAsset|registerPrivateToyAsset/
+);
+assert.doesNotMatch(adoptRecentSlice, /upload-url|\/api\/assets\/complete/);
+// Owner-switch clears recent selection only; local upload source preserved by plan.
+assert.match(studio, /selectionSource: recentSelectionSourceRef\.current/);
+assert.match(studio, /clearRecentSelection/);
+
+// Executable privacy race contracts (owner A→B fail-closed).
+let privateRecentOwnerKey;
+let planRecentOwnerTransition;
+let deriveRecentReuseUiState;
+let shouldCommitRecentList;
+let shouldCommitRecentPreview;
+let applyRecentListLoad;
+let applyRecentPreviewResolution;
+try {
+  const mod = await import(clientAssetsUrl);
+  privateRecentOwnerKey = mod.privateRecentOwnerKey;
+  planRecentOwnerTransition = mod.planRecentOwnerTransition;
+  deriveRecentReuseUiState = mod.deriveRecentReuseUiState;
+  shouldCommitRecentList = mod.shouldCommitRecentList;
+  shouldCommitRecentPreview = mod.shouldCommitRecentPreview;
+  applyRecentListLoad = mod.applyRecentListLoad;
+  applyRecentPreviewResolution = mod.applyRecentPreviewResolution;
+} catch {
+  privateRecentOwnerKey = null;
+}
+
+if (privateRecentOwnerKey) {
+  assert.equal(
+    privateRecentOwnerKey({
+      privateUploadEnabled: false,
+      ownerUserId: "owner-a",
+    }),
+    null,
+    "public / capability-off never yields an owner key"
+  );
+  assert.equal(
+    privateRecentOwnerKey({
+      privateUploadEnabled: true,
+      ownerUserId: null,
+    }),
+    null
+  );
+  assert.equal(
+    privateRecentOwnerKey({
+      privateUploadEnabled: true,
+      ownerUserId: "owner-a",
+    }),
+    "owner-a"
+  );
+
+  const staySame = planRecentOwnerTransition({
+    prevOwnerKey: "owner-a",
+    nextOwnerKey: "owner-a",
+    selectionSource: "recent",
+  });
+  assert.equal(staySame.ownerChanged, false);
+  assert.equal(staySame.clearRecentList, false);
+  assert.equal(staySame.clearRecentSelection, false);
+
+  const aToBRecent = planRecentOwnerTransition({
+    prevOwnerKey: "owner-a",
+    nextOwnerKey: "owner-b",
+    selectionSource: "recent",
+  });
+  assert.equal(aToBRecent.ownerChanged, true);
+  assert.equal(aToBRecent.clearRecentList, true);
+  assert.equal(aToBRecent.clearRecentThumbs, true);
+  assert.equal(aToBRecent.revokeThumbUrls, true);
+  assert.equal(aToBRecent.clearRecentSelection, true);
+  assert.equal(aToBRecent.bumpLoadGeneration, true);
+  assert.equal(aToBRecent.bumpSelectionToken, true);
+
+  const aToBUpload = planRecentOwnerTransition({
+    prevOwnerKey: "owner-a",
+    nextOwnerKey: "owner-b",
+    selectionSource: "upload",
+  });
+  assert.equal(
+    aToBUpload.clearRecentSelection,
+    false,
+    "owner switch must not wipe local new-upload selection"
+  );
+  assert.equal(aToBUpload.clearRecentList, true);
+
+  // Render-time blank: stale A recent selection must not surface under B.
+  {
+    const mid = deriveRecentReuseUiState({
+      currentOwnerKey: "owner-b",
+      listOwnerKey: "owner-a",
+      assets: [{ id: inputAssetId }],
+      thumbs: { [inputAssetId]: "blob:a" },
+      selectionSource: "recent",
+      selectionOwnerKey: "owner-a",
+      selectedAssetId: inputAssetId,
+      selectedImage: "blob:a",
+      loading: false,
+    });
+    assert.equal(mid.showRecentRail, false);
+    assert.equal(mid.visibleAssets.length, 0);
+    assert.equal(mid.effectiveSelectedAssetId, null);
+    assert.equal(mid.effectiveSelectedImage, null);
+    assert.equal(mid.canAdoptAssetId(inputAssetId), false);
+  }
+
+  // Same owner: list and recent selection remain visible.
+  {
+    const same = deriveRecentReuseUiState({
+      currentOwnerKey: "owner-a",
+      listOwnerKey: "owner-a",
+      assets: [{ id: inputAssetId }],
+      thumbs: { [inputAssetId]: "blob:a" },
+      selectionSource: "recent",
+      selectionOwnerKey: "owner-a",
+      selectedAssetId: inputAssetId,
+      selectedImage: "blob:a",
+      loading: false,
+    });
+    assert.equal(same.showRecentRail, true);
+    assert.equal(same.effectiveSelectedAssetId, inputAssetId);
+    assert.equal(same.canAdoptAssetId(inputAssetId), true);
+  }
+
+  // Local upload under owner switch: do not blank non-recent selection.
+  {
+    const uploadKept = deriveRecentReuseUiState({
+      currentOwnerKey: "owner-b",
+      listOwnerKey: null,
+      assets: [],
+      thumbs: {},
+      selectionSource: "upload",
+      selectionOwnerKey: null,
+      selectedAssetId: null,
+      selectedImage: "data:image/png;base64,xx",
+      loading: false,
+    });
+    assert.equal(uploadKept.effectiveSelectedImage, "data:image/png;base64,xx");
+    assert.equal(uploadKept.showRecentRail, false);
+  }
+
+  // Manual recent pick of a different id wins over deferred ?assetId= handoff.
+  assert.deepEqual(
+    planCreateQueryAssetHandoff({
+      queryAssetId: inputAssetId,
+      handoffSettled: false,
+      userOverride: false,
+      currentOwnerKey: "owner-a",
+      listOwnerKey: "owner-a",
+      readyAssets: [{ id: inputAssetId }, { id: otherAssetId }],
+      listLoading: false,
+      selectionSource: "recent",
+      selectedAssetId: otherAssetId,
+    }),
+    { action: "drop", reason: "user-override" },
+    "manual recent pick of another asset must beat deferred handoff"
+  );
+
+  // Stale list commit after A→B must not write.
+  {
+    let currentOwner = "owner-a";
+    let generation = 1;
+    let committed = null;
+    let resolveA;
+    const loadA = new Promise((resolve) => {
+      resolveA = resolve;
+    });
+    const stalePromise = applyRecentListLoad({
+      requestOwnerKey: "owner-a",
+      requestGeneration: 1,
+      getCurrent: () => ({ ownerKey: currentOwner, generation }),
+      load: () => loadA,
+      onCommit: (assets) => {
+        committed = assets;
+      },
+    });
+    currentOwner = "owner-b";
+    generation = 2;
+    let committedB = null;
+    const bPromise = applyRecentListLoad({
+      requestOwnerKey: "owner-b",
+      requestGeneration: 2,
+      getCurrent: () => ({ ownerKey: currentOwner, generation }),
+      load: async () => [{ id: "asset-b" }],
+      onCommit: (assets) => {
+        committedB = assets;
+      },
+    });
+    resolveA([{ id: "asset-a-stale" }]);
+    assert.equal(await stalePromise, "stale");
+    assert.equal(committed, null, "owner A stale list must not write after A→B");
+    assert.equal(await bPromise, "committed");
+    assert.deepEqual(committedB, [{ id: "asset-b" }]);
+  }
+
+  // Stale preview commit after selection token bump must not write.
+  {
+    let currentOwner = "owner-a";
+    let currentAssetId = inputAssetId;
+    let selectionToken = 1;
+    let committedPreview = null;
+    let resolvePreview;
+    const previewP = new Promise((resolve) => {
+      resolvePreview = resolve;
+    });
+    const stalePreview = applyRecentPreviewResolution({
+      requestOwnerKey: "owner-a",
+      requestAssetId: inputAssetId,
+      requestSelectionToken: 1,
+      getCurrent: () => ({
+        ownerKey: currentOwner,
+        assetId: currentAssetId,
+        selectionToken,
+      }),
+      resolvePreview: () => previewP,
+      onCommit: (url) => {
+        committedPreview = url;
+      },
+    });
+    // User picks a different recent photo (or owner switch) before A preview lands.
+    selectionToken = 2;
+    currentAssetId = otherAssetId;
+    resolvePreview("blob:stale-a");
+    assert.equal(await stalePreview, "stale");
+    assert.equal(committedPreview, null);
+  }
+
+  assert.equal(
+    shouldCommitRecentList({
+      requestOwnerKey: "owner-a",
+      currentOwnerKey: "owner-b",
+      requestGeneration: 1,
+      currentGeneration: 1,
+    }),
+    false
+  );
+  assert.equal(
+    shouldCommitRecentPreview({
+      requestOwnerKey: "owner-a",
+      currentOwnerKey: "owner-a",
+      requestAssetId: inputAssetId,
+      currentAssetId: otherAssetId,
+      requestSelectionToken: 1,
+      currentSelectionToken: 1,
+    }),
+    false
+  );
+}
+
 console.log(
-  "create-same-photo-handoff-regression: PASS (owner-ready adopt; foreign/pending drop; safe DTO; guest login preserves assetId; Create/Guest/Studio/API wired)"
+  "create-same-photo-handoff-regression: PASS (AIT-155 handoff + AIT-167 recent rail; owner A→B fail-closed; manual pick wins; safe DTO)"
 );
