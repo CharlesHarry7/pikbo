@@ -3,7 +3,11 @@ import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
-/** Money-path Generate door — listing 360 workbench (above fold on mobile). */
+/**
+ * Money-path Generate door — listing 360 workbench.
+ * AIT-353: sits with Moment primary in the mobile-leading copy column
+ * (order-1), not buried under the 9:16 sample stage.
+ */
 const HOME_HERO_360_HREF = createGenerate360Href("home-hero");
 
 const STREET_POWER_UP_SAMPLE = {
@@ -12,6 +16,12 @@ const STREET_POWER_UP_SAMPLE = {
   poster: "/demos/beatbot-still.webp",
   title: "Beatbot",
 } as const;
+
+const MOMENT_CTA_CLASS =
+  "btn-press inline-flex min-h-14 w-full items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(255,78,205,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--void)]";
+
+const GENERATE_360_CTA_CLASS =
+  "btn-press inline-flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#FF4ECD]/45 bg-[rgba(255,78,205,0.08)] px-5 text-[11px] font-black uppercase tracking-[0.12em] text-[#FF4ECD] transition hover:border-[#FF4ECD]/70 hover:bg-[rgba(255,78,205,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--void)]";
 
 /** Tiny SVG mascot — Pikbo "Pikko" toy-bot IP mark for the hero. */
 function PikkoMascot({ className = "" }: { className?: string }) {
@@ -122,8 +132,14 @@ export function HomeCinemaHero() {
       </span>
 
       <div className="relative z-[1] mx-auto grid max-w-[1480px] gap-8 lg:min-h-[calc(100vh-7.5rem)] lg:grid-cols-[minmax(230px,0.82fr)_minmax(340px,430px)_minmax(270px,0.82fr)] lg:items-center lg:gap-10 xl:gap-16">
-        {/* Copy column */}
-        <div className="order-2 max-w-[460px] lg:order-1">
+        {/*
+          AIT-353 mobile fold: copy + dual doors first (order-1), then sample
+          stage (order-2). Desktop keeps left copy / center video / right panel.
+        */}
+        <div
+          data-home-hero-doors="fold"
+          className="order-1 max-w-[460px] lg:order-1"
+        >
           <div className="fade-up flex items-center gap-3">
             <PikkoMascot className="h-14 w-14 shrink-0 drop-shadow-[0_0_18px_rgba(255,78,205,0.55)]" />
             <p className="inline-flex items-center gap-2 rounded-full border border-[#FF4ECD]/35 bg-[rgba(255,78,205,0.1)] px-3 py-2 text-[9px] font-black uppercase tracking-[0.2em] text-[#FF4ECD] backdrop-blur-xl">
@@ -151,10 +167,34 @@ export function HomeCinemaHero() {
             <span className="stat-card px-3 py-2 text-[#FFE600]">9:16 · 5 sec</span>
             <span className="stat-card px-3 py-2 text-[#00FFA3]">720p</span>
           </div>
+
+          {/* Dual doors above the fold on mobile — Moment primary + money-path 360. */}
+          <div className="fade-up fade-up-d3 mt-7 flex flex-col gap-2.5">
+            <Link
+              href={MOMENT_CREATE_HREF}
+              data-home-moment-cta
+              className={MOMENT_CTA_CLASS}
+            >
+              Create my drop clip
+              <span aria-hidden className="text-lg">
+                →
+              </span>
+            </Link>
+            <Link
+              href={HOME_HERO_360_HREF}
+              data-home-hero-360-cta
+              className={GENERATE_360_CTA_CLASS}
+            >
+              Generate 360° listing spin
+              <span aria-hidden className="text-base">
+                →
+              </span>
+            </Link>
+          </div>
         </div>
 
         {/* Video stage — toy display case, not a plain phone bezel */}
-        <div className="order-1 mx-auto w-full max-w-[430px] lg:order-2">
+        <div className="order-2 mx-auto w-full max-w-[430px] lg:order-2">
           <div className="fade-up fade-up-d1 toy-card relative p-2.5 shadow-[0_42px_120px_-36px_rgba(177,78,255,0.7)]">
             {/* Neon orbit ring */}
             <div
@@ -166,7 +206,7 @@ export function HomeCinemaHero() {
               }}
               aria-hidden
             />
-            <div className="relative aspect-[9/16] max-h-[calc(100vh-12rem)] overflow-hidden rounded-[26px] bg-black ring-2 ring-[#FF4ECD]/40">
+            <div className="relative aspect-[9/16] max-h-[min(52vh,calc(100vh-12rem))] overflow-hidden rounded-[26px] bg-black ring-2 ring-[#FF4ECD]/40 lg:max-h-[calc(100vh-12rem)]">
               <AutoPlayVideo
                 poster={STREET_POWER_UP_SAMPLE.poster}
                 mp4={STREET_POWER_UP_SAMPLE.video}
@@ -203,7 +243,7 @@ export function HomeCinemaHero() {
           </div>
         </div>
 
-        {/* Motion panel */}
+        {/* Motion panel — effect honesty chrome (doors live in fold column). */}
         <div className="order-3 lg:pl-2">
           <div className="fade-up fade-up-d2 effect-card bg-[rgba(20,20,30,0.88)] p-5 backdrop-blur-2xl lg:p-6">
             <div className="flex items-center justify-between gap-4">
@@ -227,27 +267,6 @@ export function HomeCinemaHero() {
                 </div>
               </div>
             </div>
-            <Link
-              href={MOMENT_CREATE_HREF}
-              data-home-moment-cta
-              className="btn-press mt-5 inline-flex min-h-14 w-full items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(255,78,205,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14141E]"
-            >
-              Create my drop clip
-              <span aria-hidden className="text-lg">
-                →
-              </span>
-            </Link>
-            {/* AIT-192: money-path Generate→360 above fold (mobile) — not only below-fold wall. */}
-            <Link
-              href={HOME_HERO_360_HREF}
-              data-home-hero-360-cta
-              className="btn-press mt-2.5 inline-flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#00D9FF]/45 bg-[rgba(0,217,255,0.1)] px-5 text-[11px] font-black uppercase tracking-[0.12em] text-[#00D9FF] transition hover:border-[#00D9FF]/70 hover:bg-[rgba(0,217,255,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14141E]"
-            >
-              Generate 360° listing spin
-              <span aria-hidden className="text-base">
-                →
-              </span>
-            </Link>
             <p className="mt-4 text-[10px] font-semibold leading-5 text-white/40">
               Sample shown: cached 6s archive, not a completed customer deliverable. Private target: 9:16 · 5s · 720p.
             </p>
