@@ -305,6 +305,20 @@ for (const relativePath of [
     `${relativePath}: "~N Free Mini left" must be gated by freeLiveOpen`
   );
 }
+// AIT-337: FreeTrialCta primary off residual competitor lime → neon-pink board
+{
+  const freeTrialCta = read("components/FreeTrialCta.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(freeTrialCta),
+    "FreeTrialCta must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    freeTrialCta.includes("var(--neon-pink)") &&
+      freeTrialCta.includes("var(--void)") &&
+      freeTrialCta.includes("rgba(255,78,205"),
+    "FreeTrialCta primary fill/text/glow use neon-pink + void board tokens"
+  );
+}
 
 // AIT-330: BatchStudio — Free Mini product-cap / trial-used / pack-credit only when freeLiveOpen.
 const batchStudioSource = read("components/BatchStudio.tsx");
