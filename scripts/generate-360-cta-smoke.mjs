@@ -243,6 +243,56 @@ assert.doesNotMatch(
   /href:\s*["']\/effects\/360-spin-showcase["']/,
   "gallery must not send listing pedestal through /effects first"
 );
+// AIT-521: every home still is a Generate→360 door (no /toys or Moment hop)
+for (const tag of [
+  "home-gallery-vinyl-guardian",
+  "home-gallery-blind-box",
+  "home-gallery-social-flash",
+  "home-gallery-mecha",
+  "home-gallery-plush",
+  "home-gallery-spotlight",
+  "home-gallery-capsule",
+  "home-gallery-pedestal",
+]) {
+  assert.match(
+    galleryLib,
+    new RegExp(
+      `createGenerate360Href\\(\\s*["']${tag.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}["']`
+    ),
+    `gallery still must use createGenerate360Href(${tag})`
+  );
+}
+assert.doesNotMatch(
+  galleryLib,
+  /href:\s*["']\/toys\//,
+  "gallery stills must not hop through /toys before Generate 360"
+);
+assert.doesNotMatch(
+  galleryLib,
+  /mode=moment|street-power-up/,
+  "gallery stills must not open fixed Moment (Generate 360 only)"
+);
+const homeGallery = read("components/HomeDesignerGallery.tsx");
+assert.match(
+  homeGallery,
+  /createGenerate360Href\(\s*["']home-gallery-section["']\s*\)/,
+  "gallery section primary CTA must deep-link Generate 360"
+);
+assert.match(
+  homeGallery,
+  /data-home-gallery-generate=["']360["']/,
+  "gallery section must mark primary Generate 360 CTA"
+);
+assert.match(
+  homeGallery,
+  /data-home-gallery-stills=["']generate-360["']/,
+  "gallery still grid must mark generate-360 contract"
+);
+assert.match(
+  homeGallery,
+  /data-home-gallery-still-generate=["']360["']/,
+  "gallery still links must mark Generate 360"
+);
 assert.match(
   homeHero,
   /Generate 360° listing spin/,

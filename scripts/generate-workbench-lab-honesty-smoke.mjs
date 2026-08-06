@@ -315,12 +315,20 @@ assert.match(
   /export const HOME_GENERATE_ENTRY_SOURCES/,
   "createRouteContract must export HOME_GENERATE_ENTRY_SOURCES"
 );
-// AIT-462 money doors + explore rail — workbench must treat all as entry tags
+// AIT-462 money doors + AIT-521 gallery residual + explore rail
 for (const tag of [
   "home-hero",
   "app-shell-home",
   "home-trust",
   "home-gallery-pedestal",
+  "home-gallery-vinyl-guardian",
+  "home-gallery-blind-box",
+  "home-gallery-social-flash",
+  "home-gallery-mecha",
+  "home-gallery-plush",
+  "home-gallery-spotlight",
+  "home-gallery-capsule",
+  "home-gallery-section",
   "home-explore-rail",
 ]) {
   assert.match(

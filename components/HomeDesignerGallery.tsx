@@ -4,10 +4,18 @@ import {
   DESIGNER_TOY_KINDS,
   designerToyGalleryForHome,
 } from "@/lib/designerToyGallery";
+import { createGenerate360Href } from "@/lib/jobIntents";
+
+/** Section primary — same Generate→360 money door as hero / trust. */
+const GALLERY_SECTION_GENERATE_HREF = createGenerate360Href(
+  "home-gallery-section"
+);
 
 /**
  * Calm collectible shelf — designer-toy stills only.
  * Replaces carnival multi-rail + cartoon demo wall on the public home.
+ * AIT-521: stills + section CTA open Generate→360 in one tap; taxonomy
+ * browse stays secondary (chips + Browse toy types).
  */
 export function HomeDesignerGallery() {
   const items = designerToyGalleryForHome(8);
@@ -20,7 +28,7 @@ export function HomeDesignerGallery() {
       aria-labelledby="home-gallery-title"
     >
       <div className="mx-auto max-w-[1200px]">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-xl">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">
               Designer toys · 潮玩
@@ -34,18 +42,27 @@ export function HomeDesignerGallery() {
             <p className="mt-3 text-sm leading-6 text-[var(--fg-muted)]">
               Style studies and lab lighting references for vinyl, blind box,
               mecha kits, and plush. Labeled studies — not customer uploads, not
-              fake UGC.
+              fake UGC. Tap any still to open listing 360°.
             </p>
           </div>
-          <Link
-            href="/toys/art-toys"
-            className="text-xs font-semibold text-[var(--brand)] underline-offset-4 hover:underline"
-          >
-            Browse toy types →
-          </Link>
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            <Link
+              href={GALLERY_SECTION_GENERATE_HREF}
+              data-home-gallery-generate="360"
+              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[var(--brand)] px-5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--primary-foreground)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/50"
+            >
+              Generate 360° listing spin
+            </Link>
+            <Link
+              href="/toys/art-toys"
+              className="text-xs font-semibold text-[var(--fg-muted)] underline-offset-4 hover:text-[var(--brand)] hover:underline"
+            >
+              Browse toy types →
+            </Link>
+          </div>
         </div>
 
-        {/* Category chips — calm, not rainbow */}
+        {/* Category chips — calm taxonomy, not rainbow Generate doors */}
         <ul
           className="mt-6 flex flex-wrap gap-2"
           aria-label="Designer toy categories"
@@ -62,13 +79,18 @@ export function HomeDesignerGallery() {
           ))}
         </ul>
 
-        {/* Still grid */}
-        <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+        {/* Still grid — each tile is Generate→360 (AIT-521) */}
+        <ul
+          className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4"
+          data-home-gallery-stills="generate-360"
+        >
           {items.map((item) => (
             <li key={item.id}>
               <Link
                 href={item.href}
-                className="group block overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] transition hover:border-[var(--brand)]/35"
+                data-home-gallery-still-generate="360"
+                className="group block overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] transition hover:border-[var(--brand)]/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/50"
+                aria-label={`Open Generate 360° listing spin from ${item.title}`}
               >
                 <div
                   className={`relative w-full overflow-hidden bg-[var(--bg-soft)] ${

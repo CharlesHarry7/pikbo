@@ -86,14 +86,22 @@ const homeWall = read("components/HomeDesignerGallery.tsx");
 const galleryLib = read("lib/designerToyGallery.ts");
 assert(
   homeWall.includes('data-home-gallery="designer-toy"') &&
+    homeWall.includes('data-home-gallery-generate="360"') &&
+    /createGenerate360Href\(\s*["']home-gallery-section["']\s*\)/.test(homeWall) &&
+    homeWall.includes('data-home-gallery-stills="generate-360"') &&
     galleryLib.includes("DESIGNER_TOY_GALLERY") &&
     galleryLib.includes("/style-studies/") &&
     galleryLib.includes("art-vinyl-guardian") &&
     galleryLib.includes('createGenerate360Href("home-gallery-pedestal")') &&
+    galleryLib.includes('createGenerate360Href("home-gallery-vinyl-guardian")') &&
+    galleryLib.includes('createGenerate360Href("home-gallery-spotlight")') &&
+    galleryLib.includes('createGenerate360Href("home-gallery-capsule")') &&
     !galleryLib.includes('href: "/effects/360-spin-showcase"') &&
+    !galleryLib.includes('href: "/toys/') &&
+    !galleryLib.includes("street-power-up") &&
     !galleryLib.includes("/demos/beatbot") &&
     !galleryLib.includes("/demos/orbit"),
-  "designer gallery must use 潮玩 style-studies stills, not cartoon demo loops"
+  "designer gallery stills must one-tap Generate→360 (no /toys or Moment hop)"
 );
 const homeTrust = read("components/HomeTrustFooter.tsx");
 assert(
