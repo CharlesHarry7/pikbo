@@ -53,7 +53,7 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     toyKind: "art-toys",
     src: "/style-studies/art-vinyl-guardian-v1.jpg",
     href: createGenerate360Href("home-gallery-vinyl-guardian"),
-    badge: "Style study · try 360°",
+    badge: "PIKBO Lab · Style study · try 360°",
     aspect: "3/4",
   },
   {
@@ -63,7 +63,7 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     toyKind: "blind-box-figures",
     src: "/style-studies/art-vinyl-blind-box-direction-v1.jpg",
     href: createGenerate360Href("home-gallery-blind-box"),
-    badge: "Style study · try 360°",
+    badge: "PIKBO Lab · Style study · try 360°",
     aspect: "3/4",
   },
   {
@@ -73,7 +73,7 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     toyKind: "vinyl-figures",
     src: "/style-studies/art-vinyl-social-flash-direction-v1.jpg",
     href: createGenerate360Href("home-gallery-social-flash"),
-    badge: "Style study · try 360°",
+    badge: "PIKBO Lab · Style study · try 360°",
     aspect: "3/4",
   },
   {
@@ -83,7 +83,7 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     toyKind: "model-kits",
     src: "/style-studies/precision-mecha-v1.jpg",
     href: createGenerate360Href("home-gallery-mecha"),
-    badge: "Style study · try 360°",
+    badge: "PIKBO Lab · Style study · try 360°",
     aspect: "3/4",
   },
   {
@@ -93,7 +93,7 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     toyKind: "plush-toys",
     src: "/style-studies/plush-hybrid-v1.jpg",
     href: createGenerate360Href("home-gallery-plush"),
-    badge: "Style study · try 360°",
+    badge: "PIKBO Lab · Style study · try 360°",
     aspect: "3/4",
   },
   {
@@ -103,7 +103,7 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     toyKind: "art-toys",
     src: "/moments/gallery-spotlight.jpg",
     href: createGenerate360Href("home-gallery-spotlight"),
-    badge: "Lab still · try 360°",
+    badge: "PIKBO Lab · still · try 360°",
     aspect: "16/9",
   },
   {
@@ -113,7 +113,7 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     toyKind: "blind-box-figures",
     src: "/moments/capsule-reveal.jpg",
     href: createGenerate360Href("home-gallery-capsule"),
-    badge: "Lab still · try 360°",
+    badge: "PIKBO Lab · still · try 360°",
     aspect: "16/9",
   },
   {
@@ -124,7 +124,7 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     src: "/moments/colorblock-pedestal.jpg",
     // AIT-462 / AIT-521: skip /effects hop — one tap into listing 360 workbench
     href: createGenerate360Href("home-gallery-pedestal"),
-    badge: "Lab still · 360 listing",
+    badge: "PIKBO Lab · still · 360 listing",
     aspect: "16/9",
   },
 ];

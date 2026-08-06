@@ -117,6 +117,10 @@ export function isGenerate360Effect(effect: string | undefined): boolean {
  *
  * AIT-521 gallery residual: every designer-toy still is a one-tap 360 door
  * (home-gallery-*) so home never routes stills through /toys or Moment first.
+ *
+ * AIT-607 residual continuity: dormant / off-home rails that still tag home-*
+ * (browse, feature, proof wall, tool shelf) must stay entry tags — never
+ * invent dead `/projects/home-*` remix links or skip Lab/Live honesty.
  */
 export const HOME_GENERATE_ENTRY_SOURCES = [
   "home-hero",
@@ -132,6 +136,10 @@ export const HOME_GENERATE_ENTRY_SOURCES = [
   "home-gallery-capsule",
   "home-gallery-section",
   "home-explore-rail",
+  "home-browse",
+  "home-feature",
+  "home-proof-wall",
+  "home-tool-shelf",
 ] as const;
 
 export type HomeGenerateEntrySource =
@@ -177,6 +185,14 @@ export function homeGenerateEntryLabel(
       return "From Home · gallery Generate";
     case "home-explore-rail":
       return "From Home · Lab explore rail";
+    case "home-browse":
+      return "From Home · browse Generate 360°";
+    case "home-feature":
+      return "From Home · feature Generate 360°";
+    case "home-proof-wall":
+      return "From Home · Lab proof wall";
+    case "home-tool-shelf":
+      return "From Home · tool shelf Generate";
     default:
       return "From Home · Generate 360°";
   }

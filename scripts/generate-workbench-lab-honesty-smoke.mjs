@@ -316,6 +316,7 @@ assert.match(
   "createRouteContract must export HOME_GENERATE_ENTRY_SOURCES"
 );
 // AIT-462 money doors + AIT-521 gallery residual + explore rail
+// AIT-607 residual: dormant home-* rails stay entry tags (not project remix ids)
 for (const tag of [
   "home-hero",
   "app-shell-home",
@@ -330,11 +331,28 @@ for (const tag of [
   "home-gallery-capsule",
   "home-gallery-section",
   "home-explore-rail",
+  "home-browse",
+  "home-feature",
+  "home-proof-wall",
+  "home-tool-shelf",
 ]) {
   assert.match(
     contractLib,
     new RegExp(`["']${tag}["']`),
     `HOME_GENERATE_ENTRY_SOURCES must include ${tag}`
+  );
+}
+// Honest entry eyebrows for residual home rails
+for (const [tag, label] of [
+  ["home-browse", "browse Generate 360"],
+  ["home-feature", "feature Generate 360"],
+  ["home-proof-wall", "Lab proof wall"],
+  ["home-tool-shelf", "tool shelf Generate"],
+]) {
+  assert.match(
+    contractLib,
+    new RegExp(`case\\s+["']${tag}["'][\\s\\S]*?return\\s+["'][^"']*${label}`),
+    `homeGenerateEntryLabel must cover ${tag}`
   );
 }
 assert.match(

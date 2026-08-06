@@ -26,6 +26,12 @@ const DEFAULT_MOMENT_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=moment-shell`;
 const PRIMARY_NAV_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=primary-nav`;
 /** Home sticky shell: one primary Generate→360 (AIT-413 friction cut). */
 const HOME_SHELL_GENERATE_HREF = createGenerate360Href("app-shell-home");
+/**
+ * Mobile home Moment secondary door (AIT-607 residual dual doors).
+ * Generate stays the solid primary; Moment is outline/text only so sticky
+ * still offers both product paths after the hero dual-door fold scrolls away.
+ */
+const HOME_SHELL_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=app-shell-home-moment` as const;
 
 function active(path: string, href: string) {
   const route = href.split("?")[0];
@@ -259,15 +265,36 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             )}
           />
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
           {momentSurface ? (
-            <Link
-              href={home ? HOME_SHELL_GENERATE_HREF : DEFAULT_MOMENT_CREATE_HREF}
-              data-app-shell-home-generate={home ? "360" : undefined}
-              className="inline-flex min-h-9 items-center rounded-full bg-[var(--grad-cta)] px-4 text-[10px] font-black text-[var(--primary-foreground)]"
-            >
-              {home ? "Generate 360°" : "Use this motion"}
-            </Link>
+            home ? (
+              // AIT-607: sticky dual doors after hero scrolls — Generate solid
+              // primary + Moment text secondary (not dual solid / Moment-first).
+              <>
+                <Link
+                  href={HOME_SHELL_GENERATE_HREF}
+                  data-app-shell-home-generate="360"
+                  data-shell-mobile-360-cta
+                  className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-[var(--grad-cta)] px-3.5 text-[10px] font-black text-[var(--primary-foreground)] shadow-[0_0_18px_rgba(196,165,116,0.28)]"
+                >
+                  Generate 360°
+                </Link>
+                <Link
+                  href={HOME_SHELL_MOMENT_HREF}
+                  data-shell-mobile-moment-cta
+                  className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-white/20 bg-white/[0.06] px-3 text-[10px] font-black text-[var(--cream)]/85 transition hover:border-[var(--brand)]/45 hover:text-[var(--cream)]"
+                >
+                  Create with my toy
+                </Link>
+              </>
+            ) : (
+              <Link
+                href={DEFAULT_MOMENT_CREATE_HREF}
+                className="inline-flex min-h-9 items-center rounded-full bg-[var(--grad-cta)] px-4 text-[10px] font-black text-[var(--primary-foreground)]"
+              >
+                Use this motion
+              </Link>
+            )
           ) : resultShell ? (
             <>
               <Link
