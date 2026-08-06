@@ -8,6 +8,7 @@ import {
   remoteClipMayExpire,
 } from "@/lib/history";
 import {
+  canLiveGenerate,
   fetchMe,
   freeTrialExhausted,
   type MeResponse,
@@ -181,6 +182,12 @@ export default function SettingsPage() {
   const perJob = session?.liveJobCredits ?? CREDITS_PER_VIDEO;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
+  /** R0/T6: Free Mini product caps / ~N left only when Live is actually open. */
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(session) &&
+      freeLive &&
+      freeLive.liveEnabled !== false
+  );
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
       ? session.freeTrial.clipsLeft
@@ -315,8 +322,11 @@ export default function SettingsPage() {
             <span className="text-[var(--fg-muted)]">Free Mini trial</span>
             <span
               className={`text-right font-semibold ${
-                trialDone && isFreePlan ? "text-amber-200" : ""
+                trialDone && isFreePlan && freeLiveOpen ? "text-amber-200" : ""
               }`}
+              data-settings-free-live={
+                !session ? "pending" : freeLiveOpen ? "open" : "gated"
+              }
             >
               {!session
                 ? "—"
@@ -324,10 +334,10 @@ export default function SettingsPage() {
                   ? "n/a · demo-cached"
                   : !isFreePlan
                     ? "paid path · not Free trial"
-                    : trialDone
-                      ? "display exhausted · demos still free"
-                      : freeLive && freeLive.liveEnabled === false
-                        ? `product caps ${freeLive.resolution} ${freeLive.durationSec}s · live blocked until T6`
+                    : !freeLiveOpen
+                      ? "Live gated · Cached Lab · 0 credits"
+                      : trialDone
+                        ? "display exhausted · demos still free"
                         : freeLive
                           ? `~${clipsLeft} left · ${freeLive.resolution} ${freeLive.durationSec}s when Live enabled`
                           : `~${clipsLeft} display · live via durable reserve only`}
@@ -337,9 +347,14 @@ export default function SettingsPage() {
             <span className="text-[var(--fg-muted)]">
               Live clips left (est. when Live on)
             </span>
-            <span className="font-semibold">
-              {demoMode || (isFreePlan && freeLive?.liveEnabled === false)
-                ? "0 · Lab demos free"
+            <span
+              className="font-semibold"
+              data-settings-clips-left={
+                demoMode || !freeLiveOpen ? "gated" : "open"
+              }
+            >
+              {demoMode || !freeLiveOpen
+                ? "0 · Live gated · Cached Lab"
                 : clipsLeft !== null
                   ? clipsLeft
                   : "—"}
