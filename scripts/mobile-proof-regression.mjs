@@ -95,8 +95,13 @@ assert.doesNotMatch(
 );
 assert.match(
   shell,
-  /\{!resultShell && !sellerPackCreate \? <nav/,
+  /!resultShell && !sellerPackCreate \?\s*(?:\(|\s*<nav)/,
   "Seller Pack Create must not stack the five-item mobile nav under its fixed primary action"
+);
+assert.match(
+  shell,
+  /data-mobile-nav=["']primary["']/,
+  "Primary mobile nav marker remains for safe-area / clearance smoke"
 );
 assert.doesNotMatch(
   zh,
