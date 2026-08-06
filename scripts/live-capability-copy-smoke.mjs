@@ -529,6 +529,20 @@ assert(
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
 );
 
+// AIT-387: LandingSeoMesh residual Free Mini CTA → Lab-first.
+const landingSeoMeshSource = read("components/LandingSeoMesh.tsx");
+assert(
+  !landingSeoMeshSource.includes('labelTry="Try free Mini"') &&
+    !landingSeoMeshSource.includes("Try free Mini") &&
+    !landingSeoMeshSource.includes("Mini 5s"),
+  "LandingSeoMesh must not hardcode Try free Mini / Mini 5s as public free trial"
+);
+assert(
+  landingSeoMeshSource.includes('labelTry="Try free · Lab"') &&
+    landingSeoMeshSource.includes("FreeTrialCta"),
+  "LandingSeoMesh must prefer Lab-first try label"
+);
+
 // AIT-298: Home suite residual — HowItWorks / Onboarding / FeatureCarousel.
 const howItWorksSource = read("components/HowItWorks.tsx");
 assert(
