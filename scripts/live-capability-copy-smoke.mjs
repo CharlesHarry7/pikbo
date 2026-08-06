@@ -481,7 +481,7 @@ assert(
   "ProfilePanel free-plan honesty banner must branch on freeLiveOpen"
 );
 
-// AIT-365: settings residual Free Mini honesty (freeLiveOpen).
+// AIT-365 + AIT-412: settings residual Free Mini honesty (freeLiveOpen).
 const settingsPageSource = read("app/settings/page.tsx");
 assert(
   settingsPageSource.includes("Live gated · Cached Lab · 0 credits"),
@@ -513,6 +513,38 @@ assert(
   /data-settings-free-live=/.test(settingsPageSource) &&
     /data-settings-clips-left=/.test(settingsPageSource),
   "settings must mark free-live open/gated + clips-left open/gated for honesty probes"
+);
+// AIT-412: residual Free Mini product-cap label + engine help brand.
+assert(
+  settingsPageSource.includes("Free plan · Live gated"),
+  "settings account-status row must prefer Free plan · Live gated when Live is closed"
+);
+assert(
+  /freeLiveOpen\s*\?\s*["']Free Mini trial["']\s*:\s*["']Free plan · Live gated["']/.test(
+    settingsPageSource
+  ),
+  "settings Free Mini trial label must be client-gated on freeLiveOpen (fail-closed)"
+);
+assert(
+  settingsPageSource.includes("Free-plan / Live state comes from "),
+  "settings engine help must prefer free-plan / Live language when Live is closed"
+);
+assert(
+  /freeLiveOpen\s*\?\s*["']Free Mini trial state comes from ["']\s*:\s*["']Free-plan \/ Live state comes from ["']/.test(
+    settingsPageSource
+  ),
+  "settings Free Mini trial help brand must sit behind freeLiveOpen"
+);
+assert(
+  !/<span className="text-\[var\(--fg-muted\)\]">Free Mini trial<\/span>/.test(
+    settingsPageSource
+  ),
+  "settings must not hardcode unconditional Free Mini trial row label"
+);
+assert(
+  !/Free Mini trial state comes from{" "}/.test(settingsPageSource) &&
+    !/Free Mini trial state comes from \{/.test(settingsPageSource),
+  "settings must not hardcode unconditional Free Mini trial engine help"
 );
 
 const landingHowItWorksSource = read("components/LandingHowItWorks.tsx");
