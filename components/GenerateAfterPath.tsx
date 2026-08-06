@@ -9,6 +9,7 @@ import {
   createRemixHref,
   remixOptsFromRecord,
 } from "@/lib/remixIntent";
+import { libraryWorkbenchHandoffHref } from "@/lib/workbenchResultFold";
 
 /**
  * Post-generate closed loop — product path first (CD Phase A + job carry):
@@ -23,6 +24,10 @@ import {
  *
  * Full Generate / Next SKU use createRemixHref so ratio/duration/channel
  * from the last run (or recipe defaults) reopen Create correctly.
+ *
+ * AIT-546: Library / Publish path chips deep-link `/library?job=` only for
+ * owner private + durable UUID requestId (via libraryWorkbenchHandoffHref).
+ * Lab demo / live-local / missing id stay plain `/library` (never invent job).
  */
 function withQuery(
   base: string,
@@ -44,6 +49,8 @@ export function GenerateAfterPath({
   sku,
   aspectRatio,
   duration,
+  requestId,
+  privateResult = false,
 }: {
   effectSlug?: string;
   demo?: boolean;
@@ -60,6 +67,13 @@ export function GenerateAfterPath({
   aspectRatio?: string;
   /** Last successful run duration seconds (5 | 10). */
   duration?: number;
+  /**
+   * Durable owner job / request id for Library deep-link.
+   * Only applied when privateResult and not demo (fail-closed helper).
+   */
+  requestId?: string | null;
+  /** True when result is owner private durable (not Lab / live-local). */
+  privateResult?: boolean;
 }) {
   const [deviceSku, setDeviceSku] = useState("");
   useEffect(() => {
@@ -80,6 +94,15 @@ export function GenerateAfterPath({
     sku !== undefined && sku !== null
       ? String(sku).trim() || undefined
       : deviceSku.trim() || undefined;
+
+  const libraryHref = libraryWorkbenchHandoffHref({
+    demo,
+    privateResult: Boolean(privateResult),
+    requestId,
+  });
+  const libraryHandoffKind = libraryHref.includes("job=")
+    ? "private-job"
+    : "list";
 
   const intent = jobIntentId ? getJobIntent(jobIntentId) : undefined;
   const effect = effectSlug || intent?.effect;
@@ -158,7 +181,17 @@ export function GenerateAfterPath({
           Next · {jobHint}
         </span>
       ) : null}
-      <Link href="/library" className={chipMint} title="Save and review clips">
+      <Link
+        href={libraryHref}
+        className={chipMint}
+        title={
+          libraryHandoffKind === "private-job"
+            ? "Open your private result in Library"
+            : "Save and review clips"
+        }
+        data-library-handoff={libraryHandoffKind}
+        data-after-library="1"
+      >
         Library
       </Link>
       <Link
@@ -185,9 +218,15 @@ export function GenerateAfterPath({
       </Link>
       {!demo ? (
         <Link
-          href="/library"
+          href={libraryHref}
           className={chip}
-          title="Publish live clips from Library when signed in"
+          title={
+            libraryHandoffKind === "private-job"
+              ? "Publish this private clip from Library when signed in"
+              : "Publish live clips from Library when signed in"
+          }
+          data-library-handoff={libraryHandoffKind}
+          data-after-publish="1"
         >
           Publish path
         </Link>
