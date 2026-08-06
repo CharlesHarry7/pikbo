@@ -76,7 +76,7 @@ export default function ImageStudioPage() {
   const [history, setHistory] = useState<ImageHistoryItem[]>([]);
   /** Server settlement echo — 0 cached vs 10 used (honest soft-launch). */
   const [lastSettlement, setLastSettlement] = useState<string | null>(null);
-  /** Free plan: stills are demo-only so Mini trial stays for Create video. */
+  /** Free / public path: stills are demo-only; Live video stays gated. */
   const [me, setMe] = useState<MeResponse | null>(null);
   /** Phase D/F parity — cancel mid still; refund unconfirmed if live debit started. */
   const abortRef = useRef<AbortController | null>(null);
@@ -532,8 +532,8 @@ export default function ImageStudioPage() {
               Still studio
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-[var(--fg-muted)]">
-              Optional packaging mock before video — not the product. Free plan
-              keeps the Mini trial for{" "}
+              Optional packaging mock before video — not the product. Public
+              stills stay labeled demo · 0 credits (upload not processed). Open{" "}
               <Link
                 href={createGenerate360Href("image-page")}
                 className="text-[var(--mint)] underline-offset-2 hover:underline"
@@ -541,8 +541,9 @@ export default function ImageStudioPage() {
               >
                 Create video
               </Link>{" "}
-              (stills stay labeled demo · 0 credits). Paid plans: Flux via fal (
-              {CREDITS_PER_VIDEO} credits live). Hand a safe URL into Generate,
+              for the cached Lab path; Live Flux stills and video remain gated
+              for eligible accounts (when Live is enabled, Generate quotes{" "}
+              {CREDITS_PER_VIDEO} credits). Hand a safe URL into Generate,
               Modules, or one directed toy Moment.
             </p>
           </div>
@@ -627,7 +628,7 @@ export default function ImageStudioPage() {
             )}
             {freeStillsDemoOnly ? (
               <p className="mt-2 text-[11px] leading-relaxed text-[var(--fg-dim)]">
-                Free Mini trial is video-only. Open{" "}
+                Public free stills are demo-only (0 credits). Open{" "}
                 <Link
                   href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
                   className="text-[var(--mint)] underline-offset-2 hover:underline"
@@ -635,14 +636,14 @@ export default function ImageStudioPage() {
                 >
                   Create
                 </Link>{" "}
-                for your Seedance clip, or{" "}
+                for a cached Lab video preview, or{" "}
                 <Link
                   href="/pricing"
                   className="text-[var(--mint)] underline-offset-2 hover:underline"
                 >
-                  upgrade
+                  check plans
                 </Link>{" "}
-                for live Flux stills.
+                — Live Flux stills stay gated until eligible.
               </p>
             ) : null}
             {error ? (
@@ -671,7 +672,7 @@ export default function ImageStudioPage() {
               <p className="mt-2 text-xs text-[var(--fg-dim)]">
                 {demoReason === "free_trial_video_only" ||
                 demoReason === "free_live_delivery_blocked"
-                  ? "Labeled demo — Free trial credits stay reserved for Create video Mini."
+                  ? "Labeled demo — free path stays cached Lab; Live video remains gated."
                   : demoReason === "anonymous_cached_only"
                     ? "Labeled demo — sign in with a paid plan for live Flux stills."
                     : demoReason === "no_provider_key"

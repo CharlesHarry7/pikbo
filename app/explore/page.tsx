@@ -43,7 +43,7 @@ const EXPLORE_FAQ = [
   },
   {
     q: "Do cached demos cost credits?",
-    a: "No. Cached Lab playback costs 0 credits. Live Seedance Mini uses Free Mini (about one 5s 480p clip with on-player mark) or paid credits.",
+    a: "No. Cached Lab playback costs 0 credits and does not process your upload. When Live is enabled for an eligible account, Generate shows the exact credit quote before submission.",
   },
 ] as const;
 

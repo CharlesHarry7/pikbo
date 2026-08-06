@@ -52,6 +52,16 @@ const seoHubFiles = [
   "app/toys/page.tsx",
 ];
 
+/** Secondary SEO walls (effects / explore / community / image + apps chips). */
+const secondarySeoFiles = [
+  "app/effects/page.tsx",
+  "app/explore/page.tsx",
+  "app/community/page.tsx",
+  "app/image/page.tsx",
+  "app/apps/page.tsx",
+  "app/apps/[slug]/page.tsx",
+];
+
 const forbiddenUnconditional = [
   /Seedance live/i,
   /Pipeline is live/i,
@@ -73,6 +83,22 @@ const forbiddenSeoHubFreeMini = [
   /Subject landings · Free Mini 5s ·/i,
   /Free Mini caps apply/i,
   /labelTry="Try free Mini"/,
+];
+
+/** Secondary SEO residual: Free Mini / 5s·480p sold as public-open live trial. */
+const forbiddenSecondarySeoFreeMini = [
+  /Live Seedance Mini uses Free Mini/i,
+  /Free Mini \(about one 5s/i,
+  /Free Mini is for one live Seedance Mini/i,
+  /about 5s · 480p · on-player mark/i,
+  /Lab vs concept · Free Mini ·/i,
+  /Lab only · not UGC · Remix · Free Mini/i,
+  /LIVE vs SOON · Free Mini ·/i,
+  /Free Mini trial is video-only/i,
+  /keeps the Mini trial for/i,
+  /Does launching cost Free Mini credits\?/i,
+  /Can Free Mini raw files be downloaded\?/i,
+  /Do Lab demos use Free Mini credits\?/i,
 ];
 
 for (const relativePath of publicPromiseFiles) {
@@ -130,6 +156,68 @@ assert(
     !read("app/toys/page.tsx").includes('labelTry="Try free Mini"') &&
     !read("app/toys/page.tsx").includes("Subject landings · Free Mini 5s ·"),
   "toys hub must drop Free Mini chip and keep Lab public path"
+);
+
+// AIT-280: secondary SEO walls — Lab public path, no Free Mini 5s·480p live default.
+for (const relativePath of secondarySeoFiles) {
+  const source = read(relativePath);
+  for (const pattern of forbiddenSecondarySeoFreeMini) {
+    assert(
+      !pattern.test(source),
+      `${relativePath} contains residual Free Mini secondary SEO promise ${pattern}`
+    );
+  }
+}
+assert(
+  read("app/effects/page.tsx").includes("cached Lab") &&
+    read("app/effects/page.tsx").includes(
+      "When Live is enabled for an eligible account"
+    ) &&
+    read("app/effects/page.tsx").includes("Live gated") &&
+    !read("app/effects/page.tsx").includes("Lab vs concept · Free Mini ·"),
+  "effects hub FAQ must sell Lab public path + conditional Live, not Free Mini trial"
+);
+assert(
+  read("app/explore/page.tsx").includes("Cached Lab playback costs 0 credits") &&
+    read("app/explore/page.tsx").includes(
+      "When Live is enabled for an eligible account"
+    ) &&
+    !read("app/explore/page.tsx").includes("Live Seedance Mini uses Free Mini"),
+  "explore FAQ must not sell Free Mini 5s·480p as public-open live"
+);
+assert(
+  read("app/community/page.tsx").includes("Cached Lab playback costs 0 credits") &&
+    read("app/community/page.tsx").includes("Live remains gated") &&
+    read("app/community/page.tsx").includes("Live gated") &&
+    !read("app/community/page.tsx").includes(
+      "Lab only · not UGC · Remix · Free Mini"
+    ),
+  "community FAQ/chip must keep Lab public path and drop Free Mini live default"
+);
+assert(
+  read("app/image/page.tsx").includes("labeled demo · 0 credits") &&
+    read("app/image/page.tsx").includes("Public free stills are demo-only") &&
+    !read("app/image/page.tsx").includes("Free Mini trial is video-only") &&
+    !read("app/image/page.tsx").includes("keeps the Mini trial for"),
+  "image stills page must not sell Free Mini trial as public-open live"
+);
+assert(
+  read("app/apps/page.tsx").includes("cached Lab") &&
+    read("app/apps/page.tsx").includes("Live gated") &&
+    !read("app/apps/page.tsx").includes("LIVE vs SOON · Free Mini ·"),
+  "apps FAQ chip must not residual Free Mini as public free trial"
+);
+assert(
+  read("app/apps/[slug]/page.tsx").includes(
+    "When Live is enabled for an eligible account"
+  ) &&
+    !read("app/apps/[slug]/page.tsx").includes(
+      "Does launching cost Free Mini credits?"
+    ) &&
+    !read("app/apps/[slug]/page.tsx").includes(
+      "Can Free Mini raw files be downloaded?"
+    ),
+  "app detail FAQ must not residual Free Mini as public credit product"
 );
 
 assert(

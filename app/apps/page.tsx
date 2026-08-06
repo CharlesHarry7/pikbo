@@ -299,7 +299,7 @@ export default function AppsPage() {
         <section className="mt-12 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
           <h2 className="text-sm font-bold text-white">Apps FAQ</h2>
           <p className="mt-1 text-xs text-white/40">
-            LIVE vs SOON · Free Mini · Modules · same Generate engine
+            LIVE vs SOON · cached Lab · Live gated · Modules · same Generate engine
           </p>
           <dl className="mt-4 space-y-4">
             {APPS_FAQ.map((f) => (
