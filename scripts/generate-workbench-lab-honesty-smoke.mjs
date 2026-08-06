@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
- * AIT-444: Generate workbench first-run after dual-path (360 Lab sample honesty).
+ * AIT-444 + AIT-459: Generate workbench first-run Lab/Live honesty.
  *
  * When Home Generate→360 opens generate-workbench (effect=360-spin-showcase):
  * - Lab sample CTAs stay 0 credits (never Mini trial / 10-cr claim)
  * - Free Mini product copy only when freeLiveOpen
  * - Wait stage Free Mini brand only when freeLiveOpen (fail-closed)
  * - Remix deep links stay workbench (not forced Moment)
+ * - Home entry sources (home-hero / home-explore-rail) get Lab sample vs
+ *   Live gated labels — no Free Mini open-trial fiction on shell/first-run
  *
  * Run: node scripts/generate-workbench-lab-honesty-smoke.mjs
  *   or: npm run generate-workbench-lab-honesty-smoke
@@ -94,8 +96,13 @@ assert.doesNotMatch(
 );
 assert.match(
   workbenchShell,
-  /0 credits|Lab sample is 0 credits/,
-  "workbench header must state Lab sample 0 credits"
+  /WORKBENCH_LAB_LIVE_HONESTY|0 credits|Lab sample is 0 credits/,
+  "workbench header must state Lab sample 0 credits honesty"
+);
+assert.match(
+  workbenchShell,
+  /data-workbench-lab-honesty=["']0-credit-lab["']/,
+  "workbench shell must mark 0-credit Lab honesty attr"
 );
 
 // ── Lab sample CTAs: always free / 0 credits (never Mini trial on Lab path) ─
@@ -298,6 +305,138 @@ assert.match(
   packageJson,
   /"generate-360-cta-smoke"/,
   "package.json must keep generate-360-cta-smoke (generate path)"
+);
+
+// ── AIT-459: Home entry → workbench Lab/Live honesty ──────────────────────
+assert.match(
+  contractLib,
+  /export const HOME_GENERATE_ENTRY_SOURCES/,
+  "createRouteContract must export HOME_GENERATE_ENTRY_SOURCES"
+);
+assert.match(
+  contractLib,
+  /home-hero/,
+  "HOME_GENERATE_ENTRY_SOURCES must include home-hero"
+);
+assert.match(
+  contractLib,
+  /home-explore-rail/,
+  "HOME_GENERATE_ENTRY_SOURCES must include home-explore-rail"
+);
+assert.match(
+  contractLib,
+  /export function isHomeGenerateEntrySource/,
+  "createRouteContract must export isHomeGenerateEntrySource"
+);
+assert.match(
+  contractLib,
+  /export const WORKBENCH_LAB_LIVE_HONESTY/,
+  "createRouteContract must export WORKBENCH_LAB_LIVE_HONESTY"
+);
+assert.match(
+  contractLib,
+  /Lab sample · 0 credits · Live gated · not Free Mini open trial/,
+  "WORKBENCH_LAB_LIVE_HONESTY must state Lab sample + Live gated + not Free Mini open trial"
+);
+
+assert.match(
+  createPage,
+  /isHomeGenerateEntrySource/,
+  "create page must detect Home Generate entry sources"
+);
+assert.match(
+  createPage,
+  /WORKBENCH_LAB_LIVE_HONESTY/,
+  "create page must surface WORKBENCH_LAB_LIVE_HONESTY"
+);
+assert.match(
+  createPage,
+  /data-workbench-honesty=["']lab-live["']/,
+  "workbench shell must mark lab-live honesty strip"
+);
+assert.match(
+  createPage,
+  /data-workbench-live-gate=["']gated["']/,
+  "workbench shell must mark Live gate closed/default"
+);
+assert.match(
+  createPage,
+  /data-home-generate-entry=\{homeEntry \? entrySource : undefined\}/,
+  "workbench shell must expose home-hero / home-explore-rail entry when present"
+);
+assert.match(
+  createPage,
+  /data-workbench-entry=\{entrySource \|\| undefined\}/,
+  "workbench shell must expose workbench entry source tag"
+);
+// Shell honesty must not sell Free Mini as open trial
+assert.doesNotMatch(
+  workbenchShell,
+  /Free Mini trial|10 free credits/i,
+  "workbench shell must not claim Free Mini open trial"
+);
+// Honesty constant is rendered (literal lives in createRouteContract)
+assert.match(
+  workbenchShell,
+  /WORKBENCH_LAB_LIVE_HONESTY|not Free Mini open trial/,
+  "workbench shell must print Lab/Live honesty line"
+);
+
+// Home doors stay dual-path: createGenerate360Href → effect=360-spin-showcase
+const homeHero = read("components/HomeCinemaHero.tsx");
+const homeRail = read("components/HomeExploreRecipeRail.tsx");
+assert.match(
+  homeHero,
+  /createGenerate360Href\(["']home-hero["']\)/,
+  "HomeCinemaHero primary door must use createGenerate360Href(home-hero)"
+);
+assert.match(
+  homeRail,
+  /createGenerate360Href\(["']home-explore-rail["']\)/,
+  "HomeExploreRecipeRail 360 door must use createGenerate360Href(home-explore-rail)"
+);
+assert.match(
+  jobIntents,
+  /export function createGenerate360Href/,
+  "createGenerate360Href helper required for Home doors"
+);
+
+// CreateStudio: home entry honesty banner; no /projects/home-hero dead link
+assert.match(
+  createStudio,
+  /isHomeGenerateEntrySource/,
+  "CreateStudio must detect home entry sources"
+);
+assert.match(
+  createStudio,
+  /data-home-generate-entry=\{initialSource\}/,
+  "CreateStudio must mark home entry honesty strip"
+);
+assert.match(
+  createStudio,
+  /data-workbench-entry-honesty=["']lab-live["']/,
+  "CreateStudio home entry strip must mark lab-live honesty"
+);
+assert.match(
+  createStudio,
+  /WORKBENCH_LAB_LIVE_HONESTY/,
+  "CreateStudio home entry must reuse WORKBENCH_LAB_LIVE_HONESTY"
+);
+assert.match(
+  createStudio,
+  /not a Free Mini open trial/,
+  "CreateStudio home entry must deny Free Mini open-trial fiction"
+);
+// Project remix link only for non-entry sources
+assert.match(
+  createStudio,
+  /remixProjectSource/,
+  "CreateStudio must separate remix project sources from home entry tags"
+);
+assert.doesNotMatch(
+  createStudio,
+  /href=\{`\/projects\/\$\{encodeURIComponent\(initialSource\)\}`\}/,
+  "CreateStudio must not deep-link /projects/{home-hero|home-explore-rail}"
 );
 
 console.log("generate-workbench-lab-honesty-smoke: ok");
