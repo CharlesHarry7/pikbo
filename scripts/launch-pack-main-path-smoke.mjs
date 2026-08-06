@@ -136,6 +136,12 @@ assert.match(homeWall, /href=\{cardHref\}|projectHref \|\| remakeHref/);
 assert.match(homeWall, /href=\{remakeHref\}|withProofEntry\(item\.href\)/);
 assert.match(homeWall, /event:\s*"recipe_use"/);
 assert.match(homeWall, /home-proof-wall/);
+// AIT-234: remake chips secondary outline (no hero-grade gradient fill).
+assert.match(homeWall, /data-home-wall-remake=["']secondary["']/);
+assert.doesNotMatch(
+  homeWall,
+  /bg-\[linear-gradient\(135deg,#B14EFF,#FF4ECD\)\]/
+);
 assert.doesNotMatch(shell, /create\?mode=seller-pack/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.match(
