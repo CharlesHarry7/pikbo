@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { USE_CASES } from "@/lib/usecases";
 import { TOOLS } from "@/lib/tools";
 import { GUIDES } from "@/lib/guides";
+import { track } from "@/lib/analytics";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { recipeHasUniqueProof } from "@/lib/seoIndex";
 
@@ -11,6 +14,9 @@ const SEO_MESH_GENERATE_HREF = createGenerate360Href("seo-mesh");
 
 /**
  * 哥飞内链网：落地页底部相关 Tools / For / Guides（可爬、可点进工具）。
+ *
+ * AIT-205 friction cut: one filled primary Generate→360 footer CTA.
+ * FreeTrial / Lab sample stay secondary outline — no second filled primary.
  */
 export function LandingSeoMesh({
   kind,
@@ -44,8 +50,13 @@ export function LandingSeoMesh({
     return g.relatedEffects.some((e) => effects.has(e));
   }).slice(0, 5);
 
+  const meshPath = `/${kind}/${currentSlug}`;
+
   return (
-    <section className="container-x border-t border-white/[0.06] py-10">
+    <section
+      className="container-x border-t border-white/[0.06] py-10"
+      data-seo-mesh-primary-generate="360"
+    >
       <h2 className="text-2xl font-bold">Related pages</h2>
       <p className="mt-2 max-w-2xl text-sm text-[var(--fg-muted)]">
         Same Generate loop — different search jobs. Each page keeps its own TDH
@@ -106,18 +117,30 @@ export function LandingSeoMesh({
         </div>
       )}
 
-      <div className="mt-8 flex flex-wrap items-center gap-2">
+      <div className="mt-8 flex flex-wrap items-center gap-2 sm:gap-3">
+        {/* Secondary Free / Lab sample — outline only, not a filled primary. */}
         <FreeTrialCta
-          path={`/${kind}/${currentSlug}`}
-          variant="mint"
+          path={meshPath}
           labelTry="Try free Mini"
+          labelDemo="Lab sample"
+          hideClipsChip
+          className="rounded-full border border-white/20 bg-transparent px-3 py-1.5 text-[11px] font-semibold text-white/70 transition hover:border-white/40 hover:text-white"
         />
+        {/* One primary Generate → 360 (AIT-205). */}
         <Link
           href={SEO_MESH_GENERATE_HREF}
-          className="btn btn-ghost text-sm"
+          className="rounded-full bg-[#c8ff3d] px-4 py-2 text-[11px] font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(200,255,61,0.4)]"
           data-seo-mesh-generate="remix"
+          data-seo-mesh-primary-generate-cta
+          onClick={() =>
+            track({
+              event: "landing_view",
+              path: meshPath,
+              meta: { cta: "seo_mesh_primary_generate_360" },
+            })
+          }
         >
-          Open Generate
+          Generate 360° →
         </Link>
       </div>
     </section>

@@ -82,6 +82,17 @@ assert(
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
   "home order: Moment hero → proof wall → HF product rail → trust footer"
 );
+// AIT-205: Landing SEO mesh — one primary Generate→360 (not FreeTrial mint dual door)
+const landingSeoMesh = read("components/LandingSeoMesh.tsx");
+assert(
+  landingSeoMesh.includes('data-seo-mesh-primary-generate="360"') &&
+    landingSeoMesh.includes("data-seo-mesh-primary-generate-cta") &&
+    landingSeoMesh.includes('createGenerate360Href("seo-mesh")') &&
+    landingSeoMesh.includes("Generate 360°") &&
+    landingSeoMesh.includes('data-seo-mesh-generate="remix"') &&
+    landingSeoMesh.includes("border border-white/20"),
+  "LandingSeoMesh must expose one primary Generate→360 door with secondary FreeTrial outline"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"
