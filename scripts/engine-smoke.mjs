@@ -4627,7 +4627,7 @@ const guidesHubSrc = fs.readFileSync(
 assert.match(guidesHubSrc, /FreeTrialCta/);
 assert.match(guidesHubSrc, /GUIDES_FAQ|Guides FAQ/);
 assert.match(guidesHubSrc, /FAQPage/);
-// Free Mini is 5s — do not advertise free 10s trial CTAs
+// Public free CTAs must not advertise a 10s trial; public i18n stays Lab/cached-first.
 assert.doesNotMatch(
   fs.readFileSync(join(root, "app/guides/[slug]/page.tsx"), "utf8"),
   /Try free · 10s/
@@ -4636,9 +4636,13 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
   /Try free · 10s/
 );
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
+  /Try free · 10s|免费试视频 · 10/
+);
 assert.match(
   fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
-  /Mini 5s|Mini 5 秒/
+  /Lab preview|缓存 Lab|0 积分|0 credits/
 );
 // Shared landing surfaces keep free-trial honesty; the converged Footer has no
 // trial CTA and points only to the fixed public sample.
@@ -5881,7 +5885,7 @@ assert.match(footerSrc, /<Link\s+href=\{FOOTER_CREATE_HREF\}/);
 // Pricing and Footer still preserve their existing product-first assertions.
 assert.match(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
-  /href=["']\/create\?effect=street-power-up&source=pricing-hero&try=1&sample=beatbot["']/
+  /href=["']\/create\?(?:mode=moment&)?effect=street-power-up&source=pricing-hero&try=1&sample=beatbot["']/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),

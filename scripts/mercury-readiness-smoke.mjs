@@ -47,9 +47,11 @@ assert.match(site, /supportEmail:\s*`support@\$\{SITE_DOMAIN\}`/);
 assert.match(contact, /does not claim a US office or\s+storefront/);
 assert.match(contact, /public checkout is closed/);
 assert.match(contact, /Private beta/);
-assert.match(pricing, /Price pending/);
-assert.match(pricing, /There is no public price or checkout today/);
-assert.match(pricing, /Apply to the private beta/);
+// Founding rate is public; live checkout stays closed (CURRENT_LAUNCH_CONTRACT).
+assert.match(pricing, /\$49/);
+assert.match(pricing, /Public live checkout remains gated|Public payment remains locked/);
+assert.match(pricing, /Request private beta access/);
+assert.doesNotMatch(pricing, /Price pending|There is no public price or checkout today/);
 
 for (const rule of [
   /cancel a paid subscription at any time/i,
@@ -81,5 +83,5 @@ for (const source of publicBusinessSources) {
 }
 
 console.log(
-  "mercury-readiness-smoke: PASS (legal entity, truthful beta, price-pending offer, support/refund surfaces)"
+  "mercury-readiness-smoke: PASS (legal entity, truthful beta, founding-rate closed checkout, support/refund surfaces)"
 );

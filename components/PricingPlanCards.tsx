@@ -14,14 +14,14 @@ import {
 
 /**
  * Public pricing stays a single closed Founding Studio proposition.
- * Stripe plan data remains in lib/pricing for test-mode billing rehearsal,
- * but no public price or monthly inclusion is frozen before quality/cost proof.
+ * Founding rate ($49 / 9 Moments) is disclosed; public live checkout stays
+ * closed until quality, recovery, privacy, and margin gates pass.
  */
 export function PricingPlanCards() {
   const measuredBeforeOpen = [
     "Choose one directed Moment and create only the clip you need",
     "Private Library delivery and owner-only downloads",
-    "Price and monthly allowance set only after p95 retry cost is measured",
+    "Founding rate $49/month for nine directed Moments when billing opens",
     "Checkout remains closed until quality, recovery, privacy, and margin gates pass",
   ];
 
@@ -38,14 +38,15 @@ export function PricingPlanCards() {
           <Badge variant="brand">Coming soon · checkout closed</Badge>
         </div>
         <div>
-          <p className="text-3xl font-black tracking-tight">Price pending</p>
+          <p className="text-3xl font-black tracking-tight">$49 founding rate</p>
           <p className="mt-1 text-xs font-bold uppercase tracking-[0.13em] text-[var(--fg-dim)]">
             No public subscription or checkout
           </p>
         </div>
         <CardDescription>
-          One finite subscription for toy sellers, opened only after the
-          single-Moment workflow is proven reliable and economically sustainable.
+          One finite subscription for toy sellers. The founding rate is public;
+          live purchase stays closed until the single-Moment workflow is proven
+          reliable and economically sustainable.
         </CardDescription>
       </CardHeader>
 
@@ -66,7 +67,7 @@ export function PricingPlanCards() {
 
       <CardFooter className="mt-auto flex-col items-stretch gap-2">
         <Link
-          href="/create?effect=street-power-up&source=pricing-preview&try=1&sample=beatbot"
+          href="/create?mode=moment&effect=street-power-up&source=pricing-preview&try=1&sample=beatbot"
           className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[var(--mint)] px-5 text-sm font-black text-black transition hover:opacity-95"
         >
           Preview one toy Moment

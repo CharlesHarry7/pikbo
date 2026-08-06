@@ -115,12 +115,18 @@ export function LandingToolPanel({
   const demoMode = !canLiveGenerate(session);
   const liveCredits = generationDisplayCredits(session);
   const freeLive = session?.freeTrial?.freeLive;
+  /** R0/T6: Free Mini left/used chips only when Live is actually open. */
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(session) &&
+      freeLive &&
+      freeLive.liveEnabled !== false
+  );
   const freeLiveModelLabel =
     freeLive?.modelClass === "seedance-fast" ? "Fast" : "Mini";
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
       ? session.freeTrial.clipsLeft
-      : session && typeof session.credits === "number"
+      : session && typeof session.credits === "number" && freeLiveOpen
         ? Math.floor(session.credits / CREDITS_PER_VIDEO)
         : null;
 
@@ -472,19 +478,19 @@ export function LandingToolPanel({
           <div>
             <p
               className={`text-xs font-bold uppercase tracking-wider ${
-                trialDone && isFree && !demoMode
+                trialDone && isFree && freeLiveOpen
                   ? "text-amber-200/90"
                   : "text-[var(--fg-dim)]"
               }`}
             >
-              {demoMode
+              {!freeLiveOpen
                 ? `Cached Lab preview · ${effectName}`
                 : trialDone && isFree
-                ? `Free Mini used · ${effectName}`
-                : `Try free Mini · ${effectName}`}
+                  ? `Free Mini used · ${effectName}`
+                  : `Try free Mini · ${effectName}`}
             </p>
             <p className="mt-0.5 text-sm text-[var(--fg-muted)]">
-              {demoMode ? (
+              {!freeLiveOpen ? (
                 "0 credits · your upload is not processed in this preview."
               ) : trialDone && isFree ? (
                 <>
@@ -508,11 +514,13 @@ export function LandingToolPanel({
               </p>
               <p
                 className={
-                  trialDone && isFree ? "text-amber-200/90" : "text-[var(--fg-dim)]"
+                  trialDone && isFree && freeLiveOpen
+                    ? "text-amber-200/90"
+                    : "text-[var(--fg-dim)]"
                 }
               >
-                {demoMode
-                  ? `Demo · ${session.planName}`
+                {!freeLiveOpen
+                  ? `Live gated · ${session.planName}`
                   : trialDone && isFree
                     ? `trial used · ${session.planName}`
                     : clipsLeft !== null
@@ -616,7 +624,7 @@ export function LandingToolPanel({
             <span className="rounded-md border border-[var(--border)] px-2 py-1">
               {demoMode ? "0 cached" : `${CREDITS_PER_VIDEO} credits`}
             </span>
-            {demoMode ? (
+            {!freeLiveOpen ? (
               <span className="rounded-md border border-[var(--border)] px-2 py-1">
                 Upload not processed
               </span>
@@ -659,7 +667,7 @@ export function LandingToolPanel({
             >
               Cancel request · {elapsed}s
             </button>
-          ) : trialDone && isFree && !demoMode ? (
+          ) : trialDone && isFree && freeLiveOpen ? (
             <div className="space-y-2">
               <p className="rounded-lg border border-amber-300/25 bg-amber-300/[0.06] px-3 py-2 text-[11px] leading-snug text-amber-100">
                 Free Mini trial exhausted · cached Lab demos still free · failed

@@ -5,9 +5,9 @@ import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
 import { useI18n } from "@/components/LanguageProvider";
 import {
+  canLiveGenerate,
   fetchMe,
   freeTrialExhausted,
-  isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
 import { createLabSampleTryHref } from "@/lib/jobIntents";
@@ -35,27 +35,36 @@ export function ModulesMobileCta() {
     };
   }, []);
 
-  const demo = isDemoMode(me);
   const trialDone = freeTrialExhausted(me);
   const clipsLeft =
     typeof me?.freeTrial?.clipsLeft === "number"
       ? me.freeTrial.clipsLeft
       : null;
+  /** R0/T6: Free Mini left/used only when Live is open (parity FreeTrialCta). */
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(me) &&
+      me?.freeTrial?.freeLive &&
+      me.freeTrial.freeLive.liveEnabled !== false
+  );
 
   const primaryHref =
-    trialDone && !demo ? "/pricing" : MODULES_MOBILE_LAB_SAMPLE_HREF;
+    trialDone && freeLiveOpen
+      ? "/pricing"
+      : MODULES_MOBILE_LAB_SAMPLE_HREF;
   const primaryLabel =
-    trialDone && !demo
+    trialDone && freeLiveOpen
       ? "Plans"
-      : demo
+      : !freeLiveOpen
         ? "Lab sample"
         : t("modules.mobile.try");
   const hint =
-    trialDone && !demo
+    trialDone && freeLiveOpen
       ? "Free Mini used · Lab demos still free · finite plans"
-      : clipsLeft !== null && !demo
+      : clipsLeft !== null && freeLiveOpen
         ? `One photo · job ready · ~${clipsLeft} Free Mini left`
-        : t("modules.mobile.hint");
+        : !freeLiveOpen
+          ? "Cached Lab preview · 0 credits · live gated"
+          : t("modules.mobile.hint");
 
   return (
     <div className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-3 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden">
@@ -70,7 +79,8 @@ export function ModulesMobileCta() {
               event: "landing_view",
               path: "/modules",
               meta: {
-                cta: trialDone && !demo ? "try_pricing" : "try_free",
+                cta:
+                  trialDone && freeLiveOpen ? "try_pricing" : "try_free",
               },
             })
           }
