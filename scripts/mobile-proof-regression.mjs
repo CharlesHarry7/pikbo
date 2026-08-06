@@ -95,9 +95,32 @@ assert.doesNotMatch(
 );
 assert.match(
   shell,
-  /\{!resultShell && !sellerPackCreate \? <nav/,
-  "Seller Pack Create must not stack the five-item mobile nav under its fixed primary action"
+  /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/,
+  "Home / fixed Moment / Seller Pack hide the five-item mobile nav under sticky primaries"
 );
+assert.match(
+  shell,
+  /!hideMobileNav\s*\?\s*(?:\(|\s*<nav)/,
+  "Mobile nav gate must use hideMobileNav (not a partial sellerPack-only check)"
+);
+assert.match(
+  shell,
+  /data-mobile-nav=["']primary["']/,
+  "Primary mobile nav marker remains for safe-area / clearance smoke"
+);
+{
+  const toast = source("components/Toast.tsx");
+  assert.match(
+    toast,
+    /bottom-\[calc\(var\(--mobile-nav-clearance\)\+0\.5rem\)\]/,
+    "Toast stack clears mobile nav + safe-area (AIT-185)"
+  );
+  assert.doesNotMatch(
+    toast,
+    /bottom-20/,
+    "Toast must not hardcode bottom-20 under notched home indicator"
+  );
+}
 assert.doesNotMatch(
   zh,
   /job\.seller\.blurb":\s*"[^"]*实时生成 30 积分/,
