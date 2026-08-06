@@ -39,6 +39,11 @@ export type ImageSuccess = {
   creditsOutcome?: "0 cached" | "10 used";
   requestId?: string;
   jobId?: string;
+  /**
+   * Server-confirmed owner durable Library job (live settle). Lab demos never
+   * set this — Image residual Library handoff stays fail-closed.
+   */
+  privateResult?: boolean;
   idempotentReplay?: boolean;
 };
 
