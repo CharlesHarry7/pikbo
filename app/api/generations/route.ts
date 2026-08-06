@@ -131,13 +131,28 @@ export async function DELETE(req: Request) {
     if (result.code === "NOT_FOUND" && id && isUuid(id)) {
       const authUser = await getAuthUserFromRequest(req);
       if (authUser) {
-        const privateJob = await getPrivateLibraryJobForOwner({
+        const privateLookup = await getPrivateLibraryJobForOwner({
           jobId: id,
           userId: authUser.id,
         });
-        if (privateJob) {
+        if (!privateLookup.ok) {
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_DETAIL_UNAVAILABLE",
+              jobId: id,
+              message:
+                "Private Library could not verify this Moment for Cancel. Retry when storage is ready.",
+              mode: "supabase-private",
+              durable: true,
+            },
+            { status: 503 }
+          );
+        }
+        if (privateLookup.job) {
           const open =
-            privateJob.status === "queued" || privateJob.status === "running";
+            privateLookup.job.status === "queued" ||
+            privateLookup.job.status === "running";
           return NextResponse.json(
             {
               ok: false,
@@ -148,7 +163,7 @@ export async function DELETE(req: Request) {
                 : "This durable Moment cannot use process-memory Cancel. Refresh Library or start a new attempt from Create.",
               mode: "supabase-private",
               durable: true,
-              status: privateJob.status,
+              status: privateLookup.job.status,
             },
             { status: 422 }
           );

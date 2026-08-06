@@ -526,4 +526,60 @@ assert.doesNotMatch(
   "deep-link catch must not invent not-your-toy on network fail"
 );
 
+// ─── AIT-357 residual: durable detail availability (list/retry/asset bind) ──
+
+// getPrivateLibraryJobForOwner Result: found | null | unavailable (not null-only).
+assert.match(results, /GetPrivateLibraryJobForOwnerResult/);
+assert.match(results, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(
+  results,
+  /getPrivateLibraryJobForOwner[\s\S]{0,1600}ok:\s*false,\s*code:\s*"DURABLE_DETAIL_UNAVAILABLE"/,
+  "detail lookup must surface unavailable when admin/query fails"
+);
+assert.match(
+  results,
+  /if \(error\) return \{ ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" \}/,
+  "query error must not collapse to missing/not-owned"
+);
+assert.match(
+  results,
+  /if \(!admin\) return \{ ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" \}/,
+  "missing admin must be unavailable, not silent null"
+);
+// Detail GET: 503 on unavailable — deep-link never invents not-your-toy.
+assert.match(generationsDetail, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(
+  generationsDetail,
+  /!privateLookup\.ok[\s\S]{0,900}status:\s*503/,
+  "GET detail must 503 when durable verify is down"
+);
+assert.match(
+  generationsDetail,
+  /ownership is not denied/i,
+  "detail 503 copy must refuse ownership denial claim"
+);
+// Retry + item cancel + collection cancel: 503 when verify unavailable.
+assert.match(retryRoute, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(
+  retryRoute,
+  /!privateLookup\.ok[\s\S]{0,900}status:\s*503/,
+  "retry must 503 when durable verify is down — never process-memory fork"
+);
+assert.match(
+  generationsDetail,
+  /export async function DELETE[\s\S]*!privateLookup\.ok[\s\S]{0,900}status:\s*503/,
+  "item cancel must 503 when durable verify is down"
+);
+assert.match(
+  generationsList,
+  /!privateLookup\.ok[\s\S]{0,900}status:\s*503/,
+  "collection cancel must 503 when durable verify is down"
+);
+// Client deep-link: recognize detail unavailable code.
+assert.match(
+  library,
+  /body\.code === "DURABLE_DETAIL_UNAVAILABLE"/,
+  "deep-link resolve must treat DURABLE_DETAIL_UNAVAILABLE as unavailable"
+);
+
 console.log("library-owner-safe-regression: ok");

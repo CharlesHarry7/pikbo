@@ -40,10 +40,26 @@ export async function POST(req: Request, { params }: Props) {
     if (result.code === "NOT_FOUND" && isUuid(id)) {
       const authUser = await getAuthUserFromRequest(req);
       if (authUser) {
-        const privateJob = await getPrivateLibraryJobForOwner({
+        const privateLookup = await getPrivateLibraryJobForOwner({
           jobId: id,
           userId: authUser.id,
         });
+        // AIT-357: storage down → 503, not local 404 (never fork, never claim missing).
+        if (!privateLookup.ok) {
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_DETAIL_UNAVAILABLE",
+              id,
+              message:
+                "Private Library could not verify this Moment for Retry. Retry when storage is ready — process-memory fork was not created.",
+              mode: "supabase-private",
+              durable: true,
+            },
+            { status: 503 }
+          );
+        }
+        const privateJob = privateLookup.job;
         if (privateJob) {
           if (
             privateJob.status === "queued" ||

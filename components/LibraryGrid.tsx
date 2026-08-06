@@ -634,9 +634,11 @@ function LibraryGridInner() {
             return;
           }
           // Transport / durable unavailable — never invent not-your-toy.
+          // AIT-357: detail 503 DURABLE_DETAIL_UNAVAILABLE shares the honesty path.
           if (
             response.status >= 500 ||
             body.code === "DURABLE_LIST_UNAVAILABLE" ||
+            body.code === "DURABLE_DETAIL_UNAVAILABLE" ||
             body.code === "DELIVERY_PIPELINE_UNAVAILABLE"
           ) {
             setDeepLinkResolve("unavailable");
