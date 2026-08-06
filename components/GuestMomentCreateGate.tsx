@@ -131,7 +131,7 @@ function GuestMomentPreview({
             </p>
             {sessionBoot === "timeout" ? (
               <div
-                className="mt-4 rounded-2xl border border-[#FF6B6B]/35 bg-[#FF6B6B]/10 px-4 py-3"
+                className="mt-4 rounded-2xl border border-ember/35 bg-ember/10 px-4 py-3"
                 data-studio-open-error="session-timeout"
                 role="alert"
               >
