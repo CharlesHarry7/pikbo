@@ -45,15 +45,32 @@ assert.match(
     "360-spin-showcase must be in the first 4 mobile wall slots"
   );
 }
+// AIT-198 / AIT-160: 360 card is direct Generate (recipe_use); non-360 still
+// project_open when projectHref is set.
 assert.match(
   wall,
-  /event:\s*item\.projectHref \? "project_open" : "recipe_use"[\s\S]*source:\s*"home_recipe_card"/,
+  /is360 \|\| !item\.projectHref[\s\S]*\? "recipe_use"[\s\S]*: "project_open"/,
   "home Recipe proof clicks must preserve project or fallback conversion analytics"
 );
 assert.match(
   wall,
-  /event:\s*"recipe_use"[\s\S]*source:\s*"home_recipe_remake"/,
-  "home Recipe CTA clicks must preserve remix conversion analytics"
+  /source:\s*is360[\s\S]*"home_recipe_card_360_generate"[\s\S]*"home_recipe_card"/,
+  "home Recipe card analytics must branch 360 Generate vs inspect"
+);
+assert.match(
+  wall,
+  /event:\s*"recipe_use"[\s\S]*source:\s*is360[\s\S]*"home_recipe_remake_360"[\s\S]*"home_recipe_remake"/,
+  "home Recipe CTA clicks must preserve remix conversion analytics (360 + remake)"
+);
+assert.match(
+  wall,
+  /data-home-primary-generate=["']360["']/,
+  "home proof wall must mark one primary Generate→360 door"
+);
+assert.match(
+  wall,
+  /data-home-primary-generate-cta/,
+  "home proof wall must expose primary Generate CTA marker"
 );
 
 assert.match(

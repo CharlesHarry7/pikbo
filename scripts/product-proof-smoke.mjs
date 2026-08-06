@@ -71,16 +71,41 @@ assert(
     homeWall.includes("pinListing360InFirstSlots") &&
     homeWall.includes("data-home-proof-360-pinned") &&
     homeWall.includes("createGenerate360Href") &&
+    homeWall.includes('data-home-primary-generate="360"') &&
+    homeWall.includes("data-home-primary-generate-cta") &&
+    homeWall.includes("listing360Href") &&
     (homeWall.includes("HOME_PROOF_LIMIT") ||
       homeWall.includes(".slice(0, 8)")),
-  "Lab proof wall must badge honestly, pin 360, use createGenerate360Href, cap ≤8"
+  "Lab proof wall must badge honestly, pin 360, one primary Generate→360, cap ≤8"
 );
-// CTA hierarchy: Moment primary in hero, then wall, then suite rail (no dual hero Generate).
+// CTA hierarchy: Moment hero primary + above-fold 360 secondary → proof wall
+// primary Generate 360 → suite rail filled Generate 360.
 assert(
   home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeViralWall") &&
     home.indexOf("<HomeViralWall") < home.indexOf("<HfProductRail") &&
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
   "home order: Moment hero → proof wall → HF product rail → trust footer"
+);
+assert(
+  homeHero.includes('createGenerate360Href("home-hero")') &&
+    homeHero.includes("data-home-hero-360-cta") &&
+    homeHero.includes("data-home-moment-cta"),
+  "hero keeps Moment primary and exposes above-fold Generate→360 secondary"
+);
+const homeRail = read("components/HfProductRail.tsx");
+assert(
+  homeRail.includes('createGenerate360Href("hf-product-rail")') &&
+    homeRail.includes('data-hf-rail-primary-generate="360"') &&
+    homeRail.includes("data-hf-rail-primary-generate-cta") &&
+    homeRail.includes("data-home-suite-360") &&
+    homeRail.includes("MOMENT_CREATE_HREF"),
+  "suite rail must expose one filled primary Generate→360 + honest Moment door"
+);
+assert(
+  create.includes("resolveCreateRouteContract") &&
+    create.includes('data-create-contract="generate-workbench"') &&
+    create.includes("fixedMomentContract"),
+  "create route dual path: 360 workbench + fixed Moment"
 );
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
