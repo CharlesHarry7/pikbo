@@ -299,6 +299,21 @@ assert(
   );
 }
 
+// AIT-589: AutoPlayVideo residual competitor lime → gallery-calm copper
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const autoplayVideo = read("components/AutoPlayVideo.tsx");
+  assert(
+    !lime.test(autoplayVideo),
+    "AutoPlayVideo must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    autoplayVideo.includes("var(--brand)") &&
+      autoplayVideo.includes("var(--primary-foreground)"),
+    "AutoPlayVideo Lab controls / error-retry chrome use --brand + primary-foreground copper"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );

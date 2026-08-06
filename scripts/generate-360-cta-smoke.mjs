@@ -771,4 +771,22 @@ assert.match(
   "Explore page eyebrows/CTAs/path accents use --brand copper"
 );
 
+// AIT-589: AutoPlayVideo residual competitor lime → gallery-calm copper
+const autoPlayVideoSrc = read("components/AutoPlayVideo.tsx");
+assert.doesNotMatch(
+  autoPlayVideoSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "AutoPlayVideo must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  autoPlayVideoSrc,
+  /var\(--brand\)/,
+  "AutoPlayVideo Lab control focus rings / error-retry chrome use --brand copper"
+);
+assert.match(
+  autoPlayVideoSrc,
+  /var\(--primary-foreground\)/,
+  "AutoPlayVideo Retry hover fill uses --primary-foreground on copper"
+);
+
 console.log("generate-360-cta-smoke: ok");
