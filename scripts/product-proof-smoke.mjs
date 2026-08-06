@@ -246,6 +246,27 @@ assert(
   );
 }
 
+// AIT-349: ExploreProjectGrid residual lime → neon-pink / void board tokens
+{
+  const exploreGrid = read("components/ExploreProjectGrid.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(exploreGrid),
+    "ExploreProjectGrid must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    exploreGrid.includes("var(--neon-pink)") &&
+      exploreGrid.includes("var(--void)") &&
+      exploreGrid.includes("rgba(255,78,205"),
+    "ExploreProjectGrid chips/focus/hover/CTA use neon-pink + void board tokens"
+  );
+  assert(
+    exploreGrid.includes("Evidence pending") &&
+      exploreGrid.includes("We do not reuse another recipe") &&
+      exploreGrid.includes("showcaseProvenanceLabel"),
+    "ExploreProjectGrid keeps fail-closed Lab/sample provenance (no fake UGC)"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
