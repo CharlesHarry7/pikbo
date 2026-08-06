@@ -988,4 +988,22 @@ assert.match(
   "FreeTrialCta primary text uses --primary-foreground (void) on copper fill"
 );
 
+// AIT-628: JobIntentBar residual competitor lime → gallery-calm copper
+const jobIntentBarSrc = read("components/JobIntentBar.tsx");
+assert.doesNotMatch(
+  jobIntentBarSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "JobIntentBar must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  jobIntentBarSrc,
+  /var\(--brand\)/,
+  "JobIntentBar chips/step chrome use --brand copper accent"
+);
+assert.match(
+  jobIntentBarSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "JobIntentBar chip glow uses copper board rgba(196,165,116)"
+);
+
 console.log("generate-360-cta-smoke: ok");
