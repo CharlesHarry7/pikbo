@@ -152,6 +152,7 @@ export default async function EffectPage({
                   <FreeTrialCta
                     path={`/effects/${preset.slug}`}
                     variant="ghost"
+                    labelDemo="Try Lab sample"
                     className="btn btn-ghost !px-3 !py-2 text-xs"
                   />
                   <Link

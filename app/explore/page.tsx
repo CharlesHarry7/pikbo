@@ -116,7 +116,11 @@ export default async function ExplorePage({
             className="flex flex-wrap items-center gap-2"
             data-explore-path="product-first"
           >
-            <FreeTrialCta path="/explore" variant="primary" />
+            <FreeTrialCta
+              path="/explore"
+              variant="primary"
+              labelDemo="Try Lab sample"
+            />
             <Link
               href={EXPLORE_GENERATE_HREF}
               className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-2.5 text-xs font-black text-[#c8ff3d] transition hover:bg-[#c8ff3d]/15"

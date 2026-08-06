@@ -96,6 +96,7 @@ export default async function SupercomputerPage({
               <FreeTrialCta
                 path="/supercomputer"
                 variant="ghost"
+                labelDemo="Try Lab sample"
                 hideClipsChip
               />
               <Link

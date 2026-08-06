@@ -121,7 +121,11 @@ export default async function CommunityPage() {
             className="flex flex-wrap items-center gap-2"
             data-community-path="product-first"
           >
-            <FreeTrialCta path="/community" variant="mint" />
+            <FreeTrialCta
+              path="/community"
+              variant="mint"
+              labelDemo="Try Lab sample"
+            />
             <Link
               href={createGenerate360Href("community")}
               className="btn btn-ghost !px-3 !py-2 text-xs"

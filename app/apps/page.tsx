@@ -142,7 +142,11 @@ export default function AppsPage() {
           <Link href="/modules" className="btn btn-primary text-sm">
             Toy Modules
           </Link>
-          <FreeTrialCta path="/apps" variant="ghost" />
+          <FreeTrialCta
+            path="/apps"
+            variant="ghost"
+            labelDemo="Try Lab sample"
+          />
           <Link
             href={APPS_GENERATE_HREF}
             className="btn btn-ghost text-sm"

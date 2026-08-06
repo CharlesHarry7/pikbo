@@ -420,6 +420,53 @@ assert(
   i18nSource.includes("Cached Lab") || i18nSource.includes("0 credits"),
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
 );
+// AIT-296: public-path cta.tryMiniFree prefers Lab sample honesty (not Mini free).
+assert(
+  !/"cta\.tryMiniFree":\s*"[^"]*Try Mini free/.test(i18nSource) &&
+    !/"cta\.tryMiniFree":\s*"[^"]*免费试用 Mini/.test(i18nSource) &&
+    !/"cta\.tryMiniFree":\s*"[^"]*Miniを無料で試す/.test(i18nSource) &&
+    !/"cta\.tryMiniFree":\s*"[^"]*Prueba Mini gratis/.test(i18nSource),
+  "i18n cta.tryMiniFree must not sell Mini free as the public default"
+);
+assert(
+  /"cta\.tryMiniFree":\s*"[^"]*Lab sample/.test(i18nSource) ||
+    /"cta\.tryMiniFree":\s*"[^"]*实验室样片/.test(i18nSource) ||
+    /"cta\.tryMiniFree":\s*"[^"]*ラボサンプル/.test(i18nSource),
+  "i18n cta.tryMiniFree must prefer Lab sample honesty"
+);
+
+// AIT-296 residual: remaining FreeTrialCta hubs pass explicit labelDemo.
+const residualFreeTrialCtaHubs = [
+  "components/SuiteDoorLinks.tsx",
+  "app/tools/page.tsx",
+  "app/explore/page.tsx",
+  "app/community/page.tsx",
+  "app/apps/page.tsx",
+  "app/effects/[slug]/page.tsx",
+  "app/settings/page.tsx",
+  "app/projects/[slug]/page.tsx",
+  "app/supercomputer/page.tsx",
+  "app/guides/page.tsx",
+];
+for (const relativePath of residualFreeTrialCtaHubs) {
+  const source = read(relativePath);
+  assert(
+    /labelDemo=/.test(source),
+    `${relativePath} FreeTrialCta must pass labelDemo Lab sample fallback`
+  );
+  assert(
+    source.includes("Try Lab sample") ||
+      source.includes("Preview Lab sample") ||
+      source.includes("Lab sample"),
+    `${relativePath} FreeTrialCta labelDemo must be Lab sample / cached honesty`
+  );
+  assert(
+    !/labelTry=["'`][^"'`]*Mini 5s/.test(source) &&
+      !/labelTry=["']Try free Mini["']/.test(source) &&
+      !/labelTry=["']Try Mini free["']/.test(source),
+    `${relativePath} must not hardcode Mini free as unconditional FreeTrialCta labelTry`
+  );
+}
 
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];

@@ -131,6 +131,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
               </Link>
               <FreeTrialCta
                 path={`/projects/${project.slug}`}
+                labelDemo="Try Lab sample"
                 className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-[#c8ff3d]/40 hover:text-[#c8ff3d]"
               />
             </div>
