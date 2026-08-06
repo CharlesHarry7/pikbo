@@ -28,10 +28,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastCtx.Provider value={value}>
       {children}
-      {/* Clear tab nav + home indicator on mobile; desktop keeps a simple inset. */}
+      {/*
+        Mobile: --toast-clearance = nav + max(bar-h, sticky-chrome-h) + gap
+        so toast clears MobileGenerateBar and taller sticky Generate (Create /
+        Modules / cinema). Desktop keeps a simple inset (lg:bottom-6).
+      */}
       <div
         data-toast-stack="safe"
-        className="pointer-events-none fixed bottom-[calc(var(--mobile-nav-clearance)+0.5rem)] right-4 z-[120] flex max-w-[min(22rem,calc(100vw-2rem))] flex-col gap-2 lg:bottom-6"
+        className="pointer-events-none fixed bottom-[var(--toast-clearance)] right-4 z-[120] flex max-w-[min(22rem,calc(100vw-2rem))] flex-col gap-2 lg:bottom-6"
       >
         {items.map((t) => (
           <div

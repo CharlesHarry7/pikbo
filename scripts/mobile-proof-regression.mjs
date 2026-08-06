@@ -126,15 +126,88 @@ assert.match(
 );
 {
   const toast = source("components/Toast.tsx");
+  const globals = source("app/globals.css");
+  // AIT-609 / AIT-597: toast clears tallest bottom chrome + tab, not nav alone
   assert.match(
     toast,
+    /bottom-\[var\(--toast-clearance\)\]/,
+    "Toast stack uses --toast-clearance (max bar/sticky + nav, AIT-609)"
+  );
+  assert.match(
+    toast,
+    /lg:bottom-6/,
+    "Toast desktop keeps bottom-6"
+  );
+  assert.doesNotMatch(
+    toast,
     /bottom-\[calc\(var\(--mobile-nav-clearance\)\+0\.5rem\)\]/,
-    "Toast stack clears mobile nav + safe-area (AIT-185)"
+    "Toast must not park on nav-only clearance under Generate chrome"
   );
   assert.doesNotMatch(
     toast,
     /bottom-20/,
     "Toast must not hardcode bottom-20 under notched home indicator"
+  );
+  assert.match(
+    globals,
+    /--toast-clearance:\s*calc\(\s*var\(--mobile-nav-clearance\)\s*\+\s*max\(\s*var\(--mobile-generate-bar-h\)\s*,\s*var\(--sticky-generate-chrome-h\)\s*\)\s*\+\s*0\.5rem\s*\)/,
+    "globals --toast-clearance stacks nav + max(bar-h, sticky-chrome-h) + gap"
+  );
+  assert.match(
+    globals,
+    /--mobile-generate-bar-h:\s*3\.25rem/,
+    "globals defines MobileGenerateBar height token for toast max()"
+  );
+  assert.match(
+    globals,
+    /--sticky-generate-chrome-h:\s*5\.75rem/,
+    "globals defines sticky Generate chrome height for toast max()"
+  );
+  // Bar-route surface still mounts MobileGenerateBar above the same nav band
+  const bar = source("components/MobileGenerateBar.tsx");
+  assert.match(
+    bar,
+    /data-floating-generate=["']mobile-bar["']/,
+    "MobileGenerateBar marker remains for bar-route collision smoke"
+  );
+  assert.match(
+    bar,
+    /bottom-\[var\(--mobile-nav-clearance\)\]/,
+    "MobileGenerateBar parks on nav clearance; toast must clear above it"
+  );
+  // Sticky money paths: Create / Modules / cinema full chrome above tab nav
+  const createSticky = source("components/CreateStudio.tsx");
+  assert.match(
+    createSticky,
+    /data-floating-generate=["']create-sticky["']/,
+    "CreateStudio sticky marker for toast stack smoke"
+  );
+  assert.match(
+    createSticky,
+    /bottom-\[var\(--mobile-nav-clearance\)\]/,
+    "CreateStudio tab-sharing sticky parks on mobile-nav-clearance"
+  );
+  const modulesCta = source("components/ModulesMobileCta.tsx");
+  assert.match(
+    modulesCta,
+    /data-floating-generate=["']modules["']/,
+    "ModulesMobileCta marker for toast stack smoke"
+  );
+  assert.match(
+    modulesCta,
+    /bottom-\[var\(--mobile-nav-clearance\)\]/,
+    "ModulesMobileCta sticky parks on mobile-nav-clearance"
+  );
+  const cinema = source("app/cinema/page.tsx");
+  assert.match(
+    cinema,
+    /data-floating-generate=["']cinema["']/,
+    "cinema sticky marker for toast stack smoke"
+  );
+  assert.match(
+    cinema,
+    /bottom-\[var\(--mobile-nav-clearance\)\]/,
+    "cinema sticky parks on mobile-nav-clearance"
   );
   // AIT-374: residual competitor lime → neon-pink / void board
   assert.doesNotMatch(

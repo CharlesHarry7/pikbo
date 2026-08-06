@@ -106,6 +106,16 @@
   --mobile-generate-bar-pad: calc(
     var(--mobile-generate-bar-h) + var(--mobile-nav-clearance) + 0.5rem
   );
+  /*
+   * Toast stack clears the tallest bottom chrome + tab nav (AIT-609 / AIT-597).
+   * MobileGenerateBar is ~3.25rem; sticky Generate (Create/Modules/cinema/Batch)
+   * is --sticky-generate-chrome-h (~5.75rem). max() keeps bar routes clear without
+   * under-clearing sticky money paths. Desktop keeps lg:bottom-6 in Toast.tsx.
+   */
+  --toast-clearance: calc(
+    var(--mobile-nav-clearance) +
+      max(var(--mobile-generate-bar-h), var(--sticky-generate-chrome-h)) + 0.5rem
+  );
 
   /* shadcn-compatible aliases */
   --background: var(--bg);
