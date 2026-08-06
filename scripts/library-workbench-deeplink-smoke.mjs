@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * AIT-529 / AIT-392 / AIT-546 / AIT-568 / AIT-576 / AIT-558: Workbench +
+ * AIT-529 / AIT-392 / AIT-546 / AIT-568 / AIT-576 / AIT-558 / AIT-622: Workbench +
  * AfterPath + WaitStage + residual CreateStudio chips + Image residual Library
- * chrome + BatchStudio/Seller Pack done → requestId deep-link (owner-safe).
+ * chrome + Image leave-wait keep-background + BatchStudio/Seller Pack done →
+ * requestId deep-link (owner-safe).
  *
  * Source + pure-logic contract:
  * - libraryWorkbenchHandoffHref only deep-links live private + UUID requestId
@@ -14,6 +15,7 @@
  * - GenerateAfterPath Library chips use helper (fail-closed)
  * - GenerateWaitStage leave exposes libraryHref / handoff markers
  * - Image Studio residual Library chrome uses helper; Lab/missing fail-closed
+ * - Image leaveWaitingKeepBackground reuses imageLibraryHref (not bare /library)
  * - BatchStudio / Seller Pack post-pack Library CTAs reuse same helper
  * - LibraryGrid matches deep-link by id or requestId; missing/foreign → not-your-toy
  *
@@ -360,6 +362,35 @@ assert.match(
   /href=\{imageLibraryHref\}/,
   "Image residual Library chrome must bind imageLibraryHref"
 );
+assert.match(
+  imageStudio,
+  /router\.push\(\s*imageLibraryHref\s*\)/,
+  "Image leave-wait keep-background must hand off owner-safe Library href"
+);
+{
+  const leaveFn = imageStudio.match(
+    /function leaveWaitingKeepBackground\(\) \{[\s\S]*?\n  \}/
+  )?.[0];
+  assert.ok(
+    leaveFn,
+    "leaveWaitingKeepBackground must exist on Image Studio"
+  );
+  assert.match(
+    leaveFn,
+    /router\.push\(\s*imageLibraryHref\s*\)/,
+    "leaveWaitingKeepBackground must push imageLibraryHref (not bare /library)"
+  );
+  assert.doesNotMatch(
+    leaveFn,
+    /router\.push\(\s*["']\/library["']\s*\)/,
+    "leaveWaitingKeepBackground must not hardcode plain /library"
+  );
+  assert.doesNotMatch(
+    leaveFn,
+    /\/library\?job=/,
+    "leaveWaitingKeepBackground must never invent hardcoded ?job="
+  );
+}
 assert.match(
   imageStudio,
   /data-library-handoff=/,

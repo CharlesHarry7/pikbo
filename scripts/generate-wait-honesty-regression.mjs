@@ -543,7 +543,9 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(imagePage, /data-generate-leave="cancel"/);
   assert.match(imagePage, /data-image-leave="detach"/);
   assert.match(imagePage, /Open Library · keep generating/);
-  assert.match(imagePage, /router\.push\(["']\/library["']\)/);
+  // AIT-622: owner-safe Library deep-link via imageLibraryHref (not bare /library)
+  assert.match(imagePage, /router\.push\(\s*imageLibraryHref\s*\)/);
+  assert.match(imagePage, /imageLibraryHref/);
   // Detach function never aborts primary, cancels ledger, or invents restore.
   {
     const leaveFn = imagePage.match(
@@ -553,7 +555,8 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     assert.match(leaveFn, /planGenerateWaitLeave\("detach"\)/);
     assert.match(leaveFn, /abortRef\.current = null/);
     assert.match(leaveFn, /detachedWaitRef\.current = true/);
-    assert.match(leaveFn, /router\.push\(["']\/library["']\)/);
+    assert.match(leaveFn, /router\.push\(\s*imageLibraryHref\s*\)/);
+    assert.doesNotMatch(leaveFn, /router\.push\(\s*["']\/library["']\s*\)/);
     assert.doesNotMatch(leaveFn, /\.abort\s*\(/);
     assert.doesNotMatch(leaveFn, /cancelSessionStill|DELETE/);
     assert.doesNotMatch(leaveFn, /setFailCreditState/);
