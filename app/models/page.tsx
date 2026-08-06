@@ -37,7 +37,7 @@ export default function ModelsPage() {
   return (
     <div className="relative px-4 py-10 sm:px-8">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(50%_70%_at_0%_0%,rgba(200,255,61,0.07),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(50%_70%_at_0%_0%,rgba(255,78,205,0.07),transparent_70%)]"
         aria-hidden
       />
       <div className="relative mx-auto max-w-6xl">
@@ -97,7 +97,7 @@ export default function ModelsPage() {
         >
           <Link
             href={MODELS_GENERATE_HREF}
-            className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+            className="rounded-full border border-[var(--neon-pink)]/40 bg-[var(--neon-pink)]/10 px-3 py-1.5 text-[var(--neon-pink)]"
             data-models-path-generate="remix"
           >
             Generate

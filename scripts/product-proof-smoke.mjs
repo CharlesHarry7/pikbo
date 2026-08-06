@@ -246,6 +246,40 @@ assert(
   );
 }
 
+// AIT-363: MobileGenerateBar showBar browse shells residual lime → neon-pink board
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const browseShells = {
+    "app/apps/page.tsx": read("app/apps/page.tsx"),
+    "app/models/page.tsx": read("app/models/page.tsx"),
+    "app/profile/page.tsx": read("app/profile/page.tsx"),
+    "app/explore/page.tsx": read("app/explore/page.tsx"),
+  };
+  for (const [rel, src] of Object.entries(browseShells)) {
+    assert(
+      !lime.test(src),
+      `${rel} must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)`
+    );
+  }
+  assert(
+    browseShells["app/apps/page.tsx"].includes("rgba(255,78,205") &&
+      browseShells["app/models/page.tsx"].includes("rgba(255,78,205") &&
+      browseShells["app/profile/page.tsx"].includes("rgba(255,78,205"),
+    "apps/models/profile radial glows use neon-pink board rgba"
+  );
+  assert(
+    browseShells["app/models/page.tsx"].includes("var(--neon-pink)") &&
+      browseShells["app/explore/page.tsx"].includes("var(--neon-pink)"),
+    "models + explore path labels/CTAs use neon-pink board tokens"
+  );
+  assert(
+    browseShells["app/explore/page.tsx"].includes("evidence pending") &&
+      browseShells["app/explore/page.tsx"].includes("not UGC") &&
+      browseShells["app/explore/page.tsx"].includes("PIKBO Lab"),
+    "Explore page keeps fail-closed Lab/sample provenance (no fake UGC)"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );

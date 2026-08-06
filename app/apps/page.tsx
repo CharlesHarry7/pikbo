@@ -121,7 +121,7 @@ export default function AppsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[radial-gradient(50%_80%_at_0%_0%,rgba(200,255,61,0.07),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[radial-gradient(50%_80%_at_0%_0%,rgba(255,78,205,0.07),transparent_70%)]"
         aria-hidden
       />
       <div className="relative mx-auto max-w-6xl">
@@ -182,7 +182,7 @@ export default function AppsPage() {
                 <Link
                   key={app.id}
                   href={app.href}
-                  className="group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--mint)]/40 hover:shadow-[0_20px_48px_-24px_rgba(200,255,61,0.12)]"
+                  className="group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--mint)]/40 hover:shadow-[0_20px_48px_-24px_rgba(255,78,205,0.12)]"
                 >
                   <div className="relative aspect-[3/4] bg-black/50">
                     {poster ? (

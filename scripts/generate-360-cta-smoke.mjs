@@ -285,6 +285,22 @@ assert.match(
   /data-floating-generate=["']mobile-bar["']/,
   "MobileGenerateBar root must carry floating-generate marker for clearance smoke"
 );
+// AIT-363: primary Generate glow off residual competitor lime → neon-pink board
+assert.doesNotMatch(
+  mobileBar,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/,
+  "MobileGenerateBar must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  mobileBar,
+  /rgba\(255,\s*78,\s*205/,
+  "MobileGenerateBar primary Generate glow uses neon-pink board rgba"
+);
+assert.match(
+  mobileBar,
+  /btn\s+btn-primary|btn-primary/,
+  "MobileGenerateBar Generate door keeps primary weight (not demoted secondary)"
+);
 
 // 7. AIT-150 — mobile nav safe-area + residual sticky CTAs use shared clearance tokens
 assert.match(
