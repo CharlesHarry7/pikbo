@@ -40,6 +40,10 @@ assert(
     homeHero.includes("data-home-moment-cta") &&
     (homeHero.match(/data-home-moment-cta/g) || []).length === 1 &&
     homeHero.includes("Create with my toy") &&
+    homeHero.includes('createGenerate360Href("home-hero")') &&
+    homeHero.includes("data-home-hero-360-cta") &&
+    homeHero.includes('data-home-primary-generate="360"') &&
+    homeHero.includes("Generate 360° listing spin") &&
     homeHero.includes("art-vinyl-guardian") &&
     homeHero.includes("Style study") &&
     !homeHero.includes("Beatbot") &&
@@ -56,6 +60,14 @@ assert(
     !home.includes("<HfExploreHome") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
   "homepage must be calm hero + designer-toy gallery + trust (no multi-rail / cartoon demo wall)"
+);
+// Dual-path /create: Generate→360 deep links open workbench (not forced Moment)
+assert(
+  create.includes("resolveCreateRouteContract") &&
+    create.includes('data-create-contract="generate-workbench"') &&
+    create.includes("fixedMomentContract") &&
+    create.includes('initialEffect="street-power-up"'),
+  "create must dual-path workbench vs fixed Moment"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),

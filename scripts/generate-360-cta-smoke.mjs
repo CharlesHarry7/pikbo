@@ -166,10 +166,11 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
-// 5. AIT-71 — floating Generate never under home indicator/nav; correct z-index
+// 5. AIT-413 / gallery-calm — home→360 one primary Generate (not floating browse)
 const globalsCss = read("app/globals.css");
 const layoutSrc = read("app/layout.tsx");
 const homePage = read("app/page.tsx");
+const homeHero = read("components/HomeCinemaHero.tsx");
 const browseCta = read("components/HomeBrowseCta.tsx");
 const mobileBar = read("components/MobileGenerateBar.tsx");
 const modulesCta = read("components/ModulesMobileCta.tsx");
@@ -194,30 +195,72 @@ assert.match(
   /viewportFit:\s*["']cover["']/,
   "root viewport must use viewport-fit=cover so safe-area env() resolves"
 );
+// Gallery-calm home: hero dual doors + designer gallery (no HomeBrowseCta remount)
 assert.match(
   homePage,
+  /<HomeCinemaHero \/>/,
+  "gallery-calm home must mount HomeCinemaHero"
+);
+assert.doesNotMatch(
+  homePage,
   /HomeBrowseCta/,
-  "Moment home must mount the floating Generate browse CTA"
+  "gallery-calm home must not remount floating HomeBrowseCta"
+);
+assert.match(
+  homeHero,
+  /createGenerate360Href\(\s*["']home-hero["']\s*\)/,
+  "home hero must deep-link Generate 360 via createGenerate360Href(home-hero)"
+);
+assert.match(
+  homeHero,
+  /data-home-hero-360-cta/,
+  "home hero must expose above-fold Generate 360 CTA marker"
+);
+assert.match(
+  homeHero,
+  /Generate 360° listing spin/,
+  "home hero 360 CTA must be result-first (listing spin)"
+);
+assert.match(
+  homeHero,
+  /data-home-moment-cta/,
+  "home hero Moment product CTA remains"
+);
+assert.equal(
+  (homeHero.match(/data-home-moment-cta/g) || []).length,
+  1,
+  "home hero must keep exactly one Moment CTA"
+);
+assert.equal(
+  (homeHero.match(/data-home-hero-360-cta/g) || []).length,
+  1,
+  "home hero must keep exactly one Generate 360 primary CTA"
+);
+assert.match(
+  homeHero,
+  /data-home-hero-doors=["']fold["']/,
+  "home hero must mark the dual-door fold column"
+);
+assert.match(
+  homeHero,
+  /data-home-hero-doors=["']fold["'][\s\S]*data-home-hero-360-cta[\s\S]*data-home-moment-cta/,
+  "Generate 360 primary + Moment secondary must sit together in the fold column"
+);
+assert.match(
+  homeHero,
+  /data-home-primary-generate=["']360["']/,
+  "home hero must mark primary Generate as 360"
+);
+// HomeBrowseCta module still honest off-home (Explore/Lab reuse)
+assert.match(
+  browseCta,
+  /createGenerate360Href\(["']home-browse["']\)/,
+  "HomeBrowseCta module must deep-link Generate→360 via home-browse source"
 );
 assert.match(
   browseCta,
   /bottom-\[var\(--floating-cta-safe-bottom\)\]/,
-  "home floating Generate must use safe-area bottom (no tab nav on home)"
-);
-assert.match(
-  browseCta,
-  /z-\[var\(--floating-generate-z\)\]/,
-  "home floating Generate must use --floating-generate-z"
-);
-assert.match(
-  browseCta,
-  /createGenerate360Href\(["']home-browse["']\)/,
-  "home browse CTA must deep-link Generate→360 via home-browse source"
-);
-assert.doesNotMatch(
-  browseCta,
-  /bottom-\[4\.75rem\]/,
-  "home floating Generate must not hardcode bare 4.75rem (double-counts nav when home has none)"
+  "HomeBrowseCta must use safe-area bottom token when mounted"
 );
 assert.match(
   mobileBar,
@@ -246,6 +289,27 @@ assert.match(
   appShellSrc,
   /<MobileGenerateBar\s*\/>/,
   "AppShell must mount MobileGenerateBar so showBar paths render"
+);
+// AIT-413: sticky shell on Home is one primary Generate→360 (not Moment-only)
+assert.match(
+  appShellSrc,
+  /createGenerate360Href\(\s*["']app-shell-home["']\s*\)/,
+  "AppShell home sticky CTA must use createGenerate360Href(app-shell-home)"
+);
+assert.match(
+  appShellSrc,
+  /data-app-shell-home-generate=\{home \? ["']360["']/,
+  "AppShell must mark home sticky Generate as 360"
+);
+assert.match(
+  appShellSrc,
+  /home \? HOME_SHELL_GENERATE_HREF/,
+  "AppShell home filled CTA must deep-link Generate workbench"
+);
+assert.doesNotMatch(
+  appShellSrc,
+  /home \? ["']Try Street Power-Up["']|home \? ["']Create my drop clip["']/,
+  "AppShell home sticky must not remain Moment-only copy"
 );
 // Browse surfaces that keep AppShell tab nav must be in showBar
 for (const route of [

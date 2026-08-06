@@ -55,6 +55,14 @@ assert.equal(
   1,
   "home hero must expose exactly one primary Moment CTA"
 );
+assert.match(
+  homeHero,
+  /createGenerate360Href\(\s*["']home-hero["']\s*\)/,
+  "home hero must expose one-click Generate→360 door"
+);
+assert.match(homeHero, /data-home-hero-360-cta/);
+assert.match(create, /resolveCreateRouteContract/);
+assert.match(create, /data-create-contract=["']generate-workbench["']/);
 assert.doesNotMatch(homeHero, /Use this motion/);
 assert.match(homeHero, /Style study|art-vinyl/);
 assert.match(homeHero, /Style study/);
