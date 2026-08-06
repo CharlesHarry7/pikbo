@@ -78,7 +78,7 @@ export default function GuidesHub() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(40%_80%_at_0%_0%,rgba(200,255,61,0.07),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(40%_80%_at_0%_0%,rgba(255,78,205,0.07),transparent_70%)]"
         aria-hidden
       />
       <div className="relative max-w-2xl">
@@ -124,16 +124,16 @@ export default function GuidesHub() {
           <Link
             key={g.slug}
             href={`/guides/${g.slug}`}
-            className="group flex flex-col rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-black/40 p-6 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--mint)]/40"
+            className="group flex flex-col rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-black/40 p-6 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--neon-pink)]/40"
           >
             <span className="text-3xl">{g.emoji}</span>
-            <h2 className="mt-3 font-semibold text-white transition group-hover:text-[var(--mint)]">
+            <h2 className="mt-3 font-semibold text-white transition group-hover:text-[var(--neon-pink)]">
               {g.title}
             </h2>
             <p className="mt-2 flex-1 text-sm leading-relaxed text-white/50">
               {g.dek}
             </p>
-            <span className="mt-4 text-xs font-semibold text-[var(--mint)]">
+            <span className="mt-4 text-xs font-semibold text-[var(--neon-pink)]">
               {g.readMins} min read →
             </span>
           </Link>
