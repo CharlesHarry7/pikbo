@@ -46,7 +46,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
         className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
       >
         <div className="mx-auto max-w-[1400px]">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]/80">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--neon-pink)]/80">
             Explore · Lab
           </p>
           <p className="mt-2 text-sm text-white/45">
@@ -93,7 +93,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--neon-pink)]">
               Explore · Lab recipes
             </p>
             <h2
@@ -128,7 +128,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
             </Link>
             <Link
               href="/effects"
-              className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
+              className="text-[11px] font-bold text-[var(--neon-pink)] hover:underline"
             >
               All recipes →
             </Link>
@@ -168,7 +168,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                 className={`group relative h-[9.5rem] w-[7.5rem] shrink-0 overflow-hidden rounded-2xl border transition duration-200 hover:-translate-y-0.5 sm:h-[11rem] sm:w-[9rem] ${
                   is360
                     ? "border-[#00D9FF]/45 shadow-[0_0_28px_rgba(0,217,255,0.12)]"
-                    : "border-white/10 hover:border-[#c8ff3d]/40"
+                    : "border-white/10 hover:border-[var(--neon-pink)]/40"
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -194,10 +194,10 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                     ) : null}
                   </div>
                   <div>
-                    <p className="text-[12px] font-black leading-tight text-white group-hover:text-[#c8ff3d] sm:text-[13px]">
+                    <p className="text-[12px] font-black leading-tight text-white group-hover:text-[var(--neon-pink)] sm:text-[13px]">
                       {recipeName}
                     </p>
-                    <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-[#c8ff3d]/90 opacity-80 transition group-hover:opacity-100">
+                    <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--neon-pink)]/90 opacity-80 transition group-hover:opacity-100">
                       Remake →
                     </p>
                   </div>

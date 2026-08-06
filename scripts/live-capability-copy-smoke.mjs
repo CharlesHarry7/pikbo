@@ -245,6 +245,8 @@ const residualSessionUi = [
   "components/ModulesMobileCta.tsx",
   "components/LandingToolPanel.tsx",
   "components/FreeTrialCta.tsx",
+  // AIT-330: BatchStudio product-cap / trial-used / pack-credit residual
+  "components/BatchStudio.tsx",
 ];
 for (const relativePath of residualSessionUi) {
   const source = read(relativePath);
@@ -301,6 +303,38 @@ for (const relativePath of [
     `${relativePath}: "~N Free Mini left" must be gated by freeLiveOpen`
   );
 }
+
+// AIT-330: BatchStudio — Free Mini product-cap / trial-used / pack-credit only when freeLiveOpen.
+const batchStudioSource = read("components/BatchStudio.tsx");
+assert(
+  batchStudioSource.includes("Cached Lab · 0 credits · Live gated"),
+  "BatchStudio must prefer Cached Lab · 0 credits · Live gated when Live is closed"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,120}\?[\s\S]{0,80}Free Mini trial used|freeLiveOpen &&[\s\S]{0,80}Free Mini trial used|freeLiveOpen\s*\?\s*[\s\S]{0,40}`Free Mini/.test(
+    batchStudioSource
+  ),
+  "BatchStudio Free Mini trial-used / product-cap must sit behind freeLiveOpen"
+);
+assert(
+  /clipsLeft !== null && freeLiveOpen && !trialDone|freeLiveOpen && !trialDone[\s\S]{0,40}clipsLeft/.test(
+    batchStudioSource
+  ),
+  "BatchStudio ~N live left must be gated by freeLiveOpen (no invented pack credits)"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,200}Free Mini covers one 10-cr job|freeLiveOpen \? \([\s\S]{0,120}Free Mini covers one 10-cr job/.test(
+    batchStudioSource
+  ),
+  "BatchStudio Free Mini pack-credit honesty must sit behind freeLiveOpen"
+);
+assert(
+  batchStudioSource.includes("Live gated · Launch Pack needs 30 live credits") ||
+    batchStudioSource.includes(
+      "Live pack credits are not available while Live is closed"
+    ),
+  "BatchStudio closed Live path must not invent free pack credits"
+);
 
 // Community must stay fail-closed on fake UGC (no invented posts/likes).
 const community = read("app/community/page.tsx");
@@ -419,6 +453,47 @@ assert(
 assert(
   i18nSource.includes("Cached Lab") || i18nSource.includes("0 credits"),
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
+);
+
+// AIT-298: Home suite residual — HowItWorks / Onboarding / FeatureCarousel.
+const howItWorksSource = read("components/HowItWorks.tsx");
+assert(
+  !howItWorksSource.includes('labelTry="Try free · Mini 5s"') &&
+    !howItWorksSource.includes("Mini 5s"),
+  "HowItWorks must not hardcode Mini 5s as public free trial CTA"
+);
+assert(
+  howItWorksSource.includes('labelTry="Try free · Lab"') &&
+    howItWorksSource.includes("FreeTrialCta"),
+  "HowItWorks must prefer Lab-first try label"
+);
+
+const onboardingBannerSource = read("components/OnboardingBanner.tsx");
+assert(
+  !onboardingBannerSource.includes("Mini 5s") &&
+    !onboardingBannerSource.includes("Free Mini"),
+  "OnboardingBanner must not hardcode Mini 5s / Free Mini trial CTA"
+);
+assert(
+  onboardingBannerSource.includes("· Lab") &&
+    onboardingBannerSource.includes("FreeTrialCta"),
+  "OnboardingBanner must prefer Lab-first try label"
+);
+
+const homeFeatureCarouselSource = read("components/HomeFeatureCarousel.tsx");
+assert(
+  !homeFeatureCarouselSource.includes("Seedance Mini trial") &&
+    !homeFeatureCarouselSource.includes("live: 5s / 480p") &&
+    !homeFeatureCarouselSource.includes("Try Mini") &&
+    !/Mini 5s/.test(homeFeatureCarouselSource),
+  "HomeFeatureCarousel must not sell Seedance Mini / 5s as public free trial"
+);
+assert(
+  homeFeatureCarouselSource.includes("Cached Lab") &&
+    (homeFeatureCarouselSource.includes("0 credits") ||
+      homeFeatureCarouselSource.includes("Live gated")) &&
+    homeFeatureCarouselSource.includes("Try Lab"),
+  "HomeFeatureCarousel seedance promo must use Cached Lab · 0 credits / Live gated honesty"
 );
 
 function walkHtml(directory) {

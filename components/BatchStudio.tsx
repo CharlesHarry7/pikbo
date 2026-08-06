@@ -48,6 +48,7 @@ import {
 import { isValidImageDataUrl } from "@/lib/providerError";
 import { SAMPLE_TOYS, sampleToDataUrl } from "@/lib/samples";
 import {
+  canLiveGenerate,
   canPreparePrivateInput,
   canUsePrivateLaunch,
   fetchMe,
@@ -610,10 +611,16 @@ export function BatchStudio({
   /** Soft-launch freeTrial honesty — same contract as Create / SoftLaunchStrip. */
   const trialDone = freeTrialExhausted(me);
   const freeLive = me?.freeTrial?.freeLive;
+  /** R0/T6: Free Mini product-cap / trial-used only when Live is actually open. */
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(me) &&
+      freeLive &&
+      freeLive.liveEnabled !== false
+  );
   const clipsLeft =
     typeof me?.freeTrial?.clipsLeft === "number"
       ? me.freeTrial.clipsLeft
-      : typeof me?.credits === "number"
+      : typeof me?.credits === "number" && freeLiveOpen
         ? Math.floor(me.credits / CREDITS_PER_VIDEO)
         : null;
   /** Any admitted private Live call uses the measured Fast 720p / 5s envelope. */
@@ -631,7 +638,9 @@ export function BatchStudio({
   const liveContractLabel =
     effectiveModel === SELLER_PACK_LIVE_MODEL_ID
       ? `Invited Fast · ${effectiveResolution} · ${effectiveDuration}s`
-      : `Free Mini · ${effectiveResolution} · ${effectiveDuration}s`;
+      : freeLiveOpen
+        ? `Free Mini · ${effectiveResolution} · ${effectiveDuration}s`
+        : "Cached Lab · 0 credits · Live gated";
   const cost = demoMode ? 0 : selected.length * CREDITS_PER_VIDEO;
   /** Label only when the frozen trio is selected (PRD: custom batch loses Seller Pack name). */
   const sellerPackActive = isSellerPack || selectedMatchesSellerPack(selected);
@@ -1588,7 +1597,9 @@ export function BatchStudio({
             ? "Open 3 archived motion tests"
             : `Run batch · ${selected.length} · cached free`
           : trialDone && isFree && !liveQuoteCovered
-            ? "Free Mini trial used · open single Generate or plans"
+            ? freeLiveOpen
+              ? "Free Mini trial used · open single Generate or plans"
+              : "Live gated · open Lab sample or plans"
             : sellerPackActive
               ? `Generate Launch Pack · ${sellerPackQuoteLabel(packQuote)}`
               : `Run batch · ${batchQuoteLabel(packQuote)}`;
@@ -1624,13 +1635,17 @@ export function BatchStudio({
           {isFree ? (
             <span
               className={
-                trialDone ? " text-amber-200" : " text-[var(--fg-dim)]"
+                trialDone && freeLiveOpen
+                  ? " text-amber-200"
+                  : " text-[var(--fg-dim)]"
               }
             >
-              {trialDone
-                ? " · Free Mini trial used"
-                : ` · ${liveContractLabel}`}
-              {clipsLeft !== null && !trialDone
+              {!freeLiveOpen
+                ? " · Cached Lab · 0 credits · Live gated"
+                : trialDone
+                  ? " · Free Mini trial used"
+                  : ` · ${liveContractLabel}`}
+              {clipsLeft !== null && freeLiveOpen && !trialDone
                 ? ` · ~${clipsLeft} live left`
                 : ""}
             </span>
@@ -1641,11 +1656,15 @@ export function BatchStudio({
             <span className="text-amber-200">
               {" "}
               · short {sellerPackShortfall(packQuote, me.credits)}
-              {trialDone && isFree
-                ? " — trial exhausted; Lab previews stay free · Founding Studio is not open yet"
-                : sellerPackActive
-                  ? " — Free Mini covers one 10-cr job, not a full pack"
-                  : " — Free Mini is one 10-cr job; deselect recipes or open single Generate"}
+              {!freeLiveOpen && isFree
+                ? " — Live gated · Lab previews stay free (0 credits) · Founding Studio is not open yet"
+                : trialDone && isFree
+                  ? " — trial exhausted; Lab previews stay free · Founding Studio is not open yet"
+                  : freeLiveOpen && sellerPackActive
+                    ? " — Free Mini covers one 10-cr job, not a full pack"
+                    : freeLiveOpen
+                      ? " — Free Mini is one 10-cr job; deselect recipes or open single Generate"
+                      : " — Live pack needs paid credits when Live opens · Lab demos stay free"}
             </span>
           ) : (
             <span>
@@ -2023,10 +2042,12 @@ export function BatchStudio({
                 </div>
                 {isFree && (
                   <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
-                    {trialDone
-                      ? "Free Mini trial used · Lab demos still free"
-                      : `${liveContractLabel} fixed`}
-                    {clipsLeft !== null && !trialDone
+                    {!freeLiveOpen
+                      ? "Cached Lab · 0 credits · Live gated"
+                      : trialDone
+                        ? "Free Mini trial used · Lab demos still free"
+                        : `${liveContractLabel} fixed`}
+                    {clipsLeft !== null && freeLiveOpen && !trialDone
                       ? ` · ~${clipsLeft} live left`
                       : ""}
                   </p>
@@ -2271,12 +2292,14 @@ export function BatchStudio({
         {!liveQuoteCovered && sellerPackActive ? (
           <div className="rounded-xl border border-[#F2C9BE] bg-[#FFF6F3] p-3 text-xs text-[#8A3C2C]">
             <p className="font-black">
-              {trialDone && isFree
+              {trialDone && isFree && freeLiveOpen
                 ? "Free Mini trial used · Launch Pack needs 30 live credits"
-                : `Full live pack needs ${cost} credits; this session has ${me?.credits ?? 0}.`}
+                : !freeLiveOpen && isFree
+                  ? "Live gated · Launch Pack needs 30 live credits when Live opens"
+                  : `Full live pack needs ${cost} credits; this session has ${me?.credits ?? 0}.`}
             </p>
             <p className="mt-1 text-[11px] font-semibold text-[#8A5A50]">
-              {trialDone && isFree ? (
+              {trialDone && isFree && freeLiveOpen ? (
                 <>
                   Cached Lab demos stay free (0 credits · upload not processed).
                   Private generation remains invite-only; public checkout is
@@ -2289,12 +2312,19 @@ export function BatchStudio({
                   </Link>
                   .
                 </>
-              ) : (
+              ) : freeLiveOpen ? (
                 <>
                   Free Mini covers one 10-cr job
                   {clipsLeft !== null ? ` (~${clipsLeft} left)` : ""} — not a
                   full 30-credit pack. Pick one child recipe below for single
                   Generate, or Preview the pack as cached demos.
+                </>
+              ) : (
+                <>
+                  Cached Lab demos stay free (0 credits · upload not processed).
+                  Live pack credits are not available while Live is closed —
+                  preview as cached demos, or open single Generate when Live is
+                  enabled.
                 </>
               )}
             </p>
@@ -2309,7 +2339,11 @@ export function BatchStudio({
                     { ratio: item.aspectRatio }
                   )}
                   data-seller-pack-free-mini="single-child"
-                  title="Open this format in single Generate (10 credits when Live)"
+                  title={
+                    freeLiveOpen
+                      ? "Open this format in single Generate (10 credits when Live)"
+                      : "Open this format as Cached Lab / single Generate (Live gated)"
+                  }
                   className="rounded-md border border-[#D5D9E1] bg-white px-2.5 py-1 text-[10px] font-bold text-[#596170]"
                   data-pack-try-recipe={item.slug}
                   data-pack-try-ratio={item.aspectRatio}
@@ -2317,7 +2351,7 @@ export function BatchStudio({
                   Try {item.label}
                 </Link>
               ))}
-              {trialDone && isFree ? (
+              {trialDone && isFree && freeLiveOpen ? (
                 <Link
                   href="/pricing"
                   className="rounded-md border border-[#2457E6]/30 bg-white px-2.5 py-1 text-[10px] font-bold text-[#2457E6]"
@@ -2398,9 +2432,11 @@ export function BatchStudio({
               ? demoMode
                 ? " as a cached Lab preview"
               : isFree
-                ? trialDone
-                  ? " (Free Mini trial used · Lab demos still free)"
-                  : ` (${liveContractLabel})`
+                ? freeLiveOpen
+                  ? trialDone
+                    ? " (Free Mini trial used · Lab demos still free)"
+                    : ` (${liveContractLabel})`
+                  : " (Cached Lab · 0 credits · Live gated)"
                 : " (private 720p)"
               : null}
             . Finished clips land in{" "}

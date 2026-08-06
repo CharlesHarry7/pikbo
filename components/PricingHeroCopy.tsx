@@ -41,7 +41,7 @@ export function PricingHeroCopy({
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -left-20 top-14 h-64 w-64 rounded-full bg-[#c8ff3d]/55 blur-[90px]"
+        className="pointer-events-none absolute -left-20 top-14 h-64 w-64 rounded-full bg-[var(--neon-pink)]/55 blur-[90px]"
         aria-hidden
       />
       <div className="relative mx-auto max-w-6xl">
@@ -70,7 +70,7 @@ export function PricingHeroCopy({
             className="inline-flex min-h-13 items-center justify-center rounded-full bg-black px-7 text-sm font-black text-white transition hover:-translate-y-0.5"
           >
             Preview one Moment
-            <span className="ml-2 text-[#c8ff3d]" aria-hidden>
+            <span className="ml-2 text-[var(--neon-pink)]" aria-hidden>
               ↗
             </span>
           </Link>
