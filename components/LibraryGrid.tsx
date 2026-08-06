@@ -609,9 +609,11 @@ function LibraryGridInner() {
   async function retry(job: GenerationJob) {
     setForkingId(job.id);
     try {
+      // Bearer required so durable owner path can emit DURABLE_* (not bare NOT_FOUND).
+      const headers = await privateDownloadHeaders();
       const response = await fetch(
         `/api/generations/${encodeURIComponent(job.id)}/retry`,
-        { method: "POST" }
+        { method: "POST", headers, cache: "no-store" }
       );
       const body = (await response.json()) as {
         ok?: boolean;
@@ -631,6 +633,21 @@ function LibraryGridInner() {
         window.location.href = acceptLibraryCreateNavigation(
           body.next?.createUi
         );
+        return;
+      }
+      // AIT-254: in-flight / already-succeeded durable — honest toast + refresh.
+      if (
+        !response.ok &&
+        (body.code === "DURABLE_IN_FLIGHT" ||
+          body.code === "DURABLE_ALREADY_SUCCEEDED")
+      ) {
+        toast(
+          body.message ||
+            (body.code === "DURABLE_IN_FLIGHT"
+              ? "This Moment is still rendering. Refresh Library."
+              : "This Moment already succeeded. Open Create for a new attempt.")
+        );
+        await refreshJobs();
         return;
       }
       if (!response.ok || !body.ok) {
@@ -675,9 +692,12 @@ function LibraryGridInner() {
     }
     setCancellingId(job.id);
     try {
+      // Bearer so owner durable UUID can return DURABLE_NO_CANCEL (parity with
+      // cancelGenerateLedger / list+detail owner gates).
+      const headers = await privateDownloadHeaders();
       const response = await fetch(
         `/api/generations/${encodeURIComponent(job.id)}`,
-        { method: "DELETE" }
+        { method: "DELETE", headers, cache: "no-store" }
       );
       const body = (await response.json()) as {
         ok?: boolean;
