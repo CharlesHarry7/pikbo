@@ -7,6 +7,7 @@ import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { MOMENTS } from "@/lib/moments";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
+/** Format accents use gallery-calm copper board tokens — no carnival coral/hot-blue. */
 const FORMATS = [
   {
     id: "listing-spin",
@@ -22,7 +23,7 @@ const FORMATS = [
     evidence: "Verified motion sample",
     actual: "Archive media · 16:9 · 6 sec",
     target: "Target format · 1:1 · 5 sec",
-    accent: "#D84A35",
+    accent: "var(--brand)",
   },
   {
     id: "blind-box-reveal",
@@ -38,7 +39,7 @@ const FORMATS = [
     evidence: "Archived format study",
     actual: "Archive media · 16:9 · 6 sec",
     target: "Target format · 9:16 · 5 sec",
-    accent: "#7A66FF",
+    accent: "var(--brand-2)",
   },
   {
     id: "social-flash",
@@ -54,7 +55,7 @@ const FORMATS = [
     evidence: "Archived format study",
     actual: "Archive media · 9:16 · 6 sec",
     target: "Target format · 9:16 · 5 sec",
-    accent: "#2876FF",
+    accent: "var(--ember)",
   },
 ] as const;
 
@@ -70,6 +71,11 @@ function momentPreviewHref(momentId: string) {
   return `/create?moment=${momentId}&source=home-official-moment`;
 }
 
+/**
+ * Dormant archive-sample surface (not mounted on gallery-calm Home/Create).
+ * Board tokens only — no residual carnival coral/hot-blue/lime hex accents.
+ * Keeps archive-sample honesty + private Moment CTAs / Live-gate copy.
+ */
 export function PublicLaunchPackSample({
   surface,
 }: {
@@ -130,7 +136,7 @@ function HomeDropArchive({
       <div className="mx-auto max-w-[1360px]">
         <div className="hidden lg:grid lg:grid-cols-[minmax(0,1fr)_390px] lg:items-end lg:gap-16">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#D84A35] sm:text-[11px]">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--brand)] sm:text-[11px]">
               Pikbo motion archive / study {active.archive}
             </p>
             <h1
@@ -149,20 +155,20 @@ function HomeDropArchive({
             <div className="mt-5 flex flex-wrap items-center gap-4">
               <Link
                 href={createHref}
-                className="inline-flex min-h-12 items-center justify-between gap-6 rounded-[10px] bg-[#D84A35] px-5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-[#E25A43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F1E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]"
+                className="inline-flex min-h-12 items-center justify-between gap-6 rounded-[10px] bg-[var(--brand)] px-5 text-xs font-black text-[var(--primary-foreground)] transition hover:-translate-y-0.5 hover:bg-[var(--brand-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--void)]"
               >
                 Create Street Power-Up <span aria-hidden>↗</span>
               </Link>
               <Link
                 href={momentPreviewHref(MOMENTS[0].id)}
                 data-home-official-moment-cta
-                className="inline-flex min-h-12 items-center justify-between gap-4 rounded-[10px] border border-[#171717]/25 px-4 text-xs font-black text-[#171717] transition hover:-translate-y-0.5 hover:border-[#D84A35] hover:text-[#D84A35] lg:border-white/25 lg:text-[#F5F1E8] lg:hover:border-[#F5F1E8] lg:hover:text-white"
+                className="inline-flex min-h-12 items-center justify-between gap-4 rounded-[10px] border border-[var(--void)]/25 px-4 text-xs font-black text-[var(--void)] transition hover:-translate-y-0.5 hover:border-[var(--brand)] hover:text-[var(--brand)] lg:border-white/25 lg:text-[var(--cream)] lg:hover:border-[var(--cream)] lg:hover:text-white"
               >
                 Preview an Official Concept <span aria-hidden>↗</span>
               </Link>
               <a
                 href="#archive-selector"
-                className="text-xs font-black text-[#171717] underline decoration-[#D84A35]/50 underline-offset-4 hover:decoration-[#D84A35] lg:text-[#F5F1E8]"
+                className="text-xs font-black text-[var(--void)] underline decoration-[var(--brand)]/50 underline-offset-4 hover:decoration-[var(--brand)] lg:text-[var(--cream)]"
               >
                 Explore archive ↓
               </a>
@@ -184,7 +190,7 @@ function HomeDropArchive({
           <div className="relative order-1 grid h-[224px] bg-[#050507] p-2 sm:h-[420px] sm:p-3 lg:h-full lg:grid-cols-[190px_minmax(0,1fr)_220px] lg:bg-transparent lg:p-0">
             <aside className="hidden border-r border-white/10 p-6 lg:flex lg:flex-col lg:justify-between">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#D84A35]">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--brand)]">
                   Archive
                 </p>
                 <p className="mt-2 font-display text-[72px] font-black leading-none tracking-[-0.08em] text-[#F5F1E8]">
@@ -235,14 +241,14 @@ function HomeDropArchive({
                   <span className="lg:hidden">Pikbo Lab archive</span>
                   <span className="hidden lg:inline">Archive motion sample</span>
                 </span>
-                <span className="border-l-2 border-[#D84A35] bg-black/58 px-3 py-2 text-[8px] font-black uppercase tracking-[0.16em] text-white/78 backdrop-blur">
+                <span className="border-l-2 border-[var(--brand)] bg-black/58 px-3 py-2 text-[8px] font-black uppercase tracking-[0.16em] text-white/78 backdrop-blur">
                   <span className="lg:hidden">{active.sample} sample</span>
                   <span className="hidden lg:inline">{active.evidence}</span>
                 </span>
               </div>
 
               <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black via-black/45 to-transparent p-5 pt-20 lg:p-7 lg:pt-28">
-                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#D84A35]">
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[var(--brand)]">
                   {active.sample} / motion study
                 </p>
                 <h2 className="mt-1 font-display text-3xl font-black tracking-[-0.05em] text-[#F5F1E8] lg:text-[42px]">
@@ -270,7 +276,7 @@ function HomeDropArchive({
                 </p>
               </div>
               <div className="border-t border-white/10 pt-5">
-                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#D84A35]">
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[var(--brand)]">
                   Seller outcome
                 </p>
                 <p className="mt-3 text-xs font-semibold leading-5 text-[#C5BEB3]">
@@ -282,7 +288,7 @@ function HomeDropArchive({
           </div>
 
           <div className="order-2 px-5 pb-6 pt-6 sm:px-8 sm:pb-8 lg:hidden">
-            <p className="text-[10px] font-black uppercase tracking-[0.21em] text-[#C9FF45] sm:text-[11px]">
+            <p className="text-[10px] font-black uppercase tracking-[0.21em] text-[var(--brand)] sm:text-[11px]">
               Toy launch engine
             </p>
             <div
@@ -331,7 +337,7 @@ function HomeDropArchive({
             <div className="mt-6 flex flex-col gap-2 sm:flex-row">
               <Link
                 href={createHref}
-                className="inline-flex min-h-14 items-center justify-between gap-4 rounded-full bg-[#C9FF45] px-6 text-sm font-black text-[#0A1700]"
+                className="inline-flex min-h-14 items-center justify-between gap-4 rounded-full bg-[var(--brand)] px-6 text-sm font-black text-[var(--primary-foreground)]"
               >
                 Create {active.shortName} <span aria-hidden>↗</span>
               </Link>
@@ -365,10 +371,10 @@ function HomeDropArchive({
                 onClick={() => onSelect(format)}
                 aria-pressed={selected}
                 data-home-format-preview={format.id}
-                className={`group grid min-h-[104px] grid-cols-[76px_1fr_auto] items-center gap-4 rounded-[14px] border p-3 text-left transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D84A35] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111] lg:min-h-[116px] ${
+                className={`group grid min-h-[104px] grid-cols-[76px_1fr_auto] items-center gap-4 rounded-[14px] border p-3 text-left transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--void)] lg:min-h-[116px] ${
                   selected
-                    ? "border-[#D84A35] bg-[#F5F1E8] text-[#111111]"
-                    : "border-black/12 bg-white/55 text-[#171717] hover:-translate-y-1 hover:border-black/30 lg:border-white/12 lg:bg-[#181818] lg:text-[#F5F1E8] lg:hover:border-white/28"
+                    ? "border-[var(--brand)] bg-[var(--cream)] text-[var(--void)]"
+                    : "border-black/12 bg-white/55 text-[var(--void)] hover:-translate-y-1 hover:border-black/30 lg:border-white/12 lg:bg-[var(--card)] lg:text-[var(--cream)] lg:hover:border-white/28"
                 }`}
               >
                 <span className="relative h-[76px] overflow-hidden rounded-[10px] bg-black">
@@ -381,7 +387,7 @@ function HomeDropArchive({
                   />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[8px] font-black uppercase tracking-[0.18em] text-[#D84A35]">
+                  <span className="block text-[8px] font-black uppercase tracking-[0.18em] text-[var(--brand)]">
                     Archive {format.archive}
                   </span>
                   <span className="mt-1 block font-display text-lg font-black tracking-[-0.035em]">
@@ -397,7 +403,7 @@ function HomeDropArchive({
                 </span>
                 <span
                   className={`h-full w-1 rounded-full ${
-                    selected ? "bg-[#D84A35]" : "bg-black/10 lg:bg-white/10"
+                    selected ? "bg-[var(--brand)]" : "bg-black/10 lg:bg-white/10"
                   }`}
                   aria-hidden
                 />
@@ -413,7 +419,7 @@ function HomeDropArchive({
         >
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.19em] text-[#D84A35]">
+              <p className="text-[10px] font-black uppercase tracking-[0.19em] text-[var(--brand)]">
                 Official concept Moments
               </p>
               <p className="mt-1 text-sm font-semibold text-[#69645C] lg:text-[#C5BEB3]">
@@ -446,7 +452,7 @@ function HomeDropArchive({
                   />
                 </span>
                 <span className="min-w-0 p-2">
-                  <span className="block truncate text-[8px] font-black uppercase tracking-[0.13em] text-[#D84A35]">
+                  <span className="block truncate text-[8px] font-black uppercase tracking-[0.13em] text-[var(--brand)]">
                     {moment.index} · {moment.useLabel}
                   </span>
                   <span className="mt-1 block truncate text-[11px] font-black">
@@ -519,7 +525,7 @@ function CreateSampleBrowser({
         <div className="flex flex-col overflow-hidden rounded-[24px] bg-[#101012] text-[#FAF7F0] shadow-[0_30px_80px_-50px_rgba(0,0,0,0.85)] sm:rounded-[32px] lg:grid lg:min-h-[690px] lg:grid-cols-[0.72fr_1.28fr]">
           <div className="order-2 flex flex-col justify-between px-5 pb-6 pt-6 sm:px-8 sm:pb-8 lg:order-1 lg:px-10 lg:py-12 xl:px-14 xl:py-14">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.21em] text-[#C9FF45] sm:text-[11px]">
+              <p className="text-[10px] font-black uppercase tracking-[0.21em] text-[var(--brand)] sm:text-[11px]">
                 Pick a format
               </p>
               <h1
@@ -581,7 +587,7 @@ function CreateSampleBrowser({
               <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
                 <Link
                   href={PRIVATE_BETA_MAILTO}
-                  className="inline-flex min-h-14 items-center justify-between gap-4 rounded-full bg-[#C9FF45] px-6 text-sm font-black text-[#0A1700] transition hover:bg-[#DCFF81] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#101012]"
+                  className="inline-flex min-h-14 items-center justify-between gap-4 rounded-full bg-[var(--brand)] px-6 text-sm font-black text-[var(--primary-foreground)] transition hover:bg-[var(--brand-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--void)]"
                   aria-label="Email Pikbo to request seller beta access"
                 >
                   Request seller beta <span aria-hidden>↗</span>

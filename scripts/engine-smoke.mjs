@@ -4023,6 +4023,21 @@ assert.match(publicSampleSrc, /Archive media · 9:16 · 6 sec/);
 assert.match(publicSampleSrc, /Target format · 1:1 · 5 sec/);
 assert.match(publicSampleSrc, /Target format · 9:16 · 5 sec/);
 assert.doesNotMatch(publicSampleSrc, /HeroUpload|fetchMe|canUsePrivateLaunch|credits/);
+// AIT-519: PublicLaunchPackSample residual carnival → gallery-calm copper board
+assert.doesNotMatch(
+  publicSampleSrc,
+  /#D84A35|#E25A43|#2876FF|#FF6846|#C9FF45|#DCFF81|#7A66FF|#c8ff3d|FF4ECD|B14EFF|00D9FF/i
+);
+assert.match(publicSampleSrc, /var\(--brand\)/);
+assert.match(publicSampleSrc, /var\(--brand-2\)/);
+assert.match(publicSampleSrc, /var\(--ember\)/);
+assert.match(publicSampleSrc, /Street Power-Up/);
+assert.match(publicSampleSrc, /No product upload in this public preview/);
+assert.match(publicSampleSrc, /private render available now/i);
+assert.doesNotMatch(
+  homePageSrc,
+  /PublicLaunchPackSample|PrivateSellerPackGate|HomeSeoBody|HomeBrowseCta|HfExplore/
+);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeDesignerGallery.tsx"),
   "utf8"
