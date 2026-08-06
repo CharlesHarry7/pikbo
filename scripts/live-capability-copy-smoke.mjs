@@ -156,6 +156,24 @@ assert(
   "modules FAQ/chip must sell Lab public path + conditional Live, not Free Mini as public trial"
 );
 
+// AIT-406: Apps hub shelf chip — no Free Mini product brand as open public trial.
+const appsHubSource = read("app/apps/page.tsx");
+assert(
+  !appsHubSource.includes("LIVE vs SOON · Free Mini ·") &&
+    !appsHubSource.includes("· Free Mini · Modules ·"),
+  "apps hub shelf chip must not sell Free Mini as public free path"
+);
+assert(
+  appsHubSource.includes(
+    "LIVE vs SOON · cached Lab · Live gated · Modules · same Generate engine"
+  ) &&
+    appsHubSource.includes("When Live is enabled for an eligible account") &&
+    (appsHubSource.includes("cached Lab") ||
+      appsHubSource.includes("Cached Lab") ||
+      appsHubSource.includes("Pikbo Lab")),
+  "apps hub must prefer cached Lab · Live gated honesty on FAQ shelf chip"
+);
+
 assert(
   read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
     read("lib/site.ts").includes("AI product video studio for toy sellers"),
