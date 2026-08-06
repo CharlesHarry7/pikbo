@@ -164,4 +164,43 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
+// 5. AIT-205 Landing SEO mesh: one primary Generate→360 footer CTA
+const landingSeoMesh = read("components/LandingSeoMesh.tsx");
+assert.match(
+  landingSeoMesh,
+  /data-seo-mesh-primary-generate=["']360["']/,
+  "LandingSeoMesh must mark primary Generate as 360"
+);
+assert.match(
+  landingSeoMesh,
+  /data-seo-mesh-primary-generate-cta/,
+  "LandingSeoMesh must expose primary Generate CTA marker"
+);
+assert.match(
+  landingSeoMesh,
+  /data-seo-mesh-generate=["']remix["']/,
+  "LandingSeoMesh primary door keeps remix marker for engine smoke"
+);
+assert.match(
+  landingSeoMesh,
+  /createGenerate360Href\(\s*["']seo-mesh["']\s*\)/,
+  "LandingSeoMesh primary Generate must use createGenerate360Href(seo-mesh)"
+);
+assert.match(
+  landingSeoMesh,
+  /Generate 360°/,
+  "LandingSeoMesh primary CTA label must say Generate 360°"
+);
+// FreeTrial must not be a filled primary competing with Generate (outline/secondary only)
+assert.doesNotMatch(
+  landingSeoMesh,
+  /FreeTrialCta[\s\S]{0,200}variant\s*=\s*["'](primary|mint)["']/,
+  "LandingSeoMesh FreeTrialCta must not use filled primary/mint variant"
+);
+assert.match(
+  landingSeoMesh,
+  /border border-white\/20/,
+  "LandingSeoMesh FreeTrial strip must be secondary outline"
+);
+
 console.log("generate-360-cta-smoke: ok");

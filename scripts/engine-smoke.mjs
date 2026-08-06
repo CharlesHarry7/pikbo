@@ -4642,14 +4642,33 @@ assert.match(
 );
 // Shared landing surfaces keep free-trial honesty; the converged Footer has no
 // trial CTA and points only to the fixed public sample.
-assert.match(
-  fs.readFileSync(join(root, "components/LandingSeoMesh.tsx"), "utf8"),
-  /FreeTrialCta/
-);
-assert.doesNotMatch(
-  fs.readFileSync(join(root, "components/LandingSeoMesh.tsx"), "utf8"),
-  /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Try free Mini/
-);
+// Landing SEO mesh: one primary Generate→360 (AIT-205) + FreeTrial secondary outline
+{
+  const landingSeoMeshSrc = fs.readFileSync(
+    join(root, "components/LandingSeoMesh.tsx"),
+    "utf8"
+  );
+  assert.match(landingSeoMeshSrc, /FreeTrialCta/);
+  assert.match(
+    landingSeoMeshSrc,
+    /createGenerate360Href|data-seo-mesh-generate=["']remix["']/
+  );
+  assert.match(landingSeoMeshSrc, /data-seo-mesh-primary-generate=["']360["']/);
+  assert.match(landingSeoMeshSrc, /data-seo-mesh-primary-generate-cta/);
+  assert.match(
+    landingSeoMeshSrc,
+    /createGenerate360Href\(\s*["']seo-mesh["']\s*\)/
+  );
+  assert.match(landingSeoMeshSrc, /Generate 360°/);
+  assert.doesNotMatch(
+    landingSeoMeshSrc,
+    /FreeTrialCta[\s\S]{0,200}variant\s*=\s*["'](primary|mint)["']/
+  );
+  assert.doesNotMatch(
+    landingSeoMeshSrc,
+    /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Try free Mini/
+  );
+}
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/Footer.tsx"), "utf8"),
   /FreeTrialCta/
