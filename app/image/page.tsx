@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
@@ -23,7 +24,11 @@ import {
   postImageWithRetry,
 } from "@/lib/imageClient";
 import { requestCreditStateFromFailure } from "@/lib/createTrust";
-import { canRetryGenerateFailure } from "@/lib/generateRecoveryPolicy";
+import {
+  canRetryGenerateFailure,
+  planGenerateWaitLeave,
+  shouldShowGenerateWaitDetach,
+} from "@/lib/generateRecoveryPolicy";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
@@ -63,11 +68,14 @@ function stashPendingStill(url: string) {
 }
 
 export default function ImageStudioPage() {
+  const router = useRouter();
   const [prompt, setPrompt] = useState(
     "Studio product photo of a designer vinyl art toy, soft box lighting, matte finish, sharp paint apps, catalog ready"
   );
   const [aspect, setAspect] = useState("3:4");
   const [busy, setBusy] = useState(false);
+  /** Wall-clock while mid-still — unlocks long-wait detach (Create/Batch parity). */
+  const [stillElapsed, setStillElapsed] = useState(0);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   /** Server Retry-After — FailPanel countdown locks Retry (parity with Create). */
@@ -101,6 +109,12 @@ export default function ImageStudioPage() {
   const [bootNonce, setBootNonce] = useState(0);
   /** Phase D/F parity — cancel mid still; refund unconfirmed if live debit started. */
   const abortRef = useRef<AbortController | null>(null);
+  /**
+   * When true, UI stopped waiting but the original still POST must keep
+   * running (no abort, no ledger cancel invent, no refund restore invent).
+   */
+  const detachedWaitRef = useRef(false);
+  const imageMountedRef = useRef(true);
   /** R1b one-shot handoff: exact child id + bearer (Library ledger retry). */
   const retryHandoffRef = useRef<
     { retryJobId: string; retryToken: string } | null
@@ -131,6 +145,27 @@ export default function ImageStudioPage() {
    * Generate is the sole primary money door; re-generate demotes to ghost.
    */
   const stillReady = canHandOffStill(imageUrl);
+
+  // Non-destructive leave: drop UI ownership only. Explicit Cancel is the sole abort path.
+  useEffect(() => {
+    imageMountedRef.current = true;
+    return () => {
+      imageMountedRef.current = false;
+      abortRef.current = null;
+    };
+  }, []);
+
+  // Wall-clock while mid-still — feeds shouldShowGenerateWaitDetach long-wait gate.
+  // Reset stillElapsed when starting generate / detach leave (not here: lint forbids
+  // setState synchronously in effect body when !busy — Create/Batch parity).
+  useEffect(() => {
+    if (!busy) return;
+    const t0 = Date.now();
+    const id = window.setInterval(() => {
+      setStillElapsed(Math.floor((Date.now() - t0) / 1000));
+    }, 500);
+    return () => window.clearInterval(id);
+  }, [busy]);
 
   // 8s wall-clock session boot (Create Studio parity). Retry re-runs via bootNonce.
   useEffect(() => {
@@ -278,8 +313,9 @@ export default function ImageStudioPage() {
       cancelled = true;
       window.clearTimeout(t);
       window.clearInterval(poll);
-      abortRef.current?.abort();
-      abortRef.current = null;
+      // Do not auto-abort the still POST on unmount — detach leave / navigate
+      // keeps the original request alive (Create/Batch parity). Explicit Cancel
+      // is the only abort path.
     };
   }, []);
 
@@ -531,17 +567,41 @@ export default function ImageStudioPage() {
   }
 
   function cancelInFlight() {
+    const plan = planGenerateWaitLeave("cancel");
+    if (!plan.abortPrimary) return;
     const ctrl = abortRef.current;
     if (!ctrl) return;
+    // Explicit cancel only — abort browser request. Never invent credits restored.
     ctrl.abort();
     abortRef.current = null;
+    detachedWaitRef.current = false;
     // Create/Landing parity: settle immediately as unconfirmed until server echoes.
-    // Cancel is retriable — never invent credits restored.
     clearFailGate();
     setFailCreditState("refund unconfirmed");
     setError(
       "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"
     );
+  }
+
+  /**
+   * Stop waiting on Image Studio without aborting the original still POST or
+   * inventing a refund restore. User can open Library while the same request finishes.
+   */
+  function leaveWaitingKeepBackground() {
+    const plan = planGenerateWaitLeave("detach");
+    if (plan.abortPrimary || plan.cancelLedger || plan.startNewGenerate) {
+      // Defensive: detach plan must never harm the in-flight still.
+      return;
+    }
+    // Drop the AbortController ref without abort() so cleanup cannot cancel.
+    abortRef.current = null;
+    detachedWaitRef.current = true;
+    setBusy(false);
+    setStillElapsed(0);
+    setError(null);
+    clearFailGate();
+    // Soft client navigation keeps the original fetch alive in this document.
+    router.push("/library");
   }
 
   async function generate(opts?: { prompt?: string; aspect?: string }) {
@@ -551,12 +611,15 @@ export default function ImageStudioPage() {
       setError("Write a short prompt (at least 4 characters).");
       return;
     }
+    // New attempt replaces any prior in-flight (explicit cancel of previous only).
     abortRef.current?.abort();
     const abortCtrl = new AbortController();
     abortRef.current = abortCtrl;
+    detachedWaitRef.current = false;
     // One logical attempt — Retry mints a new key; auto-retry reuses this one.
     const idempotencyKey = mintImageIdempotencyKey();
     setBusy(true);
+    setStillElapsed(0);
     setError(null);
     clearFailGate();
     try {
@@ -576,6 +639,37 @@ export default function ImageStudioPage() {
         },
         { signal: abortCtrl.signal }
       );
+      if (abortRef.current === abortCtrl) abortRef.current = null;
+
+      // Detached wait / unmounted Image: never invent fail UI or refund restore.
+      // On success still persist device history (Create parity).
+      if (detachedWaitRef.current || !imageMountedRef.current) {
+        if (result.ok) {
+          const data = result.data;
+          if (data.imageUrl && data.idempotentReplay !== true) {
+            const next = pushImageHistory({
+              imageUrl: data.imageUrl,
+              prompt: trimmed,
+              demo: Boolean(data.demo),
+              costCredits:
+                typeof data.costCredits === "number"
+                  ? data.costCredits
+                  : undefined,
+              creditsOutcome:
+                data.creditsOutcome === "0 cached" ||
+                data.creditsOutcome === "10 used"
+                  ? data.creditsOutcome
+                  : undefined,
+              requestId:
+                typeof data.requestId === "string" ? data.requestId : undefined,
+            });
+            if (imageMountedRef.current) setHistory(next);
+          }
+        }
+        detachedWaitRef.current = false;
+        return;
+      }
+
       if (!result.ok) {
         // Shared settlement map (Create/Landing parity) — CONTENT_POLICY ·
         // PROVIDER_NETWORK · MODEL_EMPTY · TIMEOUT · cancel never invent restore.
@@ -650,6 +744,11 @@ export default function ImageStudioPage() {
         );
       }
     } catch (e) {
+      // Detached / unmounted: never invent refund UI for a background settle.
+      if (detachedWaitRef.current || !imageMountedRef.current) {
+        detachedWaitRef.current = false;
+        return;
+      }
       // Network / unexpected — refund unconfirmed, Retry still allowed.
       recordFailGate({
         code: "NETWORK_ERROR",
@@ -660,7 +759,7 @@ export default function ImageStudioPage() {
       setError(e instanceof Error ? e.message : "Failed");
     } finally {
       if (abortRef.current === abortCtrl) abortRef.current = null;
-      setBusy(false);
+      if (imageMountedRef.current) setBusy(false);
     }
   }
 
@@ -670,6 +769,15 @@ export default function ImageStudioPage() {
     paywall: lastFailPaywall,
     busy,
     hasInput: prompt.trim().length >= 4,
+  });
+
+  /** Live long-wait / open process-memory job unlocks non-destructive leave. */
+  const showStillDetach = shouldShowGenerateWaitDetach({
+    demoMode: freeStillsDemoOnly,
+    elapsedSec: stillElapsed,
+    recoveryChecking: Boolean(
+      busy && sessionStillMeta && sessionStillMeta.open > 0
+    ),
   });
 
   return (
@@ -799,14 +907,28 @@ export default function ImageStudioPage() {
                   type="button"
                   onClick={cancelInFlight}
                   className="btn btn-ghost w-full border border-white/20"
-                  title="Aborts this browser request. Soft-launch may still finish server-side."
+                  title="Aborts this browser request. Soft-launch may still finish server-side. Refund stays unconfirmed until balance confirms."
                   data-image-cancel="settlement"
+                  data-generate-leave="cancel"
                 >
-                  Cancel request
+                  Cancel request{stillElapsed > 0 ? ` · ${stillElapsed}s` : ""}
                 </button>
+                {showStillDetach ? (
+                  <button
+                    type="button"
+                    onClick={leaveWaitingKeepBackground}
+                    className="btn btn-ghost w-full border border-[var(--mint)]/35 text-[var(--mint)]"
+                    title="Stop waiting here. Does not abort the original still POST or claim a refund."
+                    data-generate-leave="detach"
+                    data-image-leave="detach"
+                  >
+                    Open Library · keep generating
+                  </button>
+                ) : null}
                 <p className="text-center text-[10px] text-[var(--fg-dim)]">
-                  Generating still… stops waiting in this tab. Live debit may
-                  still settle — check balance before retry.
+                  {showStillDetach
+                    ? "Leave without cancel — original still may finish server-side. No refund invent; check balance before a new attempt."
+                    : "Generating still… Cancel aborts this tab wait. Live debit may still settle — check balance before retry."}
                 </p>
               </div>
             ) : !stillReady ? (

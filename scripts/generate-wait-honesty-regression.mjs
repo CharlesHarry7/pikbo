@@ -1,7 +1,6 @@
 /**
- * AIT-533 (supersedes AIT-334 / AIT-154 / AIT-213 thrash) — Studio
- * generate-wait recovery fail-closed residual
- * (recovery exit + server-gated Retry + BatchStudio parity).
+ * AIT-533 / AIT-545 / AIT-554 — Studio generate-wait recovery fail-closed
+ * residual (recovery exit + server-gated Retry + Batch/Image busy-leave).
  *
  * Source contract (no network, no provider):
  * 1. Recovery checking/waiting always unlocks a non-destructive detach exit
@@ -12,6 +11,7 @@
  * 6. BatchStudio wires recovery state, detach, and server-gated Retry
  * 7. Image Studio Fail panel uses the same pure canRetryGenerateFailure gate
  * 8. CreateStudio form-side busy-leave (AIT-571) next to Cancel
+ * 9. Image Studio mid-still busy-leave: pure detach (no abort / no refund invent)
  *
  * Run: npm run generate-wait-honesty-regression
  */
@@ -527,7 +527,69 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   );
 }
 
+// ─── 10. AIT-554 Image Studio busy-leave — non-destructive keep-generating ──
+
+{
+  const imagePage = read("app/image/page.tsx");
+  assert.match(imagePage, /leaveWaitingKeepBackground/);
+  assert.match(imagePage, /planGenerateWaitLeave\("detach"\)/);
+  assert.match(imagePage, /planGenerateWaitLeave\("cancel"\)/);
+  assert.match(imagePage, /shouldShowGenerateWaitDetach/);
+  assert.match(imagePage, /detachedWaitRef/);
+  assert.match(imagePage, /imageMountedRef/);
+  assert.match(imagePage, /data-generate-leave="detach"/);
+  assert.match(imagePage, /data-generate-leave="cancel"/);
+  assert.match(imagePage, /data-image-leave="detach"/);
+  assert.match(imagePage, /Open Library · keep generating/);
+  assert.match(imagePage, /router\.push\(["']\/library["']\)/);
+  // Detach function never aborts primary, cancels ledger, or invents restore.
+  {
+    const leaveFn = imagePage.match(
+      /function leaveWaitingKeepBackground\(\) \{[\s\S]*?\n  \}/
+    )?.[0];
+    assert.ok(leaveFn, "leaveWaitingKeepBackground must exist on Image Studio");
+    assert.match(leaveFn, /planGenerateWaitLeave\("detach"\)/);
+    assert.match(leaveFn, /abortRef\.current = null/);
+    assert.match(leaveFn, /detachedWaitRef\.current = true/);
+    assert.match(leaveFn, /router\.push\(["']\/library["']\)/);
+    assert.doesNotMatch(leaveFn, /\.abort\s*\(/);
+    assert.doesNotMatch(leaveFn, /cancelSessionStill|DELETE/);
+    assert.doesNotMatch(leaveFn, /setFailCreditState/);
+    assert.doesNotMatch(leaveFn, /10 restored|credits restored/i);
+  }
+  // Explicit cancel remains abort + refund unconfirmed (never invent restore).
+  {
+    const cancelFn = imagePage.match(
+      /function cancelInFlight\(\) \{[\s\S]*?\n  \}/
+    )?.[0];
+    assert.ok(cancelFn, "cancelInFlight must exist on Image Studio");
+    assert.match(cancelFn, /planGenerateWaitLeave\("cancel"\)/);
+    assert.match(cancelFn, /ctrl\.abort\(\)/);
+    assert.match(cancelFn, /setFailCreditState\(["']refund unconfirmed["']\)/);
+    assert.doesNotMatch(cancelFn, /10 restored/);
+  }
+  // Detached settle path persists history without inventing fail/refund UI.
+  assert.match(
+    imagePage,
+    /detachedWaitRef\.current \|\| !imageMountedRef\.current/
+  );
+  assert.match(
+    imagePage,
+    /if \(detachedWaitRef\.current \|\| !imageMountedRef\.current\) \{[\s\S]{0,500}pushImageHistory/
+  );
+  // Unmount must not auto-abort (would kill detach leave).
+  assert.doesNotMatch(
+    imagePage,
+    /return \(\) => \{[\s\S]{0,220}abortRef\.current\?\.abort\(\)/,
+    "Image unmount must not abort in-flight still POST (detach semantics)"
+  );
+  // AIT-545 Retry gate retained — AUTH / paywall / fatal / durable hold blocked.
+  assert.match(imagePage, /canRetryGenerateFailure/);
+  assert.match(imagePage, /lastFailCode/);
+  assert.match(imagePage, /DURABLE_IN_FLIGHT|DURABLE_CREDITS_UNAVAILABLE|canRetryStillFail/);
+}
+
 
 console.log(
-  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · AIT-237 Create/Landing gate · fail-closed refund copy · Batch wiring · AIT-545 Image Studio gate · AIT-571 Create form busy-leave)"
+  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · AIT-237 Create/Landing gate · fail-closed refund copy · Batch wiring · AIT-545 Image Studio gate · AIT-571 Create form busy-leave · AIT-554 Image busy-leave)"
 );
