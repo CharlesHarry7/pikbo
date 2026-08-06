@@ -80,7 +80,7 @@ export default function ToolsIndexPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-[radial-gradient(45%_80%_at_0%_0%,rgba(200,255,61,0.06),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-[radial-gradient(45%_80%_at_0%_0%,rgba(196,165,116,0.06),transparent_70%)]"
         aria-hidden
       />
       <div className="relative mx-auto max-w-5xl">
