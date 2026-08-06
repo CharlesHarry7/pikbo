@@ -487,12 +487,13 @@ assert(
   "LandingHowItWorks must mark lab-gated soft-launch honesty"
 );
 
+// AIT-411: HfProductRail free-card blurb / try labels — no Free Mini / Mini 5s product brand.
 const hfProductRailSource = read("components/HfProductRail.tsx");
 assert(
   /canLiveGenerate\s*\(/.test(hfProductRailSource) &&
     /freeLiveOpen/.test(hfProductRailSource) &&
     /liveEnabled\s*!==\s*false/.test(hfProductRailSource),
-  "HfProductRail must gate Free Mini product caps on freeLiveOpen"
+  "HfProductRail must gate free-plan live chips on freeLiveOpen"
 );
 assert(
   hfProductRailSource.includes("Cached Lab · 0 credits · Live gated") ||
@@ -500,10 +501,21 @@ assert(
   "HfProductRail closed path must use Cached Lab / 0 credits honesty"
 );
 assert(
-  /freeLiveOpen[\s\S]{0,120}\?[\s\S]{0,80}Lab sample · Free Mini 5s/.test(
+  !hfProductRailSource.includes("Free Mini") &&
+    !hfProductRailSource.includes("Mini 5s") &&
+    !hfProductRailSource.includes("Free Mini 5s"),
+  "HfProductRail must not hardcode Free Mini / Mini 5s product brand chips"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,120}\?[\s\S]{0,80}Lab sample · free-plan live/.test(
     hfProductRailSource
   ),
-  "HfProductRail Free Mini 5s must sit behind freeLiveOpen ternary"
+  "HfProductRail free-card blurb free-plan live must sit behind freeLiveOpen ternary"
+);
+assert(
+  hfProductRailSource.includes("Try free · Lab sample") &&
+    hfProductRailSource.includes("Lab sample · free-plan live"),
+  "HfProductRail try / free-card copy must prefer Lab sample / free-plan live"
 );
 assert(
   /data-hf-rail-free-cap/.test(hfProductRailSource),

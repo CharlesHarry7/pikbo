@@ -23,7 +23,7 @@ const MOMENT_RAIL_HREF = `${MOMENT_CREATE_HREF}&source=hf-product-rail` as const
  * HF homepage product entry strip — media-backed capability cards.
  * Only real Pikbo paths; Video is first and hot. Owned Lab posters only.
  * Below-fold suite density under Moment hero (AIT-241); secondary to hero CTA.
- * Free Mini product-cap blurb only when freeLiveOpen (parity FreeTrialCta).
+ * Free-plan live blurb only when freeLiveOpen (parity FreeTrialCta Lab-first).
  */
 /** Product doors first; Flow/Cinema/Image are Preview (not live job peers). */
 const PRODUCTS: {
@@ -107,18 +107,17 @@ export function HfProductRail() {
     };
   }, []);
 
-  /** R0/T6: Free Mini 5s only when Live is open (fail-closed while /api/me loading). */
+  /** R0/T6: free-plan live only when Live is open (fail-closed while /api/me loading). */
   const freeLiveOpen = Boolean(
     canLiveGenerate(me) &&
       me?.freeTrial?.freeLive &&
       me.freeTrial.freeLive.liveEnabled !== false
   );
   const freeCardBlurb = freeLiveOpen
-    ? "Lab sample · Free Mini 5s"
+    ? "Lab sample · free-plan live"
     : "Cached Lab · 0 credits · Live gated";
-  const headerTryLabel = freeLiveOpen
-    ? "Try free · Mini 5s"
-    : "Try free · Lab sample";
+  /** Lab-first try label — FreeTrialCta uses labelDemo when Live is closed. */
+  const headerTryLabel = "Try free · Lab sample";
   const headerDemoLabel = "Lab sample · 0 credits";
 
   return (
@@ -158,7 +157,7 @@ export function HfProductRail() {
           </div>
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {/* Free card — Free Mini product caps only when freeLiveOpen */}
+          {/* Free card — free-plan live blurb only when freeLiveOpen */}
           <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[var(--neon-pink)]/45 bg-[var(--neon-pink)]/[0.1] p-3.5 shadow-[0_0_32px_rgba(255,78,205,0.12)] sm:h-[11rem] sm:w-[10rem]">
             <span className="relative z-10 inline-flex rounded-full bg-[var(--neon-pink)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--void)]">
               Free
@@ -166,7 +165,7 @@ export function HfProductRail() {
             <p className="relative z-10 mt-2 text-[13px] font-black leading-tight text-white">
               <FreeTrialCta
                 path="/#product-rail-card"
-                labelTry={freeLiveOpen ? "Try free · Mini 5s" : "Lab sample"}
+                labelTry={freeLiveOpen ? "Try free · Lab sample" : "Lab sample"}
                 labelDemo="Lab sample"
                 labelPlans="Plans"
                 hideClipsChip
