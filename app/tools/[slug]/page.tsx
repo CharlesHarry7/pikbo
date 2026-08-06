@@ -130,7 +130,7 @@ export default async function ToolPage({
           {/* Rank page friction line — above H1, does not change H1 (CTR / soft launch) */}
           {isHighIntentTool ? (
             <p
-              className="mt-4 max-w-2xl text-sm font-semibold tracking-wide text-[#c8ff3d]/95 sm:text-base"
+              className="mt-4 max-w-2xl text-sm font-semibold tracking-wide text-[var(--neon-pink)]/95 sm:text-base"
               data-tools-friction="cached-preview"
             >
               Cached format preview · no card · your upload is not processed.
@@ -238,20 +238,20 @@ export default async function ToolPage({
             </p>
             <p className="leading-relaxed text-sm">
               Brand home with embedded tool:{" "}
-              <Link href="/" className="text-[var(--mint)] hover:underline">
+              <Link href="/" className="text-[var(--neon-pink)] hover:underline">
                 {site.url}
               </Link>
               . Scene page:{" "}
               <Link
                 href="/for/photo-to-video-for-toys"
-                className="text-[var(--mint)] hover:underline"
+                className="text-[var(--neon-pink)] hover:underline"
               >
                 photo to video for toys
               </Link>
               . Full studio:{" "}
               <Link
                 href={createGenerate360Href("tool-page")}
-                className="text-[var(--mint)] hover:underline"
+                className="text-[var(--neon-pink)] hover:underline"
                 data-tool-full-studio="remix"
               >
                 Generate
@@ -264,19 +264,19 @@ export default async function ToolPage({
             >
               <Link
                 href="/guides/how-to-photograph-toys-for-ai-video"
-                className="text-[var(--mint)] hover:underline"
+                className="text-[var(--neon-pink)] hover:underline"
               >
                 Prepare a clean toy photo
               </Link>
               <Link
                 href="/tools/blind-box-reveal-video-maker"
-                className="text-[var(--mint)] hover:underline"
+                className="text-[var(--neon-pink)] hover:underline"
               >
                 Make a blind-box reveal
               </Link>
               <Link
                 href="/pricing"
-                className="text-[var(--mint)] hover:underline"
+                className="text-[var(--neon-pink)] hover:underline"
               >
                 Review plan limits
               </Link>

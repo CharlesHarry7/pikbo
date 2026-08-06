@@ -175,6 +175,19 @@ assert(
   "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
 
+// AIT-452: tools/[slug] residual lime → neon-pink board tokens
+{
+  const toolsSlugPage = read("app/tools/[slug]/page.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61|var\(--mint\)/.test(toolsSlugPage),
+    "tools/[slug] page must not hard-code competitor lime (#c8ff3d / rgba 200,255,61 / mint)"
+  );
+  assert(
+    toolsSlugPage.includes("var(--neon-pink)"),
+    "tools/[slug] primary chrome uses neon-pink board tokens"
+  );
+}
+
 // AIT-320: four-surface money path off residual competitor lime (board tokens)
 {
   const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
