@@ -22,33 +22,77 @@ function isUuid(value: string): boolean {
  * Single still poll — parity with GET /api/generations/[id].
  * R1b: read-only — never extends fixed deadlineAt.
  * includeDataUrl: owned demo stills can recover data: bodies (list omits them).
+ *
+ * AIT-595 residual: local miss + durable UUID + auth must not invent a plain
+ * process-memory 404 when private verify is down (DURABLE_DETAIL_UNAVAILABLE).
+ * Owned durable Moments stay Library-scoped — never rehydrated as image stills.
  */
-export async function GET(_req: Request, { params }: Props) {
+export async function GET(req: Request, { params }: Props) {
   const { id } = await params;
   const session = await ensureSession();
   // Read-only poll: getImageJob may sweep TIMEOUT but does not slide deadline.
   const job = getImageJob(id);
-  if (!job || job.sessionId !== session.id) {
-    return NextResponse.json(
-      {
-        ok: false,
-        code: "NOT_FOUND",
-        id,
-        message:
-          "No still job in this session's local ledger. Soft-launch records jobs after POST /api/image.",
-      },
-      { status: 404 }
-    );
+  if (job && job.sessionId === session.id) {
+    return NextResponse.json({
+      ok: true,
+      mode: "local-memory",
+      durable: false,
+      job: toPublicImageJob(job, session.id, { includeDataUrl: true }),
+      /** R1b: polls never extend deadlineAt. */
+      touched: false,
+      note: "Read-only poll — fixed deadlineAt; worker heartbeat is separate.",
+    });
   }
-  return NextResponse.json({
-    ok: true,
-    mode: "local-memory",
-    durable: false,
-    job: toPublicImageJob(job, session.id, { includeDataUrl: true }),
-    /** R1b: polls never extend deadlineAt. */
-    touched: false,
-    note: "Read-only poll — fixed deadlineAt; worker heartbeat is separate.",
-  });
+
+  // Durable owner path — never claim local missing when private storage is down.
+  if (isUuid(id)) {
+    const authUser = await getAuthUserFromRequest(req);
+    if (authUser) {
+      const privateLookup = await getPrivateLibraryJobForOwner({
+        jobId: id,
+        userId: authUser.id,
+      });
+      if (!privateLookup.ok) {
+        return NextResponse.json(
+          {
+            ok: false,
+            code: "DURABLE_DETAIL_UNAVAILABLE",
+            id,
+            message:
+              "Private Library could not verify this still. Retry when storage is ready — ownership is not denied.",
+            mode: "supabase-private",
+            durable: true,
+          },
+          { status: 503 }
+        );
+      }
+      // Owned durable row exists but is not a process-memory still. Fail closed
+      // with uniform NOT_FOUND shape (no Moment metadata leak on the image API).
+      if (privateLookup.job) {
+        return NextResponse.json(
+          {
+            ok: false,
+            code: "NOT_FOUND",
+            id,
+            message:
+              "No still job in this session's local ledger. Soft-launch records jobs after POST /api/image.",
+          },
+          { status: 404 }
+        );
+      }
+    }
+  }
+
+  return NextResponse.json(
+    {
+      ok: false,
+      code: "NOT_FOUND",
+      id,
+      message:
+        "No still job in this session's local ledger. Soft-launch records jobs after POST /api/image.",
+    },
+    { status: 404 }
+  );
 }
 
 /**

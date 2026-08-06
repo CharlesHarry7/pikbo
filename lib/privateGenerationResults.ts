@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { listReadyOwnerAssetIds } from "@/lib/privateToyAssets";
 import {
-  acceptControlledLibraryNewAttemptUrl,
+  applyOwnerReadyAssetBindGate,
+  collectLibraryNewAttemptAssetIds,
   parseProviderOutputHostAllowlist,
   privateLibraryJobFromRow,
   privateResultObjectKey,
@@ -13,6 +14,8 @@ import {
 
 export {
   acceptControlledLibraryNewAttemptUrl,
+  applyOwnerReadyAssetBindGate,
+  collectLibraryNewAttemptAssetIds,
   controlledLibraryNewAttemptUrl,
   isOwnerVisibleLibraryJob,
   libraryDurableTerminalFailureCopy,
@@ -414,6 +417,9 @@ const LIBRARY_COLUMNS = [
  * pending, rejected, or foreign assets must not mint a newAttemptUrl.
  * inputBound stays true when the durable row carries a UUID binding (honest
  * column truth); only the Create handoff is gated.
+ *
+ * AIT-595: pure gate lives in applyOwnerReadyAssetBindGate; membership is
+ * fail-closed via listReadyOwnerAssetIds (empty set when storage is down).
  */
 async function gateLibrarySamePhotoHandoffs(input: {
   userId: string;
@@ -422,22 +428,7 @@ async function gateLibrarySamePhotoHandoffs(input: {
   const jobs = input.jobs;
   if (jobs.length === 0) return jobs;
 
-  const candidateAssetIds: string[] = [];
-  for (const job of jobs) {
-    if (!job.newAttemptUrl) continue;
-    const accepted = acceptControlledLibraryNewAttemptUrl(job.newAttemptUrl);
-    if (!accepted) continue;
-    try {
-      const assetId = new URL(accepted, "https://pikbo.local").searchParams
-        .get("assetId")
-        ?.trim()
-        .toLowerCase();
-      if (assetId) candidateAssetIds.push(assetId);
-    } catch {
-      /* ignore malformed */
-    }
-  }
-
+  const candidateAssetIds = collectLibraryNewAttemptAssetIds(jobs);
   const readyIds =
     candidateAssetIds.length > 0
       ? await listReadyOwnerAssetIds({
@@ -446,31 +437,7 @@ async function gateLibrarySamePhotoHandoffs(input: {
         })
       : new Set<string>();
 
-  return jobs.map((job) => {
-    if (!job.newAttemptUrl) return job;
-    const accepted = acceptControlledLibraryNewAttemptUrl(job.newAttemptUrl);
-    if (!accepted) {
-      const { newAttemptUrl: _drop, ...rest } = job;
-      void _drop;
-      return rest as PrivateLibraryJob;
-    }
-    let assetId = "";
-    try {
-      assetId =
-        new URL(accepted, "https://pikbo.local").searchParams
-          .get("assetId")
-          ?.trim()
-          .toLowerCase() || "";
-    } catch {
-      assetId = "";
-    }
-    if (!assetId || !readyIds.has(assetId)) {
-      const { newAttemptUrl: _drop, ...rest } = job;
-      void _drop;
-      return rest as PrivateLibraryJob;
-    }
-    return { ...job, newAttemptUrl: accepted };
-  });
+  return applyOwnerReadyAssetBindGate(jobs, readyIds) as PrivateLibraryJob[];
 }
 
 /**
