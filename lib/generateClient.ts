@@ -8,7 +8,11 @@ import type {
   GenerateRequestBody,
   GenerateSuccess,
 } from "@/lib/contracts";
-import { isSafeDeliverableUrl } from "@/lib/createTrust";
+import {
+  durableClientVideoUrl,
+  isSafeDeliverableUrl,
+  isStorageSignedObjectUrl,
+} from "@/lib/createTrust";
 import {
   isAuthoritativeRecoveryResult,
   raceGenerateWithDurableRecovery,
@@ -542,15 +546,29 @@ export function historyFieldsFromSuccess(
     sku?: string;
   }
 ): Omit<HistoryItem, "id" | "createdAt"> {
-  // Prefer server redaction; if a legacy free live provider URL slipped through,
-  // pin history to the controlled download path (T6 gate re-checks ownership).
+  // Prefer server redaction; rewrite residual storage signed URLs (pre-AIT-188)
+  // and free live provider absolutes into the owner download gate when an id
+  // is known. Never persist tokenized private object URLs in Library history.
   const jobKey =
     typeof data.jobId === "string"
       ? data.jobId
       : typeof data.requestId === "string"
         ? data.requestId
         : "";
-  let videoUrl = data.videoUrl;
+  let videoUrl = durableClientVideoUrl(data.videoUrl, {
+    jobId: typeof data.jobId === "string" ? data.jobId : null,
+    requestId: typeof data.requestId === "string" ? data.requestId : null,
+  });
+  if (!videoUrl) {
+    // Never fall back to a tokenized private object URL.
+    if (isStorageSignedObjectUrl(data.videoUrl)) {
+      videoUrl = jobKey
+        ? `/api/downloads/${encodeURIComponent(jobKey)}`
+        : "/api/downloads/unavailable";
+    } else {
+      videoUrl = data.videoUrl;
+    }
+  }
   if (
     Boolean(data.watermark) &&
     !Boolean(data.demo) &&

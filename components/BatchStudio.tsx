@@ -72,6 +72,7 @@ import {
 } from "@/lib/sellerPackQuote";
 import {
   canDownloadResult,
+  durableClientVideoUrl,
   freeLiveDownloadBlockReason,
   isPlayableResultVideoUrl,
   isSafeDeliverableUrl,
@@ -918,7 +919,20 @@ export function BatchStudio({
       job: {
         ...job,
         status: "succeeded",
-        videoUrl: data.videoUrl,
+        // Rewrite residual storage signed URLs → owner download gate.
+        videoUrl:
+          durableClientVideoUrl(data.videoUrl, {
+            jobId: typeof data.jobId === "string" ? data.jobId : null,
+            requestId:
+              typeof data.requestId === "string" ? data.requestId : null,
+          }) ??
+          (typeof data.jobId === "string" && data.jobId
+            ? `/api/downloads/${encodeURIComponent(data.jobId)}`
+            : typeof data.requestId === "string" && data.requestId
+              ? `/api/downloads/${encodeURIComponent(data.requestId)}`
+              : data.videoUrl.startsWith("/")
+                ? data.videoUrl
+                : "/api/downloads/unavailable"),
         demo: data.demo,
         model: data.model,
         duration:
