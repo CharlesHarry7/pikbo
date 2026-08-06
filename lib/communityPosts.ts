@@ -4,10 +4,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import {
-  isPublicCommunityVideoUrl,
-  isSafeDeliverableUrl,
-} from "@/lib/createTrust";
+import { isPublicCommunityVideoUrl } from "@/lib/createTrust";
 
 export type CommunityPost = {
   id: string;
@@ -89,7 +86,8 @@ export async function listPublicCommunityPosts(
         posterUrl: row.poster_url ? String(row.poster_url) : null,
         createdAt: String(row.created_at || ""),
       }))
-      .filter((p) => isSafeDeliverableUrl(p.videoUrl));
+      // Soft-launch: never surface private/signed/provider Moments as UGC.
+      .filter((p) => isPublicCommunityVideoUrl(p.videoUrl));
     return { posts, configured: true };
   } catch (e) {
     return {
@@ -108,27 +106,22 @@ export async function publishCommunityPost(input: {
   videoUrl: string;
   posterUrl?: string;
 }): Promise<{ ok: true; id: string } | { ok: false; error: string; code: string }> {
-  // Public UGC only — Free /api/downloads paths and relative Lab demos fail closed.
+  // Soft-launch fail closed (AIT-454): only Lab /demos/* (explicit public
+  // deliverables). Session downloads, signed storage, provider CDN rejected.
   if (!isPublicCommunityVideoUrl(input.videoUrl)) {
     return {
       ok: false,
       code: "UNSAFE_URL",
       error:
-        "videoUrl must be a public http(s) media URL (not Free download or app-local paths)",
+        "videoUrl must be a public Lab /demos/* deliverable (not session download, signed storage, or provider CDN)",
     };
   }
-  if (
-    input.posterUrl &&
-    !(
-      isPublicCommunityVideoUrl(input.posterUrl) ||
-      (isSafeDeliverableUrl(input.posterUrl) &&
-        input.posterUrl.startsWith("https://"))
-    )
-  ) {
+  if (input.posterUrl && !isPublicCommunityVideoUrl(input.posterUrl)) {
     return {
       ok: false,
       code: "UNSAFE_URL",
-      error: "posterUrl must be a public http(s) image URL",
+      error:
+        "posterUrl must be a public Lab deliverable (not private/signed/provider media)",
     };
   }
   const client = supabaseAnonWithToken(input.accessToken);

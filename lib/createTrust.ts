@@ -470,6 +470,116 @@ export function isSessionGatedDownloadUrl(url: string): boolean {
 }
 
 /**
+ * True when a URL looks like a short-lived storage object signature
+ * (Supabase `/object/sign/…?token=`, S3-style query signatures).
+ * Private Moments must never be promoted to Community UGC via these URLs.
+ */
+export function isStorageSignedObjectUrl(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t || t.length > 2000) return false;
+  if (!/^https?:\/\//i.test(t)) return false;
+  try {
+    const u = new URL(t);
+    const path = u.pathname.toLowerCase();
+    // Supabase Storage signed object URLs.
+    if (path.includes("/storage/v1/object/sign/")) return true;
+    if (path.includes("/object/sign/")) return true;
+    // Tokenized private object path (Supabase createSignedUrl).
+    if (
+      u.searchParams.has("token") &&
+      (path.includes("/storage/") || path.includes("/object/"))
+    ) {
+      return true;
+    }
+    // S3 / R2 style temporary signatures.
+    if (
+      u.searchParams.has("X-Amz-Signature") ||
+      u.searchParams.has("X-Amz-Credential") ||
+      (u.searchParams.has("Signature") && u.searchParams.has("Expires"))
+    ) {
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Known provider / ephemeral CDN hosts that deliver private generation output.
+ * These are never public Community media (fail closed even if not signed).
+ */
+const PROVIDER_DELIVERY_HOST_SUFFIXES = [
+  "fal.media",
+  "fal.run",
+  "replicate.delivery",
+  "replicate.com",
+] as const;
+
+/**
+ * True when hostname is a known private provider delivery host (or subdomain).
+ */
+export function isProviderDeliveryHost(hostname: string): boolean {
+  const host = String(hostname || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\.$/, "");
+  if (!host) return false;
+  return PROVIDER_DELIVERY_HOST_SUFFIXES.some(
+    (suffix) => host === suffix || host.endsWith(`.${suffix}`)
+  );
+}
+
+/**
+ * True when URL points at a known provider CDN (fal / replicate family).
+ * Absolute only — relative same-origin paths are never provider CDN.
+ */
+export function isProviderDeliveryMediaUrl(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t || t.length > 2000) return false;
+  if (!/^https?:\/\//i.test(t)) return false;
+  try {
+    const u = new URL(t);
+    if (!u.hostname) return false;
+    return isProviderDeliveryHost(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Path-safe Lab demo media under `/demos/*` (no traversal / backslash tricks).
+ * Relative same-origin form only — absolute demos must go through host checks.
+ */
+export function isPathSafeLabDemoUrl(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t || t.length > 2000) return false;
+  // Relative Lab demos only (no protocol-relative //).
+  if (!t.startsWith("/demos/") || t.startsWith("//")) return false;
+  if (t.includes("..") || t.includes("\\") || t.includes("//")) return false;
+  // Strip query/hash for path shape; demos are static public files.
+  const path = t.split(/[?#]/)[0] || "";
+  return /^\/demos\/[A-Za-z0-9._/-]+$/.test(path);
+}
+
+/**
+ * Private / non-portable Moment media — session gate, signed storage, or
+ * provider CDN. Community publish and Copy/Share must refuse these.
+ */
+export function isPrivateMomentMediaUrl(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t) return false;
+  if (isSessionGatedDownloadUrl(t)) return true;
+  if (isStorageSignedObjectUrl(t)) return true;
+  if (isProviderDeliveryMediaUrl(t)) return true;
+  return false;
+}
+
+/**
  * Absolute URL safe for clipboard / X share (never session-gated downloads).
  * Relative same-origin paths become origin-absolute when `origin` is provided.
  */
@@ -490,24 +600,41 @@ export function publicShareableVideoUrl(
 }
 
 /**
- * Community UGC must be a public absolute http(s) media URL.
- * Controlled Free download endpoints and app-relative paths are not public.
+ * Soft-launch Community UGC allowlist (fail closed).
+ *
+ * Allowed:
+ * - Lab `/demos/*` (path-safe relative, or absolute same path when host is not
+ *   a private provider / signed storage URL)
+ *
+ * Rejected:
+ * - Session-gated `/api/downloads/*`
+ * - Private signed storage object URLs
+ * - Provider CDN hosts (fal / replicate family)
+ * - Arbitrary absolute https (private Moments must not leak as UGC)
  */
 export function isPublicCommunityVideoUrl(url: string): boolean {
   if (!url || typeof url !== "string") return false;
   const t = url.trim();
   if (!t || t.length > 2000) return false;
-  // Free T6 gate path is session-owned, not a public Community deliverable.
-  if (isSessionGatedDownloadUrl(t)) {
-    return false;
-  }
-  // Relative paths (including /demos Lab clips) stay off Community UGC.
-  if (t.startsWith("/") || t.startsWith("//")) return false;
+
+  // Private Moments never become Community posts.
+  if (isPrivateMomentMediaUrl(t)) return false;
+
+  // Preferred: same-origin Lab demos.
+  if (isPathSafeLabDemoUrl(t)) return true;
+
+  // Absolute Lab demo only when pathname is /demos/* and host is not private.
+  if (!/^https?:\/\//i.test(t)) return false;
   try {
     const u = new URL(t);
     if (u.protocol !== "https:" && u.protocol !== "http:") return false;
     if (!u.hostname || u.username || u.password) return false;
-    return true;
+    if (isProviderDeliveryHost(u.hostname)) return false;
+    if (isStorageSignedObjectUrl(t)) return false;
+    if (u.pathname.includes("/api/downloads/")) return false;
+    const path = u.pathname;
+    if (path.includes("..") || path.includes("\\")) return false;
+    return /^\/demos\/[A-Za-z0-9._/-]+$/.test(path);
   } catch {
     return false;
   }

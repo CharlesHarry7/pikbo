@@ -260,7 +260,7 @@ assert.match(communityPostsRoute, /labOnly/);
 assert.match(communityPostsRoute, /clientIp/);
 assert.match(
   fs.readFileSync(join(root, "lib/communityPosts.ts"), "utf8"),
-  /isSafeDeliverableUrl/
+  /isPublicCommunityVideoUrl/
 );
 assert.match(
   fs.readFileSync(join(root, "scripts/critical-path.sh"), "utf8"),
@@ -2680,28 +2680,122 @@ assert.match(createTrust, /export function customerFacingGenerateVideoUrl/);
 assert.match(createTrust, /export function isPlayableResultVideoUrl/);
 assert.match(createTrust, /export function isPublicCommunityVideoUrl/);
 assert.match(createTrust, /export function isSessionGatedDownloadUrl/);
+assert.match(createTrust, /export function isStorageSignedObjectUrl/);
+assert.match(createTrust, /export function isProviderDeliveryMediaUrl/);
+assert.match(createTrust, /export function isPrivateMomentMediaUrl/);
+assert.match(createTrust, /export function isPathSafeLabDemoUrl/);
 assert.match(createTrust, /export function publicShareableVideoUrl/);
 assert.match(genRoute, /customerFacingGenerateVideoUrl/);
-// Pure community public URL parity
-function isPublicCommunityVideoUrl(url) {
+// Pure community public URL parity (AIT-454 fail closed: Lab /demos only)
+function isSessionGatedDownloadUrlLocal(url) {
   if (!url || typeof url !== "string") return false;
   const t = url.trim();
-  if (!t || t.length > 2000) return false;
-  if (t.startsWith("/api/downloads/") || t.includes("/api/downloads/")) return false;
-  if (t.startsWith("/") || t.startsWith("//")) return false;
+  return t.startsWith("/api/downloads/") || t.includes("/api/downloads/");
+}
+function isStorageSignedObjectUrlLocal(url) {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t || !/^https?:\/\//i.test(t)) return false;
   try {
     const u = new URL(t);
-    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
-    if (!u.hostname || u.username || u.password) return false;
-    return true;
+    const path = u.pathname.toLowerCase();
+    if (path.includes("/storage/v1/object/sign/") || path.includes("/object/sign/")) {
+      return true;
+    }
+    if (
+      u.searchParams.has("token") &&
+      (path.includes("/storage/") || path.includes("/object/"))
+    ) {
+      return true;
+    }
+    if (
+      u.searchParams.has("X-Amz-Signature") ||
+      u.searchParams.has("X-Amz-Credential") ||
+      (u.searchParams.has("Signature") && u.searchParams.has("Expires"))
+    ) {
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
 }
-assert.equal(isPublicCommunityVideoUrl("https://cdn.example/v.mp4"), true);
+function isProviderDeliveryHostLocal(hostname) {
+  const host = String(hostname || "").trim().toLowerCase().replace(/\.$/, "");
+  const suffixes = ["fal.media", "fal.run", "replicate.delivery", "replicate.com"];
+  return suffixes.some((s) => host === s || host.endsWith(`.${s}`));
+}
+function isProviderDeliveryMediaUrlLocal(url) {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t || !/^https?:\/\//i.test(t)) return false;
+  try {
+    return isProviderDeliveryHostLocal(new URL(t).hostname);
+  } catch {
+    return false;
+  }
+}
+function isPathSafeLabDemoUrlLocal(url) {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t.startsWith("/demos/") || t.startsWith("//")) return false;
+  if (t.includes("..") || t.includes("\\") || t.includes("//")) return false;
+  const path = t.split(/[?#]/)[0] || "";
+  return /^\/demos\/[A-Za-z0-9._/-]+$/.test(path);
+}
+function isPrivateMomentMediaUrlLocal(url) {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  return (
+    isSessionGatedDownloadUrlLocal(t) ||
+    isStorageSignedObjectUrlLocal(t) ||
+    isProviderDeliveryMediaUrlLocal(t)
+  );
+}
+function isPublicCommunityVideoUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t || t.length > 2000) return false;
+  if (isPrivateMomentMediaUrlLocal(t)) return false;
+  if (isPathSafeLabDemoUrlLocal(t)) return true;
+  if (!/^https?:\/\//i.test(t)) return false;
+  try {
+    const u = new URL(t);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    if (!u.hostname || u.username || u.password) return false;
+    if (isProviderDeliveryHostLocal(u.hostname)) return false;
+    if (isStorageSignedObjectUrlLocal(t)) return false;
+    if (u.pathname.includes("/api/downloads/")) return false;
+    const path = u.pathname;
+    if (path.includes("..") || path.includes("\\")) return false;
+    return /^\/demos\/[A-Za-z0-9._/-]+$/.test(path);
+  } catch {
+    return false;
+  }
+}
+assert.equal(isPublicCommunityVideoUrl("/demos/orbit-dance.mp4"), true);
+assert.equal(
+  isPublicCommunityVideoUrl("https://pikbo.ai/demos/orbit-dance.mp4"),
+  true
+);
+assert.equal(isPublicCommunityVideoUrl("https://cdn.example/v.mp4"), false);
 assert.equal(isPublicCommunityVideoUrl("/api/downloads/job_1"), false);
-assert.equal(isPublicCommunityVideoUrl("/demos/orbit-dance.mp4"), false);
+assert.equal(
+  isPublicCommunityVideoUrl("https://v3b.fal.media/files/private/result.mp4"),
+  false
+);
+assert.equal(
+  isPublicCommunityVideoUrl(
+    "https://xyz.supabase.co/storage/v1/object/sign/pikbo-private-results/x.mp4?token=abc"
+  ),
+  false
+);
 assert.equal(isPublicCommunityVideoUrl("javascript:alert(1)"), false);
+assert.equal(isPrivateMomentMediaUrlLocal("/api/downloads/job_1"), true);
+assert.equal(
+  isPrivateMomentMediaUrlLocal("https://fal.media/files/raw.mp4"),
+  true
+);
 // Pure share-link honesty: session gate never portable; relative demos need origin
 function isSessionGatedDownloadUrl(url) {
   if (!url || typeof url !== "string") return false;
@@ -5264,14 +5358,20 @@ assert.match(
   fs.readFileSync(join(root, "components/HeroUpload.tsx"), "utf8"),
   /effect=street-power-up&source=home-launch-pack/
 );
-// Community: never promote session gate / Lab demos to absolute UGC
+// Community: private Moments fail closed; only Lab /demos public deliverables
 const communityPublish = fs.readFileSync(
   join(root, "components/CommunityPublishButton.tsx"),
   "utf8"
 );
 assert.match(communityPublish, /isPublicCommunityVideoUrl/);
+assert.match(communityPublish, /isPrivateMomentMediaUrl/);
 assert.match(communityPublish, /isSessionGatedDownloadUrl/);
+assert.match(communityPublish, /Private · no publish|privateMomentPublishHint/);
 assert.match(communityPublish, /\/demos\//);
+assert.match(
+  fs.readFileSync(join(root, "lib/communityPosts.ts"), "utf8"),
+  /Lab \/demos|session download, signed storage, or provider CDN/
+);
 // Landing remake + suite doors use createRemixHref (ratio/duration/channel)
 assert.match(
   fs.readFileSync(join(root, "components/LandingResults.tsx"), "utf8"),

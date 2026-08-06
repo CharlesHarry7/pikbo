@@ -3,9 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
+  isPathSafeLabDemoUrl,
+  isPrivateMomentMediaUrl,
   isPublicCommunityVideoUrl,
   isSafeDeliverableUrl,
   isSessionGatedDownloadUrl,
+  isStorageSignedObjectUrl,
+  isProviderDeliveryMediaUrl,
 } from "@/lib/createTrust";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import { useToast } from "@/components/Toast";
@@ -13,9 +17,10 @@ import { track } from "@/lib/analytics";
 
 /**
  * Publish a real Library clip to Community UGC.
- * Real posts only — signed-in users + safe http(s) video URLs.
- * Lab demos (demo=true) and Free Mini watermark raw (T6) are blocked —
- * publishing raw free provider URLs would bypass the download gate.
+ * Soft-launch fail closed (AIT-454): only Lab `/demos/*` (explicit public
+ * deliverables) may be posted. Session `/api/downloads/*`, private signed
+ * storage, and provider CDN Moments are refused client + server.
+ * Lab samples (demo=true) and free-plan live raw (watermark) stay blocked.
  */
 export function CommunityPublishButton({
   videoUrl,
@@ -31,7 +36,7 @@ export function CommunityPublishButton({
   effectSlug?: string;
   effectName?: string;
   demo?: boolean;
-  /** Free Mini live raw — not a public deliverable until T6 bake. */
+  /** Free-plan live raw — not a public deliverable until T6 bake. */
   watermark?: boolean;
   className?: string;
 }) {
@@ -54,27 +59,37 @@ export function CommunityPublishButton({
     return (
       <span
         className={`text-xs text-[var(--fg-dim)] ${className}`}
-        title="Free Mini live raw is not a public deliverable until T6 file watermark bake"
+        title="Free-plan live raw is not a public deliverable until T6 file watermark bake"
       >
         Free raw · no publish
       </span>
     );
   }
 
+  // Private Moment media: show honest chip (Download / Lab, not Community).
+  if (isPrivateMomentMediaUrl(videoUrl)) {
+    const title = privateMomentPublishHint(videoUrl);
+    return (
+      <span
+        className={`text-xs text-[var(--fg-dim)] ${className}`}
+        title={title}
+      >
+        Private · no publish
+      </span>
+    );
+  }
+
   async function publish() {
-    // Fail closed before network: session /api/downloads and Lab /demos are not UGC.
-    if (isSessionGatedDownloadUrl(videoUrl)) {
-      toast("Session download only — not a public Community URL");
+    // Fail closed before network — match server isPublicCommunityVideoUrl.
+    if (isPrivateMomentMediaUrl(videoUrl)) {
+      toast(privateMomentPublishHint(videoUrl));
       return;
     }
-    const abs = toPublicVideoUrl(videoUrl);
-    if (!abs) {
-      toast("Need a public http(s) video URL to publish");
-      return;
-    }
-    // Server uses isPublicCommunityVideoUrl — match client-side (no /demos paste).
-    if (!isPublicCommunityVideoUrl(abs) || !isSafeDeliverableUrl(abs)) {
-      toast("Unsafe or non-public video URL — not published");
+    const publicUrl = toPublicCommunityVideoUrl(videoUrl);
+    if (!publicUrl || !isPublicCommunityVideoUrl(publicUrl)) {
+      toast(
+        "Only public Lab demos can post to Community — use Download for private Moments"
+      );
       return;
     }
     const sb = getSupabaseBrowser();
@@ -90,6 +105,10 @@ export function CommunityPublishButton({
         toast("Sign in to publish to Community");
         return;
       }
+      const poster =
+        posterUrl && isSafeDeliverableUrl(posterUrl)
+          ? toPublicCommunityVideoUrl(posterUrl)
+          : undefined;
       const res = await fetch("/api/community/posts", {
         method: "POST",
         headers: {
@@ -100,10 +119,9 @@ export function CommunityPublishButton({
           title: (effectName || "My toy video").slice(0, 120),
           caption: "Made with Pikbo · designer toy video",
           effectSlug: effectSlug || undefined,
-          videoUrl: abs,
-          posterUrl: posterUrl && isSafeDeliverableUrl(posterUrl)
-            ? toPublicVideoUrl(posterUrl) || undefined
-            : undefined,
+          videoUrl: publicUrl,
+          posterUrl:
+            poster && isPublicCommunityVideoUrl(poster) ? poster : undefined,
         }),
       });
       const body = (await res.json()) as {
@@ -125,7 +143,9 @@ export function CommunityPublishButton({
               : "";
           toast(`Too many publishes${wait}`);
         } else if (body.code === "UNSAFE_URL") {
-          toast("Server refused unsafe video URL");
+          toast(
+            "Server refused private/signed URL — use Download or Lab demo, not publish"
+          );
         } else {
           toast(body.error || body.code || "Publish failed");
         }
@@ -164,33 +184,35 @@ export function CommunityPublishButton({
       disabled={busy}
       onClick={() => void publish()}
       className={`text-xs font-bold text-[var(--mint)] hover:underline disabled:opacity-50 ${className}`}
-      title="Publish this live clip to Community (signed-in · real post only)"
+      title="Publish a public Lab deliverable to Community (signed-in · real post only)"
     >
       {busy ? "Publishing…" : "Publish to Community"}
     </button>
   );
 }
 
-function toPublicVideoUrl(url: string): string | null {
-  if (!isSafeDeliverableUrl(url)) return null;
-  if (isSessionGatedDownloadUrl(url)) return null;
-  const t = url.trim();
-  // Lab /demos relative paths must not become absolute "public" UGC.
-  if (t.startsWith("/demos/") || t.includes("/demos/")) return null;
-  if (t.startsWith("http://") || t.startsWith("https://")) {
-    try {
-      const u = new URL(t);
-      if (
-        u.pathname.startsWith("/demos/") ||
-        u.pathname.includes("/api/downloads/")
-      ) {
-        return null;
-      }
-    } catch {
-      return null;
-    }
-    return t;
+function privateMomentPublishHint(url: string): string {
+  if (isSessionGatedDownloadUrl(url)) {
+    return "Private Moment (session download) — use Download or open a Lab demo, not Community publish";
   }
-  // Other same-origin relative paths are not public Community media.
+  if (isStorageSignedObjectUrl(url)) {
+    return "Private Moment (signed storage) — use Download or open a Lab demo, not Community publish";
+  }
+  if (isProviderDeliveryMediaUrl(url)) {
+    return "Private Moment (provider CDN) — use Download or open a Lab demo, not Community publish";
+  }
+  return "Private Moment — use Download or open a Lab demo, not Community publish";
+}
+
+/**
+ * Normalize to a Community-allowlisted public URL.
+ * Soft-launch: path-safe Lab `/demos/*` only (absolute demos kept if already public).
+ */
+function toPublicCommunityVideoUrl(url: string): string | null {
+  if (!isSafeDeliverableUrl(url)) return null;
+  if (isPrivateMomentMediaUrl(url)) return null;
+  const t = url.trim();
+  if (isPathSafeLabDemoUrl(t)) return t.split(/[?#]/)[0] || t;
+  if (isPublicCommunityVideoUrl(t)) return t;
   return null;
 }
