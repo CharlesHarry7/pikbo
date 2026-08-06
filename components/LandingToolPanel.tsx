@@ -763,6 +763,7 @@ export function LandingToolPanel({
             <GenerateWaitStage
               elapsed={elapsed}
               demoMode={demoMode}
+              freeLiveOpen={freeLiveOpen}
               image={image}
               effectLabel={effectName}
               onCancel={cancelInFlightGenerate}
