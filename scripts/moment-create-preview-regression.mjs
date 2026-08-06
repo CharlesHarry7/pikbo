@@ -41,13 +41,28 @@ assert.match(home, /<MomentStage moment=\{active\}/);
 assert.match(home, /<MomentRail moments=\{MOMENTS\}/);
 assert.match(stage, /Preview with my toy/);
 assert.match(stage, /href=\{`\/create\?moment=\$\{moment\.id\}`\}/);
+assert.match(stage, /data-concept-preview=["']true["']/);
+assert.match(stage, /Cached Lab · not Live/);
+assert.match(stage, /MOMENT_CREATE_HREF/);
+assert.match(stage, /data-live-gated=["']true["']/);
+assert.match(stage, /Live-gated/);
+assert.doesNotMatch(stage, /available now/i);
+assert.doesNotMatch(stage, /Preview an Official Concept/);
 assert.match(rail, /role="tablist"/);
 
+// Moment query is fail-closed and resolved before GuestMomentCreateGate / CreateStudio.
 const momentBranch = createPage.indexOf("if (sp.moment !== undefined)");
-const sellerPackBranch = createPage.indexOf('if (sp.mode === "seller-pack"');
+const guestGate = createPage.indexOf("<GuestMomentCreateGate");
 const genericStudio = createPage.indexOf("<CreateStudio");
-assert.ok(momentBranch > -1 && momentBranch < sellerPackBranch);
-assert.ok(sellerPackBranch > -1 && sellerPackBranch < genericStudio);
+assert.ok(momentBranch > -1, "create page must branch on sp.moment");
+assert.ok(
+  guestGate > -1 && momentBranch < guestGate,
+  "Moment preview must resolve before GuestMomentCreateGate"
+);
+assert.ok(
+  genericStudio > -1 && momentBranch < genericStudio,
+  "Moment preview must resolve before CreateStudio"
+);
 assert.match(createPage, /Array\.isArray\(sp\.moment\) \? null : parseMomentId/);
 assert.match(createPage, /if \(!momentId\) return <InvalidMomentNotice/);
 assert.match(createPage, /fixedMomentContract/);
@@ -80,9 +95,15 @@ assert.match(createPreview, /canUsePrivateLaunch/);
 assert.match(createPreview, /Sign in to continue/);
 assert.match(createPreview, /Verify private photo/);
 assert.match(createPreview, /Create my private Moment/);
+// Private Live door must use shared MOMENT_CREATE_HREF (not seller-pack, not bare /create)
+assert.match(createPreview, /MOMENT_CREATE_HREF/);
 assert.match(
   createPreview,
-  /create\?mode=moment&effect=street-power-up&source=moment-/
+  /\$\{MOMENT_CREATE_HREF\}&source=moment-\$\{moment\.id\}/
+);
+assert.match(
+  createPreview,
+  /\$\{MOMENT_CREATE_HREF\}&source=moment-input-\$\{moment\.id\}/
 );
 assert.doesNotMatch(
   createPreview,
@@ -96,7 +117,17 @@ assert.match(
 assert.match(createPreview, /Watch a finished reveal/);
 assert.match(createPreview, /moon-box-reveal\.mp4/);
 assert.match(createPreview, /Archived study · separate sample toy/);
-assert.match(createPreview, /\/login\?next=\$\{encodeURIComponent/);
+// Sign-in next keeps concept moment id only (not private Live)
+assert.match(
+  createPreview,
+  /const conceptLoginNext = `\/create\?moment=\$\{moment\.id\}`/
+);
+assert.match(createPreview, /\/login\?next=\$\{encodeURIComponent\(conceptLoginNext\)\}/);
+assert.match(createPreview, /Concept · Cached Lab/);
+assert.match(createPreview, /data-concept-preview=["']true["']/);
+assert.match(createPreview, /data-live-gated=["']true["']/);
+assert.doesNotMatch(createPreview, /available now/i);
+assert.doesNotMatch(createPreview, /Official Concept/);
 assert.doesNotMatch(createPreview, /fetch\(["']\/api\/(?:generate|assets|seller-pack)/);
 assert.doesNotMatch(createPreview, /settle|reserve.*credits|release.*credits/i);
 
@@ -106,7 +137,9 @@ assert.match(shell, /momentValues\.length === 1/);
 assert.match(shell, /Boolean\(parseMomentId\(momentValues\[0\]\)\)/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.match(shell, /Create a Moment/);
-assert.match(shell, /label: "Projects"/);
+// Primary shell nav stays seller-first (Home/Create/Library/Pricing/Account) —
+// no Motion archive chrome; Projects label is not required on the Moment surface.
 assert.doesNotMatch(shell, /Motion archive/);
+assert.match(shell, /MOMENT_CREATE_HREF/);
 
 console.log("moment create preview regression: ok");

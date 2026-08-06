@@ -22,6 +22,7 @@
     "seller-pack-cached-smoke": "node scripts/seller-pack-cached-smoke.mjs",
     "launch-pack-main-path-smoke": "node scripts/launch-pack-main-path-smoke.mjs",
     "moment-create-preview-regression": "node scripts/moment-create-preview-regression.mjs",
+    "moment-stage-preview-honesty-smoke": "node scripts/moment-stage-preview-honesty-smoke.mjs",
     "guest-create-preview-regression": "node scripts/guest-create-preview-regression.mjs",
     "studio-open-lab-preview-regression": "node scripts/studio-open-lab-preview-regression.mjs",
     "moment-contract-regression": "node scripts/moment-contract-regression.mjs",

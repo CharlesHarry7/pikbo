@@ -25,6 +25,7 @@ import {
   type MeResponse,
 } from "@/lib/meClient";
 import { STUDIO_SESSION_BOOT_MS } from "@/lib/clientTimeout";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { cn } from "@/lib/utils";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 
@@ -244,12 +245,20 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
     [objectUrl, saveTransform, transform]
   );
 
+  // Concept composition path keeps moment id only (local Lab preview).
+  // Private Live door always uses MOMENT_CREATE_HREF (fixed Street Power-Up).
+  const conceptLoginNext = `/create?moment=${moment.id}`;
+  const privateCreateHref = `${MOMENT_CREATE_HREF}&source=moment-${moment.id}`;
+  const privateInputHref = `${MOMENT_CREATE_HREF}&source=moment-input-${moment.id}`;
+
   const cta = useMemo(() => {
     if (!blob) {
       return {
         label: "Add your toy first",
         href: null,
         note: "Choose one owned toy photo to make a local composition preview.",
+        liveGated: false,
+        conceptPreview: true,
       };
     }
     if (!meResolved) {
@@ -257,40 +266,59 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
         label: "Checking private access…",
         href: null,
         note: "No upload or generation starts during this check.",
+        liveGated: false,
+        conceptPreview: true,
       };
     }
     if (!me?.signedIn) {
       return {
         label: "Sign in to continue",
-        href: `/login?next=${encodeURIComponent(`/create?moment=${moment.id}`)}`,
-        note: "Your local draft can be restored in this browser after sign-in.",
+        // Keep moment id on next — return to concept Lab composition, not private Live.
+        href: `/login?next=${encodeURIComponent(conceptLoginNext)}`,
+        note: "Your local draft can be restored in this browser after sign-in. Private Live remains invitation-only.",
+        liveGated: false,
+        conceptPreview: true,
       };
     }
     if (canUsePrivateLaunch(me)) {
       return {
         label: "Create my private Moment",
-        href: `/create?mode=moment&effect=street-power-up&source=moment-${moment.id}`,
-        note: "Private beta currently renders the supported Street Power-Up contract: one owned toy photo, one private clip.",
+        href: privateCreateHref,
+        note: "Live-gated private beta: supported Street Power-Up contract only — one owned toy photo, one private clip. Not open checkout.",
+        liveGated: true,
+        conceptPreview: false,
       };
     }
     if (canPreparePrivateInput(me)) {
       return {
         label: "Verify private photo",
-        href: `/create?mode=moment&effect=street-power-up&source=moment-input-${moment.id}`,
-        note: "Private photo verification is available. Provider generation and credit reservation remain closed until this account is admitted.",
+        href: privateInputHref,
+        note: "Private photo verification is available. Provider generation and credit reservation remain Live-gated until this account is admitted.",
+        liveGated: true,
+        conceptPreview: false,
       };
     }
     return {
       label: "Request private access",
       href: PRIVATE_BETA_MAILTO,
-      note: "Private generation is invitation-only. No Provider call or credit reservation will start here.",
+      note: "Private generation is invitation-only / Live-gated. No Provider call or credit reservation will start here.",
+      liveGated: true,
+      conceptPreview: false,
     };
-  }, [blob, me, meResolved, moment.id]);
+  }, [
+    blob,
+    conceptLoginNext,
+    me,
+    meResolved,
+    privateCreateHref,
+    privateInputHref,
+  ]);
 
   return (
     <main
       className="min-h-[calc(100vh-64px)] bg-[#F2EFE7] px-4 pb-12 pt-8 text-[#171719] sm:px-7 lg:px-10 lg:pt-7"
       data-moment-create-preview={moment.id}
+      data-concept-preview="true"
     >
       <div className="mx-auto max-w-[1360px]">
         <div className="mb-7 grid gap-5 lg:grid-cols-[700px_1fr] lg:items-end">
@@ -338,10 +366,10 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
               />
               <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/35" />
               <span className="absolute left-4 top-4 z-10 border border-white/55 bg-black/45 px-2 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white backdrop-blur-sm">
-                Official Concept
+                Concept · Cached Lab
               </span>
               <span className="absolute right-4 top-4 z-10 border border-white/35 bg-black/45 px-2 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white backdrop-blur-sm">
-                Preview composition
+                Preview composition · not Live
               </span>
 
               {objectUrl ? (
@@ -490,8 +518,24 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
                   href={cta.href}
                   className="inline-flex min-h-14 w-full items-center justify-between bg-[#FF5A36] px-5 text-sm font-black text-[#171719] transition hover:bg-[#FF7354]"
                   data-moment-access-cta
+                  data-concept-preview={cta.conceptPreview ? "true" : undefined}
+                  data-live-gated={cta.liveGated ? "true" : undefined}
                 >
-                  {cta.label}
+                  <span className="flex flex-col items-start gap-0.5">
+                    <span>{cta.label}</span>
+                    {cta.liveGated ? (
+                      <span
+                        className="text-[9px] font-black uppercase tracking-[0.14em] text-[#171719]/70"
+                        data-live-gated-chip
+                      >
+                        Live-gated
+                      </span>
+                    ) : cta.conceptPreview ? (
+                      <span className="text-[9px] font-black uppercase tracking-[0.14em] text-[#171719]/70">
+                        Concept Lab path
+                      </span>
+                    ) : null}
+                  </span>
                   <span aria-hidden>→</span>
                 </Link>
               ) : (
@@ -500,6 +544,7 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
                   disabled
                   className="inline-flex min-h-14 w-full items-center justify-between bg-[#D7D2C8] px-5 text-sm font-black text-[#78746D]"
                   data-moment-access-cta
+                  data-concept-preview={cta.conceptPreview ? "true" : undefined}
                 >
                   {cta.label}
                   <span aria-hidden>—</span>
@@ -508,6 +553,27 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
               <p className="mt-3 text-[11px] font-semibold leading-5 text-[#66625B]">
                 {cta.note}
               </p>
+
+              {/* Always-visible private Live door (honest, gated) */}
+              <Link
+                href={`${MOMENT_CREATE_HREF}&source=moment-preview-door`}
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-between border border-[#171719]/20 px-4 text-xs font-black uppercase tracking-[0.12em] text-[#171719] transition-colors hover:border-[#F04E30] hover:text-[#F04E30]"
+                data-moment-create-cta
+                data-live-gated="true"
+              >
+                <span className="flex flex-col items-start gap-0.5 normal-case tracking-normal">
+                  <span className="uppercase tracking-[0.12em]">
+                    Create Street Power-Up
+                  </span>
+                  <span
+                    className="text-[9px] font-black uppercase tracking-[0.14em] text-current opacity-55"
+                    data-live-gated-chip
+                  >
+                    Live-gated · not open checkout
+                  </span>
+                </span>
+                <span aria-hidden>→</span>
+              </Link>
             </div>
           </aside>
         </div>
