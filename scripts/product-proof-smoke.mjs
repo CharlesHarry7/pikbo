@@ -307,6 +307,21 @@ assert(
   );
 }
 
+// AIT-603: Models hub residual competitor lime → gallery-calm copper
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const modelsPage = read("app/models/page.tsx");
+  assert(
+    !lime.test(modelsPage),
+    "app/models/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    modelsPage.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(modelsPage),
+    "Models suite-path Generate chip + radial wash use --brand / copper glow"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
