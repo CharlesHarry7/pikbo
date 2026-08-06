@@ -125,6 +125,13 @@ export default function ImageStudioPage() {
       ? true
       : me.plan === "free" || me.freeTrial?.isFreePlan === true;
 
+  /**
+   * AIT-570: post-result one-primary residual (parity with Create / Landing /
+   * Batch / Library folds). When a handoff-safe still is ready, Animate in
+   * Generate is the sole primary money door; re-generate demotes to ghost.
+   */
+  const stillReady = canHandOffStill(imageUrl);
+
   // 8s wall-clock session boot (Create Studio parity). Retry re-runs via bootNonce.
   useEffect(() => {
     let cancelled = false;
@@ -802,18 +809,20 @@ export default function ImageStudioPage() {
                   still settle — check balance before retry.
                 </p>
               </div>
-            ) : (
+            ) : !stillReady ? (
               <button
                 type="button"
                 onClick={() => void generate()}
                 className="btn btn-primary mt-4 w-full disabled:opacity-50"
+                data-image-action="generate-still"
+                data-image-primary="generate-still"
               >
                 {freeStillsDemoOnly
                   ? "Generate demo still · 0 credits"
                   : `Generate still · ${CREDITS_PER_VIDEO} credits`}
               </button>
-            )}
-            {freeStillsDemoOnly ? (
+            ) : null}
+            {freeStillsDemoOnly && !stillReady ? (
               <p className="mt-2 text-[11px] leading-relaxed text-[var(--fg-dim)]">
                 Free stills stay labeled demo. Open{" "}
                 <Link
@@ -867,8 +876,17 @@ export default function ImageStudioPage() {
                       : "Demo placeholder — labeled 0 credits."}
               </p>
             )}
-            {canHandOffStill(imageUrl) && (
-              <div className="mt-3 flex flex-col gap-2">
+            {/*
+              AIT-570 one-primary residual: when a still is ready, Animate in
+              Generate is the sole sticky primary. Re-generate + secondary hops
+              stay ghost (no dual money doors with Generate still).
+            */}
+            {stillReady ? (
+              <div
+                className="mt-3 flex flex-col gap-2"
+                data-image-result-fold="done"
+                data-image-primary-kind="animate"
+              >
                 {(demo || lastSettlement) && (
                   <p className="text-center text-[11px] text-[var(--fg-dim)]">
                     {demo ? "Cached demo · 0 credits" : null}
@@ -888,10 +906,25 @@ export default function ImageStudioPage() {
                   )}
                   className="btn btn-primary w-full text-sm"
                   data-image-handoff="create"
+                  data-image-primary="animate"
+                  data-image-action="animate"
                   onClick={() => stashPendingStill(imageUrl)}
                 >
                   Animate in Generate →
                 </Link>
+                {!busy ? (
+                  <button
+                    type="button"
+                    onClick={() => void generate()}
+                    className="btn btn-ghost w-full border border-white/15 text-sm disabled:opacity-50"
+                    data-image-action="generate-still"
+                    data-image-secondary="generate-still"
+                  >
+                    {freeStillsDemoOnly
+                      ? "Generate another demo · 0 credits"
+                      : `Generate another · ${CREDITS_PER_VIDEO} credits`}
+                  </button>
+                ) : null}
                 <Link
                   href={
                     toySku.trim()
@@ -900,6 +933,7 @@ export default function ImageStudioPage() {
                   }
                   className="btn btn-ghost w-full text-sm"
                   data-image-handoff="single-moment"
+                  data-image-secondary="single-moment"
                   onClick={() => stashPendingStill(imageUrl)}
                 >
                   Create one toy Moment →
@@ -907,6 +941,7 @@ export default function ImageStudioPage() {
                 <Link
                   href="/modules"
                   className="btn btn-ghost w-full text-sm"
+                  data-image-secondary="modules"
                   onClick={() => stashPendingStill(imageUrl)}
                 >
                   Pick a Module job →
@@ -914,10 +949,18 @@ export default function ImageStudioPage() {
                 <Link
                   href="/effects/360-spin-showcase"
                   className="btn btn-ghost w-full text-sm"
+                  data-image-secondary="effect-page"
                   onClick={() => stashPendingStill(imageUrl)}
                 >
                   Or spin on effect page →
                 </Link>
+                {freeStillsDemoOnly ? (
+                  <p className="text-center text-[11px] leading-relaxed text-[var(--fg-dim)]">
+                    Free stills stay labeled demo. Animate hands the still into
+                    Generate (Lab sample / Live when eligible) — not a second
+                    Flux claim.
+                  </p>
+                ) : null}
                 <GenerateAfterPath
                   demo={demo}
                   className="mt-1"
@@ -926,7 +969,7 @@ export default function ImageStudioPage() {
                   effectSlug={IMAGE_HANDOFF_EFFECT}
                 />
               </div>
-            )}
+            ) : null}
           </div>
           <div className="media-stage relative grid min-h-[16rem] place-items-center overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-black/50 to-black/80 sm:min-h-[20rem]">
             {imageUrl ? (
