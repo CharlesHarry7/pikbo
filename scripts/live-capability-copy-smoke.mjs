@@ -421,6 +421,59 @@ assert(
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
 );
 
+// AIT-310: residual Free Mini honesty — guides slug + i18n tryFree10s +
+// LandingSeoMesh + HfExploreHome (public path stays Lab-first).
+const guidesSlugSource = read("app/guides/[slug]/page.tsx");
+assert(
+  !guidesSlugSource.includes("Mini 5s") &&
+    !guidesSlugSource.includes("Free Mini") &&
+    !guidesSlugSource.includes('labelTry="Try free · Mini'),
+  "guides/[slug] must not hardcode Mini 5s / Free Mini as public free trial CTA"
+);
+assert(
+  guidesSlugSource.includes('labelTry="Try free · Lab →"') &&
+    guidesSlugSource.includes("FreeTrialCta"),
+  "guides/[slug] must prefer Lab-first try label"
+);
+
+assert(
+  !/"home\.tryFree10s":\s*"[^"]*Mini 5/.test(i18nSource) &&
+    !/"home\.tryFree10s":\s*"[^"]*Mini 5s/.test(i18nSource) &&
+    !/"home\.tryFree10s":\s*"[^"]*Mini 5 秒/.test(i18nSource),
+  "i18n home.tryFree10s must not hardcode Mini 5s as public free trial"
+);
+assert(
+  /"home\.tryFree10s":\s*"[^"]*Lab/.test(i18nSource),
+  "i18n home.tryFree10s must prefer Lab-first free path copy"
+);
+
+const landingSeoMeshSource = read("components/LandingSeoMesh.tsx");
+assert(
+  !landingSeoMeshSource.includes('labelTry="Try free Mini"') &&
+    !landingSeoMeshSource.includes("Try free Mini") &&
+    !landingSeoMeshSource.includes("Mini 5s"),
+  "LandingSeoMesh must not hardcode Try free Mini / Mini 5s as public free trial"
+);
+assert(
+  landingSeoMeshSource.includes('labelTry="Try free · Lab"') &&
+    landingSeoMeshSource.includes("FreeTrialCta"),
+  "LandingSeoMesh must prefer Lab-first try label"
+);
+
+const hfExploreHomeSource = read("components/HfExploreHome.tsx");
+assert(
+  !hfExploreHomeSource.includes("Mini 5s · Sample ready") &&
+    !hfExploreHomeSource.includes("Mini 5s") &&
+    !/Free Mini/.test(hfExploreHomeSource),
+  "HfExploreHome must not hardcode Mini 5s / Free Mini as public free trial chip"
+);
+assert(
+  hfExploreHomeSource.includes("Cached Lab · 0 credits") ||
+    (hfExploreHomeSource.includes("Cached Lab") &&
+      hfExploreHomeSource.includes("0 credits")),
+  "HfExploreHome flow chip must prefer Cached Lab · 0 credits honesty"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
