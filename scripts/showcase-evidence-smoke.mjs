@@ -128,6 +128,21 @@ assert(
   "shared private-launch capability must require auth, live permission, durable credits, and live mode"
 );
 
+// AIT-291: ExploreProjectGrid off residual competitor lime (board tokens)
+{
+  const exploreGrid = read("components/ExploreProjectGrid.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(exploreGrid),
+    "ExploreProjectGrid must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    exploreGrid.includes("var(--neon-pink)") &&
+      (exploreGrid.includes("rgba(255,78,205") ||
+        exploreGrid.includes("var(--void)")),
+    "ExploreProjectGrid chips/focus/hover use neon-pink / void board tokens"
+  );
+}
+
 console.log(
   `showcase-evidence smoke passed: ${proofSlugs.length} distinct cached previews, no numeric proof score, concepts static`
 );
