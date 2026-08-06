@@ -114,12 +114,23 @@ export function isGenerate360Effect(effect: string | undefined): boolean {
  * as Lab project remix ids or `/projects/{source}` links):
  * - home-hero, app-shell-home, home-trust, home-gallery-pedestal
  * Also: home-explore-rail (Lab explore listing-spin entry).
+ *
+ * AIT-521 gallery residual: every designer-toy still is a one-tap 360 door
+ * (home-gallery-*) so home never routes stills through /toys or Moment first.
  */
 export const HOME_GENERATE_ENTRY_SOURCES = [
   "home-hero",
   "app-shell-home",
   "home-trust",
   "home-gallery-pedestal",
+  "home-gallery-vinyl-guardian",
+  "home-gallery-blind-box",
+  "home-gallery-social-flash",
+  "home-gallery-mecha",
+  "home-gallery-plush",
+  "home-gallery-spotlight",
+  "home-gallery-capsule",
+  "home-gallery-section",
   "home-explore-rail",
 ] as const;
 
@@ -148,6 +159,22 @@ export function homeGenerateEntryLabel(
       return "From Home · trust Generate 360°";
     case "home-gallery-pedestal":
       return "From Home · gallery pedestal";
+    case "home-gallery-vinyl-guardian":
+      return "From Home · gallery vinyl";
+    case "home-gallery-blind-box":
+      return "From Home · gallery blind box";
+    case "home-gallery-social-flash":
+      return "From Home · gallery social flash";
+    case "home-gallery-mecha":
+      return "From Home · gallery mecha";
+    case "home-gallery-plush":
+      return "From Home · gallery plush";
+    case "home-gallery-spotlight":
+      return "From Home · gallery spotlight";
+    case "home-gallery-capsule":
+      return "From Home · gallery capsule";
+    case "home-gallery-section":
+      return "From Home · gallery Generate";
     case "home-explore-rail":
       return "From Home · Lab explore rail";
     default:

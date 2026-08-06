@@ -54,7 +54,7 @@ export function HomeCinemaHero() {
             Private when you create for real.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
             <Link
               href={HOME_HERO_360_HREF}
               data-home-hero-360-cta
@@ -63,17 +63,18 @@ export function HomeCinemaHero() {
             >
               Generate 360° listing spin
             </Link>
+            {/* AIT-521: one primary Generate — Moment stays text secondary, not dual solid CTAs */}
             <Link
               href={MOMENT_CREATE_HREF}
               data-home-moment-cta
-              className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[var(--border)] px-5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--fg-muted)] transition hover:border-[var(--brand)]/40 hover:text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/40"
+              className="inline-flex min-h-11 items-center justify-center px-1 text-xs font-semibold text-[var(--fg-muted)] underline-offset-4 transition hover:text-[var(--fg)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/40"
             >
               Create with my toy
             </Link>
           </div>
           <p className="mt-3 text-[11px] leading-5 text-[var(--fg-dim)]">
-            One-tap 360° workbench · or Street Power-Up Moment when you want the
-            fixed private path.
+            One primary Generate → 360° listing workbench. Street Power-Up
+            Moment remains the fixed private product path when you need it.
           </p>
 
           <ul className="mt-8 flex flex-wrap gap-2 text-[11px] text-[var(--fg-dim)]">
