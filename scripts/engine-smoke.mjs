@@ -4048,6 +4048,26 @@ assert.match(publicSampleSrc, /Archive media · 9:16 · 6 sec/);
 assert.match(publicSampleSrc, /Target format · 1:1 · 5 sec/);
 assert.match(publicSampleSrc, /Target format · 9:16 · 5 sec/);
 assert.doesNotMatch(publicSampleSrc, /HeroUpload|fetchMe|canUsePrivateLaunch|credits/);
+// AIT-528: HomeViralWall residual carnival → gallery-calm copper board
+const homeViralWallSrc = fs.readFileSync(
+  join(root, "components/HomeViralWall.tsx"),
+  "utf8"
+);
+assert.doesNotMatch(
+  homeViralWallSrc,
+  /#FF4ECD|#00D9FF|#B14EFF|FF4ECD|00D9FF|B14EFF|rgba\(255,\s*78,\s*205|rgba\(0,\s*217,\s*255|rgba\(177,\s*78,\s*255/i
+);
+assert.match(homeViralWallSrc, /var\(--brand\)/);
+assert.match(homeViralWallSrc, /var\(--brand-2\)/);
+assert.match(homeViralWallSrc, /var\(--grad-cta\)/);
+assert.match(homeViralWallSrc, /HOME_PROOF_BADGE|Archive previews only|not customer results/);
+assert.match(homeViralWallSrc, /Try this recipe/);
+assert.match(homeViralWallSrc, /Listing 360/);
+assert.match(homeViralWallSrc, /home-proof-wall/);
+assert.doesNotMatch(
+  homePageSrc,
+  /HomeViralWall|HfExploreHome|PublicLaunchPackSample|HomeSeoBody|HomeBrowseCta/
+);
 const homeWallSrc = fs.readFileSync(
   join(root, "components/HomeDesignerGallery.tsx"),
   "utf8"
