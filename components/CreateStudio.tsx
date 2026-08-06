@@ -255,6 +255,12 @@ export function CreateStudio({
   /** True when still is PIKBO Lab prototype sample (not customer SKU) */
   const [labStill, setLabStill] = useState(false);
   const [briefCollapsed, setBriefCollapsed] = useState(true);
+  /**
+   * AIT-153: Generate workbench deep links (home → 360, remix effect=…) already
+   * lock the recipe. Keep the 2×2 selling-task grid collapsed so upload /
+   * Lab samples + sticky Generate stay above the fold.
+   */
+  const [showTaskPicker, setShowTaskPicker] = useState(false);
   /** Phase C-lite: claimed angles + secondary still (client preview only). */
   const [fidelityAngles, setFidelityAngles] = useState<string[]>([]);
   const [secondaryStill, setSecondaryStill] = useState<string | null>(null);
@@ -1820,18 +1826,29 @@ export function CreateStudio({
     });
   }, [image, effect, demoMode, effectiveDuration, aspectRatio]);
 
+  // Workbench deep-link handoff (Generate→360 etc.): recipe already chosen.
+  const workbenchDeepLink = !fixedMomentContract;
+  const isGenerate360 =
+    !fixedMomentContract && effect === "360-spin-showcase";
+
   return (
-    <div className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0">
-      {/* Suite chrome: desktop only — mobile uses bottom nav + Modules shelf */}
+    <div
+      className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0"
+      data-studio-contract={fixedMomentContract ? "fixed-moment" : "generate-workbench"}
+      data-studio-360={isGenerate360 ? "true" : "false"}
+      data-workbench-fold={workbenchDeepLink ? "upload-generate" : undefined}
+    >
+      {/* Suite chrome: desktop only — mobile uses bottom nav + Modules shelf.
+          AIT-153: hide on workbench so the left column starts at upload. */}
       {!fixedMomentContract && (
-        <div className="hidden lg:block">
+        <div className="hidden xl:block">
           <GenerateSuiteChrome compact showSellerPack={privateUploadEnabled} />
         </div>
       )}
       {/* ── Mode banner: demo vs live (W5) · tighter on phone ── */}
       <div
         role="status"
-        className={`border-b px-4 py-1.5 sm:py-2.5 ${
+        className={`border-b px-4 py-1 sm:py-2 ${
           bannerIsDemo
             ? "border-white/10 bg-white/[0.04]"
             : "border-[var(--mint)]/25 bg-[var(--mint)]/[0.08]"
@@ -1954,35 +1971,38 @@ export function CreateStudio({
         </div>
       </div>
 
-      {/* ── Remix context (from Home / project deep link) ── */}
+      {/* ── Remix context (from Home / project deep link) · compact on workbench ── */}
       {!fixedMomentContract &&
         (remix.sourceLabel || remix.notices.length > 0 || remix.intent) && (
         <div
-          className="border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-3"
+          className="border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-1.5 sm:py-2.5"
+          data-remix-strip="compact"
         >
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 sm:gap-3">
             {remix.sourcePoster && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={remix.sourcePoster}
                 alt=""
-                className="h-14 w-10 shrink-0 rounded-md object-cover ring-1 ring-white/15"
+                className="h-9 w-7 shrink-0 rounded-md object-cover ring-1 ring-white/15 sm:h-14 sm:w-10"
               />
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-black uppercase tracking-wider text-[var(--mint)]">
-                Remix this recipe · replace the toy
+              <p className="text-[9px] font-black uppercase tracking-wider text-[var(--mint)] sm:text-[10px]">
+                {isGenerate360
+                  ? "360° listing spin · replace the toy"
+                  : "Remix this recipe · replace the toy"}
               </p>
-              <p className="text-sm font-semibold text-[var(--fg)]">
+              <p className="truncate text-[13px] font-semibold text-[var(--fg)] sm:text-sm">
                 {remix.sourceLabel || preset.name}
                 {remix.intent?.channel ? (
-                  <span className="ml-2 text-[11px] font-normal text-[var(--fg-muted)]">
+                  <span className="ml-1.5 text-[10px] font-normal text-[var(--fg-muted)] sm:text-[11px]">
                     · {remix.intent.channel} · {remix.intent.aspectRatio} ·{" "}
                     {remix.intent.durationSeconds}s
                   </span>
                 ) : null}
               </p>
-              <p className="text-[11px] text-[var(--fg-muted)]">
+              <p className="hidden text-[11px] text-[var(--fg-muted)] sm:block">
                 {privateUploadEnabled
                   ? "Upload a photo you own to create a separate private result. The example is never presented as your output."
                   : "Public preview keeps this archived Lab example. It does not accept or process your product photo."}
@@ -1996,7 +2016,7 @@ export function CreateStudio({
             {initialSource && (
               <Link
                 href={`/projects/${encodeURIComponent(initialSource)}`}
-                className="text-[11px] font-semibold text-[var(--mint)] hover:underline"
+                className="hidden text-[11px] font-semibold text-[var(--mint)] hover:underline sm:inline"
               >
                 Inside recipe →
               </Link>
@@ -2005,11 +2025,18 @@ export function CreateStudio({
         </div>
       )}
 
-      {/* ── Mobile first-run: goal → upload → recipe → generate (CD Phase A) ── */}
-      <div className="border-b border-[var(--border)] px-4 py-2 lg:hidden">
-        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--mint)]/85">
-          Creative Director · commercial path
-        </p>
+      {/* ── Mobile first-run steps · workbench omits the CD label (AIT-153) ── */}
+      <div
+        className={`border-b border-[var(--border)] px-4 lg:hidden ${
+          workbenchDeepLink ? "py-1" : "py-2"
+        }`}
+        data-first-run-path={workbenchDeepLink ? "compact" : "full"}
+      >
+        {!workbenchDeepLink ? (
+          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--mint)]/85">
+            Creative Director · commercial path
+          </p>
+        ) : null}
         <ol
           className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide"
           aria-label="Create steps"
@@ -2167,8 +2194,13 @@ export function CreateStudio({
           ) : null}
         </aside>
 
-        {/* ── Controls: upload → recipe → preflight ── */}
-        <section className="space-y-4 overflow-y-auto border-b border-white/[0.07] bg-[#08080a] p-4 lg:max-h-[calc(100vh-8rem)] lg:border-b-0 lg:border-r">
+        {/* ── Controls: upload → recipe → preflight (tighter on workbench) ── */}
+        <section
+          className={`overflow-y-auto border-b border-white/[0.07] bg-[#08080a] p-3 sm:p-4 lg:max-h-[calc(100vh-8rem)] lg:border-b-0 lg:border-r ${
+            workbenchDeepLink ? "space-y-3" : "space-y-4"
+          }`}
+          data-workbench-controls={workbenchDeepLink ? "above-fold" : undefined}
+        >
           {upgradedBanner && (
             <div className="rounded-xl border border-[var(--mint)]/40 bg-[color-mix(in_srgb,var(--mint)_10%,transparent)] px-3 py-2 text-xs">
               Private allowance active — 720p path, no on-player watermark.
@@ -2249,8 +2281,11 @@ export function CreateStudio({
                 className={`group/drop relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
                   image
                     ? "aspect-[16/10] border-[var(--mint)]/25 ring-1 ring-[var(--mint)]/15"
-                    : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:aspect-video"
+                    : workbenchDeepLink
+                      ? "min-h-[120px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:min-h-[140px] sm:aspect-video"
+                      : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:aspect-video"
                 }`}
+                data-upload-zone={workbenchDeepLink ? "workbench" : "default"}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDrop}
               >
@@ -2292,7 +2327,9 @@ export function CreateStudio({
             <div
               id="create-photo-step"
               data-public-single-preview="lab-only"
-              className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-4"
+              className={`rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] ${
+                workbenchDeepLink ? "p-3" : "p-4"
+              }`}
             >
               <p
                 className="text-xs font-black uppercase tracking-[0.12em] text-[var(--mint)]"
@@ -2301,17 +2338,27 @@ export function CreateStudio({
                 {sessionResolved
                   ? sessionBoot === "timeout"
                     ? "Lab preview · access check timed out"
-                    : "Public Lab preview · no upload"
+                    : workbenchDeepLink
+                      ? isGenerate360
+                        ? "360° workbench · Lab sample"
+                        : "Generate workbench · Lab sample"
+                      : "Public Lab preview · no upload"
                   : "Opening studio…"}
               </p>
-              <p className="mt-2 text-sm font-bold text-white">
+              <p className="mt-1.5 text-sm font-bold text-white">
                 {sessionResolved
                   ? sessionBoot === "timeout"
                     ? "Lab samples still work. Retry the access check or continue with a cached preview."
-                    : "Choose a Pikbo Lab sample below."
+                    : workbenchDeepLink
+                      ? "Pick a Lab sample below — or sign in for owned-photo upload."
+                      : "Choose a Pikbo Lab sample below."
                   : "Verifying private-beta access — Lab samples stay available if this fails."}
               </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-[var(--fg-muted)]">
+              <p
+                className={`mt-1 text-[11px] leading-relaxed text-[var(--fg-muted)] ${
+                  workbenchDeepLink ? "hidden sm:block" : ""
+                }`}
+              >
                 Public preview does not accept, register, or process your
                 product photo. Invited signed-in accounts see a separate
                 owner-only upload control here.
@@ -2362,8 +2409,8 @@ export function CreateStudio({
             </div>
           )}
 
-          {/* Moment validation has one measured outcome; the general studio keeps
-              its job rail for later exploration. */}
+          {/* Moment validation has one measured outcome. Workbench deep links
+              collapse the 2×2 task rail so Lab samples / upload stay above fold. */}
           {fixedMomentContract ? (
             <div className="rounded-xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] px-3 py-2.5">
               <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]/80">
@@ -2380,15 +2427,63 @@ export function CreateStudio({
                 .
               </p>
             </div>
+          ) : workbenchDeepLink && !showTaskPicker ? (
+            <div
+              className="rounded-xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] px-3 py-2"
+              data-workbench-recipe="locked"
+              data-first-run-step="recipe"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]/80">
+                    {isGenerate360 ? "Locked · 360° listing spin" : "Recipe locked"}
+                  </p>
+                  <p className="mt-0.5 truncate text-sm font-bold text-white">
+                    {preset.emoji} {viralName(preset.slug, preset.name)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-white/50">
+                    {aspectRatio} · {effectiveDuration}s · {effectiveResolution}
+                    {remix.intent?.channel ? ` · ${remix.intent.channel}` : ""}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTaskPicker(true)}
+                  className="shrink-0 rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/70 transition hover:border-white/35 hover:text-white"
+                  data-workbench-change-task
+                >
+                  Change
+                </button>
+              </div>
+            </div>
           ) : (
-            <JobIntentBar
-              activeId={activeSellingTask}
-              onPick={applyJobIntent}
-              showSellerPack={privateUploadEnabled}
-            />
+            <div data-workbench-task-picker={showTaskPicker ? "open" : "default"}>
+              {showTaskPicker ? (
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">
+                    Pick a selling task
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowTaskPicker(false)}
+                    className="text-[10px] font-semibold text-[var(--mint)] hover:underline"
+                  >
+                    Keep {viralName(preset.slug, preset.name)}
+                  </button>
+                </div>
+              ) : null}
+              <JobIntentBar
+                activeId={activeSellingTask}
+                onPick={(id) => {
+                  applyJobIntent(id);
+                  setShowTaskPicker(false);
+                }}
+                showSellerPack={privateUploadEnabled}
+              />
+            </div>
           )}
 
-          {/* Collapsed Lab path — after recipe so first-run stays upload→recipe→generate */}
+          {/* Lab samples — workbench puts them right after locked recipe (AIT-153) */}
           {!image && !fixedMomentContract && (
             <div
               className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-3"
@@ -2397,7 +2492,11 @@ export function CreateStudio({
               <p className="text-sm font-bold text-[var(--fg)]">
                 {t("create.noPhotoSample")}
               </p>
-              <p className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
+              <p
+                className={`mt-0.5 text-[11px] text-[var(--fg-muted)] ${
+                  workbenchDeepLink ? "hidden sm:block" : ""
+                }`}
+              >
                 PIKBO Lab reference stills (not a customer upload). Cached
                 prototypes cost 0 credits and never process your photo. One
                 tap loads the recipe and opens the preview path.
@@ -2409,7 +2508,8 @@ export function CreateStudio({
                 type="button"
                 disabled={sampleLoading || busy}
                 onClick={() => void loadSampleToy("scout", true)}
-                className="btn btn-primary mt-3 w-full py-3 text-sm disabled:opacity-50"
+                className="btn btn-primary mt-2 w-full py-2.5 text-sm disabled:opacity-50 sm:mt-3 sm:py-3"
+                data-lab-primary={isGenerate360 ? "360" : "workbench"}
               >
                 {sampleLoading || busy
                   ? t("create.generating")
@@ -2417,7 +2517,7 @@ export function CreateStudio({
                     ? t("create.oneTapCached")
                     : t("create.oneTapMini")}
               </button>
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="mt-2 grid grid-cols-4 gap-1.5 sm:mt-3 sm:gap-2">
                 {SAMPLE_TOYS.map((s) => (
                   <button
                     key={s.id}
@@ -2432,7 +2532,7 @@ export function CreateStudio({
                       alt={s.label}
                       className="aspect-square w-full object-cover transition group-hover:scale-[1.03]"
                     />
-                    <span className="block px-2 py-1.5 text-[11px] font-bold">
+                    <span className="block truncate px-1 py-1 text-[9px] font-bold sm:px-2 sm:py-1.5 sm:text-[11px]">
                       {s.label}
                     </span>
                   </button>
@@ -2467,27 +2567,27 @@ export function CreateStudio({
             </div>
           )}
 
-          {/* Active recipe summary + aspect (essential only) */}
-          {!fixedMomentContract ? <div
-            className="rounded-xl border border-[var(--mint)]/20 bg-gradient-to-br from-[var(--mint)]/[0.07] to-black/40 p-3 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]/80">
-                  {t("create.selectedRecipe")}
-                </p>
-                <p className="mt-0.5 text-sm font-bold text-white">
-                  {preset.emoji} {viralName(preset.slug, preset.name)}
-                </p>
-                <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-                  {preset.tagline}
-                </p>
+          {/* Active recipe summary — skipped when workbench already shows locked recipe */}
+          {!fixedMomentContract && !workbenchDeepLink ? (
+            <div className="rounded-xl border border-[var(--mint)]/20 bg-gradient-to-br from-[var(--mint)]/[0.07] to-black/40 p-3 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]/80">
+                    {t("create.selectedRecipe")}
+                  </p>
+                  <p className="mt-0.5 text-sm font-bold text-white">
+                    {preset.emoji} {viralName(preset.slug, preset.name)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-snug text-white/45">
+                    {preset.tagline}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full border border-[var(--mint)]/25 bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-[var(--mint)]">
+                  {effectiveDuration}s · {effectiveResolution}
+                </span>
               </div>
-              <span className="shrink-0 rounded-full border border-[var(--mint)]/25 bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-[var(--mint)]">
-                {effectiveDuration}s · {effectiveResolution}
-              </span>
             </div>
-          </div> : null}
+          ) : null}
 
           {/* Fixed Moments remove model/prompt decisions. The general Studio
               keeps Advanced available for later exploration. */}
@@ -3711,18 +3811,33 @@ export function CreateStudio({
         </section>
       </div>
 
-      {/* ── Sticky mobile primary CTA — above AppShell tab nav ── */}
+      {/* ── Sticky mobile primary CTA — above AppShell tab nav (always above fold) ── */}
       <div
         className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
         data-create-sticky="mobile"
+        data-sticky-workbench={workbenchDeepLink ? "true" : undefined}
+        data-sticky-360={isGenerate360 ? "true" : undefined}
       >
         {image ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
-            {preset.emoji} {viralName(preset.slug, preset.name)} · {aspectRatio}
-            {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
-            {demoMode
-              ? "0 credits · cached prototype"
-              : `${CREDITS_PER_VIDEO} credits when Live`}
+            {isGenerate360 ? (
+              <>
+                360° spin · {aspectRatio}
+                {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
+                {demoMode
+                  ? "0 credits · cached prototype"
+                  : `${CREDITS_PER_VIDEO} credits when Live`}
+              </>
+            ) : (
+              <>
+                {preset.emoji} {viralName(preset.slug, preset.name)} ·{" "}
+                {aspectRatio}
+                {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
+                {demoMode
+                  ? "0 credits · cached prototype"
+                  : `${CREDITS_PER_VIDEO} credits when Live`}
+              </>
+            )}
           </p>
         ) : null}
         {!image ? (
@@ -3736,8 +3851,13 @@ export function CreateStudio({
               }
               className="btn btn-primary w-full py-3 text-sm"
               data-first-run-action="upload"
+              data-sticky-primary={
+                isGenerate360 ? "360-upload" : workbenchDeepLink ? "workbench-upload" : "upload"
+              }
             >
-              Upload owned toy photo
+              {isGenerate360
+                ? "Upload photo for 360° spin"
+                : "Upload owned toy photo"}
             </button>
           ) : fixedMomentContract ? (
             <Link
@@ -3754,8 +3874,13 @@ export function CreateStudio({
               onClick={() => void loadSampleToy("scout", true)}
               className="btn btn-primary w-full py-3 text-sm disabled:opacity-50"
               data-first-run-action="lab-preview"
+              data-sticky-primary={
+                isGenerate360 ? "360-lab" : workbenchDeepLink ? "workbench-lab" : "lab"
+              }
             >
-              Preview a Lab sample · 0 credits
+              {isGenerate360
+                ? "Preview Lab 360° · 0 credits"
+                : "Preview a Lab sample · 0 credits"}
             </button>
           )
         ) : busy ? (
@@ -3783,8 +3908,11 @@ export function CreateStudio({
             }}
             disabled={!ownsRights}
             className="btn btn-primary w-full py-3 text-sm disabled:opacity-50"
+            data-sticky-primary={
+              isGenerate360 ? "360-again" : workbenchDeepLink ? "workbench-again" : "again"
+            }
           >
-            Generate again
+            {isGenerate360 ? "Generate another 360°" : "Generate again"}
           </button>
         ) : (
           <button
@@ -3804,6 +3932,13 @@ export function CreateStudio({
             disabled={busy || !ownsRights || (mode === "i2v" && !image)}
             className="btn btn-primary w-full py-3.5 text-[15px] font-black tracking-tight disabled:opacity-50"
             data-first-run-action="generate"
+            data-sticky-primary={
+              isGenerate360
+                ? "360-generate"
+                : workbenchDeepLink
+                  ? "workbench-generate"
+                  : "generate"
+            }
           >
             {primaryLabel}
           </button>
