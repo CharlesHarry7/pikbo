@@ -5097,6 +5097,39 @@ assert.match(
   flowPageSrc,
   /id:\s*["']core-i2v["'][\s\S]*?href:\s*(FLOW_GENERATE_HREF|createWorkbenchHref|createRemixHref)/
 );
+// AIT-266: core product path Moment honesty + Generate chip not lime dual-weight
+assert.match(
+  flowPageSrc,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+assert.match(
+  flowPageSrc,
+  /FLOW_PATH_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=flow-path`/
+);
+assert.match(flowPageSrc, /href=\{FLOW_PATH_MOMENT_HREF\}/);
+assert.match(flowPageSrc, /data-flow-path-moment=["']honest["']/);
+assert.match(flowPageSrc, /data-flow-path-generate=["']remix["']/);
+assert.match(
+  flowPageSrc,
+  /createWorkbenchHref\s*\(|createGenerate360Href\s*\(/
+);
+// Path nav Moment must not use bare effect-only create href (core matrix may still)
+{
+  const pathNav = flowPageSrc.match(
+    /aria-label=["']Core product path["'][\s\S]*?<\/nav>/
+  );
+  assert.ok(pathNav, "Flow core product path nav must exist");
+  assert.doesNotMatch(
+    pathNav[0],
+    /href=["']\/create\?effect=street-power-up["']/
+  );
+  assert.match(pathNav[0], /href=\{FLOW_PATH_MOMENT_HREF\}/);
+  assert.match(pathNav[0], /href=\{FLOW_GENERATE_HREF\}/);
+}
+assert.doesNotMatch(
+  flowPageSrc,
+  /data-flow-path-generate=["']remix["'][\s\S]{0,220}#c8ff3d/
+);
 
 // T8 Seller Pack recovery: browser keeps only packRunId + three packJobIds;
 // owner-scoped status owns result + settlement truth after refresh.

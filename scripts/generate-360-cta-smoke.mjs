@@ -79,6 +79,7 @@ const generateSurfaces = [
   ["app/explore/page.tsx", "explore"],
   ["app/modules/page.tsx", "modules"],
   ["app/community/page.tsx", "community"],
+  ["app/flow/page.tsx", null],
 ];
 
 for (const [file, source] of generateSurfaces) {
@@ -109,6 +110,45 @@ for (const [file, source] of generateSurfaces) {
       src,
       /createWorkbenchHref\(\s*["'][^"']+["']\s*\)/,
       `${file} must pass an honest source to createWorkbenchHref`
+    );
+    continue;
+  }
+  // Flow core product path: Moment door honest (MOMENT_CREATE_HREF + source),
+  // Generate path marker retained, no bare street-power-up on path nav.
+  if (file === "app/flow/page.tsx") {
+    assert.match(
+      src,
+      /createWorkbenchHref\s*\(|createGenerate360Href\s*\(/,
+      "Flow must use createWorkbenchHref / createGenerate360Href"
+    );
+    assert.match(
+      src,
+      /MOMENT_CREATE_HREF/,
+      "Flow path Moment must import MOMENT_CREATE_HREF"
+    );
+    assert.match(
+      src,
+      /source=flow-path/,
+      "Flow path Moment must tag source=flow-path"
+    );
+    assert.match(
+      src,
+      /data-flow-path-generate=["']remix["']/,
+      "Flow path Generate marker retained"
+    );
+    assert.match(
+      src,
+      /data-flow-path-moment=["']honest["']/,
+      "Flow path Moment honesty marker"
+    );
+    const pathNav = src.match(
+      /aria-label=["']Core product path["'][\s\S]*?<\/nav>/
+    );
+    assert.ok(pathNav, "Flow core product path nav must exist");
+    assert.doesNotMatch(
+      pathNav[0],
+      /href=["']\/create\?effect=street-power-up["']/,
+      "Flow path nav must not use bare /create?effect=street-power-up"
     );
     continue;
   }
