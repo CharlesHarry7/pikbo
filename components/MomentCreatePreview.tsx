@@ -488,7 +488,7 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
               {cta.href ? (
                 <Link
                   href={cta.href}
-                  className="inline-flex min-h-14 w-full items-center justify-between bg-[#FF5A36] px-5 text-sm font-black text-[#171719] transition hover:bg-[#FF7354]"
+                  className="inline-flex min-h-14 w-full items-center justify-between bg-[linear-gradient(135deg,var(--electric-purple),var(--neon-pink))] px-5 text-sm font-black text-white transition hover:brightness-110"
                   data-moment-access-cta
                 >
                   {cta.label}

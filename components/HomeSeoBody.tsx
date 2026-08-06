@@ -41,7 +41,7 @@ export function HomeSeoBody() {
       <div className="mx-auto max-w-[1440px]">
         <div className="grid overflow-hidden rounded-[26px] border border-black/12 bg-[#FAF7F0] lg:grid-cols-[0.8fr_1.2fr] lg:rounded-[18px] lg:border-white/12 lg:bg-[#181818]">
           <div className="border-b border-black/12 p-6 sm:p-9 lg:border-b-0 lg:border-r lg:border-white/12 lg:p-12">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF6846]">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neon-pink">
               One simple workflow
             </p>
             <h2 className="mt-4 font-display text-4xl font-black leading-[0.94] tracking-[-0.055em] sm:text-5xl">
@@ -64,7 +64,7 @@ export function HomeSeoBody() {
                 key={number}
                 className="grid grid-cols-[44px_1fr] gap-4 p-6 sm:grid-cols-[62px_1fr] sm:p-8"
               >
-                <span className="font-display text-xl font-black text-[#2876FF] lg:text-[#D84A35]">
+                <span className="font-display text-xl font-black text-electric-purple lg:text-neon-pink">
                   {number}
                 </span>
                 <div>
@@ -79,7 +79,7 @@ export function HomeSeoBody() {
         </div>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
-          <article className="rounded-[26px] bg-[#2876FF] p-7 text-white sm:p-10 lg:rounded-[18px] lg:border lg:border-white/12 lg:bg-[#181818] lg:text-[#F5F1E8]">
+          <article className="rounded-[26px] bg-electric-purple p-7 text-white sm:p-10 lg:rounded-[18px] lg:border lg:border-white/12 lg:bg-card-2 lg:text-cream">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
               Your working shelf
             </p>
@@ -94,7 +94,7 @@ export function HomeSeoBody() {
             </p>
           </article>
 
-          <article className="flex flex-col justify-between rounded-[26px] bg-[#FF6846] p-7 text-[#1B0B06] sm:p-10 lg:rounded-[18px] lg:bg-[#F5F1E8] lg:text-[#111111]">
+          <article className="flex flex-col justify-between rounded-[26px] bg-neon-pink p-7 text-void sm:p-10 lg:rounded-[18px] lg:bg-cream lg:text-void">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/48">
                 Founding Studio
@@ -105,7 +105,7 @@ export function HomeSeoBody() {
             </div>
             <Link
               href="/contact?source=home-founding-studio"
-              className="mt-10 inline-flex min-h-14 items-center justify-between rounded-full bg-[#171717] px-6 text-sm font-black text-white hover:bg-black lg:rounded-[10px] lg:bg-[#D84A35] lg:hover:bg-[#E25A43]"
+              className="mt-10 inline-flex min-h-14 items-center justify-between rounded-full bg-void px-6 text-sm font-black text-white hover:bg-black lg:rounded-[10px] lg:bg-[linear-gradient(135deg,var(--electric-purple),var(--neon-pink))] lg:hover:brightness-110"
             >
               Request seller beta <span aria-hidden>↗</span>
             </Link>
@@ -122,7 +122,7 @@ export function HomeSeoBody() {
                 <Link
                   key={href}
                   href={href}
-                  className="text-sm font-black underline decoration-black/20 underline-offset-4 hover:decoration-[#FF6846] lg:decoration-white/20 lg:hover:decoration-[#D84A35]"
+                  className="text-sm font-black underline decoration-black/20 underline-offset-4 hover:decoration-neon-pink lg:decoration-white/20 lg:hover:decoration-neon-pink"
                 >
                   {label} ↗
                 </Link>
