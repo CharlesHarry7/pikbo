@@ -108,6 +108,22 @@ assert.match(
   /data-mobile-nav=["']primary["']/,
   "Primary mobile nav marker remains for safe-area / clearance smoke"
 );
+// AIT-531: AppShell residual carnival neon → gallery-calm copper
+assert.doesNotMatch(
+  shell,
+  /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i,
+  "AppShell must not hard-code carnival neon (#B14EFF / #FF4ECD)"
+);
+assert.match(
+  shell,
+  /var\(--brand\)/,
+  "AppShell mobile active state uses copper --brand token"
+);
+assert.match(
+  shell,
+  /var\(--grad-cta\)/,
+  "AppShell filled CTAs use copper --grad-cta token"
+);
 {
   const toast = source("components/Toast.tsx");
   assert.match(
