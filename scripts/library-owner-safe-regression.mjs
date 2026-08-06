@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-254 / AIT-274 /
- * AIT-477 / AIT-485 / AIT-506 / AIT-522 / AIT-523 / AIT-561:
+ * AIT-477 / AIT-485 / AIT-506 / AIT-522 / AIT-523 / AIT-561 / AIT-595:
  * Library owner-safe recovery + owner-card one-primary residual.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
@@ -11,14 +11,16 @@
  * guest deep-link login next, deep-link fail-closed copy, client Bearer on
  * retry/cancel so durable DURABLE_* codes can resolve, pure merge
  * dropping owned:false before page slice (AIT-274), deep-link finite resolve
- * (AIT-522), and retry/cancel/download wall-clock + DURABLE_DETAIL honesty
- * (AIT-523).
+ * (AIT-522), retry/cancel/download wall-clock + DURABLE_DETAIL honesty
+ * (AIT-523), pure asset-bind gate + image GET durable unavailable (AIT-595).
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  applyOwnerReadyAssetBindGate,
+  collectLibraryNewAttemptAssetIds,
   isOwnerVisibleLibraryJob,
   libraryInputBindingCopy,
   libraryInputBoundFromAssetId,
@@ -863,6 +865,101 @@ assert.match(
   privateToyAssets,
   /if \(error \|\| !Array\.isArray\(data\)\) return new Set\(\)/,
   "asset bind membership must empty-set on query error"
+);
+
+// ─── AIT-595 residual: pure owner-ready asset bind gate + image GET 503 ─────
+
+assert.match(pure, /export function applyOwnerReadyAssetBindGate/);
+assert.match(pure, /export function collectLibraryNewAttemptAssetIds/);
+assert.match(results, /applyOwnerReadyAssetBindGate/);
+assert.match(results, /collectLibraryNewAttemptAssetIds/);
+assert.match(
+  results,
+  /gateLibrarySamePhotoHandoffs[\s\S]{0,500}applyOwnerReadyAssetBindGate/,
+  "async list/detail gate must delegate to pure applyOwnerReadyAssetBindGate"
+);
+assert.match(
+  results,
+  /gateLibrarySamePhotoHandoffs[\s\S]{0,400}listReadyOwnerAssetIds/,
+  "async gate must still prove membership via listReadyOwnerAssetIds"
+);
+
+// Pure unit: ready membership keeps controlled same-photo URL.
+const readyKeeps = applyOwnerReadyAssetBindGate(
+  [boundFailed],
+  new Set([inputAssetId])
+);
+assert.equal(readyKeeps.length, 1);
+assert.ok(readyKeeps[0].newAttemptUrl?.includes(inputAssetId));
+assert.equal(readyKeeps[0].inputBound, true);
+assert.equal(readyKeeps[0].capabilities?.newAttempt, true);
+
+// Pure unit: empty ready set (storage down / not ready) strips handoff only.
+const emptyStrips = applyOwnerReadyAssetBindGate([boundFailed], new Set());
+assert.equal(emptyStrips.length, 1);
+assert.equal(emptyStrips[0].newAttemptUrl, undefined);
+assert.equal(
+  emptyStrips[0].inputBound,
+  true,
+  "inputBound stays column truth when handoff is stripped"
+);
+assert.equal(
+  emptyStrips[0].capabilities?.newAttempt,
+  true,
+  "generic Create new-attempt remains after same-photo strip"
+);
+
+// Pure unit: foreign ready id must not unlock this job's handoff.
+const foreignReady = applyOwnerReadyAssetBindGate(
+  [boundFailed],
+  new Set([foreignJobId])
+);
+assert.equal(foreignReady[0].newAttemptUrl, undefined);
+
+// Pure unit: forged / unaccepted URL never survives the gate.
+const forged = applyOwnerReadyAssetBindGate(
+  [
+    {
+      ...boundFailed,
+      newAttemptUrl: `/create?mode=moment&effect=street-power-up&source=library&assetId=${inputAssetId}&prompt=evil`,
+    },
+  ],
+  new Set([inputAssetId])
+);
+assert.equal(forged[0].newAttemptUrl, undefined);
+
+// Pure unit: candidate collector only accepts controlled URLs.
+const candidates = collectLibraryNewAttemptAssetIds([
+  boundFailed,
+  {
+    ...boundFailed,
+    id: foreignJobId,
+    newAttemptUrl: "https://evil.example/create?assetId=" + inputAssetId,
+  },
+  unboundFailed,
+]);
+assert.deepEqual(candidates, [inputAssetId]);
+
+// Image GET detail: durable verify down → 503 (parity with generations detail).
+assert.match(
+  imageDetail,
+  /export async function GET[\s\S]{0,1800}DURABLE_DETAIL_UNAVAILABLE/,
+  "image GET must surface DURABLE_DETAIL_UNAVAILABLE when durable verify is down"
+);
+assert.match(
+  imageDetail,
+  /export async function GET[\s\S]{0,2200}getPrivateLibraryJobForOwner/,
+  "image GET local-miss must consult owner durable detail"
+);
+assert.match(
+  imageDetail,
+  /export async function GET[\s\S]{0,2200}status:\s*503/,
+  "image GET must 503 when durable verify is down — never invent local-only 404"
+);
+assert.match(
+  imageDetail,
+  /ownership is not denied/i,
+  "image GET 503 copy must refuse ownership denial claim"
 );
 
 console.log("library-owner-safe-regression: ok");
