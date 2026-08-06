@@ -82,6 +82,16 @@ assert(
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
   "home order: Moment hero → proof wall → HF product rail → trust footer"
 );
+// AIT-169: HF product rail — one primary Generate→360 (not FreeTrial dual primary)
+const hfRail = read("components/HfProductRail.tsx");
+assert(
+  hfRail.includes('data-hf-rail-primary-generate="360"') &&
+    hfRail.includes("data-hf-rail-primary-generate-cta") &&
+    hfRail.includes('createGenerate360Href("hf-product-rail")') &&
+    hfRail.includes("Generate 360°") &&
+    hfRail.includes('data-hf-rail-generate="remix"'),
+  "HfProductRail must expose one primary Generate→360 door with markers"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"
