@@ -9,14 +9,15 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white shadow-[0_0_24px_rgba(255,78,205,0.35)] hover:scale-[1.03] hover:shadow-[0_0_36px_rgba(177,78,255,0.45)] active:scale-95",
+          // Gallery-calm copper CTA (AIT-457) — board tokens, not carnival neon
+          "bg-[var(--grad-cta)] text-[var(--primary-foreground)] shadow-[0_0_24px_rgba(196,165,116,0.28)] hover:scale-[1.03] hover:shadow-[0_0_36px_rgba(196,165,116,0.38)] active:scale-95",
         secondary:
           "bg-white/[0.06] text-[var(--fg)] border border-[var(--border)] hover:bg-white/10",
         outline:
           "border border-[var(--border)] bg-transparent text-[var(--fg)] hover:bg-white/[0.04]",
         ghost: "text-[var(--fg-muted)] hover:bg-white/[0.06] hover:text-[var(--fg)]",
         accent:
-          "text-white shadow-md hover:-translate-y-px [background:var(--grad)]",
+          "text-[var(--primary-foreground)] shadow-md hover:-translate-y-px [background:var(--grad)]",
         link: "text-[var(--mint)] underline-offset-4 hover:underline rounded-none",
       },
       size: {

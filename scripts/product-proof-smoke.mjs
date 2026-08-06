@@ -223,6 +223,23 @@ assert(
   );
 }
 
+// AIT-457: shared primary Button chrome → gallery-calm copper board tokens
+{
+  const button = read("components/ui/button.tsx");
+  const carnival =
+    /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i;
+  assert(
+    !carnival.test(button),
+    "components/ui/button.tsx must not hard-code carnival neon"
+  );
+  assert(
+    button.includes("var(--grad-cta)") &&
+      button.includes("rgba(196,165,116") &&
+      button.includes("var(--primary-foreground)"),
+    "ui/button default CTA uses --grad-cta + copper glow + primary-foreground"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
