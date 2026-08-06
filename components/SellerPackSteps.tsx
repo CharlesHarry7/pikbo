@@ -60,7 +60,7 @@ export function SellerPackSteps({
             <span
               className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] ${
                 step >= it.n
-                  ? "bg-[var(--mint)] text-black"
+                  ? "bg-neon-pink text-void"
                   : "bg-white/10 text-white/40"
               }`}
             >
@@ -95,9 +95,9 @@ export function SellerPackSteps({
               key={it.n}
               className={`relative rounded-xl border px-3 py-2.5 transition ${
                 active
-                  ? "border-[var(--mint)]/50 bg-[var(--mint)]/[0.12] shadow-[0_0_28px_rgba(200,255,61,0.1)]"
+                  ? "border-neon-pink/50 bg-neon-pink/[0.12] shadow-[0_0_28px_color-mix(in_srgb,var(--neon-pink)_14%,transparent)]"
                   : done
-                    ? "border-[var(--mint)]/25 bg-[var(--mint)]/[0.05]"
+                    ? "border-neon-pink/25 bg-neon-pink/[0.05]"
                     : "border-white/10 bg-black/20 opacity-75"
               }`}
             >
@@ -105,7 +105,7 @@ export function SellerPackSteps({
                 <span
                   className={`grid h-6 w-6 place-items-center rounded-full text-[11px] font-black ${
                     active || done
-                      ? "bg-[var(--mint)] text-black shadow-[0_0_12px_rgba(200,255,61,0.35)]"
+                      ? "bg-neon-pink text-void shadow-[0_0_12px_color-mix(in_srgb,var(--neon-pink)_40%,transparent)]"
                       : "bg-white/10 text-white/50"
                   }`}
                 >
@@ -114,7 +114,7 @@ export function SellerPackSteps({
                 <span
                   className={`text-sm font-bold ${
                     active
-                      ? "text-[var(--mint)]"
+                      ? "text-neon-pink"
                       : done
                         ? "text-white/90"
                         : "text-white/70"
@@ -123,7 +123,7 @@ export function SellerPackSteps({
                   {it.label}
                 </span>
                 {active ? (
-                  <span className="ml-auto rounded-full bg-[var(--mint)]/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--mint)]">
+                  <span className="ml-auto rounded-full bg-neon-pink/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-neon-pink">
                     Now
                   </span>
                 ) : null}
