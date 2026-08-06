@@ -4113,19 +4113,23 @@ assert.match(deliveryPackSrc, /Sales fidelity|includeQc/);
 assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 
 
-// Homepage V3: one Moment → device-local Toy Stage Preview. Existing Launch
-// Pack generation remains private and is tested independently below.
+// Homepage clean HF: strip → apps → wall → Moment → trust.
+// Existing Launch Pack generation remains private and is tested independently below.
 const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
+assert.match(homePageSrc, /SoftLaunchStrip/);
+assert.match(homePageSrc, /HfProductRail/);
+assert.match(homePageSrc, /HomeViralWall/);
 assert.match(homePageSrc, /HomeCinemaHero/);
-assert.match(homePageSrc, /HomeDesignerGallery/);
-// gallery-calm: HomeExploreRecipeRail unmounted from home
-// assert.match(homePageSrc, /HomeExploreRecipeRail/);
-// gallery-calm: HfProductRail unmounted from home
-// assert.match(homePageSrc, /HfProductRail/);
+assert.match(homePageSrc, /HomeTrustFooter/);
+assert.match(homePageSrc, /buildHomeShowcaseFeed/);
+assert.match(homePageSrc, /buildHomeAttractionFeed/);
+assert.doesNotMatch(homePageSrc, /HomePromoRail|SeedanceCampaign|HomeDesignerGallery/);
 assert.ok(
-  homePageSrc.indexOf("<HomeCinemaHero") < homePageSrc.indexOf("<HomeDesignerGallery") &&
-    homePageSrc.indexOf("<HomeDesignerGallery") < homePageSrc.indexOf("<HomeTrustFooter"),
-  "Home order: Hero → DesignerGallery → Trust"
+  homePageSrc.indexOf("<SoftLaunchStrip") < homePageSrc.indexOf("<HfProductRail") &&
+    homePageSrc.indexOf("<HfProductRail") < homePageSrc.indexOf("<HomeViralWall") &&
+    homePageSrc.indexOf("<HomeViralWall") < homePageSrc.indexOf("<HomeCinemaHero") &&
+    homePageSrc.indexOf("<HomeCinemaHero") < homePageSrc.indexOf("<HomeTrustFooter"),
+  "Home order: strip → apps → wall → Moment → trust"
 );
 const homeExploreRailSrc = fs.readFileSync(
   join(root, "components/HomeExploreRecipeRail.tsx"),
@@ -4163,9 +4167,10 @@ assert.equal(
   "home hero must expose exactly one primary Moment CTA"
 );
 assert.doesNotMatch(homeHeroSrc, /Use this motion/);
-assert.match(homeHeroSrc, /Style study|art-vinyl-guardian/);
+assert.doesNotMatch(homeHeroSrc, /Beatbot|beatbot-still/);
+assert.match(homeHeroSrc, /Style study|AutoPlayVideo|moon-box/);
 assert.match(homeHeroSrc, /Lab study|Style study|Not a customer/);
-assert.match(homeHeroSrc, /Lab study|Not a customer|Style study/);
+assert.match(homeHeroSrc, /AutoPlayVideo|moon-box-reveal/);
 assert.match(homeMomentsSrc, /One toy photo\. More ways to sell\./);
 assert.match(homeMomentsSrc, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(momentStageSrc, /Official Concept/);
@@ -4184,16 +4189,15 @@ assert.match(publicSampleSrc, /Target format · 1:1 · 5 sec/);
 assert.match(publicSampleSrc, /Target format · 9:16 · 5 sec/);
 assert.doesNotMatch(publicSampleSrc, /HeroUpload|fetchMe|canUsePrivateLaunch|credits/);
 const homeWallSrc = fs.readFileSync(
-  join(root, "components/HomeDesignerGallery.tsx"),
+  join(root, "components/HomeViralWall.tsx"),
   "utf8"
 );
 assert.match(
   homeWallSrc,
-  /data-home-gallery|data-home-wall|designer-toy|Style study|style-studies|HOME_PROOF_BADGE|cached prototype|Cached preview/
+  /data-home-wall|data-home-proof-wall|data-home-attraction|HOME_PROOF|attraction/
 );
-assert.match(homeWallSrc, /item\.href|item\.src|designer-toy/);
-assert.match(homeWallSrc, /Browse toy types|designer-toy|Style study|style-studies/);
-assert.match(homeWallSrc, /data-home-gallery|designer-toy/);
+assert.match(homeWallSrc, /item\.href|remakeHref|cardHref/);
+assert.match(homeWallSrc, /data-home-proof-wall|data-attraction-id/);
 assert.match(
   [homePageSrc, homeHeroSrc].join("\n"),
   /HomeCinemaHero|data-home-hero=["']designer-toy-gallery["']/

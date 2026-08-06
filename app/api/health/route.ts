@@ -358,6 +358,7 @@ export async function GET() {
         requested,
         environment: deploymentGate.environment,
         previewOverride: deploymentGate.previewOverride,
+        productionOverride: deploymentGate.productionOverride,
         enabled: ceilingUsd > 0,
         ceilingUsd,
         durableBudgetSchemaReady: durableProviderBudget.schemaReady,

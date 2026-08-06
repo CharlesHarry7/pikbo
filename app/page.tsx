@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
-import { HomeDesignerGallery } from "@/components/HomeDesignerGallery";
 import { HomeTrustFooter } from "@/components/HomeTrustFooter";
+import { HomeViralWall } from "@/components/HomeViralWall";
+import { HfProductRail } from "@/components/HfProductRail";
+import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
 import { JsonLd } from "@/components/JsonLd";
 import {
   organizationJsonLd,
   websiteJsonLd,
 } from "@/lib/jsonLd";
 import { site } from "@/lib/site";
+import { buildHomeAttractionFeed } from "@/lib/homeAttractionFeed";
+import { buildHomeShowcaseFeed } from "@/lib/videoFeed";
 
 const HOME_DESCRIPTION =
-  "AI product video for designer toys and 潮玩 — art toys, blind boxes, vinyl, mecha kits, and plush. One photo to directed listing motion. Private creation when you are ready.";
+  "AI video for designer toys — JP/US collectible IP wall, Moments, listing motion. Lab previews free; private create when ready.";
 
 export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
@@ -40,15 +44,26 @@ export const metadata: Metadata = {
 };
 
 /**
- * Gallery-calm home (boss feedback):
- * - One hero + one designer-toy still gallery + trust
- * - No multi-rail stack, no carnival neon, no cartoon demo wall
+ * Clean HF-shaped home (not a module landfill):
+ * 1. Soft free strip
+ * 2. Apps product rail
+ * 3. One curated IP / motion wall (main stage)
+ * 4. One Moment CTA band
+ * 5. Trust
+ *
+ * Promo / Seedance / extra rails / duplicate galleries removed — less visual noise.
+ * Wall stills later swap to video via demos/loops + VIDEO_LOOP_IDS.
  */
 export default function Home() {
-  const lcpPoster = "/style-studies/art-vinyl-guardian-v1.jpg";
+  const proofWall = buildHomeShowcaseFeed();
+  const attractionWall = buildHomeAttractionFeed();
+  const lcpPoster =
+    attractionWall[0]?.poster ??
+    proofWall[0]?.demo?.poster ??
+    "/collectibles/jp-anime-scale.webp";
 
   return (
-    <>
+    <div className="bg-black text-white" data-home-layout="hf-clean-v1">
       <link rel="preload" as="image" href={lcpPoster} fetchPriority="high" />
       <JsonLd
         data={[
@@ -57,9 +72,11 @@ export default function Home() {
         ]}
       />
 
+      <SoftLaunchStrip />
+      <HfProductRail />
+      <HomeViralWall items={attractionWall} />
       <HomeCinemaHero />
-      <HomeDesignerGallery />
       <HomeTrustFooter />
-    </>
+    </div>
   );
 }

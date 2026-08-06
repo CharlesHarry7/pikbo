@@ -40,7 +40,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "orbit-cgi",
     title: "Zero-gravity product hero",
-    character: "Orbit",
+    character: "JP mecha kit",
     eyebrow: "Product showcase",
     result: "A cached product-hero prototype for recipe preview.",
     preset: "floating-hero",
@@ -54,7 +54,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "moon-reveal",
     title: "Blind-box reveal",
-    character: "Moon",
+    character: "JP blind box",
     eyebrow: "Unboxing",
     result: "A punchy reveal loop for Reels, Shorts, and listings.",
     preset: "blind-box-unboxing",
@@ -77,7 +77,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "scout-story",
     title: "Miniature story world",
-    character: "Scout",
+    character: "JP anime scale",
     eyebrow: "Story scene",
     result: "Turn a shelf character into a tiny cinematic moment.",
     preset: "miniature-scene",
@@ -91,7 +91,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "beatbot-hook",
     title: "Drop-day viral hook",
-    character: "Beatbot",
+    character: "US urban vinyl",
     eyebrow: "Social hook",
     result: "Front-load the motion and make the first second count.",
     preset: "paparazzi-flash",
@@ -105,7 +105,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "scout-spin",
     title: "Listing-ready spin",
-    character: "Scout",
+    character: "JP anime scale",
     eyebrow: "Marketplace",
     result: "Show the silhouette and finish without filming a turntable.",
     preset: "360-spin-showcase",
@@ -128,7 +128,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "beatbot-unboxed",
     title: "Collector unboxing cut",
-    character: "Beatbot",
+    character: "US urban vinyl",
     eyebrow: "Launch content",
     result: "Reuse one toy photo across a second sales-ready format.",
     preset: "mystery-box-reveal",
@@ -143,7 +143,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "orbit-dance",
     title: "Toy dance drop",
-    character: "Orbit",
+    character: "JP mecha kit",
     eyebrow: "Come alive",
     result: "Dance loop for social posts.",
     preset: "make-figure-dance",
@@ -157,7 +157,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "moon-glow",
     title: "Display case glam",
-    character: "Moon",
+    character: "JP blind box",
     eyebrow: "Showcase",
     result: "Boutique shelf glow.",
     preset: "display-case-glam",
@@ -171,7 +171,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "scout-walk",
     title: "Figure walk cycle",
-    character: "Scout",
+    character: "JP anime scale",
     eyebrow: "Come alive",
     result: "A cached walk-cycle prototype for recipe preview.",
     preset: "make-figure-walk",
@@ -185,7 +185,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "beatbot-neon",
     title: "Neon city night",
-    character: "Beatbot",
+    character: "US urban vinyl",
     eyebrow: "Scene",
     result: "Neon cyber backdrop.",
     preset: "neon-city-night",
@@ -199,7 +199,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "orbit-aura",
     title: "Power aura burst",
-    character: "Orbit",
+    character: "JP mecha kit",
     eyebrow: "VFX",
     result: "Energy aura around figure.",
     preset: "power-aura",
@@ -213,7 +213,7 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   {
     id: "moon-smoke",
     title: "Smoke entrance",
-    character: "Moon",
+    character: "JP blind box",
     eyebrow: "Reveal",
     result: "Smoke burst entrance.",
     preset: "smoke-burst-entrance",

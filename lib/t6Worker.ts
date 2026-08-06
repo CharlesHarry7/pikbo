@@ -15,7 +15,9 @@ import {
   t6OwnedStorageConfigured,
 } from "./t6OwnedStorageConfig.mjs";
 
-export const SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED = false;
+export const SERVER_OWNED_T6_BAKED_WATERMARK_IMPLEMENTED =
+  process.env.PIKBO_T6_BAKED_WATERMARK_WORKER === "1" &&
+  process.env.PIKBO_T6_IMPLEMENTED === "1";
 export const T6_DERIVATIVE_SERVING_IMPLEMENTED = true;
 export const T6_MAX_SOURCE_BYTES = 50 * 1024 * 1024;
 export const T6_SOURCE_TIMEOUT_MS = 30_000;

@@ -1,0 +1,113 @@
+{
+  "note": "When HF-style videos are ready, set videoMp4/videoWebm; wall auto-plays if present",
+  "slots": [
+    {
+      "id": "jp-anime-scale",
+      "poster": "/collectibles/jp-anime-scale.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "jp-mecha-kit",
+      "poster": "/collectibles/jp-mecha-kit.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "jp-blindbox",
+      "poster": "/collectibles/jp-blindbox.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "jp-sofubi",
+      "poster": "/collectibles/jp-sofubi.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "jp-desk-figures",
+      "poster": "/collectibles/jp-desk-figures.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "jp-us-shelf",
+      "poster": "/collectibles/jp-us-shelf.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "us-urban-vinyl",
+      "poster": "/collectibles/us-urban-vinyl.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "us-action-figure",
+      "poster": "/collectibles/us-action-figure.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "us-pop-vinyl",
+      "poster": "/collectibles/us-pop-vinyl.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "fx-scale-rays",
+      "poster": "/collectibles/fx-scale-rays.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "fx-mecha-neon",
+      "poster": "/collectibles/fx-mecha-neon.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "fx-blindbox-holo",
+      "poster": "/collectibles/fx-blindbox-holo.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "fx-vinyl-neon",
+      "poster": "/collectibles/fx-vinyl-neon.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "fx-action-blast",
+      "poster": "/collectibles/fx-action-blast.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "fx-sofubi-glow",
+      "poster": "/collectibles/fx-sofubi-glow.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "fx-pop-led",
+      "poster": "/collectibles/fx-pop-led.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "fx-shelf-led",
+      "poster": "/collectibles/fx-shelf-led.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    },
+    {
+      "id": "jp-garage-kit",
+      "poster": "/collectibles/jp-garage-kit.webp",
+      "videoMp4": null,
+      "videoWebm": null
+    }
+  ]
+}
