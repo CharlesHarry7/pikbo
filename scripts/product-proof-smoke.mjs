@@ -246,6 +246,24 @@ assert(
   );
 }
 
+// AIT-397: SellerPackSteps residual lime → neon-pink board tokens
+{
+  const sellerPackSteps = read("components/SellerPackSteps.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(sellerPackSteps),
+    "SellerPackSteps must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    sellerPackSteps.includes("var(--neon-pink)") &&
+      sellerPackSteps.includes("rgba(255,78,205"),
+    "SellerPackSteps active chrome uses neon-pink board tokens"
+  );
+  assert(
+    !sellerPackSteps.includes("var(--mint)"),
+    "SellerPackSteps must not use mint alias for step chrome"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
