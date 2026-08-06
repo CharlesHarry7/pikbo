@@ -1752,11 +1752,15 @@ export function BatchStudio({
   return (
     <div
       className={
-        sellerPackActive
-          ? "mt-4 grid gap-4 pb-32 text-[#111827] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-5 lg:pb-0"
-          : "mt-8 grid gap-6 pb-36 lg:grid-cols-[1fr_1.1fr] lg:pb-0"
+        // AIT-383: content pad = sticky chrome + matching clearance token
+        isSellerPack
+          ? "mt-4 grid gap-4 pb-[var(--sticky-generate-pad-safe)] text-[#111827] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-5 lg:pb-0"
+          : sellerPackActive
+            ? "mt-4 grid gap-4 pb-[var(--sticky-generate-pad)] text-[#111827] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-5 lg:pb-0"
+            : "mt-8 grid gap-6 pb-[var(--sticky-generate-pad)] lg:grid-cols-[1fr_1.1fr] lg:pb-0"
       }
       data-launch-workspace={sellerPackActive ? "seller-pack" : undefined}
+      data-batch-content-pad={isSellerPack ? "safe-bottom" : "mobile-nav"}
     >
       <div className="space-y-4">
         {sellerPackActive && meResolved && !privateLaunchEnabled ? (

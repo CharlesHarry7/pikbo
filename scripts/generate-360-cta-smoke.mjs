@@ -289,6 +289,17 @@ assert.match(
   /bottom-\[var\(--floating-cta-safe-bottom\)\]/,
   "HomeBrowseCta must use safe-area bottom token when mounted"
 );
+
+assert.match(
+  browseCta,
+  /z-\[var\(--floating-generate-z\)\]/,
+  "HomeBrowseCta floating Generate must use --floating-generate-z"
+);
+assert.doesNotMatch(
+  browseCta,
+  /bottom-\[4\.75rem\]/,
+  "HomeBrowseCta must not hardcode bare 4.75rem (double-counts nav when home has none)"
+);
 assert.match(
   mobileBar,
   /bottom-\[var\(--mobile-nav-clearance\)\]/,
@@ -511,5 +522,178 @@ assert.match(
   /rgba\(255,\s*78,\s*205/,
   "Toast glow uses neon-pink board rgba"
 );
+
+// 9. AIT-383 — sticky Generate content pads (Create/Modules/cinema/Batch) + browse bar pads
+{
+  const globals = read("app/globals.css");
+  assert.match(
+    globals,
+    /--sticky-generate-pad:\s*calc\(/,
+    "globals must define --sticky-generate-pad (chrome + mobile-nav-clearance)"
+  );
+  assert.match(
+    globals,
+    /--sticky-generate-pad-safe:\s*calc\(/,
+    "globals must define --sticky-generate-pad-safe (chrome + floating-cta-safe-bottom)"
+  );
+  assert.match(
+    globals,
+    /--mobile-generate-bar-pad:\s*calc\(/,
+    "globals must define --mobile-generate-bar-pad for browse last-row clearance"
+  );
+  assert.match(
+    globals,
+    /--mobile-nav-clearance:\s*calc\(/,
+    "globals must define --mobile-nav-clearance (bar pad stacks tab + safe-area)"
+  );
+
+  assert.match(
+    createStudio,
+    /pb-\[var\(--sticky-generate-pad-safe\)\]/,
+    "CreateStudio fixed Moment content pad must use --sticky-generate-pad-safe"
+  );
+  assert.match(
+    createStudio,
+    /pb-\[var\(--sticky-generate-pad\)\]/,
+    "CreateStudio tab-sharing content pad must use --sticky-generate-pad"
+  );
+  assert.match(
+    createStudio,
+    /data-create-content-pad=\{/,
+    "CreateStudio content pad branch must be smoke-visible"
+  );
+  assert.doesNotMatch(
+    createStudio,
+    /\bpb-36\b|\bpb-32\b/,
+    "CreateStudio must not bare pb-32/pb-36 under sticky Generate"
+  );
+
+  const createPageSrc = read("app/create/page.tsx");
+  assert.match(
+    createPageSrc,
+    /data-create-shell=["']fixed-moment["']/,
+    "fixed Moment Create page must mark shell for smoke"
+  );
+  assert.match(
+    createPageSrc,
+    /data-create-shell-pad=["']sticky-only["']/,
+    "fixed Moment Create page shell pad must be sticky-only (no tab ghost)"
+  );
+  assert.doesNotMatch(
+    createPageSrc,
+    /className="[^"]*\bpb-24\b/,
+    "fixed Moment Create page className must not carry tab-era pb-24 under sticky"
+  );
+
+  assert.match(
+    batchStudio,
+    /isSellerPack\s*\?[\s\S]{0,320}pb-\[var\(--sticky-generate-pad-safe\)\]/,
+    "nav-less Seller Pack content pad must use --sticky-generate-pad-safe"
+  );
+  assert.match(
+    batchStudio,
+    /data-batch-content-pad=\{\s*isSellerPack\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+    "BatchStudio content pad branch must be smoke-visible"
+  );
+  assert.doesNotMatch(
+    batchStudio,
+    /className=\{\s*[\s\S]{0,80}\bpb-32\b|\bpb-36\b/,
+    "BatchStudio content pad must not hardcode bare pb-32 / pb-36"
+  );
+
+  const libraryPage = read("app/library/page.tsx");
+  const modulesPage = read("app/modules/page.tsx");
+  assert.match(
+    libraryPage,
+    /pb-\[var\(--mobile-generate-bar-pad\)\]/,
+    "Library content must clear MobileGenerateBar + tab via --mobile-generate-bar-pad"
+  );
+  assert.match(
+    libraryPage,
+    /data-library-content-pad=["']mobile-generate-bar["']/,
+    "Library content pad must expose smoke marker"
+  );
+  assert.match(
+    modulesPage,
+    /pb-\[var\(--sticky-generate-pad\)\]/,
+    "Modules shelf content must clear ModulesMobileCta sticky via --sticky-generate-pad"
+  );
+  assert.match(
+    modulesPage,
+    /data-modules-content-pad=["']sticky-generate["']/,
+    "Modules content pad must expose smoke marker"
+  );
+
+  assert.match(
+    cinemaPage,
+    /pb-\[var\(--sticky-generate-pad\)\]/,
+    "cinema content must clear sticky Generate via --sticky-generate-pad"
+  );
+  assert.match(
+    cinemaPage,
+    /data-cinema-content-pad=["']sticky-generate["']/,
+    "cinema content pad must expose smoke marker"
+  );
+  assert.doesNotMatch(
+    cinemaPage,
+    /className="[^"]*\bpb-28\b/,
+    "cinema shell must not use bare pb-28 under sticky chrome"
+  );
+
+  const browseBarPadRoutes = [
+    ["app/explore/page.tsx", "explore"],
+    ["app/flow/page.tsx", "flow"],
+    ["app/effects/page.tsx", "effects"],
+    ["app/community/page.tsx", "community"],
+    ["app/library/page.tsx", "library"],
+    ["app/apps/page.tsx", "apps"],
+    ["app/models/page.tsx", "models"],
+    ["app/pricing/page.tsx", "pricing"],
+    ["app/profile/page.tsx", "profile"],
+    ["app/status/page.tsx", "status"],
+    ["app/login/page.tsx", "login"],
+  ];
+  for (const [file, key] of browseBarPadRoutes) {
+    const src = read(file);
+    assert.match(
+      src,
+      /pb-\[var\(--mobile-generate-bar-pad\)\]/,
+      `${file} must clear MobileGenerateBar + tab via --mobile-generate-bar-pad`
+    );
+    assert.match(
+      src,
+      new RegExp(`data-${key}-content-pad=["']mobile-generate-bar["']`),
+      `${file} content pad must expose smoke marker data-${key}-content-pad`
+    );
+    assert.doesNotMatch(
+      src,
+      /className="[^"]*\bpb-(?:24|28)\b/,
+      `${file} shell must not use bare pb-24 / pb-28 under MobileGenerateBar`
+    );
+    assert.doesNotMatch(
+      src,
+      /className=\{\s*`[^`]*\bpb-(?:24|28)\b/,
+      `${file} shell template must not bare pb-24 / pb-28 under MobileGenerateBar`
+    );
+  }
+}
+
+// 10. AIT-394 / AIT-417 — MobileGenerateBar floating Generate primary CTA off residual lime
+assert.doesNotMatch(
+  mobileBar,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/,
+  "MobileGenerateBar must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  mobileBar,
+  /rgba\(255,\s*78,\s*205/,
+  "MobileGenerateBar Generate CTA glow uses neon-pink board rgba"
+);
+assert.match(
+  mobileBar,
+  /btn-primary/,
+  "MobileGenerateBar Generate keeps btn-primary (board fill)"
+);
+
 
 console.log("generate-360-cta-smoke: ok");

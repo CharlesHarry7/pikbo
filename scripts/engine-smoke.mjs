@@ -2580,6 +2580,31 @@ assert.match(
   batchStudio,
   /bottom-\[var\(--mobile-nav-clearance\)\]/
 );
+// AIT-383: content pad tokens under sticky Generate / browse bar
+assert.match(
+  batchStudio,
+  /pb-\[var\(--sticky-generate-pad-safe\)\]|pb-\[var\(--sticky-generate-pad\)\]/
+);
+assert.match(
+  createStudio,
+  /pb-\[var\(--sticky-generate-pad-safe\)\]|pb-\[var\(--sticky-generate-pad\)\]/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/globals.css"), "utf8"),
+  /--sticky-generate-pad:\s*calc\(|--mobile-generate-bar-pad:\s*calc\(/
+);
+for (const browsePad of [
+  "app/explore/page.tsx",
+  "app/flow/page.tsx",
+  "app/effects/page.tsx",
+  "app/community/page.tsx",
+  "app/library/page.tsx",
+]) {
+  assert.match(
+    fs.readFileSync(join(root, browsePad), "utf8"),
+    /pb-\[var\(--mobile-generate-bar-pad\)\]/
+  );
+}
 assert.match(
   appShell,
   /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/
