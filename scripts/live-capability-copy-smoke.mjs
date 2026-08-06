@@ -156,6 +156,93 @@ assert(
   "modules FAQ/chip must sell Lab public path + conditional Live, not Free Mini as public trial"
 );
 
+// AIT-336 / AIT-338: community / effects / explore / apps — FAQ + chips no Free Mini public trial.
+const residualFaqHubFiles = [
+  "app/community/page.tsx",
+  "app/effects/page.tsx",
+  "app/explore/page.tsx",
+  "app/apps/page.tsx",
+  "app/apps/[slug]/page.tsx",
+];
+const forbiddenResidualFaqHubFreeMini = [
+  /Lab only · not UGC · Remix · Free Mini/i,
+  /Lab vs concept · Free Mini ·/i,
+  /LIVE vs SOON · Free Mini ·/i,
+  /Do Lab demos use Free Mini credits\?/i,
+  /Does launching cost Free Mini credits\?/i,
+  /Can Free Mini raw files be downloaded\?/i,
+  /Free Mini is for one live Seedance Mini/i,
+  /Live Seedance Mini uses Free Mini/i,
+  /Live Seedance Mini uses Free Mini \(about one 5s 480p/i,
+];
+for (const relativePath of residualFaqHubFiles) {
+  const source = read(relativePath);
+  for (const pattern of forbiddenResidualFaqHubFreeMini) {
+    assert(
+      !pattern.test(source),
+      `${relativePath} contains residual Free Mini FAQ/chip promise ${pattern}`
+    );
+  }
+  assert(
+    source.includes("When Live is enabled for an eligible account") ||
+      source.includes("Live gated") ||
+      source.includes("Cached Lab"),
+    `${relativePath} must keep Lab public-path / Live-gated honesty language`
+  );
+}
+const communitySource = read("app/community/page.tsx");
+assert(
+  communitySource.includes("Do Lab demos cost credits?") &&
+    communitySource.includes("Cached Lab playback costs 0 credits") &&
+    communitySource.includes(
+      "When Live is enabled for an eligible account"
+    ) &&
+    communitySource.includes("Lab only · not UGC · Remix · Live gated") &&
+    !communitySource.includes("Free Mini raw provider") &&
+    !communitySource.includes("· Free Mini"),
+  "community FAQ/chip must sell Lab public path + Live gated, not Free Mini trial"
+);
+const effectsSource = read("app/effects/page.tsx");
+assert(
+  effectsSource.includes("Watching Lab demos costs 0 credits") &&
+    effectsSource.includes(
+      "When Live is enabled for an eligible account"
+    ) &&
+    effectsSource.includes("Lab vs concept · Live gated · no viral guarantee") &&
+    !effectsSource.includes("Free Mini"),
+  "effects FAQ/chip must sell Lab + Live gated, not Free Mini trial"
+);
+const exploreSource = read("app/explore/page.tsx");
+assert(
+  exploreSource.includes("Cached Lab playback costs 0 credits") &&
+    exploreSource.includes(
+      "When Live is enabled for an eligible account"
+    ) &&
+    !exploreSource.includes("Free Mini") &&
+    !exploreSource.includes("Live Seedance Mini uses"),
+  "explore FAQ must sell Lab public path + conditional Live, not Free Mini trial"
+);
+const appsSource = read("app/apps/page.tsx");
+assert(
+  appsSource.includes(
+    "LIVE vs SOON · Live gated · Modules · same Generate engine"
+  ) &&
+    appsSource.includes("When Live is enabled for an eligible account") &&
+    !appsSource.includes("· Free Mini ·"),
+  "apps FAQ chip must drop Free Mini as public free path"
+);
+const appsSlugSource = read("app/apps/[slug]/page.tsx");
+assert(
+  appsSlugSource.includes("Does launching cost credits?") &&
+    appsSlugSource.includes("Can free-plan raw files be downloaded?") &&
+    appsSlugSource.includes("Cached Lab prototypes cost 0 credits") &&
+    appsSlugSource.includes(
+      "When Live is enabled for an eligible account"
+    ) &&
+    !appsSlugSource.includes("Free Mini"),
+  "apps/[slug] FAQ must not sell Free Mini as public free path"
+);
+
 assert(
   read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
     read("lib/site.ts").includes("AI product video studio for toy sellers"),
