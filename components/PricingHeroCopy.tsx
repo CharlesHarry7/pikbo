@@ -33,7 +33,7 @@ export function PricingHeroCopy({
 
   return (
     <section
-      className="relative isolate overflow-hidden border-b border-black/15 bg-[#f1eee6] px-5 py-14 text-black sm:px-8 sm:py-20"
+      className="relative isolate overflow-hidden border-b border-black/15 bg-cream px-5 py-14 text-void sm:px-8 sm:py-20"
       data-pricing-copy-variant={variant}
     >
       <div

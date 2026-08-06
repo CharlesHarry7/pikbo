@@ -546,7 +546,7 @@ function LibraryGridInner() {
   if (!me?.signedIn) {
     return (
       <section
-        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-bg-soft"
         data-library-state="guest"
       >
         <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
@@ -592,7 +592,7 @@ function LibraryGridInner() {
   if (notYourToy) {
     return (
       <section
-        className="mt-6 overflow-hidden rounded-[1.75rem] border border-amber-400/25 bg-[#111113]"
+        className="mt-6 overflow-hidden rounded-[1.75rem] border border-amber-400/25 bg-bg-soft"
         data-library-state="not-your-toy"
         data-library-not-your-toy="true"
       >
@@ -653,7 +653,7 @@ function LibraryGridInner() {
       </div>
 
       {sortedJobs.length === 0 ? (
-        <div className="grid min-h-[22rem] place-items-center rounded-[1.75rem] border border-white/10 bg-[#111113] p-6 text-center sm:p-10">
+        <div className="grid min-h-[22rem] place-items-center rounded-[1.75rem] border border-white/10 bg-bg-soft p-6 text-center sm:p-10">
           <div className="max-w-lg">
             <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-xl text-white/65">
               +
@@ -751,7 +751,7 @@ function LibraryGridInner() {
                 return (
                   <article
                     key={job.id}
-                    className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111113] shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)] lg:sticky lg:top-6"
+                    className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-bg-soft shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)] lg:sticky lg:top-6"
                     data-library-detail="true"
                   >
                     <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,color-mix(in_srgb,var(--neon-pink)_12%,transparent),transparent_55%),var(--void)] text-center">

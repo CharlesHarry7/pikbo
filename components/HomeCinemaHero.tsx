@@ -21,34 +21,34 @@ function PikkoMascot({ className = "" }: { className?: string }) {
     >
       <circle cx="48" cy="48" r="44" fill="url(#pikko-body)" />
       <circle cx="48" cy="48" r="44" stroke="url(#pikko-ring)" strokeWidth="3" />
-      <ellipse cx="34" cy="44" rx="9" ry="11" fill="#0A0A0F" />
-      <ellipse cx="62" cy="44" rx="9" ry="11" fill="#0A0A0F" />
-      <circle cx="36" cy="42" r="3.5" fill="#00D9FF" />
-      <circle cx="64" cy="42" r="3.5" fill="#00D9FF" />
+      <ellipse cx="34" cy="44" rx="9" ry="11" fill="var(--void)" />
+      <ellipse cx="62" cy="44" rx="9" ry="11" fill="var(--void)" />
+      <circle cx="36" cy="42" r="3.5" fill="var(--tide-blue)" />
+      <circle cx="64" cy="42" r="3.5" fill="var(--tide-blue)" />
       <path
         d="M36 62c4 6 20 6 24 0"
-        stroke="#FFE600"
+        stroke="var(--lemon)"
         strokeWidth="3.5"
         strokeLinecap="round"
       />
-      <circle cx="20" cy="28" r="6" fill="#FF4ECD" />
-      <circle cx="76" cy="28" r="6" fill="#B14EFF" />
+      <circle cx="20" cy="28" r="6" fill="var(--neon-pink)" />
+      <circle cx="76" cy="28" r="6" fill="var(--electric-purple)" />
       <path
         d="M48 8v8M48 80v8M8 48h8M80 48h8"
-        stroke="#00FFA3"
+        stroke="var(--tide-green)"
         strokeWidth="3"
         strokeLinecap="round"
         opacity="0.85"
       />
       <defs>
         <linearGradient id="pikko-body" x1="12" y1="8" x2="84" y2="88">
-          <stop stopColor="#B14EFF" />
-          <stop offset="0.55" stopColor="#FF4ECD" />
-          <stop offset="1" stopColor="#00D9FF" />
+          <stop stopColor="var(--electric-purple)" />
+          <stop offset="0.55" stopColor="var(--neon-pink)" />
+          <stop offset="1" stopColor="var(--tide-blue)" />
         </linearGradient>
         <linearGradient id="pikko-ring" x1="0" y1="0" x2="96" y2="96">
-          <stop stopColor="#FFE600" />
-          <stop offset="1" stopColor="#00FFA3" />
+          <stop stopColor="var(--lemon)" />
+          <stop offset="1" stopColor="var(--tide-green)" />
         </linearGradient>
       </defs>
     </svg>
