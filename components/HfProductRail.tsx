@@ -5,13 +5,17 @@ import { track } from "@/lib/analytics";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { createGenerate360Href } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Primary Generate door — listing spin remix (ratio/duration/channel). */
 const GENERATE_REMIX_HREF = createGenerate360Href("hf-product-rail");
+/** Moment door — mode=moment contract + honest source (never bare /create). */
+const MOMENT_RAIL_HREF = `${MOMENT_CREATE_HREF}&source=hf-product-rail` as const;
 
 /**
  * HF homepage product entry strip — media-backed capability cards.
  * Only real Pikbo paths; Video is first and hot. Owned Lab posters only.
+ * Below-fold suite density under Moment hero (AIT-241); secondary to hero CTA.
  */
 /** Product doors first; Flow/Cinema/Image are Preview (not live job peers). */
 const PRODUCTS: {
@@ -32,7 +36,7 @@ const PRODUCTS: {
     demoIndex: 0,
   },
   {
-    href: "/create?effect=street-power-up",
+    href: MOMENT_RAIL_HREF,
     title: "Street Power-Up Moment",
     blurb: "1 directed video · one photo",
     tag: "Toy Moment",
@@ -80,21 +84,25 @@ const PRODUCTS: {
 
 export function HfProductRail() {
   return (
-    <section className="border-b border-white/10 bg-black px-3 py-5 sm:px-5">
+    <section
+      data-home-suite-rail="hf-product"
+      className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
+      aria-label="Generate suite"
+    >
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-3 flex items-end justify-between gap-2">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
-              Create
+              Suite
             </p>
             <p className="mt-0.5 text-[11px] text-white/40">
-              Toy-native creative suite · same OS loop as a full AI video stack
+              Generate 360° and more Lab doors · secondary to the Moment above
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <FreeTrialCta
               path="/#product-rail"
-              labelTry="Try free · Mini 5s"
+              labelTry="Try free · Lab sample"
               hideClipsChip
               className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
             />
@@ -102,8 +110,9 @@ export function HfProductRail() {
               href={GENERATE_REMIX_HREF}
               className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
               data-hf-rail-generate="remix"
+              data-home-suite-360
             >
-              Open Generate →
+              Generate 360° →
             </Link>
           </div>
         </div>
@@ -124,7 +133,7 @@ export function HfProductRail() {
               />
             </p>
             <p className="relative z-10 mt-1 text-[10px] leading-snug text-white/45">
-              Lab sample · Free Mini 5s
+              Cached Lab · 0 credits · Live gated
             </p>
           </div>
           {PRODUCTS.map((p) => {
