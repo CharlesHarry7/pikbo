@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { loadHistory } from "@/lib/history";
 import {
   canLiveGenerate,
@@ -10,10 +10,16 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
+
+type SessionBoot = "checking" | "ready" | "timeout";
 
 const PROFILE_GENERATE_HREF = createGenerate360Href("profile-panel");
 
@@ -45,6 +51,8 @@ type ImageJobsProbe = {
 
 export function ProfilePanel() {
   const [session, setSession] = useState<MeResponse | null>(null);
+  /** Finite shell boot — never permanent hang on access/balance chrome. */
+  const [sessionBoot, setSessionBoot] = useState<SessionBoot>("checking");
   const [clips, setClips] = useState(0);
   const [jobsProbe, setJobsProbe] = useState<SessionJobsProbe | null>(null);
   const [imageJobsProbe, setImageJobsProbe] = useState<ImageJobsProbe | null>(
@@ -60,14 +68,22 @@ export function ProfilePanel() {
   });
   const [signingOut, setSigningOut] = useState(false);
 
-  useEffect(() => {
-    function refreshGuest() {
-      void fetchMe().then((d) => {
-        if (d) setSession(d);
+  const refreshSession = useCallback(() => {
+    setSessionBoot("checking");
+    setClips(loadHistory().length);
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+      .then((d) => {
+        setSession(d);
+        setSessionBoot("ready");
+      })
+      .catch((err) => {
+        // 8s Studio open honesty: fail closed — no invented balance/access.
+        setSession(null);
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
       });
-      setClips(loadHistory().length);
-    }
+  }, []);
 
+  useEffect(() => {
     async function refreshJobsProbe() {
       try {
         const res = await fetch("/api/generations", { method: "HEAD" });
@@ -207,7 +223,7 @@ export function ProfilePanel() {
     }
 
     function refresh() {
-      refreshGuest();
+      refreshSession();
       void refreshAuth();
       void refreshJobsProbe();
       void refreshImageJobsProbe();
@@ -219,7 +235,7 @@ export function ProfilePanel() {
       window.clearTimeout(t);
       window.removeEventListener(SESSION_EVENT, refresh);
     };
-  }, []);
+  }, [refreshSession]);
 
   async function signOut() {
     setSigningOut(true);
@@ -271,14 +287,33 @@ export function ProfilePanel() {
   const isFreePlan =
     session?.freeTrial?.isFreePlan === true || session?.plan === "free";
 
-  const accountLine = !auth.signedIn
-    ? "Guest mode · saved on this device"
-    : durableBackend
-      ? "Signed in · balance and completed private results available across devices"
-      : "Signed in · loading account details";
+  const accountLine =
+    sessionBoot === "checking"
+      ? "Checking access…"
+      : sessionBoot === "timeout"
+        ? "Access check timed out · balance unknown"
+        : !auth.signedIn
+          ? "Guest mode · saved on this device"
+          : durableBackend
+            ? "Signed in · balance and completed private results available across devices"
+            : "Signed in · loading account details";
+
+  const studioLabel =
+    sessionBoot === "checking"
+      ? "Checking studio…"
+      : sessionBoot === "timeout"
+        ? "Lab studio · access unknown"
+        : auth.signedIn
+          ? auth.email || "Signed-in studio"
+          : session
+            ? `${session.planName} studio`
+            : "Guest studio";
 
   return (
-    <div className="card mt-8 space-y-4 p-6">
+    <div
+      className="card mt-8 space-y-4 p-6"
+      data-profile-boot={sessionBoot}
+    >
       <div className="flex items-center gap-3">
         <div
           className="grid h-14 w-14 place-items-center rounded-full text-xl"
@@ -287,19 +322,45 @@ export function ProfilePanel() {
           🧸
         </div>
         <div>
-          <p className="font-semibold">
-            {auth.signedIn
-              ? auth.email || "Signed-in studio"
-              : session
-                ? `${session.planName} studio`
-                : "Guest studio"}
-          </p>
+          <p className="font-semibold">{studioLabel}</p>
           <p className="text-xs text-[var(--fg-dim)]">
             {accountLine}
-            {demo ? " · cached previews are free" : ""}
+            {demo && sessionBoot === "ready" ? " · cached previews are free" : ""}
           </p>
         </div>
       </div>
+
+      {sessionBoot === "timeout" ? (
+        <div
+          className="rounded-xl border border-[#FF6B6B]/35 bg-[#FF6B6B]/10 px-3 py-2.5 text-[11px] leading-relaxed text-[var(--fg-muted)]"
+          data-profile-boot-error="session-timeout"
+        >
+          <span className="font-semibold text-white/90">
+            Could not verify access in time.
+          </span>{" "}
+          Balance and plan stay unknown — we will not invent credits or guest
+          Lab claims until you retry.
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => refreshSession()}
+              data-profile-boot-retry
+              className="inline-flex min-h-9 items-center rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/15 px-3 text-xs font-bold text-[var(--mint)] transition hover:bg-[var(--mint)]/25"
+            >
+              Retry access check
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {sessionBoot === "checking" ? (
+        <p
+          className="text-[11px] text-[var(--fg-dim)]"
+          data-profile-boot-status="checking"
+        >
+          Verifying private access and balance — finishes within a few seconds.
+        </p>
+      ) : null}
 
       {auth.signedIn && auth.migratedNote ? (
         <p className="rounded-xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] px-3 py-2 text-[11px] leading-relaxed text-[var(--fg-muted)]">
@@ -438,10 +499,14 @@ export function ProfilePanel() {
       <div className="grid grid-cols-3 gap-2 border-t border-[var(--border)] pt-4 text-center">
         <div className="rounded-xl bg-[var(--bg-soft)] py-3">
           <p className="text-lg font-bold text-[var(--mint)]">
-            {displayCredits ?? "—"}
+            {sessionBoot === "ready" ? (displayCredits ?? "—") : "—"}
           </p>
           <p className="text-[10px] text-[var(--fg-dim)]">
-            {auth.signedIn ? "account credits" : "credits"}
+            {sessionBoot !== "ready"
+              ? "credits unknown"
+              : auth.signedIn
+                ? "account credits"
+                : "credits"}
           </p>
         </div>
         <div className="rounded-xl bg-[var(--bg-soft)] py-3">
@@ -450,14 +515,18 @@ export function ProfilePanel() {
               trialDone && isFreePlan && freeLiveOpen ? "text-amber-200" : ""
             }`}
           >
-            {freeLiveOpen && clipsLeft !== null ? clipsLeft : "—"}
+            {sessionBoot === "ready" && freeLiveOpen && clipsLeft !== null
+              ? clipsLeft
+              : "—"}
           </p>
           <p className="text-[10px] text-[var(--fg-dim)]">
-            {freeLiveOpen
-              ? trialDone && isFreePlan
-                ? "trial used"
-                : "live clips left"
-              : "live gated"}
+            {sessionBoot !== "ready"
+              ? "access unknown"
+              : freeLiveOpen
+                ? trialDone && isFreePlan
+                  ? "trial used"
+                  : "live clips left"
+                : "live gated"}
           </p>
         </div>
         <div className="rounded-xl bg-[var(--bg-soft)] py-3">
