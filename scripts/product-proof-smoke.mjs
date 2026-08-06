@@ -246,6 +246,22 @@ assert(
   );
 }
 
+// AIT-395: WorkflowShelf residual lime → neon-pink board tokens
+{
+  const workflowShelf = read("components/WorkflowShelf.tsx");
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  assert(
+    !lime.test(workflowShelf),
+    "WorkflowShelf must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    workflowShelf.includes("var(--neon-pink)") &&
+      workflowShelf.includes("var(--void)") &&
+      workflowShelf.includes("rgba(255,78,205"),
+    "WorkflowShelf selected cards use neon-pink / void board tokens"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
