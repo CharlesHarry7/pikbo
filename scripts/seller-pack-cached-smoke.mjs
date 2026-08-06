@@ -278,7 +278,9 @@ const recoveredPartial = recoveryModule.reconcileSellerPackRecovery(
     settledCredits: index === 1 ? 0 : 10,
     hasPrivateResult: index !== 1,
     resultUrl:
-      index === 1 ? null : `https://private.example.test/${item.slug}.mp4`,
+      index === 1
+        ? null
+        : `/api/downloads/pack-job-smoke-000${index + 1}`,
     errorCode: index === 1 ? "provider_error" : undefined,
   }))
 );
@@ -296,11 +298,11 @@ assert.deepEqual(
 );
 assert.equal(
   recoveredPartial.children[0].videoUrl,
-  "https://private.example.test/360-spin-showcase.mp4"
+  "/api/downloads/pack-job-smoke-0001"
 );
 assert.equal(
   recoveredPartial.children[2].videoUrl,
-  "https://private.example.test/paparazzi-flash.mp4"
+  "/api/downloads/pack-job-smoke-0003"
 );
 
 // Free Mini full pack block

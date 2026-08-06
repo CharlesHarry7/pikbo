@@ -307,7 +307,8 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(gen, /image_url:\s*imageUrl/);
   assert.match(gen, /customerFacingGenerateVideoUrl/);
   assert.match(gen, /savePrivateGenerationResult/);
-  assert.match(gen, /saved\.signedUrl/);
+  // Success body uses controlled /api/downloads — not saved.signedUrl.
+  assert.doesNotMatch(gen, /saved\.signedUrl|signedPrivateResultUrl/);
   assert.match(gen, /PRIVATE_ASSET_ID_RE/);
   assert.match(
     gen,
@@ -604,8 +605,18 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   );
   assert.match(
     generateRoute,
-    /reservationLife\.settle\([\s\S]*?signedPrivateResultUrl\(saved\.result\.objectKey\)/,
-    "a transient signing retry happens after durable settlement without refunding"
+    /reservationLife\.settle\([\s\S]*?customerFacingGenerateVideoUrl\(/,
+    "after durable settlement success returns controlled /api/downloads (no body signed URL)"
+  );
+  assert.doesNotMatch(
+    generateRoute,
+    /signedPrivateResultUrl/,
+    "generate success/idempotent replay must not mint storage signed URLs into JSON"
+  );
+  assert.doesNotMatch(
+    generateRoute,
+    /videoUrl:\s*signedUrl|videoUrl:\s*privateDeliveryUrl[\s\S]{0,40}signed/,
+    "private success videoUrl is never a storage signed URL"
   );
 
   const settlementGuard = read(
@@ -618,7 +629,12 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   const recoveryRoute = read("app/api/generations/recover/route.ts");
   assert.match(recoveryRoute, /getAuthUserFromRequest/);
   assert.match(recoveryRoute, /getPrivateGenerationRecovery/);
-  assert.match(recoveryRoute, /signedPrivateResultUrl/);
+  assert.match(recoveryRoute, /customerFacingGenerateVideoUrl/);
+  assert.doesNotMatch(
+    recoveryRoute,
+    /signedPrivateResultUrl/,
+    "recover success must not embed storage signed URLs; mint only at download gate"
+  );
   assert.match(recoveryRoute, /idempotentReplay:\s*true/);
   assert.match(recoveryRoute, /processedUpload:\s*true/);
   assert.match(recoveryRoute, /privateResult:\s*true/);

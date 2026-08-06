@@ -3,10 +3,7 @@ import { ensureSession, publicSession } from "@/lib/session";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 import { durableCreditsActive } from "@/lib/durableCredits";
 import { getSellerPackStatusAtomic } from "@/lib/durableCredits/sellerPack";
-import {
-  getPrivateGenerationResult,
-  signedPrivateResultUrl,
-} from "@/lib/privateGenerationResults";
+import { getPrivateGenerationResult } from "@/lib/privateGenerationResults";
 import {
   getOwnerSellerPackInput,
   listOwnerSellerPackInputs,
@@ -23,11 +20,15 @@ async function safeOwnerJobs(
   for (const job of source) {
     let resultUrl: string | null = null;
     if (job.status === "succeeded" && job.hasPrivateResult) {
+      // Confirm owner-bound private object exists, then expose only the
+      // controlled download gate — never a short-lived storage signed URL.
       const privateResult = await getPrivateGenerationResult({
         jobId: job.jobId,
         userId,
       });
-      if (privateResult) resultUrl = await signedPrivateResultUrl(privateResult.objectKey);
+      if (privateResult) {
+        resultUrl = `/api/downloads/${encodeURIComponent(job.jobId)}`;
+      }
     }
     jobs.push({
       jobId: job.jobId,
@@ -50,8 +51,9 @@ async function safeOwnerJobs(
 
 /**
  * Owner-scoped pack status for refresh recovery.
- * Returns the same pack run + public child state. Signed result URLs only for
- * owner-bound private successes. Cross-account pack access is rejected.
+ * Returns the same pack run + public child state. Controlled /api/downloads
+ * URLs only for owner-bound private successes (signed mint at the gate).
+ * Cross-account pack access is rejected.
  */
 export async function GET(req: Request) {
   const session = await ensureSession();

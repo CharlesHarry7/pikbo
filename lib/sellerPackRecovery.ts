@@ -3,7 +3,7 @@
  *
  * The browser stores only packRunId + the three server-created packJobIds.
  * `/api/seller-pack/status` remains the owner-scoped authority for state,
- * private signed result URLs, and credit outcomes after refresh.
+ * controlled /api/downloads result URLs, and credit outcomes after refresh.
  */
 
 import { SELLER_PACK_ITEMS } from "@/lib/sellerPackContract";
@@ -183,11 +183,17 @@ export function reconcileSellerPackRecovery(
         };
       }
       if (job.status === "succeeded") {
+        const resultUrl =
+          typeof job.resultUrl === "string" ? job.resultUrl.trim() : "";
+        // Accept controlled /api/downloads gates (preferred) or legacy http(s)
+        // absolute media — never javascript:/data: or empty.
+        const deliverable =
+          resultUrl.startsWith("/api/downloads/") ||
+          /^https?:\/\//i.test(resultUrl);
         if (
           job.settledCredits !== 10 ||
           job.hasPrivateResult !== true ||
-          typeof job.resultUrl !== "string" ||
-          !job.resultUrl.startsWith("http")
+          !deliverable
         ) {
           unavailable += 1;
           return {
@@ -202,7 +208,7 @@ export function reconcileSellerPackRecovery(
           requestId: job.jobId,
           status: "succeeded",
           creditState: "10 used",
-          videoUrl: job.resultUrl,
+          videoUrl: resultUrl,
           demo: false,
           model: job.modelId || undefined,
           duration: job.durationSec,
