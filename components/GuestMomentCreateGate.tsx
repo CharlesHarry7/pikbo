@@ -7,8 +7,11 @@ import {
   isClientTimeoutError,
   STUDIO_SESSION_BOOT_MS,
 } from "@/lib/clientTimeout";
+import {
+  fixedMomentCreateReturnPath,
+  guestMomentSignInHref,
+} from "@/lib/clientAssets";
 import { canUsePrivateLaunch, fetchMe, type MeResponse } from "@/lib/meClient";
-import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const PRIVATE_BETA_MAILTO =
   "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
@@ -19,20 +22,21 @@ const STREET_POWER_UP_SAMPLE = {
   webm: "/demos/beatbot-viral-hook.webm",
 } as const;
 
-function guestSignInHref() {
-  return `/login?next=${encodeURIComponent(
-    `${MOMENT_CREATE_HREF}&source=guest-create`
-  )}`;
-}
+const DEFAULT_GUEST_SIGN_IN_HREF = guestMomentSignInHref({
+  source: "guest-create",
+});
 
 function GuestMomentPreview({
   signedIn = false,
   sessionBoot,
   onRetrySession,
+  signInHref = DEFAULT_GUEST_SIGN_IN_HREF,
 }: {
   signedIn?: boolean;
   sessionBoot: "checking" | "ready" | "timeout";
   onRetrySession: () => void;
+  /** Login next path; may preserve durable Library `?assetId=` handoff. */
+  signInHref?: string;
 }) {
   return (
     <section
@@ -152,7 +156,7 @@ function GuestMomentPreview({
             <div className="mt-5 grid gap-3">
               {!signedIn && (
                 <Link
-                  href={guestSignInHref()}
+                  href={signInHref}
                   data-guest-create-sign-in
                   className="btn-press inline-flex min-h-14 items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(255,78,205,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#151519]"
                 >
@@ -190,13 +194,29 @@ function GuestMomentPreview({
   );
 }
 
-export function GuestMomentCreateGate({ children }: { children: ReactNode }) {
+export function GuestMomentCreateGate({
+  children,
+  /**
+   * Safe Create return path for guest sign-in. Prefer the server-built fixed
+   * Moment path so Library `?assetId=` same-photo recovery survives Magic Link.
+   */
+  signInNextPath,
+}: {
+  children: ReactNode;
+  signInNextPath?: string | null;
+}) {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [sessionResolved, setSessionResolved] = useState(false);
   const [sessionBoot, setSessionBoot] = useState<"checking" | "ready" | "timeout">(
     "checking"
   );
   const [bootNonce, setBootNonce] = useState(0);
+  const signInHref = guestMomentSignInHref({
+    pathWithSearch:
+      typeof signInNextPath === "string" && signInNextPath
+        ? signInNextPath
+        : fixedMomentCreateReturnPath({ source: "guest-create" }),
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -232,6 +252,7 @@ export function GuestMomentCreateGate({ children }: { children: ReactNode }) {
       signedIn={sessionResolved && me?.signedIn === true}
       sessionBoot={sessionBoot}
       onRetrySession={() => setBootNonce((n) => n + 1)}
+      signInHref={signInHref}
     />
   );
 }
