@@ -66,8 +66,9 @@ const PRIVATE_MOMENT_LOGIN_HREF = `/login?next=${encodeURIComponent(
 
 type Format = (typeof FORMATS)[number];
 
+/** Concept preview only — local direction study, not private Live render. */
 function momentPreviewHref(momentId: string) {
-  return `/create?moment=${momentId}&source=home-official-moment`;
+  return `/create?moment=${momentId}&source=home-concept-preview`;
 }
 
 export function PublicLaunchPackSample({
@@ -143,22 +144,38 @@ function HomeDropArchive({
 
           <div className="mt-5 lg:mt-0 lg:pb-1">
             <p className="max-w-[390px] text-sm font-semibold leading-6 text-[#686159] lg:text-[15px] lg:text-[#A39C91]">
-              Explore the archive, then use the one private render available
-              now: Street Power-Up from one owned toy photo.
+              Explore the cached Lab archive. Street Power-Up is the Live-gated
+              private path from one owned toy photo — invite / eligibility
+              required, not open checkout.
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-4">
               <Link
                 href={createHref}
-                className="inline-flex min-h-12 items-center justify-between gap-6 rounded-[10px] bg-[#D84A35] px-5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-[#E25A43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F1E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]"
+                data-home-moment-create="street-power-up"
+                data-live-gated="true"
+                className="inline-flex min-h-12 items-center justify-between gap-4 rounded-[10px] bg-[#D84A35] px-5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-[#E25A43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F1E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]"
               >
-                Create Street Power-Up <span aria-hidden>↗</span>
+                <span className="flex flex-col items-start gap-0.5">
+                  <span>Create Street Power-Up</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.14em] text-white/75">
+                    Live-gated
+                  </span>
+                </span>
+                <span aria-hidden>↗</span>
               </Link>
               <Link
                 href={momentPreviewHref(MOMENTS[0].id)}
                 data-home-official-moment-cta
+                data-concept-preview="true"
                 className="inline-flex min-h-12 items-center justify-between gap-4 rounded-[10px] border border-[#171717]/25 px-4 text-xs font-black text-[#171717] transition hover:-translate-y-0.5 hover:border-[#D84A35] hover:text-[#D84A35] lg:border-white/25 lg:text-[#F5F1E8] lg:hover:border-[#F5F1E8] lg:hover:text-white"
               >
-                Preview an Official Concept <span aria-hidden>↗</span>
+                <span className="flex flex-col items-start gap-0.5">
+                  <span>Preview a concept direction</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.14em] text-current opacity-55">
+                    Cached Lab · not Live
+                  </span>
+                </span>
+                <span aria-hidden>↗</span>
               </Link>
               <a
                 href="#archive-selector"
@@ -331,9 +348,17 @@ function HomeDropArchive({
             <div className="mt-6 flex flex-col gap-2 sm:flex-row">
               <Link
                 href={createHref}
+                data-home-moment-create="street-power-up"
+                data-live-gated="true"
                 className="inline-flex min-h-14 items-center justify-between gap-4 rounded-full bg-[#C9FF45] px-6 text-sm font-black text-[#0A1700]"
               >
-                Create {active.shortName} <span aria-hidden>↗</span>
+                <span className="flex flex-col items-start gap-0.5">
+                  <span>Create Street Power-Up</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.14em] text-black/55">
+                    Live-gated
+                  </span>
+                </span>
+                <span aria-hidden>↗</span>
               </Link>
               <Link
                 href={PRIVATE_BETA_MAILTO}
@@ -344,7 +369,8 @@ function HomeDropArchive({
               </Link>
             </div>
             <p className="mt-3 text-[10px] font-bold leading-4 text-white/40">
-              Uses Pikbo-owned samples. No product upload in this public preview.
+              Uses Pikbo-owned cached Lab samples. No product upload here. Live
+              private render is gated — not open checkout.
             </p>
           </div>
         </div>
@@ -414,15 +440,18 @@ function HomeDropArchive({
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.19em] text-[#D84A35]">
-                Official concept Moments
+                Concept direction studies
               </p>
               <p className="mt-1 text-sm font-semibold text-[#69645C] lg:text-[#C5BEB3]">
-                Pick a direction to preview with your toy locally. No upload or
-                generation starts here.
+                Pick a direction to preview with your toy locally. Cached Lab
+                concepts only — not customer deliverables or Live generation.
               </p>
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#69645C] lg:text-[#A39C91]">
-              Private render available now · Street Power-Up only
+            <p
+              className="text-[10px] font-black uppercase tracking-[0.14em] text-[#69645C] lg:text-[#A39C91]"
+              data-live-gated-chip
+            >
+              Private Street Power-Up · Live-gated · not open checkout
             </p>
           </div>
 
@@ -529,9 +558,9 @@ function CreateSampleBrowser({
                 Preview a directed toy Moment.
               </h1>
               <p className="mt-4 max-w-[560px] text-[13px] font-semibold leading-5 text-white/58 sm:text-[15px] sm:leading-6">
-                Compare Pikbo Lab directions for listing spin, blind-box reveal,
-                and social hooks. Street Power-Up is the private render
-                available in validation now.
+                Compare cached Lab directions for listing spin, blind-box
+                reveal, and social hooks. Street Power-Up is the Live-gated
+                private path — invite / eligibility required, not open checkout.
               </p>
 
               <div

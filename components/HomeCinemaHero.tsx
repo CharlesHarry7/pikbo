@@ -226,21 +226,32 @@ export function HomeCinemaHero() {
             <Link
               href={MOMENT_CREATE_HREF}
               data-home-moment-cta
+              data-live-gated="true"
               className="btn-press mt-5 inline-flex min-h-14 w-full items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(255,78,205,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14141E]"
             >
-              Create my drop clip
+              <span className="flex flex-col items-start gap-0.5 normal-case tracking-normal">
+                <span className="uppercase tracking-[0.12em]">
+                  Create my drop clip
+                </span>
+                <span
+                  className="text-[9px] font-black uppercase tracking-[0.14em] text-white/75"
+                  data-live-gated-chip
+                >
+                  Live-gated
+                </span>
+              </span>
               <span aria-hidden className="text-lg">
                 →
               </span>
             </Link>
             <p className="mt-4 text-[10px] font-semibold leading-5 text-white/40">
-              Sample shown: cached 6s archive, not a completed customer deliverable. Private target: 9:16 · 5s · 720p.
+              Sample shown: cached 6s archive, not a completed customer deliverable. Private target: 9:16 · 5s · 720p. Live path gated — not open checkout.
             </p>
           </div>
 
           <div className="fade-up fade-up-d3 mt-4 flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-black/25 px-4 py-3 text-[9px] font-black uppercase tracking-[0.13em] text-white/42 backdrop-blur-xl">
             <span className="h-1.5 w-1.5 rounded-full bg-[#00FFA3] shadow-[0_0_12px_#00FFA3]" />
-            Cached sample · 0 credits · no upload
+            Cached Lab sample · 0 credits · no upload
           </div>
         </div>
       </div>
