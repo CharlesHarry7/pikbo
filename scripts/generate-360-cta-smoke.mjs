@@ -916,6 +916,39 @@ assert.match(
   "ui/button primary text uses --primary-foreground on copper CTAs"
 );
 
+// AIT-618: shared .btn-primary residual carnival pink glow → gallery copper board
+{
+  const globalsCss = read("app/globals.css");
+  const btnPrimaryBlock =
+    globalsCss.match(
+      /\.btn-primary\s*\{[\s\S]*?\}\s*\.btn-primary:hover\s*\{[\s\S]*?\}/
+    )?.[0] ?? "";
+  assert.ok(
+    btnPrimaryBlock.length > 0,
+    "app/globals.css defines .btn-primary + :hover"
+  );
+  assert.doesNotMatch(
+    btnPrimaryBlock,
+    /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i,
+    ".btn-primary shadow path must not hard-code carnival pink/purple RGB"
+  );
+  assert.doesNotMatch(
+    btnPrimaryBlock,
+    /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+    ".btn-primary must not reintroduce competitor lime"
+  );
+  assert.match(
+    btnPrimaryBlock,
+    /var\(--grad-cta\)/,
+    ".btn-primary fill uses --grad-cta copper board gradient"
+  );
+  assert.match(
+    btnPrimaryBlock,
+    /rgba\(196\s*,\s*165\s*,\s*116/,
+    ".btn-primary glow uses copper board rgba(196,165,116)"
+  );
+}
+
 // AIT-517: SoftLaunchStrip residual competitor lime → gallery-calm copper
 const softLaunchSrc = read("components/SoftLaunchStrip.tsx");
 assert.doesNotMatch(
