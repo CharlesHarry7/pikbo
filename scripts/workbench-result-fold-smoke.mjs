@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * AIT-469 / AIT-381: 360 workbench post-generate result fold (mobile sticky next action).
+ * AIT-529 / AIT-469 / AIT-381: 360 workbench post-generate result fold.
  *
  * Source + pure-logic contract:
- * - Resolver covers Lab / live-private / live-local primary kinds
+ * - Resolver covers download / library / Lab replay / generate-again (re-spin)
  * - CreateStudio workbench (!fixedMomentContract) wires sticky + stage fold
  * - Fixed Moment path keeps generate-again sticky (no workbench fold bleed)
- * - Honest Lab vs Live provenance; Library owner-safe handoff
- * - freeLiveOpen / fixed Moment markers remain intact
+ * - Library primary owner-safe deep-link helper; Lab never claims private job
+ * - Honest Lab vs Live provenance; freeLiveOpen / fixed Moment markers intact
  *
  * Run: node scripts/workbench-result-fold-smoke.mjs
  *   or: npm run workbench-result-fold-smoke
@@ -29,6 +29,21 @@ assert.match(
   foldLib,
   /export function resolveWorkbenchResultPrimary/,
   "workbenchResultFold must export resolveWorkbenchResultPrimary"
+);
+assert.match(
+  foldLib,
+  /export function libraryWorkbenchHandoffHref/,
+  "must export libraryWorkbenchHandoffHref"
+);
+assert.match(
+  foldLib,
+  /export function libraryJobMatchesDeepLink/,
+  "must export libraryJobMatchesDeepLink"
+);
+assert.match(
+  foldLib,
+  /kind:\s*"download"/,
+  "resolver must return download primary"
 );
 assert.match(
   foldLib,
@@ -77,6 +92,11 @@ assert.match(
 );
 assert.match(
   foldLib,
+  /Re-spin/,
+  "listing 360 residual must use Re-spin labels"
+);
+assert.match(
+  foldLib,
   /if \(!input\.demo && input\.privateResult\)/,
   "private Library handoff must require !demo"
 );
@@ -85,18 +105,51 @@ assert.match(
   /if \(input\.demo\)/,
   "Lab branch must gate on demo"
 );
+assert.match(
+  foldLib,
+  /if \(input\.demo\) return ["']\/library["']/,
+  "Lab demo must never deep-link as private owned clip"
+);
+assert.match(
+  foldLib,
+  /\/library\?job=\$\{encodeURIComponent\(id\)\}/,
+  "private + UUID must produce /library?job="
+);
 
 // ── Runtime resolver via strip-types (Node 22+) ───────────────────────────
 const runtimeProbe = `
-import { resolveWorkbenchResultPrimary } from ${JSON.stringify(
+import {
+  resolveWorkbenchResultPrimary,
+  libraryWorkbenchHandoffHref,
+  libraryJobMatchesDeepLink,
+} from ${JSON.stringify(
   pathToFileURL(join(root, "lib/workbenchResultFold.ts")).href
 )};
 import assert from "node:assert/strict";
 
+const uuid = "a1b2c3d4-e5f6-4789-a012-3456789abcde";
+
+// Live private + download ready → Download (listing residual).
+const privateDownload = resolveWorkbenchResultPrimary({
+  demo: false,
+  privateResult: true,
+  playable: true,
+  downloadAllowed: true,
+  downloadReady: true,
+  listing360: true,
+});
+assert.equal(privateDownload.kind, "download");
+assert.equal(privateDownload.provenanceKind, "live-private");
+assert.match(privateDownload.label, /Download/i);
+assert.match(privateDownload.label, /360/);
+
+// Live private without download → Library.
 const privateLive = resolveWorkbenchResultPrimary({
   demo: false,
   privateResult: true,
   playable: true,
+  downloadAllowed: false,
+  downloadReady: false,
 });
 assert.equal(privateLive.kind, "library");
 assert.equal(privateLive.provenanceKind, "live-private");
@@ -106,6 +159,9 @@ const labPlayable = resolveWorkbenchResultPrimary({
   demo: true,
   privateResult: false,
   playable: true,
+  downloadAllowed: true,
+  downloadReady: true,
+  listing360: true,
 });
 assert.equal(labPlayable.kind, "replay");
 assert.equal(labPlayable.provenanceKind, "lab");
@@ -115,26 +171,81 @@ const labUnplayable = resolveWorkbenchResultPrimary({
   demo: true,
   privateResult: false,
   playable: false,
+  listing360: true,
 });
 assert.equal(labUnplayable.kind, "generate-again");
 assert.equal(labUnplayable.provenanceKind, "lab");
+assert.match(labUnplayable.label, /Re-spin/i);
 
 const liveLocal = resolveWorkbenchResultPrimary({
   demo: false,
   privateResult: false,
   playable: true,
+  downloadAllowed: false,
 });
 assert.equal(liveLocal.kind, "library");
 assert.equal(liveLocal.provenanceKind, "live-local");
 
-// Private flag must never win over Lab demo honesty.
-const labIgnoresPrivateFlag = resolveWorkbenchResultPrimary({
+// Lab never wins as Download even when downloadAllowed.
+const labIgnoresDownload = resolveWorkbenchResultPrimary({
   demo: true,
   privateResult: true,
   playable: true,
+  downloadAllowed: true,
+  downloadReady: true,
 });
-assert.equal(labIgnoresPrivateFlag.kind, "replay");
-assert.equal(labIgnoresPrivateFlag.provenanceKind, "lab");
+assert.equal(labIgnoresDownload.kind, "replay");
+assert.equal(labIgnoresDownload.provenanceKind, "lab");
+
+// Library handoff href fail-closed.
+assert.equal(
+  libraryWorkbenchHandoffHref({
+    demo: true,
+    privateResult: true,
+    requestId: uuid,
+  }),
+  "/library"
+);
+assert.equal(
+  libraryWorkbenchHandoffHref({
+    demo: false,
+    privateResult: false,
+    requestId: uuid,
+  }),
+  "/library"
+);
+assert.equal(
+  libraryWorkbenchHandoffHref({
+    demo: false,
+    privateResult: true,
+    requestId: "not-a-uuid",
+  }),
+  "/library"
+);
+assert.equal(
+  libraryWorkbenchHandoffHref({
+    demo: false,
+    privateResult: true,
+    requestId: uuid,
+  }),
+  "/library?job=" + encodeURIComponent(uuid)
+);
+
+assert.equal(
+  libraryJobMatchesDeepLink({ id: uuid, requestId: "other" }, uuid),
+  true
+);
+assert.equal(
+  libraryJobMatchesDeepLink(
+    { id: "job_local", requestId: uuid },
+    uuid
+  ),
+  true
+);
+assert.equal(
+  libraryJobMatchesDeepLink({ id: "a", requestId: "b" }, uuid),
+  false
+);
 
 console.log("runtime-resolver: ok");
 `;
@@ -171,8 +282,18 @@ assert.match(
 );
 assert.match(
   createStudio,
+  /libraryWorkbenchHandoffHref/,
+  "CreateStudio must use libraryWorkbenchHandoffHref"
+);
+assert.match(
+  createStudio,
   /from ["']@\/lib\/workbenchResultFold["']/,
   "CreateStudio must import workbenchResultFold"
+);
+assert.match(
+  createStudio,
+  /isGenerate360Effect/,
+  "CreateStudio must detect listing 360 for Re-spin labels"
 );
 assert.match(
   createStudio,
@@ -196,6 +317,11 @@ assert.match(
 );
 assert.match(
   createStudio,
+  /data-result-fold-action=["']download["']/,
+  "Download primary action marker required"
+);
+assert.match(
+  createStudio,
   /data-result-fold-action=["']library["']/,
   "Library primary action marker required"
 );
@@ -211,13 +337,23 @@ assert.match(
 );
 assert.match(
   createStudio,
+  /data-library-handoff=/,
+  "Library primary must expose handoff kind marker"
+);
+assert.match(
+  createStudio,
+  /href=\{workbenchLibraryHref\}/,
+  "Library fold primary must bind workbenchLibraryHref"
+);
+assert.match(
+  createStudio,
   /data-result-provenance=\{/,
   "sticky/stage must expose provenance kind"
 );
 assert.match(
   createStudio,
-  /href=["']\/library["']/,
-  "Library handoff must link /library"
+  /downloadActiveResult/,
+  "Download primary must call downloadActiveResult"
 );
 assert.match(
   createStudio,
@@ -266,5 +402,12 @@ const stageIdx = createStudio.indexOf('data-result-fold="stage-primary"');
 const afterIdx = createStudio.indexOf("<GenerateAfterPath");
 assert.ok(stageIdx > 0, "stage-primary marker must exist");
 assert.ok(afterIdx > stageIdx, "stage primary must render before GenerateAfterPath");
+
+// Plain /library remains for secondary/Moment paths (no deep-link thrash).
+assert.match(
+  createStudio,
+  /href=["']\/library["']/,
+  "plain /library remains for non-fold secondary/Moment paths"
+);
 
 console.log("workbench-result-fold-smoke: ok");
