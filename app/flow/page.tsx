@@ -9,9 +9,13 @@ import { FlowMediaCard } from "@/components/FlowMediaCard";
 import { createWorkbenchHref } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Flow Generate doors — listing spin remix (ratio/duration/channel). */
 const FLOW_GENERATE_HREF = createWorkbenchHref();
+/** Core product path Moment door — mode=moment + honest source (never bare effect). */
+const FLOW_PATH_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=flow-path` as const;
 
 export const metadata: Metadata = {
   title: "Flow · Creation matrix",
@@ -280,7 +284,7 @@ export default function FlowPage() {
         >
           <Link
             href={FLOW_GENERATE_HREF}
-            className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+            className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-1.5 text-[var(--mint)]"
             data-flow-path-generate="remix"
           >
             Generate
@@ -295,8 +299,9 @@ export default function FlowPage() {
             →
           </span>
           <Link
-            href="/create?effect=street-power-up"
+            href={FLOW_PATH_MOMENT_HREF}
             className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
+            data-flow-path-moment="honest"
           >
             Create one Moment
           </Link>
