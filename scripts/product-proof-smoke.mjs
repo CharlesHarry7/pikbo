@@ -105,6 +105,16 @@ assert(
   "explore recipe rail must be Lab-only, honest-empty, secondary Remake/360 (no Moment primary)"
 );
 
+// AIT-320: HomeExploreRecipeRail residual lime → neon-pink board tokens
+assert(
+  !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(exploreRail),
+  "HomeExploreRecipeRail must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert(
+  exploreRail.includes("var(--neon-pink)"),
+  "HomeExploreRecipeRail labels/hovers use neon-pink board tokens"
+);
+
 // Suite rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF.
 const homeRail = read("components/HfProductRail.tsx");
 assert(
@@ -187,6 +197,54 @@ assert(
     ),
   "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
+
+// AIT-320: four-surface money path off residual competitor lime (board tokens)
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const fourSurface = {
+    "components/HfProductRail.tsx": read("components/HfProductRail.tsx"),
+    "components/HomeBrowseCta.tsx": read("components/HomeBrowseCta.tsx"),
+    "components/HomeViralPresetRail.tsx": read("components/HomeViralPresetRail.tsx"),
+    "components/HomeExploreRecipeRail.tsx": exploreRail,
+    "components/CreateStudio.tsx": read("components/CreateStudio.tsx"),
+    "components/LibraryGrid.tsx": library,
+    "components/PricingHeroCopy.tsx": read("components/PricingHeroCopy.tsx"),
+    "components/PricingPlanCards.tsx": read("components/PricingPlanCards.tsx"),
+    "components/PricingUsageEstimator.tsx": read(
+      "components/PricingUsageEstimator.tsx"
+    ),
+    "components/GuestMomentCreateGate.tsx": read(
+      "components/GuestMomentCreateGate.tsx"
+    ),
+    // remount-ready (not mounted on / today; keep board-clean for north-star density)
+    "components/HfExploreHome.tsx": read("components/HfExploreHome.tsx"),
+  };
+  for (const [rel, src] of Object.entries(fourSurface)) {
+    assert(
+      !lime.test(src),
+      `${rel} must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)`
+    );
+  }
+  assert(
+    fourSurface["components/HfProductRail.tsx"].includes("var(--neon-pink)") &&
+      fourSurface["components/LibraryGrid.tsx"].includes("var(--neon-pink)") &&
+      fourSurface["components/HomeBrowseCta.tsx"].includes("var(--neon-pink)") &&
+      fourSurface["components/HomeExploreRecipeRail.tsx"].includes(
+        "var(--neon-pink)"
+      ),
+    "Home rails + Library + browse CTA use neon-pink board tokens"
+  );
+  assert(
+    fourSurface["components/CreateStudio.tsx"].includes("rgba(255,78,205") &&
+      fourSurface["components/PricingPlanCards.tsx"].includes(
+        "rgba(255,78,205"
+      ) &&
+      fourSurface["components/PricingUsageEstimator.tsx"].includes(
+        "rgba(255,78,205"
+      ),
+    "Create + Pricing glows use neon-pink rgba board tokens"
+  );
+}
 
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`

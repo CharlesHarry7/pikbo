@@ -130,7 +130,7 @@ export function HfProductRail() {
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-3 flex items-end justify-between gap-2">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--neon-pink)]">
               Suite
             </p>
             <p className="mt-0.5 text-[11px] text-white/40">
@@ -143,11 +143,11 @@ export function HfProductRail() {
               labelTry={headerTryLabel}
               labelDemo={headerDemoLabel}
               hideClipsChip
-              className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
+              className="text-[11px] font-bold text-[var(--neon-pink)] hover:underline"
             />
             <Link
               href={GENERATE_REMIX_HREF}
-              className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
+              className="text-[11px] font-bold text-[var(--neon-pink)] hover:underline"
               data-hf-rail-generate="remix"
               data-home-suite-360
             >
@@ -157,8 +157,8 @@ export function HfProductRail() {
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Free card — Free Mini product caps only when freeLiveOpen */}
-          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[#c8ff3d]/45 bg-[#c8ff3d]/[0.1] p-3.5 shadow-[0_0_32px_rgba(200,255,61,0.12)] sm:h-[11rem] sm:w-[10rem]">
-            <span className="relative z-10 inline-flex rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-black">
+          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[var(--neon-pink)]/45 bg-[var(--neon-pink)]/[0.1] p-3.5 shadow-[0_0_32px_rgba(255,78,205,0.12)] sm:h-[11rem] sm:w-[10rem]">
+            <span className="relative z-10 inline-flex rounded-full bg-[var(--neon-pink)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--void)]">
               Free
             </span>
             <p className="relative z-10 mt-2 text-[13px] font-black leading-tight text-white">
@@ -168,7 +168,7 @@ export function HfProductRail() {
                 labelDemo="Lab sample"
                 labelPlans="Plans"
                 hideClipsChip
-                className="font-black text-white group-hover:text-[#c8ff3d]"
+                className="font-black text-white group-hover:text-[var(--neon-pink)]"
               />
             </p>
             <p
@@ -193,7 +193,7 @@ export function HfProductRail() {
                 }
                 className={`group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border transition duration-200 hover:-translate-y-0.5 sm:h-[11rem] sm:w-[10rem] ${
                   p.hot
-                    ? "border-[#c8ff3d]/50 shadow-[0_0_32px_rgba(200,255,61,0.14)]"
+                    ? "border-[var(--neon-pink)]/50 shadow-[0_0_32px_rgba(255,78,205,0.14)]"
                     : "border-white/10 hover:border-white/30"
                 }`}
               >
@@ -218,14 +218,14 @@ export function HfProductRail() {
                   <span
                     className={`inline-flex w-fit rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${
                       p.hot
-                        ? "bg-[#c8ff3d] text-black"
+                        ? "bg-[var(--neon-pink)] text-[var(--void)]"
                         : "border border-white/20 bg-black/50 text-white/70 backdrop-blur"
                     }`}
                   >
                     {p.tag}
                   </span>
                   <div>
-                    <p className="text-[13px] font-black leading-tight text-white group-hover:text-[#c8ff3d]">
+                    <p className="text-[13px] font-black leading-tight text-white group-hover:text-[var(--neon-pink)]">
                       {p.title}
                     </p>
                     <p className="mt-0.5 text-[10px] leading-snug text-white/55">
