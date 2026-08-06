@@ -86,7 +86,7 @@ export function WorkflowShelf({
                   }}
                   className={`min-w-[8.75rem] max-w-[11rem] shrink-0 rounded-2xl border px-3 py-2.5 text-left transition duration-200 ${
                     active
-                      ? "border-[var(--mint)] bg-[var(--mint)]/15 shadow-[0_0_28px_rgba(200,255,61,0.15)]"
+                      ? "border-[var(--neon-pink)] bg-[var(--neon-pink)]/15 shadow-[0_0_28px_rgba(255,78,205,0.15)]"
                       : "border-white/12 bg-black/40 hover:border-white/28 hover:bg-black/55"
                   }`}
                 >
@@ -109,7 +109,7 @@ export function WorkflowShelf({
                 }
                 className={`min-w-[8.75rem] max-w-[11rem] shrink-0 rounded-2xl border px-3 py-2.5 text-left transition duration-200 ${
                   active
-                    ? "border-[var(--mint)] bg-[var(--mint)]/15 shadow-[0_0_28px_rgba(200,255,61,0.15)]"
+                    ? "border-[var(--neon-pink)] bg-[var(--neon-pink)]/15 shadow-[0_0_28px_rgba(255,78,205,0.15)]"
                     : "border-white/12 bg-black/40 hover:border-white/28 hover:bg-black/55"
                 }`}
               >
@@ -140,7 +140,7 @@ function WorkflowCardBody({
           <span
             className={`rounded-full px-1.5 py-px text-[8px] font-black uppercase tracking-wide ${
               active
-                ? "bg-[var(--mint)] text-black"
+                ? "bg-[var(--neon-pink)] text-[var(--void)]"
                 : "bg-white/10 text-white/60"
             }`}
           >
@@ -150,7 +150,7 @@ function WorkflowCardBody({
       </div>
       <span
         className={`mt-1.5 block text-[11px] font-bold leading-tight ${
-          active ? "text-[var(--mint)]" : "text-white/90"
+          active ? "text-[var(--neon-pink)]" : "text-white/90"
         }`}
       >
         {w.label}
