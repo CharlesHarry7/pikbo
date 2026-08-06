@@ -82,6 +82,17 @@ assert(
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
   "home order: Moment hero → proof wall → HF product rail → trust footer"
 );
+// AIT-177: Suite entry strip — one primary Generate→360 (not FreeTrial dual lime)
+const suiteEntry = read("components/SuiteEntryStrip.tsx");
+assert(
+  suiteEntry.includes('data-suite-primary-generate="360"') &&
+    suiteEntry.includes("data-suite-primary-generate-cta") &&
+    suiteEntry.includes('createGenerate360Href("suite-entry")') &&
+    suiteEntry.includes("Generate 360°") &&
+    suiteEntry.includes('data-suite-entry="generate-remix"') &&
+    suiteEntry.includes("border border-white/20"),
+  "SuiteEntryStrip must expose one primary Generate→360 door with secondary FreeTrial outline"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"
