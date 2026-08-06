@@ -529,6 +529,44 @@ assert(
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
 );
 
+// AIT-375: residual Free Mini marketing chips in static locale strings.
+assert(
+  !/"cta\.tryMiniFree":\s*"[^"]*Try Mini free/.test(i18nSource) &&
+    !/"cta\.tryMiniFree":\s*"[^"]*免费试用 Mini/.test(i18nSource) &&
+    !/"cta\.tryMiniFree":\s*"[^"]*Miniを無料/.test(i18nSource) &&
+    !/"cta\.tryMiniFree":\s*"[^"]*Prueba Mini gratis/.test(i18nSource),
+  "i18n cta.tryMiniFree must not sell Mini free as the public free path"
+);
+assert(
+  !/"home\.tryFree10s":\s*"[^"]*Mini 5s/.test(i18nSource) &&
+    !/"home\.tryFree10s":\s*"[^"]*Mini 5 秒/.test(i18nSource),
+  "i18n home.tryFree10s must not hardcode Mini 5s as public free path"
+);
+assert(
+  !/"home\.pitch\.b1":\s*"[^"]*Mini 5 秒/.test(i18nSource) &&
+    !/"home\.feat\.mini\.sub":\s*"[^"]*免费一次 5 秒/.test(i18nSource) &&
+    !/"home\.promo\.sub":\s*"[^"]*免费 Mini 试用/.test(i18nSource) &&
+    !/"home\.icp\.eyebrow":\s*"[^"]*免费 Mini 试用/.test(i18nSource) &&
+    !/"home\.hero1\.title":\s*"[^"]*Seedance Mini 免费路径/.test(i18nSource),
+  "i18n ZH marketing keys must not sell Free Mini as unconditional public trial"
+);
+assert(
+  i18nSource.includes("Try Lab sample →") &&
+    i18nSource.includes("Try free video · Lab sample") &&
+    i18nSource.includes("Cached Lab 样片 · 免费") &&
+    i18nSource.includes("配置配方 · 访问受控"),
+  "i18n residual free-path chips must stay Lab-first / access gated"
+);
+assert(
+  !/"create\.freeLock":\s*"[^"]*Free trial locked to Mini/.test(i18nSource) &&
+    !/"create\.freeLock":\s*"[^"]*免费试用锁定 Mini/.test(i18nSource),
+  "i18n create.freeLock must not imply public Free Mini lock as always open"
+);
+assert(
+  !/"onboard\.sub":\s*"[^"]*免费 Mini 5 秒/.test(i18nSource),
+  "i18n onboard.sub must not sell Free Mini 5s as unconditional public trial"
+);
+
 // AIT-298: Home suite residual — HowItWorks / Onboarding / FeatureCarousel.
 const howItWorksSource = read("components/HowItWorks.tsx");
 assert(
