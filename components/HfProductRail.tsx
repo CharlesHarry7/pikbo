@@ -123,7 +123,9 @@ export function HfProductRail() {
 
   return (
     <section
+      id="hf-product-rail"
       data-home-suite-rail="hf-product"
+      data-hf-product-rail="true"
       className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
       aria-label="Generate suite"
     >
