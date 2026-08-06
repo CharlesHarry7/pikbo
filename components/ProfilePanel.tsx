@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { loadHistory } from "@/lib/history";
 import {
   fetchMe,
@@ -9,12 +9,18 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 
 const PROFILE_GENERATE_HREF = createGenerate360Href("profile-panel");
+
+type SessionBoot = "checking" | "ready" | "timeout";
 
 type DurableClaim = {
   signedIn: boolean;
@@ -42,8 +48,13 @@ type ImageJobsProbe = {
   canceled?: number;
 };
 
+/**
+ * Profile chrome — 8s wall-clock /api/me boot so hung getSession cannot
+ * soft-stick plan / Free Mini labels forever (parity CreditsBadge / FreeTrialCta).
+ */
 export function ProfilePanel() {
   const [session, setSession] = useState<MeResponse | null>(null);
+  const [sessionBoot, setSessionBoot] = useState<SessionBoot>("checking");
   const [clips, setClips] = useState(0);
   const [jobsProbe, setJobsProbe] = useState<SessionJobsProbe | null>(null);
   const [imageJobsProbe, setImageJobsProbe] = useState<ImageJobsProbe | null>(
@@ -59,11 +70,22 @@ export function ProfilePanel() {
   });
   const [signingOut, setSigningOut] = useState(false);
 
+  const loadSession = useCallback(() => {
+    setSessionBoot("checking");
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+      .then((d) => {
+        setSession(d);
+        setSessionBoot("ready");
+      })
+      .catch((err) => {
+        setSession(null);
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+      });
+  }, []);
+
   useEffect(() => {
     function refreshGuest() {
-      void fetchMe().then((d) => {
-        if (d) setSession(d);
-      });
+      loadSession();
       setClips(loadHistory().length);
     }
 
@@ -218,7 +240,7 @@ export function ProfilePanel() {
       window.clearTimeout(t);
       window.removeEventListener(SESSION_EVENT, refresh);
     };
-  }, []);
+  }, [loadSession]);
 
   async function signOut() {
     setSigningOut(true);
@@ -233,45 +255,80 @@ export function ProfilePanel() {
         backend: null,
         reservedCredits: null,
       });
+      setSession(null);
+      setSessionBoot("ready");
     } finally {
       setSigningOut(false);
     }
   }
 
-  const perJob = session?.liveJobCredits ?? CREDITS_PER_VIDEO;
-  const demo = isDemoMode(session);
+  // Fail-closed: never claim Free Mini / paid plan while access is unknown.
+  const sessionKnown = sessionBoot === "ready" && session != null;
+  const accessUnknown = !sessionKnown;
+  const accessTimedOut = sessionBoot === "timeout";
+
+  const perJob = sessionKnown
+    ? (session?.liveJobCredits ?? CREDITS_PER_VIDEO)
+    : CREDITS_PER_VIDEO;
+  const demo = sessionKnown ? isDemoMode(session) : false;
   // Prefer /api/me durable (Bearer) then claim wallet — cookie is not live-spend authority (R0).
-  const durableBackend =
-    session?.durable?.backend ?? auth.backend ?? null;
+  const durableBackend = sessionKnown
+    ? (session?.durable?.backend ?? auth.backend ?? null)
+    : (auth.backend ?? null);
   const durableAvailable =
-    session?.durable && typeof session.durable.availableCredits === "number"
+    sessionKnown &&
+    session?.durable &&
+    typeof session.durable.availableCredits === "number"
       ? session.durable.availableCredits
       : auth.availableCredits;
   const displayCredits =
     auth.signedIn && durableAvailable !== null
       ? durableAvailable
-      : session?.credits;
-  const trialDone = freeTrialExhausted(session);
-  const freeLive = session?.freeTrial?.freeLive;
+      : sessionKnown
+        ? session?.credits
+        : undefined;
+  const trialDone = sessionKnown ? freeTrialExhausted(session) : false;
+  const freeLive = sessionKnown ? session?.freeTrial?.freeLive : undefined;
   const freeLiveModelLabel =
     freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "Free Mini";
-  const clipsLeft =
-    typeof session?.freeTrial?.clipsLeft === "number"
+  const clipsLeft = sessionKnown
+    ? typeof session?.freeTrial?.clipsLeft === "number"
       ? session.freeTrial.clipsLeft
       : displayCredits !== undefined && displayCredits !== null
         ? Math.floor(Number(displayCredits) / perJob)
-        : null;
-  const isFreePlan =
-    session?.freeTrial?.isFreePlan === true || session?.plan === "free";
+        : null
+    : auth.signedIn && durableAvailable !== null
+      ? Math.floor(Number(durableAvailable) / perJob)
+      : null;
+  const isFreePlan = sessionKnown
+    ? session?.freeTrial?.isFreePlan === true || session?.plan === "free"
+    : false;
 
-  const accountLine = !auth.signedIn
-    ? "Guest mode · saved on this device"
-    : durableBackend
-      ? "Signed in · balance and completed private results available across devices"
-      : "Signed in · loading account details";
+  const accountLine = accessTimedOut
+    ? "Could not verify access in time · retry or continue as guest"
+    : accessUnknown && sessionBoot === "checking"
+      ? "Checking account access…"
+      : !auth.signedIn
+        ? "Guest mode · saved on this device"
+        : durableBackend
+          ? "Signed in · balance and completed private results available across devices"
+          : "Signed in · loading account details";
+
+  const studioTitle = auth.signedIn
+    ? auth.email || "Signed-in studio"
+    : sessionKnown && session
+      ? `${session.planName} studio`
+      : accessTimedOut
+        ? "Studio · access unknown"
+        : sessionBoot === "checking"
+          ? "Opening studio…"
+          : "Guest studio";
 
   return (
-    <div className="card mt-8 space-y-4 p-6">
+    <div
+      className="card mt-8 space-y-4 p-6"
+      data-profile-boot={sessionBoot}
+    >
       <div className="flex items-center gap-3">
         <div
           className="grid h-14 w-14 place-items-center rounded-full text-xl"
@@ -279,17 +336,25 @@ export function ProfilePanel() {
         >
           🧸
         </div>
-        <div>
-          <p className="font-semibold">
-            {auth.signedIn
-              ? auth.email || "Signed-in studio"
-              : session
-                ? `${session.planName} studio`
-                : "Guest studio"}
-          </p>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold">{studioTitle}</p>
           <p className="text-xs text-[var(--fg-dim)]">
             {accountLine}
             {demo ? " · cached previews are free" : ""}
+            {accessTimedOut ? (
+              <>
+                {" · "}
+                <button
+                  type="button"
+                  onClick={() => loadSession()}
+                  data-profile-boot-retry
+                  className="font-semibold text-[var(--mint)] underline-offset-2 hover:underline"
+                  title="Retry access check"
+                >
+                  Retry
+                </button>
+              </>
+            ) : null}
           </p>
         </div>
       </div>
@@ -355,14 +420,15 @@ export function ProfilePanel() {
         </div>
       ) : null}
 
-      {/* Soft-launch freeTrial honesty — same contract as Create / SoftLaunchStrip */}
-      {session && isFreePlan && !demo ? (
+      {/* Soft-launch freeTrial honesty — only when session known (no Free Mini on hang). */}
+      {sessionKnown && isFreePlan && !demo ? (
         <div
           className={`rounded-xl border px-3 py-2.5 text-[11px] leading-relaxed ${
             trialDone
               ? "border-amber-400/35 bg-amber-400/[0.07] text-amber-50/95"
               : "border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] text-[var(--fg-muted)]"
           }`}
+          data-profile-free-trial={trialDone ? "used" : "open"}
         >
           {trialDone ? (
             <>
@@ -396,7 +462,8 @@ export function ProfilePanel() {
         </div>
       ) : null}
 
-      {session?.freeTrial &&
+      {sessionKnown &&
+      session?.freeTrial &&
       (session.freeTrial.failedLiveRefundPolicy ||
         session.freeTrial.ledgerTimeoutRefund ||
         session.freeTrial.ledgerCancelRefund) ? (
@@ -467,13 +534,17 @@ export function ProfilePanel() {
       </div>
 
       <p className="text-xs text-[var(--fg-muted)]">
-        {auth.signedIn
-          ? "Your balance and completed private results are available across devices; local history stays in this browser."
-          : demo
-            ? "Cached Lab previews cost 0 credits and do not process your upload."
-            : freeLive
-              ? `${freeLiveModelLabel} creates private ${freeLive.resolution}, ${freeLive.durationSec}-second clips for eligible accounts.`
-              : "Sign in to see whether real generation is available for your account."}
+        {accessTimedOut
+          ? "Could not verify live eligibility in time. Lab demos stay free — retry access or continue as guest."
+          : accessUnknown
+            ? "Checking whether real generation is available for this account…"
+            : auth.signedIn
+              ? "Your balance and completed private results are available across devices; local history stays in this browser."
+              : demo
+                ? "Cached Lab previews cost 0 credits and do not process your upload."
+                : freeLive
+                  ? `${freeLiveModelLabel} creates private ${freeLive.resolution}, ${freeLive.durationSec}-second clips for eligible accounts.`
+                  : "Sign in to see whether real generation is available for your account."}
       </p>
 
       <div className="flex flex-col gap-2">
