@@ -2593,7 +2593,13 @@ assert.match(
   batchStudio,
   /data-batch-content-pad=\{\s*isSellerPack\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/
 );
+// AIT-152: hide five-door tab on all /create (always-fixed-Moment sticky pair)
 assert.match(
+  appShell,
+  /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*create/
+);
+assert.match(appShell, /const create\s*=\s*path\.startsWith\(["']\/create["']\)/);
+assert.doesNotMatch(
   appShell,
   /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/
 );
