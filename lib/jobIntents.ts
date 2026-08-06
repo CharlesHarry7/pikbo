@@ -109,7 +109,12 @@ export function createGenerate360Href(source?: string): string {
   return createRemixHref(GENERATE_360_EFFECT, tag || undefined);
 }
 
-/** Lab sample first-run path — remix + try/sample flags CreateStudio hydrates. */
+/**
+ * Lab sample one-click first-run on the 360 Generate workbench.
+ * Emits effect=360-spin-showcase (via createGenerate360Href) + try=1&sample=
+ * so CreateStudio hydrates the Lab still and keeps the 360 recipe — never Moment
+ * chrome (dual-path resolveCreateRouteContract). Lab stills stay labeled not-your-photo.
+ */
 export function createLabSampleTryHref(sampleId = "scout"): string {
   const source =
     sampleId === "scout"

@@ -63,11 +63,15 @@
   --radius: 1rem;
 
   /*
-   * Mobile chrome clearance (AIT-150 / AIT-71)
+   * Mobile chrome clearance (AIT-150 / AIT-71 / AIT-359)
    * AppShell tab nav pads pb with env(safe-area-inset-bottom) on top of tab content
    * (--mobile-nav-content-h). Floating Generate CTAs must clear BOTH tab content AND
    * the home indicator — never sit under either.
    * Stacking: content < floating (40) < sticky nav/header (50).
+   *
+   * Sticky Generate content pads (AIT-344 residual / AIT-368): tab-sharing
+   * workbench clears sticky chrome + AppShell tab; nav-less fixed Moment
+   * clears sticky chrome + home indicator only.
    */
   --mobile-nav-content-h: 4.75rem;
   --mobile-nav-clearance: calc(
@@ -79,6 +83,19 @@
     calc(env(safe-area-inset-bottom, 0px) + 0.5rem)
   );
   --floating-generate-z: 40;
+  --sticky-generate-chrome-h: 5.75rem;
+  --sticky-generate-pad: calc(
+    var(--sticky-generate-chrome-h) + var(--mobile-nav-clearance)
+  );
+  --sticky-generate-pad-safe: calc(
+    var(--sticky-generate-chrome-h) + var(--floating-cta-safe-bottom)
+  );
+  --create-sticky-chrome-h: var(--sticky-generate-chrome-h);
+  --create-content-pad-safe: var(--sticky-generate-pad-safe);
+  --mobile-generate-bar-h: 3.25rem;
+  --mobile-generate-bar-pad: calc(
+    var(--mobile-generate-bar-h) + var(--mobile-nav-clearance) + 0.5rem
+  );
 
   /* shadcn-compatible aliases */
   --background: var(--bg);
