@@ -96,4 +96,29 @@ assert.match(showcase, /data-home-moment-showcase/);
 assert.match(showcase, /<h2\b/);
 assert.doesNotMatch(showcase, /<h1\b/);
 
+// AIT-220: CTA density — hero owns the sole primary Moment Create; showcase
+// dual doors are mid-page secondary (no filled primary / no data-home-moment-cta).
+const homeHero = read("components/HomeCinemaHero.tsx");
+assert.equal(
+  (homeHero.match(/data-home-moment-cta/g) || []).length,
+  1,
+  "hero must expose exactly one primary Moment CTA"
+);
+assert.doesNotMatch(
+  showcase,
+  /data-home-moment-cta(?:=|\s|>|\/)/,
+  "showcase must not claim the above-fold primary Moment CTA marker"
+);
+assert.match(showcase, /data-home-showcase-doors=["']secondary["']/);
+assert.match(showcase, /data-real-moment-cta/);
+assert.match(showcase, /data-moment-create-cta/);
+assert.match(showcase, /data-home-showcase-door=["']concept["']/);
+assert.match(showcase, /data-home-showcase-door=["']live-gated["']/);
+// No hero-grade filled chrome on dual doors (outline/secondary only).
+assert.doesNotMatch(
+  showcase,
+  /bg-\[linear-gradient\(135deg,#B14EFF,#FF4ECD\)\]/
+);
+assert.doesNotMatch(showcase, /rounded-full bg-\[#171719\]/);
+
 console.log("moment-rail-showcase-honesty-smoke: ok");

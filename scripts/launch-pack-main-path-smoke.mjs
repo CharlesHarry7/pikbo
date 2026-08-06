@@ -55,6 +55,12 @@ assert.equal(
   1,
   "home hero must expose exactly one primary Moment CTA"
 );
+// AIT-220: one above-fold primary; showcase dual doors are secondary chrome.
+const homeShowcase = read("components/HomeMomentShowcase.tsx");
+assert.doesNotMatch(homeShowcase, /data-home-moment-cta(?:=|\s|>|\/)/);
+assert.match(homeShowcase, /data-home-showcase-doors=["']secondary["']/);
+assert.match(homeShowcase, /data-real-moment-cta/);
+assert.match(homeShowcase, /data-moment-create-cta/);
 assert.doesNotMatch(homeHero, /Use this motion/);
 assert.match(homeHero, /Sample · Beatbot/);
 assert.match(homeHero, /Archive sample · 6s/);

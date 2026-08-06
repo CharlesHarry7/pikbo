@@ -44,11 +44,11 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const lcpPoster = "/demos/beatbot-still.webp";
-  // AIT-209: Moment hero primary (LCP) → Lab proof wall → Moment concept archive
-  // (HomeMomentShowcase dual doors) → HF product rail. One primary Create above
-  // fold (hero); showcase is mid-page concept rail + concept/Live dual CTAs.
-  // Generate→360 stays secondary via wall/rail helpers. No full Explore remount,
-  // Seller Pack, or fake UGC.
+  // AIT-209/AIT-220 CTA density: Moment hero is the only above-fold primary
+  // Create (data-home-moment-cta). Stack: hero → Lab proof wall → Moment
+  // concept archive (secondary dual doors) → HF product rail. Generate→360
+  // stays secondary via wall/rail helpers. No triple-primary doors, full
+  // Explore remount, Seller Pack, or fake UGC.
   const proofWall = buildHomeShowcaseFeed();
 
   return (
