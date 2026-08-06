@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * AIT-550 / AIT-541 / AIT-529 / AIT-469 / AIT-381: post-generate result fold.
+ * AIT-570 / AIT-550 / AIT-541 / AIT-529 / AIT-469 / AIT-381: post-generate result fold.
  *
  * Source + pure-logic contract:
  * - Resolver covers download / library / Lab replay / generate-again (re-spin)
@@ -10,6 +10,7 @@
  * - Fixed Moment path keeps generate-again sticky (no workbench fold bleed)
  * - Library primary owner-safe deep-link helper; Lab never claims private job
  * - Honest Lab vs Live provenance; freeLiveOpen / fixed Moment markers intact
+ * - Image Studio post-result: Animate in Generate sole primary (AIT-570)
  *
  * Run: node scripts/workbench-result-fold-smoke.mjs
  *   or: npm run workbench-result-fold-smoke
@@ -688,6 +689,100 @@ assert.ok(batchJobCardIdx > 0, "pack job card list must exist");
 assert.ok(
   batchJobCardIdx > batchStageIdx,
   "batch stage primary must render before pack job cards"
+);
+
+// ── Image Studio post-result one-primary (AIT-570) ────────────────────────
+const imageStudio = read("app/image/page.tsx");
+
+assert.match(
+  imageStudio,
+  /const stillReady\s*=\s*canHandOffStill\(imageUrl\)/,
+  "Image Studio must gate post-result fold on handoff-safe stillReady"
+);
+assert.match(
+  imageStudio,
+  /data-image-result-fold=["']done["']/,
+  "Image done fold must mark data-image-result-fold=done"
+);
+assert.match(
+  imageStudio,
+  /data-image-primary-kind=["']animate["']/,
+  "Image done fold primary kind must be animate"
+);
+assert.match(
+  imageStudio,
+  /data-image-primary=["']animate["']/,
+  "Animate in Generate must carry data-image-primary=animate"
+);
+assert.match(
+  imageStudio,
+  /data-image-handoff=["']create["'][\s\S]{0,120}data-image-primary=["']animate["']|data-image-primary=["']animate["'][\s\S]{0,120}data-image-handoff=["']create["']/,
+  "Animate primary must stay on create handoff (stashPendingStill path)"
+);
+assert.match(
+  imageStudio,
+  /Animate in Generate →/,
+  "Image done primary label remains Animate in Generate →"
+);
+assert.match(
+  imageStudio,
+  /data-image-secondary=["']generate-still["']/,
+  "Re-generate must demote to data-image-secondary=generate-still when still ready"
+);
+assert.match(
+  imageStudio,
+  /btn-ghost[\s\S]{0,200}data-image-secondary=["']generate-still["']|data-image-secondary=["']generate-still["'][\s\S]{0,200}btn-ghost/,
+  "Generate another still must be btn-ghost (not dual primary)"
+);
+assert.match(
+  imageStudio,
+  /Generate another demo · 0 credits|Generate another · \$\{CREDITS_PER_VIDEO\}/,
+  "Done-path re-generate labels must stay honest (demo 0 / credits)"
+);
+assert.match(
+  imageStudio,
+  /data-image-primary=["']generate-still["']/,
+  "Empty/pre-result path keeps Generate still as sole primary"
+);
+assert.match(
+  imageStudio,
+  /stashPendingStill\(imageUrl\)/,
+  "Animate handoff must still stash pending still for Generate"
+);
+assert.match(
+  imageStudio,
+  /freeStillsDemoOnly/,
+  "Free stills demo-only honesty gate must remain"
+);
+// Dual-primary regression: done fold must not render Generate still as btn-primary.
+const doneFoldIdx = imageStudio.indexOf('data-image-result-fold="done"');
+assert.ok(doneFoldIdx > 0, "done fold marker must exist");
+const doneFoldSlice = imageStudio.slice(doneFoldIdx, doneFoldIdx + 1800);
+assert.match(
+  doneFoldSlice,
+  /data-image-primary=["']animate["']/,
+  "done fold slice must include animate primary"
+);
+assert.doesNotMatch(
+  doneFoldSlice,
+  /data-image-primary=["']generate-still["']/,
+  "done fold must not promote Generate still as primary"
+);
+assert.match(
+  doneFoldSlice,
+  /className=["']btn btn-primary[^"']*["'][\s\S]{0,400}Animate in Generate →/,
+  "Animate remains btn-primary inside done fold"
+);
+// Primary order: Animate before ghost re-generate inside done fold.
+const animatePrimaryIdx = doneFoldSlice.indexOf('data-image-primary="animate"');
+const genSecondaryIdx = doneFoldSlice.indexOf(
+  'data-image-secondary="generate-still"'
+);
+assert.ok(animatePrimaryIdx > 0, "animate primary marker in fold");
+assert.ok(genSecondaryIdx > 0, "generate-still secondary marker in fold");
+assert.ok(
+  animatePrimaryIdx < genSecondaryIdx,
+  "Animate primary must render above Generate-another secondary"
 );
 
 console.log("workbench-result-fold-smoke: ok");
