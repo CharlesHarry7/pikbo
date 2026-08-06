@@ -16,7 +16,7 @@ export function PricingUsageEstimator() {
   const credits = packs * SELLER_PACK_LIVE_TOTAL_CREDITS;
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#111016] shadow-[0_30px_80px_-45px_rgba(255,78,205,.45)]">
+    <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#111016] shadow-[0_30px_80px_-45px_rgba(196,165,116,.45)]">
       <div className="grid lg:grid-cols-[1.25fr_.75fr]">
         <div className="p-6 sm:p-8">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--mint)]">
@@ -56,7 +56,7 @@ export function PricingUsageEstimator() {
           </div>
         </div>
 
-        <div className="flex flex-col justify-between border-t border-white/10 bg-[radial-gradient(circle_at_90%_0%,rgba(110,231,199,.16),transparent_55%)] p-6 sm:p-8 lg:border-l lg:border-t-0">
+        <div className="flex flex-col justify-between border-t border-white/10 bg-[radial-gradient(circle_at_90%_0%,rgba(196,165,116,.16),transparent_55%)] p-6 sm:p-8 lg:border-l lg:border-t-0">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--fg-dim)]">
               Fixed output

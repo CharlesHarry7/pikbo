@@ -67,7 +67,7 @@ export function HomeBrowseCta() {
         prefetch={false}
         tabIndex={visible ? 0 : -1}
         data-home-browse-generate="360"
-        className={`pointer-events-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl border border-[var(--neon-pink)]/50 bg-black/92 px-4 py-3 shadow-[0_0_40px_rgba(255,78,205,0.22),0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl transition hover:border-[var(--neon-pink)] hover:bg-black sm:max-w-lg ${
+        className={`pointer-events-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl border border-[var(--neon-pink)]/50 bg-black/92 px-4 py-3 shadow-[0_0_40px_rgba(196,165,116,0.22),0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl transition hover:border-[var(--neon-pink)] hover:bg-black sm:max-w-lg ${
           visible ? "" : "pointer-events-none"
         }`}
       >
