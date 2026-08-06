@@ -198,7 +198,7 @@ assert(
   "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
 
-// AIT-320: four-surface money path off residual competitor lime (board tokens)
+// AIT-320 / AIT-358: four-surface money path off residual competitor lime (board tokens)
 {
   const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
   const fourSurface = {
@@ -218,6 +218,17 @@ assert(
     ),
     // remount-ready (not mounted on / today; keep board-clean for north-star density)
     "components/HfExploreHome.tsx": read("components/HfExploreHome.tsx"),
+    // AIT-358: composition chrome still painted on Home/Create/Library/Pricing
+    "components/AutoPlayVideo.tsx": read("components/AutoPlayVideo.tsx"),
+    "components/GenerateWaitStage.tsx": read("components/GenerateWaitStage.tsx"),
+    "components/GenerateFailPanel.tsx": read("components/GenerateFailPanel.tsx"),
+    "components/GenerateSuiteChrome.tsx": read(
+      "components/GenerateSuiteChrome.tsx"
+    ),
+    "components/LanguageSwitcher.tsx": read("components/LanguageSwitcher.tsx"),
+    "components/Toast.tsx": read("components/Toast.tsx"),
+    "components/MobileGenerateBar.tsx": read("components/MobileGenerateBar.tsx"),
+    "components/DeliveryChecklist.tsx": read("components/DeliveryChecklist.tsx"),
   };
   for (const [rel, src] of Object.entries(fourSurface)) {
     assert(
@@ -243,6 +254,29 @@ assert(
         "rgba(255,78,205"
       ),
     "Create + Pricing glows use neon-pink rgba board tokens"
+  );
+  assert(
+    fourSurface["components/AutoPlayVideo.tsx"].includes("var(--neon-pink)") &&
+      fourSurface["components/GenerateWaitStage.tsx"].includes(
+        "rgba(255,78,205"
+      ) &&
+      fourSurface["components/GenerateFailPanel.tsx"].includes(
+        "var(--neon-pink)"
+      ) &&
+      fourSurface["components/GenerateSuiteChrome.tsx"].includes(
+        "var(--neon-pink)"
+      ) &&
+      fourSurface["components/LanguageSwitcher.tsx"].includes(
+        "var(--neon-pink)"
+      ) &&
+      fourSurface["components/Toast.tsx"].includes("rgba(255,78,205") &&
+      fourSurface["components/MobileGenerateBar.tsx"].includes(
+        "rgba(255,78,205"
+      ) &&
+      fourSurface["components/DeliveryChecklist.tsx"].includes(
+        "var(--neon-pink)"
+      ),
+    "Money-path composition chrome uses neon-pink board tokens (AIT-358)"
   );
 }
 

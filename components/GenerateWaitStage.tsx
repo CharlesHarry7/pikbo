@@ -155,7 +155,7 @@ export function GenerateWaitStage({
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           background:
-            "radial-gradient(ellipse 70% 50% at 50% 40%, rgba(200,255,61,0.12), transparent 70%)",
+            "radial-gradient(ellipse 70% 50% at 50% 40%, rgba(255,78,205,0.12), transparent 70%)",
         }}
       />
 
@@ -167,11 +167,11 @@ export function GenerateWaitStage({
             alt=""
             width={compact ? 64 : 88}
             height={compact ? 64 : 88}
-            className={`rounded-2xl object-cover ring-2 ring-[var(--mint)]/40 shadow-[0_0_32px_rgba(200,255,61,0.2)] ${
+            className={`rounded-2xl object-cover ring-2 ring-[var(--neon-pink)]/40 shadow-[0_0_32px_rgba(255,78,205,0.2)] ${
               compact ? "h-16 w-16" : "h-[5.5rem] w-[5.5rem]"
             }`}
           />
-          <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-[var(--mint)] text-[10px] font-black text-black shadow-[0_0_12px_rgba(200,255,61,0.5)]">
+          <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-[var(--neon-pink)] text-[10px] font-black text-[var(--void)] shadow-[0_0_12px_rgba(255,78,205,0.5)]">
             <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-black/20 border-t-black" />
           </span>
         </div>
@@ -242,7 +242,8 @@ export function GenerateWaitStage({
           className="h-full rounded-full transition-all duration-500 ease-out"
           style={{
             width: `${pct}%`,
-            background: "var(--grad, linear-gradient(90deg,#c8ff3d,#7dffb3))",
+            background:
+              "var(--grad, linear-gradient(90deg,var(--brand),var(--neon-pink)))",
           }}
         />
       </div>
@@ -357,7 +358,7 @@ export function GenerateWaitMobileStrip({
           className="h-full rounded-full transition-all duration-500"
           style={{
             width: `${pct}%`,
-            background: "var(--grad, #c8ff3d)",
+            background: "var(--grad, var(--neon-pink))",
           }}
         />
       </div>
