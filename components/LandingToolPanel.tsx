@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   historyFieldsFromSuccess,
   postGenerateWithRetry,
 } from "@/lib/generateClient";
-import { canRetryGenerateFailure } from "@/lib/generateRecoveryPolicy";
+import {
+  canRetryGenerateFailure,
+  planGenerateWaitLeave,
+  shouldShowGenerateWaitDetach,
+} from "@/lib/generateRecoveryPolicy";
 import { downloadVideoFile, pushHistory } from "@/lib/history";
 import {
   canLiveGenerate,
@@ -117,8 +122,22 @@ export function LandingToolPanel({
   const [privateResult, setPrivateResult] = useState(false);
   /** Device-local bible SKU — carry into AfterPath Next SKU / Seller Pack hops. */
   const [toySku, setToySku] = useState<string>("");
+  /**
+   * Durable recovery UI — checking/waiting unlocks non-destructive leave
+   * immediately (Create/Batch parity). Never invent a second generate.
+   */
+  const [recoveringSavedResult, setRecoveringSavedResult] = useState(false);
+  const [awaitingPrimaryAfterRecovery, setAwaitingPrimaryAfterRecovery] =
+    useState(false);
   const generateAbortRef = useRef<AbortController | null>(null);
+  /**
+   * When true, UI stopped waiting but the original /api/generate must keep
+   * running (no abort, no ledger cancel invent, no refund restore invent).
+   */
+  const detachedWaitRef = useRef(false);
+  const landingMountedRef = useRef(true);
   const resultVideoRef = useRef<HTMLVideoElement | null>(null);
+  const router = useRouter();
   const toast = useToast();
   const downloadAllowed = canDownloadResult({
     demo,
@@ -210,22 +229,57 @@ export function LandingToolPanel({
   }, []);
 
   useEffect(() => {
+    landingMountedRef.current = true;
     return () => {
-      generateAbortRef.current?.abort();
+      // Non-destructive leave: drop UI ownership only. Explicit Cancel is the
+      // sole path that aborts primary + best-effort cancels the ledger.
+      landingMountedRef.current = false;
       generateAbortRef.current = null;
     };
   }, []);
 
   function cancelInFlightGenerate() {
+    const plan = planGenerateWaitLeave("cancel");
+    if (!plan.abortPrimary) return;
     const ctrl = generateAbortRef.current;
     if (!ctrl) return;
+    // Explicit cancel only — abort signal triggers ledger cancel in generateClient.
+    // Detach (leaveWaitingKeepBackground) never calls abort().
     ctrl.abort();
     generateAbortRef.current = null;
+    detachedWaitRef.current = false;
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
     // Immediate settlement honesty until the aborted POST resolves.
     setFailCreditState("refund unconfirmed");
     toast(
       "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"
     );
+  }
+
+  /**
+   * Stop waiting on Landing without aborting the original generate POST or
+   * inventing a refund restore. User can open Library while the same private
+   * task finishes.
+   */
+  function leaveWaitingKeepBackground() {
+    const plan = planGenerateWaitLeave("detach");
+    if (plan.abortPrimary || plan.cancelLedger || plan.startNewGenerate) {
+      // Defensive: detach plan must never harm the in-flight job.
+      return;
+    }
+    // Drop the AbortController ref without abort() so cleanup cannot cancel.
+    generateAbortRef.current = null;
+    detachedWaitRef.current = true;
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
+    setElapsed(0);
+    setStatus("idle");
+    toast(
+      "Still generating in the background · open Library when ready — no cancel sent"
+    );
+    // Soft client navigation keeps the original fetch alive in this document.
+    router.push("/library");
   }
 
   function replayResultVideo() {
@@ -425,6 +479,9 @@ export function LandingToolPanel({
     setError(null);
     setFailRetryAfterSec(null);
     setFailCreditState(null);
+    setLastFailCode(null);
+    setLastFailFatal(false);
+    setLastFailPaywall(false);
     setVideoUrl(null);
     setRequestId(null);
     setPrivateResult(false);
@@ -432,7 +489,11 @@ export function LandingToolPanel({
     setResultSettlement(null);
     setServerEcho(false);
     setElapsed(0);
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
+    detachedWaitRef.current = false;
     setStatus("generating");
+    // Abort any prior in-flight POST before starting a new one (explicit replace).
     generateAbortRef.current?.abort();
     const abortCtrl = new AbortController();
     generateAbortRef.current = abortCtrl;
@@ -455,11 +516,42 @@ export function LandingToolPanel({
         maxRetries: 1,
         fallbackImage: useAsset && image ? image : undefined,
         signal: abortCtrl.signal,
+        onRecoveryState: (state) => {
+          if (detachedWaitRef.current || !landingMountedRef.current) return;
+          setRecoveringSavedResult(
+            state === "checking" || state === "waiting"
+          );
+          setAwaitingPrimaryAfterRecovery(state === "awaiting_primary");
+        },
       }
     );
     if (generateAbortRef.current === abortCtrl) {
       generateAbortRef.current = null;
     }
+
+    // Detached wait / unmounted Landing: never abort, cancel, or setState for
+    // fail/refund invent. On success still persist to device Library.
+    if (detachedWaitRef.current || !landingMountedRef.current) {
+      if (result.ok) {
+        const data = result.data;
+        pushHistory(
+          historyFieldsFromSuccess(data, {
+            effect: effectSlug,
+            effectName,
+            fallbackDuration: duration,
+            fallbackAspect: aspectRatio,
+            fallbackResolution: resolution,
+            sku: toySku || undefined,
+          })
+        );
+      }
+      detachedWaitRef.current = false;
+      return;
+    }
+
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
+
     // Dead asset after TTL/process restart — clear and re-register for next try.
     if (
       (!result.ok && result.code === "ASSET_NOT_FOUND") ||
@@ -565,6 +657,16 @@ export function LandingToolPanel({
     : status === "done"
       ? 100
       : 0;
+  /**
+   * Live recovery / long-wait unlocks non-destructive leave (Create/Batch
+   * parity). Demo Lab never detaches to private Library.
+   */
+  const showLandingDetach = shouldShowGenerateWaitDetach({
+    demoMode,
+    elapsedSec: elapsed,
+    recoveryChecking: recoveringSavedResult,
+    awaitingPrimary: awaitingPrimaryAfterRecovery,
+  });
 
   // Prefer samples tagged for this effect, else all
   const samples = [
@@ -790,14 +892,35 @@ export function LandingToolPanel({
           </label>
 
           {busy ? (
-            <button
-              type="button"
-              onClick={cancelInFlightGenerate}
-              title="Aborts this browser request. Soft-launch may still finish server-side; refund unconfirmed until balance confirms."
-              className="btn btn-ghost w-full border border-amber-400/40 text-amber-100"
-            >
-              Cancel request · {elapsed}s
-            </button>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={cancelInFlightGenerate}
+                title="Aborts this browser request. Soft-launch may still finish server-side; refund unconfirmed until balance confirms."
+                className="btn btn-ghost w-full border border-amber-400/40 text-amber-100"
+                data-generate-leave="cancel"
+                data-landing-leave="cancel"
+              >
+                Cancel request · {elapsed}s
+              </button>
+              {showLandingDetach ? (
+                <button
+                  type="button"
+                  onClick={leaveWaitingKeepBackground}
+                  className="btn btn-ghost w-full border border-[var(--mint)]/35 text-[var(--mint)]"
+                  title="Stop waiting here. Does not abort the original generate POST or claim a refund."
+                  data-generate-leave="detach"
+                  data-landing-leave="detach"
+                >
+                  Open Library · keep generating
+                </button>
+              ) : null}
+              <p className="text-center text-[10px] text-[var(--fg-dim)]">
+                {showLandingDetach
+                  ? "Leave without cancel — original job may finish server-side. No refund invent; check balance before a new attempt."
+                  : "Generating… Cancel aborts this tab wait. Live debit may still settle — check balance before retry."}
+              </p>
+            </div>
           ) : trialDone && isFree && freeLiveOpen ? (
             <div className="space-y-2">
               <p className="rounded-lg border border-amber-300/25 bg-amber-300/[0.06] px-3 py-2 text-[11px] leading-snug text-amber-100">
@@ -907,6 +1030,9 @@ export function LandingToolPanel({
               image={image}
               effectLabel={effectName}
               onCancel={cancelInFlightGenerate}
+              onLeaveToLibrary={leaveWaitingKeepBackground}
+              recoveryChecking={recoveringSavedResult}
+              awaitingPrimary={awaitingPrimaryAfterRecovery}
               compact
               className="min-h-[220px]"
             />
