@@ -10,8 +10,11 @@ import {
   toPublicJob,
 } from "@/lib/generationJobs";
 import {
+  getPrivateLibraryJobForOwner,
+  isOwnerVisibleLibraryJob,
   listPrivateGenerationResults,
   mergePrivateLibraryWithLocalLedger,
+  type PrivateLibraryJob,
 } from "@/lib/privateGenerationResults";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 
@@ -19,6 +22,12 @@ export const runtime = "nodejs";
 
 /** Soft-launch Library recovery page size (newest first). */
 const SESSION_JOBS_LIST_LIMIT = 50;
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
 
 /**
  * Library listings never expose a provider URL or Supabase signed object URL.
@@ -79,6 +88,10 @@ export async function HEAD() {
  * Cancel by jobId / requestId / idempotencyKey (body or query).
  * Parity with DELETE /api/image — used when client aborts mid-POST before
  * a jobId is known. Does not interrupt soft-launch fal mid-flight.
+ *
+ * AIT-193: durable private Moments never use process-memory Cancel (item
+ * DELETE parity). Owner durable UUID → DURABLE_NO_CANCEL; missing/foreign
+ * stay uniform NOT_FOUND (no ownership leak).
  */
 export async function DELETE(req: Request) {
   const session = await ensureSession();
@@ -114,6 +127,50 @@ export async function DELETE(req: Request) {
     idempotencyKey,
   });
   if (!result.ok) {
+    // Durable owner path — never invent a process-memory cancel success.
+    if (result.code === "NOT_FOUND" && id && isUuid(id)) {
+      const authUser = await getAuthUserFromRequest(req);
+      if (authUser) {
+        const privateLookup = await getPrivateLibraryJobForOwner({
+          jobId: id,
+          userId: authUser.id,
+        });
+        if (!privateLookup.ok) {
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_DETAIL_UNAVAILABLE",
+              jobId: id,
+              message:
+                "Private Library could not verify this Moment for Cancel. Retry when storage is ready.",
+              mode: "supabase-private",
+              durable: true,
+            },
+            { status: 503 }
+          );
+        }
+        if (privateLookup.job) {
+          const open =
+            privateLookup.job.status === "queued" ||
+            privateLookup.job.status === "running";
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_NO_CANCEL",
+              jobId: id,
+              message: open
+                ? "This durable Moment is still rendering. Refresh Library — process-memory Cancel does not apply."
+                : "This durable Moment cannot use process-memory Cancel. Refresh Library or start a new attempt from Create.",
+              mode: "supabase-private",
+              durable: true,
+              status: privateLookup.job.status,
+            },
+            { status: 422 }
+          );
+        }
+      }
+    }
+
     const status =
       result.code === "NOT_FOUND"
         ? 404
@@ -127,6 +184,7 @@ export async function DELETE(req: Request) {
         ok: false,
         code: result.code,
         message: result.message,
+        mode: "local-memory",
         jobId: result.job?.id,
       },
       { status }
@@ -161,12 +219,31 @@ export async function GET(req: Request) {
   const timedOut = sweepTimedOutJobs();
   // Owner-scoped durable rows across queued|running|succeeded|failed|canceled.
   // Anonymous / other accounts never receive these (authUser required).
-  const privateJobs = authUser
-    ? await listPrivateGenerationResults({
-        userId: authUser.id,
-        limit: SESSION_JOBS_LIST_LIMIT,
-      })
-    : [];
+  // AIT-319: signed-in owners must not get ok:true + empty durable when private
+  // storage/query is down — that invents an empty Library. Fail closed with
+  // DURABLE_LIST_UNAVAILABLE so the client shows Retry instead of empty shelf.
+  let privateJobs: PrivateLibraryJob[] = [];
+  if (authUser) {
+    const durableList = await listPrivateGenerationResults({
+      userId: authUser.id,
+      limit: SESSION_JOBS_LIST_LIMIT,
+    });
+    if (!durableList.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "DURABLE_LIST_UNAVAILABLE",
+          message:
+            "Private Library could not be loaded. Your Moments are not shown as empty — retry when storage is ready.",
+          mode: "supabase-private",
+          durable: true,
+          jobs: [],
+        },
+        { status: 503 }
+      );
+    }
+    privateJobs = durableList.jobs;
+  }
   // The local store is capped at 200 rows. Read all of it so a current-process
   // mirror of a durable result can be de-duplicated before counts and listing.
   const localJobs = listJobsForSession(session.id, 200).map((job) =>
@@ -187,6 +264,10 @@ export async function GET(req: Request) {
     },
     listLimit: SESSION_JOBS_LIST_LIMIT,
   });
+  // Fail-closed owner list: second gate after pure merge pre-slice filter
+  // (AIT-274 isOwnerVisibleLibraryJob / mergePrivateLibraryWithLocalLedger).
+  const ownerJobs = merged.jobs.filter(isOwnerVisibleLibraryJob);
+
   return NextResponse.json({
     ok: true,
     mode:
@@ -204,7 +285,7 @@ export async function GET(req: Request) {
     touchedOpen: 0,
     /** Newest-first page size for `jobs` (histogram may count more). */
     listLimit: SESSION_JOBS_LIST_LIMIT,
-    listed: merged.jobs.length,
+    listed: ownerJobs.length,
     /** Full session + durable-only job count (jobs[] may be a newest page). */
     total: merged.total,
     /** Full histogram including durable open/failed/canceled — HEAD parity. */
@@ -220,7 +301,7 @@ export async function GET(req: Request) {
       download: "/api/downloads/[id]",
     },
     session: publicCachedSession(session),
-    jobs: merged.jobs,
+    jobs: ownerJobs,
   });
 }
 

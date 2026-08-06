@@ -216,7 +216,7 @@ assert.match(status, /mine === "recent"/);
 assert.doesNotMatch(status, /\bobjectKey\s*:|\bproviderRequestId\s*:/);
 // Library MVP: account-owned generations only. The retired Seller Pack,
 // device-history, and stills-shelf UI must not reappear here.
-assert.match(library, /fetchMe\(\)/);
+assert.match(library, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
 assert.match(library, /if \(!me\?\.signedIn\)/);
 assert.match(library, /href=["']\/login\?next=\/library["']/);
 assert.match(library, /fetch\(["']\/api\/generations["']/);
