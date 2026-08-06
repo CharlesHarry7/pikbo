@@ -1832,6 +1832,12 @@ export function CreateStudio({
       data-create-content-pad={
         fixedMomentContract ? "safe-bottom" : "mobile-nav"
       }
+      data-studio-contract={
+        fixedMomentContract ? "fixed-moment" : "generate-workbench"
+      }
+      data-private-create-fold={
+        fixedMomentContract ? "upload-sticky" : undefined
+      }
     >
       {/* Suite chrome: desktop only — mobile uses bottom nav + Modules shelf */}
       {!fixedMomentContract && (
@@ -1839,19 +1845,26 @@ export function CreateStudio({
           <GenerateSuiteChrome compact showSellerPack={privateUploadEnabled} />
         </div>
       )}
-      {/* ── Mode banner: demo vs live (W5) · tighter on phone ── */}
+      {/* ── Mode banner: demo vs live (W5) · AIT-171: single-row on fixed Moment mobile ── */}
       <div
         role="status"
-        className={`border-b px-4 py-1.5 sm:py-2.5 ${
+        className={`border-b px-4 ${
+          fixedMomentContract ? "py-1 sm:py-2" : "py-1.5 sm:py-2.5"
+        } ${
           bannerIsDemo
             ? "border-white/10 bg-white/[0.04]"
             : "border-[var(--mint)]/25 bg-[var(--mint)]/[0.08]"
         }`}
+        data-mode-banner={fixedMomentContract ? "moment-compact" : "default"}
       >
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
+        <div
+          className={`mx-auto flex max-w-6xl items-center justify-between gap-2 ${
+            fixedMomentContract ? "flex-nowrap" : "flex-wrap"
+          }`}
+        >
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
             <span
-              className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide ${
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide sm:px-2.5 sm:text-[10px] ${
                 bannerIsDemo
                   ? "bg-white/10 text-white/80"
                   : "bg-[var(--mint)] text-black"
@@ -1873,7 +1886,7 @@ export function CreateStudio({
                     ? "Private Fast validation"
                     : PROVENANCE.liveGeneration}
             </span>
-            <p className="text-[11px] leading-snug text-[var(--fg-muted)] sm:text-xs">
+            <p className="min-w-0 truncate text-[10px] leading-snug text-[var(--fg-muted)] sm:text-xs">
               {showingCompletedResult && activeVersion ? (
                 activeVersion.demo ? (
                   <>
@@ -1895,9 +1908,19 @@ export function CreateStudio({
                 )
               ) : fixedMomentContract ? (
                 privateUploadEnabled ? (
-                  <>Your owned photo · 9:16 · 5s · 720p · 10 credits</>
+                  <>
+                    <span className="sm:hidden">Owned photo · 10 cr</span>
+                    <span className="hidden sm:inline">
+                      Your owned photo · 9:16 · 5s · 720p · 10 credits
+                    </span>
+                  </>
                 ) : (
-                  <>Sign in before any product photo is accepted or processed</>
+                  <>
+                    <span className="sm:hidden">Sign in required</span>
+                    <span className="hidden sm:inline">
+                      Sign in before any product photo is accepted or processed
+                    </span>
+                  </>
                 )
               ) : demoMode ? (
                 <>
@@ -1936,7 +1959,12 @@ export function CreateStudio({
               )}
             </p>
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-[var(--fg-muted)]">
+          {/* AIT-171: hide secondary access row on fixed Moment phone — saves a wrap line */}
+          <div
+            className={`items-center gap-3 text-[11px] text-[var(--fg-muted)] ${
+              fixedMomentContract ? "hidden sm:flex" : "flex"
+            }`}
+          >
             {privateUploadEnabled ? (
               <>
                 {session ? (
@@ -2016,11 +2044,18 @@ export function CreateStudio({
         </div>
       )}
 
-      {/* ── Mobile first-run: goal → upload → recipe → generate (CD Phase A) ── */}
-      <div className="border-b border-[var(--border)] px-4 py-2 lg:hidden">
-        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--mint)]/85">
-          Creative Director · commercial path
-        </p>
+      {/* ── Mobile first-run steps · AIT-171: fixed Moment omits CD label (fold) ── */}
+      <div
+        className={`border-b border-[var(--border)] px-4 lg:hidden ${
+          fixedMomentContract ? "py-1" : "py-2"
+        }`}
+        data-first-run-path={fixedMomentContract ? "compact" : "full"}
+      >
+        {!fixedMomentContract ? (
+          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--mint)]/85">
+            Creative Director · commercial path
+          </p>
+        ) : null}
         <ol
           className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide"
           aria-label="Create steps"
@@ -2178,8 +2213,17 @@ export function CreateStudio({
           ) : null}
         </aside>
 
-        {/* ── Controls: upload → recipe → preflight ── */}
-        <section className="space-y-4 overflow-y-auto border-b border-white/[0.07] bg-[#08080a] p-4 lg:max-h-[calc(100vh-8rem)] lg:border-b-0 lg:border-r">
+        {/* ── Controls: upload → recipe → preflight (AIT-171 tighter on fixed Moment) ── */}
+        <section
+          className={`overflow-y-auto border-b border-white/[0.07] bg-[#08080a] lg:max-h-[calc(100vh-8rem)] lg:border-b-0 lg:border-r ${
+            fixedMomentContract
+              ? "space-y-2.5 p-3 sm:space-y-3 sm:p-4"
+              : "space-y-4 p-4"
+          }`}
+          data-private-controls={
+            fixedMomentContract ? "above-fold" : undefined
+          }
+        >
           {upgradedBanner && (
             <div className="rounded-xl border border-[var(--mint)]/40 bg-[color-mix(in_srgb,var(--mint)_10%,transparent)] px-3 py-2 text-xs">
               Private allowance active — 720p path, no on-player watermark.
@@ -2260,8 +2304,13 @@ export function CreateStudio({
                 className={`group/drop relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
                   image
                     ? "aspect-[16/10] border-[var(--mint)]/25 ring-1 ring-[var(--mint)]/15"
-                    : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:aspect-video"
+                    : fixedMomentContract
+                      ? "min-h-[118px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:min-h-[140px] sm:aspect-video"
+                      : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:aspect-video"
                 }`}
+                data-upload-zone={
+                  fixedMomentContract ? "private-moment" : "default"
+                }
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDrop}
               >
@@ -2278,14 +2327,31 @@ export function CreateStudio({
                     </span>
                   </>
                 ) : (
-                  <span className="px-6 text-center text-sm text-[var(--fg-dim)]">
-                    <span className="mb-2 mx-auto grid h-12 w-12 place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.08] text-2xl" aria-hidden>
+                  <span
+                    className={`px-4 text-center text-[var(--fg-dim)] sm:px-6 ${
+                      fixedMomentContract ? "text-[13px] sm:text-sm" : "text-sm"
+                    }`}
+                  >
+                    <span
+                      className={`mx-auto grid place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.08] ${
+                        fixedMomentContract
+                          ? "mb-1.5 h-10 w-10 text-xl sm:mb-2 sm:h-12 sm:w-12 sm:text-2xl"
+                          : "mb-2 h-12 w-12 text-2xl"
+                      }`}
+                      aria-hidden
+                    >
                       🧸
                     </span>
                     <span className="block font-semibold text-white/80">
                       {t("create.dropPhoto")}
                     </span>
-                    <span className="mt-1 block text-xs text-white/45">
+                    <span
+                      className={`mt-1 block text-white/45 ${
+                        fixedMomentContract
+                          ? "text-[10px] sm:text-xs"
+                          : "text-xs"
+                      }`}
+                    >
                       {t("create.dropHint")}
                     </span>
                   </span>
@@ -2303,10 +2369,12 @@ export function CreateStudio({
             <div
               id="create-photo-step"
               data-public-single-preview="lab-only"
-              className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-4"
+              className={`rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] ${
+                fixedMomentContract ? "p-3 sm:p-4" : "p-4"
+              }`}
             >
               <p
-                className="text-xs font-black uppercase tracking-[0.12em] text-[var(--mint)]"
+                className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--mint)] sm:text-xs"
                 data-studio-open-state={sessionBoot}
               >
                 {sessionResolved
@@ -2315,14 +2383,24 @@ export function CreateStudio({
                     : "Public Lab preview · no upload"
                   : "Opening studio…"}
               </p>
-              <p className="mt-2 text-sm font-bold text-white">
+              <p
+                className={`mt-1.5 font-bold text-white sm:mt-2 ${
+                  fixedMomentContract ? "text-[13px] sm:text-sm" : "text-sm"
+                }`}
+              >
                 {sessionResolved
                   ? sessionBoot === "timeout"
                     ? "Lab samples still work. Retry the access check or continue with a cached preview."
-                    : "Choose a Pikbo Lab sample below."
+                    : fixedMomentContract
+                      ? "Lab sample path · sign in for owned-photo upload."
+                      : "Choose a Pikbo Lab sample below."
                   : "Verifying private-beta access — Lab samples stay available if this fails."}
               </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-[var(--fg-muted)]">
+              <p
+                className={`mt-1 text-[11px] leading-relaxed text-[var(--fg-muted)] ${
+                  fixedMomentContract ? "hidden sm:block" : ""
+                }`}
+              >
                 Public preview does not accept, register, or process your
                 product photo. Invited signed-in accounts see a separate
                 owner-only upload control here.
@@ -2374,16 +2452,27 @@ export function CreateStudio({
           )}
 
           {/* Moment validation has one measured outcome; the general studio keeps
-              its job rail for later exploration. */}
+              its job rail for later exploration.
+              AIT-171: compact fixed-format strip so upload stays above fold. */}
           {fixedMomentContract ? (
-            <div className="rounded-xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] px-3 py-2.5">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]/80">
+            <div
+              className="rounded-xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] px-3 py-1.5 sm:py-2.5"
+              data-fixed-moment-format="compact"
+              data-first-run-step="recipe"
+            >
+              <p className="hidden text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]/80 sm:block">
                 Fixed validation format
               </p>
-              <p className="mt-1 text-sm font-bold text-white">
-                Street Power-Up · vertical drop-day launch moment
+              <p className="text-[13px] font-bold text-white sm:mt-1 sm:text-sm">
+                <span className="sm:hidden">
+                  Street Power-Up · 9:16 · 5s · 720p ·{" "}
+                  <span className="text-[var(--mint)]">10 cr</span>
+                </span>
+                <span className="hidden sm:inline">
+                  Street Power-Up · vertical drop-day launch moment
+                </span>
               </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-white/55">
+              <p className="mt-1 hidden text-[11px] leading-relaxed text-white/55 sm:block">
                 One owned toy photo · Fast · 9:16 · 5s · 720p ·{" "}
                 <span className="font-semibold text-[var(--mint)]">
                   10 credits on completion
@@ -3723,9 +3812,10 @@ export function CreateStudio({
       </div>
 
       {/* ── Sticky mobile primary CTA
-          AIT-141/152/159: fixed Moment hides five-door tab → sticky on
+          AIT-141/152/159/171: fixed Moment hides five-door tab → sticky on
           --floating-cta-safe-bottom only (no ghost tab / double pad).
-          Generic Create still shares the tab bar → clear tab + home indicator. ── */}
+          Generic Create still shares the tab bar → clear tab + home indicator.
+          Private first-run keeps upload / Generate primary on first screen. ── */}
       <div
         className={
           fixedMomentContract
@@ -3739,6 +3829,9 @@ export function CreateStudio({
         }
         data-create-sticky-fold={
           fixedMomentContract ? "navless" : "with-tab"
+        }
+        data-private-create-sticky={
+          fixedMomentContract ? "first-run" : undefined
         }
       >
         {image ? (

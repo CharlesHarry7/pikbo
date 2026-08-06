@@ -445,6 +445,33 @@ assert.doesNotMatch(
   "fixed Moment Create page className must not carry tab-era pb-24 under sticky"
 );
 
+// AIT-171: private CreateStudio first-run fold (upload + sticky above fold)
+assert.match(
+  createPageSrc,
+  /data-private-create-fold=["']upload-sticky["']/,
+  "private Create page must mark upload-sticky fold intent"
+);
+assert.match(
+  createStudioSrc,
+  /data-private-create-fold=\{\s*fixedMomentContract\s*\?\s*["']upload-sticky["']\s*:\s*undefined\s*\}/,
+  "CreateStudio private fold marker must gate on fixedMomentContract"
+);
+assert.match(
+  createStudioSrc,
+  /data-private-create-sticky=\{\s*fixedMomentContract\s*\?\s*["']first-run["']\s*:\s*undefined\s*\}/,
+  "CreateStudio sticky must mark private first-run primary"
+);
+assert.match(
+  createStudioSrc,
+  /data-upload-zone=\{\s*fixedMomentContract\s*\?\s*["']private-moment["']\s*:\s*["']default["']\s*\}/,
+  "private Moment upload zone marker required"
+);
+assert.match(
+  createStudioSrc,
+  /data-first-run-path=\{fixedMomentContract\s*\?\s*["']compact["']\s*:\s*["']full["']\}/,
+  "fixed Moment path chrome compact marker required"
+);
+
 // AIT-152 + AIT-141: AppShell hide pairs with always-fixed-Moment Create sticky
 assert.match(
   appShellSrc,
