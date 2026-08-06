@@ -445,7 +445,7 @@ assert.doesNotMatch(
   "fixed Moment Create page className must not carry tab-era pb-24 under sticky"
 );
 
-// AppShell must hide mobile tab on fixed Moment entry (pairs with safe-bottom sticky)
+// AIT-152 + AIT-141: AppShell hide pairs with always-fixed-Moment Create sticky
 assert.match(
   appShellSrc,
   /const fixedMomentEntry\s*=\s*create\s*&&\s*searchParams\.get\(["']mode["']\)\s*===\s*["']moment["']\s*&&\s*searchParams\.get\(["']effect["']\)\s*===\s*["']street-power-up["']/,
@@ -453,8 +453,19 @@ assert.match(
 );
 assert.match(
   appShellSrc,
+  /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*create/,
+  "AppShell must hide tab nav on resultShell (home/?moment=) AND all /create (always-fixed-Moment sticky)"
+);
+// Residual gap lock: bare /create and non-entry Moment queries are create paths
+assert.match(
+  appShellSrc,
+  /const create\s*=\s*path\.startsWith\(["']\/create["']\)/,
+  "AppShell create path detection must cover bare /create and query variants"
+);
+assert.doesNotMatch(
+  appShellSrc,
   /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/,
-  "AppShell must hide tab nav on resultShell, fixed Moment entry, and Seller Pack"
+  "hideMobileNav must not regress to entry-only hide (bare /create gap)"
 );
 assert.match(
   appShellSrc,

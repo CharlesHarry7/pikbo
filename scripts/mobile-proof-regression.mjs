@@ -114,15 +114,26 @@ assert.match(
   /data-batch-content-pad=\{\s*isSellerPack\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
   "Batch content pad branch must be smoke-visible"
 );
+// AIT-152: pair hideMobileNav with always-fixed-Moment Create sticky (AIT-141)
 assert.match(
   shell,
+  /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*create/,
+  "mobile nav must hide on resultShell (home/?moment=) and all /create (fixed Moment sticky)"
+);
+assert.match(
+  shell,
+  /const create\s*=\s*path\.startsWith\(["']\/create["']\)/,
+  "create path must cover bare /create and non-entry Moment query URLs"
+);
+assert.doesNotMatch(
+  shell,
   /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/,
-  "mobile nav must hide on resultShell (home/?moment=), fixed Moment entry, and Seller Pack"
+  "hideMobileNav must not regress to entry-only hide under sticky"
 );
 assert.match(
   shell,
   /\{!hideMobileNav\s*\?\s*\(\s*\n\s*<nav/,
-  "fixed Moment and Seller Pack Create must not stack the five-item mobile nav under their primary action"
+  "always-fixed-Moment Create must not stack the five-item mobile nav under sticky"
 );
 assert.doesNotMatch(
   zh,

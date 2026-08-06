@@ -72,11 +72,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const momentSurface = home || momentCreate;
   const lightShell = momentSurface || sellerPackCreate;
   const resultShell = momentSurface;
-  // Home + Moment Create (?moment=) hide via resultShell; real MOMENT_CREATE_HREF
-  // is fixedMomentEntry (mode=moment&effect=street-power-up). Seller Pack also
-  // hides so sticky primaries are not parked over a ghost tab gap.
-  const hideMobileNav =
-    resultShell || fixedMomentEntry || sellerPackCreate;
+  // AIT-152: product Create always mounts fixed Moment sticky
+  // (app/create/page.tsx → fixedMomentContract). Hide five-door tab on ALL
+  // /create so AIT-141 --floating-cta-safe-bottom never sits on a ghost tab.
+  // AIT-141 only hid fixedMomentEntry; bare /create and non-entry queries still
+  // showed the tab under sticky. Home/?moment= already hide via resultShell.
+  // Non-create tab surfaces (cinema, modules, supercomputer batch) stay.
+  const hideMobileNav = resultShell || create;
   const hideFooter =
     home ||
     create ||
