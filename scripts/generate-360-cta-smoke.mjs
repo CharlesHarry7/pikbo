@@ -329,7 +329,17 @@ for (const [label, src] of [
 assert.match(
   createStudio,
   /bottom-\[var\(--mobile-nav-clearance\)\]/,
-  "CreateStudio sticky must clear tab nav + home indicator"
+  "CreateStudio sticky must clear tab nav + home indicator on generic Create"
+);
+assert.match(
+  createStudio,
+  /bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "CreateStudio fixed Moment sticky must use safe-area only (nav-less)"
+);
+assert.match(
+  createStudio,
+  /data-create-sticky-clearance=\{/,
+  "CreateStudio sticky must expose clearance branch marker"
 );
 assert.match(
   cinemaPage,
