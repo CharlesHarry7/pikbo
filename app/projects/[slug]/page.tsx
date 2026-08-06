@@ -83,7 +83,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
         <header className="mb-7 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-[#c8ff3d] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-black shadow-[0_0_20px_rgba(200,255,61,0.25)]">
+              <span className="cta-brand rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide shadow-[0_0_20px_color-mix(in_srgb,var(--neon-pink)_25%,transparent)]">
                 Inside project
               </span>
               <span className="rounded-full border border-white/15 bg-white/[0.05] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/70">
@@ -106,32 +106,32 @@ export default async function ShowcaseProjectPage({ params }: Props) {
           >
             <Link
               href={showcaseRecipeHref(project)}
-              className="inline-flex w-full items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_40px_rgba(200,255,61,0.25)] transition hover:-translate-y-0.5 hover:shadow-[0_0_48px_rgba(200,255,61,0.35)]"
+              className="inline-flex w-full items-center justify-center cta-brand rounded-full px-7 py-3.5 text-sm font-black shadow-[0_0_40px_color-mix(in_srgb,var(--neon-pink)_25%,transparent)] transition hover:-translate-y-0.5 hover:shadow-[0_0_48px_color-mix(in_srgb,var(--neon-pink)_35%,transparent)]"
             >
               Use this recipe →
             </Link>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
               <Link
                 href="/create?effect=street-power-up"
-                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-[#c8ff3d]/40 hover:text-[#c8ff3d]"
+                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-neon-pink/40 hover:text-neon-pink"
               >
                 Create one Moment
               </Link>
               <Link
                 href="/modules"
-                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-[#c8ff3d]/40 hover:text-[#c8ff3d]"
+                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-neon-pink/40 hover:text-neon-pink"
               >
                 Modules
               </Link>
               <Link
                 href="/library"
-                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-[#c8ff3d]/40 hover:text-[#c8ff3d]"
+                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-neon-pink/40 hover:text-neon-pink"
               >
                 Library
               </Link>
               <FreeTrialCta
                 path={`/projects/${project.slug}`}
-                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-[#c8ff3d]/40 hover:text-[#c8ff3d]"
+                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-[11px] font-bold text-white/80 transition hover:border-neon-pink/40 hover:text-neon-pink"
               />
             </div>
           </div>
@@ -175,10 +175,10 @@ export default async function ShowcaseProjectPage({ params }: Props) {
             </div>
           </article>
 
-          <article className="overflow-hidden rounded-2xl border border-[#c8ff3d]/30 bg-white/[0.03] shadow-[0_20px_50px_-28px_rgba(200,255,61,0.12)]">
+          <article className="overflow-hidden rounded-2xl border border-neon-pink/30 bg-white/[0.03] shadow-[0_20px_50px_-28px_color-mix(in_srgb,var(--neon-pink)_12%,transparent)]">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
+                <p className="section-label tracking-wider">
                   {promoted ? "Verified output" : "Cached prototype"}
                 </p>
                 <h2 className="text-sm font-bold">{provenance}</h2>
@@ -208,7 +208,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
           <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
+            <p className="section-label tracking-wider">
               Recipe record
             </p>
             <dl className="mt-4 grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
@@ -224,7 +224,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
                 <dt className="text-[10px] uppercase tracking-wide text-white/35">
                   Provenance
                 </dt>
-                <dd className="mt-1 font-semibold text-[#c8ff3d]">
+                <dd className="mt-1 font-semibold text-neon-pink">
                   {provenance}
                 </dd>
               </div>
@@ -289,13 +289,13 @@ export default async function ShowcaseProjectPage({ params }: Props) {
 
           <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
+              <p className="section-label tracking-wider">
                 Evidence checklist
               </p>
               <span
                 className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wide ${
                   promoted && evidenceComplete
-                    ? "border-[#c8ff3d]/35 bg-[#c8ff3d]/10 text-[#c8ff3d]"
+                    ? "border-neon-pink/35 bg-neon-pink/10 text-neon-pink"
                     : "border-white/10 bg-white/[0.04] text-white/45"
                 }`}
               >
@@ -312,7 +312,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
                   key={item.id}
                   className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 text-[10px] font-semibold ${
                     item.complete
-                      ? "border-[#c8ff3d]/25 bg-[#c8ff3d]/[0.06] text-white/75"
+                      ? "border-neon-pink/25 bg-neon-pink/[0.06] text-white/75"
                       : "border-white/[0.07] bg-black/20 text-white/35"
                   }`}
                 >
@@ -320,7 +320,7 @@ export default async function ShowcaseProjectPage({ params }: Props) {
                     aria-hidden
                     className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] ${
                       item.complete
-                        ? "bg-[#c8ff3d] text-black"
+                        ? "cta-brand"
                         : "border border-white/15 text-transparent"
                     }`}
                   >
@@ -341,13 +341,13 @@ export default async function ShowcaseProjectPage({ params }: Props) {
             <div className="mt-6 grid gap-2" data-project-footer="product-first">
               <Link
                 href={showcaseRecipeHref(project)}
-                className="rounded-full bg-[#c8ff3d] px-5 py-3 text-center text-sm font-black text-black shadow-[0_0_28px_rgba(200,255,61,0.2)] transition hover:-translate-y-0.5"
+                className="cta-brand rounded-full px-5 py-3 text-center text-sm font-black shadow-[0_0_28px_color-mix(in_srgb,var(--neon-pink)_20%,transparent)] transition hover:-translate-y-0.5"
               >
                 Use this recipe →
               </Link>
               <Link
                 href={`/effects/${project.recipeSlug}`}
-                className="rounded-full border border-white/15 bg-white/[0.03] px-5 py-3 text-center text-sm font-bold text-white transition hover:border-[#c8ff3d]/40"
+                className="rounded-full border border-white/15 bg-white/[0.03] px-5 py-3 text-center text-sm font-bold text-white transition hover:border-neon-pink/40"
               >
                 Read recipe requirements
               </Link>

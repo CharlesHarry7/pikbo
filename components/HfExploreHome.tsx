@@ -103,7 +103,7 @@ export function HfExploreHome({
         <p className="text-white/50">No cached Lab prototypes yet.</p>
         <Link
           href={createGenerate360Href("hf-explore")}
-          className="mt-4 inline-block text-[#c8ff3d]"
+          className="mt-4 inline-block text-neon-pink"
           data-hf-empty-generate="remix"
         >
           Go to Generate →
@@ -144,7 +144,7 @@ export function HfExploreHome({
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
             {t("home.feelFirst")}
           </p>
-          <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#c8ff3d]/30 bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#c8ff3d] shadow-[0_0_24px_rgba(200,255,61,0.15)] backdrop-blur">
+          <span className="mt-3 inline-flex w-fit items-center rounded-full border border-neon-pink/30 bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-neon-pink shadow-[0_0_24px_color-mix(in_srgb,var(--neon-pink)_15%,transparent)] backdrop-blur">
             {item.badge ?? "PIKBO Lab · cached prototype"}
           </span>
           {toolFirstLayout ? (
@@ -167,7 +167,7 @@ export function HfExploreHome({
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
               href="/create?effect=street-power-up"
-              className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
+              className="inline-flex items-center justify-center cta-brand rounded-full px-7 py-3.5 text-sm font-black shadow-[0_0_48px_-6px_color-mix(in_srgb,var(--neon-pink)_55%,transparent)]"
             >
               Use tool on this page
             </Link>
@@ -179,7 +179,7 @@ export function HfExploreHome({
                   path: "/",
                   recipe: item.recipeSlug})
               }
-              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-black/50 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#c8ff3d]/50 hover:bg-black/60"
+              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-black/50 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-neon-pink/50 hover:bg-black/60"
             >
               {t("home.useRecipe")}
             </Link>
@@ -209,7 +209,7 @@ export function HfExploreHome({
                 onClick={() => setActive(i)}
                 className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ring-2 transition sm:h-16 sm:w-12 ${
                   i === active
-                    ? "ring-[#c8ff3d]"
+                    ? "ring-neon-pink"
                     : "ring-white/10 opacity-70 hover:opacity-100"
                 }`}
                 aria-label={`Show ${s.title}`}
@@ -240,7 +240,7 @@ export function HfExploreHome({
       {/* ── Screen 2: Before → after ── */}
       <section className="border-b border-white/10 bg-gradient-to-b from-black via-[#08080c] to-black px-3 py-12 sm:px-5">
         <div className="mx-auto max-w-5xl">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8ff3d]/90">
+          <p className="section-label tracking-[0.18em]">
             {t("home.proof")}
           </p>
           <h2 className="font-display mt-1 text-xl font-bold uppercase tracking-tight sm:text-3xl">
@@ -269,17 +269,17 @@ export function HfExploreHome({
                 Reference poster · not verified input
               </p>
             </div>
-            <div className="overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-[#c8ff3d]/25 shadow-[0_24px_60px_-24px_rgba(200,255,61,0.2)]">
+            <div className="overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-neon-pink/25 shadow-[0_24px_60px_-24px_color-mix(in_srgb,var(--neon-pink)_20%,transparent)]">
               <div className="relative aspect-[4/5]">
                 <Clip
                   demo={item.demo}
                   className="absolute inset-0 h-full w-full object-cover"
                 />
-                <span className="absolute left-3 top-3 rounded-full bg-[#c8ff3d] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black shadow-[0_0_16px_rgba(200,255,61,0.4)]">
+                <span className="absolute left-3 top-3 cta-brand rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide shadow-[0_0_16px_color-mix(in_srgb,var(--neon-pink)_40%,transparent)]">
                   Preview
                 </span>
               </div>
-              <p className="p-3.5 text-xs font-bold uppercase tracking-wide text-[#c8ff3d]">
+              <p className="p-3.5 text-xs font-bold uppercase tracking-wide text-neon-pink">
                 Cached prototype · evidence pending
               </p>
             </div>
@@ -315,13 +315,13 @@ export function HfExploreHome({
           <div className="mt-7 flex flex-wrap gap-2">
             <Link
               href={item.href}
-              className="inline-flex rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_40px_-8px_rgba(200,255,61,0.5)] transition hover:-translate-y-0.5"
+              className="inline-flex cta-brand rounded-full px-7 py-3.5 text-sm font-black shadow-[0_0_40px_-8px_color-mix(in_srgb,var(--neon-pink)_50%,transparent)] transition hover:-translate-y-0.5"
             >
               {t("home.replaceMine")}
             </Link>
             <Link
               href={item.projectHref || item.detailHref || "/explore"}
-              className="inline-flex rounded-full border border-white/20 bg-black/40 px-5 py-3.5 text-sm font-bold text-white/85 backdrop-blur transition hover:border-[#c8ff3d]/45"
+              className="inline-flex rounded-full border border-white/20 bg-black/40 px-5 py-3.5 text-sm font-bold text-white/85 backdrop-blur transition hover:border-neon-pink/45"
             >
               {t("home.insideProject")}
             </Link>
@@ -350,7 +350,7 @@ export function HfExploreHome({
             </div>
             <Link
               href="/explore"
-              className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
+              className="text-[12px] font-semibold text-neon-pink hover:underline"
             >
               All projects →
             </Link>
@@ -359,7 +359,7 @@ export function HfExploreHome({
             {projects.slice(0, 8).map((project, i) => (
               <div
                 key={project.slug}
-                className="group relative overflow-hidden rounded-xl bg-neutral-900 ring-1 ring-white/10 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.85)] transition duration-300 hover:-translate-y-1 hover:ring-[#c8ff3d]/45 hover:shadow-[0_20px_40px_-20px_rgba(200,255,61,0.12)]"
+                className="group relative overflow-hidden rounded-xl bg-neutral-900 ring-1 ring-white/10 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.85)] transition duration-300 hover:-translate-y-1 hover:ring-neon-pink/45 hover:shadow-[0_20px_40px_-20px_color-mix(in_srgb,var(--neon-pink)_12%,transparent)]"
               >
                 <button
                   type="button"
@@ -374,7 +374,7 @@ export function HfExploreHome({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                     <div className="absolute left-2 top-2 flex max-w-[92%] flex-wrap gap-1">
-                      <span className="rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#c8ff3d] ring-1 ring-white/10">
+                      <span className="rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-neon-pink ring-1 ring-white/10">
                         PIKBO Lab · cached prototype
                       </span>
                     </div>
@@ -386,13 +386,13 @@ export function HfExploreHome({
                 <div className="absolute inset-x-0 bottom-0 flex gap-1 p-2">
                   <Link
                     href={showcaseRecipeHref(project)}
-                    className="flex-1 rounded-full bg-[#c8ff3d] py-1.5 text-center text-[10px] font-black text-black shadow-[0_0_16px_rgba(200,255,61,0.25)] transition hover:brightness-110"
+                    className="flex-1 cta-brand rounded-full py-1.5 text-center text-[10px] font-black shadow-[0_0_16px_color-mix(in_srgb,var(--neon-pink)_25%,transparent)] transition hover:brightness-110"
                   >
                     {t("home.remake")}
                   </Link>
                   <Link
                     href={showcaseProjectHref(project)}
-                    className="rounded-full border border-white/20 bg-black/55 px-2.5 py-1.5 text-[10px] font-bold text-white backdrop-blur-sm transition hover:border-[#c8ff3d]/40"
+                    className="rounded-full border border-white/20 bg-black/55 px-2.5 py-1.5 text-[10px] font-bold text-white backdrop-blur-sm transition hover:border-neon-pink/40"
                   >
                     {t("home.insideProject")}
                   </Link>
@@ -408,7 +408,7 @@ export function HfExploreHome({
         <div className="mx-auto max-w-6xl">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#c8ff3d]">
+              <p className="section-label tracking-wider">
                 Creation flow
               </p>
               <h2 className="font-display text-xl font-bold uppercase tracking-tight sm:text-2xl">
@@ -417,20 +417,20 @@ export function HfExploreHome({
             </div>
             <Link
               href={createGenerate360Href("hf-explore")}
-              className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
+              className="text-[12px] font-semibold text-neon-pink hover:underline"
               data-hf-flow-generate="remix"
             >
               Open Generate →
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:border-[#c8ff3d]/40 hover:bg-[#c8ff3d]/5">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:border-neon-pink/40 hover:bg-neon-pink/5">
               <FreeTrialCta
                 path="/#jobs"
                 labelTry="Try free video"
                 labelDemo="Lab sample"
                 hideClipsChip
-                className="text-sm font-bold text-white hover:text-[#c8ff3d]"
+                className="text-sm font-bold text-white hover:text-neon-pink"
               />
               <p className="text-[11px] text-white/40">Mini 5s · Sample ready</p>
             </div>
@@ -448,7 +448,7 @@ export function HfExploreHome({
               <Link
                 key={c.href}
                 href={c.href}
-                className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:border-[#c8ff3d]/40 hover:bg-[#c8ff3d]/5"
+                className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 transition hover:border-neon-pink/40 hover:bg-neon-pink/5"
               >
                 <p className="text-sm font-bold text-white">{c.label}</p>
                 <p className="text-[11px] text-white/40">{c.sub}</p>
@@ -462,7 +462,7 @@ export function HfExploreHome({
       <section className="px-3 pb-6 sm:px-5">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent p-5 sm:flex-row sm:items-center sm:p-6">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
+            <p className="section-label tracking-wider">
               One toy Moment — one directed result
             </p>
             <h3 className="mt-1 font-display text-lg font-bold uppercase tracking-tight sm:text-xl">
@@ -475,7 +475,7 @@ export function HfExploreHome({
           </div>
           <Link
             href="/create?effect=street-power-up"
-            className="inline-flex shrink-0 items-center rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-sm font-bold text-[#c8ff3d] transition hover:bg-[#c8ff3d]/10"
+            className="inline-flex shrink-0 items-center rounded-full border border-neon-pink/40 px-5 py-2.5 text-sm font-bold text-neon-pink transition hover:bg-neon-pink/10"
           >
             Create one Moment →
           </Link>
@@ -489,7 +489,7 @@ export function HfExploreHome({
         </p>
         <Link
           href={item.href}
-          className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-8 py-3 text-sm font-black text-black"
+          className="inline-flex items-center justify-center cta-brand rounded-full px-8 py-3 text-sm font-black"
         >
           Remix the premiere recipe
         </Link>

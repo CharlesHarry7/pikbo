@@ -26,7 +26,7 @@ export function HomeViralPresetRail() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#c8ff3d]/90">
+            <p className="section-label tracking-wider">
               {t("home.viral.eyebrow")}
             </p>
             <h2 className="mt-1 font-display text-xl font-bold uppercase tracking-tight sm:text-2xl">
@@ -38,7 +38,7 @@ export function HomeViralPresetRail() {
           </div>
           <Link
             href="/effects"
-            className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
+            className="text-[12px] font-semibold text-neon-pink hover:underline"
           >
             {t("home.viral.allRecipes")}
           </Link>
@@ -56,7 +56,7 @@ export function HomeViralPresetRail() {
                   meta: { surface: "home_viral_rail" },
                 })
               }
-              className="group relative w-[9.5rem] shrink-0 overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/10 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_16px_40px_-12px_rgba(200,255,61,0.18)] hover:ring-[#c8ff3d]/50 sm:w-[11.5rem]"
+              className="group relative w-[9.5rem] shrink-0 overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/10 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_16px_40px_-12px_color-mix(in_srgb,var(--neon-pink)_18%,transparent)] hover:ring-neon-pink/50 sm:w-[11.5rem]"
             >
               <div className="relative aspect-[3/4]">
                 <AutoPlayVideo
@@ -69,7 +69,7 @@ export function HomeViralPresetRail() {
                 />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
                 <div className="absolute left-2 top-2 flex max-w-[88%] flex-wrap gap-0.5">
-                  <span className="rounded-full bg-black/60 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-[#c8ff3d] backdrop-blur-sm">
+                  <span className="rounded-full bg-black/60 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-neon-pink backdrop-blur-sm">
                     {d.eyebrow}
                   </span>
                   <span
@@ -79,7 +79,7 @@ export function HomeViralPresetRail() {
                     Lab · cached prototype
                   </span>
                 </div>
-                <span className="absolute right-2 top-2 rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[8px] font-black text-black opacity-0 shadow transition group-hover:opacity-100">
+                <span className="absolute right-2 top-2 cta-brand rounded-full px-1.5 py-0.5 text-[8px] font-black opacity-0 shadow transition group-hover:opacity-100">
                   {t("home.remake")}
                 </span>
                 <div className="absolute inset-x-0 bottom-0 p-2.5">
@@ -87,7 +87,7 @@ export function HomeViralPresetRail() {
                     {d.title}
                   </p>
                   <p className="mt-0.5 text-[10px] text-white/50">{d.character}</p>
-                  <p className="mt-1.5 text-[9px] font-bold uppercase tracking-wide text-[#c8ff3d] opacity-0 transition group-hover:opacity-100">
+                  <p className="mt-1.5 text-[9px] font-bold uppercase tracking-wide text-neon-pink opacity-0 transition group-hover:opacity-100">
                     {t("home.yourPhoto")}
                   </p>
                 </div>
