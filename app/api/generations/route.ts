@@ -11,6 +11,7 @@ import {
 } from "@/lib/generationJobs";
 import {
   getPrivateLibraryJobForOwner,
+  isOwnerVisibleLibraryJob,
   listPrivateGenerationResults,
   mergePrivateLibraryWithLocalLedger,
 } from "@/lib/privateGenerationResults";
@@ -228,9 +229,9 @@ export async function GET(req: Request) {
     },
     listLimit: SESSION_JOBS_LIST_LIMIT,
   });
-  // Fail-closed owner list: never ship owned:false stubs to the client body
-  // (toPublicJob already redacts foreign sessions; this is a second gate).
-  const ownerJobs = merged.jobs.filter((job) => job.owned !== false);
+  // Fail-closed owner list: second gate after pure merge pre-slice filter
+  // (AIT-274 isOwnerVisibleLibraryJob / mergePrivateLibraryWithLocalLedger).
+  const ownerJobs = merged.jobs.filter(isOwnerVisibleLibraryJob);
 
   return NextResponse.json({
     ok: true,

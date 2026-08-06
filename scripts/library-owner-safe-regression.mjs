@@ -1,19 +1,21 @@
 #!/usr/bin/env node
 /**
- * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-254:
+ * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-254 / AIT-274:
  * Library owner-safe recovery.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped list/detail, non-owner deny (no metadata leak),
  * retry / cancel (item + collection) / new-attempt paths, owner-ready asset
- * bind gate, guest deep-link login next, deep-link fail-closed copy, and
- * client Bearer on retry/cancel so durable DURABLE_* codes can resolve.
+ * bind gate, guest deep-link login next, deep-link fail-closed copy,
+ * client Bearer on retry/cancel so durable DURABLE_* codes can resolve, and
+ * pure merge dropping owned:false before page slice (AIT-274).
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  isOwnerVisibleLibraryJob,
   libraryInputBindingCopy,
   libraryInputBoundFromAssetId,
   libraryNotYourToyCopy,
@@ -54,9 +56,12 @@ assert.doesNotMatch(
   "list must not accept a cross-user userId query/body"
 );
 assert.match(generationsList, /inputBound:\s*false/);
-// AIT-148: list body never ships owned:false stubs.
-assert.match(generationsList, /owned !== false/);
+// AIT-148 / AIT-274: list body never ships owned:false stubs (route + pure merge).
+assert.match(generationsList, /isOwnerVisibleLibraryJob/);
 assert.match(generationsList, /ownerJobs/);
+assert.match(pure, /isOwnerVisibleLibraryJob/);
+assert.match(pure, /ownerDurableJobs|isOwnerVisibleLibraryJob\(job\)/);
+assert.match(results, /isOwnerVisibleLibraryJob/);
 
 // ─── Source contracts: detail fail-closed ──────────────────────────────────
 
@@ -344,7 +349,12 @@ assert.doesNotMatch(notYours, /videoUrl|provider|signed/i);
 assert.doesNotMatch(notYours, new RegExp(foreignJobId));
 assert.doesNotMatch(notYours, /preview|thumbnail|stream/i);
 
-// ─── Pure: owner list merge never mixes foreign owned:false stubs ──────────
+// ─── Pure: owner list merge never ships foreign owned:false stubs ──────────
+
+assert.equal(isOwnerVisibleLibraryJob({ owned: false }), false);
+assert.equal(isOwnerVisibleLibraryJob({ owned: true }), true);
+assert.equal(isOwnerVisibleLibraryJob({ id: "x" }), true);
+assert.equal(isOwnerVisibleLibraryJob(null), false);
 
 const localForeignStub = {
   id: foreignJobId,
@@ -370,14 +380,60 @@ const merged = mergePrivateLibraryWithLocalLedger({
   },
   listLimit: 50,
 });
-// Merge keeps local rows for counts but owner UI filters owned===false.
+// AIT-274: pure merge drops owned:false before page — jobs body is owner-only.
 assert.ok(Array.isArray(merged.jobs));
-const ownerOnlyVisible = merged.jobs.filter(
-  (j) => j.owned !== false && j.demo !== true
+assert.equal(
+  merged.jobs.some((j) => j.owned === false),
+  false,
+  "merge must not include owned:false stubs in jobs[]"
 );
-assert.ok(ownerOnlyVisible.some((j) => j.id === jobId));
+assert.equal(
+  merged.jobs.some((j) => j.id === foreignJobId),
+  false,
+  "foreign stub must not appear in owner list body"
+);
+assert.ok(merged.jobs.some((j) => j.id === jobId));
 // Durable owner job must carry inputBound truth.
-const listed = ownerOnlyVisible.find((j) => j.id === jobId);
+const listed = merged.jobs.find((j) => j.id === jobId);
 assert.equal(listed.inputBound, true);
+// Histogram may still reflect localCounts (ledger truth) even when stubs are
+// stripped from the page body.
+assert.equal(merged.byStatus.failed, 1);
+
+// AIT-274: owned:false stubs must not crowd owner jobs out of the page window.
+const crowdStubs = Array.from({ length: 50 }, (_, i) => ({
+  id: `aaaaaaaa-aaaa-4aaa-8aaa-${String(i).padStart(12, "0")}`,
+  status: "failed",
+  effect: "street-power-up",
+  owned: false,
+  downloadAllowed: false,
+  demo: false,
+  createdAt: `2026-08-04T13:${String(i).padStart(2, "0")}:00.000Z`,
+}));
+const crowded = mergePrivateLibraryWithLocalLedger({
+  durableJobs: [
+    {
+      ...boundSucceeded,
+      createdAt: "2026-08-04T10:00:00.000Z",
+    },
+  ],
+  localJobs: crowdStubs,
+  localCounts: {
+    queued: 0,
+    running: 0,
+    succeeded: 0,
+    failed: 50,
+    canceled: 0,
+    open: 0,
+    total: 50,
+  },
+  listLimit: 50,
+});
+assert.equal(crowded.jobs.length, 1);
+assert.equal(crowded.jobs[0].id, jobId);
+assert.equal(
+  crowded.jobs.every((j) => j.owned !== false),
+  true
+);
 
 console.log("library-owner-safe-regression: ok");
