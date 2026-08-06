@@ -4,6 +4,9 @@
  * (orbit/beatbot/scout) that read as generic characters, not collectible vinyl.
  *
  * Labels stay honest: style studies / lab archive — never fake UGC.
+ *
+ * AIT-521: every still is a one-tap Generate→360 door (skip /toys + /effects
+ * hops). Taxonomy browse stays on category chips + "Browse toy types".
  */
 
 import { createGenerate360Href } from "@/lib/jobIntents";
@@ -49,8 +52,8 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     category: "Art toy",
     toyKind: "art-toys",
     src: "/style-studies/art-vinyl-guardian-v1.jpg",
-    href: "/toys/art-toys",
-    badge: "Style study · vinyl",
+    href: createGenerate360Href("home-gallery-vinyl-guardian"),
+    badge: "Style study · try 360°",
     aspect: "3/4",
   },
   {
@@ -59,8 +62,8 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     category: "Blind box",
     toyKind: "blind-box-figures",
     src: "/style-studies/art-vinyl-blind-box-direction-v1.jpg",
-    href: "/toys/blind-box-figures",
-    badge: "Style study · unbox",
+    href: createGenerate360Href("home-gallery-blind-box"),
+    badge: "Style study · try 360°",
     aspect: "3/4",
   },
   {
@@ -69,8 +72,8 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     category: "Urban vinyl",
     toyKind: "vinyl-figures",
     src: "/style-studies/art-vinyl-social-flash-direction-v1.jpg",
-    href: "/toys/vinyl-figures",
-    badge: "Style study · social",
+    href: createGenerate360Href("home-gallery-social-flash"),
+    badge: "Style study · try 360°",
     aspect: "3/4",
   },
   {
@@ -79,8 +82,8 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     category: "Model kit",
     toyKind: "model-kits",
     src: "/style-studies/precision-mecha-v1.jpg",
-    href: "/toys/model-kits",
-    badge: "Style study · kit",
+    href: createGenerate360Href("home-gallery-mecha"),
+    badge: "Style study · try 360°",
     aspect: "3/4",
   },
   {
@@ -89,8 +92,8 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     category: "Plush",
     toyKind: "plush-toys",
     src: "/style-studies/plush-hybrid-v1.jpg",
-    href: "/toys/plush-toys",
-    badge: "Style study · plush",
+    href: createGenerate360Href("home-gallery-plush"),
+    badge: "Style study · try 360°",
     aspect: "3/4",
   },
   {
@@ -99,8 +102,8 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     category: "Display",
     toyKind: "art-toys",
     src: "/moments/gallery-spotlight.jpg",
-    href: "/create?mode=moment&effect=street-power-up&source=gallery-spotlight",
-    badge: "Lab moment · lighting",
+    href: createGenerate360Href("home-gallery-spotlight"),
+    badge: "Lab still · try 360°",
     aspect: "16/9",
   },
   {
@@ -109,8 +112,8 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     category: "Blind box",
     toyKind: "blind-box-figures",
     src: "/moments/capsule-reveal.jpg",
-    href: "/create?mode=moment&effect=street-power-up&source=capsule-reveal",
-    badge: "Lab moment · reveal",
+    href: createGenerate360Href("home-gallery-capsule"),
+    badge: "Lab still · try 360°",
     aspect: "16/9",
   },
   {
@@ -119,9 +122,9 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     category: "Listing",
     toyKind: "vinyl-figures",
     src: "/moments/colorblock-pedestal.jpg",
-    // AIT-462: skip /effects hop — one tap into listing 360 workbench
+    // AIT-462 / AIT-521: skip /effects hop — one tap into listing 360 workbench
     href: createGenerate360Href("home-gallery-pedestal"),
-    badge: "Lab moment · 360 listing",
+    badge: "Lab still · 360 listing",
     aspect: "16/9",
   },
 ];
