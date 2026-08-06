@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 /**
- * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-207: Library owner-safe.
+ * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-207 / AIT-211:
+ * Library owner-safe.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped list/detail, non-owner deny (no metadata leak),
  * retry / cancel (item + collection, video + stills) / new-attempt paths,
- * owner-ready asset bind gate, guest deep-link login next, and deep-link
- * fail-closed copy.
+ * stills retry durable fail-closed, owner-ready asset bind gate, guest
+ * deep-link login next, and deep-link fail-closed copy.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -29,6 +30,7 @@ const generationsList = read("app/api/generations/route.ts");
 const generationsDetail = read("app/api/generations/[id]/route.ts");
 const imageList = read("app/api/image/route.ts");
 const imageDetail = read("app/api/image/[id]/route.ts");
+const imageRetryRoute = read("app/api/image/[id]/retry/route.ts");
 const imageClient = read("lib/imageClient.ts");
 const imagePage = read("app/image/page.tsx");
 const library = read("components/LibraryGrid.tsx");
@@ -129,6 +131,52 @@ assert.match(imageClient, /method:\s*["']DELETE["']/);
 // Image studio cancel surfaces DURABLE_NO_CANCEL honestly.
 assert.match(imagePage, /DURABLE_NO_CANCEL/);
 assert.match(imagePage, /privateDownloadHeaders|Authorization/);
+
+// ─── Source contracts: stills retry fail-closed (AIT-211, video retry parity) ─
+
+// Item POST /api/image/[id]/retry
+assert.match(imageRetryRoute, /export async function POST\(req: Request/);
+assert.match(imageRetryRoute, /forkRetryImageJob/);
+assert.match(imageRetryRoute, /DURABLE_USE_NEW_ATTEMPT/);
+assert.match(imageRetryRoute, /DURABLE_IN_FLIGHT/);
+assert.match(imageRetryRoute, /DURABLE_ALREADY_SUCCEEDED/);
+assert.match(imageRetryRoute, /getPrivateLibraryJobForOwner/);
+assert.match(imageRetryRoute, /getAuthUserFromRequest/);
+assert.match(
+  imageRetryRoute,
+  /result\.code === "NOT_FOUND" && isUuid\(id\)/
+);
+assert.match(imageRetryRoute, /acceptControlledLibraryNewAttemptUrl/);
+assert.match(imageRetryRoute, /mode:\s*"supabase-private"/);
+assert.match(imageRetryRoute, /next:\s*\{[\s\S]*createUi/);
+assert.match(imageRetryRoute, /imageUi:\s*GENERIC_IMAGE_NEW_ATTEMPT|imageUi:\s*["']\/image["']/);
+// Missing/foreign stay uniform NOT_FOUND (no ownership leak).
+assert.match(imageRetryRoute, /code:\s*result\.code/);
+assert.doesNotMatch(
+  imageRetryRoute,
+  /newAttemptUrl\.startsWith\(/,
+  "image retry must not use loose startsWith on newAttemptUrl"
+);
+// Client never invents process-memory re-POST for durable codes.
+assert.match(imageClient, /forkRetryImageLedger/);
+assert.match(imageClient, /acceptImageRetryNavigation/);
+assert.match(imageClient, /Authorization/);
+assert.match(imageClient, /getSupabaseBrowser|access_token/);
+assert.match(imageClient, /method:\s*["']POST["']/);
+assert.match(imagePage, /forkRetryImageLedger/);
+assert.match(imagePage, /DURABLE_USE_NEW_ATTEMPT/);
+assert.match(imagePage, /DURABLE_IN_FLIGHT/);
+assert.match(imagePage, /DURABLE_ALREADY_SUCCEEDED/);
+assert.match(imagePage, /acceptImageRetryNavigation/);
+// Durable handoff must not fall through to void generate for durable codes.
+assert.match(
+  imagePage,
+  /DURABLE_USE_NEW_ATTEMPT[\s\S]{0,200}window\.location\.href/
+);
+assert.match(
+  imagePage,
+  /DURABLE_IN_FLIGHT[\s\S]{0,280}return;/
+);
 
 // ─── Source contracts: retry path ──────────────────────────────────────────
 

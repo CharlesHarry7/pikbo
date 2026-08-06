@@ -1,17 +1,36 @@
 import { NextResponse } from "next/server";
 import { ensureSession } from "@/lib/session";
 import { forkRetryImageJob, toPublicImageJob } from "@/lib/imageJobs";
+import { getPrivateLibraryJobForOwner } from "@/lib/privateGenerationResults";
+import { acceptControlledLibraryNewAttemptUrl } from "@/lib/privateGenerationResultsPure.mjs";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+import { getAuthUserFromRequest } from "@/lib/supabase/user";
 
 export const runtime = "nodejs";
 
 type Props = { params: Promise<{ id: string }> };
 
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
+const GENERIC_LIBRARY_CREATE = `${MOMENT_CREATE_HREF}&source=library` as const;
+/** Honest Image studio new-attempt when no controlled Create handoff applies. */
+const GENERIC_IMAGE_NEW_ATTEMPT = "/image" as const;
+
 /**
  * Phase D local still retry handoff — parity with POST /api/generations/[id]/retry.
  * Forks a queued child for tracking; does not re-call Flux.
  * Client re-submits POST /api/image with exact child id + one-time bearer.
+ *
+ * AIT-211: durable owner stills/Moments never fork process-memory Retry.
+ * Local NOT_FOUND + UUID + auth owner durable row → DURABLE_USE_NEW_ATTEMPT
+ * / DURABLE_IN_FLIGHT / DURABLE_ALREADY_SUCCEEDED. Missing/foreign stay
+ * uniform NOT_FOUND (no ownership leak).
  */
-export async function POST(_req: Request, { params }: Props) {
+export async function POST(req: Request, { params }: Props) {
   const { id } = await params;
   const session = await ensureSession();
   const result = forkRetryImageJob({
@@ -19,6 +38,73 @@ export async function POST(_req: Request, { params }: Props) {
     parentId: id,
   });
   if (!result.ok) {
+    // Durable owner path — never invent a process-memory retry fork.
+    if (result.code === "NOT_FOUND" && isUuid(id)) {
+      const authUser = await getAuthUserFromRequest(req);
+      if (authUser) {
+        const privateJob = await getPrivateLibraryJobForOwner({
+          jobId: id,
+          userId: authUser.id,
+        });
+        if (privateJob) {
+          if (
+            privateJob.status === "queued" ||
+            privateJob.status === "running"
+          ) {
+            return NextResponse.json(
+              {
+                ok: false,
+                code: "DURABLE_IN_FLIGHT",
+                id,
+                message:
+                  "This durable still is still rendering. Refresh — process-memory Retry does not apply to durable jobs.",
+                mode: "supabase-private",
+                durable: true,
+              },
+              { status: 409 }
+            );
+          }
+          if (privateJob.status === "succeeded") {
+            return NextResponse.json(
+              {
+                ok: false,
+                code: "DURABLE_ALREADY_SUCCEEDED",
+                id,
+                message:
+                  "This durable still already succeeded. Open Create or Image for a new attempt — process-memory Retry does not apply.",
+                mode: "supabase-private",
+                durable: true,
+              },
+              { status: 422 }
+            );
+          }
+          // failed | canceled — same-photo Create only when the controlled
+          // accept gate passes; otherwise honest generic Create/Image handoff.
+          // Loose startsWith is not enough — reject forged handoffs.
+          const createUi =
+            acceptControlledLibraryNewAttemptUrl(privateJob.newAttemptUrl) ??
+            GENERIC_LIBRARY_CREATE;
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_USE_NEW_ATTEMPT",
+              id,
+              message:
+                "This durable still cannot use process-memory Retry. Start a new attempt from Create or Image.",
+              mode: "supabase-private",
+              durable: true,
+              next: {
+                createUi,
+                imageUi: GENERIC_IMAGE_NEW_ATTEMPT,
+                newAttempt: true,
+              },
+            },
+            { status: 422 }
+          );
+        }
+      }
+    }
+
     const status =
       result.code === "NOT_FOUND"
         ? 404

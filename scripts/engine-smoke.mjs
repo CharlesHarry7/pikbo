@@ -2017,6 +2017,21 @@ assert.match(imageRetryRoute, /status:\s*202|202/);
 assert.match(imageRetryRoute, /next:\s*\{[\s\S]*image:\s*["']\/api\/image["']/);
 assert.match(imageRetryRoute, /imageUi:/);
 assert.match(imageRetryRoute, /["']\/image["']/);
+// AIT-211: durable stills never invent process-memory Retry fork.
+assert.match(imageRetryRoute, /DURABLE_USE_NEW_ATTEMPT/);
+assert.match(imageRetryRoute, /DURABLE_IN_FLIGHT/);
+assert.match(imageRetryRoute, /DURABLE_ALREADY_SUCCEEDED/);
+assert.match(imageRetryRoute, /getPrivateLibraryJobForOwner/);
+assert.match(imageRetryRoute, /getAuthUserFromRequest/);
+assert.match(imageRetryRoute, /acceptControlledLibraryNewAttemptUrl/);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /forkRetryImageLedger/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /acceptImageRetryNavigation/
+);
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /data-image-session-ledger=["']process-memory["']/
@@ -2027,7 +2042,15 @@ assert.match(
 );
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
-  /data-image-session-retry-mode=["']ledger-fork["']|\/api\/image\/\$\{.*\}\/retry/
+  /data-image-session-retry-mode=["']ledger-fork["']|forkRetryImageLedger|\/api\/image\/\$\{.*\}\/retry/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /DURABLE_USE_NEW_ATTEMPT/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /DURABLE_IN_FLIGHT|DURABLE_ALREADY_SUCCEEDED/
 );
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
@@ -4822,6 +4845,10 @@ assert.match(imageClientSrc, /method:\s*["']DELETE["']/);
 assert.match(imageClientSrc, /keepalive:\s*true/);
 // AIT-207: mid-POST still cancel attaches Bearer for durable owner UUID honesty.
 assert.match(imageClientSrc, /Authorization|access_token|getSupabaseBrowser/);
+// AIT-211: still retry client attaches Bearer + fail-closed durable navigation.
+assert.match(imageClientSrc, /forkRetryImageLedger/);
+assert.match(imageClientSrc, /acceptImageRetryNavigation/);
+assert.match(imageClientSrc, /DURABLE_USE_NEW_ATTEMPT|createUi|imageUi/);
 assert.match(imageRouteHead, /DURABLE_NO_CANCEL/);
 assert.match(imageRouteHead, /getPrivateLibraryJobForOwner/);
 assert.match(
