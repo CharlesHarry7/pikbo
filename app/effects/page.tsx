@@ -109,7 +109,7 @@ export default function EffectsHub() {
       <div className="sticky top-0 z-20 overflow-hidden border-b border-white/[0.07] bg-black/85 px-4 py-3.5 backdrop-blur-xl sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 max-w-full">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--brand)]">
               Viral presets · {PRESETS.length} · {proofPresets.length} with Lab video
             </p>
             <h1 className="font-display break-words text-lg font-black uppercase tracking-tight sm:text-2xl">
@@ -119,7 +119,7 @@ export default function EffectsHub() {
               Pixel-parity with suite viral walls — tap any card to Generate video ·{" "}
               <Link
                 href={EFFECTS_GENERATE_HREF}
-                className="font-semibold text-[#c8ff3d] hover:underline"
+                className="font-semibold text-[var(--brand)] hover:underline"
                 data-effects-generate="remix"
               >
                 Open Generate →
@@ -168,7 +168,7 @@ export default function EffectsHub() {
             <Link
               key={w.id}
               href={w.href}
-              className="shrink-0 rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/[0.1] px-3 py-1.5 text-[11px] font-semibold text-[var(--mint)] shadow-[0_0_20px_rgba(200,255,61,0.08)] transition hover:border-[var(--mint)] hover:bg-[var(--mint)]/15"
+              className="shrink-0 rounded-full border border-[var(--mint)]/35 bg-[var(--mint)]/[0.1] px-3 py-1.5 text-[11px] font-semibold text-[var(--mint)] shadow-[0_0_20px_rgba(196,165,116,0.08)] transition hover:border-[var(--mint)] hover:bg-[var(--mint)]/15"
             >
               {w.emoji} {w.label}
             </Link>

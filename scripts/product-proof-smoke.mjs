@@ -307,6 +307,24 @@ assert(
   );
 }
 
+// AIT-604: Effects hub residual competitor lime → gallery-calm copper
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const effectsPage = read("app/effects/page.tsx");
+  assert(
+    !lime.test(effectsPage),
+    "app/effects/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    effectsPage.includes("var(--brand)"),
+    "Effects page eyebrows/Generate link use --brand copper"
+  );
+  assert(
+    /rgba\(196\s*,\s*165\s*,\s*116/.test(effectsPage),
+    "Effects page job-chip glow uses copper board rgba(196,165,116)"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
