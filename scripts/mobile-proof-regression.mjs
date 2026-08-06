@@ -133,8 +133,13 @@ assert.match(
   );
   assert.match(
     toast,
-    /rgba\(255,\s*78,\s*205/,
-    "Toast glow uses neon-pink board rgba"
+    /rgba\(196,\s*165,\s*116/,
+    "Toast glow uses gallery-calm copper board rgba"
+  );
+  assert.doesNotMatch(
+    toast,
+    /255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|#ff4ecd|#b14eff/i,
+    "Toast must not hard-code carnival neon RGB"
   );
 }
 assert.doesNotMatch(

@@ -194,25 +194,31 @@ assert.match(
   /viewportFit:\s*["']cover["']/,
   "root viewport must use viewport-fit=cover so safe-area env() resolves"
 );
-assert.match(
+// Gallery-calm home (boss 2026-08): floating browse CTA unmounted; module stays remount-ready.
+assert.doesNotMatch(
   homePage,
   /HomeBrowseCta/,
-  "Moment home must mount the floating Generate browse CTA"
+  "gallery-calm home must not mount floating Generate browse CTA"
+);
+assert.match(
+  homePage,
+  /HomeCinemaHero|HomeDesignerGallery/,
+  "gallery-calm home mounts hero + designer-toy gallery"
 );
 assert.match(
   browseCta,
   /bottom-\[var\(--floating-cta-safe-bottom\)\]/,
-  "home floating Generate must use safe-area bottom (no tab nav on home)"
+  "HomeBrowseCta module (remount-ready) must use safe-area bottom"
 );
 assert.match(
   browseCta,
   /z-\[var\(--floating-generate-z\)\]/,
-  "home floating Generate must use --floating-generate-z"
+  "HomeBrowseCta module must use --floating-generate-z"
 );
 assert.match(
   browseCta,
   /createGenerate360Href\(["']home-browse["']\)/,
-  "home browse CTA must deep-link Generate→360 via home-browse source"
+  "HomeBrowseCta module must deep-link Generate→360 via home-browse source"
 );
 assert.doesNotMatch(
   browseCta,
@@ -397,8 +403,13 @@ assert.match(
 );
 assert.match(
   toastSrc,
-  /rgba\(255,\s*78,\s*205/,
-  "Toast glow uses neon-pink board rgba"
+  /rgba\(196,\s*165,\s*116/,
+  "Toast glow uses gallery-calm copper board rgba"
+);
+assert.doesNotMatch(
+  toastSrc,
+  /255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|#ff4ecd|#b14eff/i,
+  "Toast must not hard-code carnival neon RGB"
 );
 
 console.log("generate-360-cta-smoke: ok");

@@ -79,19 +79,19 @@ export default async function CreatePage({
     <GuestMomentCreateGate>
       <div className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-24 text-[var(--cream)]">
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(177,78,255,0.22),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(255,78,205,0.16),transparent_65%)]"
+          className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(196,165,116,0.18),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(196,165,116,0.1),transparent_65%)]"
           aria-hidden
         />
-        <div className="relative mx-auto grid max-w-[1480px] gap-4 border-b border-[#FF4ECD]/15 px-5 py-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:px-12">
+        <div className="relative mx-auto grid max-w-[1480px] gap-4 border-b border-[var(--neon-pink)]/15 px-5 py-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:px-12">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--neon-pink)]">
               Pikbo Moment · private render
             </p>
             <h1 className="mt-2 max-w-4xl font-display text-[clamp(2.45rem,4.2vw,4.5rem)] font-black leading-[0.9] tracking-[-0.06em] text-bling">
               Turn one toy photo into Street Power-Up.
             </h1>
           </div>
-          <p className="border-l border-[#B14EFF]/50 pl-4 text-sm font-semibold leading-6 text-white/56">
+          <p className="border-l border-[var(--brand)]/50 pl-4 text-sm font-semibold leading-6 text-white/56">
             One fixed 9:16 · 5s · 720p video. Upload privately, pay 10
             credits only when it completes, then recover and download it from
             Library.
