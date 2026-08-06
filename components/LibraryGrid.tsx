@@ -124,6 +124,39 @@ function acceptedSamePhotoHandoff(job: GenerationJob): string | undefined {
   return acceptControlledLibraryNewAttemptUrl(job.newAttemptUrl);
 }
 
+/**
+ * Fail-closed client navigation for Create handoffs from Retry / durable
+ * responses. Same-photo controlled URLs first; otherwise only a relative
+ * `/create` path (no protocol, fragment, or open redirect).
+ */
+function acceptLibraryCreateNavigation(
+  value: unknown,
+  fallback: string = CREATE_MOMENT_HREF
+): string {
+  const samePhoto = acceptControlledLibraryNewAttemptUrl(value);
+  if (samePhoto) return samePhoto;
+  if (typeof value !== "string") return fallback;
+  const candidate = value.trim();
+  if (!candidate.startsWith("/create")) return fallback;
+  if (
+    candidate.includes("://") ||
+    candidate.includes("\\") ||
+    candidate.includes("#") ||
+    candidate.length > 280
+  ) {
+    return fallback;
+  }
+  try {
+    const url = new URL(candidate, "https://pikbo.local");
+    if (url.origin !== "https://pikbo.local") return fallback;
+    if (url.pathname !== "/create") return fallback;
+    if (url.hash || url.username || url.password) return fallback;
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return fallback;
+  }
+}
+
 function newAttemptHref(job: GenerationJob): string {
   return acceptedSamePhotoHandoff(job) || CREATE_MOMENT_HREF;
 }
@@ -593,13 +626,11 @@ function LibraryGridInner() {
         };
       };
       // Durable fail-closed: never invent process-memory retry — open Create.
-      if (
-        !response.ok &&
-        body.code === "DURABLE_USE_NEW_ATTEMPT" &&
-        typeof body.next?.createUi === "string" &&
-        body.next.createUi.startsWith("/")
-      ) {
-        window.location.href = body.next.createUi;
+      // Navigate only through acceptLibraryCreateNavigation (no open redirect).
+      if (!response.ok && body.code === "DURABLE_USE_NEW_ATTEMPT") {
+        window.location.href = acceptLibraryCreateNavigation(
+          body.next?.createUi
+        );
         return;
       }
       if (!response.ok || !body.ok) {
@@ -617,16 +648,16 @@ function LibraryGridInner() {
           return;
         }
       }
-      const createUi =
-        body.next?.createUi?.startsWith("/")
-          ? body.next.createUi
-          : createRemixHref(
-              job.effect || "street-power-up",
-              undefined,
-              null,
-              remixOptsFromRecord(job)
-            );
-      window.location.href = createUi;
+      const remixFallback = createRemixHref(
+        job.effect || "street-power-up",
+        undefined,
+        null,
+        remixOptsFromRecord(job)
+      );
+      window.location.href = acceptLibraryCreateNavigation(
+        body.next?.createUi,
+        remixFallback.startsWith("/create") ? remixFallback : CREATE_MOMENT_HREF
+      );
     } catch {
       toast("Retry could not be prepared. Please try again.");
     } finally {
