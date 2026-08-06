@@ -124,6 +124,20 @@ assert.match(
   /var\(--grad-cta\)/,
   "AppShell filled CTAs use copper --grad-cta token"
 );
+// AIT-537: LanguageSwitcher residual competitor lime → gallery-calm copper
+{
+  const languageSwitcher = source("components/LanguageSwitcher.tsx");
+  assert.doesNotMatch(
+    languageSwitcher,
+    /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+    "LanguageSwitcher must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert.match(
+    languageSwitcher,
+    /var\(--brand\)/,
+    "LanguageSwitcher active locale uses copper --brand token"
+  );
+}
 {
   const toast = source("components/Toast.tsx");
   assert.match(

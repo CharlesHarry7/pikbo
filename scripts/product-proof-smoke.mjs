@@ -254,6 +254,7 @@ assert(
   const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
   const button = read("components/ui/button.tsx");
   const softLaunch = read("components/SoftLaunchStrip.tsx");
+  const languageSwitcher = read("components/LanguageSwitcher.tsx");
   assert(
     !carnival.test(appShellProof),
     "components/AppShell.tsx must not hard-code carnival neon"
@@ -265,6 +266,10 @@ assert(
   assert(
     !lime.test(softLaunch),
     "SoftLaunchStrip must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    !lime.test(languageSwitcher),
+    "LanguageSwitcher must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
   );
   assert(
     appShellProof.includes("var(--grad-cta)") &&
@@ -282,6 +287,10 @@ assert(
     softLaunch.includes("var(--brand)") &&
       /rgba\(196\s*,\s*165\s*,\s*116/.test(softLaunch),
     "SoftLaunchStrip chips/CTAs use --brand + copper glow"
+  );
+  assert(
+    languageSwitcher.includes("var(--brand)"),
+    "LanguageSwitcher active locale uses --brand copper accent"
   );
 }
 

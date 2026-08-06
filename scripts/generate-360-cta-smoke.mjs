@@ -758,4 +758,17 @@ assert.match(
   "SoftLaunchStrip CTA glow uses copper board rgba(196,165,116)"
 );
 
+// AIT-537: LanguageSwitcher residual competitor lime → gallery-calm copper
+const languageSwitcherSrc = read("components/LanguageSwitcher.tsx");
+assert.doesNotMatch(
+  languageSwitcherSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "LanguageSwitcher must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  languageSwitcherSrc,
+  /var\(--brand\)/,
+  "LanguageSwitcher active locale uses --brand copper accent"
+);
+
 console.log("generate-360-cta-smoke: ok");
