@@ -401,4 +401,21 @@ assert.match(
   "Toast glow uses neon-pink board rgba"
 );
 
+// AIT-394: MobileGenerateBar floating Generate primary CTA off residual lime
+assert.doesNotMatch(
+  mobileBar,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/,
+  "MobileGenerateBar must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  mobileBar,
+  /rgba\(255,\s*78,\s*205/,
+  "MobileGenerateBar Generate CTA glow uses neon-pink board rgba"
+);
+assert.match(
+  mobileBar,
+  /btn-primary/,
+  "MobileGenerateBar Generate keeps btn-primary (board fill)"
+);
+
 console.log("generate-360-cta-smoke: ok");
