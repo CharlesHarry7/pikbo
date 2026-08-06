@@ -137,6 +137,20 @@ assert.match(
     "Toast glow uses neon-pink board rgba"
   );
 }
+{
+  // AIT-386: LanguageSwitcher residual competitor lime → neon-pink board
+  const languageSwitcher = source("components/LanguageSwitcher.tsx");
+  assert.doesNotMatch(
+    languageSwitcher,
+    /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/,
+    "LanguageSwitcher must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert.match(
+    languageSwitcher,
+    /var\(--neon-pink\)/,
+    "LanguageSwitcher active locale uses neon-pink board token"
+  );
+}
 assert.doesNotMatch(
   zh,
   /job\.seller\.blurb":\s*"[^"]*实时生成 30 积分/,
