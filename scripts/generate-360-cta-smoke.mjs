@@ -758,4 +758,36 @@ assert.match(
   "SoftLaunchStrip CTA glow uses copper board rgba(196,165,116)"
 );
 
+// AIT-556: HomeBrowseCta residual carnival pink → gallery-calm copper
+assert.doesNotMatch(
+  browseCta,
+  /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i,
+  "HomeBrowseCta must not hard-code carnival pink RGB (#FF4ECD / rgba 255,78,205)"
+);
+assert.doesNotMatch(
+  browseCta,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "HomeBrowseCta must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.doesNotMatch(
+  browseCta,
+  /var\(--neon-pink\)/,
+  "HomeBrowseCta must drop --neon-pink naming (use --brand copper board)"
+);
+assert.match(
+  browseCta,
+  /var\(--brand\)/,
+  "HomeBrowseCta border/chip/fill use --brand copper accent"
+);
+assert.match(
+  browseCta,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "HomeBrowseCta sticky glow uses copper board rgba(196,165,116)"
+);
+assert.match(
+  browseCta,
+  /var\(--primary-foreground\)/,
+  "HomeBrowseCta CTA fill text uses --primary-foreground (void) on copper"
+);
+
 console.log("generate-360-cta-smoke: ok");

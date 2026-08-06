@@ -12,6 +12,9 @@ const BROWSE_GENERATE_HREF = createGenerate360Href("home-browse");
  * Moment-first home hides the tab nav — only clear the home indicator.
  * z-index sits above page content and below sticky header (z-50).
  * Shows after leaving the hero; hides when the product-rail Generate suite is near.
+ *
+ * Gallery-calm copper board (AIT-556) — money-path CTA uses --brand / copper glow,
+ * not residual carnival pink RGB or --neon-pink naming.
  */
 export function HomeBrowseCta() {
   const { t } = useI18n();
@@ -67,19 +70,19 @@ export function HomeBrowseCta() {
         prefetch={false}
         tabIndex={visible ? 0 : -1}
         data-home-browse-generate="360"
-        className={`pointer-events-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl border border-[var(--neon-pink)]/50 bg-black/92 px-4 py-3 shadow-[0_0_40px_rgba(255,78,205,0.22),0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl transition hover:border-[var(--neon-pink)] hover:bg-black sm:max-w-lg ${
+        className={`pointer-events-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl border border-[var(--brand)]/50 bg-black/92 px-4 py-3 shadow-[0_0_40px_rgba(196,165,116,0.22),0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl transition hover:border-[var(--brand)] hover:bg-black sm:max-w-lg ${
           visible ? "" : "pointer-events-none"
         }`}
       >
         <span className="min-w-0 text-left">
-          <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--neon-pink)]/90">
+          <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--brand)]/90">
             {t("home.browseCta.chip")}
           </span>
           <span className="block truncate text-sm font-black text-white">
             {t("home.browseCta.title")}
           </span>
         </span>
-        <span className="shrink-0 rounded-full bg-[var(--neon-pink)] px-4 py-2 text-xs font-black text-[var(--void)]">
+        <span className="shrink-0 rounded-full bg-[var(--brand)] px-4 py-2 text-xs font-black text-[var(--primary-foreground)]">
           {t("home.browseCta.btn")}
         </span>
       </Link>
