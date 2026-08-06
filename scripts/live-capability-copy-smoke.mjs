@@ -684,6 +684,36 @@ assert(
   "i18n home/onboard marketing must not sell Free Mini 5s as unconditional public trial"
 );
 
+// AIT-491: residual Image stills + Create SEO footer Free Mini open-trial brand.
+const imageStudioSource = read("app/image/page.tsx");
+assert(
+  !imageStudioSource.includes("keeps the Mini trial") &&
+    !imageStudioSource.includes("Mini trial for") &&
+    imageStudioSource.includes("labeled demo stills · 0 credits") &&
+    imageStudioSource.includes("Cached Lab prototypes publicly") &&
+    imageStudioSource.includes("Live stays gated"),
+  "image studio must sell Lab/demo free path + Live gated, not Free Mini trial brand"
+);
+const createSeoFooterSource = read("components/CreateSeoFooter.tsx");
+assert(
+  !createSeoFooterSource.includes("Free path: one Mini trial") &&
+    !createSeoFooterSource.includes("one Mini trial with an on-player mark") &&
+    createSeoFooterSource.includes(
+      "Public free path is a labeled cached Lab prototype"
+    ) &&
+    createSeoFooterSource.includes(
+      "When Live is open for an eligible account"
+    ),
+  "CreateSeoFooter default body must lead with Lab free path + conditional Live, not Mini trial brand"
+);
+// Closed billing remains disclosed ($49 founding rate · checkout closed).
+assert(
+  read("components/PricingPlanCards.tsx").includes("$49 founding rate") &&
+    read("components/PricingPlanCards.tsx").includes("checkout closed") &&
+    read("components/PaywallCard.tsx").includes("checkout closed"),
+  "closed billing honesty must stay: $49 founding rate disclosed, checkout closed"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
