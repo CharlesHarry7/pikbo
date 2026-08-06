@@ -65,7 +65,7 @@ export function LandingHowItWorks({
             key={s.n}
             className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-black/40 p-4 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] sm:p-5"
           >
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--mint)] text-sm font-black text-black shadow-[0_0_16px_rgba(200,255,61,0.3)]">
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--mint)] text-sm font-black text-black shadow-[0_0_16px_color-mix(in_srgb,var(--neon-pink)_30%,transparent)]">
               {s.n}
             </span>
             <h3 className="mt-3 font-semibold text-white">{s.t}</h3>
