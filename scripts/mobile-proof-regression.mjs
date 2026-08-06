@@ -173,4 +173,41 @@ assert.match(
   "Guest Create Lab video must enable errorRetry for honest mobile recovery"
 );
 
+// AIT-492: HomeSeoBody residual content pad under HomeBrowseCta (nav-less)
+{
+  const globals = source("app/globals.css");
+  const homeSeo = source("components/HomeSeoBody.tsx");
+  const homePage = source("app/page.tsx");
+  assert.match(
+    globals,
+    /--home-browse-cta-pad:\s*calc\(\s*var\(--home-browse-cta-h\)\s*\+\s*var\(--floating-cta-safe-bottom\)/,
+    "globals --home-browse-cta-pad must stack on --floating-cta-safe-bottom"
+  );
+  assert.match(
+    homeSeo,
+    /pb-\[var\(--home-browse-cta-pad\)\]/,
+    "HomeSeoBody must use --home-browse-cta-pad on last fold"
+  );
+  assert.match(
+    homeSeo,
+    /data-home-seo-content-pad=["']home-browse-cta["']/,
+    "HomeSeoBody must expose content-pad smoke marker"
+  );
+  assert.doesNotMatch(
+    homeSeo,
+    /className="[^"]*\bpb-20\b/,
+    "HomeSeoBody must not bare pb-20"
+  );
+  assert.doesNotMatch(
+    homeSeo,
+    /className="[^"]*\bsm:pb-28\b/,
+    "HomeSeoBody must not bare sm:pb-28"
+  );
+  assert.doesNotMatch(
+    homePage,
+    /HomeSeoBody|HomeBrowseCta/,
+    "gallery-calm home must not remount HomeSeoBody / HomeBrowseCta"
+  );
+}
+
 console.log("mobile proof regression: source contracts PASS");

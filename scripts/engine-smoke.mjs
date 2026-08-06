@@ -2429,6 +2429,22 @@ assert.match(homeSeoBody, /\/tools\/ai-toy-video-generator/);
 assert.match(homeSeoBody, /\/effects\/360-spin-showcase/);
 assert.match(homeSeoBody, /\/tools\/blind-box-reveal-video-maker/);
 assert.doesNotMatch(homeSeoBody, /data-home-seo-mesh=["']long-tail["']/);
+// AIT-492: residual pad under HomeBrowseCta via shared token (not bare pb-20/28)
+assert.match(
+  homeSeoBody,
+  /pb-\[var\(--home-browse-cta-pad\)\]/
+);
+assert.match(
+  homeSeoBody,
+  /data-home-seo-content-pad=["']home-browse-cta["']/
+);
+assert.doesNotMatch(homeSeoBody, /className="[^"]*\bpb-20\b/);
+assert.doesNotMatch(homeSeoBody, /className="[^"]*\bsm:pb-28\b/);
+const globalsHomePad = fs.readFileSync(join(root, "app/globals.css"), "utf8");
+assert.match(
+  globalsHomePad,
+  /--home-browse-cta-pad:\s*calc\(\s*var\(--home-browse-cta-h\)\s*\+\s*var\(--floating-cta-safe-bottom\)/
+);
 const highIntentTruth = fs.readFileSync(
   join(root, "components/HighIntentProductTruth.tsx"),
   "utf8"

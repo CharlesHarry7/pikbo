@@ -80,6 +80,17 @@
   );
   --floating-generate-z: 40;
 
+  /*
+   * HomeBrowseCta floating pill (nav-less home path). AIT-492 / AIT-371.
+   * Last HomeSeoBody (and similar) folds clear pill + home indicator —
+   * stacks on --floating-cta-safe-bottom (AIT-359); never bare pb-20/24/28.
+   * Pill ≈ chip + title row + py-3 + outer pt-2 ≈ 3.75rem.
+   */
+  --home-browse-cta-h: 3.75rem;
+  --home-browse-cta-pad: calc(
+    var(--home-browse-cta-h) + var(--floating-cta-safe-bottom) + 0.5rem
+  );
+
   /* shadcn-compatible aliases */
   --background: var(--bg);
   --foreground: var(--fg);

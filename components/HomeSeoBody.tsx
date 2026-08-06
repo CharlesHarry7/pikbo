@@ -33,7 +33,12 @@ export function HomeSeoBody() {
   };
 
   return (
-    <section className="bg-[#F2EDE3] px-4 pb-20 text-[#171717] sm:px-7 sm:pb-28 lg:bg-[#111111] lg:px-8 lg:pb-24 lg:text-[#F5F1E8]">
+    // AIT-492: last SEO fold clears HomeBrowseCta + home indicator (nav-less)
+    // via --home-browse-cta-pad (not fixed Tailwind bottom pads).
+    <section
+      className="bg-[#F2EDE3] px-4 pb-[var(--home-browse-cta-pad)] text-[#171717] sm:px-7 lg:bg-[#111111] lg:px-8 lg:pb-24 lg:text-[#F5F1E8]"
+      data-home-seo-content-pad="home-browse-cta"
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}

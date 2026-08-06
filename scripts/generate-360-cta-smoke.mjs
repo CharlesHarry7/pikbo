@@ -465,4 +465,45 @@ assert.match(
   "Toast glow uses neon-pink board rgba"
 );
 
+// 9. AIT-492 — HomeSeoBody residual pad under HomeBrowseCta (nav-less)
+assert.match(
+  globalsCss,
+  /--home-browse-cta-h:\s*3\.75rem/,
+  "globals must define --home-browse-cta-h for HomeBrowseCta pill chrome"
+);
+assert.match(
+  globalsCss,
+  /--home-browse-cta-pad:\s*calc\(\s*var\(--home-browse-cta-h\)\s*\+\s*var\(--floating-cta-safe-bottom\)/,
+  "globals --home-browse-cta-pad must stack pill height on --floating-cta-safe-bottom"
+);
+{
+  const homeSeoBody = read("components/HomeSeoBody.tsx");
+  assert.match(
+    homeSeoBody,
+    /pb-\[var\(--home-browse-cta-pad\)\]/,
+    "HomeSeoBody last fold must clear HomeBrowseCta via --home-browse-cta-pad"
+  );
+  assert.match(
+    homeSeoBody,
+    /data-home-seo-content-pad=["']home-browse-cta["']/,
+    "HomeSeoBody content pad must expose smoke marker"
+  );
+  assert.doesNotMatch(
+    homeSeoBody,
+    /className="[^"]*\bpb-20\b/,
+    "HomeSeoBody must not bare pb-20 under floating HomeBrowseCta"
+  );
+  assert.doesNotMatch(
+    homeSeoBody,
+    /className="[^"]*\bsm:pb-28\b/,
+    "HomeSeoBody must not bare sm:pb-28 under floating HomeBrowseCta"
+  );
+  // Gallery-calm home must not remount SEO body / floating browse (AIT-432)
+  assert.doesNotMatch(
+    homePage,
+    /HomeSeoBody|HomeBrowseCta/,
+    "gallery-calm home must not remount HomeSeoBody / HomeBrowseCta"
+  );
+}
+
 console.log("generate-360-cta-smoke: ok");
