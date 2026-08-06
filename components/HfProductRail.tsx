@@ -102,15 +102,15 @@ export function HfProductRail() {
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-            {/* Secondary Free / Lab sample — outline only, not a filled primary. */}
+            {/* Secondary Lab sample — outline only; never competes as filled primary. */}
             <FreeTrialCta
               path="/#product-rail"
-              labelTry="Try free · Mini 5s"
+              labelTry="Lab sample"
               labelDemo="Lab sample"
               hideClipsChip
               className="rounded-full border border-white/20 bg-transparent px-3 py-1.5 text-[11px] font-bold text-white/70 transition hover:border-white/40 hover:text-white"
             />
-            {/* One primary Generate → 360 (AIT-181 / AIT-169). */}
+            {/* One primary Generate → 360 (AIT-212 / AIT-192 continuity). */}
             <Link
               href={GENERATE_REMIX_HREF}
               className="rounded-full bg-[#c8ff3d] px-4 py-2 text-[11px] font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(200,255,61,0.4)]"
@@ -130,15 +130,15 @@ export function HfProductRail() {
           </div>
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {/* Free Mini honesty card — secondary outline, Lab sample only. */}
+          {/* Lab sample card — secondary outline; Live private stays gated elsewhere. */}
           <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] p-3.5 transition hover:border-white/30 sm:h-[11rem] sm:w-[10rem]">
             <span className="relative z-10 inline-flex rounded-full border border-white/20 bg-black/40 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white/70">
-              Free
+              Lab
             </span>
             <p className="relative z-10 mt-2 text-[13px] font-black leading-tight text-white">
               <FreeTrialCta
                 path="/#product-rail-card"
-                labelTry="Try free"
+                labelTry="Lab sample"
                 labelDemo="Lab sample"
                 labelPlans="Plans"
                 hideClipsChip
@@ -146,7 +146,7 @@ export function HfProductRail() {
               />
             </p>
             <p className="relative z-10 mt-1 text-[10px] leading-snug text-white/45">
-              Lab sample · Free Mini 5s
+              Cached preview · 0 credits
             </p>
           </div>
           {PRODUCTS.map((p) => {
