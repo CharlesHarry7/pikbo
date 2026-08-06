@@ -132,6 +132,30 @@ assert(
   "toys hub must drop Free Mini chip and keep Lab public path"
 );
 
+// AIT-290: Modules residual — FAQ + shelf chip no longer sell Free Mini as public-open live.
+const modulesSource = read("app/modules/page.tsx");
+const forbiddenModulesFreeMini = [
+  /What does Free Mini cover on Modules\?/i,
+  /Free Mini raw download gated until T6 bake/i,
+  /The configured allowance is about one Mini job only when Live is enabled/i,
+];
+for (const pattern of forbiddenModulesFreeMini) {
+  assert(
+    !pattern.test(modulesSource),
+    `app/modules/page.tsx contains residual Free Mini modules promise ${pattern}`
+  );
+}
+assert(
+  modulesSource.includes("What does the public free path cover on Modules?") &&
+    modulesSource.includes("Cached Lab prototypes cost 0 credits") &&
+    modulesSource.includes(
+      "When Live is enabled for an eligible account"
+    ) &&
+    modulesSource.includes("Free-plan raw download stays gated until T6 bake") &&
+    modulesSource.includes("When Live is enabled, Seedance video out"),
+  "modules FAQ/chip must sell Lab public path + conditional Live, not Free Mini as public trial"
+);
+
 assert(
   read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
     read("lib/site.ts").includes("AI product video studio for toy sellers"),

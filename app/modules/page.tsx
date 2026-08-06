@@ -36,8 +36,8 @@ const MODULES_FAQ = [
     a: "No. Posters and Lab samples are cached prototypes with provider evidence pending. Your upload is never those stills. Cached previews cost 0 credits; a verified live path uses plan credits.",
   },
   {
-    q: "What does Free Mini cover on Modules?",
-    a: "Cached Lab prototypes cost 0 credits and do not process your upload. The configured allowance is about one Mini job only when Live is enabled for an eligible account; protected Free delivery remains gated.",
+    q: "What does the public free path cover on Modules?",
+    a: "Cached Lab prototypes cost 0 credits and do not process your upload. When Live is enabled for an eligible account, Generate shows the exact credit quote before submission; protected live delivery remains gated.",
   },
   {
     q: "Do I need to create every format?",
@@ -353,7 +353,7 @@ export default function ModulesPage() {
                 {
                   n: "3",
                   t: "Generate & deliver",
-                  d: "Seedance video out. Free Mini raw download gated until T6 bake.",
+                  d: "When Live is enabled, Seedance video out. Free-plan raw download stays gated until T6 bake.",
                 },
               ].map((s) => (
                 <li
