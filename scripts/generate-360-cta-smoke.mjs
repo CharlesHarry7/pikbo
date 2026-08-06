@@ -65,6 +65,7 @@ const generateSurfaces = [
   ["components/SuiteEntryStrip.tsx", "suite-entry"],
   ["components/HowItWorks.tsx", "how-it-works"],
   ["components/MobileGenerateBar.tsx", "mobile-bar"],
+  ["components/AppShell.tsx", "shell-mobile-home"],
   ["components/SoftLaunchStrip.tsx", "soft-launch"],
   ["components/LandingSeoMesh.tsx", "seo-mesh"],
   ["components/ModulesSuiteCtas.tsx", "modules-photo-clip"],
@@ -284,6 +285,49 @@ assert.match(
   mobileBar,
   /data-floating-generate=["']mobile-bar["']/,
   "MobileGenerateBar root must carry floating-generate marker for clearance smoke"
+);
+
+// 6b. AIT-367 — AppShell mobile home dual doors (Moment + Generate→360)
+assert.match(
+  appShellSrc,
+  /createGenerate360Href\(["']shell-mobile-home["']\)/,
+  "AppShell mobile home must tag Generate→360 source=shell-mobile-home"
+);
+assert.match(
+  appShellSrc,
+  /data-shell-mobile-360-cta/,
+  "AppShell mobile home must expose data-shell-mobile-360-cta"
+);
+assert.match(
+  appShellSrc,
+  /data-shell-mobile-moment-cta/,
+  "AppShell mobile home must expose data-shell-mobile-moment-cta"
+);
+assert.match(
+  appShellSrc,
+  /Create my drop clip/,
+  "AppShell mobile home Moment primary label must stay honest"
+);
+assert.match(
+  appShellSrc,
+  /Generate 360°/,
+  "AppShell mobile home must expose secondary Generate 360° label"
+);
+assert.doesNotMatch(
+  appShellSrc,
+  /href=\{["']\/create["']\}|href=["']\/create["']/,
+  "AppShell must not bare-link /create"
+);
+// Board tokens: neon-pink secondary, no competitor lime on shell CTAs
+assert.doesNotMatch(
+  appShellSrc,
+  /#c8ff3d|c8ff3d|00FFA3|#00ffa3/i,
+  "AppShell mobile chrome must not use competitor lime on dual-door CTAs"
+);
+assert.match(
+  appShellSrc,
+  /#FF4ECD|FF4ECD/,
+  "AppShell dual doors use neon-pink board tokens"
 );
 
 // 7. AIT-150 — mobile nav safe-area + residual sticky CTAs use shared clearance tokens

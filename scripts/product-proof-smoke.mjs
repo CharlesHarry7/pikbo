@@ -133,6 +133,20 @@ assert(
     homeWall.includes("createGenerate360Href('home-proof-wall')"),
   "proof wall Listing 360 must tag source=home-proof-wall"
 );
+
+// AIT-367: sticky mobile home AppShell dual doors (Moment primary + Generate→360).
+const appShell = read("components/AppShell.tsx");
+assert(
+  appShell.includes('createGenerate360Href("shell-mobile-home")') &&
+    appShell.includes("data-shell-mobile-360-cta") &&
+    appShell.includes("data-shell-mobile-moment-cta") &&
+    appShell.includes("Create my drop clip") &&
+    appShell.includes("Generate 360°") &&
+    !appShell.includes('href="/create"') &&
+    !appShell.includes("href={'/create'}") &&
+    !/#c8ff3d|c8ff3d/.test(appShell),
+  "AppShell mobile home: Moment primary + Generate→360 secondary (source=shell-mobile-home, neon-pink, no bare /create)"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"
