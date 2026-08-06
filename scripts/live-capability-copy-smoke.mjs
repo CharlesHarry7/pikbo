@@ -132,6 +132,20 @@ assert(
   "toys hub must drop Free Mini chip and keep Lab public path"
 );
 
+// AIT-403: Home HF Explore density shelf — no unconditional Mini 5s product-cap chip.
+const hfExploreHomeSource = read("components/HfExploreHome.tsx");
+assert(
+  !hfExploreHomeSource.includes("Mini 5s · Sample ready") &&
+    !/Mini 5s/.test(hfExploreHomeSource),
+  "HfExploreHome FreeTrialCta neighborhood must not sell unconditional Mini 5s while Live is closed"
+);
+assert(
+  hfExploreHomeSource.includes("Cached Lab · 0 credits") ||
+    hfExploreHomeSource.includes("Lab sample · 0 credits") ||
+    /freeLiveOpen[\s\S]{0,200}Mini 5s/.test(hfExploreHomeSource),
+  "HfExploreHome FreeTrialCta caption must be Cached Lab / Lab sample honesty (or Live-gated Mini)"
+);
+
 // AIT-290: Modules residual — FAQ + shelf chip no longer sell Free Mini as public-open live.
 const modulesSource = read("app/modules/page.tsx");
 const forbiddenModulesFreeMini = [
