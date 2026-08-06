@@ -66,6 +66,7 @@ const generateSurfaces = [
   ["components/SoftLaunchStrip.tsx", "soft-launch"],
   ["components/LandingSeoMesh.tsx", "seo-mesh"],
   ["components/ModulesSuiteCtas.tsx", "modules-photo-clip"],
+  ["components/ModulesMobileCta.tsx", "modules-mobile"],
   ["components/CommandPalette.tsx", null],
   ["components/GenerateSuiteChrome.tsx", null],
   ["components/Header.tsx", "header"],
@@ -163,5 +164,50 @@ assert.match(sample, /^\/create\?/);
 assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
+
+// 5. AIT-242 Modules mobile sticky CTAs: one primary Generate→360
+const modulesMobileCta = read("components/ModulesMobileCta.tsx");
+assert.match(
+  modulesMobileCta,
+  /data-modules-mobile-primary-generate=["']360["']/,
+  "ModulesMobileCta must mark primary Generate as 360"
+);
+assert.match(
+  modulesMobileCta,
+  /data-modules-mobile-primary-generate-cta/,
+  "ModulesMobileCta must expose primary Generate CTA marker"
+);
+assert.match(
+  modulesMobileCta,
+  /createGenerate360Href\(\s*["']modules-mobile["']\s*\)/,
+  "ModulesMobileCta primary Generate must use createGenerate360Href(modules-mobile)"
+);
+assert.match(
+  modulesMobileCta,
+  /Generate 360°/,
+  "ModulesMobileCta primary CTA label must say Generate 360°"
+);
+// Free / Lab / plans must not be a filled primary competing with Generate
+assert.match(
+  modulesMobileCta,
+  /btn-ghost[\s\S]{0,80}border border-white\/15|border border-white\/15[\s\S]{0,40}btn-ghost/,
+  "ModulesMobileCta Free/Lab/plans strip must be secondary outline"
+);
+assert.match(
+  modulesMobileCta,
+  /createLabSampleTryHref|data-modules-mobile-lab=["']remix["']/,
+  "ModulesMobileCta keeps Lab sample remix contract as secondary"
+);
+// Tertiary doors stay outline (not filled primaries)
+assert.doesNotMatch(
+  modulesMobileCta,
+  /href=["']\/library["'][\s\S]{0,120}btn-primary/,
+  "ModulesMobileCta Library must not be a filled primary"
+);
+assert.doesNotMatch(
+  modulesMobileCta,
+  /Create Moment[\s\S]{0,80}btn-primary|btn-primary[\s\S]{0,80}Create Moment/,
+  "ModulesMobileCta Moment must not be a filled primary"
+);
 
 console.log("generate-360-cta-smoke: ok");

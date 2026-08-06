@@ -10,13 +10,26 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
-import { createLabSampleTryHref } from "@/lib/jobIntents";
+import {
+  createGenerate360Href,
+  createLabSampleTryHref,
+} from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
+/** Primary Generate door — listing spin remix (ratio/duration/channel). */
+const MODULES_MOBILE_GENERATE_HREF = createGenerate360Href("modules-mobile");
 /** Lab sample try — remix + try/sample (not bare /create?try=1). */
 const MODULES_MOBILE_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
+const MODULES_MOBILE_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=modules-mobile` as const;
 
-/** Sticky mobile CTA on Modules wall — above AppShell tab nav */
+/**
+ * Sticky mobile CTA on Modules wall — above AppShell tab nav.
+ *
+ * AIT-242 friction cut: one filled primary Generate→360 CTA.
+ * Free / Lab sample / plans stay secondary outline — no second filled primary.
+ */
 export function ModulesMobileCta() {
   const { t } = useI18n();
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -42,9 +55,10 @@ export function ModulesMobileCta() {
       ? me.freeTrial.clipsLeft
       : null;
 
-  const primaryHref =
+  // Secondary Free / Lab / plans (outline only — honest exhaustion → pricing).
+  const secondaryHref =
     trialDone && !demo ? "/pricing" : MODULES_MOBILE_LAB_SAMPLE_HREF;
-  const primaryLabel =
+  const secondaryLabel =
     trialDone && !demo
       ? "Plans"
       : demo
@@ -58,13 +72,33 @@ export function ModulesMobileCta() {
         : t("modules.mobile.hint");
 
   return (
-    <div className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-3 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden">
+    <div
+      className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-3 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+      data-modules-mobile-primary-generate="360"
+    >
       <p className="mb-1.5 text-center text-[10px] font-medium text-white/45">
         {hint}
       </p>
       <div className="flex gap-2">
+        {/* One primary Generate → 360 (AIT-242). */}
         <Link
-          href={primaryHref}
+          href={MODULES_MOBILE_GENERATE_HREF}
+          onClick={() =>
+            track({
+              event: "landing_view",
+              path: "/modules",
+              meta: { cta: "modules_mobile_primary_generate_360" },
+            })
+          }
+          className="btn btn-primary min-w-0 flex-[1.4] py-3 text-sm font-black"
+          title="One owned toy photo → short listing or social clip"
+          data-modules-mobile-primary-generate-cta
+        >
+          Generate 360° →
+        </Link>
+        {/* Secondary Free / Lab sample / plans — outline only, not a filled primary. */}
+        <Link
+          href={secondaryHref}
           onClick={() =>
             track({
               event: "landing_view",
@@ -74,18 +108,18 @@ export function ModulesMobileCta() {
               },
             })
           }
-          className="btn btn-primary min-w-0 flex-[1.4] py-3 text-sm font-black"
+          className="btn btn-ghost min-w-0 shrink border border-white/15 px-2.5 py-3 text-xs font-bold"
           data-modules-mobile-lab="remix"
         >
-          {primaryLabel}
+          {secondaryLabel}
         </Link>
         <Link
-          href="/create?effect=street-power-up&source=modules-mobile"
+          href={MODULES_MOBILE_MOMENT_HREF}
           onClick={() =>
             track({
               event: "landing_view",
               path: "/modules",
-                meta: { cta: "single_moment" },
+              meta: { cta: "single_moment" },
             })
           }
           className="btn btn-ghost shrink-0 border border-white/15 px-3 py-3 text-xs font-bold"
