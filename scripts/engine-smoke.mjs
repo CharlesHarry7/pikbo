@@ -4537,11 +4537,32 @@ const modulesSuiteCtasSrc = fs.readFileSync(
 );
 assert.match(modulesSuiteCtasSrc, /freeTrialExhausted/);
 assert.match(modulesSuiteCtasSrc, /Compare plans|Try free/);
+// Modules mobile sticky CTAs: one primary Generate→360 (AIT-242) + Free/Lab secondary outline
 const modulesMobileCtaSrc = fs.readFileSync(
   join(root, "components/ModulesMobileCta.tsx"),
   "utf8"
 );
 assert.match(modulesMobileCtaSrc, /freeTrialExhausted/);
+assert.match(
+  modulesMobileCtaSrc,
+  /createGenerate360Href|data-modules-mobile-primary-generate=["']360["']/
+);
+assert.match(
+  modulesMobileCtaSrc,
+  /data-modules-mobile-primary-generate=["']360["']/
+);
+assert.match(modulesMobileCtaSrc, /data-modules-mobile-primary-generate-cta/);
+assert.match(
+  modulesMobileCtaSrc,
+  /createGenerate360Href\(\s*["']modules-mobile["']\s*\)/
+);
+assert.match(modulesMobileCtaSrc, /Generate 360°/);
+assert.match(modulesMobileCtaSrc, /btn-ghost/);
+assert.match(modulesMobileCtaSrc, /border border-white\/15/);
+assert.match(
+  modulesMobileCtaSrc,
+  /createLabSampleTryHref|data-modules-mobile-lab=["']remix["']/
+);
 assert.match(
   fs.readFileSync(join(root, "lib/i18n.ts"), "utf8"),
   /modules\.mobile\.try.*Lab|Try free · Lab/

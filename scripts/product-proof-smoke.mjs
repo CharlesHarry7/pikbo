@@ -123,6 +123,18 @@ assert(
     homeWall.includes("createGenerate360Href('home-proof-wall')"),
   "proof wall Listing 360 must tag source=home-proof-wall"
 );
+// AIT-242: Modules mobile sticky — one primary Generate→360 (not Free/Lab filled dual door)
+const modulesMobileCta = read("components/ModulesMobileCta.tsx");
+assert(
+  modulesMobileCta.includes('data-modules-mobile-primary-generate="360"') &&
+    modulesMobileCta.includes("data-modules-mobile-primary-generate-cta") &&
+    modulesMobileCta.includes('createGenerate360Href("modules-mobile")') &&
+    modulesMobileCta.includes("Generate 360°") &&
+    modulesMobileCta.includes('data-modules-mobile-lab="remix"') &&
+    modulesMobileCta.includes("btn-ghost") &&
+    modulesMobileCta.includes("border border-white/15"),
+  "ModulesMobileCta must expose one primary Generate→360 door with secondary Free/Lab outline"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"
