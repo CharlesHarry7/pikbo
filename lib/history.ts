@@ -4,6 +4,8 @@ import {
   canDownloadResult,
   freeLiveDownloadBlockReason,
   isSafeDeliverableUrl,
+  isStorageSignedObjectUrl,
+  durableClientVideoUrl,
   classifyDownloadHead,
 } from "@/lib/createTrust";
 import { resultProvenanceLabel } from "@/lib/provenance";
@@ -78,7 +80,12 @@ function slimInputImage(inputImage: string | undefined): string | undefined {
   return undefined;
 }
 
-function normalizeItem(raw: unknown): HistoryItem | null {
+/**
+ * Normalize one history row for durable store hydrate.
+ * Storage signed absolute URLs rewrite to `/api/downloads/{id}` when requestId
+ * is known; otherwise they are dropped so tokens never re-enter localStorage.
+ */
+export function normalizeHistoryItem(raw: unknown): HistoryItem | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
   if (typeof o.videoUrl !== "string" || !o.videoUrl) return null;
@@ -87,12 +94,18 @@ function normalizeItem(raw: unknown): HistoryItem | null {
   if (typeof o.effect !== "string" || typeof o.effectName !== "string") {
     return null;
   }
+  const requestId =
+    typeof o.requestId === "string" && o.requestId.trim()
+      ? o.requestId.trim()
+      : undefined;
+  const videoUrl = durableClientVideoUrl(o.videoUrl.trim(), { requestId });
+  if (!videoUrl) return null;
   return {
     id:
       typeof o.id === "string" && o.id
         ? o.id
         : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    videoUrl: o.videoUrl.trim(),
+    videoUrl,
     projectId: typeof o.projectId === "string" ? o.projectId : undefined,
     projectName:
       typeof o.projectName === "string" ? o.projectName : undefined,
@@ -108,7 +121,7 @@ function normalizeItem(raw: unknown): HistoryItem | null {
     duration: typeof o.duration === "number" ? o.duration : undefined,
     aspectRatio: typeof o.aspectRatio === "string" ? o.aspectRatio : undefined,
     resolution: typeof o.resolution === "string" ? o.resolution : undefined,
-    requestId: typeof o.requestId === "string" ? o.requestId : undefined,
+    requestId,
     sourceProject:
       typeof o.sourceProject === "string" ? o.sourceProject : undefined,
     channel: typeof o.channel === "string" ? o.channel : undefined,
@@ -126,6 +139,23 @@ function normalizeItem(raw: unknown): HistoryItem | null {
   };
 }
 
+/** @deprecated Prefer normalizeHistoryItem — kept for call-site clarity. */
+const normalizeItem = normalizeHistoryItem;
+
+/** Scrub signed storage tokens from items before any durable write. */
+function scrubHistoryItems(list: HistoryItem[]): HistoryItem[] {
+  return list
+    .map((item) => {
+      const videoUrl = durableClientVideoUrl(item.videoUrl, {
+        requestId: item.requestId,
+      });
+      if (!videoUrl) return null;
+      if (videoUrl === item.videoUrl) return item;
+      return { ...item, videoUrl };
+    })
+    .filter((x): x is HistoryItem => Boolean(x));
+}
+
 export function loadHistory(): HistoryItem[] {
   if (typeof window === "undefined") return [];
   try {
@@ -133,14 +163,26 @@ export function loadHistory(): HistoryItem[] {
     if (!raw) return [];
     const list = JSON.parse(raw) as unknown[];
     if (!Array.isArray(list)) return [];
-    return list.map(normalizeItem).filter((x): x is HistoryItem => Boolean(x));
+    const next = list
+      .map(normalizeItem)
+      .filter((x): x is HistoryItem => Boolean(x));
+    // Opportunistic durable scrub: pre-AIT-188 rows may still hold signed URLs.
+    const dirty = list.some((item) => {
+      if (!item || typeof item !== "object") return false;
+      const v = (item as Record<string, unknown>).videoUrl;
+      return typeof v === "string" && isStorageSignedObjectUrl(v);
+    });
+    if (dirty) {
+      saveHistory(next);
+    }
+    return next;
   } catch {
     return [];
   }
 }
 
 export function saveHistory(list: HistoryItem[]): void {
-  const capped = list.slice(0, MAX);
+  const capped = scrubHistoryItems(list).slice(0, MAX);
   try {
     localStorage.setItem(KEY, JSON.stringify(capped));
     return;

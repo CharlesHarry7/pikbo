@@ -54,6 +54,7 @@ import {
   classifyDownloadHead,
   isPlayableResultVideoUrl,
   freeLiveDownloadBlockReason,
+  durableClientVideoUrl,
   internSourceImage,
   isSafeDeliverableUrl,
   isSessionGatedDownloadUrl,
@@ -1213,7 +1214,20 @@ export function CreateStudio({
       typeof data.creditsOutcome === "string"
         ? data.creditsOutcome
         : requestCreditStateFromSuccess(Boolean(data.demo));
-    setVideoUrl(data.videoUrl);
+    // Never keep residual storage signed URLs in session version stack.
+    const resultVideoUrl =
+      durableClientVideoUrl(data.videoUrl, {
+        jobId: typeof data.jobId === "string" ? data.jobId : null,
+        requestId: typeof data.requestId === "string" ? data.requestId : null,
+      }) ??
+      (typeof data.jobId === "string" && data.jobId
+        ? `/api/downloads/${encodeURIComponent(data.jobId)}`
+        : typeof data.requestId === "string" && data.requestId
+          ? `/api/downloads/${encodeURIComponent(data.requestId)}`
+          : data.videoUrl.startsWith("/")
+            ? data.videoUrl
+            : "/api/downloads/unavailable");
+    setVideoUrl(resultVideoUrl);
     setDemo(Boolean(data.demo));
     setWatermark(Boolean(data.watermark));
     setUsedModel(serverModel);
@@ -1260,7 +1274,7 @@ export function CreateStudio({
     });
     const version: ResultVersion = {
       id: versionId,
-      videoUrl: data.videoUrl,
+      videoUrl: resultVideoUrl,
       demo: Boolean(data.demo),
       watermark: Boolean(data.watermark),
       model: serverModel,

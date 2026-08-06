@@ -3,10 +3,41 @@
  *
  * The browser stores only packRunId + the three server-created packJobIds.
  * `/api/seller-pack/status` remains the owner-scoped authority for state,
- * private signed result URLs, and credit outcomes after refresh.
+ * controlled /api/downloads result URLs (or rewritten legacy signed media),
+ * and credit outcomes after refresh.
+ *
+ * Pure module (no createTrust import) so Node smokes can eval it without a
+ * full path-alias graph. Signed-URL rewrite mirrors durableClientVideoUrl.
  */
 
 import { SELLER_PACK_ITEMS } from "@/lib/sellerPackContract";
+
+/**
+ * Prefer controlled gate; rewrite residual storage signed object URLs with job id.
+ * Kept local so this file stays a pure recovery pointer (smoke-loadable).
+ */
+function clientSafePackVideoUrl(
+  resultUrl: string,
+  jobId: string
+): string | null {
+  const t = (resultUrl || "").trim();
+  if (!t || t.length > 2000) return null;
+  if (t.startsWith("/api/downloads/") && !t.startsWith("//")) return t;
+  // Supabase / S3-style storage signatures must never hydrate into pack children.
+  const looksSigned =
+    /\/storage\/v1\/object\/sign\//i.test(t) ||
+    /\/object\/sign\//i.test(t) ||
+    (/[?&]token=/i.test(t) && /\/(?:storage|object)\//i.test(t)) ||
+    /[?&]X-Amz-(?:Signature|Credential)=/i.test(t) ||
+    (/[?&]Signature=/i.test(t) && /[?&]Expires=/i.test(t));
+  if (looksSigned) {
+    const id = (jobId || "").trim();
+    return id ? `/api/downloads/${encodeURIComponent(id)}` : null;
+  }
+  if (/^https?:\/\//i.test(t)) return t;
+  if (t.startsWith("/") && !t.startsWith("//")) return t;
+  return null;
+}
 
 export const SELLER_PACK_RECOVERY_KEY = "pikbo_seller_pack_active_v2";
 
@@ -183,11 +214,17 @@ export function reconcileSellerPackRecovery(
         };
       }
       if (job.status === "succeeded") {
+        const resultUrl =
+          typeof job.resultUrl === "string" ? job.resultUrl.trim() : "";
+        const videoUrl = clientSafePackVideoUrl(resultUrl, job.jobId);
+        const deliverable =
+          Boolean(videoUrl) &&
+          (videoUrl!.startsWith("/api/downloads/") ||
+            /^https?:\/\//i.test(videoUrl!));
         if (
           job.settledCredits !== 10 ||
           job.hasPrivateResult !== true ||
-          typeof job.resultUrl !== "string" ||
-          !job.resultUrl.startsWith("http")
+          !deliverable
         ) {
           unavailable += 1;
           return {
@@ -202,7 +239,7 @@ export function reconcileSellerPackRecovery(
           requestId: job.jobId,
           status: "succeeded",
           creditState: "10 used",
-          videoUrl: job.resultUrl,
+          videoUrl: videoUrl!,
           demo: false,
           model: job.modelId || undefined,
           duration: job.durationSec,

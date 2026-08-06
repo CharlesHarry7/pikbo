@@ -705,7 +705,11 @@ assert.match(createStudio, /showLabSample=\{lastUploadIgnored \|\| !image\}/);
 const ignoredUploadGateAt = createStudio.indexOf(
   "const ignoredOwnedUpload = isIgnoredOwnedUploadResult"
 );
-const acceptedResultAt = createStudio.indexOf("setVideoUrl(data.videoUrl)");
+// AIT-203: may set rewritten resultVideoUrl rather than raw data.videoUrl
+const acceptedResultAt = Math.max(
+  createStudio.indexOf("setVideoUrl(data.videoUrl)"),
+  createStudio.indexOf("setVideoUrl(resultVideoUrl)")
+);
 assert.ok(
   ignoredUploadGateAt > 0 && acceptedResultAt > ignoredUploadGateAt,
   "owned-upload honesty gate must run before any cached URL becomes READY"
@@ -2665,6 +2669,10 @@ assert.match(createTrust, /export function isPlayableResultVideoUrl/);
 assert.match(createTrust, /export function isPublicCommunityVideoUrl/);
 assert.match(createTrust, /export function isSessionGatedDownloadUrl/);
 assert.match(createTrust, /export function publicShareableVideoUrl/);
+// AIT-203: durable client stores must rewrite/drop storage signed object URLs
+assert.match(createTrust, /export function isStorageSignedObjectUrl/);
+assert.match(createTrust, /export function durableClientVideoUrl/);
+assert.match(createTrust, /\/storage\/v1\/object\/sign\//);
 assert.match(genRoute, /customerFacingGenerateVideoUrl/);
 // Pure community public URL parity
 function isPublicCommunityVideoUrl(url) {
@@ -2996,6 +3004,105 @@ assert.equal(isSafeDeliverableUrlPure("https://fal.media/files/x.mp4"), true);
 assert.equal(isSafeDeliverableUrlPure("javascript:alert(1)"), false);
 assert.equal(isSafeDeliverableUrlPure("//evil.com/x"), false);
 assert.equal(isSafeDeliverableUrlPure("data:text/html,hi"), false);
+
+// AIT-203: history normalize rewrites/drops storage signed URLs (never keep tokens)
+function isStorageSignedObjectUrlPure(url) {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t || t.length > 2000) return false;
+  if (!/^https?:\/\//i.test(t)) return false;
+  try {
+    const u = new URL(t);
+    const path = u.pathname.toLowerCase();
+    if (path.includes("/storage/v1/object/sign/")) return true;
+    if (path.includes("/object/sign/")) return true;
+    if (
+      u.searchParams.has("token") &&
+      (path.includes("/storage/") || path.includes("/object/"))
+    ) {
+      return true;
+    }
+    if (
+      u.searchParams.has("X-Amz-Signature") ||
+      u.searchParams.has("X-Amz-Credential") ||
+      (u.searchParams.has("Signature") && u.searchParams.has("Expires"))
+    ) {
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+function durableClientVideoUrlPure(videoUrl, opts) {
+  if (!videoUrl || typeof videoUrl !== "string") return null;
+  const t = videoUrl.trim();
+  if (!t || !isSafeDeliverableUrlPure(t)) return null;
+  if (isStorageSignedObjectUrlPure(t)) {
+    const id = String(opts?.jobId || opts?.requestId || "").trim();
+    if (!id) return null;
+    return `/api/downloads/${encodeURIComponent(id)}`;
+  }
+  return t;
+}
+const signedSupabase =
+  "https://abc.supabase.co/storage/v1/object/sign/pikbo-private-results/u/job.mp4?token=eyJhbGciOiJIUzI1NiJ9.sig";
+const signedS3 =
+  "https://bucket.s3.amazonaws.com/private/job.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA&X-Amz-Signature=deadbeef";
+assert.equal(isStorageSignedObjectUrlPure(signedSupabase), true);
+assert.equal(isStorageSignedObjectUrlPure(signedS3), true);
+assert.equal(isStorageSignedObjectUrlPure("https://fal.media/files/x.mp4"), false);
+assert.equal(isStorageSignedObjectUrlPure("/api/downloads/job_1"), false);
+assert.equal(
+  durableClientVideoUrlPure(signedSupabase, { requestId: "job_abc" }),
+  "/api/downloads/job_abc"
+);
+assert.equal(durableClientVideoUrlPure(signedSupabase, {}), null);
+assert.equal(
+  durableClientVideoUrlPure(signedS3, { jobId: "pack_1" }),
+  "/api/downloads/pack_1"
+);
+assert.equal(
+  durableClientVideoUrlPure("/api/downloads/job_1", { requestId: "job_1" }),
+  "/api/downloads/job_1"
+);
+assert.equal(
+  durableClientVideoUrlPure("/demos/orbit-dance.mp4", {}),
+  "/demos/orbit-dance.mp4"
+);
+assert.equal(
+  durableClientVideoUrlPure("https://fal.media/files/x.mp4", {
+    requestId: "job_x",
+  }),
+  "https://fal.media/files/x.mp4"
+);
+assert.equal(durableClientVideoUrlPure("javascript:alert(1)", { requestId: "j" }), null);
+// History + Create/Batch must wire the pure helper (durable scrub on hydrate)
+const historySrcAit203 = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
+assert.match(historySrcAit203, /durableClientVideoUrl|isStorageSignedObjectUrl/);
+assert.match(historySrcAit203, /normalizeHistoryItem|normalizeItem/);
+assert.match(historySrcAit203, /scrubHistoryItems|dirty/);
+assert.match(
+  fs.readFileSync(join(root, "lib/generateClient.ts"), "utf8"),
+  /durableClientVideoUrl/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/CreateStudio.tsx"), "utf8"),
+  /durableClientVideoUrl/
+);
+assert.match(
+  fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+  /durableClientVideoUrl/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/sellerPackRecovery.ts"), "utf8"),
+  /clientSafePackVideoUrl|\/api\/downloads\//
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/sellerPackRecovery.ts"), "utf8"),
+  /object\/sign|X-Amz-Signature|token=/
+);
+
 // Seller Pack: unsafe direct URL dropped; requestId still allowed via downloads gate
 assert.equal(
   filterAvailable([
