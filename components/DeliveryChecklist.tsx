@@ -72,12 +72,12 @@ export function DeliveryChecklist({
     <div
       className={`rounded-2xl border px-3.5 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm ${
         allDone
-          ? "border-[var(--mint)]/35 bg-[var(--mint)]/[0.08]"
+          ? "border-[var(--neon-pink)]/35 bg-[var(--neon-pink)]/[0.08]"
           : "border-white/10 bg-black/55"
       } ${className}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--mint)]/90">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--neon-pink)]/90">
           {title}
           <span className="ml-1.5 font-semibold normal-case tracking-normal text-white/45">
             · {done}/{items.length}
@@ -103,7 +103,7 @@ export function DeliveryChecklist({
 
       <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
         <div
-          className="h-full rounded-full bg-[var(--mint)] transition-all duration-300"
+          className="h-full rounded-full bg-[var(--neon-pink)] transition-all duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -123,8 +123,8 @@ export function DeliveryChecklist({
                 onClick={() => toggle(item.id)}
                 className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded border text-[9px] font-black transition ${
                   ok
-                    ? "border-[var(--mint)]/60 bg-[var(--mint)] text-black shadow-[0_0_10px_rgba(200,255,61,0.35)]"
-                    : "border-white/25 bg-black/40 text-transparent hover:border-[var(--mint)]/40"
+                    ? "border-[var(--neon-pink)]/60 bg-[var(--neon-pink)] text-[var(--void)] shadow-[0_0_10px_rgba(255,78,205,0.35)]"
+                    : "border-white/25 bg-black/40 text-transparent hover:border-[var(--neon-pink)]/40"
                 }`}
                 aria-pressed={ok}
                 aria-label={ok ? `Unmark ${item.label}` : `Mark ${item.label}`}
@@ -135,7 +135,7 @@ export function DeliveryChecklist({
                 <Link
                   href={item.href}
                   className={`font-medium hover:underline ${
-                    ok ? "text-white/40 line-through" : "text-[var(--mint)]"
+                    ok ? "text-white/40 line-through" : "text-[var(--neon-pink)]"
                   }`}
                 >
                   {item.label}
@@ -157,7 +157,7 @@ export function DeliveryChecklist({
       </ul>
 
       {allDone ? (
-        <p className="mt-2 text-[10px] font-semibold leading-snug text-[var(--mint)]/90">
+        <p className="mt-2 text-[10px] font-semibold leading-snug text-[var(--neon-pink)]/90">
           {t("delivery.complete")}
         </p>
       ) : (
