@@ -771,4 +771,32 @@ assert.match(
   "Explore page eyebrows/CTAs/path accents use --brand copper"
 );
 
+// AIT-585: Project detail residual competitor lime → gallery-calm copper
+const projectSlugPageSrc = read("app/projects/[slug]/page.tsx");
+assert.doesNotMatch(
+  projectSlugPageSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "app/projects/[slug]/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  projectSlugPageSrc,
+  /var\(--brand\)/,
+  "Project detail badges/labels/hovers use --brand copper"
+);
+assert.match(
+  projectSlugPageSrc,
+  /var\(--grad-cta\)/,
+  "Project detail primary CTAs use --grad-cta copper board gradient"
+);
+assert.match(
+  projectSlugPageSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "Project detail glows use copper board rgba(196,165,116)"
+);
+assert.match(
+  projectSlugPageSrc,
+  /var\(--primary-foreground\)/,
+  "Project detail solid fills use --primary-foreground on copper"
+);
+
 console.log("generate-360-cta-smoke: ok");
