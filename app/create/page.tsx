@@ -145,8 +145,9 @@ export default async function CreatePage({
           `Remix recipe, ratio, and channel from your deep link. ${honestyLead}`);
     return (
       <div
-        className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-24 text-[var(--cream)]"
+        className="relative min-h-screen overflow-hidden bg-[var(--void)] text-[var(--cream)]"
         data-create-contract="generate-workbench"
+        data-create-shell-pad="sticky-generate"
         data-generate-effect={effectSlug}
         data-generate-360={is360 ? "true" : "false"}
         data-lab-sample-try={firstRunSample ? "1" : undefined}
@@ -230,9 +231,13 @@ export default async function CreatePage({
   // street-power-up into mode=moment; this branch stays the product home.
   return (
     <GuestMomentCreateGate>
+      {/* No tab-era pb-24 — CreateStudio content pad clears sticky chrome
+          + --floating-cta-safe-bottom (nav-less fixed Moment). */}
       <div
-        className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-24 text-[var(--cream)]"
+        className="relative min-h-screen overflow-hidden bg-[var(--void)] text-[var(--cream)]"
         data-create-contract="fixed-moment"
+        data-create-shell="fixed-moment"
+        data-create-shell-pad="sticky-only"
         data-fixed-moment-effect={FIXED_MOMENT_EFFECT}
       >
         <div

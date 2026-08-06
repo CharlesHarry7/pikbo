@@ -15,7 +15,10 @@ export const metadata: Metadata = {
 
 export default function StatusPage() {
   return (
-    <main className="mx-auto max-w-lg px-4 py-12">
+    <main
+      className="mx-auto max-w-lg px-4 py-12 pb-[var(--mobile-generate-bar-pad)] lg:pb-12"
+      data-status-content-pad="mobile-generate-bar"
+    >
       <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--fg-dim)]">
         Ops
       </p>
