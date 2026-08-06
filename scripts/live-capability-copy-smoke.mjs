@@ -249,6 +249,8 @@ const residualSessionUi = [
   "components/BatchStudio.tsx",
   // AIT-343: CreateStudio product-cap / trial-used residual
   "components/CreateStudio.tsx",
+  // AIT-365: settings Free Mini trial / clips-left residual
+  "app/settings/page.tsx",
 ];
 for (const relativePath of residualSessionUi) {
   const source = read(relativePath);
@@ -465,6 +467,40 @@ assert(
   /freeLiveOpen \? \(/.test(profilePanelSource) ||
     /freeLiveOpen[\s\S]{0,80}trialDone/.test(profilePanelSource),
   "ProfilePanel free-plan honesty banner must branch on freeLiveOpen"
+);
+
+// AIT-365: settings residual Free Mini honesty (freeLiveOpen).
+const settingsPageSource = read("app/settings/page.tsx");
+assert(
+  settingsPageSource.includes("Live gated · Cached Lab · 0 credits"),
+  "settings Free Mini trial must prefer Live gated · Cached Lab · 0 credits when Live is closed"
+);
+assert(
+  settingsPageSource.includes("0 · Live gated · Cached Lab"),
+  "settings Live clips left must show 0 · Live gated · Cached Lab when freeLiveOpen is false"
+);
+assert(
+  /!freeLiveOpen[\s\S]{0,120}Live gated · Cached Lab · 0 credits|!freeLiveOpen\s*\?\s*["']Live gated · Cached Lab · 0 credits/.test(
+    settingsPageSource
+  ),
+  "settings Free Mini trial branch must sit behind !freeLiveOpen"
+);
+assert(
+  /demoMode \|\| !freeLiveOpen|!freeLiveOpen \|\| demoMode/.test(
+    settingsPageSource
+  ),
+  "settings Live clips left must gate on freeLiveOpen (not freeLive.liveEnabled alone)"
+);
+assert(
+  !/product caps \$\{freeLive\.resolution\}|live blocked until T6/.test(
+    settingsPageSource
+  ),
+  "settings must not invent Free Mini product-cap / T6-block copy while Live is closed"
+);
+assert(
+  /data-settings-free-live=/.test(settingsPageSource) &&
+    /data-settings-clips-left=/.test(settingsPageSource),
+  "settings must mark free-live open/gated + clips-left open/gated for honesty probes"
 );
 
 const landingHowItWorksSource = read("components/LandingHowItWorks.tsx");
