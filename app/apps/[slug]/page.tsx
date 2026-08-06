@@ -93,8 +93,8 @@ const APP_DETAIL_FAQ = [
     a: "No. Posters are PIKBO Lab prototype references only. They are not made from your upload. Review any eligible generated output before listing or posting.",
   },
   {
-    q: "Can Free Mini raw files be downloaded?",
-    a: "Free live raw provider URLs stay gated until server watermark bake (T6). Lab cached demos and paid clean deliverables remain downloadable when the download gate allows.",
+    q: "Can live raw provider files be downloaded publicly?",
+    a: "No. Raw provider URLs stay gated until server watermark bake (T6) and owner delivery checks pass. Labeled Lab cached demos and eligible clean deliverables download only when the download gate allows.",
   },
 ] as const;
 

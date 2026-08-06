@@ -27,11 +27,11 @@ export const metadata: Metadata = {
 const GUIDES_FAQ = [
   {
     q: "Are these guides product manuals or SEO filler?",
-    a: "Short how-tos that end in a real Generate path — spin, photo tips, content ideas. Each guide links recipes and Free Mini limits honestly.",
+    a: "Short how-tos that end in a real Generate path — spin, photo tips, content ideas. Each guide links recipes and states the public cached Lab path vs gated Live honestly.",
   },
   {
-    q: "Is Free Mini a 10-second render?",
-    a: "No. Free Mini live is about one Seedance Mini clip (5s · 480p · on-player mark). Lab samples cost 0 credits. Longer paid durations need plan credits.",
+    q: "Is the public free path a 10-second live render?",
+    a: "No. Public free path is a labeled cached Lab prototype at 0 credits. When Live is enabled for an eligible account, Generate shows the configured duration and credit quote before submission.",
   },
   {
     q: "Do guides guarantee viral reach or sales?",

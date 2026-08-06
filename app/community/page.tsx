@@ -353,7 +353,7 @@ export default async function CommunityPage() {
         <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
           <h2 className="text-sm font-bold text-white">Community FAQ</h2>
           <p className="mt-1 text-xs text-white/40">
-            Lab only · not UGC · Remix · Free Mini
+            Lab only · not UGC · Remix · Live gated
           </p>
           <dl className="mt-4 space-y-4">
             {COMMUNITY_FAQ.map((f) => (
