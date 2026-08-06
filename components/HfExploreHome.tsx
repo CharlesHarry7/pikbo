@@ -2,6 +2,7 @@
 
 import { createRemixHref } from "@/lib/remixIntent";
 import { createGenerate360Href } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import Link from "next/link";
 import { useState } from "react";
 import type { DemoVideo } from "@/lib/demoVideos";
@@ -28,6 +29,12 @@ import { SoftLaunchStrip } from "@/components/SoftLaunchStrip";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { useI18n } from "@/components/LanguageProvider";
 import { site } from "@/lib/site";
+
+/** Primary Generate door for Explore remount — listing 360 workbench. */
+const HF_EXPLORE_360_HREF = createGenerate360Href("hf-explore");
+/** Honest Moment door — mode=moment + source (never bare street-power-up). */
+const HF_EXPLORE_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=hf-explore` as const;
 
 function Clip({
   demo,
@@ -102,11 +109,11 @@ export function HfExploreHome({
       <div className="min-h-screen bg-black px-4 py-20 text-center text-white">
         <p className="text-white/50">No cached Lab prototypes yet.</p>
         <Link
-          href={createGenerate360Href("hf-explore")}
+          href={HF_EXPLORE_360_HREF}
           className="mt-4 inline-block text-[#c8ff3d]"
           data-hf-empty-generate="remix"
         >
-          Go to Generate →
+          Generate 360° →
         </Link>
       </div>
     );
@@ -166,10 +173,11 @@ export function HfExploreHome({
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
-              href="/create?effect=street-power-up"
+              href={HF_EXPLORE_360_HREF}
+              data-hf-explore-primary-generate="360"
               className="inline-flex items-center justify-center rounded-full bg-[#c8ff3d] px-7 py-3.5 text-sm font-black text-black shadow-[0_0_48px_-6px_rgba(200,255,61,0.55)]"
             >
-              Use tool on this page
+              Generate 360° listing spin
             </Link>
             <Link
               href={item.href}
@@ -326,7 +334,7 @@ export function HfExploreHome({
               {t("home.insideProject")}
             </Link>
             <Link
-              href="/create?effect=street-power-up"
+              href={HF_EXPLORE_MOMENT_HREF}
               className="inline-flex rounded-full border border-white/15 px-5 py-3.5 text-sm font-bold text-white/70 transition hover:border-white/30 hover:text-white"
             >
               {t("cta.sellerPack")}
@@ -416,11 +424,11 @@ export function HfExploreHome({
               </h2>
             </div>
             <Link
-              href={createGenerate360Href("hf-explore")}
+              href={HF_EXPLORE_360_HREF}
               className="text-[12px] font-semibold text-[#c8ff3d] hover:underline"
               data-hf-flow-generate="remix"
             >
-              Open Generate →
+              Generate 360° →
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -436,7 +444,7 @@ export function HfExploreHome({
             </div>
             {[
               {
-                href: "/create?effect=street-power-up",
+                href: HF_EXPLORE_MOMENT_HREF,
                 label: "Street Power-Up Moment",
                 sub: "one directed clip"},
               { href: "/modules", label: "Modules", sub: "Video jobs" },
@@ -474,7 +482,7 @@ export function HfExploreHome({
             </p>
           </div>
           <Link
-            href="/create?effect=street-power-up"
+            href={HF_EXPLORE_MOMENT_HREF}
             className="inline-flex shrink-0 items-center rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-sm font-bold text-[#c8ff3d] transition hover:bg-[#c8ff3d]/10"
           >
             Create one Moment →
