@@ -504,15 +504,31 @@ export async function listPrivateGenerationResults(input: {
 }
 
 /**
+ * Owner-only durable Library detail outcome.
+ * AIT-357: distinguish missing/foreign (job: null) from storage/query failure
+ * so deep-link + retry never invent not-your-toy / process-memory 404 when
+ * private storage is simply down.
+ */
+export type GetPrivateLibraryJobForOwnerResult =
+  | { ok: true; job: PrivateLibraryJob }
+  | { ok: true; job: null }
+  | { ok: false; code: "DURABLE_DETAIL_UNAVAILABLE" };
+
+/**
  * Owner-only durable Library detail by job id.
  * Always filters created_by = userId so a foreign job id cannot leak status,
- * effect, video, or input metadata. Returns null for missing, non-owned, or
- * unavailable storage — callers map that to a uniform 404.
+ * effect, video, or input metadata.
+ *
+ * - `{ ok: true, job }` — owned durable row
+ * - `{ ok: true, job: null }` — missing, non-owned, invalid ids, or unmapped row
+ *   (callers map to uniform 404; no existence leak)
+ * - `{ ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" }` — admin/query down
+ *   (callers map to 503; never invent not-your-toy)
  */
 export async function getPrivateLibraryJobForOwner(input: {
   jobId: string;
   userId: string;
-}): Promise<PrivateLibraryJob | null> {
+}): Promise<GetPrivateLibraryJobForOwnerResult> {
   const jobId = typeof input.jobId === "string" ? input.jobId.trim() : "";
   const userId = typeof input.userId === "string" ? input.userId.trim() : "";
   if (
@@ -523,10 +539,10 @@ export async function getPrivateLibraryJobForOwner(input: {
       userId
     )
   ) {
-    return null;
+    return { ok: true, job: null };
   }
   const admin = getSupabaseAdmin();
-  if (!admin) return null;
+  if (!admin) return { ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" };
   const { data, error } = await admin
     .from("generation_jobs")
     .select(LIBRARY_COLUMNS)
@@ -534,16 +550,18 @@ export async function getPrivateLibraryJobForOwner(input: {
     .eq("created_by", userId)
     .in("status", [...PRIVATE_LIBRARY_STATUSES])
     .maybeSingle();
-  if (error || !data) return null;
+  // Query failure ≠ missing row — fail closed as unavailable.
+  if (error) return { ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" };
+  if (!data) return { ok: true, job: null };
   const mapped = privateLibraryJobFromRow(
     data as unknown as Record<string, unknown>
   ) as PrivateLibraryJob | null;
-  if (!mapped) return null;
+  if (!mapped) return { ok: true, job: null };
   const [gated] = await gateLibrarySamePhotoHandoffs({
     userId,
     jobs: [mapped],
   });
-  return gated ?? null;
+  return gated ? { ok: true, job: gated } : { ok: true, job: null };
 }
 
 export async function signedPrivateResultUrl(

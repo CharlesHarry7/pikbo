@@ -22,6 +22,8 @@ function isUuid(value: string): boolean {
  * Library / poll detail. Process-memory jobs stay session-bound.
  * Durable private jobs require auth ownership (created_by = user) and never
  * return another account's metadata — missing and foreign ids share 404.
+ * AIT-357: durable storage/query down → 503 DURABLE_DETAIL_UNAVAILABLE
+ * (never invent not-your-toy / empty 404 when private rows could not be read).
  */
 export async function GET(req: Request, { params }: Props) {
   const { id } = await params;
@@ -59,16 +61,30 @@ export async function GET(req: Request, { params }: Props) {
   // Owner-scoped durable detail only — never probe by id without created_by.
   const authUser = await getAuthUserFromRequest(req);
   if (authUser && isUuid(id)) {
-    const privateJob = await getPrivateLibraryJobForOwner({
+    const privateLookup = await getPrivateLibraryJobForOwner({
       jobId: id,
       userId: authUser.id,
     });
-    if (privateJob) {
+    if (!privateLookup.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "DURABLE_DETAIL_UNAVAILABLE",
+          id,
+          message:
+            "Private Library could not verify this Moment. Retry when storage is ready — ownership is not denied.",
+          mode: "supabase-private",
+          durable: true,
+        },
+        { status: 503 }
+      );
+    }
+    if (privateLookup.job) {
       return NextResponse.json({
         ok: true,
         mode: "supabase-private",
         durable: true,
-        job: privateJob,
+        job: privateLookup.job,
         touched: false,
         note: "Owner-gated durable Library detail. No process-memory Retry/Cancel.",
       });
@@ -106,13 +122,28 @@ export async function DELETE(req: Request, { params }: Props) {
     if (result.code === "NOT_FOUND" && isUuid(id)) {
       const authUser = await getAuthUserFromRequest(req);
       if (authUser) {
-        const privateJob = await getPrivateLibraryJobForOwner({
+        const privateLookup = await getPrivateLibraryJobForOwner({
           jobId: id,
           userId: authUser.id,
         });
-        if (privateJob) {
+        if (!privateLookup.ok) {
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_DETAIL_UNAVAILABLE",
+              id,
+              message:
+                "Private Library could not verify this Moment for Cancel. Retry when storage is ready.",
+              mode: "supabase-private",
+              durable: true,
+            },
+            { status: 503 }
+          );
+        }
+        if (privateLookup.job) {
           const open =
-            privateJob.status === "queued" || privateJob.status === "running";
+            privateLookup.job.status === "queued" ||
+            privateLookup.job.status === "running";
           return NextResponse.json(
             {
               ok: false,
@@ -123,7 +154,7 @@ export async function DELETE(req: Request, { params }: Props) {
                 : "This durable Moment cannot use process-memory Cancel. Refresh Library or start a new attempt from Create.",
               mode: "supabase-private",
               durable: true,
-              status: privateJob.status,
+              status: privateLookup.job.status,
             },
             { status: 422 }
           );
