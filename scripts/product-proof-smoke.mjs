@@ -307,6 +307,28 @@ assert(
   );
 }
 
+// AIT-583: Toast residual carnival pink rgba → gallery-calm copper board
+{
+  const toast = read("components/Toast.tsx");
+  const carnival =
+    /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i;
+  assert(
+    !carnival.test(toast),
+    "components/Toast.tsx must not hard-code carnival pink RGB"
+  );
+  assert(
+    /rgba\(196\s*,\s*165\s*,\s*116/.test(toast) &&
+      toast.includes("var(--neon-pink)") &&
+      toast.includes("data-toast-stack") &&
+      toast.includes("useToast"),
+    "Toast panel/dot glows use copper rgba(196,165,116) + neon-pink board tokens; product queue/dismiss API intact"
+  );
+  assert(
+    !toast.includes("Success") && !toast.includes("fake"),
+    "Toast must not hard-code success/fake UGC copy"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
