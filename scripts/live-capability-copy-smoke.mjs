@@ -421,6 +421,47 @@ assert(
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
 );
 
+// AIT-298: Home suite residual — HowItWorks / Onboarding / FeatureCarousel.
+const howItWorksSource = read("components/HowItWorks.tsx");
+assert(
+  !howItWorksSource.includes('labelTry="Try free · Mini 5s"') &&
+    !howItWorksSource.includes("Mini 5s"),
+  "HowItWorks must not hardcode Mini 5s as public free trial CTA"
+);
+assert(
+  howItWorksSource.includes('labelTry="Try free · Lab"') &&
+    howItWorksSource.includes("FreeTrialCta"),
+  "HowItWorks must prefer Lab-first try label"
+);
+
+const onboardingBannerSource = read("components/OnboardingBanner.tsx");
+assert(
+  !onboardingBannerSource.includes("Mini 5s") &&
+    !onboardingBannerSource.includes("Free Mini"),
+  "OnboardingBanner must not hardcode Mini 5s / Free Mini trial CTA"
+);
+assert(
+  onboardingBannerSource.includes("· Lab") &&
+    onboardingBannerSource.includes("FreeTrialCta"),
+  "OnboardingBanner must prefer Lab-first try label"
+);
+
+const homeFeatureCarouselSource = read("components/HomeFeatureCarousel.tsx");
+assert(
+  !homeFeatureCarouselSource.includes("Seedance Mini trial") &&
+    !homeFeatureCarouselSource.includes("live: 5s / 480p") &&
+    !homeFeatureCarouselSource.includes("Try Mini") &&
+    !/Mini 5s/.test(homeFeatureCarouselSource),
+  "HomeFeatureCarousel must not sell Seedance Mini / 5s as public free trial"
+);
+assert(
+  homeFeatureCarouselSource.includes("Cached Lab") &&
+    (homeFeatureCarouselSource.includes("0 credits") ||
+      homeFeatureCarouselSource.includes("Live gated")) &&
+    homeFeatureCarouselSource.includes("Try Lab"),
+  "HomeFeatureCarousel seedance promo must use Cached Lab · 0 credits / Live gated honesty"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];

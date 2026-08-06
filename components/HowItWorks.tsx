@@ -61,7 +61,8 @@ export function HowItWorks() {
           <FreeTrialCta
             path="/how-it-works"
             variant="mint"
-            labelTry="Try free · Mini 5s"
+            labelTry="Try free · Lab"
+            labelDemo="Try free · Lab"
           />
           <Link
             href={HOW_IT_WORKS_GENERATE_HREF}
