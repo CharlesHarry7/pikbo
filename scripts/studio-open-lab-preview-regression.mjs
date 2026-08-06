@@ -118,6 +118,16 @@ assert.match(packGate, /Retry access check/);
 assert.match(batch, /STUDIO_SESSION_BOOT_MS/);
 assert.match(batch, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
 assert.match(batch, /setMeResolved\(true\)/);
+// AIT-182: BatchStudio surfaces timeout + Retry (no infinite loading-balance copy)
+assert.match(batch, /sessionBoot === "timeout"/);
+assert.match(batch, /isClientTimeoutError/);
+assert.match(batch, /data-studio-open-retry/);
+assert.match(batch, /data-studio-open-error="session-timeout"/);
+assert.match(batch, /Retry access check/);
+assert.match(batch, /data-batch-session-boot/);
+// UI must not render permanent "loading balance…" (comment in source is ok)
+assert.doesNotMatch(batch, /> · loading balance…</);
+assert.match(batch, /balance unavailable/);
 
 // AIT-172: Image Studio + LandingToolPanel residual bare fetchMe → 8s parity
 const imageStudio = read("app/image/page.tsx");
