@@ -86,7 +86,7 @@ export function WorkflowShelf({
                   }}
                   className={`min-w-[8.75rem] max-w-[11rem] shrink-0 rounded-2xl border px-3 py-2.5 text-left transition duration-200 ${
                     active
-                      ? "border-[var(--mint)] bg-[var(--mint)]/15 shadow-[0_0_28px_rgba(200,255,61,0.15)]"
+                      ? "border-[var(--mint)] bg-[var(--mint)]/15 shadow-[0_0_28px_color-mix(in_srgb,var(--neon-pink)_15%,transparent)]"
                       : "border-white/12 bg-black/40 hover:border-white/28 hover:bg-black/55"
                   }`}
                 >
@@ -109,7 +109,7 @@ export function WorkflowShelf({
                 }
                 className={`min-w-[8.75rem] max-w-[11rem] shrink-0 rounded-2xl border px-3 py-2.5 text-left transition duration-200 ${
                   active
-                    ? "border-[var(--mint)] bg-[var(--mint)]/15 shadow-[0_0_28px_rgba(200,255,61,0.15)]"
+                    ? "border-[var(--mint)] bg-[var(--mint)]/15 shadow-[0_0_28px_color-mix(in_srgb,var(--neon-pink)_15%,transparent)]"
                     : "border-white/12 bg-black/40 hover:border-white/28 hover:bg-black/55"
                 }`}
               >

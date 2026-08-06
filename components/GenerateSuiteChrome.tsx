@@ -78,7 +78,7 @@ export function GenerateSuiteChrome({
             >
               {isImage ? t("suite.stills") : t("cta.generate")}
             </div>
-            <span className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/12 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[var(--mint)] shadow-[0_0_20px_rgba(200,255,61,0.12)]">
+            <span className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/12 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[var(--mint)] shadow-[0_0_20px_color-mix(in_srgb,var(--neon-pink)_12%,transparent)]">
               {t("suite.toyStudio")}
             </span>
             {isImage ? (
@@ -110,7 +110,7 @@ export function GenerateSuiteChrome({
                 className={cn(
                   "shrink-0 rounded-xl border px-3 py-1.5 transition duration-200",
                   active
-                    ? "border-[var(--mint)] bg-[var(--mint)]/15 text-[var(--mint)] shadow-[0_0_24px_rgba(200,255,61,0.12)]"
+                    ? "border-[var(--mint)] bg-[var(--mint)]/15 text-[var(--mint)] shadow-[0_0_24px_color-mix(in_srgb,var(--neon-pink)_12%,transparent)]"
                     : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
                 )}
               >

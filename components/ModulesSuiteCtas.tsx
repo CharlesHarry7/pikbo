@@ -83,7 +83,7 @@ export function ModulesSuiteCtas() {
             },
           })
         }
-        className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
+        className="cta-brand rounded-full px-4 py-2 text-xs font-black"
         data-modules-lab-sample="remix"
       >
         {primaryLabel}
