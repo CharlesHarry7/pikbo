@@ -226,6 +226,7 @@ export default async function AppDetailPage({ params }: Props) {
             path={`/apps/${slug}`}
             variant="ghost"
             labelTry="Try free · Lab"
+            labelDemo="Try Lab sample"
             hideClipsChip
           />
           {effect && recipeHasUniqueProof(effect) ? (

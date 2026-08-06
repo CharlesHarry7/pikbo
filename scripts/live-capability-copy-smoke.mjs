@@ -397,6 +397,66 @@ assert(
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
 );
 
+// AIT-288 residual: FreeTrialCta call sites prefer Lab sample when Live is closed.
+const residualFreeTrialCtaSites = [
+  "components/SeedanceCampaign.tsx",
+  "app/flow/page.tsx",
+  "app/cinema/page.tsx",
+  "components/HowItWorks.tsx",
+  "components/OnboardingBanner.tsx",
+  "components/LandingSeoMesh.tsx",
+  "components/SuiteEntryStrip.tsx",
+  "app/effects/page.tsx",
+  "app/apps/[slug]/page.tsx",
+  "app/models/page.tsx",
+  "app/guides/[slug]/page.tsx",
+  "app/for/page.tsx",
+];
+for (const relativePath of residualFreeTrialCtaSites) {
+  const source = read(relativePath);
+  assert(
+    /labelDemo=/.test(source),
+    `${relativePath} FreeTrialCta must pass labelDemo Lab sample fallback`
+  );
+  assert(
+    !/labelTry=["'`][^"'`]*Mini 5s/.test(source) &&
+      !/labelTry=["']Try free Mini["']/.test(source) &&
+      !/labelTry=\{`\$\{t\("cta\.tryFree"\)\} · Mini 5s`\}/.test(source),
+    `${relativePath} must not hardcode Mini free as unconditional FreeTrialCta labelTry`
+  );
+}
+const seedanceCampaignSource = read("components/SeedanceCampaign.tsx");
+assert(
+  seedanceCampaignSource.includes("Cached Lab") &&
+    seedanceCampaignSource.includes('labelDemo="Try Lab sample"') &&
+    seedanceCampaignSource.includes('data-seedance-free-cap="lab-gated"') &&
+    !seedanceCampaignSource.includes("Live Mini") &&
+    !seedanceCampaignSource.includes('labelTry="Try free video"'),
+  "SeedanceCampaign must drop Live Mini chip and Lab-first FreeTrialCta labels"
+);
+assert(
+  read("app/flow/page.tsx").includes('labelDemo="Try Lab sample"') &&
+    read("app/cinema/page.tsx").includes('labelDemo="Try Lab sample"'),
+  "Flow/Cinema FreeTrialCta must pass Lab sample demo labels"
+);
+assert(
+  read("components/HowItWorks.tsx").includes("Preview Lab sample") &&
+    !/labelTry=["']Try free · Mini 5s["']/.test(
+      read("components/HowItWorks.tsx")
+    ),
+  "HowItWorks FreeTrialCta must not hardcode Try free · Mini 5s"
+);
+assert(
+  read("components/LandingSeoMesh.tsx").includes("Preview Lab sample") &&
+    !read("components/LandingSeoMesh.tsx").includes('labelTry="Try free Mini"'),
+  "LandingSeoMesh FreeTrialCta must drop Try free Mini hardcode"
+);
+assert(
+  read("components/OnboardingBanner.tsx").includes("Preview Lab sample") &&
+    !read("components/OnboardingBanner.tsx").includes("Mini 5s"),
+  "OnboardingBanner FreeTrialCta must drop Mini 5s hardcode"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];

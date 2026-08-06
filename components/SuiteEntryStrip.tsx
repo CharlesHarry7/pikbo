@@ -82,6 +82,7 @@ export function SuiteEntryStrip({
             <FreeTrialCta
               path="/#suite"
               labelTry={t("suite.tryFree")}
+              labelDemo="Try Lab sample"
               hideClipsChip
               className="text-[11px] font-semibold text-[#c8ff3d] hover:underline"
             />

@@ -169,6 +169,8 @@ export default function CinemaPage() {
               <FreeTrialCta
                 path="/cinema"
                 variant="ghost"
+                labelTry="Try free when Live is open"
+                labelDemo="Try Lab sample"
                 className="btn btn-ghost !px-3 !py-1.5 text-xs"
                 hideClipsChip
               />

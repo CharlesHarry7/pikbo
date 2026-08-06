@@ -98,6 +98,7 @@ export default function ForHubPage() {
             path="/for"
             variant="mint"
             labelTry="Preview cached Lab"
+            labelDemo="Preview Lab sample"
           />
           <Link href="/tools" className="btn btn-ghost text-sm">
             Tools hub

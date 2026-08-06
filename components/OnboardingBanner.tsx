@@ -45,7 +45,8 @@ export function OnboardingBanner() {
         <div className="flex flex-wrap items-center gap-2">
           <FreeTrialCta
             path="/"
-            labelTry={`${t("cta.tryFree")} · Mini 5s`}
+            labelTry={t("cta.tryFree")}
+            labelDemo="Preview Lab sample"
             onNavigate={dismiss}
             hideClipsChip
             className="btn btn-primary px-3.5 py-1.5 text-xs font-black"

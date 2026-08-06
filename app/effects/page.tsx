@@ -127,7 +127,8 @@ export default function EffectsHub() {
             <FreeTrialCta
               path="/effects"
               variant="mint"
-              labelTry="Try free"
+              labelTry="Try free when Live is open"
+              labelDemo="Try Lab sample"
               className="btn btn-primary !px-4 !py-2 text-xs font-black"
             />
             <Link
