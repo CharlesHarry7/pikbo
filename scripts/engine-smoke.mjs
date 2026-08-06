@@ -4531,6 +4531,30 @@ assert.doesNotMatch(
   modulesPageSrc,
   /Official · cached|provisionalLabQualityLabel|Lab\s*≥\s*4/
 );
+// AIT-258: suite path Moment honesty + Generate chip not lime dual-weight
+assert.match(
+  modulesPageSrc,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+assert.match(
+  modulesPageSrc,
+  /MODULES_PATH_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=modules-path`/
+);
+assert.match(modulesPageSrc, /href=\{MODULES_PATH_MOMENT_HREF\}/);
+assert.match(modulesPageSrc, /data-modules-path-moment=["']honest["']/);
+assert.match(
+  modulesPageSrc,
+  /createGenerate360Href\(\s*["']modules["']\s*\)/
+);
+assert.match(modulesPageSrc, /data-modules-path-generate=["']remix["']/);
+assert.doesNotMatch(
+  modulesPageSrc,
+  /href=["']\/create\?effect=street-power-up["']/
+);
+assert.doesNotMatch(
+  modulesPageSrc,
+  /data-modules-path-generate=["']remix["'][\s\S]{0,220}#c8ff3d/
+);
 const modulesSuiteCtasSrc = fs.readFileSync(
   join(root, "components/ModulesSuiteCtas.tsx"),
   "utf8"
