@@ -362,7 +362,7 @@ export const PRESETS: Preset[] = [
       },
       {
         q: "Is there a free version?",
-        a: "Yes. With provider access configured, Free includes one Seedance Mini 5-second 480p live trial with an on-player Pikbo mark. Without provider access, Studio returns a labeled cached demo instead.",
+        a: "Yes. Public validation is a labeled Cached Lab prototype at 0 credits — it does not process your upload. When Live is enabled for an eligible account, the configured Free path is about one 5-second 480p Mini job with an on-player mark. Live access stays gated during soft launch.",
       },
     ],
     promptTemplate:

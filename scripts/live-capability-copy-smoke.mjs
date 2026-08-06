@@ -570,6 +570,135 @@ assert(
   "HomeFeatureCarousel seedance promo must use Cached Lab · 0 credits / Live gated honesty"
 );
 
+// AIT-360: Soft-launch copy honesty residual — SEO longform + hub FAQs + preset free-version.
+const usecasesSource = read("lib/usecases.ts");
+const forbiddenUsecasesFreeMiniPublic = [
+  /Soft launch Free Mini is capped/i,
+  /Soft launch Free Mini is enough for a few/i,
+  /Free Mini caps apply\. Lab demos/i,
+  /honest Free Mini limits/i,
+  /Keep Free Mini caps in mind/i,
+  /, Free Mini \| Pikbo/,
+  /Which model runs on Free Mini\?/i,
+];
+for (const pattern of forbiddenUsecasesFreeMiniPublic) {
+  assert(
+    !pattern.test(usecasesSource),
+    `lib/usecases.ts residual Free Mini public promise ${pattern}`
+  );
+}
+assert(
+  usecasesSource.includes("Lab free | Pikbo") &&
+    usecasesSource.includes("cached Lab · 0 credits") &&
+    usecasesSource.includes("Which model runs on the free path?"),
+  "lib/usecases.ts must keep Lab free SEO titles + free-path FAQ honesty"
+);
+
+const guidesLibSource = read("lib/guides.ts");
+assert(
+  !/Soft launch Free Mini is 5s · 480p/i.test(guidesLibSource) &&
+    !/Run Free Mini or a live job/i.test(guidesLibSource) &&
+    !/What Free Mini Actually Includes/i.test(guidesLibSource) &&
+    !/Pikbo Free Mini/.test(guidesLibSource),
+  "lib/guides.ts must not sell Free Mini 5s / Free Mini brand as the open public path"
+);
+assert(
+  (guidesLibSource.includes("cached Lab · 0 credits") ||
+    guidesLibSource.includes("cached Lab preview")) &&
+    guidesLibSource.includes("What Soft Launch Actually Includes") &&
+    guidesLibSource.includes("when billing opens"),
+  "lib/guides.ts must keep Lab public-path honesty + closed billing language"
+);
+
+const presetsSource = read("lib/presets.ts");
+assert(
+  !/Free includes one Seedance Mini 5-second 480p live trial/i.test(
+    presetsSource
+  ),
+  "lib/presets.ts free-version FAQ must not sell unconditional Free Mini live trial"
+);
+assert(
+  presetsSource.includes("Cached Lab prototype at 0 credits") &&
+    presetsSource.includes("When Live is enabled for an eligible account"),
+  "lib/presets.ts free-version FAQ must prefer Cached Lab + conditional Live"
+);
+
+const communitySource = read("app/community/page.tsx");
+assert(
+  !/Do Lab demos use Free Mini credits\?/i.test(communitySource) &&
+    !/Free Mini is for one live Seedance Mini clip/i.test(communitySource),
+  "community FAQ must not sell Free Mini as unconditional live trial"
+);
+assert(
+  communitySource.includes("Do Lab demos use live credits?") &&
+    communitySource.includes("When Live is enabled for an eligible account") &&
+    communitySource.includes("never invent") &&
+    communitySource.includes("Lab only · not UGC · Remix · Live gated"),
+  "community FAQ must keep Lab-first / Live-gated honesty and no-fake-UGC denial"
+);
+
+const guideSlugSource = read("app/guides/[slug]/page.tsx");
+assert(
+  !/Try free · Mini 5s/.test(guideSlugSource) &&
+    guideSlugSource.includes('labelTry="Try free · Lab →"') &&
+    guideSlugSource.includes('labelDemo="Try Lab sample →"'),
+  "guide detail CTA must not sell Mini 5s as public free trial"
+);
+
+const imagePageSource = read("app/image/page.tsx");
+assert(
+  !/Free Mini trial is video-only/i.test(imagePageSource),
+  "image studio must not brand Free Mini trial as open product while stills are demo-cached"
+);
+assert(
+  imagePageSource.includes("Free-plan stills stay demo-cached") ||
+    imagePageSource.includes("demo still · 0 credits"),
+  "image studio free path must keep demo-cached honesty"
+);
+
+const effectsSource = read("app/effects/page.tsx");
+assert(
+  !/Live Seedance Mini uses Free Mini/i.test(effectsSource) &&
+    !/Lab vs concept · Free Mini ·/i.test(effectsSource),
+  "effects hub must not brand Free Mini as open public free trial"
+);
+assert(
+  effectsSource.includes("When Live is enabled for an eligible account") &&
+    effectsSource.includes("Lab vs concept · Live gated ·"),
+  "effects hub must keep Lab-first / Live-gated honesty"
+);
+
+const exploreSource = read("app/explore/page.tsx");
+assert(
+  !/Live Seedance Mini uses Free Mini/i.test(exploreSource),
+  "explore FAQ must not sell Free Mini as unconditional live trial"
+);
+assert(
+  exploreSource.includes("When Live is enabled for an eligible account") &&
+    exploreSource.includes("never processes your upload"),
+  "explore FAQ must keep Lab-first / Live-gated honesty"
+);
+
+const appsHubSource = read("app/apps/page.tsx");
+assert(
+  !/LIVE vs SOON · Free Mini ·/i.test(appsHubSource) &&
+    appsHubSource.includes("LIVE vs SOON · Lab free ·"),
+  "apps hub FAQ chip must prefer Lab free over Free Mini branding"
+);
+
+const appsSlugSource = read("app/apps/[slug]/page.tsx");
+assert(
+  !/Does launching cost Free Mini credits\?/i.test(appsSlugSource) &&
+    !/Can Free Mini raw files be downloaded\?/i.test(appsSlugSource),
+  "apps/[slug] FAQ must not hardcode Free Mini as public free path"
+);
+assert(
+  appsSlugSource.includes("Does launching cost credits?") &&
+    appsSlugSource.includes("Can free-plan raw files be downloaded?") &&
+    appsSlugSource.includes("When Live is enabled for an eligible account"),
+  "apps/[slug] FAQ must keep Lab-first / Live-gated honesty"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
