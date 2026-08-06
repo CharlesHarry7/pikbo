@@ -821,4 +821,27 @@ assert.match(
   "Explore page eyebrows/CTAs/path accents use --brand copper"
 );
 
+// AIT-601: GenerateWaitStage residual competitor lime → gallery-calm copper
+const generateWaitStageSrc = read("components/GenerateWaitStage.tsx");
+assert.doesNotMatch(
+  generateWaitStageSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61|#7dffb3|7dffb3/i,
+  "GenerateWaitStage must not hard-code competitor lime (#c8ff3d / #7dffb3 / rgba 200,255,61)"
+);
+assert.match(
+  generateWaitStageSrc,
+  /var\(--grad-cta\)/,
+  "GenerateWaitStage wait progress uses --grad-cta copper fallback"
+);
+assert.match(
+  generateWaitStageSrc,
+  /var\(--brand\)/,
+  "GenerateWaitStage compact progress uses --brand copper fallback"
+);
+assert.match(
+  generateWaitStageSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "GenerateWaitStage stage glow uses copper board rgba(196,165,116)"
+);
+
 console.log("generate-360-cta-smoke: ok");

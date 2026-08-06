@@ -307,6 +307,22 @@ assert(
   );
 }
 
+// AIT-601: GenerateWaitStage residual competitor lime → gallery-calm copper
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61|#7dffb3|7dffb3/i;
+  const waitStage = read("components/GenerateWaitStage.tsx");
+  assert(
+    !lime.test(waitStage),
+    "GenerateWaitStage must not hard-code competitor lime (#c8ff3d / #7dffb3 / rgba 200,255,61)"
+  );
+  assert(
+    waitStage.includes("var(--grad-cta)") &&
+      waitStage.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(waitStage),
+    "GenerateWaitStage progress chrome uses --grad-cta / --brand + copper glow"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
