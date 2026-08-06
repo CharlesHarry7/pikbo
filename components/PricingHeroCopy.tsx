@@ -41,7 +41,7 @@ export function PricingHeroCopy({
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -left-20 top-14 h-64 w-64 rounded-full bg-[#c8ff3d]/55 blur-[90px]"
+        className="pointer-events-none absolute -left-20 top-14 h-64 w-64 rounded-full bg-neon-pink/55 blur-[90px]"
         aria-hidden
       />
       <div className="relative mx-auto max-w-6xl">
@@ -54,7 +54,7 @@ export function PricingHeroCopy({
           </span>
         </div>
 
-        <p className="mt-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-[#5e7800]">
+        <p className="mt-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-electric-purple">
           {copy.eyebrow}
         </p>
         <h1 className="mx-auto mt-4 max-w-5xl text-center font-display text-[clamp(3rem,6.7vw,6.8rem)] font-black leading-[0.86] tracking-[-0.065em]">
@@ -70,7 +70,7 @@ export function PricingHeroCopy({
             className="inline-flex min-h-13 items-center justify-center rounded-full bg-black px-7 text-sm font-black text-white transition hover:-translate-y-0.5"
           >
             Preview one Moment
-            <span className="ml-2 text-[#c8ff3d]" aria-hidden>
+            <span className="ml-2 text-neon-pink" aria-hidden>
               ↗
             </span>
           </Link>
