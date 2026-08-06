@@ -84,7 +84,10 @@ export default function EffectsHub() {
   };
 
   return (
-    <div className="pb-24">
+    <div
+      className="pb-[var(--mobile-generate-bar-pad)] lg:pb-12"
+      data-effects-content-pad="mobile-generate-bar"
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}

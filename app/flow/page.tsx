@@ -165,7 +165,10 @@ export default function FlowPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-black pb-28 text-white">
+    <div
+      className="min-h-screen bg-black pb-[var(--mobile-generate-bar-pad)] text-white lg:pb-12"
+      data-flow-content-pad="mobile-generate-bar"
+    >
       <Suspense
         fallback={
           <div className="border-b border-white/10 px-4 py-3 text-sm text-white/40">

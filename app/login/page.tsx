@@ -29,8 +29,9 @@ export default async function LoginPage({
 
   return (
     <main
-      className="login-ritual create-ritual relative isolate min-h-[calc(100vh-56px)] overflow-hidden px-4 pb-16 pt-8 text-[var(--fg)] sm:px-7 lg:px-10 lg:pb-20 lg:pt-12"
+      className="login-ritual create-ritual relative isolate min-h-[calc(100vh-56px)] overflow-hidden px-4 pb-[var(--mobile-generate-bar-pad)] pt-8 text-[var(--fg)] sm:px-7 lg:px-10 lg:pb-20 lg:pt-12"
       data-login-ritual="vault"
+      data-login-content-pad="mobile-generate-bar"
     >
       <div className="particle-field login-ritual-particles" aria-hidden>
         <span style={{ left: "8%", top: "18%" }} />
