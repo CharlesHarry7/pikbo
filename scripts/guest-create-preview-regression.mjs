@@ -48,16 +48,26 @@ assert.match(gate, /data-lab-preview-retry|Retry Lab preview|errorRetry/);
 // submit language. The authenticated children remain unchanged in page.tsx.
 assert.doesNotMatch(gate, /\bupload\b|\bcredits\b|\bGenerate\b/);
 
-// AIT-305: GuestMomentCreateGate off residual competitor lime (board tokens)
+// AIT-305 / AIT-416: GuestMomentCreateGate off residual competitor lime + carnival neon
 assert.equal(
   /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(gate),
   false,
   "GuestMomentCreateGate must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
 );
 assert.equal(
-  gate.includes("var(--mint)") && gate.includes("var(--void)"),
+  /#ff4ecd|#b14eff|#00d9ff|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|255\s*,\s*32\s*,\s*122/i.test(
+    gate
+  ),
+  false,
+  "GuestMomentCreateGate must not hard-code carnival neon RGB"
+);
+assert.equal(
+  gate.includes("var(--mint)") &&
+    gate.includes("var(--void)") &&
+    gate.includes("var(--neon-pink)") &&
+    /rgba\(\s*196\s*,\s*165\s*,\s*116/.test(gate),
   true,
-  "GuestMomentCreateGate retry hover chrome uses var(--mint) / var(--void) board tokens"
+  "GuestMomentCreateGate chrome uses mint/void/neon-pink + copper glow board tokens"
 );
 
 for (const asset of [

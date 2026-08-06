@@ -74,7 +74,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
     >
       <div className="mx-auto mb-7 flex max-w-[1600px] items-end justify-between gap-6 px-2 sm:mb-9">
         <div className="max-w-3xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#FF4ECD]">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--neon-pink)]">
             {HOME_PROOF_BADGE}
           </p>
           <h2
@@ -92,14 +92,14 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
         <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
           <Link
             href={momentHref}
-            className="rounded-full border border-[#FF4ECD]/35 bg-[rgba(255,78,205,0.1)] px-5 py-2.5 text-xs font-black text-[#FF4ECD] transition hover:border-[#00D9FF]/50 hover:text-[#00D9FF]"
+            className="rounded-full border border-[var(--neon-pink)]/35 bg-[rgba(196,165,116,0.1)] px-5 py-2.5 text-xs font-black text-[var(--neon-pink)] transition hover:border-[var(--tide-blue)]/50 hover:text-[var(--tide-blue)]"
           >
             Create a Moment ↗
           </Link>
           <Link
             href={listing360Href}
             data-home-proof-360-cta
-            className="rounded-full border border-[#00D9FF]/35 bg-[rgba(0,217,255,0.08)] px-5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#00D9FF] transition hover:border-[#00D9FF]/60"
+            className="rounded-full border border-[var(--tide-blue)]/35 bg-[rgba(138,143,152,0.08)] px-5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--tide-blue)] transition hover:border-[var(--tide-blue)]/60"
             onClick={() =>
               track({
                 event: "recipe_use",
@@ -136,14 +136,14 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               data-recipe-card={recipeSlug}
               data-home-proof-card={recipeSlug}
               data-home-proof-slot={index}
-              className="toy-card group relative isolate aspect-[4/5] min-w-0 overflow-hidden p-1.5 transition duration-200 hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#00D9FF]"
+              className="toy-card group relative isolate aspect-[4/5] min-w-0 overflow-hidden p-1.5 transition duration-200 hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[var(--tide-blue)]"
             >
               <div className="relative h-full w-full overflow-hidden rounded-[1.35rem] bg-[#0A0A0F]">
                 <Link
                   href={cardHref}
                   prefetch
                   aria-label={`Explore inside ${recipeName}`}
-                  className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#00D9FF]"
+                  className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--tide-blue)]"
                   onClick={() =>
                     track({
                       event: item.projectHref ? "project_open" : "recipe_use",
@@ -177,7 +177,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                   {is360 ? (
                     <span
                       data-home-proof-360
-                      className="absolute right-2 top-2 rounded-full border border-[#00D9FF]/40 bg-[#00D9FF]/15 px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-[#00D9FF] backdrop-blur sm:right-3 sm:top-3 sm:text-[9px]"
+                      className="absolute right-2 top-2 rounded-full border border-[var(--tide-blue)]/40 bg-[var(--tide-blue)]/15 px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-[var(--tide-blue)] backdrop-blur sm:right-3 sm:top-3 sm:text-[9px]"
                     >
                       360 spin
                     </span>
@@ -195,7 +195,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                   href={remakeHref}
                   prefetch
                   aria-label={`Use the ${recipeName} recipe`}
-                  className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white shadow-[0_0_18px_rgba(255,78,205,0.35)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] sm:bottom-4 sm:left-4 sm:text-[10px]"
+                  className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,var(--brand),var(--neon-pink))] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white shadow-[0_0_18px_rgba(196,165,116,0.35)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tide-blue)] sm:bottom-4 sm:left-4 sm:text-[10px]"
                   onClick={() =>
                     track({
                       event: "recipe_use",
@@ -221,14 +221,14 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:hidden">
         <Link
           href={momentHref}
-          className="rounded-full border border-[#FF4ECD]/35 px-5 py-2.5 text-xs font-bold text-[#FF4ECD]"
+          className="rounded-full border border-[var(--neon-pink)]/35 px-5 py-2.5 text-xs font-bold text-[var(--neon-pink)]"
         >
           Create a Moment
         </Link>
         <Link
           href={listing360Href}
           data-home-proof-360-cta
-          className="rounded-full border border-[#00D9FF]/35 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#00D9FF]"
+          className="rounded-full border border-[var(--tide-blue)]/35 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-[var(--tide-blue)]"
           onClick={() =>
             track({
               event: "recipe_use",
