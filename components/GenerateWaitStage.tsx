@@ -88,6 +88,7 @@ const STEPS = ["Send", "Queue", "Render"] as const;
 export function GenerateWaitStage({
   elapsed,
   demoMode = false,
+  freeLiveOpen = false,
   image,
   effectLabel,
   onCancel,
@@ -99,6 +100,11 @@ export function GenerateWaitStage({
 }: {
   elapsed: number;
   demoMode?: boolean;
+  /**
+   * Free Mini product-cap copy only when Live is actually open.
+   * Fail-closed default: no public Free Mini brand on the wait surface.
+   */
+  freeLiveOpen?: boolean;
   /** Optional still under the spinner — grounds the wait in the user’s toy */
   image?: string | null;
   effectLabel?: string | null;
@@ -128,6 +134,13 @@ export function GenerateWaitStage({
   /** Detach only after recovery is inconclusive or the wait is already long. */
   const showLeaveToLibrary =
     Boolean(onLeaveToLibrary) && !demoMode && longWait;
+  /** Live product-cap hint — Free Mini brand only when freeLiveOpen. */
+  const livePaceHint = freeLiveOpen
+    ? "· typical Mini 1–3 min"
+    : "· Live gated · no public Free Mini";
+  const longWaitHint = freeLiveOpen
+    ? "Still working past 90s is normal for Mini. You can open Library while this request keeps running — cancel only if you mean to stop it."
+    : "Still working past 90s can happen on private Live. You can open Library while this request keeps running — cancel only if you mean to stop it.";
   const title = awaitingPrimary
     ? "Waiting on original render"
     : recoveryChecking
@@ -247,13 +260,26 @@ export function GenerateWaitStage({
         />
       </div>
 
-      <p className="relative mt-2 font-mono text-[11px] font-bold tabular-nums text-white/55">
+      <p
+        className="relative mt-2 font-mono text-[11px] font-bold tabular-nums text-white/55"
+        data-wait-free-live={freeLiveOpen ? "open" : "closed"}
+      >
         {clock}
         {!demoMode ? (
-          <span className="ml-1.5 font-sans text-[10px] font-medium text-white/35">
-            · typical Mini 1–3 min
+          <span
+            className="ml-1.5 font-sans text-[10px] font-medium text-white/35"
+            data-wait-pace-hint={freeLiveOpen ? "mini" : "gated"}
+          >
+            {livePaceHint}
           </span>
-        ) : null}
+        ) : (
+          <span
+            className="ml-1.5 font-sans text-[10px] font-medium text-white/35"
+            data-wait-pace-hint="lab"
+          >
+            · Lab sample · 0 credits
+          </span>
+        )}
       </p>
 
       {!demoMode && recoveryChecking && !awaitingPrimary ? (
@@ -268,9 +294,11 @@ export function GenerateWaitStage({
           stop this attempt.
         </p>
       ) : !demoMode && elapsed >= 90 ? (
-        <p className="relative mt-2 max-w-xs rounded-lg border border-amber-400/25 bg-amber-400/[0.07] px-3 py-1.5 text-[10px] leading-snug text-amber-100/90">
-          Still working past 90s is normal for Mini. You can open Library while
-          this request keeps running — cancel only if you mean to stop it.
+        <p
+          className="relative mt-2 max-w-xs rounded-lg border border-amber-400/25 bg-amber-400/[0.07] px-3 py-1.5 text-[10px] leading-snug text-amber-100/90"
+          data-wait-long-hint={freeLiveOpen ? "mini" : "gated"}
+        >
+          {longWaitHint}
         </p>
       ) : null}
 
@@ -320,12 +348,15 @@ export function GenerateWaitStage({
 export function GenerateWaitMobileStrip({
   elapsed,
   demoMode = false,
+  freeLiveOpen = false,
   onCancel,
   onLeaveToLibrary,
   awaitingPrimary = false,
 }: {
   elapsed: number;
   demoMode?: boolean;
+  /** Free Mini product-cap only when Live is open (fail-closed default). */
+  freeLiveOpen?: boolean;
   onCancel: () => void;
   onLeaveToLibrary?: () => void;
   awaitingPrimary?: boolean;
@@ -339,17 +370,31 @@ export function GenerateWaitMobileStrip({
   const title = awaitingPrimary
     ? "Original render still running"
     : phase.title;
+  const keepOpenHint = demoMode
+    ? "Lab · 0 cr"
+    : freeLiveOpen
+      ? "Keep tab open"
+      : "Live gated";
 
   return (
-    <div className="w-full" data-awaiting-primary={awaitingPrimary ? "true" : "false"}>
+    <div
+      className="w-full"
+      data-awaiting-primary={awaitingPrimary ? "true" : "false"}
+      data-wait-free-live={freeLiveOpen ? "open" : "closed"}
+    >
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <p className="truncate text-[10px] font-bold text-white/70">
           <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--mint)]" />
           {title}
           <span className="ml-1 font-mono text-white/45">· {elapsed}s</span>
         </p>
-        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-white/35">
-          {awaitingPrimary ? "No second job" : "Keep tab open"}
+        <span
+          className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-white/35"
+          data-wait-pace-hint={
+            demoMode ? "lab" : freeLiveOpen ? "mini" : "gated"
+          }
+        >
+          {awaitingPrimary ? "No second job" : keepOpenHint}
         </span>
       </div>
       <div className="mb-2 h-1 overflow-hidden rounded-full bg-white/10">

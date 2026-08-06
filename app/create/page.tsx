@@ -121,16 +121,23 @@ export default async function CreatePage({
   // Generate→360 and other registered remix deep links: honest workbench.
   // Do not wrap in GuestMomentCreateGate (Street Power-Up sample). Omit the
   // fixed Moment prop so CreateStudio uses remix effect/ratio/duration/channel.
+  // AIT-456: compact mobile header so photo drop + sticky Generate stay above fold.
   if (contract === "generate-workbench") {
     const effectSlug = (sp.effect || "").trim();
     const preset = getPreset(effectSlug);
     const is360 = isGenerate360Effect(effectSlug);
     return (
       <div
-        className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-24 text-[var(--cream)]"
+        className="relative min-h-screen overflow-hidden bg-[var(--void)] text-[var(--cream)]"
         data-create-contract="generate-workbench"
         data-generate-effect={effectSlug}
         data-generate-360={is360 ? "true" : "false"}
+        data-workbench-first-run="upload-sticky"
+        data-create-shell="generate-workbench"
+        data-create-shell-pad="sticky-with-tab"
+        data-lab-sample-try={firstRunSample ? "1" : undefined}
+        data-first-run-sample={firstRunSample || undefined}
+        data-workbench-lab-honesty="0-credit-lab"
       >
         <JsonLd
           data={softwareApplicationJsonLd({
@@ -142,28 +149,39 @@ export default async function CreatePage({
           })}
         />
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(177,78,255,0.18),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(0,217,255,0.12),transparent_65%)]"
+          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(177,78,255,0.18),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(0,217,255,0.12),transparent_65%)] sm:h-72"
           aria-hidden
         />
-        <div className="relative mx-auto grid max-w-[1480px] gap-4 border-b border-white/10 px-5 py-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:px-12">
+        <header
+          data-create-header="workbench-compact-mobile"
+          data-workbench-header={is360 ? "360" : "remix"}
+          className="relative mx-auto grid max-w-[1480px] gap-1 border-b border-white/10 px-4 py-2 sm:gap-4 sm:px-8 sm:py-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:px-12"
+        >
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00D9FF]">
+            <p className="text-[8px] font-black uppercase tracking-[0.14em] text-[#00D9FF] sm:text-[10px] sm:tracking-[0.2em]">
               {is360
                 ? "Pikbo Generate · 360° listing spin"
                 : "Pikbo Generate · workbench"}
             </p>
-            <h1 className="mt-2 max-w-4xl font-display text-[clamp(2.45rem,4.2vw,4.5rem)] font-black leading-[0.9] tracking-[-0.06em] text-bling">
+            <h1 className="mt-0.5 max-w-4xl font-display text-[1.35rem] font-black leading-[0.95] tracking-[-0.04em] text-bling sm:mt-2 sm:text-[clamp(2.45rem,4.2vw,4.5rem)] sm:leading-[0.9] sm:tracking-[-0.06em]">
               {preset?.h1 ??
                 (is360
                   ? "One photo → a square 360° listing spin."
                   : "One owned toy photo → a short product clip.")}
             </h1>
           </div>
-          <p className="border-l border-white/15 pl-4 text-sm font-semibold leading-6 text-white/56">
-            {preset?.tagline ??
-              "Remix recipe, ratio, and channel from your deep link. Lab preview is free; private Live is checked before any credit spend."}
+          <p className="border-l border-white/15 pl-2.5 text-[10px] font-semibold leading-snug text-white/56 sm:pl-4 sm:text-sm sm:leading-6">
+            <span className="sm:hidden">
+              {is360
+                ? "1:1 · Lab free · Live gated"
+                : "Remix · Lab free · Live gated"}
+            </span>
+            <span className="hidden sm:inline">
+              {preset?.tagline ??
+                "Remix recipe, ratio, and channel from your deep link. Lab sample is 0 credits; Free Mini Live only when open; private Live is checked before any credit spend."}
+            </span>
           </p>
-        </div>
+        </header>
         <Suspense
           fallback={
             <div className="flex min-h-[40vh] items-center justify-center text-sm text-white/40">
