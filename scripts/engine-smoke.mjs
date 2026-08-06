@@ -2563,7 +2563,7 @@ assert.doesNotMatch(retryRoute, /create\?effect=\$\{/);
 // Phase F — Create/Seller mobile craft (390px ownership + sticky CTA)
 // AIT-164/AIT-150: Seller Pack sticky clears home indicator via
 // --floating-cta-safe-bottom; tab-sharing batch clears --mobile-nav-clearance.
-// AppShell hides the five-tab nav under Seller Pack (and Moment result shell).
+// AIT-240: content pad tokens; AppShell hideMobileNav covers fixed Moment + Seller Pack.
 assert.match(createStudio, /create-ownership/);
 assert.match(createStudio, /create-photo-step/);
 assert.match(createStudio, /Download policy/);
@@ -2577,10 +2577,19 @@ assert.match(
   /bottom-\[var\(--mobile-nav-clearance\)\]/
 );
 assert.match(
+  batchStudio,
+  /pb-\[var\(--sticky-generate-pad-safe\)\]|pb-\[var\(--sticky-generate-pad\)\]/
+);
+assert.match(
+  createStudio,
+  /pb-\[var\(--sticky-generate-pad-safe\)\]|pb-\[var\(--sticky-generate-pad\)\]/
+);
+assert.match(
   appShell,
   /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/
 );
 assert.match(appShell, /!hideMobileNav\s*\?\s*\(\s*\n\s*<nav/);
+assert.match(appShell, /fixedMomentEntry/);
 assert.match(appShell, /data-mobile-nav=["']primary["']/);
 assert.match(appShell, /MobileGenerateBar/);
 assert.match(batchStudio, /api\/downloads/);

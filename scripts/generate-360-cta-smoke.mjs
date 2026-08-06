@@ -379,4 +379,124 @@ assert.doesNotMatch(
   "Toast stack must not hardcode bottom-20 (misses notched safe-area)"
 );
 
+// 9. AIT-240 — content pad under sticky Generate uses shared tokens (no bare pb-32/pb-36)
+assert.match(
+  globalsCss,
+  /--sticky-generate-chrome-h:\s*5\.75rem/,
+  "globals must size sticky Generate chrome for content pad calc"
+);
+assert.match(
+  globalsCss,
+  /--sticky-generate-pad:\s*calc\(/,
+  "globals must define --sticky-generate-pad = chrome + mobile-nav-clearance"
+);
+assert.match(
+  globalsCss,
+  /--sticky-generate-pad-safe:\s*calc\(/,
+  "globals must define --sticky-generate-pad-safe = chrome + floating-cta-safe-bottom"
+);
+assert.match(
+  globalsCss,
+  /--mobile-generate-bar-pad:\s*calc\(/,
+  "globals must define --mobile-generate-bar-pad for Library / browse last-row clearance"
+);
+
+assert.match(
+  createStudio,
+  /fixedMomentContract\s*\?[\s\S]{0,320}pb-\[var\(--sticky-generate-pad-safe\)\]/,
+  "fixed Moment CreateStudio content must use --sticky-generate-pad-safe"
+);
+assert.match(
+  createStudio,
+  /:\s*[\s\S]{0,160}pb-\[var\(--sticky-generate-pad\)\]/,
+  "tab-sharing CreateStudio content must use --sticky-generate-pad (not bare pb-36)"
+);
+assert.match(
+  createStudio,
+  /data-create-content-pad=\{\s*fixedMomentContract\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+  "CreateStudio content pad branch must be smoke-visible (safe-bottom | mobile-nav)"
+);
+assert.match(
+  createStudio,
+  /fixedMomentContract\s*\?\s*["'][^"']*bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "fixed Moment CreateStudio sticky must use --floating-cta-safe-bottom (no tab nav)"
+);
+assert.match(
+  createStudio,
+  /data-create-sticky-clearance=\{\s*fixedMomentContract\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+  "CreateStudio sticky must expose clearance branch for smoke"
+);
+assert.doesNotMatch(
+  createStudio,
+  /\bpb-36\b|\bpb-32\b/,
+  "CreateStudio sticky path must not use bare pb-32 / pb-36 (use clearance tokens)"
+);
+
+const createPageSrc = read("app/create/page.tsx");
+assert.match(
+  createPageSrc,
+  /data-create-shell=["']fixed-moment["']/,
+  "fixed Moment Create page must mark shell for smoke"
+);
+assert.match(
+  createPageSrc,
+  /data-create-shell-pad=["']sticky-only["']/,
+  "fixed Moment Create page shell pad must be sticky-only (no tab ghost)"
+);
+assert.doesNotMatch(
+  createPageSrc,
+  /className="[^"]*\bpb-24\b/,
+  "fixed Moment Create page className must not carry tab-era pb-24 under sticky"
+);
+
+assert.match(
+  batchStudio,
+  /isSellerPack\s*\?[\s\S]{0,320}pb-\[var\(--sticky-generate-pad-safe\)\]/,
+  "nav-less Seller Pack content pad must use --sticky-generate-pad-safe"
+);
+assert.match(
+  batchStudio,
+  /data-batch-content-pad=\{\s*isSellerPack\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
+  "BatchStudio content pad branch must be smoke-visible"
+);
+assert.doesNotMatch(
+  batchStudio,
+  /className=\{\s*[\s\S]{0,80}\bpb-32\b|\bpb-36\b/,
+  "BatchStudio content pad must not hardcode bare pb-32 / pb-36"
+);
+
+const libraryPage = read("app/library/page.tsx");
+const modulesPage = read("app/modules/page.tsx");
+assert.match(
+  libraryPage,
+  /pb-\[var\(--mobile-generate-bar-pad\)\]/,
+  "Library content must clear MobileGenerateBar + tab via --mobile-generate-bar-pad"
+);
+assert.match(
+  libraryPage,
+  /data-library-content-pad=["']mobile-generate-bar["']/,
+  "Library content pad must expose smoke marker"
+);
+assert.match(
+  modulesPage,
+  /pb-\[var\(--sticky-generate-pad\)\]/,
+  "Modules shelf content must clear ModulesMobileCta sticky via --sticky-generate-pad"
+);
+assert.match(
+  modulesPage,
+  /data-modules-content-pad=["']sticky-generate["']/,
+  "Modules content pad must expose smoke marker"
+);
+
+assert.match(
+  appShellSrc,
+  /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/,
+  "AppShell must hide tab nav on resultShell, fixed Moment entry, and Seller Pack"
+);
+assert.match(
+  appShellSrc,
+  /!hideMobileNav/,
+  "AppShell mobile nav render must gate on hideMobileNav"
+);
+
 console.log("generate-360-cta-smoke: ok");
