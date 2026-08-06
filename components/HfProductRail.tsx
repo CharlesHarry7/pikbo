@@ -86,15 +86,13 @@ export function HfProductRail() {
   return (
     <section
       data-home-suite-rail="hf-product"
-      className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
+      className="border-b border-white/10 bg-void px-3 py-5 sm:px-5"
       aria-label="Generate suite"
     >
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-3 flex items-end justify-between gap-2">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
-              Suite
-            </p>
+            <p className="section-label tracking-[0.2em]">Suite</p>
             <p className="mt-0.5 text-[11px] text-white/40">
               Generate 360° and more Lab doors · secondary to the Moment above
             </p>
@@ -104,11 +102,11 @@ export function HfProductRail() {
               path="/#product-rail"
               labelTry="Try free · Lab sample"
               hideClipsChip
-              className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
+              className="text-[11px] font-bold text-neon-pink hover:underline"
             />
             <Link
               href={GENERATE_REMIX_HREF}
-              className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
+              className="text-[11px] font-bold text-neon-pink hover:underline"
               data-hf-rail-generate="remix"
               data-home-suite-360
             >
@@ -118,8 +116,8 @@ export function HfProductRail() {
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Free Mini honesty card */}
-          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[#c8ff3d]/45 bg-[#c8ff3d]/[0.1] p-3.5 shadow-[0_0_32px_rgba(200,255,61,0.12)] sm:h-[11rem] sm:w-[10rem]">
-            <span className="relative z-10 inline-flex rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-black">
+          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-neon-pink/45 bg-neon-pink/[0.1] p-3.5 shadow-[0_0_32px_color-mix(in_srgb,var(--neon-pink)_18%,transparent)] sm:h-[11rem] sm:w-[10rem]">
+            <span className="cta-brand relative z-10 inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide">
               Free
             </span>
             <p className="relative z-10 mt-2 text-[13px] font-black leading-tight text-white">
@@ -129,7 +127,7 @@ export function HfProductRail() {
                 labelDemo="Lab sample"
                 labelPlans="Plans"
                 hideClipsChip
-                className="font-black text-white group-hover:text-[#c8ff3d]"
+                className="font-black text-white group-hover:text-neon-pink"
               />
             </p>
             <p className="relative z-10 mt-1 text-[10px] leading-snug text-white/45">
@@ -151,7 +149,7 @@ export function HfProductRail() {
                 }
                 className={`group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border transition duration-200 hover:-translate-y-0.5 sm:h-[11rem] sm:w-[10rem] ${
                   p.hot
-                    ? "border-[#c8ff3d]/50 shadow-[0_0_32px_rgba(200,255,61,0.14)]"
+                    ? "border-neon-pink/50 shadow-[0_0_32px_color-mix(in_srgb,var(--neon-pink)_18%,transparent)]"
                     : "border-white/10 hover:border-white/30"
                 }`}
               >
@@ -176,14 +174,14 @@ export function HfProductRail() {
                   <span
                     className={`inline-flex w-fit rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${
                       p.hot
-                        ? "bg-[#c8ff3d] text-black"
+                        ? "cta-brand"
                         : "border border-white/20 bg-black/50 text-white/70 backdrop-blur"
                     }`}
                   >
                     {p.tag}
                   </span>
                   <div>
-                    <p className="text-[13px] font-black leading-tight text-white group-hover:text-[#c8ff3d]">
+                    <p className="text-[13px] font-black leading-tight text-white group-hover:text-neon-pink">
                       {p.title}
                     </p>
                     <p className="mt-0.5 text-[10px] leading-snug text-white/55">

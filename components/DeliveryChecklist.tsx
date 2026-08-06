@@ -123,7 +123,7 @@ export function DeliveryChecklist({
                 onClick={() => toggle(item.id)}
                 className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded border text-[9px] font-black transition ${
                   ok
-                    ? "border-[var(--mint)]/60 bg-[var(--mint)] text-black shadow-[0_0_10px_rgba(200,255,61,0.35)]"
+                    ? "border-[var(--mint)]/60 bg-[var(--mint)] text-black shadow-[0_0_10px_color-mix(in_srgb,var(--neon-pink)_35%,transparent)]"
                     : "border-white/25 bg-black/40 text-transparent hover:border-[var(--mint)]/40"
                 }`}
                 aria-pressed={ok}

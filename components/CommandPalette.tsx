@@ -90,11 +90,11 @@ export function CommandPalette() {
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-2xl border border-[var(--mint)]/20 bg-[#0c0c10]/96 shadow-[0_24px_80px_-20px_rgba(0,0,0,0.9),0_0_40px_rgba(200,255,61,0.06)] backdrop-blur-xl"
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-neon-pink/20 bg-void/96 shadow-[0_24px_80px_-20px_rgba(0,0,0,0.9),0_0_40px_color-mix(in_srgb,var(--neon-pink)_10%,transparent)] backdrop-blur-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--mint)]">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-neon-pink">
             Jump
           </span>
           <input
@@ -125,7 +125,7 @@ export function CommandPalette() {
               <Link
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-between px-4 py-2 text-sm text-white/85 transition hover:bg-[var(--mint)]/10 hover:text-white"
+                className="flex items-center justify-between px-4 py-2 text-sm text-white/85 transition hover:bg-neon-pink/10 hover:text-white"
               >
                 <span>{item.label}</span>
                 <span className="text-[10px] font-bold uppercase tracking-wide text-white/35">

@@ -369,7 +369,7 @@ export function AutoPlayVideo({
           <button
             type="button"
             onClick={togglePlayback}
-            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition hover:border-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition hover:border-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-pink"
             aria-label={isPlaying ? "Pause example video" : "Play example video"}
           >
             {isPlaying ? <Pause size={16} /> : <Play size={16} />}
@@ -377,7 +377,7 @@ export function AutoPlayVideo({
           <button
             type="button"
             onClick={toggleMuted}
-            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition hover:border-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition hover:border-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-pink"
             aria-label={isMuted ? "Unmute example video" : "Mute example video"}
           >
             {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
@@ -397,7 +397,7 @@ export function AutoPlayVideo({
             type="button"
             onClick={retryMedia}
             data-lab-preview-retry
-            className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[#c8ff3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+            className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-neon-pink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-pink"
           >
             Retry Lab preview
           </button>

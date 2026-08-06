@@ -43,20 +43,20 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
       <section
         data-home-explore-rail="empty"
         aria-label="Lab recipe rail"
-        className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
+        className="border-b border-white/10 bg-void px-3 py-5 sm:px-5"
       >
         <div className="mx-auto max-w-[1400px]">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]/80">
+          <p className="section-label tracking-[0.2em] text-neon-pink/80">
             Explore · Lab
           </p>
-          <p className="mt-2 text-sm text-white/45">
+          <p className="mt-2 text-sm text-fg-muted">
             Lab recipe previews unavailable right now.
           </p>
           <div className="mt-3 flex flex-wrap gap-3">
             <Link
               href={listing360Href}
               data-home-explore-rail-360
-              className="text-[11px] font-bold text-[#00D9FF] hover:underline"
+              className="link-tide text-[11px] font-bold hover:underline"
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -73,7 +73,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
             </Link>
             <Link
               href="/effects"
-              className="text-[11px] font-bold text-white/50 hover:text-white/80 hover:underline"
+              className="text-[11px] font-bold text-fg-dim hover:text-fg-muted hover:underline"
             >
               All recipes
             </Link>
@@ -88,21 +88,21 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
       data-home-explore-rail="lab"
       data-home-explore-rail-count={rail.length}
       aria-labelledby="home-explore-rail-title"
-      className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
+      className="border-b border-white/10 bg-void px-3 py-5 sm:px-5"
     >
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+            <p className="section-label tracking-[0.2em]">
               Explore · Lab recipes
             </p>
             <h2
               id="home-explore-rail-title"
-              className="mt-0.5 text-sm font-black tracking-tight text-white sm:text-base"
+              className="mt-0.5 text-sm font-black tracking-tight text-cream sm:text-base"
             >
               Remake a Lab recipe
             </h2>
-            <p className="mt-0.5 max-w-xl text-[11px] leading-snug text-white/40">
+            <p className="mt-0.5 max-w-xl text-[11px] leading-snug text-fg-dim">
               Cached prototypes only — swipe, remake with your figure. Not
               customer results.
             </p>
@@ -111,7 +111,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
             <Link
               href={listing360Href}
               data-home-explore-rail-360
-              className="text-[11px] font-bold text-[#00D9FF] hover:underline"
+              className="link-tide text-[11px] font-bold hover:underline"
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -128,7 +128,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
             </Link>
             <Link
               href="/effects"
-              className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
+              className="text-[11px] font-bold text-neon-pink hover:underline"
             >
               All recipes →
             </Link>
@@ -167,8 +167,8 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                 }
                 className={`group relative h-[9.5rem] w-[7.5rem] shrink-0 overflow-hidden rounded-2xl border transition duration-200 hover:-translate-y-0.5 sm:h-[11rem] sm:w-[9rem] ${
                   is360
-                    ? "border-[#00D9FF]/45 shadow-[0_0_28px_rgba(0,217,255,0.12)]"
-                    : "border-white/10 hover:border-[#c8ff3d]/40"
+                    ? "border-tide-blue/45 shadow-[0_0_28px_color-mix(in_srgb,var(--tide-blue)_16%,transparent)]"
+                    : "border-white/10 hover:border-neon-pink/40"
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -181,23 +181,23 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                   loading="lazy"
                   decoding="async"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/65 to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-void via-void/65 to-void/20" />
                 <div className="relative z-10 flex h-full flex-col justify-between p-2.5">
                   <div className="flex flex-wrap gap-1">
-                    <span className="inline-flex rounded-full border border-white/15 bg-black/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur">
+                    <span className="inline-flex rounded-full border border-white/15 bg-void/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-cream/75 backdrop-blur">
                       {badge}
                     </span>
                     {is360 ? (
-                      <span className="inline-flex rounded-full bg-[#00D9FF] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
+                      <span className="inline-flex rounded-full bg-tide-blue px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-void">
                         360
                       </span>
                     ) : null}
                   </div>
                   <div>
-                    <p className="text-[12px] font-black leading-tight text-white group-hover:text-[#c8ff3d] sm:text-[13px]">
+                    <p className="text-[12px] font-black leading-tight text-cream group-hover:text-neon-pink sm:text-[13px]">
                       {recipeName}
                     </p>
-                    <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-[#c8ff3d]/90 opacity-80 transition group-hover:opacity-100">
+                    <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-neon-pink/90 opacity-80 transition group-hover:opacity-100">
                       Remake →
                     </p>
                   </div>

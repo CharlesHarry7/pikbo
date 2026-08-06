@@ -87,12 +87,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       className={cn(
         "flex min-h-screen min-w-0 flex-col",
         home
-          ? "bg-[var(--void)] text-[var(--cream)]"
+          ? "bg-void text-cream"
           : resultShell
-          ? "bg-[#FAF7F2] text-[#0A0A0F]"
+          ? "bg-cream text-void"
           : lightShell
-            ? "bg-[#FAF7F2] text-[#0A0A0F]"
-            : "bg-[var(--void)] text-[var(--cream)]"
+            ? "bg-cream text-void"
+            : "bg-void text-cream"
       )}
     >
       <header
@@ -101,25 +101,25 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           "nav-shell sticky top-0 z-50 hidden items-center border-b px-7 backdrop-blur-xl lg:flex",
           motionChrome ? "h-16" : "h-14",
           motionChrome
-            ? "border-white/10 bg-[rgba(10,10,15,0.45)] px-8"
+            ? "border-white/10 bg-[color-mix(in_srgb,var(--void)_45%,transparent)] px-8"
             : resultShell
-            ? "border-black/10 bg-[#FAF7F2]/94 px-8"
+            ? "border-black/10 bg-cream/94 px-8"
             : lightShell
-              ? "border-black/10 bg-[#FAF7F2]/92"
-              : "border-white/10 bg-[rgba(10,10,15,0.92)]"
+              ? "border-black/10 bg-cream/92"
+              : "border-white/10 bg-[color-mix(in_srgb,var(--void)_92%,transparent)]"
         )}
       >
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
           {motionBrand ? (
-            <span className="flex items-center gap-3 text-[var(--cream)]">
-              <span className="grid h-9 w-9 place-items-center rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] font-display text-sm font-black text-white shadow-[0_0_18px_rgba(255,78,205,0.45)]">
+            <span className="flex items-center gap-3 text-cream">
+              <span className="grid h-9 w-9 place-items-center rounded-2xl bg-[linear-gradient(135deg,var(--electric-purple),var(--neon-pink))] font-display text-sm font-black text-white shadow-[0_0_18px_color-mix(in_srgb,var(--neon-pink)_45%,transparent)]">
                 🧸
               </span>
               <span>
                 <span className="block font-display text-base font-black leading-none tracking-[-0.04em]">
                   Pikbo
                 </span>
-                <span className="mt-1 block text-[7px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]/80">
+                <span className="mt-1 block text-[7px] font-black uppercase tracking-[0.2em] text-neon-pink/80">
                   Toy moments
                 </span>
               </span>
@@ -129,7 +129,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               size={30}
               wordClassName={cn(
                 "text-[19px]",
-                lightShell && "!text-[#15171B]"
+                lightShell && "!text-void"
               )}
             />
           )}
@@ -168,15 +168,15 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                       : "text-white/42 hover:text-white"
                     : resultShell
                     ? on
-                      ? "text-[#15171B]"
-                      : "text-[#716C64] hover:text-[#15171B]"
+                      ? "text-void"
+                      : "text-void/45 hover:text-void"
                     : lightShell
                       ? on
-                        ? "text-[#15171B]"
-                        : "text-[#6D7480] hover:text-[#15171B]"
+                        ? "text-void"
+                        : "text-void/48 hover:text-void"
                     : on
-                      ? "text-[#F7F4ED]"
-                      : "text-[#F7F4ED]/46 hover:text-[#F7F4ED]"
+                      ? "text-cream"
+                      : "text-cream/46 hover:text-cream"
                 )}
               >
                 {item.label}
@@ -185,12 +185,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "absolute inset-x-0 bottom-0 h-0.5",
                       motionBrand
-                        ? "bg-[linear-gradient(90deg,#B14EFF,#FF4ECD)]"
+                        ? "bg-[linear-gradient(90deg,var(--electric-purple),var(--neon-pink))]"
                         : resultShell
-                        ? "bg-[#FF4ECD]"
+                        ? "bg-neon-pink"
                         : lightShell
-                          ? "bg-[#B14EFF]"
-                          : "bg-[#FF4ECD]"
+                          ? "bg-electric-purple"
+                          : "bg-neon-pink"
                     )}
                   />
                 ) : null}
@@ -202,14 +202,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           {motionChrome ? (
             <Link
               href={home ? DEFAULT_MOMENT_CREATE_HREF : "/library"}
-              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.35)]"
+              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,var(--electric-purple),var(--neon-pink))] px-5 text-xs font-black text-white shadow-[0_0_24px_color-mix(in_srgb,var(--neon-pink)_35%,transparent)]"
             >
               {home ? "Try Street Power-Up" : "Open Library"}
             </Link>
           ) : resultShell ? (
             <Link
               href={DEFAULT_MOMENT_CREATE_HREF}
-              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black text-white"
+              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,var(--electric-purple),var(--neon-pink))] px-5 text-xs font-black text-white"
             >
               Create a Moment
             </Link>
@@ -227,12 +227,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         className={cn(
           "nav-shell sticky top-0 z-50 flex h-12 items-center justify-between border-b px-3 backdrop-blur-xl lg:hidden",
           home
-            ? "border-white/10 bg-[rgba(10,10,15,0.55)]"
+            ? "border-white/10 bg-[color-mix(in_srgb,var(--void)_55%,transparent)]"
             : resultShell
-            ? "border-black/10 bg-[#FAF7F2]/94"
+            ? "border-black/10 bg-cream/94"
             : lightShell
-              ? "border-black/10 bg-[#FAF7F2]/94"
-              : "border-white/10 bg-[rgba(10,10,15,0.92)]"
+              ? "border-black/10 bg-cream/94"
+              : "border-white/10 bg-[color-mix(in_srgb,var(--void)_92%,transparent)]"
         )}
       >
         <Link href="/" aria-label="Pikbo home">
@@ -240,7 +240,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             size={26}
             wordClassName={cn(
               "text-base",
-              home ? "!text-[var(--cream)]" : lightShell && "!text-[#0A0A0F]"
+              home ? "!text-cream" : lightShell && "!text-void"
             )}
           />
         </Link>
@@ -248,12 +248,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           {momentSurface ? (
             <Link
               href={DEFAULT_MOMENT_CREATE_HREF}
-              className={cn(
-                "inline-flex min-h-9 items-center rounded-full px-4 text-[10px] font-black",
-                home
-                  ? "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
-                  : "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
-              )}
+              className="inline-flex min-h-9 items-center rounded-full bg-[linear-gradient(135deg,var(--electric-purple),var(--neon-pink))] px-4 text-[10px] font-black text-white"
             >
               {home ? "Create my drop clip" : "Use this motion"}
             </Link>
@@ -261,17 +256,17 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <>
               <Link
                 href={DEFAULT_MOMENT_CREATE_HREF}
-                className="inline-flex min-h-9 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-4 text-[10px] font-black text-white"
+                className="inline-flex min-h-9 items-center rounded-full bg-[linear-gradient(135deg,var(--electric-purple),var(--neon-pink))] px-4 text-[10px] font-black text-white"
               >
                 Create a Moment
               </Link>
               <details className="group relative">
-                <summary className="grid min-h-9 cursor-pointer list-none place-items-center rounded-full border border-black/15 bg-white/55 px-3 text-[10px] font-black text-[#171717] [&::-webkit-details-marker]:hidden">
+                <summary className="grid min-h-9 cursor-pointer list-none place-items-center rounded-full border border-black/15 bg-white/55 px-3 text-[10px] font-black text-void [&::-webkit-details-marker]:hidden">
                   Menu
                 </summary>
                 <nav
                   aria-label="Mobile product menu"
-                  className="absolute right-0 top-11 z-[70] w-44 overflow-hidden rounded-2xl border border-black/10 bg-[#FAF7F0] p-1.5 text-[#171717] shadow-[0_22px_60px_-24px_rgba(0,0,0,0.55)]"
+                  className="absolute right-0 top-11 z-[70] w-44 overflow-hidden rounded-2xl border border-black/10 bg-cream p-1.5 text-void shadow-[0_22px_60px_-24px_rgba(0,0,0,0.55)]"
                 >
                   {PRIMARY_NAV.filter((item) => item.href !== "/").map(
                     (item) => (
@@ -297,7 +292,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <span
               className={cn(
                 "text-[10px] font-black uppercase tracking-[0.16em]",
-                lightShell ? "text-[#B14EFF]" : "text-[#FF4ECD]"
+                lightShell ? "text-electric-purple" : "text-neon-pink"
               )}
             >
               Create
@@ -311,12 +306,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           className={cn(
             "min-w-0 flex-1",
             home
-              ? "bg-[var(--void)]"
+              ? "bg-void"
               : resultShell
-              ? "bg-[#FAF7F2]"
+              ? "bg-cream"
               : lightShell
-                ? "bg-[#FAF7F2]"
-                : "bg-[var(--void)]"
+                ? "bg-cream"
+                : "bg-void"
           )}
         >
           {children}
@@ -328,8 +323,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         className={cn(
           "z-50 grid grid-cols-5 border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden",
           home
-            ? "relative border-white/10 bg-[rgba(10,10,15,0.96)]"
-            : "sticky bottom-0 border-white/10 bg-[rgba(10,10,15,0.96)]"
+            ? "relative border-white/10 bg-[color-mix(in_srgb,var(--void)_96%,transparent)]"
+            : "sticky bottom-0 border-white/10 bg-[color-mix(in_srgb,var(--void)_96%,transparent)]"
         )}
         aria-label="Mobile navigation"
       >
@@ -344,18 +339,18 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 "flex min-w-0 flex-col items-center justify-center px-1 py-3 text-[10px] font-bold transition-colors",
                 home
                   ? on
-                    ? "text-[#FF4ECD]"
+                    ? "text-neon-pink"
                     : "text-white/45"
                   : on
-                    ? "text-[#FF4ECD]"
-                    : "text-[var(--cream)]/38"
+                    ? "text-neon-pink"
+                    : "text-cream/38"
               )}
             >
               <span
                 className={cn(
                   "mb-1 h-1 w-1 rounded-full",
                   on
-                    ? "bg-[#FF4ECD]"
+                    ? "bg-neon-pink"
                     : "bg-transparent"
                 )}
                 aria-hidden
