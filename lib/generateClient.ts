@@ -550,8 +550,9 @@ export function historyFieldsFromSuccess(
     sku?: string;
   }
 ): Omit<HistoryItem, "id" | "createdAt"> {
-  // Prefer server redaction; if a legacy free live provider URL slipped through,
-  // pin history to the controlled download path (T6 gate re-checks ownership).
+  // Prefer server redaction. Any non-demo live result (free or private paid)
+  // that still carries a raw/signed https URL is rewritten to the owner gate
+  // so device Library restore never re-opens provider CDN (AIT-308 residual).
   const jobKey =
     typeof data.jobId === "string"
       ? data.jobId
@@ -560,7 +561,6 @@ export function historyFieldsFromSuccess(
         : "";
   let videoUrl = data.videoUrl;
   if (
-    Boolean(data.watermark) &&
     !Boolean(data.demo) &&
     jobKey &&
     !videoUrl.startsWith("/api/downloads/") &&
