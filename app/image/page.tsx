@@ -536,7 +536,7 @@ export default function ImageStudioPage() {
               keeps the Mini trial for{" "}
               <Link
                 href={createGenerate360Href("image-page")}
-                className="text-[var(--mint)] underline-offset-2 hover:underline"
+                className="text-[var(--neon-pink)] underline-offset-2 hover:underline"
                 data-image-create-video="remix"
               >
                 Create video
@@ -570,14 +570,14 @@ export default function ImageStudioPage() {
 
         <div className="card mt-6 grid gap-5 p-5 sm:p-6 lg:grid-cols-2">
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]/80">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--neon-pink)]/80">
               Prompt
             </label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={6}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm outline-none focus:border-[var(--mint)]/50 focus:shadow-[0_0_0_3px_rgba(200,255,61,0.1)]"
+              className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm outline-none focus:border-[var(--neon-pink)]/50 focus:shadow-[0_0_0_3px_rgba(255,78,205,0.1)]"
             />
             <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/35">
               Aspect
@@ -590,7 +590,7 @@ export default function ImageStudioPage() {
                   onClick={() => setAspect(r)}
                   className={`rounded-lg border px-2.5 py-1 font-semibold transition ${
                     aspect === r
-                      ? "border-[var(--mint)]/50 bg-[var(--mint)]/12 text-[var(--mint)]"
+                      ? "border-[var(--neon-pink)]/50 bg-[var(--neon-pink)]/12 text-[var(--neon-pink)]"
                       : "border-white/10 text-[var(--fg-muted)] hover:border-white/25"
                   }`}
                 >
@@ -630,7 +630,7 @@ export default function ImageStudioPage() {
                 Free Mini trial is video-only. Open{" "}
                 <Link
                   href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
-                  className="text-[var(--mint)] underline-offset-2 hover:underline"
+                  className="text-[var(--neon-pink)] underline-offset-2 hover:underline"
                   data-image-handoff="create-free-trial"
                 >
                   Create
@@ -638,7 +638,7 @@ export default function ImageStudioPage() {
                 for your Seedance clip, or{" "}
                 <Link
                   href="/pricing"
-                  className="text-[var(--mint)] underline-offset-2 hover:underline"
+                  className="text-[var(--neon-pink)] underline-offset-2 hover:underline"
                 >
                   upgrade
                 </Link>{" "}
@@ -689,7 +689,7 @@ export default function ImageStudioPage() {
                       : null}
                   </p>
                 )}
-                <p className="text-center text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]/70">
+                <p className="text-center text-[10px] font-bold uppercase tracking-wider text-[var(--neon-pink)]/70">
                   Delivery · next job
                 </p>
                 <Link
@@ -765,7 +765,7 @@ export default function ImageStudioPage() {
                 className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
                   demo
                     ? "border border-white/15 bg-black/60 text-white/70"
-                    : "bg-[var(--mint)] text-black"
+                    : "bg-[var(--neon-pink)] text-[var(--void)]"
                 }`}
               >
                 {demo ? "Demo" : "Live still"}
@@ -806,7 +806,7 @@ export default function ImageStudioPage() {
                     <span
                       className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${
                         j.status === "succeeded"
-                          ? "bg-[var(--mint)]/15 text-[var(--mint)]"
+                          ? "bg-[var(--neon-pink)]/15 text-[var(--neon-pink)]"
                           : j.status === "running"
                             ? "bg-amber-400/15 text-amber-100"
                             : j.status === "canceled"
@@ -828,7 +828,7 @@ export default function ImageStudioPage() {
                     {j.status === "succeeded" && (j.imageUrl || j.hasImage) ? (
                       <button
                         type="button"
-                        className="text-[var(--mint)] hover:underline"
+                        className="text-[var(--neon-pink)] hover:underline"
                         data-image-session-open={j.id}
                         onClick={() => {
                           if (j.imageUrl) {
@@ -876,7 +876,7 @@ export default function ImageStudioPage() {
                     {j.status === "failed" || j.status === "canceled" ? (
                       <button
                         type="button"
-                        className="text-[var(--mint)] hover:underline"
+                        className="text-[var(--neon-pink)] hover:underline"
                         data-image-session-retry={j.id}
                         data-image-session-retry-mode="ledger-fork"
                         disabled={busy}
@@ -956,7 +956,7 @@ export default function ImageStudioPage() {
           Have a real figure photo?{" "}
           <Link
             href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
-            className="font-semibold text-[var(--mint)] hover:underline"
+            className="font-semibold text-[var(--neon-pink)] hover:underline"
             data-image-handoff="create-footer"
           >
             Animate it with Seedance
