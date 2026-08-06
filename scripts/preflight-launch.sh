@@ -10,6 +10,12 @@ echo "== preflight-launch =="
 echo "-- engine-smoke --"
 npm run engine-smoke
 
+echo "-- moment-create-href-smoke --"
+npm run moment-create-href-smoke
+
+echo "-- generate-360-cta-smoke --"
+npm run generate-360-cta-smoke
+
 echo "-- typecheck --"
 npm run typecheck
 
