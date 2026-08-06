@@ -156,6 +156,29 @@ assert(
   "modules FAQ/chip must sell Lab public path + conditional Live, not Free Mini as public trial"
 );
 
+// AIT-405: t6Watermark freeLiveRawDownload reason — no public Free Mini product brand.
+const t6WatermarkSource = read("lib/t6Watermark.ts");
+const forbiddenT6WatermarkFreeMini = [
+  /Free Mini live raw provider URLs must not be exposed/i,
+  /Free Mini live raw/i,
+];
+for (const pattern of forbiddenT6WatermarkFreeMini) {
+  assert(
+    !pattern.test(t6WatermarkSource),
+    `lib/t6Watermark.ts contains residual Free Mini freeLiveRawDownload reason ${pattern}`
+  );
+}
+assert(
+  !t6WatermarkSource.includes("Free Mini") &&
+    t6WatermarkSource.includes(
+      "Free-plan live raw provider URLs must not be exposed or downloaded"
+    ) &&
+    t6WatermarkSource.includes("player overlay is not a file watermark") &&
+    t6WatermarkSource.includes("freeLiveRawDownload") &&
+    t6WatermarkSource.includes('freeLiveRawDownload: "blocked"'),
+  "t6Watermark freeLiveRawDownload reason must use free-plan live raw / T6 bake language, not Free Mini product brand"
+);
+
 assert(
   read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
     read("lib/site.ts").includes("AI product video studio for toy sellers"),
