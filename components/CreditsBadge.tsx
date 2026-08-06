@@ -10,10 +10,20 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 import { useI18n } from "@/components/LanguageProvider";
 
+type SessionBoot = "checking" | "ready" | "timeout";
+
+/**
+ * Nav credits chrome — 8s wall-clock /api/me boot.
+ * Hung getSession must not leave permanent "…" or invent plan/credits claims.
+ */
 export function CreditsBadge({
   compact,
   tone = "dark",
@@ -23,11 +33,19 @@ export function CreditsBadge({
 }) {
   const { t } = useI18n();
   const [session, setSession] = useState<MeResponse | null>(null);
+  const [sessionBoot, setSessionBoot] = useState<SessionBoot>("checking");
 
   const load = useCallback(() => {
-    void fetchMe().then((data) => {
-      if (data) setSession(data);
-    });
+    setSessionBoot("checking");
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+      .then((data) => {
+        setSession(data);
+        setSessionBoot("ready");
+      })
+      .catch((err) => {
+        setSession(null);
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+      });
   }, []);
 
   useEffect(() => {
@@ -40,18 +58,54 @@ export function CreditsBadge({
     };
   }, [load]);
 
-  if (!session) {
+  const dimClass = compact
+    ? tone === "light"
+      ? "text-[10px] text-[#7C8490]"
+      : "text-[10px] text-white/30"
+    : "hidden text-xs text-[var(--fg-dim)] sm:inline";
+
+  // Checking: brief ellipsis only while boot is in flight (≤8s).
+  if (sessionBoot === "checking") {
     return (
-      <span
+      <span className={dimClass} data-credits-boot="checking" aria-hidden>
+        …
+      </span>
+    );
+  }
+
+  // Timeout: fail-closed — no plan/credits claim; compact Retry.
+  if (sessionBoot === "timeout") {
+    return (
+      <button
+        type="button"
+        onClick={() => load()}
+        data-credits-boot="timeout"
+        data-credits-boot-retry
         className={
           compact
-            ? tone === "light"
-              ? "text-[10px] text-[#7C8490]"
-              : "text-[10px] text-white/30"
-            : "hidden text-xs text-[var(--fg-dim)] sm:inline"
+            ? `grid h-11 min-w-11 place-items-center rounded-full border px-2 text-[10px] font-bold ${
+                tone === "light"
+                  ? "border-[#C9CED8] text-[#7C8490]"
+                  : "border-white/10 text-white/45"
+              }`
+            : `hidden items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium sm:flex ${
+                tone === "light"
+                  ? "border-[#C9CED8] bg-white text-[#5F6774]"
+                  : "border-white/12 bg-white/[0.04] text-[var(--fg-dim)]"
+              }`
         }
+        title="Could not verify credits in time · Retry"
       >
-        …
+        {compact ? "—" : "Retry"}
+      </button>
+    );
+  }
+
+  // Ready but null: soft-null — hide badge (no permanent "…", no fake 0 credits).
+  if (!session) {
+    return (
+      <span className="sr-only" data-credits-boot="ready-null">
+        Credits unavailable
       </span>
     );
   }
@@ -106,6 +160,7 @@ export function CreditsBadge({
     return (
       <Link
         href={signed ? "/profile" : "/pricing"}
+        data-credits-boot="ready"
         className={`grid h-11 min-w-11 place-items-center rounded-full border px-2 text-[10px] font-bold ${
           low && !demo
             ? "border-amber-400/50 text-amber-300"
@@ -123,6 +178,7 @@ export function CreditsBadge({
   return (
     <Link
       href={signed ? "/profile" : "/pricing"}
+      data-credits-boot="ready"
       className={`hidden items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:flex ${
         low && !demo
           ? "border-amber-400/45 bg-amber-400/10 text-[var(--fg)]"

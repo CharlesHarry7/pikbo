@@ -7,6 +7,10 @@ import { useToast } from "@/components/Toast";
 import { interpretDownloadHead } from "@/lib/createTrust";
 import { downloadVideoFile, privateDownloadHeaders } from "@/lib/history";
 import { fetchMe, type MeResponse } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
 import {
   acceptControlledLibraryNewAttemptUrl,
@@ -330,6 +334,10 @@ function LibraryGridInner() {
   const [accountReady, setAccountReady] = useState(false);
   const [jobs, setJobs] = useState<GenerationJob[]>([]);
   const [jobsReady, setJobsReady] = useState(false);
+  /** 8s session boot — never permanent Loading when getSession hangs. */
+  const [sessionBoot, setSessionBoot] = useState<
+    "checking" | "ready" | "timeout"
+  >("checking");
   const [refreshing, setRefreshing] = useState(false);
   const [forkingId, setForkingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -356,26 +364,32 @@ function LibraryGridInner() {
     }
   }, [toast]);
 
-  useEffect(() => {
-    let cancelled = false;
-    void fetchMe()
+  const loadAccount = useCallback(() => {
+    setAccountReady(false);
+    setJobsReady(false);
+    setSessionBoot("checking");
+    setMe(null);
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
       .then((result) => {
-        if (cancelled) return;
         setMe(result);
         setAccountReady(true);
+        setSessionBoot("ready");
         if (result?.signedIn) void refreshJobs();
         else setJobsReady(true);
       })
-      .catch(() => {
-        if (!cancelled) {
-          setAccountReady(true);
-          setJobsReady(true);
-        }
+      .catch((err) => {
+        setMe(null);
+        // Always release loaders — no permanent Loading your Library…
+        setAccountReady(true);
+        setJobsReady(true);
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
       });
-    return () => {
-      cancelled = true;
-    };
   }, [refreshJobs]);
+
+  useEffect(() => {
+    const t = window.setTimeout(loadAccount, 0);
+    return () => window.clearTimeout(t);
+  }, [loadAccount]);
 
   const openCount = useMemo(
     () => jobs.filter((job) => isOpen(job.status)).length,
@@ -537,9 +551,60 @@ function LibraryGridInner() {
 
   if (!accountReady || !jobsReady) {
     return (
-      <div className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]">
+      <div
+        className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]"
+        data-library-boot="checking"
+      >
         <p className="text-sm font-semibold text-white/45">Loading your Library…</p>
       </div>
+    );
+  }
+
+  // Access check timed out — fail-closed: no guest claim, no owner jobs.
+  if (sessionBoot === "timeout") {
+    return (
+      <section
+        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        data-library-state="session-timeout"
+        data-library-boot="timeout"
+      >
+        <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
+          <div className="max-w-lg">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/45">
+              Private Library
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+              Could not verify access in time.
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
+              Session lookup timed out. We will not load private jobs or claim
+              guest status until access is checked again.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => loadAccount()}
+                data-library-boot-retry
+                className="btn btn-primary text-sm"
+              >
+                Retry access check
+              </button>
+              <Link
+                href={
+                  deepLinkJobId
+                    ? `/login?next=${encodeURIComponent(
+                        `/library?job=${encodeURIComponent(deepLinkJobId)}`
+                      )}`
+                    : "/login?next=/library"
+                }
+                className="btn btn-ghost text-sm"
+              >
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     );
   }
 
@@ -548,6 +613,7 @@ function LibraryGridInner() {
       <section
         className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
         data-library-state="guest"
+        data-library-boot="ready"
       >
         <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
           <div className="max-w-lg">
