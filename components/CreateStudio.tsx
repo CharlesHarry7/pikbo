@@ -2062,7 +2062,7 @@ export function CreateStudio({
       >
         {/* Full recipe catalog is retained for future use but hidden from first run. */}
         <aside className="hidden">
-          <p className="mb-0.5 px-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]/90">
+          <p className="mb-0.5 px-1 text-[10px] font-black uppercase tracking-[0.16em] text-neon-pink/90">
             Toy recipes
           </p>
           <p className="mb-2 px-1 text-[9px] leading-snug text-white/35">
@@ -2072,7 +2072,7 @@ export function CreateStudio({
             value={presetFilter}
             onChange={(e) => setPresetFilter(e.target.value)}
             placeholder="Search spin, reveal, zero-g…"
-            className="mb-2 w-full rounded-lg border border-white/10 bg-black/50 px-2.5 py-2 text-xs outline-none focus:border-[var(--mint)]/50 focus:shadow-[0_0_0_3px_rgba(200,255,61,0.12)]"
+            className="mb-2 w-full rounded-lg border border-white/10 bg-black/50 px-2.5 py-2 text-xs outline-none focus:border-[var(--mint)]/50 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--neon-pink)_12%,transparent)]"
           />
           {favorites.length > 0 && !presetFilter && (
             <div className="mb-2">
@@ -2103,7 +2103,7 @@ export function CreateStudio({
                 key={p.slug}
                 className={`flex items-stretch gap-1 rounded-xl border transition duration-150 ${
                   effect === p.slug
-                    ? "border-[var(--mint)]/60 bg-[var(--mint)]/[0.08] shadow-[0_0_24px_rgba(200,255,61,0.1)]"
+                    ? "border-[var(--mint)]/60 bg-[var(--mint)]/[0.08] shadow-[0_0_24px_color-mix(in_srgb,var(--neon-pink)_14%,transparent)]"
                     : "border-transparent bg-white/[0.03] hover:border-white/10 hover:bg-white/[0.05]"
                 }`}
               >
@@ -2249,7 +2249,7 @@ export function CreateStudio({
                 className={`group/drop relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
                   image
                     ? "aspect-[16/10] border-[var(--mint)]/25 ring-1 ring-[var(--mint)]/15"
-                    : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(200,255,61,0.06)] sm:aspect-video"
+                    : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_color-mix(in_srgb,var(--neon-pink)_10%,transparent)] sm:aspect-video"
                 }`}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDrop}
@@ -2469,7 +2469,7 @@ export function CreateStudio({
 
           {/* Active recipe summary + aspect (essential only) */}
           {!fixedMomentContract ? <div
-            className="rounded-xl border border-[var(--mint)]/20 bg-gradient-to-br from-[var(--mint)]/[0.07] to-black/40 p-3 shadow-[inset_0_1px_0_rgba(200,255,61,0.08)]"
+            className="rounded-xl border border-[var(--mint)]/20 bg-gradient-to-br from-[var(--mint)]/[0.07] to-black/40 p-3 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--neon-pink)_12%,transparent)]"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -3233,7 +3233,7 @@ export function CreateStudio({
                     ) : null}
                   </div>
                 )}
-                <div className="mx-auto mt-4 max-w-md rounded-2xl border border-[var(--mint)]/35 bg-gradient-to-b from-[var(--mint)]/[0.12] to-black/40 px-4 py-3.5 text-center shadow-[0_0_40px_rgba(200,255,61,0.1)]">
+                <div className="mx-auto mt-4 max-w-md rounded-2xl border border-[var(--mint)]/35 bg-gradient-to-b from-[var(--mint)]/[0.12] to-black/40 px-4 py-3.5 text-center shadow-[0_0_40px_color-mix(in_srgb,var(--neon-pink)_14%,transparent)]">
                   <p className="text-[15px] font-black tracking-tight text-white">
                     {demo ? t("create.labReady") : t("create.ready")}
                   </p>
