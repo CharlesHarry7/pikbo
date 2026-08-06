@@ -177,6 +177,29 @@ assert.match(momentPreview, /Retry access check/);
 assert.match(momentPreview, /setBootNonce/);
 assert.match(momentPreview, /Checking private access…/);
 
+// AIT-522/AIT-523 residual: Library deep-link resolve finite (no infinite Loading)
+const library = read("components/LibraryGrid.tsx");
+assert.match(
+  library,
+  /withTimeout\([\s\S]{0,900}\/api\/generations\/\$\{encodeURIComponent\(deepLinkJobId\)\}/,
+  "Library deep-link detail GET must be wall-clock bounded"
+);
+assert.match(library, /Could not verify this Moment in time/);
+assert.match(library, /Verifying this Moment…/);
+assert.match(library, /data-library-deep-link=\{deepLinkPending \? "resolving"/);
+assert.match(library, /data-library-deep-link-retry/);
+// attempted ref only after terminal outcomes (cancelled mid-flight must re-run)
+assert.doesNotMatch(
+  library,
+  /deepLinkAttemptedRef\.current = deepLinkJobId;\s*let cancelled/
+);
+// AIT-523: recovery actions (retry/cancel/download) share wall-clock helper
+assert.match(library, /ownerRecoveryFetch/);
+assert.match(
+  library,
+  /async function retry[\s\S]{0,500}ownerRecoveryFetch/
+);
+
 // Runtime: withTimeout rejects hung work (authHeaders hang class)
 const hang = new Promise(() => {});
 const t0 = Date.now();
@@ -286,5 +309,5 @@ for (const asset of [
 }
 
 console.log(
-  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing/moment-preview + SoftLaunch/FreeTrial/Modules + TrustStrip/HfProductRail/LibraryStorageBanner boot; timeout/error + retry; mobile sticky Lab CTA)"
+  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing/moment-preview + SoftLaunch/FreeTrial/Modules + TrustStrip/HfProductRail/LibraryStorageBanner + Library deep-link boot; timeout/error + retry; mobile sticky Lab CTA)"
 );
