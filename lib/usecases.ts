@@ -30,8 +30,8 @@ export const USE_CASES: UseCase[] = [
     label: "Etsy sellers",
     audience: "seller",
     h1: "Make an Etsy Listing Video for a Toy From One Photo",
-    // CTR 优化 2026-07-27: 加入 Free Mini 驱动点击
-    seoTitle: "Etsy Toy Listing Video Generator, Free Mini | Pikbo",
+    // CTR: marketplace job first; no unconditional Free Mini live claim
+    seoTitle: "Etsy Toy Listing Video Generator From One Photo | Pikbo",
     seoDescription:
       "Turn one owned product photo into an Etsy listing-video recipe. Preview cached spin, floating-hero, or glam examples before gated Live submission.",
     intro:
@@ -325,8 +325,8 @@ export const USE_CASES: UseCase[] = [
      * Aliases (video-generator, action-figures short) 301 here — no duplicate pages.
      */
     h1: "AI Action Figure Video Generator — Product Clips From One Photo",
-    // CTR 优化 2026-07-27: 加入 Free Mini 驱动点击
-    seoTitle: "AI Action Figure Video Generator, Free Mini | Pikbo",
+    // CTR: subject job first; no unconditional Free Mini live claim
+    seoTitle: "AI Action Figure Video Generator From One Photo | Pikbo",
     seoDescription:
       "Action-figure video recipes for sellers. One owned photo → cached spin, hero-float, or shelf-glam preview before gated Live submission.",
     intro:
@@ -486,7 +486,7 @@ export const USE_CASES: UseCase[] = [
       "eBay buyers want to trust condition and form. Draft a short spin or hero clip from one owned product photo before you list or relaunch a SKU.",
     body: [
       "Auction and fixed-price listings both benefit from motion that shows depth without hiding flaws. Prefer honest lighting and full-figure framing.",
-      "Confirm eBay’s current media requirements for your site (US, UK, DE…). Soft launch Free Mini is capped — use it to prove one listing, then scale.",
+      "Confirm eBay’s current media requirements for your site (US, UK, DE…). Public validation is a cached Lab prototype at 0 credits. When Live is enabled for an eligible account, use one quoted job to prove a listing, then scale.",
       "Resellers: keep the original photo archive so disputes can be answered with the real still, not only the AI draft.",
       "Cross-link Amazon/Etsy pages if you multi-home inventory — each marketplace job keeps its own URL.",
     ],
@@ -516,7 +516,7 @@ export const USE_CASES: UseCase[] = [
       "Mercari is scroll-first. A short product clip from one photo helps your figure stand out without a full reshoot between thrift finds.",
     body: [
       "Shoot or reuse a clean packshot, then generate a calm spin. Avoid over-stylized effects that look unlike the item in hand.",
-      "Free Mini caps apply. Lab demos on Pikbo never process your upload.",
+      "Lab demos on Pikbo never process your upload and cost 0 credits. Live jobs remain gated until your account is eligible.",
       "Resale honesty first: if the item has shelf wear, do not pick a glam recipe that hides it.",
     ],
     keywords: [
@@ -546,7 +546,7 @@ export const USE_CASES: UseCase[] = [
     body: [
       "Keep motion simple — spin or float. Heavy VFX can hurt trust for second-hand sales.",
       "Include scale context in your photos when possible; AI will not invent accurate measurements.",
-      "Soft launch Free Mini is enough for a few active listings. Failed live jobs refund credits when confirmed.",
+      "A cached Lab preview is enough to draft a few active listings without a provider call. When Live is enabled for an eligible account, failed jobs refund credits only after the server confirms release.",
     ],
     keywords: [
       "facebook marketplace toy video",
@@ -569,12 +569,12 @@ export const USE_CASES: UseCase[] = [
     h1: "Reddit Showcase Videos for Toy Collectors",
     seoTitle: "Reddit Toy Showcase Video From One Photo | Pikbo",
     seoDescription:
-      "Make short showcase clips for Reddit toy communities from one photo — shelf flexes and pull reveals with honest Free Mini limits.",
+      "Make short showcase clips for Reddit toy communities from one photo — shelf flexes and pull reveals with honest Lab preview limits and gated Live.",
     intro:
       "Subreddits reward clear product shots. A short AI motion draft can lift a still post — as long as you label AI when community rules require it.",
     body: [
       "Check each subreddit’s rules on AI media before posting. Honesty beats bans.",
-      "Use display glam or spin for grails; unbox energy for pulls. Keep Free Mini caps in mind.",
+      "Use display glam or spin for grails; unbox energy for pulls. Keep public Lab-only limits in mind; Live stays gated during validation.",
       "Do not spam the same clip across every toy sub. Tailor captions and follow local etiquette.",
     ],
     keywords: [

@@ -32,6 +32,10 @@ const publicPromiseFiles = [
   "app/community/page.tsx",
   "app/explore/page.tsx",
   "app/effects/page.tsx",
+  "app/tools/page.tsx",
+  "app/for/page.tsx",
+  "app/toys/page.tsx",
+  "app/guides/page.tsx",
   "components/HomeSeoBody.tsx",
   "components/HomeCinemaHero.tsx",
   "components/HeroUpload.tsx",
@@ -51,9 +55,17 @@ const publicFaqAndStripFiles = [
   "app/explore/page.tsx",
   "app/effects/page.tsx",
   "app/apps/page.tsx",
+  "app/tools/page.tsx",
+  "app/for/page.tsx",
+  "app/toys/page.tsx",
+  "app/guides/page.tsx",
+  "app/modules/page.tsx",
   "components/LandingHowItWorks.tsx",
   "components/TrustStrip.tsx",
 ];
+
+/** Longform SEO surfaces (tools / for / guides) — no public Free Mini live trial promises. */
+const longformSeoFiles = ["lib/tools.ts", "lib/usecases.ts", "lib/guides.ts"];
 
 const forbiddenUnconditional = [
   /Seedance live/i,
@@ -71,8 +83,29 @@ const forbiddenPublicFreeMini = [
   /Live Seedance Mini uses Free Mini/i,
   /Free Mini is for one live Seedance Mini/i,
   /Soft launch uses Seedance Mini with honest Free Mini/i,
+  /Free Mini live is about one Seedance Mini/i,
   /Free Mini:\s*~?5s/i,
   /Free Mini · 5s · 480p/i,
+  /Free Mini limits \(5s · 480p/i,
+  /Free Mini 5s · 480p/i,
+  /One job per page · Free Mini ·/i,
+  /How-tos · Free Mini 5s ·/i,
+  /Subject landings · Free Mini 5s ·/i,
+];
+
+const forbiddenLongformFreeMini = [
+  /Soft launch Free Mini/i,
+  /Free Mini caps apply/i,
+  /Free Mini clips are/i,
+  /Free Mini teasers are/i,
+  /Free Mini validates/i,
+  /Run Free Mini or a live job/i,
+  /Seedance Mini on Free Mini/i,
+  /Free Mini is 5s/i,
+  /Free Mini is enough/i,
+  /Free Mini:\s*~?5s/i,
+  /Free Mini · 5s · 480p/i,
+  /cookie period is exhausted/i,
 ];
 
 for (const relativePath of publicPromiseFiles) {
@@ -93,6 +126,22 @@ for (const relativePath of publicFaqAndStripFiles) {
       `${relativePath} contains unconditional Free Mini live claim ${pattern}`
     );
   }
+}
+
+for (const relativePath of longformSeoFiles) {
+  const source = read(relativePath);
+  for (const pattern of forbiddenLongformFreeMini) {
+    assert(
+      !pattern.test(source),
+      `${relativePath} contains residual Free Mini live promise ${pattern}`
+    );
+  }
+  assert(
+    source.includes("When Live is enabled for an eligible account") ||
+      source.includes("cached Lab") ||
+      source.includes("Lab prototype"),
+    `${relativePath} must keep conditional Live / cached Lab honesty language`
+  );
 }
 
 assert(
@@ -117,7 +166,17 @@ assert(
     read("app/effects/page.tsx").includes("Live generation is gated"),
   "community/explore/effects FAQs must not sell unconditional Free Mini live"
 );
-
+assert(
+  read("app/tools/page.tsx").includes("cached Lab") &&
+    read("app/tools/page.tsx").includes("Live remains gated") &&
+    !read("app/tools/page.tsx").includes("Free Mini live is about one Seedance Mini"),
+  "tools hub must sell Lab public path, not Free Mini live trial"
+);
+assert(
+  read("app/for/page.tsx").includes("cached Lab") &&
+    !read("app/for/page.tsx").includes("One job per page · Free Mini ·"),
+  "for hub must not chip Free Mini as the public free trial"
+);
 assert(
   read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
     read("lib/site.ts").includes("AI product video studio for toy sellers"),
@@ -216,6 +275,34 @@ assert(
     "Private generation and subscriptions remain closed while quality, recovery, and cost are validated."
   ),
   "rank tool must keep private generation and subscriptions closed during validation"
+);
+assert(
+  rankToolSource.includes(
+    "Public path is a cached Lab prototype at 0 credits"
+  ) &&
+    rankToolSource.includes(
+      "When Live is enabled for an eligible account, Generate shows the exact duration"
+    ),
+  "tools longform must describe Lab public path and condition clip length on Live"
+);
+assert(
+  read("lib/guides.ts").includes(
+    "The public free path is a cached Pikbo Lab prototype at 0 credits"
+  ) &&
+    read("lib/guides.ts").includes(
+      "When Live is enabled for an eligible account, Generate shows the configured model"
+    ) &&
+    !read("lib/guides.ts").includes("Run Free Mini or a live job"),
+  "guides free-path article must keep Lab public path and conditional Live quotes"
+);
+assert(
+  read("lib/usecases.ts").includes(
+    "Public validation uses cached Lab prototypes at 0 credits"
+  ) &&
+    read("lib/usecases.ts").includes(
+      "Live jobs remain gated until your account is eligible"
+    ),
+  "usecases longform must keep Lab public path and gated Live language"
 );
 
 function walkHtml(directory) {
