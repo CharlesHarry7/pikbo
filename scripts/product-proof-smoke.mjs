@@ -299,6 +299,23 @@ assert(
   );
 }
 
+// AIT-585: Project detail residual competitor lime → gallery-calm copper
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const projectPage = read("app/projects/[slug]/page.tsx");
+  assert(
+    !lime.test(projectPage),
+    "app/projects/[slug]/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    projectPage.includes("var(--brand)") &&
+      projectPage.includes("var(--grad-cta)") &&
+      projectPage.includes("var(--primary-foreground)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(projectPage),
+    "Project detail uses --brand / --grad-cta / --primary-foreground + copper glow"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
