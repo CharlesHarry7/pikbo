@@ -465,4 +465,27 @@ assert.match(
   "Toast glow uses neon-pink board rgba"
 );
 
+// AIT-457: shared ui/button residual carnival neon → gallery-calm copper
+const buttonSrc = read("components/ui/button.tsx");
+assert.doesNotMatch(
+  buttonSrc,
+  /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i,
+  "ui/button must not hard-code carnival neon (#B14EFF / #FF4ECD)"
+);
+assert.match(
+  buttonSrc,
+  /var\(--grad-cta\)/,
+  "ui/button default variant uses --grad-cta copper board gradient"
+);
+assert.match(
+  buttonSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "ui/button default glow uses copper board rgba(196,165,116)"
+);
+assert.match(
+  buttonSrc,
+  /var\(--primary-foreground\)/,
+  "ui/button primary text uses --primary-foreground on copper CTAs"
+);
+
 console.log("generate-360-cta-smoke: ok");
