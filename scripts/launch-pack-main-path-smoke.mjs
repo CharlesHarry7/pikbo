@@ -29,6 +29,7 @@ const meClient = read("lib/meClient.ts");
 // Media is cached Lab sample only (not customer results / Pack archive).
 assert.match(home, /<HomeCinemaHero \/>/);
 assert.match(home, /<HomeViralWall/);
+assert.match(home, /<HomeExploreRecipeRail/);
 assert.match(home, /<HfProductRail/);
 assert.match(home, /buildHomeShowcaseFeed/);
 assert.doesNotMatch(home, /PublicLaunchPackSample/);
@@ -36,6 +37,11 @@ assert.match(homeHero, /data-home-hero=["']street-power-up["']/);
 assert.match(homeWall, /data-home-wall=["']lab-proof["']/);
 assert.match(homeWall, /HOME_PROOF_BADGE|home-proof-wall/);
 assert.match(homeWall, /360-spin-showcase|data-home-proof-360/);
+const homeExploreRail = read("components/HomeExploreRecipeRail.tsx");
+assert.match(homeExploreRail, /data-home-explore-rail/);
+assert.match(homeExploreRail, /createGenerate360Href/);
+assert.match(homeExploreRail, /HOME_PROOF_BADGE|Lab · cached/);
+assert.doesNotMatch(homeExploreRail, /data-home-moment-cta|Create my drop clip/);
 assert.match(
   homeHero,
   /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
