@@ -64,7 +64,7 @@ function ModuleCard({
   return (
     <Link
       href={w.href}
-      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-[#0c0c10] to-black shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--mint)]/45 hover:shadow-[0_24px_56px_-24px_rgba(200,255,61,0.15)]"
+      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-[#0c0c10] to-black shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--mint)]/45 hover:shadow-[0_24px_56px_-24px_rgba(196,165,116,0.15)]"
       data-module-card={isLive ? "live" : "preview"}
     >
       {poster ? (
@@ -80,14 +80,14 @@ function ModuleCard({
           <span className="absolute left-3 top-3 text-2xl drop-shadow-lg">
             {w.emoji}
           </span>
-          <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-[var(--mint)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black opacity-0 shadow-[0_0_16px_rgba(200,255,61,0.35)] transition group-hover:opacity-100">
+          <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-[var(--mint)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black opacity-0 shadow-[0_0_16px_rgba(196,165,116,0.35)] transition group-hover:opacity-100">
             Remake
           </span>
           <div className="absolute bottom-14 left-3 right-3 flex flex-wrap gap-1">
             <span
               className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
                 isLive
-                  ? "bg-[var(--mint)] text-black shadow-[0_0_16px_rgba(200,255,61,0.35)]"
+                  ? "bg-[var(--mint)] text-black shadow-[0_0_16px_rgba(196,165,116,0.35)]"
                   : "bg-amber-400/90 text-black"
               }`}
             >
@@ -227,7 +227,7 @@ export default function ModulesPage() {
       <div className="sticky top-0 z-20 border-b border-white/10 bg-black/90 px-3 py-3 backdrop-blur-xl sm:px-5">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--neon-pink)]">
               Modules · video jobs
             </p>
             <h1 className="font-display text-lg font-black uppercase tracking-tight sm:text-xl">
@@ -259,7 +259,7 @@ export default function ModulesPage() {
           >
             <Link
               href={MODULES_PATH_GENERATE_HREF}
-              className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+              className="rounded-full border border-[var(--neon-pink)]/40 bg-[var(--neon-pink)]/10 px-3 py-1.5 text-[var(--neon-pink)]"
               data-modules-path-generate="remix"
             >
               Generate
@@ -292,7 +292,7 @@ export default function ModulesPage() {
 
           <section>
             <div className="mb-3 flex items-end justify-between gap-3">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]">
+              <h2 className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--neon-pink)]">
                 Live jobs · {live.length}
               </h2>
               <p className="text-[11px] text-white/40">

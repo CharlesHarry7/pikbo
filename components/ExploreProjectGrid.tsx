@@ -56,7 +56,7 @@ export function ExploreProjectGrid({
             }}
             className={`shrink-0 rounded-full px-4 py-2 text-xs font-black transition ${
               category === item.id
-                ? "bg-[#c8ff3d] text-black"
+                ? "bg-[var(--neon-pink)] text-[var(--void)]"
                 : "border border-white/10 bg-white/[0.03] text-white/55 hover:border-white/25 hover:text-white"
             }`}
           >
@@ -70,11 +70,11 @@ export function ExploreProjectGrid({
           {visible.map((project, index) => (
             <article
               key={project.slug}
-              className="group relative mb-2 break-inside-avoid overflow-hidden rounded-2xl border border-white/[0.08] bg-neutral-950 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-0.5 hover:border-[#c8ff3d]/35 hover:shadow-[0_20px_40px_-20px_rgba(200,255,61,0.12)] sm:mb-3"
+              className="group relative mb-2 break-inside-avoid overflow-hidden rounded-2xl border border-white/[0.08] bg-neutral-950 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-0.5 hover:border-[var(--neon-pink)]/35 hover:shadow-[0_20px_40px_-20px_rgba(196,165,116,0.12)] sm:mb-3"
             >
               <Link
                 href={showcaseProjectHref(project)}
-                className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d]"
+                className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-pink)]"
                 aria-label={`Open ${project.title} project details`}
                 onClick={() =>
                   track({
@@ -107,9 +107,9 @@ export function ExploreProjectGrid({
                     className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out will-change-transform group-hover:scale-[1.05]"
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c8ff3d]/40 to-transparent opacity-0 transition group-hover:opacity-100" />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--neon-pink)]/40 to-transparent opacity-0 transition group-hover:opacity-100" />
                   <div className="absolute left-2 top-2 flex flex-wrap gap-1">
-                    <span className="rounded-full border border-white/10 bg-black/65 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-[#c8ff3d] backdrop-blur">
+                    <span className="rounded-full border border-white/10 bg-black/65 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-[var(--neon-pink)] backdrop-blur">
                       {showcaseProvenanceLabel(project)}
                     </span>
                     <span
@@ -129,7 +129,7 @@ export function ExploreProjectGrid({
                     <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-white/50">
                       {project.result}
                     </p>
-                    <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-white/15 bg-black/40 px-2.5 py-1 text-[10px] font-bold text-white/80 transition group-hover:border-[#c8ff3d]/40 group-hover:bg-[#c8ff3d]/15 group-hover:text-[#c8ff3d]">
+                    <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-white/15 bg-black/40 px-2.5 py-1 text-[10px] font-bold text-white/80 transition group-hover:border-[var(--neon-pink)]/40 group-hover:bg-[var(--neon-pink)]/15 group-hover:text-[var(--neon-pink)]">
                       Inside project →
                     </span>
                   </div>
@@ -141,7 +141,7 @@ export function ExploreProjectGrid({
                 </span>
                 <Link
                   href={showcaseRecipeHref(project)}
-                  className="shrink-0 rounded-full bg-[#c8ff3d]/15 px-2.5 py-1 text-[10px] font-black text-[#c8ff3d] transition hover:bg-[#c8ff3d] hover:text-black"
+                  className="shrink-0 rounded-full bg-[var(--neon-pink)]/15 px-2.5 py-1 text-[10px] font-black text-[var(--neon-pink)] transition hover:bg-[var(--neon-pink)] hover:text-[var(--void)]"
                   onClick={() =>
                     track({
                       event: "recipe_use",
@@ -168,7 +168,7 @@ export function ExploreProjectGrid({
             </p>
             <Link
               href="/effects"
-              className="mt-4 inline-flex text-xs font-bold text-[#c8ff3d]"
+              className="mt-4 inline-flex text-xs font-bold text-[var(--neon-pink)]"
             >
               Browse concept recipes →
             </Link>

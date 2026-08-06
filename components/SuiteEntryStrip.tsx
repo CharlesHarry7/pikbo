@@ -73,7 +73,7 @@ export function SuiteEntryStrip({
       <div className="mx-auto max-w-6xl">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8ff3d]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--neon-pink)]">
               {t(titleKey)}
             </p>
             <p className="mt-1 text-[12px] text-white/50">{t(subtitleKey)}</p>
@@ -83,7 +83,7 @@ export function SuiteEntryStrip({
               path="/#suite"
               labelTry={t("suite.tryFree")}
               hideClipsChip
-              className="text-[11px] font-semibold text-[#c8ff3d] hover:underline"
+              className="text-[11px] font-semibold text-[var(--neon-pink)] hover:underline"
             />
             <Link
               href="/flow"
@@ -93,7 +93,7 @@ export function SuiteEntryStrip({
             </Link>
             <Link
               href={SUITE_GENERATE_HREF}
-              className="text-[11px] font-semibold text-[#c8ff3d] hover:underline"
+              className="text-[11px] font-semibold text-[var(--neon-pink)] hover:underline"
               data-suite-entry="generate-remix"
             >
               {t("suite.openGenerate")}
@@ -114,12 +114,12 @@ export function SuiteEntryStrip({
               }
               className={`group relative overflow-hidden rounded-2xl border px-3 py-3.5 transition duration-200 hover:-translate-y-0.5 ${
                 "hot" in e && e.hot
-                  ? "border-[#c8ff3d]/40 bg-[#c8ff3d]/[0.09] shadow-[0_0_32px_rgba(200,255,61,0.08)] hover:shadow-[0_0_40px_rgba(200,255,61,0.14)]"
+                  ? "border-[var(--neon-pink)]/40 bg-[var(--neon-pink)]/[0.09] shadow-[0_0_32px_rgba(196,165,116,0.08)] hover:shadow-[0_0_40px_rgba(196,165,116,0.14)]"
                   : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]"
               }`}
             >
               <span
-                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c8ff3d]/50 to-transparent opacity-0 transition group-hover:opacity-100"
+                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--neon-pink)]/50 to-transparent opacity-0 transition group-hover:opacity-100"
                 aria-hidden
               />
               <div className="flex items-start justify-between gap-1">
