@@ -15,7 +15,8 @@ const MOMENT_RAIL_HREF = `${MOMENT_CREATE_HREF}&source=hf-product-rail` as const
 /**
  * HF homepage product entry strip — media-backed capability cards.
  * Only real Pikbo paths; Video is first and hot. Owned Lab posters only.
- * Below-fold suite density under Moment hero (AIT-241); secondary to hero CTA.
+ * Below-fold suite density under Moment hero (AIT-241 / AIT-272).
+ * One filled primary Generate→360; FreeTrial / Free card stay outline secondary.
  */
 /** Product doors first; Flow/Cinema/Image are Preview (not live job peers). */
 const PRODUCTS: {
@@ -86,6 +87,7 @@ export function HfProductRail() {
   return (
     <section
       data-home-suite-rail="hf-product"
+      data-hf-rail-primary-generate="360"
       className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
       aria-label="Generate suite"
     >
@@ -96,30 +98,41 @@ export function HfProductRail() {
               Suite
             </p>
             <p className="mt-0.5 text-[11px] text-white/40">
-              Generate 360° and more Lab doors · secondary to the Moment above
+              One primary Generate 360° · lab doors under the Moment above
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+            {/* Secondary Free / Lab sample — outline only, not a filled primary. */}
             <FreeTrialCta
               path="/#product-rail"
               labelTry="Try free · Lab sample"
+              labelDemo="Lab sample"
               hideClipsChip
-              className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
+              className="rounded-full border border-white/20 bg-transparent px-3 py-1.5 text-[11px] font-bold text-white/70 transition hover:border-white/40 hover:text-white"
             />
+            {/* One primary Generate → 360 (AIT-272 / AIT-252). */}
             <Link
               href={GENERATE_REMIX_HREF}
-              className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
+              className="rounded-full bg-[#c8ff3d] px-4 py-2 text-[11px] font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(200,255,61,0.4)]"
               data-hf-rail-generate="remix"
+              data-hf-rail-primary-generate-cta
               data-home-suite-360
+              onClick={() =>
+                track({
+                  event: "landing_view",
+                  path: "/",
+                  meta: { cta: "hf_rail_primary_generate_360" },
+                })
+              }
             >
               Generate 360° →
             </Link>
           </div>
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {/* Free Mini honesty card */}
-          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[#c8ff3d]/45 bg-[#c8ff3d]/[0.1] p-3.5 shadow-[0_0_32px_rgba(200,255,61,0.12)] sm:h-[11rem] sm:w-[10rem]">
-            <span className="relative z-10 inline-flex rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-black">
+          {/* Free Mini honesty card — secondary outline, Lab sample only. */}
+          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] p-3.5 transition hover:border-white/30 sm:h-[11rem] sm:w-[10rem]">
+            <span className="relative z-10 inline-flex rounded-full border border-white/20 bg-black/40 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white/70">
               Free
             </span>
             <p className="relative z-10 mt-2 text-[13px] font-black leading-tight text-white">
@@ -129,7 +142,7 @@ export function HfProductRail() {
                 labelDemo="Lab sample"
                 labelPlans="Plans"
                 hideClipsChip
-                className="font-black text-white group-hover:text-[#c8ff3d]"
+                className="font-black text-white/90 underline-offset-2 group-hover:text-[#c8ff3d] group-hover:underline"
               />
             </p>
             <p className="relative z-10 mt-1 text-[10px] leading-snug text-white/45">
