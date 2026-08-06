@@ -341,6 +341,22 @@ assert(
   );
 }
 
+// AIT-621: GenerateFailPanel residual competitor lime → gallery-calm copper board
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const failPanel = read("components/GenerateFailPanel.tsx");
+  assert(
+    !lime.test(failPanel),
+    "GenerateFailPanel must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    failPanel.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(failPanel) &&
+      failPanel.includes("var(--primary-foreground)"),
+    "GenerateFailPanel recovery Retry uses --brand + copper glow + primary-foreground (void)"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
