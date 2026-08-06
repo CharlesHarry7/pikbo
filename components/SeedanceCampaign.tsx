@@ -30,16 +30,16 @@ export function SeedanceCampaign() {
       <div className="relative grid gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:py-16">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--mint)]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--neon-pink)]">
               Flagship · already on Pikbo
             </p>
-            <span className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--mint)]">
+            <span className="rounded-full border border-[var(--neon-pink)]/40 bg-[var(--neon-pink)]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--neon-pink)]">
               Live Mini
             </span>
           </div>
           <h2 className="mt-2 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
             Seedance
-            <span className="block text-[var(--mint)]">TOY VIDEO</span>
+            <span className="block text-[var(--neon-pink)]">TOY VIDEO</span>
           </h2>
           <p className="mt-2 text-sm font-semibold uppercase tracking-[0.18em] text-white/50">
             Designer-toy OS · photo → short clip
@@ -54,11 +54,11 @@ export function SeedanceCampaign() {
               path="/seedance-campaign"
               labelTry="Try free video"
               labelDemo="Try Lab sample"
-              className="rounded-full bg-[var(--mint)] px-6 py-2.5 text-sm font-black text-black shadow-[0_0_28px_rgba(200,255,61,0.25)] transition hover:-translate-y-0.5"
+              className="rounded-full bg-[var(--neon-pink)] px-6 py-2.5 text-sm font-black text-[var(--void)] shadow-[0_0_28px_rgba(255,78,205,0.25)] transition hover:-translate-y-0.5"
             />
             <Link
               href={createGenerate360Href("seedance-campaign")}
-              className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-5 py-2.5 text-sm font-bold text-[var(--mint)] transition hover:bg-[var(--mint)]/15"
+              className="rounded-full border border-[var(--neon-pink)]/40 bg-[var(--neon-pink)]/10 px-5 py-2.5 text-sm font-bold text-[var(--neon-pink)] transition hover:bg-[var(--neon-pink)]/15"
               data-seedance-generate="remix"
             >
               Generate video
@@ -96,7 +96,7 @@ export function SeedanceCampaign() {
             <Link
               key={d.id}
               href={createRemixHref(d.preset, d.id)}
-              className="group relative h-40 w-24 shrink-0 overflow-hidden rounded-xl border border-white/10 transition duration-300 ease-out hover:-translate-y-0.5 hover:border-[var(--mint)]/45 hover:shadow-[0_10px_28px_rgba(0,0,0,0.45)] sm:h-48 sm:w-28"
+              className="group relative h-40 w-24 shrink-0 overflow-hidden rounded-xl border border-white/10 transition duration-300 ease-out hover:-translate-y-0.5 hover:border-[var(--neon-pink)]/45 hover:shadow-[0_10px_28px_rgba(0,0,0,0.45)] sm:h-48 sm:w-28"
             >
               <AutoPlayVideo
                 poster={d.poster}
@@ -108,7 +108,7 @@ export function SeedanceCampaign() {
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
               <span className="absolute inset-x-0 bottom-0 px-1 py-1.5 text-center text-[9px] font-bold uppercase tracking-wide text-white">
-                <span className="rounded-full bg-[var(--mint)]/15 px-1.5 py-0.5 text-[var(--mint)] ring-1 ring-[var(--mint)]/25 transition group-hover:bg-[var(--mint)] group-hover:text-black">
+                <span className="rounded-full bg-[var(--neon-pink)]/15 px-1.5 py-0.5 text-[var(--neon-pink)] ring-1 ring-[var(--neon-pink)]/25 transition group-hover:bg-[var(--neon-pink)] group-hover:text-[var(--void)]">
                   Remake →
                 </span>
               </span>
