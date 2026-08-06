@@ -58,7 +58,7 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
         <span
           className={`absolute right-2 top-2 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider transition duration-300 ${
             exact
-              ? "bg-[var(--mint)] text-black shadow-[0_0_16px_rgba(200,255,61,0.35)]"
+              ? "bg-[var(--neon-pink)] text-[var(--void)] shadow-[0_0_16px_rgba(255,78,205,0.35)]"
               : "border border-white/15 bg-black/60 text-white/70"
           }`}
         >
@@ -71,7 +71,7 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
           <p className="mt-0.5 line-clamp-2 text-[11px] text-white/60">
             {preset.tagline}
           </p>
-          <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[var(--mint)]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)] ring-1 ring-[var(--mint)]/25 opacity-90 transition duration-300 group-hover:bg-[var(--mint)] group-hover:text-black group-hover:opacity-100">
+          <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[var(--neon-pink)]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--neon-pink)] ring-1 ring-[var(--neon-pink)]/25 opacity-90 transition duration-300 group-hover:bg-[var(--neon-pink)] group-hover:text-[var(--void)] group-hover:opacity-100">
             {exact ? "Remake →" : "View recipe notes →"}
           </p>
         </div>

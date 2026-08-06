@@ -115,6 +115,18 @@ assert(
   "HomeExploreRecipeRail labels/hovers use neon-pink board tokens"
 );
 
+// AIT-372: PresetPreviewCard residual lime → neon-pink board tokens
+assert(
+  !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(presetPreview),
+  "PresetPreviewCard must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert(
+  presetPreview.includes("var(--neon-pink)") &&
+    presetPreview.includes("var(--void)") &&
+    presetPreview.includes("rgba(255,78,205"),
+  "PresetPreviewCard selected chip / CTA use neon-pink + void board tokens"
+);
+
 // Suite rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF.
 const homeRail = read("components/HfProductRail.tsx");
 assert(
