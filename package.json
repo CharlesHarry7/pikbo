@@ -67,7 +67,8 @@
     "privacy-analytics-regression": "node --experimental-strip-types scripts/privacy-analytics-regression.mjs",
     "mercury-readiness-smoke": "node scripts/mercury-readiness-smoke.mjs",
     "create-route-360-smoke": "node --experimental-strip-types scripts/create-route-360-smoke.mjs",
-    "workbench-first-run-smoke": "node scripts/workbench-first-run-smoke.mjs"
+    "workbench-first-run-smoke": "node scripts/workbench-first-run-smoke.mjs",
+    "lab-sample-try-hydrate-smoke": "node scripts/lab-sample-try-hydrate-smoke.mjs"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.1",

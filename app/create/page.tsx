@@ -122,6 +122,7 @@ export default async function CreatePage({
   // Do not wrap in GuestMomentCreateGate (Street Power-Up sample). Omit the
   // fixed Moment prop so CreateStudio uses remix effect/ratio/duration/channel.
   // AIT-312: compact mobile header so photo drop + sticky Generate stay above fold.
+  // AIT-325: try=1&sample= (createLabSampleTryHref) hydrates Lab still + recipe.
   if (contract === "generate-workbench") {
     const effectSlug = (sp.effect || "").trim();
     const preset = getPreset(effectSlug);
@@ -135,6 +136,8 @@ export default async function CreatePage({
         data-workbench-first-run="upload-sticky"
         data-create-shell="generate-workbench"
         data-create-shell-pad="sticky-with-tab"
+        data-lab-sample-try={firstRunSample ? "1" : undefined}
+        data-first-run-sample={firstRunSample || undefined}
       >
         <JsonLd
           data={softwareApplicationJsonLd({

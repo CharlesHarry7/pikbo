@@ -479,8 +479,17 @@ export function CreateStudio({
     }
   }
 
-  /** One-tap joy path: PIKBO Lab prototype still + matching recipe. Rights = Lab sample. */
-  async function loadSampleToy(sampleId: string, autoGenerate = false) {
+  /**
+   * One-tap Lab path: PIKBO Lab prototype still + recipe. Rights = Lab sample.
+   * AIT-325: deep-link try (createLabSampleTryHref → effect=360 + try/sample)
+   * keeps the workbench remix recipe; Moment stays fixed street-power-up.
+   * Manual sample grid taps still use each SAMPLE_TOYS recipe.
+   */
+  async function loadSampleToy(
+    sampleId: string,
+    autoGenerate = false,
+    opts?: { preferDeepLinkEffect?: boolean }
+  ) {
     const s = SAMPLE_TOYS.find((x) => x.id === sampleId) ?? SAMPLE_TOYS[0];
     setLastSampleId(s.id);
     setSampleLoading(true);
@@ -489,14 +498,26 @@ export function CreateStudio({
     try {
       const data = await sampleToDataUrl(s.path);
       await adoptImage(data, { labSample: true });
-      selectEffect(s.effect);
+      const deep = (initialEffect || "").trim();
+      const deepOk =
+        Boolean(opts?.preferDeepLinkEffect) &&
+        !fixedMomentContract &&
+        deep.length > 0 &&
+        deep !== FIXED_MOMENT_EFFECT &&
+        PRESETS.some((p) => p.slug === deep);
+      const recipe = fixedMomentContract
+        ? FIXED_MOMENT_EFFECT
+        : deepOk
+          ? deep
+          : s.effect;
+      selectEffect(recipe);
       // PIKBO Lab reference stills — not a visitor upload or verified provider input.
       setOwnsRights(true);
       if (autoGenerate) {
         toast("Previewing PIKBO Lab prototype sample · cached · 0 credits…");
         await generate({
           imageOverride: data,
-          effectOverride: s.effect,
+          effectOverride: recipe,
           rightsOverride: true,
           labSampleId: s.id,
         });
@@ -519,7 +540,8 @@ export function CreateStudio({
     }
   }
 
-  // First-run: ?sample=scout or ?try=1 → load sample and auto-generate
+  // First-run: ?sample=scout or ?try=1 → load sample and auto-generate.
+  // Workbench deep links keep their remix effect (AIT-325 one-click 360 try).
   useEffect(() => {
     if (!initialSample) return;
     const id = SAMPLE_TOYS.some((s) => s.id === initialSample)
@@ -527,7 +549,9 @@ export function CreateStudio({
       : "scout";
     // Defer so we don't setState synchronously inside the effect body.
     const t = window.setTimeout(() => {
-      void loadSampleToy(id, true);
+      void loadSampleToy(id, true, {
+        preferDeepLinkEffect: !fixedMomentContract,
+      });
     }, 0);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -823,6 +847,17 @@ export function CreateStudio({
   );
   /** Generate workbench (not fixed Moment) — first-run fold + honest Lab labels. */
   const workbenchFirstRun = !fixedMomentContract;
+  /** AIT-325: Home Lab try doors hydrate via ?try=1&sample= on the workbench. */
+  const labSampleTryActive = Boolean(initialSample);
+  const labSampleTryState = labSampleTryActive
+    ? sampleLoading
+      ? "hydrating"
+      : sampleLoadError
+        ? "error"
+        : labStill && image
+          ? "ready"
+          : "pending"
+    : undefined;
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
       ? session.freeTrial.clipsLeft
@@ -1844,6 +1879,12 @@ export function CreateStudio({
       data-workbench-first-run={
         workbenchFirstRun ? "upload-sticky" : undefined
       }
+      data-lab-sample-try={labSampleTryState}
+      data-lab-sample-id={
+        labSampleTryActive
+          ? lastSampleId || initialSample || undefined
+          : undefined
+      }
     >
       {/* Suite chrome: desktop only — mobile first-run keeps fold clean */}
       {!fixedMomentContract && (
@@ -2303,7 +2344,12 @@ export function CreateStudio({
 
           {/* Step 1 — public Lab-only preview or invited private upload */}
           {privateUploadEnabled ? (
-            <div id="create-photo-step" data-first-run-step="upload">
+            <div
+              id="create-photo-step"
+              data-first-run-step="upload"
+              data-lab-still={labStill ? "true" : undefined}
+              data-upload-replace={labStill ? "lab-to-owned" : "owned"}
+            >
               <div className="mb-2 flex items-center justify-between gap-2">
                 <label
                   htmlFor="create-photo-input"
@@ -2312,12 +2358,17 @@ export function CreateStudio({
                   <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black lg:hidden">
                     1
                   </span>
-                  <span className="lg:hidden">Upload owned toy photo</span>
-                  <span className="hidden lg:inline">{t("create.yourPhoto")}</span>
+                  <span className="lg:hidden">
+                    {labStill ? "Lab sample loaded · replace with yours" : "Upload owned toy photo"}
+                  </span>
+                  <span className="hidden lg:inline">
+                    {labStill ? "Lab sample · replace with owned photo" : t("create.yourPhoto")}
+                  </span>
                 </label>
                 {image && (
                   <button
                     type="button"
+                    data-upload-replace-action={labStill ? "clear-lab" : "clear"}
                     className="text-[10px] font-semibold text-[var(--fg-dim)] hover:text-[var(--brand)]"
                     onClick={() => {
                       setImage(null);
@@ -2328,10 +2379,20 @@ export function CreateStudio({
                       setSecondaryStill(null);
                     }}
                   >
-                    {t("create.replace")}
+                    {labStill ? "Replace Lab sample" : t("create.replace")}
                   </button>
                 )}
               </div>
+              {labStill && image ? (
+                <p
+                  className="mb-2 text-[10px] font-semibold leading-snug text-[var(--mint)]/90"
+                  data-lab-sample-honesty="owned-path"
+                >
+                  Lab prototype · <b className="text-white/85">not your photo</b>
+                  {" · "}
+                  drop your owned figure to run Live (gated).
+                </p>
+              ) : null}
               <label
                 className={`group/drop relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
                   image
@@ -2352,11 +2413,18 @@ export function CreateStudio({
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={image}
-                      alt="your toy"
+                      alt={labStill ? "PIKBO Lab sample still" : "your toy"}
                       className="h-full w-full object-contain"
                     />
+                    {labStill ? (
+                      <span className="pointer-events-none absolute left-2 top-2 rounded-full border border-white/20 bg-black/70 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-white/80">
+                        Lab · not your photo
+                      </span>
+                    ) : null}
                     <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-3 py-2.5 text-center text-[10px] font-semibold text-white/70 opacity-0 transition group-hover/drop:opacity-100">
-                      {t("create.replaceStill")}
+                      {labStill
+                        ? "Drop or click to replace Lab sample with your photo"
+                        : t("create.replaceStill")}
                     </span>
                   </>
                 ) : (
@@ -2404,6 +2472,9 @@ export function CreateStudio({
               data-workbench-photo={
                 workbenchFirstRun ? "lab-gate" : undefined
               }
+              data-lab-sample-preview={
+                labStill && image ? "loaded" : sampleLoading ? "loading" : "empty"
+              }
               className={`rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] ${
                 workbenchFirstRun ? "p-3 sm:p-4" : "p-4"
               }`}
@@ -2415,33 +2486,60 @@ export function CreateStudio({
                 {sessionResolved
                   ? sessionBoot === "timeout"
                     ? "Lab preview · access check timed out"
-                    : freeLiveOpen
-                      ? "Public Lab preview · no upload"
-                      : "Lab sample · private Live gated"
+                    : labStill && image
+                      ? "Lab sample loaded · not your photo"
+                      : freeLiveOpen
+                        ? "Public Lab preview · no upload"
+                        : "Lab sample · private Live gated"
                   : "Opening studio…"}
               </p>
-              <p
-                className={`mt-1.5 font-bold text-white sm:mt-2 ${
-                  workbenchFirstRun ? "text-[13px] sm:text-sm" : "text-sm"
-                }`}
-              >
-                {sessionResolved
-                  ? sessionBoot === "timeout"
-                    ? "Lab samples still work. Retry the access check or continue with a cached preview."
-                    : workbenchFirstRun
-                      ? "Lab sample path · sign in for owned-photo Live."
-                      : "Choose a Pikbo Lab sample below."
-                  : "Verifying private-beta access — Lab samples stay available if this fails."}
-              </p>
-              <p
-                className={`mt-1 text-[11px] leading-relaxed text-[var(--fg-muted)] ${
-                  workbenchFirstRun ? "hidden sm:block" : ""
-                }`}
-              >
-                Public preview does not accept, register, or process your
-                product photo. Invited signed-in accounts see a separate
-                owner-only upload control here.
-              </p>
+              {labStill && image ? (
+                <div
+                  className="mt-2 overflow-hidden rounded-xl border border-white/10 bg-black/40"
+                  data-lab-sample-still="ready"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={image}
+                    alt="PIKBO Lab sample still"
+                    className={`w-full object-contain ${
+                      workbenchFirstRun ? "max-h-[140px] sm:max-h-[180px]" : "max-h-[200px]"
+                    }`}
+                  />
+                  <p className="border-t border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-white/70">
+                    Lab prototype ·{" "}
+                    <b className="text-white/90">not your photo</b>
+                    {" · "}0 credits · pick another sample below or sign in for owned-photo Live
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p
+                    className={`mt-1.5 font-bold text-white sm:mt-2 ${
+                      workbenchFirstRun ? "text-[13px] sm:text-sm" : "text-sm"
+                    }`}
+                  >
+                    {sessionResolved
+                      ? sessionBoot === "timeout"
+                        ? "Lab samples still work. Retry the access check or continue with a cached preview."
+                        : workbenchFirstRun
+                          ? labSampleTryActive && sampleLoading
+                            ? "Loading Lab sample for one-click preview…"
+                            : "Lab sample path · sign in for owned-photo Live."
+                          : "Choose a Pikbo Lab sample below."
+                      : "Verifying private-beta access — Lab samples stay available if this fails."}
+                  </p>
+                  <p
+                    className={`mt-1 text-[11px] leading-relaxed text-[var(--fg-muted)] ${
+                      workbenchFirstRun ? "hidden sm:block" : ""
+                    }`}
+                  >
+                    Public preview does not accept, register, or process your
+                    product photo. Invited signed-in accounts see a separate
+                    owner-only upload control here.
+                  </p>
+                </>
+              )}
               {sessionResolved ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {sessionBoot === "timeout" ? (
