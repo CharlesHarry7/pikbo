@@ -249,6 +249,8 @@ const residualSessionUi = [
   "components/BatchStudio.tsx",
   // AIT-343: CreateStudio product-cap / trial-used residual
   "components/CreateStudio.tsx",
+  // AIT-378: Still Studio free-stills residual Free Mini brand
+  "app/image/page.tsx",
 ];
 for (const relativePath of residualSessionUi) {
   const source = read(relativePath);
@@ -336,6 +338,35 @@ assert(
       "Live pack credits are not available while Live is closed"
     ),
   "BatchStudio closed Live path must not invent free pack credits"
+);
+
+// AIT-378: Still Studio image residual Free Mini brand honesty (freeLiveOpen).
+const imagePageSource = read("app/image/page.tsx");
+assert(
+  /canLiveGenerate\s*\(/.test(imagePageSource) &&
+    /freeLiveOpen/.test(imagePageSource) &&
+    /liveEnabled\s*!==\s*false/.test(imagePageSource),
+  "image page must define freeLiveOpen (Live gate truth)"
+);
+assert(
+  imagePageSource.includes("Live gated · Cached Lab stills · 0 credits"),
+  "image free-stills closed path must use Live gated · Cached Lab stills · 0 credits"
+);
+assert(
+  /freeLiveOpen\s*\?\s*\([\s\S]{0,200}Free Mini trial is video-only|freeLiveOpen \? \([\s\S]{0,120}Free Mini trial is video-only/.test(
+    imagePageSource
+  ),
+  "image residual Free Mini trial is video-only brand must sit behind freeLiveOpen"
+);
+assert(
+  /data-image-free-stills=\{/.test(imagePageSource) ||
+    /data-image-free-stills=/.test(imagePageSource),
+  "image free-stills residual must mark free-mini-video vs lab-gated for honesty probes"
+);
+assert(
+  imagePageSource.includes('data-image-handoff="create-lab-first"') ||
+    imagePageSource.includes("create-lab-first"),
+  "image closed path must hand off Create as Lab-first (not Free Mini trial)"
 );
 
 // AIT-343: CreateStudio + directorPlan residual Free Mini honesty (freeLiveOpen).

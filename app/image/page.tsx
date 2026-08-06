@@ -11,7 +11,12 @@ import {
   removeImageHistoryItem,
   type ImageHistoryItem,
 } from "@/lib/imageHistory";
-import { fetchMe, mergeMeSession, type MeResponse } from "@/lib/meClient";
+import {
+  canLiveGenerate,
+  fetchMe,
+  mergeMeSession,
+  type MeResponse,
+} from "@/lib/meClient";
 import {
   mintImageIdempotencyKey,
   postImageWithRetry,
@@ -102,6 +107,11 @@ export default function ImageStudioPage() {
     me == null
       ? true
       : me.plan === "free" || me.freeTrial?.isFreePlan === true;
+  const freeLive = me?.freeTrial?.freeLive;
+  /** R0/T6: Free Mini brand only when Live is actually open (fail-closed). */
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(me) && freeLive && freeLive.liveEnabled !== false
+  );
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -626,23 +636,51 @@ export default function ImageStudioPage() {
               </button>
             )}
             {freeStillsDemoOnly ? (
-              <p className="mt-2 text-[11px] leading-relaxed text-[var(--fg-dim)]">
-                Free Mini trial is video-only. Open{" "}
-                <Link
-                  href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
-                  className="text-[var(--mint)] underline-offset-2 hover:underline"
-                  data-image-handoff="create-free-trial"
-                >
-                  Create
-                </Link>{" "}
-                for your Seedance clip, or{" "}
-                <Link
-                  href="/pricing"
-                  className="text-[var(--mint)] underline-offset-2 hover:underline"
-                >
-                  upgrade
-                </Link>{" "}
-                for live Flux stills.
+              <p
+                className="mt-2 text-[11px] leading-relaxed text-[var(--fg-dim)]"
+                data-image-free-stills={
+                  freeLiveOpen ? "free-mini-video" : "lab-gated"
+                }
+              >
+                {freeLiveOpen ? (
+                  <>
+                    Free Mini trial is video-only. Open{" "}
+                    <Link
+                      href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
+                      className="text-[var(--mint)] underline-offset-2 hover:underline"
+                      data-image-handoff="create-free-trial"
+                    >
+                      Create
+                    </Link>{" "}
+                    for your Seedance clip, or{" "}
+                    <Link
+                      href="/pricing"
+                      className="text-[var(--mint)] underline-offset-2 hover:underline"
+                    >
+                      upgrade
+                    </Link>{" "}
+                    for live Flux stills.
+                  </>
+                ) : (
+                  <>
+                    Live gated · Cached Lab stills · 0 credits. Open{" "}
+                    <Link
+                      href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
+                      className="text-[var(--mint)] underline-offset-2 hover:underline"
+                      data-image-handoff="create-lab-first"
+                    >
+                      Create
+                    </Link>{" "}
+                    for Lab video samples, or{" "}
+                    <Link
+                      href="/pricing"
+                      className="text-[var(--mint)] underline-offset-2 hover:underline"
+                    >
+                      upgrade
+                    </Link>{" "}
+                    for live Flux stills when Live is open.
+                  </>
+                )}
               </p>
             ) : null}
             {error ? (
@@ -671,7 +709,9 @@ export default function ImageStudioPage() {
               <p className="mt-2 text-xs text-[var(--fg-dim)]">
                 {demoReason === "free_trial_video_only" ||
                 demoReason === "free_live_delivery_blocked"
-                  ? "Labeled demo — Free trial credits stay reserved for Create video Mini."
+                  ? freeLiveOpen
+                    ? "Labeled demo — Free trial credits stay reserved for Create video Mini."
+                    : "Labeled demo — Live gated · Cached Lab stills · 0 credits."
                   : demoReason === "anonymous_cached_only"
                     ? "Labeled demo — sign in with a paid plan for live Flux stills."
                     : demoReason === "no_provider_key"
