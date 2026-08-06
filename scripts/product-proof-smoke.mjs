@@ -223,6 +223,37 @@ assert(
   );
 }
 
+// AIT-461: globals.css residual carnival utilities → gallery-calm copper
+{
+  const globals = read("app/globals.css");
+  const carnival =
+    /#b14eff|#ff4ecd|#00d9ff|#00ffa3|#ffe600|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|0\s*,\s*217\s*,\s*255|0\s*,\s*255\s*,\s*163/i;
+  assert(
+    !carnival.test(globals),
+    "app/globals.css must not hard-code carnival neon RGB"
+  );
+  assert(
+    /\.stat-card[\s\S]*?linear-gradient\(135deg,\s*#c4a574/i.test(globals),
+    ".stat-card border gradient uses copper board stops"
+  );
+  assert(
+    /\.text-bling[\s\S]*?#c4a574[\s\S]*?#a89070[\s\S]*?#9a7b55/i.test(
+      globals
+    ),
+    ".text-bling uses copper shimmer stops (not carnival rainbow)"
+  );
+  assert(
+    /\.cta-card[\s\S]*?var\(--grad-cta\)[\s\S]*?rgba\(196,\s*165,\s*116/i.test(
+      globals
+    ),
+    ".cta-card uses --grad-cta + copper glow rgba"
+  );
+  assert(
+    globals.includes("--ring: rgba(196, 165, 116, 0.55)"),
+    "--ring uses copper board rgba"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
