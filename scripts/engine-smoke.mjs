@@ -4449,11 +4449,25 @@ assert.ok(
       suiteEntrySrc.indexOf('href: "/flow"'),
   "Generate remix door before Flow on home suite rail"
 );
-// How it works Open Generate carries remix contract
-assert.match(
-  fs.readFileSync(join(root, "components/HowItWorks.tsx"), "utf8"),
-  /createGenerate360Href|data-how-it-works=["']generate-remix["']/
-);
+// How it works: one primary Generate→360 (AIT-190) + remix contract
+{
+  const howItWorksSrc = fs.readFileSync(
+    join(root, "components/HowItWorks.tsx"),
+    "utf8"
+  );
+  assert.match(
+    howItWorksSrc,
+    /createGenerate360Href|data-how-it-works=["']generate-remix["']/
+  );
+  assert.match(howItWorksSrc, /data-how-primary-generate=["']360["']/);
+  assert.match(howItWorksSrc, /data-how-primary-generate-cta/);
+  assert.match(howItWorksSrc, /createGenerate360Href\(\s*["']how-it-works["']\s*\)/);
+  assert.match(howItWorksSrc, /Generate 360°/);
+  assert.doesNotMatch(
+    howItWorksSrc,
+    /FreeTrialCta[\s\S]{0,200}variant\s*=\s*["'](primary|mint)["']/
+  );
+}
 assert.match(
   fs.readFileSync(join(root, "components/SuiteDoorLinks.tsx"), "utf8"),
   /Flow · Preview|Create one Moment/

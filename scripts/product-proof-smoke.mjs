@@ -82,6 +82,17 @@ assert(
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
   "home order: Moment hero → proof wall → HF product rail → trust footer"
 );
+// AIT-190: How it works — one primary Generate→360 (not FreeTrial mint dual door)
+const howItWorks = read("components/HowItWorks.tsx");
+assert(
+  howItWorks.includes('data-how-primary-generate="360"') &&
+    howItWorks.includes("data-how-primary-generate-cta") &&
+    howItWorks.includes('createGenerate360Href("how-it-works")') &&
+    howItWorks.includes("Generate 360°") &&
+    howItWorks.includes('data-how-it-works="generate-remix"') &&
+    howItWorks.includes("border border-white/20"),
+  "HowItWorks must expose one primary Generate→360 door with secondary FreeTrial outline"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"
