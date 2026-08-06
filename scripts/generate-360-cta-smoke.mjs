@@ -352,4 +352,22 @@ assert.match(
   "BatchStudio sticky must expose clearance branch marker"
 );
 
+// 8. AIT-185 — Toast stack clears tab + home indicator (never hard bottom-20)
+const toastSrc = read("components/Toast.tsx");
+assert.match(
+  toastSrc,
+  /data-toast-stack=["']safe["']/,
+  "Toast stack must expose data-toast-stack=safe"
+);
+assert.match(
+  toastSrc,
+  /bottom-\[calc\(var\(--mobile-nav-clearance\)\+0\.5rem\)\]/,
+  "Toast stack must clear tab nav + home indicator via --mobile-nav-clearance"
+);
+assert.doesNotMatch(
+  toastSrc,
+  /bottom-20/,
+  "Toast stack must not hardcode bottom-20 (misses notched safe-area)"
+);
+
 console.log("generate-360-cta-smoke: ok");
