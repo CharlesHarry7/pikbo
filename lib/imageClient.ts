@@ -267,7 +267,7 @@ export function interpretImageResponse(
   };
 }
 
-/** Bearer when available so cancel can resolve owner durable UUIDs. */
+/** Bearer when available so cancel/retry resolve owner durable UUIDs honestly. */
 async function imageAuthHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -321,6 +321,144 @@ export async function cancelImageLedger(opts: {
     }
   } catch {
     /* ignore — client already treats as cancel/refund unconfirmed */
+  }
+}
+
+export type ImageRetryForkOk = {
+  ok: true;
+  status: number;
+  parent?: { prompt?: string; aspect?: string };
+  next?: {
+    retryJobId?: string;
+    retryToken?: string;
+    imageUi?: string;
+  };
+};
+
+export type ImageRetryForkFail = {
+  ok: false;
+  status: number;
+  code?: string;
+  message?: string;
+  durable?: boolean;
+  next?: {
+    createUi?: string;
+    imageUi?: string;
+    newAttempt?: boolean;
+  };
+};
+
+export type ImageRetryForkResult = ImageRetryForkOk | ImageRetryForkFail;
+
+/**
+ * Fail-closed still Retry navigation (AIT-477).
+ * Prefer controlled Create same-photo handoff; else relative /create or /image
+ * only. Never follow protocol/open-redirect URLs.
+ */
+export function acceptImageRetryNavigation(
+  value: unknown,
+  fallback: string = "/image"
+): string {
+  if (typeof value !== "string") return fallback;
+  const candidate = value.trim();
+  if (!candidate) return fallback;
+  if (
+    candidate.includes("://") ||
+    candidate.includes("\\") ||
+    candidate.includes("#") ||
+    candidate.length > 280
+  ) {
+    return fallback;
+  }
+  // Controlled Create handoff (same-photo asset) or generic Create.
+  if (candidate.startsWith("/create")) {
+    try {
+      const url = new URL(candidate, "https://pikbo.local");
+      if (url.origin !== "https://pikbo.local") return fallback;
+      if (url.pathname !== "/create") return fallback;
+      if (url.hash || url.username || url.password) return fallback;
+      return `${url.pathname}${url.search}`;
+    } catch {
+      return fallback;
+    }
+  }
+  // Image studio new-attempt (literal /image or query-only prompt handoff).
+  if (candidate === "/image" || candidate.startsWith("/image?")) {
+    try {
+      const url = new URL(candidate, "https://pikbo.local");
+      if (url.origin !== "https://pikbo.local") return fallback;
+      if (url.pathname !== "/image") return fallback;
+      if (url.hash || url.username || url.password) return fallback;
+      return `${url.pathname}${url.search}`;
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
+/**
+ * POST /api/image/[id]/retry — process-memory ledger fork.
+ * Bearer attached when available so owner durable UUIDs resolve to
+ * DURABLE_* codes (AIT-477) instead of bare NOT_FOUND that clients might
+ * treat as a free process-memory re-POST.
+ */
+export async function forkRetryImageLedger(
+  jobId: string
+): Promise<ImageRetryForkResult> {
+  const id = typeof jobId === "string" ? jobId.trim() : "";
+  if (!id) {
+    return {
+      ok: false,
+      status: 400,
+      code: "INVALID_REQUEST",
+      message: "Missing still job id",
+    };
+  }
+  try {
+    const auth = await imageAuthHeaders();
+    const res = await fetch(`/api/image/${encodeURIComponent(id)}/retry`, {
+      method: "POST",
+      cache: "no-store",
+      headers: { ...auth },
+    });
+    const body = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      code?: string;
+      message?: string;
+      durable?: boolean;
+      parent?: { prompt?: string; aspect?: string };
+      next?: {
+        retryJobId?: string;
+        retryToken?: string;
+        imageUi?: string;
+        createUi?: string;
+        newAttempt?: boolean;
+      };
+    };
+    if (res.ok && body.ok) {
+      return {
+        ok: true,
+        status: res.status,
+        parent: body.parent,
+        next: body.next,
+      };
+    }
+    return {
+      ok: false,
+      status: res.status,
+      code: typeof body.code === "string" ? body.code : undefined,
+      message: typeof body.message === "string" ? body.message : undefined,
+      durable: body.durable === true,
+      next: body.next,
+    };
+  } catch {
+    return {
+      ok: false,
+      status: 0,
+      code: "NETWORK_ERROR",
+      message: "Network error — still retry fork unavailable",
+    };
   }
 }
 
