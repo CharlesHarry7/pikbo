@@ -69,7 +69,7 @@ export default async function SupercomputerPage({
   return (
     <div className="relative px-4 py-10 sm:px-8">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[radial-gradient(55%_80%_at_10%_0%,rgba(200,255,61,0.08),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[radial-gradient(55%_80%_at_10%_0%,rgba(255,78,205,0.08),transparent_70%)]"
         aria-hidden
       />
       <div className="relative mx-auto max-w-6xl">
