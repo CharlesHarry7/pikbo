@@ -20,7 +20,10 @@ export default function LibraryPage() {
   const emptyMomentHref = libraryEmptyMomentHref();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[var(--void)] px-4 py-8 text-[var(--cream)] sm:px-8 sm:py-12">
+    <div
+      className="relative min-h-screen overflow-hidden bg-[var(--void)] px-4 py-8 pb-[var(--mobile-generate-bar-pad)] text-[var(--cream)] sm:px-8 sm:py-12 lg:pb-12"
+      data-library-content-pad="mobile-generate-bar"
+    >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(42%_80%_at_8%_0%,rgba(177,78,255,0.2),transparent_72%),radial-gradient(36%_70%_at_92%_0%,rgba(255,78,205,0.14),transparent_68%)]"
         aria-hidden
