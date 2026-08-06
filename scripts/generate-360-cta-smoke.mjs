@@ -758,4 +758,32 @@ assert.match(
   "SoftLaunchStrip CTA glow uses copper board rgba(196,165,116)"
 );
 
+// AIT-539: HomeExploreRecipeRail residual carnival cyan → gallery-calm copper
+const exploreRailSrc = read("components/HomeExploreRecipeRail.tsx");
+assert.doesNotMatch(
+  exploreRailSrc,
+  /#00D9FF|00D9FF|rgba\(0\s*,\s*217\s*,\s*255/i,
+  "HomeExploreRecipeRail must not hard-code carnival cyan (#00D9FF)"
+);
+assert.match(
+  exploreRailSrc,
+  /var\(--brand\)/,
+  "HomeExploreRecipeRail 360 doors/chips use --brand copper accent"
+);
+assert.match(
+  exploreRailSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "HomeExploreRecipeRail 360 card glow uses copper board rgba(196,165,116)"
+);
+assert.match(
+  exploreRailSrc,
+  /home-explore-rail/,
+  "HomeExploreRecipeRail keeps home-explore-rail entry attribution"
+);
+assert.match(
+  exploreRailSrc,
+  /Listing 360/,
+  "HomeExploreRecipeRail keeps Listing 360 door copy"
+);
+
 console.log("generate-360-cta-smoke: ok");
