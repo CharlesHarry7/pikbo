@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   clearHistory,
   loadHistory,
@@ -13,10 +13,16 @@ import {
   freeTrialExhausted,
   type MeResponse,
 } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
+
+type SessionBoot = "checking" | "ready" | "timeout";
 
 /** Settings chrome Generate — listing spin remix (ratio/duration/channel). */
 const SETTINGS_GENERATE_HREF = createGenerate360Href("settings");
@@ -49,6 +55,8 @@ type ImageJobsProbe = {
 
 export default function SettingsPage() {
   const [session, setSession] = useState<MeResponse | null>(null);
+  /** Finite shell boot — never permanent hang on access/balance rows. */
+  const [sessionBoot, setSessionBoot] = useState<SessionBoot>("checking");
   const [libCount, setLibCount] = useState(0);
   const [agingCount, setAgingCount] = useState(0);
   const [jobsProbe, setJobsProbe] = useState<SessionJobsProbe | null>(null);
@@ -64,11 +72,21 @@ export default function SettingsPage() {
     setAgingCount(list.filter((i) => remoteClipMayExpire(i)).length);
   }
 
-  useEffect(() => {
-    function refreshSession() {
-      void fetchMe().then(setSession);
-    }
+  const refreshSession = useCallback(() => {
+    setSessionBoot("checking");
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+      .then((data) => {
+        setSession(data);
+        setSessionBoot("ready");
+      })
+      .catch((err) => {
+        // 8s Studio open honesty: fail closed — no invented plan/credits.
+        setSession(null);
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+      });
+  }, []);
 
+  useEffect(() => {
     async function refreshJobsProbe() {
       try {
         const res = await fetch("/api/generations", { method: "HEAD" });
@@ -164,7 +182,7 @@ export default function SettingsPage() {
       window.clearTimeout(t);
       window.removeEventListener(SESSION_EVENT, refresh);
     };
-  }, []);
+  }, [refreshSession]);
 
   function clearKey(key: string, label: string) {
     try {
@@ -216,8 +234,15 @@ export default function SettingsPage() {
     return "blocked · T6 file bake not proven (overlay ≠ file watermark)";
   })();
 
+  const sessionStatusLabel =
+    sessionBoot === "checking"
+      ? "checking…"
+      : sessionBoot === "timeout"
+        ? "timed out · unknown"
+        : null;
+
   return (
-    <div className="px-4 py-10 sm:px-8">
+    <div className="px-4 py-10 sm:px-8" data-settings-boot={sessionBoot}>
       <div className="mx-auto max-w-lg">
         <span className="chip">Settings</span>
         <h1 className="mt-3 text-2xl font-bold">Settings</h1>
@@ -227,6 +252,39 @@ export default function SettingsPage() {
           live-spend authority (R0) — live needs durable reserve or labeled
           cached demos.
         </p>
+
+        {sessionBoot === "timeout" ? (
+          <div
+            className="mt-4 rounded-xl border border-[#FF6B6B]/35 bg-[#FF6B6B]/10 px-3 py-2.5 text-[12px] leading-relaxed text-[var(--fg-muted)]"
+            data-settings-boot-error="session-timeout"
+          >
+            <span className="font-semibold text-white/90">
+              Access check timed out.
+            </span>{" "}
+            Plan, credits, and live authority stay unknown — we will not invent
+            a balance until you retry.
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => refreshSession()}
+                data-settings-boot-retry
+                className="inline-flex min-h-9 items-center rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/15 px-3 text-xs font-bold text-[var(--mint)] transition hover:bg-[var(--mint)]/25"
+              >
+                Retry access check
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {sessionBoot === "checking" ? (
+          <p
+            className="mt-3 text-[11px] text-[var(--fg-dim)]"
+            data-settings-boot-status="checking"
+          >
+            Checking session and balance — finishes within a few seconds.
+          </p>
+        ) : null}
+
         <div
           className="mt-4 flex flex-wrap items-center gap-2"
           data-settings-path="product-first"
@@ -265,49 +323,64 @@ export default function SettingsPage() {
           <div className="flex justify-between">
             <span className="text-[var(--fg-muted)]">Sign-in</span>
             <span className="font-semibold">
-              {session?.signedIn
-                ? session.auth?.email || "Signed in"
-                : "Guest cookie"}
+              {sessionStatusLabel
+                ? sessionStatusLabel
+                : session?.signedIn
+                  ? session.auth?.email || "Signed in"
+                  : "Guest cookie"}
             </span>
           </div>
           <div className="flex justify-between gap-4">
             <span className="text-[var(--fg-muted)]">Auth configured</span>
             <span className="text-right font-semibold">
-              {session?.authConfigured ? "yes · Supabase keys" : "no · guest only"}
+              {sessionStatusLabel
+                ? sessionStatusLabel
+                : session?.authConfigured
+                  ? "yes · Supabase keys"
+                  : "no · guest only"}
             </span>
           </div>
           <div className="flex justify-between gap-4">
             <span className="text-[var(--fg-muted)]">Credits authority</span>
             <span className="text-right text-xs font-semibold leading-snug">
-              cookie display only · not live-spend
-              {session?.signedIn
-                ? ` · durable ${durableBackend || "pending"} (${durableAuth || "shadow"})`
-                : ""}
+              {sessionStatusLabel
+                ? sessionStatusLabel
+                : `cookie display only · not live-spend${
+                    session?.signedIn
+                      ? ` · durable ${durableBackend || "pending"} (${durableAuth || "shadow"})`
+                      : ""
+                  }`}
             </span>
           </div>
           <div className="flex justify-between gap-4">
             <span className="text-[var(--fg-muted)]">Durable ledger</span>
             <span className="text-right font-semibold">
-              {session?.durable?.backend
-                ? `${session.durable.backend} · ${session.durable.availableCredits} cr`
-                : session?.durableCreditsActive
-                  ? "shadow ready · no wallet yet"
-                  : "off"}
-              {durableReserved !== null && durableReserved > 0
+              {sessionStatusLabel
+                ? sessionStatusLabel
+                : session?.durable?.backend
+                  ? `${session.durable.backend} · ${session.durable.availableCredits} cr`
+                  : session?.durableCreditsActive
+                    ? "shadow ready · no wallet yet"
+                    : "off"}
+              {!sessionStatusLabel &&
+              durableReserved !== null &&
+              durableReserved > 0
                 ? ` · ${durableReserved} reserved`
                 : ""}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--fg-muted)]">Plan</span>
-            <span className="font-semibold">{session?.planName ?? "—"}</span>
+            <span className="font-semibold">
+              {sessionStatusLabel ?? session?.planName ?? "—"}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--fg-muted)]">
               Display credits (not live authority)
             </span>
             <span className="font-semibold text-[var(--mint)]">
-              {session?.credits ?? "—"}
+              {sessionStatusLabel ?? session?.credits ?? "—"}
             </span>
           </div>
           <div className="flex justify-between">

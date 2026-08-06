@@ -10,9 +10,15 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 import { useI18n } from "@/components/LanguageProvider";
+
+type SessionBoot = "checking" | "ready" | "timeout";
 
 export function CreditsBadge({
   compact,
@@ -23,11 +29,20 @@ export function CreditsBadge({
 }) {
   const { t } = useI18n();
   const [session, setSession] = useState<MeResponse | null>(null);
+  const [sessionBoot, setSessionBoot] = useState<SessionBoot>("checking");
 
   const load = useCallback(() => {
-    void fetchMe().then((data) => {
-      if (data) setSession(data);
-    });
+    setSessionBoot("checking");
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+      .then((data) => {
+        setSession(data);
+        setSessionBoot("ready");
+      })
+      .catch((err) => {
+        // 8s open contract: fail closed to Lab/unknown — never permanent "…".
+        setSession(null);
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+      });
   }, []);
 
   useEffect(() => {
@@ -40,19 +55,71 @@ export function CreditsBadge({
     };
   }, [load]);
 
-  if (!session) {
+  const dimClass = compact
+    ? tone === "light"
+      ? "text-[10px] text-[#7C8490]"
+      : "text-[10px] text-white/30"
+    : "hidden text-xs text-[var(--fg-dim)] sm:inline";
+
+  // Finite checking — only while boot is in flight (≤ ~8s).
+  if (sessionBoot === "checking") {
     return (
       <span
-        className={
-          compact
-            ? tone === "light"
-              ? "text-[10px] text-[#7C8490]"
-              : "text-[10px] text-white/30"
-            : "hidden text-xs text-[var(--fg-dim)] sm:inline"
-        }
+        className={dimClass}
+        data-credits-boot="checking"
+        title="Checking balance…"
       >
         …
       </span>
+    );
+  }
+
+  // Timeout / soft fail: Lab unknown + Retry — never hang on "…".
+  if (sessionBoot === "timeout" || !session) {
+    const timeout = sessionBoot === "timeout";
+    const title = timeout
+      ? "Balance check timed out · Lab unknown · retry"
+      : "Balance unavailable · Lab unknown · retry";
+    if (compact) {
+      return (
+        <button
+          type="button"
+          onClick={() => load()}
+          className={`grid h-11 min-w-11 place-items-center rounded-full border px-2 text-[10px] font-bold ${
+            tone === "light"
+              ? "border-[#C9CED8] text-[#5F6774]"
+              : "border-white/10 text-white/45"
+          }`}
+          title={title}
+          data-credits-boot={timeout ? "timeout" : "unknown"}
+          data-credits-boot-retry
+        >
+          Lab
+        </button>
+      );
+    }
+    return (
+      <button
+        type="button"
+        onClick={() => load()}
+        className={`hidden items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:flex ${
+          tone === "light"
+            ? "border-[#C9CED8] bg-white text-[#5F6774] hover:border-[#2457E6] hover:text-[#15171B]"
+            : "border-white/12 bg-white/[0.04] text-[var(--fg-muted)] hover:border-[var(--mint)]/35 hover:text-[var(--fg)]"
+        }`}
+        title={title}
+        data-credits-boot={timeout ? "timeout" : "unknown"}
+        data-credits-boot-retry
+      >
+        <span className="font-bold tabular-nums text-[var(--fg-dim)]">—</span>
+        <span>{t("credits.credits")}</span>
+        <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-[var(--fg-dim)]">
+          Lab
+        </span>
+        <span className="text-[10px] font-semibold text-[var(--mint)]">
+          Retry
+        </span>
+      </button>
     );
   }
 
@@ -114,6 +181,7 @@ export function CreditsBadge({
               : "border-white/10 text-[var(--mint)]"
         }`}
         title={compactTitle}
+        data-credits-boot="ready"
       >
         {credits}
       </Link>
@@ -131,6 +199,7 @@ export function CreditsBadge({
             : "border-white/12 bg-white/[0.04] text-[var(--fg-muted)] hover:border-[var(--mint)]/35 hover:text-[var(--fg)]"
       }`}
       title={fullTitle}
+      data-credits-boot="ready"
     >
       <span
         className={`font-bold tabular-nums ${
