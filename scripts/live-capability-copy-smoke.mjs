@@ -271,6 +271,28 @@ assert(
   ),
   "SoftLaunchStrip must prefer Cached Lab preview copy when Live is closed"
 );
+// AIT-430: SoftLaunchStrip freeLiveModelLabel + open-path Free Mini brand residual.
+const softLaunchStripSource = read("components/SoftLaunchStrip.tsx");
+assert(
+  !softLaunchStripSource.includes("Free Mini"),
+  "SoftLaunchStrip must not hardcode Free Mini product brand chips"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,500}free-plan live/.test(softLaunchStripSource) &&
+    softLaunchStripSource.includes(
+      "Free-plan trial used · Lab demos still free · compare finite plans"
+    ),
+  "SoftLaunchStrip free-plan live product caps / trial-used must sit behind freeLiveOpen"
+);
+assert(
+  /seedance-fast[\s\S]{0,40}Private Fast/.test(softLaunchStripSource),
+  "SoftLaunchStrip Private Fast invited path may stay"
+);
+assert(
+  softLaunchStripSource.includes("Create Moment · ${freeLiveModelLabel} 5s") ||
+    softLaunchStripSource.includes("Create Moment · free-plan live 5s"),
+  "SoftLaunchStrip open-path Moment CTA must use freeLiveModelLabel / free-plan live"
+);
 assert(
   read("components/ModulesSuiteCtas.tsx").includes(
     "Cached Lab preview · 0 credits"

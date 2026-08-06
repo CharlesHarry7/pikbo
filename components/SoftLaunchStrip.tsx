@@ -26,7 +26,7 @@ const SOFT_LAUNCH_MOMENT_HREF =
 /**
  * Soft-launch conversion strip (哥飞 P0): honest free trial + primary Generate CTA.
  * Sits above the fold on Explore home — not a multi-step tour.
- * Free Mini / live chips only when freeLiveOpen (parity FreeTrialCta).
+ * Free-plan live chips only when freeLiveOpen (parity FreeTrialCta / AIT-421 TrustStrip).
  */
 export function SoftLaunchStrip() {
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -47,14 +47,15 @@ export function SoftLaunchStrip() {
 
   const trialDone = freeTrialExhausted(me);
   const freeLive = me?.freeTrial?.freeLive;
-  /** R0/T6: never brand Free Mini while Live is closed (incl. me loading). */
+  /** R0/T6: free-plan live only when Live is open (fail-closed while /api/me loading). */
   const freeLiveOpen = Boolean(
     canLiveGenerate(me) &&
       freeLive &&
       freeLive.liveEnabled !== false
   );
+  /** Private Fast invited path may stay; default open path uses free-plan live. */
   const freeLiveModelLabel =
-    freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "Free Mini";
+    freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "free-plan live";
   const clipsLeft =
     typeof me?.freeTrial?.clipsLeft === "number"
       ? me.freeTrial.clipsLeft
@@ -63,7 +64,7 @@ export function SoftLaunchStrip() {
   const line = !freeLiveOpen
     ? "Cached Lab preview · 0 credits · your upload is not processed"
     : trialDone
-      ? "Free Mini trial used · Lab demos still free · compare finite plans"
+      ? "Free-plan trial used · Lab demos still free · compare finite plans"
       : freeLive
         ? `${freeLiveModelLabel} · ${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · refunds when confirmed`
         : "Live gated · continue with cached Lab prototypes";
