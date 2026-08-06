@@ -78,6 +78,18 @@ assert(
   ),
   "pricing must keep subscriptions closed until private-beta proof"
 );
+// AIT-271: PricingHeroCopy off residual competitor lime (board tokens)
+{
+  const pricingHero = read("components/PricingHeroCopy.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(pricingHero),
+    "PricingHeroCopy must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    pricingHero.includes("var(--mint)"),
+    "PricingHeroCopy accent wash uses var(--mint) board token"
+  );
+}
 assert(
   read("app/create/page.tsx").includes("fixedMomentContract") &&
     !read("app/create/page.tsx").includes("<BatchStudio") &&
