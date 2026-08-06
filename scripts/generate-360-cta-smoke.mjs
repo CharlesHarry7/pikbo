@@ -876,21 +876,41 @@ assert.match(
   }
 }
 
-// 10. AIT-394 / AIT-417 — MobileGenerateBar floating Generate primary CTA off residual lime
+// 10. AIT-606 — MobileGenerateBar one solid primary Generate + copper glow; secondaries demoted
 assert.doesNotMatch(
   mobileBar,
   /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/,
   "MobileGenerateBar must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
 );
+assert.doesNotMatch(
+  mobileBar,
+  /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i,
+  "MobileGenerateBar must not hard-code carnival pink RGB (#FF4ECD / rgba 255,78,205)"
+);
 assert.match(
   mobileBar,
-  /rgba\(255,\s*78,\s*205/,
-  "MobileGenerateBar Generate CTA glow uses neon-pink board rgba"
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "MobileGenerateBar Generate CTA glow uses copper board rgba(196,165,116)"
 );
 assert.match(
   mobileBar,
   /btn-primary/,
   "MobileGenerateBar Generate keeps btn-primary (board fill)"
+);
+assert.match(
+  mobileBar,
+  /data-mobile-bar-weight=["']one-primary["']/,
+  "MobileGenerateBar marks one-primary suite weight"
+);
+assert.match(
+  mobileBar,
+  /data-mobile-bar=["']secondary["']/,
+  "MobileGenerateBar demotes Library/Moment/Modules to secondary doors"
+);
+assert.doesNotMatch(
+  mobileBar,
+  /var\(--mint\)/,
+  "MobileGenerateBar secondaries must not use mint chrome that competes with primary"
 );
 
 // AIT-517: shared ui/button residual carnival neon → gallery-calm copper
