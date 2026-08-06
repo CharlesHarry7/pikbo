@@ -81,4 +81,19 @@ assert.doesNotMatch(showcase, /Subscribe now|Buy now|Start free trial/i);
 assert.doesNotMatch(showcase, /href=["']\/create["']/);
 assert.doesNotMatch(showcase, /["']\/create\?effect=street-power-up/);
 
+// AIT-209: showcase must be mounted on Home mid-stack (after proof wall).
+const homePage = read("app/page.tsx");
+assert.match(homePage, /HomeMomentShowcase/);
+assert.match(homePage, /<HomeMomentShowcase\s*\/>/);
+assert.ok(
+  homePage.indexOf("<HomeCinemaHero") < homePage.indexOf("<HomeViralWall") &&
+    homePage.indexOf("<HomeViralWall") < homePage.indexOf("<HomeMomentShowcase") &&
+    homePage.indexOf("<HomeMomentShowcase") < homePage.indexOf("<HfProductRail"),
+  "home must mount Moment showcase after proof wall, before product rail"
+);
+assert.match(showcase, /data-home-moment-showcase/);
+// Single H1 lives on hero when showcase is mid-page.
+assert.match(showcase, /<h2\b/);
+assert.doesNotMatch(showcase, /<h1\b/);
+
 console.log("moment-rail-showcase-honesty-smoke: ok");

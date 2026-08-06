@@ -34,22 +34,39 @@ assert.doesNotMatch(moments, /provider|modelId|prompt|generated result/i);
 
 assert.match(home, /One toy photo\. More ways to sell\./);
 assert.match(home, /Start with a photo you own\. Preview a listing, reveal, or drop/);
-assert.match(home, /Preview a Moment/);
+assert.match(home, /Preview a concept/);
 assert.match(home, /Three directions · choose one/);
 assert.match(home, /mailto:support@pikbo\.ai\?subject=Pikbo%20private%20beta%20request/);
+assert.match(home, /data-home-moment-showcase/);
+assert.match(home, /MOMENT_CREATE_HREF/);
+assert.match(home, /source=home-moment-showcase/);
+assert.match(home, /data-concept-preview/);
+assert.match(home, /data-live-gated/);
 assert.match(home, /<MomentStage moment=\{active\}/);
-assert.match(home, /<MomentRail moments=\{MOMENTS\}/);
+assert.match(home, /<MomentRail[\s\S]*moments=\{MOMENTS\}/);
+// Mounted under HomeCinemaHero — keep single page H1 on hero.
+assert.match(home, /<h2 className=/);
+assert.doesNotMatch(home, /<h1 className=/);
 assert.match(stage, /Preview with my toy/);
 assert.match(stage, /href=\{`\/create\?moment=\$\{moment\.id\}`\}/);
 assert.match(rail, /role="tablist"/);
 
+// Concept ?moment= is fail-closed preview; everything else is fixed Street Power-Up.
 const momentBranch = createPage.indexOf("if (sp.moment !== undefined)");
-const sellerPackBranch = createPage.indexOf('if (sp.mode === "seller-pack"');
 const genericStudio = createPage.indexOf("<CreateStudio");
-assert.ok(momentBranch > -1 && momentBranch < sellerPackBranch);
-assert.ok(sellerPackBranch > -1 && sellerPackBranch < genericStudio);
+assert.ok(momentBranch > -1, "create page must branch on sp.moment");
+assert.ok(
+  momentBranch < genericStudio,
+  "concept moment branch must run before CreateStudio"
+);
 assert.match(createPage, /Array\.isArray\(sp\.moment\) \? null : parseMomentId/);
 assert.match(createPage, /if \(!momentId\) return <InvalidMomentNotice/);
+assert.match(createPage, /<MomentCreatePreview moment=\{getMoment\(momentId\)\}/);
+assert.doesNotMatch(
+  createPage,
+  /sp\.mode\s*===\s*["']seller-pack["']/,
+  "public create must not re-open Seller Pack product UI"
+);
 assert.match(createPage, /fixedMomentContract/);
 assert.match(studio, /fixedMomentContract\?: boolean/);
 assert.match(studio, /const FIXED_MOMENT_EFFECT = "street-power-up"/);
@@ -106,7 +123,9 @@ assert.match(shell, /momentValues\.length === 1/);
 assert.match(shell, /Boolean\(parseMomentId\(momentValues\[0\]\)\)/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.match(shell, /Create a Moment/);
-assert.match(shell, /label: "Projects"/);
+// Soft-launch primary nav is Create / Library / Pricing (not Projects).
+assert.match(shell, /label: "Library"/);
+assert.match(shell, /label: "Create"/);
 assert.doesNotMatch(shell, /Motion archive/);
 
 console.log("moment create preview regression: ok");

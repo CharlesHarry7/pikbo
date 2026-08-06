@@ -43,13 +43,24 @@ assert(
     homeHero.includes("not a completed customer deliverable") &&
     homeHero.includes("not your toy") &&
     home.includes("<HomeViralWall") &&
+    home.includes("<HomeMomentShowcase") &&
     home.includes("<HfProductRail") &&
     home.includes("buildHomeShowcaseFeed") &&
     !home.includes("PublicLaunchPackSample") &&
     !home.includes('from "@/components/HfExploreHome"') &&
     !home.includes("<HfExploreHome") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must expose Moment hero + Lab proof wall + HF product rail (no Pack / full Explore remount)"
+  "homepage must expose Moment hero + Lab proof wall + Moment showcase + HF product rail (no Pack / full Explore remount)"
+);
+const homeShowcase = read("components/HomeMomentShowcase.tsx");
+assert(
+  homeShowcase.includes("data-home-moment-showcase") &&
+    homeShowcase.includes("MOMENT_CREATE_HREF") &&
+    homeShowcase.includes("source=home-moment-showcase") &&
+    homeShowcase.includes("/create?moment=capsule-reveal") &&
+    homeShowcase.includes("data-concept-preview") &&
+    homeShowcase.includes("data-live-gated"),
+  "HomeMomentShowcase must ship dual-door concept + Live-gated honesty markers"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),
@@ -75,12 +86,13 @@ assert(
       homeWall.includes(".slice(0, 8)")),
   "Lab proof wall must badge honestly, pin 360, use createGenerate360Href, cap ≤8"
 );
-// CTA hierarchy: Moment primary in hero, then wall, then suite rail (no dual hero Generate).
+// CTA hierarchy: Moment primary in hero, then wall, then concept archive, then suite rail.
 assert(
   home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeViralWall") &&
-    home.indexOf("<HomeViralWall") < home.indexOf("<HfProductRail") &&
+    home.indexOf("<HomeViralWall") < home.indexOf("<HomeMomentShowcase") &&
+    home.indexOf("<HomeMomentShowcase") < home.indexOf("<HfProductRail") &&
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
-  "home order: Moment hero → proof wall → HF product rail → trust footer"
+  "home order: Moment hero → proof wall → Moment showcase → HF product rail → trust footer"
 );
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),

@@ -39,9 +39,10 @@ export function HomeMomentShowcase() {
             <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-[#F04E30]">
               Pikbo · AI video Moments for designer toys
             </p>
-            <h1 className="max-w-[820px] font-display text-[clamp(3.4rem,6.1vw,5.55rem)] font-black leading-[0.84] tracking-[-0.07em]">
+            {/* h2: HomeCinemaHero owns the page H1 when showcase is mid-stack. */}
+            <h2 className="max-w-[820px] font-display text-[clamp(3.4rem,6.1vw,5.55rem)] font-black leading-[0.84] tracking-[-0.07em]">
               One toy photo. More ways to sell.
-            </h1>
+            </h2>
           </div>
           <div className="border-l border-[#171719]/20 pl-5 lg:pb-1">
             <p className="max-w-[420px] text-lg font-semibold leading-7 text-[#4A4843]">

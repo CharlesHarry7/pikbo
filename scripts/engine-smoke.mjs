@@ -3901,11 +3901,13 @@ assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero/);
 assert.match(homePageSrc, /HomeViralWall/);
+assert.match(homePageSrc, /HomeMomentShowcase/);
 assert.match(homePageSrc, /HfProductRail/);
 assert.ok(
   homePageSrc.indexOf("<HomeCinemaHero") < homePageSrc.indexOf("<HomeViralWall") &&
-    homePageSrc.indexOf("<HomeViralWall") < homePageSrc.indexOf("<HfProductRail"),
-  "home CTA stack: Moment hero → proof wall → HF product rail"
+    homePageSrc.indexOf("<HomeViralWall") < homePageSrc.indexOf("<HomeMomentShowcase") &&
+    homePageSrc.indexOf("<HomeMomentShowcase") < homePageSrc.indexOf("<HfProductRail"),
+  "home CTA stack: Moment hero → proof wall → Moment showcase → HF product rail"
 );
 const homeHeroSrc = fs.readFileSync(
   join(root, "components/HomeCinemaHero.tsx"),

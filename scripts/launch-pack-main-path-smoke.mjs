@@ -25,13 +25,20 @@ const paywall = read("components/PaywallCard.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
 
-// Public homepage: honest Street Power-Up Moment hero + capped Lab proof wall.
-// Media is cached Lab sample only (not customer results / Pack archive).
+// Public homepage: honest Street Power-Up Moment hero + capped Lab proof wall +
+// Moment concept archive (AIT-209). Media is cached Lab sample only.
 assert.match(home, /<HomeCinemaHero \/>/);
 assert.match(home, /<HomeViralWall/);
+assert.match(home, /<HomeMomentShowcase \/>/);
 assert.match(home, /<HfProductRail/);
 assert.match(home, /buildHomeShowcaseFeed/);
 assert.doesNotMatch(home, /PublicLaunchPackSample/);
+assert.ok(
+  home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeViralWall") &&
+    home.indexOf("<HomeViralWall") < home.indexOf("<HomeMomentShowcase") &&
+    home.indexOf("<HomeMomentShowcase") < home.indexOf("<HfProductRail"),
+  "home order: hero → proof wall → Moment showcase → product rail"
+);
 assert.match(homeHero, /data-home-hero=["']street-power-up["']/);
 assert.match(homeWall, /data-home-wall=["']lab-proof["']/);
 assert.match(homeWall, /HOME_PROOF_BADGE|home-proof-wall/);
