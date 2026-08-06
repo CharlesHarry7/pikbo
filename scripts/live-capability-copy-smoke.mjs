@@ -79,6 +79,40 @@ assert(
   "pricing must keep subscriptions closed until private-beta proof"
 );
 assert(
+  read("components/PricingHeroCopy.tsx").includes("$49") &&
+    read("components/PricingPlanCards.tsx").includes("$49 founding rate") &&
+    read("components/PaywallCard.tsx").includes(
+      "Founding rate is $49/month for nine directed Moments"
+    ) &&
+    read("components/PaywallCard.tsx").includes(
+      "Public subscription purchase and live checkout stay closed"
+    ),
+  "closed-billing copy must disclose founding rate without implying live checkout"
+);
+assert(
+  read("components/CreateStudio.tsx").includes(
+    "Founding Studio · $49/mo founding rate · checkout closed"
+  ) &&
+    !read("components/CreateStudio.tsx").includes(
+      "Continue creating · 9 Moments/month · $49"
+    ),
+  "fixed-Moment upgrade CTA must not imply checkout is open"
+);
+assert(
+  read("components/PublicLaunchPackSample.tsx").includes(
+    "Private Moment path · Street Power-Up · Live gated"
+  ) &&
+    !read("components/PublicLaunchPackSample.tsx").includes(
+      "Private render available now"
+    ),
+  "home pack sample must not claim private render is publicly available now"
+);
+assert(
+  read("app/pricing/page.tsx").includes("when billing opens") &&
+    /Public\s+payment remains locked/.test(read("app/pricing/page.tsx")),
+  "pricing page join label must stay closed-billing honest"
+);
+assert(
   read("app/create/page.tsx").includes("fixedMomentContract") &&
     !read("app/create/page.tsx").includes("<BatchStudio") &&
     /fixedMomentContract\s*&&\s*!session\?\.signedIn/.test(

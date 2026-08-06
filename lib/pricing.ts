@@ -77,7 +77,7 @@ export const PLANS: Plan[] = [
       "Commercial use for rights-owned product photos",
     ],
     featured: true,
-    cta: "Join Founding Studio",
+    cta: "Join Founding Studio when billing opens",
     watermark: false,
     resolution: "720p",
     commercial: true,
