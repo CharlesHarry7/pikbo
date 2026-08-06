@@ -66,6 +66,7 @@ const generateSurfaces = [
   ["components/HowItWorks.tsx", "how-it-works"],
   ["components/MobileGenerateBar.tsx", "mobile-bar"],
   ["components/AppShell.tsx", "shell-mobile-home"],
+  ["components/AppShell.tsx", "shell-desktop-home"],
   ["components/SoftLaunchStrip.tsx", "soft-launch"],
   ["components/LandingSeoMesh.tsx", "seo-mesh"],
   ["components/ModulesSuiteCtas.tsx", "modules-photo-clip"],
@@ -328,6 +329,28 @@ assert.match(
   appShellSrc,
   /#FF4ECD|FF4ECD/,
   "AppShell dual doors use neon-pink board tokens"
+);
+
+// 6c. AIT-380 — AppShell desktop home dual doors (Moment + Generate→360)
+assert.match(
+  appShellSrc,
+  /createGenerate360Href\(["']shell-desktop-home["']\)/,
+  "AppShell desktop home must tag Generate→360 source=shell-desktop-home"
+);
+assert.match(
+  appShellSrc,
+  /data-shell-desktop-360-cta/,
+  "AppShell desktop home must expose data-shell-desktop-360-cta"
+);
+assert.match(
+  appShellSrc,
+  /data-shell-desktop-moment-cta/,
+  "AppShell desktop home must expose data-shell-desktop-moment-cta"
+);
+assert.match(
+  appShellSrc,
+  /Try Street Power-Up/,
+  "AppShell desktop home Moment primary label must stay honest"
 );
 
 // 7. AIT-150 — mobile nav safe-area + residual sticky CTAs use shared clearance tokens

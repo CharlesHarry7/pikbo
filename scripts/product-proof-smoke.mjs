@@ -147,6 +147,16 @@ assert(
     !/#c8ff3d|c8ff3d/.test(appShell),
   "AppShell mobile home: Moment primary + Generate→360 secondary (source=shell-mobile-home, neon-pink, no bare /create)"
 );
+// AIT-380: sticky desktop home AppShell dual doors (Moment primary + Generate→360).
+assert(
+  appShell.includes('createGenerate360Href("shell-desktop-home")') &&
+    appShell.includes("data-shell-desktop-360-cta") &&
+    appShell.includes("data-shell-desktop-moment-cta") &&
+    appShell.includes("Try Street Power-Up") &&
+    appShell.includes("Generate 360°") &&
+    !/#c8ff3d|c8ff3d/.test(appShell),
+  "AppShell desktop home: Moment primary + Generate→360 secondary (source=shell-desktop-home, neon-pink, no bare /create)"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"

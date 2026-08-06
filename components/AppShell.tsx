@@ -26,6 +26,8 @@ const DEFAULT_MOMENT_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=moment-shell`;
 const PRIMARY_NAV_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=primary-nav`;
 /** Sticky mobile home shell — money-path 360 when hero is scrolled away. */
 const SHELL_MOBILE_HOME_360_HREF = createGenerate360Href("shell-mobile-home");
+/** Sticky desktop home shell — money-path 360 when hero is scrolled away. */
+const SHELL_DESKTOP_HOME_360_HREF = createGenerate360Href("shell-desktop-home");
 
 function active(path: string, href: string) {
   const route = href.split("?")[0];
@@ -207,14 +209,26 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2">
           {motionChrome ? (
-            <Link
-              href={home ? DEFAULT_MOMENT_CREATE_HREF : "/library"}
-              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.35)]"
-            >
-              {home ? "Try Street Power-Up" : "Open Library"}
-            </Link>
+            // AIT-380: sticky desktop dual doors — Moment primary + Generate→360
+            // secondary so money-path listing spin stays one click after hero scrolls.
+            <>
+              <Link
+                href={DEFAULT_MOMENT_CREATE_HREF}
+                data-shell-desktop-moment-cta
+                className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.35)]"
+              >
+                Try Street Power-Up
+              </Link>
+              <Link
+                href={SHELL_DESKTOP_HOME_360_HREF}
+                data-shell-desktop-360-cta
+                className="btn-press inline-flex min-h-10 items-center rounded-full border border-[#FF4ECD]/50 bg-[rgba(255,78,205,0.1)] px-4 text-xs font-black text-[#FF4ECD]"
+              >
+                Generate 360°
+              </Link>
+            </>
           ) : resultShell ? (
             <Link
               href={DEFAULT_MOMENT_CREATE_HREF}
