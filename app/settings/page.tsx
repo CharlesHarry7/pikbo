@@ -319,7 +319,9 @@ export default function SettingsPage() {
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--fg-muted)]">Free Mini trial</span>
+            <span className="text-[var(--fg-muted)]">
+              {freeLiveOpen ? "Free Mini trial" : "Free plan · Live gated"}
+            </span>
             <span
               className={`text-right font-semibold ${
                 trialDone && isFreePlan && freeLiveOpen ? "text-amber-200" : ""
@@ -498,7 +500,9 @@ export default function SettingsPage() {
             Soft-live needs <code className="text-[var(--fg-muted)]">SESSION_SECRET</code>{" "}
             + <code className="text-[var(--fg-muted)]">FAL_KEY</code> on the
             server. Paid needs durable entitlements + Stripe test keys (live off).
-            Free Mini trial state comes from{" "}
+            {freeLiveOpen
+              ? "Free Mini trial state comes from "
+              : "Free-plan / Live state comes from "}
             <code className="text-[var(--fg-muted)]">GET /api/me</code>{" "}
             freeTrial — not a client guess. T6 from{" "}
             <code className="text-[var(--fg-muted)]">health.t6</code>.
