@@ -6,7 +6,7 @@ import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { createLabSampleTryHref, createGenerate360Href } from "@/lib/jobIntents";
 import { createRemixHref } from "@/lib/remixIntent";
 
-/** Seedance Mini trial door — Lab sample remix + try/sample flags. */
+/** Cached Lab sample door — remix + try/sample flags (public path · 0 credits). */
 const FEATURE_LAB_SAMPLE_HREF = createLabSampleTryHref("scout");
 
 type Promo = {
@@ -27,10 +27,10 @@ type Promo = {
 const PROMOS: Promo[] = [
   {
     id: "seedance",
-    title: "Seedance Mini trial",
-    blurb: "Cached preview · live: 5s / 480p",
+    title: "Cached Lab sample",
+    blurb: "Cached Lab · 0 credits · Live gated",
     suiteHref: FEATURE_LAB_SAMPLE_HREF,
-    cta: "Try Mini",
+    cta: "Try Lab",
     badge: "PIKBO Lab · cached prototype",
     demoIndex: 0,
   },
