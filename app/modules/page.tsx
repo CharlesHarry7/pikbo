@@ -13,8 +13,12 @@ import {
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 import { createGenerate360Href } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 const MODULES_PATH_GENERATE_HREF = createGenerate360Href("modules");
+/** Suite path Moment door — mode=moment + honest source (never bare effect). */
+const MODULES_PATH_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=modules-path` as const;
 
 export const metadata: Metadata = {
   title: "Modules · Toy workflow blocks",
@@ -259,7 +263,7 @@ export default function ModulesPage() {
           >
             <Link
               href={MODULES_PATH_GENERATE_HREF}
-              className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+              className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-1.5 text-[var(--mint)]"
               data-modules-path-generate="remix"
             >
               Generate
@@ -274,8 +278,9 @@ export default function ModulesPage() {
               →
             </span>
             <Link
-              href="/create?effect=street-power-up"
+              href={MODULES_PATH_MOMENT_HREF}
               className="rounded-full border border-white/15 px-3 py-1.5 hover:border-white/30 hover:text-white"
+              data-modules-path-moment="honest"
             >
               Create one Moment
             </Link>

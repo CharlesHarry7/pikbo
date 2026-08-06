@@ -119,6 +119,30 @@ for (const [file, source] of generateSurfaces) {
     ),
     `${file} must tag source=${source}`
   );
+  // Modules suite path: Moment door honest (MOMENT_CREATE_HREF + source),
+  // Generate path marker retained, no bare street-power-up without mode/source.
+  if (file === "app/modules/page.tsx") {
+    assert.match(
+      src,
+      /MOMENT_CREATE_HREF/,
+      "Modules suite path Moment must import MOMENT_CREATE_HREF"
+    );
+    assert.match(
+      src,
+      /source=modules-path/,
+      "Modules suite path Moment must tag source=modules-path"
+    );
+    assert.match(
+      src,
+      /data-modules-path-generate=["']remix["']/,
+      "Modules suite path Generate marker retained"
+    );
+    assert.doesNotMatch(
+      src,
+      /href=["']\/create\?effect=street-power-up["']/,
+      "Modules suite path must not use bare /create?effect=street-power-up"
+    );
+  }
 }
 
 // 3. No residual direct 360 createRemixHref in app/components
