@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * AIT-41 / AIT-103 / AIT-148 / AIT-162: Library owner-safe recovery hardening.
+ * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183: Library owner-safe recovery.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped list/detail, non-owner deny (no metadata leak),
- * retry / new-attempt paths, owner-ready asset bind gate, and deep-link
- * fail-closed copy.
+ * retry / cancel / new-attempt paths, owner-ready asset bind gate, and
+ * deep-link fail-closed copy.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -62,6 +62,12 @@ assert.match(generationsDetail, /getPrivateLibraryJobForOwner/);
 assert.match(generationsDetail, /getAuthUserFromRequest/);
 assert.match(generationsDetail, /sessionId === session\.id/);
 assert.match(generationsDetail, /code:\s*"NOT_FOUND"/);
+// AIT-183: durable Moments never use process-memory Cancel (DELETE).
+assert.match(generationsDetail, /DURABLE_NO_CANCEL/);
+assert.match(
+  generationsDetail,
+  /export async function DELETE\(req: Request/
+);
 // Detail response must not invent foreign-owner metadata fields.
 assert.doesNotMatch(generationsDetail, /created_by\s*:/);
 // No provider / signed URL leakage on detail.
@@ -90,6 +96,16 @@ assert.match(library, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}\/
 assert.match(library, /void retry\(job\)/);
 assert.match(library, /isRetryable\(job\.status\)[\s\S]{0,350}void retry\(job\)/);
 assert.match(library, /isOpen\(job\.status\)[\s\S]{0,350}void cancel\(job\)/);
+// AIT-183: client Cancel fail-closed for durable rows.
+assert.match(library, /DURABLE_NO_CANCEL/);
+assert.match(
+  library,
+  /canLocalCancel[\s\S]{0,280}durable === true[\s\S]{0,120}return false/
+);
+assert.match(
+  library,
+  /async function cancel[\s\S]{0,200}canLocalCancel\(job\)/
+);
 assert.match(library, /href=["']\/login\?next=\/library["']/);
 assert.match(library, /data-library-action="retry"/);
 assert.match(library, /data-library-action="new-attempt"/);
