@@ -212,6 +212,62 @@ assert.match(
   /data-create-header=["']compact-mobile["']/,
   "fixed Moment Create header must stay compact on mobile for sticky primary above fold"
 );
+// AIT-171: private CreateStudio first-run — upload + sticky primary above fold
+assert.match(
+  createPage,
+  /data-private-create-fold=["']upload-sticky["']/,
+  "private Create page must declare upload+sticky above-fold intent"
+);
+assert.match(
+  studio,
+  /data-private-create-fold=\{\s*fixedMomentContract\s*\?\s*["']upload-sticky["']\s*:\s*undefined\s*\}/,
+  "CreateStudio must mark private first-run fold path"
+);
+assert.match(
+  studio,
+  /data-first-run-path=\{fixedMomentContract\s*\?\s*["']compact["']\s*:\s*["']full["']\}/,
+  "fixed Moment path chrome must be compact (no CD label stack)"
+);
+assert.match(
+  studio,
+  /data-mode-banner=\{fixedMomentContract\s*\?\s*["']moment-compact["']\s*:\s*["']default["']\}/,
+  "fixed Moment mode banner must stay single-row compact on mobile"
+);
+assert.match(
+  studio,
+  /data-private-controls=\{[\s\S]*?fixedMomentContract\s*\?\s*["']above-fold["']/,
+  "private controls column marked for above-fold spacing"
+);
+assert.match(
+  studio,
+  /data-upload-zone=\{\s*fixedMomentContract\s*\?\s*["']private-moment["']\s*:\s*["']default["']\s*\}/,
+  "owned-photo upload zone marked for private Moment fold"
+);
+assert.match(
+  studio,
+  /min-h-\[118px\]/,
+  "private Moment empty upload zone must be shorter than generic min-h-160"
+);
+assert.match(
+  studio,
+  /data-fixed-moment-format=["']compact["']/,
+  "fixed validation format strip must be compact on first-run"
+);
+assert.match(
+  studio,
+  /data-private-create-sticky=\{\s*fixedMomentContract\s*\?\s*["']first-run["']\s*:\s*undefined\s*\}/,
+  "sticky primary marked for private first-run fold"
+);
+assert.match(
+  studio,
+  /data-first-run-action=["']upload["']/,
+  "private sticky must expose upload primary when no photo yet"
+);
+assert.match(
+  studio,
+  /pb-\[var\(--create-content-pad-safe\)\]/,
+  "AIT-171 must keep sticky clearance via --create-content-pad-safe (no tab ghost)"
+);
 {
   const globals = source("app/globals.css");
   assert.match(

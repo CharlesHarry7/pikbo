@@ -75,37 +75,36 @@ export default async function CreatePage({
   // MVP cut: every public or invited Create entry resolves to the one real,
   // fixed product contract. Legacy Seller Pack and generic Studio query links
   // remain harmless deep links, but no longer expose alternate product UIs.
-  // Mobile header is compact (≤640px) so Studio upload + sticky primary stay
-  // above the fold after AIT-152 full tab hide; desktop keeps denser title band.
+  // AIT-159/171: mobile header compact (≤640px) so private Studio upload +
+  // sticky primary stay above the fold after full tab hide; desktop denser.
   return (
     <GuestMomentCreateGate>
-      {/* AIT-144/159: nav-less fixed Moment — no tab-ghost bottom pad; CreateStudio
-          content pad clears sticky chrome + --floating-cta-safe-bottom only. */}
+      {/* AIT-144/159/171: nav-less fixed Moment — no tab-ghost bottom pad;
+          CreateStudio content pad clears sticky chrome + safe-bottom only. */}
       <div
         className="relative min-h-screen overflow-hidden bg-[var(--void)] text-[var(--cream)]"
         data-create-shell="fixed-moment"
         data-create-shell-pad="sticky-only"
+        data-private-create-fold="upload-sticky"
       >
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(177,78,255,0.22),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(255,78,205,0.16),transparent_65%)] sm:h-72"
+          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(177,78,255,0.22),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(255,78,205,0.16),transparent_65%)] sm:h-72"
           aria-hidden
         />
         <header
           data-create-header="compact-mobile"
-          className="relative mx-auto grid max-w-[1480px] gap-1.5 border-b border-[#FF4ECD]/15 px-4 py-2.5 sm:gap-4 sm:px-8 sm:py-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:px-12"
+          className="relative mx-auto grid max-w-[1480px] gap-1 border-b border-[#FF4ECD]/15 px-4 py-2 sm:gap-4 sm:px-8 sm:py-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:px-12"
         >
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#FF4ECD] sm:text-[10px] sm:tracking-[0.2em]">
+            <p className="text-[8px] font-black uppercase tracking-[0.14em] text-[#FF4ECD] sm:text-[10px] sm:tracking-[0.2em]">
               Pikbo Moment · private render
             </p>
-            <h1 className="mt-1 max-w-4xl font-display text-[1.55rem] font-black leading-[0.95] tracking-[-0.04em] text-bling sm:mt-2 sm:text-[clamp(2.45rem,4.2vw,4.5rem)] sm:leading-[0.9] sm:tracking-[-0.06em]">
+            <h1 className="mt-0.5 max-w-4xl font-display text-[1.35rem] font-black leading-[0.95] tracking-[-0.04em] text-bling sm:mt-2 sm:text-[clamp(2.45rem,4.2vw,4.5rem)] sm:leading-[0.9] sm:tracking-[-0.06em]">
               Turn one toy photo into Street Power-Up.
             </h1>
           </div>
-          <p className="border-l border-[#B14EFF]/50 pl-3 text-[11px] font-semibold leading-snug text-white/56 sm:pl-4 sm:text-sm sm:leading-6">
-            <span className="sm:hidden">
-              9:16 · 5s · 720p · 10 credits · private · Library download
-            </span>
+          <p className="border-l border-[#B14EFF]/50 pl-2.5 text-[10px] font-semibold leading-snug text-white/56 sm:pl-4 sm:text-sm sm:leading-6">
+            <span className="sm:hidden">9:16 · 5s · 720p · 10 cr · private</span>
             <span className="hidden sm:inline">
               One fixed 9:16 · 5s · 720p video. Upload privately, pay 10
               credits only when it completes, then recover and download it from
