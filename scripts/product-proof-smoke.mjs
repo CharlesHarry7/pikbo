@@ -105,6 +105,16 @@ assert(
   "explore recipe rail must be Lab-only, honest-empty, secondary Remake/360 (no Moment primary)"
 );
 
+// AIT-306: HomeExploreRecipeRail residual lime → neon-pink / void board
+assert(
+  !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(exploreRail),
+  "HomeExploreRecipeRail must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert(
+  exploreRail.includes("var(--neon-pink)"),
+  "HomeExploreRecipeRail labels/hovers use neon-pink board tokens"
+);
+
 // Suite rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF.
 const homeRail = read("components/HfProductRail.tsx");
 assert(
