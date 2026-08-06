@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-254 / AIT-274:
+ * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-254 / AIT-274 / AIT-485:
  * Library owner-safe recovery.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped list/detail, non-owner deny (no metadata leak),
- * retry / cancel (item + collection) / new-attempt paths, owner-ready asset
- * bind gate, guest deep-link login next, deep-link fail-closed copy,
- * client Bearer on retry/cancel so durable DURABLE_* codes can resolve, and
- * pure merge dropping owned:false before page slice (AIT-274).
+ * retry / cancel (item + collection, video + stills) / new-attempt paths,
+ * owner-ready asset bind gate, guest deep-link login next, deep-link
+ * fail-closed copy, client Bearer on retry/cancel so durable DURABLE_* codes
+ * can resolve, and pure merge dropping owned:false before page slice (AIT-274).
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -30,6 +30,10 @@ const pure = read("lib/privateGenerationResultsPure.mjs");
 const results = read("lib/privateGenerationResults.ts");
 const generationsList = read("app/api/generations/route.ts");
 const generationsDetail = read("app/api/generations/[id]/route.ts");
+const imageList = read("app/api/image/route.ts");
+const imageDetail = read("app/api/image/[id]/route.ts");
+const imageClient = read("lib/imageClient.ts");
+const imagePage = read("app/image/page.tsx");
 const library = read("components/LibraryGrid.tsx");
 const retryRoute = read("app/api/generations/[id]/retry/route.ts");
 const privateToyAssets = read("lib/privateToyAssets.ts");
@@ -97,6 +101,53 @@ assert.match(generationsDetail, /code:\s*result\.code/);
 assert.doesNotMatch(generationsDetail, /created_by\s*:/);
 // No provider / signed URL leakage on detail.
 assert.doesNotMatch(generationsDetail, /providerOutputUrl|signedUrl|output_object_key/);
+
+// ─── Source contracts: stills cancel fail-closed (AIT-485, video cancel parity) ─
+
+// Item DELETE /api/image/[id]
+assert.match(imageDetail, /export async function DELETE\(req: Request/);
+assert.match(imageDetail, /DURABLE_NO_CANCEL/);
+assert.match(imageDetail, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(imageDetail, /getPrivateLibraryJobForOwner/);
+assert.match(imageDetail, /getAuthUserFromRequest/);
+assert.match(
+  imageDetail,
+  /result\.code === "NOT_FOUND" && isUuid\(id\)/
+);
+assert.match(imageDetail, /code:\s*"DURABLE_NO_CANCEL"/);
+assert.match(imageDetail, /mode:\s*"supabase-private"/);
+assert.match(
+  imageDetail,
+  /export async function DELETE[\s\S]*!privateLookup\.ok[\s\S]{0,900}status:\s*503/,
+  "item still cancel must 503 when durable verify is down"
+);
+// Collection DELETE /api/image
+assert.match(imageList, /export async function DELETE\(req: Request/);
+assert.match(imageList, /DURABLE_NO_CANCEL/);
+assert.match(imageList, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(imageList, /getPrivateLibraryJobForOwner/);
+assert.match(
+  imageList,
+  /result\.code === "NOT_FOUND" && jobId && isUuid\(jobId\)/
+);
+assert.match(imageList, /code:\s*"DURABLE_NO_CANCEL"/);
+assert.match(
+  imageList,
+  /!privateLookup\.ok[\s\S]{0,900}status:\s*503/,
+  "collection still cancel must 503 when durable verify is down"
+);
+// Missing/foreign stay uniform NOT_FOUND (no ownership leak).
+assert.match(imageList, /code:\s*result\.code/);
+assert.match(imageDetail, /code:\s*result\.code/);
+// Client mid-POST cancel attaches Bearer for durable honesty.
+assert.match(imageClient, /cancelImageLedger/);
+assert.match(imageClient, /Authorization/);
+assert.match(imageClient, /getSupabaseBrowser|access_token/);
+assert.match(imageClient, /method:\s*["']DELETE["']/);
+// Image studio cancel surfaces DURABLE_NO_CANCEL honestly (no silent cancel).
+assert.match(imagePage, /DURABLE_NO_CANCEL/);
+assert.match(imagePage, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(imagePage, /privateDownloadHeaders|Authorization/);
 
 // ─── Source contracts: retry path ──────────────────────────────────────────
 

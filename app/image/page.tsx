@@ -233,24 +233,44 @@ export default function ImageStudioPage() {
   /** Ledger cancel for a running still (DELETE /api/image/[id]) — refund unconfirmed. */
   async function cancelSessionStill(jobId: string) {
     try {
+      // Bearer so owner durable UUID can return DURABLE_NO_CANCEL (AIT-485).
+      const { privateDownloadHeaders } = await import("@/lib/history");
+      const auth = await privateDownloadHeaders();
       const res = await fetch(`/api/image/${encodeURIComponent(jobId)}`, {
         method: "DELETE",
         cache: "no-store",
+        headers: { ...auth },
       });
       const data = (await res.json().catch(() => ({}))) as {
         refundUnconfirmed?: boolean;
         creditsOutcome?: string;
         message?: string;
+        code?: string;
+        durable?: boolean;
       };
       if (data.refundUnconfirmed === true || data.creditsOutcome === "refund unconfirmed") {
         setFailCreditState("refund unconfirmed");
       }
       if (!res.ok) {
-        setError(
-          typeof data.message === "string"
-            ? data.message
-            : "Could not cancel still ledger row"
-        );
+        // Never invent silent “canceled” for durable UUIDs.
+        if (
+          data.code === "DURABLE_NO_CANCEL" ||
+          data.code === "DURABLE_DETAIL_UNAVAILABLE"
+        ) {
+          setError(
+            typeof data.message === "string"
+              ? data.message
+              : data.code === "DURABLE_DETAIL_UNAVAILABLE"
+                ? "Private Library could not verify this still for Cancel — try again when storage is ready"
+                : "Durable still cannot use process-memory Cancel — refresh status"
+          );
+        } else {
+          setError(
+            typeof data.message === "string"
+              ? data.message
+              : "Could not cancel still ledger row"
+          );
+        }
       } else {
         setError(
           "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"

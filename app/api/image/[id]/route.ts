@@ -5,10 +5,18 @@ import {
   getImageJob,
   toPublicImageJob,
 } from "@/lib/imageJobs";
+import { getPrivateLibraryJobForOwner } from "@/lib/privateGenerationResults";
+import { getAuthUserFromRequest } from "@/lib/supabase/user";
 
 export const runtime = "nodejs";
 
 type Props = { params: Promise<{ id: string }> };
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
 
 /**
  * Single still poll — parity with GET /api/generations/[id].
@@ -46,12 +54,61 @@ export async function GET(_req: Request, { params }: Props) {
 /**
  * Cancel one still by path id — parity with DELETE /api/generations/[id].
  * Ledger only; does not interrupt in-flight Flux.
+ *
+ * AIT-485 / AIT-207 residual: durable private Moments (generation_jobs live
+ * reserve UUID) never use process-memory Cancel. Local NOT_FOUND + UUID +
+ * owner durable row → DURABLE_NO_CANCEL (or DURABLE_DETAIL_UNAVAILABLE when
+ * storage is down). Missing/foreign stay uniform NOT_FOUND (no ownership leak).
  */
-export async function DELETE(_req: Request, { params }: Props) {
+export async function DELETE(req: Request, { params }: Props) {
   const { id } = await params;
   const session = await ensureSession();
   const result = cancelImageJob({ sessionId: session.id, id });
   if (!result.ok) {
+    // Durable owner path — never invent a process-memory cancel success.
+    if (result.code === "NOT_FOUND" && isUuid(id)) {
+      const authUser = await getAuthUserFromRequest(req);
+      if (authUser) {
+        const privateLookup = await getPrivateLibraryJobForOwner({
+          jobId: id,
+          userId: authUser.id,
+        });
+        if (!privateLookup.ok) {
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_DETAIL_UNAVAILABLE",
+              id,
+              message:
+                "Private Library could not verify this still for Cancel. Retry when storage is ready.",
+              mode: "supabase-private",
+              durable: true,
+            },
+            { status: 503 }
+          );
+        }
+        if (privateLookup.job) {
+          const open =
+            privateLookup.job.status === "queued" ||
+            privateLookup.job.status === "running";
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_NO_CANCEL",
+              id,
+              message: open
+                ? "This durable still is still rendering. Refresh — process-memory Cancel does not apply."
+                : "This durable still cannot use process-memory Cancel. Refresh or start a new attempt.",
+              mode: "supabase-private",
+              durable: true,
+              status: privateLookup.job.status,
+            },
+            { status: 422 }
+          );
+        }
+      }
+    }
+
     const status =
       result.code === "NOT_FOUND"
         ? 404
@@ -66,6 +123,7 @@ export async function DELETE(_req: Request, { params }: Props) {
         code: result.code,
         id,
         message: result.message,
+        mode: "local-memory",
         job: result.job
           ? toPublicImageJob(result.job, session.id, { includeDataUrl: true })
           : undefined,
