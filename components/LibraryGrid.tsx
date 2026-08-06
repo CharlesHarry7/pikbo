@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { CommunityPublishButton } from "@/components/CommunityPublishButton";
 import { useToast } from "@/components/Toast";
 import {
   isClientTimeoutError,
@@ -50,6 +51,8 @@ type GenerationJob = {
   owned?: boolean;
   downloadAllowed?: boolean;
   videoUrl?: string;
+  /** Free-plan live raw — CommunityPublishButton refuses until T6 bake. */
+  watermark?: boolean;
   /** Server-controlled relative Create URL for durable same-photo new attempt. */
   newAttemptUrl?: string;
   /** Boolean only — true when a private input asset is bound server-side. */
@@ -316,56 +319,73 @@ function JobActionRow({
     remixOptsFromRecord(job)
   );
   return (
-    <div className="mt-4 flex flex-wrap gap-2">
-      {job.status === "succeeded" ? (
-        <button
-          type="button"
-          onClick={() => onDownload(job)}
-          className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs"
+    <div className="mt-4 space-y-2">
+      <div className="flex flex-wrap gap-2">
+        {job.status === "succeeded" ? (
+          <button
+            type="button"
+            onClick={() => onDownload(job)}
+            className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs"
+          >
+            Download video
+          </button>
+        ) : null}
+        {isRetryable(job.status) && canLocalRetry(job) ? (
+          <button
+            type="button"
+            onClick={() => onRetry(job)}
+            disabled={forkingId === job.id}
+            className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs disabled:opacity-50"
+            data-library-action="retry"
+          >
+            {forkingId === job.id ? "Preparing…" : "Retry Moment"}
+          </button>
+        ) : null}
+        {canNewAttempt(job) ? (
+          <Link
+            href={newAttemptHref(job)}
+            className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
+            data-library-action="new-attempt"
+            data-library-new-attempt={
+              acceptedSamePhotoHandoff(job) ? "same-photo" : "generic"
+            }
+          >
+            {newAttemptLabel(job)}
+          </Link>
+        ) : null}
+        {isOpen(job.status) && canLocalCancel(job) ? (
+          <button
+            type="button"
+            onClick={() => onCancel(job)}
+            disabled={cancellingId === job.id}
+            className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs disabled:opacity-50"
+          >
+            {cancellingId === job.id ? "Canceling…" : "Cancel"}
+          </button>
+        ) : null}
+        {!isOpen(job.status) && !canNewAttempt(job) ? (
+          <Link
+            href={remixHref}
+            className="btn btn-ghost min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
+          >
+            Generate again
+          </Link>
+        ) : null}
+      </div>
+      {/* AIT-555: honest Community path — private Moments chip fail-closed. */}
+      {job.status === "succeeded" && job.videoUrl ? (
+        <div
+          className="flex min-h-8 items-center"
+          data-library-community-publish="true"
         >
-          Download video
-        </button>
-      ) : null}
-      {isRetryable(job.status) && canLocalRetry(job) ? (
-        <button
-          type="button"
-          onClick={() => onRetry(job)}
-          disabled={forkingId === job.id}
-          className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs disabled:opacity-50"
-          data-library-action="retry"
-        >
-          {forkingId === job.id ? "Preparing…" : "Retry Moment"}
-        </button>
-      ) : null}
-      {canNewAttempt(job) ? (
-        <Link
-          href={newAttemptHref(job)}
-          className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
-          data-library-action="new-attempt"
-          data-library-new-attempt={
-            acceptedSamePhotoHandoff(job) ? "same-photo" : "generic"
-          }
-        >
-          {newAttemptLabel(job)}
-        </Link>
-      ) : null}
-      {isOpen(job.status) && canLocalCancel(job) ? (
-        <button
-          type="button"
-          onClick={() => onCancel(job)}
-          disabled={cancellingId === job.id}
-          className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs disabled:opacity-50"
-        >
-          {cancellingId === job.id ? "Canceling…" : "Cancel"}
-        </button>
-      ) : null}
-      {!isOpen(job.status) && !canNewAttempt(job) ? (
-        <Link
-          href={remixHref}
-          className="btn btn-ghost min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
-        >
-          Generate again
-        </Link>
+          <CommunityPublishButton
+            videoUrl={job.videoUrl}
+            effectSlug={job.effect}
+            effectName={effectName(job.effect)}
+            demo={job.demo}
+            watermark={job.watermark}
+          />
+        </div>
       ) : null}
     </div>
   );
