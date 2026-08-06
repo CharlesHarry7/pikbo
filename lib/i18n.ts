@@ -148,7 +148,7 @@ const en: Dict = {
   "home.viral.all": "ALL",
   "home.hero.sub":
     "Designer-toy Creative Director: one free try turns your figure photo into listing, reveal, or social video — TikTok, drops, shelf posts. Video is the product.",
-  "home.tryFree10s": "Try free video · Mini 5s",
+  "home.tryFree10s": "Try free video · Lab",
   "home.useRecipe": "Use this video recipe",
   "home.browseFlow": "Browse Flow",
   "home.modules": "Modules",
@@ -482,7 +482,7 @@ const zh: Dict = {
   "home.viral.all": "全部",
   "home.hero.sub":
     "潮玩创意总监：免费试一次，把你的手办照片变成上架 / 开箱 / 社媒短视频 —— 抖音、发售、晒柜。视频才是产品。",
-  "home.tryFree10s": "免费试视频 · Mini 5 秒",
+  "home.tryFree10s": "免费试视频 · Lab",
   "home.useRecipe": "用这个视频配方",
   "home.browseFlow": "逛创作矩阵",
   "home.modules": "任务模块",
