@@ -164,4 +164,43 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
+// 5. AIT-169 HF product rail: one primary Generate→360 header CTA
+const hfRail = read("components/HfProductRail.tsx");
+assert.match(
+  hfRail,
+  /data-hf-rail-primary-generate=["']360["']/,
+  "HfProductRail must mark primary Generate as 360"
+);
+assert.match(
+  hfRail,
+  /data-hf-rail-primary-generate-cta/,
+  "HfProductRail must expose primary Generate CTA marker"
+);
+assert.match(
+  hfRail,
+  /data-hf-rail-generate=["']remix["']/,
+  "HfProductRail primary door keeps remix marker for engine smoke"
+);
+assert.match(
+  hfRail,
+  /createGenerate360Href\(\s*["']hf-product-rail["']\s*\)/,
+  "HfProductRail primary Generate must use createGenerate360Href(hf-product-rail)"
+);
+assert.match(
+  hfRail,
+  /Generate 360°/,
+  "HfProductRail primary CTA label must say Generate 360°"
+);
+// FreeTrial must not be a filled primary competing with Generate (outline/secondary only)
+assert.doesNotMatch(
+  hfRail,
+  /FreeTrialCta[\s\S]{0,200}variant\s*=\s*["']primary["']/,
+  "HfProductRail FreeTrialCta must not use filled primary variant"
+);
+assert.match(
+  hfRail,
+  /border border-white\/20/,
+  "HfProductRail FreeTrial strip must be secondary outline"
+);
+
 console.log("generate-360-cta-smoke: ok");
