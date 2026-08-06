@@ -31,26 +31,31 @@ const proofList =
 const proofSlugs = [...proofList.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
 
 assert(proofSlugs.length === 8, "homepage proof whitelist must contain exactly 8 recipes");
+// Gallery-calm home (boss 2026-08): hero + designer-toy still gallery + trust.
+// No multi-rail carnival; no cartoon demo wall as primary showcase.
 assert(
   home.includes("<HomeCinemaHero />") &&
-    homeHero.includes('data-home-hero="street-power-up"') &&
+    homeHero.includes('data-home-hero="designer-toy-gallery"') &&
     homeHero.includes("href={MOMENT_CREATE_HREF}") &&
-    homeHero.includes("Sample · Beatbot") &&
-    homeHero.includes("Create my drop clip") &&
     homeHero.includes("data-home-moment-cta") &&
     (homeHero.match(/data-home-moment-cta/g) || []).length === 1 &&
-    homeHero.includes("Sample shown: cached 6s archive") &&
-    homeHero.includes("not a completed customer deliverable") &&
-    homeHero.includes("not your toy") &&
-    home.includes("<HomeViralWall") &&
-    home.includes("<HomeExploreRecipeRail") &&
-    home.includes("<HfProductRail") &&
-    home.includes("buildHomeShowcaseFeed") &&
+    homeHero.includes("Create with my toy") &&
+    homeHero.includes("art-vinyl-guardian") &&
+    homeHero.includes("Style study") &&
+    !homeHero.includes("Beatbot") &&
+    !homeHero.includes("beatbot-still") &&
+    home.includes("<HomeDesignerGallery") &&
+    home.includes("<HomeTrustFooter") &&
+    !home.includes("<HomeViralWall") &&
+    !home.includes("<HomeExploreRecipeRail") &&
+    !home.includes("<HfProductRail") &&
+    !home.includes("<HomeBrowseCta") &&
+    !home.includes("buildHomeShowcaseFeed") &&
     !home.includes("PublicLaunchPackSample") &&
     !home.includes('from "@/components/HfExploreHome"') &&
     !home.includes("<HfExploreHome") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must expose Moment hero + Lab proof wall + explore recipe rail + HF product rail (no Pack / full Explore remount)"
+  "homepage must be calm hero + designer-toy gallery + trust (no multi-rail / cartoon demo wall)"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),
@@ -64,74 +69,34 @@ assert(
   proofSlugs.slice(0, 4).includes("360-spin-showcase"),
   "360-spin-showcase must sit in the first 4 home proof slots (mobile 2×2 above fold)"
 );
-const homeWall = read("components/HomeViralWall.tsx");
+const homeWall = read("components/HomeDesignerGallery.tsx");
+const galleryLib = read("lib/designerToyGallery.ts");
 assert(
-  homeWall.includes("HOME_PROOF_BADGE") &&
-    homeWall.includes("home-proof-wall") &&
-    homeWall.includes("data-home-proof-360") &&
-    homeWall.includes("pinListing360InFirstSlots") &&
-    homeWall.includes("data-home-proof-360-pinned") &&
-    homeWall.includes("createGenerate360Href") &&
-    (homeWall.includes("HOME_PROOF_LIMIT") ||
-      homeWall.includes(".slice(0, 8)")),
-  "Lab proof wall must badge honestly, pin 360, use createGenerate360Href, cap ≤8"
+  homeWall.includes('data-home-gallery="designer-toy"') &&
+    galleryLib.includes("DESIGNER_TOY_GALLERY") &&
+    galleryLib.includes("/style-studies/") &&
+    galleryLib.includes("art-vinyl-guardian") &&
+    !galleryLib.includes("/demos/beatbot") &&
+    !galleryLib.includes("/demos/orbit"),
+  "designer gallery must use 潮玩 style-studies stills, not cartoon demo loops"
 );
-// CTA hierarchy: Moment primary in hero → wall → thin explore rail → suite rail.
 assert(
-  home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeViralWall") &&
-    home.indexOf("<HomeViralWall") < home.indexOf("<HomeExploreRecipeRail") &&
-    home.indexOf("<HomeExploreRecipeRail") < home.indexOf("<HfProductRail") &&
-    home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
-  "home order: Moment hero → proof wall → explore recipe rail → HF product rail → trust footer"
+  home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeDesignerGallery") &&
+    home.indexOf("<HomeDesignerGallery") < home.indexOf("<HomeTrustFooter"),
+  "home order: gallery hero → designer gallery → trust footer"
 );
-
-// AIT-241: thin Lab recipe rail — secondary Remake/360 only, no second primary Moment CTA.
+// Secondary rails still exist for Explore/Lab surfaces (not mounted on home).
 const exploreRail = read("components/HomeExploreRecipeRail.tsx");
 assert(
-  exploreRail.includes('data-home-explore-rail="lab"') &&
-    exploreRail.includes('data-home-explore-rail="empty"') &&
-    exploreRail.includes("createGenerate360Href") &&
-    exploreRail.includes("HOME_PROOF_BADGE") &&
-    exploreRail.includes("home-explore-rail") &&
-    exploreRail.includes("home_explore_rail_remake") &&
-    exploreRail.includes("Lab recipe previews unavailable") &&
-    !exploreRail.includes("data-home-moment-cta") &&
-    !exploreRail.includes("MOMENT_CREATE_HREF") &&
-    !exploreRail.includes("Create my drop clip") &&
-    !exploreRail.includes("Create a Moment") &&
-    (exploreRail.includes("RAIL_LIMIT") ||
-      exploreRail.includes(".slice(0, 8)") ||
-      exploreRail.includes("HOME_PROOF_LIMIT")),
-  "explore recipe rail must be Lab-only, honest-empty, secondary Remake/360 (no Moment primary)"
+  exploreRail.includes("createGenerate360Href") ||
+    exploreRail.includes("HOME_PROOF"),
+  "explore recipe rail module remains available off-home"
 );
-
-// AIT-320: HomeExploreRecipeRail residual lime → neon-pink board tokens
-assert(
-  !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(exploreRail),
-  "HomeExploreRecipeRail must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
-);
-assert(
-  exploreRail.includes("var(--neon-pink)"),
-  "HomeExploreRecipeRail labels/hovers use neon-pink board tokens"
-);
-
-// Suite rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF.
 const homeRail = read("components/HfProductRail.tsx");
 assert(
   homeRail.includes("createGenerate360Href") &&
-    homeRail.includes('"hf-product-rail"') &&
-    homeRail.includes("MOMENT_CREATE_HREF") &&
-    homeRail.includes("source=hf-product-rail") &&
-    homeRail.includes('data-home-suite-rail="hf-product"') &&
-    homeRail.includes("data-home-suite-360") &&
-    !homeRail.includes('"/create?effect=street-power-up"') &&
-    !homeRail.includes('"/create"'),
-  "HF product rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF (no bare /create)"
-);
-assert(
-  homeWall.includes('createGenerate360Href("home-proof-wall")') ||
-    homeWall.includes("createGenerate360Href('home-proof-wall')"),
-  "proof wall Listing 360 must tag source=home-proof-wall"
+    homeRail.includes("MOMENT_CREATE_HREF"),
+  "HF product rail module keeps Generate/Moment href helpers"
 );
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
