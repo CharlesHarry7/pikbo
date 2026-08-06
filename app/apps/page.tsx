@@ -111,7 +111,10 @@ export default function AppsPage() {
   };
 
   return (
-    <div className="relative px-4 py-10 sm:px-8">
+    <div
+      className="relative px-4 py-10 pb-[var(--mobile-generate-bar-pad)] sm:px-8 lg:pb-12"
+      data-apps-content-pad="mobile-generate-bar"
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}

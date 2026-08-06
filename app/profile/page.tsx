@@ -18,7 +18,10 @@ export default function ProfilePage() {
   const auth = publicAuthStatus();
 
   return (
-    <div className="relative px-4 py-10 sm:px-8">
+    <div
+      className="relative px-4 py-10 pb-[var(--mobile-generate-bar-pad)] sm:px-8 lg:pb-12"
+      data-profile-content-pad="mobile-generate-bar"
+    >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(40%_70%_at_50%_0%,rgba(200,255,61,0.07),transparent_70%)]"
         aria-hidden

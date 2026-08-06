@@ -89,7 +89,10 @@ export default async function ExplorePage({
   };
 
   return (
-    <main className="min-h-screen bg-black pb-24 text-white">
+    <main
+      className="min-h-screen bg-black pb-[var(--mobile-generate-bar-pad)] text-white lg:pb-12"
+      data-explore-content-pad="mobile-generate-bar"
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}

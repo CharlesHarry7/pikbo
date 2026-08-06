@@ -1846,7 +1846,18 @@ export function CreateStudio({
   }, [image, effect, demoMode, effectiveDuration, aspectRatio]);
 
   return (
-    <div className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0">
+    <div
+      className={
+        fixedMomentContract
+          ? // Nav-less fixed Moment: sticky chrome + --floating-cta-safe-bottom only
+            "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-pad-safe)] lg:min-h-screen lg:pb-0"
+          : // Tab-sharing Create: sticky chrome + --mobile-nav-clearance
+            "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-pad)] lg:min-h-screen lg:pb-0"
+      }
+      data-create-content-pad={
+        fixedMomentContract ? "safe-bottom" : "mobile-nav"
+      }
+    >
       {/* Suite chrome: desktop only — mobile uses bottom nav + Modules shelf */}
       {!fixedMomentContract && (
         <div className="hidden lg:block">
