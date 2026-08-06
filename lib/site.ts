@@ -13,7 +13,7 @@ export const site = {
   url: SITE_URL,
   /**
    * VIDEO-first product. Photo = input; short AI video = output.
-   * Soft launch: free Mini trial / labeled Lab demos; no fake multi-model.
+   * Soft launch: labeled Lab demos · Live gated; no fake multi-model / Free Mini open-trial brand.
    */
   tagline: "AI creative studio for designer toys",
   /**

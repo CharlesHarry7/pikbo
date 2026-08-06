@@ -14,7 +14,7 @@ export function CreateSeoFooter({ effectSlug }: { effectSlug?: string }) {
     preset?.intro ??
     "Turn one photo of a figure or blind box you own into a listing or social clip — spin, unbox, float, and more.";
   const body = preset?.body ?? [
-    "Upload a photo of a toy you own and pick a recipe. Free path: one Mini trial with an on-player mark when live is on; otherwise you get a labeled cached demo that does not animate your upload.",
+    "Upload a photo of a toy you own and pick a recipe. Public free path is a labeled cached Lab prototype (0 credits · does not animate your upload). When Live is open for an eligible account, free-plan clips may use an on-player mark.",
     "Use clips for Etsy, TikTok Shop, Whatnot, shelf flexes, and drop-day posts — without a camera rig.",
   ];
   const keywords = preset?.keywords ?? [
