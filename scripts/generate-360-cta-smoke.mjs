@@ -758,4 +758,27 @@ assert.match(
   "SoftLaunchStrip CTA glow uses copper board rgba(196,165,116)"
 );
 
+// AIT-569: FlowMediaCard residual competitor lime → gallery-calm copper
+const flowMediaCardSrc = read("components/FlowMediaCard.tsx");
+assert.doesNotMatch(
+  flowMediaCardSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "FlowMediaCard must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  flowMediaCardSrc,
+  /var\(--brand\)/,
+  "FlowMediaCard hover ring/hairline/badges/labels use --brand copper accent"
+);
+assert.match(
+  flowMediaCardSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "FlowMediaCard card glow uses copper board rgba(196,165,116)"
+);
+assert.match(
+  flowMediaCardSrc,
+  /var\(--primary-foreground\)/,
+  "FlowMediaCard remake/preview fill uses --primary-foreground on copper"
+);
+
 console.log("generate-360-cta-smoke: ok");
