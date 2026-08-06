@@ -430,6 +430,28 @@ assert.match(
   "AppShell mobile nav tabs must keep 44px min touch target"
 );
 
+// AIT-517: AppShell residual carnival neon → gallery-calm copper board tokens
+assert.doesNotMatch(
+  appShellSrc,
+  /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i,
+  "AppShell must not hard-code carnival neon (#B14EFF / #FF4ECD)"
+);
+assert.match(
+  appShellSrc,
+  /var\(--grad-cta\)/,
+  "AppShell primary CTAs use --grad-cta copper board gradient"
+);
+assert.match(
+  appShellSrc,
+  /var\(--brand\)/,
+  "AppShell active rails + mobile nav use --brand copper accent"
+);
+assert.match(
+  appShellSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "AppShell chrome glows use copper board rgba(196,165,116)"
+);
+
 const createStudio = read("components/CreateStudio.tsx");
 const cinemaPage = read("app/cinema/page.tsx");
 const batchStudio = read("components/BatchStudio.tsx");
@@ -695,5 +717,45 @@ assert.match(
   "MobileGenerateBar Generate keeps btn-primary (board fill)"
 );
 
+// AIT-517: shared ui/button residual carnival neon → gallery-calm copper
+const buttonSrc = read("components/ui/button.tsx");
+assert.doesNotMatch(
+  buttonSrc,
+  /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i,
+  "ui/button must not hard-code carnival neon (#B14EFF / #FF4ECD)"
+);
+assert.match(
+  buttonSrc,
+  /var\(--grad-cta\)/,
+  "ui/button default variant uses --grad-cta copper board gradient"
+);
+assert.match(
+  buttonSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "ui/button default glow uses copper board rgba(196,165,116)"
+);
+assert.match(
+  buttonSrc,
+  /var\(--primary-foreground\)/,
+  "ui/button primary text uses --primary-foreground on copper CTAs"
+);
+
+// AIT-517: SoftLaunchStrip residual competitor lime → gallery-calm copper
+const softLaunchSrc = read("components/SoftLaunchStrip.tsx");
+assert.doesNotMatch(
+  softLaunchSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "SoftLaunchStrip must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  softLaunchSrc,
+  /var\(--brand\)/,
+  "SoftLaunchStrip chips/CTAs use --brand copper accent"
+);
+assert.match(
+  softLaunchSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "SoftLaunchStrip CTA glow uses copper board rgba(196,165,116)"
+);
 
 console.log("generate-360-cta-smoke: ok");

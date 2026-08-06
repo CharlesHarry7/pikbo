@@ -247,6 +247,44 @@ assert(
   );
 }
 
+// AIT-517: shell chrome residual carnival/lime → gallery-calm copper board
+{
+  const carnival =
+    /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i;
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const button = read("components/ui/button.tsx");
+  const softLaunch = read("components/SoftLaunchStrip.tsx");
+  assert(
+    !carnival.test(appShellProof),
+    "components/AppShell.tsx must not hard-code carnival neon"
+  );
+  assert(
+    !carnival.test(button),
+    "components/ui/button.tsx must not hard-code carnival neon"
+  );
+  assert(
+    !lime.test(softLaunch),
+    "SoftLaunchStrip must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    appShellProof.includes("var(--grad-cta)") &&
+      appShellProof.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(appShellProof),
+    "AppShell CTAs/rails use --grad-cta / --brand + copper glow"
+  );
+  assert(
+    button.includes("var(--grad-cta)") &&
+      button.includes("rgba(196,165,116") &&
+      button.includes("var(--primary-foreground)"),
+    "ui/button default CTA uses --grad-cta + copper glow + primary-foreground"
+  );
+  assert(
+    softLaunch.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(softLaunch),
+    "SoftLaunchStrip chips/CTAs use --brand + copper glow"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
