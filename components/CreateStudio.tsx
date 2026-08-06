@@ -92,6 +92,7 @@ import {
 } from "@/components/GenerateWaitStage";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { useI18n } from "@/components/LanguageProvider";
+import { resolveWorkbenchResultPrimary } from "@/lib/workbenchResultFold";
 import { getJobIntent, JOB_INTENTS, type JobIntentId } from "@/lib/jobIntents";
 import {
   composeExtraWithIdentity,
@@ -382,6 +383,8 @@ export function CreateStudio({
     useState<RequestCreditState>(null);
   /** In-flight generate abort — cancel marks refund unconfirmed if network cut mid-debit. */
   const generateAbortRef = useRef<AbortController | null>(null);
+  /** Result-stage player — workbench sticky Replay seeks + plays this node. */
+  const resultVideoRef = useRef<HTMLVideoElement | null>(null);
   /**
    * When true, UI stopped waiting but the original /api/generate must keep
    * running (no abort, no ledger cancel, no second provider call).
@@ -1468,6 +1471,46 @@ export function CreateStudio({
     demo: Boolean(activeVersion?.demo ?? demo),
     watermark: Boolean(activeVersion?.watermark ?? watermark),
   });
+
+  /**
+   * AIT-469 / AIT-381: workbench-only post-generate primary (mobile sticky + stage).
+   * Fixed Moment keeps its own after-path chrome.
+   */
+  const workbenchResultPrimary =
+    !fixedMomentContract && status === "done" && videoUrl
+      ? resolveWorkbenchResultPrimary({
+          demo: Boolean(activeVersion?.demo ?? demo),
+          privateResult: Boolean(activeVersion?.privateResult),
+          playable: playableVideo,
+        })
+      : null;
+
+  function replayResultVideo() {
+    document
+      .getElementById("create-result")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const node = resultVideoRef.current;
+    if (!node) return;
+    try {
+      node.currentTime = 0;
+      void node.play();
+    } catch {
+      /* autoplay policy / detached node — scroll still lands on stage */
+    }
+  }
+
+  function runWorkbenchGenerateAgain() {
+    if (!ownsRights) {
+      document
+        .getElementById("create-ownership")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    void generate();
+    document
+      .getElementById("create-result")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   /**
    * Phase D: HEAD /api/downloads first when we have a job/request id so
@@ -3276,6 +3319,7 @@ export function CreateStudio({
                       {playableVideo ? (
                         <video
                           key={videoUrl}
+                          ref={resultVideoRef}
                           src={videoUrl || undefined}
                           controls
                           autoPlay
@@ -3310,6 +3354,7 @@ export function CreateStudio({
                     {playableVideo ? (
                       <video
                         key={videoUrl}
+                        ref={resultVideoRef}
                         src={videoUrl || undefined}
                         controls
                         autoPlay
@@ -3347,6 +3392,50 @@ export function CreateStudio({
                     {demo ? t("create.labReady.sub") : t("create.ready.sub")}
                   </p>
                 </div>
+
+                {/* AIT-469: one primary next action above advanced after-path chrome */}
+                {workbenchResultPrimary ? (
+                  <div
+                    className="mx-auto mt-3 w-full max-w-md"
+                    data-result-fold="stage-primary"
+                    data-result-primary={workbenchResultPrimary.kind}
+                    data-result-provenance={
+                      workbenchResultPrimary.provenanceKind
+                    }
+                  >
+                    {workbenchResultPrimary.kind === "library" ? (
+                      <Link
+                        href="/library"
+                        className="btn btn-primary flex w-full items-center justify-center py-3 text-sm font-black"
+                        data-result-fold-action="library"
+                      >
+                        {workbenchResultPrimary.label}
+                      </Link>
+                    ) : workbenchResultPrimary.kind === "replay" ? (
+                      <button
+                        type="button"
+                        onClick={replayResultVideo}
+                        className="btn btn-primary w-full py-3 text-sm font-black"
+                        data-result-fold-action="replay"
+                      >
+                        {workbenchResultPrimary.label}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={runWorkbenchGenerateAgain}
+                        disabled={!ownsRights}
+                        className="btn btn-primary w-full py-3 text-sm font-black disabled:opacity-50"
+                        data-result-fold-action="generate-again"
+                      >
+                        {workbenchResultPrimary.label}
+                      </button>
+                    )}
+                    <p className="mt-1.5 text-center text-[10px] font-medium leading-snug text-white/50">
+                      {workbenchResultPrimary.stickyHint}
+                    </p>
+                  </div>
+                ) : null}
 
                 {!fixedMomentContract && status === "done" && videoUrl ? (
                   <GenerateAfterPath
@@ -3832,7 +3921,7 @@ export function CreateStudio({
           fixedMomentContract ? "safe-bottom" : "mobile-nav"
         }
       >
-        {image ? (
+        {image && !workbenchResultPrimary ? (
           <p
             className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55"
             data-sticky-credits={demoMode || labStill ? "0" : "live"}
@@ -3889,25 +3978,69 @@ export function CreateStudio({
             awaitingPrimary={awaitingPrimaryAfterRecovery}
           />
         ) : status === "done" && videoUrl ? (
-          <button
-            type="button"
-            onClick={() => {
-              if (!ownsRights) {
+          workbenchResultPrimary ? (
+            <div
+              data-result-fold="mobile-sticky"
+              data-result-primary={workbenchResultPrimary.kind}
+              data-result-provenance={workbenchResultPrimary.provenanceKind}
+              data-workbench-result-fold="done"
+            >
+              <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
+                {workbenchResultPrimary.stickyHint}
+              </p>
+              {workbenchResultPrimary.kind === "library" ? (
+                <Link
+                  href="/library"
+                  className="btn btn-primary flex w-full items-center justify-center py-3 text-sm font-black"
+                  data-result-fold-action="library"
+                >
+                  {workbenchResultPrimary.label}
+                </Link>
+              ) : workbenchResultPrimary.kind === "replay" ? (
+                <button
+                  type="button"
+                  onClick={replayResultVideo}
+                  className="btn btn-primary w-full py-3 text-sm font-black"
+                  data-result-fold-action="replay"
+                >
+                  {workbenchResultPrimary.label}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={runWorkbenchGenerateAgain}
+                  disabled={!ownsRights}
+                  className="btn btn-primary w-full py-3 text-sm font-black disabled:opacity-50"
+                  data-result-fold-action="generate-again"
+                >
+                  {workbenchResultPrimary.label}
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                if (!ownsRights) {
+                  document
+                    .getElementById("create-ownership")
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  return;
+                }
+                void generate();
                 document
-                  .getElementById("create-ownership")
-                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                return;
+                  .getElementById("create-result")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              disabled={!ownsRights}
+              className="btn btn-primary w-full py-3 text-sm disabled:opacity-50"
+              data-sticky-primary={
+                fixedMomentContract ? "moment-generate-again" : undefined
               }
-              void generate();
-              document
-                .getElementById("create-result")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
-            disabled={!ownsRights}
-            className="btn btn-primary w-full py-3 text-sm disabled:opacity-50"
-          >
-            Generate again
-          </button>
+            >
+              Generate again
+            </button>
+          )
         ) : (
           <button
             type="button"
