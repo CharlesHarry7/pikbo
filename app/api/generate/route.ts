@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import { fal } from "@fal-ai/client";
+import {
+  getVideoProvider,
+  isRealProviderConfigured,
+} from "@/lib/providers";
 import { getPreset } from "@/lib/presets";
 import { getPlan } from "@/lib/pricing";
 import {
@@ -280,7 +283,7 @@ export async function POST(req: Request) {
       : "free";
   const privateLive = resolvePrivateLiveAccess(authUser);
   const serverAccess = liveGenerationAccess({
-    providerConfigured: Boolean(process.env.FAL_KEY),
+    providerConfigured: isRealProviderConfigured(),
     authenticated: Boolean(authUser),
     planId: accessPlanId,
     // Public Free stays blocked until T6 free delivery is ready.
@@ -1241,7 +1244,7 @@ export async function POST(req: Request) {
 
     let providerRequestStarted = false;
     try {
-      fal.config({ credentials: process.env.FAL_KEY });
+      const provider = getVideoProvider();
 
       let blob: Blob;
       try {
@@ -1292,20 +1295,21 @@ export async function POST(req: Request) {
       }
       const imageUrl = await invokeReservedProvider(
         reserved.reservation,
-        () => fal.storage.upload(file)
+        () => provider.uploadImage(file)
       );
 
-      const input: Record<string, unknown> = {
+      const jobInput = {
+        model,
         prompt,
-        image_url: imageUrl,
+        imageUrl,
         duration: seedanceDuration(secs),
-        aspect_ratio: aspect,
+        aspectRatio: aspect,
         resolution,
-        generate_audio: !freeTier,
+        generateAudio: !freeTier,
+        ...(typeof seed === "number" && Number.isFinite(seed) && seed >= 0
+          ? { seed: Math.floor(seed) }
+          : {}),
       };
-      if (typeof seed === "number" && Number.isFinite(seed) && seed >= 0) {
-        input.seed = Math.floor(seed);
-      }
 
       const generationHeartbeat = recordWorkerHeartbeat(liveJobId);
       if (!generationHeartbeat || generationHeartbeat.status !== "running") {
@@ -1325,11 +1329,7 @@ export async function POST(req: Request) {
       providerRequestStarted = true;
       const result = await invokeReservedProvider(
         reserved.reservation,
-        () =>
-          fal.subscribe(model, {
-            input,
-            logs: false,
-          })
+        () => provider.runJob(jobInput)
       );
       // Once the model request was sent, conservatively count the labeled
       // estimate against the validation ceiling even if delivery later fails.
@@ -1339,8 +1339,7 @@ export async function POST(req: Request) {
         console.error("[provider-budget] commit pending");
       }
 
-      const data = result.data as { video?: { url?: string } };
-      const videoUrl = data?.video?.url;
+      const videoUrl = result.videoUrl;
       if (!videoUrl) {
         const released = await releaseReservation("model_empty");
         const failBody: GenerateErrorBody = {
@@ -1370,10 +1369,7 @@ export async function POST(req: Request) {
         return err(failBody, 502);
       }
 
-      const providerRequestId =
-        typeof result.requestId === "string" && result.requestId.trim()
-          ? result.requestId.trim().slice(0, 256)
-          : null;
+      const providerRequestId = result.requestId;
       if (!providerRequestId) {
         const released = await releaseReservation(
           "provider_request_id_missing"
