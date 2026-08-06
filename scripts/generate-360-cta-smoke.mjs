@@ -121,6 +121,40 @@ for (const [file, source] of generateSurfaces) {
   );
 }
 
+// 2b. Flow core matrix Moment door — mode=moment + source=flow-matrix (AIT-279)
+{
+  const flow = read("app/flow/page.tsx");
+  assert.match(
+    flow,
+    /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/,
+    "Flow must import MOMENT_CREATE_HREF for matrix Moment honesty"
+  );
+  assert.match(
+    flow,
+    /FLOW_MATRIX_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=flow-matrix`/,
+    "Flow matrix Moment must use MOMENT_CREATE_HREF + source=flow-matrix"
+  );
+  assert.match(
+    flow,
+    /id:\s*["']core-pack["'][\s\S]*?href:\s*FLOW_MATRIX_MOMENT_HREF/,
+    "core-pack Street Power-Up card must deep-link FLOW_MATRIX_MOMENT_HREF"
+  );
+  const corePack = flow.match(
+    /id:\s*["']core-pack["'][\s\S]*?demoId:\s*["']beatbot-unboxed["']/
+  );
+  assert.ok(corePack, "Flow core-pack card block must exist");
+  assert.doesNotMatch(
+    corePack[0],
+    /href:\s*["']\/create\?effect=street-power-up["']/,
+    "core-pack must not use bare /create?effect=street-power-up"
+  );
+  assert.match(
+    corePack[0],
+    /href:\s*FLOW_MATRIX_MOMENT_HREF/,
+    "core-pack href must be FLOW_MATRIX_MOMENT_HREF (mode=moment + source)"
+  );
+}
+
 // 3. No residual direct 360 createRemixHref in app/components
 const residual = [];
 for (const dir of ["app", "components"]) {

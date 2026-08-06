@@ -9,9 +9,13 @@ import { FlowMediaCard } from "@/components/FlowMediaCard";
 import { createWorkbenchHref } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { PREVIEW_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Flow Generate doors — listing spin remix (ratio/duration/channel). */
 const FLOW_GENERATE_HREF = createWorkbenchHref();
+/** Core matrix Street Power-Up card — mode=moment + honest source (never bare effect). */
+const FLOW_MATRIX_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=flow-matrix` as const;
 
 export const metadata: Metadata = {
   title: "Flow · Creation matrix",
@@ -93,7 +97,7 @@ export default function FlowPage() {
       id: "core-pack",
       title: "Street Power-Up Moment",
       blurb: "One directed launch clip from one owned toy photo.",
-      href: "/create?effect=street-power-up",
+      href: FLOW_MATRIX_MOMENT_HREF,
       badge: "Toy Moment",
       tier: "core",
       demoId: "beatbot-unboxed",

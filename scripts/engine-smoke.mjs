@@ -5101,6 +5101,31 @@ assert.match(
   flowPageSrc,
   /id:\s*["']core-i2v["'][\s\S]*?href:\s*(FLOW_GENERATE_HREF|createWorkbenchHref|createRemixHref)/
 );
+// AIT-279: core matrix Street Power-Up card Moment honesty (path nav is AIT-266)
+assert.match(
+  flowPageSrc,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+assert.match(
+  flowPageSrc,
+  /FLOW_MATRIX_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=flow-matrix`/
+);
+assert.match(
+  flowPageSrc,
+  /id:\s*["']core-pack["'][\s\S]*?href:\s*FLOW_MATRIX_MOMENT_HREF/
+);
+{
+  const corePack = flowPageSrc.match(
+    /id:\s*["']core-pack["'][\s\S]*?demoId:\s*["']beatbot-unboxed["']/
+  );
+  assert.ok(corePack, "Flow core-pack Street Power-Up card must exist");
+  assert.doesNotMatch(
+    corePack[0],
+    /href:\s*["']\/create\?effect=street-power-up["']/
+  );
+  assert.match(corePack[0], /href:\s*FLOW_MATRIX_MOMENT_HREF/);
+  assert.match(corePack[0], /mode=moment|FLOW_MATRIX_MOMENT_HREF/);
+}
 
 // T8 Seller Pack recovery: browser keeps only packRunId + three packJobIds;
 // owner-scoped status owns result + settlement truth after refresh.
