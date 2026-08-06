@@ -665,6 +665,25 @@ assert(
   "CommunityPublish must block free-plan raw as public UGC without Free Mini brand"
 );
 
+// AIT-467: residual HF home + i18n marketing still selling Mini 5s as open public trial.
+assert(
+  read("components/HfExploreHome.tsx").includes("Lab sample · 0 credits") &&
+    !read("components/HfExploreHome.tsx").includes("Mini 5s · Sample ready"),
+  "HfExploreHome free-path caption must be Lab sample · 0 credits (not Mini 5s open trial)"
+);
+assert(
+  i18nSource.includes('"home.tryFree10s": "Try free video · Lab sample"') &&
+    !i18nSource.includes("Try free video · Mini 5s") &&
+    !i18nSource.includes("免费试视频 · Mini 5 秒") &&
+    !i18nSource.includes("免费：一次 Mini 5 秒 480p 试用") &&
+    !i18nSource.includes("免费 Mini 试用，无需绑卡") &&
+    !i18nSource.includes("AI 视频 · 免费 Mini 试用") &&
+    !i18nSource.includes("实时开通后免费 Mini 5 秒") &&
+    i18nSource.includes("免费：缓存 Lab 样片 · 0 积分") &&
+    i18nSource.includes("When Live is open: free plan · 5s · 480p"),
+  "i18n home/onboard marketing must not sell Free Mini 5s as unconditional public trial"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
