@@ -84,20 +84,17 @@ export default function PricingPage() {
 
   return (
     <div
-      className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-[var(--void)] px-4 py-10 text-[var(--cream)] sm:px-8 sm:py-16"
+      className="toy-page px-4 py-10 sm:px-8 sm:py-16"
       data-pricing-path="product-first"
     >
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(48%_80%_at_50%_0%,rgba(177,78,255,0.28),transparent_70%),radial-gradient(36%_60%_at_80%_10%,rgba(255,78,205,0.16),transparent_65%)]"
-        aria-hidden
-      />
+      <div className="toy-page-glow h-80" aria-hidden />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <div className="relative mx-auto max-w-6xl">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
+          <p className="section-label tracking-[0.2em]">
             Founding Studio · private beta
           </p>
           <h1 className="mt-3 font-display text-[clamp(3rem,7vw,6.5rem)] font-black leading-[0.88] tracking-[-0.07em]">
@@ -113,11 +110,11 @@ export default function PricingPage() {
         </div>
 
         <article
-          className="effect-card relative mx-auto mt-9 max-w-4xl overflow-hidden bg-[rgba(20,20,30,0.92)] p-5 text-[var(--cream)] sm:mt-12 sm:p-8"
+          className="effect-card relative mx-auto mt-9 max-w-4xl overflow-hidden bg-[color-mix(in_srgb,var(--card)_92%,transparent)] p-5 text-cream sm:mt-12 sm:p-8"
           data-pricing-state="closed-beta"
         >
           <div
-            className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#B14EFF,#FF4ECD,#00D9FF)]"
+            className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--electric-purple),var(--neon-pink),var(--tide-blue))]"
             aria-hidden
           />
           <div className="grid gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:items-start">
@@ -126,7 +123,7 @@ export default function PricingPage() {
                 <h2 className="text-2xl font-black tracking-[-0.04em] sm:text-3xl">
                   Founding Studio
                 </h2>
-                <span className="rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white">
+                <span className="cta-brand rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em]">
                   Closed beta
                 </span>
               </div>
@@ -152,13 +149,13 @@ export default function PricingPage() {
               </div>
               <Link
                 href="/contact?source=pricing-private-beta"
-                className="mt-4 inline-block text-xs font-bold text-white/58 underline decoration-white/20 underline-offset-4 hover:text-[#00D9FF]"
+                className="link-tide mt-4 inline-block text-xs font-bold"
               >
                 Request private beta access
               </Link>
               <Link
                 href={PRICING_PREVIEW_HREF}
-                className="mt-4 inline-block text-xs font-bold text-white/58 underline decoration-white/20 underline-offset-4 hover:text-[#00D9FF]"
+                className="link-tide mt-4 inline-block text-xs font-bold"
               >
                 Preview one Pikbo Lab Moment
               </Link>
@@ -166,7 +163,7 @@ export default function PricingPage() {
 
             <div className="overflow-hidden rounded-[1.4rem] border border-white/12">
               <div className="border-b border-white/12 bg-white/[0.045] px-4 py-3">
-                <p className="text-[9px] font-black uppercase tracking-[0.17em] text-[#00D9FF]">
+                <p className="text-[9px] font-black uppercase tracking-[0.17em] text-tide-blue">
                   The product promise
                 </p>
               </div>
@@ -183,7 +180,7 @@ export default function PricingPage() {
                       {note}
                     </p>
                   </div>
-                  <span className="self-center rounded-full border border-[#FF4ECD]/35 bg-[#FF4ECD]/10 px-2.5 py-1 text-[10px] font-black text-[#FF4ECD]">
+                  <span className="chip-pink self-center rounded-full px-2.5 py-1 text-[10px] font-black">
                     {value}
                   </span>
                 </div>
@@ -209,7 +206,7 @@ export default function PricingPage() {
           <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             {pricingFaqItems.map((item) => (
               <article key={item.question} className="stat-card p-5">
-                <h3 className="text-sm font-black leading-5 text-[var(--cream)]">
+                <h3 className="text-sm font-black leading-5 text-cream">
                   {item.question}
                 </h3>
                 <p className="mt-3 text-xs font-semibold leading-5 text-white/52">
@@ -221,6 +218,5 @@ export default function PricingPage() {
         </section>
       </div>
     </div>
-
   );
 }

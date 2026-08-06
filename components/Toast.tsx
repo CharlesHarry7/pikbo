@@ -32,9 +32,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {items.map((t) => (
           <div
             key={t.id}
-            className="pointer-events-auto rounded-xl border border-[var(--mint)]/25 bg-[#0c0c10]/95 px-4 py-2.5 text-sm font-medium text-white shadow-[0_12px_40px_-12px_rgba(0,0,0,0.8),0_0_24px_rgba(200,255,61,0.08)] backdrop-blur-md"
+            className="pointer-events-auto rounded-xl border border-neon-pink/25 bg-void/95 px-4 py-2.5 text-sm font-medium text-cream shadow-[0_12px_40px_-12px_rgba(0,0,0,0.8),0_0_24px_color-mix(in_srgb,var(--neon-pink)_12%,transparent)] backdrop-blur-md"
           >
-            <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-[var(--mint)] shadow-[0_0_8px_rgba(200,255,61,0.8)]" />
+            <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-neon-pink shadow-[0_0_8px_color-mix(in_srgb,var(--neon-pink)_80%,transparent)]" />
             {t.text}
           </div>
         ))}

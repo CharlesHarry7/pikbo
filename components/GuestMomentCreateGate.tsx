@@ -52,7 +52,7 @@ function GuestMomentPreview({
 
       <div className="mx-auto grid max-w-[1360px] gap-7 lg:min-h-[calc(100vh-7rem)] lg:grid-cols-[minmax(220px,0.75fr)_minmax(330px,390px)_minmax(260px,0.78fr)] lg:items-center lg:gap-10 xl:gap-14">
         <div className="order-2 max-w-[380px] lg:order-1">
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
+          <p className="section-label text-[9px] tracking-[0.2em]">
             Current motion
           </p>
           <h1 className="mt-4 font-display text-[clamp(3rem,4.6vw,5.25rem)] font-black leading-[0.87] tracking-[-0.07em]">
@@ -97,7 +97,7 @@ function GuestMomentPreview({
                 </span>
               </div>
               <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/55 to-transparent px-5 pb-5 pt-24">
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
+                <p className="section-label text-[9px] tracking-[0.2em]">
                   Street Power-Up
                 </p>
                 <div className="mt-1.5 flex items-end justify-between gap-5">
@@ -131,7 +131,7 @@ function GuestMomentPreview({
             </p>
             {sessionBoot === "timeout" ? (
               <div
-                className="mt-4 rounded-2xl border border-[#FF6B6B]/35 bg-[#FF6B6B]/10 px-4 py-3"
+                className="mt-4 rounded-2xl border border-ember/35 bg-ember/10 px-4 py-3"
                 data-studio-open-error="session-timeout"
                 role="alert"
               >
@@ -143,7 +143,7 @@ function GuestMomentPreview({
                   type="button"
                   onClick={onRetrySession}
                   data-studio-open-retry
-                  className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[#c8ff3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF]"
+                  className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-void transition hover:bg-neon-pink hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tide-blue"
                 >
                   Retry access check
                 </button>
@@ -154,7 +154,7 @@ function GuestMomentPreview({
                 <Link
                   href={guestSignInHref()}
                   data-guest-create-sign-in
-                  className="btn-press inline-flex min-h-14 items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(255,78,205,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#151519]"
+                  className="btn-press cta-brand inline-flex min-h-14 items-center justify-between rounded-2xl px-5 text-xs font-black uppercase tracking-[0.12em] shadow-[0_12px_40px_-12px_color-mix(in_srgb,var(--neon-pink)_60%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tide-blue focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                 >
                   Sign in to make yours
                   <span aria-hidden className="text-lg">→</span>
@@ -165,7 +165,7 @@ function GuestMomentPreview({
                 data-guest-create-private-beta
                 className={`inline-flex min-h-12 items-center justify-center rounded-2xl border px-5 text-[10px] font-black uppercase tracking-[0.14em] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                   signedIn
-                    ? "border-[#FF4ECD] bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
+                    ? "cta-brand border-neon-pink"
                     : "border-white/12 text-white/62 hover:border-white/28 hover:text-white"
                 }`}
               >
@@ -181,7 +181,7 @@ function GuestMomentPreview({
             </p>
           </div>
           <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-black/20 px-4 py-3 text-[9px] font-black uppercase tracking-[0.13em] text-white/38 backdrop-blur-xl">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#7CFFB2]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-tide-green" />
             Owner-only result · no public feed
           </div>
         </div>

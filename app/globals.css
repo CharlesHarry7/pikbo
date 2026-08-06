@@ -86,6 +86,15 @@
   --color-brand2: var(--brand-2);
   --color-mint: var(--mint);
   --color-lime: var(--lime);
+  /* AIT-149: full 8-color board as Tailwind tokens (Home/Create/Library/Pricing) */
+  --color-electric-purple: var(--electric-purple);
+  --color-neon-pink: var(--neon-pink);
+  --color-tide-blue: var(--tide-blue);
+  --color-lemon: var(--lemon);
+  --color-tide-green: var(--tide-green);
+  --color-ember: var(--ember);
+  --color-void: var(--void);
+  --color-cream: var(--cream);
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: "Plus Jakarta Sans", "Avenir Next", "Segoe UI", ui-sans-serif,
@@ -217,13 +226,79 @@ html[data-scroll-behavior="smooth"] {
   transform: scale(0.95);
 }
 
+/* ---- Shared page shell (Home/Create/Library/Pricing) ---- */
+.toy-page {
+  position: relative;
+  min-height: calc(100svh - 4rem);
+  overflow: hidden;
+  background: var(--void);
+  color: var(--cream);
+}
+.toy-page-glow {
+  pointer-events: none;
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 20rem;
+  background:
+    radial-gradient(
+      48% 80% at 50% 0%,
+      rgba(177, 78, 255, 0.24),
+      transparent 70%
+    ),
+    radial-gradient(
+      36% 60% at 85% 8%,
+      rgba(255, 78, 205, 0.14),
+      transparent 65%
+    );
+  z-index: 0;
+}
+.chip-pink {
+  border: 1px solid color-mix(in srgb, var(--neon-pink) 35%, transparent);
+  background: color-mix(in srgb, var(--neon-pink) 12%, transparent);
+  color: var(--neon-pink);
+}
+.chip-tide {
+  border: 1px solid color-mix(in srgb, var(--tide-blue) 40%, transparent);
+  background: color-mix(in srgb, var(--tide-blue) 12%, transparent);
+  color: var(--tide-blue);
+}
+.cta-brand {
+  background: var(--grad-cta);
+  color: #fff;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 28px rgba(255, 78, 205, 0.35);
+}
+.cta-brand:hover {
+  filter: brightness(1.06);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset,
+    0 0 42px rgba(177, 78, 255, 0.45);
+}
+.link-tide {
+  color: color-mix(in srgb, var(--cream) 58%, transparent);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.2);
+  text-underline-offset: 4px;
+}
+.link-tide:hover {
+  color: var(--tide-blue);
+}
+
 /* Card types (hard requirement) */
 .effect-card {
   border-radius: 24px;
   border: 2px solid transparent;
   background:
     linear-gradient(var(--card), var(--card)) padding-box,
-    linear-gradient(135deg, #b14eff, #ff4ecd, #00d9ff) border-box;
+    linear-gradient(
+      135deg,
+      var(--electric-purple),
+      var(--neon-pink),
+      var(--tide-blue)
+    )
+      border-box;
   box-shadow: 0 0 28px rgba(177, 78, 255, 0.18);
   transition:
     transform 400ms ease-out,
@@ -254,11 +329,16 @@ html[data-scroll-behavior="smooth"] {
 
 .stat-card {
   border-radius: 16px;
-  background: #0a0a0f;
+  background: var(--void);
   border: 1px solid transparent;
   background-image:
-    linear-gradient(#0a0a0f, #0a0a0f),
-    linear-gradient(135deg, #b14eff, #00d9ff, #00ffa3);
+    linear-gradient(var(--void), var(--void)),
+    linear-gradient(
+      135deg,
+      var(--electric-purple),
+      var(--tide-blue),
+      var(--tide-green)
+    );
   background-origin: border-box;
   background-clip: padding-box, border-box;
 }
@@ -266,7 +346,7 @@ html[data-scroll-behavior="smooth"] {
 .cta-card {
   border-radius: 24px;
   background: var(--grad-cta);
-  color: #0a0a0f;
+  color: var(--void);
   box-shadow: 0 16px 48px -16px rgba(255, 78, 205, 0.55);
 }
 
@@ -274,11 +354,11 @@ html[data-scroll-behavior="smooth"] {
 .text-bling {
   background: linear-gradient(
     105deg,
-    #00d9ff 0%,
-    #b14eff 28%,
-    #ff4ecd 58%,
-    #ffe600 88%,
-    #ff4ecd 100%
+    var(--tide-blue) 0%,
+    var(--electric-purple) 28%,
+    var(--neon-pink) 58%,
+    var(--lemon) 88%,
+    var(--neon-pink) 100%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -300,31 +380,31 @@ html[data-scroll-behavior="smooth"] {
   width: 4px;
   height: 4px;
   border-radius: 9999px;
-  background: #ff4ecd;
+  background: var(--neon-pink);
   box-shadow: 0 0 8px currentColor;
   animation: particle-drift 7s linear infinite;
   opacity: 0.5;
 }
 .particle-field span:nth-child(2n) {
-  background: #b14eff;
+  background: var(--electric-purple);
   width: 3px;
   height: 3px;
   animation-duration: 9s;
 }
 .particle-field span:nth-child(3n) {
-  background: #00d9ff;
+  background: var(--tide-blue);
   width: 5px;
   height: 5px;
   animation-duration: 11s;
 }
 .particle-field span:nth-child(4n) {
-  background: #ffe600;
+  background: var(--lemon);
   width: 3px;
   height: 3px;
   animation-duration: 8s;
 }
 .particle-field span:nth-child(5n) {
-  background: #00ffa3;
+  background: var(--tide-green);
 }
 
 /* Sticky nav: transparent → deep on scroll */
@@ -395,7 +475,12 @@ h1,
 }
 
 .text-grad {
-  background: linear-gradient(100deg, #00d9ff 0%, #b14eff 42%, #ff4ecd 100%);
+  background: linear-gradient(
+    100deg,
+    var(--tide-blue) 0%,
+    var(--electric-purple) 42%,
+    var(--neon-pink) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -417,7 +502,7 @@ h1,
 }
 .btn-primary {
   background: var(--grad-cta);
-  color: #0a0a0f;
+  color: #fff;
   padding: 0.8rem 1.4rem;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.1) inset,
@@ -435,7 +520,7 @@ h1,
 }
 .btn-accent {
   background: var(--grad);
-  color: #0a0a0f;
+  color: #fff;
   padding: 0.8rem 1.4rem;
 }
 .btn-ghost {
@@ -724,7 +809,13 @@ a {
   border-radius: 24px;
   background:
     linear-gradient(var(--card), var(--card)) padding-box,
-    linear-gradient(135deg, #b14eff, #ff4ecd, #00d9ff) border-box;
+    linear-gradient(
+      135deg,
+      var(--electric-purple),
+      var(--neon-pink),
+      var(--tide-blue)
+    )
+      border-box;
   border: 2px solid transparent;
   box-shadow: 0 20px 56px -28px rgba(177, 78, 255, 0.4);
 }

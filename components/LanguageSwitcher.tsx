@@ -41,7 +41,7 @@ export function LanguageSwitcher({
         title={t("lang.change")}
         className={`flex items-center gap-1.5 rounded-full border transition-colors ${
           tone === "light"
-            ? "border-[#C9CED8] text-[#5F6774] hover:border-[#2457E6] hover:text-[#15171B]"
+            ? "border-black/15 text-void/55 hover:border-electric-purple hover:text-void"
             : "border-white/10 text-white/70 hover:border-white/25 hover:text-white"
         } ${
           compact ? "h-11 px-3 text-[11px]" : "px-3 py-1.5 text-[13px]"
@@ -67,7 +67,7 @@ export function LanguageSwitcher({
       {open && (
         <ul
           role="listbox"
-          className="absolute right-0 z-50 mt-2 w-40 overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] py-1 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.9)]"
+          className="absolute right-0 z-50 mt-2 w-40 overflow-hidden rounded-xl border border-white/10 bg-void py-1 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.9)]"
         >
           {LOCALES.map((l) => (
             <li key={l} role="option" aria-selected={l === locale}>
@@ -78,7 +78,7 @@ export function LanguageSwitcher({
                   setOpen(false);
                 }}
                 className={`flex w-full items-center justify-between px-3 py-2 text-left text-[13px] transition-colors hover:bg-white/[0.06] ${
-                  l === locale ? "text-[#c8ff3d]" : "text-white/80"
+                  l === locale ? "text-neon-pink" : "text-white/80"
                 }`}
               >
                 {LOCALE_LABELS[l]}
