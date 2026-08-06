@@ -286,10 +286,44 @@ assert(
 );
 assert(
   read("components/LandingToolPanel.tsx").includes("Live gated") &&
-    /freeLiveOpen[\s\S]{0,80}Free Mini used|!freeLiveOpen[\s\S]{0,200}Cached Lab preview/.test(
+    /freeLiveOpen[\s\S]{0,80}Free-plan used|!freeLiveOpen[\s\S]{0,200}Cached Lab preview/.test(
       read("components/LandingToolPanel.tsx")
     ),
   "LandingToolPanel exhausted/left chips must follow freeLiveOpen"
+);
+// AIT-458: LandingToolPanel freeLiveModelLabel + open-path Free Mini brand residual.
+const landingToolPanelSource = read("components/LandingToolPanel.tsx");
+assert(
+  !landingToolPanelSource.includes("Free Mini") &&
+    !/Try free Mini|Free Mini used|Free Mini trial/.test(landingToolPanelSource),
+  "LandingToolPanel must not hardcode Free Mini product brand chips"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,500}free-plan live/.test(landingToolPanelSource) &&
+    landingToolPanelSource.includes(
+      'freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "free-plan live"'
+    ) &&
+    landingToolPanelSource.includes("Free-plan used · ${effectName}") &&
+    landingToolPanelSource.includes("Try free-plan · ${effectName}") &&
+    landingToolPanelSource.includes("Free-plan trial used") &&
+    landingToolPanelSource.includes(
+      "Free-plan trial exhausted · cached Lab demos still free"
+    ) &&
+    landingToolPanelSource.includes(
+      "free-plan live · 480p · on-player mark"
+    ),
+  "LandingToolPanel free-plan live / Free-plan open-path chips must sit behind freeLiveOpen"
+);
+assert(
+  /seedance-fast[\s\S]{0,40}Private Fast/.test(landingToolPanelSource),
+  "LandingToolPanel Private Fast invited path may stay"
+);
+assert(
+  landingToolPanelSource.includes("Cached Lab preview · ${effectName}") &&
+    landingToolPanelSource.includes("Live gated · ${session.planName}") &&
+    /canLiveGenerate\s*\(/.test(landingToolPanelSource) &&
+    /liveEnabled\s*!==\s*false/.test(landingToolPanelSource),
+  "LandingToolPanel must keep freeLiveOpen fail-closed Cached Lab / Live gated closed path"
 );
 // Free Mini left chip must be rendered only under a freeLiveOpen ternary/&& gate.
 for (const relativePath of [

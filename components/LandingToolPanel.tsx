@@ -115,14 +115,15 @@ export function LandingToolPanel({
   const demoMode = !canLiveGenerate(session);
   const liveCredits = generationDisplayCredits(session);
   const freeLive = session?.freeTrial?.freeLive;
-  /** R0/T6: Free Mini left/used chips only when Live is actually open. */
+  /** R0/T6: free-plan live only when Live is open (fail-closed while /api/me loading). */
   const freeLiveOpen = Boolean(
     canLiveGenerate(session) &&
       freeLive &&
       freeLive.liveEnabled !== false
   );
+  /** Private Fast invited path may stay; default open path uses free-plan live. */
   const freeLiveModelLabel =
-    freeLive?.modelClass === "seedance-fast" ? "Fast" : "Mini";
+    freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "free-plan live";
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
       ? session.freeTrial.clipsLeft
@@ -486,8 +487,8 @@ export function LandingToolPanel({
               {!freeLiveOpen
                 ? `Cached Lab preview · ${effectName}`
                 : trialDone && isFree
-                  ? `Free Mini used · ${effectName}`
-                  : `Try free Mini · ${effectName}`}
+                  ? `Free-plan used · ${effectName}`
+                  : `Try free-plan · ${effectName}`}
             </p>
             <p className="mt-0.5 text-sm text-[var(--fg-muted)]">
               {!freeLiveOpen ? (
@@ -637,10 +638,10 @@ export function LandingToolPanel({
                 }`}
               >
                 {trialDone
-                  ? "Free Mini trial used"
+                  ? "Free-plan trial used"
                   : freeLive
                     ? `${freeLiveModelLabel} · ${freeLive.resolution} · on-player mark`
-                    : "Mini · 480p · on-player mark"}
+                    : "free-plan live · 480p · on-player mark"}
               </span>
             ) : null}
           </div>
@@ -670,7 +671,7 @@ export function LandingToolPanel({
           ) : trialDone && isFree && freeLiveOpen ? (
             <div className="space-y-2">
               <p className="rounded-lg border border-amber-300/25 bg-amber-300/[0.06] px-3 py-2 text-[11px] leading-snug text-amber-100">
-                Free Mini trial exhausted · cached Lab demos still free · failed
+                Free-plan trial exhausted · cached Lab demos still free · failed
                 live jobs restore credits when confirmed.
               </p>
               <Link href="/pricing" className="btn btn-primary w-full text-center">
@@ -824,7 +825,7 @@ export function LandingToolPanel({
               ) : playableVideo ? (
                 <p className="mt-2 text-center text-[10px] text-[var(--fg-dim)]">
                   {PROVENANCE.liveGeneration} — AI motion varies. Failed jobs
-                  restore credits when confirmed. Free live uses Mini · 480p ·{" "}
+                  restore credits when confirmed. Free-plan live uses 480p ·{" "}
                   {PROVENANCE.onPlayerMark.toLowerCase()}.
                 </p>
               ) : (
