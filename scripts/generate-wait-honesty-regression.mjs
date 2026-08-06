@@ -496,7 +496,9 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     assert.match(leaveFn, /planGenerateWaitLeave\("detach"\)/);
     assert.match(leaveFn, /generateAbortRef\.current = null/);
     assert.match(leaveFn, /detachedWaitRef\.current = true/);
-    assert.match(leaveFn, /router\.push\(["']\/library["']\)/);
+    // AIT-546/527: owner-safe Library deep-link via helper (not bare /library)
+    assert.match(leaveFn, /libraryWorkbenchHandoffHref/);
+    assert.match(leaveFn, /router\.push\(\s*libraryWorkbenchHandoffHref/);
     assert.doesNotMatch(leaveFn, /\.abort\s*\(/);
     assert.doesNotMatch(leaveFn, /setLastRequestCreditState/);
     assert.doesNotMatch(leaveFn, /10 restored|credits restored/i);
