@@ -758,4 +758,37 @@ assert.match(
   "SoftLaunchStrip CTA glow uses copper board rgba(196,165,116)"
 );
 
+// AIT-549: Create page residual carnival → gallery-calm copper board
+const createPageCopper = read("app/create/page.tsx");
+assert.doesNotMatch(
+  createPageCopper,
+  /#FF4ECD|#00D9FF|#B14EFF|FF4ECD|00D9FF|B14EFF|rgba\(255\s*,\s*78\s*,\s*205|rgba\(0\s*,\s*217\s*,\s*255|rgba\(177\s*,\s*78\s*,\s*255/i,
+  "Create page must not hard-code carnival pink/cyan/purple hex accents"
+);
+assert.match(
+  createPageCopper,
+  /var\(--brand\)/,
+  "Create page eyebrows/accents use --brand copper"
+);
+assert.match(
+  createPageCopper,
+  /var\(--brand-2\)/,
+  "Create page moment border uses --brand-2 copper"
+);
+assert.match(
+  createPageCopper,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "Create page hero mesh uses copper board rgba(196,165,116)"
+);
+assert.match(
+  createPageCopper,
+  /WORKBENCH_LAB_LIVE_HONESTY/,
+  "Create page keeps workbench Lab/Live honesty"
+);
+assert.match(
+  createPageCopper,
+  /fixedMomentContract/,
+  "Create page keeps fixed Moment contract"
+);
+
 console.log("generate-360-cta-smoke: ok");

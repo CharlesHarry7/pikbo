@@ -115,6 +115,33 @@ assert.match(
   "Moment path heading preserved"
 );
 
+// AIT-549: Create page residual carnival → gallery-calm copper board
+assert.doesNotMatch(
+  createPage,
+  /#FF4ECD|#00D9FF|#B14EFF|FF4ECD|00D9FF|B14EFF|rgba\(255\s*,\s*78\s*,\s*205|rgba\(0\s*,\s*217\s*,\s*255|rgba\(177\s*,\s*78\s*,\s*255/i,
+  "Create page must not hard-code carnival pink/cyan/purple hex accents"
+);
+assert.match(
+  createPage,
+  /var\(--brand\)/,
+  "Create page uses --brand copper accent"
+);
+assert.match(
+  createPage,
+  /var\(--brand-2\)/,
+  "Create page uses --brand-2 copper accent"
+);
+assert.match(
+  createPage,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "Create page hero mesh uses copper board rgba"
+);
+assert.match(
+  createPage,
+  /WORKBENCH_LAB_LIVE_HONESTY/,
+  "Create page keeps workbench Lab/Live honesty"
+);
+
 // Helper module markers
 assert.match(
   contractLib,
