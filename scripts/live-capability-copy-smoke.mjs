@@ -156,6 +156,34 @@ assert(
   "modules FAQ/chip must sell Lab public path + conditional Live, not Free Mini as public trial"
 );
 
+// AIT-345: apps/[slug] residual — FAQ no longer sells Free Mini as unconditional public free path.
+const appsSlugSource = read("app/apps/[slug]/page.tsx");
+const forbiddenAppsSlugFreeMini = [
+  /Does launching cost Free Mini credits\?/i,
+  /Can Free Mini raw files be downloaded\?/i,
+  /Free Mini raw provider URLs/i,
+  /Free live raw provider URLs/i,
+];
+for (const pattern of forbiddenAppsSlugFreeMini) {
+  assert(
+    !pattern.test(appsSlugSource),
+    `app/apps/[slug]/page.tsx contains residual Free Mini FAQ promise ${pattern}`
+  );
+}
+assert(
+  appsSlugSource.includes("Does launching cost credits?") &&
+    appsSlugSource.includes("Can free-plan raw files be downloaded?") &&
+    appsSlugSource.includes("Cached Lab prototypes cost 0 credits") &&
+    appsSlugSource.includes(
+      "When Live is enabled for an eligible account"
+    ) &&
+    appsSlugSource.includes(
+      "Free-plan live raw provider URLs stay gated until server watermark bake"
+    ) &&
+    !appsSlugSource.includes("Free Mini"),
+  "apps/[slug] FAQ must sell Lab public path + Live-gated / free-plan raw T6, not Free Mini as public free path"
+);
+
 assert(
   read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
     read("lib/site.ts").includes("AI product video studio for toy sellers"),
