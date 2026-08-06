@@ -132,8 +132,8 @@ function jobStatus(status: string): {
   if (status === "succeeded") {
     return {
       label: "Ready",
-      tone: "text-[#c8ff3d]",
-      dot: "bg-[#c8ff3d]",
+      tone: "text-[var(--neon-pink)]",
+      dot: "bg-[var(--neon-pink)]",
     };
   }
   if (status === "running") {
@@ -551,10 +551,10 @@ function LibraryGridInner() {
       >
         <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
           <div className="max-w-lg">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#c8ff3d]/30 bg-[#c8ff3d]/10 text-xl text-[#c8ff3d]">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[var(--neon-pink)]/30 bg-[var(--neon-pink)]/10 text-xl text-[var(--neon-pink)]">
               ↗
             </span>
-            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.2em] text-[#c8ff3d]">
+            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--neon-pink)]">
               Private Library
             </p>
             <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
@@ -628,7 +628,7 @@ function LibraryGridInner() {
     <section className="mt-6" data-library-state={sortedJobs.length ? "filled" : "empty"}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--neon-pink)]">
             {openCount > 0
               ? `${openCount} Moment${openCount === 1 ? "" : "s"} in progress`
               : `${sortedJobs.length} saved Moment${sortedJobs.length === 1 ? "" : "s"}`}
@@ -688,16 +688,16 @@ function LibraryGridInner() {
                       setSelectedId(job.id);
                     }
                   }}
-                  className={`overflow-hidden rounded-[1.5rem] border bg-[#111113] text-left shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)] outline-none focus-visible:ring-2 focus-visible:ring-[#c8ff3d] ${
+                  className={`overflow-hidden rounded-[1.5rem] border bg-[#111113] text-left shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-pink)] ${
                     selected
-                      ? "border-[#c8ff3d]/45"
+                      ? "border-[var(--neon-pink)]/45"
                       : "border-white/10"
                   }`}
                   data-selected={selected ? "true" : "false"}
                   aria-pressed={selected}
                   aria-label={`${effectName(job.effect)}, ${status.label}, ${formatDate(job.createdAt)}`}
                 >
-                  <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(200,255,61,0.12),transparent_55%),#09090a] text-center">
+                  <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(255,78,205,0.12),transparent_55%),#09090a] text-center">
                     {job.status === "succeeded" && job.videoUrl ? (
                       <video
                         src={job.videoUrl}
@@ -754,7 +754,7 @@ function LibraryGridInner() {
                     className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111113] shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)] lg:sticky lg:top-6"
                     data-library-detail="true"
                   >
-                    <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(200,255,61,0.12),transparent_55%),#09090a] text-center">
+                    <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(255,78,205,0.12),transparent_55%),#09090a] text-center">
                       {job.status === "succeeded" && job.videoUrl ? (
                         <video
                           src={job.videoUrl}
