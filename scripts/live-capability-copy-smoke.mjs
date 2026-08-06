@@ -236,6 +236,73 @@ assert(
   "rank tool must keep private generation and subscriptions closed during validation"
 );
 
+// AIT-366: usecases + guides longform SEO — no unconditional Free Mini public free path.
+// (tools/[slug] residual is owned by AIT-354 / #380 — do not couple this lock to tools.ts.)
+const usecasesSource = read("lib/usecases.ts");
+const guidesSource = read("lib/guides.ts");
+const forbiddenUseCasesGuidesFreeMini = [
+  /Soft launch Free Mini/i,
+  /Free Mini caps apply/i,
+  /Free Mini is 5s/i,
+  /Free Mini is enough/i,
+  /Run Free Mini or a live job/i,
+  /Which model runs on Free Mini\?/i,
+  /Free Mini limits/i,
+  /Keep Free Mini caps in mind/i,
+  /What Free Mini (is|is not)/i,
+  /Pikbo Free Mini/i,
+  /Free Mini Actually Includes/i,
+  /Etsy Toy Listing Video Generator, Free Mini/i,
+  /AI Action Figure Video Generator, Free Mini/i,
+  /cookie period is exhausted/i,
+];
+for (const relativePath of ["lib/usecases.ts", "lib/guides.ts"]) {
+  const source = relativePath === "lib/usecases.ts" ? usecasesSource : guidesSource;
+  for (const pattern of forbiddenUseCasesGuidesFreeMini) {
+    assert(
+      !pattern.test(source),
+      `${relativePath} contains residual Free Mini longform promise ${pattern}`
+    );
+  }
+  assert(
+    source.includes("When Live is enabled for an eligible account") ||
+      source.includes("cached Lab") ||
+      source.includes("Lab prototype") ||
+      source.includes("Lab demos"),
+    `${relativePath} must keep Lab / conditional Live honesty language`
+  );
+}
+assert(
+  usecasesSource.includes(
+    "Public validation uses cached Lab prototypes at 0 credits"
+  ) &&
+    usecasesSource.includes(
+      "Live jobs remain gated until your account is eligible"
+    ) &&
+    usecasesSource.includes(
+      "Public validation is a cached Lab prototype at 0 credits"
+    ) &&
+    !usecasesSource.includes("Which model runs on Free Mini?") &&
+    !usecasesSource.includes("Free Mini caps apply") &&
+    !usecasesSource.includes("Soft launch Free Mini"),
+  "usecases longform must sell Lab public path + gated Live, not Free Mini as unconditional free path"
+);
+assert(
+  guidesSource.includes(
+    "The public free path is a cached Pikbo Lab prototype at 0 credits"
+  ) &&
+    guidesSource.includes(
+      "When Live is enabled for an eligible account, Generate shows the configured model"
+    ) &&
+    guidesSource.includes("What the free path is") &&
+    guidesSource.includes("Honest free path vs unlimited claims") &&
+    !guidesSource.includes("Run Free Mini or a live job") &&
+    !guidesSource.includes("Soft launch Free Mini is 5s") &&
+    !guidesSource.includes("What Free Mini is") &&
+    !guidesSource.includes("Pikbo Free Mini"),
+  "guides longform must sell Lab free path + conditional Live, not Free Mini as unconditional free path"
+);
+
 // Residual session UI — Free Mini left/used only behind freeLiveOpen.
 // Fail-closed while /api/me is loading (parity FreeTrialCta).
 const residualSessionUi = [
