@@ -341,6 +341,35 @@ assert(
   );
 }
 
+// AIT-618: shared .btn-primary residual carnival pink glow → gallery copper board
+{
+  const carnival =
+    /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i;
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const globalsCss = read("app/globals.css");
+  const btnPrimaryBlock =
+    globalsCss.match(
+      /\.btn-primary\s*\{[\s\S]*?\}\s*\.btn-primary:hover\s*\{[\s\S]*?\}/
+    )?.[0] ?? "";
+  assert(
+    btnPrimaryBlock.length > 0,
+    "app/globals.css defines .btn-primary + :hover"
+  );
+  assert(
+    !carnival.test(btnPrimaryBlock),
+    ".btn-primary shadow path must not hard-code carnival pink/purple RGB"
+  );
+  assert(
+    !lime.test(btnPrimaryBlock),
+    ".btn-primary must not reintroduce competitor lime"
+  );
+  assert(
+    btnPrimaryBlock.includes("var(--grad-cta)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(btnPrimaryBlock),
+    ".btn-primary uses --grad-cta fill + copper board glow rgba(196,165,116)"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );

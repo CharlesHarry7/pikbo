@@ -475,16 +475,17 @@ h1,
   background: var(--grad-cta);
   color: #0a0a0f;
   padding: 0.8rem 1.4rem;
+  /* Gallery copper board glow (AIT-618) — matches ui/button default, not carnival pink */
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-    0 0 28px rgba(255, 78, 205, 0.35);
+    0 0 28px rgba(196, 165, 116, 0.28);
   letter-spacing: -0.01em;
 }
 .btn-primary:hover {
   transform: scale(1.05);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.14) inset,
-    0 0 42px rgba(177, 78, 255, 0.45);
+    0 0 42px rgba(196, 165, 116, 0.38);
 }
 .btn-primary:active {
   transform: scale(0.95);
