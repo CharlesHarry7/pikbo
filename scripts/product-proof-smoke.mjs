@@ -341,6 +341,21 @@ assert(
   );
 }
 
+// AIT-628: JobIntentBar residual competitor lime → gallery-calm copper board
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const jobIntentBar = read("components/JobIntentBar.tsx");
+  assert(
+    !lime.test(jobIntentBar),
+    "JobIntentBar must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    jobIntentBar.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(jobIntentBar),
+    "JobIntentBar selected/hover chip chrome uses --brand + copper glow"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
