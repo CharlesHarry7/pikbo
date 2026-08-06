@@ -60,6 +60,7 @@ assert.match(
 const generateSurfaces = [
   ["components/HomeToolShelf.tsx", "home-tool-shelf"],
   ["components/HomeViralWall.tsx", "home-proof-wall"],
+  ["components/HomeExploreRecipeRail.tsx", "home-explore-rail"],
   ["components/SuiteEntryStrip.tsx", "suite-entry"],
   ["components/HowItWorks.tsx", "how-it-works"],
   ["components/MobileGenerateBar.tsx", "mobile-bar"],
@@ -163,5 +164,88 @@ assert.match(sample, /^\/create\?/);
 assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
+
+// 5. AIT-160 home friction: one primary Generate→360 on proof wall
+const homeWall = read("components/HomeViralWall.tsx");
+assert.match(
+  homeWall,
+  /data-home-primary-generate=["']360["']/,
+  "home proof wall must mark primary Generate as 360"
+);
+assert.match(
+  homeWall,
+  /data-home-primary-generate-cta/,
+  "home proof wall must expose primary Generate CTA marker"
+);
+assert.match(
+  homeWall,
+  /createGenerate360Href\(\s*["']home-proof-wall["']\s*\)/,
+  "home primary Generate must use createGenerate360Href(home-proof-wall)"
+);
+assert.match(
+  homeWall,
+  /is360\s*\?\s*listing360Href/,
+  "360 proof card must deep-link Generate workbench (1-click, no project hop)"
+);
+assert.match(
+  homeWall,
+  /Generate 360°/,
+  "primary Generate CTA label must say Generate 360°"
+);
+
+// 6. Create route must honor 360 (AIT-142) so home→360 is not a dead Moment force
+const createRoute = read("lib/createRouteContract.ts");
+const createPage = read("app/create/page.tsx");
+assert.match(
+  createRoute,
+  /export function resolveCreateRouteContract/,
+  "createRouteContract must resolve generate-workbench vs fixed-moment"
+);
+assert.match(
+  createPage,
+  /resolveCreateRouteContract/,
+  "create page must use resolveCreateRouteContract"
+);
+assert.match(
+  createPage,
+  /data-create-contract=["']generate-workbench["']|data-generate-360/,
+  "create page must mount honest Generate workbench markers"
+);
+
+// 7. AIT-166: Home secondary 360 doors share one createGenerate360Href path
+// (proof wall primary secondary → explore rail → suite rail)
+const exploreRail = read("components/HomeExploreRecipeRail.tsx");
+const suiteRail = read("components/HfProductRail.tsx");
+const homeStack = read("app/page.tsx");
+assert.match(
+  homeStack,
+  /HomeCinemaHero[\s\S]*HomeViralWall[\s\S]*HomeExploreRecipeRail[\s\S]*HfProductRail/,
+  "home stack order: Moment → proof wall → explore rail → suite rail"
+);
+assert.match(
+  exploreRail,
+  /createGenerate360Href\(\s*["']home-explore-rail["']\s*\)/,
+  "explore rail 360 door must use createGenerate360Href(home-explore-rail)"
+);
+assert.match(
+  exploreRail,
+  /data-home-explore-rail-360-direct/,
+  "explore rail 360 card must mark one-tap workbench path"
+);
+assert.match(
+  exploreRail,
+  /is360\s*\?\s*listing360Href/,
+  "explore rail 360 card must deep-link Generate workbench"
+);
+assert.match(
+  suiteRail,
+  /createGenerate360Href\(\s*["']hf-product-rail["']\s*\)/,
+  "suite rail Generate must use createGenerate360Href(hf-product-rail)"
+);
+assert.match(
+  suiteRail,
+  /data-home-suite-360/,
+  "suite rail must expose secondary Generate 360 marker"
+);
 
 console.log("generate-360-cta-smoke: ok");
