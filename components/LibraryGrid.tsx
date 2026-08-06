@@ -294,6 +294,28 @@ function parseDeepLinkJobId(raw: string | null): string | null {
   return LIBRARY_JOB_ID_RE.test(id) ? id : null;
 }
 
+/**
+ * AIT-561: one sticky primary per owner-card state (parity with Create /
+ * Landing / BatchStudio result folds). Exactly one of download | retry |
+ * new-attempt may win as btn-primary; secondary hops stay ghost.
+ *
+ * Priority:
+ * 1. succeeded → Download video (owner list already gates downloadAllowed)
+ * 2. terminal local failure → Retry Moment
+ * 3. durable terminal failure → New attempt (controlled handoff when bound)
+ * 4. open cancelable → no primary (Cancel stays ghost)
+ */
+type LibraryOwnerCardPrimary = "download" | "retry" | "new-attempt" | "none";
+
+function resolveLibraryOwnerCardPrimary(
+  job: GenerationJob
+): LibraryOwnerCardPrimary {
+  if (job.status === "succeeded") return "download";
+  if (isRetryable(job.status) && canLocalRetry(job)) return "retry";
+  if (canNewAttempt(job)) return "new-attempt";
+  return "none";
+}
+
 function JobActionRow({
   job,
   forkingId,
@@ -315,33 +337,50 @@ function JobActionRow({
     null,
     remixOptsFromRecord(job)
   );
+  const primary = resolveLibraryOwnerCardPrimary(job);
+  const showDownload = primary === "download";
+  const showRetry = primary === "retry";
+  const showNewAttempt = primary === "new-attempt";
+  // Secondary hop: remix / generate-again when the primary is not already a
+  // Create handoff (new-attempt owns that door). Open jobs keep Cancel only.
+  const showGenerateAgain =
+    !isOpen(job.status) && primary !== "new-attempt";
+
   return (
-    <div className="mt-4 flex flex-wrap gap-2">
-      {job.status === "succeeded" ? (
+    <div
+      className="mt-4 flex flex-wrap gap-2"
+      data-library-card-primary={primary}
+      data-library-action-row="owner"
+    >
+      {showDownload ? (
         <button
           type="button"
           onClick={() => onDownload(job)}
           className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs"
+          data-library-action="download"
+          data-library-primary="download"
         >
           Download video
         </button>
       ) : null}
-      {isRetryable(job.status) && canLocalRetry(job) ? (
+      {showRetry ? (
         <button
           type="button"
           onClick={() => onRetry(job)}
           disabled={forkingId === job.id}
           className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs disabled:opacity-50"
           data-library-action="retry"
+          data-library-primary="retry"
         >
           {forkingId === job.id ? "Preparing…" : "Retry Moment"}
         </button>
       ) : null}
-      {canNewAttempt(job) ? (
+      {showNewAttempt ? (
         <Link
           href={newAttemptHref(job)}
           className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
           data-library-action="new-attempt"
+          data-library-primary="new-attempt"
           data-library-new-attempt={
             acceptedSamePhotoHandoff(job) ? "same-photo" : "generic"
           }
@@ -355,14 +394,16 @@ function JobActionRow({
           onClick={() => onCancel(job)}
           disabled={cancellingId === job.id}
           className="btn btn-ghost min-h-11 !px-4 !py-2 text-xs disabled:opacity-50"
+          data-library-action="cancel"
         >
           {cancellingId === job.id ? "Canceling…" : "Cancel"}
         </button>
       ) : null}
-      {!isOpen(job.status) && !canNewAttempt(job) ? (
+      {showGenerateAgain ? (
         <Link
           href={remixHref}
           className="btn btn-ghost min-h-11 flex-1 !px-4 !py-2 text-center text-xs"
+          data-library-action="generate-again"
         >
           Generate again
         </Link>

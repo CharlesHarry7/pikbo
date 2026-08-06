@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-254 / AIT-274 /
- * AIT-477 / AIT-485 / AIT-506 / AIT-522 / AIT-523:
- * Library owner-safe recovery.
+ * AIT-477 / AIT-485 / AIT-506 / AIT-522 / AIT-523 / AIT-561:
+ * Library owner-safe recovery + owner-card one-primary residual.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped list/detail, non-owner deny (no metadata leak),
@@ -252,6 +252,75 @@ assert.match(library, /data-library-action="new-attempt"/);
 assert.match(library, /canLocalRetry\(job\)/);
 assert.match(library, /canNewAttempt\(job\)/);
 assert.match(library, /DURABLE_USE_NEW_ATTEMPT/);
+
+// ─── AIT-561: Library owner-card one-primary residual ──────────────────────
+// Parity with Create/Landing/BatchStudio result folds: exactly one sticky
+// primary per card state; secondary hops (Generate again / Cancel) stay ghost.
+assert.match(
+  library,
+  /function resolveLibraryOwnerCardPrimary/,
+  "AIT-561: owner-card primary resolver must exist"
+);
+assert.match(
+  library,
+  /data-library-card-primary=\{primary\}/,
+  "AIT-561: action row must expose data-library-card-primary"
+);
+assert.match(
+  library,
+  /data-library-primary="download"/,
+  "AIT-561: succeeded Download must mark data-library-primary"
+);
+assert.match(
+  library,
+  /data-library-primary="retry"/,
+  "AIT-561: local Retry must mark data-library-primary"
+);
+assert.match(
+  library,
+  /data-library-primary="new-attempt"/,
+  "AIT-561: durable New attempt must mark data-library-primary"
+);
+assert.match(
+  library,
+  /data-library-action="generate-again"/,
+  "AIT-561: Generate again secondary must stay marked"
+);
+// Succeeded path: Download is the only primary candidate — never dual with New attempt.
+assert.match(
+  library,
+  /if \(job\.status === ["']succeeded["']\) return ["']download["']/,
+  "AIT-561: succeeded owner cards resolve to download primary"
+);
+// New attempt only wins when it is the resolved primary (not alongside Download).
+assert.match(
+  library,
+  /const showNewAttempt = primary === ["']new-attempt["']/,
+  "AIT-561: New attempt CTA only when primary resolves to new-attempt"
+);
+assert.match(
+  library,
+  /const showDownload = primary === ["']download["']/,
+  "AIT-561: Download CTA only when primary resolves to download"
+);
+// Secondary generate-again must never compete as primary (btn-ghost only).
+assert.match(
+  library,
+  /data-library-action="generate-again"[\s\S]{0,80}btn btn-ghost|className="btn btn-ghost[\s\S]{0,120}data-library-action="generate-again"/,
+  "AIT-561: Generate again must stay btn-ghost (secondary hop)"
+);
+// Count: JobActionRow body should not emit two btn-primary siblings for the same state.
+// Guard: download / retry / new-attempt primaries are mutually exclusive via `primary ===`.
+assert.doesNotMatch(
+  library,
+  /showDownload[\s\S]{0,40}btn btn-primary[\s\S]{0,400}showNewAttempt[\s\S]{0,40}btn btn-primary[\s\S]{0,80}showDownload/,
+  "AIT-561: must not interleave download+new-attempt dual primaries"
+);
+assert.match(
+  library,
+  /primary !== ["']new-attempt["']/,
+  "AIT-561: generate-again suppressed when new-attempt owns the Create door"
+);
 // AIT-254 / AIT-523: client Retry attaches Bearer via ownerRecoveryFetch
 // (privateDownloadHeaders inside the shared wall-clock helper).
 assert.match(
