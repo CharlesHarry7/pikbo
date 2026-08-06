@@ -1,5 +1,5 @@
 /**
- * AIT-155: Create same-photo assetId handoff — fail-closed contracts.
+ * AIT-155 / AIT-238: Create same-photo assetId handoff — fail-closed contracts.
  *
  * Library opens:
  *   /create?mode=moment&effect=street-power-up&source=library&assetId=<uuid>
