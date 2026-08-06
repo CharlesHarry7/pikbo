@@ -2578,12 +2578,17 @@ assert.match(
 );
 assert.match(
   batchStudio,
-  /pb-\[var\(--sticky-generate-pad-safe\)\]|pb-\[var\(--sticky-generate-pad\)\]/
+  /pb-\[var\(--sticky-generate-pad-safe\)\]|pb-\[var\(--sticky-generate-pad\)\]|pb-\[var\(--sticky-generate-wait-pad\)\]/
 );
 assert.match(
   createStudio,
-  /pb-\[var\(--sticky-generate-pad-safe\)\]|pb-\[var\(--sticky-generate-pad\)\]/
+  /pb-\[var\(--sticky-generate-pad-safe\)\]|pb-\[var\(--sticky-generate-pad\)\]|pb-\[var\(--sticky-generate-wait-pad-safe\)\]|pb-\[var\(--sticky-generate-wait-pad\)\]/
 );
+// AIT-215: busy / pack-running switches to taller wait chrome
+assert.match(createStudio, /sticky-generate-wait-pad/);
+assert.match(batchStudio, /sticky-generate-wait-pad/);
+assert.match(createStudio, /data-create-sticky-chrome/);
+assert.match(batchStudio, /data-batch-sticky-chrome/);
 assert.match(appShell, /hideMobileNav/);
 assert.match(appShell, /fixedMomentEntry/);
 assert.match(appShell, /data-mobile-nav=["']primary["']/);

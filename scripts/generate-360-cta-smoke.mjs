@@ -373,20 +373,73 @@ assert.match(
   "globals must define --mobile-generate-bar-pad for Library / browse last-row clearance"
 );
 
+// 8b. AIT-215 — busy wait-strip is taller than idle Generate; split chrome + pad tokens
+assert.match(
+  globalsCss,
+  /--sticky-generate-wait-chrome-h:\s*10\.5rem/,
+  "globals must size wait-strip chrome taller than idle Generate (AIT-215)"
+);
+assert.match(
+  globalsCss,
+  /--sticky-generate-wait-pad:\s*calc\(\s*var\(--sticky-generate-wait-chrome-h\)/,
+  "globals must define --sticky-generate-wait-pad = wait chrome + mobile-nav-clearance"
+);
+assert.match(
+  globalsCss,
+  /--sticky-generate-wait-pad-safe:\s*calc\(\s*var\(--sticky-generate-wait-chrome-h\)/,
+  "globals must define --sticky-generate-wait-pad-safe = wait chrome + floating-cta-safe-bottom"
+);
+assert.ok(
+  (() => {
+    const idle = globalsCss.match(
+      /--sticky-generate-chrome-h:\s*([\d.]+)rem/
+    );
+    const wait = globalsCss.match(
+      /--sticky-generate-wait-chrome-h:\s*([\d.]+)rem/
+    );
+    return (
+      idle &&
+      wait &&
+      parseFloat(wait[1]) > parseFloat(idle[1])
+    );
+  })(),
+  "wait chrome height must be strictly taller than idle chrome"
+);
+
 assert.match(
   createStudio,
-  /fixedMomentContract\s*\?[\s\S]{0,320}pb-\[var\(--sticky-generate-pad-safe\)\]/,
-  "fixed Moment CreateStudio content must use --sticky-generate-pad-safe"
+  /pb-\[var\(--sticky-generate-pad-safe\)\]/,
+  "fixed Moment CreateStudio idle content must use --sticky-generate-pad-safe"
 );
 assert.match(
   createStudio,
-  /:\s*[\s\S]{0,160}pb-\[var\(--sticky-generate-pad\)\]/,
-  "tab-sharing CreateStudio content must use --sticky-generate-pad (not bare pb-36)"
+  /pb-\[var\(--sticky-generate-pad\)\]/,
+  "tab-sharing CreateStudio idle content must use --sticky-generate-pad (not bare pb-36)"
 );
 assert.match(
   createStudio,
-  /data-create-content-pad=\{\s*fixedMomentContract\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
-  "CreateStudio content pad branch must be smoke-visible (safe-bottom | mobile-nav)"
+  /pb-\[var\(--sticky-generate-wait-pad-safe\)\]/,
+  "busy fixed Moment CreateStudio must pad with --sticky-generate-wait-pad-safe"
+);
+assert.match(
+  createStudio,
+  /pb-\[var\(--sticky-generate-wait-pad\)\]/,
+  "busy tab-sharing CreateStudio must pad with --sticky-generate-wait-pad"
+);
+assert.match(
+  createStudio,
+  /data-create-sticky-chrome=\{busy \? ["']wait["'] : ["']idle["']\}/,
+  "CreateStudio must expose idle|wait chrome marker for smoke"
+);
+assert.match(
+  createStudio,
+  /["']wait-safe-bottom["']|["']wait-mobile-nav["']/,
+  "CreateStudio content pad kind must include wait branches when busy"
+);
+assert.match(
+  createStudio,
+  /GenerateWaitMobileStrip/,
+  "CreateStudio busy sticky must mount GenerateWaitMobileStrip"
 );
 assert.match(
   createStudio,
@@ -402,6 +455,11 @@ assert.doesNotMatch(
   createStudio,
   /\bpb-36\b|\bpb-32\b/,
   "CreateStudio sticky path must not use bare pb-32 / pb-36 (use clearance tokens)"
+);
+assert.doesNotMatch(
+  createStudio,
+  /bottom-\[4\.75rem\]/,
+  "CreateStudio must not reintroduce bare bottom-[4.75rem]"
 );
 
 const createPageSrc = read("app/create/page.tsx");
@@ -423,18 +481,38 @@ assert.doesNotMatch(
 
 assert.match(
   batchStudio,
-  /isSellerPack\s*\?[\s\S]{0,320}pb-\[var\(--sticky-generate-pad-safe\)\]/,
+  /pb-\[var\(--sticky-generate-pad-safe\)\]/,
   "nav-less Seller Pack content pad must use --sticky-generate-pad-safe"
 );
 assert.match(
   batchStudio,
-  /data-batch-content-pad=\{\s*isSellerPack\s*\?\s*["']safe-bottom["']\s*:\s*["']mobile-nav["']\s*\}/,
-  "BatchStudio content pad branch must be smoke-visible"
+  /pb-\[var\(--sticky-generate-wait-pad\)\]/,
+  "custom-batch running content must use --sticky-generate-wait-pad (wait strip)"
+);
+assert.match(
+  batchStudio,
+  /data-batch-sticky-chrome=\{batchWaitStripPad \? ["']wait["'] : ["']idle["']\}/,
+  "BatchStudio must expose idle|wait chrome marker when wait strip mounts"
+);
+assert.match(
+  batchStudio,
+  /["']wait-mobile-nav["']/,
+  "BatchStudio content pad kind must include wait-mobile-nav when pack-running strip mounts"
+);
+assert.match(
+  batchStudio,
+  /GenerateWaitMobileStrip/,
+  "BatchStudio custom-batch running sticky must mount GenerateWaitMobileStrip"
 );
 assert.doesNotMatch(
   batchStudio,
-  /className=\{\s*[\s\S]{0,80}\bpb-32\b|\bpb-36\b/,
+  /\bpb-32\b|\bpb-36\b/,
   "BatchStudio content pad must not hardcode bare pb-32 / pb-36"
+);
+assert.doesNotMatch(
+  batchStudio,
+  /bottom-\[4\.75rem\]/,
+  "BatchStudio must not reintroduce bare bottom-[4.75rem]"
 );
 
 const libraryPage = read("app/library/page.tsx");

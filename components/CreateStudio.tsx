@@ -1820,18 +1820,30 @@ export function CreateStudio({
     });
   }, [image, effect, demoMode, effectiveDuration, aspectRatio]);
 
+  // AIT-215: busy mounts GenerateWaitMobileStrip (taller than idle Generate /
+  // "Generate again") — content pad must switch to wait-chrome tokens.
+  const createContentPadClass = busy
+    ? fixedMomentContract
+      ? "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-wait-pad-safe)] lg:min-h-screen lg:pb-0"
+      : "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-wait-pad)] lg:min-h-screen lg:pb-0"
+    : fixedMomentContract
+      ? // Nav-less fixed Moment idle/done: sticky chrome + --floating-cta-safe-bottom
+        "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-pad-safe)] lg:min-h-screen lg:pb-0"
+      : // Tab-sharing Create idle/done: sticky chrome + --mobile-nav-clearance
+        "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-pad)] lg:min-h-screen lg:pb-0";
+  const createContentPadKind = busy
+    ? fixedMomentContract
+      ? "wait-safe-bottom"
+      : "wait-mobile-nav"
+    : fixedMomentContract
+      ? "safe-bottom"
+      : "mobile-nav";
+
   return (
     <div
-      className={
-        fixedMomentContract
-          ? // Nav-less fixed Moment: sticky chrome + --floating-cta-safe-bottom only
-            "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-pad-safe)] lg:min-h-screen lg:pb-0"
-          : // Tab-sharing Create: sticky chrome + --mobile-nav-clearance
-            "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-pad)] lg:min-h-screen lg:pb-0"
-      }
-      data-create-content-pad={
-        fixedMomentContract ? "safe-bottom" : "mobile-nav"
-      }
+      className={createContentPadClass}
+      data-create-content-pad={createContentPadKind}
+      data-create-sticky-chrome={busy ? "wait" : "idle"}
     >
       {/* Suite chrome: desktop only — mobile uses bottom nav + Modules shelf */}
       {!fixedMomentContract && (

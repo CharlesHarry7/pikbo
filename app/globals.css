@@ -81,22 +81,34 @@
   --floating-generate-z: 40;
 
   /*
-   * Content scroll pads under sticky Generate / Create CTAs (AIT-175).
-   * Sticky chrome ≈ optional status line + primary btn + vertical padding.
-   * Pair with the same clearance the sticky uses (tab-sharing vs nav-less).
+   * Content scroll pads under sticky Generate / Create CTAs (AIT-175 / AIT-215).
+   * Idle/done chrome ≈ optional status line + primary btn + vertical padding.
+   * Busy wait-strip (GenerateWaitMobileStrip) is taller: status + progress +
+   * cancel (+ optional leave-to-library). Pair with the same clearance the
+   * sticky uses (tab-sharing vs nav-less).
    */
   --sticky-generate-chrome-h: 5.75rem;
+  /* Busy strip: title + bar + cancel (+ leave) + sticky py-2.5 + optional quote. */
+  --sticky-generate-wait-chrome-h: 10.5rem;
   /* Tab-sharing sticky (CreateStudio generic / Modules sticky / Batch tab path). */
   --sticky-generate-pad: calc(
     var(--sticky-generate-chrome-h) + var(--mobile-nav-clearance)
+  );
+  --sticky-generate-wait-pad: calc(
+    var(--sticky-generate-wait-chrome-h) + var(--mobile-nav-clearance)
   );
   /* Nav-less sticky (fixed Moment Create / Seller Pack) — no residual tab height. */
   --sticky-generate-pad-safe: calc(
     var(--sticky-generate-chrome-h) + var(--floating-cta-safe-bottom)
   );
+  --sticky-generate-wait-pad-safe: calc(
+    var(--sticky-generate-wait-chrome-h) + var(--floating-cta-safe-bottom)
+  );
   /* Alias used by nav-less Create / Seller Pack content (AIT-144 / AIT-145). */
   --create-sticky-chrome-h: var(--sticky-generate-chrome-h);
   --create-content-pad-safe: var(--sticky-generate-pad-safe);
+  --create-sticky-wait-chrome-h: var(--sticky-generate-wait-chrome-h);
+  --create-content-wait-pad-safe: var(--sticky-generate-wait-pad-safe);
   /*
    * MobileGenerateBar is a floating pill row (not full sticky chrome).
    * Library / explore / pricing / models / flow last rows clear bar + tab.

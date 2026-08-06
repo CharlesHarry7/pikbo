@@ -1659,18 +1659,28 @@ export function BatchStudio({
     </div>
   );
 
+  // AIT-215: custom-batch running mounts GenerateWaitMobileStrip — use wait chrome.
+  // Seller Pack running uses a compact side-by-side cancel (idle chrome height).
+  const batchWaitStripPad = running && !sellerPackActive;
+  const batchContentPadClass = isSellerPack
+    ? "mt-4 grid gap-4 pb-[var(--sticky-generate-pad-safe)] text-[#111827] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-5 lg:pb-0"
+    : batchWaitStripPad
+      ? "mt-8 grid gap-6 pb-[var(--sticky-generate-wait-pad)] lg:grid-cols-[1fr_1.1fr] lg:pb-0"
+      : sellerPackActive
+        ? "mt-4 grid gap-4 pb-[var(--sticky-generate-pad)] text-[#111827] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-5 lg:pb-0"
+        : "mt-8 grid gap-6 pb-[var(--sticky-generate-pad)] lg:grid-cols-[1fr_1.1fr] lg:pb-0";
+  const batchContentPadKind = isSellerPack
+    ? "safe-bottom"
+    : batchWaitStripPad
+      ? "wait-mobile-nav"
+      : "mobile-nav";
+
   return (
     <div
-      className={
-        // AIT-175: content pad = sticky chrome + matching clearance token
-        isSellerPack
-          ? "mt-4 grid gap-4 pb-[var(--sticky-generate-pad-safe)] text-[#111827] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-5 lg:pb-0"
-          : sellerPackActive
-            ? "mt-4 grid gap-4 pb-[var(--sticky-generate-pad)] text-[#111827] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-5 lg:pb-0"
-            : "mt-8 grid gap-6 pb-[var(--sticky-generate-pad)] lg:grid-cols-[1fr_1.1fr] lg:pb-0"
-      }
+      className={batchContentPadClass}
       data-launch-workspace={sellerPackActive ? "seller-pack" : undefined}
-      data-batch-content-pad={isSellerPack ? "safe-bottom" : "mobile-nav"}
+      data-batch-content-pad={batchContentPadKind}
+      data-batch-sticky-chrome={batchWaitStripPad ? "wait" : "idle"}
     >
       <div className="space-y-4">
         {sellerPackActive && meResolved && !privateLaunchEnabled ? (
