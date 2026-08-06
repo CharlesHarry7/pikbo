@@ -205,7 +205,10 @@ export default function ModulesPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] pb-28 lg:pb-0">
+    <div
+      className="min-h-[calc(100vh-3.5rem)] pb-[var(--sticky-generate-pad)] lg:pb-0"
+      data-modules-content-pad="sticky-generate"
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}

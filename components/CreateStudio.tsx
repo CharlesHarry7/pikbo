@@ -1821,7 +1821,18 @@ export function CreateStudio({
   }, [image, effect, demoMode, effectiveDuration, aspectRatio]);
 
   return (
-    <div className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0">
+    <div
+      className={
+        fixedMomentContract
+          ? // Nav-less fixed Moment: sticky chrome + --floating-cta-safe-bottom only
+            "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-pad-safe)] lg:min-h-screen lg:pb-0"
+          : // Tab-sharing Create: sticky chrome + --mobile-nav-clearance
+            "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-pad)] lg:min-h-screen lg:pb-0"
+      }
+      data-create-content-pad={
+        fixedMomentContract ? "safe-bottom" : "mobile-nav"
+      }
+    >
       {/* Suite chrome: desktop only — mobile uses bottom nav + Modules shelf */}
       {!fixedMomentContract && (
         <div className="hidden lg:block">
@@ -3711,11 +3722,20 @@ export function CreateStudio({
         </section>
       </div>
 
-      {/* ── Sticky mobile primary CTA — above AppShell tab nav ── */}
+      {/* ── Sticky mobile primary CTA
+          Nav-less fixed Moment → --floating-cta-safe-bottom (no ghost tab).
+          Tab-sharing Create → --mobile-nav-clearance (tab + home indicator). */}
       <div
-        className="fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+        className={
+          fixedMomentContract
+            ? "fixed inset-x-0 bottom-[var(--floating-cta-safe-bottom)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+            : "fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+        }
         data-create-sticky="mobile"
         data-floating-generate="create-sticky"
+        data-create-sticky-clearance={
+          fixedMomentContract ? "safe-bottom" : "mobile-nav"
+        }
       >
         {image ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">

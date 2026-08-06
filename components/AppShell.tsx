@@ -78,6 +78,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     path.startsWith("/supercomputer") ||
     path.startsWith("/explore") ||
     path.startsWith("/community");
+  // AIT-175 / AIT-141: hide five-door tab on fixed Moment entry + Seller Pack so
+  // sticky CTAs can sit on --floating-cta-safe-bottom without a ghost tab gap.
+  const hideMobileNav = resultShell || fixedMomentEntry || sellerPackCreate;
 
   useEffect(() => {
     trackPageView(path);
@@ -328,7 +331,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       {/* Sticky Generate→360 on browse surfaces (explore/library/pricing/models/flow…).
           Self-gates via showBar; clearance uses --mobile-nav-clearance (AIT-150 / AIT-71). */}
       <MobileGenerateBar />
-      {!resultShell && !sellerPackCreate ? (
+      {!hideMobileNav ? (
         <nav
           data-mobile-nav="primary"
           className={cn(
