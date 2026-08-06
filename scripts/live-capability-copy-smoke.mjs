@@ -51,6 +51,24 @@ const forbiddenUnconditional = [
   /Free Mini trial(?:\s*[—·,:-]|\s+with|\s+for|\s*$)/i,
 ];
 
+/** Longform SEO surfaces (tools / for / guides) — no public Free Mini live trial promises. */
+const longformSeoFiles = ["lib/tools.ts", "lib/usecases.ts", "lib/guides.ts"];
+
+const forbiddenLongformFreeMini = [
+  /Soft launch Free Mini/i,
+  /Free Mini caps apply/i,
+  /Free Mini clips are/i,
+  /Free Mini teasers are/i,
+  /Free Mini validates/i,
+  /Run Free Mini or a live job/i,
+  /Seedance Mini on Free Mini/i,
+  /Free Mini is 5s/i,
+  /Free Mini is enough/i,
+  /Free Mini:\s*~?5s/i,
+  /Free Mini · 5s · 480p/i,
+  /cookie period is exhausted/i,
+];
+
 for (const relativePath of publicPromiseFiles) {
   const source = read(relativePath);
   for (const pattern of forbiddenUnconditional) {
@@ -59,6 +77,22 @@ for (const relativePath of publicPromiseFiles) {
       `${relativePath} contains unconditional public promise ${pattern}`
     );
   }
+}
+
+for (const relativePath of longformSeoFiles) {
+  const source = read(relativePath);
+  for (const pattern of forbiddenLongformFreeMini) {
+    assert(
+      !pattern.test(source),
+      `${relativePath} contains residual Free Mini live promise ${pattern}`
+    );
+  }
+  assert(
+    source.includes("When Live is enabled for an eligible account") ||
+      source.includes("cached Lab") ||
+      source.includes("Lab prototype"),
+    `${relativePath} must keep conditional Live / cached Lab honesty language`
+  );
 }
 
 assert(
@@ -109,6 +143,34 @@ assert(
     "Private generation and subscriptions remain closed while quality, recovery, and cost are validated."
   ),
   "rank tool must keep private generation and subscriptions closed during validation"
+);
+assert(
+  rankToolSource.includes(
+    "Public path is a cached Lab prototype at 0 credits"
+  ) &&
+    rankToolSource.includes(
+      "When Live is enabled for an eligible account, Generate shows the exact duration"
+    ),
+  "tools longform must describe Lab public path and condition clip length on Live"
+);
+assert(
+  read("lib/guides.ts").includes(
+    "The public free path is a cached Pikbo Lab prototype at 0 credits"
+  ) &&
+    read("lib/guides.ts").includes(
+      "When Live is enabled for an eligible account, Generate shows the configured model"
+    ) &&
+    !read("lib/guides.ts").includes("Run Free Mini or a live job"),
+  "guides free-path article must keep Lab public path and conditional Live quotes"
+);
+assert(
+  read("lib/usecases.ts").includes(
+    "Public validation uses cached Lab prototypes at 0 credits"
+  ) &&
+    read("lib/usecases.ts").includes(
+      "Live jobs remain gated until your account is eligible"
+    ),
+  "usecases longform must keep Lab public path and gated Live language"
 );
 
 function walkHtml(directory) {
