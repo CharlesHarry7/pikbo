@@ -267,9 +267,32 @@ export function interpretImageResponse(
   };
 }
 
+/** Bearer when available so cancel can resolve owner durable UUIDs. */
+async function imageAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (typeof window === "undefined") return headers;
+  try {
+    const { getSupabaseBrowser } = await import("@/lib/supabase/browser");
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return headers;
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (token) headers.Authorization = `Bearer ${token}`;
+  } catch {
+    /* guest path */
+  }
+  return headers;
+}
+
 /**
  * Best-effort still ledger cancel (DELETE /api/image).
  * Soft-launch Flux may still complete server-side; complete wins over cancel.
+ *
+ * Bearer is attached when available so collection/item DELETE can return
+ * DURABLE_NO_CANCEL for owner durable UUIDs (AIT-485) instead of a bare
+ * NOT_FOUND that looks like a missing process-memory row.
  */
 export async function cancelImageLedger(opts: {
   jobId?: string;
@@ -280,12 +303,22 @@ export async function cancelImageLedger(opts: {
     if (opts.jobId) payload.jobId = opts.jobId;
     if (opts.idempotencyKey) payload.idempotencyKey = opts.idempotencyKey;
     if (!payload.jobId && !payload.idempotencyKey) return;
-    await fetch("/api/image", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      keepalive: true,
-    });
+    const auth = await imageAuthHeaders();
+    // Prefer collection DELETE (idempotencyKey); fall back to /[id] when only jobId.
+    if (payload.idempotencyKey || !payload.jobId) {
+      await fetch("/api/image", {
+        method: "DELETE",
+        headers: auth,
+        body: JSON.stringify(payload),
+        keepalive: true,
+      });
+    } else {
+      await fetch(`/api/image/${encodeURIComponent(payload.jobId)}`, {
+        method: "DELETE",
+        headers: { ...auth },
+        keepalive: true,
+      });
+    }
   } catch {
     /* ignore — client already treats as cancel/refund unconfirmed */
   }

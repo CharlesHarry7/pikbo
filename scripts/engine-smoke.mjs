@@ -4857,6 +4857,27 @@ assert.match(imageRouteHead, /prior\.status === "canceled"/);
 assert.match(imageClientSrc, /cancelImageLedger/);
 assert.match(imageClientSrc, /method:\s*["']DELETE["']/);
 assert.match(imageClientSrc, /keepalive:\s*true/);
+// AIT-485: mid-POST still cancel attaches Bearer for durable owner UUID honesty.
+assert.match(imageClientSrc, /Authorization|access_token|getSupabaseBrowser/);
+assert.match(imageRouteHead, /DURABLE_NO_CANCEL/);
+assert.match(imageRouteHead, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(imageRouteHead, /getPrivateLibraryJobForOwner/);
+assert.match(
+  fs.readFileSync(join(root, "app/api/image/[id]/route.ts"), "utf8"),
+  /DURABLE_NO_CANCEL/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/image/[id]/route.ts"), "utf8"),
+  /DURABLE_DETAIL_UNAVAILABLE/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/api/image/[id]/route.ts"), "utf8"),
+  /getPrivateLibraryJobForOwner/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /DURABLE_NO_CANCEL/
+);
 assert.match(
   fs.readFileSync(join(root, "lib/createTrust.ts"), "utf8"),
   /downloadPolicyLabel|downloadBlockedCtaLabel/
