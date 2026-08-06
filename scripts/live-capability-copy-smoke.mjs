@@ -301,6 +301,19 @@ for (const relativePath of [
     `${relativePath}: "~N Free Mini left" must be gated by freeLiveOpen`
   );
 }
+// AIT-281: FreeTrialCta off residual competitor lime (board tokens)
+{
+  const freeTrialCta = read("components/FreeTrialCta.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(freeTrialCta),
+    "FreeTrialCta must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    freeTrialCta.includes("var(--mint)") &&
+      freeTrialCta.includes("color-mix(in_srgb,var(--mint)"),
+    "FreeTrialCta primary fill + glow use var(--mint) / color-mix board tokens"
+  );
+}
 
 // Community must stay fail-closed on fake UGC (no invented posts/likes).
 const community = read("app/community/page.tsx");
