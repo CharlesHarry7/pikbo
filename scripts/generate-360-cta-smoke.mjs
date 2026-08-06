@@ -59,6 +59,7 @@ assert.match(
 // 2. Key Generate surfaces import / call the helper
 const generateSurfaces = [
   ["components/HomeToolShelf.tsx", "home-tool-shelf"],
+  ["components/HomeCinemaHero.tsx", "home-hero"],
   ["components/HomeViralWall.tsx", "home-proof-wall"],
   ["components/HomeExploreRecipeRail.tsx", "home-explore-rail"],
   ["components/SuiteEntryStrip.tsx", "suite-entry"],
@@ -267,6 +268,69 @@ assert.match(
   suiteRail,
   /border border-white\/20/,
   "suite rail FreeTrial strip must be secondary outline"
+);
+
+// 8. AIT-192: Home→360 continuity after Studio open honesty
+// Hero keeps Moment primary (product) but exposes above-fold Generate→360 so
+// mobile does not rely only on the below-fold proof wall.
+const homeHero = read("components/HomeCinemaHero.tsx");
+assert.match(
+  homeHero,
+  /createGenerate360Href\(\s*["']home-hero["']\s*\)/,
+  "home hero must deep-link Generate 360 via createGenerate360Href(home-hero)"
+);
+assert.match(
+  homeHero,
+  /data-home-hero-360-cta/,
+  "home hero must expose above-fold Generate 360 CTA marker"
+);
+assert.match(
+  homeHero,
+  /Generate 360° listing spin/,
+  "home hero 360 CTA must be result-first (listing spin), not generic Generate"
+);
+assert.match(
+  homeHero,
+  /data-home-moment-cta/,
+  "home hero Moment primary CTA remains (product contract)"
+);
+assert.equal(
+  (homeHero.match(/data-home-moment-cta/g) || []).length,
+  1,
+  "home hero must keep exactly one Moment primary CTA"
+);
+// HfExploreHome residual: no bare street-power-up; primary Generate = 360
+const hfExplore = read("components/HfExploreHome.tsx");
+assert.match(
+  hfExplore,
+  /createGenerate360Href\(\s*["']hf-explore["']\s*\)/,
+  "HfExploreHome must use createGenerate360Href(hf-explore)"
+);
+assert.match(
+  hfExplore,
+  /data-hf-explore-primary-generate=["']360["']/,
+  "HfExploreHome primary Generate must mark 360"
+);
+assert.match(
+  hfExplore,
+  /Generate 360° listing spin/,
+  "HfExploreHome primary Generate label must be result-first"
+);
+assert.doesNotMatch(
+  hfExplore,
+  /href=["']\/create\?effect=street-power-up["']/,
+  "HfExploreHome must not use bare street-power-up create hrefs"
+);
+assert.match(
+  hfExplore,
+  /MOMENT_CREATE_HREF/,
+  "HfExploreHome Moment doors must use MOMENT_CREATE_HREF"
+);
+// Home entry file: money-path stack keeps proof wall + suite 360 doors
+assert.match(
+  homeStack,
+  /HomeCinemaHero[\s\S]*HomeViralWall[\s\S]*HfProductRail/,
+  "home entry must compose Moment hero → proof wall → suite rail"
 );
 
 console.log("generate-360-cta-smoke: ok");
