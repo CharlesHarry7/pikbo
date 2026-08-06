@@ -285,6 +285,20 @@ assert(
   );
 }
 
+// AIT-577: Explore discovery page residual competitor lime → gallery-calm copper
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const explorePage = read("app/explore/page.tsx");
+  assert(
+    !lime.test(explorePage),
+    "app/explore/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    explorePage.includes("var(--brand)"),
+    "Explore page eyebrows/CTAs/path accents use --brand copper"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
