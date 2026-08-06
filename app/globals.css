@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
-/* ---------- Pikbo · Pop Mart / designer-toy visual system ----------
-   8-color blind-box palette. Existing --mint/--brand aliases remapped so
-   product surfaces inherit the new language without rewriting every file.
+/* ---------- Pikbo · Collectible Gold (≠ Higgsfield pink neon) ----------
+   Deep ink + antique gold + soft glass teal. Aliases --mint/--neon-pink/--brand
+   so suite surfaces inherit without rewriting every file.
+   Boss 2026-08: HF layout OK · color system must be our own 潮玩 board.
 ---------------------------------------------------------------- */
 :root {
   /* Offline-safe faces — geometric display + human body.
@@ -12,53 +13,55 @@
   --font-display: "Plus Jakarta Sans", "Avenir Next", "Segoe UI", ui-sans-serif,
     system-ui, -apple-system, sans-serif;
 
-  /* Gallery / collectible board — calm, not carnival neon
-     Boss feedback 2026-08: less vivid, museum vinyl shelf energy */
+  /* Collectible gold board — not HF magenta, not competitor lime */
+  --collector-gold: #e0b35c;
+  --collector-gold-deep: #b8893a;
+  --glass-teal: #6b9aa8; /* secondary only (360 / info), never rainbow stack */
   --electric-purple: #8b7355; /* warm bronze alias for legacy names */
-  --neon-pink: #c4a574; /* single muted copper accent */
-  --tide-blue: #8a8f98;
-  --lemon: #c4a574;
+  --neon-pink: #e0b35c; /* board accent alias (name legacy · color = gold) */
+  --tide-blue: #6b9aa8;
+  --lemon: #e0b35c;
   --tide-green: #7d8578;
-  --ember: #a67c52;
-  --void: #0e0e10;
-  --cream: #f3efe8;
+  --ember: #c4893a;
+  --void: #08080b;
+  --cream: #f5f0e6;
 
-  /* Surfaces */
-  --bg: #0e0e10;
-  --bg-soft: #161618;
-  --card: #18181b;
-  --card-2: #1f1f23;
-  --border: rgba(243, 239, 232, 0.1);
-  --fg: #f3efe8;
-  --fg-muted: rgba(243, 239, 232, 0.58);
-  --fg-dim: rgba(243, 239, 232, 0.36);
+  /* Surfaces — deep ink studio */
+  --bg: #08080b;
+  --bg-soft: #101014;
+  --card: #141418;
+  --card-2: #1a1a20;
+  --border: rgba(245, 240, 230, 0.1);
+  --fg: #f5f0e6;
+  --fg-muted: rgba(245, 240, 230, 0.58);
+  --fg-dim: rgba(245, 240, 230, 0.36);
 
-  --paper: #f3efe8;
-  /* Single accent — copper / warm metal, not rainbow */
-  --brand: #c4a574;
-  --brand-2: #a89070;
-  --mint: #c4a574;
-  --lime: #9a958c;
+  --paper: #f5f0e6;
+  /* Single accent — antique gold (vinyl shelf metal) */
+  --brand: #e0b35c;
+  --brand-2: #b8893a;
+  --mint: #e0b35c;
+  --lime: #a89878;
 
-  --grad: linear-gradient(135deg, #c4a574 0%, #a89070 100%);
-  --grad-cta: linear-gradient(135deg, #c4a574 0%, #9a7b55 100%);
+  --grad: linear-gradient(135deg, #e0b35c 0%, #b8893a 100%);
+  --grad-cta: linear-gradient(135deg, #e8c06a 0%, #b8893a 100%);
   --grad-soft: linear-gradient(
     135deg,
-    rgba(196, 165, 116, 0.16),
-    rgba(196, 165, 116, 0.04)
+    rgba(224, 179, 92, 0.18),
+    rgba(224, 179, 92, 0.04)
   );
   --grad-aurora: linear-gradient(
     120deg,
-    rgba(196, 165, 116, 0.35) 0%,
-    rgba(138, 143, 152, 0.12) 55%,
-    rgba(14, 14, 16, 0.9) 100%
+    rgba(224, 179, 92, 0.32) 0%,
+    rgba(107, 154, 168, 0.1) 55%,
+    rgba(8, 8, 11, 0.92) 100%
   );
-  --brand-glow: 0 0 28px rgba(196, 165, 116, 0.18);
+  --brand-glow: 0 0 28px rgba(224, 179, 92, 0.22);
 
   --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.04);
   --shadow-md: 0 12px 40px -16px rgba(0, 0, 0, 0.7);
   --shadow-lg: 0 30px 80px -30px rgba(0, 0, 0, 0.85);
-  --shadow-neon: 0 0 0 1px rgba(196, 165, 116, 0.28),
+  --shadow-neon: 0 0 0 1px rgba(224, 179, 92, 0.3),
     0 8px 28px rgba(0, 0, 0, 0.45);
   --radius: 1rem;
 
@@ -125,7 +128,38 @@
   --muted: var(--bg-soft);
   --muted-foreground: var(--fg-muted);
   --accent: rgba(255, 255, 255, 0.06);
-  --ring: rgba(177, 78, 255, 0.55);
+  --ring: rgba(224, 179, 92, 0.45);
+}
+
+/* Home Explore board — gold system explicit on HF layout shell */
+[data-home-layout="hf-1to1"] {
+  --neon-pink: #e0b35c;
+  --mint: #e0b35c;
+  --brand: #e0b35c;
+  --brand-2: #b8893a;
+  color: var(--cream);
+  background: var(--void);
+}
+
+/* Dense wall stills — subtle Ken Burns for scroll-stop without video */
+@keyframes attraction-ken {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.08) translate(-1.5%, -1%);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+}
+.attraction-still {
+  animation: attraction-ken 14s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .attraction-still {
+    animation: none;
+  }
 }
 
 @theme inline {

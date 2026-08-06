@@ -9,25 +9,25 @@ import {
 export const SAMPLE_TOYS = [
   {
     id: "orbit",
-    label: "Orbit float",
+    label: "JP mecha kit",
     path: "/demos/orbit-still.webp",
     effect: "floating-hero",
   },
   {
     id: "moon",
-    label: "Moon box",
+    label: "JP blind box",
     path: "/demos/moon-float.webp",
     effect: "blind-box-unboxing",
   },
   {
     id: "scout",
-    label: "Scout pack",
+    label: "JP anime scale",
     path: "/demos/scout-still.webp",
     effect: "360-spin-showcase",
   },
   {
     id: "beatbot",
-    label: "Beatbot",
+    label: "US urban vinyl",
     path: "/demos/beatbot-still.webp",
     effect: "paparazzi-flash",
   },

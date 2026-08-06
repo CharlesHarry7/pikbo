@@ -70,6 +70,7 @@
     "download-owner-safe-regression": "node scripts/download-owner-safe-regression.mjs",
     "nonprod-seller-pack-harness": "node scripts/nonprod-seller-pack-harness.mjs",
     "nonprod-seller-pack-harness-regression": "node scripts/nonprod-seller-pack-harness-regression.mjs",
+    "provider-seam-regression": "node scripts/provider-seam-regression.mjs",
     "stripe-billing-regression": "node --experimental-strip-types scripts/stripe-billing-regression.mjs",
     "privacy-analytics-regression": "node --experimental-strip-types scripts/privacy-analytics-regression.mjs",
     "community-publish-private-refuse-smoke": "node scripts/community-publish-private-refuse-smoke.mjs",

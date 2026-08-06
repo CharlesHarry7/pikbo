@@ -61,13 +61,15 @@ export function t6ToolingProbe(): T6Report["tooling"] {
 export function t6Report(): T6Report {
   const tooling = t6ToolingProbe();
   const worker = t6WorkerReadiness();
+  const effective = worker.effective;
   return {
-    status: "blocked",
-    fileBake: false,
+    status: effective ? "ready" : "blocked",
+    fileBake: effective,
     playerOverlayIsNotFileWatermark: true,
-    freeLiveRawDownload: "blocked",
-    reason:
-      "No verified server-owned baked derivative exists. Free-plan live raw provider URLs must not be exposed or downloaded; player overlay is not a file watermark.",
+    freeLiveRawDownload: effective ? "allowed" : "blocked",
+    reason: effective
+      ? "Server-owned baked derivative pipeline is configured and enabled."
+      : "No verified server-owned baked derivative exists. Free-plan live raw provider URLs must not be exposed or downloaded; player overlay is not a file watermark.",
     tooling: {
       ...tooling,
       serverOwnedWorkerReady: worker.effective,
@@ -83,5 +85,5 @@ export function t6BlocksFreeLiveDownload(): boolean {
 
 /** Hard false until the server-owned derivative pipeline has actual proof. */
 export function t6AllowsFreeDownloadAttempt(): boolean {
-  return false;
+  return t6WorkerReadiness().effective;
 }

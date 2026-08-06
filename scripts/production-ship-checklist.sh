@@ -56,6 +56,16 @@ else
 fi
 echo
 
+# --- 2b) Provider seam (swappable provider; mock stays fail-closed) ---
+echo "-- 2b) provider seam regression --"
+if node scripts/provider-seam-regression.mjs; then
+  echo "OK   provider seam: no SDK in route, budget guard intact, mock fail-closed"
+else
+  echo "FAIL provider seam"
+  FAIL=1
+fi
+echo
+
 # --- 3) Remote production health honesty ---
 if [[ "$SKIP_REMOTE" == "1" ]]; then
   echo "-- 3) remote /api/health — skipped (SKIP_REMOTE=1) --"

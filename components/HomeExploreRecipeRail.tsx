@@ -56,7 +56,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
             <Link
               href={listing360Href}
               data-home-explore-rail-360
-              className="text-[11px] font-bold text-[#00D9FF] hover:underline"
+              className="text-[11px] font-bold text-[var(--glass-teal)] hover:underline"
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -88,30 +88,26 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
       data-home-explore-rail="lab"
       data-home-explore-rail-count={rail.length}
       aria-labelledby="home-explore-rail-title"
-      className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
+      className="border-b border-white/[0.07] bg-black px-3 py-3.5 sm:px-4"
     >
-      <div className="mx-auto max-w-[1400px]">
-        <div className="mb-3 flex items-end justify-between gap-3">
+      <div className="mx-auto max-w-[1600px]">
+        <div className="mb-2.5 flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--neon-pink)]">
-              Explore · Lab recipes
-            </p>
             <h2
               id="home-explore-rail-title"
-              className="mt-0.5 text-sm font-black tracking-tight text-white sm:text-base"
+              className="text-[13px] font-bold tracking-tight text-white sm:text-sm"
             >
-              Remake a Lab recipe
+              Explore · Lab recipes
             </h2>
-            <p className="mt-0.5 max-w-xl text-[11px] leading-snug text-white/40">
-              Cached prototypes only — swipe, remake with your figure. Not
-              customer results.
+            <p className="mt-0.5 text-[11px] text-white/40">
+              Remake a Lab recipe · cached only
             </p>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+          <div className="flex shrink-0 items-center gap-3">
             <Link
               href={listing360Href}
               data-home-explore-rail-360
-              className="text-[11px] font-bold text-[#00D9FF] hover:underline"
+              className="text-[11px] font-bold text-white/55 hover:text-white hover:underline"
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -136,7 +132,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
         </div>
 
         <div
-          className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           role="list"
         >
           {rail.map((item) => {
@@ -165,10 +161,10 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                     },
                   })
                 }
-                className={`group relative h-[9.5rem] w-[7.5rem] shrink-0 overflow-hidden rounded-2xl border transition duration-200 hover:-translate-y-0.5 sm:h-[11rem] sm:w-[9rem] ${
+                className={`group relative h-[8rem] w-[6.75rem] shrink-0 overflow-hidden rounded-xl border transition duration-200 hover:-translate-y-0.5 sm:h-[9rem] sm:w-[7.5rem] ${
                   is360
-                    ? "border-[#00D9FF]/45 shadow-[0_0_28px_rgba(0,217,255,0.12)]"
-                    : "border-white/10 hover:border-[var(--neon-pink)]/40"
+                    ? "border-white/30 ring-1 ring-white/15"
+                    : "border-white/10 hover:border-white/25"
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -188,7 +184,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                       {badge}
                     </span>
                     {is360 ? (
-                      <span className="inline-flex rounded-full bg-[#00D9FF] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
+                      <span className="inline-flex rounded-full bg-[var(--glass-teal)] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
                         360
                       </span>
                     ) : null}

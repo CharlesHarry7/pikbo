@@ -14,15 +14,18 @@ export function HomeProjectsExplore({
   projects: CommunityProject[];
 }) {
   return (
-    <section className="py-6">
-      <div className="mb-4 flex items-end justify-between gap-3 px-4 sm:px-5">
+    <section
+      className="border-b border-white/[0.07] bg-black py-8 sm:py-10"
+      data-home-projects="explore-inside"
+    >
+      <div className="mx-auto mb-5 flex max-w-[1600px] items-end justify-between gap-3 px-3 sm:px-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
+          <h2 className="font-display text-xl font-black tracking-tight text-white sm:text-2xl lg:text-3xl">
             Explore the inside of every project
           </h2>
-          <p className="mt-1 max-w-xl text-sm text-white/45">
-            Cached Lab prototypes — open the evidence status, or reuse the
-            recipe with a toy photo you own
+          <p className="mt-1.5 max-w-xl text-sm text-white/45">
+            See Lab prompts, assets, and how each project was created — then
+            remake with a toy photo you own
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
@@ -34,18 +37,18 @@ export function HomeProjectsExplore({
           </Link>
           <Link
             href="/community"
-            className="text-xs font-semibold text-[var(--mint)] hover:underline"
+            className="text-xs font-semibold text-[var(--neon-pink)] hover:underline"
           >
             Lab prototypes
           </Link>
         </div>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto px-4 pb-2 snap-x snap-mandatory sm:gap-3.5 sm:px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mx-auto flex max-w-[1600px] gap-2.5 overflow-x-auto px-3 pb-2 snap-x snap-mandatory sm:gap-3 sm:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {projects.map((p, i) => (
           <article
             key={p.id}
-            className="group relative h-[380px] w-[min(62vw,210px)] shrink-0 snap-start overflow-hidden rounded-2xl bg-zinc-900 ring-1 ring-white/10 transition duration-300 hover:-translate-y-0.5 hover:ring-[var(--mint)]/35 sm:h-[420px] sm:w-[200px]"
+            className="group relative h-[380px] w-[min(62vw,210px)] shrink-0 snap-start overflow-hidden rounded-2xl bg-zinc-900 ring-1 ring-white/10 transition duration-300 hover:-translate-y-0.5 hover:ring-[var(--neon-pink)]/40 sm:h-[420px] sm:w-[200px]"
           >
             <Link
               href={p.remakeHref}
@@ -81,11 +84,14 @@ export function HomeProjectsExplore({
             </div>
             <div className="absolute inset-x-0 bottom-0 z-[2] p-3">
               <div className="mb-2 flex items-center gap-2">
-                <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--mint)] text-[9px] font-black text-black">
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--neon-pink)] text-[9px] font-black text-black">
                   {p.author.initials}
                 </span>
                 <span className="truncate text-[10px] text-white/60">
                   {p.author.name}
+                </span>
+                <span className="rounded-full border border-white/15 px-1.5 py-0.5 text-[8px] font-bold uppercase text-white/50">
+                  Public
                 </span>
               </div>
               <h3 className="line-clamp-2 text-[13px] font-semibold leading-snug text-white">
@@ -97,7 +103,7 @@ export function HomeProjectsExplore({
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <Link
                   href={p.remakeHref}
-                  className="rounded-full bg-[var(--mint)]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)] ring-1 ring-[var(--mint)]/25 transition group-hover:bg-[var(--mint)] group-hover:text-black"
+                  className="rounded-full bg-[var(--neon-pink)]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--neon-pink)] ring-1 ring-[var(--neon-pink)]/25 transition group-hover:bg-[var(--neon-pink)] group-hover:text-black"
                 >
                   Remake →
                 </Link>

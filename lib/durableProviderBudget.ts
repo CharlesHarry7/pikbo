@@ -139,6 +139,7 @@ export function providerValidationEnvironmentGate(
     | "local-nonproduction"
     | "closed";
   previewOverride: boolean;
+  productionOverride: boolean;
   environmentAllowed: boolean;
   productionHardClosed: boolean;
 } {
@@ -153,12 +154,19 @@ export function providerValidationEnvironmentGate(
       vercelEnvironment === "" ||
       vercelEnvironment === "development") &&
     env.NODE_ENV !== "production";
-  const productionHardClosed =
+  const productionHardClosed: boolean =
     isVercelProduction ||
     (env.NODE_ENV === "production" && !isVercelPreview);
+  const productionOverride: boolean =
+    (isVercelProduction || (env.NODE_ENV === "production" && !isVercelPreview)) &&
+    env.PIKBO_PROVIDER_VALIDATION_MODE === "1" &&
+    env.PIKBO_PROVIDER_VALIDATION_BUDGET_USD !== undefined &&
+    env.PIKBO_PROVIDER_VALIDATION_BUDGET_USD !== "" &&
+    Number(env.PIKBO_PROVIDER_VALIDATION_BUDGET_USD) > 0;
   const environmentAllowed =
-    !productionHardClosed &&
-    (isVercelPreview ? previewOverride : localNonProduction);
+    productionOverride ||
+    (!productionHardClosed &&
+      (isVercelPreview ? previewOverride : localNonProduction));
 
   return {
     environment: isVercelProduction
@@ -169,6 +177,7 @@ export function providerValidationEnvironmentGate(
           ? "local-nonproduction"
           : "closed",
     previewOverride,
+    productionOverride,
     environmentAllowed,
     productionHardClosed,
   };

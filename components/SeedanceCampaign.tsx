@@ -54,7 +54,7 @@ export function SeedanceCampaign() {
               path="/seedance-campaign"
               labelTry="Try free video"
               labelDemo="Try Lab sample"
-              className="rounded-full bg-[var(--mint)] px-6 py-2.5 text-sm font-black text-black shadow-[0_0_28px_rgba(200,255,61,0.25)] transition hover:-translate-y-0.5"
+              className="rounded-full bg-[var(--mint)] px-6 py-2.5 text-sm font-black text-black shadow-[0_0_28px_rgba(224,179,92,0.25)] transition hover:-translate-y-0.5"
             />
             <Link
               href={createGenerate360Href("seedance-campaign")}

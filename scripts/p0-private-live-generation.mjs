@@ -304,7 +304,14 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(gen, /tryConsumePrivateLiveBudget/);
   assert.match(gen, /processedUpload/);
   assert.match(gen, /uploadIgnored/);
-  assert.match(gen, /image_url:\s*imageUrl/);
+  // The uploaded still travels to the provider through the swappable seam
+  // (lib/providers), so the image_url literal now lives in the provider impl.
+  assert.match(gen, /const jobInput = \{[\s\S]{0,300}?\bimageUrl\b/);
+  assert.match(gen, /provider\.runJob\(jobInput\)/);
+  assert.match(
+    read("lib/providers/falVideoProvider.ts"),
+    /image_url:\s*(input\.)?imageUrl/
+  );
   assert.match(gen, /customerFacingGenerateVideoUrl/);
   assert.match(gen, /savePrivateGenerationResult/);
   assert.match(gen, /saved\.signedUrl/);
