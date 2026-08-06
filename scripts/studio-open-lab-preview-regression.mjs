@@ -45,8 +45,9 @@ assert.match(video, /Retry Lab preview/);
 assert.match(video, /Lab preview timed out/);
 assert.match(video, /LAB_VIDEO_READY_MS/);
 
-// Guest Create auto-shows Lab sample while access resolves (no blank open)
-assert.match(createPage, /<GuestMomentCreateGate>/);
+// Guest Create auto-shows Lab sample while access resolves (no blank open).
+// Gate may carry props (e.g. signInNextPath for durable same-photo assetId).
+assert.match(createPage, /<GuestMomentCreateGate(?:\s|>)/);
 assert.match(gate, /data-guest-create-sample/);
 assert.match(gate, /errorRetry/);
 assert.match(gate, /data-studio-open-state/);

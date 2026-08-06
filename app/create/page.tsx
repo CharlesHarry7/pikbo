@@ -7,6 +7,7 @@ import {
   MomentCreatePreview,
 } from "@/components/MomentCreatePreview";
 import { GuestMomentCreateGate } from "@/components/GuestMomentCreateGate";
+import { fixedMomentCreateReturnPath } from "@/lib/clientAssets";
 import { getMoment, parseMomentId } from "@/lib/moments";
 
 export async function generateMetadata({
@@ -55,6 +56,11 @@ export default async function CreatePage({
     sku?: string;
     retryJobId?: string;
     retryToken?: string;
+    /**
+     * Durable Library same-photo handoff (`?assetId=` UUID).
+     * CreateStudio auto-selects only after owner-ready recent-list proof.
+     */
+    assetId?: string;
     /** Truthful device-local Moment preview; never enters generation by itself. */
     moment?: string | string[];
   }>;
@@ -72,11 +78,17 @@ export default async function CreatePage({
   const firstRunSample =
     sp.sample ||
     (sp.try === "1" || sp.try === "true" ? "scout" : undefined);
+  // Preserve durable Library same-photo handoff across guest sign-in / Magic Link.
+  // Without this, an expired session on /create?assetId=… forced re-upload.
+  const guestSignInNextPath = fixedMomentCreateReturnPath({
+    source: sp.source || (sp.assetId ? "library" : "guest-create"),
+    assetId: sp.assetId,
+  });
   // MVP cut: every public or invited Create entry resolves to the one real,
   // fixed product contract. Legacy Seller Pack and generic Studio query links
   // remain harmless deep links, but no longer expose alternate product UIs.
   return (
-    <GuestMomentCreateGate>
+    <GuestMomentCreateGate signInNextPath={guestSignInNextPath}>
       <div className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-24 text-[var(--cream)]">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(177,78,255,0.22),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(255,78,205,0.16),transparent_65%)]"
@@ -109,6 +121,7 @@ export default async function CreatePage({
           initialSku={sp.sku}
           initialRetryJobId={sp.retryJobId}
           initialRetryToken={sp.retryToken}
+          initialAssetId={sp.assetId}
           fixedMomentContract
         />
       </div>
