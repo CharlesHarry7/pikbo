@@ -5063,6 +5063,42 @@ const mobileBarSrc = fs.readFileSync(
 );
 assert.match(mobileBarSrc, /\/image|\/cinema/);
 assert.match(mobileBarSrc, /effect=street-power-up|Create one Moment/);
+// AIT-250: suite floating doors secondary + off competitor lime
+assert.match(
+  mobileBarSrc,
+  /data-mobile-bar-suite=["']secondary["']/,
+  "mobile suite bar must mark secondary suite weight"
+);
+assert.match(
+  mobileBarSrc,
+  /data-mobile-bar=["']generate-remix["']/,
+  "mobile Generate door keeps generate-remix marker"
+);
+assert.match(
+  mobileBarSrc,
+  /createGenerate360Href\(["']mobile-bar["']\)/,
+  "mobile Generate door keeps 360 href honesty"
+);
+assert.match(
+  mobileBarSrc,
+  /MOMENT_CREATE_HREF&source=mobile-bar|source=mobile-bar/,
+  "mobile Moment door keeps source=mobile-bar honesty"
+);
+assert.doesNotMatch(
+  mobileBarSrc,
+  /c8ff3d|200\s*,\s*255\s*,\s*61/,
+  "mobile suite bar must not use competitor lime"
+);
+assert.doesNotMatch(
+  mobileBarSrc,
+  /btn-primary|btn btn-primary/,
+  "mobile suite doors must not use filled primary chrome"
+);
+assert.match(
+  mobileBarSrc,
+  /var\(--neon-pink\)|var\(--cream\)/,
+  "mobile suite doors use neon-pink / cream board tokens"
+);
 assert.match(
   fs.readFileSync(join(root, "components/CommunityPublishButton.tsx"), "utf8"),
   /Lab only|demo/
