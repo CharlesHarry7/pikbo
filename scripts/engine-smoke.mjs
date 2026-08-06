@@ -822,7 +822,11 @@ assert.doesNotMatch(appShell, /const MORE|MoreMenu|CommandPalette/);
 assert.match(appShell, /CreditsBadge|LanguageSwitcher/);
 assert.match(
   appShell,
-  /MOMENT_CREATE_HREF[\s\S]*?const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`[\s\S]*?const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`[\s\S]*?data-primary-create-href=\{\s*motionChrome\s*\?\s*DEFAULT_MOMENT_CREATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF\s*\}/
+  /MOMENT_CREATE_HREF[\s\S]*?const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`[\s\S]*?const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`[\s\S]*?data-primary-create-href=\{\s*motionChrome\s*\?\s*HOME_SHELL_GENERATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF\s*\}/
+);
+assert.match(
+  appShell,
+  /createGenerate360Href\(\s*["']app-shell-home["']\s*\)/
 );
 assert.doesNotMatch(
   appShell,
@@ -2017,6 +2021,30 @@ assert.match(imageRetryRoute, /status:\s*202|202/);
 assert.match(imageRetryRoute, /next:\s*\{[\s\S]*image:\s*["']\/api\/image["']/);
 assert.match(imageRetryRoute, /imageUi:/);
 assert.match(imageRetryRoute, /["']\/image["']/);
+// AIT-477: durable owner stills never invent process-memory retry forks.
+assert.match(imageRetryRoute, /DURABLE_USE_NEW_ATTEMPT/);
+assert.match(imageRetryRoute, /DURABLE_IN_FLIGHT/);
+assert.match(imageRetryRoute, /DURABLE_ALREADY_SUCCEEDED/);
+assert.match(imageRetryRoute, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(imageRetryRoute, /getPrivateLibraryJobForOwner/);
+assert.match(imageRetryRoute, /acceptControlledLibraryNewAttemptUrl/);
+assert.doesNotMatch(
+  imageRetryRoute,
+  /newAttemptUrl\.startsWith\(/,
+  "image retry must not use loose startsWith on newAttemptUrl"
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /forkRetryImageLedger/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /acceptImageRetryNavigation/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /DURABLE_USE_NEW_ATTEMPT|createUi|imageUi/
+);
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /data-image-session-ledger=["']process-memory["']/
@@ -2038,6 +2066,18 @@ assert.match(
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /data-image-session-retry-mode=["']ledger-fork["']|\/api\/image\/.*\/retry/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /forkRetryImageLedger/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /acceptImageRetryNavigation/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /DURABLE_USE_NEW_ATTEMPT/
 );
 // Pure image timeout sweep (crash mid-Flux must not leave infinite JOB_IN_FLIGHT)
 function sweepTimedOutImageJobsPure(jobs, now, timeoutMs) {
@@ -4245,7 +4285,11 @@ assert.match(appShellSrc, /CreditsBadge|LanguageSwitcher/);
 assert.doesNotMatch(appShellSrc, /MoreMenu|CommandPalette/);
 assert.match(
   appShellSrc,
-  /MOMENT_CREATE_HREF[\s\S]*?const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`[\s\S]*?const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`[\s\S]*?data-primary-create-href=\{\s*motionChrome\s*\?\s*DEFAULT_MOMENT_CREATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF\s*\}/
+  /MOMENT_CREATE_HREF[\s\S]*?const DEFAULT_MOMENT_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=moment-shell`[\s\S]*?const PRIMARY_NAV_CREATE_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=primary-nav`[\s\S]*?data-primary-create-href=\{\s*motionChrome\s*\?\s*HOME_SHELL_GENERATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF\s*\}/
+);
+assert.match(
+  appShellSrc,
+  /createGenerate360Href\(\s*["']app-shell-home["']\s*\)/
 );
 assert.doesNotMatch(
   appShellSrc,

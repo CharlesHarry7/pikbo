@@ -92,38 +92,45 @@ export function HomeCinemaHero() {
           </ul>
         </div>
 
-        {/* Still stage — product photography frame */}
+        {/* Still stage — product photography frame; click → same 360 door (AIT-462) */}
         <div className="order-2 lg:order-2">
-          <figure className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-md)]">
-            <div className="relative aspect-[4/5] w-full bg-[var(--bg-soft)]">
-              <Image
-                src={HERO_STILL.src}
-                alt="Designer vinyl art toy style study for Pikbo homepage"
-                fill
-                priority
-                sizes="(max-width:1024px) 100vw, 480px"
-                className="object-cover"
-              />
-            </div>
-            <figcaption className="flex items-start justify-between gap-3 border-t border-[var(--border)] px-4 py-3">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand)]">
-                  Style study
-                </p>
-                <p className="mt-0.5 text-sm font-semibold text-[var(--fg)]">
-                  {HERO_STILL.title}
-                </p>
-                <p className="text-xs text-[var(--fg-muted)]">
-                  {HERO_STILL.caption}
-                </p>
+          <Link
+            href={HOME_HERO_360_HREF}
+            data-home-hero-still-generate="360"
+            className="group block overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-md)] transition hover:border-[var(--brand)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/50"
+            aria-label="Open Generate 360° listing spin workbench"
+          >
+            <figure>
+              <div className="relative aspect-[4/5] w-full bg-[var(--bg-soft)]">
+                <Image
+                  src={HERO_STILL.src}
+                  alt="Designer vinyl art toy style study for Pikbo homepage"
+                  fill
+                  priority
+                  sizes="(max-width:1024px) 100vw, 480px"
+                  className="object-cover transition duration-500 group-hover:scale-[1.02]"
+                />
               </div>
-              <p className="shrink-0 text-right text-[10px] leading-4 text-[var(--fg-dim)]">
-                Not a customer
-                <br />
-                upload · Lab study
-              </p>
-            </figcaption>
-          </figure>
+              <figcaption className="flex items-start justify-between gap-3 border-t border-[var(--border)] px-4 py-3">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand)]">
+                    Style study · try 360°
+                  </p>
+                  <p className="mt-0.5 text-sm font-semibold text-[var(--fg)]">
+                    {HERO_STILL.title}
+                  </p>
+                  <p className="text-xs text-[var(--fg-muted)]">
+                    {HERO_STILL.caption}
+                  </p>
+                </div>
+                <p className="shrink-0 text-right text-[10px] leading-4 text-[var(--fg-dim)]">
+                  Not a customer
+                  <br />
+                  upload · Lab study
+                </p>
+              </figcaption>
+            </figure>
+          </Link>
         </div>
       </div>
     </section>

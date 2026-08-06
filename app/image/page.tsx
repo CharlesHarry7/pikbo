@@ -13,6 +13,12 @@ import {
 } from "@/lib/imageHistory";
 import { fetchMe, mergeMeSession, type MeResponse } from "@/lib/meClient";
 import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
+import {
+  acceptImageRetryNavigation,
+  forkRetryImageLedger,
   mintImageIdempotencyKey,
   postImageWithRetry,
 } from "@/lib/imageClient";
@@ -78,6 +84,12 @@ export default function ImageStudioPage() {
   const [lastSettlement, setLastSettlement] = useState<string | null>(null);
   /** Free plan: stills are demo-only so Mini trial stays for Create video. */
   const [me, setMe] = useState<MeResponse | null>(null);
+  /** Finite session boot (Create Studio parity) — never leave me unresolved forever. */
+  const [meResolved, setMeResolved] = useState(false);
+  const [sessionBoot, setSessionBoot] = useState<
+    "checking" | "ready" | "timeout"
+  >("checking");
+  const [bootNonce, setBootNonce] = useState(0);
   /** Phase D/F parity — cancel mid still; refund unconfirmed if live debit started. */
   const abortRef = useRef<AbortController | null>(null);
   /** R1b one-shot handoff: exact child id + bearer (Library ledger retry). */
@@ -97,11 +109,39 @@ export default function ImageStudioPage() {
     canceled: number;
   } | null>(null);
 
-  // Default optimistic Free until /api/me resolves (soft-launch default plan).
+  // Fail closed until /api/me resolves (soft-launch default: Free stills = demo).
+  // After timeout, me stays null → demo-only with explicit Retry (never soft-stuck).
   const freeStillsDemoOnly =
     me == null
       ? true
       : me.plan === "free" || me.freeTrial?.isFreePlan === true;
+
+  // 8s wall-clock session boot (Create Studio parity). Retry re-runs via bootNonce.
+  useEffect(() => {
+    let cancelled = false;
+    const bootT = window.setTimeout(() => {
+      void (async () => {
+        setMeResolved(false);
+        setSessionBoot("checking");
+        try {
+          const m = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
+          if (cancelled) return;
+          setMe(m);
+          setMeResolved(true);
+          setSessionBoot("ready");
+        } catch (err) {
+          if (cancelled) return;
+          setMe(null);
+          setMeResolved(true);
+          setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+        }
+      })();
+    }, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(bootT);
+    };
+  }, [bootNonce]);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -141,9 +181,6 @@ export default function ImageStudioPage() {
       }
     }, 0);
     let cancelled = false;
-    void fetchMe().then((m) => {
-      if (!cancelled) setMe(m);
-    });
 
     async function loadSessionStills() {
       try {
@@ -336,6 +373,10 @@ export default function ImageStudioPage() {
    * Retry terminal still: fork process-memory ledger child (POST /api/image/[id]/retry)
    * then re-fill prompt/aspect and re-POST Flux with a new idempotency key.
    * Fork is tracking only — does not re-run provider by itself.
+   *
+   * AIT-477: durable owner UUIDs never invent process-memory fork success —
+   * honest Create/Image new-attempt handoff only; IN_FLIGHT / SUCCEEDED /
+   * DETAIL_UNAVAILABLE stay fail-closed with no silent re-POST.
    */
   async function retrySessionStill(j: SessionStillJob) {
     const nextPrompt = j.prompt?.trim() || prompt;
@@ -345,64 +386,93 @@ export default function ImageStudioPage() {
     setError(null);
     setFailCreditState(null);
     setFailRetryAfterSec(null);
-    try {
-      const res = await fetch(
-        `/api/image/${encodeURIComponent(j.id)}/retry`,
-        { method: "POST", cache: "no-store" }
-      );
-      const body = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        code?: string;
-        message?: string;
-        parent?: { prompt?: string; aspect?: string };
-      };
-      if (res.ok && body.ok) {
-        // Prefer server parent echo when present.
-        const p = body.parent?.prompt?.trim() || nextPrompt;
-        const a = body.parent?.aspect?.trim() || nextAspect;
-        if (p) setPrompt(p);
-        if (a) setAspect(a);
-        void generate({ prompt: p, aspect: a });
-        // Refresh process-memory strip so queued fork appears.
+    const body = await forkRetryImageLedger(j.id);
+    if (body.ok) {
+      // Prefer server parent echo when present.
+      const p = body.parent?.prompt?.trim() || nextPrompt;
+      const a = body.parent?.aspect?.trim() || nextAspect;
+      if (p) setPrompt(p);
+      if (a) setAspect(a);
+      // R1b: stash one-time bearer when server minted a child (sessionStorage).
+      if (body.next?.retryJobId && body.next?.retryToken) {
         try {
-          const listRes = await fetch("/api/image", {
-            method: "GET",
-            cache: "no-store",
-          });
-          if (listRes.ok) {
-            const data = (await listRes.json()) as {
-              jobs?: SessionStillJob[];
-              open?: number;
-              total?: number;
-              byStatus?: { failed?: number; canceled?: number };
-            };
-            const jobs = Array.isArray(data.jobs) ? data.jobs : [];
-            setSessionStillJobs(jobs.slice(0, 8));
-            setSessionStillMeta({
-              open: typeof data.open === "number" ? data.open : 0,
-              total: typeof data.total === "number" ? data.total : jobs.length,
-              failed: data.byStatus?.failed ?? 0,
-              canceled: data.byStatus?.canceled ?? 0,
-            });
-          }
+          sessionStorage.setItem(
+            `pikbo_retry_token:${body.next.retryJobId}`,
+            body.next.retryToken
+          );
+          retryHandoffRef.current = {
+            retryJobId: body.next.retryJobId,
+            retryToken: body.next.retryToken,
+          };
         } catch {
-          /* ignore list refresh */
+          /* private mode — Generate stays a new attempt */
         }
-        return;
       }
-      // Fork failed (e.g. NOT_RETRYABLE) — still allow client re-POST of prompt.
-      if (body.code === "JOB_IN_FLIGHT") {
-        setError(
-          typeof body.message === "string"
-            ? body.message
-            : "Still job still open — wait or cancel before retry"
-        );
-        return;
+      void generate({ prompt: p, aspect: a });
+      // Refresh process-memory strip so queued fork appears.
+      try {
+        const listRes = await fetch("/api/image", {
+          method: "GET",
+          cache: "no-store",
+        });
+        if (listRes.ok) {
+          const data = (await listRes.json()) as {
+            jobs?: SessionStillJob[];
+            open?: number;
+            total?: number;
+            byStatus?: { failed?: number; canceled?: number };
+          };
+          const jobs = Array.isArray(data.jobs) ? data.jobs : [];
+          setSessionStillJobs(jobs.slice(0, 8));
+          setSessionStillMeta({
+            open: typeof data.open === "number" ? data.open : 0,
+            total: typeof data.total === "number" ? data.total : jobs.length,
+            failed: data.byStatus?.failed ?? 0,
+            canceled: data.byStatus?.canceled ?? 0,
+          });
+        }
+      } catch {
+        /* ignore list refresh */
       }
-    } catch {
-      /* network — fall through to client re-POST */
+      return;
     }
-    // Pass overrides — setState is async; do not wait a tick that may still see old prompt.
+
+    // Durable fail-closed — never invent process-memory re-POST.
+    if (body.code === "DURABLE_USE_NEW_ATTEMPT") {
+      const href = acceptImageRetryNavigation(
+        body.next?.createUi ?? body.next?.imageUi,
+        "/image"
+      );
+      window.location.href = href;
+      return;
+    }
+    if (
+      body.code === "DURABLE_IN_FLIGHT" ||
+      body.code === "DURABLE_ALREADY_SUCCEEDED" ||
+      body.code === "DURABLE_DETAIL_UNAVAILABLE"
+    ) {
+      setError(
+        typeof body.message === "string"
+          ? body.message
+          : body.code === "DURABLE_IN_FLIGHT"
+            ? "Durable still still open — refresh, process-memory Retry does not apply"
+            : body.code === "DURABLE_DETAIL_UNAVAILABLE"
+              ? "Private Library could not verify this still — try again when storage is ready"
+              : "Durable still already succeeded — open Create or Image for a new attempt"
+      );
+      return;
+    }
+    if (body.code === "JOB_IN_FLIGHT") {
+      setError(
+        typeof body.message === "string"
+          ? body.message
+          : "Still job still open — wait or cancel before retry"
+      );
+      return;
+    }
+    // Local process-memory fork failed (e.g. NOT_RETRYABLE / NOT_FOUND for
+    // non-durable session rows) — honest client re-POST of prompt as new attempt.
+    // Network errors also fall through: user Retry still re-POSTs Flux.
     void generate({ prompt: nextPrompt, aspect: nextAspect });
   }
 
@@ -618,6 +688,40 @@ export default function ImageStudioPage() {
                 </button>
               ))}
             </div>
+            <p
+              className="mt-3 text-[10px] font-bold uppercase tracking-wider text-white/40"
+              data-studio-open-state={sessionBoot}
+              data-image-session-boot={sessionBoot}
+            >
+              {!meResolved
+                ? "Checking access…"
+                : sessionBoot === "timeout"
+                  ? "Access check timed out"
+                  : freeStillsDemoOnly
+                    ? "Demo stills · Free / unsigned"
+                    : "Live stills available"}
+            </p>
+            {sessionBoot === "timeout" ? (
+              <div
+                className="mt-2 rounded-xl border border-[#FF6B6B]/35 bg-[#FF6B6B]/10 px-3 py-2.5"
+                data-studio-open-error="session-timeout"
+                role="alert"
+              >
+                <p className="text-[11px] font-semibold leading-5 text-white/85">
+                  Could not verify private access in time. Stills stay demo-only
+                  until the check succeeds — retry or continue with a labeled
+                  demo.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setBootNonce((n) => n + 1)}
+                  data-studio-open-retry
+                  className="mt-2 inline-flex min-h-9 items-center justify-center rounded-full bg-white px-3 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[var(--mint)]"
+                >
+                  Retry access check
+                </button>
+              </div>
+            ) : null}
             {busy ? (
               <div className="mt-4 space-y-2">
                 <button

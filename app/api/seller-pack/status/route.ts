@@ -23,11 +23,14 @@ async function safeOwnerJobs(
   for (const job of source) {
     let resultUrl: string | null = null;
     if (job.status === "succeeded" && job.hasPrivateResult) {
-      const privateResult = await getPrivateGenerationResult({
+      const privateLookup = await getPrivateGenerationResult({
         jobId: job.jobId,
         userId,
       });
-      if (privateResult) resultUrl = await signedPrivateResultUrl(privateResult.objectKey);
+      // Storage down / missing: withhold signed URL (fail-closed; no invent).
+      if (privateLookup.ok && privateLookup.result) {
+        resultUrl = await signedPrivateResultUrl(privateLookup.result.objectKey);
+      }
     }
     jobs.push({
       jobId: job.jobId,
