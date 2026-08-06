@@ -9,9 +9,6 @@ import {
   mapToyAssetRowToRecentDto,
   mergeRecentAssetsWithOptionalPin,
   parseRecentIncludeAssetId,
-  privateToyAssetPreviewPath,
-  RECENT_PRIVATE_TOY_ASSETS_DEFAULT_LIMIT,
-  RECENT_PRIVATE_TOY_ASSETS_MAX_LIMIT,
 } from "@/lib/ownerRecentToyAssetsPure.mjs";
 
 export {

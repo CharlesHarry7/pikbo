@@ -804,14 +804,14 @@ export function CreateStudio({
    * after GET /api/assets/recent?include= proves owner + ready. Missing / foreign
    * / pending / rejected / deleted → honest empty upload slot (no fake preview).
    * Explicit upload or Lab always wins.
+   *
+   * Loading starts true from useState when a durable query id is present; we only
+   * clear it after async settlement (or deferred early exit) so we never call
+   * setState synchronously in this effect body (react-hooks/set-state-in-effect).
    */
   useEffect(() => {
     if (!sessionResolved) return;
     const queryAssetId = queryAssetHandoffIdRef.current;
-    if (!queryAssetId) {
-      setSamePhotoHandoffLoading(false);
-      return;
-    }
 
     const stripQueryAssetParam = () => {
       if (typeof window === "undefined") return;
@@ -836,10 +836,18 @@ export function CreateStudio({
       stripQueryAssetParam();
     };
 
-    if (queryAssetHandoffSettledRef.current || userStillChoiceRef.current) {
-      setSamePhotoHandoffLoading(false);
-      stripQueryAssetParam();
-      return;
+    // No query handoff / already settled / user override — clear loading off the
+    // effect body so React Compiler / set-state-in-effect stays clean.
+    if (
+      !queryAssetId ||
+      queryAssetHandoffSettledRef.current ||
+      userStillChoiceRef.current
+    ) {
+      const clearTimer = window.setTimeout(() => {
+        setSamePhotoHandoffLoading(false);
+        if (queryAssetId) stripQueryAssetParam();
+      }, 0);
+      return () => window.clearTimeout(clearTimer);
     }
 
     const ownerKey =
@@ -849,13 +857,14 @@ export function CreateStudio({
 
     if (!ownerKey) {
       // Invited owner proof required — leave empty (no foreign metadata).
-      dropHandoff(Boolean(queryAssetId));
-      return;
+      const dropTimer = window.setTimeout(() => {
+        dropHandoff(Boolean(queryAssetId));
+      }, 0);
+      return () => window.clearTimeout(dropTimer);
     }
 
     let cancelled = false;
     const ac = new AbortController();
-    setSamePhotoHandoffLoading(true);
 
     void (async () => {
       const readyAssets = await fetchRecentPrivateToyAssets({

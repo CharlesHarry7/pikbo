@@ -96,7 +96,6 @@ export function fixedMomentReturnPathFromLocation(
     pathOnly.startsWith("//") ||
     pathOnly.includes("\\") ||
     pathOnly.includes("://") ||
-    // eslint-disable-next-line no-control-regex
     /[\u0000-\u001f\u007f]/.test(pathWithSearch)
   ) {
     return fallback;
