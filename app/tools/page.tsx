@@ -80,7 +80,7 @@ export default function ToolsIndexPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-[radial-gradient(45%_80%_at_0%_0%,rgba(200,255,61,0.06),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-[radial-gradient(45%_80%_at_0%_0%,rgba(255,78,205,0.06),transparent_70%)]"
         aria-hidden
       />
       <div className="relative mx-auto max-w-5xl">
@@ -125,12 +125,12 @@ export default function ToolsIndexPage() {
             <Link
               key={t.slug}
               href={`/tools/${t.slug}`}
-              className="card group flex flex-col gap-2 p-4 transition hover:border-[var(--mint)]/40"
+              className="card group flex flex-col gap-2 p-4 transition hover:border-[var(--neon-pink)]/40"
             >
               <span className="text-lg" aria-hidden>
                 {t.emoji}
               </span>
-              <span className="text-sm font-bold text-[var(--fg)] group-hover:text-[var(--mint)]">
+              <span className="text-sm font-bold text-[var(--fg)] group-hover:text-[var(--neon-pink)]">
                 {t.label}
               </span>
               <span className="text-xs leading-relaxed text-[var(--fg-muted)]">
