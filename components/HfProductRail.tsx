@@ -159,7 +159,7 @@ export function HfProductRail() {
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Free card — Free Mini product caps only when freeLiveOpen */}
-          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[var(--neon-pink)]/45 bg-[var(--neon-pink)]/[0.1] p-3.5 shadow-[0_0_32px_rgba(255,78,205,0.12)] sm:h-[11rem] sm:w-[10rem]">
+          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[var(--neon-pink)]/45 bg-[var(--neon-pink)]/[0.1] p-3.5 shadow-[0_0_32px_rgba(196,165,116,0.12)] sm:h-[11rem] sm:w-[10rem]">
             <span className="relative z-10 inline-flex rounded-full bg-[var(--neon-pink)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--void)]">
               Free
             </span>
@@ -195,7 +195,7 @@ export function HfProductRail() {
                 }
                 className={`group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border transition duration-200 hover:-translate-y-0.5 sm:h-[11rem] sm:w-[10rem] ${
                   p.hot
-                    ? "border-[var(--neon-pink)]/50 shadow-[0_0_32px_rgba(255,78,205,0.14)]"
+                    ? "border-[var(--neon-pink)]/50 shadow-[0_0_32px_rgba(196,165,116,0.14)]"
                     : "border-white/10 hover:border-white/30"
                 }`}
               >

@@ -199,10 +199,17 @@ assert(
   "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
 
-// AIT-320: four-surface money path off residual competitor lime (board tokens)
+// AIT-507 / AIT-320: four-surface money path = gallery copper board tokens
+// (no competitor lime, no carnival purple/pink/cyan hardcodes)
 {
   const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const carnival =
+    /#b14eff|#ff4ecd|#00d9ff|#00ffa3|#ffe600|177\s*,\s*78\s*,\s*255|255\s*,\s*78\s*,\s*205|0\s*,\s*217\s*,\s*255/i;
+  const copper = /rgba\(\s*196\s*,\s*165\s*,\s*116|#c4a574|var\(--(?:neon-pink|brand|mint)\)/i;
   const fourSurface = {
+    "app/create/page.tsx": read("app/create/page.tsx"),
+    "app/library/page.tsx": read("app/library/page.tsx"),
+    "app/pricing/page.tsx": read("app/pricing/page.tsx"),
     "components/HfProductRail.tsx": read("components/HfProductRail.tsx"),
     "components/HomeBrowseCta.tsx": read("components/HomeBrowseCta.tsx"),
     "components/HomeViralPresetRail.tsx": read("components/HomeViralPresetRail.tsx"),
@@ -219,11 +226,16 @@ assert(
     ),
     // remount-ready (not mounted on / today; keep board-clean for north-star density)
     "components/HfExploreHome.tsx": read("components/HfExploreHome.tsx"),
+    "components/HomeViralWall.tsx": read("components/HomeViralWall.tsx"),
   };
   for (const [rel, src] of Object.entries(fourSurface)) {
     assert(
       !lime.test(src),
       `${rel} must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)`
+    );
+    assert(
+      !carnival.test(src),
+      `${rel} must not hard-code carnival neon (purple/pink/cyan)`
     );
   }
   assert(
@@ -233,17 +245,28 @@ assert(
       fourSurface["components/HomeExploreRecipeRail.tsx"].includes(
         "var(--neon-pink)"
       ),
-    "Home rails + Library + browse CTA use neon-pink board tokens"
+    "Home rails + Library + browse CTA use neon-pink (copper) board tokens"
   );
   assert(
-    fourSurface["components/CreateStudio.tsx"].includes("rgba(255,78,205") &&
-      fourSurface["components/PricingPlanCards.tsx"].includes(
-        "rgba(255,78,205"
-      ) &&
-      fourSurface["components/PricingUsageEstimator.tsx"].includes(
-        "rgba(255,78,205"
-      ),
-    "Create + Pricing glows use neon-pink rgba board tokens"
+    copper.test(fourSurface["components/CreateStudio.tsx"]) &&
+      copper.test(fourSurface["components/PricingPlanCards.tsx"]) &&
+      copper.test(fourSurface["components/PricingUsageEstimator.tsx"]) &&
+      copper.test(fourSurface["app/create/page.tsx"]) &&
+      copper.test(fourSurface["app/library/page.tsx"]) &&
+      copper.test(fourSurface["app/pricing/page.tsx"]),
+    "Create + Library + Pricing glows use gallery copper board tokens"
+  );
+  // Shared shell utilities must also be copper (effect-card / text-bling / btn)
+  const globals = read("app/globals.css");
+  assert(
+    !carnival.test(globals) && !lime.test(globals),
+    "globals.css board utilities must not hard-code carnival neon or competitor lime"
+  );
+  assert(
+    globals.includes("#c4a574") &&
+      (globals.includes("rgba(196, 165, 116") ||
+        globals.includes("rgba(196,165,116")),
+    "globals.css uses gallery copper (#c4a574 / rgba 196,165,116)"
   );
 }
 
