@@ -627,6 +627,44 @@ assert(
   "i18n cta.tryMiniFree must prefer Lab-first free path, not Mini product-cap"
 );
 
+// AIT-437: residual public Free Mini product-brand / open-trial promises.
+assert(
+  !read("lib/presets.ts").includes("Seedance Mini 5-second 480p live trial") &&
+    !read("lib/presets.ts").includes("Free includes one Seedance Mini") &&
+    read("lib/presets.ts").includes(
+      "public free path is a labeled cached Lab prototype"
+    ),
+  "presets FAQ must sell Lab public free path, not unconditional Free Mini live trial"
+);
+assert(
+  read("app/guides/[slug]/page.tsx").includes('labelTry="Try free · Lab →"') &&
+    !read("app/guides/[slug]/page.tsx").includes("Try free · Mini 5s"),
+  "guides/[slug] FreeTrialCta must be Lab-first (not Mini 5s product-cap)"
+);
+assert(
+  !read("lib/createTrust.ts").includes("Free Mini live clips cannot") &&
+    !read("lib/createTrust.ts").includes("Free Mini needs watermark bake") &&
+    read("lib/createTrust.ts").includes("Free-plan live raw"),
+  "createTrust download-block copy must use free-plan live raw (not Free Mini brand)"
+);
+assert(
+  !read("lib/t6Watermark.ts").includes("Free Mini live raw provider") &&
+    read("lib/t6Watermark.ts").includes("Free-plan live raw provider"),
+  "t6Watermark blocked reason must use free-plan live raw (not Free Mini brand)"
+);
+assert(
+  !read("components/CommunityPublishButton.tsx").includes(
+    "Free Mini live raw is not a public deliverable"
+  ) &&
+    read("components/CommunityPublishButton.tsx").includes(
+      "Free-plan live raw is not a public deliverable"
+    ) &&
+    read("components/CommunityPublishButton.tsx").includes(
+      "Free raw · no publish"
+    ),
+  "CommunityPublish must block free-plan raw as public UGC without Free Mini brand"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
