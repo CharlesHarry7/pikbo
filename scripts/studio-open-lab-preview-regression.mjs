@@ -1,7 +1,8 @@
 /**
- * AIT-40 / AIT-147 / AIT-161 / AIT-172 — Create/Studio open: auto Lab preview +
- * finite open state + honest failure/timeout/retry (desktop + mobile sticky).
- * Wall-clock covers authHeaders hang; Pack/Batch/Image/Landing boot finite.
+ * AIT-40 / AIT-147 / AIT-161 / AIT-172 / AIT-182 / AIT-199 — Create/Studio open:
+ * auto Lab preview + finite open state + honest failure/timeout/retry
+ * (desktop + mobile sticky). Wall-clock covers authHeaders hang;
+ * Pack/Batch/Image/Landing/MomentCreatePreview boot finite.
  */
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
@@ -17,6 +18,7 @@ const video = read("components/AutoPlayVideo.tsx");
 const gate = read("components/GuestMomentCreateGate.tsx");
 const studio = read("components/CreateStudio.tsx");
 const hero = read("components/HeroUpload.tsx");
+const momentPreview = read("components/MomentCreatePreview.tsx");
 const createPage = read("app/create/page.tsx");
 const packageJson = read("package.json");
 
@@ -160,6 +162,21 @@ assert.match(landing, /setSessionResolved\(true\)/);
 assert.match(landing, /data-landing-session-boot=\{sessionBoot\}/);
 assert.match(imageStudio, /data-image-session-boot=\{sessionBoot\}/);
 
+// AIT-199: MomentCreatePreview — finite Checking + timeout Retry (not soft Sign-in lie)
+assert.match(momentPreview, /STUDIO_SESSION_BOOT_MS/);
+assert.match(
+  momentPreview,
+  /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/
+);
+assert.match(momentPreview, /isClientTimeoutError/);
+assert.match(momentPreview, /sessionBoot === "timeout"/);
+assert.match(momentPreview, /data-studio-open-state=\{sessionBoot\}/);
+assert.match(momentPreview, /data-studio-open-error="session-timeout"/);
+assert.match(momentPreview, /data-studio-open-retry/);
+assert.match(momentPreview, /Retry access check/);
+assert.match(momentPreview, /setBootNonce/);
+assert.match(momentPreview, /Checking private access…/);
+
 // Runtime: withTimeout rejects hung work (authHeaders hang class)
 const hang = new Promise(() => {});
 const t0 = Date.now();
@@ -209,5 +226,5 @@ for (const asset of [
 }
 
 console.log(
-  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing boot; timeout/error + retry; mobile sticky Lab CTA)"
+  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing/moment-preview boot; timeout/error + retry; mobile sticky Lab CTA)"
 );
