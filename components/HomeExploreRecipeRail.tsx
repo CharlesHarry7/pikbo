@@ -56,7 +56,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
             <Link
               href={listing360Href}
               data-home-explore-rail-360
-              className="text-[11px] font-bold text-[#00D9FF] hover:underline"
+              className="text-[11px] font-bold text-[#c4a574] hover:underline"
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -111,7 +111,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
             <Link
               href={listing360Href}
               data-home-explore-rail-360
-              className="text-[11px] font-bold text-[#00D9FF] hover:underline"
+              className="text-[11px] font-bold text-[#c4a574] hover:underline"
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -167,7 +167,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                 }
                 className={`group relative h-[9.5rem] w-[7.5rem] shrink-0 overflow-hidden rounded-2xl border transition duration-200 hover:-translate-y-0.5 sm:h-[11rem] sm:w-[9rem] ${
                   is360
-                    ? "border-[#00D9FF]/45 shadow-[0_0_28px_rgba(0,217,255,0.12)]"
+                    ? "border-[#c4a574]/45 shadow-[0_0_28px_rgba(138,143,152,0.12)]"
                     : "border-white/10 hover:border-[var(--neon-pink)]/40"
                 }`}
               >
@@ -188,7 +188,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                       {badge}
                     </span>
                     {is360 ? (
-                      <span className="inline-flex rounded-full bg-[#00D9FF] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
+                      <span className="inline-flex rounded-full bg-[#c4a574] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
                         360
                       </span>
                     ) : null}

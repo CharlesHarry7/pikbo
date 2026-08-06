@@ -46,13 +46,13 @@ function GuestMomentPreview({
         aria-hidden
       />
       <div
-        className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_45%,rgba(206,27,106,0.16),transparent_34%),linear-gradient(90deg,rgba(8,8,10,0.98)_0%,rgba(8,8,10,0.64)_50%,rgba(8,8,10,0.96)_100%)]"
+        className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_45%,rgba(196,165,116,0.16),transparent_34%),linear-gradient(90deg,rgba(8,8,10,0.98)_0%,rgba(8,8,10,0.64)_50%,rgba(8,8,10,0.96)_100%)]"
         aria-hidden
       />
 
       <div className="mx-auto grid max-w-[1360px] gap-7 lg:min-h-[calc(100vh-7rem)] lg:grid-cols-[minmax(220px,0.75fr)_minmax(330px,390px)_minmax(260px,0.78fr)] lg:items-center lg:gap-10 xl:gap-14">
         <div className="order-2 max-w-[380px] lg:order-1">
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--brand)]">
             Current motion
           </p>
           <h1 className="mt-4 font-display text-[clamp(3rem,4.6vw,5.25rem)] font-black leading-[0.87] tracking-[-0.07em]">
@@ -76,7 +76,7 @@ function GuestMomentPreview({
           aria-label="Street Power-Up cached sample"
           data-guest-create-sample
         >
-          <div className="relative rounded-[30px] border border-white/12 bg-[var(--card)] p-2 shadow-[0_42px_120px_-42px_rgba(255,32,122,0.62)]">
+          <div className="relative rounded-[30px] border border-white/12 bg-[var(--card)] p-2 shadow-[0_42px_120px_-42px_rgba(196,165,116,0.62)]">
             <div className="relative aspect-[9/16] max-h-[calc(100vh-11rem)] overflow-hidden rounded-[23px] bg-black">
               <AutoPlayVideo
                 poster={STREET_POWER_UP_SAMPLE.poster}
@@ -97,7 +97,7 @@ function GuestMomentPreview({
                 </span>
               </div>
               <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/55 to-transparent px-5 pb-5 pt-24">
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--brand)]">
                   Street Power-Up
                 </p>
                 <div className="mt-1.5 flex items-end justify-between gap-5">
@@ -143,7 +143,7 @@ function GuestMomentPreview({
                   type="button"
                   onClick={onRetrySession}
                   data-studio-open-retry
-                  className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--void)] transition hover:bg-[var(--mint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF]"
+                  className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--void)] transition hover:bg-[var(--mint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
                 >
                   Retry access check
                 </button>
@@ -154,7 +154,7 @@ function GuestMomentPreview({
                 <Link
                   href={guestSignInHref()}
                   data-guest-create-sign-in
-                  className="btn-press inline-flex min-h-14 items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(255,78,205,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#151519]"
+                  className="btn-press inline-flex min-h-14 items-center justify-between rounded-2xl bg-[var(--grad-cta)] px-5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-12px_rgba(196,165,116,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#151519]"
                 >
                   Sign in to make yours
                   <span aria-hidden className="text-lg">→</span>
@@ -165,7 +165,7 @@ function GuestMomentPreview({
                 data-guest-create-private-beta
                 className={`inline-flex min-h-12 items-center justify-center rounded-2xl border px-5 text-[10px] font-black uppercase tracking-[0.14em] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                   signedIn
-                    ? "border-[#FF4ECD] bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
+                    ? "border-[var(--brand)] bg-[var(--grad-cta)] text-[var(--primary-foreground)]"
                     : "border-white/12 text-white/62 hover:border-white/28 hover:text-white"
                 }`}
               >
@@ -181,7 +181,7 @@ function GuestMomentPreview({
             </p>
           </div>
           <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-black/20 px-4 py-3 text-[9px] font-black uppercase tracking-[0.13em] text-white/38 backdrop-blur-xl">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#7CFFB2]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />
             Owner-only result · no public feed
           </div>
         </div>
