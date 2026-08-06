@@ -290,11 +290,18 @@ export function classifyDownloadHead(opts: {
           : freeLiveDownloadBlockReason(),
     };
   }
-  if (status === 404 || code === "NOT_FOUND") {
+  // Durable UUID deny is uniform 404 NOT_FOUND (unauth/foreign/missing).
+  // Legacy AUTH_REQUIRED / 401 on the same gate maps to the same client path.
+  if (
+    status === 404 ||
+    code === "NOT_FOUND" ||
+    status === 401 ||
+    code === "AUTH_REQUIRED"
+  ) {
     return {
       kind: "not_found",
       message:
-        "Session job not on this server process — try remake or open Library recovery",
+        "Download not found for this account — try remake or open Library recovery",
     };
   }
   if (code === "CANCELED" || code === "REQUEST_CANCELED") {

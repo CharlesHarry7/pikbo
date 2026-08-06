@@ -27,14 +27,20 @@ function isUuid(value: string): boolean {
   );
 }
 
+/**
+ * Durable UUID jobs: require auth owner (`created_by`). Missing, foreign, and
+ * unauthenticated share one fail-closed deny — no `AUTH_REQUIRED` status split
+ * that would distinguish existence, and no media/provider/signed metadata.
+ * Non-UUID ids fall through to process-memory session gate only.
+ */
 async function privateResultForRequest(req: Request, id: string) {
   if (!isUuid(id)) return { kind: "not-private" as const };
   const user = await getAuthUserFromRequest(req);
   if (!user) {
     return {
       kind: "error" as const,
-      status: 401,
-      code: "AUTH_REQUIRED",
+      status: 404,
+      code: "NOT_FOUND" as const,
     };
   }
   const result = await getPrivateGenerationResult({
@@ -45,10 +51,19 @@ async function privateResultForRequest(req: Request, id: string) {
     return {
       kind: "error" as const,
       status: 404,
-      code: "NOT_FOUND",
+      code: "NOT_FOUND" as const,
     };
   }
   return { kind: "private" as const, result };
+}
+
+/** Uniform body for durable UUID deny — never effect/status/signed/object keys. */
+function durableDownloadDenyBody() {
+  return {
+    ok: false as const,
+    code: "NOT_FOUND" as const,
+    error: "Download not found for this account",
+  };
 }
 
 /**
@@ -260,17 +275,9 @@ export async function GET(req: Request, { params }: Props) {
   const { id } = await params;
   const privateResult = await privateResultForRequest(req, id);
   if (privateResult.kind === "error") {
-    return NextResponse.json(
-      {
-        ok: false,
-        code: privateResult.code,
-        error:
-          privateResult.code === "AUTH_REQUIRED"
-            ? "Sign in to download this private result"
-            : "Private result not found for this account",
-      },
-      { status: privateResult.status }
-    );
+    return NextResponse.json(durableDownloadDenyBody(), {
+      status: privateResult.status,
+    });
   }
   if (privateResult.kind === "private") {
     const signed = await signedPrivateResultUrl(
@@ -288,8 +295,10 @@ export async function GET(req: Request, { params }: Props) {
         { status: 503 }
       );
     }
+    // Signed URL only via redirect after ownership — never JSON body.
     return NextResponse.redirect(signed, 302);
   }
+  // Process-memory path: session-bound only (non-UUID job_… ids).
   const session = await ensureSession();
   const gate = gateDownload(session.id, id);
   if (!gate.ok) {
@@ -310,11 +319,12 @@ export async function HEAD(req: Request, { params }: Props) {
   const { id } = await params;
   const privateResult = await privateResultForRequest(req, id);
   if (privateResult.kind === "error") {
+    // Uniform durable deny — no private markers / checksum on fail.
     return new NextResponse(null, {
       status: privateResult.status,
       headers: {
         "X-Pikbo-Download": "blocked",
-        "X-Pikbo-Download-Code": privateResult.code,
+        "X-Pikbo-Download-Code": "NOT_FOUND",
         "Cache-Control": "private, no-store",
       },
     });
