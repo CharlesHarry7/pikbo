@@ -117,7 +117,10 @@ export default function CinemaPage() {
     cinemaPresets.length >= 4 ? cinemaPresets : PRESETS.slice(0, 8);
 
   return (
-    <div className="relative min-h-screen pb-28">
+    <div
+      className="relative min-h-screen pb-[var(--sticky-generate-pad)] lg:pb-0"
+      data-cinema-content-pad="sticky-generate"
+    >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[min(420px,50vh)] overflow-hidden opacity-45">
         <video
           className="h-full w-full object-cover"

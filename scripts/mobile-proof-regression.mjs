@@ -173,4 +173,77 @@ assert.match(
   "Guest Create Lab video must enable errorRetry for honest mobile recovery"
 );
 
+
+// AIT-383: content under sticky Generate + MobileGenerateBar uses shared pad tokens
+{
+  const globals = source("app/globals.css");
+  assert.match(
+    globals,
+    /--sticky-generate-pad:\s*calc\(/,
+    "globals content pad stacks sticky chrome + mobile-nav-clearance"
+  );
+  assert.match(
+    globals,
+    /--sticky-generate-pad-safe:\s*calc\(/,
+    "globals nav-less content pad stacks sticky chrome + floating-cta-safe-bottom"
+  );
+  assert.match(
+    globals,
+    /--mobile-generate-bar-pad:\s*calc\(/,
+    "Library/browse last rows clear MobileGenerateBar via pad token"
+  );
+  const studioSrc = source("components/CreateStudio.tsx");
+  assert.match(
+    studioSrc,
+    /pb-\[var\(--sticky-generate-pad-safe\)\]|pb-\[var\(--sticky-generate-pad\)\]/,
+    "CreateStudio content pad must use sticky-generate pad tokens"
+  );
+  assert.doesNotMatch(
+    studioSrc,
+    /\bpb-36\b|\bpb-32\b/,
+    "CreateStudio must not bare pb-32/pb-36 under sticky Generate"
+  );
+  const cinemaSrc = source("app/cinema/page.tsx");
+  assert.match(
+    cinemaSrc,
+    /pb-\[var\(--sticky-generate-pad\)\]/,
+    "cinema content pad must use sticky-generate pad token"
+  );
+  assert.doesNotMatch(
+    cinemaSrc,
+    /className="[^"]*\bpb-28\b/,
+    "cinema must not bare pb-28 under sticky Generate"
+  );
+  const modulesSrc = source("app/modules/page.tsx");
+  assert.match(
+    modulesSrc,
+    /pb-\[var\(--sticky-generate-pad\)\]/,
+    "Modules content pad must use sticky-generate pad token"
+  );
+  for (const [file, markerName] of [
+    ["app/explore/page.tsx", "data-explore-content-pad"],
+    ["app/flow/page.tsx", "data-flow-content-pad"],
+    ["app/effects/page.tsx", "data-effects-content-pad"],
+    ["app/community/page.tsx", "data-community-content-pad"],
+    ["app/library/page.tsx", "data-library-content-pad"],
+  ]) {
+    const page = source(file);
+    assert.match(
+      page,
+      /pb-\[var\(--mobile-generate-bar-pad\)\]/,
+      `${file} must use --mobile-generate-bar-pad (not bare pb-24/28)`
+    );
+    assert.match(
+      page,
+      new RegExp(`${markerName}=["']mobile-generate-bar["']`),
+      `${file} must expose ${markerName} smoke marker`
+    );
+    assert.doesNotMatch(
+      page,
+      /className="[^"]*\bpb-(?:24|28)\b/,
+      `${file} must not bare pb-24/pb-28 under MobileGenerateBar`
+    );
+  }
+}
+
 console.log("mobile proof regression: source contracts PASS");
