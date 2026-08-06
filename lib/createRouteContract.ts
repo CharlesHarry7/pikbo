@@ -108,10 +108,18 @@ export function isGenerate360Effect(effect: string | undefined): boolean {
 /**
  * Home Generate→360 entry sources (createGenerate360Href tags).
  * These are surface analytics tags — not Lab project remix ids.
- * AIT-459: first-run workbench must stay Lab sample / Live gated honest.
+ * AIT-459/AIT-473: first-run workbench must stay Lab sample / Live gated honest.
+ *
+ * AIT-462 money doors (must all be recognized so workbench never treats them
+ * as Lab project remix ids or `/projects/{source}` links):
+ * - home-hero, app-shell-home, home-trust, home-gallery-pedestal
+ * Also: home-explore-rail (Lab explore listing-spin entry).
  */
 export const HOME_GENERATE_ENTRY_SOURCES = [
   "home-hero",
+  "app-shell-home",
+  "home-trust",
+  "home-gallery-pedestal",
   "home-explore-rail",
 ] as const;
 
@@ -125,6 +133,26 @@ export function isHomeGenerateEntrySource(
   source: string | undefined
 ): source is HomeGenerateEntrySource {
   return HOME_GENERATE_ENTRY_SET.has((source || "").trim());
+}
+
+/** Short eyebrow for the CreateStudio home-entry honesty strip. */
+export function homeGenerateEntryLabel(
+  source: string | undefined
+): string {
+  switch ((source || "").trim()) {
+    case "home-hero":
+      return "From Home · Generate 360°";
+    case "app-shell-home":
+      return "From Home · nav Generate";
+    case "home-trust":
+      return "From Home · trust Generate 360°";
+    case "home-gallery-pedestal":
+      return "From Home · gallery pedestal";
+    case "home-explore-rail":
+      return "From Home · Lab explore rail";
+    default:
+      return "From Home · Generate 360°";
+  }
 }
 
 /**
