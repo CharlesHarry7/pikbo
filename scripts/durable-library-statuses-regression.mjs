@@ -517,6 +517,7 @@ assert.equal(failedObjectPath.newAttemptUrl, undefined);
 assert.doesNotMatch(JSON.stringify(failedObjectPath), /private-results/);
 
 // Succeeded without a private object is not a deliverable download.
+// AIT-223: still surfaces as missing result with new-attempt (not silent hide).
 const incompleteSuccess = privateLibraryJobFromRow({
   ...baseRow,
   status: "succeeded",
@@ -526,6 +527,11 @@ const incompleteSuccess = privateLibraryJobFromRow({
 assert.ok(incompleteSuccess);
 assert.equal(incompleteSuccess.downloadAllowed, false);
 assert.equal(incompleteSuccess.videoUrl, undefined);
+assert.equal(incompleteSuccess.errorCode, "PRIVATE_RESULT_MISSING");
+assert.equal(incompleteSuccess.creditsOutcome, "refund unconfirmed");
+assert.equal(incompleteSuccess.capabilities.newAttempt, true);
+assert.equal(incompleteSuccess.capabilities.localRetry, false);
+assert.equal(incompleteSuccess.newAttemptUrl, expectedNewAttemptUrl);
 
 // Unknown / invalid rows are dropped (not owner-filterable client-side).
 assert.equal(

@@ -4,6 +4,7 @@ import {
   canDownloadResult,
   freeLiveDownloadBlockReason,
   isSafeDeliverableUrl,
+  durableClientVideoUrl,
   classifyDownloadHead,
 } from "@/lib/createTrust";
 import { resultProvenanceLabel } from "@/lib/provenance";
@@ -78,6 +79,11 @@ function slimInputImage(inputImage: string | undefined): string | undefined {
   return undefined;
 }
 
+/**
+ * Normalize one history row for durable store hydrate.
+ * Storage signed absolute URLs rewrite to `/api/downloads/{id}` when requestId
+ * is known; otherwise they are dropped so tokens never re-enter localStorage.
+ */
 function normalizeItem(raw: unknown): HistoryItem | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
@@ -87,12 +93,18 @@ function normalizeItem(raw: unknown): HistoryItem | null {
   if (typeof o.effect !== "string" || typeof o.effectName !== "string") {
     return null;
   }
+  const requestId =
+    typeof o.requestId === "string" && o.requestId.trim()
+      ? o.requestId.trim()
+      : undefined;
+  const videoUrl = durableClientVideoUrl(o.videoUrl.trim(), { requestId });
+  if (!videoUrl) return null;
   return {
     id:
       typeof o.id === "string" && o.id
         ? o.id
         : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    videoUrl: o.videoUrl.trim(),
+    videoUrl,
     projectId: typeof o.projectId === "string" ? o.projectId : undefined,
     projectName:
       typeof o.projectName === "string" ? o.projectName : undefined,
@@ -108,7 +120,7 @@ function normalizeItem(raw: unknown): HistoryItem | null {
     duration: typeof o.duration === "number" ? o.duration : undefined,
     aspectRatio: typeof o.aspectRatio === "string" ? o.aspectRatio : undefined,
     resolution: typeof o.resolution === "string" ? o.resolution : undefined,
-    requestId: typeof o.requestId === "string" ? o.requestId : undefined,
+    requestId,
     sourceProject:
       typeof o.sourceProject === "string" ? o.sourceProject : undefined,
     channel: typeof o.channel === "string" ? o.channel : undefined,
@@ -175,8 +187,16 @@ export function saveHistory(list: HistoryItem[]): void {
 export function pushHistory(
   item: Omit<HistoryItem, "id" | "createdAt">
 ): HistoryItem[] {
+  // Signed storage URLs rewrite to controlled gate or drop — never persist tokens.
+  const videoUrl = durableClientVideoUrl(item.videoUrl, {
+    requestId: item.requestId,
+  });
+  if (!videoUrl) {
+    return loadHistory();
+  }
   const next: HistoryItem = {
     ...item,
+    videoUrl,
     inputImage: slimInputImage(item.inputImage),
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     createdAt: new Date().toISOString(),
