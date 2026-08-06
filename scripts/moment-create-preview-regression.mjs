@@ -43,14 +43,19 @@ assert.match(stage, /Preview with my toy/);
 assert.match(stage, /href=\{`\/create\?moment=\$\{moment\.id\}`\}/);
 assert.match(rail, /role="tablist"/);
 
+// Moment query is fail-closed and never falls through to Studio.
 const momentBranch = createPage.indexOf("if (sp.moment !== undefined)");
-const sellerPackBranch = createPage.indexOf('if (sp.mode === "seller-pack"');
 const genericStudio = createPage.indexOf("<CreateStudio");
-assert.ok(momentBranch > -1 && momentBranch < sellerPackBranch);
-assert.ok(sellerPackBranch > -1 && sellerPackBranch < genericStudio);
+assert.ok(momentBranch > -1, "create page must branch on ?moment=");
+assert.ok(
+  genericStudio > -1 && momentBranch < genericStudio,
+  "Moment preview must resolve before CreateStudio"
+);
 assert.match(createPage, /Array\.isArray\(sp\.moment\) \? null : parseMomentId/);
 assert.match(createPage, /if \(!momentId\) return <InvalidMomentNotice/);
-assert.match(createPage, /fixedMomentContract/);
+assert.match(createPage, /MomentCreatePreview/);
+assert.match(createPage, /GuestMomentCreateGate/);
+// Soft-launch: public Create is the fixed Moment contract (no alternate UIs).
 assert.match(studio, /fixedMomentContract\?: boolean/);
 assert.match(studio, /const FIXED_MOMENT_EFFECT = "street-power-up"/);
 assert.match(studio, /fixedMomentContract \? FIXED_MOMENT_EFFECT/);
@@ -97,6 +102,19 @@ assert.match(createPreview, /Watch a finished reveal/);
 assert.match(createPreview, /moon-box-reveal\.mp4/);
 assert.match(createPreview, /Archived study · separate sample toy/);
 assert.match(createPreview, /\/login\?next=\$\{encodeURIComponent/);
+// AIT-199: finite session boot + honest timeout Retry (no infinite Checking…)
+assert.match(createPreview, /STUDIO_SESSION_BOOT_MS/);
+assert.match(
+  createPreview,
+  /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/
+);
+assert.match(createPreview, /isClientTimeoutError/);
+assert.match(createPreview, /sessionBoot === "timeout"/);
+assert.match(createPreview, /data-studio-open-state=\{sessionBoot\}/);
+assert.match(createPreview, /data-studio-open-error="session-timeout"/);
+assert.match(createPreview, /data-studio-open-retry/);
+assert.match(createPreview, /Retry access check/);
+assert.match(createPreview, /setBootNonce/);
 assert.doesNotMatch(createPreview, /fetch\(["']\/api\/(?:generate|assets|seller-pack)/);
 assert.doesNotMatch(createPreview, /settle|reserve.*credits|release.*credits/i);
 
@@ -106,7 +124,11 @@ assert.match(shell, /momentValues\.length === 1/);
 assert.match(shell, /Boolean\(parseMomentId\(momentValues\[0\]\)\)/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.match(shell, /Create a Moment/);
-assert.match(shell, /label: "Projects"/);
+// Soft-launch primary nav: Create / Library / Pricing (no Projects shelf).
+assert.match(shell, /label: "Create"/);
+assert.match(shell, /label: "Library"/);
+assert.match(shell, /href: "\/library"/);
 assert.doesNotMatch(shell, /Motion archive/);
+assert.doesNotMatch(shell, /label: "Projects"/);
 
 console.log("moment create preview regression: ok");
