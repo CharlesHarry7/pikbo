@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
 import {
+  canLiveGenerate,
   fetchMe,
   freeTrialExhausted,
-  isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
 import {
@@ -26,7 +26,7 @@ const SOFT_LAUNCH_MOMENT_HREF =
 /**
  * Soft-launch conversion strip (哥飞 P0): honest free trial + primary Generate CTA.
  * Sits above the fold on Explore home — not a multi-step tour.
- * Reflects Free Mini exhausted state from /api/me when known.
+ * Free Mini / live chips only when freeLiveOpen (parity FreeTrialCta).
  */
 export function SoftLaunchStrip() {
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -45,9 +45,14 @@ export function SoftLaunchStrip() {
     };
   }, []);
 
-  const demo = isDemoMode(me);
   const trialDone = freeTrialExhausted(me);
   const freeLive = me?.freeTrial?.freeLive;
+  /** R0/T6: never brand Free Mini while Live is closed (incl. me loading). */
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(me) &&
+      freeLive &&
+      freeLive.liveEnabled !== false
+  );
   const freeLiveModelLabel =
     freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "Free Mini";
   const clipsLeft =
@@ -55,32 +60,34 @@ export function SoftLaunchStrip() {
       ? me.freeTrial.clipsLeft
       : null;
 
-  const line = demo
-    ? "Cached Pikbo Lab prototypes · 0 credits · your upload is not processed"
+  const line = !freeLiveOpen
+    ? "Cached Lab preview · 0 credits · your upload is not processed"
     : trialDone
       ? "Free Mini trial used · Lab demos still free · compare finite plans"
       : freeLive
         ? `${freeLiveModelLabel} · ${freeLive.resolution} · ${freeLive.durationSec}s · live often 1–3 min · refunds when confirmed`
-        : "Live access is not confirmed · continue with cached Lab prototypes";
+        : "Live gated · continue with cached Lab prototypes";
 
   // Live primary stays first-dollar Moment; Generate secondary is 360 remix.
-  const primaryHref = trialDone
-    ? "/pricing"
-    : demo
-      ? SOFT_LAUNCH_LAB_SAMPLE_HREF
-      : SOFT_LAUNCH_MOMENT_HREF;
-  const primaryLabel = trialDone
-    ? "Compare plans"
-    : demo
-      ? "Preview cached Lab video"
-      : `Create Moment · ${freeLiveModelLabel} 5s`;
+  const primaryHref =
+    trialDone && freeLiveOpen
+      ? "/pricing"
+      : !freeLiveOpen
+        ? SOFT_LAUNCH_LAB_SAMPLE_HREF
+        : SOFT_LAUNCH_MOMENT_HREF;
+  const primaryLabel =
+    trialDone && freeLiveOpen
+      ? "Compare plans"
+      : !freeLiveOpen
+        ? "Preview cached Lab video"
+        : `Create Moment · ${freeLiveModelLabel} 5s`;
 
   return (
     <div className="border-b border-[#c8ff3d]/25 bg-gradient-to-r from-[#c8ff3d]/[0.12] via-black to-black px-3 py-2.5 sm:px-5">
       <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2">
         <p className="text-[12px] leading-snug text-white/80 sm:text-[13px]">
           <span className="font-black text-[#c8ff3d]">
-            {demo
+            {!freeLiveOpen
               ? "Cached preview"
               : trialDone
                 ? "Trial used"
@@ -88,7 +95,7 @@ export function SoftLaunchStrip() {
           </span>
           <span className="text-white/50"> · </span>
           {line}
-          {clipsLeft !== null && !demo && !trialDone ? (
+          {clipsLeft !== null && freeLiveOpen && !trialDone ? (
             <span className="text-white/45">
               {" "}
               · ~{clipsLeft} live left
@@ -103,13 +110,20 @@ export function SoftLaunchStrip() {
                 event: "landing_view",
                 path: "/",
                 meta: {
-                  cta: trialDone ? "soft_launch_pricing" : "soft_launch_try",
+                  cta:
+                    trialDone && freeLiveOpen
+                      ? "soft_launch_pricing"
+                      : "soft_launch_try",
                 },
               })
             }
             className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[12px] font-black text-black shadow-[0_0_20px_rgba(200,255,61,0.25)]"
             data-soft-launch-try={
-              trialDone ? "pricing" : demo ? "lab-sample-remix" : "single-moment"
+              trialDone && freeLiveOpen
+                ? "pricing"
+                : !freeLiveOpen
+                  ? "lab-sample-remix"
+                  : "single-moment"
             }
           >
             {primaryLabel}

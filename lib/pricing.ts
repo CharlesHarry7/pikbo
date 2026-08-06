@@ -52,7 +52,7 @@ export const PLANS: Plan[] = [
     perks: [
       "Labeled preview examples · 0 credits",
       "Explore the three Launch Pack formats",
-      "Upload and configure before sign-in",
+      "Cached Lab previews before sign-in · product photo needs private beta",
       "Your photo stays on your device in demo mode",
     ],
     cta: "Explore cached demos",
@@ -77,7 +77,7 @@ export const PLANS: Plan[] = [
       "Commercial use for rights-owned product photos",
     ],
     featured: true,
-    cta: "Join Founding Studio",
+    cta: "Join Founding Studio when billing opens",
     watermark: false,
     resolution: "720p",
     commercial: true,

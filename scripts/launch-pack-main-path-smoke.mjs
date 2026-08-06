@@ -186,12 +186,14 @@ assert.match(pricingCheckout, /Preview one Moment/);
 assert.match(pricingCheckout, /fetch\("\/api\/checkout"/);
 assert.match(pricingCheckout, /data\.acceptance\?\.paid === true/);
 assert.match(pricingCards, /data-pricing-state="coming-soon"/);
-assert.match(pricingCards, /Price pending/);
+assert.match(pricingCards, /\$49 founding rate/);
 assert.match(pricingCards, /No public subscription or checkout/);
+assert.match(pricingCards, /checkout closed/);
 assert.doesNotMatch(pricingCards, /PricingCheckoutButton|PLANS\.map|FreeTrialCta/);
-assert.match(paywall, /Founding Studio · coming soon/);
-assert.match(paywall, /No public price, monthly allowance, subscription, or checkout/);
-assert.doesNotMatch(paywall, /PLANS|priceMonthly|\$49|\/mo/);
+assert.match(paywall, /Founding Studio · checkout closed/);
+assert.match(paywall, /Founding rate is \$49\/month for nine directed Moments/);
+assert.match(paywall, /Public subscription purchase and live checkout stay closed/);
+assert.doesNotMatch(paywall, /PLANS|priceMonthly/);
 // Library is an authenticated generations ledger, not a public Pack/demo grid.
 assert.match(libraryGrid, /fetchMe\(\)/);
 assert.match(libraryGrid, /if \(!me\?\.signedIn\)/);
