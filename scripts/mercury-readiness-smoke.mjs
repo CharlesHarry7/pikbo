@@ -49,9 +49,18 @@ assert.match(contact, /public checkout is closed/);
 assert.match(contact, /Private beta/);
 // Founding rate is public; live checkout stays closed (CURRENT_LAUNCH_CONTRACT).
 assert.match(pricing, /\$49/);
-assert.match(pricing, /Public live checkout remains gated|Public payment remains locked/);
-assert.match(pricing, /Request private beta access/);
-assert.doesNotMatch(pricing, /Price pending|There is no public price or checkout today/);
+assert.match(pricing, /No subscription is on sale today/);
+assert.match(pricing, /checkout closed|Checkout closed/);
+assert.match(
+  pricing,
+  /Apply to the private beta|Request private beta access/
+);
+assert.match(pricing, /Not for sale · no public live checkout today/);
+assert.doesNotMatch(
+  pricing,
+  /Join Founding Studio · \$\{foundingStudio\.priceMonthly\}|Join Founding Studio · \$49\/month/
+);
+assert.doesNotMatch(pricing, /Price pending/);
 
 for (const rule of [
   /cancel a paid subscription at any time/i,

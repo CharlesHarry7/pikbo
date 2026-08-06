@@ -11,12 +11,12 @@ const PRICING_PREVIEW_HREF =
 export const metadata: Metadata = {
   title: "Founding Studio · Private Beta",
   description:
-    "Founding Studio is Pikbo's $49 monthly private-beta plan for nine directed toy-video Moments. Public live checkout remains gated until delivery and billing validation pass.",
+    "Founding Studio founding rate is $49/month for nine directed toy-video Moments. No subscription is on sale today — public live checkout stays closed until delivery and billing validation pass.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: `Pikbo Founding Studio · Private Beta`,
     description:
-      "Nine directed toy-video Moments for $49/month. Public live checkout remains gated until private-beta delivery and billing validation pass.",
+      "Founding rate $49/month for nine Moments. No subscription is on sale today; public live checkout remains gated.",
     url: `${site.url}/pricing`,
     siteName: site.name,
     type: "website",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `Pikbo Founding Studio · Private Beta`,
     description:
-      "Nine directed toy-video Moments for $49/month. Public live checkout remains gated until private-beta delivery and billing validation pass.",
+      "Founding rate $49/month for nine Moments. No subscription is on sale today; public live checkout remains gated.",
     images: [site.socialImages.twitter],
   },
 };
@@ -98,23 +98,21 @@ export default function PricingPage() {
       <div className="relative mx-auto max-w-6xl">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF4ECD]">
-            Founding Studio · private beta
+            Founding Studio · checkout closed
           </p>
           <h1 className="mt-3 font-display text-[clamp(3rem,7vw,6.5rem)] font-black leading-[0.88] tracking-[-0.07em]">
             <span className="text-bling">One plan</span> for your next toy launch.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-6 text-white/55 sm:text-lg sm:leading-7">
             A finite subscription for independent toy sellers who want to pick
-            one strong visual direction and create only the clip they need.
-            The founding offer is nine directed Moments for $49/month. Public
-            payment remains locked until every private-delivery and billing
-            gate passes.
+            one strong visual direction and create only the clip they need.{" "}
+            {`Founding rate is $${foundingStudio.priceMonthly}/month for nine directed Moments. No subscription is on sale today. Public payment remains locked until every private-delivery and billing gate passes.`}
           </p>
         </div>
 
         <article
           className="effect-card relative mx-auto mt-9 max-w-4xl overflow-hidden bg-[rgba(20,20,30,0.92)] p-5 text-[var(--cream)] sm:mt-12 sm:p-8"
-          data-pricing-state="closed-beta"
+          data-pricing-state="checkout-closed"
         >
           <div
             className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#B14EFF,#FF4ECD,#00D9FF)]"
@@ -127,7 +125,7 @@ export default function PricingPage() {
                   Founding Studio
                 </h2>
                 <span className="rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white">
-                  Closed beta
+                  Checkout closed
                 </span>
               </div>
               <p className="mt-7 text-4xl font-black tracking-[-0.055em]">
@@ -135,6 +133,9 @@ export default function PricingPage() {
                 <span className="ml-1 text-sm font-bold tracking-normal text-white/45">
                   / month founding rate
                 </span>
+              </p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/40">
+                Not for sale · no public live checkout today
               </p>
               <p className="mt-3 max-w-md text-sm leading-6 text-white/50">
                 A finite allowance for directed toy-video Moments. Public live
@@ -146,7 +147,7 @@ export default function PricingPage() {
               <div className="mt-7 max-w-sm">
                 <PricingCheckoutButton
                   planId="founding_studio"
-                  label={`Join Founding Studio · $${foundingStudio.priceMonthly}/month`}
+                  label={foundingStudio.cta}
                   featured
                 />
               </div>
@@ -154,7 +155,7 @@ export default function PricingPage() {
                 href="/contact?source=pricing-private-beta"
                 className="mt-4 inline-block text-xs font-bold text-white/58 underline decoration-white/20 underline-offset-4 hover:text-[#00D9FF]"
               >
-                Request private beta access
+                Apply to the private beta
               </Link>
               <Link
                 href={PRICING_PREVIEW_HREF}

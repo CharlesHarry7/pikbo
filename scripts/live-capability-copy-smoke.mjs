@@ -393,8 +393,59 @@ assert(
   "i18n home.browseCta.chip must not hardcode Free Mini as public free path"
 );
 assert(
+  !/"home\.tryFree10s":\s*"[^"]*Mini 5s/.test(i18nSource),
+  "i18n home.tryFree10s must not hardcode Mini 5s as public free path"
+);
+assert(
+  !/"cta\.tryMiniFree":\s*"[^"]*Mini free/.test(i18nSource) &&
+    !/"cta\.tryMiniFree":\s*"[^"]*免费试用 Mini/.test(i18nSource),
+  "i18n cta.tryMiniFree must prefer Lab sample over public Mini free"
+);
+assert(
   i18nSource.includes("Cached Lab") || i18nSource.includes("0 credits"),
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
+);
+
+// AIT-277 residual: public /pricing page + Explore strip must not sell checkout.
+const pricingPageSource = read("app/pricing/page.tsx");
+assert(
+  pricingPageSource.includes("No subscription is on sale today") &&
+    pricingPageSource.includes("Checkout closed") &&
+    pricingPageSource.includes("Not for sale · no public live checkout today") &&
+    pricingPageSource.includes("Apply to the private beta"),
+  "pricing page must disclose closed checkout + not-for-sale founding rate"
+);
+assert(
+  pricingPageSource.includes("foundingStudio.cta") ||
+    pricingPageSource.includes("Join Founding Studio when billing opens"),
+  "pricing checkout label must use when-billing-opens CTA (not Join · $49/month)"
+);
+assert(
+  !/Join Founding Studio · \$\{foundingStudio\.priceMonthly\}/.test(
+    pricingPageSource
+  ) && !/Join Founding Studio · \$49\/month/.test(pricingPageSource),
+  "pricing page must not mount Join Founding Studio · $49/month as if live"
+);
+
+const hfExploreHomeSource = read("components/HfExploreHome.tsx");
+assert(
+  hfExploreHomeSource.includes("Lab sample · cached · 0 credits"),
+  "HfExploreHome creation matrix must label Lab sample · cached · 0 credits"
+);
+assert(
+  !/Mini 5s · Sample ready/.test(hfExploreHomeSource),
+  "HfExploreHome must not hardcode Mini 5s · Sample ready under FreeTrialCta"
+);
+
+const howItWorksSource = read("components/HowItWorks.tsx");
+assert(
+  !/labelTry=["']Try free · Mini 5s["']/.test(howItWorksSource),
+  "HowItWorks FreeTrialCta must not hardcode Try free · Mini 5s"
+);
+assert(
+  howItWorksSource.includes("labelDemo") &&
+    howItWorksSource.includes("Preview Lab sample"),
+  "HowItWorks must pass honest Lab sample demo label"
 );
 
 function walkHtml(directory) {
