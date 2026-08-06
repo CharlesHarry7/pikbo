@@ -246,6 +246,22 @@ assert(
   );
 }
 
+// AIT-385: LandingHowItWorks residual lime → neon-pink board tokens
+{
+  const landingHiw = read("components/LandingHowItWorks.tsx");
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  assert(
+    !lime.test(landingHiw),
+    "LandingHowItWorks must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    landingHiw.includes("var(--neon-pink)") &&
+      landingHiw.includes("var(--void)") &&
+      landingHiw.includes("rgba(255,78,205"),
+    "LandingHowItWorks step badges use neon-pink / void board tokens"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
