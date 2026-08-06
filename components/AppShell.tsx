@@ -13,6 +13,7 @@ import { Logo } from "@/components/Logo";
 import { MobileGenerateBar } from "@/components/MobileGenerateBar";
 import { ToastProvider } from "@/components/Toast";
 import { trackPageView } from "@/lib/analytics";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { parseMomentId } from "@/lib/moments";
 import {
   MOBILE_NAV,
@@ -23,6 +24,8 @@ import { cn } from "@/lib/utils";
 
 const DEFAULT_MOMENT_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=moment-shell`;
 const PRIMARY_NAV_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=primary-nav`;
+/** Home sticky shell: one primary Generate→360 (AIT-413 friction cut). */
+const HOME_SHELL_GENERATE_HREF = createGenerate360Href("app-shell-home");
 
 function active(path: string, href: string) {
   const route = href.split("?")[0];
@@ -207,10 +210,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <div className="flex shrink-0 items-center gap-3">
           {motionChrome ? (
             <Link
-              href={home ? DEFAULT_MOMENT_CREATE_HREF : "/library"}
+              href={home ? HOME_SHELL_GENERATE_HREF : "/library"}
+              data-app-shell-home-generate={home ? "360" : undefined}
               className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.35)]"
             >
-              {home ? "Try Street Power-Up" : "Open Library"}
+              {home ? "Generate 360°" : "Open Library"}
             </Link>
           ) : resultShell ? (
             <Link
@@ -253,7 +257,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-2">
           {momentSurface ? (
             <Link
-              href={DEFAULT_MOMENT_CREATE_HREF}
+              href={home ? HOME_SHELL_GENERATE_HREF : DEFAULT_MOMENT_CREATE_HREF}
+              data-app-shell-home-generate={home ? "360" : undefined}
               className={cn(
                 "inline-flex min-h-9 items-center rounded-full px-4 text-[10px] font-black",
                 home
@@ -261,7 +266,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                   : "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
               )}
             >
-              {home ? "Create my drop clip" : "Use this motion"}
+              {home ? "Generate 360°" : "Use this motion"}
             </Link>
           ) : resultShell ? (
             <>
