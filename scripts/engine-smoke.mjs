@@ -5194,7 +5194,7 @@ assert.equal(
   "sessionStorage rejects an incorrect fixed-child aspect ratio"
 );
 const refreshedPack = recovery.reconcileSellerPackRecovery(activePack, [
-  { jobId: "pack-job-spin-0001", childKey: "listing_spin", effectSlug: "360-spin-showcase", aspectRatio: "1:1", status: "succeeded", quotedCredits: 10, settledCredits: 10, hasPrivateResult: true, resultUrl: "https://private.example/spin", modelId: "seedance-fast", resolution: "720p", durationSec: 5 },
+  { jobId: "pack-job-spin-0001", childKey: "listing_spin", effectSlug: "360-spin-showcase", aspectRatio: "1:1", status: "succeeded", quotedCredits: 10, settledCredits: 10, hasPrivateResult: true, resultUrl: "/api/downloads/pack-job-spin-0001", modelId: "seedance-fast", resolution: "720p", durationSec: 5 },
   { jobId: "pack-job-reveal-002", childKey: "blind_box_reveal", effectSlug: "blind-box-unboxing", aspectRatio: "9:16", status: "failed", quotedCredits: 10, settledCredits: 0, errorCode: "provider_error" },
   { jobId: "pack-job-social-003", childKey: "social_flash", effectSlug: "paparazzi-flash", aspectRatio: "9:16", status: "running", quotedCredits: 10, settledCredits: 0 },
 ]);

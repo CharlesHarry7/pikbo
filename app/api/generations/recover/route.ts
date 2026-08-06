@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import type { GenerateErrorBody, GenerateSuccess } from "@/lib/contracts";
-import {
-  getPrivateGenerationRecovery,
-  signedPrivateResultUrl,
-} from "@/lib/privateGenerationResults";
+import { customerFacingGenerateVideoUrl } from "@/lib/createTrust";
+import { getPrivateGenerationRecovery } from "@/lib/privateGenerationResults";
 import { ensureSession, publicSession } from "@/lib/session";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 
@@ -22,7 +20,9 @@ function normalizedIdempotencyKey(req: Request): string | null {
 /**
  * Read-only owner recovery for an already-submitted private generation.
  * It never reserves credits, invokes a provider, or exposes storage keys/raw
- * provider URLs. The client uses it only when the original POST is slow.
+ * provider URLs / short-lived storage signed URLs. Success videoUrl is always
+ * the controlled /api/downloads/{jobId} gate. The client uses it only when
+ * the original POST is slow.
  */
 export async function GET(req: Request) {
   const user = await getAuthUserFromRequest(req);
@@ -106,23 +106,16 @@ export async function GET(req: Request) {
   }
 
   const { result } = recovery;
-  const signedUrl = await signedPrivateResultUrl(result.objectKey);
-  if (!signedUrl) {
-    return NextResponse.json<GenerateErrorBody>(
-      {
-        error:
-          "The private result exists, but Pikbo could not open its owner download yet. No new generation was started.",
-        code: "DELIVERY_PIPELINE_UNAVAILABLE",
-        jobId: result.jobId,
-        session: publicSession(session),
-      },
-      { status: 503, headers: NO_STORE_HEADERS }
-    );
-  }
+  const controlledUrl = customerFacingGenerateVideoUrl({
+    demo: false,
+    watermark: false,
+    jobId: result.jobId,
+    videoUrl: "",
+  });
 
   return NextResponse.json<GenerateSuccess>(
     {
-      videoUrl: signedUrl,
+      videoUrl: controlledUrl,
       demo: false,
       watermark: false,
       model: result.model,
