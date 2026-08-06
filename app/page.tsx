@@ -43,9 +43,9 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const lcpPoster = "/demos/beatbot-still.webp";
-  // AIT-121: Moment hero primary (LCP) → Lab proof wall → HF product rail suite.
-  // Generate doors use createGenerate360Href; no second competing primary above fold.
-  // No full Explore remount, Seller Pack, or fake UGC.
+  // AIT-121/AIT-160: Moment hero primary (LCP) → Lab proof wall with one
+  // primary Generate→360 door → HF product rail suite. 360 card is 1-click
+  // workbench (create route honors effect). No full Explore remount / Pack / fake UGC.
   const proofWall = buildHomeShowcaseFeed();
 
   return (
