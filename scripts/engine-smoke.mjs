@@ -3999,6 +3999,23 @@ const homeExploreRailSrc = fs.readFileSync(
 assert.match(homeExploreRailSrc, /data-home-explore-rail/);
 assert.match(homeExploreRailSrc, /createGenerate360Href/);
 assert.doesNotMatch(homeExploreRailSrc, /data-home-moment-cta/);
+// AIT-539: HomeExploreRecipeRail residual carnival cyan → gallery-calm copper
+assert.doesNotMatch(
+  homeExploreRailSrc,
+  /#00D9FF|00D9FF|rgba\(0\s*,\s*217\s*,\s*255/i
+);
+assert.match(homeExploreRailSrc, /var\(--brand\)/);
+assert.match(homeExploreRailSrc, /rgba\(196\s*,\s*165\s*,\s*116/);
+assert.match(homeExploreRailSrc, /home-explore-rail/);
+assert.match(homeExploreRailSrc, /Listing 360/);
+assert.match(
+  homeExploreRailSrc,
+  /Cached prototypes only|not customer results|Lab recipe/i
+);
+assert.doesNotMatch(
+  homePageSrc,
+  /HomeExploreRecipeRail|HomeViralWall|HfExploreHome|PublicLaunchPackSample|HomeSeoBody|HomeBrowseCta/
+);
 const homeHeroSrc = fs.readFileSync(
   join(root, "components/HomeCinemaHero.tsx"),
   "utf8"

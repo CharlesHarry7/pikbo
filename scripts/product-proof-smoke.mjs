@@ -285,6 +285,40 @@ assert(
   );
 }
 
+// AIT-539: HomeExploreRecipeRail residual carnival cyan → gallery-calm copper
+{
+  const carnivalCyan =
+    /#00D9FF|00D9FF|rgba\(0\s*,\s*217\s*,\s*255/i;
+  assert(
+    !carnivalCyan.test(exploreRail),
+    "HomeExploreRecipeRail must not hard-code carnival cyan hex accents"
+  );
+  assert(
+    exploreRail.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(exploreRail) &&
+      exploreRail.includes("var(--neon-pink)"),
+    "HomeExploreRecipeRail accents use gallery-calm copper board tokens"
+  );
+  assert(
+    exploreRail.includes("home-explore-rail") &&
+      exploreRail.includes("createGenerate360Href") &&
+      exploreRail.includes("Listing 360") &&
+      /Cached prototypes only|not customer results|Lab recipe/i.test(
+        exploreRail
+      ),
+    "HomeExploreRecipeRail keeps Lab path honesty + 360 / entry attribution"
+  );
+  assert(
+    !home.includes("<HomeExploreRecipeRail") &&
+      !home.includes("<HomeViralWall") &&
+      !home.includes("<HfExploreHome") &&
+      !home.includes("<PublicLaunchPackSample") &&
+      !home.includes("<HomeSeoBody") &&
+      !home.includes("<HomeBrowseCta"),
+    "gallery-calm home must not remount dormant explore/viral/seo rails"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
