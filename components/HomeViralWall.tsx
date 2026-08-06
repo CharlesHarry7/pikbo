@@ -51,7 +51,10 @@ function pinListing360InFirstSlots(
  * Below-fold Lab proof wall for Moment home: ≤ HOME_PROOF_LIMIT cached recipes
  * from HOME_PROOF_SLUGS (360 pinned in first 4 for mobile). Honest Lab badge
  * only — not a full HfExploreHome remount, Pack sample, or UGC wall.
- * Listing 360° door goes through createGenerate360Href (AIT-108 / AIT-121).
+ *
+ * AIT-198 / AIT-160 friction cut: one primary Generate→360 door
+ * (createGenerate360Href). 360 card is 1-click workbench (not project inspect).
+ * Moment stays secondary here; hero keeps Moment product primary + 360 secondary.
  */
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
   const wall = pinListing360InFirstSlots(
@@ -69,10 +72,11 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
       data-home-wall="lab-proof"
       data-home-proof-wall="true"
       data-home-proof-360-pinned="true"
+      data-home-primary-generate="360"
       className="scroll-mt-14 overflow-hidden bg-[var(--void)] px-2 py-12 sm:px-4 sm:py-14 lg:px-6 lg:py-20"
       aria-labelledby="recipe-wall-title"
     >
-      <div className="mx-auto mb-7 flex max-w-[1600px] items-end justify-between gap-6 px-2 sm:mb-9">
+      <div className="mx-auto mb-7 flex max-w-[1600px] flex-col gap-5 px-2 sm:mb-9 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
         <div className="max-w-3xl">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#FF4ECD]">
             {HOME_PROOF_BADGE}
@@ -84,22 +88,18 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
             One toy. More ways to move.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/48 sm:text-base">
-            Eight cached Lab prototypes — including a 360 listing spin in the
-            first row. Archive previews only, not customer results. Pick a
-            recipe and remake it with your own figure.
+            Eight cached Lab prototypes — 360 listing spin first. One primary
+            Generate door opens the workbench with that recipe; archive
+            previews only, not customer results.
           </p>
         </div>
-        <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
-          <Link
-            href={momentHref}
-            className="rounded-full border border-[#FF4ECD]/35 bg-[rgba(255,78,205,0.1)] px-5 py-2.5 text-xs font-black text-[#FF4ECD] transition hover:border-[#00D9FF]/50 hover:text-[#00D9FF]"
-          >
-            Create a Moment ↗
-          </Link>
+        {/* Primary Generate visible on mobile too (AIT-198) — not sm-only. */}
+        <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
           <Link
             href={listing360Href}
             data-home-proof-360-cta
-            className="rounded-full border border-[#00D9FF]/35 bg-[rgba(0,217,255,0.08)] px-5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#00D9FF] transition hover:border-[#00D9FF]/60"
+            data-home-primary-generate-cta
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[linear-gradient(135deg,#00D9FF,#00FFA3)] px-5 py-2.5 text-xs font-black uppercase tracking-[0.1em] text-black shadow-[0_0_28px_rgba(0,217,255,0.35)] transition hover:brightness-110"
             onClick={() =>
               track({
                 event: "recipe_use",
@@ -112,7 +112,13 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               })
             }
           >
-            Listing 360° · Lab
+            Generate 360° →
+          </Link>
+          <Link
+            href={momentHref}
+            className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#FF4ECD]/35 bg-[rgba(255,78,205,0.08)] px-5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#FF4ECD] transition hover:border-[#FF4ECD]/60"
+          >
+            Create a Moment
           </Link>
         </div>
       </div>
@@ -126,9 +132,14 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
             ? withProofEntry(item.projectHref)
             : undefined;
           const remakeHref = withProofEntry(item.href);
-          const cardHref = projectHref || remakeHref;
-          const badge = item.badge || HOME_PROOF_BADGE;
           const is360 = recipeSlug === LISTING_360_SLUG;
+          // AIT-160: 360 card is a one-click Generate door — skip project
+          // inspect so home → workbench is a single tap.
+          const cardHref = is360
+            ? listing360Href
+            : projectHref || remakeHref;
+          const actionHref = is360 ? listing360Href : remakeHref;
+          const badge = item.badge || HOME_PROOF_BADGE;
 
           return (
             <article
@@ -136,23 +147,33 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               data-recipe-card={recipeSlug}
               data-home-proof-card={recipeSlug}
               data-home-proof-slot={index}
+              data-home-proof-360-direct={is360 ? "true" : undefined}
               className="toy-card group relative isolate aspect-[4/5] min-w-0 overflow-hidden p-1.5 transition duration-200 hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#00D9FF]"
             >
               <div className="relative h-full w-full overflow-hidden rounded-[1.35rem] bg-[#0A0A0F]">
                 <Link
                   href={cardHref}
                   prefetch
-                  aria-label={`Explore inside ${recipeName}`}
+                  aria-label={
+                    is360
+                      ? `Generate ${recipeName} with your toy`
+                      : `Explore inside ${recipeName}`
+                  }
                   className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#00D9FF]"
                   onClick={() =>
                     track({
-                      event: item.projectHref ? "project_open" : "recipe_use",
+                      event:
+                        is360 || !item.projectHref
+                          ? "recipe_use"
+                          : "project_open",
                       path: "/",
                       recipe: recipeSlug,
                       meta: {
-                        source: "home_recipe_card",
+                        source: is360
+                          ? "home_recipe_card_360_generate"
+                          : "home_recipe_card",
                         entry: HOME_PROOF_ENTRY,
-                        project: item.projectHref || null,
+                        project: is360 ? null : item.projectHref || null,
                       },
                     })
                   }
@@ -187,62 +208,46 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                       {recipeName}
                     </span>
                     <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-white/50 sm:text-[10px]">
-                      Open recipe proof →
+                      {is360 ? "Generate 360° →" : "Open recipe proof →"}
                     </span>
                   </span>
                 </Link>
                 <Link
-                  href={remakeHref}
+                  href={actionHref}
                   prefetch
-                  aria-label={`Use the ${recipeName} recipe`}
-                  className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white shadow-[0_0_18px_rgba(255,78,205,0.35)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] sm:bottom-4 sm:left-4 sm:text-[10px]"
+                  aria-label={
+                    is360
+                      ? `Generate 360° listing spin`
+                      : `Use the ${recipeName} recipe`
+                  }
+                  data-home-proof-360-card-cta={is360 ? "true" : undefined}
+                  className={
+                    is360
+                      ? "absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#00D9FF,#00FFA3)] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-black shadow-[0_0_18px_rgba(0,217,255,0.4)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] sm:bottom-4 sm:left-4 sm:text-[10px]"
+                      : "absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white shadow-[0_0_18px_rgba(255,78,205,0.35)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] sm:bottom-4 sm:left-4 sm:text-[10px]"
+                  }
                   onClick={() =>
                     track({
                       event: "recipe_use",
                       path: "/",
                       recipe: recipeSlug,
                       meta: {
-                        source: "home_recipe_remake",
+                        source: is360
+                          ? "home_recipe_remake_360"
+                          : "home_recipe_remake",
                         entry: HOME_PROOF_ENTRY,
-                        project: item.projectHref || null,
+                        project: is360 ? null : item.projectHref || null,
                       },
                     })
                   }
                 >
-                  Try this recipe
+                  {is360 ? "Generate →" : "Try this recipe"}
                   <span aria-hidden>↗</span>
                 </Link>
               </div>
             </article>
           );
         })}
-      </div>
-
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:hidden">
-        <Link
-          href={momentHref}
-          className="rounded-full border border-[#FF4ECD]/35 px-5 py-2.5 text-xs font-bold text-[#FF4ECD]"
-        >
-          Create a Moment
-        </Link>
-        <Link
-          href={listing360Href}
-          data-home-proof-360-cta
-          className="rounded-full border border-[#00D9FF]/35 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#00D9FF]"
-          onClick={() =>
-            track({
-              event: "recipe_use",
-              path: "/",
-              recipe: LISTING_360_SLUG,
-              meta: {
-                source: "home_proof_wall_360_door_mobile",
-                entry: HOME_PROOF_ENTRY,
-              },
-            })
-          }
-        >
-          Listing 360°
-        </Link>
       </div>
     </section>
   );
