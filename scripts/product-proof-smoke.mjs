@@ -129,6 +129,19 @@ assert(
     homeRail.includes('data-hf-rail-generate="remix"'),
   "Generate→360 remains secondary via wall/rail helpers (not hero primary)"
 );
+// AIT-234: wall remake chips + Create doors stay outline secondary — never
+// hero-grade gradient fill competing with data-home-moment-cta.
+assert(
+  homeWallSrc.includes('data-home-wall-remake="secondary"') &&
+    homeWallSrc.includes("Try this recipe") &&
+    !homeWallSrc.includes("bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)]") &&
+    !homeWallSrc.includes("shadow-[0_0_18px_rgba(255,78,205,0.35)]") &&
+    homeWallSrc.includes('data-home-wall-create="secondary"') &&
+    homeWallSrc.includes('data-home-wall-360="secondary"') &&
+    homeWallSrc.includes("HOME_PROOF_BADGE") &&
+    homeWallSrc.includes("createGenerate360Href"),
+  "wall remake chips secondary (outline weight); Create/360 doors secondary; honesty + 360 href preserved"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"

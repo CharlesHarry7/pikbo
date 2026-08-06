@@ -89,17 +89,21 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
             recipe and remake it with your own figure.
           </p>
         </div>
+        {/* Wall Create / 360 doors are below-fold secondary chrome — never
+            hero-primary filled weight (that stays on HomeCinemaHero alone). */}
         <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
           <Link
             href={momentHref}
-            className="rounded-full border border-[#FF4ECD]/35 bg-[rgba(255,78,205,0.1)] px-5 py-2.5 text-xs font-black text-[#FF4ECD] transition hover:border-[#00D9FF]/50 hover:text-[#00D9FF]"
+            data-home-wall-create="secondary"
+            className="rounded-full border border-white/20 bg-transparent px-5 py-2.5 text-xs font-black text-white/70 transition hover:border-[#FF4ECD]/45 hover:text-[#FF4ECD]"
           >
             Create a Moment ↗
           </Link>
           <Link
             href={listing360Href}
             data-home-proof-360-cta
-            className="rounded-full border border-[#00D9FF]/35 bg-[rgba(0,217,255,0.08)] px-5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#00D9FF] transition hover:border-[#00D9FF]/60"
+            data-home-wall-360="secondary"
+            className="rounded-full border border-[#00D9FF]/30 bg-transparent px-5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#00D9FF]/90 transition hover:border-[#00D9FF]/60 hover:text-[#00D9FF]"
             onClick={() =>
               track({
                 event: "recipe_use",
@@ -191,11 +195,14 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                     </span>
                   </span>
                 </Link>
+                {/* Per-card remake is outline secondary — no hero-grade
+                    gradient fill that competes with data-home-moment-cta. */}
                 <Link
                   href={remakeHref}
                   prefetch
+                  data-home-wall-remake="secondary"
                   aria-label={`Use the ${recipeName} recipe`}
-                  className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white shadow-[0_0_18px_rgba(255,78,205,0.35)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] sm:bottom-4 sm:left-4 sm:text-[10px]"
+                  className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-black/55 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white/88 backdrop-blur transition hover:border-[#FF4ECD]/45 hover:text-[#FF4ECD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] sm:bottom-4 sm:left-4 sm:text-[10px]"
                   onClick={() =>
                     track({
                       event: "recipe_use",
@@ -221,14 +228,16 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:hidden">
         <Link
           href={momentHref}
-          className="rounded-full border border-[#FF4ECD]/35 px-5 py-2.5 text-xs font-bold text-[#FF4ECD]"
+          data-home-wall-create="secondary"
+          className="rounded-full border border-white/20 bg-transparent px-5 py-2.5 text-xs font-bold text-white/70"
         >
           Create a Moment
         </Link>
         <Link
           href={listing360Href}
           data-home-proof-360-cta
-          className="rounded-full border border-[#00D9FF]/35 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#00D9FF]"
+          data-home-wall-360="secondary"
+          className="rounded-full border border-[#00D9FF]/30 bg-transparent px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#00D9FF]/90"
           onClick={() =>
             track({
               event: "recipe_use",

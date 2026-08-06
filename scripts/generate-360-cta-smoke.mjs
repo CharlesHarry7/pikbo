@@ -164,4 +164,22 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
+// 5. AIT-234: HomeViralWall remake chips stay secondary outline; 360 door
+// still routes through createGenerate360Href (not hero-grade gradient fill).
+const homeWall = read("components/HomeViralWall.tsx");
+assert.match(
+  homeWall,
+  /createGenerate360Href\(\s*["']home-proof-wall["']/,
+  "wall Listing 360° door must use createGenerate360Href(home-proof-wall)"
+);
+assert.match(homeWall, /data-home-proof-360-cta/);
+assert.match(homeWall, /data-home-wall-remake=["']secondary["']/);
+assert.match(homeWall, /data-home-wall-360=["']secondary["']/);
+assert.doesNotMatch(
+  homeWall,
+  /bg-\[linear-gradient\(135deg,#B14EFF,#FF4ECD\)\]/,
+  "wall remake chips must not use hero-grade gradient fill"
+);
+assert.match(homeWall, /HOME_PROOF_BADGE|data-home-proof-wall/);
+
 console.log("generate-360-cta-smoke: ok");
