@@ -87,6 +87,10 @@ import {
   isSafeDeliverableUrl,
   requestCreditStateFromFailure,
 } from "@/lib/createTrust";
+import {
+  libraryWorkbenchHandoffHref,
+  resolveWorkbenchResultPrimary,
+} from "@/lib/workbenchResultFold";
 import { DirectorPlanPanel } from "@/components/DirectorPlanPanel";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { buildSellerPackDirectorPlan } from "@/lib/directorPlan";
@@ -136,6 +140,8 @@ type Job = {
     | "refund unconfirmed"
     | "not charged";
   requestId?: string;
+  /** Server-confirmed owner-scoped object in Pikbo private storage. */
+  privateResult?: boolean;
   retryCount: number;
 };
 
@@ -186,7 +192,11 @@ function saveSellerPackRecovery(
 function toRecoveredJob(child: ReturnType<typeof reconcileSellerPackRecovery>["children"][number]): Job {
   const { statusHint: _hint, ...job } = child;
   void _hint;
-  return job;
+  // Recovered success requires hasPrivateResult + signed URL (server authority).
+  return {
+    ...job,
+    privateResult: job.status === "succeeded" && Boolean(job.requestId),
+  };
 }
 
 function recoveryRunFromServerJobs(
@@ -1060,6 +1070,7 @@ export function BatchStudio({
         creditState: data.demo ? "0 cached" : "10 used",
         requestId:
           typeof data.requestId === "string" ? data.requestId : undefined,
+        privateResult: data.privateResult === true,
       },
       stopQueue: false,
       recoveredFromAssetMiss: Boolean(result.recoveredFromAssetMiss),
@@ -1553,6 +1564,106 @@ export function BatchStudio({
     [exportItems]
   );
   const [exportBusy, setExportBusy] = useState(false);
+  /** First playable pack result — Replay primary targets this node. */
+  const packResultVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  /**
+   * AIT-550: BatchStudio / Launch Workspace post-generate primary (parity with
+   * Create workbench AIT-529 + Landing AIT-541). Pack summary uses the shared
+   * one-primary fold so multi-format results are not dual dead-end CTAs
+   * (Download + Library + next SKU side-by-side).
+   */
+  const succeededJobs = useMemo(
+    () => jobs.filter((j) => j.status === "succeeded"),
+    [jobs]
+  );
+  const batchResultDemo =
+    succeededJobs.length > 0 &&
+    succeededJobs.every((j) => Boolean(j.demo));
+  const batchResultPrivate = succeededJobs.some(
+    (j) => j.privateResult === true
+  );
+  const batchPlayable = succeededJobs.some((j) =>
+    isPlayableResultVideoUrl({
+      videoUrl: j.videoUrl,
+      demo: Boolean(j.demo),
+      watermark: Boolean(j.watermark),
+    })
+  );
+  const batchDownloadAllowed = succeededJobs.some((j) =>
+    canDownloadResult({
+      demo: Boolean(j.demo),
+      watermark: Boolean(j.watermark),
+    })
+  );
+  const batchDownloadReady = availableDownloads.length > 0;
+  const batchLibraryRequestId =
+    succeededJobs.find((j) => j.privateResult === true && j.requestId)
+      ?.requestId ??
+    succeededJobs.find((j) => !j.demo && j.requestId)?.requestId ??
+    null;
+  const batchResultPrimary =
+    !running && doneCount > 0
+      ? resolveWorkbenchResultPrimary({
+          demo: batchResultDemo,
+          privateResult: batchResultPrivate,
+          playable: batchPlayable,
+          downloadAllowed: batchDownloadAllowed,
+          downloadReady: batchDownloadReady,
+          listing360: false,
+        })
+      : null;
+  const batchLibraryHref = libraryWorkbenchHandoffHref({
+    demo: batchResultDemo,
+    privateResult: batchResultPrivate,
+    requestId: batchLibraryRequestId,
+  });
+  const batchNextSkuHref = demoMode
+    ? "/create?mode=seller-pack&try=1&source=next-sample"
+    : "/create?mode=seller-pack&source=next-sku";
+  const batchNextSkuLabel = demoMode
+    ? "Preview another sample"
+    : "Create next SKU";
+  const firstPlayableSlug =
+    succeededJobs.find((j) =>
+      isPlayableResultVideoUrl({
+        videoUrl: j.videoUrl,
+        demo: Boolean(j.demo),
+        watermark: Boolean(j.watermark),
+      })
+    )?.slug ?? null;
+
+  function replayPackResultVideo() {
+    document
+      .getElementById("batch-pack-result")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const node = packResultVideoRef.current;
+    if (!node) return;
+    try {
+      node.currentTime = 0;
+      void node.play();
+    } catch {
+      /* autoplay policy / detached node — scroll still lands on stage */
+    }
+  }
+
+  function runBatchGenerateAgain() {
+    if (!ownsRights) {
+      document
+        .getElementById("batch-ownership")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    // Seller Pack freezes the three-child run record — re-run is blocked.
+    // Lab / next-SKU honesty: hop to a fresh pack sample instead of double-reserve.
+    if (sellerPackActive && (jobs.length > 0 || activePackRunId)) {
+      window.location.assign(batchNextSkuHref);
+      return;
+    }
+    if (canRun) {
+      void runBatch();
+    }
+  }
 
   /**
    * Phase F: sequential multi-file save of downloadable children only.
@@ -2829,49 +2940,153 @@ export function BatchStudio({
                 ? ` · ${availableDownloads.length} available`
                 : " · none ready yet"}
             </p>
-            <button
-              type="button"
-              disabled={!canExportPack || exportBusy}
-              onClick={() => void downloadAvailableClips()}
-              className={sellerPackActive ? "rounded-md bg-[#2457E6] px-3 py-1.5 text-[10px] font-black text-white disabled:opacity-40" : "rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"}
-              title="Saves each available clip. Failed formats and unavailable raw files are omitted."
-              data-launch-pack-export="downloadable-only"
-            >
-              {exportBusy
-                ? "Saving clips…"
-                : `${demoMode ? "Download archived tests" : "Download available videos"}${
-                    availableDownloads.length
-                      ? ` · ${availableDownloads.length}`
-                      : ""
-                  }`}
-            </button>
+            {/* Fold already surfaces Download as the one primary — skip twin CTA. */}
+            {batchResultPrimary?.kind !== "download" ? (
+              <button
+                type="button"
+                disabled={!canExportPack || exportBusy}
+                onClick={() => void downloadAvailableClips()}
+                className={sellerPackActive ? "rounded-md bg-[#2457E6] px-3 py-1.5 text-[10px] font-black text-white disabled:opacity-40" : "rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-3 py-1 text-[10px] font-bold text-[var(--mint)] disabled:opacity-40"}
+                title="Saves each available clip. Failed formats and unavailable raw files are omitted."
+                data-launch-pack-export="downloadable-only"
+              >
+                {exportBusy
+                  ? "Saving clips…"
+                  : `${demoMode ? "Download archived tests" : "Download available videos"}${
+                      availableDownloads.length
+                        ? ` · ${availableDownloads.length}`
+                        : ""
+                    }`}
+              </button>
+            ) : (
+              <span
+                className={sellerPackActive ? "text-[10px] font-semibold text-[#8A919D]" : "text-[10px] text-[var(--fg-dim)]"}
+                data-launch-pack-export="fold-primary"
+              >
+                Pack download is the primary action below.
+              </span>
+            )}
             <span className={sellerPackActive ? "text-[10px] font-semibold text-[#8A919D]" : "text-[10px] text-[var(--fg-dim)]"}>
               Only completed, downloadable clips are included.
             </span>
           </div>
         )}
-        {doneCount > 0 && !running ? (
-          <nav
-            aria-label="Launch Pack next steps"
-            className="mt-3 hidden flex-wrap items-center gap-2 lg:flex"
+        {/* AIT-550: one primary next action above advanced pack chrome */}
+        {batchResultPrimary ? (
+          <div
+            id="batch-pack-result"
+            className="mt-3 hidden w-full max-w-md lg:block"
+            data-result-fold="stage-primary"
+            data-result-primary={batchResultPrimary.kind}
+            data-result-provenance={batchResultPrimary.provenanceKind}
+            data-batch-result-fold="done"
+            data-workbench-result-fold="done"
           >
-            <Link
-              href="/library"
-              className={sellerPackActive ? "inline-flex min-h-10 items-center rounded-xl bg-[#2457E6] px-4 py-2 text-xs font-black text-white" : "btn btn-primary px-4 py-2 text-xs"}
-            >
-              Open in Library
-            </Link>
-            <a
-              href={
-                demoMode
-                  ? "/create?mode=seller-pack&try=1&source=next-sample"
-                  : "/create?mode=seller-pack&source=next-sku"
+            {batchResultPrimary.kind === "download" ? (
+              <button
+                type="button"
+                disabled={!canExportPack || exportBusy}
+                onClick={() => void downloadAvailableClips()}
+                className={
+                  sellerPackActive
+                    ? "inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#2457E6] px-4 py-2.5 text-sm font-black text-white disabled:opacity-40"
+                    : "btn btn-primary w-full py-3 text-sm font-black disabled:opacity-50"
+                }
+                data-result-fold-action="download"
+                data-launch-pack-export="fold-primary"
+                data-seller-download="fold-primary"
+              >
+                {exportBusy
+                  ? "Saving clips…"
+                  : batchResultPrimary.label}
+              </button>
+            ) : batchResultPrimary.kind === "library" ? (
+              <Link
+                href={batchLibraryHref}
+                className={
+                  sellerPackActive
+                    ? "inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#2457E6] px-4 py-2.5 text-sm font-black text-white"
+                    : "btn btn-primary flex w-full items-center justify-center py-3 text-sm font-black"
+                }
+                data-result-fold-action="library"
+                data-seller-pack-action="library"
+                data-library-handoff={
+                  batchLibraryHref.includes("job=") ? "request-id" : "list"
+                }
+              >
+                {batchResultPrimary.label}
+              </Link>
+            ) : batchResultPrimary.kind === "replay" ? (
+              <button
+                type="button"
+                onClick={replayPackResultVideo}
+                className={
+                  sellerPackActive
+                    ? "inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#2457E6] px-4 py-2.5 text-sm font-black text-white"
+                    : "btn btn-primary w-full py-3 text-sm font-black"
+                }
+                data-result-fold-action="replay"
+              >
+                {batchResultPrimary.label}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={runBatchGenerateAgain}
+                disabled={!ownsRights}
+                className={
+                  sellerPackActive
+                    ? "inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#2457E6] px-4 py-2.5 text-sm font-black text-white disabled:opacity-45"
+                    : "btn btn-primary w-full py-3 text-sm font-black disabled:opacity-50"
+                }
+                data-result-fold-action="generate-again"
+              >
+                {batchResultPrimary.label}
+              </button>
+            )}
+            <p
+              className={
+                sellerPackActive
+                  ? "mt-1.5 text-center text-[10px] font-semibold leading-snug text-[#717987]"
+                  : "mt-1.5 text-center text-[10px] font-medium leading-snug text-white/50"
               }
-              className={sellerPackActive ? "inline-flex min-h-10 items-center rounded-xl border border-[#D5D9E1] bg-white px-4 py-2 text-xs font-black text-[#4E5663]" : "btn btn-ghost border border-white/15 px-4 py-2 text-xs"}
             >
-              {demoMode ? "Preview another sample" : "Create next SKU"}
-            </a>
-          </nav>
+              {batchResultPrimary.stickyHint}
+            </p>
+            {/* Secondary advanced hops — not co-primary with the fold */}
+            <nav
+              aria-label="Launch Pack next steps"
+              className="mt-2 flex flex-wrap items-center gap-2"
+            >
+              {batchResultPrimary.kind !== "library" ? (
+                <Link
+                  href={batchLibraryHref}
+                  className={
+                    sellerPackActive
+                      ? "inline-flex min-h-9 items-center rounded-xl border border-[#D5D9E1] bg-white px-3 py-1.5 text-xs font-black text-[#4E5663]"
+                      : "btn btn-ghost border border-white/15 px-3 py-1.5 text-xs"
+                  }
+                  data-seller-pack-action="library"
+                  data-library-handoff={
+                    batchLibraryHref.includes("job=") ? "request-id" : "list"
+                  }
+                >
+                  Open in Library
+                </Link>
+              ) : null}
+              <a
+                href={batchNextSkuHref}
+                className={
+                  sellerPackActive
+                    ? "inline-flex min-h-9 items-center rounded-xl border border-[#D5D9E1] bg-white px-3 py-1.5 text-xs font-black text-[#4E5663]"
+                    : "btn btn-ghost border border-white/15 px-3 py-1.5 text-xs"
+                }
+                data-seller-pack-action="next-sku"
+              >
+                {batchNextSkuLabel}
+              </a>
+            </nav>
+          </div>
         ) : null}
         {jobs.map((j) => (
           <div
@@ -2933,6 +3148,11 @@ export function BatchStudio({
               watermark: Boolean(j.watermark),
             }) ? (
               <video
+                ref={
+                  j.slug === firstPlayableSlug
+                    ? packResultVideoRef
+                    : undefined
+                }
                 src={j.videoUrl}
                 controls
                 muted
@@ -3155,6 +3375,145 @@ export function BatchStudio({
               Open 3 archived motion tests · 0 credits
             </button>
           )
+        ) : batchResultPrimary ? (
+          <div
+            data-result-fold="mobile-sticky"
+            data-result-primary={batchResultPrimary.kind}
+            data-result-provenance={batchResultPrimary.provenanceKind}
+            data-batch-result-fold="done"
+            data-workbench-result-fold="done"
+          >
+            <p
+              className={
+                sellerPackActive
+                  ? "mb-1.5 truncate text-center text-[10px] font-bold text-[#667085]"
+                  : "mb-1.5 truncate text-center text-[10px] font-medium text-white/55"
+              }
+            >
+              {batchResultPrimary.stickyHint}
+            </p>
+            {batchResultPrimary.kind === "download" ? (
+              <button
+                type="button"
+                disabled={!canExportPack || exportBusy}
+                onClick={() => void downloadAvailableClips()}
+                className={
+                  sellerPackActive
+                    ? "w-full rounded-xl bg-[#2457E6] px-4 py-3 text-sm font-black text-white disabled:opacity-45"
+                    : "btn btn-primary w-full py-3 text-sm font-black disabled:opacity-50"
+                }
+                data-result-fold-action="download"
+                data-launch-pack-export="fold-primary"
+                data-seller-download="fold-primary"
+              >
+                {exportBusy ? "Saving clips…" : batchResultPrimary.label}
+              </button>
+            ) : batchResultPrimary.kind === "library" ? (
+              <Link
+                href={batchLibraryHref}
+                className={
+                  sellerPackActive
+                    ? "flex w-full items-center justify-center rounded-xl bg-[#2457E6] px-4 py-3 text-sm font-black text-white"
+                    : "btn btn-primary flex w-full items-center justify-center py-3 text-sm font-black"
+                }
+                data-result-fold-action="library"
+                data-seller-pack-action="library"
+                data-library-handoff={
+                  batchLibraryHref.includes("job=") ? "request-id" : "list"
+                }
+              >
+                {batchResultPrimary.label}
+              </Link>
+            ) : batchResultPrimary.kind === "replay" ? (
+              <button
+                type="button"
+                onClick={replayPackResultVideo}
+                className={
+                  sellerPackActive
+                    ? "w-full rounded-xl bg-[#2457E6] px-4 py-3 text-sm font-black text-white"
+                    : "btn btn-primary w-full py-3 text-sm font-black"
+                }
+                data-result-fold-action="replay"
+              >
+                {batchResultPrimary.label}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={runBatchGenerateAgain}
+                disabled={!ownsRights}
+                className={
+                  sellerPackActive
+                    ? "w-full rounded-xl bg-[#2457E6] px-4 py-3 text-sm font-black text-white disabled:opacity-45"
+                    : "btn btn-primary w-full py-3 text-sm font-black disabled:opacity-50"
+                }
+                data-result-fold-action="generate-again"
+              >
+                {batchResultPrimary.label}
+              </button>
+            )}
+            {failedRetryCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const firstFailed = jobs.find(retryEligible);
+                  if (!firstFailed) return;
+                  document
+                    .getElementById(`pack-job-${firstFailed.slug}`)
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }}
+                className={
+                  sellerPackActive
+                    ? "mt-2 w-full rounded-xl border border-[#D5D9E1] bg-white px-3 py-2.5 text-sm font-black text-[#2457E6]"
+                    : "btn btn-ghost mt-2 w-full border border-white/15 py-2.5 text-sm"
+                }
+                data-seller-pack-action="review-failed"
+                title="Review the failed clip before confirming a per-format retry"
+              >
+                Review failed clip
+              </button>
+            ) : batchResultPrimary.kind !== "library" ? (
+              <div className="mt-2 flex gap-2">
+                <Link
+                  href={batchLibraryHref}
+                  className={
+                    sellerPackActive
+                      ? "min-w-0 flex-1 rounded-xl border border-[#D5D9E1] bg-white px-3 py-2.5 text-center text-xs font-black text-[#4E5663]"
+                      : "btn btn-ghost min-w-0 flex-1 border border-white/15 py-2.5 text-center text-xs"
+                  }
+                  data-seller-pack-action="library"
+                  data-library-handoff={
+                    batchLibraryHref.includes("job=") ? "request-id" : "list"
+                  }
+                >
+                  Open in Library
+                </Link>
+                <a
+                  href={batchNextSkuHref}
+                  className={
+                    sellerPackActive
+                      ? "min-w-0 flex-1 rounded-xl border border-[#D5D9E1] bg-white px-3 py-2.5 text-center text-xs font-black text-[#4E5663]"
+                      : "btn btn-ghost min-w-0 flex-1 border border-white/15 py-2.5 text-center text-xs"
+                  }
+                  data-seller-pack-action="next-sku"
+                >
+                  {demoMode ? "Another sample" : "Create next SKU"}
+                </a>
+              </div>
+            ) : (
+              <a
+                href={batchNextSkuHref}
+                className={
+                  sellerPackActive
+                    ? "mt-2 block w-full rounded-xl border border-[#D5D9E1] bg-white px-3 py-2.5 text-center text-xs font-black text-[#4E5663]"
+                    : "btn btn-ghost mt-2 block w-full border border-white/15 py-2.5 text-center text-xs"
+                }
+                data-seller-pack-action="next-sku"
+              >
+                {demoMode ? "Another sample" : "Create next SKU"}
+              </a>
+            )}
+          </div>
         ) : jobs.length > 0 ? (
           <div className="flex gap-2">
             <Link
@@ -3182,11 +3541,7 @@ export function BatchStudio({
               </button>
             ) : (
               <a
-                href={
-                  demoMode
-                    ? "/create?mode=seller-pack&try=1&source=next-sample"
-                    : "/create?mode=seller-pack&source=next-sku"
-                }
+                href={batchNextSkuHref}
                 className="min-w-0 flex-1 rounded-xl border border-[#D5D9E1] bg-white px-3 py-3 text-center text-sm font-black text-[#4E5663]"
                 data-seller-pack-action="next-sku"
               >

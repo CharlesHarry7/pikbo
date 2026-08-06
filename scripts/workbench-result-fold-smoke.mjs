@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
- * AIT-541 / AIT-529 / AIT-469 / AIT-381: post-generate result fold.
+ * AIT-550 / AIT-541 / AIT-529 / AIT-469 / AIT-381: post-generate result fold.
  *
  * Source + pure-logic contract:
  * - Resolver covers download / library / Lab replay / generate-again (re-spin)
  * - CreateStudio workbench (!fixedMomentContract) wires sticky + stage fold
  * - LandingToolPanel done stage wires the same one-primary fold (AIT-541)
+ * - BatchStudio / Launch Workspace pack summary wires the same one-primary fold
  * - Fixed Moment path keeps generate-again sticky (no workbench fold bleed)
  * - Library primary owner-safe deep-link helper; Lab never claims private job
  * - Honest Lab vs Live provenance; freeLiveOpen / fixed Moment markers intact
@@ -25,6 +26,7 @@ const read = (file) => readFileSync(join(root, file), "utf8");
 const foldLib = read("lib/workbenchResultFold.ts");
 const createStudio = read("components/CreateStudio.tsx");
 const landingTool = read("components/LandingToolPanel.tsx");
+const batchStudio = read("components/BatchStudio.tsx");
 
 // ── Pure resolver source contract ─────────────────────────────────────────
 assert.match(
@@ -549,6 +551,143 @@ assert.match(
   landingTool,
   /landingResultPrimary\?\.kind !== ["']download["']/,
   "landing must skip twin Download CTA when fold primary is download"
+);
+
+// ── BatchStudio / Launch Workspace wiring (AIT-550 parity) ────────────────
+assert.match(
+  batchStudio,
+  /resolveWorkbenchResultPrimary/,
+  "BatchStudio must use resolveWorkbenchResultPrimary"
+);
+assert.match(
+  batchStudio,
+  /libraryWorkbenchHandoffHref/,
+  "BatchStudio must use libraryWorkbenchHandoffHref"
+);
+assert.match(
+  batchStudio,
+  /from ["']@\/lib\/workbenchResultFold["']/,
+  "BatchStudio must import workbenchResultFold"
+);
+assert.match(
+  batchStudio,
+  /privateResult:\s*data\.privateResult === true/,
+  "BatchStudio must capture privateResult from generate response"
+);
+assert.match(
+  batchStudio,
+  /privateResult:\s*job\.status === ["']succeeded["'] && Boolean\(job\.requestId\)/,
+  "BatchStudio recovery must mark privateResult on owner success"
+);
+assert.match(
+  batchStudio,
+  /!running && doneCount > 0/,
+  "batch result primary only when pack/batch has finished children"
+);
+assert.match(
+  batchStudio,
+  /data-result-fold=["']stage-primary["']/,
+  "batch stage must mark above-fold primary"
+);
+assert.match(
+  batchStudio,
+  /data-result-fold=["']mobile-sticky["']/,
+  "batch sticky must mark result fold"
+);
+assert.match(
+  batchStudio,
+  /data-batch-result-fold=["']done["']/,
+  "batch must mark result-fold done"
+);
+assert.match(
+  batchStudio,
+  /data-workbench-result-fold=["']done["']/,
+  "batch must share workbench result-fold marker"
+);
+assert.match(
+  batchStudio,
+  /data-result-fold-action=["']download["']/,
+  "Batch Download primary action marker required"
+);
+assert.match(
+  batchStudio,
+  /data-result-fold-action=["']library["']/,
+  "Batch Library primary action marker required"
+);
+assert.match(
+  batchStudio,
+  /data-result-fold-action=["']replay["']/,
+  "Batch Replay primary action marker required"
+);
+assert.match(
+  batchStudio,
+  /data-result-fold-action=["']generate-again["']/,
+  "Batch Generate-again primary action marker required"
+);
+assert.match(
+  batchStudio,
+  /data-library-handoff=/,
+  "Batch Library primary must expose handoff kind marker"
+);
+assert.match(
+  batchStudio,
+  /href=\{batchLibraryHref\}/,
+  "Batch Library fold primary must bind batchLibraryHref"
+);
+assert.match(
+  batchStudio,
+  /data-result-provenance=\{/,
+  "batch sticky/stage must expose provenance kind"
+);
+assert.match(
+  batchStudio,
+  /function replayPackResultVideo/,
+  "Batch Replay handler required"
+);
+assert.match(
+  batchStudio,
+  /function runBatchGenerateAgain/,
+  "Batch Generate-again handler required"
+);
+assert.match(
+  batchStudio,
+  /packResultVideoRef/,
+  "Batch Replay must target pack result video ref"
+);
+assert.match(
+  batchStudio,
+  /batchResultPrimary\?\.kind !== ["']download["']/,
+  "batch must skip twin pack export Download when fold primary is download"
+);
+assert.match(
+  batchStudio,
+  /Open in Library|Create next SKU|Preview another sample/,
+  "batch secondary advanced hops remain under fold primary"
+);
+assert.match(
+  batchStudio,
+  /data-seller-pack-action=["']library["']/,
+  "seller-pack library action marker remains for first-run smoke"
+);
+assert.match(
+  batchStudio,
+  /data-seller-pack-action=["']review-failed["']/,
+  "seller-pack review-failed action marker remains"
+);
+assert.match(
+  batchStudio,
+  /data-seller-pack-action=["']next-sku["']/,
+  "seller-pack next-sku secondary hop remains"
+);
+
+// Stage primary precedes the pack job card list (summary above per-format cards).
+const batchStageIdx = batchStudio.indexOf('data-result-fold="stage-primary"');
+const batchJobCardIdx = batchStudio.indexOf('id={`pack-job-${j.slug}`}');
+assert.ok(batchStageIdx > 0, "batch stage-primary marker must exist");
+assert.ok(batchJobCardIdx > 0, "pack job card list must exist");
+assert.ok(
+  batchJobCardIdx > batchStageIdx,
+  "batch stage primary must render before pack job cards"
 );
 
 console.log("workbench-result-fold-smoke: ok");
