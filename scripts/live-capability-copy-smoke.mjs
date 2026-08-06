@@ -570,6 +570,63 @@ assert(
   "HomeFeatureCarousel seedance promo must use Cached Lab · 0 credits / Live gated honesty"
 );
 
+// AIT-419: residual SEO / hub Free Mini product-cap promises (public free path is Lab).
+const residualSeoContentFiles = [
+  "lib/tools.ts",
+  "lib/usecases.ts",
+  "lib/guides.ts",
+  "app/effects/page.tsx",
+  "app/community/page.tsx",
+  "app/explore/page.tsx",
+  "app/apps/page.tsx",
+  "app/apps/[slug]/page.tsx",
+  "components/LandingSeoMesh.tsx",
+];
+const forbiddenResidualSeoFreeMini = [
+  /Free Mini caps apply/i,
+  /Soft launch Free Mini/i,
+  /Free Mini clips are 5 seconds/i,
+  /Free Mini teasers are 5 seconds/i,
+  /Free Mini is for one live Seedance Mini/i,
+  /Live Seedance Mini uses Free Mini/i,
+  /Does launching cost Free Mini credits\?/i,
+  /Can Free Mini raw files be downloaded\?/i,
+  /Do Lab demos use Free Mini credits\?/i,
+  /What Free Mini Actually Includes/i,
+  /seoTitle:[\s\S]{0,80}Free Mini/i,
+  /labelTry="Try free Mini"/,
+  /LIVE vs SOON · Free Mini/i,
+  /Lab only · not UGC · Remix · Free Mini/i,
+  /Lab vs concept · Free Mini/i,
+];
+for (const relativePath of residualSeoContentFiles) {
+  const source = read(relativePath);
+  for (const pattern of forbiddenResidualSeoFreeMini) {
+    assert(
+      !pattern.test(source),
+      `${relativePath} contains residual Free Mini SEO/hub promise ${pattern}`
+    );
+  }
+}
+assert(
+  read("components/LandingSeoMesh.tsx").includes('labelTry="Try free · Lab"') &&
+    read("components/LandingSeoMesh.tsx").includes('labelDemo="Try free · Lab"'),
+  "LandingSeoMesh must use Lab-first try labels (not Try free Mini)"
+);
+assert(
+  read("lib/tools.ts").includes("Public path is a labeled cached Lab prototype") &&
+    read("lib/guides.ts").includes("What the public free path is") &&
+    read("app/effects/page.tsx").includes("Live remains gated") &&
+    read("app/community/page.tsx").includes("Live remains gated") &&
+    read("app/explore/page.tsx").includes("Live remains gated"),
+  "SEO residual pass must keep Lab public path + Live gated language"
+);
+assert(
+  read("lib/i18n.ts").includes("Try free · Lab →") &&
+    !read("lib/i18n.ts").includes("Try Mini free →"),
+  "i18n cta.tryMiniFree must prefer Lab-first free path, not Mini product-cap"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];

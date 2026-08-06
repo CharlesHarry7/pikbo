@@ -85,7 +85,7 @@ const APP_DETAIL_FAQ = [
     a: "No. App doors open the same Generate workbench with a prefilled recipe and aspect. Runtime eligibility determines whether the result is cached or Live.",
   },
   {
-    q: "Does launching cost Free Mini credits?",
+    q: "Does launching cost live credits?",
     a: "Opening the door is free. Cached Lab prototypes cost 0 credits and do not process your upload. When Live is enabled for an eligible account, Generate shows the exact credit quote.",
   },
   {
@@ -93,8 +93,8 @@ const APP_DETAIL_FAQ = [
     a: "No. Posters are PIKBO Lab prototype references only. They are not made from your upload. Review any eligible generated output before listing or posting.",
   },
   {
-    q: "Can Free Mini raw files be downloaded?",
-    a: "Free live raw provider URLs stay gated until server watermark bake (T6). Lab cached demos and paid clean deliverables remain downloadable when the download gate allows.",
+    q: "Can free-plan raw files be downloaded?",
+    a: "Free-plan live raw provider URLs stay gated until server watermark bake (T6). Lab cached demos and paid clean deliverables remain downloadable when the download gate allows.",
   },
 ] as const;
 
