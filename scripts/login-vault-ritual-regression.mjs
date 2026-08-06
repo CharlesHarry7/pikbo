@@ -118,6 +118,30 @@ must(
 must(!loginForm.includes("text-sky-"), "LoginForm must not use SaaS sky utility");
 must(!loginForm.includes("bg-sky-"), "LoginForm must not use SaaS sky utility");
 
+// AIT-572: email focus residual carnival pink → gallery copper board
+{
+  const carnival =
+    /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i;
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  must(
+    !carnival.test(loginForm),
+    "LoginForm must not hard-code carnival pink RGB (#FF4ECD / rgba 255,78,205)"
+  );
+  must(
+    !lime.test(loginForm),
+    "LoginForm must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  must(
+    !/var\(--neon-pink\)/.test(loginForm),
+    "LoginForm email focus must prefer --brand over --neon-pink naming"
+  );
+  must(
+    loginForm.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(loginForm),
+    "LoginForm email focus uses --brand + copper board rgba(196,165,116)"
+  );
+}
+
 // Frozen TDH — do not rewrite homeH1 in this PR
 must(
   site.includes('homeH1: "One toy photo. More ways to sell."'),

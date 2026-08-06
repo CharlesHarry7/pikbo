@@ -285,6 +285,28 @@ assert(
   );
 }
 
+// AIT-572: LoginForm residual carnival pink email focus → gallery-calm copper board
+{
+  const carnival =
+    /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i;
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const loginForm = read("components/LoginForm.tsx");
+  assert(
+    !carnival.test(loginForm),
+    "LoginForm must not hard-code carnival pink RGB"
+  );
+  assert(
+    !lime.test(loginForm),
+    "LoginForm must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    !/var\(--neon-pink\)/.test(loginForm) &&
+      loginForm.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(loginForm),
+    "LoginForm email focus uses --brand + copper board glow (not --neon-pink naming)"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
