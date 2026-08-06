@@ -254,14 +254,15 @@ export function ProfilePanel() {
       : session?.credits;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
-  /** R0/T6: Free Mini product-cap lines only when Live is actually open. */
+  /** R0/T6: free-plan live only when Live is open (fail-closed while /api/me loading). */
   const freeLiveOpen = Boolean(
     canLiveGenerate(session) &&
       freeLive &&
       freeLive.liveEnabled !== false
   );
+  /** Private Fast invited path may stay; default open path uses free-plan live. */
   const freeLiveModelLabel =
-    freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "Free Mini";
+    freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "free-plan live";
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
       ? session.freeTrial.clipsLeft
@@ -362,7 +363,7 @@ export function ProfilePanel() {
         </div>
       ) : null}
 
-      {/* Soft-launch freeTrial honesty — Free Mini only when freeLiveOpen */}
+      {/* Soft-launch freeTrial honesty — free-plan live only when freeLiveOpen */}
       {session && isFreePlan && freeLiveOpen ? (
         <div
           className={`rounded-xl border px-3 py-2.5 text-[11px] leading-relaxed ${

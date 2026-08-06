@@ -466,6 +466,32 @@ assert(
     /freeLiveOpen[\s\S]{0,80}trialDone/.test(profilePanelSource),
   "ProfilePanel free-plan honesty banner must branch on freeLiveOpen"
 );
+// AIT-451: ProfilePanel freeLiveModelLabel + open-path Free Mini brand residual.
+assert(
+  !profilePanelSource.includes("Free Mini"),
+  "ProfilePanel must not hardcode Free Mini product brand chips"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,500}free-plan live/.test(profilePanelSource) &&
+    /seedance-fast[\s\S]{0,40}Private Fast/.test(profilePanelSource) &&
+    profilePanelSource.includes(
+      'freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "free-plan live"'
+    ),
+  "ProfilePanel freeLiveModelLabel must use free-plan live (Private Fast invited path may stay)"
+);
+assert(
+  /data-profile-free-live=["']open["']/.test(profilePanelSource) &&
+    /data-profile-free-live=["']gated["']/.test(profilePanelSource) &&
+    /canLiveGenerate\s*\(/.test(profilePanelSource) &&
+    /liveEnabled\s*!==\s*false/.test(profilePanelSource),
+  "ProfilePanel must keep freeLiveOpen fail-closed open vs gated honesty"
+);
+assert(
+  profilePanelSource.includes(
+    "${freeLiveModelLabel} creates private ${freeLive.resolution}, ${freeLive.durationSec}-second clips for eligible accounts."
+  ),
+  "ProfilePanel open-path blurb must use freeLiveModelLabel (not Free Mini product brand)"
+);
 
 const landingHowItWorksSource = read("components/LandingHowItWorks.tsx");
 assert(
