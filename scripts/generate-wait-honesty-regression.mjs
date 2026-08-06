@@ -10,6 +10,7 @@
  * 4. CreateStudio + GenerateWaitStage wire the policy (no silent hang)
  * 5. Fail-closed refund copy remains on GenerateFailPanel
  * 6. BatchStudio wires recovery state, detach, and server-gated Retry
+ * 7. Image Studio Fail panel uses the same pure canRetryGenerateFailure gate
  *
  * Run: npm run generate-wait-honesty-regression
  */
@@ -393,7 +394,67 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(wait, /no second (provider call or )?charge|no second charge/i);
 }
 
+// ─── 8. AIT-545 Image Studio residual — same pure Retry gate ───────────────
+
+{
+  const imagePage = read("app/image/page.tsx");
+  assert.match(imagePage, /canRetryGenerateFailure/);
+  assert.match(imagePage, /lastFailCode/);
+  assert.match(imagePage, /lastFailFatal/);
+  assert.match(imagePage, /lastFailPaywall/);
+  assert.match(imagePage, /recordFailGate/);
+  assert.match(imagePage, /clearFailGate/);
+  assert.match(imagePage, /GenerateFailPanel/);
+  assert.match(imagePage, /retryAfterSec=\{failRetryAfterSec\}/);
+  // Fail-panel Retry only when pure gate allows (no invented re-POST)
+  assert.match(
+    imagePage,
+    /canRetryGenerateFailure\(\{[\s\S]{0,220}code: lastFailCode[\s\S]{0,120}fatal: lastFailFatal[\s\S]{0,120}paywall: lastFailPaywall[\s\S]{0,80}busy[\s\S]{0,80}hasInput:/
+  );
+  assert.match(
+    imagePage,
+    /canRetryStillFail[\s\S]{0,200}\?\s*\(\)\s*=>[\s\S]{0,200}clearFailGate[\s\S]{0,120}:\s*undefined/
+  );
+  // Settlement honesty: only "10 restored" may claim creditsRestored
+  assert.match(
+    imagePage,
+    /creditsRestored=\{failCreditState === ["']10 restored["']\}/
+  );
+  // Cancel / timeout path keeps refund unconfirmed (never invent restore)
+  assert.match(
+    imagePage,
+    /setFailCreditState\(["']refund unconfirmed["']\)/
+  );
+  // Session strip Retry also gates on canRetryGenerateFailure (no durable-hold invent)
+  assert.match(
+    imagePage,
+    /data-image-session-retry[\s\S]{0,40}ledger-fork/
+  );
+  assert.match(
+    imagePage,
+    /canRetryGenerateFailure\(\{[\s\S]{0,120}code: j\.errorCode/
+  );
+
+  const imageClient = read("lib/imageClient.ts");
+  // ImageFail exposes fatal/paywall for the same gate as generateClient
+  assert.match(imageClient, /fatal\?: boolean/);
+  assert.match(imageClient, /paywall\?: boolean/);
+  assert.match(
+    imageClient,
+    /code === ["']INSUFFICIENT_CREDITS["'][\s\S]{0,80}PROVIDER_BALANCE/
+  );
+  // DURABLE_CREDITS_UNAVAILABLE still withholds — no invented refund
+  assert.match(
+    imageClient,
+    /DURABLE_CREDITS_UNAVAILABLE[\s\S]{0,400}creditsRefunded: undefined/
+  );
+  assert.match(
+    imageClient,
+    /do not retry this attempt yet/
+  );
+}
+
 
 console.log(
-  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · AIT-237 Create/Landing gate · fail-closed refund copy · Batch wiring)"
+  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · AIT-237 Create/Landing gate · fail-closed refund copy · Batch wiring · AIT-545 Image Studio gate)"
 );
