@@ -33,8 +33,11 @@ export function SeedanceCampaign() {
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--mint)]">
               Flagship · already on Pikbo
             </p>
-            <span className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--mint)]">
-              Live Mini
+            <span
+              className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--mint)]"
+              data-seedance-free-cap="lab-gated"
+            >
+              Cached Lab
             </span>
           </div>
           <h2 className="mt-2 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -45,14 +48,15 @@ export function SeedanceCampaign() {
             Designer-toy OS · photo → short clip
           </p>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/45">
-            One live engine (Seedance) for figures, blind boxes, listings.
-            Not a multi-model zoo — Kling / Veo / Sora stay Soon until real
-            keys land.
+            One Seedance engine for figures, blind boxes, listings — public
+            path is a cached Lab sample. Live stays gated for eligible
+            accounts. Not a multi-model zoo — Kling / Veo / Sora stay Soon
+            until real keys land.
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-2.5">
             <FreeTrialCta
               path="/seedance-campaign"
-              labelTry="Try free video"
+              labelTry="Try free when Live is open"
               labelDemo="Try Lab sample"
               className="rounded-full bg-[var(--mint)] px-6 py-2.5 text-sm font-black text-black shadow-[0_0_28px_rgba(200,255,61,0.25)] transition hover:-translate-y-0.5"
             />

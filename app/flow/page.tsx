@@ -191,7 +191,8 @@ export default function FlowPage() {
             <FreeTrialCta
               path="/flow"
               variant="primary"
-              labelTry="Try free"
+              labelTry="Try free when Live is open"
+              labelDemo="Try Lab sample"
               className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
             />
             <Link

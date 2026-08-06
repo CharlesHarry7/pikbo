@@ -273,7 +273,7 @@ export default async function GuidePage({
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               <FreeTrialCta
                 path={`/guides/${g.slug}`}
-                labelTry="Try free · Mini 5s →"
+                labelTry="Try free when Live is open →"
                 labelPlans="Compare plans →"
                 labelDemo="Try Lab sample →"
                 className="btn bg-white px-6 py-2.5 font-semibold text-[var(--bg)] hover:opacity-90"

@@ -65,6 +65,7 @@ export default function ModelsPage() {
             path="/models"
             variant="ghost"
             labelTry="Try free · Lab"
+            labelDemo="Try Lab sample"
             hideClipsChip
           />
           <Link href="/modules" className="btn btn-ghost text-sm">
