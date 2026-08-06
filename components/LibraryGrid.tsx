@@ -566,12 +566,14 @@ function LibraryGridInner() {
     jobs.some((job) => job.id === deepLinkJobId);
 
   /**
-   * Deep-link ownership resolve (AIT-103 / AIT-110 / AIT-319).
+   * Deep-link ownership resolve (AIT-103 / AIT-110 / AIT-319 / AIT-522).
    * List hit → owned (derived). Miss → one-shot GET /api/generations/:id (owner-scoped).
    * 200 + visible job merges into list; 404-class → not-your-toy;
-   * network/5xx → unavailable (never invent not-your-toy on transport fail).
+   * network/5xx/timeout → unavailable (never invent not-your-toy on transport fail).
    * Skip resolve while owner list is error/timeout — list surface owns honesty.
-   * `deepLinkAttemptedRef` stops re-fetch loops after terminal resolve.
+   * `deepLinkAttemptedRef` is set only on terminal outcomes so effect re-runs
+   * never soft-stick on permanent "Loading your Library…" after a cancelled flight.
+   * Wall-clock STUDIO_SESSION_BOOT_MS covers authHeaders + detail GET hang.
    * setState is deferred (setTimeout 0) so react-hooks/set-state-in-effect stays clean.
    */
   useEffect(() => {
@@ -590,32 +592,56 @@ function LibraryGridInner() {
 
     // Owned via list membership — mark owned (async setState; UI also trusts listHasDeepLink).
     if (listHasDeepLink) {
+      deepLinkAttemptedRef.current = deepLinkJobId;
       const t = window.setTimeout(() => setDeepLinkResolve("owned"), 0);
       return () => window.clearTimeout(t);
     }
 
+    // Terminal resolve for this id already landed — do not re-fetch.
     if (deepLinkAttemptedRef.current === deepLinkJobId) {
-      // Already resolved this id as not-yours/unavailable (or in-flight completed).
       return;
     }
-    deepLinkAttemptedRef.current = deepLinkJobId;
 
     let cancelled = false;
     const t = window.setTimeout(() => {
       setDeepLinkResolve("resolving");
       void (async () => {
         try {
-          const headers = await privateDownloadHeaders();
-          const response = await fetch(
-            `/api/generations/${encodeURIComponent(deepLinkJobId)}`,
-            { headers, cache: "no-store" }
+          // Wall-clock covers getSession hang inside privateDownloadHeaders + detail fetch.
+          const result = await withTimeout(
+            (async () => {
+              const headers = await privateDownloadHeaders();
+              const controller =
+                typeof AbortController !== "undefined"
+                  ? new AbortController()
+                  : null;
+              const timer = controller
+                ? setTimeout(() => controller.abort(), STUDIO_SESSION_BOOT_MS)
+                : null;
+              try {
+                const response = await fetch(
+                  `/api/generations/${encodeURIComponent(deepLinkJobId)}`,
+                  {
+                    headers,
+                    cache: "no-store",
+                    signal: controller?.signal,
+                  }
+                );
+                const body = (await response.json()) as {
+                  ok?: boolean;
+                  job?: GenerationJob;
+                  code?: string;
+                };
+                return { response, body };
+              } finally {
+                if (timer) clearTimeout(timer);
+              }
+            })(),
+            STUDIO_SESSION_BOOT_MS,
+            "Could not verify this Moment in time"
           );
-          const body = (await response.json()) as {
-            ok?: boolean;
-            job?: GenerationJob;
-            code?: string;
-          };
           if (cancelled) return;
+          const { response, body } = result;
           const job = body.job;
           // Fail-closed: require ok + visible account job (never owned:false / demo).
           if (
@@ -625,6 +651,7 @@ function LibraryGridInner() {
             job.id === deepLinkJobId &&
             visibleAccountJob(job)
           ) {
+            deepLinkAttemptedRef.current = deepLinkJobId;
             setJobs((prev) => {
               if (prev.some((row) => row.id === job.id)) return prev;
               return [job, ...prev];
@@ -641,12 +668,17 @@ function LibraryGridInner() {
             body.code === "DURABLE_DETAIL_UNAVAILABLE" ||
             body.code === "DELIVERY_PIPELINE_UNAVAILABLE"
           ) {
+            deepLinkAttemptedRef.current = deepLinkJobId;
             setDeepLinkResolve("unavailable");
             return;
           }
+          deepLinkAttemptedRef.current = deepLinkJobId;
           setDeepLinkResolve("not-yours");
         } catch {
-          if (!cancelled) setDeepLinkResolve("unavailable");
+          // Timeout / abort / network: honest unavailable + Retry — never infinite Loading.
+          if (cancelled) return;
+          deepLinkAttemptedRef.current = deepLinkJobId;
+          setDeepLinkResolve("unavailable");
         }
       })();
     }, 0);
@@ -864,9 +896,20 @@ function LibraryGridInner() {
       <div
         className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]"
         data-library-state={deepLinkPending ? "deep-link-resolving" : "loading"}
-        data-library-boot="checking"
+        data-library-boot={deepLinkPending ? "deep-link-resolving" : "checking"}
+        data-library-deep-link={deepLinkPending ? "resolving" : undefined}
       >
-        <p className="text-sm font-semibold text-white/45">Loading your Library…</p>
+        <p className="text-sm font-semibold text-white/45">
+          {deepLinkPending
+            ? "Verifying this Moment…"
+            : "Loading your Library…"}
+        </p>
+        {deepLinkPending ? (
+          <p className="mt-2 max-w-sm text-center text-[11px] leading-5 text-white/40">
+            Ownership check is wall-clock bounded. If it times out, you can retry
+            without us inventing a not-your-toy claim.
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -1029,9 +1072,9 @@ function LibraryGridInner() {
               Could not verify this Moment.
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
-              Ownership check failed due to a network or private storage error.
-              We will not claim this is not your toy — retry when the connection
-              is ready.
+              Ownership check failed due to a network, timeout, or private
+              storage error. We will not claim this is not your toy — retry when
+              the connection is ready.
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               <button

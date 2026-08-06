@@ -688,4 +688,46 @@ assert.match(
   "deep-link resolve must treat DURABLE_DETAIL_UNAVAILABLE as unavailable"
 );
 
+// ─── AIT-522 residual: deep-link resolve finite (no infinite Loading) ───────
+// Wall-clock covers authHeaders + detail GET; timeout/abort → unavailable + Retry.
+assert.match(
+  library,
+  /withTimeout\([\s\S]{0,900}\/api\/generations\/\$\{encodeURIComponent\(deepLinkJobId\)\}/,
+  "deep-link detail GET must be wall-clock bounded"
+);
+assert.match(
+  library,
+  /STUDIO_SESSION_BOOT_MS/,
+  "deep-link resolve must use STUDIO_SESSION_BOOT_MS bound"
+);
+assert.match(
+  library,
+  /Could not verify this Moment in time/,
+  "deep-link timeout message must be honest"
+);
+// attempted ref only on terminal outcomes — cancelled mid-flight must re-run, not soft-stick
+assert.match(
+  library,
+  /deepLinkAttemptedRef\.current = deepLinkJobId[\s\S]{0,120}setDeepLinkResolve\("owned"\)|setDeepLinkResolve\("owned"\)[\s\S]{0,80}deepLinkAttemptedRef/,
+  "owned terminal must pin attempted ref"
+);
+assert.match(
+  library,
+  /deepLinkAttemptedRef\.current = deepLinkJobId[\s\S]{0,80}setDeepLinkResolve\("unavailable"\)/,
+  "unavailable terminal must pin attempted ref"
+);
+assert.match(
+  library,
+  /deepLinkAttemptedRef\.current = deepLinkJobId[\s\S]{0,80}setDeepLinkResolve\("not-yours"\)/,
+  "not-yours terminal must pin attempted ref"
+);
+// Must not pin attempted before the flight starts (that soft-sticks after cancel).
+assert.doesNotMatch(
+  library,
+  /deepLinkAttemptedRef\.current = deepLinkJobId;\s*let cancelled/,
+  "must not pin attempted before deep-link flight"
+);
+assert.match(library, /data-library-deep-link=\{deepLinkPending \? "resolving"/);
+assert.match(library, /Verifying this Moment…/);
+
 console.log("library-owner-safe-regression: ok");
