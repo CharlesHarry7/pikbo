@@ -426,7 +426,7 @@ assert.match(
   "BatchStudio sticky must expose clearance branch marker"
 );
 
-// 8. AIT-185 — Toast stack clears tab + home indicator (never hard bottom-20)
+// 8. AIT-447 / AIT-185 — Toast clears MobileGenerateBar + tab + home indicator
 const toastSrc = read("components/Toast.tsx");
 assert.match(
   toastSrc,
@@ -435,13 +435,44 @@ assert.match(
 );
 assert.match(
   toastSrc,
+  /bottom-\[var\(--toast-clearance\)\]/,
+  "Toast stack must use --toast-clearance (bar + nav, AIT-447)"
+);
+assert.match(
+  toastSrc,
+  /lg:bottom-6/,
+  "Toast desktop keeps bottom-6"
+);
+assert.doesNotMatch(
+  toastSrc,
   /bottom-\[calc\(var\(--mobile-nav-clearance\)\+0\.5rem\)\]/,
-  "Toast stack must clear tab nav + home indicator via --mobile-nav-clearance"
+  "Toast must not park on nav-only clearance under MobileGenerateBar"
 );
 assert.doesNotMatch(
   toastSrc,
   /bottom-20/,
   "Toast stack must not hardcode bottom-20 (misses notched safe-area)"
+);
+assert.match(
+  globalsCss,
+  /--toast-clearance:\s*calc\(\s*var\(--mobile-nav-clearance\)\s*\+\s*var\(--mobile-generate-bar-h\)\s*\+\s*0\.5rem\s*\)/,
+  "globals --toast-clearance stacks bar-h + nav clearance + gap"
+);
+assert.match(
+  globalsCss,
+  /--mobile-generate-bar-h:\s*3\.25rem/,
+  "globals defines --mobile-generate-bar-h for toast stack"
+);
+// Bar-route: MobileGenerateBar and toast must not share the same bottom band
+assert.match(
+  mobileBar,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "MobileGenerateBar parks on --mobile-nav-clearance"
+);
+assert.match(
+  mobileBar,
+  /data-floating-generate=["']mobile-bar["']/,
+  "MobileGenerateBar keeps data-floating-generate marker on bar routes"
 );
 // AIT-374: Toast residual competitor lime → neon-pink / void board tokens
 assert.doesNotMatch(

@@ -80,6 +80,17 @@
   );
   --floating-generate-z: 40;
 
+  /*
+   * Toast stack clears MobileGenerateBar + tab nav (AIT-447).
+   * MobileGenerateBar parks at --mobile-nav-clearance (pill row ~3.25rem).
+   * Without bar-h, toast lands in the same band as the Generate pills on browse
+   * surfaces (library/explore/pricing/…). Desktop keeps lg:bottom-6 in Toast.tsx.
+   */
+  --mobile-generate-bar-h: 3.25rem;
+  --toast-clearance: calc(
+    var(--mobile-nav-clearance) + var(--mobile-generate-bar-h) + 0.5rem
+  );
+
   /* shadcn-compatible aliases */
   --background: var(--bg);
   --foreground: var(--fg);
