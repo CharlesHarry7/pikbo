@@ -1,10 +1,10 @@
 /**
- * AIT-529 / AIT-469 / AIT-392 / AIT-381: CreateStudio workbench post-generate
- * result fold.
+ * AIT-541 / AIT-529 / AIT-469 / AIT-392 / AIT-381: post-generate result fold
+ * shared by CreateStudio workbench + LandingToolPanel tool pages.
  *
- * After a Lab try or owned generate finishes on the workbench path
- * (`!fixedMomentContract`, esp. 360-spin-showcase), mobile sticky + stage
- * surface exactly one primary next action above the fold.
+ * After a Lab try or owned generate finishes on the workbench / landing path
+ * (`!fixedMomentContract` on Create; landing tool-panel done stage), sticky
+ * and/or stage surface exactly one primary next action above the fold.
  *
  * Allowed primaries: download | library | replay | generate-again (re-spin).
  * Fixed Moment contract and freeLiveOpen gates stay outside this helper.
