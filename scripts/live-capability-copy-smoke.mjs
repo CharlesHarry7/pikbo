@@ -284,6 +284,34 @@ assert(
     ),
   "CreditsBadge must drop Free Mini product-cap copy when freeLiveOpen is false"
 );
+// AIT-442: CreditsBadge freeLiveOpen title chips — no Free Mini product brand.
+const creditsBadgeSource = read("components/CreditsBadge.tsx");
+assert(
+  !creditsBadgeSource.includes("Free Mini"),
+  "CreditsBadge must not hardcode Free Mini product brand title chips"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,500}free-plan live/.test(creditsBadgeSource) &&
+    creditsBadgeSource.includes(
+      "Free-plan display balance ${credits} cr · cached demos still free · compare plans"
+    ) &&
+    creditsBadgeSource.includes(
+      "Free-plan display exhausted · cached demos still free · compare plans"
+    ) &&
+    creditsBadgeSource.includes(
+      "${credits} cr · free-plan live ${freeLive!.resolution} ${freeLive!.durationSec}s when Live is enabled"
+    ) &&
+    creditsBadgeSource.includes(
+      "free-plan live · ${freeLive!.resolution} · ${freeLive!.durationSec}s · ~${clips} live when enabled · on-player mark"
+    ),
+  "CreditsBadge free-plan live / Free-plan display title chips must sit behind freeLiveOpen"
+);
+assert(
+  creditsBadgeSource.includes("Cached Lab preview · 0 credits · live gated") &&
+    /canLiveGenerate\s*\(/.test(creditsBadgeSource) &&
+    /liveEnabled\s*!==\s*false/.test(creditsBadgeSource),
+  "CreditsBadge must keep freeLiveOpen fail-closed Cached Lab / live gated closed path"
+);
 assert(
   read("components/LandingToolPanel.tsx").includes("Live gated") &&
     /freeLiveOpen[\s\S]{0,80}Free Mini used|!freeLiveOpen[\s\S]{0,200}Cached Lab preview/.test(

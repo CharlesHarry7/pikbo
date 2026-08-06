@@ -67,7 +67,7 @@ export function CreditsBadge({
   const signed = Boolean(session.signedIn && session.durable);
   const trialDone = freeTrialExhausted(session);
   const freeLive = session.freeTrial?.freeLive;
-  /** R0/T6: Free live Mini is product intent only until liveEnabled. */
+  /** R0/T6: free-plan live only when Live is open (fail-closed while /api/me loading). */
   const freeLiveOpen = Boolean(
     canLiveGenerate(session) &&
       freeLive &&
@@ -79,13 +79,13 @@ export function CreditsBadge({
       ? `${credits} account credits · live generation unavailable · cached previews free`
       : "0 credits · cached previews free (upload not processed)"
     : trialDone && freeLiveOpen
-      ? `Free Mini display balance ${credits} cr · cached demos still free · compare plans`
+      ? `Free-plan display balance ${credits} cr · cached demos still free · compare plans`
       : trialDone
         ? `Cached Lab preview · 0 credits · live gated · compare plans`
         : signed
           ? `${credits} account credits · live generation available`
           : freeLiveOpen
-            ? `${credits} cr · Free Mini ${freeLive!.resolution} ${freeLive!.durationSec}s when Live is enabled`
+            ? `${credits} cr · free-plan live ${freeLive!.resolution} ${freeLive!.durationSec}s when Live is enabled`
             : "Cached Lab preview · 0 credits · live gated";
 
   const fullTitle = demo
@@ -93,13 +93,13 @@ export function CreditsBadge({
       ? `${session.planName} · ${credits} account credits · live generation unavailable · cached previews free`
       : `${session.planName} · cached previews · 0 credits`
     : trialDone && freeLiveOpen
-      ? `Free Mini display exhausted · cached demos still free · compare plans`
+      ? `Free-plan display exhausted · cached demos still free · compare plans`
       : trialDone
         ? `Cached Lab preview · 0 credits · live gated · compare plans`
         : signed
           ? `Signed in · ${credits} account credits · live generation available`
           : freeLiveOpen
-            ? `Free Mini · ${freeLive!.resolution} · ${freeLive!.durationSec}s · ~${clips} live when enabled · on-player mark`
+            ? `free-plan live · ${freeLive!.resolution} · ${freeLive!.durationSec}s · ~${clips} live when enabled · on-player mark`
             : `${session.planName} · Cached Lab preview · 0 credits · live gated`;
 
   if (compact) {
