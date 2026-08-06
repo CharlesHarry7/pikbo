@@ -771,4 +771,29 @@ assert.match(
   "Explore page eyebrows/CTAs/path accents use --brand copper"
 );
 
+// AIT-590: Pricing page residual carnival pink chrome → gallery-calm copper
+{
+  const pricingPageCopper = read("app/pricing/page.tsx");
+  assert.doesNotMatch(
+    pricingPageCopper,
+    /#B14EFF|#FF4ECD|#00D9FF|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|0\s*,\s*217\s*,\s*255/i,
+    "app/pricing/page.tsx must not hard-code carnival pink/cyan RGB"
+  );
+  assert.match(
+    pricingPageCopper,
+    /var\(--brand\)/,
+    "Pricing page eyebrows/pills/link hovers use --brand copper"
+  );
+  assert.match(
+    pricingPageCopper,
+    /var\(--grad\)/,
+    "Pricing page bar/badge use --grad copper board gradient"
+  );
+  assert.match(
+    pricingPageCopper,
+    /rgba\(196\s*,\s*165\s*,\s*116/,
+    "Pricing page radial wash uses copper board rgba(196,165,116)"
+  );
+}
+
 console.log("generate-360-cta-smoke: ok");
