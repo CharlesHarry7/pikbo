@@ -62,6 +62,34 @@
     0 0 32px rgba(177, 78, 255, 0.35);
   --radius: 1rem;
 
+  /*
+   * Mobile clearance + sticky Generate content pads (AIT-344 residual /
+   * AIT-335 tokens). Tab-sharing workbench clears sticky chrome + AppShell
+   * tab; nav-less fixed Moment clears sticky chrome + home indicator only.
+   */
+  --mobile-nav-content-h: 4.75rem;
+  --mobile-nav-clearance: calc(
+    var(--mobile-nav-content-h) + env(safe-area-inset-bottom, 0px)
+  );
+  --floating-cta-safe-bottom: max(
+    0.85rem,
+    calc(env(safe-area-inset-bottom, 0px) + 0.5rem)
+  );
+  --floating-generate-z: 40;
+  --sticky-generate-chrome-h: 5.75rem;
+  --sticky-generate-pad: calc(
+    var(--sticky-generate-chrome-h) + var(--mobile-nav-clearance)
+  );
+  --sticky-generate-pad-safe: calc(
+    var(--sticky-generate-chrome-h) + var(--floating-cta-safe-bottom)
+  );
+  --create-sticky-chrome-h: var(--sticky-generate-chrome-h);
+  --create-content-pad-safe: var(--sticky-generate-pad-safe);
+  --mobile-generate-bar-h: 3.25rem;
+  --mobile-generate-bar-pad: calc(
+    var(--mobile-generate-bar-h) + var(--mobile-nav-clearance) + 0.5rem
+  );
+
   /* shadcn-compatible aliases */
   --background: var(--bg);
   --foreground: var(--fg);

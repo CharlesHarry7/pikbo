@@ -15,6 +15,7 @@ import {
   pushHistory,
 } from "@/lib/history";
 import {
+  canLiveGenerate,
   canUsePrivateLaunch,
   fetchMe,
   freeTrialExhausted,
@@ -478,8 +479,17 @@ export function CreateStudio({
     }
   }
 
-  /** One-tap joy path: PIKBO Lab prototype still + matching recipe. Rights = Lab sample. */
-  async function loadSampleToy(sampleId: string, autoGenerate = false) {
+  /**
+   * One-tap Lab path: PIKBO Lab prototype still + recipe. Rights = Lab sample.
+   * AIT-325: deep-link try (createLabSampleTryHref → effect=360 + try/sample)
+   * keeps the workbench remix recipe; Moment stays fixed street-power-up.
+   * Manual sample grid taps still use each SAMPLE_TOYS recipe.
+   */
+  async function loadSampleToy(
+    sampleId: string,
+    autoGenerate = false,
+    opts?: { preferDeepLinkEffect?: boolean }
+  ) {
     const s = SAMPLE_TOYS.find((x) => x.id === sampleId) ?? SAMPLE_TOYS[0];
     setLastSampleId(s.id);
     setSampleLoading(true);
@@ -488,14 +498,26 @@ export function CreateStudio({
     try {
       const data = await sampleToDataUrl(s.path);
       await adoptImage(data, { labSample: true });
-      selectEffect(s.effect);
+      const deep = (initialEffect || "").trim();
+      const deepOk =
+        Boolean(opts?.preferDeepLinkEffect) &&
+        !fixedMomentContract &&
+        deep.length > 0 &&
+        deep !== FIXED_MOMENT_EFFECT &&
+        PRESETS.some((p) => p.slug === deep);
+      const recipe = fixedMomentContract
+        ? FIXED_MOMENT_EFFECT
+        : deepOk
+          ? deep
+          : s.effect;
+      selectEffect(recipe);
       // PIKBO Lab reference stills — not a visitor upload or verified provider input.
       setOwnsRights(true);
       if (autoGenerate) {
         toast("Previewing PIKBO Lab prototype sample · cached · 0 credits…");
         await generate({
           imageOverride: data,
-          effectOverride: s.effect,
+          effectOverride: recipe,
           rightsOverride: true,
           labSampleId: s.id,
         });
@@ -518,7 +540,8 @@ export function CreateStudio({
     }
   }
 
-  // First-run: ?sample=scout or ?try=1 → load sample and auto-generate
+  // First-run: ?sample=scout or ?try=1 → load sample and auto-generate.
+  // Workbench deep links keep their remix effect (AIT-325 one-click 360 try).
   useEffect(() => {
     if (!initialSample) return;
     const id = SAMPLE_TOYS.some((s) => s.id === initialSample)
@@ -526,7 +549,9 @@ export function CreateStudio({
       : "scout";
     // Defer so we don't setState synchronously inside the effect body.
     const t = window.setTimeout(() => {
-      void loadSampleToy(id, true);
+      void loadSampleToy(id, true, {
+        preferDeepLinkEffect: !fixedMomentContract,
+      });
     }, 0);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -814,6 +839,25 @@ export function CreateStudio({
   const demoMode = !privateUploadEnabled || labStill;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
+  /** AIT-312: never advertise Free Mini while Live is closed. */
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(session) &&
+      freeLive &&
+      freeLive.liveEnabled !== false
+  );
+  /** Generate workbench (not fixed Moment) — first-run fold + honest Lab labels. */
+  const workbenchFirstRun = !fixedMomentContract;
+  /** AIT-325: Home Lab try doors hydrate via ?try=1&sample= on the workbench. */
+  const labSampleTryActive = Boolean(initialSample);
+  const labSampleTryState = labSampleTryActive
+    ? sampleLoading
+      ? "hydrating"
+      : sampleLoadError
+        ? "error"
+        : labStill && image
+          ? "ready"
+          : "pending"
+    : undefined;
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
       ? session.freeTrial.clipsLeft
@@ -1821,26 +1865,59 @@ export function CreateStudio({
   }, [image, effect, demoMode, effectiveDuration, aspectRatio]);
 
   return (
-    <div className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-36 lg:min-h-screen lg:pb-0">
-      {/* Suite chrome: desktop only — mobile uses bottom nav + Modules shelf */}
+    <div
+      className={
+        fixedMomentContract
+          ? // Nav-less fixed Moment: sticky chrome + home indicator only
+            "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-pad-safe)] lg:min-h-screen lg:pb-0"
+          : // Tab-sharing workbench: sticky chrome + AppShell tab clearance
+            "flex h-full min-h-[calc(100vh-3.5rem)] flex-col pb-[var(--sticky-generate-pad)] lg:min-h-screen lg:pb-0"
+      }
+      data-create-content-pad={
+        fixedMomentContract ? "safe-bottom" : "mobile-nav"
+      }
+      data-studio-contract={
+        fixedMomentContract ? "fixed-moment" : "generate-workbench"
+      }
+      data-workbench-first-run={
+        workbenchFirstRun ? "upload-sticky" : undefined
+      }
+      data-create-source={
+        initialSource ? initialSource.slice(0, 64) : undefined
+      }
+      data-lab-sample-try={labSampleTryState}
+      data-lab-sample-id={
+        labSampleTryActive
+          ? lastSampleId || initialSample || undefined
+          : undefined
+      }
+    >
+      {/* Suite chrome: desktop only — mobile first-run keeps fold clean */}
       {!fixedMomentContract && (
-        <div className="hidden lg:block">
+        <div className="hidden lg:block" data-workbench-suite-chrome="desktop-only">
           <GenerateSuiteChrome compact showSellerPack={privateUploadEnabled} />
         </div>
       )}
-      {/* ── Mode banner: demo vs live (W5) · tighter on phone ── */}
+      {/* ── Mode banner: demo vs live (W5) · AIT-312: single-row on workbench mobile ── */}
       <div
         role="status"
-        className={`border-b px-4 py-1.5 sm:py-2.5 ${
+        className={`border-b px-4 ${
+          workbenchFirstRun ? "py-1 sm:py-2" : "py-1.5 sm:py-2.5"
+        } ${
           bannerIsDemo
             ? "border-white/10 bg-white/[0.04]"
             : "border-[var(--mint)]/25 bg-[var(--mint)]/[0.08]"
         }`}
+        data-mode-banner={workbenchFirstRun ? "workbench-compact" : "default"}
       >
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
+        <div
+          className={`mx-auto flex max-w-6xl items-center justify-between gap-2 ${
+            workbenchFirstRun ? "flex-nowrap" : "flex-wrap"
+          }`}
+        >
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
             <span
-              className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide ${
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide sm:px-2.5 sm:text-[10px] ${
                 bannerIsDemo
                   ? "bg-white/10 text-white/80"
                   : "bg-[var(--mint)] text-black"
@@ -1893,23 +1970,35 @@ export function CreateStudio({
                   Lab example · <b className="text-[var(--fg)]">not your photo</b>
                   <span className="hidden sm:inline"> · 0 credits</span>
                 </>
-              ) : trialDone && isFree ? (
+              ) : trialDone && isFree && freeLiveOpen ? (
                 <>
                   Free Mini trial used · cached Lab demos still free ·{" "}
                   <Link href="/pricing" className="font-semibold text-[var(--mint)] hover:underline">
                     compare plans
                   </Link>
                 </>
+              ) : trialDone && isFree && !freeLiveOpen ? (
+                <>
+                  Private Live gated ·{" "}
+                  <b className="text-[var(--fg)]">Lab samples stay free</b>
+                  <span className="hidden sm:inline"> · 0 credits</span>
+                </>
+              ) : !freeLiveOpen && !privateUploadEnabled ? (
+                <>
+                  Lab preview ·{" "}
+                  <b className="text-[var(--fg)]">private Live gated</b>
+                  <span className="hidden sm:inline"> · 0 credits</span>
+                </>
               ) : (
                 <>
                   Your photo ·{" "}
-                  {isFree && freeLive
+                  {isFree && freeLiveOpen && freeLive
                     ? `${effectiveModelLabel} ${freeLive.durationSec}s ${freeLive.resolution}`
                     : isFree
                       ? `${effectiveModelLabel} 5s ${effectiveResolution}`
                       : `${effectiveDuration}s · ${effectiveResolution}`}{" "}
                   · {CREDITS_PER_VIDEO} cr
-                  {clipsLeft !== null
+                  {freeLiveOpen && clipsLeft !== null
                     ? ` · ~${clipsLeft} live left`
                     : creditsLeft !== null
                       ? ` · ${creditsLeft} cr left`
@@ -1925,7 +2014,12 @@ export function CreateStudio({
               )}
             </p>
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-[var(--fg-muted)]">
+          {/* AIT-312: hide secondary access row on workbench phone — saves a wrap line */}
+          <div
+            className={`items-center gap-3 text-[11px] text-[var(--fg-muted)] ${
+              workbenchFirstRun ? "hidden sm:flex" : "flex"
+            }`}
+          >
             {privateUploadEnabled ? (
               <>
                 {session ? (
@@ -1947,31 +2041,49 @@ export function CreateStudio({
               <span className="font-semibold text-white/65">
                 {fixedMomentContract
                   ? "Sign in required · private beta"
-                  : "Public Lab · cached 0 credits"}
+                  : freeLiveOpen
+                    ? "Public Lab · cached 0 credits"
+                    : "Lab sample · private Live gated"}
               </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* ── Remix context (from Home / project deep link) ── */}
+      {/* ── Remix context (from Home / project deep link) · AIT-312: compact on mobile ── */}
       {!fixedMomentContract &&
         (remix.sourceLabel || remix.notices.length > 0 || remix.intent) && (
         <div
-          className="border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-3"
+          className={`border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 ${
+            workbenchFirstRun ? "py-1.5 sm:py-3" : "py-3"
+          }`}
+          data-workbench-remix={workbenchFirstRun ? "compact" : "full"}
         >
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 sm:gap-3">
             {remix.sourcePoster && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={remix.sourcePoster}
                 alt=""
-                className="h-14 w-10 shrink-0 rounded-md object-cover ring-1 ring-white/15"
+                className={`shrink-0 rounded-md object-cover ring-1 ring-white/15 ${
+                  workbenchFirstRun
+                    ? "hidden h-10 w-8 sm:block sm:h-14 sm:w-10"
+                    : "h-14 w-10"
+                }`}
               />
             )}
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-black uppercase tracking-wider text-[var(--mint)]">
-                Remix this recipe · replace the toy
+                {workbenchFirstRun ? (
+                  <>
+                    <span className="sm:hidden">Recipe · replace toy</span>
+                    <span className="hidden sm:inline">
+                      Remix this recipe · replace the toy
+                    </span>
+                  </>
+                ) : (
+                  "Remix this recipe · replace the toy"
+                )}
               </p>
               <p className="text-sm font-semibold text-[var(--fg)]">
                 {remix.sourceLabel || preset.name}
@@ -1982,7 +2094,11 @@ export function CreateStudio({
                   </span>
                 ) : null}
               </p>
-              <p className="text-[11px] text-[var(--fg-muted)]">
+              <p
+                className={`text-[11px] text-[var(--fg-muted)] ${
+                  workbenchFirstRun ? "hidden sm:block" : ""
+                }`}
+              >
                 {privateUploadEnabled
                   ? "Upload a photo you own to create a separate private result. The example is never presented as your output."
                   : "Public preview keeps this archived Lab example. It does not accept or process your product photo."}
@@ -1996,7 +2112,9 @@ export function CreateStudio({
             {initialSource && (
               <Link
                 href={`/projects/${encodeURIComponent(initialSource)}`}
-                className="text-[11px] font-semibold text-[var(--mint)] hover:underline"
+                className={`text-[11px] font-semibold text-[var(--mint)] hover:underline ${
+                  workbenchFirstRun ? "hidden sm:inline" : ""
+                }`}
               >
                 Inside recipe →
               </Link>
@@ -2005,11 +2123,18 @@ export function CreateStudio({
         </div>
       )}
 
-      {/* ── Mobile first-run: goal → upload → recipe → generate (CD Phase A) ── */}
-      <div className="border-b border-[var(--border)] px-4 py-2 lg:hidden">
-        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--mint)]/85">
-          Creative Director · commercial path
-        </p>
+      {/* ── Mobile first-run steps · AIT-312: workbench compact path chrome ── */}
+      <div
+        className={`border-b border-[var(--border)] px-4 lg:hidden ${
+          workbenchFirstRun ? "py-1" : "py-2"
+        }`}
+        data-first-run-path={workbenchFirstRun ? "compact" : "full"}
+      >
+        {!workbenchFirstRun ? (
+          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--mint)]/85">
+            Creative Director · commercial path
+          </p>
+        ) : null}
         <ol
           className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide"
           aria-label="Create steps"
@@ -2167,8 +2292,17 @@ export function CreateStudio({
           ) : null}
         </aside>
 
-        {/* ── Controls: upload → recipe → preflight ── */}
-        <section className="space-y-4 overflow-y-auto border-b border-white/[0.07] bg-[#08080a] p-4 lg:max-h-[calc(100vh-8rem)] lg:border-b-0 lg:border-r">
+        {/* ── Controls: upload → recipe → preflight (AIT-312 tighter on workbench) ── */}
+        <section
+          className={`overflow-y-auto border-b border-white/[0.07] bg-[#08080a] lg:max-h-[calc(100vh-8rem)] lg:border-b-0 lg:border-r ${
+            workbenchFirstRun
+              ? "space-y-2.5 p-3 sm:space-y-3 sm:p-4"
+              : "space-y-4 p-4"
+          }`}
+          data-workbench-controls={
+            workbenchFirstRun ? "above-fold" : undefined
+          }
+        >
           {upgradedBanner && (
             <div className="rounded-xl border border-[var(--mint)]/40 bg-[color-mix(in_srgb,var(--mint)_10%,transparent)] px-3 py-2 text-xs">
               Private allowance active — 720p path, no on-player watermark.
@@ -2216,7 +2350,12 @@ export function CreateStudio({
 
           {/* Step 1 — public Lab-only preview or invited private upload */}
           {privateUploadEnabled ? (
-            <div id="create-photo-step" data-first-run-step="upload">
+            <div
+              id="create-photo-step"
+              data-first-run-step="upload"
+              data-lab-still={labStill ? "true" : undefined}
+              data-upload-replace={labStill ? "lab-to-owned" : "owned"}
+            >
               <div className="mb-2 flex items-center justify-between gap-2">
                 <label
                   htmlFor="create-photo-input"
@@ -2225,12 +2364,17 @@ export function CreateStudio({
                   <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--mint)] text-[9px] text-black lg:hidden">
                     1
                   </span>
-                  <span className="lg:hidden">Upload owned toy photo</span>
-                  <span className="hidden lg:inline">{t("create.yourPhoto")}</span>
+                  <span className="lg:hidden">
+                    {labStill ? "Lab sample loaded · replace with yours" : "Upload owned toy photo"}
+                  </span>
+                  <span className="hidden lg:inline">
+                    {labStill ? "Lab sample · replace with owned photo" : t("create.yourPhoto")}
+                  </span>
                 </label>
                 {image && (
                   <button
                     type="button"
+                    data-upload-replace-action={labStill ? "clear-lab" : "clear"}
                     className="text-[10px] font-semibold text-[var(--fg-dim)] hover:text-[var(--brand)]"
                     onClick={() => {
                       setImage(null);
@@ -2241,16 +2385,32 @@ export function CreateStudio({
                       setSecondaryStill(null);
                     }}
                   >
-                    {t("create.replace")}
+                    {labStill ? "Replace Lab sample" : t("create.replace")}
                   </button>
                 )}
               </div>
+              {labStill && image ? (
+                <p
+                  className="mb-2 text-[10px] font-semibold leading-snug text-[var(--mint)]/90"
+                  data-lab-sample-honesty="owned-path"
+                >
+                  Lab prototype · <b className="text-white/85">not your photo</b>
+                  {" · "}
+                  drop your owned figure to run Live (gated).
+                </p>
+              ) : null}
               <label
                 className={`group/drop relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed bg-black/40 transition-all duration-200 hover:border-[var(--mint)]/55 hover:bg-black/55 ${
                   image
                     ? "aspect-[16/10] border-[var(--mint)]/25 ring-1 ring-[var(--mint)]/15"
-                    : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(255,78,205,0.06)] sm:aspect-video"
+                    : workbenchFirstRun
+                      ? "min-h-[118px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(255,78,205,0.06)] sm:min-h-[140px] sm:aspect-video"
+                      : "min-h-[160px] border-[var(--mint)]/40 shadow-[0_0_40px_rgba(255,78,205,0.06)] sm:aspect-video"
                 }`}
+                data-upload-zone={
+                  workbenchFirstRun ? "workbench" : "default"
+                }
+                data-first-run-step="upload"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDrop}
               >
@@ -2259,22 +2419,44 @@ export function CreateStudio({
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={image}
-                      alt="your toy"
+                      alt={labStill ? "PIKBO Lab sample still" : "your toy"}
                       className="h-full w-full object-contain"
                     />
+                    {labStill ? (
+                      <span className="pointer-events-none absolute left-2 top-2 rounded-full border border-white/20 bg-black/70 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-white/80">
+                        Lab · not your photo
+                      </span>
+                    ) : null}
                     <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-3 py-2.5 text-center text-[10px] font-semibold text-white/70 opacity-0 transition group-hover/drop:opacity-100">
-                      {t("create.replaceStill")}
+                      {labStill
+                        ? "Drop or click to replace Lab sample with your photo"
+                        : t("create.replaceStill")}
                     </span>
                   </>
                 ) : (
-                  <span className="px-6 text-center text-sm text-[var(--fg-dim)]">
-                    <span className="mb-2 mx-auto grid h-12 w-12 place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.08] text-2xl" aria-hidden>
+                  <span
+                    className={`px-4 text-center text-[var(--fg-dim)] sm:px-6 ${
+                      workbenchFirstRun ? "text-[13px] sm:text-sm" : "text-sm"
+                    }`}
+                  >
+                    <span
+                      className={`mx-auto grid place-items-center rounded-2xl border border-[var(--mint)]/30 bg-[var(--mint)]/[0.08] ${
+                        workbenchFirstRun
+                          ? "mb-1.5 h-10 w-10 text-xl sm:mb-2 sm:h-12 sm:w-12 sm:text-2xl"
+                          : "mb-2 h-12 w-12 text-2xl"
+                      }`}
+                      aria-hidden
+                    >
                       🧸
                     </span>
                     <span className="block font-semibold text-white/80">
                       {t("create.dropPhoto")}
                     </span>
-                    <span className="mt-1 block text-xs text-white/45">
+                    <span
+                      className={`mt-1 block text-white/45 ${
+                        workbenchFirstRun ? "text-[10px] sm:text-xs" : "text-xs"
+                      }`}
+                    >
                       {t("create.dropHint")}
                     </span>
                   </span>
@@ -2292,30 +2474,78 @@ export function CreateStudio({
             <div
               id="create-photo-step"
               data-public-single-preview="lab-only"
-              className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-4"
+              data-first-run-step="upload"
+              data-workbench-photo={
+                workbenchFirstRun ? "lab-gate" : undefined
+              }
+              data-lab-sample-preview={
+                labStill && image ? "loaded" : sampleLoading ? "loading" : "empty"
+              }
+              className={`rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] ${
+                workbenchFirstRun ? "p-3 sm:p-4" : "p-4"
+              }`}
             >
               <p
-                className="text-xs font-black uppercase tracking-[0.12em] text-[var(--mint)]"
+                className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--mint)] sm:text-xs"
                 data-studio-open-state={sessionBoot}
               >
                 {sessionResolved
                   ? sessionBoot === "timeout"
                     ? "Lab preview · access check timed out"
-                    : "Public Lab preview · no upload"
+                    : labStill && image
+                      ? "Lab sample loaded · not your photo"
+                      : freeLiveOpen
+                        ? "Public Lab preview · no upload"
+                        : "Lab sample · private Live gated"
                   : "Opening studio…"}
               </p>
-              <p className="mt-2 text-sm font-bold text-white">
-                {sessionResolved
-                  ? sessionBoot === "timeout"
-                    ? "Lab samples still work. Retry the access check or continue with a cached preview."
-                    : "Choose a Pikbo Lab sample below."
-                  : "Verifying private-beta access — Lab samples stay available if this fails."}
-              </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-[var(--fg-muted)]">
-                Public preview does not accept, register, or process your
-                product photo. Invited signed-in accounts see a separate
-                owner-only upload control here.
-              </p>
+              {labStill && image ? (
+                <div
+                  className="mt-2 overflow-hidden rounded-xl border border-white/10 bg-black/40"
+                  data-lab-sample-still="ready"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={image}
+                    alt="PIKBO Lab sample still"
+                    className={`w-full object-contain ${
+                      workbenchFirstRun ? "max-h-[140px] sm:max-h-[180px]" : "max-h-[200px]"
+                    }`}
+                  />
+                  <p className="border-t border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-white/70">
+                    Lab prototype ·{" "}
+                    <b className="text-white/90">not your photo</b>
+                    {" · "}0 credits · pick another sample below or sign in for owned-photo Live
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p
+                    className={`mt-1.5 font-bold text-white sm:mt-2 ${
+                      workbenchFirstRun ? "text-[13px] sm:text-sm" : "text-sm"
+                    }`}
+                  >
+                    {sessionResolved
+                      ? sessionBoot === "timeout"
+                        ? "Lab samples still work. Retry the access check or continue with a cached preview."
+                        : workbenchFirstRun
+                          ? labSampleTryActive && sampleLoading
+                            ? "Loading Lab sample for one-click preview…"
+                            : "Lab sample path · sign in for owned-photo Live."
+                          : "Choose a Pikbo Lab sample below."
+                      : "Verifying private-beta access — Lab samples stay available if this fails."}
+                  </p>
+                  <p
+                    className={`mt-1 text-[11px] leading-relaxed text-[var(--fg-muted)] ${
+                      workbenchFirstRun ? "hidden sm:block" : ""
+                    }`}
+                  >
+                    Public preview does not accept, register, or process your
+                    product photo. Invited signed-in accounts see a separate
+                    owner-only upload control here.
+                  </p>
+                </>
+              )}
               {sessionResolved ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {sessionBoot === "timeout" ? (
@@ -2391,29 +2621,45 @@ export function CreateStudio({
           {/* Collapsed Lab path — after recipe so first-run stays upload→recipe→generate */}
           {!image && !fixedMomentContract && (
             <div
-              className="rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] p-3"
+              className={`rounded-2xl border border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] ${
+                workbenchFirstRun ? "p-2.5 sm:p-3" : "p-3"
+              }`}
               data-first-run-lab="samples"
+              data-workbench-lab={workbenchFirstRun ? "compact" : "full"}
             >
-              <p className="text-sm font-bold text-[var(--fg)]">
+              <p
+                className={`font-bold text-[var(--fg)] ${
+                  workbenchFirstRun ? "text-[13px] sm:text-sm" : "text-sm"
+                }`}
+              >
                 {t("create.noPhotoSample")}
               </p>
-              <p className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
+              <p
+                className={`mt-0.5 text-[11px] text-[var(--fg-muted)] ${
+                  workbenchFirstRun ? "hidden sm:block" : ""
+                }`}
+              >
                 PIKBO Lab reference stills (not a customer upload). Cached
                 prototypes cost 0 credits and never process your photo. One
                 tap loads the recipe and opens the preview path.
               </p>
               <p className="mt-1 text-[10px] font-semibold text-[var(--mint)]">
-                Preview a Lab sample · cached prototype, not your upload.
+                {freeLiveOpen
+                  ? "Preview a Lab sample · cached prototype, not your upload."
+                  : "Lab sample · private Live gated · 0 credits"}
               </p>
               <button
                 type="button"
                 disabled={sampleLoading || busy}
                 onClick={() => void loadSampleToy("scout", true)}
-                className="btn btn-primary mt-3 w-full py-3 text-sm disabled:opacity-50"
+                className={`btn btn-primary w-full text-sm disabled:opacity-50 ${
+                  workbenchFirstRun ? "mt-2 py-2.5 sm:mt-3 sm:py-3" : "mt-3 py-3"
+                }`}
+                data-workbench-lab-cta="primary"
               >
                 {sampleLoading || busy
                   ? t("create.generating")
-                  : demoMode
+                  : demoMode || !freeLiveOpen
                     ? t("create.oneTapCached")
                     : t("create.oneTapMini")}
               </button>
@@ -3696,7 +3942,7 @@ export function CreateStudio({
                     onClick={() => void loadSampleToy("scout", true)}
                     className="btn btn-primary mt-5 px-6 py-2.5 text-sm disabled:opacity-50"
                   >
-                    {demoMode
+                    {demoMode || !freeLiveOpen
                       ? t("create.labSampleFree")
                       : t("create.labSampleMini")}
                   </button>
@@ -3711,17 +3957,29 @@ export function CreateStudio({
         </section>
       </div>
 
-      {/* ── Sticky mobile primary CTA — above AppShell tab nav ── */}
+      {/* ── Sticky mobile primary CTA
+          AIT-312/AIT-344: workbench first-run keeps upload / Lab / Generate
+          above the fold; clearance tokens clear AppShell tab or home
+          indicator (fixed Moment nav-less). ── */}
       <div
-        className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+        className={
+          fixedMomentContract
+            ? "fixed inset-x-0 bottom-[var(--floating-cta-safe-bottom)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+            : "fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+        }
         data-create-sticky="mobile"
+        data-workbench-sticky={workbenchFirstRun ? "first-run" : undefined}
+        data-create-sticky-clearance={
+          fixedMomentContract ? "safe-bottom" : "mobile-nav"
+        }
+        data-create-sticky-fold={workbenchFirstRun ? "with-tab" : "default"}
       >
         {image ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
             {preset.emoji} {viralName(preset.slug, preset.name)} · {aspectRatio}
             {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
-            {demoMode
-              ? "0 credits · cached prototype"
+            {demoMode || !freeLiveOpen
+              ? "0 credits · Lab sample / Live gated"
               : `${CREDITS_PER_VIDEO} credits when Live`}
           </p>
         ) : null}
@@ -3755,7 +4013,9 @@ export function CreateStudio({
               className="btn btn-primary w-full py-3 text-sm disabled:opacity-50"
               data-first-run-action="lab-preview"
             >
-              Preview a Lab sample · 0 credits
+              {freeLiveOpen
+                ? "Preview a Lab sample · 0 credits"
+                : "Lab sample · private Live gated"}
             </button>
           )
         ) : busy ? (

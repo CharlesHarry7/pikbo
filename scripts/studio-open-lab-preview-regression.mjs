@@ -79,8 +79,13 @@ assert.match(studio, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/)
 // No fragile wall-clock heuristic for session timeout detection
 assert.doesNotMatch(studio, /elapsed\s*>=\s*STUDIO_SESSION_BOOT_MS/);
 assert.doesNotMatch(gate, /elapsed\s*>=\s*STUDIO_SESSION_BOOT_MS/);
-// Auto Lab on first-run sample/try deep link
-assert.match(studio, /loadSampleToy\(id,\s*true\)/);
+// Auto Lab on first-run sample/try deep link (AIT-325 preferDeepLinkEffect
+// keeps workbench remix recipe; still auto-generates on open)
+assert.match(
+  studio,
+  /loadSampleToy\(\s*id,\s*true(?:,\s*\{[\s\S]*?preferDeepLinkEffect[\s\S]*?\})?\)/
+);
+assert.match(studio, /preferDeepLinkEffect:\s*!fixedMomentContract/);
 assert.match(studio, /initialSample/);
 
 // Mobile sticky Lab CTA retained

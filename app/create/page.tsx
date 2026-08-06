@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { CreateStudio } from "@/components/CreateStudio";
+import { CreateSeoFooter } from "@/components/CreateSeoFooter";
+import { JsonLd } from "@/components/JsonLd";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
 import {
@@ -8,6 +11,14 @@ import {
 } from "@/components/MomentCreatePreview";
 import { GuestMomentCreateGate } from "@/components/GuestMomentCreateGate";
 import { getMoment, parseMomentId } from "@/lib/moments";
+import { getPreset } from "@/lib/presets";
+import { softwareApplicationJsonLd } from "@/lib/jsonLd";
+import {
+  FIXED_MOMENT_EFFECT,
+  FIXED_MOMENT_MODE,
+  isGenerate360Effect,
+  resolveCreateRouteContract,
+} from "@/lib/createRouteContract";
 
 export async function generateMetadata({
   searchParams,
@@ -23,7 +34,11 @@ export async function generateMetadata({
   const moment = Array.isArray(sp.moment) ? null : parseMomentId(sp.moment);
   if (sp.moment !== undefined) {
     return {
-      title: { absolute: moment ? `${getMoment(moment).name} | ${site.name}` : `Moment unavailable | ${site.name}` },
+      title: {
+        absolute: moment
+          ? `${getMoment(moment).name} | ${site.name}`
+          : `Moment unavailable | ${site.name}`,
+      },
       description: moment
         ? `Place your owned toy into Pikbo's ${getMoment(moment).name} local composition preview. No upload or generation occurs in the public preview.`
         : "Choose one of Pikbo's published toy Moments. Invalid Moment links do not upload or generate anything.",
@@ -31,11 +46,34 @@ export async function generateMetadata({
       robots: CONCEPT_ROBOTS,
     };
   }
+
+  const contract = resolveCreateRouteContract(sp);
+  if (contract === "generate-workbench") {
+    const preset = sp.effect ? getPreset(sp.effect) : undefined;
+    if (preset) {
+      return {
+        title: { absolute: `Generate · ${preset.name} | ${site.name}` },
+        description: preset.seoDescription,
+        alternates: { canonical: `/effects/${preset.slug}` },
+        robots: CONCEPT_ROBOTS,
+      };
+    }
+    return {
+      title: "Generate · Toy Creative Director",
+      description:
+        "Pikbo Generate — inspect cached Lab formats publicly, or use an authorized toy photo inside the invited private beta.",
+      alternates: { canonical: "/create" },
+      robots: CONCEPT_ROBOTS,
+    };
+  }
+
   return {
     title: { absolute: `Street Power-Up · Private Moment | ${site.name}` },
     description:
       "Preview Pikbo's cached Street Power-Up sample, then request the owner-only private beta path.",
-    alternates: { canonical: "/create?mode=moment&effect=street-power-up" },
+    alternates: {
+      canonical: `/create?mode=${FIXED_MOMENT_MODE}&effect=${FIXED_MOMENT_EFFECT}`,
+    },
     robots: CONCEPT_ROBOTS,
   };
 }
@@ -48,6 +86,11 @@ export default async function CreatePage({
     mode?: string;
     source?: string;
     channel?: string;
+    ratio?: string;
+    duration?: string;
+    model?: string;
+    resolution?: string;
+    prompt?: string;
     /** One-click first-run sample: orbit | moon | scout | beatbot */
     sample?: string;
     try?: string;
@@ -72,12 +115,118 @@ export default async function CreatePage({
   const firstRunSample =
     sp.sample ||
     (sp.try === "1" || sp.try === "true" ? "scout" : undefined);
-  // MVP cut: every public or invited Create entry resolves to the one real,
-  // fixed product contract. Legacy Seller Pack and generic Studio query links
-  // remain harmless deep links, but no longer expose alternate product UIs.
+
+  const contract = resolveCreateRouteContract(sp);
+
+  // Generate→360 and other registered remix deep links: honest workbench.
+  // Do not wrap in GuestMomentCreateGate (Street Power-Up sample). Omit the
+  // fixed Moment prop so CreateStudio uses remix effect/ratio/duration/channel.
+  // AIT-312: compact mobile header so photo drop + sticky Generate stay above fold.
+  // AIT-325: try=1&sample= (createLabSampleTryHref) hydrates Lab still + recipe.
+  if (contract === "generate-workbench") {
+    const effectSlug = (sp.effect || "").trim();
+    const preset = getPreset(effectSlug);
+    const is360 = isGenerate360Effect(effectSlug);
+    return (
+      <div
+        className="relative min-h-screen overflow-hidden bg-[var(--void)] text-[var(--cream)]"
+        data-create-contract="generate-workbench"
+        data-generate-effect={effectSlug}
+        data-generate-360={is360 ? "true" : "false"}
+        data-workbench-first-run="upload-sticky"
+        data-create-shell="generate-workbench"
+        data-create-shell-pad="sticky-with-tab"
+        data-create-source={
+          typeof sp.source === "string" && sp.source.trim()
+            ? sp.source.trim().slice(0, 64)
+            : undefined
+        }
+        data-lab-sample-try={firstRunSample ? "1" : undefined}
+        data-first-run-sample={firstRunSample || undefined}
+      >
+        <JsonLd
+          data={softwareApplicationJsonLd({
+            name: `${site.name} Generate — ${preset?.name ?? "Toy Creative Director"}`,
+            url: `${site.url}/create`,
+            description:
+              preset?.seoDescription ??
+              "Upload a designer-toy photo you own, pick a commercial goal, and preview a cached recipe. Eligible Live access and the exact quote are checked before submission.",
+          })}
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(177,78,255,0.18),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(0,217,255,0.12),transparent_65%)] sm:h-72"
+          aria-hidden
+        />
+        <header
+          data-create-header="workbench-compact-mobile"
+          data-workbench-header={is360 ? "360" : "remix"}
+          className="relative mx-auto grid max-w-[1480px] gap-1 border-b border-white/10 px-4 py-2 sm:gap-4 sm:px-8 sm:py-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:px-12"
+        >
+          <div>
+            <p className="text-[8px] font-black uppercase tracking-[0.14em] text-[#00D9FF] sm:text-[10px] sm:tracking-[0.2em]">
+              {is360
+                ? "Pikbo Generate · 360° listing spin"
+                : "Pikbo Generate · workbench"}
+            </p>
+            <h1 className="mt-0.5 max-w-4xl font-display text-[1.35rem] font-black leading-[0.95] tracking-[-0.04em] text-bling sm:mt-2 sm:text-[clamp(2.45rem,4.2vw,4.5rem)] sm:leading-[0.9] sm:tracking-[-0.06em]">
+              {preset?.h1 ??
+                (is360
+                  ? "One photo → a square 360° listing spin."
+                  : "One owned toy photo → a short product clip.")}
+            </h1>
+          </div>
+          <p className="border-l border-white/15 pl-2.5 text-[10px] font-semibold leading-snug text-white/56 sm:pl-4 sm:text-sm sm:leading-6">
+            <span className="sm:hidden">
+              {is360
+                ? "1:1 · Lab free · Live gated"
+                : "Remix · Lab free · Live gated"}
+            </span>
+            <span className="hidden sm:inline">
+              {preset?.tagline ??
+                "Remix recipe, ratio, and channel from your deep link. Lab preview is free; private Live is checked before any credit spend."}
+            </span>
+          </p>
+        </header>
+        <Suspense
+          fallback={
+            <div className="flex min-h-[40vh] items-center justify-center text-sm text-white/40">
+              Loading Generate…
+            </div>
+          }
+        >
+          <CreateStudio
+            initialEffect={effectSlug}
+            initialModel={sp.model}
+            initialResolution={sp.resolution}
+            initialMode="i2v"
+            initialPrompt={sp.prompt}
+            initialSource={sp.source}
+            initialRatio={sp.ratio}
+            initialDuration={sp.duration}
+            initialChannel={sp.channel}
+            initialSample={firstRunSample}
+            initialJob={sp.job}
+            initialSku={sp.sku}
+            initialRetryJobId={sp.retryJobId}
+            initialRetryToken={sp.retryToken}
+          />
+        </Suspense>
+        <CreateSeoFooter effectSlug={effectSlug} />
+      </div>
+    );
+  }
+
+  // Fixed Moment path: mode=moment, bare street-power-up, default /create,
+  // and unknown effects. AIT-140 coerce (when present) funnels bare
+  // street-power-up into mode=moment; this branch stays the product home.
   return (
     <GuestMomentCreateGate>
-      <div className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-24 text-[var(--cream)]">
+      <div
+        className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-[var(--sticky-generate-pad-safe)] text-[var(--cream)]"
+        data-create-contract="fixed-moment"
+        data-create-shell-pad="sticky-only"
+        data-fixed-moment-effect={FIXED_MOMENT_EFFECT}
+      >
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(50%_80%_at_12%_0%,rgba(177,78,255,0.22),transparent_70%),radial-gradient(40%_60%_at_88%_0%,rgba(255,78,205,0.16),transparent_65%)]"
           aria-hidden
