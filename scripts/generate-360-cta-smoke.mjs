@@ -79,6 +79,8 @@ const generateSurfaces = [
   ["app/explore/page.tsx", "explore"],
   ["app/modules/page.tsx", "modules"],
   ["app/community/page.tsx", "community"],
+  ["app/effects/page.tsx", "effects"],
+  ["app/apps/page.tsx", "apps"],
 ];
 
 for (const [file, source] of generateSurfaces) {
@@ -120,6 +122,86 @@ for (const [file, source] of generateSurfaces) {
     `${file} must tag source=${source}`
   );
 }
+
+// 2b. AIT-297: Community / Effects / Apps Moment doors — mode=moment + source
+const suiteMomentDoors = [
+  {
+    file: "app/community/page.tsx",
+    constName: "COMMUNITY_MOMENT_HREF",
+    source: "community",
+    marker: "data-community-moment",
+  },
+  {
+    file: "app/effects/page.tsx",
+    constName: "EFFECTS_MOMENT_HREF",
+    source: "effects",
+    marker: "data-effects-moment",
+  },
+  {
+    file: "app/apps/page.tsx",
+    constName: "APPS_MOMENT_HREF",
+    source: "apps",
+    marker: "data-apps-moment",
+  },
+];
+for (const { file, constName, source, marker } of suiteMomentDoors) {
+  const src = read(file);
+  assert.match(
+    src,
+    /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/,
+    `${file} must import MOMENT_CREATE_HREF for Moment honesty`
+  );
+  assert.match(
+    src,
+    new RegExp(
+      `${constName}\\s*=\\s*\`\\$\\{MOMENT_CREATE_HREF\\}&source=${source}\``
+    ),
+    `${file} Moment must use MOMENT_CREATE_HREF + source=${source}`
+  );
+  assert.match(
+    src,
+    new RegExp(`href=\\{${constName}\\}`),
+    `${file} Create Moment must deep-link ${constName}`
+  );
+  assert.match(
+    src,
+    new RegExp(`${marker}=["']honest["']`),
+    `${file} Moment honesty marker retained`
+  );
+  assert.doesNotMatch(
+    src,
+    /href=["']\/create\?effect=street-power-up/,
+    `${file} must not use bare /create?effect=street-power-up (missing mode=moment)`
+  );
+}
+
+// Effect detail Moment doors (AIT-297)
+const effectDetailSrc = read("app/effects/[slug]/page.tsx");
+assert.match(
+  effectDetailSrc,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/,
+  "Effect detail must import MOMENT_CREATE_HREF for Moment honesty"
+);
+assert.match(
+  effectDetailSrc,
+  /EFFECT_DETAIL_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=effect-detail`/,
+  "Effect detail Moment must use MOMENT_CREATE_HREF + source=effect-detail"
+);
+assert.match(
+  effectDetailSrc,
+  /href=\{EFFECT_DETAIL_MOMENT_HREF\}/,
+  "Effect detail Create Moment must deep-link EFFECT_DETAIL_MOMENT_HREF"
+);
+assert.match(
+  effectDetailSrc,
+  /data-effect-detail-moment=["']honest["']/,
+  "Effect detail Moment honesty marker retained"
+);
+assert.doesNotMatch(
+  effectDetailSrc,
+  /href=["']\/create\?effect=street-power-up/,
+  "Effect detail must not use bare /create?effect=street-power-up (missing mode=moment)"
+);
 
 // 3. No residual direct 360 createRemixHref in app/components
 const residual = [];

@@ -16,6 +16,11 @@ import { site } from "@/lib/site";
 import { listPublicCommunityPosts } from "@/lib/communityPosts";
 import { isSafeDeliverableUrl } from "@/lib/createTrust";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+
+/** Header Create Moment door — mode=moment + honest source (never bare effect). */
+const COMMUNITY_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=community` as const;
 
 export const metadata: Metadata = {
   title: "PIKBO Lab Cached Toy Video Prototypes",
@@ -130,8 +135,9 @@ export default async function CommunityPage() {
               Generate
             </Link>
             <Link
-              href="/create?effect=street-power-up"
+              href={COMMUNITY_MOMENT_HREF}
               className="btn btn-ghost !px-3 !py-2 text-xs"
+              data-community-moment="honest"
             >
               Create one Moment
             </Link>

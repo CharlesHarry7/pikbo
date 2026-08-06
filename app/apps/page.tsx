@@ -7,9 +7,12 @@ import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Apps Open Generate — listing spin remix (ratio/duration/channel). */
 const APPS_GENERATE_HREF = createGenerate360Href("apps");
+/** Header Create Moment door — mode=moment + honest source (never bare effect). */
+const APPS_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=apps` as const;
 
 function posterForEffect(effect?: string): string | null {
   if (!effect) return null;
@@ -151,8 +154,9 @@ export default function AppsPage() {
             Open Generate
           </Link>
           <Link
-            href="/create?effect=street-power-up"
+            href={APPS_MOMENT_HREF}
             className="btn btn-ghost text-sm"
+            data-apps-moment="honest"
           >
             Create one Moment
           </Link>

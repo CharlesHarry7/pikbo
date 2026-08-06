@@ -11,9 +11,13 @@ import { createGenerate360Href } from "@/lib/jobIntents";
 import { proofBackedRecipeSlugs } from "@/lib/seoIndex";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Effects wall Generate doors — listing spin remix (ratio/duration/channel). */
 const EFFECTS_GENERATE_HREF = createGenerate360Href("effects");
+/** Header Create Moment door — mode=moment + honest source (never bare effect). */
+const EFFECTS_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=effects` as const;
 
 export const metadata: Metadata = {
   title: "Toy video presets · Recipes",
@@ -138,8 +142,9 @@ export default function EffectsHub() {
               Video
             </Link>
             <Link
-              href="/create?effect=street-power-up"
+              href={EFFECTS_MOMENT_HREF}
               className="btn btn-ghost !px-3 !py-2 text-xs"
+              data-effects-moment="honest"
             >
               Create one Moment
             </Link>
