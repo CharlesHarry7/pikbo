@@ -2576,7 +2576,11 @@ assert.match(
   batchStudio,
   /bottom-\[var\(--mobile-nav-clearance\)\]/
 );
-assert.match(appShell, /!sellerPackCreate/);
+assert.match(
+  appShell,
+  /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/
+);
+assert.match(appShell, /!hideMobileNav\s*\?\s*\(\s*\n\s*<nav/);
 assert.match(appShell, /data-mobile-nav=["']primary["']/);
 assert.match(appShell, /MobileGenerateBar/);
 assert.match(batchStudio, /api\/downloads/);

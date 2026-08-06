@@ -95,8 +95,13 @@ assert.doesNotMatch(
 );
 assert.match(
   shell,
-  /!resultShell && !sellerPackCreate \?\s*(?:\(|\s*<nav)/,
-  "Seller Pack Create must not stack the five-item mobile nav under its fixed primary action"
+  /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/,
+  "Home / fixed Moment / Seller Pack hide the five-item mobile nav under sticky primaries"
+);
+assert.match(
+  shell,
+  /!hideMobileNav\s*\?\s*(?:\(|\s*<nav)/,
+  "Mobile nav gate must use hideMobileNav (not a partial sellerPack-only check)"
 );
 assert.match(
   shell,
