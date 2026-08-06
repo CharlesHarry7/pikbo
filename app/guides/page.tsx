@@ -143,7 +143,7 @@ export default function GuidesHub() {
       <section className="relative mx-auto mt-12 max-w-3xl rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
         <h2 className="text-sm font-bold text-white">Guides FAQ</h2>
         <p className="mt-1 text-xs text-white/40">
-          How-tos · Free Mini 5s · no viral guarantee
+          How-tos · Lab preview free · no viral guarantee
         </p>
         <dl className="mt-4 space-y-4">
           {GUIDES_FAQ.map((f) => (

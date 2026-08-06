@@ -94,7 +94,7 @@ export function HfProductRail() {
           <div className="flex flex-wrap items-center gap-3">
             <FreeTrialCta
               path="/#product-rail"
-              labelTry="Try free · Mini 5s"
+              labelTry="Try free · Lab preview"
               hideClipsChip
               className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
             />
@@ -108,7 +108,7 @@ export function HfProductRail() {
           </div>
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {/* Free Mini honesty card */}
+          {/* Cached Lab honesty card — not a public Free Mini live claim */}
           <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[#c8ff3d]/45 bg-[#c8ff3d]/[0.1] p-3.5 shadow-[0_0_32px_rgba(200,255,61,0.12)] sm:h-[11rem] sm:w-[10rem]">
             <span className="relative z-10 inline-flex rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-black">
               Free
@@ -124,7 +124,7 @@ export function HfProductRail() {
               />
             </p>
             <p className="relative z-10 mt-1 text-[10px] leading-snug text-white/45">
-              Lab sample · Free Mini 5s
+              Lab sample · 0 credits · upload not processed
             </p>
           </div>
           {PRODUCTS.map((p) => {
