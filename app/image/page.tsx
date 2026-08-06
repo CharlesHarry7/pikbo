@@ -82,7 +82,7 @@ export default function ImageStudioPage() {
   const [history, setHistory] = useState<ImageHistoryItem[]>([]);
   /** Server settlement echo — 0 cached vs 10 used (honest soft-launch). */
   const [lastSettlement, setLastSettlement] = useState<string | null>(null);
-  /** Free plan: stills are demo-only so Mini trial stays for Create video. */
+  /** Free plan: stills are demo-only; public free video path is Cached Lab (not Mini product-cap). */
   const [me, setMe] = useState<MeResponse | null>(null);
   /** Finite session boot (Create Studio parity) — never leave me unresolved forever. */
   const [meResolved, setMeResolved] = useState(false);
@@ -622,8 +622,8 @@ export default function ImageStudioPage() {
               Still studio
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-[var(--fg-muted)]">
-              Optional packaging mock before video — not the product. Free plan
-              keeps the Mini trial for{" "}
+              Optional packaging mock before video — not the product. Public free
+              path: labeled demo stills · 0 credits (not live Flux).{" "}
               <Link
                 href={createGenerate360Href("image-page")}
                 className="text-[var(--mint)] underline-offset-2 hover:underline"
@@ -631,9 +631,10 @@ export default function ImageStudioPage() {
               >
                 Create video
               </Link>{" "}
-              (stills stay labeled demo · 0 credits). Paid plans: Flux via fal (
-              {CREDITS_PER_VIDEO} credits live). Hand a safe URL into Generate,
-              Modules, or one directed toy Moment.
+              uses Cached Lab prototypes publicly; Live stays gated for eligible
+              accounts. Paid plans: Flux via fal ({CREDITS_PER_VIDEO} credits
+              live). Hand a safe URL into Generate, Modules, or one directed toy
+              Moment.
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">

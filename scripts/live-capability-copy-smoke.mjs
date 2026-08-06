@@ -249,6 +249,8 @@ const residualSessionUi = [
   "components/BatchStudio.tsx",
   // AIT-343: CreateStudio product-cap / trial-used residual
   "components/CreateStudio.tsx",
+  // AIT-365: settings Free Mini trial / clips-left residual
+  "app/settings/page.tsx",
 ];
 for (const relativePath of residualSessionUi) {
   const source = read(relativePath);
@@ -479,6 +481,72 @@ assert(
   "ProfilePanel free-plan honesty banner must branch on freeLiveOpen"
 );
 
+// AIT-365 + AIT-412: settings residual Free Mini honesty (freeLiveOpen).
+const settingsPageSource = read("app/settings/page.tsx");
+assert(
+  settingsPageSource.includes("Live gated · Cached Lab · 0 credits"),
+  "settings Free Mini trial must prefer Live gated · Cached Lab · 0 credits when Live is closed"
+);
+assert(
+  settingsPageSource.includes("0 · Live gated · Cached Lab"),
+  "settings Live clips left must show 0 · Live gated · Cached Lab when freeLiveOpen is false"
+);
+assert(
+  /!freeLiveOpen[\s\S]{0,120}Live gated · Cached Lab · 0 credits|!freeLiveOpen\s*\?\s*["']Live gated · Cached Lab · 0 credits/.test(
+    settingsPageSource
+  ),
+  "settings Free Mini trial branch must sit behind !freeLiveOpen"
+);
+assert(
+  /demoMode \|\| !freeLiveOpen|!freeLiveOpen \|\| demoMode/.test(
+    settingsPageSource
+  ),
+  "settings Live clips left must gate on freeLiveOpen (not freeLive.liveEnabled alone)"
+);
+assert(
+  !/product caps \$\{freeLive\.resolution\}|live blocked until T6/.test(
+    settingsPageSource
+  ),
+  "settings must not invent Free Mini product-cap / T6-block copy while Live is closed"
+);
+assert(
+  /data-settings-free-live=/.test(settingsPageSource) &&
+    /data-settings-clips-left=/.test(settingsPageSource),
+  "settings must mark free-live open/gated + clips-left open/gated for honesty probes"
+);
+// AIT-412: residual Free Mini product-cap label + engine help brand.
+assert(
+  settingsPageSource.includes("Free plan · Live gated"),
+  "settings account-status row must prefer Free plan · Live gated when Live is closed"
+);
+assert(
+  /freeLiveOpen\s*\?\s*["']Free Mini trial["']\s*:\s*["']Free plan · Live gated["']/.test(
+    settingsPageSource
+  ),
+  "settings Free Mini trial label must be client-gated on freeLiveOpen (fail-closed)"
+);
+assert(
+  settingsPageSource.includes("Free-plan / Live state comes from "),
+  "settings engine help must prefer free-plan / Live language when Live is closed"
+);
+assert(
+  /freeLiveOpen\s*\?\s*["']Free Mini trial state comes from ["']\s*:\s*["']Free-plan \/ Live state comes from ["']/.test(
+    settingsPageSource
+  ),
+  "settings Free Mini trial help brand must sit behind freeLiveOpen"
+);
+assert(
+  !/<span className="text-\[var\(--fg-muted\)\]">Free Mini trial<\/span>/.test(
+    settingsPageSource
+  ),
+  "settings must not hardcode unconditional Free Mini trial row label"
+);
+assert(
+  !/Free Mini trial state comes from{" "}/.test(settingsPageSource) &&
+    !/Free Mini trial state comes from \{/.test(settingsPageSource),
+  "settings must not hardcode unconditional Free Mini trial engine help"
+);
+
 const landingHowItWorksSource = read("components/LandingHowItWorks.tsx");
 assert(
   !/Seedance Mini with honest Free Mini caps/.test(landingHowItWorksSource),
@@ -694,6 +762,36 @@ assert(
     i18nSource.includes("免费：缓存 Lab 样片 · 0 积分") &&
     i18nSource.includes("When Live is open: free plan · 5s · 480p"),
   "i18n home/onboard marketing must not sell Free Mini 5s as unconditional public trial"
+);
+
+// AIT-491: residual Image stills + Create SEO footer Free Mini open-trial brand.
+const imageStudioSource = read("app/image/page.tsx");
+assert(
+  !imageStudioSource.includes("keeps the Mini trial") &&
+    !imageStudioSource.includes("Mini trial for") &&
+    imageStudioSource.includes("labeled demo stills · 0 credits") &&
+    imageStudioSource.includes("Cached Lab prototypes publicly") &&
+    imageStudioSource.includes("Live stays gated"),
+  "image studio must sell Lab/demo free path + Live gated, not Free Mini trial brand"
+);
+const createSeoFooterSource = read("components/CreateSeoFooter.tsx");
+assert(
+  !createSeoFooterSource.includes("Free path: one Mini trial") &&
+    !createSeoFooterSource.includes("one Mini trial with an on-player mark") &&
+    createSeoFooterSource.includes(
+      "Public free path is a labeled cached Lab prototype"
+    ) &&
+    createSeoFooterSource.includes(
+      "When Live is open for an eligible account"
+    ),
+  "CreateSeoFooter default body must lead with Lab free path + conditional Live, not Mini trial brand"
+);
+// Closed billing remains disclosed ($49 founding rate · checkout closed).
+assert(
+  read("components/PricingPlanCards.tsx").includes("$49 founding rate") &&
+    read("components/PricingPlanCards.tsx").includes("checkout closed") &&
+    read("components/PaywallCard.tsx").includes("checkout closed"),
+  "closed billing honesty must stay: $49 founding rate disclosed, checkout closed"
 );
 
 function walkHtml(directory) {
