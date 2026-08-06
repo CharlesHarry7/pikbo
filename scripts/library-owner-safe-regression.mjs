@@ -256,4 +256,27 @@ assert.ok(ownerOnlyVisible.some((j) => j.id === jobId));
 const listed = ownerOnlyVisible.find((j) => j.id === jobId);
 assert.equal(listed.inputBound, true);
 
+// ─── AIT-261: Library chrome off competitor lime (board tokens) ────────────
+
+assert.doesNotMatch(
+  library,
+  /c8ff3d|200\s*,\s*255\s*,\s*61/,
+  "LibraryGrid must not use competitor lime #c8ff3d / rgba(200,255,61,…)"
+);
+assert.match(
+  library,
+  /var\(--neon-pink\)|rgba\(255\s*,\s*78\s*,\s*205/,
+  "LibraryGrid accents use neon-pink board tokens"
+);
+// Owner-safe honesty markers preserved after token purge.
+assert.match(library, /data-library-state=["']guest["']/);
+assert.match(library, /href=["']\/login\?next=\/library["']/);
+assert.match(library, /data-library-action=["']retry["']/);
+assert.match(library, /data-library-action=["']new-attempt["']/);
+assert.doesNotMatch(
+  library,
+  /data-library-seller-packs|Create new Pack|Try cached sample Pack/,
+  "Library must not ship Pack/demo grid chrome"
+);
+
 console.log("library-owner-safe-regression: ok");
