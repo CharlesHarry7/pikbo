@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 /**
- * AIT-294: Create / Landing / Batch download fallthrough residual.
+ * AIT-294 + AIT-308: client download / open residual after durable gate.
  *
- * Source + pure-function smoke (no network, no provider). Locks client residual
- * after durable gate deny: never follow raw provider CDN; only Lab /demos/*
- * or controlled /api/downloads/* fallthrough.
+ * Source + pure-function smoke (no network, no provider). Locks:
+ * - Create / Landing / Batch: no raw CDN fallthrough after gate deny
+ * - downloadVideoFile: controlled allowlist only (no raw https window.open)
+ * - publicShareableVideoUrl: Lab demos only (no private signed / provider CDN)
+ * - historyFieldsFromSuccess: non-demo raw → gate path when durable id known
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -17,8 +19,11 @@ const read = (path) => readFileSync(join(root, path), "utf8");
 const createStudio = read("components/CreateStudio.tsx");
 const landing = read("components/LandingToolPanel.tsx");
 const batch = read("components/BatchStudio.tsx");
+const library = read("components/LibraryGrid.tsx");
 const createTrust = read("lib/createTrust.ts");
 const packExport = read("lib/sellerPackExport.ts");
+const historyLib = read("lib/history.ts");
+const genClient = read("lib/generateClient.ts");
 const pkg = read("package.json");
 
 // ─── Source: controlled client download helpers ─────────────────────────────
@@ -259,6 +264,102 @@ assert.equal(
     videoUrl: "/demos/moon-glow.mp4",
   }).via,
   "controlled"
+);
+
+// ─── AIT-308: downloadVideoFile residual — controlled open only ─────────────
+
+assert.match(historyLib, /isControlledClientDownloadUrl/);
+// Entry + catch path both require controlled allowlist (not bare isSafe only).
+assert.match(
+  historyLib,
+  /if \(!isControlledClientDownloadUrl\(url\)\) return "unsafe"/
+);
+// Must not open raw https on the non-gate fallback without controlled check.
+// After controlled entry, non-gate open is Lab demos only.
+assert.match(
+  historyLib,
+  /isControlledClientDownloadUrl\(url\)[\s\S]{0,800}window\.open\(url/
+);
+// Ensure entry no longer trusts broad isSafeDeliverableUrl alone.
+assert.doesNotMatch(
+  historyLib,
+  /export async function downloadVideoFile[\s\S]{0,200}if \(!isSafeDeliverableUrl\(url\)\) return "unsafe"/
+);
+
+// ─── AIT-308: publicShareableVideoUrl — demos only, never absolute https ────
+
+assert.match(
+  createTrust,
+  /export function publicShareableVideoUrl[\s\S]{0,500}\/demos\//
+);
+assert.match(
+  createTrust,
+  /publicShareableVideoUrl[\s\S]{0,800}startsWith\("\/demos\/"\)/
+);
+// Pure mirror of production publicShareableVideoUrl.
+function publicShareableVideoUrl(url, origin) {
+  if (!url || typeof url !== "string") return null;
+  const t = url.trim();
+  if (!isSafeDeliverableUrl(t)) return null;
+  if (isSessionGatedDownloadUrl(t)) return null;
+  if (!(t.startsWith("/demos/") && !t.includes("..") && !t.includes("\\"))) {
+    return null;
+  }
+  const o = (origin || "").replace(/\/$/, "");
+  if (!o || !/^https?:\/\//i.test(o)) return null;
+  return `${o}${t}`;
+}
+assert.equal(
+  publicShareableVideoUrl("/demos/orbit-dance.mp4", "https://pikbo.ai"),
+  "https://pikbo.ai/demos/orbit-dance.mp4"
+);
+assert.equal(
+  publicShareableVideoUrl("/api/downloads/550e8400-e29b-41d4-a716-446655440000", "https://pikbo.ai"),
+  null,
+  "session gate is never a public share link"
+);
+assert.equal(
+  publicShareableVideoUrl("https://fal.media/files/private.mp4", "https://pikbo.ai"),
+  null,
+  "raw provider CDN must not be shareable"
+);
+assert.equal(
+  publicShareableVideoUrl(
+    "https://storage.googleapis.com/bucket/signed?token=x",
+    "https://pikbo.ai"
+  ),
+  null,
+  "private signed storage must not be shareable"
+);
+assert.equal(publicShareableVideoUrl("/demos/x.mp4"), null, "origin required");
+
+// Create share handoff: durable private honesty toast path.
+assert.match(
+  createStudio,
+  /Private Moment — use Download \(not a public share link\)/
+);
+assert.match(createStudio, /isDurableDownloadRequestId\(activeVersion\?\.requestId\)/);
+
+// ─── AIT-308: history restore — non-demo raw → gate when jobKey present ─────
+
+assert.match(genClient, /export function historyFieldsFromSuccess/);
+// Rewrite must not require watermark (paid private residual).
+assert.match(
+  genClient,
+  /!Boolean\(data\.demo\)[\s\S]{0,200}jobKey[\s\S]{0,300}\/api\/downloads\//
+);
+// Must not still gate rewrite on watermark alone.
+assert.doesNotMatch(
+  genClient,
+  /Boolean\(data\.watermark\)\s*&&\s*\n?\s*!Boolean\(data\.demo\)/
+);
+
+// ─── Library: download is gate-only (no raw videoUrl fallthrough) ───────────
+
+assert.match(library, /downloadVideoFile\(\s*gateUrl/);
+assert.doesNotMatch(
+  library,
+  /downloadVideoFile\(\s*(job\.videoUrl|videoUrl)/
 );
 
 // ─── Package script registered ──────────────────────────────────────────────
