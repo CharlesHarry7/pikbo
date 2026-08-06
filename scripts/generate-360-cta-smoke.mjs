@@ -758,4 +758,27 @@ assert.match(
   "SoftLaunchStrip CTA glow uses copper board rgba(196,165,116)"
 );
 
+// AIT-560: VideoTile residual competitor lime → gallery-calm copper
+const videoTileSrc = read("components/VideoTile.tsx");
+assert.doesNotMatch(
+  videoTileSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "VideoTile must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  videoTileSrc,
+  /var\(--brand\)/,
+  "VideoTile hover ring/hairline/badges/pills use --brand copper accent"
+);
+assert.match(
+  videoTileSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "VideoTile card glow uses copper board rgba(196,165,116)"
+);
+assert.match(
+  videoTileSrc,
+  /var\(--primary-foreground\)/,
+  "VideoTile remake/use fill uses --primary-foreground on copper"
+);
+
 console.log("generate-360-cta-smoke: ok");
