@@ -346,6 +346,18 @@ assert(
     /liveEnabled\s*!==\s*false/.test(createStudioSource),
   "CreateStudio must define freeLiveOpen (Live gate truth)"
 );
+// AIT-444: Wait stage Free Mini brand only when freeLiveOpen (fail-closed).
+const waitStageSource = read("components/GenerateWaitStage.tsx");
+assert(
+  /freeLiveOpen\s*=\s*false/.test(waitStageSource) &&
+    /data-wait-free-live/.test(waitStageSource) &&
+    /Live gated · no public Free Mini/.test(waitStageSource),
+  "GenerateWaitStage Free Mini pace copy must gate on freeLiveOpen"
+);
+assert(
+  /freeLiveOpen=\{freeLiveOpen\}/.test(createStudioSource),
+  "CreateStudio must pass freeLiveOpen into GenerateWaitStage"
+);
 assert(
   createStudioSource.includes("Cached Lab · 0 credits · Live gated"),
   "CreateStudio must prefer Cached Lab · 0 credits · Live gated when Live is closed"

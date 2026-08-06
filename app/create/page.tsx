@@ -131,6 +131,9 @@ export default async function CreatePage({
         data-create-contract="generate-workbench"
         data-generate-effect={effectSlug}
         data-generate-360={is360 ? "true" : "false"}
+        data-lab-sample-try={firstRunSample ? "1" : undefined}
+        data-first-run-sample={firstRunSample || undefined}
+        data-workbench-lab-honesty="0-credit-lab"
       >
         <JsonLd
           data={softwareApplicationJsonLd({
@@ -161,7 +164,7 @@ export default async function CreatePage({
           </div>
           <p className="border-l border-white/15 pl-4 text-sm font-semibold leading-6 text-white/56">
             {preset?.tagline ??
-              "Remix recipe, ratio, and channel from your deep link. Lab preview is free; private Live is checked before any credit spend."}
+              "Remix recipe, ratio, and channel from your deep link. Lab sample is 0 credits; Free Mini Live only when open; private Live is checked before any credit spend."}
           </p>
         </div>
         <Suspense
