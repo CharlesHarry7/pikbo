@@ -436,4 +436,44 @@ assert.equal(
   true
 );
 
+// ─── AIT-311 residual: session boot 8s + list error/timeout honesty ────────
+
+const meClient = read("lib/meClient.ts");
+assert.match(library, /STUDIO_SESSION_BOOT_MS/);
+assert.match(
+  library,
+  /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/,
+  "LibraryGrid must bound session boot like Studio open"
+);
+assert.match(library, /isClientTimeoutError/);
+assert.match(library, /sessionBoot === "timeout"/);
+assert.match(library, /data-library-boot="timeout"/);
+assert.match(library, /data-library-boot-retry/);
+assert.match(library, /Retry access check/);
+assert.doesNotMatch(
+  library,
+  /void fetchMe\(\)\.then/,
+  "LibraryGrid must not use bare unbounded fetchMe()"
+);
+// List load: error/timeout surfaces — never invent empty shelf or public demos.
+assert.match(
+  library,
+  /isTimeout \? "list-timeout" : "list-error"/,
+  "list fail surfaces honest list-timeout / list-error states"
+);
+assert.match(library, /data-library-list-load=\{listLoad\}/);
+assert.match(library, /data-library-list-retry/);
+assert.match(library, /listLoad === "error" \|\| listLoad === "timeout"/);
+assert.match(library, /withTimeout/);
+assert.match(library, /will not invent public sample clips/i);
+assert.match(library, /not shown as empty/i);
+assert.doesNotMatch(
+  library,
+  /demoClips|demoVideos/,
+  "LibraryGrid must never invent public/demo clip rows on list failure"
+);
+// meClient wall-clock must cover getSession hang (authHeaders), not only /api/me abort.
+assert.match(meClient, /withTimeout/);
+assert.match(meClient, /Outer withTimeout covers authHeaders hang/);
+
 console.log("library-owner-safe-regression: ok");

@@ -197,7 +197,7 @@ assert.match(paywall, /Founding rate is \$49\/month for nine directed Moments/);
 assert.match(paywall, /Public subscription purchase and live checkout stay closed/);
 assert.doesNotMatch(paywall, /PLANS|priceMonthly/);
 // Library is an authenticated generations ledger, not a public Pack/demo grid.
-assert.match(libraryGrid, /fetchMe\(\)/);
+assert.match(libraryGrid, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
 assert.match(libraryGrid, /if \(!me\?\.signedIn\)/);
 assert.match(libraryGrid, /href=["']\/login\?next=\/library["']/);
 assert.match(libraryGrid, /fetch\(["']\/api\/generations["']/);
