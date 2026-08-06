@@ -212,4 +212,40 @@ assert.match(
   "create page must mount honest Generate workbench markers"
 );
 
+// 7. AIT-166: Home secondary 360 doors share one createGenerate360Href path
+// (proof wall primary secondary → explore rail → suite rail)
+const exploreRail = read("components/HomeExploreRecipeRail.tsx");
+const suiteRail = read("components/HfProductRail.tsx");
+const homeStack = read("app/page.tsx");
+assert.match(
+  homeStack,
+  /HomeCinemaHero[\s\S]*HomeViralWall[\s\S]*HomeExploreRecipeRail[\s\S]*HfProductRail/,
+  "home stack order: Moment → proof wall → explore rail → suite rail"
+);
+assert.match(
+  exploreRail,
+  /createGenerate360Href\(\s*["']home-explore-rail["']\s*\)/,
+  "explore rail 360 door must use createGenerate360Href(home-explore-rail)"
+);
+assert.match(
+  exploreRail,
+  /data-home-explore-rail-360-direct/,
+  "explore rail 360 card must mark one-tap workbench path"
+);
+assert.match(
+  exploreRail,
+  /is360\s*\?\s*listing360Href/,
+  "explore rail 360 card must deep-link Generate workbench"
+);
+assert.match(
+  suiteRail,
+  /createGenerate360Href\(\s*["']hf-product-rail["']\s*\)/,
+  "suite rail Generate must use createGenerate360Href(hf-product-rail)"
+);
+assert.match(
+  suiteRail,
+  /data-home-suite-360/,
+  "suite rail must expose secondary Generate 360 marker"
+);
+
 console.log("generate-360-cta-smoke: ok");

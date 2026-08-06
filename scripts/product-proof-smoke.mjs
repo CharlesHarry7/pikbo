@@ -85,7 +85,7 @@ assert(
   "home order: Moment hero → proof wall → explore recipe rail → HF product rail → trust footer"
 );
 
-// AIT-156: thin Lab recipe rail — secondary Remake/360 only, no second primary Moment CTA.
+// AIT-156/AIT-166: thin Lab recipe rail — secondary Remake + one-tap 360 workbench.
 const exploreRail = read("components/HomeExploreRecipeRail.tsx");
 assert(
   exploreRail.includes('data-home-explore-rail="lab"') &&
@@ -95,6 +95,10 @@ assert(
     exploreRail.includes("home-explore-rail") &&
     exploreRail.includes("home_explore_rail_remake") &&
     exploreRail.includes("Lab recipe previews unavailable") &&
+    exploreRail.includes("data-home-explore-rail-360-direct") &&
+    exploreRail.includes("pinListing360First") &&
+    /is360\s*\?\s*listing360Href/.test(exploreRail) &&
+    exploreRail.includes("Generate 360°") &&
     !exploreRail.includes("data-home-moment-cta") &&
     !exploreRail.includes("MOMENT_CREATE_HREF") &&
     !exploreRail.includes("Create my drop clip") &&
@@ -102,7 +106,7 @@ assert(
     (exploreRail.includes("RAIL_LIMIT") ||
       exploreRail.includes(".slice(0, 8)") ||
       exploreRail.includes("HOME_PROOF_LIMIT")),
-  "explore recipe rail must be Lab-only, honest-empty, secondary Remake/360 (no Moment primary)"
+  "explore recipe rail must be Lab-only, honest-empty, 1-click 360 workbench (no Moment primary)"
 );
 
 // Suite rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF.

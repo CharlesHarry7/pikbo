@@ -24,15 +24,29 @@ function withRailEntry(href: string): string {
 }
 
 /**
+ * Keep 360 listing spin first in the thin rail when present (honest reorder only).
+ */
+function pinListing360First(items: FeedVideoItem[]): FeedVideoItem[] {
+  const idx = items.findIndex(
+    (item) => (item.recipeSlug ?? item.demo.preset) === LISTING_360_SLUG
+  );
+  if (idx <= 0) return items;
+  const next = items.slice();
+  const [spin] = next.splice(idx, 1);
+  next.unshift(spin);
+  return next;
+}
+
+/**
  * Thin HfExplore-style horizontal recipe rail under the Lab proof wall.
- * Lab/archive samples only — secondary Remake + Listing 360 doors.
+ * Lab/archive samples only — secondary Remake + Generate→360 doors.
  * Does not compete with HomeCinemaHero as the primary Moment CTA.
- * AIT-156: remounts Explore density under Moment-first (not full HfExploreHome).
+ * AIT-156 density + AIT-166: 360 card is one-tap createGenerate360Href workbench.
  */
 export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
-  const rail: FeedVideoItem[] = items
-    .filter(hasFeedVideo)
-    .slice(0, RAIL_LIMIT);
+  const rail: FeedVideoItem[] = pinListing360First(
+    items.filter(hasFeedVideo).slice(0, RAIL_LIMIT)
+  );
   // String literal source for generate-360-cta smoke surface freeze.
   const listing360Href = withRailEntry(
     createGenerate360Href("home-explore-rail")
@@ -69,7 +83,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                 })
               }
             >
-              Listing 360° · Lab →
+              Generate 360° · Lab →
             </Link>
             <Link
               href="/effects"
@@ -124,7 +138,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                 })
               }
             >
-              Listing 360°
+              Generate 360°
             </Link>
             <Link
               href="/effects"
@@ -146,13 +160,16 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
             const remakeHref = withRailEntry(item.href);
             const badge = item.badge || HOME_PROOF_BADGE;
             const is360 = recipeSlug === LISTING_360_SLUG;
+            // AIT-166: 360 card matches proof-wall path — one-tap Generate workbench.
+            const cardHref = is360 ? listing360Href : remakeHref;
 
             return (
               <Link
                 key={item.id}
-                href={remakeHref}
+                href={cardHref}
                 role="listitem"
                 data-home-explore-rail-card={recipeSlug}
+                data-home-explore-rail-360-direct={is360 ? "true" : undefined}
                 prefetch
                 onClick={() =>
                   track({
@@ -160,7 +177,9 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                     path: "/",
                     recipe: recipeSlug,
                     meta: {
-                      source: "home_explore_rail_remake",
+                      source: is360
+                        ? "home_explore_rail_360_card"
+                        : "home_explore_rail_remake",
                       entry: HOME_EXPLORE_RAIL_ENTRY,
                     },
                   })
@@ -197,8 +216,12 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                     <p className="text-[12px] font-black leading-tight text-white group-hover:text-[#c8ff3d] sm:text-[13px]">
                       {recipeName}
                     </p>
-                    <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-[#c8ff3d]/90 opacity-80 transition group-hover:opacity-100">
-                      Remake →
+                    <p
+                      className={`mt-0.5 text-[9px] font-bold uppercase tracking-wide opacity-80 transition group-hover:opacity-100 ${
+                        is360 ? "text-[#00D9FF]" : "text-[#c8ff3d]/90"
+                      }`}
+                    >
+                      {is360 ? "Generate 360° →" : "Remake →"}
                     </p>
                   </div>
                 </div>
