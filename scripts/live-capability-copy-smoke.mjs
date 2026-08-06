@@ -156,6 +156,30 @@ assert(
   "modules FAQ/chip must sell Lab public path + conditional Live, not Free Mini as public trial"
 );
 
+// AIT-390: CommunityPublishButton residual — blocked-publish no public Free Mini brand.
+const communityPublishSource = read("components/CommunityPublishButton.tsx");
+const forbiddenCommunityPublishFreeMini = [
+  /Free Mini live raw/i,
+  /Free Mini watermark raw/i,
+  /title=["'][^"']*Free Mini/i,
+];
+for (const pattern of forbiddenCommunityPublishFreeMini) {
+  assert(
+    !pattern.test(communityPublishSource),
+    `components/CommunityPublishButton.tsx contains residual Free Mini blocked-publish promise ${pattern}`
+  );
+}
+assert(
+  !communityPublishSource.includes("Free Mini") &&
+    communityPublishSource.includes(
+      "Free-plan live raw is not a public deliverable until T6 file watermark bake"
+    ) &&
+    communityPublishSource.includes("Free raw · no publish") &&
+    communityPublishSource.includes("watermark") &&
+    communityPublishSource.includes("free-plan live raw"),
+  "CommunityPublishButton blocked-publish must use free-plan live raw / T6 bake language, not Free Mini product brand"
+);
+
 assert(
   read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
     read("lib/site.ts").includes("AI product video studio for toy sellers"),

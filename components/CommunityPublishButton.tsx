@@ -14,7 +14,7 @@ import { track } from "@/lib/analytics";
 /**
  * Publish a real Library clip to Community UGC.
  * Real posts only — signed-in users + safe http(s) video URLs.
- * Lab demos (demo=true) and Free Mini watermark raw (T6) are blocked —
+ * Lab demos (demo=true) and free-plan live raw (T6) are blocked —
  * publishing raw free provider URLs would bypass the download gate.
  */
 export function CommunityPublishButton({
@@ -31,7 +31,7 @@ export function CommunityPublishButton({
   effectSlug?: string;
   effectName?: string;
   demo?: boolean;
-  /** Free Mini live raw — not a public deliverable until T6 bake. */
+  /** Free-plan live raw — not a public deliverable until T6 bake. */
   watermark?: boolean;
   className?: string;
 }) {
@@ -54,7 +54,7 @@ export function CommunityPublishButton({
     return (
       <span
         className={`text-xs text-[var(--fg-dim)] ${className}`}
-        title="Free Mini live raw is not a public deliverable until T6 file watermark bake"
+        title="Free-plan live raw is not a public deliverable until T6 file watermark bake"
       >
         Free raw · no publish
       </span>
