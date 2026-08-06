@@ -58,7 +58,7 @@ export function PresetPreviewCard({ preset }: { preset: Preset }) {
         <span
           className={`absolute right-2 top-2 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider transition duration-300 ${
             exact
-              ? "bg-[var(--mint)] text-black shadow-[0_0_16px_rgba(200,255,61,0.35)]"
+              ? "bg-[var(--mint)] text-black shadow-[0_0_16px_color-mix(in_srgb,var(--neon-pink)_35%,transparent)]"
               : "border border-white/15 bg-black/60 text-white/70"
           }`}
         >
