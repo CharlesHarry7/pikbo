@@ -96,6 +96,39 @@ assert.match(hero, /data-studio-open-error/);
 assert.match(hero, /data-studio-open-retry/);
 assert.match(hero, /data-studio-open-state=\{busy \? "opening" : "idle"\}/);
 
+// AIT-284: residual chrome — CreditsBadge + LibraryGrid 8s session boot
+const creditsBadge = read("components/CreditsBadge.tsx");
+const libraryGrid = read("components/LibraryGrid.tsx");
+for (const [name, src] of [
+  ["CreditsBadge", creditsBadge],
+  ["LibraryGrid", libraryGrid],
+]) {
+  assert.match(src, /STUDIO_SESSION_BOOT_MS/, `${name} must boot-bound`);
+  assert.match(
+    src,
+    /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/,
+    `${name} must pass timeoutMs`
+  );
+  assert.match(src, /isClientTimeoutError/, `${name} must detect timeout`);
+  assert.match(src, /sessionBoot === "timeout"/, `${name} timeout branch`);
+  assert.doesNotMatch(src, /void fetchMe\(\)\.then/, `${name} no bare fetchMe`);
+}
+// CreditsBadge: never permanent "…" past timeout; fail-closed + Retry
+assert.match(creditsBadge, /data-credits-boot="checking"/);
+assert.match(creditsBadge, /data-credits-boot="timeout"/);
+assert.match(creditsBadge, /data-credits-boot-retry/);
+assert.match(creditsBadge, /data-credits-boot="ready-null"/);
+// LibraryGrid: always release loaders; timeout Retry; no owner/guest claim while unknown
+assert.match(libraryGrid, /data-library-boot="checking"/);
+assert.match(libraryGrid, /data-library-boot="timeout"/);
+assert.match(libraryGrid, /data-library-boot-retry/);
+assert.match(libraryGrid, /Retry access check/);
+assert.match(libraryGrid, /setAccountReady\(true\)/);
+assert.match(libraryGrid, /setJobsReady\(true\)/);
+// fetchMe wall-clock must cover getSession hang (authHeaders), not only /api/me abort
+assert.match(meClient, /withTimeout/);
+assert.match(meClient, /Outer withTimeout covers authHeaders hang/);
+
 // Package + CI script wiring
 assert.match(
   packageJson,
@@ -112,5 +145,5 @@ for (const asset of [
 }
 
 console.log(
-  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; timeout/error + retry; mobile sticky Lab CTA)"
+  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; CreditsBadge+LibraryGrid 8s boot; timeout/error + retry; mobile sticky Lab CTA)"
 );
