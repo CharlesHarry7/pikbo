@@ -246,6 +246,24 @@ assert(
   );
 }
 
+
+// AIT-384 / AIT-388: GenerateFailPanel residual competitor lime → neon-pink / void
+{
+  const failPanel = read("components/GenerateFailPanel.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i.test(failPanel),
+    "GenerateFailPanel must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    failPanel.includes("var(--neon-pink)") && failPanel.includes("var(--void)"),
+    "GenerateFailPanel retry primary uses neon-pink / void board tokens"
+  );
+  assert(
+    failPanel.includes("rgba(255,78,205"),
+    "GenerateFailPanel retry glow uses neon-pink board rgba"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
