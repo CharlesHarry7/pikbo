@@ -23,6 +23,7 @@ import {
   postImageWithRetry,
 } from "@/lib/imageClient";
 import { requestCreditStateFromFailure } from "@/lib/createTrust";
+import { canRetryGenerateFailure } from "@/lib/generateRecoveryPolicy";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
@@ -73,6 +74,14 @@ export default function ImageStudioPage() {
   const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
     null
   );
+  /**
+   * Last fail code + flags — Image Fail panel Retry is server-gated
+   * (auth/paywall/fatal/durable-hold never invent a retriable path).
+   * Same pure gate as Create / Landing / Batch (`canRetryGenerateFailure`).
+   */
+  const [lastFailCode, setLastFailCode] = useState<string | null>(null);
+  const [lastFailFatal, setLastFailFatal] = useState(false);
+  const [lastFailPaywall, setLastFailPaywall] = useState(false);
   /** Settlement honesty for FailPanel (restored vs unconfirmed). */
   const [failCreditState, setFailCreditState] = useState<
     null | "10 restored" | "refund unconfirmed"
@@ -378,14 +387,52 @@ export default function ImageStudioPage() {
    * honest Create/Image new-attempt handoff only; IN_FLIGHT / SUCCEEDED /
    * DETAIL_UNAVAILABLE stay fail-closed with no silent re-POST.
    */
+  function clearFailGate() {
+    setLastFailCode(null);
+    setLastFailFatal(false);
+    setLastFailPaywall(false);
+    setFailRetryAfterSec(null);
+    setFailCreditState(null);
+  }
+
+  function recordFailGate(opts: {
+    code?: string | null;
+    fatal?: boolean;
+    paywall?: boolean;
+    retryAfterSec?: number | null;
+  }) {
+    setLastFailCode(opts.code || null);
+    setLastFailFatal(Boolean(opts.fatal));
+    setLastFailPaywall(Boolean(opts.paywall));
+    setFailRetryAfterSec(
+      typeof opts.retryAfterSec === "number" && opts.retryAfterSec > 0
+        ? opts.retryAfterSec
+        : null
+    );
+  }
+
   async function retrySessionStill(j: SessionStillJob) {
     const nextPrompt = j.prompt?.trim() || prompt;
     const nextAspect = j.aspect?.trim() || aspect;
+    // Closed gates (auth / paywall / durable hold) never invent process-memory Retry.
+    if (
+      !canRetryGenerateFailure({
+        code: j.errorCode,
+        busy,
+        hasInput: nextPrompt.trim().length >= 4,
+      })
+    ) {
+      setError(
+        j.error ||
+          "This still cannot be retried here — change access, balance, or wait for settlement, then start a new attempt"
+      );
+      recordFailGate({ code: j.errorCode || null });
+      return;
+    }
     if (j.prompt) setPrompt(j.prompt);
     if (j.aspect) setAspect(j.aspect);
     setError(null);
-    setFailCreditState(null);
-    setFailRetryAfterSec(null);
+    clearFailGate();
     const body = await forkRetryImageLedger(j.id);
     if (body.ok) {
       // Prefer server parent echo when present.
@@ -482,6 +529,8 @@ export default function ImageStudioPage() {
     ctrl.abort();
     abortRef.current = null;
     // Create/Landing parity: settle immediately as unconfirmed until server echoes.
+    // Cancel is retriable — never invent credits restored.
+    clearFailGate();
     setFailCreditState("refund unconfirmed");
     setError(
       "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"
@@ -502,8 +551,7 @@ export default function ImageStudioPage() {
     const idempotencyKey = mintImageIdempotencyKey();
     setBusy(true);
     setError(null);
-    setFailRetryAfterSec(null);
-    setFailCreditState(null);
+    clearFailGate();
     try {
       const ledgerRetry = retryHandoffRef.current;
       retryHandoffRef.current = null;
@@ -522,13 +570,9 @@ export default function ImageStudioPage() {
         { signal: abortCtrl.signal }
       );
       if (!result.ok) {
-        const retryAfter =
-          typeof result.retryAfterSec === "number" && result.retryAfterSec > 0
-            ? result.retryAfterSec
-            : null;
-        setFailRetryAfterSec(retryAfter);
         // Shared settlement map (Create/Landing parity) — CONTENT_POLICY ·
         // PROVIDER_NETWORK · MODEL_EMPTY · TIMEOUT · cancel never invent restore.
+        // Only creditsRefunded === true may claim restored (never invent).
         const settlement = requestCreditStateFromFailure({
           creditsRefunded: result.creditsRefunded,
           refundUnconfirmed: result.refundUnconfirmed,
@@ -540,6 +584,12 @@ export default function ImageStudioPage() {
             ? settlement
             : null
         );
+        recordFailGate({
+          code: result.code || null,
+          fatal: Boolean(result.fatal),
+          paywall: Boolean(result.paywall),
+          retryAfterSec: result.retryAfterSec,
+        });
         if (result.session) {
           setMe((prev) => mergeMeSession(prev, result.session as MeResponse));
         }
@@ -593,7 +643,12 @@ export default function ImageStudioPage() {
         );
       }
     } catch (e) {
-      setFailRetryAfterSec(null);
+      // Network / unexpected — refund unconfirmed, Retry still allowed.
+      recordFailGate({
+        code: "NETWORK_ERROR",
+        fatal: false,
+        paywall: false,
+      });
       setFailCreditState("refund unconfirmed");
       setError(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -601,6 +656,14 @@ export default function ImageStudioPage() {
       setBusy(false);
     }
   }
+
+  const canRetryStillFail = canRetryGenerateFailure({
+    code: lastFailCode,
+    fatal: lastFailFatal,
+    paywall: lastFailPaywall,
+    busy,
+    hasInput: prompt.trim().length >= 4,
+  });
 
   return (
     <div>
@@ -779,9 +842,9 @@ export default function ImageStudioPage() {
                 retryAfterSec={failRetryAfterSec}
                 compact
                 onRetry={
-                  !busy
+                  canRetryStillFail
                     ? () => {
-                        setFailRetryAfterSec(null);
+                        clearFailGate();
                         void generate();
                       }
                     : undefined
@@ -998,7 +1061,13 @@ export default function ImageStudioPage() {
                         Queued fork
                       </span>
                     ) : null}
-                    {j.status === "failed" || j.status === "canceled" ? (
+                    {(j.status === "failed" || j.status === "canceled") &&
+                    canRetryGenerateFailure({
+                      code: j.errorCode,
+                      busy,
+                      hasInput:
+                        (j.prompt || prompt).trim().length >= 4,
+                    }) ? (
                       <button
                         type="button"
                         className="text-[var(--mint)] hover:underline"
