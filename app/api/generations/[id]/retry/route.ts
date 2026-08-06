@@ -3,6 +3,7 @@ import { ensureSession } from "@/lib/session";
 import { forkRetryJob, toPublicJob } from "@/lib/generationJobs";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
 import { getPrivateLibraryJobForOwner } from "@/lib/privateGenerationResults";
+import { acceptControlledLibraryNewAttemptUrl } from "@/lib/privateGenerationResultsPure.mjs";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 
@@ -25,9 +26,10 @@ const GENERIC_LIBRARY_CREATE = `${MOMENT_CREATE_HREF}&source=library` as const;
  * POST /api/generate with the same photo + effect. Seller Pack retries
  * only the failed child — siblings stay playable.
  *
- * AIT-148: durable private Moments never fork process-memory Retry. Owner
- * terminal rows return DURABLE_USE_NEW_ATTEMPT with a Create handoff;
- * missing/foreign ids stay uniform NOT_FOUND (no ownership leak).
+ * AIT-148/AIT-162: durable private Moments never fork process-memory Retry.
+ * Owner terminal rows return DURABLE_USE_NEW_ATTEMPT with a Create handoff
+ * (same-photo only after acceptControlledLibraryNewAttemptUrl); missing/foreign
+ * ids stay uniform NOT_FOUND (no ownership leak).
  */
 export async function POST(req: Request, { params }: Props) {
   const { id } = await params;
@@ -74,12 +76,12 @@ export async function POST(req: Request, { params }: Props) {
               { status: 422 }
             );
           }
-          // failed | canceled — honest Create handoff (same-photo when gated).
+          // failed | canceled — same-photo only when the controlled accept gate
+          // passes (owner-ready asset already applied in getPrivateLibraryJobForOwner).
+          // Loose startsWith("/create?") is not enough — reject forged handoffs.
           const createUi =
-            typeof privateJob.newAttemptUrl === "string" &&
-            privateJob.newAttemptUrl.startsWith("/create?")
-              ? privateJob.newAttemptUrl
-              : GENERIC_LIBRARY_CREATE;
+            acceptControlledLibraryNewAttemptUrl(privateJob.newAttemptUrl) ??
+            GENERIC_LIBRARY_CREATE;
           return NextResponse.json(
             {
               ok: false,
