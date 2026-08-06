@@ -341,6 +341,41 @@ assert(
   );
 }
 
+// AIT-575: Library residual carnival pink rgba → gallery-calm copper board
+{
+  const libraryPage = read("app/library/page.tsx");
+  const carnival =
+    /#B14EFF|#FF4ECD|#00D9FF|#00FFA3|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|0\s*,\s*217\s*,\s*255|0\s*,\s*255\s*,\s*163/i;
+  assert(
+    !carnival.test(library),
+    "components/LibraryGrid.tsx must not hard-code carnival pink RGB"
+  );
+  assert(
+    !carnival.test(libraryPage),
+    "app/library/page.tsx must not hard-code carnival pink/purple/cyan hex accents"
+  );
+  assert(
+    /rgba\(196\s*,\s*165\s*,\s*116/.test(library) &&
+      library.includes("var(--neon-pink)"),
+    "LibraryGrid card placeholders use copper rgba glow + neon-pink board tokens"
+  );
+  assert(
+    /rgba\(196\s*,\s*165\s*,\s*116/.test(libraryPage) &&
+      libraryPage.includes("var(--brand)") &&
+      libraryPage.includes("var(--brand-2)") &&
+      libraryPage.includes("var(--mint)"),
+    "Library page wash + shell accents use gallery-calm copper board tokens"
+  );
+  assert(
+    libraryPage.includes("Private Library") &&
+      libraryPage.includes("Your Moments.") &&
+      libraryPage.includes('data-library-header-cta="generate-360"') &&
+      libraryPage.includes('data-library-header-cta="moment"') &&
+      libraryPage.includes("<LibraryGrid />"),
+    "Library page keeps owner-safe shell + header CTAs + LibraryGrid mount"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
