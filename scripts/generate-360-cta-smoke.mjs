@@ -218,6 +218,33 @@ assert.match(
 );
 assert.match(
   homeHero,
+  /data-home-hero-still-generate=["']360["']/,
+  "home hero still must be a Generate 360 door (reduce home→360 clicks)"
+);
+const homeTrust = read("components/HomeTrustFooter.tsx");
+assert.match(
+  homeTrust,
+  /createGenerate360Href\(\s*["']home-trust["']\s*\)/,
+  "home trust footer must deep-link Generate 360"
+);
+assert.match(
+  homeTrust,
+  /data-home-trust-generate=["']360["']/,
+  "home trust footer must mark last-fold Generate 360 CTA"
+);
+const galleryLib = read("lib/designerToyGallery.ts");
+assert.match(
+  galleryLib,
+  /createGenerate360Href\(\s*["']home-gallery-pedestal["']\s*\)/,
+  "gallery pedestal must deep-link Generate 360 (skip /effects hop)"
+);
+assert.doesNotMatch(
+  galleryLib,
+  /href:\s*["']\/effects\/360-spin-showcase["']/,
+  "gallery must not send listing pedestal through /effects first"
+);
+assert.match(
+  homeHero,
   /Generate 360° listing spin/,
   "home hero 360 CTA must be result-first (listing spin)"
 );
@@ -290,7 +317,7 @@ assert.match(
   /<MobileGenerateBar\s*\/>/,
   "AppShell must mount MobileGenerateBar so showBar paths render"
 );
-// AIT-413: sticky shell on Home is one primary Generate→360 (not Moment-only)
+// AIT-413 / AIT-462: shell on Home is one primary Generate→360 (nav + sticky)
 assert.match(
   appShellSrc,
   /createGenerate360Href\(\s*["']app-shell-home["']\s*\)/,
@@ -305,6 +332,26 @@ assert.match(
   appShellSrc,
   /home \? HOME_SHELL_GENERATE_HREF/,
   "AppShell home filled CTA must deep-link Generate workbench"
+);
+assert.match(
+  appShellSrc,
+  /data-home-primary-nav=\{motionChrome \? ["']generate-360["']/,
+  "AppShell home primary nav must mark generate-360 money door"
+);
+assert.match(
+  appShellSrc,
+  /href:\s*HOME_SHELL_GENERATE_HREF[\s\S]*label:\s*["']Generate["']/,
+  "AppShell home primary nav Create slot must be Generate→360"
+);
+assert.match(
+  appShellSrc,
+  /data-primary-create-href=\{\s*motionChrome\s*\?\s*HOME_SHELL_GENERATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF\s*\}/,
+  "AppShell home data-primary-create-href must point at Generate→360"
+);
+assert.doesNotMatch(
+  appShellSrc,
+  /motionChrome\s*\?\s*DEFAULT_MOMENT_CREATE_HREF\s*:\s*PRIMARY_NAV_CREATE_HREF/,
+  "AppShell home must not keep Moment as primary-create-href"
 );
 assert.doesNotMatch(
   appShellSrc,
