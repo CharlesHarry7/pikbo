@@ -51,7 +51,7 @@ assert.equal(
 assert.doesNotMatch(homeHero, /Use this motion/);
 assert.match(homeHero, /Sample · Beatbot/);
 assert.match(homeHero, /Archive sample · 6s/);
-assert.match(homeHero, /Cached sample · 0 credits · no upload/);
+assert.match(homeHero, /Cached (Lab )?sample · 0 credits · no upload/);
 assert.match(homeHero, /not your toy/);
 assert.match(homeHero, /not a completed customer deliverable/);
 assert.match(homeHero, /showControls/);

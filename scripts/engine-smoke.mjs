@@ -4478,12 +4478,18 @@ assert.ok(
     hfRailSrc.indexOf('href: "/flow"'),
   "Generate remix before Flow on HfProductRail"
 );
+// Moment card uses MOMENT_CREATE_HREF (Live-gated), never bare /create.
+assert.match(hfRailSrc, /MOMENT_CREATE_HREF|RAIL_MOMENT_HREF/);
+assert.match(hfRailSrc, /source=hf-product-rail|Live-gated/);
+assert.doesNotMatch(hfRailSrc, /href:\s*["']\/create\?effect=street-power-up["']/);
 assert.ok(
-  hfRailSrc.indexOf('href: "/create?effect=street-power-up"') <
+  (hfRailSrc.indexOf("RAIL_MOMENT_HREF") >= 0
+    ? hfRailSrc.indexOf("RAIL_MOMENT_HREF")
+    : hfRailSrc.indexOf("MOMENT_CREATE_HREF")) <
     hfRailSrc.indexOf('href: "/flow"'),
   "Moment before Flow on HfProductRail"
 );
-assert.match(hfRailSrc, /tag:\s*["']Preview["']/);
+assert.match(hfRailSrc, /tag:\s*["']Preview · Lab["']/);
 assert.match(
   fs.readFileSync(join(root, "components/HfExploreHome.tsx"), "utf8"),
   /Flow · Preview|Street Power-Up Moment|Create one Moment/
@@ -5216,7 +5222,13 @@ const featureCarousel = fs.readFileSync(
   "utf8"
 );
 assert.match(featureCarousel, /createRemixHref/);
-assert.match(featureCarousel, /effect=street-power-up|data-home-promo-path=["']seller-pack["']/);
+// Street Power-Up promo uses MOMENT_CREATE_HREF (Live-gated), not bare /create.
+assert.match(
+  featureCarousel,
+  /FEATURE_MOMENT_HREF|MOMENT_CREATE_HREF|data-home-promo-path=["']seller-pack["']/
+);
+assert.match(featureCarousel, /source=home-feature|Live-gated/);
+assert.doesNotMatch(featureCarousel, /["']\/create\?effect=street-power-up/);
 assert.doesNotMatch(featureCarousel, /href:\s*["']\/supercomputer["']/);
 assert.match(featureCarousel, /Lab · cached prototype/);
 assert.doesNotMatch(

@@ -92,9 +92,10 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
         <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
           <Link
             href={momentHref}
+            data-live-gated="true"
             className="rounded-full border border-[#FF4ECD]/35 bg-[rgba(255,78,205,0.1)] px-5 py-2.5 text-xs font-black text-[#FF4ECD] transition hover:border-[#00D9FF]/50 hover:text-[#00D9FF]"
           >
-            Create a Moment ↗
+            Create a Moment · Live-gated ↗
           </Link>
           <Link
             href={listing360Href}
@@ -112,7 +113,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               })
             }
           >
-            Listing 360° · Lab
+            Listing 360° · cached Lab
           </Link>
         </div>
       </div>

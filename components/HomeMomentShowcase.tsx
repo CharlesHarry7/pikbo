@@ -10,6 +10,13 @@ import {
   MOMENTS,
   type MomentId,
 } from "@/lib/moments";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+
+/** Concept preview entry — not private Live Street Power-Up. */
+const CONCEPT_PREVIEW_HREF =
+  `/create?moment=capsule-reveal&source=home-moment-showcase` as const;
+const SHOWCASE_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=home-moment-showcase` as const;
 
 export function HomeMomentShowcase() {
   const [activeId, setActiveId] = useState<MomentId>(DEFAULT_MOMENT_ID);
@@ -54,12 +61,40 @@ export function HomeMomentShowcase() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              href="/create?moment=capsule-reveal"
-              className="inline-flex min-h-12 items-center justify-between gap-8 rounded-full bg-[#171719] px-5 text-xs font-black uppercase tracking-[0.12em] text-[#F5F1E8] transition-transform hover:-translate-y-0.5"
+              href={CONCEPT_PREVIEW_HREF}
+              className="inline-flex min-h-12 items-center justify-between gap-6 rounded-full bg-[#171719] px-5 text-xs font-black uppercase tracking-[0.12em] text-[#F5F1E8] transition-transform hover:-translate-y-0.5"
               data-real-moment-cta
+              data-concept-preview="true"
             >
-              Preview a Moment
-              <span aria-hidden className="text-lg">↗</span>
+              <span className="flex flex-col items-start gap-0.5 normal-case tracking-normal">
+                <span className="uppercase tracking-[0.12em]">
+                  Preview a concept
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-[0.14em] text-white/55">
+                  Cached Lab · not Live
+                </span>
+              </span>
+              <span aria-hidden className="text-lg">
+                ↗
+              </span>
+            </Link>
+            <Link
+              href={SHOWCASE_MOMENT_HREF}
+              className="inline-flex min-h-12 items-center justify-between gap-4 rounded-full border border-[#171719]/25 px-5 text-xs font-black uppercase tracking-[0.12em] text-[#171719] transition-colors hover:border-[#F04E30] hover:text-[#F04E30]"
+              data-moment-create-cta
+              data-live-gated="true"
+            >
+              <span className="flex flex-col items-start gap-0.5 normal-case tracking-normal">
+                <span className="uppercase tracking-[0.12em]">
+                  Create Street Power-Up
+                </span>
+                <span
+                  className="text-[9px] font-black uppercase tracking-[0.14em] text-current opacity-55"
+                  data-live-gated-chip
+                >
+                  Live-gated
+                </span>
+              </span>
             </Link>
             <Link
               href="mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access."

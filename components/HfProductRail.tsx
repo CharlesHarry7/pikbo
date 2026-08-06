@@ -5,13 +5,19 @@ import { track } from "@/lib/analytics";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { createGenerate360Href } from "@/lib/jobIntents";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Primary Generate door — listing spin remix (ratio/duration/channel). */
 const GENERATE_REMIX_HREF = createGenerate360Href("hf-product-rail");
+/** Fixed first-dollar Moment — Live-gated, never bare /create. */
+const RAIL_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=hf-product-rail` as const;
 
 /**
  * HF homepage product entry strip — media-backed capability cards.
  * Only real Pikbo paths; Video is first and hot. Owned Lab posters only.
+ * Create/Generate doors use MOMENT_CREATE_HREF / createGenerate360Href.
+ * Tags stay honest: Live-gated vs cached Lab / Preview (no open checkout).
  */
 /** Product doors first; Flow/Cinema/Image are Preview (not live job peers). */
 const PRODUCTS: {
@@ -26,32 +32,32 @@ const PRODUCTS: {
   {
     href: GENERATE_REMIX_HREF,
     title: "Seedance Video",
-    blurb: "Photo → short video",
-    tag: "Video",
+    blurb: "Photo → short video · Lab",
+    tag: "Generate · Lab",
     hot: true,
     demoIndex: 0,
   },
   {
-    href: "/create?effect=street-power-up",
+    href: RAIL_MOMENT_HREF,
     title: "Street Power-Up Moment",
-    blurb: "1 directed video · one photo",
-    tag: "Toy Moment",
+    blurb: "1 directed video · Live-gated",
+    tag: "Live-gated",
     hot: true,
     demoIndex: 3,
   },
   {
     href: "/modules",
     title: "Modules",
-    blurb: "Fixed video jobs",
-    tag: "Jobs",
+    blurb: "Fixed video jobs · Lab",
+    tag: "Jobs · Lab",
     hot: true,
     demoIndex: 2,
   },
   {
     href: "/effects",
     title: "Viral Presets",
-    blurb: "Full recipe wall",
-    tag: "Presets",
+    blurb: "Full recipe wall · Lab",
+    tag: "Presets · Lab",
     hot: true,
     demoIndex: 4,
   },
@@ -59,21 +65,21 @@ const PRODUCTS: {
     href: "/flow",
     title: "Flow",
     blurb: "Preview media wall",
-    tag: "Preview",
+    tag: "Preview · Lab",
     demoIndex: 1,
   },
   {
     href: "/cinema",
     title: "Cinema",
     blurb: "Director board · Preview",
-    tag: "Preview",
+    tag: "Preview · Lab",
     demoIndex: 2,
   },
   {
     href: "/image",
     title: "Image",
     blurb: "Stills · then animate",
-    tag: "Preview",
+    tag: "Preview · Lab",
     demoIndex: 3,
   },
 ];
