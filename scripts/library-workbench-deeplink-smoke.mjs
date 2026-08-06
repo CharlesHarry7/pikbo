@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * AIT-529 / AIT-392 / AIT-546 / AIT-568: Workbench + AfterPath + WaitStage +
- * residual CreateStudio Library chips → requestId deep-link (owner-safe).
+ * AIT-529 / AIT-392 / AIT-546 / AIT-568 / AIT-576: Workbench + AfterPath +
+ * WaitStage + residual CreateStudio chips + Image residual Library chrome →
+ * requestId deep-link (owner-safe).
  *
  * Source + pure-logic contract:
  * - libraryWorkbenchHandoffHref only deep-links live private + UUID requestId
@@ -12,6 +13,7 @@
  *   the same workbenchLibraryHref helper (never invent ?job=)
  * - GenerateAfterPath Library chips use helper (fail-closed)
  * - GenerateWaitStage leave exposes libraryHref / handoff markers
+ * - Image Studio residual Library chrome uses helper; Lab/missing fail-closed
  * - LibraryGrid matches deep-link by id or requestId; missing/foreign → not-your-toy
  *
  * Run: node scripts/library-workbench-deeplink-smoke.mjs
@@ -33,6 +35,9 @@ const waitStage = read("components/GenerateWaitStage.tsx");
 const landingPanel = read("components/LandingToolPanel.tsx");
 const generateClient = read("lib/generateClient.ts");
 const libraryGrid = read("components/LibraryGrid.tsx");
+const imageStudio = read("app/image/page.tsx");
+const imageRoute = read("app/api/image/route.ts");
+const imageClient = read("lib/imageClient.ts");
 const pkg = read("package.json");
 
 // ── Source contracts ──────────────────────────────────────────────────────
@@ -265,6 +270,76 @@ assert.match(
   landingPanel,
   /privateResult=\{privateResult\}/,
   "LandingToolPanel AfterPath must pass privateResult"
+);
+
+// ── Image Studio residual Library handoff (AIT-576) ───────────────────────
+assert.match(
+  imageStudio,
+  /libraryWorkbenchHandoffHref/,
+  "Image Studio must import/use libraryWorkbenchHandoffHref"
+);
+assert.match(
+  imageStudio,
+  /from ["']@\/lib\/workbenchResultFold["']/,
+  "Image Studio must import workbenchResultFold"
+);
+assert.match(
+  imageStudio,
+  /imageLibraryHref/,
+  "Image Studio must compute imageLibraryHref"
+);
+assert.match(
+  imageStudio,
+  /href=\{imageLibraryHref\}/,
+  "Image residual Library chrome must bind imageLibraryHref"
+);
+assert.match(
+  imageStudio,
+  /data-library-handoff=/,
+  "Image Library chrome must expose handoff kind marker"
+);
+assert.match(
+  imageStudio,
+  /data-image-library-handoff=/,
+  "Image Library chrome must expose image-specific handoff marker"
+);
+assert.match(
+  imageStudio,
+  /setLastPrivateResult\(\s*Boolean\(data\.demo\) \? false : data\.privateResult === true\s*\)/,
+  "Image Studio must capture privateResult from still response (fail-closed)"
+);
+assert.match(
+  imageStudio,
+  /setLastPrivateResult\(false\)/,
+  "Image Studio history/device path must not invent privateResult"
+);
+// Fail-closed residual: never hardcode inventing private ?job= outside helper.
+assert.doesNotMatch(
+  imageStudio,
+  /href=["']\/library\?job=/,
+  "Image Studio must never hardcode /library?job= (use helper)"
+);
+// Residual chrome must not leave a bare plain href="/library" CTA.
+assert.doesNotMatch(
+  imageStudio,
+  /href=["']\/library["']/,
+  "Image Studio residual Library must not hardcode plain /library"
+);
+// Live image settle must echo durable UUID + privateResult for owner deep-link.
+assert.match(
+  imageRoute,
+  /privateResult:\s*true/,
+  "Image API live success must emit privateResult for durable owner jobs"
+);
+assert.match(
+  imageRoute,
+  /reserved\.reservation\.jobId/,
+  "Image API live success must use durable reservation jobId as request identity"
+);
+assert.match(
+  imageClient,
+  /privateResult\?:/,
+  "imageClient ImageSuccess must surface privateResult"
 );
 
 // ── Runtime pure helpers ──────────────────────────────────────────────────

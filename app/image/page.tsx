@@ -34,6 +34,7 @@ import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { GenerateSuiteChrome } from "@/components/GenerateSuiteChrome";
 import { loadToyIdentity } from "@/lib/toyIdentity";
 import { createRemixHref } from "@/lib/remixIntent";
+import { libraryWorkbenchHandoffHref } from "@/lib/workbenchResultFold";
 
 /** Default video recipe when handing a still into Generate (listing spin). */
 const IMAGE_HANDOFF_EFFECT = "360-spin-showcase";
@@ -96,6 +97,12 @@ export default function ImageStudioPage() {
   >(null);
   const [demo, setDemo] = useState(false);
   const [demoReason, setDemoReason] = useState<string | null>(null);
+  /**
+   * AIT-576: last still handoff identity for residual Library chrome.
+   * Only server privateResult + requestId deep-link; Lab/missing fail-closed.
+   */
+  const [lastRequestId, setLastRequestId] = useState<string | null>(null);
+  const [lastPrivateResult, setLastPrivateResult] = useState(false);
   const [history, setHistory] = useState<ImageHistoryItem[]>([]);
   /** Server settlement echo — 0 cached vs 10 used (honest soft-launch). */
   const [lastSettlement, setLastSettlement] = useState<string | null>(null);
@@ -282,6 +289,7 @@ export default function ImageStudioPage() {
                 demo?: boolean;
                 creditsOutcome?: string;
                 demoReason?: string;
+                requestId?: string;
               };
             } | null) => {
               if (cancelled || !data?.job) return;
@@ -295,6 +303,19 @@ export default function ImageStudioPage() {
                     j.creditsOutcome === "10 used"
                     ? j.creditsOutcome
                     : null
+                );
+                // Library Open still recovery: durable UUID job id is owner-scoped.
+                const recoveredId =
+                  typeof j.requestId === "string" && j.requestId.trim()
+                    ? j.requestId.trim()
+                    : jobId;
+                setLastRequestId(recoveredId);
+                setLastPrivateResult(
+                  Boolean(j.demo)
+                    ? false
+                    : /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+                        recoveredId
+                      )
                 );
                 if (j.prompt) setPrompt(j.prompt.slice(0, 2000));
                 if (j.aspect && ["1:1", "3:4", "16:9", "9:16"].includes(j.aspect)) {
@@ -622,6 +643,9 @@ export default function ImageStudioPage() {
     setStillElapsed(0);
     setError(null);
     clearFailGate();
+    // Clear prior handoff until this attempt settles (never invent private).
+    setLastRequestId(null);
+    setLastPrivateResult(false);
     try {
       const ledgerRetry = retryHandoffRef.current;
       retryHandoffRef.current = null;
@@ -703,6 +727,17 @@ export default function ImageStudioPage() {
       setDemoReason(
         typeof data.demoReason === "string" ? data.demoReason : null
       );
+      // Residual Library handoff — server privateResult only (never invent).
+      const handoffRequestId =
+        typeof data.requestId === "string" && data.requestId.trim()
+          ? data.requestId.trim()
+          : typeof data.jobId === "string" && data.jobId.trim()
+            ? data.jobId.trim()
+            : null;
+      setLastRequestId(handoffRequestId);
+      setLastPrivateResult(
+        Boolean(data.demo) ? false : data.privateResult === true
+      );
       const outcome =
         data.creditsOutcome === "0 cached" || data.creditsOutcome === "10 used"
           ? data.creditsOutcome
@@ -738,8 +773,7 @@ export default function ImageStudioPage() {
               data.creditsOutcome === "10 used"
                 ? data.creditsOutcome
                 : undefined,
-            requestId:
-              typeof data.requestId === "string" ? data.requestId : undefined,
+            requestId: handoffRequestId || undefined,
           })
         );
       }
@@ -779,6 +813,16 @@ export default function ImageStudioPage() {
       busy && sessionStillMeta && sessionStillMeta.open > 0
     ),
   });
+
+  /** AIT-576: residual Library chrome — owner deep-link or plain list. */
+  const imageLibraryHref = libraryWorkbenchHandoffHref({
+    demo,
+    privateResult: lastPrivateResult,
+    requestId: lastRequestId,
+  });
+  const imageLibraryHandoffKind = imageLibraryHref.includes("job=")
+    ? "request-id"
+    : "list";
 
   return (
     <div>
@@ -1279,6 +1323,12 @@ export default function ImageStudioPage() {
                       setImageUrl(h.imageUrl);
                       setDemo(Boolean(h.demo));
                       setDemoReason(h.demo ? "history" : null);
+                      // Device history is not server privateResult authority —
+                      // fail-closed residual Library (no invented ?job=).
+                      setLastRequestId(
+                        typeof h.requestId === "string" ? h.requestId : null
+                      );
+                      setLastPrivateResult(false);
                       setLastSettlement(
                         h.creditsOutcome === "0 cached" ||
                           h.creditsOutcome === "10 used"
@@ -1321,7 +1371,12 @@ export default function ImageStudioPage() {
             Animate it with Seedance
           </Link>
           {" · "}
-          <Link href="/library" className="text-[var(--fg-dim)] hover:underline">
+          <Link
+            href={imageLibraryHref}
+            className="text-[var(--fg-dim)] hover:underline"
+            data-library-handoff={imageLibraryHandoffKind}
+            data-image-library-handoff={imageLibraryHandoffKind}
+          >
             Library
           </Link>
           {" · "}

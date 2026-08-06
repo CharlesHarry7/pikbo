@@ -290,8 +290,17 @@ type ImageSuccessBody = {
   creditsOutcome: "0 cached" | "10 used";
   requestId?: string;
   jobId?: string;
+  /**
+   * Owner durable Library job after live settle. Lab/demo never set this —
+   * residual Image Library handoff stays fail-closed (AIT-576).
+   */
+  privateResult?: boolean;
   idempotentReplay?: boolean;
 };
+
+/** Durable Supabase job ids are UUID-shaped; process-memory stills use img_*. */
+const DURABLE_JOB_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function successFromImageJob(
   job: ImageJob,
@@ -308,6 +317,12 @@ function successFromImageJob(
   ) {
     return null;
   }
+  const requestId = job.requestId || job.id;
+  // Replay of a live settled still may still carry the durable UUID requestId.
+  const privateResult =
+    !job.demo &&
+    typeof requestId === "string" &&
+    DURABLE_JOB_ID_RE.test(requestId);
   return {
     imageUrl: job.imageUrl,
     demo: Boolean(job.demo),
@@ -323,8 +338,9 @@ function successFromImageJob(
         : job.demo
           ? "0 cached"
           : "10 used",
-    requestId: job.requestId || job.id,
+    requestId,
     jobId: job.id,
+    ...(privateResult ? { privateResult: true as const } : {}),
     ...(replay ? { idempotentReplay: true } : {}),
   };
 }
@@ -981,8 +997,10 @@ export async function POST(req: Request) {
         );
       }
 
-      let jobId = liveJobId;
-      let requestId = providerRequestId || liveJobId;
+      // Public request identity is the durable Supabase job (generate parity).
+      // Provider evidence stays off the response boundary as a delivery id.
+      const durableJobId = reserved.reservation.jobId;
+      let requestId = durableJobId;
       try {
         const job = completeImageJob({
           jobId: liveJobId,
@@ -994,11 +1012,11 @@ export async function POST(req: Request) {
           model: IMAGE_MODEL,
           costCredits: reserved.reservation.credits,
           creditsOutcome: "10 used",
-          requestId: providerRequestId,
+          // Owner-safe Library deep-link id (AIT-576) — durable UUID, not fal id.
+          requestId: durableJobId,
           idempotencyKey: ledgerIdempotencyKey,
         });
-        jobId = job.id;
-        requestId = job.requestId || job.id;
+        requestId = job.requestId || durableJobId;
       } catch {
         /* best-effort ledger */
       }
@@ -1013,7 +1031,9 @@ export async function POST(req: Request) {
         costCredits: reserved.reservation.credits,
         creditsOutcome: "10 used" as const,
         requestId,
-        jobId,
+        jobId: durableJobId,
+        // Owner durable credit job after settle — residual Library deep-link.
+        privateResult: true as const,
       });
     } catch (err) {
       console.error("image gen error:", err);
