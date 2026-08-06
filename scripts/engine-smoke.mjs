@@ -5372,6 +5372,14 @@ assert.match(
   fs.readFileSync(join(root, "lib/communityPosts.ts"), "utf8"),
   /Lab \/demos|session download, signed storage, or provider CDN/
 );
+// AIT-475: Library success rows mount CommunityPublishButton (honest private chip)
+assert.match(
+  library,
+  /CommunityPublishButton[\s\S]*?videoUrl=\{job\.videoUrl\}/
+);
+assert.match(library, /data-library-community-publish/);
+assert.match(library, /watermark=\{job\.watermark\}/);
+assert.match(library, /demo=\{job\.demo\}/);
 // Landing remake + suite doors use createRemixHref (ratio/duration/channel)
 assert.match(
   fs.readFileSync(join(root, "components/LandingResults.tsx"), "utf8"),

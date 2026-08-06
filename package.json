@@ -67,6 +67,7 @@
     "stripe-billing-regression": "node --experimental-strip-types scripts/stripe-billing-regression.mjs",
     "privacy-analytics-regression": "node --experimental-strip-types scripts/privacy-analytics-regression.mjs",
     "community-publish-private-refuse-smoke": "node scripts/community-publish-private-refuse-smoke.mjs",
+    "library-community-publish-mount-smoke": "node scripts/library-community-publish-mount-smoke.mjs",
     "mercury-readiness-smoke": "node scripts/mercury-readiness-smoke.mjs"
   },
   "dependencies": {
