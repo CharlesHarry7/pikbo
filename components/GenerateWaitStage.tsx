@@ -155,7 +155,7 @@ export function GenerateWaitStage({
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           background:
-            "radial-gradient(ellipse 70% 50% at 50% 40%, rgba(200,255,61,0.12), transparent 70%)",
+            "radial-gradient(ellipse 70% 50% at 50% 40%, rgba(255,78,205,0.12), transparent 70%)",
         }}
       />
 
@@ -167,17 +167,17 @@ export function GenerateWaitStage({
             alt=""
             width={compact ? 64 : 88}
             height={compact ? 64 : 88}
-            className={`rounded-2xl object-cover ring-2 ring-[var(--mint)]/40 shadow-[0_0_32px_rgba(200,255,61,0.2)] ${
+            className={`rounded-2xl object-cover ring-2 ring-[var(--neon-pink)]/40 shadow-[0_0_32px_rgba(255,78,205,0.2)] ${
               compact ? "h-16 w-16" : "h-[5.5rem] w-[5.5rem]"
             }`}
           />
-          <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-[var(--mint)] text-[10px] font-black text-black shadow-[0_0_12px_rgba(200,255,61,0.5)]">
+          <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-[var(--neon-pink)] text-[10px] font-black text-[var(--void)] shadow-[0_0_12px_rgba(255,78,205,0.5)]">
             <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-black/20 border-t-black" />
           </span>
         </div>
       ) : (
         <div
-          className={`mx-auto mb-4 animate-spin rounded-full border-2 border-white/15 border-t-[var(--mint)] ${
+          className={`mx-auto mb-4 animate-spin rounded-full border-2 border-white/15 border-t-[var(--neon-pink)] ${
             compact ? "h-9 w-9" : "h-11 w-11"
           }`}
         />
@@ -191,7 +191,7 @@ export function GenerateWaitStage({
         {title}
       </p>
       {effectLabel ? (
-        <p className="relative mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--mint)]/90">
+        <p className="relative mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--neon-pink)]/90">
           {effectLabel}
         </p>
       ) : null}
@@ -213,16 +213,16 @@ export function GenerateWaitStage({
               {i > 0 ? (
                 <span
                   className={`h-px w-4 sm:w-6 ${
-                    done || on ? "bg-[var(--mint)]/50" : "bg-white/15"
+                    done || on ? "bg-[var(--neon-pink)]/50" : "bg-white/15"
                   }`}
                 />
               ) : null}
               <span
                 className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${
                   on
-                    ? "bg-[var(--mint)] text-black"
+                    ? "bg-[var(--neon-pink)] text-[var(--void)]"
                     : done
-                      ? "border border-[var(--mint)]/40 text-[var(--mint)]"
+                      ? "border border-[var(--neon-pink)]/40 text-[var(--neon-pink)]"
                       : "border border-white/10 text-white/35"
                 }`}
               >
@@ -242,7 +242,8 @@ export function GenerateWaitStage({
           className="h-full rounded-full transition-all duration-500 ease-out"
           style={{
             width: `${pct}%`,
-            background: "var(--grad, linear-gradient(90deg,#c8ff3d,#7dffb3))",
+            background:
+              "var(--grad, linear-gradient(90deg,#b14eff,#ff4ecd))",
           }}
         />
       </div>
@@ -257,12 +258,12 @@ export function GenerateWaitStage({
       </p>
 
       {!demoMode && recoveryChecking && !awaitingPrimary ? (
-        <p className="relative mt-2 max-w-xs rounded-lg border border-[var(--mint)]/25 bg-[var(--mint)]/[0.07] px-3 py-1.5 text-[10px] leading-snug text-white/80">
+        <p className="relative mt-2 max-w-xs rounded-lg border border-[var(--neon-pink)]/25 bg-[var(--neon-pink)]/[0.07] px-3 py-1.5 text-[10px] leading-snug text-white/80">
           Pikbo is following the same durable attempt. If the first response
           stays open after saving, the owner result will recover here.
         </p>
       ) : !demoMode && awaitingPrimary ? (
-        <p className="relative mt-2 max-w-xs rounded-lg border border-[var(--mint)]/25 bg-[var(--mint)]/[0.07] px-3 py-1.5 text-[10px] leading-snug text-white/80">
+        <p className="relative mt-2 max-w-xs rounded-lg border border-[var(--neon-pink)]/25 bg-[var(--neon-pink)]/[0.07] px-3 py-1.5 text-[10px] leading-snug text-white/80">
           Recovery did not end this job. Your original generate is still live —
           leave for Library without canceling, or cancel only if you intend to
           stop this attempt.
@@ -282,7 +283,7 @@ export function GenerateWaitStage({
                 type="button"
                 onClick={onLeaveToLibrary}
                 data-generate-leave="detach"
-                className="w-full rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/15 px-4 py-2 text-[11px] font-bold text-[var(--mint)] transition hover:border-[var(--mint)]/70 hover:bg-[var(--mint)]/25"
+                className="w-full rounded-full border border-[var(--neon-pink)]/40 bg-[var(--neon-pink)]/15 px-4 py-2 text-[11px] font-bold text-[var(--neon-pink)] transition hover:border-[var(--neon-pink)]/70 hover:bg-[var(--neon-pink)]/25"
                 title="Stop waiting on this page. Does not abort the original generate or cancel the ledger."
               >
                 Open Library · keep generating
@@ -344,7 +345,7 @@ export function GenerateWaitMobileStrip({
     <div className="w-full" data-awaiting-primary={awaitingPrimary ? "true" : "false"}>
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <p className="truncate text-[10px] font-bold text-white/70">
-          <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--mint)]" />
+          <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--neon-pink)]" />
           {title}
           <span className="ml-1 font-mono text-white/45">· {elapsed}s</span>
         </p>
@@ -357,7 +358,7 @@ export function GenerateWaitMobileStrip({
           className="h-full rounded-full transition-all duration-500"
           style={{
             width: `${pct}%`,
-            background: "var(--grad, #c8ff3d)",
+            background: "var(--grad, #ff4ecd)",
           }}
         />
       </div>
@@ -367,7 +368,7 @@ export function GenerateWaitMobileStrip({
             type="button"
             onClick={onLeaveToLibrary}
             data-generate-leave="detach"
-            className="btn w-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 py-2.5 text-sm text-[var(--mint)]"
+            className="btn w-full border border-[var(--neon-pink)]/40 bg-[var(--neon-pink)]/10 py-2.5 text-sm text-[var(--neon-pink)]"
           >
             Open Library · keep generating
           </button>
