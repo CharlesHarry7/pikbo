@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 /**
- * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193: Library owner-safe.
+ * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-254:
+ * Library owner-safe recovery.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped list/detail, non-owner deny (no metadata leak),
  * retry / cancel (item + collection) / new-attempt paths, owner-ready asset
- * bind gate, guest deep-link login next, and deep-link fail-closed copy.
+ * bind gate, guest deep-link login next, deep-link fail-closed copy, and
+ * client Bearer on retry/cancel so durable DURABLE_* codes can resolve.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -137,6 +139,18 @@ assert.match(library, /data-library-action="new-attempt"/);
 assert.match(library, /canLocalRetry\(job\)/);
 assert.match(library, /canNewAttempt\(job\)/);
 assert.match(library, /DURABLE_USE_NEW_ATTEMPT/);
+// AIT-254: client Retry attaches Bearer so durable owner path can resolve.
+assert.match(
+  library,
+  /async function retry[\s\S]{0,400}privateDownloadHeaders\(\)[\s\S]{0,240}method:\s*["']POST["']/
+);
+assert.match(library, /DURABLE_IN_FLIGHT/);
+assert.match(library, /DURABLE_ALREADY_SUCCEEDED/);
+// AIT-254: client Cancel attaches Bearer (item DELETE durable code parity).
+assert.match(
+  library,
+  /async function cancel[\s\S]{0,600}privateDownloadHeaders\(\)[\s\S]{0,240}method:\s*["']DELETE["']/
+);
 // AIT-162: client Retry navigation fail-closed (no open redirect via startsWith("/")).
 assert.match(library, /acceptLibraryCreateNavigation/);
 assert.doesNotMatch(
