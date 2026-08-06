@@ -207,7 +207,32 @@ assert.match(
   /errorRetry/,
   "Guest Create Lab video must enable errorRetry for honest mobile recovery"
 );
-
+// AIT-581: GuestMomentCreateGate residual carnival pink CTA → gallery copper
+assert.doesNotMatch(
+  gate,
+  /#B14EFF|#FF4ECD|#00D9FF|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|206\s*,\s*27\s*,\s*106|255\s*,\s*32\s*,\s*122/i,
+  "GuestMomentCreateGate must not hard-code carnival pink/cyan RGB"
+);
+assert.doesNotMatch(
+  gate,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "GuestMomentCreateGate must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  gate,
+  /var\(--grad-cta\)/,
+  "GuestMomentCreateGate primary CTAs use --grad-cta copper board gradient"
+);
+assert.match(
+  gate,
+  /var\(--brand\)/,
+  "GuestMomentCreateGate eyebrows/focus use --brand copper accent"
+);
+assert.match(
+  gate,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "GuestMomentCreateGate glows use copper board rgba(196,165,116)"
+);
 
 // AIT-383: content under sticky Generate + MobileGenerateBar uses shared pad tokens
 {
