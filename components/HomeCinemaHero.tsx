@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+
+/** Money-path Generate door — listing 360 workbench (above fold on mobile). */
+const HOME_HERO_360_HREF = createGenerate360Href("home-hero");
 
 const STREET_POWER_UP_SAMPLE = {
   video: "/demos/beatbot-viral-hook.mp4",
@@ -230,6 +234,17 @@ export function HomeCinemaHero() {
             >
               Create my drop clip
               <span aria-hidden className="text-lg">
+                →
+              </span>
+            </Link>
+            {/* AIT-192: money-path Generate→360 above fold (mobile) — not only below-fold wall. */}
+            <Link
+              href={HOME_HERO_360_HREF}
+              data-home-hero-360-cta
+              className="btn-press mt-2.5 inline-flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#00D9FF]/45 bg-[rgba(0,217,255,0.1)] px-5 text-[11px] font-black uppercase tracking-[0.12em] text-[#00D9FF] transition hover:border-[#00D9FF]/70 hover:bg-[rgba(0,217,255,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14141E]"
+            >
+              Generate 360° listing spin
+              <span aria-hidden className="text-base">
                 →
               </span>
             </Link>

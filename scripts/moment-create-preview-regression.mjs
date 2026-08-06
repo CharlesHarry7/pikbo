@@ -44,10 +44,14 @@ assert.match(stage, /href=\{`\/create\?moment=\$\{moment\.id\}`\}/);
 assert.match(rail, /role="tablist"/);
 
 const momentBranch = createPage.indexOf("if (sp.moment !== undefined)");
-const sellerPackBranch = createPage.indexOf('if (sp.mode === "seller-pack"');
-const genericStudio = createPage.indexOf("<CreateStudio");
-assert.ok(momentBranch > -1 && momentBranch < sellerPackBranch);
-assert.ok(sellerPackBranch > -1 && sellerPackBranch < genericStudio);
+const workbenchBranch = createPage.indexOf('contract === "generate-workbench"');
+const fixedMomentMarker = createPage.indexOf('data-create-contract="fixed-moment"');
+const firstStudio = createPage.indexOf("<CreateStudio");
+// Fail-closed: published Moment preview short-circuits before any Studio path.
+assert.ok(momentBranch > -1 && momentBranch < firstStudio);
+// AIT-198 / AIT-142: Generate workbench + fixed Moment dual path (no Seller Pack revival).
+assert.ok(workbenchBranch > -1 || fixedMomentMarker > -1);
+assert.match(createPage, /data-create-contract=["']fixed-moment["']/);
 assert.match(createPage, /Array\.isArray\(sp\.moment\) \? null : parseMomentId/);
 assert.match(createPage, /if \(!momentId\) return <InvalidMomentNotice/);
 assert.match(createPage, /fixedMomentContract/);
@@ -106,7 +110,8 @@ assert.match(shell, /momentValues\.length === 1/);
 assert.match(shell, /Boolean\(parseMomentId\(momentValues\[0\]\)\)/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.match(shell, /Create a Moment/);
-assert.match(shell, /label: "Projects"/);
+// Soft-launch primary chrome: Create / Library / Pricing (not legacy Projects).
+assert.match(shell, /label: "Create"|label: "Library"|PRIMARY_NAV/);
 assert.doesNotMatch(shell, /Motion archive/);
 
 console.log("moment create preview regression: ok");
