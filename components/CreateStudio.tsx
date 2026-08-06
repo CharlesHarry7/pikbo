@@ -48,6 +48,11 @@ import {
 import { seedanceModelLabel } from "@/lib/models";
 import { parseRemixSearchParams } from "@/lib/remixIntent";
 import {
+  homeGenerateEntryLabel,
+  isHomeGenerateEntrySource,
+  WORKBENCH_LAB_LIVE_HONESTY,
+} from "@/lib/createRouteContract";
+import {
   buildGenerationSpec,
   canDownloadResult,
   downloadBlockedCtaLabel,
@@ -190,7 +195,11 @@ export function CreateStudio({
   initialResolution?: string;
   initialMode?: Mode;
   initialPrompt?: string;
-  /** PIKBO Lab prototype project id (remix attribution) — RETENTION_REMIX_LOOP */
+  /**
+   * Remix attribution: Lab project id OR Home Generate entry tag
+   * (home-hero / app-shell-home / home-trust / home-gallery-pedestal /
+   * home-explore-rail). Entry tags are not project slugs.
+   */
   initialSource?: string;
   initialRatio?: string;
   initialDuration?: string;
@@ -309,6 +318,10 @@ export function CreateStudio({
     "checking" | "ready" | "timeout"
   >("checking");
   const privateUploadEnabled = canUsePrivateLaunch(session);
+  /** Home Generate doors tag entry surfaces — not Lab project remix ids. */
+  const homeGenerateEntry = isHomeGenerateEntrySource(initialSource);
+  const remixProjectSource =
+    initialSource && !homeGenerateEntry ? initialSource : undefined;
   const fixedMomentNextPath = initialSource
     ? `${MOMENT_CREATE_HREF}&source=${encodeURIComponent(initialSource)}`
     : MOMENT_CREATE_HREF;
@@ -493,6 +506,7 @@ export function CreateStudio({
       // PIKBO Lab reference stills — not a visitor upload or verified provider input.
       setOwnsRights(true);
       if (autoGenerate) {
+        // Lab sample path is always cached 0 credits (never Free Mini Live spend).
         toast("Previewing PIKBO Lab prototype sample · cached · 0 credits…");
         await generate({
           imageOverride: data,
@@ -501,7 +515,9 @@ export function CreateStudio({
           labSampleId: s.id,
         });
       } else {
-        toast("PIKBO Lab prototype still ready — tap Generate when you want the clip");
+        toast(
+          "PIKBO Lab prototype still ready · 0 credits · tap Generate for cached preview"
+        );
       }
     } catch (err) {
       const timedOut = isClientTimeoutError(err);
@@ -1974,8 +1990,46 @@ export function CreateStudio({
         </div>
       </div>
 
-      {/* ── Remix context (from Home / project deep link) ── */}
+      {/* ── Home Generate→360 entry honesty (AIT-459 / AIT-473) ── */}
+      {!fixedMomentContract && homeGenerateEntry ? (
+        <div
+          className="border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-3"
+          data-home-generate-entry={initialSource}
+          data-workbench-entry-honesty="lab-live"
+        >
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-black uppercase tracking-wider text-[var(--mint)]">
+                {homeGenerateEntryLabel(initialSource)}
+              </p>
+              <p className="text-sm font-semibold text-[var(--fg)]">
+                {preset.emoji} {viralName(preset.slug, preset.name)}
+                {remix.intent?.channel ? (
+                  <span className="ml-2 text-[11px] font-normal text-[var(--fg-muted)]">
+                    · {remix.intent.channel} · {remix.intent.aspectRatio} ·{" "}
+                    {remix.intent.durationSeconds}s
+                  </span>
+                ) : null}
+              </p>
+              <p
+                className="mt-0.5 text-[11px] font-semibold text-[var(--mint)]"
+                data-lab-sample-cost="0"
+              >
+                {WORKBENCH_LAB_LIVE_HONESTY}
+              </p>
+              <p className="text-[11px] text-[var(--fg-muted)]">
+                Cached Lab samples cost 0 credits and never process your upload.
+                Live generation stays gated until an eligible account passes
+                the quote check — not a Free Mini open trial.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* ── Remix context (from Lab project deep link) ── */}
       {!fixedMomentContract &&
+        !homeGenerateEntry &&
         (remix.sourceLabel || remix.notices.length > 0 || remix.intent) && (
         <div
           className="border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-3"
@@ -2013,14 +2067,14 @@ export function CreateStudio({
                 </p>
               ))}
             </div>
-            {initialSource && (
+            {remixProjectSource ? (
               <Link
-                href={`/projects/${encodeURIComponent(initialSource)}`}
+                href={`/projects/${encodeURIComponent(remixProjectSource)}`}
                 className="text-[11px] font-semibold text-[var(--mint)] hover:underline"
               >
                 Inside recipe →
               </Link>
-            )}
+            ) : null}
           </div>
         </div>
       )}
@@ -2422,20 +2476,25 @@ export function CreateStudio({
                 prototypes cost 0 credits and never process your photo. One
                 tap loads the recipe and opens the preview path.
               </p>
-              <p className="mt-1 text-[10px] font-semibold text-[var(--mint)]">
-                Preview a Lab sample · cached prototype, not your upload.
+              <p
+                className="mt-1 text-[10px] font-semibold text-[var(--mint)]"
+                data-lab-sample-cost="0"
+              >
+                {freeLiveOpen
+                  ? "Lab sample · 0 credits · not Free Mini Live"
+                  : "Lab sample · private Live gated · 0 credits"}
               </p>
               <button
                 type="button"
                 disabled={sampleLoading || busy}
                 onClick={() => void loadSampleToy("scout", true)}
                 className="btn btn-primary mt-3 w-full py-3 text-sm disabled:opacity-50"
+                data-workbench-lab-cta="primary"
+                data-lab-sample-cta="free"
               >
                 {sampleLoading || busy
                   ? t("create.generating")
-                  : demoMode
-                    ? t("create.oneTapCached")
-                    : t("create.oneTapMini")}
+                  : t("create.oneTapCached")}
               </button>
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {SAMPLE_TOYS.map((s) => (
@@ -2930,8 +2989,21 @@ export function CreateStudio({
                     {effectiveResolution}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-full border border-[var(--mint)]/30 bg-black/35 px-2.5 py-1 text-[11px] font-black text-[var(--mint)]">
-                  {demoMode ? "0 credits" : `${CREDITS_PER_VIDEO} credits`}
+                <span
+                  className="shrink-0 rounded-full border border-[var(--mint)]/30 bg-black/35 px-2.5 py-1 text-[11px] font-black text-[var(--mint)]"
+                  data-quote-credits={
+                    demoMode || labStill
+                      ? "0"
+                      : freeLiveOpen || !isFree
+                        ? String(CREDITS_PER_VIDEO)
+                        : "0"
+                  }
+                >
+                  {demoMode || labStill
+                    ? "0 credits"
+                    : freeLiveOpen || !isFree
+                      ? `${CREDITS_PER_VIDEO} credits`
+                      : "0 credits · Live gated"}
                 </span>
               </div>
             ) : (
@@ -3092,6 +3164,7 @@ export function CreateStudio({
               <GenerateWaitStage
                 elapsed={elapsed}
                 demoMode={demoMode}
+                freeLiveOpen={freeLiveOpen}
                 image={image}
                 effectLabel={viralName(preset.slug, preset.name)}
                 onCancel={cancelInFlightGenerate}
@@ -3707,7 +3780,7 @@ export function CreateStudio({
                 <p className="mt-1.5 max-w-xs text-xs text-[var(--fg-muted)]">
                   {image
                     ? t("create.hitGenerate")
-                    : demoMode
+                    : demoMode || !freeLiveOpen
                       ? t("create.noPhotoCached")
                       : t("create.noPhotoLive")}
                 </p>
@@ -3717,10 +3790,10 @@ export function CreateStudio({
                     disabled={sampleLoading || busy}
                     onClick={() => void loadSampleToy("scout", true)}
                     className="btn btn-primary mt-5 px-6 py-2.5 text-sm disabled:opacity-50"
+                    data-lab-sample-cta="free"
                   >
-                    {demoMode
-                      ? t("create.labSampleFree")
-                      : t("create.labSampleMini")}
+                    {/* Lab sample path is always cached 0 credits — never Mini trial. */}
+                    {t("create.labSampleFree")}
                   </button>
                 )}
                 <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[var(--mint)]/25 bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]">
@@ -3749,12 +3822,17 @@ export function CreateStudio({
         }
       >
         {image ? (
-          <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
+          <p
+            className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55"
+            data-sticky-credits={demoMode || labStill ? "0" : "live"}
+          >
             {preset.emoji} {viralName(preset.slug, preset.name)} · {aspectRatio}
             {toyIdentity.sku ? ` · ${toyIdentity.sku}` : ""} ·{" "}
-            {demoMode
-              ? "0 credits · cached prototype"
-              : `${CREDITS_PER_VIDEO} credits when Live`}
+            {demoMode || labStill
+              ? "0 credits · Lab sample / Live gated"
+              : freeLiveOpen
+                ? `${CREDITS_PER_VIDEO} credits when Live`
+                : "0 credits · Live gated"}
           </p>
         ) : null}
         {!image ? (
@@ -3794,6 +3872,7 @@ export function CreateStudio({
           <GenerateWaitMobileStrip
             elapsed={elapsed}
             demoMode={demoMode}
+            freeLiveOpen={freeLiveOpen}
             onCancel={cancelInFlightGenerate}
             onLeaveToLibrary={leaveWaitingKeepBackground}
             awaitingPrimary={awaitingPrimaryAfterRecovery}
