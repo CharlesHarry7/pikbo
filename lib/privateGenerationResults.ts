@@ -252,12 +252,30 @@ async function attachedOutputState(input: {
     : "conflict";
 }
 
+/**
+ * Owner-only durable download/result outcome (AIT-488 residual).
+ * Distinguishes missing/foreign (result: null) from storage/query failure so
+ * downloads never invent NOT_FOUND when private rows could not be read.
+ */
+export type GetPrivateGenerationResultOutcome =
+  | { ok: true; result: PrivateGenerationResult }
+  | { ok: true; result: null }
+  | { ok: false; code: "DURABLE_DETAIL_UNAVAILABLE" };
+
+/**
+ * Owner-only durable private result by job id (succeeded rows only).
+ * Always filters created_by so foreign ids cannot leak object keys / checksums.
+ *
+ * - `{ ok: true, result }` — owned succeeded durable row
+ * - `{ ok: true, result: null }` — missing, non-owned, not succeeded, or unmapped
+ * - `{ ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" }` — admin/query down
+ */
 export async function getPrivateGenerationResult(input: {
   jobId: string;
   userId: string;
-}): Promise<PrivateGenerationResult | null> {
+}): Promise<GetPrivateGenerationResultOutcome> {
   const admin = getSupabaseAdmin();
-  if (!admin) return null;
+  if (!admin) return { ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" };
   const { data, error } = await admin
     .from("generation_jobs")
     .select(RESULT_COLUMNS)
@@ -265,8 +283,11 @@ export async function getPrivateGenerationResult(input: {
     .eq("created_by", input.userId)
     .eq("status", "succeeded")
     .maybeSingle();
-  if (error || !data) return null;
-  return resultFromRow(data as unknown as Record<string, unknown>);
+  // Query failure ≠ missing row — fail closed as unavailable.
+  if (error) return { ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" };
+  if (!data) return { ok: true, result: null };
+  const mapped = resultFromRow(data as unknown as Record<string, unknown>);
+  return mapped ? { ok: true, result: mapped } : { ok: true, result: null };
 }
 
 export async function getPrivateGenerationResultByIdempotency(input: {

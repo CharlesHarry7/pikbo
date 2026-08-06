@@ -31,6 +31,7 @@ function isUuid(value: string): boolean {
  * Durable UUID jobs: require auth owner (`created_by`). Missing, foreign, and
  * unauthenticated share one fail-closed deny — no `AUTH_REQUIRED` status split
  * that would distinguish existence, and no media/provider/signed metadata.
+ * Storage/query down → 503 DURABLE_DETAIL_UNAVAILABLE (never invent NOT_FOUND).
  * Non-UUID ids fall through to process-memory session gate only.
  */
 async function privateResultForRequest(req: Request, id: string) {
@@ -43,22 +44,38 @@ async function privateResultForRequest(req: Request, id: string) {
       code: "NOT_FOUND" as const,
     };
   }
-  const result = await getPrivateGenerationResult({
+  const lookup = await getPrivateGenerationResult({
     jobId: id,
     userId: user.id,
   });
-  if (!result) {
+  // AIT-488: durable verify down → 503, not false NOT_FOUND.
+  if (!lookup.ok) {
+    return {
+      kind: "error" as const,
+      status: 503,
+      code: "DURABLE_DETAIL_UNAVAILABLE" as const,
+    };
+  }
+  if (!lookup.result) {
     return {
       kind: "error" as const,
       status: 404,
       code: "NOT_FOUND" as const,
     };
   }
-  return { kind: "private" as const, result };
+  return { kind: "private" as const, result: lookup.result };
 }
 
 /** Uniform body for durable UUID deny — never effect/status/signed/object keys. */
-function durableDownloadDenyBody() {
+function durableDownloadDenyBody(code: "NOT_FOUND" | "DURABLE_DETAIL_UNAVAILABLE" = "NOT_FOUND") {
+  if (code === "DURABLE_DETAIL_UNAVAILABLE") {
+    return {
+      ok: false as const,
+      code: "DURABLE_DETAIL_UNAVAILABLE" as const,
+      error:
+        "Private download could not be verified. Retry when storage is ready — ownership is not denied.",
+    };
+  }
   return {
     ok: false as const,
     code: "NOT_FOUND" as const,
@@ -275,7 +292,7 @@ export async function GET(req: Request, { params }: Props) {
   const { id } = await params;
   const privateResult = await privateResultForRequest(req, id);
   if (privateResult.kind === "error") {
-    return NextResponse.json(durableDownloadDenyBody(), {
+    return NextResponse.json(durableDownloadDenyBody(privateResult.code), {
       status: privateResult.status,
     });
   }
@@ -320,11 +337,12 @@ export async function HEAD(req: Request, { params }: Props) {
   const privateResult = await privateResultForRequest(req, id);
   if (privateResult.kind === "error") {
     // Uniform durable deny — no private markers / checksum on fail.
+    // AIT-488: storage down uses DURABLE_DETAIL_UNAVAILABLE (retry), not NOT_FOUND.
     return new NextResponse(null, {
       status: privateResult.status,
       headers: {
         "X-Pikbo-Download": "blocked",
-        "X-Pikbo-Download-Code": "NOT_FOUND",
+        "X-Pikbo-Download-Code": privateResult.code,
         "Cache-Control": "private, no-store",
       },
     });

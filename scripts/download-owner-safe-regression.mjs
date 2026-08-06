@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
- * AIT-464 / AIT-173 residual: Downloads owner gate fail-closed.
+ * AIT-488 / AIT-464 residual: Downloads owner gate fail-closed.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
- * Locks durable UUID deny uniformity (unauth/foreign/missing), process-memory
+ * Locks durable UUID deny uniformity (unauth/foreign/missing), storage-down
+ * 503 DURABLE_DETAIL_UNAVAILABLE (never invent NOT_FOUND), process-memory
  * session bind that never wins over durable created_by, LibraryGrid controlled-
  * gate only, HEAD honesty codes (not blanket NOT_READY), and no signed/provider
  * leak on deny bodies.
@@ -65,10 +66,10 @@ assert.doesNotMatch(
   /function durableDownloadDenyBody[\s\S]{0,280}(signedUrl|objectKey|providerOutput|checksum|videoUrl)/
 );
 
-// GET/HEAD private errors share NOT_FOUND; private success only after ownership.
+// GET/HEAD private errors share durableDownloadDenyBody(code); success only after ownership.
 assert.match(
   downloadRoute,
-  /privateResult\.kind === "error"[\s\S]{0,350}durableDownloadDenyBody|privateResult\.kind === "error"[\s\S]{0,250}NOT_FOUND/
+  /privateResult\.kind === "error"[\s\S]{0,350}durableDownloadDenyBody\(privateResult\.code\)/
 );
 assert.match(
   downloadRoute,
@@ -81,14 +82,33 @@ assert.doesNotMatch(
   /signedUrl:\s*signed|url:\s*signed|objectKey:\s*privateResult/
 );
 
-// HEAD deny: blocked + NOT_FOUND only — no private markers / checksum.
+// HEAD deny: blocked + code from privateResult (NOT_FOUND or DURABLE_DETAIL_UNAVAILABLE).
+// No private markers / checksum on any deny.
 assert.match(
   downloadRoute,
-  /privateResult\.kind === "error"[\s\S]{0,400}X-Pikbo-Download-Code": "NOT_FOUND"/
+  /privateResult\.kind === "error"[\s\S]{0,400}X-Pikbo-Download-Code": privateResult\.code/
 );
 assert.doesNotMatch(
   downloadRoute,
   /privateResult\.kind === "error"[\s\S]{0,500}X-Pikbo-Private-Result|privateResult\.kind === "error"[\s\S]{0,500}X-Pikbo-Result-Sha256/
+);
+
+// AIT-488: getPrivateGenerationResult Result — storage down ≠ missing.
+assert.match(results, /GetPrivateGenerationResultOutcome|DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(
+  results,
+  /getPrivateGenerationResult[\s\S]{0,600}ok: false,\s*code: "DURABLE_DETAIL_UNAVAILABLE"/
+);
+assert.match(
+  results,
+  /if \(error\) return \{ ok: false, code: "DURABLE_DETAIL_UNAVAILABLE" \}/
+);
+assert.match(downloadRoute, /status:\s*503/);
+assert.match(downloadRoute, /code:\s*"DURABLE_DETAIL_UNAVAILABLE"/);
+assert.match(createTrust, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(
+  createTrust,
+  /Private download could not be verified\. Retry when storage is ready/
 );
 
 // ─── Source: process-memory stays session-bound (non-UUID only) ─────────────
@@ -183,6 +203,13 @@ function classifyDownloadDeny(opts) {
   const code = (opts.code || "").trim();
   const status = opts.status;
   if (
+    status === 503 ||
+    code === "DURABLE_DETAIL_UNAVAILABLE" ||
+    code === "PRIVATE_RESULT_SIGN_FAILED"
+  ) {
+    return { kind: "unavailable" };
+  }
+  if (
     status === 404 ||
     code === "NOT_FOUND" ||
     status === 401 ||
@@ -201,6 +228,10 @@ const legacyAuth = classifyDownloadDeny({
   status: 401,
   code: "AUTH_REQUIRED",
 });
+const storageDown = classifyDownloadDeny({
+  status: 503,
+  code: "DURABLE_DETAIL_UNAVAILABLE",
+});
 assert.equal(unauth.kind, "not_found");
 assert.equal(foreign.kind, unauth.kind);
 assert.equal(missing.kind, unauth.kind);
@@ -209,6 +240,12 @@ assert.equal(
   "not_found",
   "legacy AUTH_REQUIRED must not surface as a distinct existence path"
 );
+assert.equal(
+  storageDown.kind,
+  "unavailable",
+  "storage down must not invent not_found"
+);
+assert.notEqual(storageDown.kind, unauth.kind);
 assert.equal(
   classifyDownloadDeny({ status: 200, code: "" }).kind,
   "allow"
