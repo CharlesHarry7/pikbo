@@ -3942,6 +3942,25 @@ assert.doesNotMatch(homeMomentsSrc, /data-home-moment-cta(?:=|\s|>|\/)/);
 assert.match(homeMomentsSrc, /data-home-showcase-doors=["']secondary["']/);
 assert.match(homeMomentsSrc, /data-real-moment-cta/);
 assert.match(homeMomentsSrc, /data-moment-create-cta/);
+// AIT-244: AppShell Home Create secondary when hero owns primary.
+const shellHomeCreateSrc = fs.readFileSync(
+  join(root, "components/AppShell.tsx"),
+  "utf8"
+);
+assert.equal(
+  (
+    shellHomeCreateSrc.match(
+      /data-shell-home-create=\{home\s*\?\s*["']secondary["']\s*:\s*undefined\}/g
+    ) || []
+  ).length,
+  2,
+  "shell desktop+mobile Home Create must be secondary chrome"
+);
+assert.match(
+  shellHomeCreateSrc,
+  /home\s*\?\s*["']border border-white\/25 bg-transparent/
+);
+assert.match(shellHomeCreateSrc, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.doesNotMatch(homeHeroSrc, /Use this motion/);
 assert.match(homeHeroSrc, /Sample · Beatbot/);
 assert.match(homeHeroSrc, /Sample shown: cached 6s archive/);

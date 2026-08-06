@@ -142,6 +142,28 @@ assert(
     homeWallSrc.includes("createGenerate360Href"),
   "wall remake chips secondary (outline weight); Create/360 doors secondary; honesty + 360 href preserved"
 );
+// AIT-244: AppShell Home header Create is secondary chrome when hero owns primary.
+const shellSrc = read("components/AppShell.tsx");
+assert(
+  // JSX: data-shell-home-create={home ? "secondary" : undefined} × desktop+mobile
+  (shellSrc.match(
+    /data-shell-home-create=\{home\s*\?\s*["']secondary["']\s*:\s*undefined\}/g
+  ) || []).length === 2 &&
+    shellSrc.includes('data-shell-create-surface="desktop"') &&
+    shellSrc.includes('data-shell-create-surface="mobile"') &&
+    shellSrc.includes("Try Street Power-Up") &&
+    shellSrc.includes("Create my drop clip") &&
+    shellSrc.includes("DEFAULT_MOMENT_CREATE_HREF") &&
+    shellSrc.includes(
+      "const DEFAULT_MOMENT_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=moment-shell`"
+    ) &&
+    // Home arm is outline (border + transparent), not hero-grade fill.
+    /home\s*\?\s*["']border border-white\/25 bg-transparent/.test(shellSrc) &&
+    // Non-home moment / result shell may keep filled Create.
+    shellSrc.includes("Create a Moment") &&
+    shellSrc.includes("Use this motion"),
+  "shell home Create secondary when hero owns primary; DEFAULT_MOMENT_CREATE_HREF honesty"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"

@@ -200,9 +200,18 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="flex shrink-0 items-center gap-3">
           {motionChrome ? (
+            // Home shell Create is secondary chrome — hero owns the sole
+            // filled primary (data-home-moment-cta). Outline weight only.
             <Link
               href={home ? DEFAULT_MOMENT_CREATE_HREF : "/library"}
-              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.35)]"
+              data-shell-home-create={home ? "secondary" : undefined}
+              data-shell-create-surface="desktop"
+              className={cn(
+                "btn-press inline-flex min-h-10 items-center rounded-full px-5 text-xs font-black transition",
+                home
+                  ? "border border-white/25 bg-transparent text-white/80 hover:border-[#FF4ECD]/45 hover:text-[#FF4ECD]"
+                  : "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white shadow-[0_0_24px_rgba(255,78,205,0.35)]"
+              )}
             >
               {home ? "Try Street Power-Up" : "Open Library"}
             </Link>
@@ -246,12 +255,16 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="flex items-center gap-2">
           {momentSurface ? (
+            // Home sticky Create stays secondary outline so it never fights
+            // hero data-home-moment-cta; non-home moment chrome keeps fill.
             <Link
               href={DEFAULT_MOMENT_CREATE_HREF}
+              data-shell-home-create={home ? "secondary" : undefined}
+              data-shell-create-surface="mobile"
               className={cn(
-                "inline-flex min-h-9 items-center rounded-full px-4 text-[10px] font-black",
+                "inline-flex min-h-9 items-center rounded-full px-4 text-[10px] font-black transition",
                 home
-                  ? "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
+                  ? "border border-white/25 bg-transparent text-white/80 hover:border-[#FF4ECD]/45 hover:text-[#FF4ECD]"
                   : "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
               )}
             >

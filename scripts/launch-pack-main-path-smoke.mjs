@@ -142,6 +142,21 @@ assert.doesNotMatch(
   homeWall,
   /bg-\[linear-gradient\(135deg,#B14EFF,#FF4ECD\)\]/
 );
+// AIT-244: shell Home Create secondary (desktop + mobile) when hero owns primary.
+assert.equal(
+  (
+    shell.match(
+      /data-shell-home-create=\{home\s*\?\s*["']secondary["']\s*:\s*undefined\}/g
+    ) || []
+  ).length,
+  2,
+  "shell must mark desktop + mobile Home Create as secondary"
+);
+assert.match(shell, /data-shell-create-surface=["']desktop["']/);
+assert.match(shell, /data-shell-create-surface=["']mobile["']/);
+assert.match(shell, /Try Street Power-Up/);
+assert.match(shell, /Create my drop clip/);
+assert.match(shell, /home\s*\?\s*["']border border-white\/25 bg-transparent/);
 assert.doesNotMatch(shell, /create\?mode=seller-pack/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.match(
