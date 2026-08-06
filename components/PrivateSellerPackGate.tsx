@@ -19,6 +19,8 @@ const PRIVATE_BETA_MAILTO =
  * product door. Resolve the authenticated bearer-backed session before any
  * Pack UI is rendered; public and non-invited visitors are sent to the single
  * preset-first Moment workflow instead.
+ *
+ * Board tokens only on the denied/timeout shell — no residual carnival orange.
  */
 export function PrivateSellerPackGate({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -66,7 +68,7 @@ export function PrivateSellerPackGate({ children }: { children: ReactNode }) {
 
   return (
     <main
-      className="grid min-h-[calc(100vh-3.5rem)] place-items-center bg-[#0A0A0A] px-6 text-[#F7F4ED]"
+      className="grid min-h-[calc(100vh-3.5rem)] place-items-center bg-[var(--void)] px-6 text-[var(--cream)]"
       data-private-seller-pack-gate={
         resolved
           ? sessionBoot === "timeout"
@@ -77,7 +79,7 @@ export function PrivateSellerPackGate({ children }: { children: ReactNode }) {
       data-studio-open-state={sessionBoot}
     >
       <div className="max-w-xl text-center">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF6846]">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--brand)]">
           Pikbo private validation
         </p>
         <h1 className="mt-4 font-display text-5xl font-black leading-[0.92] tracking-[-0.055em] sm:text-6xl">
@@ -102,7 +104,7 @@ export function PrivateSellerPackGate({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => setBootNonce((n) => n + 1)}
               data-studio-open-retry
-              className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[var(--mint)]"
+              className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--void)] transition hover:bg-[var(--mint)]"
             >
               Retry access check
             </button>
@@ -111,7 +113,7 @@ export function PrivateSellerPackGate({ children }: { children: ReactNode }) {
         <div className="mt-7 flex flex-wrap justify-center gap-3">
           <Link
             href={PUBLIC_MOMENT_HREF}
-            className="inline-flex min-h-11 items-center rounded-full bg-[#FF6846] px-6 text-xs font-black text-black"
+            className="inline-flex min-h-11 items-center rounded-full bg-[var(--brand)] px-6 text-xs font-black text-[var(--void)]"
           >
             Create one Moment
           </Link>

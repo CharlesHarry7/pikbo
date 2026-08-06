@@ -117,6 +117,16 @@ assert.match(packGate, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)
 assert.match(packGate, /data-studio-open-retry/);
 assert.match(packGate, /sessionBoot === "timeout"/);
 assert.match(packGate, /Retry access check/);
+// AIT-512: residual carnival orange → gallery-calm copper board tokens
+assert.doesNotMatch(
+  packGate,
+  /#FF6846|#2876FF|#D84A35|#E25A43|FF4ECD|B14EFF|00D9FF/i
+);
+assert.match(packGate, /var\(--brand\)/);
+assert.match(packGate, /var\(--void\)/);
+assert.match(packGate, /var\(--cream\)/);
+assert.match(packGate, /Pikbo private validation/);
+assert.match(packGate, /invited validation accounts/);
 assert.match(batch, /STUDIO_SESSION_BOOT_MS/);
 assert.match(batch, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
 assert.match(batch, /setMeResolved\(true\)/);

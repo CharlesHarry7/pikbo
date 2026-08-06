@@ -971,6 +971,27 @@ assert.match(createPage, /<CreateStudio/);
 assert.match(createPage, /initialEffect=["']street-power-up["']/);
 assert.match(createPage, /fixedMomentContract/);
 assert.doesNotMatch(createPage, /BatchStudio|PrivateSellerPackGate/);
+// AIT-512: PrivateSellerPackGate residual carnival → gallery-calm copper board
+{
+  const packGateSrc = fs.readFileSync(
+    join(root, "components/PrivateSellerPackGate.tsx"),
+    "utf8"
+  );
+  assert.doesNotMatch(
+    packGateSrc,
+    /#FF6846|#2876FF|#D84A35|#E25A43|FF4ECD|B14EFF|00D9FF/i
+  );
+  assert.match(packGateSrc, /var\(--brand\)/);
+  assert.match(packGateSrc, /var\(--void\)/);
+  assert.match(packGateSrc, /var\(--cream\)/);
+  assert.match(packGateSrc, /canUsePrivateLaunch/);
+  assert.match(packGateSrc, /invited validation accounts/);
+  const homePage = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
+  assert.doesNotMatch(
+    homePage,
+    /PrivateSellerPackGate|HomeSeoBody|HomeBrowseCta|HfExplore/
+  );
+}
 const batchPage = fs.readFileSync(
   join(root, "app/supercomputer/page.tsx"),
   "utf8"
