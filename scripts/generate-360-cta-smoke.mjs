@@ -119,6 +119,49 @@ for (const [file, source] of generateSurfaces) {
     ),
     `${file} must tag source=${source}`
   );
+  // Explore Moment doors: MOMENT_CREATE_HREF + sources (never bare effect-only).
+  if (file === "app/explore/page.tsx") {
+    assert.match(
+      src,
+      /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/,
+      "Explore must import MOMENT_CREATE_HREF for Moment honesty"
+    );
+    assert.match(
+      src,
+      /EXPLORE_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=explore`/,
+      "Explore header Moment must use MOMENT_CREATE_HREF + source=explore"
+    );
+    assert.match(
+      src,
+      /EXPLORE_SELLER_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=explore-seller-workflow`/,
+      "Explore seller Moment must use MOMENT_CREATE_HREF + source=explore-seller-workflow"
+    );
+    assert.match(
+      src,
+      /href=\{EXPLORE_MOMENT_HREF\}/,
+      "Explore header Create Moment must deep-link EXPLORE_MOMENT_HREF"
+    );
+    assert.match(
+      src,
+      /href=\{EXPLORE_SELLER_MOMENT_HREF\}/,
+      "Explore seller Create Moment must deep-link EXPLORE_SELLER_MOMENT_HREF"
+    );
+    assert.match(
+      src,
+      /data-explore-moment=["']honest["']/,
+      "Explore header Moment marker retained"
+    );
+    assert.match(
+      src,
+      /data-explore-seller-moment=["']honest["']/,
+      "Explore seller Moment marker retained"
+    );
+    assert.doesNotMatch(
+      src,
+      /href=["']\/create\?effect=street-power-up/,
+      "Explore must not use bare /create?effect=street-power-up (missing mode=moment)"
+    );
+  }
 }
 
 // 3. No residual direct 360 createRemixHref in app/components
