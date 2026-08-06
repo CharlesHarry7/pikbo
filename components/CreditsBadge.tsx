@@ -10,9 +10,15 @@ import {
   isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 import { useI18n } from "@/components/LanguageProvider";
+
+type SessionBoot = "checking" | "ready" | "timeout";
 
 export function CreditsBadge({
   compact,
@@ -23,11 +29,19 @@ export function CreditsBadge({
 }) {
   const { t } = useI18n();
   const [session, setSession] = useState<MeResponse | null>(null);
+  const [sessionBoot, setSessionBoot] = useState<SessionBoot>("checking");
 
   const load = useCallback(() => {
-    void fetchMe().then((data) => {
-      if (data) setSession(data);
-    });
+    setSessionBoot("checking");
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+      .then((data) => {
+        setSession(data);
+        setSessionBoot("ready");
+      })
+      .catch((err) => {
+        setSession(null);
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+      });
   }, []);
 
   useEffect(() => {
@@ -40,18 +54,74 @@ export function CreditsBadge({
     };
   }, [load]);
 
-  if (!session) {
+  const dimClass = compact
+    ? tone === "light"
+      ? "text-[10px] text-[#7C8490]"
+      : "text-[10px] text-white/30"
+    : "hidden text-xs text-[var(--fg-dim)] sm:inline";
+
+  // Fail-closed: never leave "…" forever when /api/me or getSession hangs.
+  if (sessionBoot === "checking" && !session) {
+    return (
+      <span className={dimClass} data-credits-boot="checking" title="Checking credits…">
+        …
+      </span>
+    );
+  }
+
+  if (sessionBoot === "timeout" || !session) {
+    const unknownTitle =
+      sessionBoot === "timeout"
+        ? "Could not verify credits in time · retry or open pricing"
+        : "Credits unavailable · retry or open pricing";
+    const shellClass = compact
+      ? `grid h-11 min-w-11 place-items-center rounded-full border px-2 text-[10px] font-bold ${
+          tone === "light"
+            ? "border-[#C9CED8] text-[#7C8490]"
+            : "border-white/10 text-white/45"
+        }`
+      : `hidden items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium sm:flex ${
+          tone === "light"
+            ? "border-[#C9CED8] bg-white text-[#5F6774]"
+            : "border-white/12 bg-white/[0.04] text-[var(--fg-muted)]"
+        }`;
+
     return (
       <span
-        className={
-          compact
-            ? tone === "light"
-              ? "text-[10px] text-[#7C8490]"
-              : "text-[10px] text-white/30"
-            : "hidden text-xs text-[var(--fg-dim)] sm:inline"
-        }
+        className="inline-flex items-center gap-1"
+        data-credits-boot={sessionBoot === "timeout" ? "timeout" : "unknown"}
       >
-        …
+        <Link
+          href="/pricing"
+          className={shellClass}
+          title={unknownTitle}
+        >
+          {compact ? "—" : (
+            <>
+              <span className="font-bold tabular-nums">—</span>
+              <span>{t("credits.credits")}</span>
+            </>
+          )}
+        </Link>
+        {sessionBoot === "timeout" ? (
+          <button
+            type="button"
+            onClick={() => load()}
+            data-credits-boot-retry
+            className={
+              compact
+                ? tone === "light"
+                  ? "h-11 rounded-full border border-[#C9CED8] px-2 text-[10px] font-bold text-[#2457E6]"
+                  : "h-11 rounded-full border border-white/15 px-2 text-[10px] font-bold text-white/70"
+                : tone === "light"
+                  ? "hidden rounded-full border border-[#C9CED8] px-2 py-1.5 text-[10px] font-bold text-[#2457E6] sm:inline-flex"
+                  : "hidden rounded-full border border-white/15 px-2 py-1.5 text-[10px] font-bold text-white/70 sm:inline-flex"
+            }
+            title="Retry access check"
+          >
+            Retry
+          </button>
+        ) : null}
       </span>
     );
   }
@@ -114,6 +184,7 @@ export function CreditsBadge({
               : "border-white/10 text-[var(--mint)]"
         }`}
         title={compactTitle}
+        data-credits-boot="ready"
       >
         {credits}
       </Link>
@@ -131,6 +202,7 @@ export function CreditsBadge({
             : "border-white/12 bg-white/[0.04] text-[var(--fg-muted)] hover:border-[var(--mint)]/35 hover:text-[var(--fg)]"
       }`}
       title={fullTitle}
+      data-credits-boot="ready"
     >
       <span
         className={`font-bold tabular-nums ${

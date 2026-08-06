@@ -96,6 +96,31 @@ assert.match(hero, /data-studio-open-error/);
 assert.match(hero, /data-studio-open-retry/);
 assert.match(hero, /data-studio-open-state=\{busy \? "opening" : "idle"\}/);
 
+// AIT-180: chrome residual fetchMe must wall-clock timeout (CreditsBadge + SoftLaunchStrip)
+const creditsBadge = read("components/CreditsBadge.tsx");
+const softLaunchStrip = read("components/SoftLaunchStrip.tsx");
+assert.match(creditsBadge, /STUDIO_SESSION_BOOT_MS/);
+assert.match(
+  creditsBadge,
+  /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/
+);
+assert.match(creditsBadge, /isClientTimeoutError/);
+assert.match(creditsBadge, /data-credits-boot/);
+assert.match(creditsBadge, /data-credits-boot-retry/);
+assert.match(creditsBadge, /sessionBoot === "timeout"/);
+// Never bare untimed mount hydrate on CreditsBadge
+assert.doesNotMatch(creditsBadge, /void fetchMe\(\)\.then/);
+assert.match(softLaunchStrip, /STUDIO_SESSION_BOOT_MS/);
+assert.match(
+  softLaunchStrip,
+  /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/
+);
+assert.match(softLaunchStrip, /isClientTimeoutError/);
+assert.match(softLaunchStrip, /data-soft-launch-boot=\{sessionBoot\}/);
+assert.match(softLaunchStrip, /data-soft-launch-boot-retry/);
+assert.match(softLaunchStrip, /sessionBoot === "timeout"/);
+assert.doesNotMatch(softLaunchStrip, /void fetchMe\(\)\.then/);
+
 // Package + CI script wiring
 assert.match(
   packageJson,
@@ -112,5 +137,5 @@ for (const asset of [
 }
 
 console.log(
-  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; timeout/error + retry; mobile sticky Lab CTA)"
+  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; CreditsBadge+SoftLaunchStrip 8s boot; timeout/error + retry; mobile sticky Lab CTA)"
 );
