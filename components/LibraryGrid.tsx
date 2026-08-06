@@ -430,6 +430,8 @@ function LibraryGridInner() {
       toast("This result is not ready to download");
       return;
     }
+    // Fail-closed: only the controlled owner/session gate — never follow
+    // raw provider CDN or storage signed URLs even if a DTO still carries one.
     const gateUrl = `/api/downloads/${encodeURIComponent(id)}`;
     try {
       const headers = await privateDownloadHeaders();
@@ -450,6 +452,7 @@ function LibraryGridInner() {
         );
         return;
       }
+      // Always download via gateUrl — never job.videoUrl (may be absent or raw).
       const result = await downloadVideoFile(
         gateUrl,
         `pikbo-${job.effect || "toy-moment"}.mp4`
