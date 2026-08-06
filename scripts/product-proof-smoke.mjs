@@ -175,6 +175,27 @@ assert(
   "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
 
+// AIT-501: dormant HomeSeoBody residual carnival → gallery-calm copper board
+{
+  const homeSeoBody = read("components/HomeSeoBody.tsx");
+  const carnival = /#FF6846|#2876FF|#D84A35|#E25A43|#c8ff3d|c8ff3d|FF4ECD|B14EFF|00D9FF/i;
+  assert(
+    !carnival.test(homeSeoBody),
+    "HomeSeoBody must not hard-code carnival orange/hot-blue/lime hex accents"
+  );
+  assert(
+    homeSeoBody.includes("var(--brand)") &&
+      homeSeoBody.includes("var(--cream)") &&
+      homeSeoBody.includes("var(--card)") &&
+      homeSeoBody.includes("var(--void)"),
+    "HomeSeoBody shelves/accents use gallery-calm board tokens"
+  );
+  assert(
+    !read("app/page.tsx").includes("HomeSeoBody"),
+    "gallery-calm home must not remount HomeSeoBody"
+  );
+}
+
 // AIT-320: four-surface money path off residual competitor lime (board tokens)
 {
   const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;

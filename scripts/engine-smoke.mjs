@@ -2429,6 +2429,17 @@ assert.match(homeSeoBody, /\/tools\/ai-toy-video-generator/);
 assert.match(homeSeoBody, /\/effects\/360-spin-showcase/);
 assert.match(homeSeoBody, /\/tools\/blind-box-reveal-video-maker/);
 assert.doesNotMatch(homeSeoBody, /data-home-seo-mesh=["']long-tail["']/);
+// AIT-501: residual carnival accents → gallery-calm copper board (dormant component)
+assert.doesNotMatch(
+  homeSeoBody,
+  /#FF6846|#2876FF|#D84A35|#E25A43/i
+);
+assert.match(homeSeoBody, /var\(--brand\)/);
+assert.match(homeSeoBody, /var\(--cream\)/);
+assert.doesNotMatch(
+  fs.readFileSync(join(root, "app/page.tsx"), "utf8"),
+  /HomeSeoBody/
+);
 const highIntentTruth = fs.readFileSync(
   join(root, "components/HighIntentProductTruth.tsx"),
   "utf8"
