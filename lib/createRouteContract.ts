@@ -104,3 +104,33 @@ export function resolveCreateRouteContract(
 export function isGenerate360Effect(effect: string | undefined): boolean {
   return (effect || "").trim() === GENERATE_360_EFFECT;
 }
+
+/**
+ * Home Generate→360 entry sources (createGenerate360Href tags).
+ * These are surface analytics tags — not Lab project remix ids.
+ * AIT-459: first-run workbench must stay Lab sample / Live gated honest.
+ */
+export const HOME_GENERATE_ENTRY_SOURCES = [
+  "home-hero",
+  "home-explore-rail",
+] as const;
+
+export type HomeGenerateEntrySource =
+  (typeof HOME_GENERATE_ENTRY_SOURCES)[number];
+
+const HOME_GENERATE_ENTRY_SET = new Set<string>(HOME_GENERATE_ENTRY_SOURCES);
+
+/** True when `source` is a Home Generate door tag (not a project slug). */
+export function isHomeGenerateEntrySource(
+  source: string | undefined
+): source is HomeGenerateEntrySource {
+  return HOME_GENERATE_ENTRY_SET.has((source || "").trim());
+}
+
+/**
+ * Workbench first-run honesty line for Generate→360 (and home doors).
+ * Lab samples are always 0-credit cached prototypes; Live stays gated —
+ * never sell Free Mini as an open public trial on entry.
+ */
+export const WORKBENCH_LAB_LIVE_HONESTY =
+  "Lab sample · 0 credits · Live gated · not Free Mini open trial" as const;

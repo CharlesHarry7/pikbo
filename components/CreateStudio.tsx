@@ -48,6 +48,10 @@ import {
 import { seedanceModelLabel } from "@/lib/models";
 import { parseRemixSearchParams } from "@/lib/remixIntent";
 import {
+  isHomeGenerateEntrySource,
+  WORKBENCH_LAB_LIVE_HONESTY,
+} from "@/lib/createRouteContract";
+import {
   buildGenerationSpec,
   canDownloadResult,
   downloadBlockedCtaLabel,
@@ -190,7 +194,10 @@ export function CreateStudio({
   initialResolution?: string;
   initialMode?: Mode;
   initialPrompt?: string;
-  /** PIKBO Lab prototype project id (remix attribution) — RETENTION_REMIX_LOOP */
+  /**
+   * Remix attribution: Lab project id OR Home Generate entry tag
+   * (home-hero / home-explore-rail). Entry tags are not project slugs.
+   */
   initialSource?: string;
   initialRatio?: string;
   initialDuration?: string;
@@ -309,6 +316,10 @@ export function CreateStudio({
     "checking" | "ready" | "timeout"
   >("checking");
   const privateUploadEnabled = canUsePrivateLaunch(session);
+  /** Home Generate doors tag entry surfaces — not Lab project remix ids. */
+  const homeGenerateEntry = isHomeGenerateEntrySource(initialSource);
+  const remixProjectSource =
+    initialSource && !homeGenerateEntry ? initialSource : undefined;
   const fixedMomentNextPath = initialSource
     ? `${MOMENT_CREATE_HREF}&source=${encodeURIComponent(initialSource)}`
     : MOMENT_CREATE_HREF;
@@ -1977,8 +1988,48 @@ export function CreateStudio({
         </div>
       </div>
 
-      {/* ── Remix context (from Home / project deep link) ── */}
+      {/* ── Home Generate→360 entry honesty (AIT-459) ── */}
+      {!fixedMomentContract && homeGenerateEntry ? (
+        <div
+          className="border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-3"
+          data-home-generate-entry={initialSource}
+          data-workbench-entry-honesty="lab-live"
+        >
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-black uppercase tracking-wider text-[var(--mint)]">
+                {initialSource === "home-hero"
+                  ? "From Home · Generate 360°"
+                  : "From Home · Lab explore rail"}
+              </p>
+              <p className="text-sm font-semibold text-[var(--fg)]">
+                {preset.emoji} {viralName(preset.slug, preset.name)}
+                {remix.intent?.channel ? (
+                  <span className="ml-2 text-[11px] font-normal text-[var(--fg-muted)]">
+                    · {remix.intent.channel} · {remix.intent.aspectRatio} ·{" "}
+                    {remix.intent.durationSeconds}s
+                  </span>
+                ) : null}
+              </p>
+              <p
+                className="mt-0.5 text-[11px] font-semibold text-[var(--mint)]"
+                data-lab-sample-cost="0"
+              >
+                {WORKBENCH_LAB_LIVE_HONESTY}
+              </p>
+              <p className="text-[11px] text-[var(--fg-muted)]">
+                Cached Lab samples cost 0 credits and never process your upload.
+                Live generation stays gated until an eligible account passes
+                the quote check — not a Free Mini open trial.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* ── Remix context (from Lab project deep link) ── */}
       {!fixedMomentContract &&
+        !homeGenerateEntry &&
         (remix.sourceLabel || remix.notices.length > 0 || remix.intent) && (
         <div
           className="border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-3"
@@ -2016,14 +2067,14 @@ export function CreateStudio({
                 </p>
               ))}
             </div>
-            {initialSource && (
+            {remixProjectSource ? (
               <Link
-                href={`/projects/${encodeURIComponent(initialSource)}`}
+                href={`/projects/${encodeURIComponent(remixProjectSource)}`}
                 className="text-[11px] font-semibold text-[var(--mint)] hover:underline"
               >
                 Inside recipe →
               </Link>
-            )}
+            ) : null}
           </div>
         </div>
       )}

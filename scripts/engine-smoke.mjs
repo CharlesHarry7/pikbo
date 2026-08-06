@@ -4901,10 +4901,15 @@ const createStudioSmoke = fs.readFileSync(
   "utf8"
 );
 assert.match(createStudioSmoke, /GenerateWaitStage/);
-// Mobile sticky Lab sample is explicitly cached and not a Free Mini live claim.
+// Lab sample first-run is explicitly cached / Live-gated — not Free Mini live claim.
 assert.match(
   createStudioSmoke,
-  /Preview a Lab sample · cached prototype, not your upload/
+  /Lab sample · private Live gated · 0 credits|Lab sample · 0 credits · not Free Mini Live|Preview a Lab sample · 0 credits/
+);
+assert.match(createStudioSmoke, /data-lab-sample-cost=["']0["']/);
+assert.doesNotMatch(
+  createStudioSmoke,
+  /t\(["']create\.oneTapMini["']\)|t\(["']create\.labSampleMini["']\)/
 );
 // Device Library stills: path samples or tiny previews only (no multi-MB Base64).
 assert.match(createStudioSmoke, /stillForStore\.startsWith\(["']\/["']\)|8_000/);
