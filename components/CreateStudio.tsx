@@ -48,6 +48,7 @@ import {
 import { seedanceModelLabel } from "@/lib/models";
 import { parseRemixSearchParams } from "@/lib/remixIntent";
 import {
+  homeGenerateEntryLabel,
   isHomeGenerateEntrySource,
   WORKBENCH_LAB_LIVE_HONESTY,
 } from "@/lib/createRouteContract";
@@ -196,7 +197,8 @@ export function CreateStudio({
   initialPrompt?: string;
   /**
    * Remix attribution: Lab project id OR Home Generate entry tag
-   * (home-hero / home-explore-rail). Entry tags are not project slugs.
+   * (home-hero / app-shell-home / home-trust / home-gallery-pedestal /
+   * home-explore-rail). Entry tags are not project slugs.
    */
   initialSource?: string;
   initialRatio?: string;
@@ -1988,7 +1990,7 @@ export function CreateStudio({
         </div>
       </div>
 
-      {/* ── Home Generate→360 entry honesty (AIT-459) ── */}
+      {/* ── Home Generate→360 entry honesty (AIT-459 / AIT-473) ── */}
       {!fixedMomentContract && homeGenerateEntry ? (
         <div
           className="border-b border-[var(--mint)]/20 bg-[var(--mint)]/[0.06] px-4 py-3"
@@ -1998,9 +2000,7 @@ export function CreateStudio({
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-black uppercase tracking-wider text-[var(--mint)]">
-                {initialSource === "home-hero"
-                  ? "From Home · Generate 360°"
-                  : "From Home · Lab explore rail"}
+                {homeGenerateEntryLabel(initialSource)}
               </p>
               <p className="text-sm font-semibold text-[var(--fg)]">
                 {preset.emoji} {viralName(preset.slug, preset.name)}

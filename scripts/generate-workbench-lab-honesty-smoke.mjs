@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 /**
- * AIT-444 + AIT-459: Generate workbench first-run Lab/Live honesty.
+ * AIT-444 + AIT-459 + AIT-473: Generate workbench first-run Lab/Live honesty.
  *
  * When Home Generate→360 opens generate-workbench (effect=360-spin-showcase):
  * - Lab sample CTAs stay 0 credits (never Mini trial / 10-cr claim)
  * - Free Mini product copy only when freeLiveOpen
  * - Wait stage Free Mini brand only when freeLiveOpen (fail-closed)
  * - Remix deep links stay workbench (not forced Moment)
- * - Home entry sources (home-hero / home-explore-rail) get Lab sample vs
+ * - Home entry sources (AIT-462 doors + explore rail) get Lab sample vs
  *   Live gated labels — no Free Mini open-trial fiction on shell/first-run
+ *   Tags: home-hero, app-shell-home, home-trust, home-gallery-pedestal,
+ *         home-explore-rail
  *
  * Run: node scripts/generate-workbench-lab-honesty-smoke.mjs
  *   or: npm run generate-workbench-lab-honesty-smoke
@@ -307,26 +309,35 @@ assert.match(
   "package.json must keep generate-360-cta-smoke (generate path)"
 );
 
-// ── AIT-459: Home entry → workbench Lab/Live honesty ──────────────────────
+// ── AIT-459 / AIT-473: Home entry → workbench Lab/Live honesty ─────────────
 assert.match(
   contractLib,
   /export const HOME_GENERATE_ENTRY_SOURCES/,
   "createRouteContract must export HOME_GENERATE_ENTRY_SOURCES"
 );
-assert.match(
-  contractLib,
-  /home-hero/,
-  "HOME_GENERATE_ENTRY_SOURCES must include home-hero"
-);
-assert.match(
-  contractLib,
-  /home-explore-rail/,
-  "HOME_GENERATE_ENTRY_SOURCES must include home-explore-rail"
-);
+// AIT-462 money doors + explore rail — workbench must treat all as entry tags
+for (const tag of [
+  "home-hero",
+  "app-shell-home",
+  "home-trust",
+  "home-gallery-pedestal",
+  "home-explore-rail",
+]) {
+  assert.match(
+    contractLib,
+    new RegExp(`["']${tag}["']`),
+    `HOME_GENERATE_ENTRY_SOURCES must include ${tag}`
+  );
+}
 assert.match(
   contractLib,
   /export function isHomeGenerateEntrySource/,
   "createRouteContract must export isHomeGenerateEntrySource"
+);
+assert.match(
+  contractLib,
+  /export function homeGenerateEntryLabel/,
+  "createRouteContract must export homeGenerateEntryLabel for entry eyebrows"
 );
 assert.match(
   contractLib,
@@ -362,7 +373,7 @@ assert.match(
 assert.match(
   createPage,
   /data-home-generate-entry=\{homeEntry \? entrySource : undefined\}/,
-  "workbench shell must expose home-hero / home-explore-rail entry when present"
+  "workbench shell must expose AIT-462 home entry source tags when present"
 );
 assert.match(
   createPage,
@@ -385,6 +396,7 @@ assert.match(
 // Home doors stay dual-path: createGenerate360Href → effect=360-spin-showcase
 const homeHero = read("components/HomeCinemaHero.tsx");
 const homeRail = read("components/HomeExploreRecipeRail.tsx");
+const appShell = read("components/AppShell.tsx");
 assert.match(
   homeHero,
   /createGenerate360Href\(["']home-hero["']\)/,
@@ -396,16 +408,28 @@ assert.match(
   "HomeExploreRecipeRail 360 door must use createGenerate360Href(home-explore-rail)"
 );
 assert.match(
+  appShell,
+  /createGenerate360Href\(["']app-shell-home["']\)/,
+  "AppShell home Generate door must use createGenerate360Href(app-shell-home)"
+);
+assert.match(
   jobIntents,
   /export function createGenerate360Href/,
   "createGenerate360Href helper required for Home doors"
 );
+// home-trust / home-gallery-pedestal doors may land via AIT-462 PR; workbench
+// side still recognizes those tags so first-run stays honest when they land.
 
-// CreateStudio: home entry honesty banner; no /projects/home-hero dead link
+// CreateStudio: home entry honesty banner; no /projects/{entry} dead link
 assert.match(
   createStudio,
   /isHomeGenerateEntrySource/,
   "CreateStudio must detect home entry sources"
+);
+assert.match(
+  createStudio,
+  /homeGenerateEntryLabel/,
+  "CreateStudio must label AIT-462 home entry sources via homeGenerateEntryLabel"
 );
 assert.match(
   createStudio,
@@ -436,7 +460,7 @@ assert.match(
 assert.doesNotMatch(
   createStudio,
   /href=\{`\/projects\/\$\{encodeURIComponent\(initialSource\)\}`\}/,
-  "CreateStudio must not deep-link /projects/{home-hero|home-explore-rail}"
+  "CreateStudio must not deep-link /projects/{AIT-462 home entry tags}"
 );
 
 console.log("generate-workbench-lab-honesty-smoke: ok");
