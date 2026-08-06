@@ -2561,12 +2561,24 @@ assert.match(retryRoute, /NOT_RETRYABLE|JOB_IN_FLIGHT|422|409/);
 assert.doesNotMatch(retryRoute, /create\?effect=\$\{/);
 
 // Phase F — Create/Seller mobile craft (390px ownership + sticky CTA)
+// AIT-164/AIT-150: Seller Pack sticky clears home indicator via
+// --floating-cta-safe-bottom; tab-sharing batch clears --mobile-nav-clearance.
+// AppShell hides the five-tab nav under Seller Pack (and Moment result shell).
 assert.match(createStudio, /create-ownership/);
 assert.match(createStudio, /create-photo-step/);
 assert.match(createStudio, /Download policy/);
 assert.match(batchStudio, /batch-ownership/);
-assert.match(batchStudio, /fixed inset-x-0 bottom-0/);
-assert.match(appShell, /!sellerPackCreate\s*\?\s*<nav/);
+assert.match(
+  batchStudio,
+  /bottom-\[var\(--floating-cta-safe-bottom\)\]/
+);
+assert.match(
+  batchStudio,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/
+);
+assert.match(appShell, /!sellerPackCreate/);
+assert.match(appShell, /data-mobile-nav=["']primary["']/);
+assert.match(appShell, /MobileGenerateBar/);
 assert.match(batchStudio, /api\/downloads/);
 
 // Landing tool Free-download honesty (parity with Create/Library)
