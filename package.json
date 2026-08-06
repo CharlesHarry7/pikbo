@@ -71,6 +71,7 @@
     "nonprod-seller-pack-harness-regression": "node scripts/nonprod-seller-pack-harness-regression.mjs",
     "stripe-billing-regression": "node --experimental-strip-types scripts/stripe-billing-regression.mjs",
     "privacy-analytics-regression": "node --experimental-strip-types scripts/privacy-analytics-regression.mjs",
+    "community-publish-private-refuse-smoke": "node scripts/community-publish-private-refuse-smoke.mjs",
     "mercury-readiness-smoke": "node scripts/mercury-readiness-smoke.mjs"
   },
   "dependencies": {
