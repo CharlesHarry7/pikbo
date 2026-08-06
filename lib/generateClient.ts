@@ -256,6 +256,10 @@ async function generateAuthHeaders(): Promise<Record<string, string>> {
  * Soft-launch fal may still complete upstream, but canceled local attempts
  * fail closed and withhold the late output pending settlement reconciliation.
  * Prefer jobId when known; else idempotencyKey from the aborted attempt.
+ *
+ * Bearer is attached when available so collection DELETE can return
+ * DURABLE_NO_CANCEL for owner durable UUIDs (AIT-193) instead of a bare
+ * NOT_FOUND that looks like a missing process-memory row.
  */
 export async function cancelGenerateLedger(opts: {
   jobId?: string;
@@ -266,18 +270,22 @@ export async function cancelGenerateLedger(opts: {
     if (opts.jobId) payload.jobId = opts.jobId;
     if (opts.idempotencyKey) payload.idempotencyKey = opts.idempotencyKey;
     if (!payload.jobId && !payload.idempotencyKey) return;
+    const auth = await generateAuthHeaders();
     // Prefer collection DELETE (idempotencyKey); fall back to /[id] when only jobId.
     if (payload.idempotencyKey || !payload.jobId) {
       await fetch("/api/generations", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...auth,
+        },
         body: JSON.stringify(payload),
         keepalive: true,
       });
     } else {
       await fetch(
         `/api/generations/${encodeURIComponent(payload.jobId)}`,
-        { method: "DELETE", keepalive: true }
+        { method: "DELETE", headers: { ...auth }, keepalive: true }
       );
     }
   } catch {

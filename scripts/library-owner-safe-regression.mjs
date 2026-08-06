@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183: Library owner-safe recovery.
+ * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193: Library owner-safe.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped list/detail, non-owner deny (no metadata leak),
- * retry / cancel / new-attempt paths, owner-ready asset bind gate, and
- * deep-link fail-closed copy.
+ * retry / cancel (item + collection) / new-attempt paths, owner-ready asset
+ * bind gate, guest deep-link login next, and deep-link fail-closed copy.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -62,12 +62,30 @@ assert.match(generationsDetail, /getPrivateLibraryJobForOwner/);
 assert.match(generationsDetail, /getAuthUserFromRequest/);
 assert.match(generationsDetail, /sessionId === session\.id/);
 assert.match(generationsDetail, /code:\s*"NOT_FOUND"/);
-// AIT-183: durable Moments never use process-memory Cancel (DELETE).
+// AIT-183: durable Moments never use process-memory Cancel (item DELETE).
 assert.match(generationsDetail, /DURABLE_NO_CANCEL/);
 assert.match(
   generationsDetail,
   /export async function DELETE\(req: Request/
 );
+// AIT-193: collection DELETE /api/generations same durable cancel codes.
+assert.match(generationsList, /DURABLE_NO_CANCEL/);
+assert.match(
+  generationsList,
+  /export async function DELETE\(req: Request/
+);
+assert.match(generationsList, /getPrivateLibraryJobForOwner/);
+assert.match(
+  generationsList,
+  /result\.code === "NOT_FOUND" && id && isUuid\(id\)/
+);
+assert.match(
+  generationsList,
+  /code:\s*"DURABLE_NO_CANCEL"/
+);
+// Missing/foreign stay uniform NOT_FOUND (no ownership leak on either surface).
+assert.match(generationsList, /code:\s*result\.code/);
+assert.match(generationsDetail, /code:\s*result\.code/);
 // Detail response must not invent foreign-owner metadata fields.
 assert.doesNotMatch(generationsDetail, /created_by\s*:/);
 // No provider / signed URL leakage on detail.
@@ -106,7 +124,14 @@ assert.match(
   library,
   /async function cancel[\s\S]{0,200}canLocalCancel\(job\)/
 );
+// Static guest login keeps engine-smoke / launch-pack contract.
 assert.match(library, /href=["']\/login\?next=\/library["']/);
+// AIT-193: guest deep-link preserves /library?job=<uuid> through login next.
+assert.match(
+  library,
+  /\/login\?next=\$\{encodeURIComponent\(\s*`\/library\?job=\$\{encodeURIComponent\(deepLinkJobId\)\}`\s*\)\}/
+);
+assert.match(library, /deepLinkJobId[\s\S]{0,120}\/login\?next=/);
 assert.match(library, /data-library-action="retry"/);
 assert.match(library, /data-library-action="new-attempt"/);
 assert.match(library, /canLocalRetry\(job\)/);

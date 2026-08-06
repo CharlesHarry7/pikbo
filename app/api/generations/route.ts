@@ -10,6 +10,7 @@ import {
   toPublicJob,
 } from "@/lib/generationJobs";
 import {
+  getPrivateLibraryJobForOwner,
   listPrivateGenerationResults,
   mergePrivateLibraryWithLocalLedger,
 } from "@/lib/privateGenerationResults";
@@ -19,6 +20,12 @@ export const runtime = "nodejs";
 
 /** Soft-launch Library recovery page size (newest first). */
 const SESSION_JOBS_LIST_LIMIT = 50;
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
 
 /**
  * Library listings never expose a provider URL or Supabase signed object URL.
@@ -79,6 +86,10 @@ export async function HEAD() {
  * Cancel by jobId / requestId / idempotencyKey (body or query).
  * Parity with DELETE /api/image — used when client aborts mid-POST before
  * a jobId is known. Does not interrupt soft-launch fal mid-flight.
+ *
+ * AIT-193: durable private Moments never use process-memory Cancel (item
+ * DELETE parity). Owner durable UUID → DURABLE_NO_CANCEL; missing/foreign
+ * stay uniform NOT_FOUND (no ownership leak).
  */
 export async function DELETE(req: Request) {
   const session = await ensureSession();
@@ -114,6 +125,35 @@ export async function DELETE(req: Request) {
     idempotencyKey,
   });
   if (!result.ok) {
+    // Durable owner path — never invent a process-memory cancel success.
+    if (result.code === "NOT_FOUND" && id && isUuid(id)) {
+      const authUser = await getAuthUserFromRequest(req);
+      if (authUser) {
+        const privateJob = await getPrivateLibraryJobForOwner({
+          jobId: id,
+          userId: authUser.id,
+        });
+        if (privateJob) {
+          const open =
+            privateJob.status === "queued" || privateJob.status === "running";
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_NO_CANCEL",
+              jobId: id,
+              message: open
+                ? "This durable Moment is still rendering. Refresh Library — process-memory Cancel does not apply."
+                : "This durable Moment cannot use process-memory Cancel. Refresh Library or start a new attempt from Create.",
+              mode: "supabase-private",
+              durable: true,
+              status: privateJob.status,
+            },
+            { status: 422 }
+          );
+        }
+      }
+    }
+
     const status =
       result.code === "NOT_FOUND"
         ? 404
@@ -127,6 +167,7 @@ export async function DELETE(req: Request) {
         ok: false,
         code: result.code,
         message: result.message,
+        mode: "local-memory",
         jobId: result.job?.id,
       },
       { status }
