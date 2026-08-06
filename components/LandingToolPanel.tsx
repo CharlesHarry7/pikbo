@@ -15,6 +15,10 @@ import {
   mergeMeSession,
   type MeResponse,
 } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
 import { isValidImageDataUrl } from "@/lib/providerError";
 import { SAMPLE_TOYS, sampleToDataUrl } from "@/lib/samples";
@@ -80,6 +84,11 @@ export function LandingToolPanel({
   const [demo, setDemo] = useState(false);
   const [watermark, setWatermark] = useState(true);
   const [session, setSession] = useState<MeResponse | null>(null);
+  /** Finite session boot — never leave generate CTA on capability-unknown forever. */
+  const [sessionResolved, setSessionResolved] = useState(false);
+  const [sessionBoot, setSessionBoot] = useState<
+    "checking" | "ready" | "timeout"
+  >("checking");
   const [elapsed, setElapsed] = useState(0);
   const [loadingSample, setLoadingSample] = useState(false);
   const [ownsRights, setOwnsRights] = useState(false);
@@ -125,10 +134,19 @@ export function LandingToolPanel({
         : null;
 
   const refreshSession = useCallback(async () => {
-    const data = await fetchMe();
-    if (!data) return;
-    setSession(data);
-    setWatermark(data.watermark);
+    setSessionBoot("checking");
+    try {
+      const data = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
+      setSessionResolved(true);
+      setSessionBoot("ready");
+      if (!data) return;
+      setSession(data);
+      setWatermark(data.watermark);
+    } catch (err) {
+      // 8s open contract: honest timeout + Retry, never hang demoMode forever.
+      setSessionResolved(true);
+      setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+    }
   }, []);
 
   useEffect(() => {
@@ -476,15 +494,25 @@ export function LandingToolPanel({
                   ? "text-amber-200/90"
                   : "text-[var(--fg-dim)]"
               }`}
+              data-studio-open-state={sessionBoot}
+              data-landing-session-boot={sessionBoot}
             >
-              {demoMode
-                ? `Cached Lab preview · ${effectName}`
-                : trialDone && isFree
-                ? `Free Mini used · ${effectName}`
-                : `Try free Mini · ${effectName}`}
+              {!sessionResolved || sessionBoot === "checking"
+                ? `Checking access · ${effectName}`
+                : sessionBoot === "timeout"
+                  ? `Access timed out · ${effectName}`
+                  : demoMode
+                    ? `Cached Lab preview · ${effectName}`
+                    : trialDone && isFree
+                      ? `Free Mini used · ${effectName}`
+                      : `Try free Mini · ${effectName}`}
             </p>
             <p className="mt-0.5 text-sm text-[var(--fg-muted)]">
-              {demoMode ? (
+              {!sessionResolved || sessionBoot === "checking" ? (
+                "Verifying credits and live capability — fail-closed to Lab if this times out."
+              ) : sessionBoot === "timeout" ? (
+                "Could not verify private access in time. Generate stays on cached Lab until you retry."
+              ) : demoMode ? (
                 "0 credits · your upload is not processed in this preview."
               ) : trialDone && isFree ? (
                 <>
@@ -522,6 +550,26 @@ export function LandingToolPanel({
             </div>
           )}
         </div>
+        {sessionBoot === "timeout" ? (
+          <div
+            className="mt-3 rounded-xl border border-[#FF6B6B]/35 bg-[#FF6B6B]/10 px-3 py-2.5"
+            data-studio-open-error="session-timeout"
+            role="alert"
+          >
+            <p className="text-[11px] font-semibold leading-5 text-white/85">
+              Access check timed out — capability stays Lab-only until
+              verification succeeds.
+            </p>
+            <button
+              type="button"
+              onClick={() => void refreshSession()}
+              data-studio-open-retry
+              className="mt-2 inline-flex min-h-9 items-center justify-center rounded-full bg-white px-3 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[#c8ff3d]"
+            >
+              Retry access check
+            </button>
+          </div>
+        ) : null}
         {busy && (
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/30">
             <div

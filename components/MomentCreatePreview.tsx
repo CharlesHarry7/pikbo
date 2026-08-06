@@ -24,11 +24,15 @@ import {
   fetchMe,
   type MeResponse,
 } from "@/lib/meClient";
-import { STUDIO_SESSION_BOOT_MS } from "@/lib/clientTimeout";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { cn } from "@/lib/utils";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 
 type DraftStatus = "loading" | "empty" | "ready" | "tab-only";
+type SessionBoot = "checking" | "ready" | "timeout";
 
 const PRIVATE_BETA_MAILTO =
   "mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access.";
@@ -69,6 +73,9 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
   const [error, setError] = useState<string | null>(null);
   const [me, setMe] = useState<MeResponse | null>(null);
   const [meResolved, setMeResolved] = useState(false);
+  /** Finite open state — never leave "Checking private access…" forever. */
+  const [sessionBoot, setSessionBoot] = useState<SessionBoot>("checking");
+  const [bootNonce, setBootNonce] = useState(0);
   const dragRef = useRef<{
     pointerId: number;
     startX: number;
@@ -107,22 +114,31 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
 
   useEffect(() => {
     let cancelled = false;
-    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
-      .then((next) => {
-        if (cancelled) return;
-        setMe(next);
-        setMeResolved(true);
-      })
-      .catch(() => {
-        // Timeout or soft failure: resolve empty so preview never hangs on open.
-        if (cancelled) return;
-        setMe(null);
-        setMeResolved(true);
-      });
+    // Defer setState (Create/Guest gate pattern) — avoid set-state-in-effect lint.
+    const t = window.setTimeout(() => {
+      setSessionBoot("checking");
+      setMeResolved(false);
+      void (async () => {
+        try {
+          const next = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
+          if (cancelled) return;
+          setMe(next);
+          setMeResolved(true);
+          setSessionBoot("ready");
+        } catch (err) {
+          // 8s open contract: honest timeout + Retry, never permanent checking.
+          if (cancelled) return;
+          setMe(null);
+          setMeResolved(true);
+          setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+        }
+      })();
+    }, 0);
     return () => {
       cancelled = true;
+      window.clearTimeout(t);
     };
-  }, []);
+  }, [bootNonce]);
 
   useEffect(() => {
     return () => {
@@ -247,20 +263,31 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
   const cta = useMemo(() => {
     if (!blob) {
       return {
+        kind: "disabled" as const,
         label: "Add your toy first",
         href: null,
         note: "Choose one owned toy photo to make a local composition preview.",
       };
     }
-    if (!meResolved) {
+    if (!meResolved || sessionBoot === "checking") {
       return {
+        kind: "disabled" as const,
         label: "Checking private access…",
         href: null,
         note: "No upload or generation starts during this check.",
       };
     }
+    if (sessionBoot === "timeout") {
+      return {
+        kind: "retry" as const,
+        label: "Retry access check",
+        href: null,
+        note: "Could not verify private access in time. Retry, or keep composing locally — no upload starts here.",
+      };
+    }
     if (!me?.signedIn) {
       return {
+        kind: "link" as const,
         label: "Sign in to continue",
         href: `/login?next=${encodeURIComponent(`/create?moment=${moment.id}`)}`,
         note: "Your local draft can be restored in this browser after sign-in.",
@@ -268,6 +295,7 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
     }
     if (canUsePrivateLaunch(me)) {
       return {
+        kind: "link" as const,
         label: "Create my private Moment",
         href: `/create?mode=moment&effect=street-power-up&source=moment-${moment.id}`,
         note: "Private beta currently renders the supported Street Power-Up contract: one owned toy photo, one private clip.",
@@ -275,22 +303,25 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
     }
     if (canPreparePrivateInput(me)) {
       return {
+        kind: "link" as const,
         label: "Verify private photo",
         href: `/create?mode=moment&effect=street-power-up&source=moment-input-${moment.id}`,
         note: "Private photo verification is available. Provider generation and credit reservation remain closed until this account is admitted.",
       };
     }
     return {
+      kind: "link" as const,
       label: "Request private access",
       href: PRIVATE_BETA_MAILTO,
       note: "Private generation is invitation-only. No Provider call or credit reservation will start here.",
     };
-  }, [blob, me, meResolved, moment.id]);
+  }, [blob, me, meResolved, moment.id, sessionBoot]);
 
   return (
     <main
       className="min-h-[calc(100vh-64px)] bg-[#F2EFE7] px-4 pb-12 pt-8 text-[#171719] sm:px-7 lg:px-10 lg:pt-7"
       data-moment-create-preview={moment.id}
+      data-studio-open-state={sessionBoot}
     >
       <div className="mx-auto max-w-[1360px]">
         <div className="mb-7 grid gap-5 lg:grid-cols-[700px_1fr] lg:items-end">
@@ -485,7 +516,7 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
             </div>
 
             <div className="border-t border-[#171719]/20 pt-5">
-              {cta.href ? (
+              {cta.kind === "link" && cta.href ? (
                 <Link
                   href={cta.href}
                   className="inline-flex min-h-14 w-full items-center justify-between bg-[#FF5A36] px-5 text-sm font-black text-[#171719] transition hover:bg-[#FF7354]"
@@ -494,6 +525,23 @@ export function MomentCreatePreview({ moment }: { moment: PikboMoment }) {
                   {cta.label}
                   <span aria-hidden>→</span>
                 </Link>
+              ) : cta.kind === "retry" ? (
+                <div
+                  className="space-y-3"
+                  data-studio-open-error="session-timeout"
+                  role="alert"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setBootNonce((n) => n + 1)}
+                    data-studio-open-retry
+                    data-moment-access-cta="retry"
+                    className="inline-flex min-h-14 w-full items-center justify-between border border-[#B52C1B]/40 bg-[#B52C1B]/10 px-5 text-sm font-black text-[#171719] transition hover:bg-[#B52C1B]/18"
+                  >
+                    {cta.label}
+                    <span aria-hidden>↻</span>
+                  </button>
+                </div>
               ) : (
                 <button
                   type="button"
