@@ -143,7 +143,7 @@ function GuestMomentPreview({
                   type="button"
                   onClick={onRetrySession}
                   data-studio-open-retry
-                  className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[#c8ff3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF]"
+                  className="mt-2 inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--void)] transition hover:bg-[var(--mint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF]"
                 >
                   Retry access check
                 </button>
