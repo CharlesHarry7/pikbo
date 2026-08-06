@@ -211,6 +211,25 @@ assert(
   );
 }
 
+// AIT-400: SeedanceCampaign residual lime → neon-pink board tokens
+{
+  const seedanceCampaign = read("components/SeedanceCampaign.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(seedanceCampaign),
+    "SeedanceCampaign must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    seedanceCampaign.includes("var(--neon-pink)") &&
+      seedanceCampaign.includes("rgba(255,78,205") &&
+      seedanceCampaign.includes("var(--void)"),
+    "SeedanceCampaign CTA + chrome use neon-pink / void board tokens"
+  );
+  assert(
+    !seedanceCampaign.includes("var(--mint)"),
+    "SeedanceCampaign must not use mint alias for campaign chrome"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
