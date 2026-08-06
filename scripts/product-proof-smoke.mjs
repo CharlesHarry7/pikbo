@@ -82,7 +82,7 @@ assert(
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
   "home order: Moment hero → proof wall → HF product rail → trust footer"
 );
-// AIT-146: proof wall one primary Generate→360 (not Moment-first on the wall).
+// AIT-160: proof wall one primary Generate→360 (not Moment-first on the wall).
 assert(
   homeWall.includes('data-home-primary-generate="360"') &&
     homeWall.includes("data-home-primary-generate-cta") &&

@@ -52,7 +52,7 @@ function pinListing360InFirstSlots(
  * from HOME_PROOF_SLUGS (360 pinned in first 4 for mobile). Honest Lab badge
  * only — not a full HfExploreHome remount, Pack sample, or UGC wall.
  *
- * AIT-146 friction cut: one primary Generate→360 door (createGenerate360Href).
+ * AIT-160 friction cut: one primary Generate→360 door (createGenerate360Href).
  * 360 card click lands on Generate workbench (not project inspect). Moment
  * stays secondary here; hero keeps Moment primary (product contract).
  */
@@ -94,7 +94,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
           </p>
         </div>
         <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
-          {/* One primary Generate → 360 (AIT-146); Moment is secondary here. */}
+          {/* One primary Generate → 360 (AIT-160); Moment is secondary here. */}
           <Link
             href={listing360Href}
             data-home-proof-360-cta
@@ -133,7 +133,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
             : undefined;
           const remakeHref = withProofEntry(item.href);
           const is360 = recipeSlug === LISTING_360_SLUG;
-          // AIT-146: 360 card is a one-click Generate door — skip project
+          // AIT-160: 360 card is a one-click Generate door — skip project
           // inspect so home → workbench is a single tap.
           const cardHref = is360
             ? listing360Href

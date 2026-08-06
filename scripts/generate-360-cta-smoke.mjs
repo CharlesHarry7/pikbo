@@ -164,7 +164,7 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
-// 5. AIT-146 home friction: one primary Generate→360 on proof wall
+// 5. AIT-160 home friction: one primary Generate→360 on proof wall
 const homeWall = read("components/HomeViralWall.tsx");
 assert.match(
   homeWall,
