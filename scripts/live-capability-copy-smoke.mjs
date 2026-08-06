@@ -111,6 +111,67 @@ assert(
   "rank tool must keep private generation and subscriptions closed during validation"
 );
 
+// AIT-233: TrustStrip + ProfilePanel — Free Mini only when Live open.
+// Fail-closed while /api/me is loading (parity FreeTrialCta freeLiveOpen).
+const residualStaticTrust = [
+  "components/TrustStrip.tsx",
+  "components/ProfilePanel.tsx",
+];
+for (const relativePath of residualStaticTrust) {
+  const source = read(relativePath);
+  assert(
+    /canLiveGenerate\s*\(/.test(source),
+    `${relativePath} must gate Free Mini / product caps on canLiveGenerate`
+  );
+  assert(
+    /freeLiveOpen/.test(source),
+    `${relativePath} must define freeLiveOpen (Live gate truth)`
+  );
+  assert(
+    /liveEnabled\s*!==\s*false/.test(source),
+    `${relativePath} must require freeLive.liveEnabled !== false`
+  );
+}
+const trustStripSource = read("components/TrustStrip.tsx");
+assert(
+  !/Free Mini · 5s · 480p · on-player mark · refunds when confirmed/.test(
+    trustStripSource.replace(
+      /freeLiveOpen[\s\S]*?\?[\s\S]*?:[\s\S]*?;/,
+      ""
+    )
+  ) ||
+    /freeLiveOpen[\s\S]{0,400}Free Mini/.test(trustStripSource),
+  "TrustStrip must not hardcode Free Mini product caps outside freeLiveOpen"
+);
+assert(
+  trustStripSource.includes("Live gated · Cached Lab") &&
+    trustStripSource.includes("refunds when confirmed"),
+  "TrustStrip must prefer Live gated / Cached Lab honesty when Live is closed"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,500}Free Mini/.test(trustStripSource),
+  "TrustStrip Free Mini product caps must sit behind freeLiveOpen"
+);
+const profilePanelSource = read("components/ProfilePanel.tsx");
+assert(
+  profilePanelSource.includes("data-profile-free-live") &&
+    profilePanelSource.includes("Live gated") &&
+    profilePanelSource.includes("Cached Lab previews remain free"),
+  "ProfilePanel must expose Live gated / Cached Lab copy when freeLiveOpen is false"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,200}freeLiveModelLabel|freeLiveOpen \? \(/.test(
+    profilePanelSource
+  ),
+  "ProfilePanel Free Mini model label must only render when freeLiveOpen"
+);
+// Free Mini product-cap span (resolution · duration) only under freeLiveOpen branch.
+assert(
+  /freeLiveOpen \? \(/.test(profilePanelSource) ||
+    /freeLiveOpen[\s\S]{0,80}trialDone/.test(profilePanelSource),
+  "ProfilePanel free-plan honesty banner must branch on freeLiveOpen"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
