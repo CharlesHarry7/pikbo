@@ -4,7 +4,7 @@
  * Multi-download uses per-clip /api/downloads or videoUrl — no server ZIP yet.
  */
 
-import { isSafeDeliverableUrl } from "@/lib/createTrust";
+import { isControlledClientDownloadUrl } from "@/lib/createTrust";
 
 export type SellerPackExportItem = {
   key: string;
@@ -36,18 +36,20 @@ export function filterAvailableDeliverables(
   return items.filter(
     (i) =>
       i.status === "succeeded" &&
-      typeof i.videoUrl === "string" &&
-      i.videoUrl.length > 0 &&
       i.downloadable &&
-      // Never list javascript:/data: or other unsafe schemes as deliverables.
-      (isSafeDeliverableUrl(i.videoUrl) ||
-        (typeof i.requestId === "string" && i.requestId.trim().length > 0))
+      // Gate id alone is enough (DTO videoUrl may be absent/raw).
+      // Without requestId, only controlled client URLs (Lab demos / gate path).
+      ((typeof i.requestId === "string" && i.requestId.trim().length > 0) ||
+        (typeof i.videoUrl === "string" &&
+          i.videoUrl.length > 0 &&
+          isControlledClientDownloadUrl(i.videoUrl)))
   );
 }
 
 /**
  * Prefer session-gated /api/downloads when requestId is known (T6 gate).
- * Fall back to the playable URL only for already-downloadable items.
+ * Without requestId, only Lab demos / controlled gate paths — never raw
+ * provider CDN (AIT-294 client fallthrough lock).
  */
 export function sellerPackDownloadHref(
   item: Pick<SellerPackExportItem, "requestId" | "videoUrl" | "downloadable" | "status">
@@ -59,7 +61,7 @@ export function sellerPackDownloadHref(
   if (
     typeof item.videoUrl === "string" &&
     item.videoUrl.length > 0 &&
-    isSafeDeliverableUrl(item.videoUrl)
+    isControlledClientDownloadUrl(item.videoUrl)
   ) {
     return item.videoUrl;
   }

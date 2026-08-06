@@ -74,7 +74,7 @@ import {
   canDownloadResult,
   freeLiveDownloadBlockReason,
   isPlayableResultVideoUrl,
-  isSafeDeliverableUrl,
+  isControlledClientDownloadUrl,
   requestCreditStateFromFailure,
 } from "@/lib/createTrust";
 import { DirectorPlanPanel } from "@/components/DirectorPlanPanel";
@@ -1405,9 +1405,9 @@ export function BatchStudio({
    * No server ZIP (needs object storage). Free raw / failed siblings omitted.
    */
   /**
-   * Per-child download delegates the private gate check to downloadVideoFile.
-   * That helper sends the signed-in bearer token for both HEAD and GET; an
-   * unauthenticated duplicate probe here would reject every private Pack.
+   * Per-child download: requestId always uses controlled /api/downloads gate
+   * (downloadVideoFile HEAD/GET + auth). No fallthrough to raw provider CDN
+   * after gate deny (AIT-294). Without requestId, only Lab demos / gate URLs.
    */
   async function downloadChild(j: Job) {
     const downloadAllowed = canDownloadResult({
@@ -1435,7 +1435,8 @@ export function BatchStudio({
       setError(`${j.name || j.slug}: download failed`);
       return;
     }
-    if (j.videoUrl && isSafeDeliverableUrl(j.videoUrl)) {
+    // No requestId: only controlled client URLs (Lab /demos or gate path).
+    if (j.videoUrl && isControlledClientDownloadUrl(j.videoUrl)) {
       setError(null);
       const result = await downloadVideoFile(j.videoUrl, filename);
       if (result === "ok" || result === "fallback") return;
@@ -2728,7 +2729,7 @@ export function BatchStudio({
                 ) : null}
                 {j.demo || !j.watermark ? (
                   j.requestId ||
-                  (j.videoUrl && isSafeDeliverableUrl(j.videoUrl)) ? (
+                  (j.videoUrl && isControlledClientDownloadUrl(j.videoUrl)) ? (
                     <button
                       type="button"
                       data-seller-download="gated"
