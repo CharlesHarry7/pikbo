@@ -758,4 +758,38 @@ assert.match(
   "SoftLaunchStrip CTA glow uses copper board rgba(196,165,116)"
 );
 
+// AIT-548: ModulesSuite/ModulesMobile residual competitor lime → gallery-calm copper
+const modulesSuiteCtasSrc = read("components/ModulesSuiteCtas.tsx");
+const modulesMobileCtaSrc = read("components/ModulesMobileCta.tsx");
+for (const [label, src] of [
+  ["ModulesSuiteCtas", modulesSuiteCtasSrc],
+  ["ModulesMobileCta", modulesMobileCtaSrc],
+]) {
+  assert.doesNotMatch(
+    src,
+    /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+    `${label} must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)`
+  );
+}
+assert.match(
+  modulesSuiteCtasSrc,
+  /var\(--brand\)/,
+  "ModulesSuiteCtas primary CTA uses --brand copper fill"
+);
+assert.match(
+  modulesSuiteCtasSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "ModulesSuiteCtas primary CTA glow uses copper board rgba(196,165,116)"
+);
+assert.match(
+  modulesSuiteCtasSrc,
+  /var\(--primary-foreground\)/,
+  "ModulesSuiteCtas primary CTA text uses --primary-foreground on copper fill"
+);
+assert.match(
+  modulesMobileCtaSrc,
+  /btn-primary/,
+  "ModulesMobileCta primary uses btn-primary (copper --grad-cta board)"
+);
+
 console.log("generate-360-cta-smoke: ok");

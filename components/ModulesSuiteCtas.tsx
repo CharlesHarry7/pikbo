@@ -139,7 +139,7 @@ export function ModulesSuiteCtas() {
             },
           })
         }
-        className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
+        className="rounded-full bg-[var(--brand)] px-4 py-2 text-xs font-black text-[var(--primary-foreground)] shadow-[0_0_20px_rgba(196,165,116,0.28)]"
         data-modules-lab-sample="remix"
       >
         {primaryLabel}
