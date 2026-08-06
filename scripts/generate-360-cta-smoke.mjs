@@ -59,7 +59,9 @@ assert.match(
 // 2. Key Generate surfaces import / call the helper
 const generateSurfaces = [
   ["components/HomeToolShelf.tsx", "home-tool-shelf"],
+  ["components/HomeCinemaHero.tsx", "home-hero"],
   ["components/HomeViralWall.tsx", "home-proof-wall"],
+  ["components/HomeExploreRecipeRail.tsx", "home-explore-rail"],
   ["components/SuiteEntryStrip.tsx", "suite-entry"],
   ["components/HowItWorks.tsx", "how-it-works"],
   ["components/MobileGenerateBar.tsx", "mobile-bar"],
@@ -163,5 +165,172 @@ assert.match(sample, /^\/create\?/);
 assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
+
+// 5. AIT-160 home friction: one primary Generate→360 on proof wall
+const homeWall = read("components/HomeViralWall.tsx");
+assert.match(
+  homeWall,
+  /data-home-primary-generate=["']360["']/,
+  "home proof wall must mark primary Generate as 360"
+);
+assert.match(
+  homeWall,
+  /data-home-primary-generate-cta/,
+  "home proof wall must expose primary Generate CTA marker"
+);
+assert.match(
+  homeWall,
+  /createGenerate360Href\(\s*["']home-proof-wall["']\s*\)/,
+  "home primary Generate must use createGenerate360Href(home-proof-wall)"
+);
+assert.match(
+  homeWall,
+  /is360\s*\?\s*listing360Href/,
+  "360 proof card must deep-link Generate workbench (1-click, no project hop)"
+);
+assert.match(
+  homeWall,
+  /Generate 360°/,
+  "primary Generate CTA label must say Generate 360°"
+);
+
+// 6. Create route must honor 360 (AIT-142) so home→360 is not a dead Moment force
+const createRoute = read("lib/createRouteContract.ts");
+const createPage = read("app/create/page.tsx");
+assert.match(
+  createRoute,
+  /export function resolveCreateRouteContract/,
+  "createRouteContract must resolve generate-workbench vs fixed-moment"
+);
+assert.match(
+  createPage,
+  /resolveCreateRouteContract/,
+  "create page must use resolveCreateRouteContract"
+);
+assert.match(
+  createPage,
+  /data-create-contract=["']generate-workbench["']|data-generate-360/,
+  "create page must mount honest Generate workbench markers"
+);
+
+// 7. AIT-166: Home secondary 360 doors share one createGenerate360Href path
+// (proof wall primary secondary → explore rail → suite rail)
+const exploreRail = read("components/HomeExploreRecipeRail.tsx");
+const suiteRail = read("components/HfProductRail.tsx");
+const homeStack = read("app/page.tsx");
+assert.match(
+  homeStack,
+  /HomeCinemaHero[\s\S]*HomeViralWall[\s\S]*HomeExploreRecipeRail[\s\S]*HfProductRail/,
+  "home stack order: Moment → proof wall → explore rail → suite rail"
+);
+assert.match(
+  exploreRail,
+  /createGenerate360Href\(\s*["']home-explore-rail["']\s*\)/,
+  "explore rail 360 door must use createGenerate360Href(home-explore-rail)"
+);
+assert.match(
+  exploreRail,
+  /data-home-explore-rail-360-direct/,
+  "explore rail 360 card must mark one-tap workbench path"
+);
+assert.match(
+  exploreRail,
+  /is360\s*\?\s*listing360Href/,
+  "explore rail 360 card must deep-link Generate workbench"
+);
+assert.match(
+  suiteRail,
+  /createGenerate360Href\(\s*["']hf-product-rail["']\s*\)/,
+  "suite rail Generate must use createGenerate360Href(hf-product-rail)"
+);
+assert.match(
+  suiteRail,
+  /data-home-suite-360/,
+  "suite rail must expose secondary Generate 360 marker"
+);
+// AIT-181 / AIT-169: suite rail one filled primary Generate→360
+assert.match(
+  suiteRail,
+  /data-hf-rail-primary-generate=["']360["']/,
+  "suite rail must mark primary Generate as 360"
+);
+assert.match(
+  suiteRail,
+  /data-hf-rail-primary-generate-cta/,
+  "suite rail must expose primary Generate CTA marker"
+);
+assert.doesNotMatch(
+  suiteRail,
+  /FreeTrialCta[\s\S]{0,200}variant\s*=\s*["']primary["']/,
+  "suite rail FreeTrialCta must not use filled primary variant"
+);
+assert.match(
+  suiteRail,
+  /border border-white\/20/,
+  "suite rail FreeTrial strip must be secondary outline"
+);
+
+// 8. AIT-192: Home→360 continuity after Studio open honesty
+// Hero keeps Moment primary (product) but exposes above-fold Generate→360 so
+// mobile does not rely only on the below-fold proof wall.
+const homeHero = read("components/HomeCinemaHero.tsx");
+assert.match(
+  homeHero,
+  /createGenerate360Href\(\s*["']home-hero["']\s*\)/,
+  "home hero must deep-link Generate 360 via createGenerate360Href(home-hero)"
+);
+assert.match(
+  homeHero,
+  /data-home-hero-360-cta/,
+  "home hero must expose above-fold Generate 360 CTA marker"
+);
+assert.match(
+  homeHero,
+  /Generate 360° listing spin/,
+  "home hero 360 CTA must be result-first (listing spin), not generic Generate"
+);
+assert.match(
+  homeHero,
+  /data-home-moment-cta/,
+  "home hero Moment primary CTA remains (product contract)"
+);
+assert.equal(
+  (homeHero.match(/data-home-moment-cta/g) || []).length,
+  1,
+  "home hero must keep exactly one Moment primary CTA"
+);
+// HfExploreHome residual: no bare street-power-up; primary Generate = 360
+const hfExplore = read("components/HfExploreHome.tsx");
+assert.match(
+  hfExplore,
+  /createGenerate360Href\(\s*["']hf-explore["']\s*\)/,
+  "HfExploreHome must use createGenerate360Href(hf-explore)"
+);
+assert.match(
+  hfExplore,
+  /data-hf-explore-primary-generate=["']360["']/,
+  "HfExploreHome primary Generate must mark 360"
+);
+assert.match(
+  hfExplore,
+  /Generate 360° listing spin/,
+  "HfExploreHome primary Generate label must be result-first"
+);
+assert.doesNotMatch(
+  hfExplore,
+  /href=["']\/create\?effect=street-power-up["']/,
+  "HfExploreHome must not use bare street-power-up create hrefs"
+);
+assert.match(
+  hfExplore,
+  /MOMENT_CREATE_HREF/,
+  "HfExploreHome Moment doors must use MOMENT_CREATE_HREF"
+);
+// Home entry file: money-path stack keeps proof wall + suite 360 doors
+assert.match(
+  homeStack,
+  /HomeCinemaHero[\s\S]*HomeViralWall[\s\S]*HfProductRail/,
+  "home entry must compose Moment hero → proof wall → suite rail"
+);
 
 console.log("generate-360-cta-smoke: ok");

@@ -43,13 +43,14 @@ assert(
     homeHero.includes("not a completed customer deliverable") &&
     homeHero.includes("not your toy") &&
     home.includes("<HomeViralWall") &&
+    home.includes("<HomeExploreRecipeRail") &&
     home.includes("<HfProductRail") &&
     home.includes("buildHomeShowcaseFeed") &&
     !home.includes("PublicLaunchPackSample") &&
     !home.includes('from "@/components/HfExploreHome"') &&
     !home.includes("<HfExploreHome") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must expose Moment hero + Lab proof wall + HF product rail (no Pack / full Explore remount)"
+  "homepage must expose Moment hero + Lab proof wall + explore recipe rail + HF product rail (no Pack / full Explore remount)"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),
@@ -75,13 +76,81 @@ assert(
       homeWall.includes(".slice(0, 8)")),
   "Lab proof wall must badge honestly, pin 360, use createGenerate360Href, cap ≤8"
 );
-// CTA hierarchy: Moment primary in hero, then wall, then suite rail (no dual hero Generate).
+// CTA hierarchy: Moment primary in hero → wall → thin explore rail → suite rail.
 assert(
   home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeViralWall") &&
-    home.indexOf("<HomeViralWall") < home.indexOf("<HfProductRail") &&
+    home.indexOf("<HomeViralWall") < home.indexOf("<HomeExploreRecipeRail") &&
+    home.indexOf("<HomeExploreRecipeRail") < home.indexOf("<HfProductRail") &&
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
-  "home order: Moment hero → proof wall → HF product rail → trust footer"
+  "home order: Moment hero → proof wall → explore recipe rail → HF product rail → trust footer"
 );
+
+// AIT-156/AIT-166: thin Lab recipe rail — secondary Remake + one-tap 360 workbench.
+const exploreRail = read("components/HomeExploreRecipeRail.tsx");
+assert(
+  exploreRail.includes('data-home-explore-rail="lab"') &&
+    exploreRail.includes('data-home-explore-rail="empty"') &&
+    exploreRail.includes("createGenerate360Href") &&
+    exploreRail.includes("HOME_PROOF_BADGE") &&
+    exploreRail.includes("home-explore-rail") &&
+    exploreRail.includes("home_explore_rail_remake") &&
+    exploreRail.includes("Lab recipe previews unavailable") &&
+    exploreRail.includes("data-home-explore-rail-360-direct") &&
+    exploreRail.includes("pinListing360First") &&
+    /is360\s*\?\s*listing360Href/.test(exploreRail) &&
+    exploreRail.includes("Generate 360°") &&
+    !exploreRail.includes("data-home-moment-cta") &&
+    !exploreRail.includes("MOMENT_CREATE_HREF") &&
+    !exploreRail.includes("Create my drop clip") &&
+    !exploreRail.includes("Create a Moment") &&
+    (exploreRail.includes("RAIL_LIMIT") ||
+      exploreRail.includes(".slice(0, 8)") ||
+      exploreRail.includes("HOME_PROOF_LIMIT")),
+  "explore recipe rail must be Lab-only, honest-empty, 1-click 360 workbench (no Moment primary)"
+);
+
+// Suite rail: one primary Generate→360 + Moment via MOMENT_CREATE_HREF.
+const homeRail = read("components/HfProductRail.tsx");
+assert(
+  homeRail.includes("createGenerate360Href") &&
+    homeRail.includes('"hf-product-rail"') &&
+    homeRail.includes("MOMENT_CREATE_HREF") &&
+    homeRail.includes("source=hf-product-rail") &&
+    homeRail.includes('data-home-suite-rail="hf-product"') &&
+    homeRail.includes("data-home-suite-360") &&
+    homeRail.includes('data-hf-rail-primary-generate="360"') &&
+    homeRail.includes("data-hf-rail-primary-generate-cta") &&
+    homeRail.includes("Generate 360°") &&
+    homeRail.includes("border border-white/20") &&
+    !homeRail.includes('"/create?effect=street-power-up"') &&
+    !homeRail.includes('"/create"'),
+  "HF product rail: one primary Generate→360 via createGenerate360Href + Moment via MOMENT_CREATE_HREF (no bare /create)"
+);
+assert(
+  homeWall.includes('createGenerate360Href("home-proof-wall")') ||
+    homeWall.includes("createGenerate360Href('home-proof-wall')"),
+  "proof wall Listing 360 must tag source=home-proof-wall"
+);
+// AIT-160: proof wall one primary Generate→360 (not Moment-first on the wall).
+assert(
+  homeWall.includes('data-home-primary-generate="360"') &&
+    homeWall.includes("data-home-primary-generate-cta") &&
+    homeWall.includes("data-home-proof-360-direct") &&
+    homeWall.includes("Generate 360°") &&
+    homeWall.includes('createGenerate360Href("home-proof-wall")') &&
+    homeWall.includes("listing360Href") &&
+    /is360\s*\?\s*listing360Href/.test(homeWall),
+  "home proof wall must expose one primary Generate→360 door and 1-click 360 card"
+);
+// Wall primary Generate CTA before secondary Moment (desktop header block).
+{
+  const genIdx = homeWall.indexOf("data-home-primary-generate-cta");
+  const momentLabelIdx = homeWall.indexOf("Create a Moment");
+  assert(
+    genIdx > 0 && momentLabelIdx > genIdx,
+    "proof wall must render primary Generate CTA before secondary Moment label"
+  );
+}
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"
