@@ -48,6 +48,18 @@ assert.match(gate, /data-lab-preview-retry|Retry Lab preview|errorRetry/);
 // submit language. The authenticated children remain unchanged in page.tsx.
 assert.doesNotMatch(gate, /\bupload\b|\bcredits\b|\bGenerate\b/);
 
+// AIT-305: GuestMomentCreateGate off residual competitor lime (board tokens)
+assert.equal(
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(gate),
+  false,
+  "GuestMomentCreateGate must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.equal(
+  gate.includes("var(--mint)") && gate.includes("var(--void)"),
+  true,
+  "GuestMomentCreateGate retry hover chrome uses var(--mint) / var(--void) board tokens"
+);
+
 for (const asset of [
   "public/demos/beatbot-still.webp",
   "public/demos/beatbot-viral-hook.mp4",
