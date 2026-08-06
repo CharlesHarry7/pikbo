@@ -427,6 +427,21 @@ for (const absolute of renderedFiles) {
   }
 }
 
+// AIT-292: GenerateFailPanel residual lime → neon-pink / void board
+{
+  const failPanel = read("components/GenerateFailPanel.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(failPanel),
+    "GenerateFailPanel must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    /255\s*,\s*78\s*,\s*205|#ff4ecd|#b14eff/.test(failPanel) ||
+      failPanel.includes("var(--mint)") ||
+      failPanel.includes("var(--brand)"),
+    "GenerateFailPanel retry chrome uses neon-pink / board tokens"
+  );
+}
+
 console.log(
   `live-capability copy smoke: PASS (${publicPromiseFiles.length} source files, ${renderedFiles.length} rendered routes)`
 );
