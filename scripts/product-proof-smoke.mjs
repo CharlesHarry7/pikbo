@@ -341,6 +341,22 @@ assert(
   );
 }
 
+// AIT-623: GenerateSuiteChrome residual lime → gallery-calm copper board
+// (retargets stalled AIT-364 neon-pink thrash on #390)
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const suiteChrome = read("components/GenerateSuiteChrome.tsx");
+  assert(
+    !lime.test(suiteChrome),
+    "GenerateSuiteChrome must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    suiteChrome.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(suiteChrome),
+    "GenerateSuiteChrome badge + selected tab chrome uses --brand + copper glow"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
