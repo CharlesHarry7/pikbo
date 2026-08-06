@@ -372,6 +372,28 @@ assert.match(
   "AppShell mobile nav tabs must keep 44px min touch target"
 );
 
+// AIT-448: AppShell residual carnival neon → gallery-calm copper board tokens
+assert.doesNotMatch(
+  appShellSrc,
+  /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i,
+  "AppShell must not hard-code carnival neon (#B14EFF / #FF4ECD)"
+);
+assert.match(
+  appShellSrc,
+  /var\(--grad-cta\)/,
+  "AppShell primary CTAs use --grad-cta copper board gradient"
+);
+assert.match(
+  appShellSrc,
+  /var\(--brand\)/,
+  "AppShell active rails + mobile nav use --brand copper accent"
+);
+assert.match(
+  appShellSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "AppShell chrome glows use copper board rgba(196,165,116)"
+);
+
 const createStudio = read("components/CreateStudio.tsx");
 const cinemaPage = read("app/cinema/page.tsx");
 const batchStudio = read("components/BatchStudio.tsx");
