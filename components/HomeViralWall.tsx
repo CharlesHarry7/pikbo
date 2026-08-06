@@ -48,10 +48,11 @@ function pinListing360InFirstSlots(
 }
 
 /**
- * Below-fold Lab proof wall for Moment home: ≤ HOME_PROOF_LIMIT cached recipes
- * from HOME_PROOF_SLUGS (360 pinned in first 4 for mobile). Honest Lab badge
- * only — not a full HfExploreHome remount, Pack sample, or UGC wall.
- * Listing 360° door goes through createGenerate360Href (AIT-108 / AIT-121).
+ * Lab proof wall: ≤ HOME_PROOF_LIMIT cached recipes from HOME_PROOF_SLUGS
+ * (360 pinned in first 4 for mobile). First MOBILE_FIRST_ROW_SLOTS use eager
+ * posters + viewport play for above-fold LCP; deeper cards stay interaction +
+ * lazySources (HfExploreHome Clip parity). Honest Lab badge only — not a full
+ * remount, Pack sample, or UGC wall. Listing 360° door via createGenerate360Href.
  */
 export function HomeViralWall({ items }: { items: FeedItem[] }) {
   const wall = pinListing360InFirstSlots(
@@ -129,6 +130,10 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
           const cardHref = projectHref || remakeHref;
           const badge = item.badge || HOME_PROOF_BADGE;
           const is360 = recipeSlug === LISTING_360_SLUG;
+          // Mobile 2×2 first row (and sm+ first band of 4) is above-fold proof —
+          // eager posters for LCP; deeper cards stay interaction + lazySources
+          // (parity with HfExploreHome Clip premiere policy).
+          const isFirstRow = index < MOBILE_FIRST_ROW_SLOTS;
 
           return (
             <article
@@ -136,6 +141,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               data-recipe-card={recipeSlug}
               data-home-proof-card={recipeSlug}
               data-home-proof-slot={index}
+              data-home-proof-lcp={isFirstRow ? "eager" : "lazy"}
               className="toy-card group relative isolate aspect-[4/5] min-w-0 overflow-hidden p-1.5 transition duration-200 hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#00D9FF]"
             >
               <div className="relative h-full w-full overflow-hidden rounded-[1.35rem] bg-[#0A0A0F]">
@@ -161,7 +167,9 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                     poster={item.demo.poster}
                     webm={item.demo.webm}
                     mp4={item.demo.mp4}
-                    lazySources
+                    eager={isFirstRow}
+                    desktopPlayMode={isFirstRow ? "viewport" : "interaction"}
+                    lazySources={!isFirstRow}
                     wallDense
                     focusable={false}
                     label={`${recipeName} cached demo`}

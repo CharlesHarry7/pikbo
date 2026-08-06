@@ -33,6 +33,53 @@ assert.match(
   /data-home-proof-360/,
   "home proof wall must mark the 360 listing spin card for mobile visibility"
 );
+// AIT-410: first-row LCP — eager posters for MOBILE_FIRST_ROW_SLOTS only
+assert.match(
+  wall,
+  /MOBILE_FIRST_ROW_SLOTS\s*=\s*4/,
+  "mobile first-row LCP budget must stay 4 (2×2 above deep scroll)"
+);
+assert.match(
+  wall,
+  /const isFirstRow\s*=\s*index\s*<\s*MOBILE_FIRST_ROW_SLOTS/,
+  "first-row LCP gate must use MOBILE_FIRST_ROW_SLOTS index bound"
+);
+assert.match(
+  wall,
+  /data-home-proof-lcp=\{isFirstRow \? "eager" : "lazy"\}/,
+  "home proof cards must expose data-home-proof-lcp eager|lazy for smoke"
+);
+assert.match(
+  wall,
+  /eager=\{isFirstRow\}/,
+  "first-row Lab cards must eager posters for above-fold LCP"
+);
+assert.match(
+  wall,
+  /desktopPlayMode=\{isFirstRow \? "viewport" : "interaction"\}/,
+  "first-row uses viewport play; deeper cards stay interaction"
+);
+assert.match(
+  wall,
+  /lazySources=\{!isFirstRow\}/,
+  "deeper wall cards must keep lazySources (no full eager wall)"
+);
+// Guard: only one AutoPlayVideo eager prop, bound to first-row gate
+assert.equal(
+  (wall.match(/eager=\{isFirstRow\}/g) || []).length,
+  1,
+  "exactly one first-row eager gate on AutoPlayVideo"
+);
+assert.doesNotMatch(
+  wall,
+  /eager=\{true\}/,
+  "HomeViralWall must not hardcode eager={true} on every card"
+);
+assert.doesNotMatch(
+  wall,
+  /<\s*AutoPlayVideo[\s\S]*?\beager\s*\n/,
+  "HomeViralWall must not pass bare eager on AutoPlayVideo"
+);
 {
   const softLaunch = source("lib/softLaunch.ts");
   const proofList =
