@@ -661,7 +661,9 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(create, /recoveringSavedResult/);
   assert.match(create, /leaveWaitingKeepBackground/);
   assert.match(create, /planGenerateWaitLeave\("detach"\)/);
-  assert.match(create, /router\.push\("\/library"\)/);
+  // AIT-546: detach navigates via owner-safe helper (deep-link when durable UUID).
+  assert.match(create, /libraryWorkbenchHandoffHref/);
+  assert.match(create, /router\.push\(\s*libraryWorkbenchHandoffHref/);
   assert.match(create, /stillForStore\.length <= 8_000/);
   // Unmount / detach must not abort the original POST or cancel ledger.
   assert.doesNotMatch(
@@ -677,7 +679,8 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
     assert.ok(leaveFn, "leaveWaitingKeepBackground must exist");
     assert.match(leaveFn, /planGenerateWaitLeave\("detach"\)/);
     assert.match(leaveFn, /generateAbortRef\.current = null/);
-    assert.match(leaveFn, /router\.push\("\/library"\)/);
+    assert.match(leaveFn, /libraryWorkbenchHandoffHref/);
+    assert.match(leaveFn, /router\.push\(/);
     assert.doesNotMatch(leaveFn, /cancelGenerateLedger/);
     assert.doesNotMatch(leaveFn, /\.abort\s*\(/);
   }

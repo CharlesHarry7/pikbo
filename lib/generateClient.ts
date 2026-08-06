@@ -356,6 +356,11 @@ async function pollDurableGenerateRecovery(
   opts?: {
     signal?: AbortSignal;
     onState?: (state: GenerateRecoveryState) => void;
+    /**
+     * AIT-546: owner durable jobId surfaced while still pending/recovered so
+     * wait-stage "Open Library" can deep-link without inventing ids.
+     */
+    onDurableJobId?: (jobId: string) => void;
     startAfterMs?: number;
     pollEveryMs?: number;
     maxWaitMs?: number;
@@ -396,7 +401,22 @@ async function pollDurableGenerateRecovery(
         );
         const raw = (await res.json().catch(() => ({}))) as {
           recoveryState?: string;
+          jobId?: string;
+          requestId?: string;
         };
+        const durableId =
+          typeof raw.jobId === "string" && raw.jobId.trim()
+            ? raw.jobId.trim()
+            : typeof raw.requestId === "string" && raw.requestId.trim()
+              ? raw.requestId.trim()
+              : "";
+        if (durableId) {
+          try {
+            opts?.onDurableJobId?.(durableId);
+          } catch {
+            /* UI hooks must never break recovery polling */
+          }
+        }
         if (res.status === 200) {
           const recovered = interpretGenerateResponse(res.status, raw);
           if (isAuthoritativeRecoveryResult(recovered)) {
@@ -494,6 +514,7 @@ async function postGenerateRecoverable(
   opts?: {
     signal?: AbortSignal;
     onRecoveryState?: (state: GenerateRecoveryState) => void;
+    onDurableJobId?: (jobId: string) => void;
   }
 ): Promise<GenerateResult> {
   const primaryController = new AbortController();
@@ -515,6 +536,7 @@ async function postGenerateRecoverable(
   const recovery = pollDurableGenerateRecovery(body.idempotencyKey!, {
     signal: recoveryController.signal,
     onState: opts?.onRecoveryState,
+    onDurableJobId: opts?.onDurableJobId,
   });
   try {
     return await raceGenerateWithDurableRecovery({
@@ -998,6 +1020,8 @@ export async function postGenerateWithRetry(
     maxRetries?: number;
     signal?: AbortSignal;
     onRecoveryState?: (state: GenerateRecoveryState) => void;
+    /** AIT-546: mid-wait owner durable jobId for Library deep-link leave. */
+    onDurableJobId?: (jobId: string) => void;
     /**
      * Local data URL for cached compatibility only. Live provider requests do
      * not remove assetId or transmit this fallback.
@@ -1016,6 +1040,7 @@ export async function postGenerateWithRetry(
   let result = await postGenerateRecoverable(keyed, {
     signal: opts?.signal,
     onRecoveryState: opts?.onRecoveryState,
+    onDurableJobId: opts?.onDurableJobId,
   });
   while (
     !result.ok &&
@@ -1062,6 +1087,7 @@ export async function postGenerateWithRetry(
     result = await postGenerateRecoverable(keyed, {
       signal: opts?.signal,
       onRecoveryState: opts?.onRecoveryState,
+      onDurableJobId: opts?.onDurableJobId,
     });
   }
 
@@ -1082,6 +1108,7 @@ export async function postGenerateWithRetry(
       {
         signal: opts?.signal,
         onRecoveryState: opts?.onRecoveryState,
+        onDurableJobId: opts?.onDurableJobId,
       }
     );
     if (recovered.ok) {
