@@ -31,29 +31,34 @@ export function PrivateSellerPackGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    setSessionBoot("checking");
-    setResolved(false);
-    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
-      .then((me) => {
-        if (!active) return;
-        const nextAllowed = canUsePrivateLaunch(me);
-        setAllowed(nextAllowed);
-        setResolved(true);
-        setSessionBoot("ready");
-        if (!nextAllowed) router.replace(PUBLIC_MOMENT_HREF);
-      })
-      .catch((err) => {
-        if (!active) return;
-        // 8s open contract: never stick on gate "checking".
-        setAllowed(false);
-        setResolved(true);
-        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
-        if (!isClientTimeoutError(err)) {
-          router.replace(PUBLIC_MOMENT_HREF);
+    // Defer setState (GuestMomentCreateGate pattern) — avoid set-state-in-effect lint.
+    const t = window.setTimeout(() => {
+      void (async () => {
+        setSessionBoot("checking");
+        setResolved(false);
+        try {
+          const me = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
+          if (!active) return;
+          const nextAllowed = canUsePrivateLaunch(me);
+          setAllowed(nextAllowed);
+          setResolved(true);
+          setSessionBoot("ready");
+          if (!nextAllowed) router.replace(PUBLIC_MOMENT_HREF);
+        } catch (err) {
+          if (!active) return;
+          // 8s open contract: never stick on gate "checking".
+          setAllowed(false);
+          setResolved(true);
+          setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+          if (!isClientTimeoutError(err)) {
+            router.replace(PUBLIC_MOMENT_HREF);
+          }
         }
-      });
+      })();
+    }, 0);
     return () => {
       active = false;
+      window.clearTimeout(t);
     };
   }, [router, bootNonce]);
 
