@@ -465,4 +465,29 @@ assert.match(
   "Toast glow uses neon-pink board rgba"
 );
 
+// AIT-461: globals.css residual carnival utilities → gallery-calm copper
+{
+  const globalsCss = read("app/globals.css");
+  assert.doesNotMatch(
+    globalsCss,
+    /#b14eff|#ff4ecd|#00d9ff|#00ffa3|#ffe600|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i,
+    "globals.css must not hard-code carnival neon"
+  );
+  assert.match(
+    globalsCss,
+    /\.stat-card[\s\S]{0,280}#c4a574/i,
+    ".stat-card uses copper board border gradient"
+  );
+  assert.match(
+    globalsCss,
+    /\.text-bling[\s\S]{0,220}#c4a574[\s\S]{0,80}#a89070/i,
+    ".text-bling uses copper shimmer stops"
+  );
+  assert.match(
+    globalsCss,
+    /\.cta-card[\s\S]{0,160}var\(--grad-cta\)[\s\S]{0,80}rgba\(196,\s*165,\s*116/i,
+    ".cta-card uses --grad-cta + copper glow"
+  );
+}
+
 console.log("generate-360-cta-smoke: ok");
