@@ -65,6 +65,8 @@ type GenerationJob = {
 
 type GenerationsResponse = {
   ok?: boolean;
+  code?: string;
+  message?: string;
   jobs?: GenerationJob[];
   open?: number;
 };
@@ -80,9 +82,15 @@ const LIBRARY_JOB_ID_RE =
 /**
  * Deep-link ownership resolve after list load.
  * idle: no deep link · resolving: owner detail GET in flight ·
- * owned: job on list or detail confirmed · not-yours: fail-closed.
+ * owned: job on list or detail confirmed · not-yours: fail-closed foreign/missing ·
+ * unavailable: network/5xx verify failure (never invent not-your-toy on transport fail).
  */
-type DeepLinkResolve = "idle" | "resolving" | "owned" | "not-yours";
+type DeepLinkResolve =
+  | "idle"
+  | "resolving"
+  | "owned"
+  | "not-yours"
+  | "unavailable";
 
 /**
  * Owner list load honesty (AIT-311 residual).
@@ -454,11 +462,17 @@ function LibraryGridInner() {
         listSucceededRef.current = true;
       } else {
         // Fail-closed: do not invent public/demo clips; do not claim empty shelf.
+        // AIT-319: DURABLE_LIST_UNAVAILABLE (503) is an explicit private list fail.
         if (!listSucceededRef.current) {
           setJobs([]);
           setListLoad("error");
         } else {
-          toast("Could not refresh your results");
+          toast(
+            body.code === "DURABLE_LIST_UNAVAILABLE"
+              ? body.message ||
+                  "Private Library could not be refreshed. Saved Moments are unchanged."
+              : "Could not refresh your results"
+          );
         }
       }
     } catch (err) {
@@ -552,10 +566,12 @@ function LibraryGridInner() {
     jobs.some((job) => job.id === deepLinkJobId);
 
   /**
-   * Deep-link ownership resolve (AIT-103 / AIT-110).
+   * Deep-link ownership resolve (AIT-103 / AIT-110 / AIT-319).
    * List hit → owned (derived). Miss → one-shot GET /api/generations/:id (owner-scoped).
-   * 200 + visible job merges into list; any other outcome → not-your-toy.
-   * `deepLinkAttemptedRef` stops re-fetch loops after not-yours.
+   * 200 + visible job merges into list; 404-class → not-your-toy;
+   * network/5xx → unavailable (never invent not-your-toy on transport fail).
+   * Skip resolve while owner list is error/timeout — list surface owns honesty.
+   * `deepLinkAttemptedRef` stops re-fetch loops after terminal resolve.
    * setState is deferred (setTimeout 0) so react-hooks/set-state-in-effect stays clean.
    */
   useEffect(() => {
@@ -566,6 +582,11 @@ function LibraryGridInner() {
       return () => window.clearTimeout(t);
     }
     if (!me?.signedIn || !jobsReady) return;
+    // AIT-319: list fail already owns the UI — do not resolve to not-your-toy.
+    if (listLoad === "error" || listLoad === "timeout") {
+      const t = window.setTimeout(() => setDeepLinkResolve("unavailable"), 0);
+      return () => window.clearTimeout(t);
+    }
 
     // Owned via list membership — mark owned (async setState; UI also trusts listHasDeepLink).
     if (listHasDeepLink) {
@@ -574,7 +595,7 @@ function LibraryGridInner() {
     }
 
     if (deepLinkAttemptedRef.current === deepLinkJobId) {
-      // Already resolved this id as not-yours (or in-flight completed).
+      // Already resolved this id as not-yours/unavailable (or in-flight completed).
       return;
     }
     deepLinkAttemptedRef.current = deepLinkJobId;
@@ -612,9 +633,18 @@ function LibraryGridInner() {
             setDeepLinkResolve("owned");
             return;
           }
+          // Transport / durable unavailable — never invent not-your-toy.
+          if (
+            response.status >= 500 ||
+            body.code === "DURABLE_LIST_UNAVAILABLE" ||
+            body.code === "DELIVERY_PIPELINE_UNAVAILABLE"
+          ) {
+            setDeepLinkResolve("unavailable");
+            return;
+          }
           setDeepLinkResolve("not-yours");
         } catch {
-          if (!cancelled) setDeepLinkResolve("not-yours");
+          if (!cancelled) setDeepLinkResolve("unavailable");
         }
       })();
     }, 0);
@@ -624,25 +654,40 @@ function LibraryGridInner() {
       window.clearTimeout(t);
     };
     // deepLinkResolve intentionally omitted — including it would cancel in-flight resolve.
-  }, [me?.signedIn, jobsReady, deepLinkJobId, listHasDeepLink]);
+  }, [me?.signedIn, jobsReady, deepLinkJobId, listHasDeepLink, listLoad]);
 
   /**
    * Fail-closed not-your-toy only after resolve confirms foreign/missing.
    * While resolving, keep loading — never flash media or invent metadata.
    * List membership alone counts as owned (no media flash for foreign ids).
+   * AIT-319: unavailable is not not-your-toy (honest retry, no ownership claim).
    */
   const notYourToy =
     Boolean(me?.signedIn) &&
     jobsReady &&
     Boolean(deepLinkJobId) &&
     !listHasDeepLink &&
-    deepLinkResolve === "not-yours";
+    deepLinkResolve === "not-yours" &&
+    listLoad !== "error" &&
+    listLoad !== "timeout";
+  const deepLinkUnavailable =
+    Boolean(me?.signedIn) &&
+    jobsReady &&
+    Boolean(deepLinkJobId) &&
+    !listHasDeepLink &&
+    deepLinkResolve === "unavailable" &&
+    listLoad !== "error" &&
+    listLoad !== "timeout";
   const deepLinkPending =
     Boolean(me?.signedIn) &&
     jobsReady &&
     Boolean(deepLinkJobId) &&
     !listHasDeepLink &&
-    deepLinkResolve !== "not-yours";
+    listLoad !== "error" &&
+    listLoad !== "timeout" &&
+    deepLinkResolve !== "not-yours" &&
+    deepLinkResolve !== "unavailable" &&
+    deepLinkResolve !== "owned";
 
   useEffect(() => {
     if (!me?.signedIn || openCount === 0) return;
@@ -954,6 +999,51 @@ function LibraryGridInner() {
               </button>
               <Link href={EMPTY_360_HREF} className="btn btn-ghost text-sm">
                 Generate 360° Spin
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // AIT-319: deep-link verify transport/5xx — honest retry, never "not your toy".
+  if (deepLinkUnavailable) {
+    return (
+      <section
+        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        data-library-state="deep-link-unavailable"
+        data-library-deep-link="unavailable"
+      >
+        <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
+          <div className="max-w-lg">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">
+              Private Library
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+              Could not verify this Moment.
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
+              Ownership check failed due to a network or private storage error.
+              We will not claim this is not your toy — retry when the connection
+              is ready.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  deepLinkAttemptedRef.current = null;
+                  setDeepLinkResolve("idle");
+                  void refreshJobs();
+                }}
+                disabled={refreshing}
+                data-library-deep-link-retry
+                className="btn btn-primary text-sm disabled:opacity-50"
+              >
+                {refreshing ? "Retrying…" : "Retry verify"}
+              </button>
+              <Link href="/library" className="btn btn-ghost text-sm">
+                Open Library
               </Link>
             </div>
           </div>
