@@ -285,4 +285,70 @@ assert.match(
   "MobileGenerateBar root must carry floating-generate marker for clearance smoke"
 );
 
+// 7. AIT-150 — mobile nav safe-area + residual sticky CTAs use shared clearance tokens
+assert.match(
+  appShellSrc,
+  /data-mobile-nav=["']primary["']/,
+  "AppShell mobile nav must expose data-mobile-nav=primary"
+);
+assert.match(
+  appShellSrc,
+  /pb-\[env\(safe-area-inset-bottom(?:,\s*0px)?\)\]/,
+  "AppShell mobile nav must pad home-indicator safe-area"
+);
+assert.match(
+  globalsCss,
+  /--mobile-nav-content-h:\s*4\.75rem/,
+  "tab content height token must stay aligned with mobile nav chrome"
+);
+assert.match(
+  appShellSrc,
+  /min-h-11/,
+  "AppShell mobile nav tabs must keep 44px min touch target"
+);
+
+const createStudio = read("components/CreateStudio.tsx");
+const cinemaPage = read("app/cinema/page.tsx");
+const batchStudio = read("components/BatchStudio.tsx");
+
+for (const [label, src] of [
+  ["CreateStudio sticky", createStudio],
+  ["cinema sticky", cinemaPage],
+  ["ModulesMobileCta", modulesCta],
+  ["MobileGenerateBar", mobileBar],
+  ["BatchStudio sticky", batchStudio],
+]) {
+  assert.doesNotMatch(
+    src,
+    /bottom-\[4\.75rem\]/,
+    `${label} must not hardcode bottom-[4.75rem] (use clearance tokens)`
+  );
+}
+
+assert.match(
+  createStudio,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "CreateStudio sticky must clear tab nav + home indicator"
+);
+assert.match(
+  cinemaPage,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "cinema sticky must clear tab nav + home indicator"
+);
+assert.match(
+  batchStudio,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "BatchStudio tab-sharing sticky must clear tab nav + home indicator"
+);
+assert.match(
+  batchStudio,
+  /bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "BatchStudio nav-less Seller Pack sticky must use floating-cta-safe-bottom"
+);
+assert.match(
+  batchStudio,
+  /data-batch-sticky-clearance=\{/,
+  "BatchStudio sticky must expose clearance branch marker"
+);
+
 console.log("generate-360-cta-smoke: ok");
