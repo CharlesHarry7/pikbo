@@ -236,6 +236,51 @@ assert(
   "rank tool must keep private generation and subscriptions closed during validation"
 );
 
+// AIT-354: tools/[slug] longform FAQ + body — no unconditional Free Mini public free path.
+const forbiddenToolsFaqFreeMini = [
+  /Free Mini caps apply/i,
+  /Free Mini clips are 5 seconds at 480p/i,
+  /Free Mini teasers are 5 seconds at 480p/i,
+  /Soft launch Free Mini/i,
+  /Free Mini validates one hero SKU/i,
+  /soft launch model is Seedance Mini on Free Mini/i,
+  /Listing Clips, Free Mini \|/i,
+  /— Free Mini \| Pikbo/i,
+];
+for (const pattern of forbiddenToolsFaqFreeMini) {
+  assert(
+    !pattern.test(rankToolSource),
+    `lib/tools.ts contains residual Free Mini FAQ/body promise ${pattern}`
+  );
+}
+assert(
+  rankToolSource.includes(
+    "Public path is a cached Lab prototype at 0 credits"
+  ) &&
+    rankToolSource.includes(
+      "When Live is enabled for an eligible account, Generate shows the exact duration"
+    ) &&
+    rankToolSource.includes(
+      "Cached Lab teasers are free previews (upload not processed)"
+    ) &&
+    rankToolSource.includes(
+      "Use a cached Lab preview to learn the look"
+    ) &&
+    rankToolSource.includes(
+      "A cached Lab preview helps you judge one hero SKU without a provider call"
+    ) &&
+    rankToolSource.includes(
+      "Lab demos are labeled cached samples (0 credits, upload not processed)"
+    ) &&
+    (rankToolSource.match(/When Live is enabled for an eligible account/g) || [])
+      .length >= 4,
+  "tools/[slug] FAQ/body must sell Lab public path + conditional Live, not Free Mini as unconditional free path"
+);
+assert(
+  !rankToolSource.includes("Free Mini"),
+  "lib/tools.ts must not sell Free Mini as public free path (FAQ, body, or seoTitle)"
+);
+
 // Residual session UI — Free Mini left/used only behind freeLiveOpen.
 // Fail-closed while /api/me is loading (parity FreeTrialCta).
 const residualSessionUi = [
