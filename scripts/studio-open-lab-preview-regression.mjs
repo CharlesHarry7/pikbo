@@ -45,6 +45,18 @@ assert.match(video, /Retry Lab preview/);
 assert.match(video, /Lab preview timed out/);
 assert.match(video, /LAB_VIDEO_READY_MS/);
 
+// AIT-316: AutoPlayVideo off residual competitor lime (board tokens)
+assert.equal(
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(video),
+  false,
+  "AutoPlayVideo must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.equal(
+  video.includes("var(--mint)") && video.includes("var(--void)"),
+  true,
+  "AutoPlayVideo Lab sample controls / error-retry chrome use var(--mint) / var(--void) board tokens"
+);
+
 // Guest Create auto-shows Lab sample while access resolves (no blank open)
 assert.match(createPage, /<GuestMomentCreateGate>/);
 assert.match(gate, /data-guest-create-sample/);
