@@ -36,7 +36,7 @@ export default function AboutPage() {
   return (
     <div className="bg-black text-white">
       <div className="container-x max-w-3xl py-12 sm:py-16">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--neon-pink)]">
           About
         </p>
         <h1 className="mt-2 font-display text-3xl font-black tracking-tight sm:text-4xl">
@@ -105,7 +105,7 @@ export default function AboutPage() {
           <div className="flex flex-wrap gap-2">
             <Link
               href="/contact"
-              className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
+              className="rounded-full bg-[var(--neon-pink)] px-4 py-2 text-xs font-black text-[var(--void)]"
             >
               Apply to the private beta
             </Link>

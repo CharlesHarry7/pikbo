@@ -37,7 +37,7 @@ export default function ModelsPage() {
   return (
     <div className="relative px-4 py-10 sm:px-8">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(50%_70%_at_0%_0%,rgba(200,255,61,0.07),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(50%_70%_at_0%_0%,rgba(196,165,116,0.07),transparent_70%)]"
         aria-hidden
       />
       <div className="relative mx-auto max-w-6xl">
@@ -47,7 +47,7 @@ export default function ModelsPage() {
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
           Configured model shelf for the PIKBO workflow.{" "}
-          <strong className="text-[var(--mint)]">WIRED</strong> cards open a
+          <strong className="text-[var(--neon-pink)]">WIRED</strong> cards open a
           workspace; live output still requires provider credentials.{" "}
           <strong className="text-[var(--fg)]">Seedance</strong> for motion ·{" "}
           <strong className="text-[var(--fg)]">Flux</strong> for stills. We
@@ -97,7 +97,7 @@ export default function ModelsPage() {
         >
           <Link
             href={MODELS_GENERATE_HREF}
-            className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+            className="rounded-full border border-[var(--neon-pink)]/40 bg-[var(--neon-pink)]/10 px-3 py-1.5 text-[var(--neon-pink)]"
             data-models-path-generate="remix"
           >
             Generate
@@ -119,7 +119,7 @@ export default function ModelsPage() {
           </Link>
         </nav>
 
-        <h2 className="mt-10 mb-4 text-xs font-bold uppercase tracking-wider text-[var(--mint)]">
+        <h2 className="mt-10 mb-4 text-xs font-bold uppercase tracking-wider text-[var(--neon-pink)]">
           Configured · {live.length}
         </h2>
         <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
@@ -129,7 +129,7 @@ export default function ModelsPage() {
               <Link
                 key={m.id}
                 href={m.href}
-                className="group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 transition hover:-translate-y-1 hover:border-[var(--mint)]/40"
+                className="group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 transition hover:-translate-y-1 hover:border-[var(--neon-pink)]/40"
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   {poster ? (
@@ -147,7 +147,7 @@ export default function ModelsPage() {
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                  <span className="absolute left-2 top-2 rounded-full bg-[var(--mint)] px-2 py-0.5 text-[10px] font-black text-black">
+                  <span className="absolute left-2 top-2 rounded-full bg-[var(--neon-pink)] px-2 py-0.5 text-[10px] font-black text-[var(--void)]">
                     WIRED
                   </span>
                   {m.tag ? (
@@ -156,7 +156,7 @@ export default function ModelsPage() {
                     </span>
                   ) : null}
                   <div className="absolute inset-x-0 bottom-0 p-3">
-                    <h2 className="text-sm font-bold text-white group-hover:text-[var(--mint)]">
+                    <h2 className="text-sm font-bold text-white group-hover:text-[var(--neon-pink)]">
                       {m.name}
                     </h2>
                     <p className="text-[10px] text-white/45">{m.vendor}</p>
@@ -164,7 +164,7 @@ export default function ModelsPage() {
                 </div>
                 <div className="p-3">
                   <p className="line-clamp-2 text-xs text-white/50">{m.blurb}</p>
-                  <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]">
+                  <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[var(--neon-pink)]">
                     Open workspace →
                   </p>
                 </div>

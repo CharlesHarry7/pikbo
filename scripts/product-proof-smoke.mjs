@@ -175,6 +175,40 @@ assert(
   "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
 
+// AIT-502: Projects/About/Models residual lime → gallery-calm copper board tokens
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const hubs = {
+    "app/about/page.tsx": read("app/about/page.tsx"),
+    "app/models/page.tsx": read("app/models/page.tsx"),
+    "app/projects/[slug]/page.tsx": read("app/projects/[slug]/page.tsx"),
+  };
+  for (const [rel, src] of Object.entries(hubs)) {
+    assert(
+      !lime.test(src),
+      `${rel} must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)`
+    );
+  }
+  assert(
+    hubs["app/about/page.tsx"].includes("var(--neon-pink)") &&
+      hubs["app/about/page.tsx"].includes("var(--void)") &&
+      hubs["app/models/page.tsx"].includes("var(--neon-pink)") &&
+      hubs["app/projects/[slug]/page.tsx"].includes("var(--neon-pink)") &&
+      hubs["app/projects/[slug]/page.tsx"].includes("var(--void)"),
+    "Projects/About/Models hub chrome uses neon-pink / void board tokens"
+  );
+  assert(
+    hubs["app/models/page.tsx"].includes("rgba(196,165,116") &&
+      hubs["app/projects/[slug]/page.tsx"].includes("rgba(196,165,116"),
+    "Models wash + Projects glows use gallery-calm copper rgba (AIT-489 map)"
+  );
+  assert(
+    !/var\(--mint\)/.test(hubs["app/about/page.tsx"]) &&
+      !/var\(--mint\)/.test(hubs["app/models/page.tsx"]),
+    "About/Models hub primary chrome prefers neon-pink over mint alias"
+  );
+}
+
 // AIT-320: four-surface money path off residual competitor lime (board tokens)
 {
   const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
