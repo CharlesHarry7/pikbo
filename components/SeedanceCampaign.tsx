@@ -1,17 +1,31 @@
+"use client";
+
 import Link from "next/link";
+import { track } from "@/lib/analytics";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { AutoPlayVideo } from "@/components/AutoPlayVideo";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { createRemixHref } from "@/lib/remixIntent";
 
-/** Full-bleed flagship banner — HF Seedance battle pattern (H1). */
+/** Primary Generate door — listing spin remix (ratio/duration/channel). */
+const SEEDANCE_GENERATE_HREF = createGenerate360Href("seedance-campaign");
+
+/**
+ * Full-bleed flagship banner — HF Seedance battle pattern (H1).
+ *
+ * AIT-218 friction cut: one filled primary Generate→360 CTA.
+ * FreeTrial / Lab sample stay secondary outline — no second filled primary.
+ */
 export function SeedanceCampaign() {
   const hero = DEMO_VIDEOS[0];
   const strip = DEMO_VIDEOS.slice(0, 8);
 
   return (
-    <section className="relative my-2 overflow-hidden border-y border-white/[0.06]">
+    <section
+      className="relative my-2 overflow-hidden border-y border-white/[0.06]"
+      data-seedance-primary-generate="360"
+    >
       <div className="absolute inset-0">
         <AutoPlayVideo
           poster={hero.poster}
@@ -50,19 +64,30 @@ export function SeedanceCampaign() {
             keys land.
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-2.5">
+            {/* One primary Generate → 360 (AIT-218). */}
+            <Link
+              href={SEEDANCE_GENERATE_HREF}
+              className="rounded-full bg-[var(--mint)] px-6 py-2.5 text-sm font-black text-black shadow-[0_0_28px_rgba(200,255,61,0.25)] transition hover:-translate-y-0.5 hover:shadow-[0_0_36px_rgba(200,255,61,0.4)]"
+              data-seedance-generate="remix"
+              data-seedance-primary-generate-cta
+              onClick={() =>
+                track({
+                  event: "landing_view",
+                  path: "/",
+                  meta: { cta: "seedance_primary_generate_360" },
+                })
+              }
+            >
+              Generate 360° →
+            </Link>
+            {/* Secondary Free / Lab sample — outline only, not a filled primary. */}
             <FreeTrialCta
               path="/seedance-campaign"
               labelTry="Try free video"
               labelDemo="Try Lab sample"
-              className="rounded-full bg-[var(--mint)] px-6 py-2.5 text-sm font-black text-black shadow-[0_0_28px_rgba(200,255,61,0.25)] transition hover:-translate-y-0.5"
+              hideClipsChip
+              className="rounded-full border border-white/20 bg-transparent px-5 py-2.5 text-sm font-semibold text-white/70 transition hover:border-white/40 hover:text-white"
             />
-            <Link
-              href={createGenerate360Href("seedance-campaign")}
-              className="rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 px-5 py-2.5 text-sm font-bold text-[var(--mint)] transition hover:bg-[var(--mint)]/15"
-              data-seedance-generate="remix"
-            >
-              Generate video
-            </Link>
             <Link
               href="/modules"
               className="rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:border-white/35"

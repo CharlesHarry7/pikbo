@@ -4696,10 +4696,36 @@ assert.doesNotMatch(
   fs.readFileSync(join(root, "components/SuiteEntryStrip.tsx"), "utf8"),
   /href:\s*["']\/create\?try=1&sample=scout["']/
 );
-assert.match(
-  fs.readFileSync(join(root, "components/SeedanceCampaign.tsx"), "utf8"),
-  /FreeTrialCta/
-);
+// Seedance campaign: one primary Generate→360 (AIT-218) + FreeTrial secondary outline
+{
+  const seedanceCampaignSrc = fs.readFileSync(
+    join(root, "components/SeedanceCampaign.tsx"),
+    "utf8"
+  );
+  assert.match(seedanceCampaignSrc, /FreeTrialCta/);
+  assert.match(
+    seedanceCampaignSrc,
+    /createGenerate360Href|data-seedance-generate=["']remix["']/
+  );
+  assert.match(
+    seedanceCampaignSrc,
+    /data-seedance-primary-generate=["']360["']/
+  );
+  assert.match(seedanceCampaignSrc, /data-seedance-primary-generate-cta/);
+  assert.match(
+    seedanceCampaignSrc,
+    /createGenerate360Href\(\s*["']seedance-campaign["']\s*\)/
+  );
+  assert.match(seedanceCampaignSrc, /Generate 360°/);
+  assert.doesNotMatch(
+    seedanceCampaignSrc,
+    /FreeTrialCta[\s\S]{0,200}variant\s*=\s*["'](primary|mint)["']/
+  );
+  assert.doesNotMatch(
+    seedanceCampaignSrc,
+    /href=["']\/create\?try=1&sample=scout["'][^>]*>\s*Try free/
+  );
+}
 assert.match(
   fs.readFileSync(join(root, "components/OnboardingBanner.tsx"), "utf8"),
   /FreeTrialCta/

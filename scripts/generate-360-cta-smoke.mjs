@@ -65,6 +65,7 @@ const generateSurfaces = [
   ["components/MobileGenerateBar.tsx", "mobile-bar"],
   ["components/SoftLaunchStrip.tsx", "soft-launch"],
   ["components/LandingSeoMesh.tsx", "seo-mesh"],
+  ["components/SeedanceCampaign.tsx", "seedance-campaign"],
   ["components/ModulesSuiteCtas.tsx", "modules-photo-clip"],
   ["components/CommandPalette.tsx", null],
   ["components/GenerateSuiteChrome.tsx", null],
@@ -163,5 +164,55 @@ assert.match(sample, /^\/create\?/);
 assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
+
+// 5. AIT-218 Seedance campaign: one primary Generate→360 CTA
+const seedanceCampaign = read("components/SeedanceCampaign.tsx");
+assert.match(
+  seedanceCampaign,
+  /data-seedance-primary-generate=["']360["']/,
+  "SeedanceCampaign must mark primary Generate as 360"
+);
+assert.match(
+  seedanceCampaign,
+  /data-seedance-primary-generate-cta/,
+  "SeedanceCampaign must expose primary Generate CTA marker"
+);
+assert.match(
+  seedanceCampaign,
+  /data-seedance-generate=["']remix["']/,
+  "SeedanceCampaign primary door keeps remix marker for engine smoke"
+);
+assert.match(
+  seedanceCampaign,
+  /createGenerate360Href\(\s*["']seedance-campaign["']\s*\)/,
+  "SeedanceCampaign primary Generate must use createGenerate360Href(seedance-campaign)"
+);
+assert.match(
+  seedanceCampaign,
+  /Generate 360°/,
+  "SeedanceCampaign primary CTA label must say Generate 360°"
+);
+// FreeTrial must not be a filled primary competing with Generate (outline/secondary only)
+assert.doesNotMatch(
+  seedanceCampaign,
+  /FreeTrialCta[\s\S]{0,200}variant\s*=\s*["'](primary|mint)["']/,
+  "SeedanceCampaign FreeTrialCta must not use filled primary/mint variant"
+);
+assert.match(
+  seedanceCampaign,
+  /border border-white\/20/,
+  "SeedanceCampaign FreeTrial strip must be secondary outline"
+);
+// Tertiary suite doors stay outline (not filled primaries)
+assert.doesNotMatch(
+  seedanceCampaign,
+  /href=["']\/modules["'][\s\S]{0,120}bg-\[(?:var\(--mint\)|#c8ff3d)\]/,
+  "SeedanceCampaign Modules must not be a filled primary"
+);
+assert.doesNotMatch(
+  seedanceCampaign,
+  /href=["']\/create\?effect=street-power-up["'][\s\S]{0,120}bg-\[(?:var\(--mint\)|#c8ff3d)\]/,
+  "SeedanceCampaign Moment door must not be a filled primary"
+);
 
 console.log("generate-360-cta-smoke: ok");
