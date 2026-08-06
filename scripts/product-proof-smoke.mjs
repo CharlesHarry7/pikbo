@@ -211,6 +211,21 @@ assert(
   );
 }
 
+// AIT-407: FlowMediaCard residual lime → neon-pink board tokens
+{
+  const flowMediaCard = read("components/FlowMediaCard.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(flowMediaCard),
+    "FlowMediaCard must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    flowMediaCard.includes("var(--neon-pink)") &&
+      flowMediaCard.includes("rgba(255,78,205") &&
+      flowMediaCard.includes("var(--void)"),
+    "FlowMediaCard chrome uses neon-pink / void board tokens"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
