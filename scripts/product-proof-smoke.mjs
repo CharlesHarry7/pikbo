@@ -285,6 +285,22 @@ assert(
   );
 }
 
+// AIT-573: Flow page residual competitor lime → gallery copper board
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const flowPage = read("app/flow/page.tsx");
+  assert(
+    !lime.test(flowPage),
+    "app/flow/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    flowPage.includes("var(--brand)") &&
+      flowPage.includes("var(--grad-cta)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(flowPage),
+    "Flow page accents use --brand / --grad-cta + copper glow"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );

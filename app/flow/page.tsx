@@ -183,7 +183,7 @@ export default function FlowPage() {
       <div className="sticky top-0 z-20 border-b border-white/10 bg-black/90 px-3 py-3 backdrop-blur-xl sm:px-5">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--brand)]">
               Flow
             </p>
             <h1 className="font-display text-lg font-black uppercase tracking-tight sm:text-xl">
@@ -195,7 +195,7 @@ export default function FlowPage() {
               path="/flow"
               variant="primary"
               labelTry="Try free"
-              className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
+              className="rounded-full bg-[var(--grad-cta)] px-4 py-2 text-xs font-black text-[var(--primary-foreground)]"
             />
             <Link
               href={FLOW_GENERATE_HREF}
@@ -226,7 +226,7 @@ export default function FlowPage() {
             <a
               key={s.id}
               href={`#flow-${s.id}`}
-              className="shrink-0 rounded-full border border-white/12 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/50 hover:border-[#c8ff3d]/40 hover:text-[#c8ff3d]"
+              className="shrink-0 rounded-full border border-white/12 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/50 hover:border-[var(--brand)]/40 hover:text-[var(--brand)]"
             >
               {s.label.split("·")[0].trim()} · {s.items.length}
             </a>
@@ -283,7 +283,7 @@ export default function FlowPage() {
         >
           <Link
             href={FLOW_GENERATE_HREF}
-            className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+            className="rounded-full border border-[var(--brand)]/40 bg-[var(--brand)]/10 px-3 py-1.5 text-[var(--brand)]"
             data-flow-path-generate="remix"
           >
             Generate
@@ -318,7 +318,7 @@ export default function FlowPage() {
         </nav>
         <Link
           href={FLOW_GENERATE_HREF}
-          className="mt-6 inline-flex rounded-full bg-[#c8ff3d] px-8 py-3.5 text-sm font-black text-black shadow-[0_0_32px_rgba(200,255,61,0.25)]"
+          className="mt-6 inline-flex rounded-full bg-[var(--grad-cta)] px-8 py-3.5 text-sm font-black text-[var(--primary-foreground)] shadow-[0_0_32px_rgba(196,165,116,0.25)]"
           data-flow-start-generate="remix"
         >
           Start Generate video
