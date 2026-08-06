@@ -505,6 +505,12 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(downloads, /getAuthUserFromRequest/);
   assert.match(downloads, /getPrivateGenerationResult/);
   assert.match(downloads, /signedPrivateResultUrl/);
+  // AIT-464 / AIT-173: durable UUID deny is uniform NOT_FOUND (unauth/foreign/missing).
+  assert.match(downloads, /Download not found for this account|durableDownloadDenyBody/);
+  assert.doesNotMatch(
+    downloads,
+    /status:\s*401|code:\s*"AUTH_REQUIRED"|Sign in to download this private result/
+  );
   const generations = read("app/api/generations/route.ts");
   assert.match(generations, /getAuthUserFromRequest/);
   assert.match(
