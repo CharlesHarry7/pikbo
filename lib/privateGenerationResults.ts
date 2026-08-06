@@ -14,6 +14,7 @@ import {
 export {
   acceptControlledLibraryNewAttemptUrl,
   controlledLibraryNewAttemptUrl,
+  isOwnerVisibleLibraryJob,
   libraryDurableTerminalFailureCopy,
   libraryInputBindingCopy,
   libraryInputBoundFromAssetId,
