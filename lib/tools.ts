@@ -91,7 +91,7 @@ export const TOOLS: Tool[] = [
       "Image-to-video keeps your figure as the visual reference, so the result looks like your toy rather than a generic character.",
       "Best with a clean, well-lit, front-facing photo on a plain background. Generated details can drift — review before posting.",
       "Use walk or dance recipes when you want character motion; use spin when the still is a packshot for marketplaces. One tool page, one primary job — deep-linked to Create.",
-      "Free Mini caps apply on soft launch. Lab wall clips never spend your photo. Keep the browser tab open until the job finishes or credits may look wrong until refresh.",
+      "Public path is a labeled cached Lab prototype at 0 credits and never processes your photo. Live remains gated; eligible accounts see the exact duration and credit quote before submission. Keep the browser tab open until a Live job finishes or credits may look wrong until refresh.",
     ],
     keywords: [
       "toy image to video",
@@ -107,7 +107,7 @@ export const TOOLS: Tool[] = [
       },
       {
         q: "How long is the clip?",
-        a: "Free Mini clips are 5 seconds at 480p. Paid tiers unlock longer, higher-resolution runs.",
+        a: "Cached Lab previews show the recipe look at 0 credits. When Live is enabled for an eligible account, Generate shows the configured duration, resolution, and credit quote before submission.",
       },
     ],
   },
@@ -116,8 +116,8 @@ export const TOOLS: Tool[] = [
     emoji: "🛍️",
     label: "Product video",
     h1: "Toy Product Video AI — Listing Clips From One Photo",
-    // CTR 优化 2026-07-27: 加入 Free 驱动点击
-    seoTitle: "Toy Product Video AI: Listing Clips, Free Mini | Pikbo",
+    // Soft-launch honesty: no Free Mini product-cap in public SEO titles.
+    seoTitle: "Toy Product Video AI: Listing Clips From One Photo | Pikbo",
     seoDescription:
       "Toy product video recipes for Etsy, TikTok Shop, and storefronts. One owned photo → clean spin or hero workflow, with a cached preview first.",
     intro:
@@ -274,7 +274,7 @@ export const TOOLS: Tool[] = [
       },
       {
         q: "What length?",
-        a: "Free Mini teasers are 5 seconds at 480p — enough for a punchy vertical hook.",
+        a: "Cached Lab previews show the teaser look at 0 credits. When Live is enabled for an eligible account, Generate shows the exact duration and quote before submission.",
       },
     ],
   },
@@ -386,9 +386,9 @@ export const TOOLS: Tool[] = [
     emoji: "🪝",
     label: "Unboxing hook",
     h1: "Generate a Toy Unboxing Hook for Reels and Shorts",
-    // CTR 优化 2026-07-27: 加入 Free Mini Trial 驱动点击（该页有 GSC 展现但 0 点击）
+    // Soft-launch honesty: public free path is Lab, not Free Mini product caps.
     seoTitle:
-      "Toy Unboxing Hook Video From One Photo — Free Mini | Pikbo",
+      "Toy Unboxing Hook Video From One Photo | Pikbo",
     seoDescription:
       "Plan a toy unboxing hook from one photo. Preview cached vertical reveal recipes for Reels, Shorts, and TikTok before gated submission.",
     intro:
@@ -679,7 +679,7 @@ export const TOOLS: Tool[] = [
       "Short-form toy content needs a strong open. Upload one owned photo, pick a vertical-friendly recipe, and draft a TikTok-ready clip.",
     body: [
       "Vertical 9:16 is the default for social hooks. Spin still works if your feed is product-first.",
-      "Soft launch Free Mini is enough to test a hook; do not expect unlimited free exports.",
+      "Public validation is a cached Lab prototype path — enough to judge a hook look, not unlimited free Live exports.",
       "Caption and sound still matter — Pikbo drafts the motion layer, not the full growth system.",
       "Channel-specific SEO also lives on /for/tiktok-shop-product-videos.",
     ],
@@ -710,7 +710,7 @@ export const TOOLS: Tool[] = [
     body: [
       "Prefer calm motion for PDPs; save flashy social recipes for ads.",
       "Export aspect that matches your theme gallery. QA every SKU — AI can smear logos.",
-      "Free Mini validates one hero SKU; batch more when paid credits are available.",
+      "Start with one hero SKU via Lab preview or a gated Live Moment; batch more only after Live and billing open for your account.",
       "Also see Amazon and Etsy use-case pages if you sell multi-channel.",
     ],
     keywords: [
@@ -740,7 +740,7 @@ export const TOOLS: Tool[] = [
     body: [
       "Floating hero sells premium. Mystery reveal sells curiosity. Match the recipe to the announcement beat.",
       "The head term AI toy video generator is on /tools/ai-toy-video-generator. This page owns designer-toy teaser / drop energy.",
-      "Keep claims honest: soft launch model is Seedance Mini on Free Mini; Lab demos are labeled cached samples.",
+      "Keep claims honest: Lab demos are labeled cached samples; Live model and caps appear only when Live is enabled for an eligible account.",
       "Brand end-cards and logos still belong in your editor after download. See also /for pages for channel marketing jobs.",
     ],
     keywords: [
