@@ -111,6 +111,72 @@ assert(
   "rank tool must keep private generation and subscriptions closed during validation"
 );
 
+// AIT-217: residual session UI — Free Mini left/used only behind freeLiveOpen.
+// Fail-closed while /api/me is loading (parity FreeTrialCta).
+const residualSessionUi = [
+  "components/SoftLaunchStrip.tsx",
+  "components/CreditsBadge.tsx",
+  "components/ModulesSuiteCtas.tsx",
+  "components/ModulesMobileCta.tsx",
+  "components/LandingToolPanel.tsx",
+  "components/FreeTrialCta.tsx",
+];
+for (const relativePath of residualSessionUi) {
+  const source = read(relativePath);
+  assert(
+    /canLiveGenerate\s*\(/.test(source),
+    `${relativePath} must gate Free Mini / Live chips on canLiveGenerate`
+  );
+  assert(
+    /freeLiveOpen/.test(source),
+    `${relativePath} must define freeLiveOpen (Live gate truth)`
+  );
+  assert(
+    /liveEnabled\s*!==\s*false/.test(source),
+    `${relativePath} must require freeLive.liveEnabled !== false`
+  );
+}
+assert(
+  read("components/SoftLaunchStrip.tsx").includes(
+    "Cached Lab preview · 0 credits"
+  ),
+  "SoftLaunchStrip must prefer Cached Lab preview copy when Live is closed"
+);
+assert(
+  read("components/ModulesSuiteCtas.tsx").includes(
+    "Cached Lab preview · 0 credits"
+  ),
+  "ModulesSuiteCtas must show Cached Lab chip when Live is closed"
+);
+assert(
+  read("components/CreditsBadge.tsx").includes("live gated") &&
+    read("components/CreditsBadge.tsx").includes(
+      "Cached Lab preview · 0 credits"
+    ),
+  "CreditsBadge must drop Free Mini product-cap copy when freeLiveOpen is false"
+);
+assert(
+  read("components/LandingToolPanel.tsx").includes("Live gated") &&
+    /freeLiveOpen[\s\S]{0,80}Free Mini used|!freeLiveOpen[\s\S]{0,200}Cached Lab preview/.test(
+      read("components/LandingToolPanel.tsx")
+    ),
+  "LandingToolPanel exhausted/left chips must follow freeLiveOpen"
+);
+// Free Mini left chip must be rendered only under a freeLiveOpen ternary/&& gate.
+for (const relativePath of [
+  "components/ModulesSuiteCtas.tsx",
+  "components/ModulesMobileCta.tsx",
+  "components/FreeTrialCta.tsx",
+]) {
+  const source = read(relativePath);
+  assert(
+    /freeLiveOpen[\s\S]{0,220}~(\$\{clipsLeft\}|\{clipsLeft\}) Free Mini left/.test(
+      source
+    ),
+    `${relativePath}: "~N Free Mini left" must be gated by freeLiveOpen`
+  );
+}
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
