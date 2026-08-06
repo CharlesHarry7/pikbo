@@ -120,6 +120,22 @@ assert.match(
     /bottom-20/,
     "Toast must not hardcode bottom-20 under notched home indicator"
   );
+  // AIT-374: residual competitor lime → neon-pink / void board
+  assert.doesNotMatch(
+    toast,
+    /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/,
+    "Toast must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert.match(
+    toast,
+    /var\(--neon-pink\)/,
+    "Toast chrome uses neon-pink board token"
+  );
+  assert.match(
+    toast,
+    /rgba\(255,\s*78,\s*205/,
+    "Toast glow uses neon-pink board rgba"
+  );
 }
 assert.doesNotMatch(
   zh,
