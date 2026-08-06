@@ -246,6 +246,25 @@ assert(
   );
 }
 
+// AIT-362: Explore page chrome residual lime → neon-pink board tokens
+{
+  const explorePage = read("app/explore/page.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(explorePage),
+    "app/explore/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    explorePage.includes("var(--neon-pink)"),
+    "Explore page chrome (eyebrows, outline CTAs, path links) use neon-pink board tokens"
+  );
+  assert(
+    explorePage.includes("evidence pending") &&
+      explorePage.includes("not UGC") &&
+      explorePage.includes("PIKBO Lab"),
+    "Explore page keeps fail-closed Lab/sample provenance (no fake UGC)"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
