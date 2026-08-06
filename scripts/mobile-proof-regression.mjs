@@ -126,15 +126,37 @@ assert.match(
 );
 {
   const toast = source("components/Toast.tsx");
+  const globals = source("app/globals.css");
+  // AIT-597 / AIT-447: toast must clear MobileGenerateBar + tab nav, not nav alone
   assert.match(
     toast,
+    /bottom-\[var\(--toast-clearance\)\]/,
+    "Toast stack uses --toast-clearance (bar + nav, AIT-597)"
+  );
+  assert.match(
+    toast,
+    /lg:bottom-6/,
+    "Toast desktop keeps bottom-6"
+  );
+  assert.doesNotMatch(
+    toast,
     /bottom-\[calc\(var\(--mobile-nav-clearance\)\+0\.5rem\)\]/,
-    "Toast stack clears mobile nav + safe-area (AIT-185)"
+    "Toast must not park on nav-only clearance under MobileGenerateBar"
   );
   assert.doesNotMatch(
     toast,
     /bottom-20/,
     "Toast must not hardcode bottom-20 under notched home indicator"
+  );
+  assert.match(
+    globals,
+    /--toast-clearance:\s*calc\(\s*var\(--mobile-nav-clearance\)\s*\+\s*var\(--mobile-generate-bar-h\)\s*\+\s*0\.5rem\s*\)/,
+    "globals --toast-clearance stacks bar-h + nav clearance + gap"
+  );
+  assert.match(
+    globals,
+    /--mobile-generate-bar-h:\s*3\.25rem/,
+    "globals defines MobileGenerateBar height token for toast stack"
   );
   // AIT-374: residual competitor lime → neon-pink / void board
   assert.doesNotMatch(
@@ -151,6 +173,18 @@ assert.match(
     toast,
     /rgba\(255,\s*78,\s*205/,
     "Toast glow uses neon-pink board rgba"
+  );
+  // Bar-route surface still mounts MobileGenerateBar above the same nav band
+  const bar = source("components/MobileGenerateBar.tsx");
+  assert.match(
+    bar,
+    /data-floating-generate=["']mobile-bar["']/,
+    "MobileGenerateBar marker remains for bar-route collision smoke"
+  );
+  assert.match(
+    bar,
+    /bottom-\[var\(--mobile-nav-clearance\)\]/,
+    "MobileGenerateBar parks on nav clearance; toast must clear above it"
   );
 }
 {
