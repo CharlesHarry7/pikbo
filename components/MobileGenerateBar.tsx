@@ -49,7 +49,7 @@ export function MobileGenerateBar() {
     >
       <Link
         href={MOBILE_GENERATE_HREF}
-        className="pointer-events-auto btn btn-primary px-5 py-2.5 text-xs shadow-[0_0_30px_rgba(200,255,61,0.35)]"
+        className="pointer-events-auto btn btn-primary px-5 py-2.5 text-xs shadow-[0_0_30px_rgba(255,78,205,0.35)]"
         data-mobile-bar="generate-remix"
       >
         Generate

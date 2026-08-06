@@ -94,7 +94,10 @@ export default async function CommunityPage() {
   };
 
   return (
-    <div className="pb-24">
+    <div
+      className="pb-[var(--mobile-generate-bar-pad)] lg:pb-12"
+      data-community-content-pad="mobile-generate-bar"
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}

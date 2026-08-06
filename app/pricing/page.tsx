@@ -84,8 +84,9 @@ export default function PricingPage() {
 
   return (
     <div
-      className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-[var(--void)] px-4 py-10 text-[var(--cream)] sm:px-8 sm:py-16"
+      className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-[var(--void)] px-4 py-10 pb-[var(--mobile-generate-bar-pad)] text-[var(--cream)] sm:px-8 sm:py-16 lg:pb-16"
       data-pricing-path="product-first"
+      data-pricing-content-pad="mobile-generate-bar"
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(48%_80%_at_50%_0%,rgba(177,78,255,0.28),transparent_70%),radial-gradient(36%_60%_at_80%_10%,rgba(255,78,205,0.16),transparent_65%)]"
