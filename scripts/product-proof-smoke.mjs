@@ -246,6 +246,22 @@ assert(
   );
 }
 
+// AIT-339: VideoTile residual lime → neon-pink board tokens (browse cards)
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const videoTile = tile;
+  assert(
+    !lime.test(videoTile),
+    "VideoTile must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    videoTile.includes("var(--neon-pink)") &&
+      videoTile.includes("var(--void)") &&
+      videoTile.includes("rgba(255,78,205"),
+    "VideoTile hover/remake/labels use neon-pink + void board tokens"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
