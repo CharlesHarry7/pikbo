@@ -574,10 +574,16 @@ assert.doesNotMatch(
   "Toast stack must not hardcode bottom-20 (misses notched safe-area)"
 );
 // AIT-374: Toast residual competitor lime → neon-pink / void board tokens
+// AIT-583: hard glow rgba carnival pink → gallery copper (tokens stay --neon-pink)
 assert.doesNotMatch(
   toastSrc,
   /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/,
   "Toast must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.doesNotMatch(
+  toastSrc,
+  /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i,
+  "Toast must not hard-code carnival pink RGB"
 );
 assert.match(
   toastSrc,
@@ -591,8 +597,8 @@ assert.match(
 );
 assert.match(
   toastSrc,
-  /rgba\(255,\s*78,\s*205/,
-  "Toast glow uses neon-pink board rgba"
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "Toast glow uses gallery copper board rgba"
 );
 
 // 9. AIT-383 — sticky Generate content pads (Create/Modules/cinema/Batch) + browse bar pads
