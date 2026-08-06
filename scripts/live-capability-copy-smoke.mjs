@@ -410,6 +410,47 @@ assert(
   "BatchStudio must pass freeLiveOpen into buildSellerPackDirectorPlan"
 );
 
+// AIT-352: sellerPackQuote residual Free Mini honesty (freeLiveOpen).
+const sellerPackQuoteSource = read("lib/sellerPackQuote.ts");
+assert(
+  /freeLiveOpen\??:\s*boolean|freeLiveOpen\s*===\s*true|opts\.freeLiveOpen/.test(
+    sellerPackQuoteSource
+  ),
+  "sellerPackQuote must accept freeLiveOpen for Free Mini full-pack honesty"
+);
+assert(
+  /FREE_MINI_FULL_PACK/.test(sellerPackQuoteSource) &&
+    /freeLiveOpen[\s\S]{0,400}FREE_MINI_FULL_PACK|FREE_MINI_FULL_PACK[\s\S]{0,200}freeLiveOpen/.test(
+      sellerPackQuoteSource
+    ),
+  "sellerPackQuote FREE_MINI_FULL_PACK must sit behind freeLiveOpen"
+);
+assert(
+  sellerPackQuoteSource.includes("Free Mini covers one 10-credit child") &&
+    /freeLiveOpen[\s\S]{0,500}Free Mini covers one 10-credit child|if \(freeLiveOpen\)[\s\S]{0,300}Free Mini covers/.test(
+      sellerPackQuoteSource
+    ),
+  "sellerPackQuote Free Mini full-pack shortfall message must sit behind freeLiveOpen"
+);
+assert(
+  sellerPackQuoteSource.includes("LIVE_GATED_FULL_PACK") ||
+    sellerPackQuoteSource.includes(
+      "Live gated · Launch Pack needs 30 live credits"
+    ),
+  "sellerPackQuote closed Live path must prefer Live gated · Launch Pack honesty"
+);
+assert(
+  sellerPackQuoteSource.includes("Cached Lab") ||
+    sellerPackQuoteSource.includes("0 credits"),
+  "sellerPackQuote closed Live shortfall must mention Cached Lab / 0 credits"
+);
+assert(
+  /sellerPackLiveStartAllowed\(\{[\s\S]{0,220}freeLiveOpen/.test(
+    batchStudioSource
+  ),
+  "BatchStudio must pass freeLiveOpen into sellerPackLiveStartAllowed"
+);
+
 // Community must stay fail-closed on fake UGC (no invented posts/likes).
 const community = read("app/community/page.tsx");
 assert(

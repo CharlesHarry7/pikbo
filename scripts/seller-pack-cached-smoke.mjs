@@ -303,10 +303,20 @@ assert.equal(
   "https://private.example.test/paparazzi-flash.mp4"
 );
 
-// Free Mini full pack block
+// Free Mini full pack block (AIT-352: freeLiveOpen gate; Live-closed honesty)
 assert.match(quote, /sellerPackLiveStartAllowed/);
 assert.match(quote, /FREE_MINI_FULL_PACK/);
+assert.match(quote, /LIVE_GATED_FULL_PACK/);
+assert.match(quote, /freeLiveOpen/);
+assert.match(
+  quote,
+  /Live gated · Launch Pack needs 30 live credits/
+);
 assert.match(batch, /sellerPackLiveStartAllowed/);
+assert.match(
+  batch,
+  /sellerPackLiveStartAllowed\(\{[\s\S]{0,220}freeLiveOpen/
+);
 assert.match(batch, /data-seller-pack-free-mini=["']single-child["']/);
 assert.doesNotMatch(batch, /cookie generate remains authoritative/);
 assert.match(

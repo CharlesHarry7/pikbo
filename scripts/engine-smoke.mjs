@@ -3333,13 +3333,20 @@ assert.doesNotMatch(spReserve, /cookie-generate-still-authoritative/);
 assert.match(spReserve, /server-owned-atomic-pack/);
 
 // Phase F Seller Pack Free Mini cannot start full 30-credit live pack
+// AIT-352: FREE_MINI_FULL_PACK copy only when freeLiveOpen; else LIVE_GATED_FULL_PACK
 {
   const quoteSrc = fs.readFileSync(join(root, "lib/sellerPackQuote.ts"), "utf8");
   assert.match(quoteSrc, /export function sellerPackLiveStartAllowed/);
   assert.match(quoteSrc, /FREE_MINI_FULL_PACK/);
+  assert.match(quoteSrc, /LIVE_GATED_FULL_PACK/);
+  assert.match(quoteSrc, /freeLiveOpen/);
   assert.match(
     fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
     /sellerPackLiveStartAllowed/
+  );
+  assert.match(
+    fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
+    /sellerPackLiveStartAllowed\(\{[\s\S]{0,200}freeLiveOpen/
   );
   assert.doesNotMatch(
     fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
@@ -3349,15 +3356,20 @@ assert.match(spReserve, /server-owned-atomic-pack/);
     fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
     /data-seller-pack-free-mini=["']single-child["']/
   );
-  // Pure policy: demo always ok; 10 credits blocks 3-child live pack
+  // Pure policy: demo always ok; 10 credits blocks 3-child live pack;
+  // Free Mini product-cap only when freeLiveOpen === true (fail-closed).
   function sellerPackLiveStartAllowed(opts) {
     if (opts.demo) return { ok: true };
     if (opts.balance === undefined) return { ok: true };
     const need = Math.max(1, opts.childCount) * 10;
     const have = opts.balance;
     if (have >= need) return { ok: true };
+    const freeLiveOpen = opts.freeLiveOpen === true;
     if (have < need && have < 30 && need >= 30) {
-      return { ok: false, code: "FREE_MINI_FULL_PACK" };
+      return {
+        ok: false,
+        code: freeLiveOpen ? "FREE_MINI_FULL_PACK" : "LIVE_GATED_FULL_PACK",
+      };
     }
     return { ok: false, code: "INSUFFICIENT_CREDITS" };
   }
@@ -3365,6 +3377,15 @@ assert.match(spReserve, /server-owned-atomic-pack/);
   assert.equal(sellerPackLiveStartAllowed({ demo: false, balance: 10, childCount: 3 }).ok, false);
   assert.equal(
     sellerPackLiveStartAllowed({ demo: false, balance: 10, childCount: 3 }).code,
+    "LIVE_GATED_FULL_PACK"
+  );
+  assert.equal(
+    sellerPackLiveStartAllowed({
+      demo: false,
+      balance: 10,
+      childCount: 3,
+      freeLiveOpen: true,
+    }).code,
     "FREE_MINI_FULL_PACK"
   );
   assert.equal(sellerPackLiveStartAllowed({ demo: false, balance: 30, childCount: 3 }).ok, true);
@@ -3438,15 +3459,19 @@ function sellerPackBalanceCoversPure(quote, balance) {
 assert.equal(sellerPackBalanceCoversPure(sellerPackQuotePure(false), 30), true);
 assert.equal(sellerPackBalanceCoversPure(sellerPackQuotePure(false), 10), false);
 assert.equal(sellerPackBalanceCoversPure(sellerPackQuotePure(false), undefined), true);
-// Free Mini cannot start a 3-child live pack (PRD §6)
+// Free Mini cannot start a 3-child live pack (PRD §6); AIT-352 freeLiveOpen gate
 function sellerPackLiveStartAllowedPure(opts) {
   if (opts.demo) return { ok: true };
   if (opts.balance === undefined) return { ok: true };
   const need = Math.max(1, opts.childCount) * 10;
   const have = opts.balance;
   if (have >= need) return { ok: true };
+  const freeLiveOpen = opts.freeLiveOpen === true;
   if (have < need && have < 30 && need >= 30) {
-    return { ok: false, code: "FREE_MINI_FULL_PACK" };
+    return {
+      ok: false,
+      code: freeLiveOpen ? "FREE_MINI_FULL_PACK" : "LIVE_GATED_FULL_PACK",
+    };
   }
   return { ok: false, code: "INSUFFICIENT_CREDITS" };
 }
@@ -3461,6 +3486,15 @@ assert.equal(
 assert.equal(
   sellerPackLiveStartAllowedPure({ demo: false, balance: 10, childCount: 3 })
     .code,
+  "LIVE_GATED_FULL_PACK"
+);
+assert.equal(
+  sellerPackLiveStartAllowedPure({
+    demo: false,
+    balance: 10,
+    childCount: 3,
+    freeLiveOpen: true,
+  }).code,
   "FREE_MINI_FULL_PACK"
 );
 assert.equal(
