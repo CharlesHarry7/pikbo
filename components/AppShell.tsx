@@ -13,6 +13,7 @@ import { Logo } from "@/components/Logo";
 import { MobileGenerateBar } from "@/components/MobileGenerateBar";
 import { ToastProvider } from "@/components/Toast";
 import { trackPageView } from "@/lib/analytics";
+import { createGenerate360Href } from "@/lib/jobIntents";
 import { parseMomentId } from "@/lib/moments";
 import {
   MOBILE_NAV,
@@ -23,6 +24,8 @@ import { cn } from "@/lib/utils";
 
 const DEFAULT_MOMENT_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=moment-shell`;
 const PRIMARY_NAV_CREATE_HREF = `${MOMENT_CREATE_HREF}&source=primary-nav`;
+/** Sticky mobile home shell — money-path 360 when hero is scrolled away. */
+const SHELL_MOBILE_HOME_360_HREF = createGenerate360Href("shell-mobile-home");
 
 function active(path: string, href: string) {
   const route = href.split("?")[0];
@@ -250,19 +253,35 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             )}
           />
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
           {momentSurface ? (
-            <Link
-              href={DEFAULT_MOMENT_CREATE_HREF}
-              className={cn(
-                "inline-flex min-h-9 items-center rounded-full px-4 text-[10px] font-black",
-                home
-                  ? "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
-                  : "bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] text-white"
-              )}
-            >
-              {home ? "Create my drop clip" : "Use this motion"}
-            </Link>
+            home ? (
+              // AIT-367: sticky dual doors — Moment primary + Generate→360 secondary
+              // so money-path stays one tap after hero scrolls away.
+              <>
+                <Link
+                  href={DEFAULT_MOMENT_CREATE_HREF}
+                  data-shell-mobile-moment-cta
+                  className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-3 text-[10px] font-black text-white shadow-[0_0_18px_rgba(255,78,205,0.35)]"
+                >
+                  Create my drop clip
+                </Link>
+                <Link
+                  href={SHELL_MOBILE_HOME_360_HREF}
+                  data-shell-mobile-360-cta
+                  className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-[#FF4ECD]/50 bg-[rgba(255,78,205,0.1)] px-3 text-[10px] font-black text-[#FF4ECD]"
+                >
+                  Generate 360°
+                </Link>
+              </>
+            ) : (
+              <Link
+                href={DEFAULT_MOMENT_CREATE_HREF}
+                className="inline-flex min-h-9 items-center rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-4 text-[10px] font-black text-white"
+              >
+                Use this motion
+              </Link>
+            )
           ) : resultShell ? (
             <>
               <Link
