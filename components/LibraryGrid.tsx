@@ -754,7 +754,7 @@ function LibraryGridInner() {
                     className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111113] shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)] lg:sticky lg:top-6"
                     data-library-detail="true"
                   >
-                    <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(200,255,61,0.12),transparent_55%),#09090a] text-center">
+                    <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,color-mix(in_srgb,var(--neon-pink)_12%,transparent),transparent_55%),var(--void)] text-center">
                       {job.status === "succeeded" && job.videoUrl ? (
                         <video
                           src={job.videoUrl}

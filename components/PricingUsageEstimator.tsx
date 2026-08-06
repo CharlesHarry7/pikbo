@@ -16,7 +16,7 @@ export function PricingUsageEstimator() {
   const credits = packs * SELLER_PACK_LIVE_TOTAL_CREDITS;
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#111016] shadow-[0_30px_80px_-45px_rgba(200,255,61,.45)]">
+    <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#111016] shadow-[0_30px_80px_-45px_color-mix(in_srgb,var(--neon-pink)_45%,transparent)]">
       <div className="grid lg:grid-cols-[1.25fr_.75fr]">
         <div className="p-6 sm:p-8">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--mint)]">
