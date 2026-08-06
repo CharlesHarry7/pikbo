@@ -1,20 +1,16 @@
 import type { Metadata } from "next";
-import { HomeBrowseCta } from "@/components/HomeBrowseCta";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
+import { HomeDesignerGallery } from "@/components/HomeDesignerGallery";
 import { HomeTrustFooter } from "@/components/HomeTrustFooter";
-import { HomeViralWall } from "@/components/HomeViralWall";
-import { HomeExploreRecipeRail } from "@/components/HomeExploreRecipeRail";
-import { HfProductRail } from "@/components/HfProductRail";
 import { JsonLd } from "@/components/JsonLd";
 import {
   organizationJsonLd,
   websiteJsonLd,
 } from "@/lib/jsonLd";
 import { site } from "@/lib/site";
-import { buildHomeShowcaseFeed } from "@/lib/videoFeed";
 
 const HOME_DESCRIPTION =
-  "Preview one Street Power-Up Moment for designer toys. Pikbo's public sample is cached and costs 0 credits; invited private beta sellers can submit one owned toy photo for one private result.";
+  "AI product video for designer toys and 潮玩 — art toys, blind boxes, vinyl, mecha kits, and plush. One photo to directed listing motion. Private creation when you are ready.";
 
 export const metadata: Metadata = {
   title: { absolute: site.titleDefault },
@@ -43,12 +39,13 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Gallery-calm home (boss feedback):
+ * - One hero + one designer-toy still gallery + trust
+ * - No multi-rail stack, no carnival neon, no cartoon demo wall
+ */
 export default function Home() {
-  const lcpPoster = "/demos/beatbot-still.webp";
-  // AIT-241: Moment hero (primary LCP) → Lab proof wall → thin Explore recipe
-  // rail → HF product suite rail. Generate doors use createGenerate360Href;
-  // density without full HfExploreHome remount, Seller Pack, or fake UGC.
-  const proofWall = buildHomeShowcaseFeed();
+  const lcpPoster = "/style-studies/art-vinyl-guardian-v1.jpg";
 
   return (
     <>
@@ -61,11 +58,7 @@ export default function Home() {
       />
 
       <HomeCinemaHero />
-      <HomeViralWall items={proofWall} />
-      <HomeExploreRecipeRail items={proofWall} />
-      {/* AIT-256/AIT-71: floating Generate clears home indicator; z below sticky header */}
-      <HomeBrowseCta />
-      <HfProductRail />
+      <HomeDesignerGallery />
       <HomeTrustFooter />
     </>
   );

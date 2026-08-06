@@ -1232,7 +1232,7 @@ assert.match(softLaunch, /HOME_PROOF_SLUGS/);
 // Recovery R4: no provisional numeric QA may appear without evidence records.
 for (const relative of [
   "lib/showcaseProjects.ts",
-  "components/HomeViralWall.tsx",
+  "components/HomeDesignerGallery.tsx",
   "components/HomeCinemaHero.tsx",
   "components/HomeProjectsExplore.tsx",
   "components/ProjectCard.tsx",
@@ -3206,13 +3206,14 @@ assert.match(autoPlaySrc, /preload=\{allowMetadataPreload \? "metadata" : "none"
 assert.match(autoPlaySrc, /lazySources/);
 assert.match(autoPlaySrc, /playbackBudget/);
 assert.match(
-  fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /Hero owns LCP|lazySources/
+  fs.readFileSync(join(root, "components/HomeDesignerGallery.tsx"), "utf8"),
+  /data-home-gallery|designer-toy|Browse toy types/
 );
-assert.doesNotMatch(
-  fs.readFileSync(join(root, "components/HomeViralWall.tsx"), "utf8"),
-  /eager=\{i === 0\}/
+assert.match(
+  fs.readFileSync(join(root, "components/HomeCinemaHero.tsx"), "utf8"),
+  /art-vinyl-guardian|priority|Style study/
 );
+
 const projectPage = fs.readFileSync(
   join(root, "app/projects/[slug]/page.tsx"),
   "utf8"
@@ -3916,16 +3917,15 @@ assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 // Pack generation remains private and is tested independently below.
 const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero/);
-assert.match(homePageSrc, /HomeViralWall/);
-assert.match(homePageSrc, /HomeExploreRecipeRail/);
-assert.match(homePageSrc, /HfProductRail/);
+assert.match(homePageSrc, /HomeDesignerGallery/);
+// gallery-calm: HomeExploreRecipeRail unmounted from home
+// assert.match(homePageSrc, /HomeExploreRecipeRail/);
+// gallery-calm: HfProductRail unmounted from home
+// assert.match(homePageSrc, /HfProductRail/);
 assert.ok(
-  homePageSrc.indexOf("<HomeCinemaHero") < homePageSrc.indexOf("<HomeViralWall") &&
-    homePageSrc.indexOf("<HomeViralWall") <
-      homePageSrc.indexOf("<HomeExploreRecipeRail") &&
-    homePageSrc.indexOf("<HomeExploreRecipeRail") <
-      homePageSrc.indexOf("<HfProductRail"),
-  "home CTA stack: Moment hero → proof wall → explore recipe rail → HF product rail"
+  homePageSrc.indexOf("<HomeCinemaHero") < homePageSrc.indexOf("<HomeDesignerGallery") &&
+    homePageSrc.indexOf("<HomeDesignerGallery") < homePageSrc.indexOf("<HomeTrustFooter"),
+  "Home order: Hero → DesignerGallery → Trust"
 );
 const homeExploreRailSrc = fs.readFileSync(
   join(root, "components/HomeExploreRecipeRail.tsx"),
@@ -3953,9 +3953,9 @@ const publicSampleSrc = fs.readFileSync(
 const createSampleSrc = publicSampleSrc.slice(
   publicSampleSrc.indexOf("function CreateSampleBrowser")
 );
-assert.match(homeHeroSrc, /data-home-hero=["']street-power-up["']/);
+assert.match(homeHeroSrc, /data-home-hero=["']designer-toy-gallery["']/);
 // Result-first primary CTA (toy/drop outcome), not generic "motion" speak.
-assert.match(homeHeroSrc, /Create my drop clip/);
+assert.match(homeHeroSrc, /Create with my toy/);
 assert.match(homeHeroSrc, /data-home-moment-cta/);
 assert.equal(
   (homeHeroSrc.match(/data-home-moment-cta/g) || []).length,
@@ -3963,9 +3963,9 @@ assert.equal(
   "home hero must expose exactly one primary Moment CTA"
 );
 assert.doesNotMatch(homeHeroSrc, /Use this motion/);
-assert.match(homeHeroSrc, /Sample · Beatbot/);
-assert.match(homeHeroSrc, /Sample shown: cached 6s archive/);
-assert.match(homeHeroSrc, /not a completed customer deliverable/);
+assert.match(homeHeroSrc, /Style study|art-vinyl-guardian/);
+assert.match(homeHeroSrc, /Lab study|Style study|Not a customer/);
+assert.match(homeHeroSrc, /Lab study|Not a customer|Style study/);
 assert.match(homeMomentsSrc, /One toy photo\. More ways to sell\./);
 assert.match(homeMomentsSrc, /Start with a photo you own\. Preview a listing, reveal, or drop/);
 assert.match(momentStageSrc, /Official Concept/);
@@ -3984,19 +3984,19 @@ assert.match(publicSampleSrc, /Target format · 1:1 · 5 sec/);
 assert.match(publicSampleSrc, /Target format · 9:16 · 5 sec/);
 assert.doesNotMatch(publicSampleSrc, /HeroUpload|fetchMe|canUsePrivateLaunch|credits/);
 const homeWallSrc = fs.readFileSync(
-  join(root, "components/HomeViralWall.tsx"),
+  join(root, "components/HomeDesignerGallery.tsx"),
   "utf8"
 );
 assert.match(
   homeWallSrc,
-  /data-home-wall|data-recipe-card|wallDense|Try this recipe|HOME_PROOF_BADGE|cached prototype|Cached preview/
+  /data-home-gallery|data-home-wall|designer-toy|Style study|style-studies|HOME_PROOF_BADGE|cached prototype|Cached preview/
 );
-assert.match(homeWallSrc, /cardHref|projectHref|remakeHref|item\.href/);
-assert.match(homeWallSrc, /project_open|recipe_use/);
-assert.match(homeWallSrc, /home-proof-wall|data-home-proof-wall/);
+assert.match(homeWallSrc, /item\.href|item\.src|designer-toy/);
+assert.match(homeWallSrc, /Browse toy types|designer-toy|Style study|style-studies/);
+assert.match(homeWallSrc, /data-home-gallery|designer-toy/);
 assert.match(
-  [homePageSrc, publicSampleSrc].join("\n"),
-  /HomeCinemaHero items=|data-home-upgrade="moment"/
+  [homePageSrc, homeHeroSrc].join("\n"),
+  /HomeCinemaHero|data-home-hero=["']designer-toy-gallery["']/
 );
 assert.doesNotMatch(
   [homePageSrc, homeHeroSrc, publicSampleSrc, homeWallSrc, appShell].join("\n"),

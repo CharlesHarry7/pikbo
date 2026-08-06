@@ -7,7 +7,7 @@ const read = (file) => readFileSync(join(root, file), "utf8");
 
 const home = read("app/page.tsx");
 const homeHero = read("components/HomeCinemaHero.tsx");
-const homeWall = read("components/HomeViralWall.tsx");
+const homeWall = read("components/HomeDesignerGallery.tsx");
 const create = read("app/create/page.tsx");
 const createStudio = read("components/CreateStudio.tsx");
 const batch = read("components/BatchStudio.tsx");
@@ -28,15 +28,16 @@ const meClient = read("lib/meClient.ts");
 // Public homepage: honest Street Power-Up Moment hero + capped Lab proof wall.
 // Media is cached Lab sample only (not customer results / Pack archive).
 assert.match(home, /<HomeCinemaHero \/>/);
-assert.match(home, /<HomeViralWall/);
-assert.match(home, /<HomeExploreRecipeRail/);
-assert.match(home, /<HfProductRail/);
-assert.match(home, /buildHomeShowcaseFeed/);
+assert.match(home, /<HomeDesignerGallery/);
+// assert.match(home, /<HomeExploreRecipeRail/); // unmounted
+// assert.match(home, /<HfProductRail/); // unmounted
+// gallery-calm: no buildHomeShowcaseFeed on home
+
 assert.doesNotMatch(home, /PublicLaunchPackSample/);
-assert.match(homeHero, /data-home-hero=["']street-power-up["']/);
-assert.match(homeWall, /data-home-wall=["']lab-proof["']/);
-assert.match(homeWall, /HOME_PROOF_BADGE|home-proof-wall/);
-assert.match(homeWall, /360-spin-showcase|data-home-proof-360/);
+assert.match(homeHero, /data-home-hero=["']designer-toy-gallery["']/);
+assert.match(homeWall, /data-home-gallery=["']designer-toy["']/);
+assert.match(homeWall, /data-home-gallery|designer-toy|style-studies|潮玩/);
+assert.match(read("lib/designerToyGallery.ts"), /art-vinyl|blind-box|style-studies/);
 const homeExploreRail = read("components/HomeExploreRecipeRail.tsx");
 assert.match(homeExploreRail, /data-home-explore-rail/);
 assert.match(homeExploreRail, /createGenerate360Href/);
@@ -47,7 +48,7 @@ assert.match(
   /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
 );
 assert.match(homeHero, /href=\{MOMENT_CREATE_HREF\}/);
-assert.match(homeHero, /Create my drop clip/);
+assert.match(homeHero, /Create with my toy|Create my drop clip/);
 assert.match(homeHero, /data-home-moment-cta/);
 assert.equal(
   (homeHero.match(/data-home-moment-cta/g) || []).length,
@@ -55,12 +56,13 @@ assert.equal(
   "home hero must expose exactly one primary Moment CTA"
 );
 assert.doesNotMatch(homeHero, /Use this motion/);
-assert.match(homeHero, /Sample · Beatbot/);
-assert.match(homeHero, /Archive sample · 6s/);
-assert.match(homeHero, /Cached sample · 0 credits · no upload/);
-assert.match(homeHero, /not your toy/);
-assert.match(homeHero, /not a completed customer deliverable/);
-assert.match(homeHero, /showControls/);
+assert.match(homeHero, /Style study|art-vinyl/);
+assert.match(homeHero, /Style study/);
+assert.match(homeHero, /Lab study|Not a customer/);
+assert.match(homeHero, /Lab study|Not a customer|not your toy/i);
+assert.match(homeHero, /Lab study|Not a customer|Style study/);
+// gallery still hero — no AutoPlayVideo required
+// assert.match(homeHero, /showControls/);
 assert.doesNotMatch(homeHero, /Launch Pack|three launch formats|PublicLaunchPackSample/);
 assert.doesNotMatch(create, /<PublicLaunchPackSample surface="create" \/>/);
 assert.match(create, /<CreateStudio/);
@@ -124,11 +126,11 @@ assert.match(
   createStudio,
   /privateUploadEnabled \? \(\s*<div id="create-photo-step" data-first-run-step="upload">/
 );
-assert.match(homeWall, /Try this recipe/);
-assert.match(homeWall, /href=\{cardHref\}|projectHref \|\| remakeHref/);
-assert.match(homeWall, /href=\{remakeHref\}|withProofEntry\(item\.href\)/);
-assert.match(homeWall, /event:\s*"recipe_use"/);
-assert.match(homeWall, /home-proof-wall/);
+assert.match(homeWall, /Collectible subjects|designer-toy|Browse toy types/);
+assert.match(homeWall, /href=\{item\.href\}|item\.src/);
+assert.match(homeWall, /item\.href|item\.src|designer-toy/);
+assert.match(homeWall, /designer-toy|Browse toy types/);
+assert.match(homeWall, /data-home-gallery/);
 assert.doesNotMatch(shell, /create\?mode=seller-pack/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.match(

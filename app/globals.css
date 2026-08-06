@@ -12,54 +12,54 @@
   --font-display: "Plus Jakarta Sans", "Avenir Next", "Segoe UI", ui-sans-serif,
     system-ui, -apple-system, sans-serif;
 
-  /* Core 8-color board */
-  --electric-purple: #b14eff;
-  --neon-pink: #ff4ecd;
-  --tide-blue: #00d9ff;
-  --lemon: #ffe600;
-  --tide-green: #00ffa3;
-  --ember: #ff3d00;
-  --void: #0a0a0f;
-  --cream: #faf7f2;
+  /* Gallery / collectible board — calm, not carnival neon
+     Boss feedback 2026-08: less vivid, museum vinyl shelf energy */
+  --electric-purple: #8b7355; /* warm bronze alias for legacy names */
+  --neon-pink: #c4a574; /* single muted copper accent */
+  --tide-blue: #8a8f98;
+  --lemon: #c4a574;
+  --tide-green: #7d8578;
+  --ember: #a67c52;
+  --void: #0e0e10;
+  --cream: #f3efe8;
 
   /* Surfaces */
-  --bg: #0a0a0f;
-  --bg-soft: #12121a;
-  --card: #14141e;
-  --card-2: #1a1a28;
-  --border: rgba(255, 255, 255, 0.1);
-  --fg: #faf7f2;
-  --fg-muted: rgba(250, 247, 242, 0.62);
-  --fg-dim: rgba(250, 247, 242, 0.38);
+  --bg: #0e0e10;
+  --bg-soft: #161618;
+  --card: #18181b;
+  --card-2: #1f1f23;
+  --border: rgba(243, 239, 232, 0.1);
+  --fg: #f3efe8;
+  --fg-muted: rgba(243, 239, 232, 0.58);
+  --fg-dim: rgba(243, 239, 232, 0.36);
 
-  --paper: #faf7f2;
-  /* Action / accent — purple-pink is the primary signal now */
-  --brand: #b14eff;
-  --brand-2: #ff4ecd;
-  --mint: #ff4ecd;
-  --lime: #00ffa3;
+  --paper: #f3efe8;
+  /* Single accent — copper / warm metal, not rainbow */
+  --brand: #c4a574;
+  --brand-2: #a89070;
+  --mint: #c4a574;
+  --lime: #9a958c;
 
-  --grad: linear-gradient(135deg, #b14eff 0%, #ff4ecd 55%, #ff4ecd 100%);
-  --grad-cta: linear-gradient(135deg, #b14eff 0%, #ff4ecd 100%);
+  --grad: linear-gradient(135deg, #c4a574 0%, #a89070 100%);
+  --grad-cta: linear-gradient(135deg, #c4a574 0%, #9a7b55 100%);
   --grad-soft: linear-gradient(
     135deg,
-    rgba(177, 78, 255, 0.22),
-    rgba(255, 78, 205, 0.08)
+    rgba(196, 165, 116, 0.16),
+    rgba(196, 165, 116, 0.04)
   );
   --grad-aurora: linear-gradient(
     120deg,
-    #b14eff 0%,
-    #ff4ecd 35%,
-    #00d9ff 70%,
-    #00ffa3 100%
+    rgba(196, 165, 116, 0.35) 0%,
+    rgba(138, 143, 152, 0.12) 55%,
+    rgba(14, 14, 16, 0.9) 100%
   );
-  --brand-glow: 0 0 40px rgba(177, 78, 255, 0.35);
+  --brand-glow: 0 0 28px rgba(196, 165, 116, 0.18);
 
-  --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.05);
-  --shadow-md: 0 12px 40px -16px rgba(0, 0, 0, 0.75);
-  --shadow-lg: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
-  --shadow-neon: 0 0 0 1px rgba(255, 78, 205, 0.35),
-    0 0 32px rgba(177, 78, 255, 0.35);
+  --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-md: 0 12px 40px -16px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 30px 80px -30px rgba(0, 0, 0, 0.85);
+  --shadow-neon: 0 0 0 1px rgba(196, 165, 116, 0.28),
+    0 8px 28px rgba(0, 0, 0, 0.45);
   --radius: 1rem;
 
   /*
@@ -83,8 +83,8 @@
   /* shadcn-compatible aliases */
   --background: var(--bg);
   --foreground: var(--fg);
-  --primary: var(--neon-pink);
-  --primary-foreground: #0a0a0f;
+  --primary: var(--brand);
+  --primary-foreground: #0e0e10;
   --muted: var(--bg-soft);
   --muted-foreground: var(--fg-muted);
   --accent: rgba(255, 255, 255, 0.06);
@@ -305,8 +305,9 @@ html[data-scroll-behavior="smooth"] {
   animation: bling-shimmer 3.2s ease-in-out infinite;
 }
 
-/* Particle field (decorative, pure CSS) */
+/* Particle field — off for gallery-calm home (was neon confetti) */
 .particle-field {
+  display: none;
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -318,7 +319,7 @@ html[data-scroll-behavior="smooth"] {
   width: 4px;
   height: 4px;
   border-radius: 9999px;
-  background: #ff4ecd;
+  background: var(--brand);
   box-shadow: 0 0 8px currentColor;
   animation: particle-drift 7s linear infinite;
   opacity: 0.5;

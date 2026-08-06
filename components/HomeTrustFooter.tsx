@@ -11,52 +11,54 @@ import { company } from "@/lib/company";
 export function HomeTrustFooter() {
   return (
     <footer
-      className="border-t border-[#FF4ECD]/15 bg-[var(--void)] px-4 py-6 text-[var(--cream)] sm:px-7 lg:px-10"
+      className="border-t border-[var(--border)] bg-[var(--bg)] px-4 py-8 text-[var(--fg)] sm:px-7 lg:px-10"
       data-home-trust-footer
     >
-      <div className="mx-auto flex max-w-[1360px] flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mx-auto flex max-w-[1120px] flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FF4ECD]">
-            Pikbo · creative moments for designer toys
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand)]">
+            Pikbo · motion for designer toys &amp; 潮玩
           </p>
-          <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-white/52">
-            Concepts are labeled. Private creation stays gated. Check every generated detail against the physical toy before publishing.
+          <p className="mt-2 max-w-xl text-xs font-medium leading-5 text-[var(--fg-muted)]">
+            Style studies and lab samples are labeled. Private creation stays
+            gated. Always check generated motion against the physical toy before
+            publishing.
           </p>
         </div>
 
         <div className="lg:text-right">
           <nav
             aria-label="Pikbo trust and support"
-            className="flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-black uppercase tracking-[0.12em] lg:justify-end"
+            className="flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-semibold uppercase tracking-[0.12em] lg:justify-end"
           >
-            <Link href="/about" className="text-white/55 hover:text-[#00D9FF]">
+            <Link href="/about" className="text-[var(--fg-muted)] hover:text-[var(--brand)]">
               About
             </Link>
-            <Link href="/contact" className="text-white/55 hover:text-[#00D9FF]">
+            <Link href="/contact" className="text-[var(--fg-muted)] hover:text-[var(--brand)]">
               Contact
             </Link>
-            <Link href="/refund" className="text-white/55 hover:text-[#00D9FF]">
+            <Link href="/refund" className="text-[var(--fg-muted)] hover:text-[var(--brand)]">
               Refunds
             </Link>
             <Link
               href="/guides/how-to-photograph-toys-for-ai-video"
-              className="text-white/55 hover:text-[#00D9FF]"
+              className="text-[var(--fg-muted)] hover:text-[var(--brand)]"
             >
               Photo guide
             </Link>
-            <Link href="/privacy" className="text-white/55 hover:text-[#00D9FF]">
+            <Link href="/privacy" className="text-[var(--fg-muted)] hover:text-[var(--brand)]">
               Privacy
             </Link>
-            <Link href="/terms" className="text-white/55 hover:text-[#00D9FF]">
+            <Link href="/terms" className="text-[var(--fg-muted)] hover:text-[var(--brand)]">
               Terms
             </Link>
           </nav>
-          <div className="mt-3 space-y-1 text-[10px] font-semibold text-white/40">
+          <div className="mt-3 space-y-1 text-[10px] font-medium text-[var(--fg-dim)]">
             <p>
               Support:{" "}
               <a
                 href={`mailto:${site.contact.supportEmail}`}
-                className="underline decoration-white/20 underline-offset-2 hover:text-[#FF4ECD]"
+                className="underline decoration-[var(--border)] underline-offset-2 hover:text-[var(--brand)]"
               >
                 {site.contact.supportEmail}
               </a>
