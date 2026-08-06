@@ -3,9 +3,14 @@
 import { createRemixHref } from "@/lib/remixIntent";
 import { createGenerate360Href } from "@/lib/jobIntents";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AssetBriefPanel } from "@/components/AssetBriefPanel";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
+import {
+  canRetryGenerateFailure,
+  planGenerateWaitLeave,
+} from "@/lib/generateRecoveryPolicy";
 import {
   buildAssetBrief,
   probeImageSize,
@@ -226,7 +231,8 @@ function launchWorkspaceStatus(status: Job["status"]): string {
   ) {
     return "Needs retry";
   }
-  if (status === "recovery_unavailable") return "Checking status";
+  // Explicit terminal-ish recovery miss — never permanent "Checking…".
+  if (status === "recovery_unavailable") return "Status unavailable · refresh";
   if (status === "running") return "Creating";
   return "Preparing";
 }
@@ -270,6 +276,7 @@ export function BatchStudio({
   /** Explicit owner-scoped Pack selected in Library; takes recovery priority. */
   initialRecoverPackRunId?: string;
 }) {
+  const router = useRouter();
   const isSellerPack = pack === "seller";
 
   const validInitial = useMemo(() => {
@@ -308,6 +315,18 @@ export function BatchStudio({
   const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
     null
   );
+  /**
+   * Last fail code + flags — batch Fail panel Retry is server-gated
+   * (auth/paywall/fatal/durable-hold never invent a retriable path).
+   */
+  const [lastFailCode, setLastFailCode] = useState<string | null>(null);
+  const [lastFailFatal, setLastFailFatal] = useState(false);
+  const [lastFailPaywall, setLastFailPaywall] = useState(false);
+  /** Durable child recovery checking/waiting (same private task). */
+  const [recoveringSavedResult, setRecoveringSavedResult] = useState(false);
+  /** Recovery exhausted without authority; original child POST still open. */
+  const [awaitingPrimaryAfterRecovery, setAwaitingPrimaryAfterRecovery] =
+    useState(false);
   const [aspectRatio, setAspectRatio] = useState<"9:16" | "1:1" | "16:9">(
     "9:16"
   );
@@ -331,6 +350,12 @@ export function BatchStudio({
   const [packElapsed, setPackElapsed] = useState(0);
   /** Abort in-flight pack child + rate-limit waits (parity with Create Cancel). */
   const packAbortRef = useRef<AbortController | null>(null);
+  /**
+   * When true, UI stopped waiting but the current child POST must keep running
+   * (no abort, no ledger cancel, no second provider call).
+   */
+  const detachedWaitRef = useRef(false);
+  const packMountedRef = useRef(true);
   const quoteEventRef = useRef("");
   const privateInputEnabled = canPreparePrivateInput(me);
   const privateLaunchEnabled = canUsePrivateLaunch(me);
@@ -341,6 +366,7 @@ export function BatchStudio({
   const { locale } = useI18n();
 
   useEffect(() => {
+    packMountedRef.current = true;
     const t = window.setTimeout(() => {
       void fetchMe().then((next) => {
         setMe(next);
@@ -351,8 +377,8 @@ export function BatchStudio({
     }, 0);
     return () => {
       window.clearTimeout(t);
-      packAbortRef.current?.abort();
-      packAbortRef.current = null;
+      // Do not auto-abort on unmount — detach leave keeps child POSTs alive.
+      packMountedRef.current = false;
     };
   }, [initialSku]);
 
@@ -578,10 +604,17 @@ export function BatchStudio({
   }, [running]);
 
   function cancelInFlightPack() {
+    const plan = planGenerateWaitLeave("cancel");
+    if (!plan.abortPrimary || !plan.cancelLedger) {
+      return;
+    }
     const ctrl = packAbortRef.current;
     if (!ctrl) return;
     ctrl.abort();
     packAbortRef.current = null;
+    detachedWaitRef.current = false;
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
     // Immediate Wave B settlement UI (parity with Create cancel) before the
     // generate loop unwinds — finished siblings stay; running → unconfirmed.
     setJobs((previous) =>
@@ -605,6 +638,49 @@ export function BatchStudio({
     setError(
       "Pack canceled — finished formats stay available. The interrupted format may still complete; check your balance before trying again."
     );
+  }
+
+  /**
+   * Stop waiting on Batch/Pack without aborting the in-flight child POST or
+   * canceling the ledger. Finished clips stay; open Library for private truth.
+   */
+  function leaveWaitingKeepBackground() {
+    const plan = planGenerateWaitLeave("detach");
+    if (plan.abortPrimary || plan.cancelLedger || plan.startNewGenerate) {
+      return;
+    }
+    // Drop the AbortController ref without abort() so cleanup cannot cancel.
+    packAbortRef.current = null;
+    detachedWaitRef.current = true;
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
+    setPackElapsed(0);
+    setRunning(false);
+    setError(null);
+    router.push("/library");
+  }
+
+  function recordFailGate(opts: {
+    code?: string | null;
+    fatal?: boolean;
+    paywall?: boolean;
+    retryAfterSec?: number | null;
+  }) {
+    setLastFailCode(opts.code || null);
+    setLastFailFatal(Boolean(opts.fatal));
+    setLastFailPaywall(Boolean(opts.paywall));
+    setFailRetryAfterSec(
+      typeof opts.retryAfterSec === "number" && opts.retryAfterSec > 0
+        ? opts.retryAfterSec
+        : null
+    );
+  }
+
+  function clearFailGate() {
+    setLastFailCode(null);
+    setLastFailFatal(false);
+    setLastFailPaywall(false);
+    setFailRetryAfterSec(null);
   }
 
   const isFree = me?.plan === "free" || me?.watermark === true;
@@ -808,6 +884,8 @@ export function BatchStudio({
     /** Caller should re-register still for remaining pack children. */
     recoveredFromAssetMiss?: boolean;
     retryAfterSec?: number;
+    fatal?: boolean;
+    paywall?: boolean;
   }> {
     const jobAspect = job.aspectRatio ?? aspectRatio;
     const dualStill =
@@ -856,6 +934,13 @@ export function BatchStudio({
             ? image
             : undefined,
         signal,
+        onRecoveryState: (state) => {
+          if (detachedWaitRef.current || !packMountedRef.current) return;
+          setRecoveringSavedResult(
+            state === "checking" || state === "waiting"
+          );
+          setAwaitingPrimaryAfterRecovery(state === "awaiting_primary");
+        },
       }
     );
 
@@ -864,6 +949,7 @@ export function BatchStudio({
         setMe((previous) => mergeMeSession(previous, result.session));
         emitSessionRefresh();
       }
+      // Only durable creditsRefunded === true may claim restore (never invent).
       const refunded = result.creditsRefunded === true;
       // TIMEOUT / network / abort → unconfirmed; confirmed refund → restored.
       const settlement = requestCreditStateFromFailure({
@@ -895,6 +981,8 @@ export function BatchStudio({
           typeof result.retryAfterSec === "number" && result.retryAfterSec > 0
             ? result.retryAfterSec
             : undefined,
+        fatal: Boolean(result.fatal),
+        paywall: Boolean(result.paywall),
       };
     }
 
@@ -1009,7 +1097,10 @@ export function BatchStudio({
       },
     });
     setError(null);
-    setFailRetryAfterSec(null);
+    clearFailGate();
+    setRecoveringSavedResult(false);
+    setAwaitingPrimaryAfterRecovery(false);
+    detachedWaitRef.current = false;
     setPackElapsed(0);
     setRunning(true);
     const projectId = `${sellerPackActive ? "seller-pack" : "batch"}-${Date.now()}`;
@@ -1108,10 +1199,17 @@ export function BatchStudio({
 
     try {
       for (let i = 0; i < queue.length; i++) {
+        // Detach drops UI ownership but keeps the original child POSTs alive.
+        // Only explicit cancel (abort) ends remaining work.
         if (abortCtrl.signal.aborted) break;
-        setJobs((prev) =>
-          prev.map((j, idx) => (idx === i ? { ...j, status: "running" } : j))
-        );
+        const uiLive = packMountedRef.current && !detachedWaitRef.current;
+        if (uiLive) {
+          setJobs((prev) =>
+            prev.map((j, idx) => (idx === i ? { ...j, status: "running" } : j))
+          );
+          setRecoveringSavedResult(false);
+          setAwaitingPrimaryAfterRecovery(false);
+        }
         const outcome = await executeJob(
           queue[i],
           projectId,
@@ -1120,9 +1218,13 @@ export function BatchStudio({
           abortCtrl.signal
         );
         queue[i] = outcome.job;
-        setJobs((previous) =>
-          previous.map((job, index) => (index === i ? outcome.job : job))
-        );
+        if (packMountedRef.current && !detachedWaitRef.current) {
+          setJobs((previous) =>
+            previous.map((job, index) => (index === i ? outcome.job : job))
+          );
+          setRecoveringSavedResult(false);
+          setAwaitingPrimaryAfterRecovery(false);
+        }
         // Mid-pack asset miss: re-register still so remaining children use a fresh assetId.
         if (
           !demoMode &&
@@ -1138,25 +1240,32 @@ export function BatchStudio({
           }
         }
         if (outcome.stopQueue || abortCtrl.signal.aborted) {
-          if (!abortCtrl.signal.aborted) {
+          if (
+            !abortCtrl.signal.aborted &&
+            !detachedWaitRef.current &&
+            packMountedRef.current
+          ) {
             setError(outcome.job.error ?? "Launch Pack paused");
-            setFailRetryAfterSec(
-              typeof outcome.retryAfterSec === "number"
-                ? outcome.retryAfterSec
-                : null
+            recordFailGate({
+              code: outcome.job.errorCode,
+              fatal: outcome.fatal,
+              paywall: outcome.paywall,
+              retryAfterSec: outcome.retryAfterSec,
+            });
+          }
+          if (!detachedWaitRef.current && packMountedRef.current) {
+            setJobs((previous) =>
+              previous.map((job, index) =>
+                index > i && job.status === "queued"
+                  ? {
+                      ...job,
+                      error:
+                        "Reserved but unstarted; the worker will release it at expiry.",
+                    }
+                  : job
+              )
             );
           }
-          setJobs((previous) =>
-            previous.map((job, index) =>
-              index > i && job.status === "queued"
-                ? {
-                    ...job,
-                    error:
-                      "Reserved but unstarted; the worker will release it at expiry.",
-                  }
-                : job
-            )
-          );
           break;
         }
         // Soft gap so sequential batch stays under session/IP soft limits.
@@ -1165,36 +1274,48 @@ export function BatchStudio({
         }
       }
     } catch (e) {
-      const aborted =
-        (e instanceof Error && e.name === "AbortError") ||
-        abortCtrl.signal.aborted;
-      if (aborted) {
-        setJobs((previous) =>
-          previous.map((job) =>
-            job.status === "queued" || job.status === "running"
-              ? {
-                  ...job,
-                  status:
-                    job.status === "running" ? "failed" : "queued",
-                  error:
-                    job.status === "running"
-                      ? "Canceled · refund unconfirmed if live debit started"
-                      : "Reserved but unstarted; the worker will release it at expiry.",
-                  creditState:
-                    job.status === "running"
-                      ? "refund unconfirmed"
-                      : job.creditState,
-                }
-              : job
-          )
-        );
+      if (detachedWaitRef.current || !packMountedRef.current) {
+        // Detached wait / unmounted: never invent cancel settlement or setState.
       } else {
-        setError(e instanceof Error ? e.message : "Batch failed");
+        const aborted =
+          (e instanceof Error && e.name === "AbortError") ||
+          abortCtrl.signal.aborted;
+        if (aborted) {
+          setJobs((previous) =>
+            previous.map((job) =>
+              job.status === "queued" || job.status === "running"
+                ? {
+                    ...job,
+                    status:
+                      job.status === "running" ? "failed" : "queued",
+                    error:
+                      job.status === "running"
+                        ? "Canceled · refund unconfirmed if live debit started"
+                        : "Reserved but unstarted; the worker will release it at expiry.",
+                    creditState:
+                      job.status === "running"
+                        ? "refund unconfirmed"
+                        : job.creditState,
+                  }
+                : job
+            )
+          );
+        } else {
+          setError(e instanceof Error ? e.message : "Batch failed");
+        }
       }
     } finally {
       if (packAbortRef.current === abortCtrl) {
         packAbortRef.current = null;
       }
+      if (detachedWaitRef.current || !packMountedRef.current) {
+        // Keep detachedWaitRef true until this finally so late child POSTs stay
+        // non-aborted; clear after background work settles.
+        detachedWaitRef.current = false;
+        return;
+      }
+      setRecoveringSavedResult(false);
+      setAwaitingPrimaryAfterRecovery(false);
       setRunning(false);
     }
   }
@@ -2243,10 +2364,25 @@ export function BatchStudio({
                 type="button"
                 onClick={cancelInFlightPack}
                 className="mt-3 min-h-10 w-full rounded-xl border border-[#D5D9E1] bg-white px-4 text-xs font-black text-[#4E5663]"
-                title="Stops waiting in this browser. A render already in progress may still finish."
+                title="Stops waiting in this browser. A render already in progress may still finish. Refund stays unconfirmed until balance confirms."
+                data-generate-leave="cancel"
               >
                 Cancel Pack · keep finished clips
               </button>
+              {!demoMode &&
+              (recoveringSavedResult ||
+                awaitingPrimaryAfterRecovery ||
+                packElapsed >= 90) ? (
+                <button
+                  type="button"
+                  onClick={leaveWaitingKeepBackground}
+                  data-generate-leave="detach"
+                  className="mt-2 min-h-10 w-full rounded-xl border border-[#2457E6]/30 bg-[#2457E6]/10 px-4 text-xs font-black text-[#2457E6]"
+                  title="Stop waiting here. Does not abort the original generate or claim a refund."
+                >
+                  Open Library · keep generating
+                </button>
+              ) : null}
             </div>
           ) : (
             <>
@@ -2261,6 +2397,9 @@ export function BatchStudio({
                   : `Batch · ${doneCount}/${jobs.length || selected.length}`)
               }
               onCancel={cancelInFlightPack}
+              onLeaveToLibrary={leaveWaitingKeepBackground}
+              recoveryChecking={recoveringSavedResult}
+              awaitingPrimary={awaitingPrimaryAfterRecovery}
               compact
               className="mb-1"
             />
@@ -2269,6 +2408,7 @@ export function BatchStudio({
               onClick={cancelInFlightPack}
               className="btn btn-ghost hidden w-full border border-white/20 lg:flex"
               title="Stops waiting in this browser. A render already in progress may still finish."
+              data-generate-leave="cancel"
             >
               Cancel pack · keep finished formats
             </button>
@@ -2405,9 +2545,15 @@ export function BatchStudio({
               message={error}
               retryAfterSec={failRetryAfterSec}
               onRetry={
-                image && !running && selected.length > 0
+                canRetryGenerateFailure({
+                  code: lastFailCode,
+                  fatal: lastFailFatal,
+                  paywall: lastFailPaywall,
+                  busy: running,
+                  hasInput: Boolean(image) && selected.length > 0,
+                })
                   ? () => {
-                      setFailRetryAfterSec(null);
+                      clearFailGate();
                       void runBatch();
                     }
                   : undefined
@@ -2850,29 +2996,54 @@ export function BatchStudio({
         ) : null}
         {running ? (
           sellerPackActive ? (
-            <div className="flex items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-black text-[#111827]">
-                  Creating your Pack · {doneCount}/3 ready
-                </p>
-                <p className="mt-0.5 text-[9px] font-semibold leading-3 text-[#717987]">
-                  Stops waiting here; a render may still finish. Check Pack
-                  status and balance before retrying.
-                </p>
+            <div className="flex w-full flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-black text-[#111827]">
+                    Creating your Pack · {doneCount}/3 ready
+                    <span className="ml-1 font-mono text-[10px] font-bold text-[#717987]">
+                      · {packElapsed}s
+                    </span>
+                  </p>
+                  <p className="mt-0.5 text-[9px] font-semibold leading-3 text-[#717987]">
+                    {awaitingPrimaryAfterRecovery
+                      ? "Original format still running · no second charge"
+                      : recoveringSavedResult
+                        ? "Tracking private task · no second charge"
+                        : "Keep tab open · cancel only if you mean to stop"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={cancelInFlightPack}
+                  className="shrink-0 rounded-xl border border-[#D5D9E1] bg-white px-3 py-2 text-[10px] font-black text-[#4E5663]"
+                  data-generate-leave="cancel"
+                >
+                  Cancel Pack
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={cancelInFlightPack}
-                className="shrink-0 rounded-xl border border-[#D5D9E1] bg-white px-3 py-2 text-[10px] font-black text-[#4E5663]"
-              >
-                Cancel Pack
-              </button>
+              {!demoMode &&
+              (recoveringSavedResult ||
+                awaitingPrimaryAfterRecovery ||
+                packElapsed >= 90) ? (
+                <button
+                  type="button"
+                  onClick={leaveWaitingKeepBackground}
+                  data-generate-leave="detach"
+                  className="w-full rounded-xl border border-[#2457E6]/30 bg-[#2457E6]/10 px-3 py-2 text-[10px] font-black text-[#2457E6]"
+                >
+                  Open Library · keep generating
+                </button>
+              ) : null}
             </div>
           ) : (
             <GenerateWaitMobileStrip
               elapsed={packElapsed}
               demoMode={demoMode}
               onCancel={cancelInFlightPack}
+              onLeaveToLibrary={leaveWaitingKeepBackground}
+              recoveryChecking={recoveringSavedResult}
+              awaitingPrimary={awaitingPrimaryAfterRecovery}
             />
           )
         ) : !image ? (

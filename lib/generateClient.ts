@@ -266,19 +266,23 @@ export async function cancelGenerateLedger(opts: {
     if (opts.jobId) payload.jobId = opts.jobId;
     if (opts.idempotencyKey) payload.idempotencyKey = opts.idempotencyKey;
     if (!payload.jobId && !payload.idempotencyKey) return;
+    // Keep Bearer when present (Library recovery cancel parity) so owner-scoped
+    // durable cancel does not fall through to guest / process-memory miss.
+    const headers = await generateAuthHeaders();
     // Prefer collection DELETE (idempotencyKey); fall back to /[id] when only jobId.
     if (payload.idempotencyKey || !payload.jobId) {
       await fetch("/api/generations", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(payload),
         keepalive: true,
       });
     } else {
-      await fetch(
-        `/api/generations/${encodeURIComponent(payload.jobId)}`,
-        { method: "DELETE", keepalive: true }
-      );
+      await fetch(`/api/generations/${encodeURIComponent(payload.jobId)}`, {
+        method: "DELETE",
+        headers,
+        keepalive: true,
+      });
     }
   } catch {
     /* ignore — client already refund-unconfirmed */
