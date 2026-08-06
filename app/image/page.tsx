@@ -13,6 +13,10 @@ import {
 } from "@/lib/imageHistory";
 import { fetchMe, mergeMeSession, type MeResponse } from "@/lib/meClient";
 import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
+import {
   mintImageIdempotencyKey,
   postImageWithRetry,
 } from "@/lib/imageClient";
@@ -78,6 +82,12 @@ export default function ImageStudioPage() {
   const [lastSettlement, setLastSettlement] = useState<string | null>(null);
   /** Free plan: stills are demo-only so Mini trial stays for Create video. */
   const [me, setMe] = useState<MeResponse | null>(null);
+  /** Finite session boot (Create Studio parity) — never leave me unresolved forever. */
+  const [meResolved, setMeResolved] = useState(false);
+  const [sessionBoot, setSessionBoot] = useState<
+    "checking" | "ready" | "timeout"
+  >("checking");
+  const [bootNonce, setBootNonce] = useState(0);
   /** Phase D/F parity — cancel mid still; refund unconfirmed if live debit started. */
   const abortRef = useRef<AbortController | null>(null);
   /** R1b one-shot handoff: exact child id + bearer (Library ledger retry). */
@@ -97,11 +107,39 @@ export default function ImageStudioPage() {
     canceled: number;
   } | null>(null);
 
-  // Default optimistic Free until /api/me resolves (soft-launch default plan).
+  // Fail closed until /api/me resolves (soft-launch default: Free stills = demo).
+  // After timeout, me stays null → demo-only with explicit Retry (never soft-stuck).
   const freeStillsDemoOnly =
     me == null
       ? true
       : me.plan === "free" || me.freeTrial?.isFreePlan === true;
+
+  // 8s wall-clock session boot (Create Studio parity). Retry re-runs via bootNonce.
+  useEffect(() => {
+    let cancelled = false;
+    const bootT = window.setTimeout(() => {
+      void (async () => {
+        setMeResolved(false);
+        setSessionBoot("checking");
+        try {
+          const m = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
+          if (cancelled) return;
+          setMe(m);
+          setMeResolved(true);
+          setSessionBoot("ready");
+        } catch (err) {
+          if (cancelled) return;
+          setMe(null);
+          setMeResolved(true);
+          setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+        }
+      })();
+    }, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(bootT);
+    };
+  }, [bootNonce]);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -141,9 +179,6 @@ export default function ImageStudioPage() {
       }
     }, 0);
     let cancelled = false;
-    void fetchMe().then((m) => {
-      if (!cancelled) setMe(m);
-    });
 
     async function loadSessionStills() {
       try {
@@ -598,6 +633,40 @@ export default function ImageStudioPage() {
                 </button>
               ))}
             </div>
+            <p
+              className="mt-3 text-[10px] font-bold uppercase tracking-wider text-white/40"
+              data-studio-open-state={sessionBoot}
+              data-image-session-boot={sessionBoot}
+            >
+              {!meResolved
+                ? "Checking access…"
+                : sessionBoot === "timeout"
+                  ? "Access check timed out"
+                  : freeStillsDemoOnly
+                    ? "Demo stills · Free / unsigned"
+                    : "Live stills available"}
+            </p>
+            {sessionBoot === "timeout" ? (
+              <div
+                className="mt-2 rounded-xl border border-[#FF6B6B]/35 bg-[#FF6B6B]/10 px-3 py-2.5"
+                data-studio-open-error="session-timeout"
+                role="alert"
+              >
+                <p className="text-[11px] font-semibold leading-5 text-white/85">
+                  Could not verify private access in time. Stills stay demo-only
+                  until the check succeeds — retry or continue with a labeled
+                  demo.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setBootNonce((n) => n + 1)}
+                  data-studio-open-retry
+                  className="mt-2 inline-flex min-h-9 items-center justify-center rounded-full bg-white px-3 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[var(--mint)]"
+                >
+                  Retry access check
+                </button>
+              </div>
+            ) : null}
             {busy ? (
               <div className="mt-4 space-y-2">
                 <button
