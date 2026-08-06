@@ -529,6 +529,46 @@ assert(
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
 );
 
+// AIT-379: residual Free Mini honesty — freeLock + image handoff + presets FAQ.
+assert(
+  !/"create\.freeLock":\s*"[^"]*Free trial locked to Mini/.test(i18nSource) &&
+    !/"create\.freeLock":\s*"[^"]*免费试用锁定 Mini/.test(i18nSource) &&
+    !/"create\.freeLock":\s*"[^"]*Mini · 5s · 480p/.test(i18nSource),
+  "i18n create.freeLock must not hardcode Mini · 5s · 480p as unconditional free trial"
+);
+assert(
+  /"create\.freeLock":[\s\S]{0,80}Cached Lab/.test(i18nSource) &&
+    /"create\.freeLock":[\s\S]{0,80}Live product caps when enabled|"create\.freeLock":[\s\S]{0,80}Live 产品上限/.test(
+      i18nSource
+    ),
+  "i18n create.freeLock must prefer Cached Lab / Live product caps when enabled"
+);
+
+const presetsSource = read("lib/presets.ts");
+assert(
+  !/Free includes one Seedance Mini 5-second 480p live trial/i.test(
+    presetsSource
+  ),
+  "lib/presets.ts free-version FAQ must not sell unconditional Free Mini live trial"
+);
+assert(
+  presetsSource.includes("Cached Lab prototype at 0 credits") &&
+    presetsSource.includes("When Live is enabled for an eligible account"),
+  "lib/presets.ts free-version FAQ must prefer Cached Lab + conditional Live"
+);
+
+const imagePageSource = read("app/image/page.tsx");
+assert(
+  !/Free Mini trial is video-only/i.test(imagePageSource) &&
+    !/for your Seedance clip/i.test(imagePageSource),
+  "image studio must not brand Free Mini trial as public-open video path"
+);
+assert(
+  imagePageSource.includes("Free-plan stills stay demo-cached") &&
+    imagePageSource.includes("Lab sample or Live video when eligible"),
+  "image studio free path must keep demo-cached + Live-eligible handoff honesty"
+);
+
 // AIT-298: Home suite residual — HowItWorks / Onboarding / FeatureCarousel.
 const howItWorksSource = read("components/HowItWorks.tsx");
 assert(

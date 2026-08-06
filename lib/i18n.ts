@@ -209,7 +209,8 @@ const en: Dict = {
     "Creative Director tip: only toys you own or have rights to. Blind box, resin, sofubi, plush, gunpla — fidelity first in Sales mode.",
   "create.duration": "Duration",
   "create.tenPaid": "10s · paid",
-  "create.freeLock": "Free trial locked to Mini · 5s · 480p · on-player mark",
+  "create.freeLock":
+    "Public path: Cached Lab · 0 credits · Live product caps when enabled",
   "create.aspect": "Aspect",
   "create.aspectChannel": "Aspect · channel crop",
   "create.resolution": "Resolution",
@@ -543,7 +544,8 @@ const zh: Dict = {
     "创意总监提示：只做你拥有或有权使用的玩具。盲盒、树脂、搪胶、毛绒、高达 —— 卖货模式保真优先。",
   "create.duration": "时长",
   "create.tenPaid": "10 秒 · 付费",
-  "create.freeLock": "免费试用锁定 Mini · 5 秒 · 480p · 播放器水印",
+  "create.freeLock":
+    "公开路径：Cached Lab · 0 积分 · Live 产品上限开通后生效",
   "create.aspect": "画幅",
   "create.aspectChannel": "画幅 · 渠道裁切",
   "create.resolution": "分辨率",

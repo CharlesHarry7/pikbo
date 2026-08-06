@@ -627,7 +627,7 @@ export default function ImageStudioPage() {
             )}
             {freeStillsDemoOnly ? (
               <p className="mt-2 text-[11px] leading-relaxed text-[var(--fg-dim)]">
-                Free Mini trial is video-only. Open{" "}
+                Free-plan stills stay demo-cached · 0 credits. Open{" "}
                 <Link
                   href={createRemixHref(IMAGE_HANDOFF_EFFECT)}
                   className="text-[var(--mint)] underline-offset-2 hover:underline"
@@ -635,12 +635,12 @@ export default function ImageStudioPage() {
                 >
                   Create
                 </Link>{" "}
-                for your Seedance clip, or{" "}
+                for a Lab sample or Live video when eligible, or{" "}
                 <Link
                   href="/pricing"
                   className="text-[var(--mint)] underline-offset-2 hover:underline"
                 >
-                  upgrade
+                  compare plans
                 </Link>{" "}
                 for live Flux stills.
               </p>
