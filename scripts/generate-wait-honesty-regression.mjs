@@ -1,5 +1,6 @@
 /**
- * AIT-154 — Studio generate-wait honesty (recovery exit + server-gated Retry).
+ * AIT-154 / AIT-213 — Studio generate-wait honesty residual
+ * (recovery exit + server-gated Retry + BatchStudio parity).
  *
  * Source contract (no network, no provider):
  * 1. Recovery checking/waiting always unlocks a non-destructive detach exit
@@ -7,6 +8,7 @@
  * 3. Fail-panel Retry is blocked for auth/paywall/fatal/reconcile codes
  * 4. CreateStudio + GenerateWaitStage wire the policy (no silent hang)
  * 5. Fail-closed refund copy remains on GenerateFailPanel
+ * 6. BatchStudio wires recovery state, detach, and server-gated Retry
  *
  * Run: npm run generate-wait-honesty-regression
  */
@@ -263,7 +265,55 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(client, /185_000|maxWaitMs/);
 }
 
-// ─── 5. package.json script registered ─────────────────────────────────────
+// ─── 5. BatchStudio residual — recovery exit + Retry gate + detach ─────────
+
+{
+  const batch = read("components/BatchStudio.tsx");
+  assert.match(batch, /canRetryGenerateFailure/);
+  assert.match(batch, /planGenerateWaitLeave/);
+  assert.match(batch, /leaveWaitingKeepBackground/);
+  assert.match(batch, /cancelInFlightPack/);
+  assert.match(batch, /lastFailCode/);
+  assert.match(batch, /lastFailFatal/);
+  assert.match(batch, /lastFailPaywall/);
+  assert.match(batch, /recoveringSavedResult/);
+  assert.match(batch, /awaitingPrimaryAfterRecovery/);
+  assert.match(batch, /onRecoveryState/);
+  assert.match(batch, /awaiting_primary/);
+  assert.match(batch, /detachedWaitRef/);
+  assert.match(batch, /data-generate-leave="detach"/);
+  assert.match(batch, /data-generate-leave="cancel"/);
+  assert.match(
+    batch,
+    /GenerateWaitStage[\s\S]{0,600}onLeaveToLibrary=\{leaveWaitingKeepBackground\}/
+  );
+  assert.match(
+    batch,
+    /GenerateWaitStage[\s\S]{0,800}recoveryChecking=\{recoveringSavedResult\}/
+  );
+  assert.match(
+    batch,
+    /GenerateWaitMobileStrip[\s\S]{0,400}recoveryChecking=\{recoveringSavedResult\}/
+  );
+  assert.match(
+    batch,
+    /canRetryGenerateFailure\(\{[\s\S]{0,200}code: lastFailCode/
+  );
+  // recovery_unavailable never reads as permanent "Checking…"
+  assert.match(batch, /Status unavailable · refresh/);
+  assert.doesNotMatch(
+    batch,
+    /recovery_unavailable"\) return "Checking status"/
+  );
+  // Unmount must not auto-abort (would kill detach leave)
+  assert.match(batch, /packMountedRef\.current = false/);
+  assert.doesNotMatch(
+    batch,
+    /return \(\) => \{\s*window\.clearTimeout\(t\);\s*packAbortRef\.current\?\.abort\(\)/
+  );
+}
+
+// ─── 6. package.json script registered ─────────────────────────────────────
 
 {
   const pkg = JSON.parse(read("package.json"));
@@ -274,5 +324,5 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
 }
 
 console.log(
-  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · fail-closed refund copy · Create wiring)"
+  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · fail-closed refund copy · Create + Batch wiring)"
 );
