@@ -199,6 +199,37 @@ assert(
   "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
 
+// AIT-512: PrivateSellerPackGate residual carnival → gallery-calm copper board
+{
+  const packGate = read("components/PrivateSellerPackGate.tsx");
+  const carnival = /#FF6846|#2876FF|#D84A35|#E25A43|#c8ff3d|c8ff3d|FF4ECD|B14EFF|00D9FF/i;
+  assert(
+    !carnival.test(packGate),
+    "PrivateSellerPackGate must not hard-code carnival orange/hot-blue/lime hex accents"
+  );
+  assert(
+    packGate.includes("var(--brand)") &&
+      packGate.includes("var(--void)") &&
+      packGate.includes("var(--cream)"),
+    "PrivateSellerPackGate accents use gallery-calm board tokens"
+  );
+  assert(
+    packGate.includes("Pikbo private validation") &&
+      packGate.includes("invited validation accounts") &&
+      packGate.includes("Request private beta") &&
+      packGate.includes("Create one Moment") &&
+      packGate.includes("canUsePrivateLaunch"),
+    "PrivateSellerPackGate keeps private-access honesty + public Moment CTAs"
+  );
+  assert(
+    !read("app/page.tsx").includes("PrivateSellerPackGate") &&
+      !read("app/page.tsx").includes("HomeSeoBody") &&
+      !read("app/page.tsx").includes("HomeBrowseCta") &&
+      !read("app/page.tsx").includes("HfExplore"),
+    "gallery-calm home must not remount Seller Pack gate / HomeSeoBody / browse CTA / HfExplore"
+  );
+}
+
 // AIT-320: four-surface money path off residual competitor lime (board tokens)
 {
   const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
