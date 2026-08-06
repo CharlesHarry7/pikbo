@@ -3711,11 +3711,20 @@ export function CreateStudio({
         </section>
       </div>
 
-      {/* ── Sticky mobile primary CTA — above AppShell tab nav ── */}
+      {/* ── Sticky mobile primary CTA
+          Fixed Moment / resultShell hides AppShell tab nav → safe-area only.
+          Generic Create still shares the tab bar → clear tab + home indicator. ── */}
       <div
-        className="fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+        className={
+          fixedMomentContract
+            ? "fixed inset-x-0 bottom-[var(--floating-cta-safe-bottom)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+            : "fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+        }
         data-create-sticky="mobile"
         data-floating-generate="create-sticky"
+        data-create-sticky-clearance={
+          fixedMomentContract ? "safe-bottom" : "mobile-nav"
+        }
       >
         {image ? (
           <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
