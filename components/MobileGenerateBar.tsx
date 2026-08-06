@@ -9,6 +9,17 @@ import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 const MOBILE_GENERATE_HREF = createGenerate360Href("mobile-bar");
 const MOBILE_MOMENT_HREF = `${MOMENT_CREATE_HREF}&source=mobile-bar` as const;
 
+/**
+ * Suite floating doors — secondary outline weight only.
+ * Board tokens: neon-pink / cream / white (no competitor lime fill/glow).
+ */
+const suiteDoorSecondary =
+  "pointer-events-auto rounded-full border border-white/20 bg-black/70 px-4 py-2.5 text-xs font-semibold text-[var(--cream)]/90 backdrop-blur transition hover:border-[var(--neon-pink)]/45 hover:text-[var(--neon-pink)]";
+
+/** Generate is the lead suite door but still outline secondary (not filled primary). */
+const suiteDoorGenerate =
+  "pointer-events-auto rounded-full border border-[var(--neon-pink)]/40 bg-black/70 px-5 py-2.5 text-xs font-semibold text-[var(--cream)] backdrop-blur transition hover:border-[var(--neon-pink)]/65 hover:text-[var(--neon-pink)]";
+
 export function MobileGenerateBar() {
   const path = usePathname() || "/";
   // Hide when a full tool surface is already on-screen
@@ -43,33 +54,27 @@ export function MobileGenerateBar() {
   const onLibrary = path === "/library" || path.startsWith("/library/");
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[4.75rem] z-30 flex justify-center gap-2 px-4 lg:hidden">
+    <div
+      data-mobile-bar-suite="secondary"
+      className="pointer-events-none fixed inset-x-0 bottom-[4.75rem] z-30 flex justify-center gap-2 px-4 lg:hidden"
+    >
       <Link
         href={MOBILE_GENERATE_HREF}
-        className="pointer-events-auto btn btn-primary px-5 py-2.5 text-xs shadow-[0_0_30px_rgba(200,255,61,0.35)]"
+        className={suiteDoorGenerate}
         data-mobile-bar="generate-remix"
       >
         Generate
       </Link>
       {onLibrary ? (
-        <Link
-          href={MOBILE_MOMENT_HREF}
-          className="pointer-events-auto rounded-full border border-[var(--mint)]/40 bg-black/70 px-4 py-2.5 text-xs font-semibold text-[var(--mint)] backdrop-blur"
-        >
+        <Link href={MOBILE_MOMENT_HREF} className={suiteDoorSecondary}>
           Create one Moment
         </Link>
       ) : (
-        <Link
-          href="/library"
-          className="pointer-events-auto rounded-full border border-[var(--mint)]/40 bg-black/70 px-4 py-2.5 text-xs font-semibold text-[var(--mint)] backdrop-blur"
-        >
+        <Link href="/library" className={suiteDoorSecondary}>
           Library
         </Link>
       )}
-      <Link
-        href="/modules"
-        className="pointer-events-auto rounded-full border border-white/15 bg-black/70 px-4 py-2.5 text-xs font-semibold text-white backdrop-blur"
-      >
+      <Link href="/modules" className={suiteDoorSecondary}>
         Modules
       </Link>
     </div>
