@@ -771,4 +771,29 @@ assert.match(
   "Explore page eyebrows/CTAs/path accents use --brand copper"
 );
 
+// AIT-588: Create page residual carnival pink chrome → gallery-calm copper
+{
+  const createPageCopper = read("app/create/page.tsx");
+  assert.doesNotMatch(
+    createPageCopper,
+    /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+    "app/create/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert.doesNotMatch(
+    createPageCopper,
+    /#B14EFF|#FF4ECD|#00D9FF|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|0\s*,\s*217\s*,\s*255/i,
+    "app/create/page.tsx must not hard-code carnival pink/cyan RGB"
+  );
+  assert.match(
+    createPageCopper,
+    /var\(--brand\)/,
+    "Create page eyebrows/border accents use --brand copper"
+  );
+  assert.match(
+    createPageCopper,
+    /rgba\(196\s*,\s*165\s*,\s*116/,
+    "Create page radial wash uses copper board rgba(196,165,116)"
+  );
+}
+
 console.log("generate-360-cta-smoke: ok");
