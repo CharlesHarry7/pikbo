@@ -164,4 +164,64 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
+// 5. AIT-190 How it works: one primary Generate→360 footer CTA
+const howItWorks = read("components/HowItWorks.tsx");
+assert.match(
+  howItWorks,
+  /data-how-primary-generate=["']360["']/,
+  "HowItWorks must mark primary Generate as 360"
+);
+assert.match(
+  howItWorks,
+  /data-how-primary-generate-cta/,
+  "HowItWorks must expose primary Generate CTA marker"
+);
+assert.match(
+  howItWorks,
+  /data-how-it-works=["']generate-remix["']/,
+  "HowItWorks primary door keeps remix marker for engine smoke"
+);
+assert.match(
+  howItWorks,
+  /createGenerate360Href\(\s*["']how-it-works["']\s*\)/,
+  "HowItWorks primary Generate must use createGenerate360Href(how-it-works)"
+);
+assert.match(
+  howItWorks,
+  /Generate 360°/,
+  "HowItWorks primary CTA label must say Generate 360°"
+);
+// FreeTrial must not be a filled primary competing with Generate (outline/secondary only)
+assert.doesNotMatch(
+  howItWorks,
+  /FreeTrialCta[\s\S]{0,200}variant\s*=\s*["'](primary|mint)["']/,
+  "HowItWorks FreeTrialCta must not use filled primary/mint variant"
+);
+assert.match(
+  howItWorks,
+  /border border-white\/20/,
+  "HowItWorks FreeTrial strip must be secondary outline"
+);
+// Library + SEO tool stay tertiary text (not filled primaries)
+assert.match(
+  howItWorks,
+  /href=["']\/library["']/,
+  "HowItWorks keeps Library door"
+);
+assert.match(
+  howItWorks,
+  /href=["']\/tools\/ai-toy-video-generator["']/,
+  "HowItWorks keeps SEO tool door"
+);
+assert.doesNotMatch(
+  howItWorks,
+  /href=["']\/library["'][\s\S]{0,120}bg-\[#c8ff3d\]/,
+  "HowItWorks Library must not be a filled primary"
+);
+assert.doesNotMatch(
+  howItWorks,
+  /href=["']\/tools\/ai-toy-video-generator["'][\s\S]{0,120}bg-\[#c8ff3d\]/,
+  "HowItWorks SEO tool must not be a filled primary"
+);
+
 console.log("generate-360-cta-smoke: ok");
