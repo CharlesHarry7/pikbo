@@ -94,6 +94,41 @@ assert(
     home.indexOf("<HfProductRail") < home.indexOf("<HomeTrustFooter"),
   "home order: Moment hero → proof wall → Moment showcase → HF product rail → trust footer"
 );
+
+// AIT-220: one above-fold primary Moment CTA (hero only). Mid-page dual doors
+// + Generate→360 wall/rail helpers stay secondary — no triple-primary stack.
+const homeWallSrc = homeWall;
+const homeShowcaseSrc = homeShowcase;
+const homeRail = read("components/HfProductRail.tsx");
+const countMarker = (src, marker) => (src.match(new RegExp(marker, "g")) || []).length;
+
+// Attribute form only (ignore prose comments that may mention the marker name).
+const primaryAttr = /data-home-moment-cta(?:=|\s|>|\/)/;
+assert(
+  countMarker(homeHero, "data-home-moment-cta") === 1 &&
+    primaryAttr.test(homeHero) &&
+    !primaryAttr.test(homeWallSrc) &&
+    !primaryAttr.test(homeShowcaseSrc) &&
+    !primaryAttr.test(homeRail),
+  "exactly one above-fold primary Moment CTA (data-home-moment-cta on hero only)"
+);
+assert(
+  countMarker(homeShowcaseSrc, "data-real-moment-cta") === 1 &&
+    countMarker(homeShowcaseSrc, "data-moment-create-cta") === 1 &&
+    homeShowcaseSrc.includes('data-home-showcase-doors="secondary"') &&
+    homeShowcaseSrc.includes('data-home-showcase-door="concept"') &&
+    homeShowcaseSrc.includes('data-home-showcase-door="live-gated"') &&
+    !homeShowcaseSrc.includes("bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)]") &&
+    !/rounded-full bg-\[#171719\]/.test(homeShowcaseSrc),
+  "showcase dual doors stay mid-page secondary (markers + no filled primary chrome)"
+);
+assert(
+  homeWallSrc.includes("createGenerate360Href") &&
+    countMarker(homeWallSrc, "data-home-proof-360-cta") >= 1 &&
+    homeRail.includes("createGenerate360Href") &&
+    homeRail.includes('data-hf-rail-generate="remix"'),
+  "Generate→360 remains secondary via wall/rail helpers (not hero primary)"
+);
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
   "legacy viral-wall helper must stay capped to the homepage proof registry"

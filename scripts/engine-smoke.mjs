@@ -3937,6 +3937,11 @@ assert.equal(
   1,
   "home hero must expose exactly one primary Moment CTA"
 );
+// AIT-220: showcase dual doors stay secondary (no above-fold primary attribute).
+assert.doesNotMatch(homeMomentsSrc, /data-home-moment-cta(?:=|\s|>|\/)/);
+assert.match(homeMomentsSrc, /data-home-showcase-doors=["']secondary["']/);
+assert.match(homeMomentsSrc, /data-real-moment-cta/);
+assert.match(homeMomentsSrc, /data-moment-create-cta/);
 assert.doesNotMatch(homeHeroSrc, /Use this motion/);
 assert.match(homeHeroSrc, /Sample · Beatbot/);
 assert.match(homeHeroSrc, /Sample shown: cached 6s archive/);

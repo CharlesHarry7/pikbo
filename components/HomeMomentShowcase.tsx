@@ -65,30 +65,37 @@ export function HomeMomentShowcase() {
               Listing Spin · 1:1 · Blind-box Reveal · 9:16 · Social Flash · 9:16
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          {/* Dual doors are mid-page secondary chrome — never hero-primary
+              filled Create weight (that stays on HomeCinemaHero alone). */}
+          <div
+            className="flex flex-wrap items-center gap-2.5"
+            data-home-showcase-doors="secondary"
+          >
             <Link
               href={CONCEPT_PREVIEW_HREF}
-              className="inline-flex min-h-12 items-center justify-between gap-6 rounded-full bg-[#171719] px-5 text-xs font-black uppercase tracking-[0.12em] text-[#F5F1E8] transition-transform hover:-translate-y-0.5"
+              className="inline-flex min-h-11 items-center justify-between gap-4 rounded-full border border-[#171719]/35 bg-transparent px-4 text-xs font-black uppercase tracking-[0.12em] text-[#171719] transition-colors hover:border-[#171719] hover:bg-[#171719]/[0.05]"
               data-real-moment-cta
               data-concept-preview="true"
+              data-home-showcase-door="concept"
             >
               <span className="flex flex-col items-start gap-0.5 normal-case tracking-normal">
                 <span className="uppercase tracking-[0.12em]">
                   Preview a concept
                 </span>
-                <span className="text-[9px] font-black uppercase tracking-[0.14em] text-white/55">
+                <span className="text-[9px] font-black uppercase tracking-[0.14em] text-[#817D75]">
                   Cached Lab · not Live
                 </span>
               </span>
-              <span aria-hidden className="text-lg">
+              <span aria-hidden className="text-base text-[#817D75]">
                 ↗
               </span>
             </Link>
             <Link
               href={SHOWCASE_MOMENT_HREF}
-              className="inline-flex min-h-12 items-center justify-between gap-4 rounded-full border border-[#171719]/25 px-5 text-xs font-black uppercase tracking-[0.12em] text-[#171719] transition-colors hover:border-[#F04E30] hover:text-[#F04E30]"
+              className="inline-flex min-h-11 items-center justify-between gap-3 rounded-full border border-[#171719]/20 px-4 text-xs font-black uppercase tracking-[0.12em] text-[#45433F] transition-colors hover:border-[#F04E30]/55 hover:text-[#F04E30]"
               data-moment-create-cta
               data-live-gated="true"
+              data-home-showcase-door="live-gated"
             >
               <span className="flex flex-col items-start gap-0.5 normal-case tracking-normal">
                 <span className="uppercase tracking-[0.12em]">
@@ -104,8 +111,9 @@ export function HomeMomentShowcase() {
             </Link>
             <Link
               href="mailto:support@pikbo.ai?subject=Pikbo%20private%20beta%20request&body=I%20sell%20designer%20toys%20and%20would%20like%20to%20request%20private%20beta%20access."
-              className="inline-flex min-h-12 items-center rounded-full border border-[#171719]/25 px-5 text-xs font-black uppercase tracking-[0.12em] text-[#171719] transition-colors hover:border-[#F04E30] hover:text-[#F04E30]"
+              className="inline-flex min-h-11 items-center rounded-full border border-[#171719]/15 px-4 text-[11px] font-black uppercase tracking-[0.12em] text-[#6D6A63] transition-colors hover:border-[#F04E30]/45 hover:text-[#F04E30]"
               data-moment-beta-cta
+              data-home-showcase-door="beta"
               aria-label="Email Pikbo to request private beta access"
             >
               Request private beta
