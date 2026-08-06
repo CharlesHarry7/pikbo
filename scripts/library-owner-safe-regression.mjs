@@ -476,4 +476,54 @@ assert.doesNotMatch(
 assert.match(meClient, /withTimeout/);
 assert.match(meClient, /Outer withTimeout covers authHeaders hang/);
 
+// ─── AIT-319 residual: durable list availability + deep-link verify honesty ─
+
+// listPrivateGenerationResults must surface unavailable — never silent [].
+assert.match(results, /ListPrivateGenerationResultsResult/);
+assert.match(results, /DURABLE_LIST_UNAVAILABLE/);
+assert.match(
+  results,
+  /listPrivateGenerationResults[\s\S]{0,1200}ok:\s*false,\s*code:\s*"DURABLE_LIST_UNAVAILABLE"/,
+  "durable list must return Result unavailable, not silent empty array"
+);
+assert.match(
+  results,
+  /return \{\s*ok:\s*true,\s*jobs/,
+  "legitimate empty shelf remains ok:true jobs"
+);
+// Signed-in GET must fail closed when durable list is unavailable.
+assert.match(generationsList, /DURABLE_LIST_UNAVAILABLE/);
+assert.match(generationsList, /status:\s*503/);
+assert.match(
+  generationsList,
+  /!durableList\.ok/,
+  "GET must branch on durable list Result.ok"
+);
+assert.match(
+  generationsList,
+  /Your Moments are not shown as empty/i,
+  "503 copy must refuse empty-shelf invention"
+);
+// Client: deep-link transport fail is unavailable, never not-your-toy.
+assert.match(library, /deepLinkUnavailable/);
+assert.match(library, /deep-link-unavailable/);
+assert.match(library, /data-library-deep-link="unavailable"/);
+assert.match(library, /data-library-deep-link-retry/);
+assert.match(library, /setDeepLinkResolve\("unavailable"\)/);
+assert.match(
+  library,
+  /listLoad === "error" \|\| listLoad === "timeout"/,
+  "deep-link must skip resolve while list fail owns honesty"
+);
+assert.match(
+  library,
+  /body\.code === "DURABLE_LIST_UNAVAILABLE"/,
+  "client must recognize durable list unavailable on refresh + resolve"
+);
+assert.doesNotMatch(
+  library,
+  /catch \{\s*if \(!cancelled\) setDeepLinkResolve\("not-yours"\)/,
+  "deep-link catch must not invent not-your-toy on network fail"
+);
+
 console.log("library-owner-safe-regression: ok");

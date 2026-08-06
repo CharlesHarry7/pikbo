@@ -453,19 +453,33 @@ async function gateLibrarySamePhotoHandoffs(input: {
 }
 
 /**
+ * Owner-only durable Library list outcome.
+ * AIT-319: distinguish a true empty shelf from durable storage/query failure.
+ * Callers must not map unavailable → ok:true jobs:[] (that invents an empty
+ * Library for signed-in owners when private rows could not be read).
+ */
+export type ListPrivateGenerationResultsResult =
+  | { ok: true; jobs: PrivateLibraryJob[] }
+  | { ok: false; code: "DURABLE_LIST_UNAVAILABLE" };
+
+/**
  * Owner-only durable Library rows across open + terminal statuses.
  * Object keys, signed URLs, provider IDs, prompts, hashes, raw input_asset_id,
  * and user identity stay server-side. Callers expose only the controlled
  * /api/downloads/{jobId} gate for deliverable successes, a narrow newAttemptUrl
  * Create handoff when a terminal row has a UUID input binding, and capability
  * flags so the UI never posts durable rows to process-memory Retry/Cancel.
+ *
+ * Fail-closed availability (AIT-319): missing admin client or query error
+ * returns `{ ok: false, code: "DURABLE_LIST_UNAVAILABLE" }` — never a silent
+ * empty array. Legitimate zero rows remain `{ ok: true, jobs: [] }`.
  */
 export async function listPrivateGenerationResults(input: {
   userId: string;
   limit?: number;
-}): Promise<PrivateLibraryJob[]> {
+}): Promise<ListPrivateGenerationResultsResult> {
   const admin = getSupabaseAdmin();
-  if (!admin) return [];
+  if (!admin) return { ok: false, code: "DURABLE_LIST_UNAVAILABLE" };
   const limit = Math.min(50, Math.max(1, Math.floor(input.limit ?? 50)));
   const { data, error } = await admin
     .from("generation_jobs")
@@ -474,16 +488,19 @@ export async function listPrivateGenerationResults(input: {
     .in("status", [...PRIVATE_LIBRARY_STATUSES])
     .order("created_at", { ascending: false })
     .limit(limit);
-  if (error || !Array.isArray(data)) return [];
+  if (error || !Array.isArray(data)) {
+    return { ok: false, code: "DURABLE_LIST_UNAVAILABLE" };
+  }
   const mapped = data
     .map((row) =>
       privateLibraryJobFromRow(row as unknown as Record<string, unknown>)
     )
     .filter((row): row is PrivateLibraryJob => Boolean(row));
-  return gateLibrarySamePhotoHandoffs({
+  const jobs = await gateLibrarySamePhotoHandoffs({
     userId: input.userId,
     jobs: mapped,
   });
+  return { ok: true, jobs };
 }
 
 /**
