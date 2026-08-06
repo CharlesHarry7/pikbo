@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { loadHistory } from "@/lib/history";
 import {
+  canLiveGenerate,
   fetchMe,
   freeTrialExhausted,
   isDemoMode,
@@ -253,6 +254,12 @@ export function ProfilePanel() {
       : session?.credits;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
+  /** R0/T6: Free Mini product-cap lines only when Live is actually open. */
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(session) &&
+      freeLive &&
+      freeLive.liveEnabled !== false
+  );
   const freeLiveModelLabel =
     freeLive?.modelClass === "seedance-fast" ? "Private Fast" : "Free Mini";
   const clipsLeft =
@@ -355,14 +362,15 @@ export function ProfilePanel() {
         </div>
       ) : null}
 
-      {/* Soft-launch freeTrial honesty — same contract as Create / SoftLaunchStrip */}
-      {session && isFreePlan && !demo ? (
+      {/* Soft-launch freeTrial honesty — Free Mini only when freeLiveOpen */}
+      {session && isFreePlan && freeLiveOpen ? (
         <div
           className={`rounded-xl border px-3 py-2.5 text-[11px] leading-relaxed ${
             trialDone
               ? "border-amber-400/35 bg-amber-400/[0.07] text-amber-50/95"
               : "border-[var(--mint)]/25 bg-[var(--mint)]/[0.06] text-[var(--fg-muted)]"
           }`}
+          data-profile-free-live="open"
         >
           {trialDone ? (
             <>
@@ -393,6 +401,18 @@ export function ProfilePanel() {
               are saved privately in Library.
             </>
           )}
+        </div>
+      ) : null}
+      {session && isFreePlan && !freeLiveOpen ? (
+        <div
+          className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-[var(--fg-muted)]"
+          data-profile-free-live="gated"
+        >
+          <span className="font-semibold text-white/80">Live gated</span>
+          {" · "}
+          Cached Lab previews remain free (0 credits · upload not processed).
+          Real generation opens for eligible invited accounts when Live is
+          enabled.
         </div>
       ) : null}
 
@@ -427,13 +447,17 @@ export function ProfilePanel() {
         <div className="rounded-xl bg-[var(--bg-soft)] py-3">
           <p
             className={`text-lg font-bold ${
-              trialDone && isFreePlan ? "text-amber-200" : ""
+              trialDone && isFreePlan && freeLiveOpen ? "text-amber-200" : ""
             }`}
           >
-            {clipsLeft !== null ? clipsLeft : "—"}
+            {freeLiveOpen && clipsLeft !== null ? clipsLeft : "—"}
           </p>
           <p className="text-[10px] text-[var(--fg-dim)]">
-            {trialDone && isFreePlan ? "trial used" : "live clips left"}
+            {freeLiveOpen
+              ? trialDone && isFreePlan
+                ? "trial used"
+                : "live clips left"
+              : "live gated"}
           </p>
         </div>
         <div className="rounded-xl bg-[var(--bg-soft)] py-3">
@@ -469,7 +493,7 @@ export function ProfilePanel() {
       <p className="text-xs text-[var(--fg-muted)]">
         {auth.signedIn
           ? "Your balance and completed private results are available across devices; local history stays in this browser."
-          : demo
+          : demo || !freeLiveOpen
             ? "Cached Lab previews cost 0 credits and do not process your upload."
             : freeLive
               ? `${freeLiveModelLabel} creates private ${freeLive.resolution}, ${freeLive.durationSec}-second clips for eligible accounts.`
