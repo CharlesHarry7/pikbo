@@ -31,7 +31,7 @@ const FOR_FAQ = [
     a: "One search job (Etsy listing, TikTok hook, drop teaser…) with an on-page Generate tool and a registered recipe. Not a brochure or feature dump.",
   },
   {
-    q: "Does Try free Mini mean unlimited clips?",
+    q: "Does Try free mean unlimited live clips?",
     a: "No. Try free is a cached Lab prototype at 0 credits and does not process your upload. When Live is enabled for an eligible account, the configured allowance is finite and the exact quote appears before submission.",
   },
   {
@@ -143,7 +143,7 @@ export default function ForHubPage() {
         <section className="mt-12 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
           <h2 className="text-sm font-bold text-white">Use cases FAQ</h2>
           <p className="mt-1 text-xs text-white/40">
-            One job per page · Free Mini · no sales guarantee
+            One job per page · cached Lab · Live gated · no sales guarantee
           </p>
           <dl className="mt-4 space-y-4 text-left">
             {FOR_FAQ.map((f) => (

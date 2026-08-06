@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 import { createGenerate360Href } from "@/lib/jobIntents";
+import {
+  canLiveGenerate,
+  fetchMe,
+  type MeResponse,
+} from "@/lib/meClient";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
+import { SESSION_EVENT } from "@/lib/sessionEvents";
 
 /** Primary Generate door — listing spin remix (ratio/duration/channel). */
 const GENERATE_REMIX_HREF = createGenerate360Href("hf-product-rail");
@@ -16,6 +23,7 @@ const MOMENT_RAIL_HREF = `${MOMENT_CREATE_HREF}&source=hf-product-rail` as const
  * HF homepage product entry strip — media-backed capability cards.
  * Only real Pikbo paths; Video is first and hot. Owned Lab posters only.
  * Below-fold suite density under Moment hero (AIT-241); secondary to hero CTA.
+ * Free Mini product-cap blurb only when freeLiveOpen (parity FreeTrialCta).
  */
 /** Product doors first; Flow/Cinema/Image are Preview (not live job peers). */
 const PRODUCTS: {
@@ -83,6 +91,36 @@ const PRODUCTS: {
 ];
 
 export function HfProductRail() {
+  const [me, setMe] = useState<MeResponse | null>(null);
+
+  useEffect(() => {
+    function load() {
+      void fetchMe().then((d) => {
+        if (d) setMe(d);
+      });
+    }
+    const t = window.setTimeout(load, 0);
+    window.addEventListener(SESSION_EVENT, load);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener(SESSION_EVENT, load);
+    };
+  }, []);
+
+  /** R0/T6: Free Mini 5s only when Live is open (fail-closed while /api/me loading). */
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(me) &&
+      me?.freeTrial?.freeLive &&
+      me.freeTrial.freeLive.liveEnabled !== false
+  );
+  const freeCardBlurb = freeLiveOpen
+    ? "Lab sample · Free Mini 5s"
+    : "Cached Lab · 0 credits · Live gated";
+  const headerTryLabel = freeLiveOpen
+    ? "Try free · Mini 5s"
+    : "Try free · Lab sample";
+  const headerDemoLabel = "Lab sample · 0 credits";
+
   return (
     <section
       data-home-suite-rail="hf-product"
@@ -102,7 +140,8 @@ export function HfProductRail() {
           <div className="flex flex-wrap items-center gap-3">
             <FreeTrialCta
               path="/#product-rail"
-              labelTry="Try free · Lab sample"
+              labelTry={headerTryLabel}
+              labelDemo={headerDemoLabel}
               hideClipsChip
               className="text-[11px] font-bold text-[#c8ff3d] hover:underline"
             />
@@ -117,7 +156,7 @@ export function HfProductRail() {
           </div>
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {/* Free Mini honesty card */}
+          {/* Free card — Free Mini product caps only when freeLiveOpen */}
           <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[#c8ff3d]/45 bg-[#c8ff3d]/[0.1] p-3.5 shadow-[0_0_32px_rgba(200,255,61,0.12)] sm:h-[11rem] sm:w-[10rem]">
             <span className="relative z-10 inline-flex rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-black">
               Free
@@ -125,15 +164,18 @@ export function HfProductRail() {
             <p className="relative z-10 mt-2 text-[13px] font-black leading-tight text-white">
               <FreeTrialCta
                 path="/#product-rail-card"
-                labelTry="Try free"
+                labelTry={freeLiveOpen ? "Try free · Mini 5s" : "Lab sample"}
                 labelDemo="Lab sample"
                 labelPlans="Plans"
                 hideClipsChip
                 className="font-black text-white group-hover:text-[#c8ff3d]"
               />
             </p>
-            <p className="relative z-10 mt-1 text-[10px] leading-snug text-white/45">
-              Cached Lab · 0 credits · Live gated
+            <p
+              className="relative z-10 mt-1 text-[10px] leading-snug text-white/45"
+              data-hf-rail-free-cap={freeLiveOpen ? "free-live" : "lab-gated"}
+            >
+              {freeCardBlurb}
             </p>
           </div>
           {PRODUCTS.map((p) => {

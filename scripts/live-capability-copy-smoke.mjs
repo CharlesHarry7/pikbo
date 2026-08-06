@@ -29,6 +29,10 @@ const publicPromiseFiles = [
   "app/modules/page.tsx",
   "app/flow/page.tsx",
   "app/cinema/page.tsx",
+  "app/tools/page.tsx",
+  "app/for/page.tsx",
+  "app/guides/page.tsx",
+  "app/toys/page.tsx",
   "components/HomeSeoBody.tsx",
   "components/HomeCinemaHero.tsx",
   "components/HeroUpload.tsx",
@@ -38,6 +42,14 @@ const publicPromiseFiles = [
   "components/PricingPlanCards.tsx",
   "components/HfExploreHome.tsx",
   "components/SoftLaunchStrip.tsx",
+];
+
+/** SEO hub FAQs/chips (tools / for / guides / toys) — no public Free Mini live trial. */
+const seoHubFiles = [
+  "app/tools/page.tsx",
+  "app/for/page.tsx",
+  "app/guides/page.tsx",
+  "app/toys/page.tsx",
 ];
 
 const forbiddenUnconditional = [
@@ -51,6 +63,18 @@ const forbiddenUnconditional = [
   /Free Mini trial(?:\s*[—·,:-]|\s+with|\s+for|\s*$)/i,
 ];
 
+/** Residual hub chips/FAQ claims that sold Free Mini as an unconditional live trial. */
+const forbiddenSeoHubFreeMini = [
+  /Free Mini live is about one Seedance Mini/i,
+  /Free Mini limits \(5s · 480p/i,
+  /Free Mini 5s · 480p/i,
+  /One job per page · Free Mini ·/i,
+  /How-tos · Free Mini 5s ·/i,
+  /Subject landings · Free Mini 5s ·/i,
+  /Free Mini caps apply/i,
+  /labelTry="Try free Mini"/,
+];
+
 for (const relativePath of publicPromiseFiles) {
   const source = read(relativePath);
   for (const pattern of forbiddenUnconditional) {
@@ -60,6 +84,53 @@ for (const relativePath of publicPromiseFiles) {
     );
   }
 }
+
+for (const relativePath of seoHubFiles) {
+  const source = read(relativePath);
+  for (const pattern of forbiddenSeoHubFreeMini) {
+    assert(
+      !pattern.test(source),
+      `${relativePath} contains residual Free Mini hub promise ${pattern}`
+    );
+  }
+  assert(
+    source.includes("cached Lab") ||
+      source.includes("Lab prototype") ||
+      source.includes("Lab preview"),
+    `${relativePath} must keep Lab public-path honesty language`
+  );
+}
+
+assert(
+  read("app/tools/page.tsx").includes("Live remains gated") &&
+    read("app/tools/page.tsx").includes(
+      "When Live is enabled for an eligible account"
+    ) &&
+    !read("app/tools/page.tsx").includes(
+      "Free Mini live is about one Seedance Mini"
+    ),
+  "tools hub must sell Lab public path + conditional Live, not Free Mini live trial"
+);
+assert(
+  read("app/for/page.tsx").includes("cached Lab") &&
+    !read("app/for/page.tsx").includes("One job per page · Free Mini ·"),
+  "for hub must not chip Free Mini as the public free trial"
+);
+assert(
+  read("app/guides/page.tsx").includes(
+    "When Live is enabled for an eligible account"
+  ) &&
+    read("app/guides/page.tsx").includes("labeled cached Lab prototype") &&
+    !read("app/guides/page.tsx").includes("How-tos · Free Mini 5s ·"),
+  "guides hub FAQ must keep Lab public path and conditional Live quotes"
+);
+assert(
+  read("app/toys/page.tsx").includes("Public path is cached Lab") &&
+    read("app/toys/page.tsx").includes("Live remains gated") &&
+    !read("app/toys/page.tsx").includes('labelTry="Try free Mini"') &&
+    !read("app/toys/page.tsx").includes("Subject landings · Free Mini 5s ·"),
+  "toys hub must drop Free Mini chip and keep Lab public path"
+);
 
 assert(
   read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
@@ -72,12 +143,42 @@ assert(
   ),
   "home SEO body must condition real generation on the private Live gate"
 );
+
+// AIT-231: closed billing honesty — disclose founding rate, keep checkout closed.
 assert(
   read("components/PricingHeroCopy.tsx").includes(
     "No subscription is on sale today."
-  ),
-  "pricing must keep subscriptions closed until private-beta proof"
+  ) &&
+    read("components/PricingHeroCopy.tsx").includes("$49") &&
+    read("components/PricingHeroCopy.tsx").includes("checkout closed"),
+  "pricing hero must disclose $49 founding rate while stating checkout is closed"
 );
+assert(
+  read("components/PricingPlanCards.tsx").includes("$49 founding rate") &&
+    read("components/PricingPlanCards.tsx").includes("checkout closed") &&
+    !read("components/PricingPlanCards.tsx").includes("Price pending"),
+  "pricing cards must disclose $49 founding rate (not Price pending) with checkout closed"
+);
+assert(
+  read("components/PaywallCard.tsx").includes(
+    "Founding rate is $49/month for nine directed Moments"
+  ) &&
+    read("components/PaywallCard.tsx").includes("checkout closed") &&
+    !read("components/PaywallCard.tsx").includes(
+      "No public price, monthly allowance, subscription, or checkout is available."
+    ),
+  "paywall must disclose founding rate while keeping live checkout closed"
+);
+assert(
+  read("lib/pricing.ts").includes(
+    "Join Founding Studio when billing opens"
+  ) &&
+    read("lib/pricing.ts").includes(
+      "Cached Lab previews before sign-in · product photo needs private beta"
+    ),
+  "plan CTAs must not imply live purchase or free-plan product-photo upload"
+);
+
 assert(
   read("app/create/page.tsx").includes("fixedMomentContract") &&
     !read("app/create/page.tsx").includes("<BatchStudio") &&
@@ -109,6 +210,191 @@ assert(
     "Private generation and subscriptions remain closed while quality, recovery, and cost are validated."
   ),
   "rank tool must keep private generation and subscriptions closed during validation"
+);
+
+// Residual session UI — Free Mini left/used only behind freeLiveOpen.
+// Fail-closed while /api/me is loading (parity FreeTrialCta).
+const residualSessionUi = [
+  "components/SoftLaunchStrip.tsx",
+  "components/CreditsBadge.tsx",
+  "components/ModulesSuiteCtas.tsx",
+  "components/ModulesMobileCta.tsx",
+  "components/LandingToolPanel.tsx",
+  "components/FreeTrialCta.tsx",
+];
+for (const relativePath of residualSessionUi) {
+  const source = read(relativePath);
+  assert(
+    /canLiveGenerate\s*\(/.test(source),
+    `${relativePath} must gate Free Mini / Live chips on canLiveGenerate`
+  );
+  assert(
+    /freeLiveOpen/.test(source),
+    `${relativePath} must define freeLiveOpen (Live gate truth)`
+  );
+  assert(
+    /liveEnabled\s*!==\s*false/.test(source),
+    `${relativePath} must require freeLive.liveEnabled !== false`
+  );
+}
+assert(
+  read("components/SoftLaunchStrip.tsx").includes(
+    "Cached Lab preview · 0 credits"
+  ),
+  "SoftLaunchStrip must prefer Cached Lab preview copy when Live is closed"
+);
+assert(
+  read("components/ModulesSuiteCtas.tsx").includes(
+    "Cached Lab preview · 0 credits"
+  ),
+  "ModulesSuiteCtas must show Cached Lab chip when Live is closed"
+);
+assert(
+  read("components/CreditsBadge.tsx").includes("live gated") &&
+    read("components/CreditsBadge.tsx").includes(
+      "Cached Lab preview · 0 credits"
+    ),
+  "CreditsBadge must drop Free Mini product-cap copy when freeLiveOpen is false"
+);
+assert(
+  read("components/LandingToolPanel.tsx").includes("Live gated") &&
+    /freeLiveOpen[\s\S]{0,80}Free Mini used|!freeLiveOpen[\s\S]{0,200}Cached Lab preview/.test(
+      read("components/LandingToolPanel.tsx")
+    ),
+  "LandingToolPanel exhausted/left chips must follow freeLiveOpen"
+);
+// Free Mini left chip must be rendered only under a freeLiveOpen ternary/&& gate.
+for (const relativePath of [
+  "components/ModulesSuiteCtas.tsx",
+  "components/ModulesMobileCta.tsx",
+  "components/FreeTrialCta.tsx",
+]) {
+  const source = read(relativePath);
+  assert(
+    /freeLiveOpen[\s\S]{0,220}~(\$\{clipsLeft\}|\{clipsLeft\}) Free Mini left/.test(
+      source
+    ),
+    `${relativePath}: "~N Free Mini left" must be gated by freeLiveOpen`
+  );
+}
+
+// Community must stay fail-closed on fake UGC (no invented posts/likes).
+const community = read("app/community/page.tsx");
+assert(
+  community.includes("never invent") ||
+    community.includes("We never invent") ||
+    community.includes("never invent fake"),
+  "community page must state that UGC is never invented"
+);
+assert(
+  !/fake likes|invented accounts|placeholder posts/i.test(community) ||
+    /never invent likes|never invent fake|No fake likes/i.test(community),
+  "community must not present fake social proof without an explicit denial"
+);
+
+// AIT-257 residual: TrustStrip + ProfilePanel + LandingHowItWorks + HfProductRail.
+const residualStaticTrust = [
+  "components/TrustStrip.tsx",
+  "components/ProfilePanel.tsx",
+];
+for (const relativePath of residualStaticTrust) {
+  const source = read(relativePath);
+  assert(
+    /canLiveGenerate\s*\(/.test(source),
+    `${relativePath} must gate Free Mini / product caps on canLiveGenerate`
+  );
+  assert(
+    /freeLiveOpen/.test(source),
+    `${relativePath} must define freeLiveOpen (Live gate truth)`
+  );
+  assert(
+    /liveEnabled\s*!==\s*false/.test(source),
+    `${relativePath} must require freeLive.liveEnabled !== false`
+  );
+}
+const trustStripSource = read("components/TrustStrip.tsx");
+assert(
+  trustStripSource.includes("Live gated · Cached Lab") &&
+    trustStripSource.includes("refunds when confirmed"),
+  "TrustStrip must prefer Live gated / Cached Lab honesty when Live is closed"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,500}Free Mini/.test(trustStripSource),
+  "TrustStrip Free Mini product caps must sit behind freeLiveOpen"
+);
+const profilePanelSource = read("components/ProfilePanel.tsx");
+assert(
+  profilePanelSource.includes("data-profile-free-live") &&
+    profilePanelSource.includes("Live gated") &&
+    profilePanelSource.includes("Cached Lab previews remain free"),
+  "ProfilePanel must expose Live gated / Cached Lab copy when freeLiveOpen is false"
+);
+assert(
+  /freeLiveOpen \? \(/.test(profilePanelSource) ||
+    /freeLiveOpen[\s\S]{0,80}trialDone/.test(profilePanelSource),
+  "ProfilePanel free-plan honesty banner must branch on freeLiveOpen"
+);
+
+const landingHowItWorksSource = read("components/LandingHowItWorks.tsx");
+assert(
+  !/Seedance Mini with honest Free Mini caps/.test(landingHowItWorksSource),
+  "LandingHowItWorks must not hardcode Seedance Mini / Free Mini caps"
+);
+assert(
+  !/Free Mini:\s*~?5s\s*·\s*480p/.test(landingHowItWorksSource),
+  "LandingHowItWorks must not hardcode Free Mini · 5s · 480p product caps"
+);
+assert(
+  landingHowItWorksSource.includes("Live gated") &&
+    landingHowItWorksSource.includes("Cached Lab") &&
+    landingHowItWorksSource.includes("refunds when confirmed"),
+  "LandingHowItWorks must prefer Live-gated / Cached Lab honesty while Live is closed"
+);
+assert(
+  /data-landing-hiw-cap=["']lab-gated["']/.test(landingHowItWorksSource),
+  "LandingHowItWorks must mark lab-gated soft-launch honesty"
+);
+
+const hfProductRailSource = read("components/HfProductRail.tsx");
+assert(
+  /canLiveGenerate\s*\(/.test(hfProductRailSource) &&
+    /freeLiveOpen/.test(hfProductRailSource) &&
+    /liveEnabled\s*!==\s*false/.test(hfProductRailSource),
+  "HfProductRail must gate Free Mini product caps on freeLiveOpen"
+);
+assert(
+  hfProductRailSource.includes("Cached Lab · 0 credits · Live gated") ||
+    hfProductRailSource.includes("Lab sample · 0 credits"),
+  "HfProductRail closed path must use Cached Lab / 0 credits honesty"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,120}\?[\s\S]{0,80}Lab sample · Free Mini 5s/.test(
+    hfProductRailSource
+  ),
+  "HfProductRail Free Mini 5s must sit behind freeLiveOpen ternary"
+);
+assert(
+  /data-hf-rail-free-cap/.test(hfProductRailSource),
+  "HfProductRail must expose data-hf-rail-free-cap for free-live vs lab-gated"
+);
+
+// i18n marketing chips — no unconditional Free Mini 5s as public free trial.
+const i18nSource = read("lib/i18n.ts");
+assert(
+  !/"modules\.mobile\.hint":\s*"[^"]*Free Mini 5s/.test(i18nSource),
+  "i18n modules.mobile.hint must not hardcode Free Mini 5s"
+);
+assert(
+  !/"suite\.tryFree\.blurb":\s*"[^"]*Free Mini 5/.test(i18nSource),
+  "i18n suite.tryFree.blurb must not hardcode Free Mini 5s as public free path"
+);
+assert(
+  !/"home\.browseCta\.chip":\s*"[^"]*Free Mini/.test(i18nSource),
+  "i18n home.browseCta.chip must not hardcode Free Mini as public free path"
+);
+assert(
+  i18nSource.includes("Cached Lab") || i18nSource.includes("0 credits"),
+  "i18n must keep Cached Lab / 0 credits honesty on free path chips"
 );
 
 function walkHtml(directory) {

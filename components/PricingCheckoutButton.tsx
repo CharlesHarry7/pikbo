@@ -73,8 +73,8 @@ export function PricingCheckoutButton({
           </Link>
         </Button>
         <p className="mt-2 text-center text-[10px] leading-relaxed text-[var(--fg-dim)]">
-          Checkout is closed while Stripe approval and private-beta quality
-          gates are unfinished. The Moment preview is open now.
+          Live checkout stays closed until Stripe approval and private-beta
+          quality gates pass. Cached Moment preview remains free (0 credits).
         </p>
       </div>
     );

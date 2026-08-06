@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
 import {
+  canLiveGenerate,
   fetchMe,
   freeTrialExhausted,
-  isDemoMode,
   type MeResponse,
 } from "@/lib/meClient";
 import {
@@ -25,7 +25,7 @@ const MODULES_MOMENT_HREF =
 
 /**
  * Modules sticky header CTAs — freeTrial honesty (Phase F).
- * Trial exhausted → Lab still free + plans; never claim free live when spent.
+ * Free Mini left/used only when freeLiveOpen; else Cached Lab (parity FreeTrialCta).
  */
 export function ModulesSuiteCtas() {
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -44,30 +44,40 @@ export function ModulesSuiteCtas() {
     };
   }, []);
 
-  const demo = isDemoMode(me);
   const trialDone = freeTrialExhausted(me);
   const clipsLeft =
     typeof me?.freeTrial?.clipsLeft === "number"
       ? me.freeTrial.clipsLeft
       : null;
+  /** R0/T6: do not advertise Free Mini while Live is closed (incl. me loading). */
+  const freeLiveOpen = Boolean(
+    canLiveGenerate(me) &&
+      me?.freeTrial?.freeLive &&
+      me.freeTrial.freeLive.liveEnabled !== false
+  );
 
   const primaryHref =
-    trialDone && !demo ? "/pricing" : MODULES_LAB_SAMPLE_HREF;
+    trialDone && freeLiveOpen ? "/pricing" : MODULES_LAB_SAMPLE_HREF;
   const primaryLabel =
-    trialDone && !demo
+    trialDone && freeLiveOpen
       ? "Compare plans"
-      : demo
+      : !freeLiveOpen
         ? "Try Lab sample"
         : "Try free · Lab";
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {clipsLeft !== null && !demo && !trialDone ? (
+      {clipsLeft !== null && freeLiveOpen && !trialDone ? (
         <span className="hidden text-[10px] text-white/40 sm:inline">
           ~{clipsLeft} Free Mini left
         </span>
       ) : null}
-      {trialDone && !demo ? (
+      {!freeLiveOpen ? (
+        <span className="hidden text-[10px] text-white/40 sm:inline">
+          Cached Lab preview · 0 credits
+        </span>
+      ) : null}
+      {trialDone && freeLiveOpen ? (
         <span className="hidden text-[10px] font-semibold text-amber-200/90 sm:inline">
           Free Mini used · Lab demos still free
         </span>
@@ -79,7 +89,8 @@ export function ModulesSuiteCtas() {
             event: "landing_view",
             path: "/modules",
             meta: {
-              cta: trialDone && !demo ? "modules_pricing" : "modules_try",
+              cta:
+                trialDone && freeLiveOpen ? "modules_pricing" : "modules_try",
             },
           })
         }

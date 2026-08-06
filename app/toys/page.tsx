@@ -33,8 +33,8 @@ const TOYS_FAQ = [
     a: "No. A clear photo of a toy you own is enough to start. Better lighting and a clean background help motion quality, but Lab demos show the look first.",
   },
   {
-    q: "Is Free Mini a 10-second clip?",
-    a: "No. Free Mini live is about one Seedance Mini result (5s · 480p · on-player mark). Longer or paid durations need credits. Lab samples cost 0.",
+    q: "Is the public free path a 10-second live clip?",
+    a: "No. Public Try free is a labeled cached Lab prototype at 0 credits and does not process your upload. When Live is enabled for an eligible account, Generate shows the configured duration and credit quote before submission.",
   },
 ] as const;
 
@@ -83,14 +83,15 @@ export default function ToysHubPage() {
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)]">
           Search by subject (action figure, art toy, blind box…). Each page is one
-          keyword cluster with an on-page upload → generate tool. Free Mini caps
-          apply; Lab demos are cached samples.
+          keyword cluster with an on-page Generate tool. Public path is cached Lab
+          (0 credits); Live remains gated until your account is eligible.
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <FreeTrialCta
             path="/toys"
             variant="mint"
-            labelTry="Try free Mini"
+            labelTry="Try cached sample"
+            labelDemo="Try cached sample"
           />
           <Link href="/for" className="btn btn-ghost text-sm">
             Use cases
@@ -129,7 +130,7 @@ export default function ToysHubPage() {
         <section className="mt-12 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
           <h2 className="text-sm font-bold text-white">Toy types FAQ</h2>
           <p className="mt-1 text-xs text-white/40">
-            Subject landings · Free Mini 5s · tool on page
+            Subject landings · Lab preview free · tool on page
           </p>
           <dl className="mt-4 space-y-4 text-left">
             {TOYS_FAQ.map((f) => (
