@@ -63,10 +63,11 @@
   --radius: 1rem;
 
   /*
-   * Mobile chrome clearance (AIT-71)
-   * AppShell tab nav uses pb-[env(safe-area-inset-bottom)] on top of tab content.
-   * Floating Generate CTAs must clear BOTH the tab content AND the home indicator —
-   * never sit under either. Stacking: content < floating (40) < sticky nav/header (50).
+   * Mobile chrome clearance (AIT-150 / AIT-71)
+   * AppShell tab nav pads pb with env(safe-area-inset-bottom) on top of tab content
+   * (--mobile-nav-content-h). Floating Generate CTAs must clear BOTH tab content AND
+   * the home indicator — never sit under either.
+   * Stacking: content < floating (40) < sticky nav/header (50).
    */
   --mobile-nav-content-h: 4.75rem;
   --mobile-nav-clearance: calc(
