@@ -2583,6 +2583,28 @@ assert.match(
 assert.match(appShell, /!hideMobileNav\s*\?\s*\(\s*\n\s*<nav/);
 assert.match(appShell, /data-mobile-nav=["']primary["']/);
 assert.match(appShell, /MobileGenerateBar/);
+// AIT-286: toast clearance follows shell chrome (tab vs navless)
+assert.match(
+  appShell,
+  /const mobileChrome\s*=\s*hideMobileNav\s*\?\s*["']navless["']\s*:\s*["']tab["']/
+);
+assert.match(appShell, /data-mobile-chrome=\{mobileChrome\}/);
+assert.match(appShell, /dataset\.mobileChrome\s*=\s*mobileChrome/);
+{
+  const toastSrc = fs.readFileSync(join(root, "components/Toast.tsx"), "utf8");
+  const globalsCss = fs.readFileSync(join(root, "app/globals.css"), "utf8");
+  assert.match(toastSrc, /bottom-\[var\(--toast-stack-clearance\)\]/);
+  assert.match(toastSrc, /lg:bottom-6/);
+  assert.doesNotMatch(toastSrc, /bottom-20/);
+  assert.match(
+    globalsCss,
+    /--toast-stack-clearance:\s*calc\(\s*var\(--mobile-nav-clearance\)/
+  );
+  assert.match(
+    globalsCss,
+    /html\[data-mobile-chrome=["']navless["']\][\s\S]*--toast-stack-clearance:\s*calc\(\s*var\(--floating-cta-safe-bottom\)/
+  );
+}
 assert.match(batchStudio, /api\/downloads/);
 
 // Landing tool Free-download honesty (parity with Create/Library)

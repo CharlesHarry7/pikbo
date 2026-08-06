@@ -362,7 +362,9 @@ assert.match(
   "BatchStudio sticky must expose clearance branch marker"
 );
 
-// 8. AIT-185 — Toast stack clears tab + home indicator (never hard bottom-20)
+// 8. AIT-185/AIT-286 — Toast stack follows shell chrome clearance
+// Tab surfaces: --toast-stack-clearance = mobile-nav-clearance + gap
+// Nav-less (html[data-mobile-chrome=navless]): floating-cta-safe-bottom + gap
 const toastSrc = read("components/Toast.tsx");
 assert.match(
   toastSrc,
@@ -371,13 +373,43 @@ assert.match(
 );
 assert.match(
   toastSrc,
-  /bottom-\[calc\(var\(--mobile-nav-clearance\)\+0\.5rem\)\]/,
-  "Toast stack must clear tab nav + home indicator via --mobile-nav-clearance"
+  /bottom-\[var\(--toast-stack-clearance\)\]/,
+  "Toast stack must use --toast-stack-clearance (chrome-aware token)"
+);
+assert.match(
+  toastSrc,
+  /lg:bottom-6/,
+  "Toast stack must keep desktop lg:bottom-6"
 );
 assert.doesNotMatch(
   toastSrc,
   /bottom-20/,
   "Toast stack must not hardcode bottom-20 (misses notched safe-area)"
+);
+assert.match(
+  globalsCss,
+  /--toast-stack-clearance:\s*calc\(\s*var\(--mobile-nav-clearance\)/,
+  "default toast clearance must pair with tab nav clearance"
+);
+assert.match(
+  globalsCss,
+  /html\[data-mobile-chrome=["']navless["']\][\s\S]*--toast-stack-clearance:\s*calc\(\s*var\(--floating-cta-safe-bottom\)/,
+  "navless toast clearance must pair with floating-cta-safe-bottom"
+);
+assert.match(
+  appShellSrc,
+  /data-mobile-chrome=\{mobileChrome\}/,
+  "AppShell must publish data-mobile-chrome for shell consumers"
+);
+assert.match(
+  appShellSrc,
+  /dataset\.mobileChrome\s*=\s*mobileChrome/,
+  "AppShell must set html[data-mobile-chrome] so fixed Toast inherits clearance"
+);
+assert.match(
+  appShellSrc,
+  /const mobileChrome\s*=\s*hideMobileNav\s*\?\s*["']navless["']\s*:\s*["']tab["']/,
+  "mobileChrome must map hideMobileNav → navless | tab (no path re-derive in Toast)"
 );
 
 console.log("generate-360-cta-smoke: ok");

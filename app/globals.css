@@ -78,6 +78,14 @@
     0.85rem,
     calc(env(safe-area-inset-bottom, 0px) + 0.5rem)
   );
+  /*
+   * Toast stack clearance (AIT-286 / AIT-185)
+   * Default = tab surfaces (five-door + home indicator).
+   * AppShell sets html[data-mobile-chrome="navless"] when the tab is hidden
+   * (Home Moment / fixed Moment Create / Seller Pack) so toasts drop to
+   * safe-area only — no ghost 4.75rem tab gap.
+   */
+  --toast-stack-clearance: calc(var(--mobile-nav-clearance) + 0.5rem);
   --floating-generate-z: 40;
 
   /* shadcn-compatible aliases */
@@ -89,6 +97,11 @@
   --muted-foreground: var(--fg-muted);
   --accent: rgba(255, 255, 255, 0.06);
   --ring: rgba(177, 78, 255, 0.55);
+}
+
+/* Nav-less shells: toast only needs home-indicator clearance + small gap. */
+html[data-mobile-chrome="navless"] {
+  --toast-stack-clearance: calc(var(--floating-cta-safe-bottom) + 0.5rem);
 }
 
 @theme inline {

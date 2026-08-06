@@ -110,15 +110,41 @@ assert.match(
 );
 {
   const toast = source("components/Toast.tsx");
+  const globals = source("app/globals.css");
   assert.match(
     toast,
-    /bottom-\[calc\(var\(--mobile-nav-clearance\)\+0\.5rem\)\]/,
-    "Toast stack clears mobile nav + safe-area (AIT-185)"
+    /bottom-\[var\(--toast-stack-clearance\)\]/,
+    "Toast stack uses chrome-aware --toast-stack-clearance (AIT-286)"
+  );
+  assert.match(
+    toast,
+    /lg:bottom-6/,
+    "Toast keeps desktop lg:bottom-6"
   );
   assert.doesNotMatch(
     toast,
     /bottom-20/,
     "Toast must not hardcode bottom-20 under notched home indicator"
+  );
+  assert.match(
+    globals,
+    /--toast-stack-clearance:\s*calc\(\s*var\(--mobile-nav-clearance\)/,
+    "tab toast clearance pairs with --mobile-nav-clearance"
+  );
+  assert.match(
+    globals,
+    /html\[data-mobile-chrome=["']navless["']\][\s\S]*--toast-stack-clearance:\s*calc\(\s*var\(--floating-cta-safe-bottom\)/,
+    "navless toast clearance pairs with --floating-cta-safe-bottom"
+  );
+  assert.match(
+    shell,
+    /data-mobile-chrome=\{mobileChrome\}/,
+    "AppShell publishes data-mobile-chrome so Toast does not re-derive paths"
+  );
+  assert.match(
+    shell,
+    /const mobileChrome\s*=\s*hideMobileNav\s*\?\s*["']navless["']\s*:\s*["']tab["']/,
+    "mobileChrome maps hideMobileNav → navless | tab"
   );
 }
 assert.doesNotMatch(

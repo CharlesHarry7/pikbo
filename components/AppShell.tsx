@@ -88,8 +88,22 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     trackPageView(path);
   }, [path]);
 
+  // Drive toast / floating clearance without re-deriving path rules in Toast.
+  // "tab" = five-door visible; "navless" = Home Moment / fixed Moment / Seller Pack.
+  const mobileChrome = hideMobileNav ? "navless" : "tab";
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.mobileChrome = mobileChrome;
+    return () => {
+      if (root.dataset.mobileChrome === mobileChrome) {
+        delete root.dataset.mobileChrome;
+      }
+    };
+  }, [mobileChrome]);
+
   return (
     <div
+      data-mobile-chrome={mobileChrome}
       className={cn(
         "flex min-h-screen min-w-0 flex-col",
         home
