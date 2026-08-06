@@ -30,10 +30,14 @@ export default function StatusPage() {
         <code className="text-[var(--mint)]">/api/health</code> — no secrets
         shown. Launch gates: docs/prd/GO_NO_GO.md.
       </p>
-      <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] leading-relaxed text-[var(--fg-dim)]">
-        Product soft-live: Generate · directed Moments · Library · Cancel mid-job.
-        Public Mode B still needs boss Vercel + DNS; paid path needs T6 bake +
-        Stripe when you open charging.
+      <p
+        className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] leading-relaxed text-[var(--fg-dim)]"
+        data-status-product-truth="validation-closed"
+      >
+        Public product is validation-closed: cached Lab samples · 0 credits · Live gated
+        (softLive and paid stay closed until /api/health gates pass). Create · Library ·
+        cancel mid-job exist for eligible private paths only. Checkout stays closed until
+        Stripe + delivery gates clear. No fake UGC.
       </p>
       <StatusProbe />
       <div className="mt-8 flex flex-wrap gap-3 text-sm">
