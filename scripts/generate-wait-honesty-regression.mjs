@@ -241,6 +241,15 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(create, /awaitingPrimaryAfterRecovery/);
   assert.match(create, /GenerateFailPanel/);
   assert.match(create, /retryAfterSec=\{failRetryAfterSec\}/);
+  // AIT-237: fail Retry only when pure gate allows (no invented re-POST)
+  assert.match(
+    create,
+    /canRetryGenerateFailure\(\{[\s\S]{0,220}code: lastFailCode[\s\S]{0,120}fatal: lastFailFatal[\s\S]{0,120}paywall:[\s\S]{0,80}busy[\s\S]{0,80}hasInput:/
+  );
+  assert.match(
+    create,
+    /canRetryGenerateFailure\([\s\S]{0,400}\)\s*\?\s*\(\)\s*=>[\s\S]{0,200}:\s*undefined/
+  );
   // Mobile strip also gets recoveryChecking for detach parity
   assert.match(
     create,
@@ -252,10 +261,24 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(fail, /fail\.restored|credits restored|10 restored/i);
   assert.match(fail, /retryAfterSec|waitLeft|Retry in/);
   assert.match(fail, /disabled=\{retryLocked\}/);
+  // Panel only renders Retry when onRetry is passed — callers own the gate
+  assert.match(fail, /\{onRetry \? \(/);
 
   const landing = read("components/LandingToolPanel.tsx");
   assert.match(landing, /canRetryGenerateFailure/);
   assert.match(landing, /lastFailCode/);
+  assert.match(landing, /lastFailFatal/);
+  assert.match(landing, /lastFailPaywall/);
+  assert.match(landing, /setFailCreditState\("refund unconfirmed"\)/);
+  // AIT-237: Landing fail Retry is the same pure gate (auth/paywall/balance/reconcile)
+  assert.match(
+    landing,
+    /canRetryGenerateFailure\(\{[\s\S]{0,220}code: lastFailCode[\s\S]{0,120}fatal: lastFailFatal[\s\S]{0,120}paywall:[\s\S]{0,100}busy[\s\S]{0,80}hasInput:/
+  );
+  assert.match(
+    landing,
+    /canRetryGenerateFailure\([\s\S]{0,400}\)\s*\?\s*\(\)\s*=>[\s\S]{0,200}:\s*undefined/
+  );
 
   const client = read("lib/generateClient.ts");
   assert.match(client, /awaiting_primary/);
@@ -324,5 +347,5 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
 }
 
 console.log(
-  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · fail-closed refund copy · Create + Batch wiring)"
+  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · AIT-237 Create/Landing gate · fail-closed refund copy · Batch wiring)"
 );
