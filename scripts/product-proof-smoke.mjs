@@ -163,8 +163,9 @@ assert(
   "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
 
-// AIT-416 / AIT-320: four-surface money path on gallery-calm copper board tokens.
-// After Home gallery-calm remount, residual carnival RGB must not outlive CSS aliases.
+// AIT-435 / AIT-416 / AIT-320: four-surface money path on gallery-calm copper board tokens.
+// After Home gallery-calm remount, residual carnival RGB must not outlive CSS aliases —
+// including Create / Library / Pricing page shells (not only shared components).
 {
   const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
   // Old carnival neon hardcodes (pre gallery-calm). Copper board = #c4a574 / 196,165,116.
@@ -189,6 +190,10 @@ assert(
     "components/HfExploreHome.tsx": read("components/HfExploreHome.tsx"),
     "components/HomeViralWall.tsx": read("components/HomeViralWall.tsx"),
     "components/Toast.tsx": read("components/Toast.tsx"),
+    // page shells (AIT-435 residual after component-only copper pass)
+    "app/create/page.tsx": read("app/create/page.tsx"),
+    "app/library/page.tsx": read("app/library/page.tsx"),
+    "app/pricing/page.tsx": read("app/pricing/page.tsx"),
   };
   for (const [rel, src] of Object.entries(fourSurface)) {
     assert(
@@ -209,16 +214,22 @@ assert(
       ) &&
       fourSurface["components/GuestMomentCreateGate.tsx"].includes(
         "var(--neon-pink)"
-      ),
-    "Home rails + Library + browse CTA + guest Create gate use neon-pink board tokens"
+      ) &&
+      fourSurface["app/create/page.tsx"].includes("var(--neon-pink)") &&
+      fourSurface["app/library/page.tsx"].includes("var(--neon-pink)") &&
+      fourSurface["app/pricing/page.tsx"].includes("var(--neon-pink)"),
+    "Home rails + Library + browse CTA + guest Create gate + page shells use neon-pink board tokens"
   );
   assert(
     copperGlow.test(fourSurface["components/CreateStudio.tsx"]) &&
       copperGlow.test(fourSurface["components/PricingPlanCards.tsx"]) &&
       copperGlow.test(fourSurface["components/PricingUsageEstimator.tsx"]) &&
       copperGlow.test(fourSurface["components/LibraryGrid.tsx"]) &&
-      copperGlow.test(fourSurface["components/HomeBrowseCta.tsx"]),
-    "Create + Pricing + Library + Home browse glows use copper rgba(196,165,116) board tokens"
+      copperGlow.test(fourSurface["components/HomeBrowseCta.tsx"]) &&
+      copperGlow.test(fourSurface["app/create/page.tsx"]) &&
+      copperGlow.test(fourSurface["app/library/page.tsx"]) &&
+      copperGlow.test(fourSurface["app/pricing/page.tsx"]),
+    "Create + Pricing + Library + Home browse + page shells use copper rgba(196,165,116) board tokens"
   );
   const globals = read("app/globals.css");
   assert(
