@@ -285,6 +285,23 @@ assert(
   );
 }
 
+// AIT-557: Modules hub page residual competitor lime → gallery copper board
+// Supersedes AIT-418/#436 neon-pink thrash on the same file.
+{
+  const limeMint = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61|var\(--mint\)/i;
+  const modulesHub = read("app/modules/page.tsx");
+  assert(
+    !limeMint.test(modulesHub),
+    "Modules hub page must not hard-code competitor lime (#c8ff3d / rgba 200,255,61 / mint)"
+  );
+  assert(
+    modulesHub.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(modulesHub) &&
+      modulesHub.includes("var(--void)"),
+    "Modules hub chrome uses --brand + copper glow + void on fills"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );

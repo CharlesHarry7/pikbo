@@ -64,7 +64,7 @@ function ModuleCard({
   return (
     <Link
       href={w.href}
-      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-[#0c0c10] to-black shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--mint)]/45 hover:shadow-[0_24px_56px_-24px_rgba(200,255,61,0.15)]"
+      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-[#0c0c10] to-black shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--brand)]/45 hover:shadow-[0_24px_56px_-24px_rgba(196,165,116,0.15)]"
       data-module-card={isLive ? "live" : "preview"}
     >
       {poster ? (
@@ -80,14 +80,14 @@ function ModuleCard({
           <span className="absolute left-3 top-3 text-2xl drop-shadow-lg">
             {w.emoji}
           </span>
-          <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-[var(--mint)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black opacity-0 shadow-[0_0_16px_rgba(200,255,61,0.35)] transition group-hover:opacity-100">
+          <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-[var(--brand)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--void)] opacity-0 shadow-[0_0_16px_rgba(196,165,116,0.35)] transition group-hover:opacity-100">
             Remake
           </span>
           <div className="absolute bottom-14 left-3 right-3 flex flex-wrap gap-1">
             <span
               className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
                 isLive
-                  ? "bg-[var(--mint)] text-black shadow-[0_0_16px_rgba(200,255,61,0.35)]"
+                  ? "bg-[var(--brand)] text-[var(--void)] shadow-[0_0_16px_rgba(196,165,116,0.35)]"
                   : "bg-amber-400/90 text-black"
               }`}
             >
@@ -117,7 +117,7 @@ function ModuleCard({
             <span
               className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
                 isLive
-                  ? "bg-[var(--mint)]/15 text-[var(--mint)]"
+                  ? "bg-[var(--brand)]/15 text-[var(--brand)]"
                   : "bg-amber-400/15 text-amber-100"
               }`}
             >
@@ -133,7 +133,7 @@ function ModuleCard({
       )}
       <div className={poster ? "p-3 pt-3" : "p-5 pt-4"}>
         <h3
-          className={`font-bold tracking-tight transition group-hover:text-[var(--mint)] ${
+          className={`font-bold tracking-tight transition group-hover:text-[var(--brand)] ${
             poster ? "text-sm sm:text-base" : "text-lg"
           }`}
         >
@@ -152,7 +152,7 @@ function ModuleCard({
             Lab still ≠ upload
           </p>
         )}
-        <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[var(--mint)]">
+        <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[var(--brand)]">
           {isLive ? "Remake · your toy photo" : "Preview path"}
           <span className="transition group-hover:translate-x-0.5" aria-hidden>
             →
@@ -230,7 +230,7 @@ export default function ModulesPage() {
       <div className="sticky top-0 z-20 border-b border-white/10 bg-black/90 px-3 py-3 backdrop-blur-xl sm:px-5">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#c8ff3d]">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--brand)]">
               Modules · video jobs
             </p>
             <h1 className="font-display text-lg font-black uppercase tracking-tight sm:text-xl">
@@ -262,7 +262,7 @@ export default function ModulesPage() {
           >
             <Link
               href={MODULES_PATH_GENERATE_HREF}
-              className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-3 py-1.5 text-[#c8ff3d]"
+              className="rounded-full border border-[var(--brand)]/40 bg-[var(--brand)]/10 px-3 py-1.5 text-[var(--brand)]"
               data-modules-path-generate="remix"
             >
               Generate
@@ -295,7 +295,7 @@ export default function ModulesPage() {
 
           <section>
             <div className="mb-3 flex items-end justify-between gap-3">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]">
+              <h2 className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--brand)]">
                 Live jobs · {live.length}
               </h2>
               <p className="text-[11px] text-white/40">
@@ -363,7 +363,7 @@ export default function ModulesPage() {
                   key={s.n}
                   className="rounded-xl border border-white/8 bg-white/[0.03] p-4"
                 >
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--mint)] text-[11px] font-black text-black">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-black text-[var(--void)]">
                     {s.n}
                   </span>
                   <p className="mt-2 text-sm font-bold text-white">{s.t}</p>

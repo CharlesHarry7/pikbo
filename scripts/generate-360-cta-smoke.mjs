@@ -758,4 +758,27 @@ assert.match(
   "SoftLaunchStrip CTA glow uses copper board rgba(196,165,116)"
 );
 
+// AIT-557: Modules hub page residual competitor lime → gallery copper board
+const modulesHubPageSrc = read("app/modules/page.tsx");
+assert.doesNotMatch(
+  modulesHubPageSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61|var\(--mint\)/i,
+  "Modules hub page must not hard-code competitor lime (#c8ff3d / rgba 200,255,61 / mint)"
+);
+assert.match(
+  modulesHubPageSrc,
+  /var\(--brand\)/,
+  "Modules hub accents use --brand copper"
+);
+assert.match(
+  modulesHubPageSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "Modules hub glows use copper board rgba(196,165,116)"
+);
+assert.match(
+  modulesHubPageSrc,
+  /var\(--void\)/,
+  "Modules hub filled badges use void text on copper fills"
+);
+
 console.log("generate-360-cta-smoke: ok");
