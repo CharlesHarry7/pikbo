@@ -1,7 +1,7 @@
 /**
- * AIT-40 / AIT-147 — Create/Studio open: auto Lab preview + finite open state +
- * honest failure/timeout/retry (desktop + mobile sticky path).
- * AIT-147: wall-clock covers authHeaders hang; Seller Pack gate + Batch boot finite.
+ * AIT-40 / AIT-147 / AIT-161 / AIT-172 — Create/Studio open: auto Lab preview +
+ * finite open state + honest failure/timeout/retry (desktop + mobile sticky).
+ * Wall-clock covers authHeaders hang; Pack/Batch/Image/Landing boot finite.
  */
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
@@ -119,6 +119,37 @@ assert.match(batch, /STUDIO_SESSION_BOOT_MS/);
 assert.match(batch, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
 assert.match(batch, /setMeResolved\(true\)/);
 
+// AIT-172: Image Studio + LandingToolPanel residual bare fetchMe → 8s parity
+const imageStudio = read("app/image/page.tsx");
+const landing = read("components/LandingToolPanel.tsx");
+assert.match(imageStudio, /STUDIO_SESSION_BOOT_MS/);
+assert.match(
+  imageStudio,
+  /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/
+);
+assert.match(imageStudio, /setMeResolved\(true\)/);
+assert.match(imageStudio, /sessionBoot === "timeout"/);
+assert.match(imageStudio, /data-studio-open-retry/);
+assert.match(imageStudio, /data-studio-open-error="session-timeout"/);
+assert.match(imageStudio, /Retry access check/);
+assert.match(imageStudio, /isClientTimeoutError/);
+// No bare untimed session hydrate on Image Studio boot
+assert.doesNotMatch(imageStudio, /void fetchMe\(\)\.then/);
+assert.match(landing, /STUDIO_SESSION_BOOT_MS/);
+assert.match(
+  landing,
+  /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/
+);
+assert.match(landing, /sessionBoot === "timeout"/);
+assert.match(landing, /data-studio-open-retry/);
+assert.match(landing, /data-studio-open-error="session-timeout"/);
+assert.match(landing, /Retry access check/);
+assert.match(landing, /isClientTimeoutError/);
+assert.match(landing, /setSessionResolved\(true\)/);
+// Landing generate path must not leave capability-unknown without timeout marker
+assert.match(landing, /data-landing-session-boot=\{sessionBoot\}/);
+assert.match(imageStudio, /data-image-session-boot=\{sessionBoot\}/);
+
 // Runtime: withTimeout rejects hung work (authHeaders hang class)
 const hang = new Promise(() => {});
 const t0 = Date.now();
@@ -168,5 +199,5 @@ for (const asset of [
 }
 
 console.log(
-  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack gate/batch boot; timeout/error + retry; mobile sticky Lab CTA)"
+  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing boot; timeout/error + retry; mobile sticky Lab CTA)"
 );
