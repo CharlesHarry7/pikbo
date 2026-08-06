@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
- * AIT-529 / AIT-469 / AIT-381: 360 workbench post-generate result fold.
+ * AIT-541 / AIT-529 / AIT-469 / AIT-381: post-generate result fold.
  *
  * Source + pure-logic contract:
  * - Resolver covers download / library / Lab replay / generate-again (re-spin)
  * - CreateStudio workbench (!fixedMomentContract) wires sticky + stage fold
+ * - LandingToolPanel done stage wires the same one-primary fold (AIT-541)
  * - Fixed Moment path keeps generate-again sticky (no workbench fold bleed)
  * - Library primary owner-safe deep-link helper; Lab never claims private job
  * - Honest Lab vs Live provenance; freeLiveOpen / fixed Moment markers intact
@@ -23,6 +24,7 @@ const read = (file) => readFileSync(join(root, file), "utf8");
 
 const foldLib = read("lib/workbenchResultFold.ts");
 const createStudio = read("components/CreateStudio.tsx");
+const landingTool = read("components/LandingToolPanel.tsx");
 
 // ── Pure resolver source contract ─────────────────────────────────────────
 assert.match(
@@ -408,6 +410,134 @@ assert.match(
   createStudio,
   /href=["']\/library["']/,
   "plain /library remains for non-fold secondary/Moment paths"
+);
+
+// ── LandingToolPanel wiring (AIT-541 parity) ──────────────────────────────
+assert.match(
+  landingTool,
+  /resolveWorkbenchResultPrimary/,
+  "LandingToolPanel must use resolveWorkbenchResultPrimary"
+);
+assert.match(
+  landingTool,
+  /libraryWorkbenchHandoffHref/,
+  "LandingToolPanel must use libraryWorkbenchHandoffHref"
+);
+assert.match(
+  landingTool,
+  /from ["']@\/lib\/workbenchResultFold["']/,
+  "LandingToolPanel must import workbenchResultFold"
+);
+assert.match(
+  landingTool,
+  /isGenerate360Effect/,
+  "LandingToolPanel must detect listing 360 for Re-spin labels"
+);
+assert.match(
+  landingTool,
+  /status === ["']done["'] && videoUrl/,
+  "landing result primary only on done path with video"
+);
+assert.match(
+  landingTool,
+  /data-result-fold=["']stage-primary["']/,
+  "landing result stage must mark above-fold primary"
+);
+assert.match(
+  landingTool,
+  /data-landing-result-fold=["']done["']/,
+  "landing must mark result-fold done"
+);
+assert.match(
+  landingTool,
+  /data-workbench-result-fold=["']done["']/,
+  "landing must share workbench result-fold marker"
+);
+assert.match(
+  landingTool,
+  /data-result-fold-action=["']download["']/,
+  "Landing Download primary action marker required"
+);
+assert.match(
+  landingTool,
+  /data-result-fold-action=["']library["']/,
+  "Landing Library primary action marker required"
+);
+assert.match(
+  landingTool,
+  /data-result-fold-action=["']replay["']/,
+  "Landing Replay primary action marker required"
+);
+assert.match(
+  landingTool,
+  /data-result-fold-action=["']generate-again["']/,
+  "Landing Generate-again primary action marker required"
+);
+assert.match(
+  landingTool,
+  /data-library-handoff=/,
+  "Landing Library primary must expose handoff kind marker"
+);
+assert.match(
+  landingTool,
+  /href=\{landingLibraryHref\}/,
+  "Landing Library fold primary must bind landingLibraryHref"
+);
+assert.match(
+  landingTool,
+  /data-result-provenance=\{/,
+  "landing stage must expose provenance kind"
+);
+assert.match(
+  landingTool,
+  /privateResult:\s*data\.privateResult === true|setPrivateResult\(data\.privateResult === true\)/,
+  "Landing must capture privateResult from generate response"
+);
+assert.match(
+  landingTool,
+  /downloadLandingResult/,
+  "Download primary must call downloadLandingResult"
+);
+assert.match(
+  landingTool,
+  /resultVideoRef/,
+  "Landing Replay must target result video ref"
+);
+assert.match(
+  landingTool,
+  /function replayResultVideo/,
+  "Landing Replay handler required"
+);
+assert.match(
+  landingTool,
+  /function runLandingGenerateAgain/,
+  "Landing Generate-again handler required"
+);
+assert.match(
+  landingTool,
+  /const freeLiveOpen\s*=\s*Boolean\(/,
+  "Landing freeLiveOpen gate must remain"
+);
+assert.match(
+  landingTool,
+  /GenerateAfterPath/,
+  "Landing GenerateAfterPath advanced chrome remains under stage primary"
+);
+
+// Stage primary is ordered before GenerateAfterPath on landing.
+const landingStageIdx = landingTool.indexOf('data-result-fold="stage-primary"');
+const landingAfterIdx = landingTool.indexOf("<GenerateAfterPath");
+assert.ok(landingStageIdx > 0, "landing stage-primary marker must exist");
+assert.ok(
+  landingAfterIdx > landingStageIdx,
+  "landing stage primary must render before GenerateAfterPath"
+);
+
+// Fold primary skips twin Download when download is already the primary.
+assert.match(
+  landingTool,
+  /landingResultPrimary\?\.kind !== ["']download["']/,
+  "landing must skip twin Download CTA when fold primary is download"
 );
 
 console.log("workbench-result-fold-smoke: ok");

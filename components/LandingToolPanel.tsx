@@ -43,6 +43,11 @@ import {
   requestCreditStateFromFailure,
   requestCreditStateFromSuccess,
 } from "@/lib/createTrust";
+import { isGenerate360Effect } from "@/lib/createRouteContract";
+import {
+  libraryWorkbenchHandoffHref,
+  resolveWorkbenchResultPrimary,
+} from "@/lib/workbenchResultFold";
 import { deliveryItemsForJob } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
@@ -108,9 +113,12 @@ export function LandingToolPanel({
   >(null);
   const [serverEcho, setServerEcho] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
+  /** Server-confirmed owner-scoped object in Pikbo private storage. */
+  const [privateResult, setPrivateResult] = useState(false);
   /** Device-local bible SKU — carry into AfterPath Next SKU / Seller Pack hops. */
   const [toySku, setToySku] = useState<string>("");
   const generateAbortRef = useRef<AbortController | null>(null);
+  const resultVideoRef = useRef<HTMLVideoElement | null>(null);
   const toast = useToast();
   const downloadAllowed = canDownloadResult({
     demo,
@@ -120,6 +128,32 @@ export function LandingToolPanel({
     videoUrl,
     demo,
     watermark,
+  });
+
+  /**
+   * AIT-541: landing tool-panel post-generate primary (parity with Create
+   * workbench AIT-529). One next action: download | Library (owner deep-link)
+   * | re-spin / replay — no dual dead-end Download+Regenerate row.
+   */
+  const landingListing360 = isGenerate360Effect(effectSlug);
+  const landingDownloadReady = Boolean(
+    requestId || (videoUrl && isSafeDeliverableUrl(videoUrl))
+  );
+  const landingResultPrimary =
+    status === "done" && videoUrl
+      ? resolveWorkbenchResultPrimary({
+          demo,
+          privateResult,
+          playable: playableVideo,
+          downloadAllowed,
+          downloadReady: landingDownloadReady,
+          listing360: landingListing360,
+        })
+      : null;
+  const landingLibraryHref = libraryWorkbenchHandoffHref({
+    demo,
+    privateResult,
+    requestId,
   });
 
   const trialDone = freeTrialExhausted(session);
@@ -180,6 +214,28 @@ export function LandingToolPanel({
     toast(
       "Canceled · ledger cancel best-effort · refund unconfirmed until balance confirms"
     );
+  }
+
+  function replayResultVideo() {
+    document
+      .getElementById("landing-result")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const node = resultVideoRef.current;
+    if (!node) return;
+    try {
+      node.currentTime = 0;
+      void node.play();
+    } catch {
+      /* autoplay policy / detached node — scroll still lands on stage */
+    }
+  }
+
+  function runLandingGenerateAgain() {
+    if (!ownsRights) {
+      toast("Confirm you own this photo before generating.");
+      return;
+    }
+    void generate();
   }
 
   /**
@@ -359,6 +415,7 @@ export function LandingToolPanel({
     setFailCreditState(null);
     setVideoUrl(null);
     setRequestId(null);
+    setPrivateResult(false);
     setCostCredits(null);
     setResultSettlement(null);
     setServerEcho(false);
@@ -449,6 +506,7 @@ export function LandingToolPanel({
     setVideoUrl(data.videoUrl);
     setDemo(Boolean(data.demo));
     setWatermark(Boolean(data.watermark));
+    setPrivateResult(data.privateResult === true);
     setUsedModel(data.model || null);
     setResultResolution(
       typeof data.resolution === "string" ? data.resolution : resolution
@@ -841,7 +899,7 @@ export function LandingToolPanel({
             />
           )}
           {!busy && videoUrl ? (
-            <div className="relative p-4">
+            <div className="relative p-4" id="landing-result">
               <div className="mb-2 flex flex-wrap items-center justify-center gap-1.5">
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
@@ -860,6 +918,7 @@ export function LandingToolPanel({
               </div>
               {playableVideo ? (
                 <video
+                  ref={resultVideoRef}
                   src={videoUrl || undefined}
                   controls
                   autoPlay
@@ -975,43 +1034,102 @@ export function LandingToolPanel({
                   : "Metadata uses the last response when available."}{" "}
                 · {demo ? PROVENANCE.cachedDemo : localLibraryNote()}
               </p>
-              <div className="mt-3 flex flex-wrap justify-center gap-2">
-                {downloadAllowed &&
-                (requestId ||
-                  (videoUrl && isSafeDeliverableUrl(videoUrl))) ? (
-                  <button
-                    type="button"
-                    data-landing-download="gated"
-                    className="btn btn-primary px-3 py-1.5 text-xs"
-                    onClick={() => void downloadLandingResult()}
-                  >
-                    Download
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled
-                    title={
-                      downloadAllowed
-                        ? "Unsafe deliverable URL — download blocked"
-                        : freeLiveDownloadBlockReason()
-                    }
-                    className="btn btn-primary cursor-not-allowed px-3 py-1.5 text-xs opacity-50"
-                  >
-                    {downloadBlockedCtaLabel({
-                      downloadAllowed,
-                      unsafeUrl: downloadAllowed,
-                    })}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void generate()}
-                  className="btn btn-ghost px-3 py-1.5 text-xs"
+              {/* AIT-541: one primary next action above advanced after-path chrome */}
+              {landingResultPrimary ? (
+                <div
+                  className="mx-auto mt-3 w-full max-w-sm"
+                  data-result-fold="stage-primary"
+                  data-result-primary={landingResultPrimary.kind}
+                  data-result-provenance={landingResultPrimary.provenanceKind}
+                  data-landing-result-fold="done"
+                  data-workbench-result-fold="done"
                 >
-                  Regenerate
-                </button>
-              </div>
+                  {landingResultPrimary.kind === "download" ? (
+                    <button
+                      type="button"
+                      onClick={() => void downloadLandingResult()}
+                      className="btn btn-primary w-full py-3 text-sm font-black"
+                      data-result-fold-action="download"
+                      data-landing-download="fold-primary"
+                    >
+                      {landingResultPrimary.label}
+                    </button>
+                  ) : landingResultPrimary.kind === "library" ? (
+                    <Link
+                      href={landingLibraryHref}
+                      className="btn btn-primary flex w-full items-center justify-center py-3 text-sm font-black"
+                      data-result-fold-action="library"
+                      data-library-handoff={
+                        landingLibraryHref.includes("job=")
+                          ? "request-id"
+                          : "list"
+                      }
+                    >
+                      {landingResultPrimary.label}
+                    </Link>
+                  ) : landingResultPrimary.kind === "replay" ? (
+                    <button
+                      type="button"
+                      onClick={replayResultVideo}
+                      className="btn btn-primary w-full py-3 text-sm font-black"
+                      data-result-fold-action="replay"
+                    >
+                      {landingResultPrimary.label}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={runLandingGenerateAgain}
+                      disabled={!ownsRights}
+                      className="btn btn-primary w-full py-3 text-sm font-black disabled:opacity-50"
+                      data-result-fold-action="generate-again"
+                      data-result-respin={
+                        landingListing360 ? "360" : undefined
+                      }
+                    >
+                      {landingResultPrimary.label}
+                    </button>
+                  )}
+                  <p className="mt-1.5 text-center text-[10px] font-medium leading-snug text-white/50">
+                    {landingResultPrimary.stickyHint}
+                  </p>
+                </div>
+              ) : null}
+
+              {/* Fold already surfaces Download as the one primary — skip twin CTA. */}
+              {landingResultPrimary?.kind !== "download" ? (
+                <div className="mt-2 flex flex-wrap justify-center gap-2">
+                  {downloadAllowed &&
+                  (requestId ||
+                    (videoUrl && isSafeDeliverableUrl(videoUrl))) ? (
+                    <button
+                      type="button"
+                      data-landing-download="gated"
+                      className="btn btn-ghost px-3 py-1.5 text-xs"
+                      onClick={() => void downloadLandingResult()}
+                    >
+                      Download
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      title={
+                        downloadAllowed
+                          ? "Unsafe deliverable URL — download blocked"
+                          : freeLiveDownloadBlockReason()
+                      }
+                      className="btn btn-ghost cursor-not-allowed px-3 py-1.5 text-xs opacity-50"
+                    >
+                      {downloadBlockedCtaLabel({
+                        downloadAllowed,
+                        unsafeUrl: downloadAllowed,
+                      })}
+                    </button>
+                  )}
+                </div>
+              ) : null}
+
               <GenerateAfterPath
                 effectSlug={effectSlug}
                 demo={demo}
