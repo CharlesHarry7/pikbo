@@ -100,7 +100,11 @@ export default function GuidesHub() {
         >
           Open Generate
         </Link>
-        <FreeTrialCta path="/guides" variant="ghost" />
+        <FreeTrialCta
+          path="/guides"
+          variant="ghost"
+          labelDemo="Try Lab sample"
+        />
         <Link href="/modules" className="btn btn-ghost text-sm">
           Toy Modules
         </Link>

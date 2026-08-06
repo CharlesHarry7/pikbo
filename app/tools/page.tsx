@@ -101,7 +101,11 @@ export default function ToolsIndexPage() {
           >
             Open Generate
           </Link>
-          <FreeTrialCta path="/tools" variant="ghost" />
+          <FreeTrialCta
+            path="/tools"
+            variant="ghost"
+            labelDemo="Try Lab sample"
+          />
           <Link href="/modules" className="btn btn-ghost text-sm">
             Modules
           </Link>
