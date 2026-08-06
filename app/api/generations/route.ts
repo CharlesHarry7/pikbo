@@ -14,6 +14,7 @@ import {
   isOwnerVisibleLibraryJob,
   listPrivateGenerationResults,
   mergePrivateLibraryWithLocalLedger,
+  type PrivateLibraryJob,
 } from "@/lib/privateGenerationResults";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
 
@@ -203,12 +204,31 @@ export async function GET(req: Request) {
   const timedOut = sweepTimedOutJobs();
   // Owner-scoped durable rows across queued|running|succeeded|failed|canceled.
   // Anonymous / other accounts never receive these (authUser required).
-  const privateJobs = authUser
-    ? await listPrivateGenerationResults({
-        userId: authUser.id,
-        limit: SESSION_JOBS_LIST_LIMIT,
-      })
-    : [];
+  // AIT-319: signed-in owners must not get ok:true + empty durable when private
+  // storage/query is down — that invents an empty Library. Fail closed with
+  // DURABLE_LIST_UNAVAILABLE so the client shows Retry instead of empty shelf.
+  let privateJobs: PrivateLibraryJob[] = [];
+  if (authUser) {
+    const durableList = await listPrivateGenerationResults({
+      userId: authUser.id,
+      limit: SESSION_JOBS_LIST_LIMIT,
+    });
+    if (!durableList.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "DURABLE_LIST_UNAVAILABLE",
+          message:
+            "Private Library could not be loaded. Your Moments are not shown as empty — retry when storage is ready.",
+          mode: "supabase-private",
+          durable: true,
+          jobs: [],
+        },
+        { status: 503 }
+      );
+    }
+    privateJobs = durableList.jobs;
+  }
   // The local store is capped at 200 rows. Read all of it so a current-process
   // mirror of a durable result can be de-duplicated before counts and listing.
   const localJobs = listJobsForSession(session.id, 200).map((job) =>
