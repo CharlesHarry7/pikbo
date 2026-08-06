@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * AIT-41 / AIT-103 / AIT-148: Library owner-safe recovery hardening.
+ * AIT-41 / AIT-103 / AIT-148 / AIT-162: Library owner-safe recovery hardening.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped list/detail, non-owner deny (no metadata leak),
@@ -73,12 +73,19 @@ assert.match(retryRoute, /forkRetryJob/);
 assert.match(retryRoute, /NOT_OWNED/);
 assert.match(retryRoute, /createUi/);
 assert.match(retryRoute, /retryToken/);
-// AIT-148: durable Moments never fork process-memory Retry.
+// AIT-148/AIT-162: durable Moments never fork process-memory Retry.
 assert.match(retryRoute, /DURABLE_USE_NEW_ATTEMPT/);
 assert.match(retryRoute, /DURABLE_IN_FLIGHT/);
 assert.match(retryRoute, /DURABLE_ALREADY_SUCCEEDED/);
 assert.match(retryRoute, /getPrivateLibraryJobForOwner/);
 assert.match(retryRoute, /getAuthUserFromRequest/);
+// AIT-162: retry Create handoff must pass acceptControlled — not loose startsWith.
+assert.match(retryRoute, /acceptControlledLibraryNewAttemptUrl/);
+assert.doesNotMatch(
+  retryRoute,
+  /newAttemptUrl\.startsWith\(/,
+  "retry must not use loose startsWith on newAttemptUrl"
+);
 assert.match(library, /\/api\/generations\/\$\{encodeURIComponent\(job\.id\)\}\/retry/);
 assert.match(library, /void retry\(job\)/);
 assert.match(library, /isRetryable\(job\.status\)[\s\S]{0,350}void retry\(job\)/);
@@ -89,6 +96,13 @@ assert.match(library, /data-library-action="new-attempt"/);
 assert.match(library, /canLocalRetry\(job\)/);
 assert.match(library, /canNewAttempt\(job\)/);
 assert.match(library, /DURABLE_USE_NEW_ATTEMPT/);
+// AIT-162: client Retry navigation fail-closed (no open redirect via startsWith("/")).
+assert.match(library, /acceptLibraryCreateNavigation/);
+assert.doesNotMatch(
+  library,
+  /body\.next\?\.createUi\.startsWith\(["']\/["']\)/,
+  "LibraryGrid must not navigate on bare startsWith('/')"
+);
 // Durable rows never hit process-memory Retry (AIT-103 fail-closed).
 assert.match(
   library,
