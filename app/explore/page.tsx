@@ -10,9 +10,16 @@ import {
 import { createGenerate360Href } from "@/lib/jobIntents";
 import { site } from "@/lib/site";
 import { CONCEPT_ROBOTS } from "@/lib/seoIndex";
+import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 /** Explore Generate doors — listing spin remix (ratio/duration/channel). */
 const EXPLORE_GENERATE_HREF = createGenerate360Href("explore");
+/** Header Create Moment door — mode=moment + honest source (never bare effect). */
+const EXPLORE_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=explore` as const;
+/** Seller workflow Create Moment — mode=moment + honest source. */
+const EXPLORE_SELLER_MOMENT_HREF =
+  `${MOMENT_CREATE_HREF}&source=explore-seller-workflow` as const;
 
 export const metadata: Metadata = {
   title: "Explore PIKBO Lab Toy Video Prototypes",
@@ -125,8 +132,9 @@ export default async function ExplorePage({
               Generate
             </Link>
             <Link
-              href="/create?effect=street-power-up&source=explore"
+              href={EXPLORE_MOMENT_HREF}
               className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/80 transition hover:border-white/30"
+              data-explore-moment="honest"
             >
               Create one Moment
             </Link>
@@ -216,8 +224,9 @@ export default async function ExplorePage({
             </p>
           </div>
           <Link
-            href="/create?effect=street-power-up&source=explore-seller-workflow"
+            href={EXPLORE_SELLER_MOMENT_HREF}
             className="shrink-0 rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-xs font-black text-[#c8ff3d]"
+            data-explore-seller-moment="honest"
           >
             Create one Moment →
           </Link>

@@ -4587,6 +4587,32 @@ assert.doesNotMatch(
   /data-proof-quality|provisionalLabQualityLabel|Official · cached|Lab\s*≥\s*4/
 );
 assert.match(explorePageSrc, /FreeTrialCta/);
+// AIT-289: Explore Moment doors honest (mode=moment + source); Generate stays 360 helper
+assert.match(
+  explorePageSrc,
+  /import\s*\{\s*MOMENT_CREATE_HREF\s*\}\s*from\s*["']@\/lib\/softLaunch["']/
+);
+assert.match(
+  explorePageSrc,
+  /EXPLORE_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=explore`/
+);
+assert.match(
+  explorePageSrc,
+  /EXPLORE_SELLER_MOMENT_HREF\s*=\s*`\$\{MOMENT_CREATE_HREF\}&source=explore-seller-workflow`/
+);
+assert.match(explorePageSrc, /href=\{EXPLORE_MOMENT_HREF\}/);
+assert.match(explorePageSrc, /href=\{EXPLORE_SELLER_MOMENT_HREF\}/);
+assert.match(explorePageSrc, /data-explore-moment=["']honest["']/);
+assert.match(explorePageSrc, /data-explore-seller-moment=["']honest["']/);
+assert.match(
+  explorePageSrc,
+  /createGenerate360Href\(\s*["']explore["']\s*\)/
+);
+assert.match(explorePageSrc, /data-explore-generate=["']remix["']/);
+assert.doesNotMatch(
+  explorePageSrc,
+  /href=["']\/create\?effect=street-power-up/
+);
 const communityPageSrc = fs.readFileSync(
   join(root, "app/community/page.tsx"),
   "utf8"
