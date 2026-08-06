@@ -69,17 +69,17 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
       data-home-wall="lab-proof"
       data-home-proof-wall="true"
       data-home-proof-360-pinned="true"
-      className="scroll-mt-14 overflow-hidden bg-[var(--void)] px-2 py-12 sm:px-4 sm:py-14 lg:px-6 lg:py-20"
+      className="scroll-mt-14 overflow-hidden bg-void px-2 py-12 sm:px-4 sm:py-14 lg:px-6 lg:py-20"
       aria-labelledby="recipe-wall-title"
     >
       <div className="mx-auto mb-7 flex max-w-[1600px] items-end justify-between gap-6 px-2 sm:mb-9">
         <div className="max-w-3xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#FF4ECD]">
+          <p className="section-label tracking-[0.22em]">
             {HOME_PROOF_BADGE}
           </p>
           <h2
             id="recipe-wall-title"
-            className="mt-3 font-display text-4xl font-black tracking-[-0.055em] text-[var(--cream)] sm:text-6xl"
+            className="mt-3 font-display text-4xl font-black tracking-[-0.055em] text-cream sm:text-6xl"
           >
             One toy. More ways to move.
           </h2>
@@ -92,14 +92,14 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
         <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
           <Link
             href={momentHref}
-            className="rounded-full border border-[#FF4ECD]/35 bg-[rgba(255,78,205,0.1)] px-5 py-2.5 text-xs font-black text-[#FF4ECD] transition hover:border-[#00D9FF]/50 hover:text-[#00D9FF]"
+            className="chip-pink rounded-full px-5 py-2.5 text-xs font-black transition hover:border-tide-blue/50 hover:text-tide-blue"
           >
             Create a Moment ↗
           </Link>
           <Link
             href={listing360Href}
             data-home-proof-360-cta
-            className="rounded-full border border-[#00D9FF]/35 bg-[rgba(0,217,255,0.08)] px-5 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#00D9FF] transition hover:border-[#00D9FF]/60"
+            className="chip-tide rounded-full px-5 py-2 text-[10px] font-black uppercase tracking-[0.12em] transition hover:border-tide-blue/60"
             onClick={() =>
               track({
                 event: "recipe_use",
@@ -136,14 +136,14 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
               data-recipe-card={recipeSlug}
               data-home-proof-card={recipeSlug}
               data-home-proof-slot={index}
-              className="toy-card group relative isolate aspect-[4/5] min-w-0 overflow-hidden p-1.5 transition duration-200 hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#00D9FF]"
+              className="toy-card group relative isolate aspect-[4/5] min-w-0 overflow-hidden p-1.5 transition duration-200 hover:scale-[1.02] focus-within:ring-2 focus-within:ring-tide-blue"
             >
-              <div className="relative h-full w-full overflow-hidden rounded-[1.35rem] bg-[#0A0A0F]">
+              <div className="relative h-full w-full overflow-hidden rounded-[1.35rem] bg-void">
                 <Link
                   href={cardHref}
                   prefetch
                   aria-label={`Explore inside ${recipeName}`}
-                  className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#00D9FF]"
+                  className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-tide-blue"
                   onClick={() =>
                     track({
                       event: item.projectHref ? "project_open" : "recipe_use",
@@ -177,7 +177,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                   {is360 ? (
                     <span
                       data-home-proof-360
-                      className="absolute right-2 top-2 rounded-full border border-[#00D9FF]/40 bg-[#00D9FF]/15 px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-[#00D9FF] backdrop-blur sm:right-3 sm:top-3 sm:text-[9px]"
+                      className="chip-tide absolute right-2 top-2 rounded-full px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] backdrop-blur sm:right-3 sm:top-3 sm:text-[9px]"
                     >
                       360 spin
                     </span>
@@ -195,7 +195,7 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
                   href={remakeHref}
                   prefetch
                   aria-label={`Use the ${recipeName} recipe`}
-                  className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#B14EFF,#FF4ECD)] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-white shadow-[0_0_18px_rgba(255,78,205,0.35)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF] sm:bottom-4 sm:left-4 sm:text-[10px]"
+                  className="cta-brand absolute bottom-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] shadow-[0_0_18px_color-mix(in_srgb,var(--neon-pink)_35%,transparent)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tide-blue sm:bottom-4 sm:left-4 sm:text-[10px]"
                   onClick={() =>
                     track({
                       event: "recipe_use",
@@ -221,14 +221,14 @@ export function HomeViralWall({ items }: { items: FeedItem[] }) {
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:hidden">
         <Link
           href={momentHref}
-          className="rounded-full border border-[#FF4ECD]/35 px-5 py-2.5 text-xs font-bold text-[#FF4ECD]"
+          className="chip-pink rounded-full px-5 py-2.5 text-xs font-bold"
         >
           Create a Moment
         </Link>
         <Link
           href={listing360Href}
           data-home-proof-360-cta
-          className="rounded-full border border-[#00D9FF]/35 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#00D9FF]"
+          className="chip-tide rounded-full px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em]"
           onClick={() =>
             track({
               event: "recipe_use",
