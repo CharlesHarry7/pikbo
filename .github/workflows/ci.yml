@@ -54,6 +54,8 @@ jobs:
           npm run durable-library-statuses-regression
           npm run library-owner-safe-regression
           npm run download-owner-safe-regression
+          npm run library-result-delivery-regression
+          npm run create-download-gate-residual-smoke
           npm run provider-budget-regression
           npm run capability-matrix
 

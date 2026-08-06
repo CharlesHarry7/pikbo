@@ -64,6 +64,7 @@
     "library-owner-safe-regression": "node scripts/library-owner-safe-regression.mjs",
     "download-owner-safe-regression": "node scripts/download-owner-safe-regression.mjs",
     "create-download-gate-residual-smoke": "node scripts/create-download-gate-residual-smoke.mjs",
+    "library-result-delivery-regression": "node --experimental-strip-types scripts/library-result-delivery-regression.mjs",
     "nonprod-seller-pack-harness": "node scripts/nonprod-seller-pack-harness.mjs",
     "nonprod-seller-pack-harness-regression": "node scripts/nonprod-seller-pack-harness-regression.mjs",
     "stripe-billing-regression": "node --experimental-strip-types scripts/stripe-billing-regression.mjs",
