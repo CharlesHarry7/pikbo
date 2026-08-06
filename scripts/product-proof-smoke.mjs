@@ -72,11 +72,15 @@ assert(
     homeWall.includes("pinListing360InFirstSlots") &&
     homeWall.includes("data-home-proof-360-pinned") &&
     homeWall.includes("createGenerate360Href") &&
+    homeWall.includes('data-home-primary-generate="360"') &&
+    homeWall.includes("data-home-primary-generate-cta") &&
+    homeWall.includes("listing360Href") &&
     (homeWall.includes("HOME_PROOF_LIMIT") ||
       homeWall.includes(".slice(0, 8)")),
-  "Lab proof wall must badge honestly, pin 360, use createGenerate360Href, cap ≤8"
+  "Lab proof wall must badge honestly, pin 360, one primary Generate→360, cap ≤8"
 );
-// CTA hierarchy: Moment primary in hero → wall → thin explore rail → suite rail.
+// CTA hierarchy: Moment hero primary + above-fold 360 secondary → proof wall
+// primary Generate 360 → thin explore rail → suite rail filled Generate 360.
 assert(
   home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeViralWall") &&
     home.indexOf("<HomeViralWall") < home.indexOf("<HomeExploreRecipeRail") &&
@@ -85,7 +89,7 @@ assert(
   "home order: Moment hero → proof wall → explore recipe rail → HF product rail → trust footer"
 );
 
-// AIT-241: thin Lab recipe rail — secondary Remake/360 only, no second primary Moment CTA.
+// AIT-241 / AIT-332: thin Lab recipe rail — Remake + one-tap Generate→360 (no second Moment primary).
 const exploreRail = read("components/HomeExploreRecipeRail.tsx");
 assert(
   exploreRail.includes('data-home-explore-rail="lab"') &&
@@ -105,6 +109,19 @@ assert(
   "explore recipe rail must be Lab-only, honest-empty, secondary Remake/360 (no Moment primary)"
 );
 
+// AIT-332 residual: pin 360 + 1-tap workbench on explore rail (parity with proof wall).
+assert(
+  exploreRail.includes("pinListing360First") &&
+    exploreRail.includes('data-home-explore-360-pinned="true"') &&
+    exploreRail.includes('data-home-explore-primary-generate="360"') &&
+    exploreRail.includes("data-home-explore-primary-generate-cta") &&
+    exploreRail.includes("data-home-explore-rail-360-direct") &&
+    exploreRail.includes("home_explore_rail_360_generate") &&
+    (exploreRail.includes('createGenerate360Href("home-explore-rail")') ||
+      exploreRail.includes("createGenerate360Href('home-explore-rail')")),
+  "explore rail must pin 360 first and route 360 card via createGenerate360Href (Generate→360 continuity)"
+);
+
 // AIT-320: HomeExploreRecipeRail residual lime → neon-pink board tokens
 assert(
   !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(exploreRail),
@@ -115,23 +132,40 @@ assert(
   "HomeExploreRecipeRail labels/hovers use neon-pink board tokens"
 );
 
-// Suite rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF.
+// Suite rail: one filled primary Generate→360 + Moment via MOMENT_CREATE_HREF.
 const homeRail = read("components/HfProductRail.tsx");
 assert(
-  homeRail.includes("createGenerate360Href") &&
-    homeRail.includes('"hf-product-rail"') &&
+  homeRail.includes('createGenerate360Href("hf-product-rail")') &&
     homeRail.includes("MOMENT_CREATE_HREF") &&
     homeRail.includes("source=hf-product-rail") &&
     homeRail.includes('data-home-suite-rail="hf-product"') &&
+    homeRail.includes('data-hf-rail-primary-generate="360"') &&
+    homeRail.includes("data-hf-rail-primary-generate-cta") &&
     homeRail.includes("data-home-suite-360") &&
     !homeRail.includes('"/create?effect=street-power-up"') &&
-    !homeRail.includes('"/create"'),
-  "HF product rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF (no bare /create)"
+    !homeRail.includes('href="/create"'),
+  "suite rail: one filled primary Generate→360 + honest Moment door (no bare /create)"
 );
 assert(
   homeWall.includes('createGenerate360Href("home-proof-wall")') ||
     homeWall.includes("createGenerate360Href('home-proof-wall')"),
   "proof wall Listing 360 must tag source=home-proof-wall"
+);
+assert(
+  homeHero.includes('createGenerate360Href("home-hero")') &&
+    homeHero.includes("data-home-hero-360-cta") &&
+    homeHero.includes("data-home-moment-cta") &&
+    homeHero.includes('data-home-hero-doors="fold"') &&
+    /data-home-hero-doors=["']fold["'][\s\S]*data-home-moment-cta[\s\S]*data-home-hero-360-cta/.test(
+      homeHero
+    ),
+  "hero keeps Moment primary + above-fold Generate→360 secondary in fold column (AIT-353)"
+);
+assert(
+  create.includes("resolveCreateRouteContract") &&
+    create.includes('data-create-contract="generate-workbench"') &&
+    create.includes("fixedMomentContract"),
+  "create route dual path: 360 workbench + fixed Moment"
 );
 assert(
   feed.includes("return buildHomeShowcaseFeed();"),
