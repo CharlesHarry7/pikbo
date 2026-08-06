@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { STUDIO_SESSION_BOOT_MS } from "@/lib/clientTimeout";
 import { loadHistory } from "@/lib/history";
 import {
   canLiveGenerate,
@@ -62,9 +63,14 @@ export function ProfilePanel() {
 
   useEffect(() => {
     function refreshGuest() {
-      void fetchMe().then((d) => {
-        if (d) setSession(d);
-      });
+      // Residual 8s boot — hang-safe; fail closed leaves session null.
+      void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+        .then((d) => {
+          if (d) setSession(d);
+        })
+        .catch(() => {
+          /* keep prior/null session — never invent ownership */
+        });
       setClips(loadHistory().length);
     }
 

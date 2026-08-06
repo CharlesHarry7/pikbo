@@ -5,6 +5,10 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useToast } from "@/components/Toast";
 import { interpretDownloadHead } from "@/lib/createTrust";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { downloadVideoFile, privateDownloadHeaders } from "@/lib/history";
 import { fetchMe, type MeResponse } from "@/lib/meClient";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
@@ -328,6 +332,11 @@ function LibraryGridInner() {
   const deepLinkJobId = parseDeepLinkJobId(searchParams.get("job"));
   const [me, setMe] = useState<MeResponse | null>(null);
   const [accountReady, setAccountReady] = useState(false);
+  /** Finite session boot — parity with CreateStudio 8s open contract (AIT-40/414). */
+  const [sessionBoot, setSessionBoot] = useState<
+    "checking" | "ready" | "timeout"
+  >("checking");
+  const [bootNonce, setBootNonce] = useState(0);
   const [jobs, setJobs] = useState<GenerationJob[]>([]);
   const [jobsReady, setJobsReady] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -358,24 +367,37 @@ function LibraryGridInner() {
 
   useEffect(() => {
     let cancelled = false;
-    void fetchMe()
-      .then((result) => {
-        if (cancelled) return;
-        setMe(result);
-        setAccountReady(true);
-        if (result?.signedIn) void refreshJobs();
-        else setJobsReady(true);
-      })
-      .catch(() => {
-        if (!cancelled) {
+    // Defer setState so it is not synchronous inside the effect body.
+    const t = window.setTimeout(() => {
+      setAccountReady(false);
+      setJobsReady(false);
+      setSessionBoot("checking");
+      // Owner-safe: never claim signedIn/credits until /api/me resolves or times out.
+      setMe(null);
+      void (async () => {
+        try {
+          const result = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
+          if (cancelled) return;
+          setMe(result);
+          setSessionBoot("ready");
+          setAccountReady(true);
+          if (result?.signedIn) void refreshJobs();
+          else setJobsReady(true);
+        } catch (err) {
+          if (cancelled) return;
+          // Explicit 8s abort → honest timeout + Retry; other failures soft-fall to guest.
+          setMe(null);
+          setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
           setAccountReady(true);
           setJobsReady(true);
         }
-      });
+      })();
+    }, 0);
     return () => {
       cancelled = true;
+      window.clearTimeout(t);
     };
-  }, [refreshJobs]);
+  }, [bootNonce, refreshJobs]);
 
   const openCount = useMemo(
     () => jobs.filter((job) => isOpen(job.status)).length,
@@ -537,9 +559,71 @@ function LibraryGridInner() {
 
   if (!accountReady || !jobsReady) {
     return (
-      <div className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]">
-        <p className="text-sm font-semibold text-white/45">Loading your Library…</p>
+      <div
+        className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]"
+        data-library-session-boot={sessionBoot}
+        data-library-state="checking"
+      >
+        <p className="text-sm font-semibold text-white/45">
+          Checking your Library…
+        </p>
       </div>
+    );
+  }
+
+  // Finite boot: never stay on Checking forever when /api/me or getSession hangs.
+  if (sessionBoot === "timeout") {
+    return (
+      <section
+        className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
+        data-library-state="session-timeout"
+        data-library-session-boot="timeout"
+        data-library-open-error="session-timeout"
+      >
+        <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
+          <div className="max-w-lg">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#FF6B6B]/35 bg-[#FF6B6B]/10 text-xl text-[#FF6B6B]">
+              ⏱
+            </span>
+            <p className="mt-5 text-[10px] font-black uppercase tracking-[0.2em] text-[#FF6B6B]">
+              Access check timed out
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+              Could not verify your account in time.
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/55">
+              Library stays private until the check succeeds — no ownership or
+              credits are claimed. Retry, sign in again, or open a public Lab
+              preview.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setBootNonce((n) => n + 1)}
+                data-library-session-retry
+                className="btn btn-primary text-sm"
+              >
+                Retry access check
+              </button>
+              <Link
+                href={
+                  deepLinkJobId
+                    ? `/login?next=${encodeURIComponent(
+                        `/library?job=${encodeURIComponent(deepLinkJobId)}`
+                      )}`
+                    : "/login?next=/library"
+                }
+                className="btn btn-ghost text-sm"
+              >
+                Sign in
+              </Link>
+              <Link href={CREATE_MOMENT_HREF} className="btn btn-ghost text-sm">
+                Preview Street Power-Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     );
   }
 
@@ -548,6 +632,7 @@ function LibraryGridInner() {
       <section
         className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111113]"
         data-library-state="guest"
+        data-library-session-boot="ready"
       >
         <div className="grid min-h-[22rem] place-items-center p-6 text-center sm:p-10">
           <div className="max-w-lg">

@@ -27,8 +27,36 @@ const results = read("lib/privateGenerationResults.ts");
 const generationsList = read("app/api/generations/route.ts");
 const generationsDetail = read("app/api/generations/[id]/route.ts");
 const library = read("components/LibraryGrid.tsx");
+const banner = read("components/LibraryStorageBanner.tsx");
+const profile = read("components/ProfilePanel.tsx");
 const retryRoute = read("app/api/generations/[id]/retry/route.ts");
 const pkg = read("package.json");
+
+// ─── Source contracts: Library session boot honesty (AIT-424) ──────────────
+// 8s wall-clock /api/me parity with CreateStudio — no infinite Checking.
+
+assert.match(library, /STUDIO_SESSION_BOOT_MS/);
+assert.match(library, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
+assert.match(library, /isClientTimeoutError/);
+assert.match(library, /sessionBoot === "timeout"/);
+assert.match(library, /data-library-state="session-timeout"/);
+assert.match(library, /data-library-session-boot="timeout"/);
+assert.match(library, /data-library-open-error="session-timeout"/);
+assert.match(library, /data-library-session-retry/);
+assert.match(library, /Retry access check/);
+assert.match(library, /Could not verify your account in time/);
+assert.match(library, /Checking your Library…/);
+// Fail closed: timeout clears me; never claim ownership until resolved.
+assert.match(
+  library,
+  /setMe\(null\)[\s\S]{0,220}setSessionBoot\(isClientTimeoutError/
+);
+assert.doesNotMatch(library, /elapsed\s*>=\s*STUDIO_SESSION_BOOT_MS/);
+// Residual surfaces share the same 8s boot (no hang on incomplete owner claim).
+assert.match(banner, /STUDIO_SESSION_BOOT_MS/);
+assert.match(banner, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
+assert.match(profile, /STUDIO_SESSION_BOOT_MS/);
+assert.match(profile, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
 
 // ─── Source contracts: owner list ──────────────────────────────────────────
 

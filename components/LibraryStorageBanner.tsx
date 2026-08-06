@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { STUDIO_SESSION_BOOT_MS } from "@/lib/clientTimeout";
 import {
   canUsePrivateLaunch,
   fetchMe,
@@ -23,9 +24,14 @@ export function LibraryStorageBanner({
 
   useEffect(() => {
     const t = window.setTimeout(() => {
-      void fetchMe().then((data) => {
-        if (data) setMe(data);
-      });
+      // 8s session boot — fail closed to Guest; never hang ownership claim.
+      void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+        .then((data) => {
+          if (data) setMe(data);
+        })
+        .catch(() => {
+          setMe(null);
+        });
     }, 0);
     return () => window.clearTimeout(t);
   }, []);
