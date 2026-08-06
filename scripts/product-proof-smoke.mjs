@@ -46,16 +46,16 @@ assert(
     !homeHero.includes("beatbot-still") &&
     home.includes("<HomeDesignerGallery") &&
     home.includes("<HomeTrustFooter") &&
+    home.includes("<HomeBrowseCta") &&
     !home.includes("<HomeViralWall") &&
     !home.includes("<HomeExploreRecipeRail") &&
     !home.includes("<HfProductRail") &&
-    !home.includes("<HomeBrowseCta") &&
     !home.includes("buildHomeShowcaseFeed") &&
     !home.includes("PublicLaunchPackSample") &&
     !home.includes('from "@/components/HfExploreHome"') &&
     !home.includes("<HfExploreHome") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must be calm hero + designer-toy gallery + trust (no multi-rail / cartoon demo wall)"
+  "homepage must be calm hero + designer-toy gallery + floating Generate CTA + trust (no multi-rail / cartoon demo wall)"
 );
 assert(
   !home.includes("buildViralPresetsWallFeed"),

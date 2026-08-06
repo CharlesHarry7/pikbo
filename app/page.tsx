@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HomeBrowseCta } from "@/components/HomeBrowseCta";
 import { HomeCinemaHero } from "@/components/HomeCinemaHero";
 import { HomeDesignerGallery } from "@/components/HomeDesignerGallery";
 import { HomeTrustFooter } from "@/components/HomeTrustFooter";
@@ -42,6 +43,7 @@ export const metadata: Metadata = {
 /**
  * Gallery-calm home (boss feedback):
  * - One hero + one designer-toy still gallery + trust
+ * - Floating Generate→360 door below the fold (HomeBrowseCta)
  * - No multi-rail stack, no carnival neon, no cartoon demo wall
  */
 export default function Home() {
@@ -58,7 +60,15 @@ export default function Home() {
       />
 
       <HomeCinemaHero />
-      <HomeDesignerGallery />
+      {/* Last gallery folds clear floating Generate + home indicator */}
+      <div
+        className="pb-[var(--home-browse-cta-pad)] lg:pb-0"
+        data-home-content-pad="home-browse-cta"
+      >
+        <HomeDesignerGallery />
+      </div>
+      {/* AIT-438: calm floating Generate→360 while browsing the shelf */}
+      <HomeBrowseCta />
       <HomeTrustFooter />
     </>
   );
