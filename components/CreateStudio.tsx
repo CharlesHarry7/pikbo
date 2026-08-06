@@ -3392,7 +3392,7 @@ export function CreateStudio({
                         className="btn btn-primary px-4 py-2 text-xs"
                         data-fixed-moment-upgrade
                       >
-                        Continue creating · 9 Moments/month · $49
+                        Founding Studio · $49/mo founding rate · checkout closed
                       </Link>
                     </div>
                   ) : (

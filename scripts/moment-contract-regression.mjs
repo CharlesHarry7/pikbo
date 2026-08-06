@@ -131,7 +131,7 @@ assertMatch(
 );
 assertMatch(
   studio,
-  /data-fixed-moment-upgrade[\s\S]{0,180}9 Moments\/month · \$49/,
+  /data-fixed-moment-upgrade[\s\S]{0,220}Founding Studio · \$49\/mo founding rate · checkout closed/,
   "fixed Moment result must expose the single Founding Studio upgrade"
 );
 

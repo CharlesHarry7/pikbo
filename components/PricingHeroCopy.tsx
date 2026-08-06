@@ -14,13 +14,13 @@ const COPY: Record<
     eyebrow: "Private validation · checkout closed",
     title: "Founding Studio opens after real Moments are proven.",
     description:
-      "Pikbo is measuring real output quality, recovery, and p95 retry cost before setting a public price or monthly allowance. No subscription is on sale today.",
+      "Founding rate is $49/month for nine directed Moments. Pikbo is still measuring output quality, recovery, and p95 retry cost before public live checkout. No subscription is on sale today.",
   },
   "cost-control": {
-    eyebrow: "Margin gate · no premature price",
+    eyebrow: "Margin gate · checkout closed",
     title: "Cost first. Public subscription second.",
     description:
-      "Founding Studio will open only after a finite monthly inclusion clears the measured quality, retry-cost, payment-fee, and 70% gross-margin gates.",
+      "Founding Studio ($49 founding rate · nine Moments) will open only after quality, retry-cost, payment-fee, and 70% gross-margin gates clear. No subscription is on sale today.",
   },
 };
 
@@ -66,7 +66,7 @@ export function PricingHeroCopy({
 
         <div className="mt-8 flex flex-col justify-center gap-2 sm:flex-row">
           <Link
-            href="/create?effect=street-power-up&source=pricing-hero&try=1&sample=beatbot"
+            href="/create?mode=moment&effect=street-power-up&source=pricing-hero&try=1&sample=beatbot"
             className="inline-flex min-h-13 items-center justify-center rounded-full bg-black px-7 text-sm font-black text-white transition hover:-translate-y-0.5"
           >
             Preview one Moment
@@ -85,7 +85,7 @@ export function PricingHeroCopy({
         <div className="mx-auto mt-9 grid max-w-3xl gap-px overflow-hidden rounded-2xl border border-black/15 bg-black/15 sm:grid-cols-3">
           {[
             ["1 Moment", "one selected video direction"],
-            ["Pending", "price and monthly count"],
+            ["$49 founding", "nine Moments · checkout closed"],
             ["Private", "signed-in Library"],
           ].map(([value, label]) => (
             <div key={value} className="bg-white/48 px-4 py-4 text-center">

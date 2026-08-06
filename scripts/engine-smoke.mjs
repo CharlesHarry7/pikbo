@@ -5881,7 +5881,7 @@ assert.match(footerSrc, /<Link\s+href=\{FOOTER_CREATE_HREF\}/);
 // Pricing and Footer still preserve their existing product-first assertions.
 assert.match(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
-  /href=["']\/create\?effect=street-power-up&source=pricing-hero&try=1&sample=beatbot["']/
+  /href=["']\/create\?(?:mode=moment&)?effect=street-power-up&source=pricing-hero&try=1&sample=beatbot["']/
 );
 assert.doesNotMatch(
   fs.readFileSync(join(root, "components/PricingHeroCopy.tsx"), "utf8"),
