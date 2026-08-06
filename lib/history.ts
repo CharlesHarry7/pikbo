@@ -3,6 +3,7 @@
 import {
   canDownloadResult,
   freeLiveDownloadBlockReason,
+  isControlledClientDownloadUrl,
   isSafeDeliverableUrl,
   classifyDownloadHead,
 } from "@/lib/createTrust";
@@ -271,12 +272,18 @@ export function remoteClipMayExpire(item: {
   return ageMs > 5 * 24 * 60 * 60 * 1000;
 }
 
-/** Download a remote or local video (fal CORS allows *). Falls back to new tab. */
+/**
+ * Client blob / tab open for video deliverables.
+ * Controlled paths only (AIT-294/AIT-308): Lab `/demos/*` or session
+ * `/api/downloads/*`. Never fetch or window.open raw provider / signed CDN.
+ */
 export async function downloadVideoFile(
   url: string,
   filename: string
 ): Promise<"ok" | "fallback" | "fail" | "unsafe" | "blocked"> {
-  if (!isSafeDeliverableUrl(url)) return "unsafe";
+  // Residual lock: isSafeDeliverableUrl alone allows any https host; client
+  // open/download must stay on the controlled allowlist (demos + gate).
+  if (!isControlledClientDownloadUrl(url)) return "unsafe";
   const isGate =
     url.startsWith("/api/downloads/") || url.includes("/api/downloads/");
   // Controlled gate: HEAD first so cancel/timeout never blob-fetch 409 JSON.
@@ -310,7 +317,7 @@ export async function downloadVideoFile(
   const ctrl = new AbortController();
   const timer = window.setTimeout(() => ctrl.abort(), 45_000);
   try {
-    // Relative /demos/... works same-origin; absolute fal needs CORS.
+    // Relative /demos/... works same-origin; gate path is same-origin + auth.
     const res = await fetch(url, {
       mode: "cors",
       signal: ctrl.signal,
@@ -352,8 +359,9 @@ export async function downloadVideoFile(
     return "ok";
   } catch {
     try {
-      // Re-check: never open unsafe schemes even on fetch failure path.
-      if (!isSafeDeliverableUrl(url)) return "unsafe";
+      // Residual: never window.open raw CDN even if a future caller bypasses
+      // the entry check — controlled allowlist only (demos or gate after HEAD).
+      if (!isControlledClientDownloadUrl(url)) return "unsafe";
       if (isGate) {
         // CORS/network after HEAD allow: browser tab can follow 302 to the file.
         // HEAD block / JSON body already returned "blocked" above.
@@ -363,6 +371,7 @@ export async function downloadVideoFile(
         }
         return "blocked";
       }
+      // Lab demos only reach here — same-origin open is fine.
       window.open(url, "_blank", "noopener,noreferrer");
       return "fallback";
     } catch {

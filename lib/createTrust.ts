@@ -470,23 +470,28 @@ export function isSessionGatedDownloadUrl(url: string): boolean {
 }
 
 /**
- * Absolute URL safe for clipboard / X share (never session-gated downloads).
- * Relative same-origin paths become origin-absolute when `origin` is provided.
+ * Absolute URL safe for clipboard / X share.
+ * Soft-launch honesty (AIT-308): only Lab demos are portable public links.
+ * Never mint a share URL from session gates, private signed storage, or
+ * raw provider CDN (durable UUID Moments use Download, not Copy/Share).
  */
 export function publicShareableVideoUrl(
   url: string,
   origin?: string
 ): string | null {
-  if (!isSafeDeliverableUrl(url)) return null;
-  if (isSessionGatedDownloadUrl(url)) return null;
+  if (!url || typeof url !== "string") return null;
   const t = url.trim();
-  if (t.startsWith("/") && !t.startsWith("//")) {
-    const o = (origin || "").replace(/\/$/, "");
-    if (!o || !/^https?:\/\//i.test(o)) return null;
-    return `${o}${t}`;
+  if (!isSafeDeliverableUrl(t)) return null;
+  if (isSessionGatedDownloadUrl(t)) return null;
+  // Lab demos only — no path traversal; never absolute https (signed/CDN).
+  if (
+    !(t.startsWith("/demos/") && !t.includes("..") && !t.includes("\\"))
+  ) {
+    return null;
   }
-  if (/^https?:\/\//i.test(t)) return t;
-  return null;
+  const o = (origin || "").replace(/\/$/, "");
+  if (!o || !/^https?:\/\//i.test(o)) return null;
+  return `${o}${t}`;
 }
 
 /**
@@ -534,6 +539,39 @@ export function isSafeDeliverableUrl(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Durable private job ids (UUID) use the owner-scoped /api/downloads gate.
+ * Process-memory jobs use non-UUID ids (`job_…`).
+ */
+export function isDurableDownloadRequestId(id: string | null | undefined): boolean {
+  if (!id || typeof id !== "string") return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    id.trim()
+  );
+}
+
+/**
+ * Client blob / open download allowlist after gate deny or without a gate id.
+ * Never follow raw provider CDN / storage signed HTTPS — only:
+ * - same-origin Lab demos (`/demos/*`)
+ * - controlled session gate (`/api/downloads/*`)
+ *
+ * `isSafeDeliverableUrl` stays broader for server redirect targets and play
+ * mounts; client fallthrough must use this stricter gate.
+ */
+export function isControlledClientDownloadUrl(url: string | null | undefined): boolean {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!isSafeDeliverableUrl(t)) return false;
+  // Lab demos only — no path traversal / backslash tricks.
+  if (t.startsWith("/demos/") && !t.includes("..") && !t.includes("\\")) {
+    return true;
+  }
+  // Controlled owner/session gate path (relative or absolute same app).
+  if (isSessionGatedDownloadUrl(t)) return true;
+  return false;
 }
 
 /** Build immutable spec snapshot at success time. */

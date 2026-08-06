@@ -55,7 +55,8 @@ import {
   isPlayableResultVideoUrl,
   freeLiveDownloadBlockReason,
   internSourceImage,
-  isSafeDeliverableUrl,
+  isControlledClientDownloadUrl,
+  isDurableDownloadRequestId,
   isSessionGatedDownloadUrl,
   publicShareableVideoUrl,
   preserveRequestSettlementOnVersionRestore,
@@ -1368,16 +1369,21 @@ export function CreateStudio({
       toast(freeLiveDownloadBlockReason());
       return;
     }
-    // /api/downloads is session-cookie gated — not a portable public link.
+    // /api/downloads + private signed/CDN are not portable public links.
     const share = publicShareableVideoUrl(
       videoUrl,
       typeof window !== "undefined" ? window.location.origin : undefined
     );
     if (!share) {
+      const durablePrivate =
+        Boolean(activeVersion?.privateResult) ||
+        isDurableDownloadRequestId(activeVersion?.requestId);
       toast(
         isSessionGatedDownloadUrl(videoUrl)
           ? "Session download only — use Download (not a public link)"
-          : "Unsafe deliverable URL — not copied"
+          : durablePrivate
+            ? "Private Moment — use Download (not a public share link)"
+            : "Unsafe deliverable URL — not copied"
       );
       return;
     }
@@ -1451,6 +1457,8 @@ export function CreateStudio({
    * canceled/timeout/in-flight never open a dead tab (Library parity).
    * Allowed GET always uses downloadVideoFile (blob) — never window.open
    * the gate URL (403/409 JSON tabs).
+   * After gate deny / network miss: only Lab `/demos/*` or controlled gate
+   * URLs — never raw provider CDN (AIT-294).
    */
   async function downloadActiveResult() {
     if (!downloadAllowed) {
@@ -1494,13 +1502,25 @@ export function CreateStudio({
         }
         if (decision.kind === "not_found" && decision.message) {
           toast(decision.message);
-          // Fall through only when a safe demo/paid URL exists.
+        } else if (decision.kind === "unknown") {
+          toast("Download gate refused — try again or remake");
+        }
+        // Fail closed: durable UUID (and any gate miss) never open raw CDN.
+        if (!(videoUrl && isControlledClientDownloadUrl(videoUrl))) {
+          return;
         }
       } catch {
-        /* network — try direct below when safe */
+        if (!(videoUrl && isControlledClientDownloadUrl(videoUrl))) {
+          toast(
+            isDurableDownloadRequestId(requestId)
+              ? "Download not found for this account — try remake or open Library recovery"
+              : "Download gate unreachable — try again or open Library"
+          );
+          return;
+        }
       }
     }
-    if (videoUrl && isSafeDeliverableUrl(videoUrl)) {
+    if (videoUrl && isControlledClientDownloadUrl(videoUrl)) {
       markActivationShared();
       track({
         event: "export_click",
@@ -1529,16 +1549,21 @@ export function CreateStudio({
       toast(freeLiveDownloadBlockReason());
       return;
     }
-    // Never tweet a session-gated /api/downloads path (cookie-bound · not public).
+    // Never tweet session gate / private signed / provider CDN (not public).
     const share = publicShareableVideoUrl(
       videoUrl,
       typeof window !== "undefined" ? window.location.origin : undefined
     );
     if (!share) {
+      const durablePrivate =
+        Boolean(activeVersion?.privateResult) ||
+        isDurableDownloadRequestId(activeVersion?.requestId);
       toast(
         isSessionGatedDownloadUrl(videoUrl)
           ? "Session download only — use Download (not a public X link)"
-          : "Unsafe deliverable URL — not shared"
+          : durablePrivate
+            ? "Private Moment — use Download (not a public share link)"
+            : "Unsafe deliverable URL — not shared"
       );
       return;
     }
@@ -3338,7 +3363,7 @@ export function CreateStudio({
                 <div className="mt-4 flex flex-col items-center gap-2">
                   {downloadAllowed &&
                   (activeVersion?.requestId ||
-                    (videoUrl && isSafeDeliverableUrl(videoUrl))) ? (
+                    (videoUrl && isControlledClientDownloadUrl(videoUrl))) ? (
                     <button
                       type="button"
                       data-create-download="gated"

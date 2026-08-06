@@ -182,7 +182,7 @@ assert.match(gen, /isSafeDeliverableUrl/);
 assert.match(gen, /UNSAFE_URL/);
 assert.match(
   fs.readFileSync(join(root, "components/BatchStudio.tsx"), "utf8"),
-  /isSafeDeliverableUrl/
+  /isControlledClientDownloadUrl/
 );
 const pe = fs.readFileSync(join(root, "lib/providerError.ts"), "utf8");
 assert.match(pe, /export function isValidImageDataUrl/);
@@ -1608,21 +1608,22 @@ assert.match(packExport, /filterAvailableDeliverables/);
 assert.match(packExport, /sellerPackCsv/);
 assert.match(packExport, /sellerPackAvailableDownloads/);
 assert.match(packExport, /sellerPackDownloadHref/);
-assert.match(packExport, /isSafeDeliverableUrl/);
+assert.match(packExport, /isControlledClientDownloadUrl/);
 function filterAvailable(items) {
   return items.filter(
     (i) =>
       i.status === "succeeded" &&
-      i.videoUrl &&
       i.downloadable &&
-      (isSafeDeliverableUrlPure(i.videoUrl) ||
-        (typeof i.requestId === "string" && i.requestId.trim()))
+      ((typeof i.requestId === "string" && i.requestId.trim()) ||
+        (i.videoUrl && isControlledClientDownloadUrlPure(i.videoUrl)))
   );
 }
 function packDownloadHref(item) {
   if (item.status !== "succeeded" || !item.downloadable) return null;
   if (item.requestId) return `/api/downloads/${encodeURIComponent(item.requestId)}`;
-  if (item.videoUrl && isSafeDeliverableUrlPure(item.videoUrl)) return item.videoUrl;
+  if (item.videoUrl && isControlledClientDownloadUrlPure(item.videoUrl)) {
+    return item.videoUrl;
+  }
   return null;
 }
 function packAvailableDownloads(items) {
@@ -1635,11 +1636,22 @@ function packAvailableDownloads(items) {
 }
 assert.equal(
   filterAvailable([
-    { status: "succeeded", videoUrl: "/a.mp4", downloadable: true },
-    { status: "failed", videoUrl: "/b.mp4", downloadable: true },
-    { status: "succeeded", videoUrl: "/c.mp4", downloadable: false },
+    { status: "succeeded", videoUrl: "/demos/a.mp4", downloadable: true },
+    { status: "failed", videoUrl: "/demos/b.mp4", downloadable: true },
+    { status: "succeeded", videoUrl: "/demos/c.mp4", downloadable: false },
   ]).length,
   1
+);
+// Raw provider CDN alone is not a client download target (AIT-294).
+assert.equal(
+  filterAvailable([
+    {
+      status: "succeeded",
+      videoUrl: "https://cdn.example/x.mp4",
+      downloadable: true,
+    },
+  ]).length,
+  0
 );
 assert.equal(
   packDownloadHref({
@@ -1649,6 +1661,15 @@ assert.equal(
     videoUrl: "https://cdn.example/x.mp4",
   }),
   "/api/downloads/req_1"
+);
+assert.equal(
+  packDownloadHref({
+    status: "succeeded",
+    downloadable: true,
+    videoUrl: "https://cdn.example/x.mp4",
+  }),
+  null,
+  "raw CDN without requestId must not yield download href"
 );
 assert.equal(
   packDownloadHref({
@@ -1665,14 +1686,14 @@ assert.equal(
     {
       key: "listing_spin",
       status: "succeeded",
-      videoUrl: "/a.mp4",
+      videoUrl: "/demos/a.mp4",
       downloadable: true,
       requestId: "r1",
     },
     {
       key: "fail",
       status: "failed",
-      videoUrl: "/b.mp4",
+      videoUrl: "/demos/b.mp4",
       downloadable: true,
     },
     {
@@ -2547,7 +2568,7 @@ assert.match(historySrcLib, /isSafeDeliverableUrl/);
 assert.match(library, /\/api\/downloads\//);
 assert.match(library, /method:\s*["']HEAD["']|X-Pikbo-Download-Code/);
 assert.match(createStudio, /\/api\/downloads\//);
-assert.match(createStudio, /isSafeDeliverableUrl\(videoUrl\)/);
+assert.match(createStudio, /isControlledClientDownloadUrl\(videoUrl\)/);
 const retryRoute = fs.readFileSync(
   join(root, "app/api/generations/[id]/retry/route.ts"),
   "utf8"
@@ -2585,10 +2606,10 @@ assert.match(landingTool, /data-download-policy=/);
 assert.match(landingTool, /requestCreditStateFromSuccess/);
 assert.match(landingTool, /costCredits/);
 assert.match(landingTool, /\/api\/downloads\//);
-assert.match(landingTool, /isSafeDeliverableUrl/);
-assert.match(landingTool, /isSafeDeliverableUrl\(videoUrl\)/);
+assert.match(landingTool, /isControlledClientDownloadUrl/);
+assert.match(landingTool, /isControlledClientDownloadUrl\(videoUrl\)/);
 // Create: Free Mini must not copy/share raw provider URL (T6 honesty)
-assert.match(createStudio, /isSafeDeliverableUrl/);
+assert.match(createStudio, /isControlledClientDownloadUrl/);
 assert.match(
   createStudio,
   /Free Mini raw provider URL is not a deliverable|downloadAllowed/
@@ -2659,6 +2680,8 @@ assert.doesNotMatch(
 );
 // Download redirect safety
 assert.match(createTrust, /export function isSafeDeliverableUrl/);
+assert.match(createTrust, /export function isControlledClientDownloadUrl/);
+assert.match(createTrust, /export function isDurableDownloadRequestId/);
 // Free live generate success must not echo raw provider URLs (T6 honesty)
 assert.match(createTrust, /export function customerFacingGenerateVideoUrl/);
 assert.match(createTrust, /export function isPlayableResultVideoUrl/);
@@ -2686,7 +2709,7 @@ assert.equal(isPublicCommunityVideoUrl("https://cdn.example/v.mp4"), true);
 assert.equal(isPublicCommunityVideoUrl("/api/downloads/job_1"), false);
 assert.equal(isPublicCommunityVideoUrl("/demos/orbit-dance.mp4"), false);
 assert.equal(isPublicCommunityVideoUrl("javascript:alert(1)"), false);
-// Pure share-link honesty: session gate never portable; relative demos need origin
+// Pure share-link honesty (AIT-308): Lab demos only; session gate / raw https never portable
 function isSessionGatedDownloadUrl(url) {
   if (!url || typeof url !== "string") return false;
   const t = url.trim();
@@ -2697,21 +2720,12 @@ function publicShareableVideoUrl(url, origin) {
   const t = url.trim();
   if (!t || t.length > 2000) return null;
   if (isSessionGatedDownloadUrl(t)) return null;
-  if (t.startsWith("/") && !t.startsWith("//")) {
-    const o = (origin || "").replace(/\/$/, "");
-    if (!o || !/^https?:\/\//i.test(o)) return null;
-    return `${o}${t}`;
+  if (!(t.startsWith("/demos/") && !t.includes("..") && !t.includes("\\"))) {
+    return null;
   }
-  if (/^https?:\/\//i.test(t)) {
-    try {
-      const u = new URL(t);
-      if (!u.hostname || u.username || u.password) return null;
-      return t;
-    } catch {
-      return null;
-    }
-  }
-  return null;
+  const o = (origin || "").replace(/\/$/, "");
+  if (!o || !/^https?:\/\//i.test(o)) return null;
+  return `${o}${t}`;
 }
 assert.equal(isSessionGatedDownloadUrl("/api/downloads/job_1"), true);
 assert.equal(publicShareableVideoUrl("/api/downloads/job_1", "https://pikbo.ai"), null);
@@ -2722,7 +2736,12 @@ assert.equal(
 assert.equal(publicShareableVideoUrl("/demos/x.mp4"), null);
 assert.equal(
   publicShareableVideoUrl("https://cdn.example/v.mp4", "https://pikbo.ai"),
-  "https://cdn.example/v.mp4"
+  null,
+  "raw absolute https is never a soft-launch public share link"
+);
+assert.equal(
+  publicShareableVideoUrl("https://fal.media/files/x.mp4", "https://pikbo.ai"),
+  null
 );
 assert.match(
   fs.readFileSync(join(root, "lib/communityPosts.ts"), "utf8"),
@@ -2991,11 +3010,33 @@ function isSafeDeliverableUrlPure(url) {
     return false;
   }
 }
+/** Mirrors createTrust.isControlledClientDownloadUrl (AIT-294 fallthrough lock). */
+function isControlledClientDownloadUrlPure(url) {
+  if (!isSafeDeliverableUrlPure(url)) return false;
+  const t = url.trim();
+  if (t.startsWith("/demos/") && !t.includes("..") && !t.includes("\\")) {
+    return true;
+  }
+  if (t.startsWith("/api/downloads/") || t.includes("/api/downloads/")) {
+    return true;
+  }
+  return false;
+}
 assert.equal(isSafeDeliverableUrlPure("/demos/orbit-dance.mp4"), true);
 assert.equal(isSafeDeliverableUrlPure("https://fal.media/files/x.mp4"), true);
 assert.equal(isSafeDeliverableUrlPure("javascript:alert(1)"), false);
 assert.equal(isSafeDeliverableUrlPure("//evil.com/x"), false);
 assert.equal(isSafeDeliverableUrlPure("data:text/html,hi"), false);
+assert.equal(isControlledClientDownloadUrlPure("/demos/orbit-dance.mp4"), true);
+assert.equal(
+  isControlledClientDownloadUrlPure("/api/downloads/job_x"),
+  true
+);
+assert.equal(
+  isControlledClientDownloadUrlPure("https://fal.media/files/x.mp4"),
+  false,
+  "raw provider CDN must not be a client direct download"
+);
 // Seller Pack: unsafe direct URL dropped; requestId still allowed via downloads gate
 assert.equal(
   filterAvailable([
@@ -3100,14 +3141,21 @@ assert.match(
 assert.match(library, /privateDownloadHeaders[\s\S]{0,700}method:\s*["']HEAD["']/);
 assert.match(library, /interpretDownloadHead[\s\S]{0,900}downloadVideoFile/);
 // downloadVideoFile: HEAD block/JSON → blocked; HEAD allow + CORS may open gate
+// AIT-308: controlled client allowlist only — never window.open raw provider CDN
 const historyLibSrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
 assert.match(historyLibSrc, /downloadVideoFile|classifyDownloadHead/);
+assert.match(historyLibSrc, /isControlledClientDownloadUrl/);
 assert.match(historyLibSrc, /return ["']blocked["']/);
 assert.match(historyLibSrc, /gateHeadAllowed/);
 assert.ok(
   historyLibSrc.includes("/api/downloads/") &&
     historyLibSrc.includes('return "blocked"'),
   "downloadVideoFile must block /api/downloads when HEAD refuses"
+);
+assert.match(
+  historyLibSrc,
+  /if \(!isControlledClientDownloadUrl\(url\)\) return "unsafe"/,
+  "downloadVideoFile entry must refuse non-controlled URLs"
 );
 // Reject JSON/text Content-Type so gate error bodies never save as .mp4
 assert.match(
