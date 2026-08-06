@@ -307,6 +307,29 @@ assert(
   );
 }
 
+// AIT-608: Tools hub residual competitor lime → gallery-calm copper
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const toolsHub = read("app/tools/page.tsx");
+  const toolsSlug = read("app/tools/[slug]/page.tsx");
+  assert(
+    !lime.test(toolsHub),
+    "app/tools/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    !lime.test(toolsSlug),
+    "app/tools/[slug]/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    /rgba\(196\s*,\s*165\s*,\s*116/.test(toolsHub),
+    "Tools hub radial wash uses copper board rgba(196,165,116)"
+  );
+  assert(
+    toolsSlug.includes("var(--brand)"),
+    "Tools slug honesty/eyebrow friction line uses --brand copper"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );

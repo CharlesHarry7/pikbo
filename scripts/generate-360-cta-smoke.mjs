@@ -821,4 +821,28 @@ assert.match(
   "Explore page eyebrows/CTAs/path accents use --brand copper"
 );
 
+// AIT-608: Tools hub residual competitor lime → gallery-calm copper
+const toolsHubSrc = read("app/tools/page.tsx");
+const toolsSlugSrc = read("app/tools/[slug]/page.tsx");
+assert.doesNotMatch(
+  toolsHubSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "app/tools/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.doesNotMatch(
+  toolsSlugSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "app/tools/[slug]/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  toolsHubSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "Tools hub radial wash uses copper board rgba(196,165,116)"
+);
+assert.match(
+  toolsSlugSrc,
+  /var\(--brand\)/,
+  "Tools slug honesty/eyebrow friction line uses --brand copper"
+);
+
 console.log("generate-360-cta-smoke: ok");

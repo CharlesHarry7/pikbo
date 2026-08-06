@@ -130,7 +130,7 @@ export default async function ToolPage({
           {/* Rank page friction line — above H1, does not change H1 (CTR / soft launch) */}
           {isHighIntentTool ? (
             <p
-              className="mt-4 max-w-2xl text-sm font-semibold tracking-wide text-[#c8ff3d]/95 sm:text-base"
+              className="mt-4 max-w-2xl text-sm font-semibold tracking-wide text-[var(--brand)] sm:text-base"
               data-tools-friction="cached-preview"
             >
               Cached format preview · no card · your upload is not processed.
