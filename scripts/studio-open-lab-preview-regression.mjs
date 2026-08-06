@@ -96,6 +96,43 @@ assert.match(hero, /data-studio-open-error/);
 assert.match(hero, /data-studio-open-retry/);
 assert.match(hero, /data-studio-open-state=\{busy \? "opening" : "idle"\}/);
 
+// AIT-249: residual chrome — ProfilePanel + LibraryStorageBanner + PrivateSellerPackGate
+const profilePanel = read("components/ProfilePanel.tsx");
+const libraryStorageBanner = read("components/LibraryStorageBanner.tsx");
+const privateSellerPackGate = read("components/PrivateSellerPackGate.tsx");
+for (const [name, src] of [
+  ["ProfilePanel", profilePanel],
+  ["LibraryStorageBanner", libraryStorageBanner],
+  ["PrivateSellerPackGate", privateSellerPackGate],
+]) {
+  assert.match(src, /STUDIO_SESSION_BOOT_MS/, `${name} must boot-bound`);
+  assert.match(
+    src,
+    /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/,
+    `${name} must pass timeoutMs`
+  );
+  assert.match(src, /isClientTimeoutError/, `${name} must detect timeout`);
+  assert.match(src, /sessionBoot === "timeout"/, `${name} timeout branch`);
+  // Never bare untimed mount hydrate
+  assert.doesNotMatch(src, /void fetchMe\(\)\.then/, `${name} no bare fetchMe`);
+}
+assert.match(profilePanel, /data-profile-boot=\{sessionBoot\}/);
+assert.match(profilePanel, /data-profile-boot-retry/);
+assert.match(libraryStorageBanner, /data-library-storage-boot=\{sessionBoot\}/);
+assert.match(libraryStorageBanner, /data-library-storage-boot-retry/);
+assert.match(
+  privateSellerPackGate,
+  /data-private-seller-pack-boot=\{sessionBoot\}/
+);
+assert.match(privateSellerPackGate, /data-private-seller-pack-boot-retry/);
+// Profile must not claim Free Mini while session unknown
+assert.match(profilePanel, /sessionKnown && isFreePlan/);
+assert.doesNotMatch(
+  profilePanel,
+  /\{session && isFreePlan && !demo \?/,
+  "Profile free-trial chip must gate on sessionKnown"
+);
+
 // Package + CI script wiring
 assert.match(
   packageJson,
@@ -112,5 +149,5 @@ for (const asset of [
 }
 
 console.log(
-  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; timeout/error + retry; mobile sticky Lab CTA)"
+  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; ProfilePanel+LibraryStorage+PrivateSellerPackGate 8s boot; timeout/error + retry; mobile sticky Lab CTA)"
 );

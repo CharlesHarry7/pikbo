@@ -1,15 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   canUsePrivateLaunch,
   fetchMe,
   type MeResponse,
 } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { isBrowserSupabaseReady } from "@/lib/supabase/browser";
 
-/** Distinguish private account results from device-only imports. */
+type SessionBoot = "checking" | "ready" | "timeout";
+
+/**
+ * Distinguish private account results from device-only imports.
+ * 8s wall-clock /api/me boot — never soft-stick Guest/Account labels on hang.
+ */
 export function LibraryStorageBanner({
   deviceCount,
   sessionOpen,
@@ -20,25 +29,69 @@ export function LibraryStorageBanner({
   privateCount?: number;
 }) {
   const [me, setMe] = useState<MeResponse | null>(null);
+  const [sessionBoot, setSessionBoot] = useState<SessionBoot>("checking");
 
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      void fetchMe().then((data) => {
-        if (data) setMe(data);
+  const load = useCallback(() => {
+    setSessionBoot("checking");
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+      .then((data) => {
+        setMe(data);
+        setSessionBoot("ready");
+      })
+      .catch((err) => {
+        setMe(null);
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
       });
-    }, 0);
-    return () => window.clearTimeout(t);
   }, []);
 
+  useEffect(() => {
+    const t = window.setTimeout(load, 0);
+    return () => window.clearTimeout(t);
+  }, [load]);
+
+  const sessionKnown = sessionBoot === "ready" && me != null;
+  const accessUnknown = !sessionKnown;
+  const accessTimedOut = sessionBoot === "timeout";
+
+  // Owner evidence from privateCount is independent of /api/me; session labels
+  // only claim signed-in / private access when me is known (or privateCount > 0).
   const signedIn =
-    privateCount > 0 || Boolean(me?.signedIn && me?.auth?.id);
+    privateCount > 0 ||
+    (sessionKnown && Boolean(me?.signedIn && me?.auth?.id));
   const privateGenerationEnabled =
-    privateCount > 0 || canUsePrivateLaunch(me);
-  const authReady = isBrowserSupabaseReady() || Boolean(me?.authConfigured);
-  const email = me?.auth?.email;
+    privateCount > 0 || (sessionKnown && canUsePrivateLaunch(me));
+  const authReady =
+    isBrowserSupabaseReady() ||
+    (sessionKnown && Boolean(me?.authConfigured));
+  const email = sessionKnown ? me?.auth?.email : undefined;
+
+  const accountLabel = accessTimedOut
+    ? "Access check timed out"
+    : accessUnknown && sessionBoot === "checking" && privateCount === 0
+      ? "Checking account…"
+      : signedIn
+        ? email || "Signed in"
+        : "Guest";
+
+  const accountDetail = accessTimedOut
+    ? "Could not verify account in time · device imports still local"
+    : accessUnknown && sessionBoot === "checking" && privateCount === 0
+      ? "Verifying whether private results are available…"
+      : signedIn
+        ? privateCount > 0
+          ? `${privateCount} private clip${privateCount === 1 ? "" : "s"} · owner-only cloud download`
+          : privateGenerationEnabled
+            ? "Private generation access enabled · completed clips persist here"
+            : "Signed in · private generation access is not enabled"
+        : authReady
+          ? "Sign in to save private generations to your account"
+          : "Auth not configured · Library stays on-device";
 
   return (
-    <section className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent">
+    <section
+      className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent"
+      data-library-storage-boot={sessionBoot}
+    >
       <div className="grid gap-0 sm:grid-cols-3">
         <div className="border-b border-white/10 p-4 sm:border-b-0 sm:border-r">
           <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--mint)]">
@@ -69,37 +122,42 @@ export function LibraryStorageBanner({
           <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/50">
             Account
           </p>
-          {signedIn ? (
-            <>
-              <p className="mt-1 truncate text-sm font-bold text-white">
-                {email || "Signed in"}
-              </p>
-              <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-                {privateCount > 0
-                  ? `${privateCount} private clip${privateCount === 1 ? "" : "s"} · owner-only cloud download`
-                  : privateGenerationEnabled
-                    ? "Private generation access enabled · completed clips persist here"
-                    : "Signed in · private generation access is not enabled"}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="mt-1 text-sm font-bold text-white/80">Guest</p>
-              <p className="mt-0.5 text-[11px] leading-snug text-white/45">
-                {authReady
-                  ? "Sign in to save private generations to your account"
-                  : "Auth not configured · Library stays on-device"}
-              </p>
-              {authReady ? (
-                <Link
-                  href="/login?next=/library"
-                  className="mt-2 inline-block text-[11px] font-bold text-[var(--mint)] hover:underline"
+          <p className="mt-1 truncate text-sm font-bold text-white">
+            {accountLabel}
+          </p>
+          <p className="mt-0.5 text-[11px] leading-snug text-white/45">
+            {accountDetail}
+            {accessTimedOut ? (
+              <>
+                {" · "}
+                <button
+                  type="button"
+                  onClick={() => load()}
+                  data-library-storage-boot-retry
+                  className="font-bold text-[var(--mint)] underline-offset-2 hover:underline"
+                  title="Retry access check"
                 >
-                  Sign in →
-                </Link>
-              ) : null}
-            </>
-          )}
+                  Retry
+                </button>
+              </>
+            ) : null}
+          </p>
+          {!signedIn && !accessUnknown && authReady ? (
+            <Link
+              href="/login?next=/library"
+              className="mt-2 inline-block text-[11px] font-bold text-[var(--mint)] hover:underline"
+            >
+              Sign in →
+            </Link>
+          ) : null}
+          {accessTimedOut && authReady ? (
+            <Link
+              href="/login?next=/library"
+              className="mt-2 inline-block text-[11px] font-bold text-[var(--mint)] hover:underline"
+            >
+              Sign in →
+            </Link>
+          ) : null}
         </div>
       </div>
       <div className="border-t border-white/10 bg-black/30 px-4 py-2">
