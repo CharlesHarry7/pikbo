@@ -219,6 +219,51 @@ assert.doesNotMatch(
   /bottom-\[4\.75rem\]/,
   "home floating Generate must not hardcode bare 4.75rem (double-counts nav when home has none)"
 );
+
+// 5b. AIT-371 — Home last folds pad under HomeBrowseCta (not bare pb-28)
+assert.match(
+  globalsCss,
+  /--home-browse-cta-h:\s*3\.75rem/,
+  "globals must define --home-browse-cta-h for HomeBrowseCta pill chrome"
+);
+assert.match(
+  globalsCss,
+  /--home-browse-cta-pad:\s*calc\(\s*var\(--home-browse-cta-h\)\s*\+\s*var\(--floating-cta-safe-bottom\)/,
+  "globals --home-browse-cta-pad must stack pill height on --floating-cta-safe-bottom"
+);
+assert.match(
+  homePage,
+  /data-home-content-pad=["']home-browse-cta["']/,
+  "Moment home must mark proof-wall/rail pad under HomeBrowseCta"
+);
+assert.match(
+  homePage,
+  /pb-\[var\(--home-browse-cta-pad\)\]/,
+  "Moment home wall/rail shell must use --home-browse-cta-pad"
+);
+assert.doesNotMatch(
+  homePage,
+  /\bpb-28\b/,
+  "Moment home must not use bare pb-28 under floating Generate path"
+);
+{
+  const hfExplore = read("components/HfExploreHome.tsx");
+  assert.match(
+    hfExplore,
+    /pb-\[var\(--home-browse-cta-pad\)\]/,
+    "HfExploreHome full layout must clear floating Generate via --home-browse-cta-pad"
+  );
+  assert.match(
+    hfExplore,
+    /data-hf-explore-content-pad=\{/,
+    "HfExploreHome must expose content-pad branch marker"
+  );
+  assert.doesNotMatch(
+    hfExplore,
+    /\bpb-28\b/,
+    "HfExploreHome must not residual bare pb-28 under floating Generate path"
+  );
+}
 assert.match(
   mobileBar,
   /bottom-\[var\(--mobile-nav-clearance\)\]/,

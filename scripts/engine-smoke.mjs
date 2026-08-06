@@ -2576,6 +2576,27 @@ assert.match(
   batchStudio,
   /bottom-\[var\(--mobile-nav-clearance\)\]/
 );
+// AIT-371: Home proof-wall/rail content pad under HomeBrowseCta
+{
+  const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
+  const globalsSrc = fs.readFileSync(join(root, "app/globals.css"), "utf8");
+  assert.match(
+    globalsSrc,
+    /--home-browse-cta-pad:\s*calc\(/
+  );
+  assert.match(
+    globalsSrc,
+    /var\(--home-browse-cta-h\)\s*\+\s*var\(--floating-cta-safe-bottom\)/
+  );
+  assert.match(
+    homePageSrc,
+    /pb-\[var\(--home-browse-cta-pad\)\]/
+  );
+  assert.match(
+    homePageSrc,
+    /data-home-content-pad=["']home-browse-cta["']/
+  );
+}
 assert.match(
   appShell,
   /const hideMobileNav\s*=\s*resultShell\s*\|\|\s*fixedMomentEntry\s*\|\|\s*sellerPackCreate/

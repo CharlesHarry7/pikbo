@@ -115,8 +115,13 @@ export function HfExploreHome({
   return (
     <div
       className={`bg-black text-white sm:pb-16 ${
-        toolFirstLayout ? "pb-8" : "min-h-screen pb-28"
+        toolFirstLayout
+          ? "pb-8"
+          : "min-h-screen pb-[var(--home-browse-cta-pad)]"
       }`}
+      data-hf-explore-content-pad={
+        toolFirstLayout ? "tool-first" : "home-browse-cta"
+      }
     >
       {!toolFirstLayout ? <SoftLaunchStrip /> : null}
 

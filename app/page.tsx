@@ -61,8 +61,14 @@ export default function Home() {
       />
 
       <HomeCinemaHero />
-      <HomeViralWall items={proofWall} />
-      <HomeExploreRecipeRail items={proofWall} />
+      {/* AIT-371: last proof-wall / rail folds clear HomeBrowseCta + safe-bottom */}
+      <div
+        className="pb-[var(--home-browse-cta-pad)] lg:pb-0"
+        data-home-content-pad="home-browse-cta"
+      >
+        <HomeViralWall items={proofWall} />
+        <HomeExploreRecipeRail items={proofWall} />
+      </div>
       {/* AIT-256/AIT-71: floating Generate clears home indicator; z below sticky header */}
       <HomeBrowseCta />
       <HfProductRail />

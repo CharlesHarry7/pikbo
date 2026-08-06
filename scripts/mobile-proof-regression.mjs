@@ -121,6 +121,47 @@ assert.match(
     "Toast must not hardcode bottom-20 under notched home indicator"
   );
 }
+// AIT-371: Home proof-wall / rail content pad under HomeBrowseCta
+{
+  const globals = source("app/globals.css");
+  const home = source("app/page.tsx");
+  const browseCta = source("components/HomeBrowseCta.tsx");
+  assert.match(
+    globals,
+    /--home-browse-cta-pad:\s*calc\(/,
+    "globals must define --home-browse-cta-pad for Home last-fold clearance"
+  );
+  assert.match(
+    globals,
+    /var\(--home-browse-cta-h\)\s*\+\s*var\(--floating-cta-safe-bottom\)/,
+    "--home-browse-cta-pad must stack on --floating-cta-safe-bottom"
+  );
+  assert.match(
+    home,
+    /data-home-content-pad=["']home-browse-cta["']/,
+    "Home shell must mark content pad under HomeBrowseCta"
+  );
+  assert.match(
+    home,
+    /pb-\[var\(--home-browse-cta-pad\)\]/,
+    "Home wall/rail must use --home-browse-cta-pad (not bare pb-28)"
+  );
+  assert.doesNotMatch(
+    home,
+    /\bpb-28\b/,
+    "Home must not residual bare pb-28 under floating Generate"
+  );
+  assert.match(
+    browseCta,
+    /bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+    "HomeBrowseCta still parks on --floating-cta-safe-bottom"
+  );
+  assert.match(
+    browseCta,
+    /createGenerate360Href\(["']home-browse["']\)/,
+    "HomeBrowseCta Generate→360 deep-link honesty preserved"
+  );
+}
 assert.doesNotMatch(
   zh,
   /job\.seller\.blurb":\s*"[^"]*实时生成 30 积分/,
