@@ -11,6 +11,7 @@
  * 5. Fail-closed refund copy remains on GenerateFailPanel
  * 6. BatchStudio wires recovery state, detach, and server-gated Retry
  * 7. Image Studio Fail panel uses the same pure canRetryGenerateFailure gate
+ * 8. CreateStudio form-side busy-leave (AIT-571) next to Cancel
  *
  * Run: npm run generate-wait-honesty-regression
  */
@@ -454,7 +455,77 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   );
 }
 
+// ─── 9. AIT-571 CreateStudio form-side busy-leave residual ───────────────────
+// Desktop form mid-generate previously only exposed Cancel. WaitStage + mobile
+// strip already detach; form row must match Batch/Landing/Image when the pure
+// shouldShowGenerateWaitDetach gate allows.
+
+{
+  const create = read("components/CreateStudio.tsx");
+  assert.match(create, /shouldShowGenerateWaitDetach/);
+  assert.match(create, /showCreateFormDetach/);
+  assert.match(create, /data-create-leave="detach"/);
+  assert.match(create, /data-create-leave="cancel"/);
+  assert.match(create, /data-generate-leave="detach"/);
+  assert.match(create, /data-generate-leave="cancel"/);
+  assert.match(create, /Open Library · keep generating/);
+  assert.match(create, /Cancel request · \{elapsed\}s/);
+  // Form detach uses the pure policy (recovery / long-wait; demo never detaches)
+  assert.match(
+    create,
+    /shouldShowGenerateWaitDetach\(\{[\s\S]{0,200}demoMode[\s\S]{0,120}elapsedSec: elapsed[\s\S]{0,120}recoveryChecking: recoveringSavedResult[\s\S]{0,120}awaitingPrimary: awaitingPrimaryAfterRecovery/
+  );
+  // WaitStage + mobile strip retain non-destructive leave (do not regress)
+  assert.match(
+    create,
+    /GenerateWaitStage[\s\S]{0,600}onLeaveToLibrary=\{leaveWaitingKeepBackground\}/
+  );
+  assert.match(
+    create,
+    /GenerateWaitMobileStrip[\s\S]{0,400}onLeaveToLibrary=\{leaveWaitingKeepBackground\}/
+  );
+  // Detach leave is pure — no abort, no refund invent
+  {
+    const leaveFn = create.match(
+      /function leaveWaitingKeepBackground\(\) \{[\s\S]*?\n  \}/
+    )?.[0];
+    assert.ok(
+      leaveFn,
+      "leaveWaitingKeepBackground must exist on CreateStudio"
+    );
+    assert.match(leaveFn, /planGenerateWaitLeave\("detach"\)/);
+    assert.match(leaveFn, /generateAbortRef\.current = null/);
+    assert.match(leaveFn, /detachedWaitRef\.current = true/);
+    assert.match(leaveFn, /router\.push\(["']\/library["']\)/);
+    assert.doesNotMatch(leaveFn, /\.abort\s*\(/);
+    assert.doesNotMatch(leaveFn, /setLastRequestCreditState/);
+    assert.doesNotMatch(leaveFn, /10 restored|credits restored/i);
+  }
+  // Explicit cancel remains abort + refund unconfirmed (never invent restore)
+  {
+    const cancelFn = create.match(
+      /function cancelInFlightGenerate\(\) \{[\s\S]*?\n  \}/
+    )?.[0];
+    assert.ok(cancelFn, "cancelInFlightGenerate must exist on CreateStudio");
+    assert.match(cancelFn, /ctrl\.abort\(\)/);
+    assert.match(
+      cancelFn,
+      /setLastRequestCreditState\(["']refund unconfirmed["']\)/
+    );
+    assert.doesNotMatch(cancelFn, /10 restored/);
+  }
+  // AIT-545 Retry gate retained — AUTH / paywall / fatal / durable hold blocked
+  assert.match(create, /canRetryGenerateFailure/);
+  assert.match(create, /lastFailCode/);
+  assert.match(create, /lastFailFatal/);
+  assert.match(create, /lastFailPaywall/);
+  assert.match(
+    create,
+    /canRetryGenerateFailure\(\{[\s\S]{0,220}code: lastFailCode[\s\S]{0,120}fatal: lastFailFatal[\s\S]{0,120}paywall:[\s\S]{0,100}busy[\s\S]{0,80}hasInput:/
+  );
+}
+
 
 console.log(
-  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · AIT-237 Create/Landing gate · fail-closed refund copy · Batch wiring · AIT-545 Image Studio gate)"
+  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · AIT-237 Create/Landing gate · fail-closed refund copy · Batch wiring · AIT-545 Image Studio gate · AIT-571 Create form busy-leave)"
 );

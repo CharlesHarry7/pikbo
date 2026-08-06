@@ -11,6 +11,7 @@ import {
 import {
   canRetryGenerateFailure,
   planGenerateWaitLeave,
+  shouldShowGenerateWaitDetach,
 } from "@/lib/generateRecoveryPolicy";
 import {
   downloadVideoFile,
@@ -1689,6 +1690,17 @@ export function CreateStudio({
   }
 
   const busy = status === "generating" || status === "uploading";
+  /**
+   * Desktop form mid-generate: offer non-destructive leave next to Cancel when
+   * recovery is open or long-wait unlocks (WaitStage / mobile strip already gate
+   * the same policy). Demo Free never detaches to private Library.
+   */
+  const showCreateFormDetach = shouldShowGenerateWaitDetach({
+    demoMode,
+    elapsedSec: elapsed,
+    recoveryChecking: recoveringSavedResult,
+    awaitingPrimary: awaitingPrimaryAfterRecovery,
+  });
   const canGenerate =
     !busy && mode === "i2v" && Boolean(image) && ownsRights;
   const primaryLabel = busy
@@ -3191,14 +3203,35 @@ export function CreateStudio({
           )}
 
           {status === "generating" ? (
-            <button
-              type="button"
-              onClick={cancelInFlightGenerate}
-              className="btn btn-ghost hidden w-full border border-white/20 lg:flex"
-              title="Aborts this browser request. Live debit may still settle server-side."
-            >
-              Cancel request · {elapsed}s
-            </button>
+            <div className="hidden w-full space-y-2 lg:block">
+              <button
+                type="button"
+                onClick={cancelInFlightGenerate}
+                className="btn btn-ghost w-full border border-white/20"
+                title="Aborts this browser request. Live debit may still settle server-side."
+                data-generate-leave="cancel"
+                data-create-leave="cancel"
+              >
+                Cancel request · {elapsed}s
+              </button>
+              {showCreateFormDetach ? (
+                <button
+                  type="button"
+                  onClick={leaveWaitingKeepBackground}
+                  className="btn btn-ghost w-full border border-[var(--mint)]/35 text-[var(--mint)]"
+                  title="Stop waiting here. Does not abort the original generate POST or claim a refund."
+                  data-generate-leave="detach"
+                  data-create-leave="detach"
+                >
+                  Open Library · keep generating
+                </button>
+              ) : null}
+              <p className="text-center text-[10px] text-[var(--fg-dim)]">
+                {showCreateFormDetach
+                  ? "Leave without cancel — original job may finish server-side. No refund invent; check balance before a new attempt."
+                  : "Generating… Cancel aborts this tab wait. Live debit may still settle — check balance before retry."}
+              </p>
+            </div>
           ) : fixedMomentContract && !privateUploadEnabled ? null : (
             <button
               type="button"
