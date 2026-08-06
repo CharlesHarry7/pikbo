@@ -143,7 +143,7 @@ export default function CinemaPage() {
       <div className="relative z-10 border-b border-white/10 bg-black/50 px-4 py-3 backdrop-blur-md sm:px-6">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mint)]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--neon-pink)]">
               Cinema Studio · Preview
             </p>
             <p className="mt-0.5 text-xs text-white/45">
@@ -198,7 +198,7 @@ export default function CinemaPage() {
             </div>
             <Link
               href={href}
-              className="hidden rounded-full bg-[var(--mint)] px-6 py-3 text-sm font-black text-black shadow-[0_0_32px_rgba(200,255,61,0.3)] lg:inline-flex"
+              className="hidden rounded-full bg-[var(--neon-pink)] px-6 py-3 text-sm font-black text-[var(--void)] shadow-[0_0_32px_rgba(255,78,205,0.3)] lg:inline-flex"
             >
               Render in Generate →
             </Link>
@@ -213,7 +213,7 @@ export default function CinemaPage() {
                 onClick={() => setShot(t.brief)}
                 className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[11px] font-bold transition ${
                   shot === t.brief
-                    ? "border-[var(--mint)] bg-[var(--mint)] text-black"
+                    ? "border-[var(--neon-pink)] bg-[var(--neon-pink)] text-[var(--void)]"
                     : "border-white/15 bg-white/[0.04] text-white/70 hover:border-white/30"
                 }`}
               >
@@ -232,7 +232,7 @@ export default function CinemaPage() {
                   value={shot}
                   onChange={(e) => setShot(e.target.value)}
                   rows={4}
-                  className="mt-1.5 w-full rounded-2xl border border-white/10 bg-black/50 px-3.5 py-3 text-sm leading-relaxed text-white outline-none focus:border-[var(--mint)]/50"
+                  className="mt-1.5 w-full rounded-2xl border border-white/10 bg-black/50 px-3.5 py-3 text-sm leading-relaxed text-white outline-none focus:border-[var(--neon-pink)]/50"
                 />
               </label>
 
@@ -252,7 +252,7 @@ export default function CinemaPage() {
                       onClick={() => setEffect(p.slug)}
                       className={`rounded-full border px-2.5 py-1.5 text-[11px] font-bold ${
                         effect === p.slug
-                          ? "border-[var(--mint)] bg-[var(--mint)]/15 text-[var(--mint)]"
+                          ? "border-[var(--neon-pink)] bg-[var(--neon-pink)]/15 text-[var(--neon-pink)]"
                           : "border-white/10 text-white/55 hover:border-white/25"
                       }`}
                     >
@@ -283,7 +283,7 @@ export default function CinemaPage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--mint)]">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--neon-pink)]">
                       Storyboard ref · Lab
                     </p>
                     <p className="mt-1 text-sm font-black text-white">
@@ -308,7 +308,7 @@ export default function CinemaPage() {
                       onClick={() => setBoardShot(i)}
                       className={`overflow-hidden rounded-xl border text-left transition ${
                         boardShot === i
-                          ? "border-[var(--mint)] ring-1 ring-[var(--mint)]/40"
+                          ? "border-[var(--neon-pink)] ring-1 ring-[var(--neon-pink)]/40"
                           : "border-white/10 hover:border-white/25"
                       }`}
                     >
@@ -332,7 +332,7 @@ export default function CinemaPage() {
 
               <Link
                 href={href}
-                className="flex w-full items-center justify-center rounded-full bg-[var(--mint)] py-3.5 text-sm font-black text-black shadow-[0_0_32px_rgba(200,255,61,0.28)]"
+                className="flex w-full items-center justify-center rounded-full bg-[var(--neon-pink)] py-3.5 text-sm font-black text-[var(--void)] shadow-[0_0_32px_rgba(255,78,205,0.28)]"
                 data-cinema-compose="remix"
               >
                 Render in Generate →
@@ -389,7 +389,7 @@ function ChipField<T extends string>({
             onClick={() => onChange(o)}
             className={`rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
               value === o
-                ? "border-[var(--mint)] bg-[var(--mint)] text-black"
+                ? "border-[var(--neon-pink)] bg-[var(--neon-pink)] text-[var(--void)]"
                 : "border-white/12 bg-white/[0.03] text-white/60 hover:border-white/25"
             }`}
           >

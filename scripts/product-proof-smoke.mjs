@@ -211,6 +211,25 @@ assert(
   );
 }
 
+// AIT-401: Cinema director board residual lime → neon-pink board tokens
+{
+  const cinemaPage = read("app/cinema/page.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(cinemaPage),
+    "Cinema page must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    cinemaPage.includes("var(--neon-pink)") &&
+      cinemaPage.includes("var(--void)") &&
+      cinemaPage.includes("rgba(255,78,205"),
+    "Cinema Render CTAs + selected chips use neon-pink / void board tokens"
+  );
+  assert(
+    !cinemaPage.includes("var(--mint)"),
+    "Cinema page must not use mint alias for primary chrome"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
