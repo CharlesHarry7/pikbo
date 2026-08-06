@@ -34,7 +34,8 @@ import {
   freeLiveDownloadBlockReason,
   classifyDownloadHead,
   isPlayableResultVideoUrl,
-  isSafeDeliverableUrl,
+  isControlledClientDownloadUrl,
+  isDurableDownloadRequestId,
   requestCreditStateFromFailure,
   requestCreditStateFromSuccess,
 } from "@/lib/createTrust";
@@ -159,6 +160,8 @@ export function LandingToolPanel({
   /**
    * HEAD gate then blob download — canceled/timeout/in-flight never open a
    * dead tab, and /api/downloads never window.open as JSON.
+   * After gate deny / network miss: only Lab `/demos/*` or controlled gate
+   * URLs — never raw provider CDN (AIT-294).
    */
   async function downloadLandingResult() {
     if (!downloadAllowed) {
@@ -201,12 +204,24 @@ export function LandingToolPanel({
         }
         if (decision.kind === "not_found" && decision.message) {
           toast(decision.message);
+        } else if (decision.kind === "unknown") {
+          toast("Download gate refused — try again or remake");
+        }
+        if (!(videoUrl && isControlledClientDownloadUrl(videoUrl))) {
+          return;
         }
       } catch {
-        /* fall through */
+        if (!(videoUrl && isControlledClientDownloadUrl(videoUrl))) {
+          toast(
+            isDurableDownloadRequestId(requestId)
+              ? "Download not found for this account — try remake or open Library recovery"
+              : "Download gate unreachable — try again or open Library"
+          );
+          return;
+        }
       }
     }
-    if (videoUrl && isSafeDeliverableUrl(videoUrl)) {
+    if (videoUrl && isControlledClientDownloadUrl(videoUrl)) {
       track({
         event: "export_click",
         path: `/effects/${effectSlug}`,
@@ -908,7 +923,7 @@ export function LandingToolPanel({
               <div className="mt-3 flex flex-wrap justify-center gap-2">
                 {downloadAllowed &&
                 (requestId ||
-                  (videoUrl && isSafeDeliverableUrl(videoUrl))) ? (
+                  (videoUrl && isControlledClientDownloadUrl(videoUrl))) ? (
                   <button
                     type="button"
                     data-landing-download="gated"
