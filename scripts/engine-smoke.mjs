@@ -4333,7 +4333,17 @@ function resolveGenerateStillPure(input) {
   const retry = input.retry ?? null;
   if (retry) {
     const frozen = resolveSpecImagePure(retry, input.sourceStore);
-    if (frozen) return { image: frozen, mode: "retry-still" };
+    if (frozen) {
+      // Prefer frozen durable assetId on live POST; keep frozen still for intern.
+      if (retry.assetId) {
+        return {
+          image: frozen,
+          assetId: retry.assetId,
+          mode: "retry-asset",
+        };
+      }
+      return { image: frozen, mode: "retry-still" };
+    }
     if (retry.assetId) return { assetId: retry.assetId, mode: "retry-asset" };
     return { mode: "none" };
   }
@@ -4360,16 +4370,16 @@ function resolveGenerateStillPure(input) {
     resolution: "480p",
     model: "seedance-mini",
   };
-  // Composer re-uploaded a new asset — Retry must still post frozen still A
+  // Composer re-uploaded a new asset — Retry freezes old assetId (not ambient)
   const still = resolveGenerateStillPure({
     retry,
     sourceStore: store,
     image: "data:image/png;base64,BBB",
     assetId: "asset_new",
   });
-  assert.equal(still.mode, "retry-still");
+  assert.equal(still.mode, "retry-asset");
   assert.equal(still.image, "data:image/png;base64,AAA");
-  assert.equal(still.assetId, undefined);
+  assert.equal(still.assetId, "asset_old");
   // Missing still falls back to frozen assetId only (not ambient asset_new)
   const missing = resolveGenerateStillPure({
     retry: { ...retry, sourceKey: "src-gone" },

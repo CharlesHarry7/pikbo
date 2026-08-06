@@ -91,6 +91,8 @@ jobs:
           npm run product-proof-smoke
           npm run guest-create-preview-regression
           npm run studio-open-lab-preview-regression
+          npm run create-same-photo-handoff-regression
+          npm run create-generate-assetid-regression
           npm run mobile-proof-regression
 
       - name: T6 owned watermark delivery proof

@@ -6,6 +6,312 @@ function hex(bytes: Uint8Array): string {
   return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
 }
 
+/** Safe recent-asset list row from GET /api/assets/recent. */
+export type RecentPrivateToyAsset = {
+  id: string;
+  skuLabel: string | null;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: string;
+  verifiedAt: string | null;
+  previewPath: string;
+};
+
+/**
+ * Stable Create query parameter for Library same-photo durable `input_asset_id`.
+ * Handoff is owner-safe: Create auto-selects only after this id appears in the
+ * current owner's ready recent-assets list — never from the query string alone.
+ */
+export const CREATE_RETRY_ASSET_ID_QUERY = "assetId";
+
+const DURABLE_TOY_ASSET_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const SAFE_CREATE_SOURCE_RE = /^[A-Za-z0-9._-]{1,48}$/;
+
+/**
+ * Parse Create `?assetId=` for durable same-photo handoff.
+ * Accepts only UUID-shaped durable ids; rejects empty, local `asset_*`, or junk.
+ */
+export function parseCreateRetryAssetIdQuery(
+  raw: string | null | undefined
+): string | null {
+  if (typeof raw !== "string") return null;
+  const value = raw.trim();
+  if (!value || !DURABLE_TOY_ASSET_ID_RE.test(value)) return null;
+  return value;
+}
+
+/**
+ * Safe fixed Street Power-Up Create return path for login / Magic Link `next`.
+ * Preserves a durable Library same-photo `assetId` handoff when present so a
+ * mid-recovery session expiry does not force re-upload. Never embeds prompts,
+ * object keys, signed URLs, emails, or freeform text.
+ */
+export function fixedMomentCreateReturnPath(input?: {
+  source?: string | null;
+  assetId?: string | null;
+}): string {
+  const params = new URLSearchParams();
+  params.set("mode", "moment");
+  params.set("effect", "street-power-up");
+
+  const assetId = parseCreateRetryAssetIdQuery(input?.assetId ?? null);
+  const rawSource =
+    typeof input?.source === "string" ? input.source.trim() : "";
+  const safeSource =
+    rawSource && SAFE_CREATE_SOURCE_RE.test(rawSource) ? rawSource : "";
+
+  if (assetId) {
+    params.set("source", safeSource || "library");
+    params.set(CREATE_RETRY_ASSET_ID_QUERY, assetId);
+  } else if (safeSource) {
+    params.set("source", safeSource);
+  } else {
+    params.set("source", "guest-create");
+  }
+
+  return `/create?${params.toString()}`;
+}
+
+/**
+ * Fail-closed extract of a fixed-Moment Create return path from an arbitrary
+ * relative location (pathname + search). Hostile or non-Moment paths fall back
+ * to the guest Create entry.
+ */
+export function fixedMomentReturnPathFromLocation(
+  pathWithSearch: string | null | undefined
+): string {
+  const fallback = fixedMomentCreateReturnPath({ source: "guest-create" });
+  if (typeof pathWithSearch !== "string" || !pathWithSearch.startsWith("/")) {
+    return fallback;
+  }
+  // Reject absolute / protocol-relative / control chars on the path prefix only.
+  // Query values may contain "://" when an attacker smuggles signedUrl=https://…
+  // — those freeform keys are dropped when we rebuild from mode/effect/source/assetId.
+  const qIndex = pathWithSearch.indexOf("?");
+  const pathOnly =
+    qIndex === -1 ? pathWithSearch : pathWithSearch.slice(0, qIndex);
+  if (
+    pathOnly.startsWith("//") ||
+    pathOnly.includes("\\") ||
+    pathOnly.includes("://") ||
+    /[\u0000-\u001f\u007f]/.test(pathWithSearch)
+  ) {
+    return fallback;
+  }
+  try {
+    const url = new URL(pathWithSearch, "https://pikbo.local");
+    if (url.origin !== "https://pikbo.local") return fallback;
+    if (url.pathname !== "/create") return fallback;
+    if (url.hash) return fallback;
+    if (url.username || url.password) return fallback;
+    if (url.searchParams.get("mode") !== "moment") return fallback;
+    if (url.searchParams.get("effect") !== "street-power-up") return fallback;
+    return fixedMomentCreateReturnPath({
+      source: url.searchParams.get("source"),
+      assetId: url.searchParams.get(CREATE_RETRY_ASSET_ID_QUERY),
+    });
+  } catch {
+    return fallback;
+  }
+}
+
+/** Login deep-link that returns to a safe fixed-Moment Create path. */
+export function guestMomentSignInHref(input?: {
+  source?: string | null;
+  assetId?: string | null;
+  /** Prefer a full relative location when available (pathname + search). */
+  pathWithSearch?: string | null;
+}): string {
+  const next =
+    typeof input?.pathWithSearch === "string" && input.pathWithSearch
+      ? fixedMomentReturnPathFromLocation(input.pathWithSearch)
+      : fixedMomentCreateReturnPath({
+          source: input?.source,
+          assetId: input?.assetId,
+        });
+  return `/login?next=${encodeURIComponent(next)}`;
+}
+
+/** How the current Create still was chosen. */
+export type RecentSelectionSource = "recent" | "upload" | "lab" | "other";
+
+export type CreateQueryAssetHandoffPlan =
+  | { action: "wait" }
+  | { action: "adopt"; assetId: string }
+  | {
+      action: "drop";
+      reason:
+        | "invalid"
+        | "no-owner"
+        | "not-in-ready-list"
+        | "user-override"
+        | "already-settled"
+        | "already-selected";
+    };
+
+/**
+ * Decide whether Create may auto-select a durable query `assetId`.
+ *
+ * Fail-closed rules:
+ * - Never adopt a query id that is absent from the current owner's ready list.
+ * - Explicit upload / Lab / manual recent selection wins over deferred handoff.
+ * - Wait while the owner-bound ready proof is still loading.
+ */
+export function planCreateQueryAssetHandoff(input: {
+  queryAssetId: string | null;
+  handoffSettled: boolean;
+  /** True once the user explicitly uploaded, chose Lab, or picked recent manually. */
+  userOverride: boolean;
+  currentOwnerKey: string | null;
+  listOwnerKey: string | null;
+  readyAssets: ReadonlyArray<{ id: string }>;
+  listLoading: boolean;
+  selectionSource: RecentSelectionSource | null;
+  selectedAssetId: string | null;
+}): CreateQueryAssetHandoffPlan {
+  if (input.handoffSettled) {
+    return { action: "drop", reason: "already-settled" };
+  }
+  if (!input.queryAssetId) {
+    return { action: "drop", reason: "invalid" };
+  }
+  if (input.userOverride) {
+    return { action: "drop", reason: "user-override" };
+  }
+  if (
+    input.selectionSource === "upload" ||
+    input.selectionSource === "lab" ||
+    input.selectionSource === "other"
+  ) {
+    return { action: "drop", reason: "user-override" };
+  }
+  if (
+    input.selectionSource === "recent" &&
+    typeof input.selectedAssetId === "string" &&
+    input.selectedAssetId.length > 0
+  ) {
+    if (
+      input.selectedAssetId.toLowerCase() === input.queryAssetId.toLowerCase()
+    ) {
+      return { action: "drop", reason: "already-selected" };
+    }
+    return { action: "drop", reason: "user-override" };
+  }
+  if (!input.currentOwnerKey) {
+    return { action: "drop", reason: "no-owner" };
+  }
+  if (input.listLoading) {
+    return { action: "wait" };
+  }
+  // Wait until the list is bound to this owner (covers initial load + A→B).
+  if (input.listOwnerKey !== input.currentOwnerKey) {
+    return { action: "wait" };
+  }
+  const target = input.queryAssetId.toLowerCase();
+  const match = input.readyAssets.find(
+    (row) => typeof row?.id === "string" && row.id.toLowerCase() === target
+  );
+  if (!match) {
+    return { action: "drop", reason: "not-in-ready-list" };
+  }
+  return { action: "adopt", assetId: match.id };
+}
+
+/**
+ * Load the signed-in owner's newest ready private toy photos.
+ * Call only when private upload capability is already open on the client.
+ *
+ * When `includeAssetId` is a durable UUID (e.g. Create `?assetId=` handoff),
+ * the server is asked to prove that exact owner-ready row in addition to the
+ * bounded newest list. Never treat the id as authorized until it appears in
+ * the response.
+ */
+export async function fetchRecentPrivateToyAssets(opts?: {
+  limit?: number;
+  /** Optional durable UUID to prove/pin beyond the recent window. */
+  includeAssetId?: string | null;
+  signal?: AbortSignal;
+}): Promise<RecentPrivateToyAsset[]> {
+  try {
+    const auth = await privateDownloadHeaders();
+    if (!auth.Authorization) return [];
+    const limit =
+      typeof opts?.limit === "number" && Number.isFinite(opts.limit)
+        ? Math.min(12, Math.max(1, Math.floor(opts.limit)))
+        : 8;
+    const params = new URLSearchParams();
+    params.set("limit", String(limit));
+    const includeRaw =
+      typeof opts?.includeAssetId === "string" ? opts.includeAssetId.trim() : "";
+    if (includeRaw && DURABLE_TOY_ASSET_ID_RE.test(includeRaw)) {
+      params.set("include", includeRaw);
+    }
+    const res = await fetch(`/api/assets/recent?${params.toString()}`, {
+      method: "GET",
+      headers: { ...auth },
+      cache: "no-store",
+      signal: opts?.signal,
+    });
+    if (!res.ok) return [];
+    const body = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      assets?: RecentPrivateToyAsset[];
+    };
+    if (!body.ok || !Array.isArray(body.assets)) return [];
+    return body.assets.filter(
+      (row) =>
+        typeof row?.id === "string" &&
+        typeof row?.previewPath === "string" &&
+        row.previewPath.startsWith("/api/assets/") &&
+        !row.previewPath.includes("://")
+    );
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Resolve a controlled relative preview path into a short-lived display URL.
+ * Uses owner Bearer auth; does not re-upload or invent Base64 for generate.
+ * Caller should revokeObjectURL when replacing the still.
+ */
+export async function resolvePrivateToyAssetPreviewUrl(
+  previewPath: string,
+  opts?: { signal?: AbortSignal }
+): Promise<string | null> {
+  if (
+    typeof previewPath !== "string" ||
+    !previewPath.startsWith("/api/assets/") ||
+    previewPath.includes("://")
+  ) {
+    return null;
+  }
+  try {
+    const auth = await privateDownloadHeaders();
+    if (!auth.Authorization) return null;
+    const res = await fetch(previewPath, {
+      method: "GET",
+      headers: { ...auth },
+      redirect: "follow",
+      cache: "no-store",
+      signal: opts?.signal,
+    });
+    if (!res.ok) return null;
+    // Prefer the final signed Location after redirect; fall back to blob.
+    // Absolute signed URL is never stored on a Create DTO — display-only.
+    if (res.url && res.url.startsWith("https://") && !res.url.includes("/api/assets/")) {
+      return res.url;
+    }
+    const blob = await res.blob();
+    if (!blob.type.startsWith("image/")) return null;
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
+
 export async function registerPrivateToyAsset(
   dataUrl: string,
   skuLabel?: string
