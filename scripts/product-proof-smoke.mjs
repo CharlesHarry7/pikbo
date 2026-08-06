@@ -283,6 +283,27 @@ assert(
       /rgba\(196\s*,\s*165\s*,\s*116/.test(softLaunch),
     "SoftLaunchStrip chips/CTAs use --brand + copper glow"
   );
+  // AIT-548: Modules money-path CTAs residual lime → gallery copper
+  const modulesSuite = read("components/ModulesSuiteCtas.tsx");
+  const modulesMobile = read("components/ModulesMobileCta.tsx");
+  assert(
+    !lime.test(modulesSuite),
+    "ModulesSuiteCtas must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    !lime.test(modulesMobile),
+    "ModulesMobileCta must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    modulesSuite.includes("var(--brand)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(modulesSuite) &&
+      modulesSuite.includes("var(--primary-foreground)"),
+    "ModulesSuiteCtas primary CTA uses --brand + copper glow + primary-foreground"
+  );
+  assert(
+    modulesMobile.includes("btn-primary"),
+    "ModulesMobileCta primary uses btn-primary (copper --grad-cta board)"
+  );
 }
 
 console.log(
