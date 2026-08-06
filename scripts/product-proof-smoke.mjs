@@ -341,6 +341,37 @@ assert(
   );
 }
 
+// AIT-606: MobileGenerateBar one-primary residual — solid Generate + copper, demoted suite doors
+{
+  const carnival =
+    /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i;
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const mobileBar = read("components/MobileGenerateBar.tsx");
+  assert(
+    !carnival.test(mobileBar),
+    "MobileGenerateBar must not hard-code carnival pink RGB"
+  );
+  assert(
+    !lime.test(mobileBar),
+    "MobileGenerateBar must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    /rgba\(196\s*,\s*165\s*,\s*116/.test(mobileBar) &&
+      mobileBar.includes("btn-primary") &&
+      mobileBar.includes('data-mobile-bar-weight="one-primary"'),
+    "MobileGenerateBar sticky Generate is one solid primary + copper glow"
+  );
+  assert(
+    mobileBar.includes('data-mobile-bar="secondary"') &&
+      !mobileBar.includes("var(--mint)"),
+    "MobileGenerateBar Library/Moment/Modules are demoted secondary (no mint chrome)"
+  );
+  assert(
+    /createGenerate360Href\(["']mobile-bar["']\)/.test(mobileBar),
+    "MobileGenerateBar Generate keeps createGenerate360Href(mobile-bar) honesty"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
