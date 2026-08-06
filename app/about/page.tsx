@@ -105,7 +105,7 @@ export default function AboutPage() {
           <div className="flex flex-wrap gap-2">
             <Link
               href="/contact"
-              className="rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black"
+              className="rounded-full bg-[var(--brand)] px-4 py-2 text-xs font-black text-[var(--primary-foreground)]"
             >
               Apply to the private beta
             </Link>

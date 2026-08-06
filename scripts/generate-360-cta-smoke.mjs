@@ -771,4 +771,22 @@ assert.match(
   "Explore page eyebrows/CTAs/path accents use --brand copper"
 );
 
+// AIT-591: About page residual competitor lime → gallery-calm copper
+const aboutPageSrc = read("app/about/page.tsx");
+assert.doesNotMatch(
+  aboutPageSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "app/about/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  aboutPageSrc,
+  /var\(--brand\)/,
+  "About page primary CTA uses --brand copper"
+);
+assert.match(
+  aboutPageSrc,
+  /var\(--primary-foreground\)/,
+  "About page solid CTA text uses --primary-foreground"
+);
+
 console.log("generate-360-cta-smoke: ok");

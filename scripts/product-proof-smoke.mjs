@@ -299,6 +299,21 @@ assert(
   );
 }
 
+// AIT-591: About page residual competitor lime → gallery-calm copper
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const aboutPage = read("app/about/page.tsx");
+  assert(
+    !lime.test(aboutPage),
+    "app/about/page.tsx must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    aboutPage.includes("var(--brand)") &&
+      aboutPage.includes("var(--primary-foreground)"),
+    "About page primary CTA uses --brand + primary-foreground copper board"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
