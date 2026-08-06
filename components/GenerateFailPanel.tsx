@@ -141,7 +141,7 @@ export function GenerateFailPanel({
             type="button"
             onClick={onRetry}
             disabled={retryLocked}
-            className="rounded-full bg-[var(--mint)] px-3.5 py-1.5 text-[11px] font-black text-black shadow-[0_0_16px_rgba(200,255,61,0.3)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full bg-[var(--mint)] px-3.5 py-1.5 text-[11px] font-black text-[var(--void)] shadow-[0_0_16px_rgba(255,78,205,0.3)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {retryLocked ? `Wait ${waitLeft}s` : retryText}
           </button>
