@@ -165,4 +165,54 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
+// 5. AIT-346 — MobileGenerateBar browse shells clear bar + tab via pad token
+const globalsCss = read("app/globals.css");
+assert.match(
+  globalsCss,
+  /--mobile-generate-bar-pad:\s*calc\(/,
+  "globals must define --mobile-generate-bar-pad for browse last-row clearance"
+);
+assert.match(
+  globalsCss,
+  /--mobile-nav-clearance:\s*calc\(/,
+  "globals must define --mobile-nav-clearance (bar pad stacks tab + safe-area)"
+);
+
+const browseBarPadRoutes = [
+  ["app/explore/page.tsx", "explore"],
+  ["app/flow/page.tsx", "flow"],
+  ["app/effects/page.tsx", "effects"],
+  ["app/community/page.tsx", "community"],
+  ["app/library/page.tsx", "library"],
+  ["app/apps/page.tsx", "apps"],
+  ["app/models/page.tsx", "models"],
+  ["app/pricing/page.tsx", "pricing"],
+  ["app/profile/page.tsx", "profile"],
+  ["app/status/page.tsx", "status"],
+  ["app/login/page.tsx", "login"],
+];
+for (const [file, key] of browseBarPadRoutes) {
+  const src = read(file);
+  assert.match(
+    src,
+    /pb-\[var\(--mobile-generate-bar-pad\)\]/,
+    `${file} must clear MobileGenerateBar + tab via --mobile-generate-bar-pad`
+  );
+  assert.match(
+    src,
+    new RegExp(`data-${key}-content-pad=["']mobile-generate-bar["']`),
+    `${file} content pad must expose smoke marker data-${key}-content-pad`
+  );
+  assert.doesNotMatch(
+    src,
+    /className="[^"]*\bpb-(?:24|28)\b/,
+    `${file} shell must not use bare pb-24 / pb-28 under MobileGenerateBar`
+  );
+  assert.doesNotMatch(
+    src,
+    /className=\{\s*`[^`]*\bpb-(?:24|28)\b/,
+    `${file} shell template must not bare pb-24 / pb-28 under MobileGenerateBar`
+  );
+}
+
 console.log("generate-360-cta-smoke: ok");

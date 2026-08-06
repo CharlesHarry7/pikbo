@@ -134,4 +134,38 @@ assert.match(
   "Guest Create Lab video must enable errorRetry for honest mobile recovery"
 );
 
+// AIT-346: browse MobileGenerateBar last folds clear bar + tab via pad token
+{
+  const globals = source("app/globals.css");
+  assert.match(
+    globals,
+    /--mobile-generate-bar-pad:\s*calc\(/,
+    "Library/browse last rows clear MobileGenerateBar via pad token"
+  );
+  for (const [file, marker] of [
+    ["app/explore/page.tsx", "data-explore-content-pad"],
+    ["app/flow/page.tsx", "data-flow-content-pad"],
+    ["app/effects/page.tsx", "data-effects-content-pad"],
+    ["app/community/page.tsx", "data-community-content-pad"],
+    ["app/library/page.tsx", "data-library-content-pad"],
+  ]) {
+    const page = source(file);
+    assert.match(
+      page,
+      /pb-\[var\(--mobile-generate-bar-pad\)\]/,
+      `${file} must use --mobile-generate-bar-pad (not bare pb-24/28)`
+    );
+    assert.match(
+      page,
+      new RegExp(`${marker}=["']mobile-generate-bar["']`),
+      `${file} must expose ${marker} smoke marker`
+    );
+    assert.doesNotMatch(
+      page,
+      /className="[^"]*\bpb-(?:24|28)\b/,
+      `${file} must not bare pb-24/pb-28 under MobileGenerateBar`
+    );
+  }
+}
+
 console.log("mobile proof regression: source contracts PASS");

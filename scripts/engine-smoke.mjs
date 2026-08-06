@@ -5817,6 +5817,23 @@ assert.match(
   fs.readFileSync(join(root, "components/MobileGenerateBar.tsx"), "utf8"),
   /createGenerate360Href|data-mobile-bar=["']generate-remix["']/
 );
+// AIT-346: browse shells clear MobileGenerateBar via shared pad token
+assert.match(
+  fs.readFileSync(join(root, "app/globals.css"), "utf8"),
+  /--mobile-generate-bar-pad:\s*calc\(/
+);
+for (const browsePad of [
+  "app/explore/page.tsx",
+  "app/flow/page.tsx",
+  "app/effects/page.tsx",
+  "app/community/page.tsx",
+  "app/library/page.tsx",
+]) {
+  assert.match(
+    fs.readFileSync(join(root, browsePad), "utf8"),
+    /pb-\[var\(--mobile-generate-bar-pad\)\]/
+  );
+}
 assert.match(
   fs.readFileSync(join(root, "components/LoginForm.tsx"), "utf8"),
   /Sign-in is temporarily unavailable|data-login-guest/
