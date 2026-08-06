@@ -758,4 +758,22 @@ assert.match(
   "SoftLaunchStrip CTA glow uses copper board rgba(196,165,116)"
 );
 
+// AIT-565: SuiteEntryStrip residual competitor lime → gallery copper board
+const suiteEntryStripSrc = read("components/SuiteEntryStrip.tsx");
+assert.doesNotMatch(
+  suiteEntryStripSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "SuiteEntryStrip must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  suiteEntryStripSrc,
+  /var\(--brand\)/,
+  "SuiteEntryStrip eyebrow/links/hot cards use --brand copper accent"
+);
+assert.match(
+  suiteEntryStripSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "SuiteEntryStrip hot-card glows use copper board rgba(196,165,116)"
+);
+
 console.log("generate-360-cta-smoke: ok");
