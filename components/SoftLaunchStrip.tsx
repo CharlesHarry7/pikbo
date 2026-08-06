@@ -76,10 +76,10 @@ export function SoftLaunchStrip() {
       : `Create Moment · ${freeLiveModelLabel} 5s`;
 
   return (
-    <div className="border-b border-[#c8ff3d]/25 bg-gradient-to-r from-[#c8ff3d]/[0.12] via-black to-black px-3 py-2.5 sm:px-5">
+    <div className="border-b border-neon-pink/25 bg-gradient-to-r from-neon-pink/[0.12] via-black to-black px-3 py-2.5 sm:px-5">
       <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2">
         <p className="text-[12px] leading-snug text-white/80 sm:text-[13px]">
-          <span className="font-black text-[#c8ff3d]">
+          <span className="font-black text-neon-pink">
             {demo
               ? "Cached preview"
               : trialDone
@@ -107,7 +107,7 @@ export function SoftLaunchStrip() {
                 },
               })
             }
-            className="rounded-full bg-[#c8ff3d] px-4 py-1.5 text-[12px] font-black text-black shadow-[0_0_20px_rgba(200,255,61,0.25)]"
+            className="rounded-full bg-neon-pink px-4 py-1.5 text-[12px] font-black text-void shadow-[0_0_20px_rgba(255,78,205,0.25)]"
             data-soft-launch-try={
               trialDone ? "pricing" : demo ? "lab-sample-remix" : "single-moment"
             }
@@ -123,7 +123,7 @@ export function SoftLaunchStrip() {
                 meta: { cta: "soft_launch_generate" },
               })
             }
-            className="rounded-full border border-white/20 px-3 py-1.5 text-[12px] font-bold text-white/85 hover:border-[#c8ff3d]/40"
+            className="rounded-full border border-white/20 px-3 py-1.5 text-[12px] font-bold text-white/85 hover:border-neon-pink/40"
             data-soft-launch="generate-remix"
           >
             Open Generate
