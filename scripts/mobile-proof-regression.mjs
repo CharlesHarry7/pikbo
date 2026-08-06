@@ -108,6 +108,53 @@ assert.match(
   /data-mobile-nav=["']primary["']/,
   "Primary mobile nav marker remains for safe-area / clearance smoke"
 );
+// AIT-240: content under sticky Generate must use shared pad tokens (not bare pb-32/36)
+{
+  const globals = source("app/globals.css");
+  assert.match(
+    globals,
+    /--sticky-generate-pad:\s*calc\(/,
+    "globals content pad stacks sticky chrome + mobile-nav-clearance"
+  );
+  assert.match(
+    globals,
+    /--sticky-generate-pad-safe:\s*calc\(/,
+    "globals nav-less content pad stacks sticky chrome + floating-cta-safe-bottom"
+  );
+  assert.match(
+    globals,
+    /--mobile-generate-bar-pad:\s*calc\(/,
+    "Library/browse last rows clear MobileGenerateBar via pad token"
+  );
+  const studioSrc = source("components/CreateStudio.tsx");
+  assert.match(
+    studioSrc,
+    /pb-\[var\(--sticky-generate-pad-safe\)\]|pb-\[var\(--sticky-generate-pad\)\]/,
+    "CreateStudio content pad must use sticky-generate pad tokens"
+  );
+  assert.doesNotMatch(
+    studioSrc,
+    /\bpb-36\b|\bpb-32\b/,
+    "CreateStudio must not bare pb-32/pb-36 under sticky Generate"
+  );
+  const cinemaSrc = source("app/cinema/page.tsx");
+  assert.match(
+    cinemaSrc,
+    /pb-\[var\(--sticky-generate-pad\)\]/,
+    "cinema content pad must use sticky-generate pad token (AIT-335)"
+  );
+  assert.doesNotMatch(
+    cinemaSrc,
+    /className="[^"]*\bpb-28\b/,
+    "cinema must not bare pb-28 under sticky Generate"
+  );
+  const modulesSrc = source("app/modules/page.tsx");
+  assert.match(
+    modulesSrc,
+    /pb-\[var\(--sticky-generate-pad\)\]/,
+    "Modules content pad must use sticky-generate pad token"
+  );
+}
 {
   const toast = source("components/Toast.tsx");
   assert.match(
