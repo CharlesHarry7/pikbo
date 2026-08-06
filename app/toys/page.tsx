@@ -90,8 +90,8 @@ export default function ToysHubPage() {
           <FreeTrialCta
             path="/toys"
             variant="mint"
-            labelTry="Try cached sample"
-            labelDemo="Try cached sample"
+            labelTry="Try Lab sample"
+            labelDemo="Try Lab sample"
           />
           <Link href="/for" className="btn btn-ghost text-sm">
             Use cases

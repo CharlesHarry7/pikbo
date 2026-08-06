@@ -131,6 +131,25 @@ assert(
     !read("app/toys/page.tsx").includes("Subject landings · Free Mini 5s ·"),
   "toys hub must drop Free Mini chip and keep Lab public path"
 );
+// AIT-323: residual FreeTrialCta toys hub + HfExploreHome Mini chip honesty.
+const toysHubSource = read("app/toys/page.tsx");
+assert(
+  !toysHubSource.includes('labelTry="Try cached sample"') &&
+    !toysHubSource.includes('labelDemo="Try cached sample"') &&
+    toysHubSource.includes('labelTry="Try Lab sample"') &&
+    toysHubSource.includes('labelDemo="Try Lab sample"'),
+  "toys hub FreeTrialCta must use Lab sample labels, not generic Try cached sample"
+);
+const hfExploreHomeSource = read("components/HfExploreHome.tsx");
+assert(
+  !hfExploreHomeSource.includes("Mini 5s · Sample ready"),
+  "HfExploreHome FreeTrialCta neighborhood must not sell unconditional Mini 5s while Live is closed"
+);
+assert(
+  hfExploreHomeSource.includes("Lab sample · 0 credits") ||
+    /freeLiveOpen[\s\S]{0,200}Mini 5s/.test(hfExploreHomeSource),
+  "HfExploreHome FreeTrialCta caption must be Lab sample honesty (or Live-gated Mini)"
+);
 
 // AIT-290: Modules residual — FAQ + shelf chip no longer sell Free Mini as public-open live.
 const modulesSource = read("app/modules/page.tsx");
