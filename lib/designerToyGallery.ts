@@ -6,6 +6,8 @@
  * Labels stay honest: style studies / lab archive — never fake UGC.
  */
 
+import { createGenerate360Href } from "@/lib/jobIntents";
+
 export type DesignerToyGalleryItem = {
   id: string;
   title: string;
@@ -117,8 +119,9 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     category: "Listing",
     toyKind: "vinyl-figures",
     src: "/moments/colorblock-pedestal.jpg",
-    href: "/effects/360-spin-showcase",
-    badge: "Lab moment · pedestal",
+    // AIT-462: skip /effects hop — one tap into listing 360 workbench
+    href: createGenerate360Href("home-gallery-pedestal"),
+    badge: "Lab moment · 360 listing",
     aspect: "16/9",
   },
 ];

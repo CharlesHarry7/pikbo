@@ -1,12 +1,16 @@
 import Link from "next/link";
-import { site } from "@/lib/site";
 import { company } from "@/lib/company";
+import { createGenerate360Href } from "@/lib/jobIntents";
+import { site } from "@/lib/site";
+
+/** Last-fold money door — same Generate→360 helper as hero / shell. */
+const TRUST_GENERATE_HREF = createGenerate360Href("home-trust");
 
 /**
  * Compact trust surface for the cinema-style homepage.
  * The full site footer intentionally stays hidden on Home because it links to
  * many noindex product/Lab surfaces; this block exposes only truthful trust and
- * support destinations.
+ * support destinations, plus one primary Generate door (AIT-462).
  */
 export function HomeTrustFooter() {
   return (
@@ -24,6 +28,13 @@ export function HomeTrustFooter() {
             gated. Always check generated motion against the physical toy before
             publishing.
           </p>
+          <Link
+            href={TRUST_GENERATE_HREF}
+            data-home-trust-generate="360"
+            className="mt-4 inline-flex min-h-10 items-center justify-center rounded-xl bg-[var(--brand)] px-5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--primary-foreground)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/50"
+          >
+            Generate 360° listing spin
+          </Link>
         </div>
 
         <div className="lg:text-right">
