@@ -865,4 +865,31 @@ assert.match(
   "asset bind membership must empty-set on query error"
 );
 
+// AIT-575: Library residual carnival pink rgba → gallery-calm copper (color only)
+{
+  const libraryPage = read("app/library/page.tsx");
+  const carnivalPink =
+    /#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|#B14EFF/i;
+  assert.doesNotMatch(
+    library,
+    carnivalPink,
+    "LibraryGrid must not hard-code carnival pink RGB"
+  );
+  assert.doesNotMatch(
+    libraryPage,
+    carnivalPink,
+    "library page must not hard-code carnival pink RGB"
+  );
+  assert.match(
+    library,
+    /rgba\(196\s*,\s*165\s*,\s*116/,
+    "LibraryGrid placeholders use copper board glow"
+  );
+  assert.match(
+    libraryPage,
+    /rgba\(196\s*,\s*165\s*,\s*116/,
+    "library page wash uses copper board glow"
+  );
+}
+
 console.log("library-owner-safe-regression: ok");
