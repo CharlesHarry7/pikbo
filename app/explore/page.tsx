@@ -101,7 +101,7 @@ export default async function ExplorePage({
       <header className="sticky top-0 z-20 border-b border-white/10 bg-black/90 px-4 py-4 backdrop-blur sm:px-6">
         <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#c8ff3d]">
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--neon-pink)]">
               PIKBO Lab · evidence pending
             </p>
             <h1 className="font-display mt-1 text-2xl font-black uppercase tracking-tight sm:text-3xl">
@@ -119,7 +119,7 @@ export default async function ExplorePage({
             <FreeTrialCta path="/explore" variant="primary" />
             <Link
               href={EXPLORE_GENERATE_HREF}
-              className="rounded-full border border-[#c8ff3d]/40 bg-[#c8ff3d]/10 px-5 py-2.5 text-xs font-black text-[#c8ff3d] transition hover:bg-[#c8ff3d]/15"
+              className="rounded-full border border-[var(--neon-pink)]/40 bg-[var(--neon-pink)]/10 px-5 py-2.5 text-xs font-black text-[var(--neon-pink)] transition hover:bg-[var(--neon-pink)]/15"
               data-explore-generate="remix"
             >
               Generate
@@ -163,7 +163,7 @@ export default async function ExplorePage({
           </span>
           <Link
             href={EXPLORE_GENERATE_HREF}
-            className="text-[#c8ff3d] hover:underline"
+            className="text-[var(--neon-pink)] hover:underline"
             data-explore-path-generate="remix"
           >
             Generate
@@ -204,7 +204,7 @@ export default async function ExplorePage({
       <section className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:flex-row sm:items-center">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#c8ff3d]">
+            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--neon-pink)]">
               Seller workflow
             </p>
             <h2 className="mt-1 text-lg font-black">
@@ -217,7 +217,7 @@ export default async function ExplorePage({
           </div>
           <Link
             href="/create?effect=street-power-up&source=explore-seller-workflow"
-            className="shrink-0 rounded-full border border-[#c8ff3d]/40 px-5 py-2.5 text-xs font-black text-[#c8ff3d]"
+            className="shrink-0 rounded-full border border-[var(--neon-pink)]/40 px-5 py-2.5 text-xs font-black text-[var(--neon-pink)]"
           >
             Create one Moment →
           </Link>

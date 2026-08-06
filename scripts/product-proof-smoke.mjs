@@ -223,6 +223,58 @@ assert(
   );
 }
 
+// AIT-497: suite rails residual lime → gallery-calm copper board tokens
+// (Explore/Flow/Modules + SoftLaunch/SuiteEntry/FreeTrial/VideoTile/FlowMedia)
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const suiteRails = {
+    "app/explore/page.tsx": read("app/explore/page.tsx"),
+    "app/flow/page.tsx": read("app/flow/page.tsx"),
+    "app/modules/page.tsx": read("app/modules/page.tsx"),
+    "components/SoftLaunchStrip.tsx": read("components/SoftLaunchStrip.tsx"),
+    "components/SuiteEntryStrip.tsx": read("components/SuiteEntryStrip.tsx"),
+    "components/FreeTrialCta.tsx": read("components/FreeTrialCta.tsx"),
+    "components/VideoTile.tsx": read("components/VideoTile.tsx"),
+    "components/FlowMediaCard.tsx": read("components/FlowMediaCard.tsx"),
+    "components/ExploreProjectGrid.tsx": read(
+      "components/ExploreProjectGrid.tsx"
+    ),
+    "components/ModulesSuiteCtas.tsx": read("components/ModulesSuiteCtas.tsx"),
+  };
+  for (const [rel, src] of Object.entries(suiteRails)) {
+    assert(
+      !lime.test(src),
+      `${rel} must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)`
+    );
+  }
+  assert(
+    suiteRails["components/SoftLaunchStrip.tsx"].includes("var(--neon-pink)") &&
+      suiteRails["components/SuiteEntryStrip.tsx"].includes(
+        "var(--neon-pink)"
+      ) &&
+      suiteRails["components/FreeTrialCta.tsx"].includes("var(--neon-pink)") &&
+      suiteRails["components/FlowMediaCard.tsx"].includes("var(--neon-pink)") &&
+      suiteRails["components/VideoTile.tsx"].includes("var(--neon-pink)") &&
+      suiteRails["app/explore/page.tsx"].includes("var(--neon-pink)") &&
+      suiteRails["app/flow/page.tsx"].includes("var(--neon-pink)") &&
+      suiteRails["app/modules/page.tsx"].includes("var(--neon-pink)"),
+    "Suite rails use neon-pink board tokens (gallery-calm copper alias)"
+  );
+  assert(
+    suiteRails["components/SoftLaunchStrip.tsx"].includes(
+      "rgba(196,165,116"
+    ) &&
+      suiteRails["components/FlowMediaCard.tsx"].includes(
+        "rgba(196,165,116"
+      ) &&
+      suiteRails["components/SuiteEntryStrip.tsx"].includes(
+        "rgba(196,165,116"
+      ) &&
+      suiteRails["app/flow/page.tsx"].includes("rgba(196,165,116"),
+    "Suite rail glows use gallery-calm copper rgba (AIT-489 map)"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );

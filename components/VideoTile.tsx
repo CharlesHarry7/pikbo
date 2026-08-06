@@ -43,7 +43,7 @@ export function VideoTile({
   return (
     <Link
       href={item.href}
-      className="video-tile group block overflow-hidden rounded-xl border border-white/[0.08] bg-black shadow-[0_12px_32px_-14px_rgba(0,0,0,0.85)] transition duration-300 hover:-translate-y-0.5 hover:border-[var(--mint)]/45 hover:shadow-[0_20px_48px_-16px_rgba(200,255,61,0.12)]"
+      className="video-tile group block overflow-hidden rounded-xl border border-white/[0.08] bg-black shadow-[0_12px_32px_-14px_rgba(0,0,0,0.85)] transition duration-300 hover:-translate-y-0.5 hover:border-[var(--mint)]/45 hover:shadow-[0_20px_48px_-16px_rgba(196,165,116,0.12)]"
       aria-label={`Open ${item.title}`}
     >
       <div className={`relative ${aspectClass(item.ratio, compact)}`}>
@@ -75,7 +75,7 @@ export function VideoTile({
           </div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-95" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c8ff3d]/45 to-transparent opacity-0 transition group-hover:opacity-100" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--neon-pink)]/45 to-transparent opacity-0 transition group-hover:opacity-100" />
         <div className="absolute left-2 top-2 flex max-w-[80%] flex-wrap gap-0.5">
           {item.badge ? (
             <span className="rounded-full border border-white/10 bg-black/55 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/80 backdrop-blur">
@@ -91,7 +91,7 @@ export function VideoTile({
           ) : null}
         </div>
         {!isConcept ? (
-          <span className="absolute right-2 top-2 rounded-full bg-[#c8ff3d] px-1.5 py-0.5 text-[8px] font-black text-black opacity-0 shadow transition group-hover:opacity-100">
+          <span className="absolute right-2 top-2 rounded-full bg-[var(--neon-pink)] px-1.5 py-0.5 text-[8px] font-black text-[var(--void)] opacity-0 shadow transition group-hover:opacity-100">
             Remake
           </span>
         ) : null}
@@ -109,7 +109,7 @@ export function VideoTile({
             {item.title}
           </h3>
           {compact ? (
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-wide text-[#c8ff3d] opacity-0 transition group-hover:opacity-100">
+            <p className="mt-1 text-[9px] font-bold uppercase tracking-wide text-[var(--neon-pink)] opacity-0 transition group-hover:opacity-100">
               {isConcept ? "View recipe notes →" : "Your photo →"}
             </p>
           ) : (

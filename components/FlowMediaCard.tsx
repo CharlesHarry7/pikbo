@@ -42,7 +42,7 @@ export function FlowMediaCard({
   return (
     <Link
       href={href}
-      className="group relative overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/10 transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_-28px_rgba(200,255,61,0.2)] hover:ring-[#c8ff3d]/50"
+      className="group relative overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/10 transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_-28px_rgba(196,165,116,0.2)] hover:ring-[var(--neon-pink)]/50"
       aria-label={`${isPreview ? "Preview" : "Remake"} ${title}`}
       data-flow-card={isPreview ? "preview" : "live-path"}
     >
@@ -56,13 +56,13 @@ export function FlowMediaCard({
           className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out will-change-transform group-hover:scale-[1.05]"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c8ff3d]/40 to-transparent opacity-0 transition group-hover:opacity-100" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--neon-pink)]/40 to-transparent opacity-0 transition group-hover:opacity-100" />
         <div className="absolute left-2.5 top-2.5 flex max-w-[75%] flex-wrap gap-0.5">
           <span
             className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-sm ${
               isPreview
                 ? "bg-amber-400/90 text-black"
-                : "bg-black/65 text-[#c8ff3d] backdrop-blur-sm"
+                : "bg-black/65 text-[var(--neon-pink)] backdrop-blur-sm"
             }`}
           >
             {badge}
@@ -79,16 +79,16 @@ export function FlowMediaCard({
         <span className="absolute bottom-2 right-2 rounded-full bg-black/55 px-1.5 py-0.5 text-[9px] font-medium text-white/50 backdrop-blur-sm">
           Lab media
         </span>
-        <span className="absolute bottom-2 left-2 translate-y-1 rounded-full bg-[#c8ff3d] px-2.5 py-1 text-[10px] font-black text-black opacity-0 shadow-[0_0_20px_rgba(200,255,61,0.35)] transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+        <span className="absolute bottom-2 left-2 translate-y-1 rounded-full bg-[var(--neon-pink)] px-2.5 py-1 text-[10px] font-black text-[var(--void)] opacity-0 shadow-[0_0_20px_rgba(196,165,116,0.35)] transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
           {ctaLabel}
         </span>
       </div>
       <div className="p-4">
-        <h3 className="text-lg font-bold tracking-tight text-white transition group-hover:text-[#c8ff3d]">
+        <h3 className="text-lg font-bold tracking-tight text-white transition group-hover:text-[var(--neon-pink)]">
           {title}
         </h3>
         <p className="mt-1 text-sm leading-snug text-white/50">{blurb}</p>
-        <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-[#c8ff3d]/90">
+        <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-[var(--neon-pink)]/90">
           {isPreview ? "Preview path" : "Remake · your toy photo"} →
         </p>
       </div>

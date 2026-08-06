@@ -23,7 +23,7 @@ type Variant = "primary" | "ghost" | "mint";
 
 const VARIANT_CLASS: Record<Variant, string> = {
   primary:
-    "rounded-full bg-[#c8ff3d] px-5 py-2.5 text-xs font-black text-black shadow-[0_0_28px_rgba(200,255,61,0.22)] transition hover:-translate-y-0.5",
+    "rounded-full bg-[var(--neon-pink)] px-5 py-2.5 text-xs font-black text-[var(--void)] shadow-[0_0_28px_rgba(196,165,116,0.22)] transition hover:-translate-y-0.5",
   mint: "btn btn-primary !px-4 !py-2 text-xs",
   ghost:
     "btn btn-ghost text-sm",
