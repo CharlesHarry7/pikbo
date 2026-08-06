@@ -6,18 +6,52 @@
  * remix deep links must open the Generate workbench — not silently coerce
  * into the Moment UI.
  *
- * Keep free of path aliases so source smokes can import it via
- * `node --experimental-strip-types`.
+ * Pure module (no neighbor imports) so source smokes can load it via
+ * `node --experimental-strip-types` and tsc (moduleResolution bundler)
+ * both succeed. WORKBENCH_EFFECT_SLUGS must stay in sync with PRESETS
+ * minus street-power-up (create-route-360-smoke asserts parity).
  */
-
-// Explicit .ts suffix: Node --experimental-strip-types cannot resolve bare
-// extensionless neighbors; Next/tsc still resolve this under bundler mode.
-import { getPreset } from "./presets.ts";
 
 /** Keep in sync with lib/jobIntents.GENERATE_360_EFFECT. */
 export const GENERATE_360_EFFECT = "360-spin-showcase" as const;
 export const FIXED_MOMENT_EFFECT = "street-power-up" as const;
 export const FIXED_MOMENT_MODE = "moment" as const;
+
+/**
+ * Registered remix effects that open the Generate workbench.
+ * Excludes FIXED_MOMENT_EFFECT. Mirror of PRESETS slugs in lib/presets.ts.
+ */
+export const WORKBENCH_EFFECT_SLUGS: readonly string[] = [
+  "360-spin-showcase",
+  "display-case-glam",
+  "floating-hero",
+  "collection-shelf-pan",
+  "blind-box-unboxing",
+  "mystery-box-reveal",
+  "claw-machine-win",
+  "make-figure-dance",
+  "make-figure-walk",
+  "toy-wave-hello",
+  "plushie-comes-alive",
+  "stop-motion-style",
+  "miniature-scene",
+  "festive-snow",
+  "neon-city-night",
+  "assemble-reveal",
+  "paparazzi-flash",
+  "kaiju-rampage",
+  "smoke-burst-entrance",
+  "paint-splash",
+  "power-aura",
+  "hologram-glitch",
+  "melt-and-reform",
+  "bullet-time-orbit",
+  "desk-adventure",
+  "confetti-drop-reveal",
+  "snow-globe-world",
+];
+
+const WORKBENCH_SLUG_SET = new Set(WORKBENCH_EFFECT_SLUGS);
 
 export type CreateRouteContract = "fixed-moment" | "generate-workbench";
 
@@ -43,7 +77,7 @@ export function isGenerateWorkbenchEffect(
 ): boolean {
   const slug = (effect || "").trim();
   if (!slug || slug === FIXED_MOMENT_EFFECT) return false;
-  return Boolean(getPreset(slug));
+  return WORKBENCH_SLUG_SET.has(slug);
 }
 
 /**

@@ -109,7 +109,7 @@ assert(
   "explore recipe rail must be Lab-only, honest-empty, 1-click 360 workbench (no Moment primary)"
 );
 
-// Suite rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF.
+// Suite rail: one primary Generate→360 + Moment via MOMENT_CREATE_HREF.
 const homeRail = read("components/HfProductRail.tsx");
 assert(
   homeRail.includes("createGenerate360Href") &&
@@ -118,9 +118,13 @@ assert(
     homeRail.includes("source=hf-product-rail") &&
     homeRail.includes('data-home-suite-rail="hf-product"') &&
     homeRail.includes("data-home-suite-360") &&
+    homeRail.includes('data-hf-rail-primary-generate="360"') &&
+    homeRail.includes("data-hf-rail-primary-generate-cta") &&
+    homeRail.includes("Generate 360°") &&
+    homeRail.includes("border border-white/20") &&
     !homeRail.includes('"/create?effect=street-power-up"') &&
     !homeRail.includes('"/create"'),
-  "HF product rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF (no bare /create)"
+  "HF product rail: one primary Generate→360 via createGenerate360Href + Moment via MOMENT_CREATE_HREF (no bare /create)"
 );
 assert(
   homeWall.includes('createGenerate360Href("home-proof-wall")') ||

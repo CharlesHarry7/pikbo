@@ -247,5 +247,26 @@ assert.match(
   /data-home-suite-360/,
   "suite rail must expose secondary Generate 360 marker"
 );
+// AIT-181 / AIT-169: suite rail one filled primary Generate→360
+assert.match(
+  suiteRail,
+  /data-hf-rail-primary-generate=["']360["']/,
+  "suite rail must mark primary Generate as 360"
+);
+assert.match(
+  suiteRail,
+  /data-hf-rail-primary-generate-cta/,
+  "suite rail must expose primary Generate CTA marker"
+);
+assert.doesNotMatch(
+  suiteRail,
+  /FreeTrialCta[\s\S]{0,200}variant\s*=\s*["']primary["']/,
+  "suite rail FreeTrialCta must not use filled primary variant"
+);
+assert.match(
+  suiteRail,
+  /border border-white\/20/,
+  "suite rail FreeTrial strip must be secondary outline"
+);
 
 console.log("generate-360-cta-smoke: ok");

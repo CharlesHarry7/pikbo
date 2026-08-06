@@ -150,6 +150,7 @@ const {
   isGenerate360Effect,
   FIXED_MOMENT_EFFECT,
   GENERATE_360_EFFECT,
+  WORKBENCH_EFFECT_SLUGS,
 } = await import(pathToFileURL(libPath).href);
 
 assert.equal(GENERATE_360_EFFECT, "360-spin-showcase");
@@ -218,5 +219,22 @@ assert.equal(isGenerate360Effect("street-power-up"), false);
 assert.equal(isGenerateWorkbenchEffect("360-spin-showcase"), true);
 assert.equal(isGenerateWorkbenchEffect("street-power-up"), false);
 assert.equal(isGenerateWorkbenchEffect(undefined), false);
+
+// WORKBENCH_EFFECT_SLUGS must mirror PRESETS minus street-power-up
+const presetsMod = await import(
+  pathToFileURL(join(root, "lib", "presets.ts")).href
+);
+const presetWorkbench = presetsMod.PRESETS.map((p) => p.slug).filter(
+  (s) => s !== "street-power-up"
+);
+assert.deepEqual(
+  [...WORKBENCH_EFFECT_SLUGS].sort(),
+  [...presetWorkbench].sort(),
+  "WORKBENCH_EFFECT_SLUGS must match PRESETS minus street-power-up"
+);
+assert.ok(
+  !WORKBENCH_EFFECT_SLUGS.includes("street-power-up"),
+  "workbench registry must never include fixed Moment effect"
+);
 
 console.log("create-route-360-smoke: ok");
