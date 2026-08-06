@@ -88,6 +88,18 @@ assert.match(studio, /data-create-sticky="mobile"/);
 assert.match(studio, /data-first-run-action="lab-preview"/);
 assert.match(studio, /Preview a Lab sample · 0 credits/);
 
+// AIT-262: CreateStudio off residual competitor lime (board tokens)
+assert.doesNotMatch(
+  studio,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/,
+  "CreateStudio must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  studio,
+  /var\(--mint\)/,
+  "CreateStudio accent chrome uses var(--mint) board token"
+);
+
 // Hero handoff cannot stick on Opening forever
 assert.match(hero, /Opening your private Moment…/);
 assert.match(hero, /STUDIO_NAV_OPEN_MS/);
