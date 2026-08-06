@@ -1,0 +1,278 @@
+/**
+ * AIT-154 — Studio generate-wait honesty (recovery exit + server-gated Retry).
+ *
+ * Source contract (no network, no provider):
+ * 1. Recovery checking/waiting always unlocks a non-destructive detach exit
+ * 2. Cancel vs detach leave plans stay pure and non-overlapping
+ * 3. Fail-panel Retry is blocked for auth/paywall/fatal/reconcile codes
+ * 4. CreateStudio + GenerateWaitStage wire the policy (no silent hang)
+ * 5. Fail-closed refund copy remains on GenerateFailPanel
+ *
+ * Run: npm run generate-wait-honesty-regression
+ */
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import {
+  canRetryGenerateFailure,
+  planGenerateWaitLeave,
+  shouldShowGenerateWaitDetach,
+} from "../lib/generateRecoveryPolicy.ts";
+
+const root = process.cwd();
+const read = (rel) => readFileSync(join(root, rel), "utf8");
+
+// ─── 1. Detach visibility — recovery never sticks without exit ─────────────
+
+{
+  assert.equal(
+    shouldShowGenerateWaitDetach({
+      demoMode: true,
+      elapsedSec: 120,
+      recoveryChecking: true,
+    }),
+    false,
+    "demo Lab wait never detaches to private Library"
+  );
+  assert.equal(
+    shouldShowGenerateWaitDetach({
+      elapsedSec: 5,
+      recoveryChecking: false,
+      awaitingPrimary: false,
+    }),
+    false,
+    "early primary-only wait keeps user on the stage (cancel still available)"
+  );
+  assert.equal(
+    shouldShowGenerateWaitDetach({
+      elapsedSec: 15,
+      recoveryChecking: true,
+    }),
+    true,
+    "recovery checking unlocks detach immediately — no silent stick"
+  );
+  assert.equal(
+    shouldShowGenerateWaitDetach({
+      elapsedSec: 20,
+      recoveryChecking: false,
+      awaitingPrimary: true,
+    }),
+    true,
+    "awaiting_primary unlocks detach"
+  );
+  assert.equal(
+    shouldShowGenerateWaitDetach({
+      elapsedSec: 90,
+      recoveryChecking: false,
+      awaitingPrimary: false,
+    }),
+    true,
+    "long wall-clock unlocks detach without recovery signal"
+  );
+  assert.equal(
+    shouldShowGenerateWaitDetach({
+      elapsedSec: 89,
+      recoveryChecking: false,
+      awaitingPrimary: false,
+    }),
+    false,
+    "pre-90s primary wait does not force detach"
+  );
+}
+
+// ─── 2. Leave plans — cancel vs detach never invent a second generate ──────
+
+{
+  const detach = planGenerateWaitLeave("detach");
+  assert.equal(detach.abortPrimary, false);
+  assert.equal(detach.abortRecovery, false);
+  assert.equal(detach.cancelLedger, false);
+  assert.equal(detach.startNewGenerate, false);
+
+  const cancel = planGenerateWaitLeave("cancel");
+  assert.equal(cancel.abortPrimary, true);
+  assert.equal(cancel.abortRecovery, true);
+  assert.equal(cancel.cancelLedger, true);
+  assert.equal(cancel.startNewGenerate, false);
+}
+
+// ─── 3. Server-gated Retry — fail-closed, no invented retriable path ───────
+
+{
+  assert.equal(
+    canRetryGenerateFailure({
+      code: "PROVIDER_TIMEOUT",
+      hasInput: true,
+      busy: false,
+    }),
+    true,
+    "provider blip remains retriable after Retry-After"
+  );
+  assert.equal(
+    canRetryGenerateFailure({
+      code: "RATE_LIMITED",
+      hasInput: true,
+    }),
+    true
+  );
+  assert.equal(
+    canRetryGenerateFailure({
+      code: "TIMEOUT",
+      hasInput: true,
+      refundUnconfirmed: true,
+    }),
+    true,
+    "refund unconfirmed still allows Retry (copy warns check balance)"
+  );
+  assert.equal(
+    canRetryGenerateFailure({
+      code: "GENERATION_FAILED",
+      hasInput: true,
+    }),
+    true
+  );
+
+  assert.equal(
+    canRetryGenerateFailure({ code: "AUTH_REQUIRED", hasInput: true }),
+    false,
+    "auth gate is not a Retry"
+  );
+  assert.equal(
+    canRetryGenerateFailure({
+      code: "LIVE_ACCESS_REQUIRED",
+      hasInput: true,
+    }),
+    false
+  );
+  assert.equal(
+    canRetryGenerateFailure({
+      code: "INSUFFICIENT_CREDITS",
+      paywall: true,
+      hasInput: true,
+    }),
+    false
+  );
+  assert.equal(
+    canRetryGenerateFailure({
+      code: "PROVIDER_BALANCE",
+      fatal: true,
+      hasInput: true,
+    }),
+    false
+  );
+  assert.equal(
+    canRetryGenerateFailure({
+      code: "RIGHTS_REQUIRED",
+      hasInput: true,
+    }),
+    false
+  );
+  assert.equal(
+    canRetryGenerateFailure({
+      code: "DURABLE_CREDITS_UNAVAILABLE",
+      hasInput: true,
+    }),
+    false,
+    "reconcile hold must not re-POST"
+  );
+  assert.equal(
+    canRetryGenerateFailure({
+      code: "PROVIDER_NETWORK",
+      hasInput: false,
+    }),
+    false,
+    "no still → no Retry"
+  );
+  assert.equal(
+    canRetryGenerateFailure({
+      code: "PROVIDER_NETWORK",
+      hasInput: true,
+      busy: true,
+    }),
+    false,
+    "busy generate blocks Retry"
+  );
+  assert.equal(
+    canRetryGenerateFailure({ paywall: true, hasInput: true }),
+    false
+  );
+  assert.equal(
+    canRetryGenerateFailure({ fatal: true, hasInput: true }),
+    false
+  );
+}
+
+// ─── 4. Source wiring — CreateStudio + wait stage + fail panel ─────────────
+
+{
+  const policy = read("lib/generateRecoveryPolicy.ts");
+  assert.match(policy, /export function shouldShowGenerateWaitDetach/);
+  assert.match(policy, /export function canRetryGenerateFailure/);
+  assert.match(policy, /AUTH_REQUIRED/);
+  assert.match(policy, /DURABLE_CREDITS_UNAVAILABLE/);
+
+  const wait = read("components/GenerateWaitStage.tsx");
+  assert.match(wait, /shouldShowGenerateWaitDetach/);
+  assert.match(wait, /data-wait-detach/);
+  assert.match(wait, /data-recovery-checking/);
+  assert.match(wait, /data-generate-leave="detach"/);
+  assert.match(wait, /data-generate-leave="cancel"/);
+  assert.match(
+    wait,
+    /recoveryChecking[\s\S]{0,80}awaitingPrimary/,
+    "recovery checking feeds detach policy"
+  );
+  // No silent stick: cancel always available when onCancel provided
+  assert.match(wait, /data-generate-leave="cancel"/);
+  assert.match(wait, /Cancel generation/);
+
+  const create = read("components/CreateStudio.tsx");
+  assert.match(create, /canRetryGenerateFailure/);
+  assert.match(create, /lastFailCode/);
+  assert.match(create, /lastFailFatal/);
+  assert.match(create, /lastFailPaywall/);
+  assert.match(create, /planGenerateWaitLeave\("detach"\)/);
+  assert.match(create, /leaveWaitingKeepBackground/);
+  assert.match(create, /cancelInFlightGenerate/);
+  assert.match(create, /setLastRequestCreditState\("refund unconfirmed"\)/);
+  assert.match(create, /recoveringSavedResult/);
+  assert.match(create, /awaitingPrimaryAfterRecovery/);
+  assert.match(create, /GenerateFailPanel/);
+  assert.match(create, /retryAfterSec=\{failRetryAfterSec\}/);
+  // Mobile strip also gets recoveryChecking for detach parity
+  assert.match(
+    create,
+    /GenerateWaitMobileStrip[\s\S]{0,400}recoveryChecking=\{recoveringSavedResult\}/
+  );
+
+  const fail = read("components/GenerateFailPanel.tsx");
+  assert.match(fail, /fail\.unconfirmed|Refund unconfirmed|refund unconfirmed/i);
+  assert.match(fail, /fail\.restored|credits restored|10 restored/i);
+  assert.match(fail, /retryAfterSec|waitLeft|Retry in/);
+  assert.match(fail, /disabled=\{retryLocked\}/);
+
+  const landing = read("components/LandingToolPanel.tsx");
+  assert.match(landing, /canRetryGenerateFailure/);
+  assert.match(landing, /lastFailCode/);
+
+  const client = read("lib/generateClient.ts");
+  assert.match(client, /awaiting_primary/);
+  assert.match(client, /onInconclusiveRecovery/);
+  assert.match(client, /maxWaitMs/);
+  // Recovery poll is finite — cannot stick forever in checking/waiting
+  assert.match(client, /185_000|maxWaitMs/);
+}
+
+// ─── 5. package.json script registered ─────────────────────────────────────
+
+{
+  const pkg = JSON.parse(read("package.json"));
+  assert.equal(
+    pkg.scripts["generate-wait-honesty-regression"],
+    "node --experimental-strip-types scripts/generate-wait-honesty-regression.mjs"
+  );
+}
+
+console.log(
+  "generate-wait-honesty-regression: PASS (detach on recovery · cancel vs detach · server-gated Retry · fail-closed refund copy · Create wiring)"
+);
