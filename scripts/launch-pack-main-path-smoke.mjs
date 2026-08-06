@@ -304,6 +304,44 @@ assert.match(packExport, /status === "succeeded"/);
 assert.match(packExport, /i\.downloadable/);
 assert.match(packExport, /Failed siblings and Free raw URLs are omitted/);
 
+// AIT-315: soft shell residual competitor lime → neon-pink / void board
+{
+  const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
+  const softShell = {
+    "components/SoftLaunchStrip.tsx": softLaunchStrip,
+    "components/MobileGenerateBar.tsx": read("components/MobileGenerateBar.tsx"),
+    "components/Toast.tsx": read("components/Toast.tsx"),
+    "components/GenerateSuiteChrome.tsx": read(
+      "components/GenerateSuiteChrome.tsx"
+    ),
+  };
+  for (const [rel, src] of Object.entries(softShell)) {
+    assert.ok(
+      !lime.test(src),
+      `${rel} must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)`
+    );
+  }
+  assert.ok(
+    softShell["components/SoftLaunchStrip.tsx"].includes("var(--neon-pink)") &&
+      softShell["components/SoftLaunchStrip.tsx"].includes("var(--void)") &&
+      softShell["components/Toast.tsx"].includes("var(--neon-pink)") &&
+      softShell["components/GenerateSuiteChrome.tsx"].includes(
+        "var(--neon-pink)"
+      ),
+    "Soft shell chrome uses neon-pink / void board tokens"
+  );
+  assert.ok(
+    softShell["components/MobileGenerateBar.tsx"].includes(
+      "rgba(255,78,205"
+    ) &&
+      softShell["components/Toast.tsx"].includes("rgba(255,78,205") &&
+      softShell["components/GenerateSuiteChrome.tsx"].includes(
+        "rgba(255,78,205"
+      ),
+    "Soft shell residual glows use neon-pink rgba board tokens"
+  );
+}
+
 console.log(
   "launch-pack-main-path-smoke: PASS (public Moment entry + private fixed trio + downloadable-only seller handoff)"
 );
