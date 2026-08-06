@@ -38,6 +38,7 @@ import {
   requestCreditStateFromFailure,
   requestCreditStateFromSuccess,
 } from "@/lib/createTrust";
+import { canRetryGenerateFailure } from "@/lib/generateRecoveryPolicy";
 import { deliveryItemsForJob } from "@/lib/deliveryPack";
 import { DeliveryChecklist } from "@/components/DeliveryChecklist";
 import { GenerateFailPanel } from "@/components/GenerateFailPanel";
@@ -73,6 +74,10 @@ export function LandingToolPanel({
   const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
     null
   );
+  /** Server-gated Retry (auth/paywall/fatal never invent retriable). */
+  const [lastFailCode, setLastFailCode] = useState<string | null>(null);
+  const [lastFailFatal, setLastFailFatal] = useState(false);
+  const [lastFailPaywall, setLastFailPaywall] = useState(false);
   /** FailPanel settlement honesty (TIMEOUT / network → unconfirmed). */
   const [failCreditState, setFailCreditState] = useState<
     null | "10 restored" | "refund unconfirmed"
@@ -324,6 +329,9 @@ export function LandingToolPanel({
       : freeLive?.resolution ?? "720p";
     setError(null);
     setFailRetryAfterSec(null);
+    setLastFailCode(null);
+    setLastFailFatal(false);
+    setLastFailPaywall(false);
     setFailCreditState(null);
     setVideoUrl(null);
     setRequestId(null);
@@ -384,6 +392,9 @@ export function LandingToolPanel({
           ? result.retryAfterSec
           : null
       );
+      setLastFailCode(result.code || null);
+      setLastFailFatal(Boolean(result.fatal));
+      setLastFailPaywall(Boolean(result.paywall));
       const settlement = requestCreditStateFromFailure({
         creditsRefunded: result.creditsRefunded,
         refundUnconfirmed: result.refundUnconfirmed,
@@ -703,7 +714,13 @@ export function LandingToolPanel({
               showLabSample
               retryAfterSec={failRetryAfterSec}
               onRetry={
-                image && !busy
+                canRetryGenerateFailure({
+                  code: lastFailCode,
+                  fatal: lastFailFatal,
+                  paywall: lastFailPaywall || error === "INSUFFICIENT",
+                  busy,
+                  hasInput: Boolean(image),
+                })
                   ? () => {
                       setFailRetryAfterSec(null);
                       setFailCreditState(null);
