@@ -971,6 +971,18 @@ assert.match(createPage, /<CreateStudio/);
 assert.match(createPage, /initialEffect=["']street-power-up["']/);
 assert.match(createPage, /fixedMomentContract/);
 assert.doesNotMatch(createPage, /BatchStudio|PrivateSellerPackGate/);
+// AIT-549: Create page residual carnival → gallery-calm copper board
+assert.doesNotMatch(
+  createPage,
+  /#FF4ECD|#00D9FF|#B14EFF|FF4ECD|00D9FF|B14EFF|rgba\(255\s*,\s*78\s*,\s*205|rgba\(0\s*,\s*217\s*,\s*255|rgba\(177\s*,\s*78\s*,\s*255/i
+);
+assert.match(createPage, /var\(--brand\)/);
+assert.match(createPage, /var\(--brand-2\)/);
+assert.match(createPage, /rgba\(196\s*,\s*165\s*,\s*116/);
+assert.match(createPage, /WORKBENCH_LAB_LIVE_HONESTY/);
+assert.match(createPage, /data-workbench-honesty=["']lab-live["']/);
+assert.match(createPage, /Pikbo Moment · private render/);
+assert.match(createPage, /fixedMomentContract/);
 const batchPage = fs.readFileSync(
   join(root, "app/supercomputer/page.tsx"),
   "utf8"

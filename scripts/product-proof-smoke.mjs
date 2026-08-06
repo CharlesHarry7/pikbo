@@ -285,6 +285,30 @@ assert(
   );
 }
 
+// AIT-549: Create page residual carnival → gallery-calm copper board
+{
+  const carnival =
+    /#FF4ECD|#00D9FF|#B14EFF|FF4ECD|00D9FF|B14EFF|rgba\(255\s*,\s*78\s*,\s*205|rgba\(0\s*,\s*217\s*,\s*255|rgba\(177\s*,\s*78\s*,\s*255/i;
+  assert(
+    !carnival.test(create),
+    "app/create/page.tsx must not hard-code carnival pink/cyan/purple hex accents"
+  );
+  assert(
+    create.includes("var(--brand)") &&
+      create.includes("var(--brand-2)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(create),
+    "Create page shell accents use gallery-calm copper board tokens"
+  );
+  assert(
+    create.includes("WORKBENCH_LAB_LIVE_HONESTY") &&
+      create.includes('data-workbench-honesty="lab-live"') &&
+      create.includes("Pikbo Moment · private render") &&
+      create.includes("fixedMomentContract") &&
+      create.includes("Street Power-Up"),
+    "Create page keeps workbench Lab/Live honesty + fixed Moment copy"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
