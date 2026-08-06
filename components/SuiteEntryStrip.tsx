@@ -10,6 +10,9 @@ import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 /**
  * Toy suite entry rail — HF Generate + Yiha modules pattern, verticalized.
  * Used on Home after premiere so users hit real product doors, not model zoo.
+ *
+ * AIT-177 friction cut: one filled primary Generate→360 header CTA.
+ * FreeTrial / Lab sample stay secondary outline; Flow browse is tertiary text.
  */
 /** Default listing recipe for suite Generate doors (remix contract). */
 const SUITE_GENERATE_HREF = createGenerate360Href("suite-entry");
@@ -69,7 +72,10 @@ export function SuiteEntryStrip({
   const { t } = useI18n();
 
   return (
-    <section className="border-b border-white/10 bg-gradient-to-b from-[#0c0c14] via-[#08080c] to-black px-3 py-8 sm:px-5">
+    <section
+      className="border-b border-white/10 bg-gradient-to-b from-[#0c0c14] via-[#08080c] to-black px-3 py-8 sm:px-5"
+      data-suite-primary-generate="360"
+    >
       <div className="mx-auto max-w-6xl">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
           <div>
@@ -78,25 +84,38 @@ export function SuiteEntryStrip({
             </p>
             <p className="mt-1 text-[12px] text-white/50">{t(subtitleKey)}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+            {/* Secondary Free / Lab sample — outline only, not a filled primary. */}
             <FreeTrialCta
               path="/#suite"
               labelTry={t("suite.tryFree")}
+              labelDemo="Lab sample"
               hideClipsChip
-              className="text-[11px] font-semibold text-[#c8ff3d] hover:underline"
+              className="rounded-full border border-white/20 bg-transparent px-3 py-1.5 text-[11px] font-semibold text-white/70 transition hover:border-white/40 hover:text-white"
             />
+            {/* Tertiary Flow browse — text link only. */}
             <Link
               href="/flow"
               className="text-[11px] font-semibold text-white/55 hover:text-white hover:underline"
+              data-suite-browse-flow
             >
               {t("suite.browseFlow")}
             </Link>
+            {/* One primary Generate → 360 (AIT-177). */}
             <Link
               href={SUITE_GENERATE_HREF}
-              className="text-[11px] font-semibold text-[#c8ff3d] hover:underline"
+              className="rounded-full bg-[#c8ff3d] px-4 py-2 text-[11px] font-black text-black shadow-[0_0_24px_rgba(200,255,61,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(200,255,61,0.4)]"
               data-suite-entry="generate-remix"
+              data-suite-primary-generate-cta
+              onClick={() =>
+                track({
+                  event: "landing_view",
+                  path: "/",
+                  meta: { cta: "suite_primary_generate_360" },
+                })
+              }
             >
-              {t("suite.openGenerate")}
+              Generate 360° →
             </Link>
           </div>
         </div>

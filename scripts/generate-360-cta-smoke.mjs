@@ -164,4 +164,54 @@ assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
 
+// 5. AIT-177 Suite entry strip: one primary Generate→360 header CTA
+const suiteEntry = read("components/SuiteEntryStrip.tsx");
+assert.match(
+  suiteEntry,
+  /data-suite-primary-generate=["']360["']/,
+  "SuiteEntryStrip must mark primary Generate as 360"
+);
+assert.match(
+  suiteEntry,
+  /data-suite-primary-generate-cta/,
+  "SuiteEntryStrip must expose primary Generate CTA marker"
+);
+assert.match(
+  suiteEntry,
+  /data-suite-entry=["']generate-remix["']/,
+  "SuiteEntryStrip primary door keeps remix marker for engine smoke"
+);
+assert.match(
+  suiteEntry,
+  /createGenerate360Href\(\s*["']suite-entry["']\s*\)/,
+  "SuiteEntryStrip primary Generate must use createGenerate360Href(suite-entry)"
+);
+assert.match(
+  suiteEntry,
+  /Generate 360°/,
+  "SuiteEntryStrip primary CTA label must say Generate 360°"
+);
+// FreeTrial must not be a filled primary competing with Generate (outline/secondary only)
+assert.doesNotMatch(
+  suiteEntry,
+  /FreeTrialCta[\s\S]{0,200}variant\s*=\s*["']primary["']/,
+  "SuiteEntryStrip FreeTrialCta must not use filled primary variant"
+);
+assert.match(
+  suiteEntry,
+  /border border-white\/20/,
+  "SuiteEntryStrip FreeTrial strip must be secondary outline"
+);
+// Flow browse stays tertiary text (not a second filled primary)
+assert.match(
+  suiteEntry,
+  /href=["']\/flow["']/,
+  "SuiteEntryStrip keeps Flow browse door"
+);
+assert.doesNotMatch(
+  suiteEntry,
+  /href=["']\/flow["'][\s\S]{0,120}bg-\[#c8ff3d\]/,
+  "SuiteEntryStrip Flow browse must not be a filled primary"
+);
+
 console.log("generate-360-cta-smoke: ok");
