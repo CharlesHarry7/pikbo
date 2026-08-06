@@ -839,7 +839,7 @@ export function CreateStudio({
   const demoMode = !privateUploadEnabled || labStill;
   const trialDone = freeTrialExhausted(session);
   const freeLive = session?.freeTrial?.freeLive;
-  /** AIT-312: never advertise Free Mini while Live is closed. */
+  /** R0/T6 + AIT-368: Free Mini product-cap / trial-used only when Live is open. */
   const freeLiveOpen = Boolean(
     canLiveGenerate(session) &&
       freeLive &&
@@ -847,7 +847,7 @@ export function CreateStudio({
   );
   /** Generate workbench (not fixed Moment) — first-run fold + honest Lab labels. */
   const workbenchFirstRun = !fixedMomentContract;
-  /** AIT-325: Home Lab try doors hydrate via ?try=1&sample= on the workbench. */
+  /** AIT-325/AIT-368: Home Lab try doors hydrate via ?try=1&sample= on the workbench. */
   const labSampleTryActive = Boolean(initialSample);
   const labSampleTryState = labSampleTryActive
     ? sampleLoading
@@ -861,7 +861,7 @@ export function CreateStudio({
   const clipsLeft =
     typeof session?.freeTrial?.clipsLeft === "number"
       ? session.freeTrial.clipsLeft
-      : creditsLeft !== null
+      : creditsLeft !== null && freeLiveOpen
         ? Math.floor(creditsLeft / CREDITS_PER_VIDEO)
         : null;
   // Private validation is one measured Fast 720p / 5s cost envelope. Cached
@@ -1818,6 +1818,7 @@ export function CreateStudio({
       demoMode,
       isFree: Boolean(isFree),
       trialDone,
+      freeLiveOpen,
       creditsLeft,
       clipsLeft,
       identity: toyIdentity,
@@ -1836,6 +1837,7 @@ export function CreateStudio({
     isFree,
     demoMode,
     trialDone,
+    freeLiveOpen,
     creditsLeft,
     clipsLeft,
     toyIdentity,
@@ -1977,30 +1979,29 @@ export function CreateStudio({
                     compare plans
                   </Link>
                 </>
-              ) : trialDone && isFree && !freeLiveOpen ? (
+              ) : !freeLiveOpen && isFree ? (
                 <>
-                  Private Live gated ·{" "}
-                  <b className="text-[var(--fg)]">Lab samples stay free</b>
-                  <span className="hidden sm:inline"> · 0 credits</span>
-                </>
-              ) : !freeLiveOpen && !privateUploadEnabled ? (
-                <>
-                  Lab preview ·{" "}
-                  <b className="text-[var(--fg)]">private Live gated</b>
-                  <span className="hidden sm:inline"> · 0 credits</span>
+                  Cached Lab · 0 credits · Live gated ·{" "}
+                  <Link href="/pricing" className="font-semibold text-[var(--mint)] hover:underline">
+                    compare plans
+                  </Link>
                 </>
               ) : (
                 <>
                   Your photo ·{" "}
-                  {isFree && freeLiveOpen && freeLive
+                  {isFree && freeLive && freeLiveOpen
                     ? `${effectiveModelLabel} ${freeLive.durationSec}s ${freeLive.resolution}`
-                    : isFree
+                    : isFree && freeLiveOpen
                       ? `${effectiveModelLabel} 5s ${effectiveResolution}`
-                      : `${effectiveDuration}s · ${effectiveResolution}`}{" "}
-                  · {CREDITS_PER_VIDEO} cr
-                  {freeLiveOpen && clipsLeft !== null
+                      : isFree
+                        ? "Cached Lab · Live gated"
+                        : `${effectiveDuration}s · ${effectiveResolution}`}{" "}
+                  {isFree && !freeLiveOpen
+                    ? null
+                    : `· ${CREDITS_PER_VIDEO} cr`}
+                  {clipsLeft !== null && freeLiveOpen && !trialDone
                     ? ` · ~${clipsLeft} live left`
-                    : creditsLeft !== null
+                    : creditsLeft !== null && freeLiveOpen
                       ? ` · ${creditsLeft} cr left`
                       : ""}
                   <span className="hidden sm:inline">
@@ -2890,7 +2891,9 @@ export function CreateStudio({
                     <p className="mt-1 text-[10px] text-[var(--fg-dim)]">
                       {liveEntitled
                         ? "Invited validation is fixed to Fast · 5s · 720p · private delivery"
-                        : "Free cached prototype · Mini · 5s · 480p · on-player mark"}
+                        : freeLiveOpen
+                          ? "Free cached prototype · Mini · 5s · 480p · on-player mark"
+                          : "Cached Lab · 0 credits · Live gated"}
                     </p>
                   )}
                 </div>
@@ -3958,9 +3961,10 @@ export function CreateStudio({
       </div>
 
       {/* ── Sticky mobile primary CTA
-          AIT-312/AIT-344: workbench first-run keeps upload / Lab / Generate
-          above the fold; clearance tokens clear AppShell tab or home
-          indicator (fixed Moment nav-less). ── */}
+          AIT-368/AIT-312: workbench first-run keeps upload / Lab / Generate
+          above the fold. Fixed Moment / resultShell hides AppShell tab →
+          safe-area only; workbench shares the tab bar → clear tab + home
+          indicator. ── */}
       <div
         className={
           fixedMomentContract
@@ -3968,6 +3972,7 @@ export function CreateStudio({
             : "fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
         }
         data-create-sticky="mobile"
+        data-floating-generate="create-sticky"
         data-workbench-sticky={workbenchFirstRun ? "first-run" : undefined}
         data-create-sticky-clearance={
           fixedMomentContract ? "safe-bottom" : "mobile-nav"

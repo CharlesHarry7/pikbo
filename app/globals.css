@@ -63,14 +63,21 @@
   --radius: 1rem;
 
   /*
-   * Mobile clearance + sticky Generate content pads (AIT-344 residual /
-   * AIT-335 tokens). Tab-sharing workbench clears sticky chrome + AppShell
-   * tab; nav-less fixed Moment clears sticky chrome + home indicator only.
+   * Mobile chrome clearance (AIT-150 / AIT-71 / AIT-359)
+   * AppShell tab nav pads pb with env(safe-area-inset-bottom) on top of tab content
+   * (--mobile-nav-content-h). Floating Generate CTAs must clear BOTH tab content AND
+   * the home indicator — never sit under either.
+   * Stacking: content < floating (40) < sticky nav/header (50).
+   *
+   * Sticky Generate content pads (AIT-344 residual / AIT-368): tab-sharing
+   * workbench clears sticky chrome + AppShell tab; nav-less fixed Moment
+   * clears sticky chrome + home indicator only.
    */
   --mobile-nav-content-h: 4.75rem;
   --mobile-nav-clearance: calc(
     var(--mobile-nav-content-h) + env(safe-area-inset-bottom, 0px)
   );
+  /* Home/Moment shell hides the tab nav — only clear the home indicator. */
   --floating-cta-safe-bottom: max(
     0.85rem,
     calc(env(safe-area-inset-bottom, 0px) + 0.5rem)

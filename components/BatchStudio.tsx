@@ -1532,6 +1532,7 @@ export function BatchStudio({
       demoMode,
       isFree: Boolean(isFree),
       trialDone,
+      freeLiveOpen,
       creditsLeft: typeof me?.credits === "number" ? me.credits : null,
       clipsLeft,
       ownsRights,
@@ -1546,6 +1547,7 @@ export function BatchStudio({
     demoMode,
     isFree,
     trialDone,
+    freeLiveOpen,
     me?.credits,
     freeLive?.durationSec,
     freeLive?.resolution,
@@ -2810,14 +2812,20 @@ export function BatchStudio({
         ))}
       </div>
 
-      {/* Phase F: sticky mobile Seller Pack / Batch CTA above tab nav */}
+      {/* Phase F: sticky mobile Seller Pack / Batch CTA
+          Nav-less Seller Pack (pack=seller) hides AppShell tab → safe-area only.
+          Tab-sharing custom batch / selected seller-trio clears tab + home indicator. */}
       <div
         className={
-          sellerPackActive
-            ? "fixed inset-x-0 bottom-0 z-40 border-t border-[#D5D9E1] bg-white/96 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_36px_rgba(22,32,51,0.12)] backdrop-blur-xl lg:hidden"
-            : "fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/92 px-4 py-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+          isSellerPack
+            ? "fixed inset-x-0 bottom-[var(--floating-cta-safe-bottom)] z-[var(--floating-generate-z)] border-t border-[#D5D9E1] bg-white/96 px-4 py-2.5 shadow-[0_-12px_36px_rgba(22,32,51,0.12)] backdrop-blur-xl lg:hidden"
+            : sellerPackActive
+              ? "fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-[#D5D9E1] bg-white/96 px-4 py-2.5 shadow-[0_-12px_36px_rgba(22,32,51,0.12)] backdrop-blur-xl lg:hidden"
+              : "fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-[var(--floating-generate-z)] border-t border-white/10 bg-black/92 px-4 py-2.5 shadow-[0_-12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
         }
         data-seller-pack-sticky="mobile"
+        data-floating-generate="batch-sticky"
+        data-batch-sticky-clearance={isSellerPack ? "safe-bottom" : "mobile-nav"}
       >
         {image ? (
           <p className={sellerPackActive ? "mb-1.5 truncate text-center text-[10px] font-bold text-[#667085]" : "mb-1.5 truncate text-center text-[10px] font-medium text-white/55"}>

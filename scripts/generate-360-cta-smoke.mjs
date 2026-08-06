@@ -61,6 +61,7 @@ const generateSurfaces = [
   ["components/HomeToolShelf.tsx", "home-tool-shelf"],
   ["components/HomeViralWall.tsx", "home-proof-wall"],
   ["components/HomeExploreRecipeRail.tsx", "home-explore-rail"],
+  ["components/HomeBrowseCta.tsx", "home-browse"],
   ["components/SuiteEntryStrip.tsx", "suite-entry"],
   ["components/HowItWorks.tsx", "how-it-works"],
   ["components/MobileGenerateBar.tsx", "mobile-bar"],
@@ -164,5 +165,219 @@ assert.match(sample, /^\/create\?/);
 assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
+
+// 5. AIT-71 — floating Generate never under home indicator/nav; correct z-index
+const globalsCss = read("app/globals.css");
+const layoutSrc = read("app/layout.tsx");
+const homePage = read("app/page.tsx");
+const browseCta = read("components/HomeBrowseCta.tsx");
+const mobileBar = read("components/MobileGenerateBar.tsx");
+const modulesCta = read("components/ModulesMobileCta.tsx");
+
+assert.match(
+  globalsCss,
+  /--mobile-nav-clearance:\s*calc\(/,
+  "globals must define --mobile-nav-clearance = tab content + safe-area"
+);
+assert.match(
+  globalsCss,
+  /--floating-cta-safe-bottom:\s*max\(/,
+  "globals must define --floating-cta-safe-bottom for nav-less Moment home"
+);
+assert.match(
+  globalsCss,
+  /--floating-generate-z:\s*40/,
+  "floating Generate z-index token must sit under sticky header/nav (50)"
+);
+assert.match(
+  layoutSrc,
+  /viewportFit:\s*["']cover["']/,
+  "root viewport must use viewport-fit=cover so safe-area env() resolves"
+);
+assert.match(
+  homePage,
+  /HomeBrowseCta/,
+  "Moment home must mount the floating Generate browse CTA"
+);
+assert.match(
+  browseCta,
+  /bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "home floating Generate must use safe-area bottom (no tab nav on home)"
+);
+assert.match(
+  browseCta,
+  /z-\[var\(--floating-generate-z\)\]/,
+  "home floating Generate must use --floating-generate-z"
+);
+assert.match(
+  browseCta,
+  /createGenerate360Href\(["']home-browse["']\)/,
+  "home browse CTA must deep-link Generate→360 via home-browse source"
+);
+assert.doesNotMatch(
+  browseCta,
+  /bottom-\[4\.75rem\]/,
+  "home floating Generate must not hardcode bare 4.75rem (double-counts nav when home has none)"
+);
+assert.match(
+  mobileBar,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "MobileGenerateBar must clear tab nav + home indicator"
+);
+assert.match(
+  mobileBar,
+  /z-\[var\(--floating-generate-z\)\]/,
+  "MobileGenerateBar must use floating Generate z token"
+);
+assert.match(
+  modulesCta,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "ModulesMobileCta must clear tab nav + home indicator"
+);
+
+// 6. AIT-131 — MobileGenerateBar mounted in AppShell on browse surfaces
+const appShellSrc = read("components/AppShell.tsx");
+assert.match(
+  appShellSrc,
+  /import\s+\{\s*MobileGenerateBar\s*\}\s+from\s+["']@\/components\/MobileGenerateBar["']/,
+  "AppShell must import MobileGenerateBar"
+);
+assert.match(
+  appShellSrc,
+  /<MobileGenerateBar\s*\/>/,
+  "AppShell must mount MobileGenerateBar so showBar paths render"
+);
+// Browse surfaces that keep AppShell tab nav must be in showBar
+for (const route of [
+  "/explore",
+  "/library",
+  "/pricing",
+  "/models",
+  "/flow",
+]) {
+  assert.match(
+    mobileBar,
+    new RegExp(
+      route === "/explore"
+        ? String.raw`path\.startsWith\(["']\/explore["']\)`
+        : String.raw`path\s*===\s*["']${route}["']`
+    ),
+    `MobileGenerateBar showBar must include ${route}`
+  );
+}
+assert.match(
+  mobileBar,
+  /createGenerate360Href\(["']mobile-bar["']\)/,
+  "MobileGenerateBar Generate door must use createGenerate360Href(mobile-bar)"
+);
+assert.doesNotMatch(
+  mobileBar,
+  /href=\{["']\/create["']\}|href=["']\/create["']/,
+  "MobileGenerateBar must not bare-link /create"
+);
+assert.match(
+  mobileBar,
+  /data-mobile-bar=["']generate-remix["']/,
+  "MobileGenerateBar Generate link must keep data-mobile-bar marker"
+);
+assert.match(
+  mobileBar,
+  /data-floating-generate=["']mobile-bar["']/,
+  "MobileGenerateBar root must carry floating-generate marker for clearance smoke"
+);
+
+// 7. AIT-150 — mobile nav safe-area + residual sticky CTAs use shared clearance tokens
+assert.match(
+  appShellSrc,
+  /data-mobile-nav=["']primary["']/,
+  "AppShell mobile nav must expose data-mobile-nav=primary"
+);
+assert.match(
+  appShellSrc,
+  /pb-\[env\(safe-area-inset-bottom(?:,\s*0px)?\)\]/,
+  "AppShell mobile nav must pad home-indicator safe-area"
+);
+assert.match(
+  globalsCss,
+  /--mobile-nav-content-h:\s*4\.75rem/,
+  "tab content height token must stay aligned with mobile nav chrome"
+);
+assert.match(
+  appShellSrc,
+  /min-h-11/,
+  "AppShell mobile nav tabs must keep 44px min touch target"
+);
+
+const createStudio = read("components/CreateStudio.tsx");
+const cinemaPage = read("app/cinema/page.tsx");
+const batchStudio = read("components/BatchStudio.tsx");
+
+for (const [label, src] of [
+  ["CreateStudio sticky", createStudio],
+  ["cinema sticky", cinemaPage],
+  ["ModulesMobileCta", modulesCta],
+  ["MobileGenerateBar", mobileBar],
+  ["BatchStudio sticky", batchStudio],
+]) {
+  assert.doesNotMatch(
+    src,
+    /bottom-\[4\.75rem\]/,
+    `${label} must not hardcode bottom-[4.75rem] (use clearance tokens)`
+  );
+}
+
+assert.match(
+  createStudio,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "CreateStudio sticky must clear tab nav + home indicator on generic Create"
+);
+assert.match(
+  createStudio,
+  /bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "CreateStudio fixed Moment sticky must use safe-area only (nav-less)"
+);
+assert.match(
+  createStudio,
+  /data-create-sticky-clearance=\{/,
+  "CreateStudio sticky must expose clearance branch marker"
+);
+assert.match(
+  cinemaPage,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "cinema sticky must clear tab nav + home indicator"
+);
+assert.match(
+  batchStudio,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "BatchStudio tab-sharing sticky must clear tab nav + home indicator"
+);
+assert.match(
+  batchStudio,
+  /bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "BatchStudio nav-less Seller Pack sticky must use floating-cta-safe-bottom"
+);
+assert.match(
+  batchStudio,
+  /data-batch-sticky-clearance=\{/,
+  "BatchStudio sticky must expose clearance branch marker"
+);
+
+// 8. AIT-185 — Toast stack clears tab + home indicator (never hard bottom-20)
+const toastSrc = read("components/Toast.tsx");
+assert.match(
+  toastSrc,
+  /data-toast-stack=["']safe["']/,
+  "Toast stack must expose data-toast-stack=safe"
+);
+assert.match(
+  toastSrc,
+  /bottom-\[calc\(var\(--mobile-nav-clearance\)\+0\.5rem\)\]/,
+  "Toast stack must clear tab nav + home indicator via --mobile-nav-clearance"
+);
+assert.doesNotMatch(
+  toastSrc,
+  /bottom-20/,
+  "Toast stack must not hardcode bottom-20 (misses notched safe-area)"
+);
 
 console.log("generate-360-cta-smoke: ok");
