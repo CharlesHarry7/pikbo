@@ -245,6 +245,8 @@ const residualSessionUi = [
   "components/ModulesMobileCta.tsx",
   "components/LandingToolPanel.tsx",
   "components/FreeTrialCta.tsx",
+  // AIT-330: BatchStudio product-cap / trial-used / pack-credit residual
+  "components/BatchStudio.tsx",
 ];
 for (const relativePath of residualSessionUi) {
   const source = read(relativePath);
@@ -301,6 +303,38 @@ for (const relativePath of [
     `${relativePath}: "~N Free Mini left" must be gated by freeLiveOpen`
   );
 }
+
+// AIT-330: BatchStudio — Free Mini product-cap / trial-used / pack-credit only when freeLiveOpen.
+const batchStudioSource = read("components/BatchStudio.tsx");
+assert(
+  batchStudioSource.includes("Cached Lab · 0 credits · Live gated"),
+  "BatchStudio must prefer Cached Lab · 0 credits · Live gated when Live is closed"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,120}\?[\s\S]{0,80}Free Mini trial used|freeLiveOpen &&[\s\S]{0,80}Free Mini trial used|freeLiveOpen\s*\?\s*[\s\S]{0,40}`Free Mini/.test(
+    batchStudioSource
+  ),
+  "BatchStudio Free Mini trial-used / product-cap must sit behind freeLiveOpen"
+);
+assert(
+  /clipsLeft !== null && freeLiveOpen && !trialDone|freeLiveOpen && !trialDone[\s\S]{0,40}clipsLeft/.test(
+    batchStudioSource
+  ),
+  "BatchStudio ~N live left must be gated by freeLiveOpen (no invented pack credits)"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,200}Free Mini covers one 10-cr job|freeLiveOpen \? \([\s\S]{0,120}Free Mini covers one 10-cr job/.test(
+    batchStudioSource
+  ),
+  "BatchStudio Free Mini pack-credit honesty must sit behind freeLiveOpen"
+);
+assert(
+  batchStudioSource.includes("Live gated · Launch Pack needs 30 live credits") ||
+    batchStudioSource.includes(
+      "Live pack credits are not available while Live is closed"
+    ),
+  "BatchStudio closed Live path must not invent free pack credits"
+);
 
 // Community must stay fail-closed on fake UGC (no invented posts/likes).
 const community = read("app/community/page.tsx");
