@@ -108,8 +108,13 @@ assertMatch(
 );
 assertMatch(
   libraryGrid,
-  /async function download\(job: GenerationJob\)[\s\S]{0,500}const headers = await privateDownloadHeaders\(\)[\s\S]{0,240}fetch\(gateUrl,\s*\{[\s\S]{0,100}method:\s*[\"']HEAD[\"'][\s\S]{0,100}headers/,
-  "Library account downloads must authenticate the private result HEAD gate"
+  /async function download\(job: GenerationJob\)[\s\S]{0,500}ownerRecoveryFetch[\s\S]{0,200}method:\s*[\"']HEAD[\"']/,
+  "Library account downloads must authenticate the private result HEAD gate via ownerRecoveryFetch"
+);
+assertMatch(
+  libraryGrid,
+  /ownerRecoveryFetch[\s\S]{0,200}privateDownloadHeaders\(\)/,
+  "ownerRecoveryFetch must attach private Bearer headers for HEAD/download"
 );
 
 // 2. The client carries an explicit, typed contract rather than relying on

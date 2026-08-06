@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-254 / AIT-274 /
- * AIT-477 / AIT-485 / AIT-506:
+ * AIT-477 / AIT-485 / AIT-506 / AIT-522 / AIT-523:
  * Library owner-safe recovery.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
@@ -9,8 +9,10 @@
  * retry / cancel (item + collection, video + stills) / new-attempt paths,
  * stills retry durable fail-closed (AIT-477), owner-ready asset bind gate,
  * guest deep-link login next, deep-link fail-closed copy, client Bearer on
- * retry/cancel so durable DURABLE_* codes can resolve, and pure merge
- * dropping owned:false before page slice (AIT-274).
+ * retry/cancel so durable DURABLE_* codes can resolve, pure merge
+ * dropping owned:false before page slice (AIT-274), deep-link finite resolve
+ * (AIT-522), and retry/cancel/download wall-clock + DURABLE_DETAIL honesty
+ * (AIT-523).
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -250,17 +252,22 @@ assert.match(library, /data-library-action="new-attempt"/);
 assert.match(library, /canLocalRetry\(job\)/);
 assert.match(library, /canNewAttempt\(job\)/);
 assert.match(library, /DURABLE_USE_NEW_ATTEMPT/);
-// AIT-254: client Retry attaches Bearer so durable owner path can resolve.
+// AIT-254 / AIT-523: client Retry attaches Bearer via ownerRecoveryFetch
+// (privateDownloadHeaders inside the shared wall-clock helper).
 assert.match(
   library,
-  /async function retry[\s\S]{0,400}privateDownloadHeaders\(\)[\s\S]{0,240}method:\s*["']POST["']/
+  /ownerRecoveryFetch[\s\S]{0,200}privateDownloadHeaders\(\)/
+);
+assert.match(
+  library,
+  /async function retry[\s\S]{0,500}ownerRecoveryFetch[\s\S]{0,240}method:\s*["']POST["']/
 );
 assert.match(library, /DURABLE_IN_FLIGHT/);
 assert.match(library, /DURABLE_ALREADY_SUCCEEDED/);
-// AIT-254: client Cancel attaches Bearer (item DELETE durable code parity).
+// AIT-254 / AIT-523: client Cancel attaches Bearer via ownerRecoveryFetch.
 assert.match(
   library,
-  /async function cancel[\s\S]{0,600}privateDownloadHeaders\(\)[\s\S]{0,240}method:\s*["']DELETE["']/
+  /async function cancel[\s\S]{0,600}ownerRecoveryFetch[\s\S]{0,240}method:\s*["']DELETE["']/
 );
 // AIT-162: client Retry navigation fail-closed (no open redirect via startsWith("/")).
 assert.match(library, /acceptLibraryCreateNavigation/);
@@ -686,6 +693,107 @@ assert.match(
   library,
   /body\.code === "DURABLE_DETAIL_UNAVAILABLE"/,
   "deep-link resolve must treat DURABLE_DETAIL_UNAVAILABLE as unavailable"
+);
+
+// ─── AIT-522 residual: deep-link resolve finite (no infinite Loading) ───────
+// Wall-clock covers authHeaders + detail GET; timeout/abort → unavailable + Retry.
+assert.match(
+  library,
+  /withTimeout\([\s\S]{0,900}\/api\/generations\/\$\{encodeURIComponent\(deepLinkJobId\)\}/,
+  "deep-link detail GET must be wall-clock bounded"
+);
+assert.match(
+  library,
+  /STUDIO_SESSION_BOOT_MS/,
+  "deep-link resolve must use STUDIO_SESSION_BOOT_MS bound"
+);
+assert.match(
+  library,
+  /Could not verify this Moment in time/,
+  "deep-link timeout message must be honest"
+);
+// attempted ref only on terminal outcomes — cancelled mid-flight must re-run, not soft-stick
+assert.match(
+  library,
+  /deepLinkAttemptedRef\.current = deepLinkJobId[\s\S]{0,120}setDeepLinkResolve\("owned"\)|setDeepLinkResolve\("owned"\)[\s\S]{0,80}deepLinkAttemptedRef/,
+  "owned terminal must pin attempted ref"
+);
+assert.match(
+  library,
+  /deepLinkAttemptedRef\.current = deepLinkJobId[\s\S]{0,80}setDeepLinkResolve\("unavailable"\)/,
+  "unavailable terminal must pin attempted ref"
+);
+assert.match(
+  library,
+  /deepLinkAttemptedRef\.current = deepLinkJobId[\s\S]{0,80}setDeepLinkResolve\("not-yours"\)/,
+  "not-yours terminal must pin attempted ref"
+);
+// Must not pin attempted before the flight starts (that soft-sticks after cancel).
+assert.doesNotMatch(
+  library,
+  /deepLinkAttemptedRef\.current = deepLinkJobId;\s*let cancelled/,
+  "must not pin attempted before deep-link flight"
+);
+assert.match(library, /data-library-deep-link=\{deepLinkPending \? "resolving"/);
+assert.match(library, /Verifying this Moment…/);
+
+// ─── AIT-523 residual: retry/cancel/download wall-clock + DURABLE_DETAIL ───
+assert.match(
+  library,
+  /ownerRecoveryFetch/,
+  "Library recovery actions must share a wall-clock owner fetch helper"
+);
+assert.match(
+  library,
+  /async function retry[\s\S]{0,500}ownerRecoveryFetch[\s\S]{0,200}method:\s*["']POST["']/,
+  "retry POST must be wall-clock bounded via ownerRecoveryFetch"
+);
+assert.match(
+  library,
+  /async function cancel[\s\S]{0,600}ownerRecoveryFetch[\s\S]{0,200}method:\s*["']DELETE["']/,
+  "cancel DELETE must be wall-clock bounded via ownerRecoveryFetch"
+);
+assert.match(
+  library,
+  /async function download[\s\S]{0,500}ownerRecoveryFetch[\s\S]{0,200}method:\s*["']HEAD["']/,
+  "download HEAD must be wall-clock bounded via ownerRecoveryFetch"
+);
+// DURABLE_DETAIL_UNAVAILABLE honesty on retry + cancel (never invent fork/cancel).
+assert.match(
+  library,
+  /async function retry[\s\S]{0,1400}DURABLE_DETAIL_UNAVAILABLE/,
+  "retry must handle DURABLE_DETAIL_UNAVAILABLE honestly"
+);
+assert.match(
+  library,
+  /async function cancel[\s\S]{0,1400}DURABLE_DETAIL_UNAVAILABLE/,
+  "cancel must handle DURABLE_DETAIL_UNAVAILABLE honestly"
+);
+assert.match(
+  library,
+  /Retry timed out\. Your Library is unchanged/,
+  "retry timeout toast must refuse inventing a fork"
+);
+assert.match(
+  library,
+  /Cancel timed out\. Refresh Library to confirm status/,
+  "cancel timeout toast must refuse inventing cancel success"
+);
+// Asset bind gate stays fail-closed when membership cannot be proven.
+assert.match(
+  privateToyAssets,
+  /Fail-closed:\s*empty set when storage is unavailable/,
+  "listReadyOwnerAssetIds must document fail-closed empty set"
+);
+assert.match(
+  privateToyAssets,
+  /if \(!admin\) return new Set\(\)/,
+  "asset bind membership must empty-set when admin missing"
+);
+assert.match(
+  privateToyAssets,
+  /if \(error \|\| !Array\.isArray\(data\)\) return new Set\(\)/,
+  "asset bind membership must empty-set on query error"
 );
 
 console.log("library-owner-safe-regression: ok");

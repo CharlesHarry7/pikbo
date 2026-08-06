@@ -570,12 +570,14 @@ function LibraryGridInner() {
     jobs.some((job) => libraryJobMatchesDeepLink(job, deepLinkJobId!));
 
   /**
-   * Deep-link ownership resolve (AIT-103 / AIT-110 / AIT-319).
+   * Deep-link ownership resolve (AIT-103 / AIT-110 / AIT-319 / AIT-522 / AIT-523).
    * List hit → owned (derived). Miss → one-shot GET /api/generations/:id (owner-scoped).
    * 200 + visible job merges into list; 404-class → not-your-toy;
-   * network/5xx → unavailable (never invent not-your-toy on transport fail).
+   * network/5xx/timeout → unavailable (never invent not-your-toy on transport fail).
    * Skip resolve while owner list is error/timeout — list surface owns honesty.
-   * `deepLinkAttemptedRef` stops re-fetch loops after terminal resolve.
+   * `deepLinkAttemptedRef` is set only on terminal outcomes so effect re-runs
+   * never soft-stick on permanent "Loading your Library…" after a cancelled flight.
+   * Wall-clock STUDIO_SESSION_BOOT_MS covers authHeaders + detail GET hang.
    * setState is deferred (setTimeout 0) so react-hooks/set-state-in-effect stays clean.
    */
   useEffect(() => {
@@ -594,32 +596,56 @@ function LibraryGridInner() {
 
     // Owned via list membership — mark owned (async setState; UI also trusts listHasDeepLink).
     if (listHasDeepLink) {
+      deepLinkAttemptedRef.current = deepLinkJobId;
       const t = window.setTimeout(() => setDeepLinkResolve("owned"), 0);
       return () => window.clearTimeout(t);
     }
 
+    // Terminal resolve for this id already landed — do not re-fetch.
     if (deepLinkAttemptedRef.current === deepLinkJobId) {
-      // Already resolved this id as not-yours/unavailable (or in-flight completed).
       return;
     }
-    deepLinkAttemptedRef.current = deepLinkJobId;
 
     let cancelled = false;
     const t = window.setTimeout(() => {
       setDeepLinkResolve("resolving");
       void (async () => {
         try {
-          const headers = await privateDownloadHeaders();
-          const response = await fetch(
-            `/api/generations/${encodeURIComponent(deepLinkJobId)}`,
-            { headers, cache: "no-store" }
+          // Wall-clock covers getSession hang inside privateDownloadHeaders + detail fetch.
+          const result = await withTimeout(
+            (async () => {
+              const headers = await privateDownloadHeaders();
+              const controller =
+                typeof AbortController !== "undefined"
+                  ? new AbortController()
+                  : null;
+              const timer = controller
+                ? setTimeout(() => controller.abort(), STUDIO_SESSION_BOOT_MS)
+                : null;
+              try {
+                const response = await fetch(
+                  `/api/generations/${encodeURIComponent(deepLinkJobId)}`,
+                  {
+                    headers,
+                    cache: "no-store",
+                    signal: controller?.signal,
+                  }
+                );
+                const body = (await response.json()) as {
+                  ok?: boolean;
+                  job?: GenerationJob;
+                  code?: string;
+                };
+                return { response, body };
+              } finally {
+                if (timer) clearTimeout(timer);
+              }
+            })(),
+            STUDIO_SESSION_BOOT_MS,
+            "Could not verify this Moment in time"
           );
-          const body = (await response.json()) as {
-            ok?: boolean;
-            job?: GenerationJob;
-            code?: string;
-          };
           if (cancelled) return;
+          const { response, body } = result;
           const job = body.job;
           // Fail-closed: require ok + visible account job (never owned:false / demo).
           // Accept id or requestId so workbench `?job=<requestId>` does not hang.
@@ -630,6 +656,7 @@ function LibraryGridInner() {
             libraryJobMatchesDeepLink(job, deepLinkJobId) &&
             visibleAccountJob(job)
           ) {
+            deepLinkAttemptedRef.current = deepLinkJobId;
             setJobs((prev) => {
               if (prev.some((row) => row.id === job.id)) return prev;
               return [job, ...prev];
@@ -646,12 +673,17 @@ function LibraryGridInner() {
             body.code === "DURABLE_DETAIL_UNAVAILABLE" ||
             body.code === "DELIVERY_PIPELINE_UNAVAILABLE"
           ) {
+            deepLinkAttemptedRef.current = deepLinkJobId;
             setDeepLinkResolve("unavailable");
             return;
           }
+          deepLinkAttemptedRef.current = deepLinkJobId;
           setDeepLinkResolve("not-yours");
         } catch {
-          if (!cancelled) setDeepLinkResolve("unavailable");
+          // Timeout / abort / network: honest unavailable + Retry — never infinite Loading.
+          if (cancelled) return;
+          deepLinkAttemptedRef.current = deepLinkJobId;
+          setDeepLinkResolve("unavailable");
         }
       })();
     }, 0);
@@ -702,6 +734,40 @@ function LibraryGridInner() {
     return () => window.clearInterval(timer);
   }, [me?.signedIn, openCount, refreshJobs]);
 
+  /**
+   * AIT-523: wall-clock owner recovery fetch (auth headers + request).
+   * Fail-closed — never leave Retry/Cancel/Download spinners infinite when
+   * getSession or the API hangs. Mirrors list + deep-link bounds.
+   */
+  async function ownerRecoveryFetch(
+    input: RequestInfo | URL,
+    init: RequestInit | undefined,
+    timeoutMessage: string
+  ): Promise<Response> {
+    return withTimeout(
+      (async () => {
+        const headers = await privateDownloadHeaders();
+        const controller =
+          typeof AbortController !== "undefined" ? new AbortController() : null;
+        const timer = controller
+          ? setTimeout(() => controller.abort(), STUDIO_SESSION_BOOT_MS)
+          : null;
+        try {
+          return await fetch(input, {
+            ...init,
+            headers: { ...headers, ...(init?.headers || {}) },
+            cache: "no-store",
+            signal: controller?.signal,
+          });
+        } finally {
+          if (timer) clearTimeout(timer);
+        }
+      })(),
+      STUDIO_SESSION_BOOT_MS,
+      timeoutMessage
+    );
+  }
+
   async function download(job: GenerationJob) {
     const id = (job.requestId || job.id || "").trim();
     if (!id) {
@@ -712,12 +778,11 @@ function LibraryGridInner() {
     // raw provider CDN or storage signed URLs even if a DTO still carries one.
     const gateUrl = `/api/downloads/${encodeURIComponent(id)}`;
     try {
-      const headers = await privateDownloadHeaders();
-      const head = await fetch(gateUrl, {
-        method: "HEAD",
-        headers,
-        cache: "no-store",
-      });
+      const head = await ownerRecoveryFetch(
+        gateUrl,
+        { method: "HEAD" },
+        "Download check timed out"
+      );
       const decision = interpretDownloadHead({
         status: head.status,
         code: head.headers.get("X-Pikbo-Download-Code"),
@@ -738,8 +803,15 @@ function LibraryGridInner() {
       if (result === "ok") toast("Download started");
       else if (result === "fallback") toast("Opened video — save it from your browser");
       else toast("Download could not start. Refresh and try again.");
-    } catch {
-      toast("Download could not start. Refresh and try again.");
+    } catch (err) {
+      const timedOut =
+        isClientTimeoutError(err) ||
+        (err instanceof Error && err.name === "AbortError");
+      toast(
+        timedOut
+          ? "Download check timed out. Refresh and try again."
+          : "Download could not start. Refresh and try again."
+      );
     }
   }
 
@@ -747,10 +819,11 @@ function LibraryGridInner() {
     setForkingId(job.id);
     try {
       // Bearer required so durable owner path can emit DURABLE_* (not bare NOT_FOUND).
-      const headers = await privateDownloadHeaders();
-      const response = await fetch(
+      // AIT-523: wall-clock bound — never infinite "Preparing…".
+      const response = await ownerRecoveryFetch(
         `/api/generations/${encodeURIComponent(job.id)}/retry`,
-        { method: "POST", headers, cache: "no-store" }
+        { method: "POST" },
+        "Retry could not be prepared in time"
       );
       const body = (await response.json()) as {
         ok?: boolean;
@@ -773,16 +846,20 @@ function LibraryGridInner() {
         return;
       }
       // AIT-254: in-flight / already-succeeded durable — honest toast + refresh.
+      // AIT-523: DURABLE_DETAIL_UNAVAILABLE (503) — honest retry, never invent fork.
       if (
         !response.ok &&
         (body.code === "DURABLE_IN_FLIGHT" ||
-          body.code === "DURABLE_ALREADY_SUCCEEDED")
+          body.code === "DURABLE_ALREADY_SUCCEEDED" ||
+          body.code === "DURABLE_DETAIL_UNAVAILABLE")
       ) {
         toast(
           body.message ||
             (body.code === "DURABLE_IN_FLIGHT"
               ? "This Moment is still rendering. Refresh Library."
-              : "This Moment already succeeded. Open Create for a new attempt.")
+              : body.code === "DURABLE_DETAIL_UNAVAILABLE"
+                ? "Private Library could not verify this Moment for Retry. Try again when storage is ready."
+                : "This Moment already succeeded. Open Create for a new attempt.")
         );
         await refreshJobs();
         return;
@@ -812,8 +889,15 @@ function LibraryGridInner() {
         body.next?.createUi,
         remixFallback.startsWith("/create") ? remixFallback : CREATE_MOMENT_HREF
       );
-    } catch {
-      toast("Retry could not be prepared. Please try again.");
+    } catch (err) {
+      const timedOut =
+        isClientTimeoutError(err) ||
+        (err instanceof Error && err.name === "AbortError");
+      toast(
+        timedOut
+          ? "Retry timed out. Your Library is unchanged — try again."
+          : "Retry could not be prepared. Please try again."
+      );
     } finally {
       setForkingId(null);
     }
@@ -831,10 +915,11 @@ function LibraryGridInner() {
     try {
       // Bearer so owner durable UUID can return DURABLE_NO_CANCEL (parity with
       // cancelGenerateLedger / list+detail owner gates).
-      const headers = await privateDownloadHeaders();
-      const response = await fetch(
+      // AIT-523: wall-clock bound — never infinite "Canceling…".
+      const response = await ownerRecoveryFetch(
         `/api/generations/${encodeURIComponent(job.id)}`,
-        { method: "DELETE", headers, cache: "no-store" }
+        { method: "DELETE" },
+        "Cancel could not finish in time"
       );
       const body = (await response.json()) as {
         ok?: boolean;
@@ -843,10 +928,17 @@ function LibraryGridInner() {
         durable?: boolean;
       };
       // AIT-183: durable Cancel is server-gated — refresh, never invent cancel success.
-      if (!response.ok && body.code === "DURABLE_NO_CANCEL") {
+      // AIT-523: DURABLE_DETAIL_UNAVAILABLE — honest refresh, never invent cancel.
+      if (
+        !response.ok &&
+        (body.code === "DURABLE_NO_CANCEL" ||
+          body.code === "DURABLE_DETAIL_UNAVAILABLE")
+      ) {
         toast(
           body.message ||
-            "This durable Moment cannot use process-memory Cancel. Refresh Library."
+            (body.code === "DURABLE_DETAIL_UNAVAILABLE"
+              ? "Private Library could not verify this Moment for Cancel. Retry when storage is ready."
+              : "This durable Moment cannot use process-memory Cancel. Refresh Library.")
         );
         await refreshJobs();
         return;
@@ -857,8 +949,15 @@ function LibraryGridInner() {
       }
       toast("Render canceled");
       await refreshJobs();
-    } catch {
-      toast("Could not cancel this render");
+    } catch (err) {
+      const timedOut =
+        isClientTimeoutError(err) ||
+        (err instanceof Error && err.name === "AbortError");
+      toast(
+        timedOut
+          ? "Cancel timed out. Refresh Library to confirm status."
+          : "Could not cancel this render"
+      );
     } finally {
       setCancellingId(null);
     }
@@ -869,9 +968,20 @@ function LibraryGridInner() {
       <div
         className="mt-6 grid min-h-64 place-items-center rounded-[1.75rem] border border-white/10 bg-white/[0.025]"
         data-library-state={deepLinkPending ? "deep-link-resolving" : "loading"}
-        data-library-boot="checking"
+        data-library-boot={deepLinkPending ? "deep-link-resolving" : "checking"}
+        data-library-deep-link={deepLinkPending ? "resolving" : undefined}
       >
-        <p className="text-sm font-semibold text-white/45">Loading your Library…</p>
+        <p className="text-sm font-semibold text-white/45">
+          {deepLinkPending
+            ? "Verifying this Moment…"
+            : "Loading your Library…"}
+        </p>
+        {deepLinkPending ? (
+          <p className="mt-2 max-w-sm text-center text-[11px] leading-5 text-white/40">
+            Ownership check is wall-clock bounded. If it times out, you can retry
+            without us inventing a not-your-toy claim.
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -1034,9 +1144,9 @@ function LibraryGridInner() {
               Could not verify this Moment.
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/52">
-              Ownership check failed due to a network or private storage error.
-              We will not claim this is not your toy — retry when the connection
-              is ready.
+              Ownership check failed due to a network, timeout, or private
+              storage error. We will not claim this is not your toy — retry when
+              the connection is ready.
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               <button

@@ -3178,7 +3178,14 @@ assert.match(
 );
 // Library's private result button performs an authenticated HEAD probe before
 // fetching the gated video; no raw history/download anchor is exposed.
-assert.match(library, /privateDownloadHeaders[\s\S]{0,700}method:\s*["']HEAD["']/);
+// AIT-523: HEAD goes through wall-clock ownerRecoveryFetch (Bearer via
+// privateDownloadHeaders inside the helper) — not a bare untimed HEAD.
+assert.match(library, /ownerRecoveryFetch/);
+assert.match(
+  library,
+  /async function download[\s\S]{0,500}ownerRecoveryFetch[\s\S]{0,200}method:\s*["']HEAD["']/
+);
+assert.match(library, /privateDownloadHeaders/);
 assert.match(library, /interpretDownloadHead[\s\S]{0,900}downloadVideoFile/);
 // downloadVideoFile: HEAD block/JSON → blocked; HEAD allow + CORS may open gate
 const historyLibSrc = fs.readFileSync(join(root, "lib/history.ts"), "utf8");
