@@ -36,6 +36,14 @@ jobs:
       - name: Engine smoke
         run: npm run engine-smoke
 
+      # Residual CTA honesty (source-only): Moment doors → MOMENT_CREATE_HREF;
+      # Generate doors → createGenerate360Href / workbench 360. Fail closed so
+      # bare /create Moment or bare Generate CTAs cannot regress past CI.
+      - name: Moment + Generate CTA honesty
+        run: |
+          npm run moment-create-href-smoke
+          npm run generate-360-cta-smoke
+
       - name: Recovery QA (R0–R3 cost · ledger · CI honesty)
         run: npm run recovery-qa
 

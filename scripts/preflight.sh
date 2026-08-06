@@ -75,6 +75,12 @@ console.log('OK: demoClips+samples disk assets', new Set([...demos,...samples]).
 node scripts/engine-smoke.mjs
 echo "OK: engine-smoke"
 
+# Residual CTA honesty (source-only) — fail closed for Moment + Generate doors
+node scripts/moment-create-href-smoke.mjs
+echo "OK: moment-create-href-smoke"
+node scripts/generate-360-cta-smoke.mjs
+echo "OK: generate-360-cta-smoke"
+
 npm run lint
 npm run typecheck
 npm run build
