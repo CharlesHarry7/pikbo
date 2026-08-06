@@ -210,6 +210,36 @@ await new Promise((resolve, reject) => {
   }
 );
 
+// AIT-515 residual chrome CTAs — wall-clock fetchMe (SoftLaunch + FreeTrial + Modules)
+const softLaunch = read("components/SoftLaunchStrip.tsx");
+const freeTrialCta = read("components/FreeTrialCta.tsx");
+const modulesSuiteCtas = read("components/ModulesSuiteCtas.tsx");
+const modulesMobileCta = read("components/ModulesMobileCta.tsx");
+for (const [name, src] of [
+  ["SoftLaunchStrip", softLaunch],
+  ["FreeTrialCta", freeTrialCta],
+  ["ModulesSuiteCtas", modulesSuiteCtas],
+  ["ModulesMobileCta", modulesMobileCta],
+]) {
+  assert.match(src, /STUDIO_SESSION_BOOT_MS/, `${name} must boot-bound`);
+  assert.match(
+    src,
+    /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/,
+    `${name} must pass timeoutMs`
+  );
+  assert.match(src, /isClientTimeoutError/, `${name} must detect timeout`);
+  assert.match(src, /sessionBoot === "timeout"/, `${name} timeout branch`);
+  assert.doesNotMatch(src, /void fetchMe\(\)\.then/, `${name} no bare fetchMe`);
+}
+assert.match(softLaunch, /data-soft-launch-boot=\{sessionBoot\}/);
+assert.match(softLaunch, /data-soft-launch-boot-retry/);
+assert.match(freeTrialCta, /data-free-trial-boot=\{sessionBoot\}/);
+assert.match(freeTrialCta, /data-free-trial-boot-retry/);
+assert.match(modulesSuiteCtas, /data-modules-suite-boot=\{sessionBoot\}/);
+assert.match(modulesSuiteCtas, /data-modules-suite-boot-retry/);
+assert.match(modulesMobileCta, /data-modules-mobile-boot=\{sessionBoot\}/);
+assert.match(modulesMobileCta, /data-modules-mobile-boot-retry/);
+
 // Package + CI script wiring
 assert.match(
   packageJson,
@@ -226,5 +256,5 @@ for (const asset of [
 }
 
 console.log(
-  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing/moment-preview boot; timeout/error + retry; mobile sticky Lab CTA)"
+  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing/moment-preview + SoftLaunch/FreeTrial/Modules boot; timeout/error + retry; mobile sticky Lab CTA)"
 );

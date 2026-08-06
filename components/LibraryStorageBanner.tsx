@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   canUsePrivateLaunch,
   fetchMe,
   type MeResponse,
 } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { isBrowserSupabaseReady } from "@/lib/supabase/browser";
+
+type SessionBoot = "checking" | "ready" | "timeout";
 
 /** Distinguish private account results from device-only imports. */
 export function LibraryStorageBanner({
@@ -20,25 +26,48 @@ export function LibraryStorageBanner({
   privateCount?: number;
 }) {
   const [me, setMe] = useState<MeResponse | null>(null);
+  const [sessionBoot, setSessionBoot] = useState<SessionBoot>("checking");
 
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      void fetchMe().then((data) => {
-        if (data) setMe(data);
+  const load = useCallback(() => {
+    setSessionBoot("checking");
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+      .then((data) => {
+        setMe(data);
+        setSessionBoot("ready");
+      })
+      .catch((err) => {
+        // Fail closed — Guest/unknown, never permanent hang on account chip.
+        setMe(null);
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
       });
-    }, 0);
-    return () => window.clearTimeout(t);
   }, []);
 
+  useEffect(() => {
+    const t = window.setTimeout(load, 0);
+    return () => window.clearTimeout(t);
+  }, [load]);
+
+  const sessionKnown = sessionBoot === "ready" && me != null;
+  const accessTimedOut = sessionBoot === "timeout";
+  const accessChecking = sessionBoot === "checking";
+
+  // privateCount from cloud list is durable proof of signed-in ownership.
   const signedIn =
-    privateCount > 0 || Boolean(me?.signedIn && me?.auth?.id);
+    privateCount > 0 ||
+    Boolean(sessionKnown && me?.signedIn && me?.auth?.id);
   const privateGenerationEnabled =
-    privateCount > 0 || canUsePrivateLaunch(me);
-  const authReady = isBrowserSupabaseReady() || Boolean(me?.authConfigured);
-  const email = me?.auth?.email;
+    privateCount > 0 ||
+    (sessionKnown ? canUsePrivateLaunch(me) : false);
+  const authReady =
+    isBrowserSupabaseReady() ||
+    Boolean(sessionKnown && me?.authConfigured);
+  const email = sessionKnown ? me?.auth?.email : undefined;
 
   return (
-    <section className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent">
+    <section
+      className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent"
+      data-library-storage-boot={sessionBoot}
+    >
       <div className="grid gap-0 sm:grid-cols-3">
         <div className="border-b border-white/10 p-4 sm:border-b-0 sm:border-r">
           <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--mint)]">
@@ -69,7 +98,32 @@ export function LibraryStorageBanner({
           <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/50">
             Account
           </p>
-          {signedIn ? (
+          {accessChecking && privateCount === 0 ? (
+            <>
+              <p className="mt-1 text-sm font-bold text-white/60">Checking…</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-white/45">
+                Verifying private access
+              </p>
+            </>
+          ) : accessTimedOut && privateCount === 0 ? (
+            <>
+              <p className="mt-1 text-sm font-bold text-white/80">
+                Access check timed out
+              </p>
+              <p className="mt-0.5 text-[11px] leading-snug text-white/45">
+                Account status unknown · device Library still available
+              </p>
+              <button
+                type="button"
+                onClick={() => load()}
+                data-library-storage-boot-retry
+                className="mt-2 inline-block text-[11px] font-bold text-[var(--mint)] hover:underline"
+                title="Retry access check"
+              >
+                Retry →
+              </button>
+            </>
+          ) : signedIn ? (
             <>
               <p className="mt-1 truncate text-sm font-bold text-white">
                 {email || "Signed in"}
