@@ -419,6 +419,64 @@ assert.doesNotMatch(
   /home \? ["']Try Street Power-Up["']|home \? ["']Create my drop clip["']/,
   "AppShell home sticky must not remain Moment-only copy"
 );
+// AIT-607 residual: mobile Home dual doors — Generate solid primary + Moment secondary
+assert.match(
+  appShellSrc,
+  /data-shell-mobile-360-cta/,
+  "AppShell mobile home must mark Generate 360 dual-door primary"
+);
+assert.match(
+  appShellSrc,
+  /data-shell-mobile-moment-cta/,
+  "AppShell mobile home must mark Moment dual-door secondary"
+);
+assert.match(
+  appShellSrc,
+  /data-shell-mobile-360-cta[\s\S]*data-shell-mobile-moment-cta/,
+  "mobile dual doors must order Generate primary then Moment secondary"
+);
+assert.match(
+  appShellSrc,
+  /source=app-shell-home-moment/,
+  "mobile Moment secondary must tag app-shell-home-moment (not bare Moment)"
+);
+assert.doesNotMatch(
+  appShellSrc,
+  /data-shell-mobile-moment-cta[\s\S]{0,200}bg-\[var\(--grad-cta\)\]/,
+  "mobile Moment secondary must not use solid primary CTA fill"
+);
+// Honest Lab labels on gallery-calm stills (never bare style study without Lab)
+const designerGallery = read("lib/designerToyGallery.ts");
+assert.match(
+  designerGallery,
+  /PIKBO Lab · Style study · try 360°/,
+  "gallery style-study badges must prefix PIKBO Lab"
+);
+assert.match(
+  designerGallery,
+  /PIKBO Lab · still · try 360°/,
+  "gallery Lab still badges must prefix PIKBO Lab"
+);
+assert.match(
+  designerGallery,
+  /PIKBO Lab · still · 360 listing/,
+  "gallery pedestal badge must prefix PIKBO Lab"
+);
+assert.doesNotMatch(
+  designerGallery,
+  /badge:\s*["']Style study · try 360°["']/,
+  "gallery must not ship bare Style study badges without Lab"
+);
+assert.match(
+  homeHero,
+  /data-home-hero-lab-label/,
+  "home hero still must mark honest Lab label"
+);
+assert.match(
+  homeHero,
+  /PIKBO Lab · Style study · try 360°/,
+  "home hero still caption must prefix PIKBO Lab"
+);
 // Browse surfaces that keep AppShell tab nav must be in showBar
 for (const route of [
   "/explore",

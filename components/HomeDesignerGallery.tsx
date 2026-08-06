@@ -40,9 +40,9 @@ export function HomeDesignerGallery() {
               Collectible subjects — not cartoon fillers
             </h2>
             <p className="mt-3 text-sm leading-6 text-[var(--fg-muted)]">
-              Style studies and lab lighting references for vinyl, blind box,
-              mecha kits, and plush. Labeled studies — not customer uploads, not
-              fake UGC. Tap any still to open listing 360°.
+              PIKBO Lab style studies and lighting references for vinyl, blind
+              box, mecha kits, and plush. Labeled Lab stills — not customer
+              uploads, not fake UGC. Tap any still to open listing 360°.
             </p>
           </div>
           <div className="flex flex-col items-start gap-2 sm:items-end">

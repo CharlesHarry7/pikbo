@@ -114,8 +114,11 @@ export function HomeCinemaHero() {
               </div>
               <figcaption className="flex items-start justify-between gap-3 border-t border-[var(--border)] px-4 py-3">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand)]">
-                    Style study · try 360°
+                  <p
+                    className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand)]"
+                    data-home-hero-lab-label
+                  >
+                    PIKBO Lab · Style study · try 360°
                   </p>
                   <p className="mt-0.5 text-sm font-semibold text-[var(--fg)]">
                     {HERO_STILL.title}
