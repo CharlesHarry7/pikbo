@@ -111,6 +111,62 @@ assert(
   "rank tool must keep private generation and subscriptions closed during validation"
 );
 
+// AIT-243: HfProductRail + LandingHowItWorks — Free Mini only when Live open.
+// Rail: freeLiveOpen client gate (parity FreeTrialCta). Landing: static
+// Live-gated / Cached Lab honesty (SSR fail-closed; JSON-LD stays server-safe).
+const hfProductRailSource = read("components/HfProductRail.tsx");
+assert(
+  /canLiveGenerate\s*\(/.test(hfProductRailSource),
+  "HfProductRail must gate Free Mini product caps on canLiveGenerate"
+);
+assert(
+  /freeLiveOpen/.test(hfProductRailSource),
+  "HfProductRail must define freeLiveOpen (Live gate truth)"
+);
+assert(
+  /liveEnabled\s*!==\s*false/.test(hfProductRailSource),
+  "HfProductRail must require freeLive.liveEnabled !== false"
+);
+assert(
+  hfProductRailSource.includes("Lab sample · Cached preview"),
+  "HfProductRail closed path must use Lab sample · Cached preview"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,120}\?[\s\S]{0,80}Lab sample · Free Mini 5s/.test(
+    hfProductRailSource
+  ),
+  "HfProductRail Free Mini 5s must sit behind freeLiveOpen ternary"
+);
+assert(
+  /data-hf-rail-free-cap/.test(hfProductRailSource),
+  "HfProductRail must expose data-hf-rail-free-cap for free-live vs lab-gated"
+);
+// Free Mini 5s appears only in the freeLiveOpen-gated blurb (not as bare static JSX).
+assert(
+  !/^\s*Lab sample · Free Mini 5s\s*$/m.test(hfProductRailSource),
+  "HfProductRail must not hardcode bare Lab sample · Free Mini 5s as static JSX"
+);
+
+const landingHowItWorksSource = read("components/LandingHowItWorks.tsx");
+assert(
+  !/Seedance Mini with honest Free Mini caps/.test(landingHowItWorksSource),
+  "LandingHowItWorks must not hardcode Seedance Mini / Free Mini caps"
+);
+assert(
+  !/Free Mini:\s*~?5s\s*·\s*480p/.test(landingHowItWorksSource),
+  "LandingHowItWorks must not hardcode Free Mini · 5s · 480p product caps"
+);
+assert(
+  landingHowItWorksSource.includes("Live gated") &&
+    landingHowItWorksSource.includes("Cached Lab") &&
+    landingHowItWorksSource.includes("refunds when confirmed"),
+  "LandingHowItWorks must prefer Live-gated / Cached Lab honesty while Live is closed"
+);
+assert(
+  /data-landing-hiw-cap=["']lab-gated["']/.test(landingHowItWorksSource),
+  "LandingHowItWorks must mark lab-gated soft-launch honesty"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
