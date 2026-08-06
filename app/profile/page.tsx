@@ -20,7 +20,7 @@ export default function ProfilePage() {
   return (
     <div className="relative px-4 py-10 sm:px-8">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(40%_70%_at_50%_0%,rgba(200,255,61,0.07),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(40%_70%_at_50%_0%,rgba(255,78,205,0.07),transparent_70%)]"
         aria-hidden
       />
       <div className="relative mx-auto max-w-lg">
@@ -33,7 +33,7 @@ export default function ProfilePage() {
         </p>
         <p className="mt-3 text-xs text-[var(--fg-dim)]">
           {auth.message}{" "}
-          <Link href="/login" className="text-[var(--mint)] hover:underline">
+          <Link href="/login" className="text-[var(--neon-pink)] hover:underline">
             Sign-in options →
           </Link>
         </p>
