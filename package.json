@@ -64,6 +64,8 @@
     "library-owner-safe-regression": "node scripts/library-owner-safe-regression.mjs",
     "nonprod-seller-pack-harness": "node scripts/nonprod-seller-pack-harness.mjs",
     "nonprod-seller-pack-harness-regression": "node scripts/nonprod-seller-pack-harness-regression.mjs",
+    "private-moment-acceptance": "node scripts/private-moment-acceptance-harness.mjs",
+    "private-moment-acceptance-regression": "node scripts/private-moment-acceptance-harness-regression.mjs",
     "stripe-billing-regression": "node --experimental-strip-types scripts/stripe-billing-regression.mjs",
     "privacy-analytics-regression": "node --experimental-strip-types scripts/privacy-analytics-regression.mjs",
     "mercury-readiness-smoke": "node scripts/mercury-readiness-smoke.mjs"
