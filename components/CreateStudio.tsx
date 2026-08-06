@@ -8,7 +8,10 @@ import {
   historyFieldsFromSuccess,
   postGenerateWithRetry,
 } from "@/lib/generateClient";
-import { planGenerateWaitLeave } from "@/lib/generateRecoveryPolicy";
+import {
+  canRetryGenerateFailure,
+  planGenerateWaitLeave,
+} from "@/lib/generateRecoveryPolicy";
 import {
   downloadVideoFile,
   privateDownloadHeaders,
@@ -314,6 +317,13 @@ export function CreateStudio({
   const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
     null
   );
+  /**
+   * Last failed generate code + flags — fail panel Retry is server-gated
+   * (auth/paywall/fatal/durable-hold never invent a retriable path).
+   */
+  const [lastFailCode, setLastFailCode] = useState<string | null>(null);
+  const [lastFailFatal, setLastFailFatal] = useState(false);
+  const [lastFailPaywall, setLastFailPaywall] = useState(false);
   const [demo, setDemo] = useState(false);
   const [watermark, setWatermark] = useState(true);
   const [session, setSession] = useState<MeResponse | null>(null);
@@ -967,6 +977,10 @@ export function CreateStudio({
     setLastRefunded(false);
     // Clear only the *request* settlement for a new attempt — version chips stay.
     setLastRequestCreditState(null);
+    setLastFailCode(null);
+    setLastFailFatal(false);
+    setLastFailPaywall(false);
+    setFailRetryAfterSec(null);
     setShowPaywall(false);
     setElapsed(0);
     setRecoveringSavedResult(false);
@@ -1132,7 +1146,11 @@ export function CreateStudio({
         setSession((prev) => mergeMeSession(prev, result.session));
       }
       if (result.paywall) setShowPaywall(true);
-      setLastRefunded(Boolean(result.creditsRefunded));
+      // Only durable creditsRefunded === true may claim restore (never invent).
+      setLastRefunded(result.creditsRefunded === true);
+      setLastFailCode(result.code || null);
+      setLastFailFatal(Boolean(result.fatal));
+      setLastFailPaywall(Boolean(result.paywall));
       setFailRetryAfterSec(
         typeof result.retryAfterSec === "number" && result.retryAfterSec > 0
           ? result.retryAfterSec
@@ -3171,10 +3189,18 @@ export function CreateStudio({
             <GenerateFailPanel
               message={error}
               creditState={lastRequestCreditState}
-              creditsRestored={lastRefunded}
+              creditsRestored={
+                lastRefunded && lastRequestCreditState !== "refund unconfirmed"
+              }
               retryAfterSec={failRetryAfterSec}
               onRetry={
-                !lastUploadIgnored && image && !busy
+                canRetryGenerateFailure({
+                  code: lastFailCode,
+                  fatal: lastFailFatal,
+                  paywall: lastFailPaywall || showPaywall,
+                  busy,
+                  hasInput: !lastUploadIgnored && Boolean(image),
+                })
                   ? () => {
                       setFailRetryAfterSec(null);
                       if (activeVersion) retryActiveVersion();
@@ -4018,6 +4044,7 @@ export function CreateStudio({
             freeLiveOpen={freeLiveOpen}
             onCancel={cancelInFlightGenerate}
             onLeaveToLibrary={leaveWaitingKeepBackground}
+            recoveryChecking={recoveringSavedResult}
             awaitingPrimary={awaitingPrimaryAfterRecovery}
           />
         ) : status === "done" && videoUrl ? (

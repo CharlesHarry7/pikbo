@@ -707,8 +707,13 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
   assert.match(waitStage, /onLeaveToLibrary/);
   assert.match(
     waitStage,
-    /awaitingPrimary \|\| elapsed >= 90/,
-    "Open Library only after awaiting_primary or 90s"
+    /shouldShowGenerateWaitDetach/,
+    "detach visibility is policy-driven (recovery checking/waiting always exits)"
+  );
+  assert.match(
+    waitStage,
+    /data-wait-detach|data-recovery-checking/,
+    "wait stage exposes recovery exit markers"
   );
 
   const library = read("components/LibraryGrid.tsx");

@@ -51,6 +51,7 @@ jobs:
       - name: P0 private object settlement + provider budget
         run: |
           npm run p0-private-live-generation
+          npm run generate-wait-honesty-regression
           npm run durable-library-statuses-regression
           npm run library-owner-safe-regression
           npm run download-owner-safe-regression
