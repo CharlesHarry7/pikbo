@@ -451,6 +451,21 @@ for (const absolute of renderedFiles) {
   }
 }
 
+// AIT-282: GenerateWaitStage residual lime → neon-pink / void board
+{
+  const waitStage = read("components/GenerateWaitStage.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(waitStage),
+    "GenerateWaitStage must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    /255\s*,\s*78\s*,\s*205|#ff4ecd|#b14eff/.test(waitStage) ||
+      waitStage.includes("var(--grad") ||
+      waitStage.includes("var(--mint)"),
+    "GenerateWaitStage wait chrome uses neon-pink / electric-purple board tokens"
+  );
+}
+
 console.log(
   `live-capability copy smoke: PASS (${publicPromiseFiles.length} source files, ${renderedFiles.length} rendered routes)`
 );
