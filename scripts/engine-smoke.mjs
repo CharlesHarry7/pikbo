@@ -3917,15 +3917,19 @@ assert.match(createStudio, /fidelity QC|includeQc:\s*true/);
 // Pack generation remains private and is tested independently below.
 const homePageSrc = fs.readFileSync(join(root, "app/page.tsx"), "utf8");
 assert.match(homePageSrc, /HomeCinemaHero/);
+assert.match(homePageSrc, /HomeExploreRecipeRail/);
+assert.match(homePageSrc, /buildHomeShowcaseFeed/);
 assert.match(homePageSrc, /HomeDesignerGallery/);
-// gallery-calm: HomeExploreRecipeRail unmounted from home
-// assert.match(homePageSrc, /HomeExploreRecipeRail/);
-// gallery-calm: HfProductRail unmounted from home
-// assert.match(homePageSrc, /HfProductRail/);
+// gallery-calm: HfProductRail / ViralWall stay unmounted (thin rail only)
+assert.doesNotMatch(homePageSrc, /HomeViralWall|HfProductRail|HomeBrowseCta/);
 assert.ok(
-  homePageSrc.indexOf("<HomeCinemaHero") < homePageSrc.indexOf("<HomeDesignerGallery") &&
-    homePageSrc.indexOf("<HomeDesignerGallery") < homePageSrc.indexOf("<HomeTrustFooter"),
-  "Home order: Hero → DesignerGallery → Trust"
+  homePageSrc.indexOf("<HomeCinemaHero") <
+    homePageSrc.indexOf("<HomeExploreRecipeRail") &&
+    homePageSrc.indexOf("<HomeExploreRecipeRail") <
+      homePageSrc.indexOf("<HomeDesignerGallery") &&
+    homePageSrc.indexOf("<HomeDesignerGallery") <
+      homePageSrc.indexOf("<HomeTrustFooter"),
+  "Home order: Hero → ExploreRecipeRail → DesignerGallery → Trust"
 );
 const homeExploreRailSrc = fs.readFileSync(
   join(root, "components/HomeExploreRecipeRail.tsx"),

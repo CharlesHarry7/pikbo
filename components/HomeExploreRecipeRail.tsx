@@ -24,10 +24,10 @@ function withRailEntry(href: string): string {
 }
 
 /**
- * Thin HfExplore-style horizontal recipe rail under the Lab proof wall.
- * Lab/archive samples only — secondary Remake + Listing 360 doors.
- * Does not compete with HomeCinemaHero as the primary Moment CTA.
- * AIT-241: remounts Explore density under Moment-first (not full HfExploreHome).
+ * Thin HfExplore-style horizontal recipe rail under the gallery-calm hero.
+ * Lab/archive samples only — secondary Remake + one Listing 360 door.
+ * Does not compete with HomeCinemaHero as the primary Generate→360 CTA.
+ * AIT-449: remount under gallery-calm home with honest Lab vs Live copy.
  */
 export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
   const rail: FeedVideoItem[] = items
@@ -43,20 +43,20 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
       <section
         data-home-explore-rail="empty"
         aria-label="Lab recipe rail"
-        className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
+        className="border-t border-[var(--border)] bg-[var(--bg)] px-4 py-8 sm:px-7 lg:px-10"
       >
-        <div className="mx-auto max-w-[1400px]">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--neon-pink)]/80">
+        <div className="mx-auto max-w-[1200px]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">
             Explore · Lab
           </p>
-          <p className="mt-2 text-sm text-white/45">
+          <p className="mt-2 text-sm text-[var(--fg-muted)]">
             Lab recipe previews unavailable right now.
           </p>
           <div className="mt-3 flex flex-wrap gap-3">
             <Link
               href={listing360Href}
               data-home-explore-rail-360
-              className="text-[11px] font-bold text-[#00D9FF] hover:underline"
+              className="text-[11px] font-semibold text-[var(--brand)] underline-offset-4 hover:underline"
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -73,11 +73,15 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
             </Link>
             <Link
               href="/effects"
-              className="text-[11px] font-bold text-white/50 hover:text-white/80 hover:underline"
+              className="text-[11px] font-semibold text-[var(--fg-dim)] underline-offset-4 hover:text-[var(--fg-muted)] hover:underline"
             >
               All recipes
             </Link>
           </div>
+          <p className="mt-3 text-[11px] leading-5 text-[var(--fg-dim)]">
+            Cached Lab prototypes only · Live generation stays gated for eligible
+            invited accounts.
+          </p>
         </div>
       </section>
     );
@@ -88,30 +92,30 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
       data-home-explore-rail="lab"
       data-home-explore-rail-count={rail.length}
       aria-labelledby="home-explore-rail-title"
-      className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
+      className="border-t border-[var(--border)] bg-[var(--bg)] px-4 py-8 sm:px-7 lg:px-10"
     >
-      <div className="mx-auto max-w-[1400px]">
-        <div className="mb-3 flex items-end justify-between gap-3">
+      <div className="mx-auto max-w-[1200px]">
+        <div className="mb-4 flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--neon-pink)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">
               Explore · Lab recipes
             </p>
             <h2
               id="home-explore-rail-title"
-              className="mt-0.5 text-sm font-black tracking-tight text-white sm:text-base"
+              className="mt-1 font-display text-lg font-semibold tracking-[-0.02em] text-[var(--fg)] sm:text-xl"
             >
               Remake a Lab recipe
             </h2>
-            <p className="mt-0.5 max-w-xl text-[11px] leading-snug text-white/40">
+            <p className="mt-1 max-w-xl text-[12px] leading-5 text-[var(--fg-muted)]">
               Cached prototypes only — swipe, remake with your figure. Not
-              customer results.
+              customer results. Live gen stays gated.
             </p>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-3">
             <Link
               href={listing360Href}
               data-home-explore-rail-360
-              className="text-[11px] font-bold text-[#00D9FF] hover:underline"
+              className="text-[11px] font-semibold text-[var(--brand)] underline-offset-4 hover:underline"
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -124,11 +128,11 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                 })
               }
             >
-              Listing 360°
+              Listing 360° · Lab
             </Link>
             <Link
               href="/effects"
-              className="text-[11px] font-bold text-[var(--neon-pink)] hover:underline"
+              className="text-[11px] font-semibold text-[var(--fg-dim)] underline-offset-4 hover:text-[var(--fg-muted)] hover:underline"
             >
               All recipes →
             </Link>
@@ -136,7 +140,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
         </div>
 
         <div
-          className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           role="list"
         >
           {rail.map((item) => {
@@ -165,10 +169,10 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                     },
                   })
                 }
-                className={`group relative h-[9.5rem] w-[7.5rem] shrink-0 overflow-hidden rounded-2xl border transition duration-200 hover:-translate-y-0.5 sm:h-[11rem] sm:w-[9rem] ${
+                className={`group relative h-[10rem] w-[8rem] shrink-0 overflow-hidden rounded-xl border transition duration-200 hover:-translate-y-0.5 sm:h-[11.5rem] sm:w-[9.5rem] ${
                   is360
-                    ? "border-[#00D9FF]/45 shadow-[0_0_28px_rgba(0,217,255,0.12)]"
-                    : "border-white/10 hover:border-[var(--neon-pink)]/40"
+                    ? "border-[var(--brand)]/45 shadow-[var(--shadow-md)]"
+                    : "border-[var(--border)] hover:border-[var(--brand)]/35"
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -181,24 +185,24 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                   loading="lazy"
                   decoding="async"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/65 to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/10" />
                 <div className="relative z-10 flex h-full flex-col justify-between p-2.5">
                   <div className="flex flex-wrap gap-1">
-                    <span className="inline-flex rounded-full border border-white/15 bg-black/55 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/75 backdrop-blur">
+                    <span className="inline-flex rounded-md border border-white/15 bg-black/55 px-1.5 py-0.5 text-[8px] font-medium uppercase tracking-wide text-white/80 backdrop-blur-sm">
                       {badge}
                     </span>
                     {is360 ? (
-                      <span className="inline-flex rounded-full bg-[#00D9FF] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
+                      <span className="inline-flex rounded-md bg-[var(--brand)] px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-[var(--primary-foreground)]">
                         360
                       </span>
                     ) : null}
                   </div>
                   <div>
-                    <p className="text-[12px] font-black leading-tight text-white group-hover:text-[var(--neon-pink)] sm:text-[13px]">
+                    <p className="text-[12px] font-semibold leading-tight text-white group-hover:text-[var(--brand)] sm:text-[13px]">
                       {recipeName}
                     </p>
-                    <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--neon-pink)]/90 opacity-80 transition group-hover:opacity-100">
-                      Remake →
+                    <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/70 opacity-90 transition group-hover:text-[var(--brand)] group-hover:opacity-100">
+                      Remake · Lab →
                     </p>
                   </div>
                 </div>
@@ -206,6 +210,11 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
             );
           })}
         </div>
+
+        <p className="mt-4 text-[11px] leading-5 text-[var(--fg-dim)]">
+          Lab archive only · not Free Mini open trial · Live generation gated for
+          eligible invited accounts. Primary Generate stays above.
+        </p>
       </div>
     </section>
   );

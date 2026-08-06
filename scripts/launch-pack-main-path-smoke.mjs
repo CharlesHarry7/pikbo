@@ -25,23 +25,31 @@ const paywall = read("components/PaywallCard.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
 
-// Public homepage: honest Street Power-Up Moment hero + capped Lab proof wall.
+// Public homepage: gallery-calm hero + thin Lab Explore rail + designer stills.
 // Media is cached Lab sample only (not customer results / Pack archive).
 assert.match(home, /<HomeCinemaHero \/>/);
+assert.match(home, /<HomeExploreRecipeRail/);
+assert.match(home, /buildHomeShowcaseFeed/);
 assert.match(home, /<HomeDesignerGallery/);
-// assert.match(home, /<HomeExploreRecipeRail/); // unmounted
-// assert.match(home, /<HfProductRail/); // unmounted
-// gallery-calm: no buildHomeShowcaseFeed on home
+assert.doesNotMatch(home, /HomeViralWall|HfProductRail|HomeBrowseCta/);
 
 assert.doesNotMatch(home, /PublicLaunchPackSample/);
 assert.match(homeHero, /data-home-hero=["']designer-toy-gallery["']/);
+assert.match(homeHero, /data-home-hero-lab-live/);
+assert.match(homeHero, /not Free Mini open trial/);
+assert.match(homeHero, /Live generation stays gated/);
 assert.match(homeWall, /data-home-gallery=["']designer-toy["']/);
 assert.match(homeWall, /data-home-gallery|designer-toy|style-studies|潮玩/);
 assert.match(read("lib/designerToyGallery.ts"), /art-vinyl|blind-box|style-studies/);
+assert.match(
+  read("lib/designerToyGallery.ts"),
+  /effect=360-spin-showcase&source=gallery-pedestal/
+);
 const homeExploreRail = read("components/HomeExploreRecipeRail.tsx");
 assert.match(homeExploreRail, /data-home-explore-rail/);
-assert.match(homeExploreRail, /createGenerate360Href/);
+assert.match(homeExploreRail, /createGenerate360Href\(\s*["']home-explore-rail["']\)/);
 assert.match(homeExploreRail, /HOME_PROOF_BADGE|Lab · cached/);
+assert.match(homeExploreRail, /not Free Mini open trial/);
 assert.doesNotMatch(homeExploreRail, /data-home-moment-cta|Create my drop clip/);
 assert.match(
   homeHero,

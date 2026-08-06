@@ -12,7 +12,7 @@ const HERO_STILL = {
 
 /**
  * Money-path Generate door — listing 360 workbench in one click.
- * AIT-413: primary Generate on gallery-calm home (Moment stays product door).
+ * AIT-413 / AIT-449: primary Generate on gallery-calm home (Moment stays product door).
  */
 const HOME_HERO_360_HREF = createGenerate360Href("home-hero");
 
@@ -71,9 +71,13 @@ export function HomeCinemaHero() {
               Create with my toy
             </Link>
           </div>
-          <p className="mt-3 text-[11px] leading-5 text-[var(--fg-dim)]">
-            One-tap 360° workbench · or Street Power-Up Moment when you want the
-            fixed private path.
+          <p
+            className="mt-3 max-w-md text-[11px] leading-5 text-[var(--fg-dim)]"
+            data-home-hero-lab-live
+          >
+            Primary: Listing 360° workbench · Secondary: Street Power-Up Moment.
+            Lab samples below are cached style studies — not Free Mini open trial.
+            Live generation stays gated for eligible invited accounts.
           </p>
 
           <ul className="mt-8 flex flex-wrap gap-2 text-[11px] text-[var(--fg-dim)]">

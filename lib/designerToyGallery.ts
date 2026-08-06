@@ -117,7 +117,9 @@ export const DESIGNER_TOY_GALLERY: DesignerToyGalleryItem[] = [
     category: "Listing",
     toyKind: "vinyl-figures",
     src: "/moments/colorblock-pedestal.jpg",
-    href: "/effects/360-spin-showcase",
+    // Same shape as createGenerate360Href("gallery-pedestal") — keep static so
+    // this data module stays server-safe without importing remix helpers.
+    href: "/create?effect=360-spin-showcase&source=gallery-pedestal&ratio=1%3A1&duration=5&channel=etsy",
     badge: "Lab moment · pedestal",
     aspect: "16/9",
   },

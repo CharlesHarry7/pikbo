@@ -31,8 +31,9 @@ const proofList =
 const proofSlugs = [...proofList.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
 
 assert(proofSlugs.length === 8, "homepage proof whitelist must contain exactly 8 recipes");
-// Gallery-calm home (boss 2026-08): hero + designer-toy still gallery + trust.
-// No multi-rail carnival; no cartoon demo wall as primary showcase.
+// Gallery-calm home (boss 2026-08) + AIT-449 thin Lab density:
+// hero (primary Generate→360) → Explore recipe rail → designer stills → trust.
+// No carnival multi-rail (ViralWall / HfProductRail / floating browse).
 assert(
   home.includes("<HomeCinemaHero />") &&
     homeHero.includes('data-home-hero="designer-toy-gallery"') &&
@@ -44,22 +45,25 @@ assert(
     homeHero.includes("data-home-hero-360-cta") &&
     homeHero.includes('data-home-primary-generate="360"') &&
     homeHero.includes("Generate 360° listing spin") &&
+    homeHero.includes("data-home-hero-lab-live") &&
+    homeHero.includes("Live generation stays gated") &&
+    homeHero.includes("not Free Mini open trial") &&
     homeHero.includes("art-vinyl-guardian") &&
     homeHero.includes("Style study") &&
     !homeHero.includes("Beatbot") &&
     !homeHero.includes("beatbot-still") &&
+    home.includes("<HomeExploreRecipeRail") &&
+    home.includes("buildHomeShowcaseFeed") &&
     home.includes("<HomeDesignerGallery") &&
     home.includes("<HomeTrustFooter") &&
     !home.includes("<HomeViralWall") &&
-    !home.includes("<HomeExploreRecipeRail") &&
     !home.includes("<HfProductRail") &&
     !home.includes("<HomeBrowseCta") &&
-    !home.includes("buildHomeShowcaseFeed") &&
     !home.includes("PublicLaunchPackSample") &&
     !home.includes('from "@/components/HfExploreHome"') &&
     !home.includes("<HfExploreHome") &&
     (moments.match(/evidence: "Official Concept",/g) || []).length === 6,
-  "homepage must be calm hero + designer-toy gallery + trust (no multi-rail / cartoon demo wall)"
+  "homepage must be calm hero + Lab recipe rail + designer gallery + trust (no carnival multi-rail)"
 );
 // Dual-path /create: Generate→360 deep links open workbench (not forced Moment)
 assert(
@@ -93,16 +97,21 @@ assert(
   "designer gallery must use 潮玩 style-studies stills, not cartoon demo loops"
 );
 assert(
-  home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeDesignerGallery") &&
+  home.indexOf("<HomeCinemaHero") < home.indexOf("<HomeExploreRecipeRail") &&
+    home.indexOf("<HomeExploreRecipeRail") < home.indexOf("<HomeDesignerGallery") &&
     home.indexOf("<HomeDesignerGallery") < home.indexOf("<HomeTrustFooter"),
-  "home order: gallery hero → designer gallery → trust footer"
+  "home order: gallery hero → Lab recipe rail → designer gallery → trust footer"
 );
-// Secondary rails still exist for Explore/Lab surfaces (not mounted on home).
+// Thin Lab Explore rail remounted under hero (AIT-449) — honest Lab labels.
 const exploreRail = read("components/HomeExploreRecipeRail.tsx");
 assert(
-  exploreRail.includes("createGenerate360Href") ||
-    exploreRail.includes("HOME_PROOF"),
-  "explore recipe rail module remains available off-home"
+  exploreRail.includes('createGenerate360Href("home-explore-rail")') &&
+    exploreRail.includes("data-home-explore-rail") &&
+    exploreRail.includes("HOME_PROOF_BADGE") &&
+    exploreRail.includes("Live") &&
+    exploreRail.includes("not Free Mini open trial") &&
+    !exploreRail.includes("data-home-moment-cta"),
+  "explore recipe rail must deep-link Generate→360 with honest Lab copy"
 );
 const homeRail = read("components/HfProductRail.tsx");
 assert(
@@ -205,11 +214,21 @@ assert(
   assert(
     fourSurface["components/HfProductRail.tsx"].includes("var(--neon-pink)") &&
       fourSurface["components/LibraryGrid.tsx"].includes("var(--neon-pink)") &&
-      fourSurface["components/HomeBrowseCta.tsx"].includes("var(--neon-pink)") &&
+      fourSurface["components/HomeBrowseCta.tsx"].includes("var(--neon-pink)"),
+    "HF rails + Library + browse CTA use neon-pink board tokens"
+  );
+  // AIT-449: Home Explore rail on gallery-calm brand tokens (not carnival neon-pink)
+  assert(
+    fourSurface["components/HomeExploreRecipeRail.tsx"].includes(
+      "var(--brand)"
+    ) &&
       fourSurface["components/HomeExploreRecipeRail.tsx"].includes(
+        "var(--fg-muted)"
+      ) &&
+      !fourSurface["components/HomeExploreRecipeRail.tsx"].includes(
         "var(--neon-pink)"
       ),
-    "Home rails + Library + browse CTA use neon-pink board tokens"
+    "Home Explore recipe rail uses gallery-calm brand tokens"
   );
   assert(
     fourSurface["components/CreateStudio.tsx"].includes("rgba(255,78,205") &&
