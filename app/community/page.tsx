@@ -40,15 +40,15 @@ const COMMUNITY_FAQ = [
   },
   {
     q: "How do I publish my clip?",
-    a: "Generate a live paid/clean deliverable → open Library → Publish to Community (sign-in required). Lab demos and Free Mini raw provider files cannot be posted as public UGC (T6).",
+    a: "Generate a live paid/clean deliverable → open Library → Publish to Community (sign-in required). Lab demos and free-plan raw provider files cannot be posted as public UGC (T6).",
   },
   {
     q: "What is Remix vs Inside?",
     a: "Remix opens Generate with that recipe on a toy photo you own. Inside shows a reference poster, cached output, settings, and the evidence status.",
   },
   {
-    q: "Do Lab demos use Free Mini credits?",
-    a: "Cached Lab playback costs 0 credits. Free Mini is for one live Seedance Mini clip (about 5s · 480p · on-player mark). After trial, Lab still free; live needs a plan.",
+    q: "Do Lab demos cost credits?",
+    a: "Cached Lab playback costs 0 credits and does not process your upload. When Live is enabled for an eligible account, Generate shows the exact credit quote before submission; protected live delivery remains gated.",
   },
 ] as const;
 
@@ -353,7 +353,7 @@ export default async function CommunityPage() {
         <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
           <h2 className="text-sm font-bold text-white">Community FAQ</h2>
           <p className="mt-1 text-xs text-white/40">
-            Lab only · not UGC · Remix · Free Mini
+            Lab only · not UGC · Remix · Live gated
           </p>
           <dl className="mt-4 space-y-4">
             {COMMUNITY_FAQ.map((f) => (
