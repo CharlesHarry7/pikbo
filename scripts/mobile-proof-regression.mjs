@@ -45,7 +45,7 @@ assert.match(
     "360-spin-showcase must be in the first 4 mobile wall slots"
   );
 }
-// AIT-146: 360 card is direct Generate (recipe_use); non-360 still project_open when projectHref set.
+// AIT-160: 360 card is direct Generate (recipe_use); non-360 still project_open when projectHref set.
 assert.match(
   wall,
   /is360 \|\| !item\.projectHref[\s\S]*\? "recipe_use"[\s\S]*: "project_open"/,
