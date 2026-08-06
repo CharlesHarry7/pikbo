@@ -529,6 +529,20 @@ assert(
   "i18n must keep Cached Lab / 0 credits honesty on free path chips"
 );
 
+// AIT-396: guides longform residual — FreeTrialCta no longer sells Mini 5s as public try.
+const guidesSlugSource = read("app/guides/[slug]/page.tsx");
+assert(
+  !guidesSlugSource.includes("Mini 5s") &&
+    !guidesSlugSource.includes("Free Mini") &&
+    !guidesSlugSource.includes('labelTry="Try free · Mini'),
+  "guides/[slug] must not hardcode Mini 5s / Free Mini as public free trial CTA"
+);
+assert(
+  guidesSlugSource.includes('labelTry="Try free · Lab →"') &&
+    guidesSlugSource.includes("FreeTrialCta"),
+  "guides/[slug] must prefer Lab-first try label"
+);
+
 // AIT-298: Home suite residual — HowItWorks / Onboarding / FeatureCarousel.
 const howItWorksSource = read("components/HowItWorks.tsx");
 assert(
