@@ -821,4 +821,22 @@ assert.match(
   "Explore page eyebrows/CTAs/path accents use --brand copper"
 );
 
+// AIT-611: LandingHowItWorks residual competitor lime → gallery-calm copper
+const landingHowItWorksSrc = read("components/LandingHowItWorks.tsx");
+assert.doesNotMatch(
+  landingHowItWorksSrc,
+  /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+  "LandingHowItWorks must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+);
+assert.match(
+  landingHowItWorksSrc,
+  /var\(--brand\)/,
+  "LandingHowItWorks step-number chrome uses --brand copper fill"
+);
+assert.match(
+  landingHowItWorksSrc,
+  /rgba\(196\s*,\s*165\s*,\s*116/,
+  "LandingHowItWorks step-number glow uses copper board rgba(196,165,116)"
+);
+
 console.log("generate-360-cta-smoke: ok");
