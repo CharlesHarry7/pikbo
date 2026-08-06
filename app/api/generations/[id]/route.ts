@@ -92,12 +92,45 @@ export async function GET(req: Request, { params }: Props) {
 /**
  * Phase D — cancel a queued/running local job (ledger only).
  * Does not interrupt an in-flight soft-launch fal request.
+ *
+ * AIT-183: durable private Moments never use process-memory Cancel.
+ * Owner durable rows return DURABLE_NO_CANCEL (refresh/poll only);
+ * missing/foreign UUID stay uniform NOT_FOUND (no ownership leak).
  */
-export async function DELETE(_req: Request, { params }: Props) {
+export async function DELETE(req: Request, { params }: Props) {
   const { id } = await params;
   const session = await ensureSession();
   const result = cancelJob({ sessionId: session.id, id });
   if (!result.ok) {
+    // Durable owner path — never invent a process-memory cancel.
+    if (result.code === "NOT_FOUND" && isUuid(id)) {
+      const authUser = await getAuthUserFromRequest(req);
+      if (authUser) {
+        const privateJob = await getPrivateLibraryJobForOwner({
+          jobId: id,
+          userId: authUser.id,
+        });
+        if (privateJob) {
+          const open =
+            privateJob.status === "queued" || privateJob.status === "running";
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_NO_CANCEL",
+              id,
+              message: open
+                ? "This durable Moment is still rendering. Refresh Library — process-memory Cancel does not apply."
+                : "This durable Moment cannot use process-memory Cancel. Refresh Library or start a new attempt from Create.",
+              mode: "supabase-private",
+              durable: true,
+              status: privateJob.status,
+            },
+            { status: 422 }
+          );
+        }
+      }
+    }
+
     const status =
       result.code === "NOT_FOUND"
         ? 404
@@ -112,6 +145,7 @@ export async function DELETE(_req: Request, { params }: Props) {
         code: result.code,
         id,
         message: result.message,
+        mode: "local-memory",
         job: result.job
           ? toPublicJob(result.job, session.id)
           : undefined,
