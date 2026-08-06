@@ -1,5 +1,5 @@
 /**
- * AIT-381: CreateStudio workbench post-generate result fold.
+ * AIT-381 + AIT-392: CreateStudio workbench post-generate result fold.
  *
  * After a Lab try or owned generate finishes on the workbench path
  * (`!fixedMomentContract`, esp. 360-spin-showcase), mobile sticky + stage
@@ -7,6 +7,9 @@
  *
  * Allowed primaries: replay | library (save/open) | generate-again.
  * Fixed Moment contract and freeLiveOpen gates stay outside this helper.
+ *
+ * AIT-392: Library primary may deep-link `?job=` only for owner private
+ * durable results (UUID requestId). Lab demo never deep-links as private.
  *
  * Labels mirror lib/provenance.ts (Cached demo / Local Library) so strip-type
  * smokes can import this module without path-alias resolution.
@@ -34,6 +37,13 @@ export type WorkbenchResultPrimary = {
 /** Keep in lockstep with PROVENANCE.cachedDemo / localLibrary. */
 const CACHED_DEMO = "Cached demo";
 const LOCAL_LIBRARY = "Local Library";
+
+/**
+ * UUID shape for Library deep-link job / durable request ids.
+ * Must stay aligned with LibraryGrid `LIBRARY_JOB_ID_RE` / parseDeepLinkJobId.
+ */
+const LIBRARY_DEEP_LINK_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
  * Resolve the single mobile sticky / stage primary for workbench `status=done`.
@@ -84,4 +94,42 @@ export function resolveWorkbenchResultPrimary(input: {
     stickyHint: `${LOCAL_LIBRARY} · this browser only`,
     provenanceKind: "live-local",
   };
+}
+
+/**
+ * AIT-392: owner-safe Library href for workbench fold primary.
+ *
+ * Fail-closed:
+ * - Lab demo → plain `/library` (never claim a private owned clip)
+ * - live-local / missing privateResult → plain `/library`
+ * - private without valid UUID requestId → plain `/library` (list, no fake open)
+ * - private + UUID requestId → `/library?job=<id>` for exact owner open/highlight
+ */
+export function libraryWorkbenchHandoffHref(input: {
+  demo: boolean;
+  privateResult: boolean;
+  requestId?: string | null;
+}): string {
+  if (input.demo) return "/library";
+  if (!input.privateResult) return "/library";
+  const id =
+    typeof input.requestId === "string" ? input.requestId.trim() : "";
+  if (!id || !LIBRARY_DEEP_LINK_ID_RE.test(id)) return "/library";
+  return `/library?job=${encodeURIComponent(id)}`;
+}
+
+/**
+ * True when a Library list row matches a deep-link id (durable job id or requestId).
+ * Owner list is already fail-closed; this only selects among visible owner rows.
+ */
+export function libraryJobMatchesDeepLink(
+  job: { id?: string; requestId?: string },
+  deepLinkId: string
+): boolean {
+  if (!deepLinkId) return false;
+  if (job.id === deepLinkId) return true;
+  if (typeof job.requestId === "string" && job.requestId === deepLinkId) {
+    return true;
+  }
+  return false;
 }

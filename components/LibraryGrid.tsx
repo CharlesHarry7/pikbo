@@ -15,6 +15,7 @@ import {
   libraryNewAttemptButtonLabel,
   libraryNotYourToyCopy,
 } from "@/lib/privateGenerationResultsPure.mjs";
+import { libraryJobMatchesDeepLink } from "@/lib/workbenchResultFold";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
 type JobCapabilities = {
@@ -393,7 +394,7 @@ function LibraryGridInner() {
     [jobs]
   );
 
-  // Prefer explicit selection, then deep-link job, then newest/open job.
+  // Prefer explicit selection, then deep-link job/requestId, then newest/open.
   const selectedJob = useMemo(() => {
     if (sortedJobs.length === 0) return null;
     if (selectedId) {
@@ -401,7 +402,9 @@ function LibraryGridInner() {
       if (match) return match;
     }
     if (deepLinkJobId) {
-      const linked = sortedJobs.find((job) => job.id === deepLinkJobId);
+      const linked = sortedJobs.find((job) =>
+        libraryJobMatchesDeepLink(job, deepLinkJobId)
+      );
       if (linked) return linked;
     }
     return sortedJobs[0] || null;
@@ -409,14 +412,15 @@ function LibraryGridInner() {
   const activeSelectedId = selectedJob?.id ?? null;
 
   /**
-   * Deep-linked job id that is not on this owner's visible list after load.
+   * Deep-linked job/request id that is not on this owner's visible list after load.
    * Fail-closed: no media, no effect metadata invent, not-your-toy copy only.
+   * Matches durable id or requestId mirror — never invents foreign rows.
    */
   const notYourToy =
     Boolean(me?.signedIn) &&
     jobsReady &&
     Boolean(deepLinkJobId) &&
-    !sortedJobs.some((job) => job.id === deepLinkJobId);
+    !sortedJobs.some((job) => libraryJobMatchesDeepLink(job, deepLinkJobId!));
 
   useEffect(() => {
     if (!me?.signedIn || openCount === 0) return;

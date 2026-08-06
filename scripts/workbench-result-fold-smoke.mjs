@@ -216,8 +216,19 @@ assert.match(
 );
 assert.match(
   createStudio,
+  /libraryWorkbenchHandoffHref/,
+  "Library fold primary must use owner-safe handoff href helper"
+);
+assert.match(
+  createStudio,
+  /href=\{workbenchLibraryHref\}/,
+  "Library fold primary must bind workbenchLibraryHref (may carry ?job=)"
+);
+// Secondary / fixed-Moment Open Library links stay plain list (no deep-link thrash).
+assert.match(
+  createStudio,
   /href=["']\/library["']/,
-  "Library handoff must link /library"
+  "plain /library remains for non-fold secondary/Moment paths"
 );
 assert.match(
   createStudio,

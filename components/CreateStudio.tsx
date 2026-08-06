@@ -87,7 +87,10 @@ import {
 } from "@/components/GenerateWaitStage";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { useI18n } from "@/components/LanguageProvider";
-import { resolveWorkbenchResultPrimary } from "@/lib/workbenchResultFold";
+import {
+  libraryWorkbenchHandoffHref,
+  resolveWorkbenchResultPrimary,
+} from "@/lib/workbenchResultFold";
 import { getJobIntent, JOB_INTENTS, type JobIntentId } from "@/lib/jobIntents";
 import {
   composeExtraWithIdentity,
@@ -1459,15 +1462,23 @@ export function CreateStudio({
   /**
    * AIT-381: workbench-only post-generate primary (mobile sticky + stage).
    * Fixed Moment keeps its own after-path chrome.
+   * AIT-392: Library primary deep-links owner requestId when private durable.
    */
+  const workbenchResultDemo = Boolean(activeVersion?.demo ?? demo);
+  const workbenchResultPrivate = Boolean(activeVersion?.privateResult);
   const workbenchResultPrimary =
     !fixedMomentContract && status === "done" && videoUrl
       ? resolveWorkbenchResultPrimary({
-          demo: Boolean(activeVersion?.demo ?? demo),
-          privateResult: Boolean(activeVersion?.privateResult),
+          demo: workbenchResultDemo,
+          privateResult: workbenchResultPrivate,
           playable: playableVideo,
         })
       : null;
+  const workbenchLibraryHref = libraryWorkbenchHandoffHref({
+    demo: workbenchResultDemo,
+    privateResult: workbenchResultPrivate,
+    requestId: activeVersion?.requestId,
+  });
 
   function replayResultVideo() {
     document
@@ -3321,9 +3332,14 @@ export function CreateStudio({
                   >
                     {workbenchResultPrimary.kind === "library" ? (
                       <Link
-                        href="/library"
+                        href={workbenchLibraryHref}
                         className="btn btn-primary flex w-full items-center justify-center py-3 text-sm font-black"
                         data-result-fold-action="library"
+                        data-library-handoff={
+                          workbenchLibraryHref.includes("job=")
+                            ? "request-id"
+                            : "list"
+                        }
                       >
                         {workbenchResultPrimary.label}
                       </Link>
@@ -3900,9 +3916,14 @@ export function CreateStudio({
               </p>
               {workbenchResultPrimary.kind === "library" ? (
                 <Link
-                  href="/library"
+                  href={workbenchLibraryHref}
                   className="btn btn-primary flex w-full items-center justify-center py-3 text-sm font-black"
                   data-result-fold-action="library"
+                  data-library-handoff={
+                    workbenchLibraryHref.includes("job=")
+                      ? "request-id"
+                      : "list"
+                  }
                 >
                   {workbenchResultPrimary.label}
                 </Link>
