@@ -4,6 +4,12 @@
  */
 
 import { CREDITS_PER_VIDEO } from "@/lib/pricing";
+import {
+  buildCreateGenerateStillFields as buildCreateGenerateStillFieldsPure,
+  composerHasUsableToyInput as composerHasUsableToyInputPure,
+  isComposerDataUrlStill as isComposerDataUrlStillPure,
+  resolveGenerateStill as resolveGenerateStillPure,
+} from "@/lib/createGenerateStillPure.mjs";
 
 /** Settlement of the most recent generate attempt (not a historical version). */
 export type RequestCreditState =
@@ -42,55 +48,89 @@ export type GenerationSpec = {
   requestId?: string;
 };
 
+export type GenerateStillMode =
+  | "retry-still"
+  | "retry-asset"
+  | "asset"
+  | "image"
+  | "none";
+
+export type ResolvedGenerateStill = {
+  /** Local still for interning / history (may be set even when POSTing assetId). */
+  image?: string;
+  assetId?: string;
+  /** What the generate POST should prefer. */
+  mode: GenerateStillMode;
+};
+
+export type CreateGenerateStillFields = {
+  image?: string;
+  assetId?: string;
+  /** Cached-only recovery still; live never transmits this. */
+  fallbackImage?: string;
+  canSubmit: boolean;
+  error?: string;
+};
+
+/** True only for a real data-URL still — blob: previews and empty strings fail. */
+export function isComposerDataUrlStill(
+  image: string | null | undefined
+): boolean {
+  return isComposerDataUrlStillPure(image);
+}
+
+/**
+ * Composer has a still that can drive Generate without a fresh local file pick:
+ * durable private assetId (same-photo handoff / recent rail) or a data-URL upload.
+ * Blob-only previews without assetId do not count (no provider payload).
+ */
+export function composerHasUsableToyInput(input: {
+  image?: string | null;
+  assetId?: string | null;
+}): boolean {
+  return composerHasUsableToyInputPure(input);
+}
+
 /**
  * Decide which still to POST for a generate attempt.
  * Retry freezes the version's still — never the composer's latest re-upload.
  *
- * `image` may still be present in `asset` mode so the client can intern the
- * still / write Library history without re-downloading the asset.
- * POST body should send assetId only when mode is asset|retry-asset.
+ * `image` may still be present in `asset` / `retry-asset` mode so the client can
+ * intern the still / write Library history without re-downloading the asset.
+ * POST body should send durable assetId (no Base64) when mode is asset|retry-asset
+ * on the live path — see buildCreateGenerateStillFields.
  */
 export function resolveGenerateStill(input: {
   retry?: GenerationSpec | null;
   sourceStore: Record<string, string>;
   imageOverride?: string | null;
-  /** Current composer still (data URL). */
+  /** Current composer still (data URL or blob preview). */
   image?: string | null;
-  /** Current composer Phase D asset id. */
+  /** Current composer durable / Phase D asset id. */
   assetId?: string | null;
-}): {
-  /** Local still for interning / history (may be set even when POSTing assetId). */
-  image?: string;
-  assetId?: string;
-  /** What the generate POST should prefer. */
-  mode: "retry-still" | "retry-asset" | "asset" | "image" | "none";
-} {
-  const retry = input.retry ?? null;
-  if (retry) {
-    const frozen = resolveSpecImage(retry, input.sourceStore);
-    if (frozen) {
-      // Always post the frozen still — never ambient composer assetId.
-      return { image: frozen, mode: "retry-still" };
-    }
-    if (retry.assetId) {
-      return { assetId: retry.assetId, mode: "retry-asset" };
-    }
-    return { mode: "none" };
-  }
-  if (input.imageOverride) {
-    return { image: input.imageOverride, mode: "image" };
-  }
-  if (input.assetId) {
-    return {
-      assetId: input.assetId,
-      image: input.image || undefined,
-      mode: "asset",
-    };
-  }
-  if (input.image) {
-    return { image: input.image, mode: "image" };
-  }
-  return { mode: "none" };
+}): ResolvedGenerateStill {
+  return resolveGenerateStillPure(input) as ResolvedGenerateStill;
+}
+
+/**
+ * AIT-247: shape Create → POST /api/generate still fields after same-photo hydrate.
+ *
+ * Live (!demoMode): durable assetId only — never re-post Base64 or blob preview.
+ * Cached (demoMode): may dual-send a small data URL for process-local recovery.
+ * Fail-closed without a usable still (honest client error, no provider call).
+ */
+export function buildCreateGenerateStillFields(input: {
+  mode: GenerateStillMode;
+  assetId?: string | null;
+  /** Resolved still image (data URL preferred; blob previews ignored for POST). */
+  image?: string | null;
+  /** Ambient composer image when resolved still is asset-only. */
+  ambientImage?: string | null;
+  demoMode: boolean;
+  /** Dual-send comfort cap for cached JSON bodies (default ~3.5MB). */
+  dualImageMaxLen?: number;
+}): CreateGenerateStillFields {
+  return buildCreateGenerateStillFieldsPure(input) as CreateGenerateStillFields;
 }
 
 /** FNV-1a style key for interning large stills in a session Map. */
