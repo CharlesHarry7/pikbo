@@ -188,6 +188,16 @@ assert(
   "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
 
+// AIT-261: owner Library chrome off competitor lime (status, empty, ring, wash)
+assert(
+  !/c8ff3d|200\s*,\s*255\s*,\s*61/.test(library),
+  "LibraryGrid must not use competitor lime #c8ff3d / rgba(200,255,61,…)"
+);
+assert(
+  /var\(--neon-pink\)|rgba\(255\s*,\s*78\s*,\s*205/.test(library),
+  "LibraryGrid accents use neon-pink board tokens"
+);
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
