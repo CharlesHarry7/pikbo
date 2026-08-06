@@ -577,7 +577,7 @@ export default function ImageStudioPage() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={6}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm outline-none focus:border-[var(--mint)]/50 focus:shadow-[0_0_0_3px_rgba(200,255,61,0.1)]"
+              className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm outline-none focus:border-[var(--mint)]/50 focus:shadow-[0_0_0_3px_rgba(255,78,205,0.1)]"
             />
             <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/35">
               Aspect
