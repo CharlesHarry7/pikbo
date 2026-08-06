@@ -211,6 +211,21 @@ assert(
   );
 }
 
+// AIT-423: Models hub page residual lime → neon-pink board tokens
+{
+  const modelsPage = read("app/models/page.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61|var\(--mint\)/.test(modelsPage),
+    "Models hub page must not hard-code competitor lime (#c8ff3d / rgba 200,255,61 / mint)"
+  );
+  assert(
+    modelsPage.includes("var(--neon-pink)") &&
+      modelsPage.includes("var(--void)") &&
+      modelsPage.includes("rgba(255,78,205"),
+    "Models hub primary chrome uses neon-pink / void board tokens"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
