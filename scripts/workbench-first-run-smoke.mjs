@@ -248,4 +248,125 @@ assert.match(
   "Free Mini trial-used UI must be gated by freeLiveOpen"
 );
 
+// ── AIT-344 residual: sticky pad tokens + finite open + source honesty ────
+const globalsCss = read("app/globals.css");
+const jobIntents = read("lib/jobIntents.ts");
+
+assert.match(
+  globalsCss,
+  /--sticky-generate-pad:/,
+  "globals must define --sticky-generate-pad for workbench content pad"
+);
+assert.match(
+  globalsCss,
+  /--sticky-generate-pad-safe:/,
+  "globals must define --sticky-generate-pad-safe for nav-less Moment"
+);
+assert.match(
+  globalsCss,
+  /--mobile-nav-clearance:/,
+  "globals must define --mobile-nav-clearance for sticky bottom offset"
+);
+assert.match(
+  createStudio,
+  /pb-\[var\(--sticky-generate-pad\)\]/,
+  "workbench content must pad with --sticky-generate-pad (not bare pb-36)"
+);
+assert.match(
+  createStudio,
+  /pb-\[var\(--sticky-generate-pad-safe\)\]/,
+  "fixed Moment content must pad with --sticky-generate-pad-safe"
+);
+assert.doesNotMatch(
+  createStudio,
+  /\bpb-36\b/,
+  "CreateStudio must not use bare pb-36 under sticky Generate"
+);
+assert.match(
+  createStudio,
+  /bottom-\[var\(--mobile-nav-clearance\)\]/,
+  "workbench sticky must sit on --mobile-nav-clearance"
+);
+assert.match(
+  createStudio,
+  /bottom-\[var\(--floating-cta-safe-bottom\)\]/,
+  "Moment sticky must sit on --floating-cta-safe-bottom"
+);
+assert.match(
+  createStudio,
+  /data-create-source=\{\s*initialSource \? initialSource\.slice\(0, 64\) : undefined\s*\}/,
+  "CreateStudio must expose entry source for Home→360 deep links"
+);
+assert.match(
+  createPage,
+  /data-create-source=\{/,
+  "workbench shell must mark data-create-source from query"
+);
+assert.match(
+  createStudio,
+  /timeoutMs:\s*STUDIO_SESSION_BOOT_MS/,
+  "CreateStudio open must use finite STUDIO_SESSION_BOOT_MS wall-clock"
+);
+assert.match(
+  createStudio,
+  /data-studio-open-state=\{sessionBoot\}/,
+  "finite Studio open state marker required"
+);
+assert.match(
+  createStudio,
+  /data-studio-open-retry/,
+  "Studio open timeout must expose Retry access check"
+);
+assert.match(
+  createStudio,
+  /data-lab-sample-honesty=["']owned-path["']/,
+  "Lab still must mark honest owned-photo replace path"
+);
+assert.match(
+  createStudio,
+  /not your photo/,
+  "Lab still must say not your photo (no fake UGC)"
+);
+
+// Home deep-link sources that land on effect=360-spin-showcase
+for (const source of [
+  "home-hero",
+  "home-proof-wall",
+  "home-explore-rail",
+  "hf-product-rail",
+]) {
+  assert.match(
+    jobIntents,
+    /createGenerate360Href/,
+    "createGenerate360Href required for Home→360 sources"
+  );
+  // Source tags live on call sites; helper must accept optional source
+  assert.match(
+    jobIntents,
+    /export function createGenerate360Href\(source\?: string\)/,
+    "createGenerate360Href must accept source tag"
+  );
+  void source;
+}
+
+// Known Home→360 call sites (proof residual stack lands honest source tags)
+const homeProof = read("components/HomeViralWall.tsx");
+const homeExplore = read("components/HomeExploreRecipeRail.tsx");
+const hfRail = read("components/HfProductRail.tsx");
+assert.match(
+  homeProof,
+  /createGenerate360Href\(["']home-proof-wall["']\)/,
+  "home-proof-wall must deep-link Generate 360 with source tag"
+);
+assert.match(
+  homeExplore,
+  /createGenerate360Href\(["']home-explore-rail["']\)/,
+  "home-explore-rail must deep-link Generate 360 with source tag"
+);
+assert.match(
+  hfRail,
+  /createGenerate360Href\(["']hf-product-rail["']\)/,
+  "hf-product-rail must deep-link Generate 360 with source tag"
+);
+
 console.log("workbench-first-run-smoke: ok");

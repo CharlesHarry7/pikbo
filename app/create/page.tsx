@@ -136,6 +136,11 @@ export default async function CreatePage({
         data-workbench-first-run="upload-sticky"
         data-create-shell="generate-workbench"
         data-create-shell-pad="sticky-with-tab"
+        data-create-source={
+          typeof sp.source === "string" && sp.source.trim()
+            ? sp.source.trim().slice(0, 64)
+            : undefined
+        }
         data-lab-sample-try={firstRunSample ? "1" : undefined}
         data-first-run-sample={firstRunSample || undefined}
       >
@@ -217,8 +222,9 @@ export default async function CreatePage({
   return (
     <GuestMomentCreateGate>
       <div
-        className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-24 text-[var(--cream)]"
+        className="relative min-h-screen overflow-hidden bg-[var(--void)] pb-[var(--sticky-generate-pad-safe)] text-[var(--cream)]"
         data-create-contract="fixed-moment"
+        data-create-shell-pad="sticky-only"
         data-fixed-moment-effect={FIXED_MOMENT_EFFECT}
       >
         <div
