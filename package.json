@@ -27,6 +27,7 @@
     "moment-contract-regression": "node scripts/moment-contract-regression.mjs",
     "generate-360-cta-smoke": "node scripts/generate-360-cta-smoke.mjs",
     "workbench-result-fold-smoke": "node scripts/workbench-result-fold-smoke.mjs",
+    "library-workbench-deeplink-smoke": "node scripts/library-workbench-deeplink-smoke.mjs",
     "create-route-360-smoke": "node --experimental-strip-types scripts/create-route-360-smoke.mjs",
     "generate-workbench-lab-honesty-smoke": "node scripts/generate-workbench-lab-honesty-smoke.mjs",
     "recovery-cost-gate": "node scripts/recovery-cost-gate.mjs",

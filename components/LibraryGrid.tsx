@@ -24,6 +24,7 @@ import {
   libraryEmpty360Href,
   libraryEmptyMomentHref,
 } from "@/lib/libraryEmpty";
+import { libraryJobMatchesDeepLink } from "@/lib/workbenchResultFold";
 import {
   acceptControlledLibraryNewAttemptUrl,
   libraryDurableTerminalFailureCopy,
@@ -546,7 +547,7 @@ function LibraryGridInner() {
     [jobs]
   );
 
-  // Prefer explicit selection, then deep-link job, then newest/open job.
+  // Prefer explicit selection, then deep-link job/requestId, then newest/open.
   const selectedJob = useMemo(() => {
     if (sortedJobs.length === 0) return null;
     if (selectedId) {
@@ -554,16 +555,19 @@ function LibraryGridInner() {
       if (match) return match;
     }
     if (deepLinkJobId) {
-      const linked = sortedJobs.find((job) => job.id === deepLinkJobId);
+      const linked = sortedJobs.find((job) =>
+        libraryJobMatchesDeepLink(job, deepLinkJobId)
+      );
       if (linked) return linked;
     }
     return sortedJobs[0] || null;
   }, [sortedJobs, selectedId, deepLinkJobId]);
   const activeSelectedId = selectedJob?.id ?? null;
 
+  // Match durable id or requestId mirror — workbench fold may hand off requestId.
   const listHasDeepLink =
     Boolean(deepLinkJobId) &&
-    jobs.some((job) => job.id === deepLinkJobId);
+    jobs.some((job) => libraryJobMatchesDeepLink(job, deepLinkJobId!));
 
   /**
    * Deep-link ownership resolve (AIT-103 / AIT-110 / AIT-319).
@@ -618,11 +622,12 @@ function LibraryGridInner() {
           if (cancelled) return;
           const job = body.job;
           // Fail-closed: require ok + visible account job (never owned:false / demo).
+          // Accept id or requestId so workbench `?job=<requestId>` does not hang.
           if (
             response.ok &&
             body.ok &&
             job &&
-            job.id === deepLinkJobId &&
+            libraryJobMatchesDeepLink(job, deepLinkJobId) &&
             visibleAccountJob(job)
           ) {
             setJobs((prev) => {

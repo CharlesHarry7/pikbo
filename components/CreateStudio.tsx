@@ -49,6 +49,7 @@ import { seedanceModelLabel } from "@/lib/models";
 import { parseRemixSearchParams } from "@/lib/remixIntent";
 import {
   homeGenerateEntryLabel,
+  isGenerate360Effect,
   isHomeGenerateEntrySource,
   WORKBENCH_LAB_LIVE_HONESTY,
 } from "@/lib/createRouteContract";
@@ -92,7 +93,10 @@ import {
 } from "@/components/GenerateWaitStage";
 import { GenerateAfterPath } from "@/components/GenerateAfterPath";
 import { useI18n } from "@/components/LanguageProvider";
-import { resolveWorkbenchResultPrimary } from "@/lib/workbenchResultFold";
+import {
+  libraryWorkbenchHandoffHref,
+  resolveWorkbenchResultPrimary,
+} from "@/lib/workbenchResultFold";
 import { getJobIntent, JOB_INTENTS, type JobIntentId } from "@/lib/jobIntents";
 import {
   composeExtraWithIdentity,
@@ -1473,17 +1477,35 @@ export function CreateStudio({
   });
 
   /**
-   * AIT-469 / AIT-381: workbench-only post-generate primary (mobile sticky + stage).
-   * Fixed Moment keeps its own after-path chrome.
+   * AIT-529 / AIT-469 / AIT-392: workbench-only post-generate primary
+   * (mobile sticky + stage). Fixed Moment keeps its own after-path chrome.
+   * One next action: download | Library (owner deep-link) | re-spin / replay.
    */
+  const workbenchResultDemo = Boolean(activeVersion?.demo ?? demo);
+  const workbenchResultPrivate = Boolean(activeVersion?.privateResult);
+  const workbenchDownloadReady = Boolean(
+    activeVersion?.requestId ||
+      (videoUrl && isSafeDeliverableUrl(videoUrl))
+  );
+  const workbenchListing360 = isGenerate360Effect(
+    activeVersion?.effect || effect
+  );
   const workbenchResultPrimary =
     !fixedMomentContract && status === "done" && videoUrl
       ? resolveWorkbenchResultPrimary({
-          demo: Boolean(activeVersion?.demo ?? demo),
-          privateResult: Boolean(activeVersion?.privateResult),
+          demo: workbenchResultDemo,
+          privateResult: workbenchResultPrivate,
           playable: playableVideo,
+          downloadAllowed,
+          downloadReady: workbenchDownloadReady,
+          listing360: workbenchListing360,
         })
       : null;
+  const workbenchLibraryHref = libraryWorkbenchHandoffHref({
+    demo: workbenchResultDemo,
+    privateResult: workbenchResultPrivate,
+    requestId: activeVersion?.requestId,
+  });
 
   function replayResultVideo() {
     document
@@ -3393,7 +3415,7 @@ export function CreateStudio({
                   </p>
                 </div>
 
-                {/* AIT-469: one primary next action above advanced after-path chrome */}
+                {/* AIT-529: one primary next action above advanced after-path chrome */}
                 {workbenchResultPrimary ? (
                   <div
                     className="mx-auto mt-3 w-full max-w-md"
@@ -3403,11 +3425,26 @@ export function CreateStudio({
                       workbenchResultPrimary.provenanceKind
                     }
                   >
-                    {workbenchResultPrimary.kind === "library" ? (
+                    {workbenchResultPrimary.kind === "download" ? (
+                      <button
+                        type="button"
+                        onClick={() => void downloadActiveResult()}
+                        className="btn btn-primary w-full py-3 text-sm font-black"
+                        data-result-fold-action="download"
+                        data-create-download="fold-primary"
+                      >
+                        {workbenchResultPrimary.label}
+                      </button>
+                    ) : workbenchResultPrimary.kind === "library" ? (
                       <Link
-                        href="/library"
+                        href={workbenchLibraryHref}
                         className="btn btn-primary flex w-full items-center justify-center py-3 text-sm font-black"
                         data-result-fold-action="library"
+                        data-library-handoff={
+                          workbenchLibraryHref.includes("job=")
+                            ? "request-id"
+                            : "list"
+                        }
                       >
                         {workbenchResultPrimary.label}
                       </Link>
@@ -3427,6 +3464,9 @@ export function CreateStudio({
                         disabled={!ownsRights}
                         className="btn btn-primary w-full py-3 text-sm font-black disabled:opacity-50"
                         data-result-fold-action="generate-again"
+                        data-result-respin={
+                          workbenchListing360 ? "360" : undefined
+                        }
                       >
                         {workbenchResultPrimary.label}
                       </button>
@@ -3531,39 +3571,42 @@ export function CreateStudio({
                     : `${PROVENANCE.liveGeneration} — each run creates a separate version. Provider failures restore credits when confirmed; TIMEOUT / network / cancel stay refund unconfirmed.`}
                 </p>
                 <div className="mt-4 flex flex-col items-center gap-2">
-                  {downloadAllowed &&
-                  (activeVersion?.requestId ||
-                    (videoUrl && isSafeDeliverableUrl(videoUrl))) ? (
-                    <button
-                      type="button"
-                      data-create-download="gated"
-                      className="btn btn-primary w-full max-w-sm px-6 py-3.5 text-sm font-black tracking-tight sm:w-auto sm:min-w-[14rem]"
-                      onClick={() => void downloadActiveResult()}
-                    >
-                      {t("create.download")}
-                    </button>
-                  ) : downloadAllowed ? (
-                    <button
-                      type="button"
-                      disabled
-                      title="Unsafe deliverable URL — download blocked"
-                      className="btn btn-primary w-full max-w-sm cursor-not-allowed px-6 py-3.5 text-sm font-black opacity-50 sm:w-auto sm:min-w-[14rem]"
-                    >
-                      {downloadBlockedCtaLabel({
-                        downloadAllowed: true,
-                        unsafeUrl: true,
-                      })}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled
-                      title={freeLiveDownloadBlockReason()}
-                      className="btn btn-primary w-full max-w-sm cursor-not-allowed px-6 py-3.5 text-sm font-black opacity-50 sm:w-auto sm:min-w-[14rem]"
-                    >
-                      {downloadBlockedCtaLabel({ downloadAllowed: false })}
-                    </button>
-                  )}
+                  {/* Fold already surfaces Download as the one primary — skip twin CTA. */}
+                  {workbenchResultPrimary?.kind !== "download" ? (
+                    downloadAllowed &&
+                    (activeVersion?.requestId ||
+                      (videoUrl && isSafeDeliverableUrl(videoUrl))) ? (
+                      <button
+                        type="button"
+                        data-create-download="gated"
+                        className="btn btn-primary w-full max-w-sm px-6 py-3.5 text-sm font-black tracking-tight sm:w-auto sm:min-w-[14rem]"
+                        onClick={() => void downloadActiveResult()}
+                      >
+                        {t("create.download")}
+                      </button>
+                    ) : downloadAllowed ? (
+                      <button
+                        type="button"
+                        disabled
+                        title="Unsafe deliverable URL — download blocked"
+                        className="btn btn-primary w-full max-w-sm cursor-not-allowed px-6 py-3.5 text-sm font-black opacity-50 sm:w-auto sm:min-w-[14rem]"
+                      >
+                        {downloadBlockedCtaLabel({
+                          downloadAllowed: true,
+                          unsafeUrl: true,
+                        })}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled
+                        title={freeLiveDownloadBlockReason()}
+                        className="btn btn-primary w-full max-w-sm cursor-not-allowed px-6 py-3.5 text-sm font-black opacity-50 sm:w-auto sm:min-w-[14rem]"
+                      >
+                        {downloadBlockedCtaLabel({ downloadAllowed: false })}
+                      </button>
+                    )
+                  ) : null}
                   {fixedMomentContract ? (
                     <div
                       className="flex flex-wrap items-center justify-center gap-2"
@@ -3988,11 +4031,26 @@ export function CreateStudio({
               <p className="mb-1.5 truncate text-center text-[10px] font-medium text-white/55">
                 {workbenchResultPrimary.stickyHint}
               </p>
-              {workbenchResultPrimary.kind === "library" ? (
+              {workbenchResultPrimary.kind === "download" ? (
+                <button
+                  type="button"
+                  onClick={() => void downloadActiveResult()}
+                  className="btn btn-primary w-full py-3 text-sm font-black"
+                  data-result-fold-action="download"
+                  data-create-download="fold-primary"
+                >
+                  {workbenchResultPrimary.label}
+                </button>
+              ) : workbenchResultPrimary.kind === "library" ? (
                 <Link
-                  href="/library"
+                  href={workbenchLibraryHref}
                   className="btn btn-primary flex w-full items-center justify-center py-3 text-sm font-black"
                   data-result-fold-action="library"
+                  data-library-handoff={
+                    workbenchLibraryHref.includes("job=")
+                      ? "request-id"
+                      : "list"
+                  }
                 >
                   {workbenchResultPrimary.label}
                 </Link>
@@ -4012,6 +4070,9 @@ export function CreateStudio({
                   disabled={!ownsRights}
                   className="btn btn-primary w-full py-3 text-sm font-black disabled:opacity-50"
                   data-result-fold-action="generate-again"
+                  data-result-respin={
+                    workbenchListing360 ? "360" : undefined
+                  }
                 >
                   {workbenchResultPrimary.label}
                 </button>
