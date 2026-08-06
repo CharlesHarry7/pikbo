@@ -29,6 +29,7 @@ import {
   recordSettlementUnknown,
 } from "@/lib/durableCredits/reconciliation";
 import { getAuthUserFromRequest } from "@/lib/supabase/user";
+import { getPrivateLibraryJobForOwner } from "@/lib/privateGenerationResults";
 import {
   invokeReservedProvider,
   liveGenerationAccess,
@@ -147,10 +148,20 @@ export async function GET() {
   });
 }
 
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
 /**
- * Phase D still cancel (ledger only) — parity with DELETE /api/generations/[id].
+ * Phase D still cancel (ledger only) — parity with DELETE /api/generations.
  * Does not interrupt in-flight Flux; complete may still stamp success.
  * Accepts jobId / requestId / idempotencyKey via query or JSON body.
+ *
+ * AIT-207: durable private stills never use process-memory Cancel (item
+ * DELETE parity). Owner durable UUID → DURABLE_NO_CANCEL; missing/foreign
+ * stay uniform NOT_FOUND (no ownership leak).
  */
 export async function DELETE(req: Request) {
   const session = await ensureSession();
@@ -188,6 +199,35 @@ export async function DELETE(req: Request) {
     idempotencyKey,
   });
   if (!result.ok) {
+    // Durable owner path — never invent a process-memory cancel success.
+    if (result.code === "NOT_FOUND" && jobId && isUuid(jobId)) {
+      const authUser = await getAuthUserFromRequest(req);
+      if (authUser) {
+        const privateJob = await getPrivateLibraryJobForOwner({
+          jobId,
+          userId: authUser.id,
+        });
+        if (privateJob) {
+          const open =
+            privateJob.status === "queued" || privateJob.status === "running";
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "DURABLE_NO_CANCEL",
+              jobId,
+              message: open
+                ? "This durable still is still rendering. Refresh — process-memory Cancel does not apply."
+                : "This durable still cannot use process-memory Cancel. Refresh or start a new attempt.",
+              mode: "supabase-private",
+              durable: true,
+              status: privateJob.status,
+            },
+            { status: 422 }
+          );
+        }
+      }
+    }
+
     const status =
       result.code === "NOT_FOUND"
         ? 404
@@ -201,6 +241,7 @@ export async function DELETE(req: Request) {
         ok: false,
         code: result.code,
         message: result.message,
+        mode: "local-memory",
         jobId: result.job?.id,
       },
       { status }
