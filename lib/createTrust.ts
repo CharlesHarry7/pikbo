@@ -236,7 +236,7 @@ export function canDownloadResult(opts: {
 }
 
 export function freeLiveDownloadBlockReason(): string {
-  return "Free Mini live clips cannot expose or download the raw provider file. A verified server-owned baked derivative is required (T6 blocked).";
+  return "Free-plan live raw cannot expose or download the raw provider file. A verified server-owned baked derivative is required (T6 blocked).";
 }
 
 /**
@@ -286,7 +286,7 @@ export function classifyDownloadHead(opts: {
       kind: "block",
       message:
         opts.t6Mode === "bake_on_download"
-          ? "Free Mini needs watermark bake — worker may be down. Upgrade for a clean file."
+          ? "Free-plan live raw needs watermark bake — worker may be down. Upgrade for a clean file."
           : freeLiveDownloadBlockReason(),
     };
   }

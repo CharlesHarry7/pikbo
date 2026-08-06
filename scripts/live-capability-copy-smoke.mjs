@@ -156,6 +156,33 @@ assert(
   "modules FAQ/chip must sell Lab public path + conditional Live, not Free Mini as public trial"
 );
 
+// AIT-399: createTrust download-block toasts — no public Free Mini product brand.
+const createTrustSource = read("lib/createTrust.ts");
+const forbiddenCreateTrustFreeMini = [
+  /Free Mini live clips cannot expose or download/i,
+  /Free Mini needs watermark bake/i,
+  /Free Mini live raw/i,
+];
+for (const pattern of forbiddenCreateTrustFreeMini) {
+  assert(
+    !pattern.test(createTrustSource),
+    `lib/createTrust.ts contains residual Free Mini download-block promise ${pattern}`
+  );
+}
+assert(
+  !createTrustSource.includes("Free Mini") &&
+    createTrustSource.includes(
+      "Free-plan live raw cannot expose or download the raw provider file"
+    ) &&
+    createTrustSource.includes(
+      "Free-plan live raw needs watermark bake — worker may be down"
+    ) &&
+    createTrustSource.includes("export function freeLiveDownloadBlockReason") &&
+    createTrustSource.includes("bake_on_download") &&
+    createTrustSource.includes("T6 blocked"),
+  "createTrust download-block toasts must use free-plan live raw / T6 bake language, not Free Mini product brand"
+);
+
 assert(
   read("lib/site.ts").includes("Turn one owned toy photo into product-listing") &&
     read("lib/site.ts").includes("AI product video studio for toy sellers"),
