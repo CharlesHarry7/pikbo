@@ -54,19 +54,19 @@ export function HomeBrowseCta() {
         href="#home-create"
         prefetch={false}
         tabIndex={visible ? 0 : -1}
-        className={`pointer-events-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl border border-[#c8ff3d]/50 bg-black/92 px-4 py-3 shadow-[0_0_40px_rgba(200,255,61,0.22),0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl transition hover:border-[#c8ff3d] hover:bg-black sm:max-w-lg ${
+        className={`pointer-events-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl border border-neon-pink/50 bg-black/92 px-4 py-3 shadow-[0_0_40px_rgba(255,78,205,0.22),0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl transition hover:border-neon-pink hover:bg-black sm:max-w-lg ${
           visible ? "" : "pointer-events-none"
         }`}
       >
         <span className="min-w-0 text-left">
-          <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#c8ff3d]/90">
+          <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-neon-pink/90">
             {t("home.browseCta.chip")}
           </span>
           <span className="block truncate text-sm font-black text-white">
             {t("home.browseCta.title")}
           </span>
         </span>
-        <span className="shrink-0 rounded-full bg-[#c8ff3d] px-4 py-2 text-xs font-black text-black">
+        <span className="shrink-0 rounded-full bg-neon-pink px-4 py-2 text-xs font-black text-void">
           {t("home.browseCta.btn")}
         </span>
       </Link>
