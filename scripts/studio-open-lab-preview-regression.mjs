@@ -1,8 +1,9 @@
 /**
- * AIT-40 / AIT-147 / AIT-161 / AIT-172 / AIT-182 / AIT-199 / AIT-463 —
+ * AIT-40 / AIT-147 / AIT-161 / AIT-172 / AIT-182 / AIT-199 / AIT-463 / AIT-530 —
  * Create/Studio open: auto Lab preview + finite open state + honest
  * failure/timeout/retry (desktop + mobile sticky). Wall-clock covers
  * authHeaders hang; Pack/Batch/Image/Landing/MomentCreatePreview boot finite.
+ * Home residual: TrustStrip / HfProductRail / LibraryStorageBanner session honesty.
  */
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
@@ -210,6 +211,58 @@ await new Promise((resolve, reject) => {
   }
 );
 
+// AIT-530: Home suite residual session honesty — TrustStrip / HfProductRail /
+// LibraryStorageBanner (after Studio open + shell boot paths). Bare fetchMe()
+// must not soft-stick Free Mini / account claims on hung /api/me.
+const trustStrip = read("components/TrustStrip.tsx");
+const hfProductRail = read("components/HfProductRail.tsx");
+const libraryStorageBanner = read("components/LibraryStorageBanner.tsx");
+
+for (const [name, src] of [
+  ["TrustStrip", trustStrip],
+  ["HfProductRail", hfProductRail],
+  ["LibraryStorageBanner", libraryStorageBanner],
+]) {
+  assert.match(src, /STUDIO_SESSION_BOOT_MS/, `${name} must boot-bound`);
+  assert.match(
+    src,
+    /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/,
+    `${name} must pass timeoutMs`
+  );
+  assert.match(src, /isClientTimeoutError/, `${name} must detect timeout`);
+  assert.match(src, /sessionBoot === "timeout"/, `${name} timeout branch`);
+  assert.doesNotMatch(
+    src,
+    /void fetchMe\(\)\.then/,
+    `${name} no bare fetchMe().then`
+  );
+  assert.doesNotMatch(src, /void fetchMe\(\)/, `${name} no bare void fetchMe()`);
+}
+
+assert.match(trustStrip, /data-trust-boot=\{sessionBoot\}/);
+assert.match(trustStrip, /data-trust-boot-retry/);
+assert.match(trustStrip, /Retry/);
+// Fail-closed Free Mini: freeLiveOpen requires sessionKnown
+assert.match(trustStrip, /sessionKnown &&/);
+assert.match(trustStrip, /canLiveGenerate\(me\)/);
+
+assert.match(hfProductRail, /data-hf-product-boot=\{sessionBoot\}/);
+assert.match(hfProductRail, /data-hf-product-boot-retry/);
+assert.match(hfProductRail, /Retry access/);
+assert.match(hfProductRail, /sessionKnown &&/);
+assert.match(hfProductRail, /Cached Lab · 0 credits · Live gated/);
+
+assert.match(libraryStorageBanner, /data-library-storage-boot=\{sessionBoot\}/);
+assert.match(
+  libraryStorageBanner,
+  /data-library-storage-boot-error="session-timeout"/
+);
+assert.match(libraryStorageBanner, /data-library-storage-boot-retry/);
+assert.match(libraryStorageBanner, /Retry access check/);
+// No infinite spinner chrome — checking is finite (boot state), timeout has retry
+assert.match(libraryStorageBanner, /Checking access…/);
+assert.match(libraryStorageBanner, /Access check timed out/);
+
 // Package + CI script wiring
 assert.match(
   packageJson,
@@ -226,5 +279,5 @@ for (const asset of [
 }
 
 console.log(
-  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing/moment-preview boot; timeout/error + retry; mobile sticky Lab CTA)"
+  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing/moment-preview boot; TrustStrip/HfProductRail/LibraryStorageBanner residual; timeout/error + retry; mobile sticky Lab CTA)"
 );
