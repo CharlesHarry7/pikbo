@@ -6,6 +6,7 @@ import {
   historyFieldsFromSuccess,
   postGenerateWithRetry,
 } from "@/lib/generateClient";
+import { canRetryGenerateFailure } from "@/lib/generateRecoveryPolicy";
 import { downloadVideoFile, pushHistory } from "@/lib/history";
 import {
   canLiveGenerate,
@@ -77,6 +78,13 @@ export function LandingToolPanel({
   const [failRetryAfterSec, setFailRetryAfterSec] = useState<number | null>(
     null
   );
+  /**
+   * Last fail code + flags — Landing fail Retry is server-gated
+   * (auth/paywall/fatal/durable-hold never invent a retriable path).
+   */
+  const [lastFailCode, setLastFailCode] = useState<string | null>(null);
+  const [lastFailFatal, setLastFailFatal] = useState(false);
+  const [lastFailPaywall, setLastFailPaywall] = useState(false);
   /** FailPanel settlement honesty (TIMEOUT / network → unconfirmed). */
   const [failCreditState, setFailCreditState] = useState<
     null | "10 restored" | "refund unconfirmed"
@@ -403,6 +411,9 @@ export function LandingToolPanel({
       if (result.session) {
         setSession((prev) => mergeMeSession(prev, result.session));
       }
+      setLastFailCode(result.code || null);
+      setLastFailFatal(Boolean(result.fatal));
+      setLastFailPaywall(Boolean(result.paywall));
       setFailRetryAfterSec(
         typeof result.retryAfterSec === "number" && result.retryAfterSec > 0
           ? result.retryAfterSec
@@ -414,6 +425,7 @@ export function LandingToolPanel({
         status: result.status,
         code: result.code,
       });
+      // Only durable creditsRefunded path yields "10 restored" (never invent).
       setFailCreditState(
         settlement === "10 restored" || settlement === "refund unconfirmed"
           ? settlement
@@ -759,10 +771,19 @@ export function LandingToolPanel({
               showLabSample
               retryAfterSec={failRetryAfterSec}
               onRetry={
-                image && !busy
+                canRetryGenerateFailure({
+                  code: lastFailCode,
+                  fatal: lastFailFatal,
+                  paywall: lastFailPaywall || error === "INSUFFICIENT",
+                  busy,
+                  hasInput: Boolean(image),
+                })
                   ? () => {
                       setFailRetryAfterSec(null);
                       setFailCreditState(null);
+                      setLastFailCode(null);
+                      setLastFailFatal(false);
+                      setLastFailPaywall(false);
                       void generate();
                     }
                   : undefined

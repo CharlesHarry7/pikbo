@@ -270,6 +270,8 @@ export async function cancelGenerateLedger(opts: {
     if (opts.jobId) payload.jobId = opts.jobId;
     if (opts.idempotencyKey) payload.idempotencyKey = opts.idempotencyKey;
     if (!payload.jobId && !payload.idempotencyKey) return;
+    // Keep Bearer when present (Library recovery cancel parity) so owner-scoped
+    // durable cancel does not fall through to guest / process-memory miss.
     const auth = await generateAuthHeaders();
     // Prefer collection DELETE (idempotencyKey); fall back to /[id] when only jobId.
     if (payload.idempotencyKey || !payload.jobId) {

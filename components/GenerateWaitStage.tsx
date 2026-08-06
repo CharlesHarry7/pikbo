@@ -1,5 +1,7 @@
 "use client";
 
+import { shouldShowGenerateWaitDetach } from "@/lib/generateRecoveryPolicy";
+
 /**
  * HF-class Generate wait surface — shared by CreateStudio + LandingToolPanel.
  * Eligible Live work can take minutes; progress is paced, not a fake 30s bar.
@@ -9,6 +11,8 @@
  * - Keep the original /api/generate open (no auto-abort, no second generate).
  * - "Open Library · keep generating" detaches UI only — never cancels ledger.
  * - "Cancel generation" is the only path that aborts + best-effort ledger cancel.
+ * - Recovery checking/waiting always offers a user-visible exit (detach + cancel).
+ * - Exit copy only promises "no second charge" / unconfirmed settlement — never restore.
  */
 
 export type WaitPhaseId =
@@ -131,9 +135,19 @@ export function GenerateWaitStage({
   const ss = elapsed % 60;
   const clock = mm > 0 ? `${mm}:${String(ss).padStart(2, "0")}` : `${ss}s`;
   const longWait = !demoMode && (awaitingPrimary || elapsed >= 90);
-  /** Detach only after recovery is inconclusive or the wait is already long. */
+  /**
+   * Recovery checking/waiting must never stick without a user-visible exit:
+   * detach (non-destructive) as soon as durable recovery is active, not only
+   * after the 90s long-wait floor. Cancel remains available whenever provided.
+   */
   const showLeaveToLibrary =
-    Boolean(onLeaveToLibrary) && !demoMode && longWait;
+    Boolean(onLeaveToLibrary) &&
+    shouldShowGenerateWaitDetach({
+      demoMode,
+      elapsedSec: elapsed,
+      recoveryChecking,
+      awaitingPrimary,
+    });
   const title = awaitingPrimary
     ? "Waiting on original render"
     : recoveryChecking
@@ -151,6 +165,11 @@ export function GenerateWaitStage({
   const longWaitHint = freeLiveOpen
     ? "Still working past 90s is normal for Mini. You can open Library while this request keeps running — cancel only if you mean to stop it."
     : "Still working past 90s can happen on private Live. You can open Library while this request keeps running — cancel only if you mean to stop it.";
+  const recoveryState = awaitingPrimary
+    ? "awaiting_primary"
+    : recoveryChecking
+      ? "checking"
+      : "primary";
 
   return (
     <div
@@ -161,6 +180,9 @@ export function GenerateWaitStage({
       aria-live="polite"
       aria-busy="true"
       data-awaiting-primary={awaitingPrimary ? "true" : "false"}
+      data-recovery-checking={recoveryChecking ? "true" : "false"}
+      data-recovery-state={recoveryState}
+      data-wait-detach={showLeaveToLibrary ? "true" : "false"}
       data-long-wait={longWait ? "true" : "false"}
     >
       {/* Soft stage glow */}
@@ -351,6 +373,7 @@ export function GenerateWaitMobileStrip({
   freeLiveOpen = false,
   onCancel,
   onLeaveToLibrary,
+  recoveryChecking = false,
   awaitingPrimary = false,
 }: {
   elapsed: number;
@@ -359,17 +382,24 @@ export function GenerateWaitMobileStrip({
   freeLiveOpen?: boolean;
   onCancel: () => void;
   onLeaveToLibrary?: () => void;
+  recoveryChecking?: boolean;
   awaitingPrimary?: boolean;
 }) {
   const phase = waitPhaseForElapsed(elapsed, demoMode);
   const pct = waitProgressPct(elapsed, demoMode);
   const showLeaveToLibrary =
     Boolean(onLeaveToLibrary) &&
-    !demoMode &&
-    (awaitingPrimary || elapsed >= 90);
+    shouldShowGenerateWaitDetach({
+      demoMode,
+      elapsedSec: elapsed,
+      recoveryChecking,
+      awaitingPrimary,
+    });
   const title = awaitingPrimary
     ? "Original render still running"
-    : phase.title;
+    : recoveryChecking
+      ? "Tracking private task"
+      : phase.title;
   const keepOpenHint = demoMode
     ? "Lab · 0 cr"
     : freeLiveOpen
@@ -381,6 +411,7 @@ export function GenerateWaitMobileStrip({
       className="w-full"
       data-awaiting-primary={awaitingPrimary ? "true" : "false"}
       data-wait-free-live={freeLiveOpen ? "open" : "closed"}
+      data-wait-detach={showLeaveToLibrary ? "true" : "false"}
     >
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <p className="truncate text-[10px] font-bold text-white/70">
