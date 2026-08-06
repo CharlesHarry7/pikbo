@@ -56,7 +56,7 @@ export function HomeViralPresetRail() {
                   meta: { surface: "home_viral_rail" },
                 })
               }
-              className="group relative w-[9.5rem] shrink-0 overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/10 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_16px_40px_-12px_rgba(255,78,205,0.18)] hover:ring-[var(--neon-pink)]/50 sm:w-[11.5rem]"
+              className="group relative w-[9.5rem] shrink-0 overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/10 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_16px_40px_-12px_rgba(196,165,116,0.18)] hover:ring-[var(--neon-pink)]/50 sm:w-[11.5rem]"
             >
               <div className="relative aspect-[3/4]">
                 <AutoPlayVideo

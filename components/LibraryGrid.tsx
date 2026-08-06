@@ -1195,7 +1195,7 @@ function LibraryGridInner() {
                   aria-pressed={selected}
                   aria-label={`${effectName(job.effect)}, ${status.label}, ${formatDate(job.createdAt)}`}
                 >
-                  <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(255,78,205,0.12),transparent_55%),#09090a] text-center">
+                  <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(196,165,116,0.12),transparent_55%),#09090a] text-center">
                     {job.status === "succeeded" && job.videoUrl ? (
                       <video
                         src={job.videoUrl}
@@ -1252,7 +1252,7 @@ function LibraryGridInner() {
                     className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111113] shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)] lg:sticky lg:top-6"
                     data-library-detail="true"
                   >
-                    <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(255,78,205,0.12),transparent_55%),#09090a] text-center">
+                    <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(196,165,116,0.12),transparent_55%),#09090a] text-center">
                       {job.status === "succeeded" && job.videoUrl ? (
                         <video
                           src={job.videoUrl}

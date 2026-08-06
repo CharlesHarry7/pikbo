@@ -54,7 +54,7 @@ export function PricingHeroCopy({
           </span>
         </div>
 
-        <p className="mt-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-[#5e7800]">
+        <p className="mt-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-[var(--brand)]">
           {copy.eyebrow}
         </p>
         <h1 className="mx-auto mt-4 max-w-5xl text-center font-display text-[clamp(3rem,6.7vw,6.8rem)] font-black leading-[0.86] tracking-[-0.065em]">
