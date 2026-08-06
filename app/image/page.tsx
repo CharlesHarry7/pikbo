@@ -605,8 +605,22 @@ export default function ImageStudioPage() {
   }
 
   /**
+   * AIT-576 residual chrome + AIT-622 leave-wait: owner deep-link or plain list.
+   * Lab / missing / non-private stay plain /library (never invent ?job=).
+   */
+  const imageLibraryHref = libraryWorkbenchHandoffHref({
+    demo,
+    privateResult: lastPrivateResult,
+    requestId: lastRequestId,
+  });
+  const imageLibraryHandoffKind = imageLibraryHref.includes("job=")
+    ? "request-id"
+    : "list";
+
+  /**
    * Stop waiting on Image Studio without aborting the original still POST or
    * inventing a refund restore. User can open Library while the same request finishes.
+   * AIT-622: owner-safe deep-link via imageLibraryHref (same helper as residual chrome).
    */
   function leaveWaitingKeepBackground() {
     const plan = planGenerateWaitLeave("detach");
@@ -622,7 +636,8 @@ export default function ImageStudioPage() {
     setError(null);
     clearFailGate();
     // Soft client navigation keeps the original fetch alive in this document.
-    router.push("/library");
+    // Reuse residual chrome helper inputs (lastPrivateResult + lastRequestId).
+    router.push(imageLibraryHref);
   }
 
   async function generate(opts?: { prompt?: string; aspect?: string }) {
@@ -813,16 +828,6 @@ export default function ImageStudioPage() {
       busy && sessionStillMeta && sessionStillMeta.open > 0
     ),
   });
-
-  /** AIT-576: residual Library chrome — owner deep-link or plain list. */
-  const imageLibraryHref = libraryWorkbenchHandoffHref({
-    demo,
-    privateResult: lastPrivateResult,
-    requestId: lastRequestId,
-  });
-  const imageLibraryHandoffKind = imageLibraryHref.includes("job=")
-    ? "request-id"
-    : "list";
 
   return (
     <div>
