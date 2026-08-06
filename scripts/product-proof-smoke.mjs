@@ -299,6 +299,29 @@ assert(
   );
 }
 
+// AIT-590: Pricing page residual carnival pink chrome → gallery-calm copper
+{
+  const pricingPage = read("app/pricing/page.tsx");
+  const carnival =
+    /#B14EFF|#FF4ECD|#00D9FF|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|0\s*,\s*217\s*,\s*255/i;
+  assert(
+    !carnival.test(pricingPage),
+    "app/pricing/page.tsx must not hard-code carnival pink/cyan RGB"
+  );
+  assert(
+    pricingPage.includes("var(--brand)") &&
+      pricingPage.includes("var(--grad)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(pricingPage),
+    "Pricing page chrome uses --brand / --grad + copper rgba(196,165,116)"
+  );
+  assert(
+    pricingPage.includes("data-pricing-state") &&
+      pricingPage.includes("founding_studio") &&
+      pricingPage.includes("PricingCheckoutButton"),
+    "Pricing product honesty + closed checkout path intact"
+  );
+}
+
 console.log(
   `product-proof smoke passed: ${proofSlugs.length} proof recipes, static concepts, 1/2 autoplay budget`
 );
