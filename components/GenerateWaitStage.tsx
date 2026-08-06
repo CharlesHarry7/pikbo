@@ -13,6 +13,10 @@ import { shouldShowGenerateWaitDetach } from "@/lib/generateRecoveryPolicy";
  * - "Cancel generation" is the only path that aborts + best-effort ledger cancel.
  * - Recovery checking/waiting always offers a user-visible exit (detach + cancel).
  * - Exit copy only promises "no second charge" / unconfirmed settlement — never restore.
+ *
+ * AIT-546: optional `libraryHref` from parent (via libraryWorkbenchHandoffHref).
+ * Parent leave handler navigates; we only expose honesty markers so smoke can
+ * lock owner deep-link vs plain list. Lab / missing id → plain `/library`.
  */
 
 export type WaitPhaseId =
@@ -97,6 +101,7 @@ export function GenerateWaitStage({
   effectLabel,
   onCancel,
   onLeaveToLibrary,
+  libraryHref = "/library",
   recoveryChecking = false,
   awaitingPrimary = false,
   compact = false,
@@ -117,8 +122,14 @@ export function GenerateWaitStage({
   /**
    * Non-destructive leave: stop waiting here / open Library.
    * Must NOT abort primary or cancel the ledger.
+   * Parent navigates to owner-safe libraryHref when a durable UUID exists.
    */
   onLeaveToLibrary?: () => void;
+  /**
+   * Owner-safe Library href (parent via libraryWorkbenchHandoffHref).
+   * Deep-link only when private durable UUID requestId exists; else `/library`.
+   */
+  libraryHref?: string;
   /** The original POST is slow; read the same owner-only durable task. */
   recoveryChecking?: boolean;
   /**
@@ -148,6 +159,8 @@ export function GenerateWaitStage({
       recoveryChecking,
       awaitingPrimary,
     });
+  const libraryHandoffKind =
+    !demoMode && libraryHref.includes("job=") ? "private-job" : "list";
   const title = awaitingPrimary
     ? "Waiting on original render"
     : recoveryChecking
@@ -184,6 +197,8 @@ export function GenerateWaitStage({
       data-recovery-state={recoveryState}
       data-wait-detach={showLeaveToLibrary ? "true" : "false"}
       data-long-wait={longWait ? "true" : "false"}
+      data-library-handoff={libraryHandoffKind}
+      data-library-href={libraryHref}
     >
       {/* Soft stage glow */}
       <div
@@ -332,8 +347,14 @@ export function GenerateWaitStage({
                 type="button"
                 onClick={onLeaveToLibrary}
                 data-generate-leave="detach"
+                data-library-handoff={libraryHandoffKind}
+                data-library-href={libraryHref}
                 className="w-full rounded-full border border-[var(--mint)]/40 bg-[var(--mint)]/15 px-4 py-2 text-[11px] font-bold text-[var(--mint)] transition hover:border-[var(--mint)]/70 hover:bg-[var(--mint)]/25"
-                title="Stop waiting on this page. Does not abort the original generate or cancel the ledger."
+                title={
+                  libraryHandoffKind === "private-job"
+                    ? "Stop waiting here and open your private job in Library. Does not abort generate or cancel the ledger."
+                    : "Stop waiting on this page. Does not abort the original generate or cancel the ledger."
+                }
               >
                 Open Library · keep generating
               </button>
@@ -373,6 +394,7 @@ export function GenerateWaitMobileStrip({
   freeLiveOpen = false,
   onCancel,
   onLeaveToLibrary,
+  libraryHref = "/library",
   recoveryChecking = false,
   awaitingPrimary = false,
 }: {
@@ -382,6 +404,11 @@ export function GenerateWaitMobileStrip({
   freeLiveOpen?: boolean;
   onCancel: () => void;
   onLeaveToLibrary?: () => void;
+  /**
+   * Owner-safe Library href (parent via libraryWorkbenchHandoffHref).
+   * Deep-link only when private durable UUID requestId exists; else `/library`.
+   */
+  libraryHref?: string;
   recoveryChecking?: boolean;
   awaitingPrimary?: boolean;
 }) {
@@ -395,6 +422,8 @@ export function GenerateWaitMobileStrip({
       recoveryChecking,
       awaitingPrimary,
     });
+  const libraryHandoffKind =
+    !demoMode && libraryHref.includes("job=") ? "private-job" : "list";
   const title = awaitingPrimary
     ? "Original render still running"
     : recoveryChecking
@@ -412,6 +441,8 @@ export function GenerateWaitMobileStrip({
       data-awaiting-primary={awaitingPrimary ? "true" : "false"}
       data-wait-free-live={freeLiveOpen ? "open" : "closed"}
       data-wait-detach={showLeaveToLibrary ? "true" : "false"}
+      data-library-handoff={libraryHandoffKind}
+      data-library-href={libraryHref}
     >
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <p className="truncate text-[10px] font-bold text-white/70">
@@ -443,6 +474,8 @@ export function GenerateWaitMobileStrip({
             type="button"
             onClick={onLeaveToLibrary}
             data-generate-leave="detach"
+            data-library-handoff={libraryHandoffKind}
+            data-library-href={libraryHref}
             className="btn w-full border border-[var(--mint)]/40 bg-[var(--mint)]/10 py-2.5 text-sm text-[var(--mint)]"
           >
             Open Library · keep generating

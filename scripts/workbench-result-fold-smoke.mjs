@@ -407,11 +407,22 @@ const afterIdx = createStudio.indexOf("<GenerateAfterPath");
 assert.ok(stageIdx > 0, "stage-primary marker must exist");
 assert.ok(afterIdx > stageIdx, "stage primary must render before GenerateAfterPath");
 
-// Plain /library remains for secondary/Moment paths (no deep-link thrash).
+// AIT-546: residual Library chips/leave use workbenchLibraryHref / waitLibraryHref
+// (owner deep-link when private UUID exists; fail-closed plain list otherwise).
 assert.match(
   createStudio,
-  /href=["']\/library["']/,
-  "plain /library remains for non-fold secondary/Moment paths"
+  /href=\{workbenchLibraryHref\}/,
+  "CreateStudio residual Library paths bind workbenchLibraryHref"
+);
+assert.match(
+  createStudio,
+  /waitLibraryHref/,
+  "CreateStudio must compute waitLibraryHref for mid-generate leave"
+);
+assert.match(
+  createStudio,
+  /libraryHref=\{waitLibraryHref\}/,
+  "GenerateWaitStage must receive waitLibraryHref"
 );
 
 // ── LandingToolPanel wiring (AIT-541 parity) ──────────────────────────────

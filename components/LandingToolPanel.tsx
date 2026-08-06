@@ -113,7 +113,7 @@ export function LandingToolPanel({
   >(null);
   const [serverEcho, setServerEcho] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
-  /** Server-confirmed owner-scoped object in Pikbo private storage. */
+  /** Server-confirmed owner-scoped object — fail-closed for AfterPath Library deep-link. */
   const [privateResult, setPrivateResult] = useState(false);
   /** Device-local bible SKU — carry into AfterPath Next SKU / Seller Pack hops. */
   const [toySku, setToySku] = useState<string>("");
@@ -516,6 +516,7 @@ export function LandingToolPanel({
         ? data.requestId
         : null
     );
+    setPrivateResult(data.privateResult === true);
     setCostCredits(
       typeof data.costCredits === "number" ? data.costCredits : null
     );
@@ -1138,6 +1139,8 @@ export function LandingToolPanel({
                 sku={toySku || null}
                 aspectRatio={aspectRatio}
                 duration={duration}
+                requestId={requestId}
+                privateResult={privateResult}
               />
               {/* First-principles delivery steps (honest Free download). */}
               <DeliveryChecklist

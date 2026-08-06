@@ -356,6 +356,13 @@ export function CreateStudio({
   /** Durable recovery exhausted without authority; original POST still open. */
   const [awaitingPrimaryAfterRecovery, setAwaitingPrimaryAfterRecovery] =
     useState(false);
+  /**
+   * AIT-546: owner durable jobId while generate is still open (recovery pending).
+   * Fail-closed — only set from server recovery, never invented client-side.
+   */
+  const [waitDurableRequestId, setWaitDurableRequestId] = useState<
+    string | null
+  >(null);
   const [copied, setCopied] = useState(false);
   // PRD soft-launch §3/§5: user must confirm rights before submitting.
   const [ownsRights, setOwnsRights] = useState(false);
@@ -439,6 +446,8 @@ export function CreateStudio({
   /**
    * Stop waiting on Create without aborting the original generate or canceling
    * the ledger. User can open Library while the same private task finishes.
+   * AIT-546: deep-link `/library?job=` only when recovery already exposed a
+   * durable owner UUID; Lab / missing id stay plain list (fail-closed).
    */
   function leaveWaitingKeepBackground() {
     const plan = planGenerateWaitLeave("detach");
@@ -459,7 +468,14 @@ export function CreateStudio({
     // Soft client navigation keeps the original fetch alive in this document.
     // Hard reload would drop the browser request without canceling the ledger,
     // but would also lose the chance to pushHistory when primary settles.
-    router.push("/library");
+    // Recovery jobIds are owner-private; Lab demo never deep-links as owned.
+    router.push(
+      libraryWorkbenchHandoffHref({
+        demo: demoMode,
+        privateResult: !demoMode && Boolean(waitDurableRequestId),
+        requestId: waitDurableRequestId,
+      })
+    );
   }
 
   const preset = useMemo(
@@ -985,6 +1001,7 @@ export function CreateStudio({
     setElapsed(0);
     setRecoveringSavedResult(false);
     setAwaitingPrimaryAfterRecovery(false);
+    setWaitDurableRequestId(null);
     detachedWaitRef.current = false;
     setStatus("generating");
     // Abort any prior in-flight POST before starting a new one (explicit replace).
@@ -1041,6 +1058,11 @@ export function CreateStudio({
             state === "checking" || state === "waiting"
           );
           setAwaitingPrimaryAfterRecovery(state === "awaiting_primary");
+        },
+        onDurableJobId: (jobId) => {
+          if (detachedWaitRef.current || !generateMountedRef.current) return;
+          if (!jobId || typeof jobId !== "string") return;
+          setWaitDurableRequestId(jobId);
         },
       }
     );
@@ -1523,6 +1545,12 @@ export function CreateStudio({
     demo: workbenchResultDemo,
     privateResult: workbenchResultPrivate,
     requestId: activeVersion?.requestId,
+  });
+  /** Mid-generate leave: owner deep-link only when recovery exposed a durable id. */
+  const waitLibraryHref = libraryWorkbenchHandoffHref({
+    demo: demoMode,
+    privateResult: !demoMode && Boolean(waitDurableRequestId),
+    requestId: waitDurableRequestId,
   });
 
   function replayResultVideo() {
@@ -3271,6 +3299,7 @@ export function CreateStudio({
                 effectLabel={viralName(preset.slug, preset.name)}
                 onCancel={cancelInFlightGenerate}
                 onLeaveToLibrary={leaveWaitingKeepBackground}
+                libraryHref={waitLibraryHref}
                 recoveryChecking={recoveringSavedResult}
                 awaitingPrimary={awaitingPrimaryAfterRecovery}
               />
@@ -3517,6 +3546,8 @@ export function CreateStudio({
                       activeVersion?.duration ??
                       activeVersion?.spec?.duration
                     }
+                    requestId={activeVersion?.requestId}
+                    privateResult={Boolean(activeVersion?.privateResult)}
                     className="mx-auto mt-3 max-w-md"
                   />
                 ) : null}
@@ -3646,8 +3677,13 @@ export function CreateStudio({
                         Retry this Moment
                       </button>
                       <Link
-                        href="/library"
+                        href={workbenchLibraryHref}
                         className="btn btn-ghost px-4 py-2 text-xs"
+                        data-library-handoff={
+                          workbenchLibraryHref.includes("job=")
+                            ? "private-job"
+                            : "list"
+                        }
                       >
                         Open Library
                       </Link>
@@ -3711,8 +3747,13 @@ export function CreateStudio({
                     </Link>
                   ) : null}
                   <Link
-                    href="/library"
+                    href={workbenchLibraryHref}
                     className="btn btn-ghost px-4 py-2 text-xs"
+                    data-library-handoff={
+                      workbenchLibraryHref.includes("job=")
+                        ? "private-job"
+                        : "list"
+                    }
                   >
                     {t("create.savedLibrary")}
                   </Link>
@@ -4044,6 +4085,7 @@ export function CreateStudio({
             freeLiveOpen={freeLiveOpen}
             onCancel={cancelInFlightGenerate}
             onLeaveToLibrary={leaveWaitingKeepBackground}
+            libraryHref={waitLibraryHref}
             recoveryChecking={recoveringSavedResult}
             awaitingPrimary={awaitingPrimaryAfterRecovery}
           />
