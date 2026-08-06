@@ -1,7 +1,8 @@
 /**
- * AIT-515 / AIT-446 — Shell session finite boot:
+ * AIT-515 / AIT-446 / AIT-536 — Shell session finite boot:
  * CreditsBadge + ProfilePanel + Settings + SoftLaunchStrip / FreeTrialCta /
- * Modules CTAs no permanent hang on bare fetchMe().
+ * Modules CTAs + TrustStrip / LibraryStorageBanner / HfProductRail
+ * no permanent hang on bare fetchMe().
  * Mirror Studio open honesty: 8s wall-clock, checking/timeout, Retry, Lab fail-closed.
  */
 import assert from "node:assert/strict";
@@ -19,6 +20,9 @@ const softLaunch = read("components/SoftLaunchStrip.tsx");
 const freeTrialCta = read("components/FreeTrialCta.tsx");
 const modulesSuiteCtas = read("components/ModulesSuiteCtas.tsx");
 const modulesMobileCta = read("components/ModulesMobileCta.tsx");
+const trustStrip = read("components/TrustStrip.tsx");
+const libraryStorageBanner = read("components/LibraryStorageBanner.tsx");
+const hfProductRail = read("components/HfProductRail.tsx");
 const packageJson = read("package.json");
 
 // Shared 8s contract
@@ -67,11 +71,15 @@ assert.doesNotMatch(settings, /void fetchMe\(\)/);
 assert.doesNotMatch(settings, /fetchMe\(\)\.then/);
 
 // SoftLaunchStrip + FreeTrialCta + Modules CTAs — residual chrome (AIT-515)
+// TrustStrip + LibraryStorageBanner + HfProductRail — residual (AIT-536)
 for (const [name, src] of [
   ["SoftLaunchStrip", softLaunch],
   ["FreeTrialCta", freeTrialCta],
   ["ModulesSuiteCtas", modulesSuiteCtas],
   ["ModulesMobileCta", modulesMobileCta],
+  ["TrustStrip", trustStrip],
+  ["LibraryStorageBanner", libraryStorageBanner],
+  ["HfProductRail", hfProductRail],
 ]) {
   assert.match(src, /STUDIO_SESSION_BOOT_MS/, `${name} must boot-bound`);
   assert.match(
@@ -94,6 +102,22 @@ assert.match(modulesSuiteCtas, /data-modules-suite-boot=\{sessionBoot\}/);
 assert.match(modulesSuiteCtas, /data-modules-suite-boot-retry/);
 assert.match(modulesMobileCta, /data-modules-mobile-boot=\{sessionBoot\}/);
 assert.match(modulesMobileCta, /data-modules-mobile-boot-retry/);
+
+// AIT-536 residual shell chrome
+assert.match(trustStrip, /data-trust-boot=\{sessionBoot\}/);
+assert.match(trustStrip, /data-trust-boot-retry/);
+assert.match(trustStrip, /Retry/);
+assert.match(trustStrip, /sessionKnown/);
+assert.match(trustStrip, /Live gated · Cached Lab/);
+assert.match(libraryStorageBanner, /data-library-storage-boot=\{sessionBoot\}/);
+assert.match(libraryStorageBanner, /data-library-storage-boot-retry/);
+assert.match(libraryStorageBanner, /Access check timed out/);
+assert.match(libraryStorageBanner, /sessionKnown/);
+assert.match(hfProductRail, /data-hf-rail-boot=\{sessionBoot\}/);
+assert.match(hfProductRail, /data-hf-rail-boot-retry/);
+assert.match(hfProductRail, /sessionKnown/);
+assert.match(hfProductRail, /Lab sample · Free Mini 5s/);
+assert.match(hfProductRail, /Cached Lab · 0 credits · Live gated/);
 
 // npm script wired
 assert.match(

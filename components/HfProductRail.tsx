@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
 import { FreeTrialCta } from "@/components/FreeTrialCta";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
@@ -11,6 +11,10 @@ import {
   fetchMe,
   type MeResponse,
 } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 import { SESSION_EVENT } from "@/lib/sessionEvents";
 
@@ -24,6 +28,7 @@ const MOMENT_RAIL_HREF = `${MOMENT_CREATE_HREF}&source=hf-product-rail` as const
  * Only real Pikbo paths; Video is first and hot. Owned Lab posters only.
  * Below-fold suite density under Moment hero (AIT-241); secondary to hero CTA.
  * Free Mini product-cap blurb only when freeLiveOpen (parity FreeTrialCta).
+ * 8s wall-clock session boot — never soft-stick Free Mini on hung getSession.
  */
 /** Product doors first; Flow/Cinema/Image are Preview (not live job peers). */
 const PRODUCTS: {
@@ -90,32 +95,53 @@ const PRODUCTS: {
   },
 ];
 
+type SessionBoot = "checking" | "ready" | "timeout";
+
 export function HfProductRail() {
   const [me, setMe] = useState<MeResponse | null>(null);
+  const [sessionBoot, setSessionBoot] = useState<SessionBoot>("checking");
+
+  const load = useCallback(() => {
+    setSessionBoot("checking");
+    void fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS })
+      .then((d) => {
+        setMe(d);
+        setSessionBoot("ready");
+      })
+      .catch((err) => {
+        // Fail closed Lab — never Free Mini claim while unknown/timeout.
+        setMe(null);
+        setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+      });
+  }, []);
 
   useEffect(() => {
-    function load() {
-      void fetchMe().then((d) => {
-        if (d) setMe(d);
-      });
-    }
     const t = window.setTimeout(load, 0);
     window.addEventListener(SESSION_EVENT, load);
     return () => {
       window.clearTimeout(t);
       window.removeEventListener(SESSION_EVENT, load);
     };
-  }, []);
+  }, [load]);
 
-  /** R0/T6: Free Mini 5s only when Live is open (fail-closed while /api/me loading). */
+  const sessionKnown = sessionBoot === "ready" && me != null;
+  const accessTimedOut = sessionBoot === "timeout";
+  const accessUnknown = !sessionKnown;
+
+  /** R0/T6: Free Mini 5s only when Live is open (fail-closed while loading/timeout). */
   const freeLiveOpen = Boolean(
-    canLiveGenerate(me) &&
+    sessionKnown &&
+      canLiveGenerate(me) &&
       me?.freeTrial?.freeLive &&
       me.freeTrial.freeLive.liveEnabled !== false
   );
-  const freeCardBlurb = freeLiveOpen
-    ? "Lab sample · Free Mini 5s"
-    : "Cached Lab · 0 credits · Live gated";
+  const freeCardBlurb = accessTimedOut
+    ? "Access check timed out · Cached Lab"
+    : accessUnknown
+      ? "Checking access… · Lab sample"
+      : freeLiveOpen
+        ? "Lab sample · Free Mini 5s"
+        : "Cached Lab · 0 credits · Live gated";
   const headerTryLabel = freeLiveOpen
     ? "Try free · Mini 5s"
     : "Try free · Lab sample";
@@ -126,6 +152,7 @@ export function HfProductRail() {
       id="hf-product-rail"
       data-home-suite-rail="hf-product"
       data-hf-product-rail="true"
+      data-hf-rail-boot={sessionBoot}
       className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
       aria-label="Generate suite"
     >
@@ -137,6 +164,20 @@ export function HfProductRail() {
             </p>
             <p className="mt-0.5 text-[11px] text-white/40">
               Generate 360° and more Lab doors · secondary to the Moment above
+              {accessTimedOut ? (
+                <>
+                  {" · "}
+                  <button
+                    type="button"
+                    onClick={() => load()}
+                    data-hf-rail-boot-retry
+                    className="font-bold text-white/70 underline-offset-2 hover:text-[var(--neon-pink)] hover:underline"
+                    title="Retry access check"
+                  >
+                    Retry
+                  </button>
+                </>
+              ) : null}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -175,7 +216,15 @@ export function HfProductRail() {
             </p>
             <p
               className="relative z-10 mt-1 text-[10px] leading-snug text-white/45"
-              data-hf-rail-free-cap={freeLiveOpen ? "free-live" : "lab-gated"}
+              data-hf-rail-free-cap={
+                accessTimedOut
+                  ? "timeout"
+                  : accessUnknown
+                    ? "checking"
+                    : freeLiveOpen
+                      ? "free-live"
+                      : "lab-gated"
+              }
             >
               {freeCardBlurb}
             </p>
