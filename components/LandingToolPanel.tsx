@@ -181,8 +181,19 @@ export function LandingToolPanel({
         ? Math.floor(session.credits / CREDITS_PER_VIDEO)
         : null;
 
-  const refreshSession = useCallback(async () => {
-    setSessionBoot("checking");
+  /**
+   * Quiet balance refreshes keep last-known session. Timeout Retry rechecks
+   * fail-closed so the CTA returns to Checking… (not soft-success mid-flight).
+   */
+  const refreshSession = useCallback(async (opts?: { recheck?: boolean }) => {
+    const recheck = opts?.recheck === true;
+    if (recheck) {
+      setSessionResolved(false);
+      setSession(null);
+      setSessionBoot("checking");
+    } else {
+      setSessionBoot("checking");
+    }
     try {
       const data = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
       setSessionResolved(true);
@@ -192,6 +203,7 @@ export function LandingToolPanel({
       setWatermark(data.watermark);
     } catch (err) {
       // 8s open contract: honest timeout + Retry, never hang demoMode forever.
+      if (recheck) setSession(null);
       setSessionResolved(true);
       setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
     }
@@ -641,7 +653,7 @@ export function LandingToolPanel({
             </p>
             <button
               type="button"
-              onClick={() => void refreshSession()}
+              onClick={() => void refreshSession({ recheck: true })}
               data-studio-open-retry
               className="mt-2 inline-flex min-h-9 items-center justify-center rounded-full bg-white px-3 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[var(--mint)]"
             >

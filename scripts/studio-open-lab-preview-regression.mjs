@@ -89,6 +89,22 @@ assert.match(studio, /Retry Lab sample/);
 assert.match(studio, /isClientTimeoutError\(err\)/);
 assert.match(studio, /STUDIO_SESSION_BOOT_MS/);
 assert.match(studio, /fetchMe\(\{\s*timeoutMs:\s*STUDIO_SESSION_BOOT_MS\s*\}\)/);
+// AIT-594: timeout Retry is fail-closed recheck — returns to Opening, not soft-success
+assert.match(
+  studio,
+  /refreshSession\(\{\s*recheck:\s*true\s*\}\)/,
+  "CreateStudio Retry must call refreshSession({ recheck: true })"
+);
+assert.match(
+  studio,
+  /opts\?\.recheck\s*===\s*true/,
+  "CreateStudio refreshSession must accept recheck option"
+);
+assert.match(
+  studio,
+  /if \(recheck\) \{\s*setSessionResolved\(false\);\s*setSession\(null\);\s*setSessionBoot\("checking"\);/,
+  "CreateStudio recheck must clear resolved+session and show Opening"
+);
 // No fragile wall-clock heuristic for session timeout detection
 assert.doesNotMatch(studio, /elapsed\s*>=\s*STUDIO_SESSION_BOOT_MS/);
 assert.doesNotMatch(gate, /elapsed\s*>=\s*STUDIO_SESSION_BOOT_MS/);
@@ -158,6 +174,17 @@ assert.match(landing, /data-studio-open-error="session-timeout"/);
 assert.match(landing, /Retry access check/);
 assert.match(landing, /isClientTimeoutError/);
 assert.match(landing, /setSessionResolved\(true\)/);
+// AIT-594: Landing timeout Retry rechecks fail-closed (parity with CreateStudio)
+assert.match(
+  landing,
+  /refreshSession\(\{\s*recheck:\s*true\s*\}\)/,
+  "LandingToolPanel Retry must call refreshSession({ recheck: true })"
+);
+assert.match(
+  landing,
+  /if \(recheck\) \{\s*setSessionResolved\(false\);\s*setSession\(null\);\s*setSessionBoot\("checking"\);/,
+  "LandingToolPanel recheck must clear resolved+session"
+);
 // Landing generate path must not leave capability-unknown without timeout marker
 assert.match(landing, /data-landing-session-boot=\{sessionBoot\}/);
 assert.match(imageStudio, /data-image-session-boot=\{sessionBoot\}/);
@@ -309,5 +336,5 @@ for (const asset of [
 }
 
 console.log(
-  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing/moment-preview + SoftLaunch/FreeTrial/Modules + TrustStrip/HfProductRail/LibraryStorageBanner + Library deep-link boot; timeout/error + retry; mobile sticky Lab CTA)"
+  "studio-open-lab-preview-regression: PASS (auto Lab on Create open; finite Opening studio; wall-clock auth+me; pack/batch/image/landing/moment-preview + SoftLaunch/FreeTrial/Modules + TrustStrip/HfProductRail/LibraryStorageBanner + Library deep-link boot; timeout/error + fail-closed recheck Retry; mobile sticky Lab CTA)"
 );

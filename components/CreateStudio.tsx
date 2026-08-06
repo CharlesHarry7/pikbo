@@ -636,8 +636,19 @@ export function CreateStudio({
     }
   }
 
-  const refreshSession = useCallback(async () => {
-    setSessionBoot("checking");
+  /**
+   * Session hydrate. Quiet refreshes (post-generate balance) keep the last
+   * known session and do not flip the open banner back to "Opening…".
+   * Explicit recheck (timeout Retry) fails closed: clear resolved + session so
+   * the UI returns to Opening + finite 8s contract (never soft-success mid-retry).
+   */
+  const refreshSession = useCallback(async (opts?: { recheck?: boolean }) => {
+    const recheck = opts?.recheck === true;
+    if (recheck) {
+      setSessionResolved(false);
+      setSession(null);
+      setSessionBoot("checking");
+    }
     try {
       const data = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
       setSessionResolved(true);
@@ -652,6 +663,7 @@ export function CreateStudio({
       }
     } catch (err) {
       // 8s open contract: honest timeout + Retry, never permanent "Opening studio…"
+      if (recheck) setSession(null);
       setSessionResolved(true);
       setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
     }
@@ -2529,7 +2541,7 @@ export function CreateStudio({
                   {sessionBoot === "timeout" ? (
                     <button
                       type="button"
-                      onClick={() => void refreshSession()}
+                      onClick={() => void refreshSession({ recheck: true })}
                       data-studio-open-retry
                       className="inline-flex min-h-10 items-center rounded-full border border-[#FF6B6B]/50 bg-[#FF6B6B]/15 px-4 text-xs font-black text-white transition hover:bg-[#FF6B6B]/25"
                     >
