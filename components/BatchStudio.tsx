@@ -55,6 +55,10 @@ import {
   mergeMeSession,
   type MeResponse,
 } from "@/lib/meClient";
+import {
+  isClientTimeoutError,
+  STUDIO_SESSION_BOOT_MS,
+} from "@/lib/clientTimeout";
 import { emitSessionRefresh } from "@/lib/sessionEvents";
 import {
   canExportSellerPack,
@@ -314,6 +318,11 @@ export function BatchStudio({
   const [catFilter, setCatFilter] = useState<CategoryId | "all">("all");
   const [me, setMe] = useState<MeResponse | null>(null);
   const [meResolved, setMeResolved] = useState(false);
+  /** Finite open state — never leave Pack/batch on permanent "loading balance…". */
+  const [sessionBoot, setSessionBoot] = useState<
+    "checking" | "ready" | "timeout"
+  >("checking");
+  const [bootNonce, setBootNonce] = useState(0);
   const [ownsRights, setOwnsRights] = useState(false);
   const [runProjectId, setRunProjectId] = useState<string | null>(null);
   const [activePackRunId, setActivePackRunId] = useState<string | null>(null);
@@ -340,16 +349,37 @@ export function BatchStudio({
   const { locale } = useI18n();
 
   useEffect(() => {
+    let cancelled = false;
     const t = window.setTimeout(() => {
-      void fetchMe().then((next) => {
-        setMe(next);
-        setMeResolved(true);
-      });
+      // Finite session boot (Create Studio parity) — never leave meResolved false forever.
+      setMeResolved(false);
+      setSessionBoot("checking");
+      void (async () => {
+        try {
+          const next = await fetchMe({ timeoutMs: STUDIO_SESSION_BOOT_MS });
+          if (cancelled) return;
+          setMe(next);
+          setMeResolved(true);
+          setSessionBoot("ready");
+        } catch (err) {
+          if (cancelled) return;
+          setMe(null);
+          setMeResolved(true);
+          setSessionBoot(isClientTimeoutError(err) ? "timeout" : "ready");
+        }
+      })();
       // Query ?sku= wins so Seller Pack AfterPath carry is not wiped by localStorage.
       setToyIdentity(hydrateToyIdentityFromQuery(initialSku));
     }, 0);
     return () => {
+      cancelled = true;
       window.clearTimeout(t);
+    };
+  }, [initialSku, bootNonce]);
+
+  // Abort in-flight pack only on unmount / sku change — not on session Retry.
+  useEffect(() => {
+    return () => {
       packAbortRef.current?.abort();
       packAbortRef.current = null;
     };
@@ -1611,14 +1641,53 @@ export function BatchStudio({
           ? sellerPackQuoteLabel(packQuote)
           : batchQuoteLabel(packQuote)}
       </p>
-      {demoMode ? (
-        <p className="mt-0.5 text-[var(--fg-dim)]">
+      {sessionBoot === "timeout" ? (
+        <div
+          className="mt-2 rounded-xl border border-[#FF6B6B]/35 bg-[#FF6B6B]/10 px-3 py-2.5"
+          data-studio-open-error="session-timeout"
+          data-batch-session-boot="timeout"
+          role="alert"
+        >
+          <p
+            className="text-[11px] font-semibold leading-5 text-white/85"
+            data-studio-open-state={sessionBoot}
+          >
+            Could not verify private access in time. Pack stays Lab-only until
+            the check succeeds — retry or continue with a labeled preview.
+          </p>
+          <button
+            type="button"
+            onClick={() => setBootNonce((n) => n + 1)}
+            data-studio-open-retry
+            className="mt-2 inline-flex min-h-9 items-center justify-center rounded-full bg-white px-3 text-[10px] font-black uppercase tracking-[0.12em] text-black transition hover:bg-[var(--mint)]"
+          >
+            Retry access check
+          </button>
+        </div>
+      ) : !meResolved || sessionBoot === "checking" ? (
+        <p
+          className="mt-0.5 text-[var(--fg-dim)]"
+          data-studio-open-state={sessionBoot}
+          data-batch-session-boot={sessionBoot}
+        >
+          Checking access… Lab preview stays available if this times out.
+        </p>
+      ) : demoMode ? (
+        <p
+          className="mt-0.5 text-[var(--fg-dim)]"
+          data-studio-open-state={sessionBoot}
+          data-batch-session-boot={sessionBoot}
+        >
           {privateInputEnabled && !privateLaunchEnabled && !labStill
             ? "Private photo verification only · generation unavailable · 0 credits reserved."
             : "Public Lab preview · no product photo is accepted or processed · 0 credits."}
         </p>
       ) : (
-        <p className="mt-0.5 text-[var(--fg-dim)]">
+        <p
+          className="mt-0.5 text-[var(--fg-dim)]"
+          data-studio-open-state={sessionBoot}
+          data-batch-session-boot={sessionBoot}
+        >
           Session balance:{" "}
           <b className="text-[var(--fg)]">{me?.credits ?? "…"} credits</b>
           {isFree ? (
@@ -1636,7 +1705,7 @@ export function BatchStudio({
             </span>
           ) : null}
           {typeof me?.credits !== "number" ? (
-            <span> · loading balance…</span>
+            <span> · balance unavailable</span>
           ) : !sellerPackBalanceCovers(packQuote, me.credits) ? (
             <span className="text-amber-200">
               {" "}

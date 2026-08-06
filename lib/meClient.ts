@@ -5,6 +5,7 @@
 import {
   ClientTimeoutError,
   isClientTimeoutError,
+  withTimeout,
 } from "@/lib/clientTimeout";
 import type { PublicSession } from "@/lib/session";
 
@@ -308,8 +309,10 @@ async function authHeaders(): Promise<HeadersInit> {
 
 export async function fetchMe(opts?: {
   /**
-   * Abort hanging /api/me so Studio never stays on "Opening…" forever.
-   * On wall-clock timeout, rejects with ClientTimeoutError (honest retry path).
+   * Wall-clock bound for Studio open so we never stay on "Opening…" forever.
+   * Covers BOTH supabase getSession (authHeaders) and /api/me — a hanging
+   * session lookup used to leave Opening stuck even when fetch had AbortController.
+   * On timeout, rejects with ClientTimeoutError (honest retry path).
    * Other network/auth failures still resolve null (soft public Lab fallback).
    */
   timeoutMs?: number;
@@ -318,17 +321,18 @@ export async function fetchMe(opts?: {
     typeof opts?.timeoutMs === "number" && opts.timeoutMs > 0
       ? opts.timeoutMs
       : undefined;
-  const controller =
-    typeof timeoutMs === "number" && typeof AbortController !== "undefined"
-      ? new AbortController()
-      : null;
-  const timer =
-    controller && timeoutMs
-      ? setTimeout(() => controller.abort(), timeoutMs)
-      : null;
-  try {
-    const headers = await authHeaders();
+
+  const load = async (): Promise<MeResponse | null> => {
+    const controller =
+      typeof timeoutMs === "number" && typeof AbortController !== "undefined"
+        ? new AbortController()
+        : null;
+    const timer =
+      controller && timeoutMs
+        ? setTimeout(() => controller.abort(), timeoutMs)
+        : null;
     try {
+      const headers = await authHeaders();
       const res = await fetch("/api/me", {
         headers,
         signal: controller?.signal,
@@ -339,18 +343,31 @@ export async function fetchMe(opts?: {
     } finally {
       if (timer) clearTimeout(timer);
     }
+  };
+
+  try {
+    // Outer withTimeout covers authHeaders hang; inner AbortController aborts fetch.
+    if (timeoutMs) {
+      return await withTimeout(
+        load(),
+        timeoutMs,
+        "Could not verify private access in time"
+      );
+    }
+    return await load();
   } catch (err) {
-    if (timer) clearTimeout(timer);
-    // Explicit 8s Studio open contract: surface timeout, never swallow into null.
+    // Explicit Studio open contract: surface timeout, never swallow into null.
+    if (isClientTimeoutError(err)) throw err;
     const aborted =
-      Boolean(controller?.signal.aborted) ||
-      (err instanceof Error && err.name === "AbortError");
+      (err instanceof Error && err.name === "AbortError") ||
+      (typeof err === "object" &&
+        err !== null &&
+        (err as { name?: string }).name === "AbortError");
     if (aborted && timeoutMs) {
       throw new ClientTimeoutError(
         "Could not verify private access in time"
       );
     }
-    if (isClientTimeoutError(err)) throw err;
     return null;
   }
 }
