@@ -80,12 +80,13 @@
   --floating-generate-z: 40;
 
   /*
-   * Create sticky content scroll pad for nav-less fixed Moment (AIT-144).
-   * Sticky chrome ≈ optional status line + primary btn + py. Content bottom inset
-   * clears sticky chrome + --floating-cta-safe-bottom only — not residual tab height.
+   * Create sticky content scroll pad for nav-less fixed Moment (AIT-144/159).
+   * After AIT-152 full tab hide, sticky sits only on --floating-cta-safe-bottom.
+   * Re-measured sticky chrome ≈ optional status line + primary btn + py-2.5
+   * (~5.5rem with status; keep 5.5rem — no tab residual, no double pad).
    * Tab-sharing Create keeps legacy pb-36 (unchanged).
    */
-  --create-sticky-chrome-h: 5.75rem;
+  --create-sticky-chrome-h: 5.5rem;
   --create-content-pad-safe: calc(
     var(--create-sticky-chrome-h) + var(--floating-cta-safe-bottom)
   );

@@ -3723,7 +3723,8 @@ export function CreateStudio({
       </div>
 
       {/* ── Sticky mobile primary CTA
-          Fixed Moment / resultShell hides AppShell tab nav → safe-area only.
+          AIT-141/152/159: fixed Moment hides five-door tab → sticky on
+          --floating-cta-safe-bottom only (no ghost tab / double pad).
           Generic Create still shares the tab bar → clear tab + home indicator. ── */}
       <div
         className={
@@ -3735,6 +3736,9 @@ export function CreateStudio({
         data-floating-generate="create-sticky"
         data-create-sticky-clearance={
           fixedMomentContract ? "safe-bottom" : "mobile-nav"
+        }
+        data-create-sticky-fold={
+          fixedMomentContract ? "navless" : "with-tab"
         }
       >
         {image ? (

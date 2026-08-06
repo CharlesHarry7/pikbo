@@ -191,6 +191,40 @@ assert.doesNotMatch(
   /className="[^"]*\bpb-24\b/,
   "fixed Moment Create page className must not keep pb-24 tab-ghost under sticky"
 );
+// AIT-159: re-measure guest fold + sticky after full tab hide (AIT-152)
+assert.match(
+  gate,
+  /data-guest-create-compact="mobile"/,
+  "guest Create must keep AIT-134 compact chrome for ~390px first screen"
+);
+assert.match(
+  gate,
+  /data-guest-create-fold="navless"/,
+  "guest Create fold must mark navless clearance after AIT-152 tab hide"
+);
+assert.match(
+  studio,
+  /data-create-sticky-fold=\{\s*fixedMomentContract\s*\?\s*["']navless["']\s*:\s*["']with-tab["']\s*\}/,
+  "Create sticky fold marker must expose navless vs with-tab branch"
+);
+assert.match(
+  createPage,
+  /data-create-header=["']compact-mobile["']/,
+  "fixed Moment Create header must stay compact on mobile for sticky primary above fold"
+);
+{
+  const globals = source("app/globals.css");
+  assert.match(
+    globals,
+    /--create-sticky-chrome-h:\s*5\.5rem/,
+    "AIT-159 sticky chrome token must stay re-measured (no tab residual pad)"
+  );
+  assert.match(
+    globals,
+    /--create-content-pad-safe:\s*calc\(\s*var\(--create-sticky-chrome-h\)\s*\+\s*var\(--floating-cta-safe-bottom\)\s*\)/,
+    "content pad must clear sticky chrome + floating-cta-safe-bottom only"
+  );
+}
 assert.match(
   studio,
   /data-lab-sample-retry|data-studio-open-retry/,

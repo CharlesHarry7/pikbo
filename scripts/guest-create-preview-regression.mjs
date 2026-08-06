@@ -13,6 +13,20 @@ assert.match(createPage, /<CreateStudio[\s\S]*initialEffect="street-power-up"[\s
 assert.match(createPage, /description:[\s\S]{0,180}cached Street Power-Up sample/);
 
 assert.match(gate, /data-guest-create-first="street-power-up"/);
+// AIT-134/159: mobile compact chrome — sample + Sign-in above fold on ~390px
+assert.match(gate, /data-guest-create-compact="mobile"/);
+// AIT-159: re-measure after full tab hide — safe-area bottom only (no tab ghost)
+assert.match(gate, /data-guest-create-fold="navless"/);
+assert.match(
+  gate,
+  /pb-\[max\(1\.25rem,env\(safe-area-inset-bottom/,
+  "guest Create bottom pad must be safe-area only after AIT-152 tab hide"
+);
+assert.match(
+  gate,
+  /max-h-\[min\(46svh,21rem\)\]/,
+  "guest sample max-height must keep primary path above fold on ~390px"
+);
 assert.match(gate, /Street[\s\S]*Power-Up\./);
 assert.match(gate, /A neon, drop-day direction built for designer-toy reveals/);
 assert.match(gate, /data-guest-create-sample/);
@@ -57,5 +71,5 @@ for (const asset of [
 }
 
 console.log(
-  "guest-create-preview-regression: PASS (guest-first 6s archive study; honest 9:16/5s/720p private target; sign-in/request-beta CTAs; no upload/credits/Generate copy)"
+  "guest-create-preview-regression: PASS (guest-first 6s archive study; AIT-159 navless fold; honest 9:16/5s/720p private target; sign-in/request-beta CTAs; no upload/credits/Generate copy)"
 );
