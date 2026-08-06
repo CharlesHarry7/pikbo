@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useToast } from "@/components/Toast";
 import { interpretDownloadHead } from "@/lib/createTrust";
+import { canRetryGenerateFailure } from "@/lib/generateRecoveryPolicy";
 import { downloadVideoFile, privateDownloadHeaders } from "@/lib/history";
 import { fetchMe, type MeResponse } from "@/lib/meClient";
 import { createRemixHref, remixOptsFromRecord } from "@/lib/remixIntent";
@@ -12,8 +13,10 @@ import {
   acceptControlledLibraryNewAttemptUrl,
   libraryDurableTerminalFailureCopy,
   libraryInputBindingCopy,
+  libraryMissingPrivateResultCopy,
   libraryNewAttemptButtonLabel,
   libraryNotYourToyCopy,
+  libraryResultMissingDeliverable,
 } from "@/lib/privateGenerationResultsPure.mjs";
 import { MOMENT_CREATE_HREF } from "@/lib/softLaunch";
 
@@ -72,7 +75,11 @@ function canLocalRetry(job: GenerationJob): boolean {
   if (!isRetryable(job.status)) return false;
   if (job.durable === true || job.adapter === "supabase-private") return false;
   if (job.capabilities?.localRetry === false) return false;
-  return job.capabilities?.localRetry === true || job.capabilities == null;
+  const capabilityAllows =
+    job.capabilities?.localRetry === true || job.capabilities == null;
+  if (!capabilityAllows) return false;
+  // Server-honest gate: auth/paywall/balance/reconcile codes never invent Retry.
+  return canRetryGenerateFailure({ code: job.errorCode });
 }
 
 /** Process-memory Cancel only — durable open rows stay refresh/poll-only. */
@@ -83,14 +90,28 @@ function canLocalCancel(job: GenerationJob): boolean {
   return job.capabilities?.localCancel === true || job.capabilities == null;
 }
 
-/** Durable terminal failure: honest Create/new-attempt, not process-memory Retry. */
+/**
+ * Durable terminal failure OR missing private deliverable: honest Create /
+ * new-attempt, not process-memory Retry.
+ */
 function canNewAttempt(job: GenerationJob): boolean {
-  if (!isRetryable(job.status)) return false;
   if (canLocalRetry(job)) return false;
+  const missing = libraryResultMissingDeliverable(job);
+  if (!isRetryable(job.status) && !missing) return false;
   return (
     job.capabilities?.newAttempt === true ||
     job.durable === true ||
-    job.adapter === "supabase-private"
+    job.adapter === "supabase-private" ||
+    missing
+  );
+}
+
+/** Owner-safe download only when the server marked a real deliverable. */
+function canDownloadResultCard(job: GenerationJob): boolean {
+  return (
+    job.status === "succeeded" &&
+    job.downloadAllowed === true &&
+    Boolean((job.requestId || job.id || "").trim())
   );
 }
 
@@ -117,33 +138,66 @@ function visibleAccountJob(job: GenerationJob): boolean {
   // Fail-closed: never render another session's stub (owned:false).
   if (job.owned === false) return false;
   if (isOpen(job.status) || isRetryable(job.status)) return true;
-  return (
-    job.status === "succeeded" &&
-    job.downloadAllowed === true &&
-    Boolean(job.videoUrl)
-  );
+  // Succeeded with OR without deliverable — missing private result stays visible.
+  return job.status === "succeeded";
 }
 
-function jobStatus(status: string): {
+function jobStatus(job: GenerationJob | string): {
   label: string;
   tone: string;
   dot: string;
 } {
-  if (status === "succeeded") {
+  // Back-compat: some call sites pass status string only.
+  if (typeof job === "string") {
+    if (job === "succeeded") {
+      return {
+        label: "Ready",
+        tone: "text-[var(--neon-pink)]",
+        dot: "bg-[var(--neon-pink)]",
+      };
+    }
+    if (job === "running") {
+      return {
+        label: "Generating",
+        tone: "text-sky-200",
+        dot: "animate-pulse bg-sky-300",
+      };
+    }
+    if (job === "queued") {
+      return {
+        label: "Preparing",
+        tone: "text-sky-200",
+        dot: "animate-pulse bg-sky-300",
+      };
+    }
+    return {
+      label: "Needs retry",
+      tone: "text-amber-200",
+      dot: "bg-amber-300",
+    };
+  }
+  if (libraryResultMissingDeliverable(job)) {
+    return {
+      label: "Result missing",
+      tone: "text-amber-200",
+      dot: "bg-amber-300",
+    };
+  }
+  if (job.status === "succeeded") {
     return {
       label: "Ready",
       tone: "text-[var(--neon-pink)]",
       dot: "bg-[var(--neon-pink)]",
     };
   }
-  if (status === "running") {
+  if (job.status === "running") {
     return {
       label: "Generating",
       tone: "text-sky-200",
       dot: "animate-pulse bg-sky-300",
     };
   }
-  if (status === "queued") {
+  if (job.status === "queued") {
     return {
       label: "Preparing",
       tone: "text-sky-200",
@@ -177,6 +231,11 @@ function effectName(effect: string): string {
 }
 
 function friendlyFailure(job: GenerationJob): string {
+  if (libraryResultMissingDeliverable(job)) {
+    return libraryMissingPrivateResultCopy({
+      samePhotoHandoff: Boolean(acceptedSamePhotoHandoff(job)),
+    });
+  }
   const durable = job.durable === true || job.adapter === "supabase-private";
   if (durable) {
     // Copy branches on the same client-accepted handoff URL as the CTA.
@@ -243,11 +302,12 @@ function JobActionRow({
   );
   return (
     <div className="mt-4 flex flex-wrap gap-2">
-      {job.status === "succeeded" ? (
+      {canDownloadResultCard(job) ? (
         <button
           type="button"
           onClick={() => onDownload(job)}
           className="btn btn-primary min-h-11 flex-1 !px-4 !py-2 text-xs"
+          data-library-action="download"
         >
           Download video
         </button>
@@ -425,6 +485,16 @@ function LibraryGridInner() {
   }, [me?.signedIn, openCount, refreshJobs]);
 
   async function download(job: GenerationJob) {
+    // Fail-closed: never download without server downloadAllowed, and never
+    // follow raw provider CDN or storage signed URLs even if a DTO still carries one.
+    if (!canDownloadResultCard(job)) {
+      toast(
+        libraryResultMissingDeliverable(job)
+          ? "This private result is missing — no file to download. Settlement may be unconfirmed."
+          : "This result is not ready to download"
+      );
+      return;
+    }
     const id = (job.requestId || job.id || "").trim();
     if (!id) {
       toast("This result is not ready to download");
@@ -677,8 +747,11 @@ function LibraryGridInner() {
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
             {sortedJobs.map((job) => {
-              const status = jobStatus(job.status);
+              const status = jobStatus(job);
               const selected = job.id === activeSelectedId;
+              const playable =
+                canDownloadResultCard(job) &&
+                Boolean(job.videoUrl?.startsWith("/api/downloads/"));
               return (
                 <div
                   key={job.id}
@@ -697,11 +770,18 @@ function LibraryGridInner() {
                       : "border-white/10"
                   }`}
                   data-selected={selected ? "true" : "false"}
+                  data-library-result={
+                    libraryResultMissingDeliverable(job)
+                      ? "missing"
+                      : canDownloadResultCard(job)
+                        ? "ready"
+                        : job.status
+                  }
                   aria-pressed={selected}
                   aria-label={`${effectName(job.effect)}, ${status.label}, ${formatDate(job.createdAt)}`}
                 >
                   <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(255,78,205,0.12),transparent_55%),#09090a] text-center">
-                    {job.status === "succeeded" && job.videoUrl ? (
+                    {playable && job.videoUrl ? (
                       <video
                         src={job.videoUrl}
                         muted
@@ -749,16 +829,27 @@ function LibraryGridInner() {
           {selectedJob
             ? (() => {
                 const job = selectedJob;
-                const status = jobStatus(job.status);
+                const status = jobStatus(job);
                 const inputBound = job.inputBound === true;
+                const playable =
+                  canDownloadResultCard(job) &&
+                  Boolean(job.videoUrl?.startsWith("/api/downloads/"));
+                const missing = libraryResultMissingDeliverable(job);
                 return (
                   <article
                     key={job.id}
                     className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111113] shadow-[0_24px_70px_-50px_rgba(0,0,0,0.95)] lg:sticky lg:top-6"
                     data-library-detail="true"
+                    data-library-result={
+                      missing
+                        ? "missing"
+                        : canDownloadResultCard(job)
+                          ? "ready"
+                          : job.status
+                    }
                   >
                     <div className="relative grid aspect-video place-items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(255,78,205,0.12),transparent_55%),#09090a] text-center">
-                      {job.status === "succeeded" && job.videoUrl ? (
+                      {playable && job.videoUrl ? (
                         <video
                           src={job.videoUrl}
                           controls
@@ -796,8 +887,13 @@ function LibraryGridInner() {
                         </span>
                       </div>
 
-                      {isRetryable(job.status) ? (
-                        <p className="mt-3 text-xs leading-5 text-amber-100/72">
+                      {isRetryable(job.status) || missing ? (
+                        <p
+                          className="mt-3 text-xs leading-5 text-amber-100/72"
+                          data-library-failure={
+                            missing ? "private-result-missing" : "terminal"
+                          }
+                        >
                           {friendlyFailure(job)}
                         </p>
                       ) : null}

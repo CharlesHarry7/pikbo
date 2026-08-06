@@ -292,6 +292,7 @@ export function classifyDownloadHead(opts: {
   }
   // Durable UUID deny is uniform 404 NOT_FOUND (unauth/foreign/missing).
   // Legacy AUTH_REQUIRED / 401 on the same gate maps to the same client path.
+  // PRIVATE_RESULT_MISSING / sign failure: result is not a deliverable.
   if (
     status === 404 ||
     code === "NOT_FOUND" ||
@@ -302,6 +303,16 @@ export function classifyDownloadHead(opts: {
       kind: "not_found",
       message:
         "Download not found for this account — try remake or open Library recovery",
+    };
+  }
+  if (
+    code === "PRIVATE_RESULT_MISSING" ||
+    code === "PRIVATE_RESULT_SIGN_FAILED"
+  ) {
+    return {
+      kind: "block",
+      message:
+        "Private result is not available to download. Settlement may be unconfirmed — refresh or start a new attempt.",
     };
   }
   if (code === "CANCELED" || code === "REQUEST_CANCELED") {
@@ -464,6 +475,65 @@ export function isPlayableResultVideoUrl(opts: {
   if (opts.videoUrl.startsWith("/api/downloads/")) return false;
   // Defense: never mount free live absolute provider URLs as durable media.
   return false;
+}
+
+/**
+ * True when a URL looks like a short-lived storage object signature
+ * (Supabase `/object/sign/…?token=`, S3-style query signatures).
+ * These must never land in durable client stores — they expire and leak.
+ */
+export function isStorageSignedObjectUrl(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  if (!t || t.length > 2000) return false;
+  if (!/^https?:\/\//i.test(t)) return false;
+  try {
+    const u = new URL(t);
+    const path = u.pathname.toLowerCase();
+    // Supabase Storage signed object URLs.
+    if (path.includes("/storage/v1/object/sign/")) return true;
+    if (path.includes("/object/sign/")) return true;
+    // Tokenized private object path (Supabase createSignedUrl).
+    if (
+      u.searchParams.has("token") &&
+      (path.includes("/storage/") || path.includes("/object/"))
+    ) {
+      return true;
+    }
+    // S3 / R2 style temporary signatures.
+    if (
+      u.searchParams.has("X-Amz-Signature") ||
+      u.searchParams.has("X-Amz-Credential") ||
+      (u.searchParams.has("Signature") && u.searchParams.has("Expires"))
+    ) {
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Normalize a result video URL for durable client stores (Library history,
+ * Create version stacks). Storage signed absolute URLs rewrite to
+ * `/api/downloads/{jobId}` when an id is known; otherwise they are dropped.
+ */
+export function durableClientVideoUrl(
+  videoUrl: string,
+  opts?: { requestId?: string | null; jobId?: string | null }
+): string | null {
+  if (!videoUrl || typeof videoUrl !== "string") return null;
+  const t = videoUrl.trim();
+  if (!t || !isSafeDeliverableUrl(t)) return null;
+
+  if (isStorageSignedObjectUrl(t)) {
+    const id = String(opts?.jobId || opts?.requestId || "").trim();
+    if (!id) return null;
+    return `/api/downloads/${encodeURIComponent(id)}`;
+  }
+
+  return t;
 }
 
 /**

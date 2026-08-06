@@ -3,6 +3,9 @@
  * owner-only recovery. Recovery is allowed to win only when it proves a
  * terminal durable outcome; a read/network failure must not cancel a live
  * provider request.
+ *
+ * Also owns fail Retry honesty (Create/Batch/Library):
+ * - fail Retry is server-gated (no fake retriable path on closed gates)
  */
 
 export type GenerateRaceResultLike = {
@@ -11,6 +14,44 @@ export type GenerateRaceResultLike = {
   code?: string;
   creditsRefunded?: boolean;
 };
+
+/**
+ * Codes where Retry would only re-hit the same closed gate. User must change
+ * context (sign-in, rights, balance, wait for reconciliation) first.
+ * Transient rate/in-flight codes stay retriable after Retry-After countdown.
+ */
+const NON_RETRYABLE_GENERATE_CODES = new Set([
+  "AUTH_REQUIRED",
+  "LIVE_ACCESS_REQUIRED",
+  "INSUFFICIENT_CREDITS",
+  "PROVIDER_BALANCE",
+  "RIGHTS_REQUIRED",
+  /** Hold/reconcile open — hammering re-POST risks double settlement. */
+  "DURABLE_CREDITS_UNAVAILABLE",
+]);
+
+/**
+ * Fail-panel / Library Retry gate — pure, server-honest.
+ * - Never invent retry while paywall/fatal/auth blocks apply
+ * - refund unconfirmed still allows Retry (copy warns to check balance first)
+ * - busy or missing input never shows Retry
+ */
+export function canRetryGenerateFailure(opts: {
+  code?: string | null;
+  fatal?: boolean;
+  paywall?: boolean;
+  busy?: boolean;
+  /** Still / photo present for a re-POST. */
+  hasInput?: boolean;
+}): boolean {
+  if (opts.busy) return false;
+  if (opts.hasInput === false) return false;
+  if (opts.paywall === true) return false;
+  if (opts.fatal === true) return false;
+  const code = (opts.code || "").trim();
+  if (code && NON_RETRYABLE_GENERATE_CODES.has(code)) return false;
+  return true;
+}
 
 /**
  * How the Create wait surface leaves a still-open generation.
