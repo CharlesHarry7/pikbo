@@ -276,7 +276,7 @@ export const GUIDES: Guide[] = [
         h2: "1. Match Etsy’s job, not a cinematic short",
         paragraphs: [
           "Listing video intent is commercial: show the object clearly, keep motion calm, and avoid effects that hide paint or scale. Prefer 360° spin, floating hero, or display glam over chaotic dance unless that is your brand.",
-          "Confirm Etsy’s current file rules (length, format, size) before you generate a batch. Soft launch Free Mini is 5s · 480p with an on-player mark — enough to validate a hook.",
+          "Confirm Etsy’s current file rules (length, format, size) before you generate a batch. Public validation is a cached Lab prototype at 0 credits (upload not processed). When Live is enabled for an eligible account, Generate shows duration, resolution, and the exact quote — enough to validate one hook.",
         ],
       },
       {
@@ -289,8 +289,8 @@ export const GUIDES: Guide[] = [
       {
         h2: "3. Generate on the use-case page, then QA",
         paragraphs: [
-          "Open the Etsy use-case landing or Generate with a listing recipe. Confirm you own the photo. Run Free Mini or a live job, wait for the full render (often 1–3 minutes), and download only after visual QA.",
-          "If free credits are spent, wait for period refresh or upgrade when billing is live. Failed live jobs should refund the 10-credit debit when the server confirms failure.",
+          "Open the Etsy use-case landing or Generate with a listing recipe. Confirm you own the photo. Start with a cached Lab preview (0 credits). When Live is enabled for an eligible account, submit only after the exact quote appears, wait for the full render, and download only after visual QA.",
+          "Public checkout stays closed during validation. When Live is enabled for an eligible account, a failed job refunds its credit debit only after the server confirms release.",
         ],
       },
     ],
@@ -314,9 +314,9 @@ export const GUIDES: Guide[] = [
   {
     slug: "free-ai-toy-video-generator-limits",
     emoji: "🆓",
-    title: "Free AI Toy Video Generator — What Free Mini Actually Includes",
+    title: "Free AI Toy Video Generator — What Free Validation Actually Includes",
     dek: "Honest soft-launch limits so searchers are not sold unlimited generation.",
-    seoTitle: "Free AI Toy Video Generator Limits | Pikbo Free Mini",
+    seoTitle: "Free AI Toy Video Generator Limits | Cached Lab | Pikbo",
     seoDescription:
       "What Pikbo free validation includes: cached Lab prototypes at 0 credits. Live is gated; configured allowances and refund truth are explained without unlimited claims.",
     readMins: 3,
@@ -324,17 +324,17 @@ export const GUIDES: Guide[] = [
       "Searchers looking for a free AI toy video generator should see the current truth: public validation is a cached prototype path, not unlimited generation and not a multi-model marketplace.",
     sections: [
       {
-        h2: "What Free Mini is",
+        h2: "What the free path is",
         paragraphs: [
           "The public free path is a cached Pikbo Lab prototype at 0 credits. It never processes your upload and makes no provider call.",
           "When Live is enabled for an eligible account, Generate shows the configured model, duration, resolution, and exact credit quote. A refund is only claimed after the server confirms release.",
         ],
       },
       {
-        h2: "What Free Mini is not",
+        h2: "What the free path is not",
         paragraphs: [
           "It is not unlimited 4K, not Kling/Runway multi-model switching, and not a guarantee of sales or virality. Stripe checkout stays off until billing is intentionally enabled.",
-          "If the UI says trial used up, the cookie period is exhausted — not a broken engine. Wait for monthly free refresh or use paid credits when available.",
+          "If Live is not offered on your account, that is the validation gate — not a broken engine. Cached Lab prototypes stay free; paid checkout remains closed until intentionally enabled.",
         ],
       },
       {
@@ -460,7 +460,7 @@ export const GUIDES: Guide[] = [
     dek: "Why a toy-vertical generator beats a multi-model zoo for listings and drops.",
     seoTitle: "Designer Toy AI Video vs Generic Tools | Pikbo",
     seoDescription:
-      "Compare designer toy AI video with generic photo-to-video apps. Owned photos, listing recipes, honest Free Mini limits — not fake multi-model theater.",
+      "Compare designer toy AI video with generic photo-to-video apps. Owned photos, listing recipes, honest Lab preview limits and gated Live — not fake multi-model theater.",
     readMins: 6,
     intro:
       "Generic AI video tools optimize for faces, cinematic B-roll, and model shopping. Designer-toy sellers need paint, sculpt, and packaging to stay readable while motion sells depth on Etsy, TikTok Shop, and drop posts. This guide explains the difference and when Pikbo’s toy-native path is the right job.",
@@ -487,7 +487,7 @@ export const GUIDES: Guide[] = [
         ],
       },
       {
-        h2: "Honest Free Mini vs unlimited claims",
+        h2: "Honest free path vs unlimited claims",
         paragraphs: [
           "Public validation is intentionally small: cached Lab prototypes cost 0 credits and never process your upload. Configured Live allowances appear only for eligible accounts.",
           "A failed job is called refunded only after the server confirms release. TIMEOUT or cancel can remain unconfirmed — that is honest ledger policy, not a silent debit.",
@@ -641,7 +641,7 @@ export const GUIDES: Guide[] = [
         a: "Not against YouTube and Amazon on the head term in week one. Compete on photo-to-reveal jobs and vertical long-tails, then earn links and CTR.",
       },
       {
-        q: "Is Free Mini the same as free unboxing toys?",
+        q: "Is free Pikbo the same as free unboxing toys?",
         a: "No. Pikbo provides a cached video-workflow preview during validation; it does not ship physical toys or promise public Live generation.",
       },
       {
