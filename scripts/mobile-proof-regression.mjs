@@ -103,6 +103,19 @@ assert.match(
   /data-mobile-nav=["']primary["']/,
   "Primary mobile nav marker remains for safe-area / clearance smoke"
 );
+{
+  const toast = source("components/Toast.tsx");
+  assert.match(
+    toast,
+    /bottom-\[calc\(var\(--mobile-nav-clearance\)\+0\.5rem\)\]/,
+    "Toast stack clears mobile nav + safe-area (AIT-185)"
+  );
+  assert.doesNotMatch(
+    toast,
+    /bottom-20/,
+    "Toast must not hardcode bottom-20 under notched home indicator"
+  );
+}
 assert.doesNotMatch(
   zh,
   /job\.seller\.blurb":\s*"[^"]*实时生成 30 积分/,
