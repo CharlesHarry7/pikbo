@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /**
- * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-254 / AIT-274:
+ * AIT-41 / AIT-103 / AIT-148 / AIT-162 / AIT-183 / AIT-193 / AIT-254 / AIT-274 / AIT-477:
  * Library owner-safe recovery.
  *
  * Source + pure-function regression (no network, no provider, no Supabase).
  * Covers owner-scoped list/detail, non-owner deny (no metadata leak),
- * retry / cancel (item + collection) / new-attempt paths, owner-ready asset
- * bind gate, guest deep-link login next, deep-link fail-closed copy,
- * client Bearer on retry/cancel so durable DURABLE_* codes can resolve, and
- * pure merge dropping owned:false before page slice (AIT-274).
+ * retry / cancel (item + collection) / new-attempt paths, stills retry
+ * durable fail-closed (AIT-477), owner-ready asset bind gate, guest deep-link
+ * login next, deep-link fail-closed copy, client Bearer on retry/cancel so
+ * durable DURABLE_* codes can resolve, and pure merge dropping owned:false
+ * before page slice (AIT-274).
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -30,6 +31,9 @@ const pure = read("lib/privateGenerationResultsPure.mjs");
 const results = read("lib/privateGenerationResults.ts");
 const generationsList = read("app/api/generations/route.ts");
 const generationsDetail = read("app/api/generations/[id]/route.ts");
+const imageRetryRoute = read("app/api/image/[id]/retry/route.ts");
+const imageClient = read("lib/imageClient.ts");
+const imagePage = read("app/image/page.tsx");
 const library = read("components/LibraryGrid.tsx");
 const retryRoute = read("app/api/generations/[id]/retry/route.ts");
 const privateToyAssets = read("lib/privateToyAssets.ts");
@@ -97,6 +101,58 @@ assert.match(generationsDetail, /code:\s*result\.code/);
 assert.doesNotMatch(generationsDetail, /created_by\s*:/);
 // No provider / signed URL leakage on detail.
 assert.doesNotMatch(generationsDetail, /providerOutputUrl|signedUrl|output_object_key/);
+
+// ─── Source contracts: stills retry fail-closed (AIT-477, generations parity) ─
+
+// Item POST /api/image/[id]/retry
+assert.match(imageRetryRoute, /export async function POST\(req: Request/);
+assert.match(imageRetryRoute, /forkRetryImageJob/);
+assert.match(imageRetryRoute, /DURABLE_USE_NEW_ATTEMPT/);
+assert.match(imageRetryRoute, /DURABLE_IN_FLIGHT/);
+assert.match(imageRetryRoute, /DURABLE_ALREADY_SUCCEEDED/);
+assert.match(imageRetryRoute, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(imageRetryRoute, /getPrivateLibraryJobForOwner/);
+assert.match(imageRetryRoute, /getAuthUserFromRequest/);
+assert.match(
+  imageRetryRoute,
+  /result\.code === "NOT_FOUND" && isUuid\(id\)/
+);
+assert.match(imageRetryRoute, /acceptControlledLibraryNewAttemptUrl/);
+assert.match(imageRetryRoute, /mode:\s*"supabase-private"/);
+assert.match(imageRetryRoute, /next:\s*\{[\s\S]*createUi/);
+assert.match(
+  imageRetryRoute,
+  /imageUi:\s*GENERIC_IMAGE_NEW_ATTEMPT|imageUi:\s*["']\/image["']/
+);
+// Missing/foreign stay uniform NOT_FOUND (no ownership leak).
+assert.match(imageRetryRoute, /code:\s*result\.code/);
+assert.doesNotMatch(
+  imageRetryRoute,
+  /newAttemptUrl\.startsWith\(/,
+  "image retry must not use loose startsWith on newAttemptUrl"
+);
+// Client never invents process-memory re-POST for durable codes.
+assert.match(imageClient, /forkRetryImageLedger/);
+assert.match(imageClient, /acceptImageRetryNavigation/);
+assert.match(imageClient, /Authorization/);
+assert.match(imageClient, /getSupabaseBrowser|access_token/);
+assert.match(imageClient, /method:\s*["']POST["']/);
+assert.match(imagePage, /forkRetryImageLedger/);
+assert.match(imagePage, /DURABLE_USE_NEW_ATTEMPT/);
+assert.match(imagePage, /DURABLE_IN_FLIGHT/);
+assert.match(imagePage, /DURABLE_ALREADY_SUCCEEDED/);
+assert.match(imagePage, /acceptImageRetryNavigation/);
+// Durable handoff must not fall through to void generate for durable codes.
+assert.match(
+  imagePage,
+  /DURABLE_USE_NEW_ATTEMPT[\s\S]{0,200}window\.location\.href/
+);
+// Durable IN_FLIGHT / SUCCEEDED / DETAIL_UNAVAILABLE share a fail-closed return.
+assert.match(
+  imagePage,
+  /DURABLE_IN_FLIGHT[\s\S]{0,600}return;/
+);
+assert.match(imagePage, /DURABLE_DETAIL_UNAVAILABLE/);
 
 // ─── Source contracts: retry path ──────────────────────────────────────────
 
