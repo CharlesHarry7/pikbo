@@ -111,6 +111,53 @@ assert(
   "rank tool must keep private generation and subscriptions closed during validation"
 );
 
+// AIT-251: Home suite Free Mini honesty — freeLiveOpen only.
+// HfProductRail Free card + FreeTrialCta labels: Lab sample / 0 credits when
+// Live closed; Free Mini 5s only behind freeLiveOpen (parity FreeTrialCta).
+const hfProductRailSource = read("components/HfProductRail.tsx");
+assert(
+  /canLiveGenerate\s*\(/.test(hfProductRailSource),
+  "HfProductRail must gate Free Mini product caps on canLiveGenerate"
+);
+assert(
+  /freeLiveOpen/.test(hfProductRailSource),
+  "HfProductRail must define freeLiveOpen (Live gate truth)"
+);
+assert(
+  /liveEnabled\s*!==\s*false/.test(hfProductRailSource),
+  "HfProductRail must require freeLive.liveEnabled !== false"
+);
+assert(
+  hfProductRailSource.includes("Lab sample · 0 credits"),
+  "HfProductRail closed path must advertise Lab sample · 0 credits"
+);
+assert(
+  /freeLiveOpen[\s\S]{0,160}\?[\s\S]{0,100}Lab sample · Free Mini 5s/.test(
+    hfProductRailSource
+  ),
+  "HfProductRail Free Mini 5s must sit behind freeLiveOpen ternary"
+);
+assert(
+  /data-hf-rail-free-cap/.test(hfProductRailSource),
+  "HfProductRail must expose data-hf-rail-free-cap for free-live vs lab-gated"
+);
+// Free Mini 5s must not be bare static JSX (always-on residual claim).
+assert(
+  !/^\s*Lab sample · Free Mini 5s\s*$/m.test(hfProductRailSource),
+  "HfProductRail must not hardcode bare Lab sample · Free Mini 5s as static JSX"
+);
+assert(
+  !/labelTry=["']Try free · Mini 5s["']/.test(hfProductRailSource),
+  "HfProductRail must not pass unconditional labelTry Mini 5s (gate on freeLiveOpen)"
+);
+assert(
+  hfProductRailSource.includes("labelDemo={headerDemoLabel}") &&
+    /headerDemoLabel\s*=\s*["']Lab sample · 0 credits["']/.test(
+      hfProductRailSource
+    ),
+  "HfProductRail header FreeTrialCta must demote to Lab sample · 0 credits when Live closed"
+);
+
 function walkHtml(directory) {
   if (!fs.existsSync(directory)) return [];
   const output = [];
