@@ -199,6 +199,38 @@ assert(
   "Library must stay account-only with owner-gated video results, retry/cancel, and no Pack/demo grid"
 );
 
+// AIT-519: PublicLaunchPackSample residual carnival → gallery-calm copper board
+{
+  const publicSample = read("components/PublicLaunchPackSample.tsx");
+  const carnival =
+    /#D84A35|#E25A43|#2876FF|#FF6846|#C9FF45|#DCFF81|#7A66FF|#c8ff3d|c8ff3d|FF4ECD|B14EFF|00D9FF/i;
+  assert(
+    !carnival.test(publicSample),
+    "PublicLaunchPackSample must not hard-code carnival coral/hot-blue/lime hex accents"
+  );
+  assert(
+    publicSample.includes("var(--brand)") &&
+      publicSample.includes("var(--brand-2)") &&
+      publicSample.includes("var(--ember)"),
+    "PublicLaunchPackSample accents use gallery-calm copper board tokens"
+  );
+  assert(
+    publicSample.includes("Street Power-Up") &&
+      publicSample.includes("No product upload in this public preview") &&
+      publicSample.includes("Request seller beta") &&
+      /private render available now/i.test(publicSample),
+    "PublicLaunchPackSample keeps archive-sample honesty + private Moment CTAs / Live-gate copy"
+  );
+  assert(
+    !read("app/page.tsx").includes("PublicLaunchPackSample") &&
+      !read("app/page.tsx").includes("PrivateSellerPackGate") &&
+      !read("app/page.tsx").includes("HomeSeoBody") &&
+      !read("app/page.tsx").includes("HomeBrowseCta") &&
+      !read("app/page.tsx").includes("HfExplore"),
+    "gallery-calm home must not remount PublicLaunchPackSample / Seller Pack / HomeSeoBody / browse CTA / HfExplore"
+  );
+}
+
 // AIT-320: four-surface money path off residual competitor lime (board tokens)
 {
   const lime = /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i;
