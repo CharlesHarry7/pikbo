@@ -243,15 +243,26 @@ assert(
       ),
     "Home rails + Library + browse CTA use neon-pink board tokens"
   );
+  // AIT-559: CreateStudio residual carnival pink rgba → gallery-calm copper
+  {
+    const createStudio = fourSurface["components/CreateStudio.tsx"];
+    const carnival =
+      /#B14EFF|#FF4ECD|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255/i;
+    assert(
+      !carnival.test(createStudio) &&
+        /rgba\(196\s*,\s*165\s*,\s*116/.test(createStudio),
+      "CreateStudio glows use gallery-calm copper rgba(196,165,116) (no carnival pink)"
+    );
+  }
+  // Pricing residual pink glows remain a separate atomic (out of AIT-559 scope)
   assert(
-    fourSurface["components/CreateStudio.tsx"].includes("rgba(255,78,205") &&
-      fourSurface["components/PricingPlanCards.tsx"].includes(
-        "rgba(255,78,205"
-      ) &&
+    fourSurface["components/PricingPlanCards.tsx"].includes(
+      "rgba(255,78,205"
+    ) &&
       fourSurface["components/PricingUsageEstimator.tsx"].includes(
         "rgba(255,78,205"
       ),
-    "Create + Pricing glows use neon-pink rgba board tokens"
+    "Pricing glows still use neon-pink rgba board tokens (separate copper wave)"
   );
 }
 
