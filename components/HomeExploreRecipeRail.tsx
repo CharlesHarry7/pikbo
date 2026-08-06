@@ -11,7 +11,7 @@ import {
 } from "@/lib/videoFeed";
 import { HOME_PROOF_BADGE, HOME_PROOF_LIMIT } from "@/lib/softLaunch";
 
-/** Analytics + guest-intent entry for the thin Home explore recipe rail (AIT-156). */
+/** Analytics + guest-intent entry for the thin Home explore recipe rail (AIT-156 / AIT-332). */
 const HOME_EXPLORE_RAIL_ENTRY = "home-explore-rail" as const;
 const LISTING_360_SLUG = "360-spin-showcase" as const;
 /** Thin strip cap — same Lab registry as the proof wall, never denser. */
@@ -24,15 +24,31 @@ function withRailEntry(href: string): string {
 }
 
 /**
+ * Keep listing 360 first in the horizontal strip so Generate→360 is one swipe
+ * away under the proof wall. Reorders existing Lab media only.
+ */
+function pinListing360First(items: FeedVideoItem[]): FeedVideoItem[] {
+  const idx = items.findIndex(
+    (item) => (item.recipeSlug ?? item.demo.preset) === LISTING_360_SLUG
+  );
+  if (idx <= 0) return items;
+  const next = items.slice();
+  const [spin] = next.splice(idx, 1);
+  next.unshift(spin);
+  return next;
+}
+
+/**
  * Thin HfExplore-style horizontal recipe rail under the Lab proof wall.
- * Lab/archive samples only — secondary Remake + Listing 360 doors.
+ * Lab/archive samples only — secondary Remake + one-tap Listing 360 door.
  * Does not compete with HomeCinemaHero as the primary Moment CTA.
- * AIT-241: remounts Explore density under Moment-first (not full HfExploreHome).
+ * AIT-241 / AIT-332: Explore density under Moment-first (not full HfExploreHome).
+ * Continuity with proof wall: 360 card is createGenerate360Href → workbench.
  */
 export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
-  const rail: FeedVideoItem[] = items
-    .filter(hasFeedVideo)
-    .slice(0, RAIL_LIMIT);
+  const rail: FeedVideoItem[] = pinListing360First(
+    items.filter(hasFeedVideo).slice(0, RAIL_LIMIT)
+  );
   // String literal source for generate-360-cta smoke surface freeze.
   const listing360Href = withRailEntry(
     createGenerate360Href("home-explore-rail")
@@ -56,7 +72,8 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
             <Link
               href={listing360Href}
               data-home-explore-rail-360
-              className="text-[11px] font-bold text-[#00D9FF] hover:underline"
+              data-home-explore-primary-generate-cta
+              className="inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#00D9FF,#00FFA3)] px-4 py-2 text-[11px] font-black text-black shadow-[0_0_20px_rgba(0,217,255,0.28)] transition hover:brightness-110"
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -69,7 +86,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                 })
               }
             >
-              Listing 360° · Lab →
+              Generate 360° →
             </Link>
             <Link
               href="/effects"
@@ -87,6 +104,8 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
     <section
       data-home-explore-rail="lab"
       data-home-explore-rail-count={rail.length}
+      data-home-explore-360-pinned="true"
+      data-home-explore-primary-generate="360"
       aria-labelledby="home-explore-rail-title"
       className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
     >
@@ -103,15 +122,16 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
               Remake a Lab recipe
             </h2>
             <p className="mt-0.5 max-w-xl text-[11px] leading-snug text-white/40">
-              Cached prototypes only — swipe, remake with your figure. Not
-              customer results.
+              Cached prototypes only — 360 listing spin first, one tap into the
+              Generate workbench. Not customer results.
             </p>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-3">
             <Link
               href={listing360Href}
               data-home-explore-rail-360
-              className="text-[11px] font-bold text-[#00D9FF] hover:underline"
+              data-home-explore-primary-generate-cta
+              className="inline-flex min-h-10 items-center rounded-full bg-[linear-gradient(135deg,#00D9FF,#00FFA3)] px-4 py-2 text-[11px] font-black text-black shadow-[0_0_20px_rgba(0,217,255,0.28)] transition hover:brightness-110"
               onClick={() =>
                 track({
                   event: "recipe_use",
@@ -124,7 +144,7 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                 })
               }
             >
-              Listing 360°
+              Generate 360°
             </Link>
             <Link
               href="/effects"
@@ -139,20 +159,24 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
           className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           role="list"
         >
-          {rail.map((item) => {
+          {rail.map((item, index) => {
             const recipeSlug = item.recipeSlug ?? item.demo.preset;
             const recipeName =
               getPreset(recipeSlug)?.name || item.demo.title || item.title;
             const remakeHref = withRailEntry(item.href);
             const badge = item.badge || HOME_PROOF_BADGE;
             const is360 = recipeSlug === LISTING_360_SLUG;
+            // AIT-332: 360 card is one-tap Generate workbench (same continuity as proof wall).
+            const cardHref = is360 ? listing360Href : remakeHref;
 
             return (
               <Link
                 key={item.id}
-                href={remakeHref}
+                href={cardHref}
                 role="listitem"
                 data-home-explore-rail-card={recipeSlug}
+                data-home-explore-rail-slot={index}
+                data-home-explore-rail-360-direct={is360 ? "true" : undefined}
                 prefetch
                 onClick={() =>
                   track({
@@ -160,7 +184,9 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                     path: "/",
                     recipe: recipeSlug,
                     meta: {
-                      source: "home_explore_rail_remake",
+                      source: is360
+                        ? "home_explore_rail_360_generate"
+                        : "home_explore_rail_remake",
                       entry: HOME_EXPLORE_RAIL_ENTRY,
                     },
                   })
@@ -194,11 +220,23 @@ export function HomeExploreRecipeRail({ items }: { items: FeedItem[] }) {
                     ) : null}
                   </div>
                   <div>
-                    <p className="text-[12px] font-black leading-tight text-white group-hover:text-[var(--neon-pink)] sm:text-[13px]">
+                    <p
+                      className={`text-[12px] font-black leading-tight sm:text-[13px] ${
+                        is360
+                          ? "text-white group-hover:text-[#00D9FF]"
+                          : "text-white group-hover:text-[var(--neon-pink)]"
+                      }`}
+                    >
                       {recipeName}
                     </p>
-                    <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--neon-pink)]/90 opacity-80 transition group-hover:opacity-100">
-                      Remake →
+                    <p
+                      className={`mt-0.5 text-[9px] font-bold uppercase tracking-wide opacity-80 transition group-hover:opacity-100 ${
+                        is360
+                          ? "text-[#00D9FF]"
+                          : "text-[var(--neon-pink)]/90"
+                      }`}
+                    >
+                      {is360 ? "Generate 360° →" : "Remake →"}
                     </p>
                   </div>
                 </div>

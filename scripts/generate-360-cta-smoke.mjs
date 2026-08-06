@@ -59,8 +59,10 @@ assert.match(
 // 2. Key Generate surfaces import / call the helper
 const generateSurfaces = [
   ["components/HomeToolShelf.tsx", "home-tool-shelf"],
+  ["components/HomeCinemaHero.tsx", "home-hero"],
   ["components/HomeViralWall.tsx", "home-proof-wall"],
   ["components/HomeExploreRecipeRail.tsx", "home-explore-rail"],
+  ["components/AppShell.tsx", "app-shell-home"],
   ["components/SuiteEntryStrip.tsx", "suite-entry"],
   ["components/HowItWorks.tsx", "how-it-works"],
   ["components/MobileGenerateBar.tsx", "mobile-bar"],
@@ -164,5 +166,188 @@ assert.match(sample, /^\/create\?/);
 assert.match(sample, /effect=360-spin-showcase/);
 assert.match(sample, /source=suite-entry/);
 assert.doesNotMatch(sample, /^\/create$/);
+
+// 5. AIT-198 / AIT-353 home→360 friction cut: hero dual doors + proof primary + suite filled
+const homeHero = read("components/HomeCinemaHero.tsx");
+assert.match(
+  homeHero,
+  /createGenerate360Href\(\s*["']home-hero["']\s*\)/,
+  "home hero must deep-link Generate 360 via createGenerate360Href(home-hero)"
+);
+assert.match(
+  homeHero,
+  /data-home-hero-360-cta/,
+  "home hero must expose above-fold Generate 360 CTA marker"
+);
+assert.match(
+  homeHero,
+  /Generate 360° listing spin/,
+  "home hero 360 CTA must be result-first (listing spin)"
+);
+assert.match(
+  homeHero,
+  /data-home-moment-cta/,
+  "home hero Moment primary CTA remains (product contract)"
+);
+assert.equal(
+  (homeHero.match(/data-home-moment-cta/g) || []).length,
+  1,
+  "home hero must keep exactly one Moment primary CTA"
+);
+assert.equal(
+  (homeHero.match(/data-home-hero-360-cta/g) || []).length,
+  1,
+  "home hero must keep exactly one Generate 360 secondary CTA"
+);
+// AIT-353: dual doors live in the mobile-leading fold column (order-1), not
+// under the 9:16 sample stage alone.
+assert.match(
+  homeHero,
+  /data-home-hero-doors=["']fold["']/,
+  "home hero must mark the mobile-leading dual-door fold column"
+);
+assert.match(
+  homeHero,
+  /data-home-hero-doors=["']fold["'][\s\S]*data-home-moment-cta[\s\S]*data-home-hero-360-cta/,
+  "Moment primary + Generate 360 secondary must sit together in the fold column"
+);
+assert.match(
+  homeHero,
+  /order-1[\s\S]*data-home-moment-cta[\s\S]*data-home-hero-360-cta/,
+  "dual doors must be in order-1 so they lead the mobile fold"
+);
+assert.doesNotMatch(
+  homeHero,
+  /#C8FF3D|rgba\(200,\s*255,\s*61/i,
+  "home hero must not use competitor lime (board neon-pink / void / cyan only)"
+);
+assert.match(
+  homeHero,
+  /GENERATE_360_CTA_CLASS[\s\S]*#FF4ECD|data-home-hero-360-cta[\s\S]*#FF4ECD/,
+  "home hero 360 secondary CTA must use neon-pink board token"
+);
+
+// AIT-355: sticky shell on Home is one primary Generate→360 (not Moment-only).
+const appShell = read("components/AppShell.tsx");
+assert.match(
+  appShell,
+  /createGenerate360Href\(\s*["']app-shell-home["']\s*\)/,
+  "AppShell home sticky CTA must use createGenerate360Href(app-shell-home)"
+);
+assert.match(
+  appShell,
+  /data-app-shell-home-generate=\{home \? ["']360["']/,
+  "AppShell must mark home sticky Generate as 360"
+);
+assert.match(
+  appShell,
+  /home \? HOME_SHELL_GENERATE_HREF/,
+  "AppShell home filled CTA must deep-link Generate workbench"
+);
+assert.doesNotMatch(
+  appShell,
+  /home \? ["']Try Street Power-Up["']|home \? ["']Create my drop clip["']/,
+  "AppShell home sticky must not remain Moment-only copy"
+);
+
+const proofWall = read("components/HomeViralWall.tsx");
+assert.match(
+  proofWall,
+  /createGenerate360Href\(\s*["']home-proof-wall["']\s*\)/,
+  "proof wall must use createGenerate360Href(home-proof-wall)"
+);
+assert.match(
+  proofWall,
+  /data-home-primary-generate=["']360["']/,
+  "proof wall must mark primary Generate as 360"
+);
+assert.match(
+  proofWall,
+  /data-home-primary-generate-cta/,
+  "proof wall must expose primary Generate CTA"
+);
+assert.match(
+  proofWall,
+  /data-home-proof-360-direct/,
+  "proof wall 360 card must mark one-tap workbench path"
+);
+assert.match(
+  proofWall,
+  /is360\s*\?\s*listing360Href/,
+  "proof wall 360 card must deep-link Generate workbench"
+);
+
+const suiteRail = read("components/HfProductRail.tsx");
+assert.match(
+  suiteRail,
+  /createGenerate360Href\(\s*["']hf-product-rail["']\s*\)/,
+  "suite rail Generate must use createGenerate360Href(hf-product-rail)"
+);
+assert.match(
+  suiteRail,
+  /data-hf-rail-primary-generate=["']360["']/,
+  "suite rail must mark primary Generate as 360"
+);
+assert.match(
+  suiteRail,
+  /data-hf-rail-primary-generate-cta/,
+  "suite rail must expose primary Generate CTA marker"
+);
+assert.match(
+  suiteRail,
+  /data-home-suite-360/,
+  "suite rail must expose suite 360 marker"
+);
+assert.doesNotMatch(
+  suiteRail,
+  /FreeTrialCta[\s\S]{0,200}variant\s*=\s*["']primary["']/,
+  "suite rail FreeTrialCta must not use filled primary variant"
+);
+
+const homeStack = read("app/page.tsx");
+assert.match(
+  homeStack,
+  /HomeCinemaHero[\s\S]*HomeViralWall[\s\S]*HfProductRail/,
+  "home entry must compose Moment hero → proof wall → suite rail"
+);
+
+const createPage = read("app/create/page.tsx");
+assert.match(
+  createPage,
+  /resolveCreateRouteContract/,
+  "create page must dual-route via resolveCreateRouteContract"
+);
+assert.match(
+  createPage,
+  /data-create-contract=["']generate-workbench["']/,
+  "create page must mount generate-workbench contract for 360"
+);
+assert.match(
+  createPage,
+  /data-generate-360/,
+  "create page must mark 360 workbench mounts"
+);
+
+const hfExplore = read("components/HfExploreHome.tsx");
+assert.match(
+  hfExplore,
+  /createGenerate360Href\(\s*["']hf-explore["']\s*\)/,
+  "HfExploreHome must use createGenerate360Href(hf-explore)"
+);
+assert.match(
+  hfExplore,
+  /data-hf-explore-primary-generate=["']360["']/,
+  "HfExploreHome primary Generate must mark 360"
+);
+assert.doesNotMatch(
+  hfExplore,
+  /href=["']\/create\?effect=street-power-up["']/,
+  "HfExploreHome must not use bare street-power-up create hrefs"
+);
+assert.match(
+  hfExplore,
+  /MOMENT_CREATE_HREF/,
+  "HfExploreHome Moment doors must use MOMENT_CREATE_HREF"
+);
 
 console.log("generate-360-cta-smoke: ok");
