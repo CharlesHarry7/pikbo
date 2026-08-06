@@ -1369,16 +1369,21 @@ export function CreateStudio({
       toast(freeLiveDownloadBlockReason());
       return;
     }
-    // /api/downloads is session-cookie gated — not a portable public link.
+    // /api/downloads + private signed/CDN are not portable public links.
     const share = publicShareableVideoUrl(
       videoUrl,
       typeof window !== "undefined" ? window.location.origin : undefined
     );
     if (!share) {
+      const durablePrivate =
+        Boolean(activeVersion?.privateResult) ||
+        isDurableDownloadRequestId(activeVersion?.requestId);
       toast(
         isSessionGatedDownloadUrl(videoUrl)
           ? "Session download only — use Download (not a public link)"
-          : "Unsafe deliverable URL — not copied"
+          : durablePrivate
+            ? "Private Moment — use Download (not a public share link)"
+            : "Unsafe deliverable URL — not copied"
       );
       return;
     }
@@ -1544,16 +1549,21 @@ export function CreateStudio({
       toast(freeLiveDownloadBlockReason());
       return;
     }
-    // Never tweet a session-gated /api/downloads path (cookie-bound · not public).
+    // Never tweet session gate / private signed / provider CDN (not public).
     const share = publicShareableVideoUrl(
       videoUrl,
       typeof window !== "undefined" ? window.location.origin : undefined
     );
     if (!share) {
+      const durablePrivate =
+        Boolean(activeVersion?.privateResult) ||
+        isDurableDownloadRequestId(activeVersion?.requestId);
       toast(
         isSessionGatedDownloadUrl(videoUrl)
           ? "Session download only — use Download (not a public X link)"
-          : "Unsafe deliverable URL — not shared"
+          : durablePrivate
+            ? "Private Moment — use Download (not a public share link)"
+            : "Unsafe deliverable URL — not shared"
       );
       return;
     }
