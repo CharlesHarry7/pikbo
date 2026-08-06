@@ -17,7 +17,9 @@ import {
   FIXED_MOMENT_EFFECT,
   FIXED_MOMENT_MODE,
   isGenerate360Effect,
+  isHomeGenerateEntrySource,
   resolveCreateRouteContract,
+  WORKBENCH_LAB_LIVE_HONESTY,
 } from "@/lib/createRouteContract";
 
 export async function generateMetadata({
@@ -125,6 +127,22 @@ export default async function CreatePage({
     const effectSlug = (sp.effect || "").trim();
     const preset = getPreset(effectSlug);
     const is360 = isGenerate360Effect(effectSlug);
+    const entrySource = (sp.source || "").trim();
+    const homeEntry = isHomeGenerateEntrySource(entrySource);
+    // Home Generate→360 doors + listing spin: fail-closed Lab/Live honesty —
+    // never sell Free Mini as an open public trial on first-run shell.
+    const honestyLead =
+      homeEntry || is360
+        ? WORKBENCH_LAB_LIVE_HONESTY
+        : "Lab sample · 0 credits · Live gated · private Live checked before any credit spend.";
+    const workbenchTagline = homeEntry
+      ? is360
+        ? `From Home · ${WORKBENCH_LAB_LIVE_HONESTY}. Remix this listing-spin recipe with a Lab sample or an eligible owned photo.`
+        : `From Home · ${WORKBENCH_LAB_LIVE_HONESTY}. Remix recipe, ratio, and channel — Lab first.`
+      : is360
+        ? `${WORKBENCH_LAB_LIVE_HONESTY}. One owned photo or a cached Lab sample for this listing spin.`
+        : (preset?.tagline ??
+          `Remix recipe, ratio, and channel from your deep link. ${honestyLead}`);
     return (
       <div
         className="relative min-h-screen overflow-hidden bg-[var(--void)] text-[var(--cream)]"
@@ -132,6 +150,12 @@ export default async function CreatePage({
         data-create-shell-pad="sticky-generate"
         data-generate-effect={effectSlug}
         data-generate-360={is360 ? "true" : "false"}
+        data-lab-sample-try={firstRunSample ? "1" : undefined}
+        data-first-run-sample={firstRunSample || undefined}
+        data-workbench-lab-honesty="0-credit-lab"
+        data-workbench-entry={entrySource || undefined}
+        data-home-generate-entry={homeEntry ? entrySource : undefined}
+        data-workbench-live-gate="gated"
       >
         <JsonLd
           data={softwareApplicationJsonLd({
@@ -159,10 +183,18 @@ export default async function CreatePage({
                   ? "One photo → a square 360° listing spin."
                   : "One owned toy photo → a short product clip.")}
             </h1>
+            <p
+              className="mt-3 text-[11px] font-semibold leading-5 text-[#00D9FF]/90"
+              data-workbench-honesty="lab-live"
+            >
+              {WORKBENCH_LAB_LIVE_HONESTY}
+            </p>
           </div>
-          <p className="border-l border-white/15 pl-4 text-sm font-semibold leading-6 text-white/56">
-            {preset?.tagline ??
-              "Remix recipe, ratio, and channel from your deep link. Lab preview is free; private Live is checked before any credit spend."}
+          <p
+            className="border-l border-white/15 pl-4 text-sm font-semibold leading-6 text-white/56"
+            data-workbench-tagline={homeEntry ? "home-entry" : "workbench"}
+          >
+            {workbenchTagline}
           </p>
         </div>
         <Suspense

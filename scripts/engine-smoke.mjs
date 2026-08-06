@@ -2021,6 +2021,30 @@ assert.match(imageRetryRoute, /status:\s*202|202/);
 assert.match(imageRetryRoute, /next:\s*\{[\s\S]*image:\s*["']\/api\/image["']/);
 assert.match(imageRetryRoute, /imageUi:/);
 assert.match(imageRetryRoute, /["']\/image["']/);
+// AIT-477: durable owner stills never invent process-memory retry forks.
+assert.match(imageRetryRoute, /DURABLE_USE_NEW_ATTEMPT/);
+assert.match(imageRetryRoute, /DURABLE_IN_FLIGHT/);
+assert.match(imageRetryRoute, /DURABLE_ALREADY_SUCCEEDED/);
+assert.match(imageRetryRoute, /DURABLE_DETAIL_UNAVAILABLE/);
+assert.match(imageRetryRoute, /getPrivateLibraryJobForOwner/);
+assert.match(imageRetryRoute, /acceptControlledLibraryNewAttemptUrl/);
+assert.doesNotMatch(
+  imageRetryRoute,
+  /newAttemptUrl\.startsWith\(/,
+  "image retry must not use loose startsWith on newAttemptUrl"
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /forkRetryImageLedger/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /acceptImageRetryNavigation/
+);
+assert.match(
+  fs.readFileSync(join(root, "lib/imageClient.ts"), "utf8"),
+  /DURABLE_USE_NEW_ATTEMPT|createUi|imageUi/
+);
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /data-image-session-ledger=["']process-memory["']/
@@ -2042,6 +2066,18 @@ assert.match(
 assert.match(
   fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
   /data-image-session-retry-mode=["']ledger-fork["']|\/api\/image\/.*\/retry/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /forkRetryImageLedger/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /acceptImageRetryNavigation/
+);
+assert.match(
+  fs.readFileSync(join(root, "app/image/page.tsx"), "utf8"),
+  /DURABLE_USE_NEW_ATTEMPT/
 );
 // Pure image timeout sweep (crash mid-Flux must not leave infinite JOB_IN_FLIGHT)
 function sweepTimedOutImageJobsPure(jobs, now, timeoutMs) {
@@ -4955,10 +4991,15 @@ const createStudioSmoke = fs.readFileSync(
   "utf8"
 );
 assert.match(createStudioSmoke, /GenerateWaitStage/);
-// Mobile sticky Lab sample is explicitly cached and not a Free Mini live claim.
+// Lab sample first-run is explicitly cached / Live-gated — not Free Mini live claim.
 assert.match(
   createStudioSmoke,
-  /Preview a Lab sample · cached prototype, not your upload/
+  /Lab sample · private Live gated · 0 credits|Lab sample · 0 credits · not Free Mini Live|Preview a Lab sample · 0 credits/
+);
+assert.match(createStudioSmoke, /data-lab-sample-cost=["']0["']/);
+assert.doesNotMatch(
+  createStudioSmoke,
+  /t\(["']create\.oneTapMini["']\)|t\(["']create\.labSampleMini["']\)/
 );
 // Device Library stills: path samples or tiny previews only (no multi-MB Base64).
 assert.match(createStudioSmoke, /stillForStore\.startsWith\(["']\/["']\)|8_000/);

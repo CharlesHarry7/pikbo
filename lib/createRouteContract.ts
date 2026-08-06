@@ -104,3 +104,61 @@ export function resolveCreateRouteContract(
 export function isGenerate360Effect(effect: string | undefined): boolean {
   return (effect || "").trim() === GENERATE_360_EFFECT;
 }
+
+/**
+ * Home Generate→360 entry sources (createGenerate360Href tags).
+ * These are surface analytics tags — not Lab project remix ids.
+ * AIT-459/AIT-473: first-run workbench must stay Lab sample / Live gated honest.
+ *
+ * AIT-462 money doors (must all be recognized so workbench never treats them
+ * as Lab project remix ids or `/projects/{source}` links):
+ * - home-hero, app-shell-home, home-trust, home-gallery-pedestal
+ * Also: home-explore-rail (Lab explore listing-spin entry).
+ */
+export const HOME_GENERATE_ENTRY_SOURCES = [
+  "home-hero",
+  "app-shell-home",
+  "home-trust",
+  "home-gallery-pedestal",
+  "home-explore-rail",
+] as const;
+
+export type HomeGenerateEntrySource =
+  (typeof HOME_GENERATE_ENTRY_SOURCES)[number];
+
+const HOME_GENERATE_ENTRY_SET = new Set<string>(HOME_GENERATE_ENTRY_SOURCES);
+
+/** True when `source` is a Home Generate door tag (not a project slug). */
+export function isHomeGenerateEntrySource(
+  source: string | undefined
+): source is HomeGenerateEntrySource {
+  return HOME_GENERATE_ENTRY_SET.has((source || "").trim());
+}
+
+/** Short eyebrow for the CreateStudio home-entry honesty strip. */
+export function homeGenerateEntryLabel(
+  source: string | undefined
+): string {
+  switch ((source || "").trim()) {
+    case "home-hero":
+      return "From Home · Generate 360°";
+    case "app-shell-home":
+      return "From Home · nav Generate";
+    case "home-trust":
+      return "From Home · trust Generate 360°";
+    case "home-gallery-pedestal":
+      return "From Home · gallery pedestal";
+    case "home-explore-rail":
+      return "From Home · Lab explore rail";
+    default:
+      return "From Home · Generate 360°";
+  }
+}
+
+/**
+ * Workbench first-run honesty line for Generate→360 (and home doors).
+ * Lab samples are always 0-credit cached prototypes; Live stays gated —
+ * never sell Free Mini as an open public trial on entry.
+ */
+export const WORKBENCH_LAB_LIVE_HONESTY =
+  "Lab sample · 0 credits · Live gated · not Free Mini open trial" as const;
