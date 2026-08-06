@@ -771,4 +771,40 @@ assert.match(
   "Explore page eyebrows/CTAs/path accents use --brand copper"
 );
 
+// AIT-581: GuestMomentCreateGate residual carnival pink CTA → gallery-calm copper
+// (guest auth money path; login-adjacent Create gate)
+{
+  const guestGate = read("components/GuestMomentCreateGate.tsx");
+  assert.doesNotMatch(
+    guestGate,
+    /#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/i,
+    "GuestMomentCreateGate must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert.doesNotMatch(
+    guestGate,
+    /#B14EFF|#FF4ECD|#00D9FF|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|206\s*,\s*27\s*,\s*106|255\s*,\s*32\s*,\s*122/i,
+    "GuestMomentCreateGate must not hard-code carnival pink/cyan RGB"
+  );
+  assert.match(
+    guestGate,
+    /var\(--grad-cta\)/,
+    "GuestMomentCreateGate primary CTAs use --grad-cta copper board gradient"
+  );
+  assert.match(
+    guestGate,
+    /var\(--brand\)/,
+    "GuestMomentCreateGate eyebrows/focus use --brand copper accent"
+  );
+  assert.match(
+    guestGate,
+    /var\(--primary-foreground\)/,
+    "GuestMomentCreateGate CTA text uses --primary-foreground on copper"
+  );
+  assert.match(
+    guestGate,
+    /rgba\(196\s*,\s*165\s*,\s*116/,
+    "GuestMomentCreateGate glows use copper board rgba(196,165,116)"
+  );
+}
+
 console.log("generate-360-cta-smoke: ok");

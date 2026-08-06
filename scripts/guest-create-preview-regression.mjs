@@ -60,6 +60,25 @@ assert.equal(
   "GuestMomentCreateGate retry hover chrome uses var(--mint) / var(--void) board tokens"
 );
 
+// AIT-581: GuestMomentCreateGate residual carnival pink CTA → gallery copper
+{
+  const carnival =
+    /#B14EFF|#FF4ECD|#00D9FF|255\s*,\s*78\s*,\s*205|177\s*,\s*78\s*,\s*255|206\s*,\s*27\s*,\s*106|255\s*,\s*32\s*,\s*122/i;
+  assert.equal(
+    carnival.test(gate),
+    false,
+    "GuestMomentCreateGate must not hard-code carnival pink/cyan RGB"
+  );
+  assert.equal(
+    gate.includes("var(--grad-cta)") &&
+      gate.includes("var(--brand)") &&
+      gate.includes("var(--primary-foreground)") &&
+      /rgba\(196\s*,\s*165\s*,\s*116/.test(gate),
+    true,
+    "GuestMomentCreateGate CTAs use --grad-cta / --brand / copper glow + primary-foreground"
+  );
+}
+
 for (const asset of [
   "public/demos/beatbot-still.webp",
   "public/demos/beatbot-viral-hook.mp4",
