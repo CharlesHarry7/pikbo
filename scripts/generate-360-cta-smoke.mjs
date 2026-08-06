@@ -629,6 +629,41 @@ assert.match(
       `${file} shell template must not bare pb-24 / pb-28 under MobileGenerateBar`
     );
   }
+
+  // AIT-479 — residual content pads (Seller Pack sample + HfExplore)
+  const publicPackSample = read("components/PublicLaunchPackSample.tsx");
+  assert.match(
+    publicPackSample,
+    /pb-\[var\(--sticky-generate-pad-safe\)\]/,
+    "PublicLaunchPackSample create surface must use nav-less --sticky-generate-pad-safe"
+  );
+  assert.match(
+    publicPackSample,
+    /data-public-pack-content-pad=["']safe-bottom["']/,
+    "PublicLaunchPackSample content pad must expose smoke marker"
+  );
+  assert.doesNotMatch(
+    publicPackSample,
+    /className="[^"]*\bpb-24\b/,
+    "PublicLaunchPackSample must not bare pb-24 under sticky Generate"
+  );
+
+  const hfExploreHome = read("components/HfExploreHome.tsx");
+  assert.match(
+    hfExploreHome,
+    /pb-\[var\(--mobile-generate-bar-pad\)\]/,
+    "HfExploreHome full mount must clear MobileGenerateBar via --mobile-generate-bar-pad"
+  );
+  assert.match(
+    hfExploreHome,
+    /data-hf-explore-content-pad=\{/,
+    "HfExploreHome content pad branch must be smoke-visible"
+  );
+  assert.doesNotMatch(
+    hfExploreHome,
+    /\bpb-28\b/,
+    "HfExploreHome must not bare pb-28 under MobileGenerateBar / browse chrome"
+  );
 }
 
 // 10. AIT-394 / AIT-417 — MobileGenerateBar floating Generate primary CTA off residual lime

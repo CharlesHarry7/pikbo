@@ -263,6 +263,41 @@ assert.match(
       `${file} must not bare pb-24/pb-28 under MobileGenerateBar`
     );
   }
+
+  // AIT-479 residual: public sample + HF Explore component shells
+  const publicPack = source("components/PublicLaunchPackSample.tsx");
+  assert.match(
+    publicPack,
+    /pb-\[var\(--sticky-generate-pad-safe\)\]/,
+    "PublicLaunchPackSample create pad must use sticky-generate-pad-safe"
+  );
+  assert.match(
+    publicPack,
+    /data-public-pack-content-pad=["']safe-bottom["']/,
+    "PublicLaunchPackSample must expose content-pad smoke marker"
+  );
+  assert.doesNotMatch(
+    publicPack,
+    /className="[^"]*\bpb-24\b/,
+    "PublicLaunchPackSample must not bare pb-24"
+  );
+
+  const hfExplore = source("components/HfExploreHome.tsx");
+  assert.match(
+    hfExplore,
+    /pb-\[var\(--mobile-generate-bar-pad\)\]/,
+    "HfExploreHome full mount must use mobile-generate-bar-pad"
+  );
+  assert.match(
+    hfExplore,
+    /data-hf-explore-content-pad=\{/,
+    "HfExploreHome must expose content-pad smoke marker"
+  );
+  assert.doesNotMatch(
+    hfExplore,
+    /\bpb-28\b/,
+    "HfExploreHome must not bare pb-28 under MobileGenerateBar"
+  );
 }
 
 console.log("mobile proof regression: source contracts PASS");

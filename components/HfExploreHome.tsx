@@ -112,11 +112,18 @@ export function HfExploreHome({
     );
   }
 
+  // AIT-479: full mount under browse shells clears MobileGenerateBar + tab;
+  // tool-first embeds keep compact pad (tool already on page).
   return (
     <div
-      className={`bg-black text-white sm:pb-16 ${
-        toolFirstLayout ? "pb-8" : "min-h-screen pb-28"
-      }`}
+      className={
+        toolFirstLayout
+          ? "bg-black pb-8 text-white sm:pb-16"
+          : "min-h-screen bg-black pb-[var(--mobile-generate-bar-pad)] text-white lg:pb-16"
+      }
+      data-hf-explore-content-pad={
+        toolFirstLayout ? "tool-first" : "mobile-generate-bar"
+      }
     >
       {!toolFirstLayout ? <SoftLaunchStrip /> : null}
 

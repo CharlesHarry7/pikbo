@@ -499,11 +499,13 @@ function CreateSampleBrowser({
   active: Format;
   onSelect: (format: Format) => void;
 }) {
+  // AIT-479: nav-less sticky chrome pad matches Seller Pack (not tab-era pb-24)
   return (
     <section
       id="sample-create"
       data-public-pack-preview="instant-archived-samples"
-      className="min-h-[calc(100vh-3rem)] bg-[#F2EDE3] px-3 pb-24 pt-3 text-[#171717] sm:px-6 sm:pt-6 lg:min-h-[calc(100vh-4rem)] lg:px-8"
+      className="min-h-[calc(100vh-3rem)] bg-[#F2EDE3] px-3 pb-[var(--sticky-generate-pad-safe)] pt-3 text-[#171717] sm:px-6 sm:pt-6 lg:min-h-[calc(100vh-4rem)] lg:px-8 lg:pb-8"
+      data-public-pack-content-pad="safe-bottom"
       aria-labelledby="create-launch-title"
     >
       <div className="mx-auto max-w-[1440px]">
