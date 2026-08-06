@@ -115,6 +115,22 @@ assert(
   "HomeExploreRecipeRail labels/hovers use neon-pink board tokens"
 );
 
+// AIT-373: GenerateWaitStage residual lime → neon-pink board tokens
+{
+  const waitStage = read("components/GenerateWaitStage.tsx");
+  assert(
+    !/#c8ff3d|c8ff3d|200\s*,\s*255\s*,\s*61/.test(waitStage),
+    "GenerateWaitStage must not hard-code competitor lime (#c8ff3d / rgba 200,255,61)"
+  );
+  assert(
+    waitStage.includes("var(--neon-pink)") &&
+      waitStage.includes("var(--void)") &&
+      waitStage.includes("rgba(255,78,205") &&
+      waitStage.includes("#ff4ecd"),
+    "GenerateWaitStage progress glows / rings / fills use neon-pink board tokens"
+  );
+}
+
 // Suite rail: Generate via createGenerate360Href + Moment via MOMENT_CREATE_HREF.
 const homeRail = read("components/HfProductRail.tsx");
 assert(
