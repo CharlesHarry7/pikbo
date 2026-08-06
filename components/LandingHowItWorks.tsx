@@ -19,12 +19,12 @@ export function LandingHowItWorks({
     {
       n: "2",
       t: "Recipe",
-      d: "Pick a toy-native recipe (spin, float, unbox energy). Soft launch uses Seedance Mini with honest Free Mini caps.",
+      d: "Pick a toy-native recipe (spin, float, unbox energy). Public path is a labeled Lab prototype; Live runs only when your account is eligible.",
     },
     {
       n: "3",
       t: "Video draft",
-      d: `Review the ${productLabel} before posting. Free Mini: ~5s · 480p · on-player mark. Failed live jobs refund when confirmed.`,
+      d: `Review the ${productLabel} before posting. Cached previews: 0 credits · upload not processed. Live quotes and refunds appear only after eligibility is confirmed.`,
     },
   ];
 

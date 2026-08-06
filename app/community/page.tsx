@@ -40,15 +40,15 @@ const COMMUNITY_FAQ = [
   },
   {
     q: "How do I publish my clip?",
-    a: "Generate a live paid/clean deliverable → open Library → Publish to Community (sign-in required). Lab demos and Free Mini raw provider files cannot be posted as public UGC (T6).",
+    a: "When Live is enabled for your account, generate a clean server-owned deliverable → open Library → Publish to Community (sign-in required). Lab demos and raw provider files cannot be posted as public UGC (T6).",
   },
   {
     q: "What is Remix vs Inside?",
     a: "Remix opens Generate with that recipe on a toy photo you own. Inside shows a reference poster, cached output, settings, and the evidence status.",
   },
   {
-    q: "Do Lab demos use Free Mini credits?",
-    a: "Cached Lab playback costs 0 credits. Free Mini is for one live Seedance Mini clip (about 5s · 480p · on-player mark). After trial, Lab still free; live needs a plan.",
+    q: "Do Lab demos cost credits?",
+    a: "No. Cached Lab playback costs 0 credits and never processes your upload. Public live generation and paid checkout stay closed during validation; eligible private Live shows an exact quote before submission.",
   },
 ] as const;
 

@@ -143,8 +143,8 @@ function HomeDropArchive({
 
           <div className="mt-5 lg:mt-0 lg:pb-1">
             <p className="max-w-[390px] text-sm font-semibold leading-6 text-[#686159] lg:text-[15px] lg:text-[#A39C91]">
-              Explore the archive, then use the one private render available
-              now: Street Power-Up from one owned toy photo.
+              Explore the archive, then preview the one private Moment path:
+              Street Power-Up from one owned toy photo (Live remains gated).
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-4">
               <Link
@@ -422,7 +422,7 @@ function HomeDropArchive({
               </p>
             </div>
             <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#69645C] lg:text-[#A39C91]">
-              Private render available now · Street Power-Up only
+              Private Moment path · Street Power-Up · Live gated
             </p>
           </div>
 

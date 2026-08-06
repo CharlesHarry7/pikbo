@@ -37,7 +37,7 @@ const EFFECTS_FAQ = [
   },
   {
     q: "Does remaking a preset cost credits?",
-    a: "Watching Lab demos costs 0. Live Seedance Mini uses Free Mini (about one 5s 480p clip with on-player mark) or paid credits. Exhausted trial CTAs go to plans — Lab still free.",
+    a: "Watching Lab demos costs 0 and does not process your upload. Live generation is gated by account and deployment readiness; Generate shows the exact quote only when Live is eligible. Lab remains free to browse.",
   },
   {
     q: "Is every card a guaranteed viral look?",
@@ -211,7 +211,7 @@ export default function EffectsHub() {
         <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7">
           <h2 className="text-sm font-bold text-white">Recipes FAQ</h2>
           <p className="mt-1 text-xs text-white/40">
-            Lab vs concept · Free Mini · no viral guarantee
+            Lab vs concept · Live gated · no viral guarantee
           </p>
           <dl className="mt-4 space-y-4">
             {EFFECTS_FAQ.map((f) => (

@@ -5,14 +5,14 @@ export function TrustStrip() {
     <section className="border-y border-white/10 bg-gradient-to-r from-black via-[#0a0a0c] to-black px-4 py-5 sm:px-8">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-3 text-center text-xs tracking-wide text-white/50">
         <span>
-          <strong className="font-semibold text-[var(--mint)]">Seedance</strong>{" "}
-          live path when configured
+          <strong className="font-semibold text-[var(--mint)]">Private Live</strong>{" "}
+          only when account + deployment are eligible
         </span>
         <span className="hidden h-3 w-px bg-white/15 sm:block" />
-        <span>Cached demos clearly labeled</span>
+        <span>Cached Lab demos clearly labeled · 0 credits</span>
         <span className="hidden h-3 w-px bg-white/15 sm:block" />
         <span>
-          Free Mini · 5s · 480p · on-player mark · refunds when confirmed
+          Checkout closed · Live refunds when confirmed
         </span>
         <span className="hidden h-3 w-px bg-white/15 sm:block" />
         <span>

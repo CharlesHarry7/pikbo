@@ -432,7 +432,7 @@ export function HfExploreHome({
                 hideClipsChip
                 className="text-sm font-bold text-white hover:text-[#c8ff3d]"
               />
-              <p className="text-[11px] text-white/40">Mini 5s · Sample ready</p>
+              <p className="text-[11px] text-white/40">Lab preview · 0 credits</p>
             </div>
             {[
               {

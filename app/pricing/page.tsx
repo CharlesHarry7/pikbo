@@ -146,7 +146,7 @@ export default function PricingPage() {
               <div className="mt-7 max-w-sm">
                 <PricingCheckoutButton
                   planId="founding_studio"
-                  label={`Join Founding Studio · $${foundingStudio.priceMonthly}/month`}
+                  label={`Join Founding Studio · $${foundingStudio.priceMonthly}/month when billing opens`}
                   featured
                 />
               </div>

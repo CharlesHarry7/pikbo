@@ -16,16 +16,18 @@ export function PaywallCard({
       </p>
       <div className="mt-3 rounded-lg border border-[var(--brand)]/45 bg-[var(--card)] p-3">
         <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--mint)]">
-          Founding Studio · coming soon
+          Founding Studio · checkout closed
         </p>
         <p className="mt-1 text-xs text-[var(--fg-muted)]">
-          No public price, monthly allowance, subscription, or checkout is available.
-          Pikbo Lab samples remain cached and use no visitor product photo.
+          Founding rate is $49/month for nine directed Moments when billing
+          opens. Public subscription purchase and live checkout stay closed
+          during validation. Pikbo Lab samples remain cached and use no
+          visitor product photo.
         </p>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         <Link href="/pricing" className="btn btn-primary px-4 py-2 text-xs">
-          See the validation gate
+          See Founding Studio limits
         </Link>
         <Link href="/library" className="btn btn-ghost px-4 py-2 text-xs">
           Library
