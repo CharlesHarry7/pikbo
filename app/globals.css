@@ -1,134 +1,98 @@
 @import "tailwindcss";
 
-/* ---------- Pikbo · Collectible Gold (≠ Higgsfield pink neon) ----------
-   Deep ink + antique gold + soft glass teal. Aliases --mint/--neon-pink/--brand
-   so suite surfaces inherit without rewriting every file.
-   Boss 2026-08: HF layout OK · color system must be our own 潮玩 board.
+/* ---------- Pikbo · Modern Studio ----------
+   Clean dark mode with vibrant purple-blue accent. No gold, no muddy colors.
+   Simple, bold, modern — like a design studio for vinyl toys.
 ---------------------------------------------------------------- */
 :root {
-  /* Offline-safe faces — geometric display + human body.
-     Prefer Plus Jakarta / Inter when present; system stack otherwise. */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --font-display: "Plus Jakarta Sans", "Avenir Next", "Segoe UI", ui-sans-serif,
     system-ui, -apple-system, sans-serif;
 
-  /* Collectible gold board — not HF magenta, not competitor lime */
-  --collector-gold: #e0b35c;
-  --collector-gold-deep: #b8893a;
-  --glass-teal: #6b9aa8; /* secondary only (360 / info), never rainbow stack */
-  --electric-purple: #8b7355; /* warm bronze alias for legacy names */
-  --neon-pink: #e0b35c; /* board accent alias (name legacy · color = gold) */
-  --tide-blue: #6b9aa8;
-  --lemon: #e0b35c;
-  --tide-green: #7d8578;
-  --ember: #c4893a;
-  --void: #08080b;
-  --cream: #f5f0e6;
+  /* Core palette */
+  --void: #0a0a0f;
+  --cream: #f0ede8;
 
-  /* Surfaces — deep ink studio */
-  --bg: #08080b;
-  --bg-soft: #101014;
-  --card: #141418;
-  --card-2: #1a1a20;
-  --border: rgba(245, 240, 230, 0.1);
-  --fg: #f5f0e6;
-  --fg-muted: rgba(245, 240, 230, 0.58);
-  --fg-dim: rgba(245, 240, 230, 0.36);
+  /* Surfaces */
+  --bg: #0a0a0f;
+  --bg-soft: #111116;
+  --card: #14141a;
+  --card-2: #1a1a22;
+  --border: rgba(255, 255, 255, 0.08);
+  --fg: #f0ede8;
+  --fg-muted: rgba(240, 237, 232, 0.5);
+  --fg-dim: rgba(240, 237, 232, 0.3);
 
-  --paper: #f5f0e6;
-  /* Single accent — antique gold (vinyl shelf metal) */
-  --brand: #e0b35c;
-  --brand-2: #b8893a;
-  --mint: #e0b35c;
-  --lime: #a89878;
+  /* Accent — modern purple-blue */
+  --brand: #8B5CF6;
+  --brand-2: #7C3AED;
+  --mint: #8B5CF6;
+  --lime: #A78BFA;
+  --neon-pink: #8B5CF6;
+  --tide-blue: #06B6D4;
+  --tide-green: #10B981;
+  --lemon: #F59E0B;
+  --ember: #EF4444;
 
-  --grad: linear-gradient(135deg, #e0b35c 0%, #b8893a 100%);
-  --grad-cta: linear-gradient(135deg, #e8c06a 0%, #b8893a 100%);
+  /* Gradients */
+  --grad: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  --grad-cta: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
   --grad-soft: linear-gradient(
     135deg,
-    rgba(224, 179, 92, 0.18),
-    rgba(224, 179, 92, 0.04)
+    rgba(139, 92, 246, 0.15),
+    rgba(99, 102, 241, 0.05)
   );
   --grad-aurora: linear-gradient(
     120deg,
-    rgba(224, 179, 92, 0.32) 0%,
-    rgba(107, 154, 168, 0.1) 55%,
-    rgba(8, 8, 11, 0.92) 100%
+    rgba(139, 92, 246, 0.2) 0%,
+    rgba(6, 182, 212, 0.08) 55%,
+    transparent 100%
   );
-  --brand-glow: 0 0 28px rgba(224, 179, 92, 0.22);
+  --brand-glow: 0 0 24px rgba(139, 92, 246, 0.25);
 
   --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.04);
   --shadow-md: 0 12px 40px -16px rgba(0, 0, 0, 0.7);
   --shadow-lg: 0 30px 80px -30px rgba(0, 0, 0, 0.85);
-  --shadow-neon: 0 0 0 1px rgba(224, 179, 92, 0.3),
+  --shadow-neon: 0 0 0 1px rgba(139, 92, 246, 0.25),
     0 8px 28px rgba(0, 0, 0, 0.45);
   --radius: 1rem;
 
-  /*
-   * Mobile chrome clearance (AIT-150 / AIT-71)
-   * AppShell tab nav pads pb with env(safe-area-inset-bottom) on top of tab content
-   * (--mobile-nav-content-h). Floating Generate CTAs must clear BOTH tab content AND
-   * the home indicator — never sit under either.
-   * Stacking: content < floating (40) < sticky nav/header (50).
-   */
   --mobile-nav-content-h: 4.75rem;
   --mobile-nav-clearance: calc(
     var(--mobile-nav-content-h) + env(safe-area-inset-bottom, 0px)
   );
-  /* Home/Moment shell hides the tab nav — only clear the home indicator. */
   --floating-cta-safe-bottom: max(
     0.85rem,
     calc(env(safe-area-inset-bottom, 0px) + 0.5rem)
   );
   --floating-generate-z: 40;
-
-  /*
-   * Content scroll pads under sticky Generate / Create CTAs (AIT-383 / AIT-335).
-   * Sticky chrome ≈ optional status line + primary btn + vertical padding.
-   * Pair with the same clearance the sticky uses (tab-sharing vs nav-less).
-   * Stacks on AIT-359 clearance tokens — never bare pb-24/28/32/36.
-   */
   --sticky-generate-chrome-h: 5.75rem;
-  /* Tab-sharing sticky (CreateStudio generic / Modules sticky / Batch tab path). */
   --sticky-generate-pad: calc(
     var(--sticky-generate-chrome-h) + var(--mobile-nav-clearance)
   );
-  /* Nav-less sticky (fixed Moment Create / Seller Pack) — no residual tab height. */
   --sticky-generate-pad-safe: calc(
     var(--sticky-generate-chrome-h) + var(--floating-cta-safe-bottom)
   );
-  /* Alias used by nav-less Create / Seller Pack content (AIT-144 / AIT-145). */
   --create-sticky-chrome-h: var(--sticky-generate-chrome-h);
   --create-content-pad-safe: var(--sticky-generate-pad-safe);
-  /*
-   * MobileGenerateBar is a floating pill row (not full sticky chrome).
-   * Browse last folds clear bar + tab + safe-area — never bare pb-24 / pb-28.
-   */
   --mobile-generate-bar-h: 3.25rem;
   --mobile-generate-bar-pad: calc(
     var(--mobile-generate-bar-h) + var(--mobile-nav-clearance) + 0.5rem
   );
-  /*
-   * Toast stack clears the tallest bottom chrome + tab nav (AIT-609 / AIT-597).
-   * MobileGenerateBar is ~3.25rem; sticky Generate (Create/Modules/cinema/Batch)
-   * is --sticky-generate-chrome-h (~5.75rem). max() keeps bar routes clear without
-   * under-clearing sticky money paths. Desktop keeps lg:bottom-6 in Toast.tsx.
-   */
   --toast-clearance: calc(
     var(--mobile-nav-clearance) +
       max(var(--mobile-generate-bar-h), var(--sticky-generate-chrome-h)) + 0.5rem
   );
 
-  /* shadcn-compatible aliases */
   --background: var(--bg);
   --foreground: var(--fg);
   --primary: var(--brand);
-  --primary-foreground: #0e0e10;
+  --primary-foreground: #ffffff;
   --muted: var(--bg-soft);
   --muted-foreground: var(--fg-muted);
   --accent: rgba(255, 255, 255, 0.06);
-  --ring: rgba(224, 179, 92, 0.45);
+  --ring: rgba(139, 92, 246, 0.5);
 }
 
 /* Home Explore board — gold system explicit on HF layout shell */
@@ -309,65 +273,54 @@ html[data-scroll-behavior="smooth"] {
 /* Card types (hard requirement) */
 .effect-card {
   border-radius: 24px;
-  border: 2px solid transparent;
-  background:
-    linear-gradient(var(--card), var(--card)) padding-box,
-    linear-gradient(135deg, #b14eff, #ff4ecd, #00d9ff) border-box;
-  box-shadow: 0 0 28px rgba(177, 78, 255, 0.18);
+  border: 1px solid var(--border);
+  background: var(--card);
   transition:
     transform 400ms ease-out,
     box-shadow 400ms ease-out;
 }
 .effect-card:hover {
-  transform: scale(1.05) rotate(1deg);
-  box-shadow:
-    0 0 40px rgba(255, 78, 205, 0.45),
-    0 0 80px rgba(177, 78, 255, 0.25);
+  transform: scale(1.03);
+  box-shadow: var(--shadow-neon);
 }
 
 .toy-card {
   border-radius: 32px;
   background: linear-gradient(
     160deg,
-    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.08) 0%,
     rgba(20, 20, 30, 0.72) 45%,
     rgba(10, 10, 15, 0.9) 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   box-shadow:
-    0 24px 60px -28px rgba(177, 78, 255, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 24px 60px -28px rgba(139, 92, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .stat-card {
   border-radius: 16px;
   background: #0a0a0f;
-  border: 1px solid transparent;
-  background-image:
-    linear-gradient(#0a0a0f, #0a0a0f),
-    linear-gradient(135deg, #b14eff, #00d9ff, #00ffa3);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  border: 1px solid var(--border);
 }
 
 .cta-card {
   border-radius: 24px;
   background: var(--grad-cta);
-  color: #0a0a0f;
-  box-shadow: 0 16px 48px -16px rgba(255, 78, 205, 0.55);
+  color: #ffffff;
+  box-shadow: 0 16px 48px -16px rgba(139, 92, 246, 0.4);
 }
 
 /* Bling title */
 .text-bling {
   background: linear-gradient(
     105deg,
-    #00d9ff 0%,
-    #b14eff 28%,
-    #ff4ecd 58%,
-    #ffe600 88%,
-    #ff4ecd 100%
+    #8B5CF6 0%,
+    #6366F1 40%,
+    #06B6D4 70%,
+    #8B5CF6 100%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -426,8 +379,8 @@ html[data-scroll-behavior="smooth"] {
 }
 .nav-shell[data-scrolled="true"] {
   background: rgba(10, 10, 15, 0.92) !important;
-  border-color: rgba(255, 78, 205, 0.18) !important;
-  box-shadow: 0 12px 40px -24px rgba(177, 78, 255, 0.45);
+  border-color: rgba(139, 92, 246, 0.15) !important;
+  box-shadow: 0 12px 40px -24px rgba(139, 92, 246, 0.2);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -477,15 +430,14 @@ h1,
   inset: -10% -5% auto;
   height: 520px;
   background:
-    radial-gradient(46% 46% at 50% -4%, rgba(177, 78, 255, 0.18), transparent 70%),
-    radial-gradient(38% 38% at 84% 6%, rgba(255, 78, 205, 0.12), transparent 66%),
-    radial-gradient(32% 32% at 12% 18%, rgba(0, 217, 255, 0.1), transparent 66%);
+    radial-gradient(46% 46% at 50% -4%, rgba(139, 92, 246, 0.15), transparent 70%),
+    radial-gradient(38% 38% at 84% 6%, rgba(99, 102, 241, 0.1), transparent 66%);
   pointer-events: none;
   z-index: 0;
 }
 
 .text-grad {
-  background: linear-gradient(100deg, #00d9ff 0%, #b14eff 42%, #ff4ecd 100%);
+  background: linear-gradient(100deg, #8B5CF6 0%, #6366F1 50%, #06B6D4 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -507,18 +459,18 @@ h1,
 }
 .btn-primary {
   background: var(--grad-cta);
-  color: #0a0a0f;
+  color: #ffffff;
   padding: 0.8rem 1.4rem;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-    0 0 28px rgba(255, 78, 205, 0.35);
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 0 24px rgba(139, 92, 246, 0.25);
   letter-spacing: -0.01em;
 }
 .btn-primary:hover {
   transform: scale(1.05);
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.14) inset,
-    0 0 42px rgba(177, 78, 255, 0.45);
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+    0 0 36px rgba(139, 92, 246, 0.35);
 }
 .btn-primary:active {
   transform: scale(0.95);
@@ -559,11 +511,11 @@ h1,
   background:
     radial-gradient(
       120% 80% at 50% 0%,
-      rgba(177, 78, 255, 0.12),
+      rgba(139, 92, 246, 0.1),
       transparent 55%
     ),
     #030308;
-  border: 1px solid rgba(255, 78, 205, 0.18);
+  border: 1px solid rgba(139, 92, 246, 0.15);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 24px 80px -40px rgba(0, 0, 0, 0.9);
@@ -639,8 +591,8 @@ h1,
 }
 .video-tile:hover {
   transform: translateY(-2px) scale(1.02);
-  border-color: rgba(255, 78, 205, 0.45);
-  box-shadow: 0 20px 50px -20px rgba(177, 78, 255, 0.45);
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 20px 50px -20px rgba(139, 92, 246, 0.35);
 }
 .video-tile video {
   width: 100%;
@@ -693,8 +645,8 @@ select {
 
 /* On-brand text selection */
 ::selection {
-  background: rgba(255, 78, 205, 0.75);
-  color: #0a0a0f;
+  background: rgba(139, 92, 246, 0.6);
+  color: #ffffff;
 }
 
 /* Accessible, on-brand keyboard focus ring */
@@ -713,7 +665,12 @@ input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(177, 78, 255, 0.22);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.login-email-field:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(0, 0, 0, 0.55);
 }
 
 /* Editorial eyebrow */
@@ -743,8 +700,8 @@ select:focus {
 }
 .card-i:hover {
   transform: translateY(-2px) scale(1.02);
-  border-color: rgba(255, 78, 205, 0.35);
-  box-shadow: 0 24px 60px -28px rgba(177, 78, 255, 0.45);
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 24px 60px -28px rgba(139, 92, 246, 0.35);
 }
 
 /* Smoother links */
@@ -777,14 +734,14 @@ a {
   border-radius: 28px;
   background: linear-gradient(
     165deg,
-    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.08) 0%,
     rgba(20, 20, 30, 0.78) 42%,
     rgba(10, 10, 15, 0.94) 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    0 28px 70px -32px rgba(177, 78, 255, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 28px 70px -32px rgba(139, 92, 246, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   overflow: hidden;
@@ -795,8 +752,8 @@ a {
 .collection-card:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 36px 80px -30px rgba(255, 78, 205, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    0 36px 80px -30px rgba(139, 92, 246, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .result-card {
@@ -806,17 +763,15 @@ a {
     rgba(26, 26, 40, 0.95),
     rgba(10, 10, 15, 0.98)
   );
-  border: 1px solid rgba(0, 217, 255, 0.22);
-  box-shadow: 0 18px 48px -28px rgba(0, 217, 255, 0.35);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 0 18px 48px -28px rgba(139, 92, 246, 0.3);
 }
 
 .pricing-card {
   border-radius: 24px;
-  background:
-    linear-gradient(var(--card), var(--card)) padding-box,
-    linear-gradient(135deg, #b14eff, #ff4ecd, #00d9ff) border-box;
-  border: 2px solid transparent;
-  box-shadow: 0 20px 56px -28px rgba(177, 78, 255, 0.4);
+  background: var(--card);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  box-shadow: 0 20px 56px -28px rgba(139, 92, 246, 0.3);
 }
 
 .status-card {
@@ -844,7 +799,7 @@ a {
 }
 .status-card--ok,
 .status-card[data-tone="ready"] {
-  border-color: rgba(0, 255, 163, 0.28);
+  border-color: rgba(16, 185, 129, 0.28);
 }
 .status-card--ok::before,
 .status-card[data-tone="ready"]::before {
@@ -853,7 +808,7 @@ a {
 .status-card--warn,
 .status-card[data-tone="warn"],
 .status-card[data-tone="progress"] {
-  border-color: rgba(255, 230, 0, 0.28);
+  border-color: rgba(245, 158, 11, 0.28);
 }
 .status-card--warn::before,
 .status-card[data-tone="warn"]::before,
@@ -861,13 +816,13 @@ a {
   background: var(--lemon);
 }
 .status-card--err {
-  border-color: rgba(255, 61, 0, 0.35);
+  border-color: rgba(239, 68, 68, 0.35);
 }
 .status-card--err::before {
   background: var(--ember);
 }
 .status-card[data-tone="private"] {
-  border-color: rgba(255, 78, 205, 0.3);
+  border-color: rgba(139, 92, 246, 0.3);
 }
 .status-card[data-tone="private"]::before {
   background: var(--neon-pink);
@@ -876,7 +831,7 @@ a {
   transform: translateY(-1px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 12px 28px -18px rgba(177, 78, 255, 0.4);
+    0 12px 28px -18px rgba(139, 92, 246, 0.3);
 }
 
 /* Stickers — collectible chrome */
@@ -937,36 +892,36 @@ a {
   text-transform: uppercase;
   border: 1.5px solid transparent;
   box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.55);
-  color: #0a0a0f;
-  background: var(--cream);
+  color: #ffffff;
+  background: var(--card);
 }
 .toy-sticker-lime {
   background: var(--tide-green);
-  border-color: rgba(0, 255, 163, 0.45);
+  border-color: rgba(16, 185, 129, 0.45);
 }
 .toy-sticker-bubblegum {
-  background: var(--neon-pink);
-  border-color: rgba(255, 78, 205, 0.45);
-  color: #0a0a0f;
+  background: var(--brand);
+  border-color: rgba(139, 92, 246, 0.45);
+  color: #ffffff;
 }
 .toy-sticker-grape {
-  background: var(--electric-purple);
-  border-color: rgba(177, 78, 255, 0.5);
-  color: #faf7f2;
+  background: var(--brand-2);
+  border-color: rgba(124, 58, 237, 0.5);
+  color: #ffffff;
 }
 .toy-sticker-mango {
   background: var(--lemon);
-  border-color: rgba(255, 230, 0, 0.5);
+  border-color: rgba(245, 158, 11, 0.5);
 }
 .toy-sticker-aqua {
   background: var(--tide-blue);
-  border-color: rgba(0, 217, 255, 0.5);
-  color: #0a0a0f;
+  border-color: rgba(6, 182, 212, 0.5);
+  color: #ffffff;
 }
 .toy-sticker-outline {
   background: transparent;
   color: var(--cream);
-  border-color: rgba(250, 247, 242, 0.35);
+  border-color: rgba(255, 255, 255, 0.25);
   box-shadow: none;
 }
 
@@ -1028,18 +983,13 @@ a {
   background:
     radial-gradient(
       55% 40% at 18% 0%,
-      rgba(177, 78, 255, 0.16),
+      rgba(139, 92, 246, 0.14),
       transparent 70%
     ),
     radial-gradient(
       45% 35% at 88% 8%,
-      rgba(255, 78, 205, 0.12),
+      rgba(99, 102, 241, 0.1),
       transparent 68%
-    ),
-    radial-gradient(
-      40% 30% at 70% 90%,
-      rgba(0, 217, 255, 0.08),
-      transparent 70%
     ),
     var(--bg);
 }
@@ -1049,10 +999,10 @@ a {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.22;
+  opacity: 0.15;
   background-image:
-    linear-gradient(rgba(255, 78, 205, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(177, 78, 255, 0.07) 1px, transparent 1px);
+    linear-gradient(rgba(139, 92, 246, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 20%, transparent 75%);
 }
@@ -1060,9 +1010,9 @@ a {
 .login-vault-card {
   animation: capsule-float 7.5s ease-in-out infinite;
   box-shadow:
-    0 0 0 1px rgba(255, 78, 205, 0.16),
-    0 36px 100px -40px rgba(177, 78, 255, 0.55),
-    0 0 48px -18px rgba(0, 255, 163, 0.16);
+    0 0 0 1px rgba(139, 92, 246, 0.15),
+    0 36px 100px -40px rgba(139, 92, 246, 0.4),
+    0 0 48px -18px rgba(99, 102, 241, 0.15);
 }
 
 .login-email-field {
