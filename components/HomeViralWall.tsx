@@ -216,7 +216,7 @@ export function HomeViralWall({
       <div className="mx-auto mt-6 flex max-w-[1200px] justify-center gap-2 sm:hidden">
         <Link
           href={momentHref}
-          className="rounded-full bg-[var(--grad-cta)] px-5 py-2.5 text-xs font-semibold text-white shadow-sm"
+          className="rounded-full [background:var(--grad-cta)] px-5 py-2.5 text-xs font-semibold text-white shadow-sm"
         >
           Create with my toy
         </Link>

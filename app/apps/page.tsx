@@ -241,7 +241,7 @@ export default function AppsPage() {
                   href={app.href}
                   className="card group flex gap-3 p-4 transition-transform hover:-translate-y-0.5"
                 >
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[var(--grad-soft)] text-2xl">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl [background:var(--grad-soft)] text-2xl">
                     {app.emoji}
                   </span>
                   <div className="min-w-0">

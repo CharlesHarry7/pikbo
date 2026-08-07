@@ -73,7 +73,7 @@ export default function Home() {
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href={createGenerate360Href("home-hero")}
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--grad-cta)] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[rgba(255,78,205,0.25)] transition hover:scale-105 active:scale-95"
+                className="inline-flex items-center gap-2 rounded-full [background:var(--grad-cta)] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[rgba(255,78,205,0.25)] transition hover:scale-105 active:scale-95"
               >
                 Generate 360° listing spin
               </Link>
@@ -157,7 +157,7 @@ export default function Home() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               href={createGenerate360Href("home-cta")}
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--grad-cta)] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[rgba(255,78,205,0.25)] transition hover:scale-105 active:scale-95"
+              className="inline-flex items-center gap-2 rounded-full [background:var(--grad-cta)] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[rgba(255,78,205,0.25)] transition hover:scale-105 active:scale-95"
             >
               Generate 360°
             </Link>

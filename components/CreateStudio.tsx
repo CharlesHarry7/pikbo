@@ -2856,7 +2856,7 @@ export function CreateStudio({
                           }}
                           className={`flex-1 rounded-lg border py-2 text-sm font-semibold ${
                             effectiveDuration === d
-                              ? "border-[var(--brand)] bg-[var(--grad-soft)]"
+                              ? "border-[var(--brand)] [background:var(--grad-soft)]"
                               : "border-[var(--border)] text-[var(--fg-muted)]"
                           } ${freeLock || fixedMomentContract ? "cursor-not-allowed opacity-50" : ""}`}
                         >
@@ -2907,7 +2907,7 @@ export function CreateStudio({
                           }}
                           className={`flex-1 rounded-lg border py-2 text-sm font-semibold ${
                             effectiveResolution === r
-                              ? "border-[var(--brand)] bg-[var(--grad-soft)]"
+                              ? "border-[var(--brand)] [background:var(--grad-soft)]"
                               : "border-[var(--border)] text-[var(--fg-muted)]"
                           } ${locked ? "opacity-60" : ""}`}
                         >

@@ -127,7 +127,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
           {motionBrand ? (
             <span className="flex items-center gap-3 text-[var(--fg)]">
-              <span className="grid h-9 w-9 place-items-center rounded-2xl bg-[var(--grad-cta)] font-display text-sm font-black text-white shadow-[0_0_18px_rgba(255,78,205,0.3)]">
+              <span className="grid h-9 w-9 place-items-center rounded-2xl [background:var(--grad-cta)] font-display text-sm font-black text-white shadow-[0_0_18px_rgba(255,78,205,0.3)]">
                 🧸
               </span>
               <span>
@@ -209,7 +209,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "absolute inset-x-0 bottom-0 h-0.5",
                       motionBrand
-                        ? "bg-[var(--grad)]"
+                        ? "[background:var(--grad)]"
                         : "bg-[var(--brand)]"
                     )}
                   />
@@ -223,14 +223,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <Link
               href={home ? HOME_SHELL_GENERATE_HREF : "/library"}
               data-app-shell-home-generate={home ? "360" : undefined}
-              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[var(--grad-cta)] px-5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.25)]"
+              className="btn-press inline-flex min-h-10 items-center rounded-full [background:var(--grad-cta)] px-5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.25)]"
             >
               {home ? "Generate 360°" : "Open Library"}
             </Link>
           ) : resultShell ? (
             <Link
               href={DEFAULT_MOMENT_CREATE_HREF}
-              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[var(--grad-cta)] px-5 text-xs font-black text-[var(--primary-foreground)]"
+              className="btn-press inline-flex min-h-10 items-center rounded-full [background:var(--grad-cta)] px-5 text-xs font-black text-[var(--primary-foreground)]"
             >
               Create a Moment
             </Link>
@@ -275,7 +275,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                   href={HOME_SHELL_GENERATE_HREF}
                   data-app-shell-home-generate="360"
                   data-shell-mobile-360-cta
-                  className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-[var(--grad-cta)] px-3.5 text-[10px] font-black text-white shadow-[0_0_18px_rgba(255,78,205,0.25)]"
+                  className="inline-flex min-h-9 shrink-0 items-center rounded-full [background:var(--grad-cta)] px-3.5 text-[10px] font-black text-white shadow-[0_0_18px_rgba(255,78,205,0.25)]"
                 >
                   Generate 360°
                 </Link>
@@ -290,7 +290,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             ) : (
               <Link
                 href={DEFAULT_MOMENT_CREATE_HREF}
-                className="inline-flex min-h-9 items-center rounded-full bg-[var(--grad-cta)] px-4 text-[10px] font-black text-[var(--primary-foreground)]"
+                className="inline-flex min-h-9 items-center rounded-full [background:var(--grad-cta)] px-4 text-[10px] font-black text-[var(--primary-foreground)]"
               >
                 Use this motion
               </Link>
@@ -299,7 +299,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <>
               <Link
                 href={DEFAULT_MOMENT_CREATE_HREF}
-                className="inline-flex min-h-9 items-center rounded-full bg-[var(--grad-cta)] px-4 text-[10px] font-black text-[var(--primary-foreground)]"
+                className="inline-flex min-h-9 items-center rounded-full [background:var(--grad-cta)] px-4 text-[10px] font-black text-[var(--primary-foreground)]"
               >
                 Create a Moment
               </Link>
