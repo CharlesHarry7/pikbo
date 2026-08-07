@@ -153,7 +153,7 @@ export function HfProductRail() {
       data-home-suite-rail="hf-product"
       data-hf-product-rail="true"
       data-hf-rail-boot={sessionBoot}
-      className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
+      className="border-b border-[var(--border)] bg-white px-3 py-5 sm:px-5"
       aria-label="Generate suite"
     >
       <div className="mx-auto max-w-[1400px]">
@@ -162,7 +162,7 @@ export function HfProductRail() {
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--brand)]">
               Suite
             </p>
-            <p className="mt-0.5 text-[11px] text-white/40">
+            <p className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
               Generate 360° and more Lab doors · secondary to the Moment above
               {accessTimedOut ? (
                 <>
@@ -200,22 +200,22 @@ export function HfProductRail() {
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Free card — Free Mini product caps only when freeLiveOpen */}
-          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[var(--brand)]/40 bg-[var(--brand)]/[0.08] p-3.5 shadow-[0_0_32px_rgba(139,92,246,0.1)] sm:h-[11rem] sm:w-[10rem]">
+          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[var(--brand)]/30 bg-[var(--brand)]/[0.06] p-3.5 shadow-[0_0_24px_rgba(255,78,205,0.08)] sm:h-[11rem] sm:w-[10rem]">
             <span className="relative z-10 inline-flex rounded-full bg-[var(--brand)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
               Free
             </span>
-            <p className="relative z-10 mt-2 text-[13px] font-black leading-tight text-white">
+            <p className="relative z-10 mt-2 text-[13px] font-black leading-tight text-[var(--fg)]">
               <FreeTrialCta
                 path="/#product-rail-card"
                 labelTry={freeLiveOpen ? "Try free · Mini 5s" : "Lab sample"}
                 labelDemo="Lab sample"
                 labelPlans="Plans"
                 hideClipsChip
-                className="font-black text-white group-hover:text-[var(--brand)]"
+                className="font-black text-[var(--fg)] group-hover:text-[var(--brand)]"
               />
             </p>
             <p
-              className="relative z-10 mt-1 text-[10px] leading-snug text-white/45"
+              className="relative z-10 mt-1 text-[10px] leading-snug text-[var(--fg-muted)]"
               data-hf-rail-free-cap={
                 accessTimedOut
                   ? "timeout"

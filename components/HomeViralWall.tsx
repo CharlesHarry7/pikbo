@@ -61,17 +61,17 @@ export function HomeViralWall({
       data-home-proof-wall="true"
       data-home-proof-360-pinned="true"
       data-home-attraction="clean-v2"
-      className="scroll-mt-14 border-b border-white/[0.06] bg-black px-3 py-8 sm:px-5 sm:py-10"
+      className="scroll-mt-14 border-b border-[var(--border)] bg-white px-3 py-8 sm:px-5 sm:py-10"
       aria-labelledby="recipe-wall-title"
     >
       <div className="mx-auto mb-5 flex max-w-[1200px] items-end justify-between gap-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--fg-muted)]">
             Explore
           </p>
           <h2
             id="recipe-wall-title"
-            className="mt-1 font-display text-xl font-semibold tracking-tight text-white sm:text-2xl"
+            className="mt-1 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-2xl"
           >
             One toy. More ways to move.
           </h2>
@@ -80,7 +80,7 @@ export function HomeViralWall({
           <Link
             href={listing360Href}
             data-home-proof-360-cta
-            className="hidden text-white/45 transition hover:text-white sm:inline"
+            className="hidden text-[var(--fg-muted)] transition hover:text-[var(--fg)] sm:inline"
             onClick={() =>
               track({
                 event: "recipe_use",
@@ -124,7 +124,7 @@ export function HomeViralWall({
               data-home-proof-card={item.isProof ? recipeSlug : undefined}
               data-home-proof-slot={item.isProof ? index : undefined}
               data-attraction-id={item.id}
-              className="group relative isolate aspect-[3/4] overflow-hidden rounded-2xl bg-[#111] ring-1 ring-white/[0.07] transition duration-300 hover:ring-white/20"
+              className="group relative isolate aspect-[3/4] overflow-hidden rounded-2xl bg-[var(--card)] ring-1 ring-[var(--border)] transition duration-300 hover:ring-[var(--brand)]/30"
             >
               <Link
                 href={cardHref}
@@ -165,7 +165,7 @@ export function HomeViralWall({
                   />
                 )}
                 <div
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent"
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"
                   aria-hidden
                 />
                 {item.is360 ? (
@@ -184,7 +184,7 @@ export function HomeViralWall({
                   <p className="text-[13px] font-semibold leading-snug tracking-tight text-white">
                     {item.title}
                   </p>
-                  <p className="mt-0.5 text-[10px] text-white/40">
+                  <p className="mt-0.5 text-[10px] text-white/50">
                     {hasMotion ? "Motion" : "Still · try motion"}
                   </p>
                 </div>
@@ -216,14 +216,14 @@ export function HomeViralWall({
       <div className="mx-auto mt-6 flex max-w-[1200px] justify-center gap-2 sm:hidden">
         <Link
           href={momentHref}
-          className="rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-black"
+          className="rounded-full bg-[var(--grad-cta)] px-5 py-2.5 text-xs font-semibold text-white shadow-sm"
         >
           Create with my toy
         </Link>
         <Link
           href={listing360Href}
           data-home-proof-360-cta
-          className="rounded-full border border-white/15 px-4 py-2.5 text-xs text-white/60"
+          className="rounded-full border border-[var(--border)] bg-white px-4 py-2.5 text-xs text-[var(--fg-muted)]"
         >
           360°
         </Link>
