@@ -79,7 +79,7 @@ export default function Home() {
               </Link>
               <Link
                 href={`${MOMENT_CREATE_HREF}&source=home-hero`}
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-6 py-3 text-sm font-semibold text-[var(--fg)] shadow-sm transition hover:shadow-md hover:border-[var(--brand)]/30"
+className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--brand)]/30 bg-white px-6 py-3 text-sm font-semibold text-[var(--fg)] shadow-sm transition hover:shadow-md hover:border-[var(--brand)]/50 active:scale-95"
               >
                 Create with my toy
               </Link>
@@ -163,7 +163,7 @@ export default function Home() {
             </Link>
             <Link
               href="/pricing"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-6 py-3 text-sm font-semibold text-[var(--fg)] shadow-sm transition hover:shadow-md hover:border-[var(--brand)]/30"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--brand)]/30 bg-white px-6 py-3 text-sm font-semibold text-[var(--fg)] shadow-sm transition hover:shadow-md hover:border-[var(--brand)]/50 active:scale-95"
             >
               View plans
             </Link>
