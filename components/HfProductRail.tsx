@@ -153,16 +153,16 @@ export function HfProductRail() {
       data-home-suite-rail="hf-product"
       data-hf-product-rail="true"
       data-hf-rail-boot={sessionBoot}
-      className="border-b border-white/10 bg-black px-3 py-5 sm:px-5"
+      className="border-b border-[var(--border)] bg-white px-3 py-5 sm:px-5"
       aria-label="Generate suite"
     >
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-3 flex items-end justify-between gap-2">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--neon-pink)]">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--brand)]">
               Suite
             </p>
-            <p className="mt-0.5 text-[11px] text-white/40">
+            <p className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
               Generate 360° and more Lab doors · secondary to the Moment above
               {accessTimedOut ? (
                 <>
@@ -171,7 +171,7 @@ export function HfProductRail() {
                     type="button"
                     onClick={() => load()}
                     data-hf-rail-boot-retry
-                    className="font-bold text-white/70 underline-offset-2 hover:text-[var(--neon-pink)] hover:underline"
+                    className="font-bold text-[var(--fg-muted)] underline-offset-2 hover:text-[var(--brand)] hover:underline"
                     title="Retry access check"
                   >
                     Retry
@@ -186,11 +186,11 @@ export function HfProductRail() {
               labelTry={headerTryLabel}
               labelDemo={headerDemoLabel}
               hideClipsChip
-              className="text-[11px] font-bold text-[var(--neon-pink)] hover:underline"
+              className="text-[11px] font-bold text-[var(--brand)] hover:underline"
             />
             <Link
               href={GENERATE_REMIX_HREF}
-              className="text-[11px] font-bold text-[var(--neon-pink)] hover:underline"
+              className="text-[11px] font-bold text-[var(--brand)] hover:underline"
               data-hf-rail-generate="remix"
               data-home-suite-360
             >
@@ -200,22 +200,22 @@ export function HfProductRail() {
         </div>
         <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Free card — Free Mini product caps only when freeLiveOpen */}
-          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[var(--neon-pink)]/45 bg-[var(--neon-pink)]/[0.1] p-3.5 shadow-[0_0_32px_rgba(255,78,205,0.12)] sm:h-[11rem] sm:w-[10rem]">
-            <span className="relative z-10 inline-flex rounded-full bg-[var(--neon-pink)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--void)]">
+          <div className="group relative h-[9.5rem] w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border border-[var(--brand)]/30 bg-[var(--brand)]/[0.06] p-3.5 shadow-[0_0_24px_rgba(255,78,205,0.08)] sm:h-[11rem] sm:w-[10rem]">
+            <span className="relative z-10 inline-flex rounded-full bg-[var(--brand)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
               Free
             </span>
-            <p className="relative z-10 mt-2 text-[13px] font-black leading-tight text-white">
+            <p className="relative z-10 mt-2 text-[13px] font-black leading-tight text-[var(--fg)]">
               <FreeTrialCta
                 path="/#product-rail-card"
                 labelTry={freeLiveOpen ? "Try free · Mini 5s" : "Lab sample"}
                 labelDemo="Lab sample"
                 labelPlans="Plans"
                 hideClipsChip
-                className="font-black text-white group-hover:text-[var(--neon-pink)]"
+                className="font-black text-[var(--fg)] group-hover:text-[var(--brand)]"
               />
             </p>
             <p
-              className="relative z-10 mt-1 text-[10px] leading-snug text-white/45"
+              className="relative z-10 mt-1 text-[10px] leading-snug text-[var(--fg-muted)]"
               data-hf-rail-free-cap={
                 accessTimedOut
                   ? "timeout"
@@ -261,25 +261,25 @@ export function HfProductRail() {
                 <div
                   className={`absolute inset-0 bg-gradient-to-t ${
                     p.hot
-                      ? "from-black via-black/70 to-black/25"
-                      : "from-black via-black/75 to-black/35"
+                      ? "from-black/70 via-black/40 to-black/10"
+                      : "from-black/60 via-black/30 to-transparent"
                   }`}
                 />
                 <div className="relative z-10 flex h-full flex-col justify-between p-3">
                   <span
                     className={`inline-flex w-fit rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${
                       p.hot
-                        ? "bg-[var(--neon-pink)] text-[var(--void)]"
-                        : "border border-white/20 bg-black/50 text-white/70 backdrop-blur"
+                        ? "bg-[var(--brand)] text-white"
+                        : "border border-white/30 bg-black/30 text-white/80 backdrop-blur"
                     }`}
                   >
                     {p.tag}
                   </span>
                   <div>
-                    <p className="text-[13px] font-black leading-tight text-white group-hover:text-[var(--neon-pink)]">
+                    <p className="text-[13px] font-black leading-tight text-white group-hover:text-[var(--brand)]">
                       {p.title}
                     </p>
-                    <p className="mt-0.5 text-[10px] leading-snug text-white/55">
+                    <p className="mt-0.5 text-[10px] leading-snug text-white/60">
                       {p.blurb}
                     </p>
                   </div>

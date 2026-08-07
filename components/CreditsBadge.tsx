@@ -226,7 +226,7 @@ export function CreditsBadge({
           {t("credits.upgrade")}
         </span>
       ) : session.plan !== "free" ? (
-        <span className="rounded-full bg-[var(--grad-soft)] px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-[var(--fg)]">
+        <span className="rounded-full [background:var(--grad-soft)] px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-[var(--fg)]">
           {session.planName}
         </span>
       ) : freeLiveOpen ? (

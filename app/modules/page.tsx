@@ -110,7 +110,7 @@ function ModuleCard({
         </div>
       ) : (
         <div className="flex items-start justify-between gap-3 p-5 pb-0">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--grad-soft)] text-2xl ring-1 ring-white/10">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl [background:var(--grad-soft)] text-2xl ring-1 ring-white/10">
             {w.emoji}
           </span>
           <div className="flex flex-wrap justify-end gap-1">

@@ -10,7 +10,7 @@ const buttonVariants = cva(
       variant: {
         default:
           // Gallery-calm copper CTA (AIT-517) — board tokens, not carnival neon
-          "bg-[var(--grad-cta)] text-[var(--primary-foreground)] shadow-[0_0_24px_rgba(196,165,116,0.28)] hover:scale-[1.03] hover:shadow-[0_0_36px_rgba(196,165,116,0.38)] active:scale-95",
+          "[background:var(--grad-cta)] text-[var(--primary-foreground)] shadow-[0_0_24px_rgba(196,165,116,0.28)] hover:scale-[1.03] hover:shadow-[0_0_36px_rgba(196,165,116,0.38)] active:scale-95",
         secondary:
           "bg-white/[0.06] text-[var(--fg)] border border-[var(--border)] hover:bg-white/10",
         outline:

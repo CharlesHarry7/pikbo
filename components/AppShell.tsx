@@ -102,12 +102,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       className={cn(
         "flex min-h-screen min-w-0 flex-col",
         home
-          ? "bg-[var(--void)] text-[var(--cream)]"
+          ? "bg-[var(--bg)] text-[var(--fg)]"
           : resultShell
           ? "bg-[#FAF7F2] text-[#0A0A0F]"
           : lightShell
             ? "bg-[#FAF7F2] text-[#0A0A0F]"
-            : "bg-[var(--void)] text-[var(--cream)]"
+            : "bg-[var(--bg)] text-[var(--fg)]"
       )}
     >
       <header
@@ -116,18 +116,18 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           "nav-shell sticky top-0 z-50 hidden items-center border-b px-7 backdrop-blur-xl lg:flex",
           motionChrome ? "h-16" : "h-14",
           motionChrome
-            ? "border-white/10 bg-[rgba(10,10,15,0.45)] px-8"
+            ? "border-[var(--border)] bg-white/80 px-8"
             : resultShell
             ? "border-black/10 bg-[#FAF7F2]/94 px-8"
             : lightShell
               ? "border-black/10 bg-[#FAF7F2]/92"
-              : "border-white/10 bg-[rgba(10,10,15,0.92)]"
+              : "border-[var(--border)] bg-white/80"
         )}
       >
         <Link href="/" className="shrink-0" aria-label="Pikbo home">
           {motionBrand ? (
-            <span className="flex items-center gap-3 text-[var(--cream)]">
-              <span className="grid h-9 w-9 place-items-center rounded-2xl bg-[var(--grad-cta)] font-display text-sm font-black text-[var(--primary-foreground)] shadow-[0_0_18px_rgba(196,165,116,0.35)]">
+            <span className="flex items-center gap-3 text-[var(--fg)]">
+              <span className="grid h-9 w-9 place-items-center rounded-2xl [background:var(--grad-cta)] font-display text-sm font-black text-white shadow-[0_0_18px_rgba(255,78,205,0.3)]">
                 🧸
               </span>
               <span>
@@ -188,8 +188,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                   "relative py-5 text-[13px] font-bold transition-colors",
                   motionChrome
                     ? on
-                      ? "text-white"
-                      : "text-white/42 hover:text-white"
+                      ? "text-[var(--fg)]"
+                      : "text-[var(--fg-muted)] hover:text-[var(--fg)]"
                     : resultShell
                     ? on
                       ? "text-[#15171B]"
@@ -209,7 +209,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "absolute inset-x-0 bottom-0 h-0.5",
                       motionBrand
-                        ? "bg-[var(--grad)]"
+                        ? "[background:var(--grad)]"
                         : "bg-[var(--brand)]"
                     )}
                   />
@@ -223,14 +223,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <Link
               href={home ? HOME_SHELL_GENERATE_HREF : "/library"}
               data-app-shell-home-generate={home ? "360" : undefined}
-              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[var(--grad-cta)] px-5 text-xs font-black text-[var(--primary-foreground)] shadow-[0_0_24px_rgba(196,165,116,0.28)]"
+              className="btn-press inline-flex min-h-10 items-center rounded-full [background:var(--grad-cta)] px-5 text-xs font-black text-white shadow-[0_0_24px_rgba(255,78,205,0.25)]"
             >
               {home ? "Generate 360°" : "Open Library"}
             </Link>
           ) : resultShell ? (
             <Link
               href={DEFAULT_MOMENT_CREATE_HREF}
-              className="btn-press inline-flex min-h-10 items-center rounded-full bg-[var(--grad-cta)] px-5 text-xs font-black text-[var(--primary-foreground)]"
+              className="btn-press inline-flex min-h-10 items-center rounded-full [background:var(--grad-cta)] px-5 text-xs font-black text-[var(--primary-foreground)]"
             >
               Create a Moment
             </Link>
@@ -248,12 +248,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         className={cn(
           "nav-shell sticky top-0 z-50 flex h-12 items-center justify-between border-b px-3 backdrop-blur-xl lg:hidden",
           home
-            ? "border-white/10 bg-[rgba(10,10,15,0.55)]"
+            ? "border-[var(--border)] bg-white/80"
             : resultShell
             ? "border-black/10 bg-[#FAF7F2]/94"
             : lightShell
               ? "border-black/10 bg-[#FAF7F2]/94"
-              : "border-white/10 bg-[rgba(10,10,15,0.92)]"
+              : "border-[var(--border)] bg-white/80"
         )}
       >
         <Link href="/" aria-label="Pikbo home">
@@ -261,7 +261,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             size={26}
             wordClassName={cn(
               "text-base",
-              home ? "!text-[var(--cream)]" : lightShell && "!text-[#0A0A0F]"
+              home ? "!text-[var(--fg)]" : lightShell && "!text-[#0A0A0F]"
             )}
           />
         </Link>
@@ -275,14 +275,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                   href={HOME_SHELL_GENERATE_HREF}
                   data-app-shell-home-generate="360"
                   data-shell-mobile-360-cta
-                  className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-[var(--grad-cta)] px-3.5 text-[10px] font-black text-[var(--primary-foreground)] shadow-[0_0_18px_rgba(196,165,116,0.28)]"
+                  className="inline-flex min-h-9 shrink-0 items-center rounded-full [background:var(--grad-cta)] px-3.5 text-[10px] font-black text-white shadow-[0_0_18px_rgba(255,78,205,0.25)]"
                 >
                   Generate 360°
                 </Link>
                 <Link
                   href={HOME_SHELL_MOMENT_HREF}
                   data-shell-mobile-moment-cta
-                  className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-white/20 bg-white/[0.06] px-3 text-[10px] font-black text-[var(--cream)]/85 transition hover:border-[var(--brand)]/45 hover:text-[var(--cream)]"
+                  className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-[var(--border)] bg-white px-3 text-[10px] font-black text-[var(--fg)]/85 transition hover:border-[var(--brand)]/30 hover:text-[var(--fg)]"
                 >
                   Create with my toy
                 </Link>
@@ -290,7 +290,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             ) : (
               <Link
                 href={DEFAULT_MOMENT_CREATE_HREF}
-                className="inline-flex min-h-9 items-center rounded-full bg-[var(--grad-cta)] px-4 text-[10px] font-black text-[var(--primary-foreground)]"
+                className="inline-flex min-h-9 items-center rounded-full [background:var(--grad-cta)] px-4 text-[10px] font-black text-[var(--primary-foreground)]"
               >
                 Use this motion
               </Link>
@@ -299,7 +299,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             <>
               <Link
                 href={DEFAULT_MOMENT_CREATE_HREF}
-                className="inline-flex min-h-9 items-center rounded-full bg-[var(--grad-cta)] px-4 text-[10px] font-black text-[var(--primary-foreground)]"
+                className="inline-flex min-h-9 items-center rounded-full [background:var(--grad-cta)] px-4 text-[10px] font-black text-[var(--primary-foreground)]"
               >
                 Create a Moment
               </Link>
@@ -344,12 +344,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           className={cn(
             "min-w-0 flex-1",
             home
-              ? "bg-[var(--void)]"
+              ? "bg-[var(--bg)]"
               : resultShell
               ? "bg-[#FAF7F2]"
               : lightShell
                 ? "bg-[#FAF7F2]"
-                : "bg-[var(--void)]"
+                : "bg-[var(--bg)]"
           )}
         >
           {children}
@@ -366,7 +366,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           className={cn(
             // Tab content ≈ --mobile-nav-content-h; floating CTAs clear
             // content-h + safe-area via --mobile-nav-clearance (AIT-150).
-            "z-50 grid grid-cols-5 border-t border-white/10 bg-[rgba(10,10,15,0.96)] px-1 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl lg:hidden",
+            "z-50 grid grid-cols-5 border-t border-[var(--border)] bg-white/95 px-1 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl lg:hidden",
             home ? "relative" : "sticky bottom-0"
           )}
           aria-label="Mobile navigation"
@@ -381,7 +381,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
                 className={cn(
                   // 44px min touch target; truncate labels so 5-up still fits 390px
                   "flex min-h-11 min-w-0 flex-col items-center justify-center px-1 py-2.5 text-[10px] font-bold transition-colors",
-                  on ? "text-[var(--brand)]" : "text-white/45"
+                  on ? "text-[var(--brand)]" : "text-[var(--fg-muted)]"
                 )}
               >
                 <span

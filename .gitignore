@@ -42,6 +42,16 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local preview
+.local-preview/
+
+# nested clones
+/pikbo/
+
+# legacy assets
+/public/moments/_legacy/
+/public/style-studies/_legacy/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

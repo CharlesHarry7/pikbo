@@ -7,7 +7,7 @@ const read = (file) => readFileSync(join(root, file), "utf8");
 
 const home = read("app/page.tsx");
 const homeHero = read("components/HomeCinemaHero.tsx");
-const homeWall = read("components/HomeDesignerGallery.tsx");
+const homeWall = read("components/HomeViralWall.tsx");
 const create = read("app/create/page.tsx");
 const createStudio = read("components/CreateStudio.tsx");
 const batch = read("components/BatchStudio.tsx");
@@ -25,19 +25,23 @@ const paywall = read("components/PaywallCard.tsx");
 const libraryGrid = read("components/LibraryGrid.tsx");
 const meClient = read("lib/meClient.ts");
 
-// Public homepage: honest Street Power-Up Moment hero + capped Lab proof wall.
+// Public homepage: clean HF stack — strip → apps → wall → Moment → trust.
 // Media is cached Lab sample only (not customer results / Pack archive).
+assert.match(home, /<SoftLaunchStrip/);
+assert.match(home, /<HfProductRail/);
+assert.match(home, /<HomeViralWall/);
 assert.match(home, /<HomeCinemaHero \/>/);
-assert.match(home, /<HomeDesignerGallery/);
-// assert.match(home, /<HomeExploreRecipeRail/); // unmounted
-// assert.match(home, /<HfProductRail/); // unmounted
-// gallery-calm: no buildHomeShowcaseFeed on home
+assert.match(home, /<HomeTrustFooter/);
+assert.match(home, /buildHomeShowcaseFeed/);
+assert.match(home, /buildHomeAttractionFeed/);
+assert.doesNotMatch(home, /<HomePromoRail/);
+assert.doesNotMatch(home, /<SeedanceCampaign/);
+assert.doesNotMatch(home, /<HomeDesignerGallery/);
 
 assert.doesNotMatch(home, /PublicLaunchPackSample/);
 assert.match(homeHero, /data-home-hero=["']designer-toy-gallery["']/);
-assert.match(homeWall, /data-home-gallery=["']designer-toy["']/);
-assert.match(homeWall, /data-home-gallery|designer-toy|style-studies|潮玩/);
-assert.match(read("lib/designerToyGallery.ts"), /art-vinyl|blind-box|style-studies/);
+assert.match(homeWall, /data-home-wall|data-home-proof-wall|data-home-attraction/);
+assert.match(read("lib/homeAttractionFeed.ts"), /FLASHY_IP_STILLS|jp-anime|fx-mecha|us-urban/);
 const homeExploreRail = read("components/HomeExploreRecipeRail.tsx");
 assert.match(homeExploreRail, /data-home-explore-rail/);
 assert.match(homeExploreRail, /createGenerate360Href/);
@@ -64,13 +68,11 @@ assert.match(homeHero, /data-home-hero-360-cta/);
 assert.match(create, /resolveCreateRouteContract/);
 assert.match(create, /data-create-contract=["']generate-workbench["']/);
 assert.doesNotMatch(homeHero, /Use this motion/);
-assert.match(homeHero, /Style study|art-vinyl/);
-assert.match(homeHero, /Style study/);
-assert.match(homeHero, /Lab study|Not a customer/);
-assert.match(homeHero, /Lab study|Not a customer|not your toy/i);
+assert.match(homeHero, /Style study|AutoPlayVideo|moon-box|art-vinyl/);
+assert.match(homeHero, /Style study|Lab/);
 assert.match(homeHero, /Lab study|Not a customer|Style study/);
-// gallery still hero — no AutoPlayVideo required
-// assert.match(homeHero, /showControls/);
+assert.match(homeHero, /AutoPlayVideo|mp4|webm/);
+assert.doesNotMatch(homeHero, /Beatbot|beatbot-still/);
 assert.doesNotMatch(homeHero, /Launch Pack|three launch formats|PublicLaunchPackSample/);
 assert.doesNotMatch(create, /<PublicLaunchPackSample surface="create" \/>/);
 assert.match(create, /<CreateStudio/);
@@ -134,11 +136,9 @@ assert.match(
   createStudio,
   /privateUploadEnabled \? \(\s*<div id="create-photo-step" data-first-run-step="upload">/
 );
-assert.match(homeWall, /Collectible subjects|designer-toy|Browse toy types/);
-assert.match(homeWall, /href=\{item\.href\}|item\.src/);
-assert.match(homeWall, /item\.href|item\.src|designer-toy/);
-assert.match(homeWall, /designer-toy|Browse toy types/);
-assert.match(homeWall, /data-home-gallery/);
+assert.match(homeWall, /data-home-proof-wall|data-attraction-id|attraction/);
+assert.match(homeWall, /item\.href|remakeHref|cardHref/);
+assert.match(homeWall, /data-home-wall|data-home-proof/);
 assert.doesNotMatch(shell, /create\?mode=seller-pack/);
 assert.match(shell, /DEFAULT_MOMENT_CREATE_HREF/);
 assert.match(

@@ -2478,7 +2478,7 @@ export function BatchStudio({
                       onClick={() => toggle(p.slug)}
                       className={`rounded-lg border px-2.5 py-1.5 text-xs ${
                         on
-                          ? "border-[var(--brand)] bg-[var(--grad-soft)]"
+                          ? "border-[var(--brand)] [background:var(--grad-soft)]"
                           : "border-[var(--border)] text-[var(--fg-muted)]"
                       }`}
                     >

@@ -1,0 +1,72 @@
+[
+  {
+    "n": 9,
+    "id": "jp-anime-scale",
+    "region": "JP",
+    "title": "Anime scale figure",
+    "webp": "/collectibles/jp-anime-scale.webp"
+  },
+  {
+    "n": 10,
+    "id": "jp-mecha-kit",
+    "region": "JP",
+    "title": "Mecha model kit",
+    "webp": "/collectibles/jp-mecha-kit.webp"
+  },
+  {
+    "n": 11,
+    "id": "jp-sofubi",
+    "region": "JP",
+    "title": "Sofubi soft vinyl",
+    "webp": "/collectibles/jp-sofubi.webp"
+  },
+  {
+    "n": 12,
+    "id": "jp-blindbox",
+    "region": "JP",
+    "title": "Blind box figure",
+    "webp": "/collectibles/jp-blindbox.webp"
+  },
+  {
+    "n": 13,
+    "id": "us-urban-vinyl",
+    "region": "US",
+    "title": "Urban vinyl",
+    "webp": "/collectibles/us-urban-vinyl.webp"
+  },
+  {
+    "n": 14,
+    "id": "us-action-figure",
+    "region": "US",
+    "title": "Action figure",
+    "webp": "/collectibles/us-action-figure.webp"
+  },
+  {
+    "n": 15,
+    "id": "us-pop-vinyl",
+    "region": "US",
+    "title": "Pop vinyl head",
+    "webp": "/collectibles/us-pop-vinyl.webp"
+  },
+  {
+    "n": 16,
+    "id": "jp-desk-figures",
+    "region": "JP",
+    "title": "Desk figures",
+    "webp": "/collectibles/jp-desk-figures.webp"
+  },
+  {
+    "n": 17,
+    "id": "jp-us-shelf",
+    "region": "JP/US",
+    "title": "Collectible shelf",
+    "webp": "/collectibles/jp-us-shelf.webp"
+  },
+  {
+    "n": 18,
+    "id": "jp-garage-kit",
+    "region": "JP",
+    "title": "Garage kit",
+    "webp": "/collectibles/jp-garage-kit.webp"
+  }
+]

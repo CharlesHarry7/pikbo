@@ -9,7 +9,7 @@ export function PaywallCard({
   subtitle?: string;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--brand)]/40 bg-[var(--grad-soft)] p-4 text-sm">
+    <div className="rounded-xl border border-[var(--brand)]/40 [background:var(--grad-soft)] p-4 text-sm">
       <p className="font-semibold">{title}</p>
       <p className="mt-1 text-xs leading-relaxed text-[var(--fg-muted)]">
         {subtitle}
