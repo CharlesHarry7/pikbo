@@ -171,7 +171,7 @@ export function HfProductRail() {
                     type="button"
                     onClick={() => load()}
                     data-hf-rail-boot-retry
-                    className="font-bold text-white/70 underline-offset-2 hover:text-[var(--brand)] hover:underline"
+                    className="font-bold text-[var(--fg-muted)] underline-offset-2 hover:text-[var(--brand)] hover:underline"
                     title="Retry access check"
                   >
                     Retry
@@ -261,25 +261,25 @@ export function HfProductRail() {
                 <div
                   className={`absolute inset-0 bg-gradient-to-t ${
                     p.hot
-                      ? "from-black via-black/70 to-black/25"
-                      : "from-black via-black/75 to-black/35"
+                      ? "from-black/70 via-black/40 to-black/10"
+                      : "from-black/60 via-black/30 to-transparent"
                   }`}
                 />
                 <div className="relative z-10 flex h-full flex-col justify-between p-3">
                   <span
                     className={`inline-flex w-fit rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${
                       p.hot
-                        ? "bg-[var(--neon-pink)] text-[var(--void)]"
-                        : "border border-white/20 bg-black/50 text-white/70 backdrop-blur"
+                        ? "bg-[var(--brand)] text-white"
+                        : "border border-white/30 bg-black/30 text-white/80 backdrop-blur"
                     }`}
                   >
                     {p.tag}
                   </span>
                   <div>
-                    <p className="text-[13px] font-black leading-tight text-white group-hover:text-[var(--neon-pink)]">
+                    <p className="text-[13px] font-black leading-tight text-white group-hover:text-[var(--brand)]">
                       {p.title}
                     </p>
-                    <p className="mt-0.5 text-[10px] leading-snug text-white/55">
+                    <p className="mt-0.5 text-[10px] leading-snug text-white/60">
                       {p.blurb}
                     </p>
                   </div>
